@@ -1,425 +1,201 @@
-﻿
-
-using ShapeEngine.Color;
 using ShapeEngine.Core.Shapes;
 
-namespace ShapeEngine.Stats
+namespace ShapeEngine.Stats;
+
+
+/*
+ Buff Hierarchy
+    - Buff
+    - BuffStacked
+    - BuffTimed
+    - BuffStackedTimed? (better name)
+*/
+
+
+public class BuffSimple : IBuff
 {
-    public interface IBuff
+     protected readonly List<BuffEffect> Effects;
+    public uint Id { get; private set; }
+    public uint GetId() => Id;
+
+    
+    internal BuffSimple(uint id)
     {
-        public int GetID();
-        public bool IsEmpty();
-        public bool DrawToUI();
-        public (float totalBonus, float totalFlat) Get(params int[] tags);
-        public void AddStack();
-        public bool RemoveStack();
-        public void Update(float dt);
-        public void DrawUI(Rect r, ColorRgba barColorRgba, ColorRgba bgColorRgba, ColorRgba textColorRgba);
+        Id = id;
+        Effects = new();
+    }
+    internal BuffSimple(uint id, params BuffEffect[] effects)
+    {
+        Id = id;
+        this.Effects = new(effects.Length);
+        this.Effects.AddRange(effects);
     }
 
-    public struct BuffValue
+    public IBuff Clone() => new BuffSimple(Id, Effects.ToArray());
+
+    public void AddEffect(BuffEffect buffEffect)
     {
-        public float bonus = 0f;
-        public float flat = 0f;
-        public int id = -1;
-        public BuffValue(int id)
+        Effects.Add(buffEffect);
+    }
+
+    public void AddStacks(int amount) { }
+
+    public bool RemoveStacks(int amount) => true;
+    public void ApplyTo(IStat stat)
+    {
+        if (Effects.Count <= 0) return;
+        foreach (var effect in Effects)
         {
-            this.bonus = 0f;
-            this.flat = 0f;
-            this.id = id;
+            if (stat.IsAffected(effect.Tag))
+            {
+                stat.Apply(GetCurBuffValue(effect));
+            }
         }
-        public BuffValue(int id, float bonus, float flat)
+    }
+    public virtual void Update(float dt) { }
+    public virtual void Draw(Rect rect) { }
+    public virtual bool IsFinished() => false;
+    public virtual void GetEffectTexts(ref List<string> result)
+    {
+        foreach (var effect in Effects)
         {
-            this.id = id;
-            this.bonus = bonus;
-            this.flat = flat;
+            var v = GetCurBuffValue(effect);
+            result.Add(v.ToText());
+        }
+    }
+    protected virtual BuffValue GetCurBuffValue(BuffEffect effect)
+    {
+        return new (effect.Bonus, effect.Flat);
+    }
+}
+public class Buff : IBuff
+{
+    protected readonly List<BuffEffect> Effects;
+    public uint Id { get; private set; }
+    public uint GetId() => Id;
+    public int MaxStacks { get; private set; }
+    public int CurStacks { get; private set; }
+    public float Duration { get; private set; }
+    public float Timer { get; private set; }
+    public float TimerF
+    {
+        get
+        {
+            if (Duration <= 0f) return 0f;
+            return 1f - (Timer / Duration);
+        }
+    }
+    public float StackF
+    {
+        get
+        {
+            if (MaxStacks <= 0) return 0f;
+            return (float)CurStacks / (float)MaxStacks;
         }
     }
 
-    public class Buff : IBuff
+    public bool StacksReplenishDuration = true;
+    public bool ClearAllStacksOnDurationEnd = false;
+    public bool Degrading = false;
+
+    
+    internal Buff(uint id, int maxStacks = -1, float duration = -1)
     {
-        protected Dictionary<int, BuffValue> buffValues = new();
-        private int id = -1;
-        public int MaxStacks { get; private set; } = -1;
-        public int CurStacks { get; private set; } = 1;
-        public float Duration { get; private set; } = -1f;
-        public float Timer { get; private set; } = 0f;
-        public float TimerF
-        {
-            get
-            {
-                if (Duration <= 0f) return 0f;
-                return 1f - (Timer / Duration);
-            }
-        }
-        public float StackF
-        {
-            get
-            {
-                if (MaxStacks <= 0) return 0f;
-                return (float)CurStacks / (float)MaxStacks;
-            }
-        }
-        public string Name { get; set; } = "";
-        public string Abbreviation { get; set; } = "";
-        public bool clearAllStacksOnDurationEnd = false;
-        public bool Degrading = false;
-        public bool IsEmpty() { return CurStacks <= 0; }
-        public bool DrawToUI() { return Abbreviation != ""; }
-        public int GetID() { return id; }
+        Id = id;
+        MaxStacks = maxStacks;
+        Duration = duration;
+        if (this.Duration > 0f) Timer = this.Duration;
+        else Timer = 0f;
 
-        public Buff(int id, float duration = -1, int maxStacks = -1, params BuffValue[] buffValues)
-        {
-            this.id = id;
-            this.MaxStacks = maxStacks;
-            this.Duration = duration;
-            if (this.Duration > 0f) Timer = this.Duration;
-            foreach (var buffValue in buffValues)
-            {
-                this.buffValues.Add(buffValue.id, buffValue);
-            }
-        }
+        Effects = new();
+    }
+    internal Buff(uint id, int maxStacks, float duration, params BuffEffect[] effects)
+    {
+        Id = id;
+        MaxStacks = maxStacks;
+        Duration = duration;
+        if (this.Duration > 0f) Timer = this.Duration;
+        else Timer = 0f;
 
-        public virtual (float totalBonus, float totalFlat) Get(params int[] tags)
-        {
-            float totalBonus = 0f;
-            float totalFlat = 0f;
-            if (IsEmpty()) return new(0f, 0f);
+        this.Effects = new(effects.Length);
+        this.Effects.AddRange(effects);
+    }
 
-            foreach (var buffValue in buffValues.Values)
-            {
-                if (tags.Contains(buffValue.id))
-                {
-                    totalBonus += buffValue.bonus;
-                    totalFlat += buffValue.flat;
-                }
-            }
+    // public Buff Clone() => new(Id, MaxStacks, Duration, Effects.ToArray());
+    public IBuff Clone() => new Buff(Id, MaxStacks, Duration, Effects.ToArray());
 
-            float f = 1f;
-            if (Degrading && Duration > 0) f = TimerF;
-
-            return (totalBonus * CurStacks * f, totalFlat * CurStacks * f);
-        }
-        public void AddStack()
-        {
-            if (CurStacks < MaxStacks || MaxStacks < 0) CurStacks += 1;
-            if (Duration > 0) Timer = Duration;
-        }
-        public bool RemoveStack()
-        {
-            CurStacks -= 1;
-            if (CurStacks <= 0) return true;
-
-            return false;
-        }
-        public void Update(float dt)
-        {
-            if (IsEmpty()) return;
-            if (Duration > 0f)
-            {
-                Timer -= dt;
-                if (Timer <= 0f)
-                {
-                    if (clearAllStacksOnDurationEnd) CurStacks = 0;
-                    else
-                    {
-                        CurStacks -= 1;
-                        if (CurStacks > 0)
-                        {
-                            Timer = Duration;
-                        }
-                    }
-                }
-            }
-        }
-
-        public virtual void DrawUI(Rect r, ColorRgba barColorRgba, ColorRgba bgColorRgba, ColorRgba textColorRgba) { }
+    public void AddEffect(BuffEffect buffEffect)
+    {
+        Effects.Add(buffEffect);
     }
     
-    public class BuffSingle : IBuff
+    public void AddStacks(int amount)
     {
-        protected BuffValue buffValue;
-        private int id = -1;
-        public int MaxStacks { get; private set; } = -1;
-        public int CurStacks { get; private set; } = 1;
-        public float Duration { get; private set; } = -1f;
-        public float Timer { get; private set; } = 0f;
-        public float TimerF
+        if (CurStacks < MaxStacks || MaxStacks < 0) CurStacks += amount;
+        if (Duration > 0 && StacksReplenishDuration) Timer = Duration;
+    }
+    public bool RemoveStacks(int amount)
+    {
+        CurStacks -= amount;
+        if (CurStacks <= 0)
         {
-            get
+            CurStacks = 0;
+            Timer = 0f;
+            return true;
+        }
+
+        return false;
+    }
+    public void ApplyTo(IStat stat)
+    {
+        if (Effects.Count <= 0) return;
+        foreach (var effect in Effects)
+        {
+            if (stat.IsAffected(effect.Tag))
             {
-                if (Duration <= 0f) return 0f;
-                return 1f - (Timer / Duration);
+                stat.Apply(GetCurBuffValue(effect));
             }
         }
-        public float StackF
+    }
+    public virtual void Update(float dt)
+    {
+        if (Duration > 0f)
         {
-            get
+            Timer -= dt;
+            if (Timer <= 0f)
             {
-                if (MaxStacks <= 0) return 0f;
-                return (float)CurStacks / (float)MaxStacks;
-            }
-        }
-        public string Name { get; set; } = "";
-        public string Abbreviation { get; set; } = "";
-        public bool clearAllStacksOnDurationEnd = false;
-        public bool Degrading = false;
-        public bool IsEmpty() { return CurStacks <= 0; }
-        public bool DrawToUI() { return Abbreviation != ""; }
-        public int GetID() { return id; }
-
-        public BuffSingle(int id, BuffValue buffValue, int maxStacks = -1, float duration = -1)
-        {
-            this.id = id;
-            this.MaxStacks = maxStacks;
-            this.Duration = duration;
-            if (this.Duration > 0f) Timer = this.Duration;
-            this.buffValue = buffValue;
-        }
-
-        public virtual (float totalBonus, float totalFlat) Get(params int[] tags)
-        {
-            if (IsEmpty()) return new(0f, 0f);
-            if(!tags.Contains(buffValue.id)) return new(0f, 0f);
-            float f = 1f;
-            if (Degrading && Duration > 0f) f = TimerF;
-            return (buffValue.bonus * CurStacks * f, buffValue.flat * CurStacks * f);
-        }
-        public void AddStack()
-        {
-            if (CurStacks < MaxStacks || MaxStacks < 0) CurStacks += 1;
-            if (Duration > 0) Timer = Duration;
-        }
-        public bool RemoveStack()
-        {
-            CurStacks -= 1;
-            if (CurStacks <= 0) return true;
-
-            return false;
-        }
-        public void Update(float dt)
-        {
-            if (IsEmpty()) return;
-            if (Duration > 0f)
-            {
-                Timer -= dt;
-                if (Timer <= 0f)
+                if (ClearAllStacksOnDurationEnd) CurStacks = 0;
+                else
                 {
-                    if (clearAllStacksOnDurationEnd) CurStacks = 0;
-                    else
+                    CurStacks -= 1;
+                    if (CurStacks > 0)
                     {
-                        CurStacks -= 1;
-                        if (CurStacks > 0)
-                        {
-                            Timer = Duration;
-                        }
+                        Timer = Duration;
                     }
                 }
             }
         }
-
-        public virtual void DrawUI(Rect r, ColorRgba barColorRgba, ColorRgba bgColorRgba, ColorRgba textColorRgba) { }
     }
-
-
-    /*
-    public class BuffSimple : IBuff
+    public virtual void Draw(Rect rect) { }
+    public virtual bool IsFinished() => Duration > 0f && Timer <= 0f;
+    public virtual void GetEffectTexts(ref List<string> result)
     {
-        private Dictionary<int, BuffValue> buffValues = new();
-        private int id = -1;
-        public int CurStacks { get; private set; } = 1;
-        public string Name { get; set; } = "";
-        public string Abbreviation { get; set; } = "";
-        public bool IsEmpty() { return CurStacks <= 0; }
-        public bool DrawToUI() { return Abbreviation != ""; }
-        public int GetID() { return id; }
-
-        public BuffSimple(int id, params BuffValue[] buffValues)
+        foreach (var effect in Effects)
         {
-            this.id = id;
-            foreach (var buffValue in buffValues)
-            {
-                this.buffValues.Add(buffValue.id, buffValue);
-            }
+            var v = GetCurBuffValue(effect);
+            result.Add(v.ToText());
         }
-
-        public (float totalBonus, float totalFlat) Get(params int[] tags)
-        {
-            float totalBonus = 0f;
-            float totalFlat = 0f;
-            if (IsEmpty()) return new(0f, 0f);
-
-            foreach (var buffValue in buffValues.Values)
-            {
-                if (tags.Contains(buffValue.id))
-                {
-                    totalBonus += buffValue.bonus * CurStacks;
-                    totalFlat += buffValue.flat * CurStacks;
-                }
-            }
-            return (totalBonus, totalFlat);
-        }
-        public void AddStack()
-        {
-            CurStacks += 1;
-        }
-        public bool RemoveStack()
-        {
-            CurStacks -= 1;
-            if (CurStacks <= 0) return true;
-
-            return false;
-        }
-        public void Update(float dt) { }
-        public void DrawUI(Rectangle r, Color barColor, Color bgColor, Color textColor) { }
     }
-    public class BuffPermanent : IBuff
+    public virtual string GetStackText() => $"Stacks {CurStacks}/{MaxStacks}";
+    
+    protected virtual BuffValue GetCurBuffValue(BuffEffect effect)
     {
-        private Dictionary<int, BuffValue> buffValues = new();
-        private int id = -1;
-        public int MaxStacks { get; private set; } = -1;
-        public int CurStacks { get; private set; } = 1;
-        public float StackF
-        {
-            get
-            {
-                if (MaxStacks <= 0) return 0f;
-                return (float)CurStacks / (float)MaxStacks;
-            }
-        }
-        public string Name { get; set; } = "";
-        public string Abbreviation { get; set; } = "";
-        public bool IsEmpty() { return CurStacks <= 0; }
-        public bool DrawToUI() { return Abbreviation != ""; }
-        public int GetID() { return id; }
-
-        public BuffPermanent(int id, int maxStacks = -1, params BuffValue[] buffValues)
-        {
-            this.id = id;
-            this.MaxStacks = maxStacks;
-            foreach (var buffValue in buffValues)
-            {
-                this.buffValues.Add(buffValue.id, buffValue);
-            }
-        }
-
-        public (float totalBonus, float totalFlat) Get(params int[] tags)
-        {
-            float totalBonus = 0f;
-            float totalFlat = 0f;
-            if (IsEmpty()) return new(0f, 0f);
-
-            foreach (var buffValue in buffValues.Values)
-            {
-                if (tags.Contains(buffValue.id))
-                {
-                    totalBonus += buffValue.bonus * CurStacks;
-                    totalFlat += buffValue.flat * CurStacks;
-                }
-            }
-            return (totalBonus, totalFlat);
-        }
-        public void AddStack()
-        {
-            if (CurStacks < MaxStacks || MaxStacks < 0) CurStacks += 1;
-        }
-        public bool RemoveStack()
-        {
-            CurStacks -= 1;
-            if (CurStacks <= 0) return true;
-
-            return false;
-        }
-        public void Update(float dt) { }
-
-        public void DrawUI(Rectangle r, Color barColor, Color bgColor, Color textColor) { }
+        float f = 1f;
+        if (Degrading && Duration > 0) f = TimerF;
+    
+        var stacks = CurStacks + 1;
+    
+        return new (effect.Bonus * stacks * f, effect.Flat * stacks * f);
     }
-    public class BuffSingleStack : IBuff
-    {
-        private Dictionary<int, BuffValue> buffValues = new();
-        private int id = -1;
-        public int CurStacks { get; private set; } = 1;
-        public float Duration { get; private set; } = -1f;
-        public float Timer { get; private set; } = 0f;
-        public float TimerF
-        {
-            get
-            {
-                if (Duration <= 0f) return 0f;
-                return 1f - (Timer / Duration);
-            }
-        }
-        public string Name { get; set; } = "";
-        public string Abbreviation { get; set; } = "";
-        public bool clearAllStacksOnDurationEnd = false;
-        public bool IsEmpty() { return CurStacks <= 0; }
-        public bool DrawToUI() { return Abbreviation != ""; }
-        public int GetID() { return id; }
 
-        public BuffSingleStack(int id, float duration = -1, params BuffValue[] buffValues)
-        {
-            this.id = id;
-            this.Duration = duration;
-            foreach (var buffValue in buffValues)
-            {
-                this.buffValues.Add(buffValue.id, buffValue);
-            }
-        }
-
-        public (float totalBonus, float totalFlat) Get(params int[] tags)
-        {
-            float totalBonus = 0f;
-            float totalFlat = 0f;
-            if (IsEmpty()) return new(0f, 0f);
-
-            foreach (var buffValue in buffValues.Values)
-            {
-                if (tags.Contains(buffValue.id))
-                {
-                    totalBonus += buffValue.bonus * CurStacks;
-                    totalFlat += buffValue.flat * CurStacks;
-                }
-            }
-            return (totalBonus, totalFlat);
-        }
-        public void AddStack()
-        {
-            if (CurStacks < MaxStacks || MaxStacks < 0) CurStacks += 1;
-            if (Duration > 0) Timer = Duration;
-        }
-        public bool RemoveStack()
-        {
-            CurStacks -= 1;
-            if (CurStacks <= 0) return true;
-
-            return false;
-        }
-        public void Update(float dt)
-        {
-            if (IsEmpty()) return;
-            if (Duration > 0f)
-            {
-                Timer -= dt;
-                if (Timer <= 0f)
-                {
-                    if (clearAllStacksOnDurationEnd) CurStacks = 0;
-                    else
-                    {
-                        CurStacks -= 1;
-                        if (CurStacks > 0)
-                        {
-                            Timer = Duration;
-                        }
-                    }
-                }
-            }
-        }
-
-        public void DrawUI(Rectangle r, Color barColor, Color bgColor, Color textColor) { }
-    }
-    public class BuffDegrading : BuffSingleStack
-    {
-
-    }
-    */
 }

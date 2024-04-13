@@ -1,87 +1,59 @@
-﻿
-namespace ShapeEngine.Stats
+using ShapeEngine.Core.Shapes;
+using ShapeEngine.Core.Structs;
+
+namespace ShapeEngine.Stats;
+
+public class Stat : IStat
 {
-    public interface IStat
+    private readonly BitFlag mask;
+    public uint Id { get; private set; }
+    public string Name = "";
+    public string NameAbbreviation = "";
+    public float BaseValue { get; set; }
+    public float CurValue => total.ApplyTo(BaseValue);
+    public bool Locked
     {
-        public int[] Tags { get; set; }
-        public void UpdateCur(float totalBonus, float totalFlat);
-    }
-
-    public class Stat : IStat
-    {
-        public event Action<Stat, float>? CurChanged;
-        public float Base { get; private set; } = 0f;
-        public float Cur { get; private set; } = 0f;
-        public float F
+        get => locked;
+        set
         {
-            get
-            {
-                if (Base <= 0f) return 0f;
-                return Cur / Base;
-            }
+            if (value && !locked) Reset();
+            locked = value;
         }
-        public int[] Tags { get; set; }
-        public Stat(float baseValue, params int[] tags) { Base = baseValue; Cur = baseValue; Tags = tags; }
-        public void SetBase(float value)
-        {
-            Base = value;
-            Cur = value;
-        }
-        public void UpdateCur(float totalBonuses, float totalFlats)
-        {
-            float old = Cur;
-            if (totalBonuses >= 0f)
-            {
-                Cur = (Base + totalFlats) * (1f + totalBonuses);
-            }
-            else
-            {
-                Cur = (Base + totalFlats) / (1f + MathF.Abs(totalBonuses));
-            }
-
-            if (Cur != old) CurChanged?.Invoke(this, old);
-        }
-
     }
     
-    public class StatInt : IStat
+    private bool locked = false;
+    private BuffValue total = new();
+    
+    public Stat(uint id, float baseValue, BitFlag tagMask)
     {
-        public event Action<StatInt, int>? CurChanged;
-        public int Base { get; private set; } = 0;
-        public int Cur { get; private set; } = 0;
-        public float F
-        {
-            get
-            {
-                if (Base <= 0f) return 0f;
-                return (float)Cur / (float)Base;
-            }
-        }
-        public int[] Tags { get; set; }
-
-        public StatInt(int baseValue, params int[] tags) { Base = baseValue; Cur = baseValue; this.Tags = tags; }
-        public void SetBase(int value)
-        {
-            Base = value;
-            Cur = value;
-        }
-        public void UpdateCur(float totalBonuses, float totalFlats)
-        {
-            int old = Cur;
-            if (totalBonuses >= 0f)
-            {
-                float v = ((float)Base + totalFlats) * totalBonuses;
-                Cur = (int)MathF.Ceiling(v);
-            }
-            else
-            {
-                float v = ((float)Base + totalFlats) / (1f + MathF.Abs(totalBonuses));
-                Cur = (int)MathF.Ceiling(v);
-            }
-
-            if (Cur != old) CurChanged?.Invoke(this, old);
-        }
-
+        Id = id;
+        BaseValue = baseValue;
+        mask = tagMask;
     }
+    
+    
+    public virtual void Draw(Rect rect) { }
 
+    public new string ToString()
+    {
+        float bonusPercent = (1 + total.Bonus) * 100;
+        return $"{Name}: {CurValue} [+{(int)bonusPercent}% +{(int)total.Flat}]";
+    }
+    public virtual string ToText(bool abbreviated)
+    {
+        float bonusPercent = (1 + total.Bonus) * 100;
+        return $"{(abbreviated ? NameAbbreviation : Name)}: {CurValue} [+{(int)bonusPercent}% +{(int)total.Flat}]";
+    }
+    
+    
+    public bool IsAffected(uint tag) => mask.Has(tag);
+    public void Reset()
+    {
+        total = new();
+    }
+    public void Apply(BuffValue buffValue)
+    {
+        if (Locked) return;
+        total = total.Add(buffValue);
+    }
 }
