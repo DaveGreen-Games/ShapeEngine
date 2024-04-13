@@ -10,6 +10,7 @@ using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
+using ShapeEngine.Stats;
 using Size = ShapeEngine.Core.Structs.Size;
 
 namespace Examples.Scenes.ExampleScenes;
@@ -446,8 +447,74 @@ public class EndlessSpaceCollision : ExampleScene
             
         }
     }
+
+    
+    
+    // public static class BuffLibrary
+    // {
+    //     public static readonly uint FreezeNerfId = 100;
+    //     public static readonly uint DashBuffId = 101;
+    //
+    //     public static readonly BuffStacked FreezeNerf =
+    //         new(
+    //             FreezeNerfId, 3, 3, false, true, true,
+    //             new BuffEffect(StatLibrary.MovementTag, -0.1f, 0f, "Movement Speed"),
+    //             new BuffEffect(StatLibrary.FirerateTag, -0.05f, 0f, "Movement Speed")
+    //         );
+    //
+    //     public static readonly BuffTimed DashBuff =
+    //         new(
+    //             DashBuffId, 1, false,
+    //             new BuffEffect(StatLibrary.MovementTag, 0.5f, 0f, "Movement Speed")
+    //         );
+    // }
+    // public static class StatLibrary
+    // {
+    //     public static readonly uint HealthTag = BitFlag.GetFlagUint(0);
+    //     public static readonly uint MovementTag = BitFlag.GetFlagUint(1);
+    //     public static readonly uint DamageTag = BitFlag.GetFlagUint(2);
+    //     public static readonly uint FirerateTag = BitFlag.GetFlagUint(3);
+    //     public static readonly uint DetectionRangeTag = BitFlag.GetFlagUint(4);
+    //     public static readonly uint ExplosionSizeTag = BitFlag.GetFlagUint(5);
+    //     public static readonly uint CallInTimeTag = BitFlag.GetFlagUint(6);
+    //     public static readonly uint SizeTag = BitFlag.GetFlagUint(7);
+    //     public static readonly uint DurationTag = BitFlag.GetFlagUint(8);
+    //
+    //     public static readonly uint HealthStatId = 1000;
+    //     public static readonly uint MovementStatId = 1001;
+    //     public static readonly uint DamageStatId = 1002;
+    //     public static readonly uint FirerateStatId = 1003;
+    //     public static readonly uint DetectionRangeStatId = 1004;
+    //     public static readonly uint ExplosionSizeStatId = 1005;
+    //     public static readonly uint CallInTimeStatId = 1006;
+    //
+    //     public static Stat HealthStat(float baseValue) => GetStat(HealthStatId, baseValue, HealthTag);
+    //     public static Stat MovementStat(float baseValue) => GetStat(MovementStatId, baseValue, MovementTag);
+    //     public static Stat DamageStat(float baseValue) => GetStat(DamageStatId, baseValue, DamageTag);
+    //     public static Stat FirerateStat(float baseValue) => GetStat(FirerateStatId, baseValue, FirerateTag);
+    //     public static Stat DetectionRangeStat(float baseValue) => GetStat(DetectionRangeStatId, baseValue, DetectionRangeTag, SizeTag);
+    //     public static Stat ExplosionSizeStat(float baseValue) => GetStat(ExplosionSizeStatId, baseValue, ExplosionSizeTag, SizeTag);
+    //     public static Stat CallIntTimeStat(float baseValue) => GetStat(CallInTimeStatId, baseValue, CallInTimeTag, DurationTag);
+    //     
+    //     
+    //     
+    //     private static Stat GetStat(uint id, float baseValue, params uint[] tags)
+    //     {
+    //         var flag = new BitFlag();
+    //         foreach (var tag in tags)
+    //         {
+    //             flag.Add(tag);
+    //         }
+    //
+    //         return new Stat(id, baseValue, flag);
+    //     }
+    // }
+    //
+    
+    
     private class Ship : CollisionObject, ICameraFollowTarget
     {
+
         public event Action? OnKilled;
         
         public static readonly uint CollisionLayer = BitFlag.GetFlagUint(3);
