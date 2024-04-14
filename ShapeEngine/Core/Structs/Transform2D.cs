@@ -57,6 +57,7 @@ public readonly struct Transform2D : IEquatable<Transform2D>
     
     public readonly Transform2D SetPosition(Vector2 newPosition) => new(newPosition, RotationRad, Size);
     public readonly Transform2D SetRotationRad(float newRotationRad) => new(Position, newRotationRad, Size);
+    public Transform2D WrapRotationRad() => new(Position, ShapeMath.WrapAngleRad(RotationRad), Size);
     public readonly Transform2D SetSize(Size newSize) => new(Position, RotationRad, newSize);
     public readonly Transform2D SetSize(float newSize) => new(Position, RotationRad, new(newSize));
 

@@ -176,8 +176,6 @@ public readonly struct Grid : IEquatable<Grid>
         #endregion
     }
 
-    // public readonly Rect Rect;
-    // public readonly Direction Direction;
     public readonly int Rows;
     public readonly int Cols;
     public readonly Direction Placement;

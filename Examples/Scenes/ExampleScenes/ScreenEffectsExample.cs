@@ -464,7 +464,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 float thickness = 2f * camera.ZoomFactor;
                 var boundarySize = follower.BoundaryDis.ToVector2();
-                var boundaryCenter = camera.Position;
+                var boundaryCenter = camera.BasePosition;
 
                 if (boundarySize.X > 0)
                 {
@@ -497,7 +497,7 @@ namespace Examples.Scenes.ExampleScenes
 
         private void DrawCameraInfo(Rect rect)
         {
-            var pos = camera.Position;
+            var pos = camera.BasePosition;
             var x = (int)pos.X;
             var y = (int)pos.Y;
             var rot = (int)camera.RotationDeg;

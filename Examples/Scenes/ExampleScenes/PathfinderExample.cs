@@ -139,7 +139,7 @@ internal class PathfinderFlag
             var moveCameraDir = new Vector2(moveCameraH, moveCameraV);
             var cam = GAMELOOP.Camera;
             var f = cam.ZoomFactor;
-            cam.Position += moveCameraDir * 500 * dt * f;
+            cam.BasePosition += moveCameraDir * 500 * dt * f;
 
 
             startFlag.Update(dt, mousePosGame);

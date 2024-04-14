@@ -104,17 +104,30 @@ public sealed class ShapeCamera
             follower?.OnCameraAttached();
         }
     }
-    public Vector2 Position { get; set; } = new();
     
-    public Size Size { get; private set; } = new();
-    // public Vector2 SizeRaw => Size / zoomAdjustment;
-    // private Vector2 sizeRaw => Size / zoomAdjustment;
+    public Transform2D BaseTransform { get; set; }
+
+    public Vector2 BasePosition
+    {
+        get => BaseTransform.Position;
+        set => BaseTransform = BaseTransform.SetPosition(value);
+    }
+    public Size BaseSize
+    {
+        get => BaseTransform.Size;
+        private set => BaseTransform = BaseTransform.SetSize(value);
+    }
+    public float BaseRotationDeg
+    {
+        get => BaseTransform.RotationRad * ShapeMath.RADTODEG;
+        private set => BaseTransform = BaseTransform.SetRotationRad(value * ShapeMath.RADTODEG);
+    }
     public Vector2 Alignement{ get; private set; } = new(0.5f);
     
-    public Size BaseOffset => Size * Alignement;
+    public Size BaseOffset => BaseTransform.Size * Alignement;
     public Size Offset { get; private set; } = new();
     
-    public float BaseRotationDeg { get; private set; } = 0f;
+    
     public float RotationDeg { get; private set; } = 0f;
     
     public float BaseZoomLevel { get; private set; } = 1f;
@@ -126,29 +139,29 @@ public sealed class ShapeCamera
     public ShapeCamera() { }
     public ShapeCamera(Vector2 pos)
     {
-        this.Position = pos;
+        BaseTransform = BaseTransform.SetPosition(pos);
     }
     public ShapeCamera(Vector2 pos, Vector2 alignement)
     {
-        this.Position = pos;
+        BaseTransform = BaseTransform.SetPosition(pos);
         this.SetAlignement(alignement);
     }
     public ShapeCamera(Vector2 pos, Vector2 alignement, float zoomLevel)
     {
-        this.Position = pos;
+        BaseTransform = BaseTransform.SetPosition(pos);
         this.SetAlignement(alignement);
         this.SetZoom(zoomLevel);
     }
     public ShapeCamera(Vector2 pos, Vector2 alignement, float zoomLevel, float rotationDeg)
     {
-        this.Position = pos;
+        BaseTransform = BaseTransform.SetPosition(pos);
         this.SetAlignement(alignement);
         this.SetZoom(zoomLevel);
         this.SetRotation(rotationDeg);
     }
     public ShapeCamera(Vector2 pos, float zoomLevel)
     {
-        this.Position = pos;
+        BaseTransform.SetPosition(pos);
         this.SetZoom(zoomLevel);
     }
 
@@ -166,14 +179,14 @@ public sealed class ShapeCamera
     }
     public Rect Area => new
     (
-        Position.X - Offset.Width * ZoomFactor, 
-        Position.Y - Offset.Height * ZoomFactor, 
-        Size.Width * ZoomFactor,
-        Size.Height * ZoomFactor
+        BaseTransform.Position.X - Offset.Width * ZoomFactor, 
+        BaseTransform.Position.Y - Offset.Height * ZoomFactor, 
+        BaseTransform.Size.Width * ZoomFactor,
+        BaseTransform.Size.Height * ZoomFactor
     );
     public Camera2D Camera => new()
     {
-        Target = Position,
+        Target = BaseTransform.Position,
         Offset = Offset.ToVector2(),
         Zoom = ZoomLevel,
         Rotation = RotationDeg
@@ -190,7 +203,7 @@ public sealed class ShapeCamera
         var shakeOffset = new Size(shake.Get(ShakeX), shake.Get(ShakeY));
         
         Offset = BaseOffset + shakeOffset + cameraTweenTotalOffset;
-        RotationDeg = BaseRotationDeg + shake.Get(ShakeRot) + cameraTweenTotalRotationDeg;
+        RotationDeg = (BaseTransform.RotationRad * ShapeMath.RADTODEG) + shake.Get(ShakeRot) + cameraTweenTotalRotationDeg;
         ZoomLevel = (shake.Get(ShakeZoom) + BaseZoomLevel) * cameraTweenTotalZoomFactor;
         ZoomLevel *= zoomAdjustment;
         cameraTweenTotalOffset = new(0f);
@@ -212,7 +225,7 @@ public sealed class ShapeCamera
     }
     internal void SetSize(Dimensions curScreenSize, Dimensions targetDimensions)
     {
-        Size = curScreenSize.ToSize();
+        BaseTransform = BaseTransform.SetSize(curScreenSize.ToSize());
 
         //VARIANT 2
         // float xDif = curScreenSize.Width - targetDimensions.Width;
@@ -244,7 +257,7 @@ public sealed class ShapeCamera
 
     private float CalculateZoomLevel(Size targetSize)
     {
-        var size = Size / zoomAdjustment;
+        var size = BaseTransform.Size / zoomAdjustment;
         var fX = 1f / (targetSize.Width / size.Width);
         var fY = 1f / (targetSize.Height / size.Height);
         return fX < fY ? fX : fY;
@@ -252,7 +265,7 @@ public sealed class ShapeCamera
     }
     public void SetCameraRect(Rect newRect)
     {
-        Position = newRect.GetPoint(Alignement);
+        BaseTransform = BaseTransform.SetPosition(newRect.GetPoint(Alignement));
         if (newRect.Size != Area.Size) SetZoom( CalculateZoomLevel(newRect.Size) );
     }
     
@@ -265,10 +278,9 @@ public sealed class ShapeCamera
     public void Reset()
     {
         Follower?.Reset();
-        Position = new();
+        BaseTransform = new Transform2D(new(), 0f);
         Alignement = new(0.5f);
         BaseZoomLevel = 1f;
-        BaseRotationDeg = 0f;
     }
     
     public void Zoom(float change) => SetZoom(BaseZoomLevel + change);
@@ -279,12 +291,10 @@ public sealed class ShapeCamera
         else if (BaseZoomLevel < MinZoomLevel) BaseZoomLevel = MinZoomLevel;
     }
 
-    public void Rotate(float deg) => SetRotation(BaseRotationDeg + deg);
+    public void Rotate(float deg) => SetRotation((BaseTransform.RotationRad * ShapeMath.RADTODEG) + deg);
     public void SetRotation(float deg)
     {
-        BaseRotationDeg = deg;
-        //RotationDeg = Wrap(RotationDeg, 0f, 360f);
-        BaseRotationDeg = ShapeMath.WrapAngleDeg(BaseRotationDeg);
+        BaseTransform = BaseTransform.SetRotationRad(deg * ShapeMath.DEGTORAD).WrapRotationRad();
     }
 
     public void SetAlignement(Vector2 newAlignement) => Alignement = Vector2.Clamp(newAlignement, Vector2.Zero, Vector2.One);

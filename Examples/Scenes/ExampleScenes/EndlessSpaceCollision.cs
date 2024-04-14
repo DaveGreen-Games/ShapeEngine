@@ -1523,7 +1523,7 @@ public class EndlessSpaceCollision : ExampleScene
         cannon.BulletFired += OnBulletFired;
         
         CollisionHandler?.Add(ship);
-        UpdateFollower(camera.Size.Min());
+        UpdateFollower(camera.BaseSize.Min());
         
         var toggleDrawKB = new InputTypeKeyboardButton(ShapeKeyboardButton.T);
         var toggleDrawGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
@@ -1550,7 +1550,7 @@ public class EndlessSpaceCollision : ExampleScene
     public override void Activate(Scene oldScene)
     {
         GAMELOOP.Camera = camera;
-        UpdateFollower(camera.Size.Min());
+        UpdateFollower(camera.BaseSize.Min());
         camera.SetZoom(0.35f);
         follower.SetTarget(ship);
     }
@@ -1596,7 +1596,7 @@ public class EndlessSpaceCollision : ExampleScene
         CollisionHandler?.Add(ship);
         follower.SetTarget(ship);
         
-        UpdateFollower(camera.Size.Min());
+        UpdateFollower(camera.BaseSize.Min());
         camera.SetZoom(0.35f);
 
         AddAsteroids(AsteroidCount);
@@ -1770,7 +1770,7 @@ public class EndlessSpaceCollision : ExampleScene
             hyperStrafe.Update(time.Delta);
             // barrage350mm.Update(time.Delta);
 
-            UpdateFollower(camera.Size.Min());
+            UpdateFollower(camera.BaseSize.Min());
 
             var coordinates = ship.GetPosition() / cellSize;
             var uX = (int)coordinates.X * cellSize;
@@ -1882,7 +1882,7 @@ public class EndlessSpaceCollision : ExampleScene
             
             float thickness = 2f * camera.ZoomFactor;
             var boundarySize = follower.BoundaryDis.ToVector2();
-            var boundaryCenter = camera.Position;
+            var boundaryCenter = camera.BasePosition;
 
             if (boundarySize.X > 0)
             {
@@ -2010,7 +2010,7 @@ public class EndlessSpaceCollision : ExampleScene
 
     private void DrawCameraInfo(Rect rect)
     {
-        var pos = camera.Position;
+        var pos = camera.BasePosition;
         var x = (int)pos.X;
         var y = (int)pos.Y;
         var rot = (int)camera.RotationDeg;

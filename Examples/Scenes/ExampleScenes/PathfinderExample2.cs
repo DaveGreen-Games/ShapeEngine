@@ -605,7 +605,7 @@ public class PathfinderExample2 : ExampleScene
         follower = new(0, 300, 500);
         camera.Follower = follower;
         ship = new(new Vector2(0f), 45f, pathfinder);
-        UpdateFollower(camera.Size.Min());
+        UpdateFollower(camera.BaseSize.Min());
         
         var toggleDrawKB = new InputTypeKeyboardButton(ShapeKeyboardButton.T);
         var toggleDrawGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
@@ -619,7 +619,7 @@ public class PathfinderExample2 : ExampleScene
     public override void Activate(Scene oldScene)
     {
         GAMELOOP.Camera = camera;
-        UpdateFollower(camera.Size.Min());
+        UpdateFollower(camera.BaseSize.Min());
         camera.SetZoom(0.6f);
         follower.SetTarget(ship);
     }
@@ -654,7 +654,7 @@ public class PathfinderExample2 : ExampleScene
         ship.Reset(new Vector2(0f), 45f);
         follower.SetTarget(ship);
         
-        UpdateFollower(camera.Size.Min());
+        UpdateFollower(camera.BaseSize.Min());
 
         AddAsteroids(AsteroidCount);
         AddChasers(100);
@@ -1024,7 +1024,7 @@ public class PathfinderExample2 : ExampleScene
         
         
         pathfinder.Update(time.Delta);
-        UpdateFollower(camera.Size.Min());
+        UpdateFollower(camera.BaseSize.Min());
         foreach (var chaser in chasers)
         {
             chaser.Update(time.Delta);
@@ -1049,7 +1049,7 @@ public class PathfinderExample2 : ExampleScene
             
             float thickness = 2f * camera.ZoomFactor;
             var boundarySize = follower.BoundaryDis.ToVector2();
-            var boundaryCenter = camera.Position;
+            var boundaryCenter = camera.BasePosition;
 
             if (boundarySize.X > 0)
             {
@@ -1106,7 +1106,7 @@ public class PathfinderExample2 : ExampleScene
 
     private void DrawCameraInfo(Rect rect)
     {
-        var pos = camera.Position;
+        var pos = camera.BasePosition;
         var x = (int)pos.X;
         var y = (int)pos.Y;
         var rot = (int)camera.RotationDeg;

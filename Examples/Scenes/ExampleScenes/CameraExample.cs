@@ -145,7 +145,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 var movement = new Vector2(dirX, dirY).Normalize() * speed * dt * camera.ZoomFactor;
                 movement = movement.Rotate(-camera.RotationDeg * ShapeMath.DEGTORAD);
-                camera.Position += movement;
+                camera.BasePosition += movement;
                 //camera.Translation += movement;
             }
         }
@@ -159,11 +159,11 @@ namespace Examples.Scenes.ExampleScenes
 
             var c = new ColorRgba(Color.CornflowerBlue);
             float f = camera.ZoomFactor;
-            ShapeDrawing.DrawCircle(camera.Position, 8f * f, c);
-            ShapeDrawing.DrawCircleLines(camera.Position, 64 * f, 2f * f, c);
-            Segment hor = new(camera.Position - new Vector2(3000 * f, 0), camera.Position + new Vector2(3000 * f, 0));
+            ShapeDrawing.DrawCircle(camera.BasePosition, 8f * f, c);
+            ShapeDrawing.DrawCircleLines(camera.BasePosition, 64 * f, 2f * f, c);
+            Segment hor = new(camera.BasePosition - new Vector2(3000 * f, 0), camera.BasePosition + new Vector2(3000 * f, 0));
             hor.Draw(2f * f, c);
-            Segment ver = new(camera.Position - new Vector2(0, 3000 * f), camera.Position + new Vector2(0, 3000 * f));
+            Segment ver = new(camera.BasePosition - new Vector2(0, 3000 * f), camera.BasePosition + new Vector2(0, 3000 * f));
             ver.Draw(2f * f, c);
         }
         protected override void OnDrawGameUIExample(ScreenInfo ui)
@@ -187,7 +187,7 @@ namespace Examples.Scenes.ExampleScenes
             var curInputDeviceAll = ShapeInput.CurrentInputDeviceType;
             //var curInputDeviceNoMouse = ShapeLoop.Input.CurrentInputDeviceNoMouse;
             
-            var pos = camera.Position;
+            var pos = camera.BasePosition;
             var x = (int)pos.X;
             var y = (int)pos.Y;
             var rot = (int)camera.BaseRotationDeg;
