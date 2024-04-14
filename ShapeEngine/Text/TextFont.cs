@@ -9,7 +9,7 @@ using ShapeEngine.UI;
 
 namespace ShapeEngine.Text;
 
-public struct TextFont
+public class TextFont
 {
     #region Static Members
 
@@ -33,7 +33,6 @@ public struct TextFont
     public float FontSpacing;
     public float LineSpacing;
     public ColorRgba ColorRgba;
-
 
     #endregion
 
@@ -83,6 +82,8 @@ public struct TextFont
 
 
     #endregion
+
+    public TextFont Clone() => new(Font, FontSize, FontSpacing, LineSpacing, ColorRgba);
     
     #region Size
 
@@ -183,7 +184,7 @@ public struct TextFont
         float f = fontSize / (float)BaseSize;
         return baseSize * f;
     }
-    public readonly Size GetCharBaseSize(char c)
+    public Size GetCharBaseSize(char c)
     {
         unsafe
         {
