@@ -19,7 +19,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             Title = "Text Scaling Example";
             var s = GAMELOOP.UIScreenInfo.Area.Size;
-            textBox.EmptyText = "Longer Test Text";
+            TextInputBox.EmptyText = "Longer Test Text";
             var decreaseFontSpacingKB = new InputTypeKeyboardButton(ShapeKeyboardButton.S);
             var decreaseFontSpacingGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN);
             iaDeacreaseFontSpacing = new(accessTagTextBox,decreaseFontSpacingKB, decreaseFontSpacingGP);
@@ -46,16 +46,16 @@ namespace Examples.Scenes.ExampleScenes
         {
             textFont.FontSpacing = fontSpacing;
             textFont.ColorRgba = Colors.Highlight;
-            textFont.DrawTextWrapNone(textBox.Text, rect, new(0.5f));
+            textFont.DrawTextWrapNone(TextInputBox.Text, rect, new(0.5f));
             // font.DrawText(textBox.Text, rect, fontSpacing, new Vector2(0.5f, 0.5f), ColorHighlight1);
         }
 
         protected override void DrawTextEntry(Rect rect)
         {
-            Caret caret = new(textBox.CaretVisible ? textBox.CaretIndex : -1, Colors.Special, 0.05f);
+            Caret caret = new(TextInputBox.CaretVisible ? TextInputBox.CaretIndex : -1, Colors.Special, 0.05f);
             textFont.FontSpacing = fontSpacing;
             textFont.ColorRgba = Colors.Light;
-            textFont.DrawTextWrapNone(textBox.Text, rect, new(0.5f), caret);
+            textFont.DrawTextWrapNone(TextInputBox.Text, rect, new(0.5f), caret);
             
             // font.DrawText(textBox.Text, rect, fontSpacing, new Vector2(0.5f, 0.5f), ColorLight);
             

@@ -31,7 +31,7 @@ namespace Examples.Scenes.ExampleScenes
         bool wrapModeChar = true;
         // bool autoSize = false;
 
-        private TextBlock textBlock;
+        private TextEmphasisBox textEmphasisBox;
         
         private readonly InputAction iaChangeFontSpacing;
         private readonly InputAction iaChangeLineSpacing;
@@ -42,8 +42,8 @@ namespace Examples.Scenes.ExampleScenes
         public TextWrapEmphasisExample() : base()
         {
             Title = "Text Wrap Multi Color Example";
-            textBox.EmptyText = "Enter Text...";
-            textBox.SetEnteredText("Damaging an enemy with Rupture creates a pool that does Bleed damage over 6 seconds. Enemies in the pool take 10% increased Bleed damage.");
+            TextInputBox.EmptyText = "Enter Text...";
+            TextInputBox.SetEnteredText("Damaging an enemy with Rupture creates a pool that does Bleed damage over 6 seconds. Enemies in the pool take 10% increased Bleed damage.");
             
             var changeFontSpacingKB = new InputTypeKeyboardButton(ShapeKeyboardButton.S);
             var changeFontSpacingGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN);
@@ -72,8 +72,8 @@ namespace Examples.Scenes.ExampleScenes
             inputActions.Add(iaToggleWrapMode);
 
             // var tf = new TextFont(textFont.Font, 0f, 0f, WHITE);
-            textBlock = new(textFont);
-            textBlock.Caret = new(-1, new(Color.OrangeRed));
+            textEmphasisBox = new(textFont);
+            textEmphasisBox.Caret = new(-1, new(Color.OrangeRed));
             var emphasis1 = new Emphasis(new ED_Block(), new(Color.IndianRed), new(Color.Black));
             var emphasis2 = new Emphasis(new ED_Block(), new(Color.CornflowerBlue), new(Color.Black));
             var emphasis3 = new Emphasis(new ED_Transparent(), new(Color.Black), new(Color.Goldenrod));
@@ -82,10 +82,10 @@ namespace Examples.Scenes.ExampleScenes
             var textEmphasis2 = new TextEmphasis(emphasis2, "(increased)|(added)");
             var textEmphasis3 = new TextEmphasis(emphasis3, "(\\d)|(sec)|(seconds)");
             var textEmphasis4 = new TextEmphasis(emphasis4, "[A-Z]+$");
-            textBlock.Emphases.Add(textEmphasis1);
-            textBlock.Emphases.Add(textEmphasis2);
-            textBlock.Emphases.Add(textEmphasis3);
-            textBlock.Emphases.Add(textEmphasis4);
+            textEmphasisBox.Emphases.Add(textEmphasis1);
+            textEmphasisBox.Emphases.Add(textEmphasis2);
+            textEmphasisBox.Emphases.Add(textEmphasis3);
+            textEmphasisBox.Emphases.Add(textEmphasis4);
 
             TextFont.EmphasisRectMargins = new(0.05f, 0f, 0.05f, 0f);
             // TextBlock.FontSizeModifier = 2f;
@@ -94,14 +94,14 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void UpdateExampleTextEntryInactive(float dt, ScreenInfo game, ScreenInfo ui)
         {
-            textBlock.TextFont.Font = textFont.Font;// font;// textBlock.TextFont.ChangeFont(font);
-            textBlock.Caret.Index = -1;
+            textEmphasisBox.TextFont.Font = textFont.Font;// font;// textBlock.TextFont.ChangeFont(font);
+            textEmphasisBox.Caret.Index = -1;
         }
 
         protected override void UpdateExampleTextEntryActive(float dt, ScreenInfo game, ScreenInfo ui)
         {
-            var index = textBox.CaretVisible ? textBox.CaretIndex : -1;
-            textBlock.Caret.Index = index;
+            var index = TextInputBox.CaretVisible ? TextInputBox.CaretIndex : -1;
+            textEmphasisBox.Caret.Index = index;
             // textBlock.Caret = new(index, 5f, RED);
         }
 
@@ -120,8 +120,8 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void DrawText(Rect rect)
         {
-            var text = textBox.Text;
-            textBlock.Draw(text, rect, new(0), wrapModeChar ? TextWrapType.Char : TextWrapType.Word);
+            var text = TextInputBox.Text;
+            textEmphasisBox.Draw(text, rect, new(0), wrapModeChar ? TextWrapType.Char : TextWrapType.Word);
             // if (autoSize)
             // {
             //     if (wrapModeChar)
@@ -149,8 +149,8 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void DrawTextEntry(Rect rect)
         {
-            var text = textBox.Text;
-            textBlock.Draw(text, rect, new(0.5f, 0.5f), wrapModeChar ? TextWrapType.Char : TextWrapType.Word);
+            var text = TextInputBox.Text;
+            textEmphasisBox.Draw(text, rect, new(0.5f, 0.5f), wrapModeChar ? TextWrapType.Char : TextWrapType.Word);
             // if (autoSize)
             // {
             //     if (wrapModeChar)
@@ -203,14 +203,14 @@ namespace Examples.Scenes.ExampleScenes
             lineSpacing += lineSpacingIncrement;
             if (lineSpacing < 0) lineSpacing = maxLineSpacing;
             else if (lineSpacing > maxLineSpacing) lineSpacing = 0;
-            textBlock.TextFont.LineSpacing = lineSpacing;
+            textEmphasisBox.TextFont.LineSpacing = lineSpacing;
         }
         private void ChangeFontSpacing()
         {
             fontSpacing += fontSpacingIncrement;
             if (fontSpacing < 0) fontSpacing = maxFontSpacing;
             else if (fontSpacing > maxFontSpacing) fontSpacing = 0;
-            textBlock.TextFont.FontSpacing = fontSpacing;
+            textEmphasisBox.TextFont.FontSpacing = fontSpacing;
         }
         // private void ChangeFontSize()
         // {

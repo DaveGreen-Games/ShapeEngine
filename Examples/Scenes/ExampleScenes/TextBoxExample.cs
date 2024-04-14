@@ -54,7 +54,7 @@ namespace Examples.Scenes.ExampleScenes
             textFont.FontSize = fontSize;
             textFont.FontSpacing = fontSpacing;
             textFont.ColorRgba = Colors.Highlight;
-            textFont.DrawWord(textBox.Text, rect.GetPoint(curAlignement), curAlignement);
+            textFont.DrawWord(TextInputBox.Text, rect.GetPoint(curAlignement), curAlignement);
             // font.DrawText(textBox.Text, fontSize, fontSpacing, rect.GetPoint(curAlignement), curAlignement, ColorHighlight1);
         }
 
@@ -65,8 +65,8 @@ namespace Examples.Scenes.ExampleScenes
             textFont.FontSize = fontSize;
             textFont.FontSpacing = fontSpacing;
             textFont.ColorRgba = Colors.Light;
-            Caret caret = new(textBox.CaretVisible ? textBox.CaretIndex : -1, Colors.Special, 0.05f);
-            textFont.DrawWord(textBox.Text, rect.GetPoint(curAlignement), curAlignement, caret);
+            Caret caret = new(TextInputBox.CaretVisible ? TextInputBox.CaretIndex : -1, Colors.Special, 0.05f);
+            textFont.DrawWord(TextInputBox.Text, rect.GetPoint(curAlignement), curAlignement, caret);
             // font.DrawText(textBox.Text, fontSize, fontSpacing, rect.GetPoint(curAlignement), curAlignement, ColorLight);
 
             // if (textBox.CaretVisible)

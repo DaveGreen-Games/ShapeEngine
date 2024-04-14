@@ -26,9 +26,9 @@ namespace Examples.Scenes
         //protected TextFont font;
         // protected Font font;
         private int fontIndex = 0;
-        private bool textEntryActive => textBox.Active;
+        private bool textEntryActive => TextInputBox.Active;
 
-        protected readonly ShapeTextBox textBox = new("Enter Text into this box");
+        protected readonly TextInputBox TextInputBox = new("Enter Text into this box");
 
         protected readonly uint accessTagTextBox = InputAction.NextTag; // BitFlag.GetFlagUint(12);
         
@@ -149,7 +149,7 @@ namespace Examples.Scenes
                 action.Gamepad = gamepad;
                 action.Update(dt);
             }
-            textBox.Update(dt);
+            TextInputBox.Update(dt);
             
             if (!textEntryActive)
             {
@@ -157,7 +157,7 @@ namespace Examples.Scenes
                 {
                     BitFlag mask = new(accessTagTextBox);
                     InputAction.LockWhitelist(mask);
-                    textBox.StartEntry();
+                    TextInputBox.StartEntry();
                     // InputAction.LockWhitelist(accessTagTextBox);
                     draggingBottomRight = false;
                     draggingTopLeft = false;
@@ -197,49 +197,49 @@ namespace Examples.Scenes
             {
                 if (iaFinishText.State.Pressed)
                 {
-                    textBox.FinishEntry();
+                    TextInputBox.FinishEntry();
                     InputAction.Unlock();
                 }
                 else if (iaCancelText.State.Pressed)
                 {
-                    textBox.CancelEntry();
+                    TextInputBox.CancelEntry();
                     InputAction.Unlock();
                 }
                 else if (iaClear.State.Pressed)
                 {
-                    textBox.DeleteEntry();
+                    TextInputBox.DeleteEntry();
                 }
                 else if (iaDelete.State.Down)
                 {
-                    textBox.DeleteCharacterStart(1);
+                    TextInputBox.DeleteCharacterStart(1);
                 }
                 else if (iaBackspace.State.Down)
                 {
-                    textBox.DeleteCharacterStart(-1);
+                    TextInputBox.DeleteCharacterStart(-1);
                 }
                 else if (iaCaretPrev.State.Down)
                 {
                     // textBox.MoveCaret(-1, false);
-                    textBox.MoveCaretStart(-1, false);
+                    TextInputBox.MoveCaretStart(-1, false);
                 }
                 else if (iaCaretNext.State.Down)
                 {
                     // textBox.MoveCaret(1, false);
-                    textBox.MoveCaretStart(1, false);
+                    TextInputBox.MoveCaretStart(1, false);
                 }
                 else
                 {
-                    textBox.AddCharacters(ShapeInput.KeyboardDevice.GetStreamChar());
+                    TextInputBox.AddCharacters(ShapeInput.KeyboardDevice.GetStreamChar());
                 }
 
                 
                 if (iaCaretPrev.State.Released || iaCaretNext.State.Released)
                 {
-                    textBox.MoveCaretEnd();
+                    TextInputBox.MoveCaretEnd();
                 }
                 else if (iaDelete.State.Released || iaBackspace.State.Released)
                 {
-                    textBox.DeleteCharacterEnd();
+                    TextInputBox.DeleteCharacterEnd();
                 }
                 
                 HandleInputTextEntryActive(dt, mousePosGame, mousePosUI);
@@ -414,7 +414,7 @@ namespace Examples.Scenes
                 textFont.FontSpacing = 4f;
                 
                 textFont.ColorRgba = Colors.Warm;
-                textFont.DrawTextWrapNone($"Text Entry Mode Active |  Caret Position [{caretPrevText}/{caretNextText}] ({textBox.CaretIndex})", top, new(0.5f));
+                textFont.DrawTextWrapNone($"Text Entry Mode Active |  Caret Position [{caretPrevText}/{caretNextText}] ({TextInputBox.CaretIndex})", top, new(0.5f));
                 
                 textFont.ColorRgba = Colors.Light;
                 textFont.DrawTextWrapNone(info, bottom, new(0.5f));

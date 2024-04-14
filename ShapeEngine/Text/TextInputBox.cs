@@ -1,6 +1,6 @@
 namespace ShapeEngine.Text;
 
-public class ShapeTextBox
+public class TextInputBox
 {
     #region Members
 
@@ -44,7 +44,7 @@ public class ShapeTextBox
     #endregion
 
     #region Basic
-    public ShapeTextBox(string emptyText)
+    public TextInputBox(string emptyText)
     {
         this.EmptyText = emptyText;
         if (CaretBlinkInterval > 0f) caretBlinkTimer = CaretBlinkInterval;
