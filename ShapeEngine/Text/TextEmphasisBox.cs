@@ -25,7 +25,7 @@ public class TextEmphasisBox
     public bool HasEmphasis() => UseEmphasis && Emphases.Count > 0;
     public void Draw(string text, Rect rect, Vector2 alignement, Vector2 mousePos, TextWrapType textWrapType = TextWrapType.None)
     {
-        TextFont.MousePos = mousePos;
+        // TextFont.MousePos = mousePos;
         if(textWrapType == TextWrapType.None)
         {
             TextFont.DrawTextWrapNone(text, rect ,alignement, Caret, Emphases);

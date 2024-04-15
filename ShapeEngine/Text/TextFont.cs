@@ -8,8 +8,6 @@ namespace ShapeEngine.Text;
 
 public class TextFont
 {
-    public event Action<string, Rect, Vector2>? OnMouseEnteredWord;
-    
     #region Static Members
 
     public static Rect.Margins EmphasisRectMargins = new();
@@ -27,8 +25,11 @@ public class TextFont
     #region Members
     public FontDimensions FontDimensions;
     public ColorRgba ColorRgba;
-    public Vector2 MousePos = new();
-    public Emphasis? MouseEmphasis = null;
+
+    /// <summary>
+    /// Is used on Wrap Char/Word draw functions. Is used to determine what happens with words that are entered by the mouse pointer.
+    /// </summary>
+    public IMouseDetection? MouseDetection = null;
     #endregion
 
     #region Constructors
@@ -43,11 +44,11 @@ public class TextFont
         FontDimensions = fontDimensions;
         ColorRgba = colorRgba;
     }
-    public TextFont(FontDimensions fontDimensions, ColorRgba colorRgba, Emphasis mouseEmphasis)
+    public TextFont(FontDimensions fontDimensions, ColorRgba colorRgba, IMouseDetection mouseDetection)
     {
         FontDimensions = fontDimensions;
         ColorRgba = colorRgba;
-        MouseEmphasis = mouseEmphasis;
+        MouseDetection = mouseDetection;
     }
     public TextFont(Font font, float fontSpacing, ColorRgba colorRgba)
     {
@@ -285,7 +286,7 @@ public class TextFont
         // var rectSize = rect.Size;
         
         var textSize = FontDimensions.GetTextBaseSize(text);
-
+    
         if (textSize.Width < rect.Size.Width)//no wrapping needed
         {
             DrawTextWrapNone(text, rect, alignement, caret, emphases);
@@ -313,9 +314,10 @@ public class TextFont
             Emphasis? lineBreakEmphasis = null;
             var curWordWidth = 0f;
             var curLineWidth = 0f;
-
+    
             var caretTop = new Vector2();
             var caretFound = false;
+            string completeWord = string.Empty;
             
             for (int i = 0; i < text.Length; i++)
             {
@@ -336,13 +338,19 @@ public class TextFont
                     if (c == ' ') 
                     {
                         var emphasis = GetEmphasis(curWord, emphases);
-
-                        if (MouseEmphasis != null)
+    
+                        if (MouseDetection != null)
                         {
                             var mouseRect = new Rect(pos, new Size(curWordWidth, scaledFont.Size));
-                            if (mouseRect.ContainsPoint(MousePos))
+                            if (mouseRect.ContainsPoint(MouseDetection.GetMousePosition()))
                             {
-                                DrawWord(curWord, pos, curWordWidth, MouseEmphasis, scaledFont);
+                                var mouseEmphasis = MouseDetection.OnMouseEntered(curWord, curWord, rect);
+                                if(mouseEmphasis != null) DrawWord(curWord, pos, curWordWidth, mouseEmphasis, scaledFont);
+                                else
+                                {
+                                    if (emphasis != null) DrawWord(curWord, pos, curWordWidth, emphasis, scaledFont);
+                                    else DrawWord(curWord, pos, scaledFont);
+                                }
                             }
                             else
                             {
@@ -355,45 +363,13 @@ public class TextFont
                             if (emphasis != null) DrawWord(curWord, pos, curWordWidth, emphasis, scaledFont);
                             else DrawWord(curWord, pos, scaledFont);
                         }
-                        
-                        
-                        // if (emphasis != null)
-                        // {
-                        //     if (MouseEmphasis != null)
-                        //     {
-                        //         var mouseRect = new Rect(pos, new Size(curWordWidth, scaledFont.Size));
-                        //         if (mouseRect.ContainsPoint(MousePos))
-                        //         {
-                        //             DrawWord(curWord, pos, curWordWidth, MouseEmphasis, scaledFont);
-                        //         }
-                        //         else DrawWord(curWord, pos, curWordWidth, emphasis, scaledFont);
-                        //     }
-                        //     else DrawWord(curWord, pos, curWordWidth, emphasis, scaledFont); 
-                        //     
-                        // }
-                        // else
-                        // {
-                        //     if (MouseEmphasis != null)
-                        //     {
-                        //         var wordSize = scaledFont.GetTextSize(curWord);
-                        //         var mouseRect = new Rect(pos, wordSize);
-                        //         if (mouseRect.ContainsPoint(MousePos))
-                        //         {
-                        //             DrawWord(curWord, pos, wordSize.Width, MouseEmphasis, scaledFont);
-                        //         }
-                        //         else DrawWord(curWord, pos, scaledFont);
-                        //     }
-                        //     else DrawWord(curWord, pos, scaledFont);
-                        //     
-                        // }
-                        //
                     }
                     else
                     {
                         if (!lineBreakInProcess)
                         {
                             lineBreakInProcess = true;
-                            string completeWord = curWord;
+                            completeWord = curWord;
                             for (int j = i; j < text.Length; j++)
                             {
                                 var nextChar = text[j];
@@ -415,13 +391,19 @@ public class TextFont
                                 
                             }
                         }
-
-                        if (MouseEmphasis != null)
+    
+                        if (MouseDetection != null)
                         {
                             var mouseRect = new Rect(pos, new Size(curWordWidth, scaledFont.Size));
-                            if (mouseRect.ContainsPoint(MousePos))
+                            if (mouseRect.ContainsPoint(MouseDetection.GetMousePosition()))
                             {
-                                DrawWord(curWord, pos, curWordWidth, MouseEmphasis, scaledFont);
+                                var mouseEmphasis = MouseDetection.OnMouseEntered(curWord, completeWord, rect);
+                                if(mouseEmphasis != null) DrawWord(curWord, pos, curWordWidth, mouseEmphasis, scaledFont);
+                                else
+                                {
+                                    if (lineBreakEmphasis != null) DrawWord(curWord, pos, curWordWidth, lineBreakEmphasis, scaledFont);
+                                    else DrawWord(curWord, pos, scaledFont);
+                                }
                             }
                             else
                             {
@@ -434,35 +416,8 @@ public class TextFont
                             if (lineBreakEmphasis != null) DrawWord(curWord, pos, curWordWidth, lineBreakEmphasis, scaledFont);
                             else DrawWord(curWord, pos, scaledFont);
                         }
-                        // if (lineBreakEmphasis != null)
-                        // {
-                        //     if (MouseEmphasis != null)
-                        //     {
-                        //         var mouseRect = new Rect(pos, new Size(curWordWidth, scaledFont.Size));
-                        //         if (mouseRect.ContainsPoint(MousePos))
-                        //         {
-                        //             DrawWord(curWord, pos, curWordWidth, MouseEmphasis, scaledFont);
-                        //         }
-                        //         else DrawWord(curWord, pos, curWordWidth, lineBreakEmphasis, scaledFont);
-                        //     }
-                        //     else DrawWord(curWord, pos, curWordWidth, lineBreakEmphasis, scaledFont); 
-                        // }
-                        // else
-                        // {
-                        //     if (MouseEmphasis != null)
-                        //     {
-                        //         var wordSize = scaledFont.GetTextSize(curWord);
-                        //         var mouseRect = new Rect(pos, wordSize);
-                        //         if (mouseRect.ContainsPoint(MousePos))
-                        //         {
-                        //             DrawWord(curWord, pos, wordSize.Width, MouseEmphasis, scaledFont);
-                        //         }
-                        //         else DrawWord(curWord, pos, scaledFont);
-                        //     }
-                        //     else DrawWord(curWord, pos, scaledFont);
-                        // }
                     } 
-                        
+                    
                     
                     curWord = string.Empty;
                     if(c != ' ') curWord += c;
@@ -480,12 +435,18 @@ public class TextFont
                     if (lineBreakInProcess)
                     {
                         lineBreakInProcess = false;
-                        if (MouseEmphasis != null)
+                        if (MouseDetection != null)
                         {
                             var mouseRect = new Rect(pos, new Size(curWordWidth - glyphWidth, scaledFont.Size));
-                            if (mouseRect.ContainsPoint(MousePos))
+                            if (mouseRect.ContainsPoint(MouseDetection.GetMousePosition()))
                             {
-                                DrawWord(curWord, pos, curWordWidth - glyphWidth, MouseEmphasis, scaledFont);
+                                var mouseEmphasis = MouseDetection.OnMouseEntered(curWord, completeWord, rect);
+                                if(mouseEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, mouseEmphasis, scaledFont);
+                                else
+                                {
+                                    if (lineBreakEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, lineBreakEmphasis, scaledFont);
+                                    else DrawWord(curWord, pos, scaledFont);
+                                }
                             }
                             else
                             {
@@ -498,45 +459,23 @@ public class TextFont
                             if (lineBreakEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, lineBreakEmphasis, scaledFont);
                             else DrawWord(curWord, pos, scaledFont);
                         }
-                        // if (lineBreakEmphasis != null)
-                        // {
-                        //     if (MouseEmphasis != null)
-                        //     {
-                        //         var mouseRect = new Rect(pos, new Size(curWordWidth, scaledFont.Size));
-                        //         if (mouseRect.ContainsPoint(MousePos))
-                        //         {
-                        //             DrawWord(curWord, pos, curWordWidth, MouseEmphasis, scaledFont);
-                        //         }
-                        //         else DrawWord(curWord, pos, curWordWidth, lineBreakEmphasis, scaledFont);
-                        //     }
-                        //     else DrawWord(curWord, pos, curWordWidth, lineBreakEmphasis, scaledFont); 
-                        // }
-                        // else
-                        // {
-                        //     if (MouseEmphasis != null)
-                        //     {
-                        //         var wordSize = scaledFont.GetTextSize(curWord);
-                        //         var mouseRect = new Rect(pos, wordSize);
-                        //         if (mouseRect.ContainsPoint(MousePos))
-                        //         {
-                        //             DrawWord(curWord, pos, wordSize.Width, MouseEmphasis, scaledFont);
-                        //         }
-                        //         else DrawWord(curWord, pos, scaledFont);
-                        //     }
-                        //     else DrawWord(curWord, pos, scaledFont);
-                        // }
-                        //
                     }
                     else
                     {
                         var wordEmphasis = GetEmphasis(curWord, emphases);
                         
-                        if (MouseEmphasis != null)
+                        if (MouseDetection != null)
                         {
                             var mouseRect = new Rect(pos, new Size(curWordWidth - glyphWidth, scaledFont.Size));
-                            if (mouseRect.ContainsPoint(MousePos))
+                            if (mouseRect.ContainsPoint(MouseDetection.GetMousePosition()))
                             {
-                                DrawWord(curWord, pos, curWordWidth - glyphWidth, MouseEmphasis, scaledFont);
+                                var mouseEmphasis = MouseDetection.OnMouseEntered(curWord, curWord, rect);
+                                if(mouseEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, mouseEmphasis, scaledFont);
+                                else
+                                {
+                                    if (wordEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, wordEmphasis, scaledFont);
+                                    else DrawWord(curWord, pos, scaledFont);
+                                }
                             }
                             else
                             {
@@ -549,33 +488,6 @@ public class TextFont
                             if (wordEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, wordEmphasis, scaledFont);
                             else DrawWord(curWord, pos, scaledFont);
                         }
-                        // if (wordEmphasis != null)
-                        // {
-                        //     if (MouseEmphasis != null)
-                        //     {
-                        //         var mouseRect = new Rect(pos, new Size(curWordWidth, scaledFont.Size));
-                        //         if (mouseRect.ContainsPoint(MousePos))
-                        //         {
-                        //             DrawWord(curWord, pos, curWordWidth, MouseEmphasis, scaledFont);
-                        //         }
-                        //         else DrawWord(curWord, pos, curWordWidth, wordEmphasis, scaledFont);
-                        //     }
-                        //     else DrawWord(curWord, pos, curWordWidth, wordEmphasis, scaledFont); 
-                        // }
-                        // else
-                        // {
-                        //     if (MouseEmphasis != null)
-                        //     {
-                        //         var wordSize = scaledFont.GetTextSize(curWord);
-                        //         var mouseRect = new Rect(pos, wordSize);
-                        //         if (mouseRect.ContainsPoint(MousePos))
-                        //         {
-                        //             DrawWord(curWord, pos, wordSize.Width, MouseEmphasis, scaledFont);
-                        //         }
-                        //         else DrawWord(curWord, pos, scaledFont);
-                        //     }
-                        //     else DrawWord(curWord, pos, scaledFont);
-                        // }
                     }
             
                     curWord = string.Empty;
@@ -588,12 +500,18 @@ public class TextFont
             
             if (lineBreakInProcess)
             {
-                if (MouseEmphasis != null)
+                if (MouseDetection != null)
                 {
                     var mouseRect = new Rect(pos, new Size(curWordWidth, scaledFont.Size));
-                    if (mouseRect.ContainsPoint(MousePos))
+                    if (mouseRect.ContainsPoint(MouseDetection.GetMousePosition()))
                     {
-                        DrawWord(curWord, pos, curWordWidth, MouseEmphasis, scaledFont);
+                        var mouseEmphasis = MouseDetection.OnMouseEntered(curWord, completeWord, rect);
+                        if(mouseEmphasis != null) DrawWord(curWord, pos, curWordWidth, mouseEmphasis, scaledFont);
+                        else
+                        {
+                            if (lineBreakEmphasis != null) DrawWord(curWord, pos, curWordWidth, lineBreakEmphasis, scaledFont);
+                            else DrawWord(curWord, pos, scaledFont);
+                        }
                     }
                     else
                     {
@@ -606,43 +524,22 @@ public class TextFont
                     if (lineBreakEmphasis != null) DrawWord(curWord, pos, curWordWidth, lineBreakEmphasis, scaledFont);
                     else DrawWord(curWord, pos, scaledFont);
                 }
-                // if (lineBreakEmphasis != null)
-                // {
-                //     if (MouseEmphasis != null)
-                //     {
-                //         var mouseRect = new Rect(pos, new Size(curWordWidth, scaledFont.Size));
-                //         if (mouseRect.ContainsPoint(MousePos))
-                //         {
-                //             DrawWord(curWord, pos, curWordWidth, MouseEmphasis, scaledFont);
-                //         }
-                //         else DrawWord(curWord, pos, curWordWidth, lineBreakEmphasis, scaledFont);
-                //     }
-                //     else DrawWord(curWord, pos, curWordWidth, lineBreakEmphasis, scaledFont); 
-                // }
-                // else
-                // {
-                //     if (MouseEmphasis != null)
-                //     {
-                //         var wordSize = scaledFont.GetTextSize(curWord);
-                //         var mouseRect = new Rect(pos, wordSize);
-                //         if (mouseRect.ContainsPoint(MousePos))
-                //         {
-                //             DrawWord(curWord, pos, wordSize.Width, MouseEmphasis, scaledFont);
-                //         }
-                //         else DrawWord(curWord, pos, scaledFont);
-                //     }
-                //     else DrawWord(curWord, pos, scaledFont);
-                // }
             }
             else
             {
                 var wordEmphasis = GetEmphasis(curWord, emphases);
-                if (MouseEmphasis != null)
+                if (MouseDetection != null)
                 {
                     var mouseRect = new Rect(pos, new Size(curWordWidth, scaledFont.Size));
-                    if (mouseRect.ContainsPoint(MousePos))
+                    if (mouseRect.ContainsPoint(MouseDetection.GetMousePosition()))
                     {
-                        DrawWord(curWord, pos, curWordWidth, MouseEmphasis, scaledFont);
+                        var mouseEmphasis = MouseDetection.OnMouseEntered(curWord, curWord, rect);
+                        if(mouseEmphasis != null) DrawWord(curWord, pos, curWordWidth, mouseEmphasis, scaledFont);
+                        else
+                        {
+                            if (wordEmphasis != null) DrawWord(curWord, pos, curWordWidth, wordEmphasis, scaledFont);
+                            else DrawWord(curWord, pos, scaledFont);
+                        }
                     }
                     else
                     {
@@ -655,34 +552,6 @@ public class TextFont
                     if (wordEmphasis != null) DrawWord(curWord, pos, curWordWidth, wordEmphasis, scaledFont);
                     else DrawWord(curWord, pos, scaledFont);
                 }
-                // if (wordEmphasis != null)
-                // {
-                //     if (MouseEmphasis != null)
-                //     {
-                //         var mouseRect = new Rect(pos, new Size(curWordWidth, scaledFont.Size));
-                //         if (mouseRect.ContainsPoint(MousePos))
-                //         {
-                //             DrawWord(curWord, pos, curWordWidth, MouseEmphasis, scaledFont);
-                //         }
-                //         else DrawWord(curWord, pos, curWordWidth, wordEmphasis, scaledFont);
-                //     }
-                //     else DrawWord(curWord, pos, curWordWidth, wordEmphasis, scaledFont); 
-                // }
-                // else
-                // {
-                //     if (MouseEmphasis != null)
-                //     {
-                //         var wordSize = scaledFont.GetTextSize(curWord);
-                //         var mouseRect = new Rect(pos, wordSize);
-                //         if (mouseRect.ContainsPoint(MousePos))
-                //         {
-                //             DrawWord(curWord, pos, wordSize.Width, MouseEmphasis, scaledFont);
-                //         }
-                //         else DrawWord(curWord, pos, scaledFont);
-                //     }
-                //     else DrawWord(curWord, pos, scaledFont);
-                // }
-                //
             }
             
             
@@ -714,7 +583,7 @@ public class TextFont
         if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
         // var rectSize = rect.Size;
         var textSize = FontDimensions.GetTextBaseSize(text);
-
+    
         if (textSize.Width < rect.Size.Width)
         {
             DrawTextWrapNone(text, rect, alignement, caret, emphases);
@@ -771,15 +640,19 @@ public class TextFont
                 if (c == ' ')
                 {
                     var wordEmphasis = GetEmphasis(curWord, emphases);
-
-                    // if (wordEmphasis != null) scaledFont.DrawWord(curWord, pos, curWordWidth - glyphWidth, wordEmphasis);
-                    // else scaledFont.DrawWord(curWord, pos);
-                    if (MouseEmphasis != null)
+    
+                    if (MouseDetection != null)
                     {
                         var mouseRect = new Rect(pos, new Size(curWordWidth - glyphWidth, scaledFont.Size));
-                        if (mouseRect.ContainsPoint(MousePos))
+                        if (mouseRect.ContainsPoint(MouseDetection.GetMousePosition()))
                         {
-                            DrawWord(curWord, pos, curWordWidth - glyphWidth, MouseEmphasis, scaledFont);
+                            var mouseEmphasis = MouseDetection.OnMouseEntered(curWord, curWord, rect);
+                            if(mouseEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, mouseEmphasis, scaledFont);
+                            else
+                            {
+                                if (wordEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, wordEmphasis, scaledFont);
+                                else DrawWord(curWord, pos, scaledFont);
+                            }
                         }
                         else
                         {
@@ -810,16 +683,19 @@ public class TextFont
             
             //draw last word
             var lastWordEmphasis = GetEmphasis(curWord, emphases);
-
-            // if (lastWordEmphasis != null) scaledFont.DrawWord(curWord, pos, curWordWidth, lastWordEmphasis);
-            // else scaledFont.DrawWord(curWord, pos);
-            
-            if (MouseEmphasis != null)
+    
+            if (MouseDetection != null)
             {
                 var mouseRect = new Rect(pos, new Size(curWordWidth, scaledFont.Size));
-                if (mouseRect.ContainsPoint(MousePos))
+                if (mouseRect.ContainsPoint(MouseDetection.GetMousePosition()))
                 {
-                    DrawWord(curWord, pos, curWordWidth, MouseEmphasis, scaledFont);
+                    var mouseEmphasis = MouseDetection.OnMouseEntered(curWord, curWord, rect);
+                    if(mouseEmphasis != null) DrawWord(curWord, pos, curWordWidth, mouseEmphasis, scaledFont);
+                    else
+                    {
+                        if (lastWordEmphasis != null) DrawWord(curWord, pos, curWordWidth, lastWordEmphasis, scaledFont);
+                        else DrawWord(curWord, pos, scaledFont);
+                    }
                 }
                 else
                 {
@@ -853,8 +729,8 @@ public class TextFont
         }
     }
     
-    // private void DrawWord(string word, Vector2 topLeft, ColorRgba colorRgba) => Raylib.DrawTextEx(Font, word, topLeft, FontSize, FontSpacing, colorRgba.ToRayColor());
-    // private void DrawWord(string word, Vector2 topLeft, float width, Emphasis emphasis)
+    // protected void DrawWord(string word, Vector2 topLeft, ColorRgba colorRgba) => Raylib.DrawTextEx(Font, word, topLeft, FontSize, FontSpacing, colorRgba.ToRayColor());
+    // protected void DrawWord(string word, Vector2 topLeft, float width, Emphasis emphasis)
     // {
     //     Rect r = new(topLeft, new Size(width, FontSize), new());
     //
@@ -866,7 +742,7 @@ public class TextFont
     //     
     // }
     //
-    private void DrawWord(string word, Vector2 topLeft, float width, Emphasis emphasis, FontDimensions fontDimensions)
+    protected void DrawWord(string word, Vector2 topLeft, float width, Emphasis emphasis, FontDimensions fontDimensions)
     {
         Rect r = new(topLeft, new Size(width, fontDimensions.Size), new());
 
@@ -877,7 +753,7 @@ public class TextFont
         emphasis.DrawForeground(emphasisRect);
         
     }
-    private void DrawWord(string word, Vector2 topLeft, ColorRgba colorRgba, FontDimensions fontDimensions) => Raylib.DrawTextEx(fontDimensions.Font, word, topLeft, fontDimensions.Size, fontDimensions.Spacing, colorRgba.ToRayColor());
+    protected void DrawWord(string word, Vector2 topLeft, ColorRgba colorRgba, FontDimensions fontDimensions) => Raylib.DrawTextEx(fontDimensions.Font, word, topLeft, fontDimensions.Size, fontDimensions.Spacing, colorRgba.ToRayColor());
 
     #endregion
 
@@ -899,26 +775,501 @@ public class TextFont
 
         return null;
     }
-
-
-    #endregion
-    
-    #region MouseEntered
-
-    protected virtual void MouseHasEnteredWord(string word, Rect rect, Vector2 mousePos) { }
-    private void ResolveMouseHasEnteredWord(string word, Rect rect, Vector2 mousePos)
-    {
-        MouseHasEnteredWord(word, rect, mousePos);
-        OnMouseEnteredWord?.Invoke(word, rect, mousePos);
-    }
-
-
     #endregion
     
 }
 
 
- /*
+// public class TextFontWrapping : TextFont
+// {
+//     public TextFontWrapping(FontDimensions fontDimensions) : base(fontDimensions) { }
+//
+//     public TextFontWrapping(FontDimensions fontDimensions, ColorRgba colorRgba) : base(fontDimensions, colorRgba) { }
+//
+//     public TextFontWrapping(FontDimensions fontDimensions, ColorRgba colorRgba, IMouseDetection mouseDetection) : base(fontDimensions, colorRgba)
+//     {
+//         MouseDetection = mouseDetection;
+//     }
+//
+//     
+//     #region Members
+//     /// <summary>
+//     /// Is used on Wrap Char/Word draw functions. Is used to determine what happens with words that are entered by the mouse pointer.
+//     /// </summary>
+//     public IMouseDetection? MouseDetection = null;
+//     // public Vector2 MousePos = new();
+//     // public Emphasis? MouseEmphasis = null;
+//     #endregion
+//     
+//     #region Draw
+//     
+//     public void DrawTextWrapChar(string text, Rect rect, Vector2 alignement)
+//     {
+//         DrawTextWrapChar(text, rect, alignement, new(), null);
+//     }
+//     public void DrawTextWrapChar(string text, Rect rect, Vector2 alignement, Caret caret)
+//     {
+//         DrawTextWrapChar(text, rect, alignement, caret, null);
+//     }
+//     public void DrawTextWrapChar(string text, Rect rect, Vector2 alignement, Caret caret, List<TextEmphasis>? emphases)
+//     {
+//         if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
+//         // var rectSize = rect.Size;
+//         
+//         var textSize = FontDimensions.GetTextBaseSize(text);
+//
+//         if (textSize.Width < rect.Size.Width)//no wrapping needed
+//         {
+//             DrawTextWrapNone(text, rect, alignement, caret, emphases);
+//         }
+//         else
+//         {
+//             var scaledFont = FontDimensions.ScaleDynamicWrapMode(text, rect.Size, 1.25f);
+//             // var fontSpacing = FontSpacing;
+//             // var lineSpacing = LineSpacing;
+//             // var lines = (int)MathF.Ceiling((textSize.X * 1.25f) / rect.Size.X);
+//             // var textHeight = lines * textFont.BaseSize;
+//             // var lineSpacingHeight = lines <= 0 ? 0 : (lines - 1) * lineSpacing;
+//             // var height = textHeight + lineSpacingHeight;
+//             //
+//             // var textArea = rect.Size.X * height;
+//             // var sizeF = MathF.Sqrt(rect.Size.GetArea() / textArea);
+//             // float fontSize = FontSizeRange.Clamp(textFont.BaseSize * sizeF);
+//             // sizeF = fontSize / textFont.BaseSize;
+//             // lineSpacing *= sizeF;
+//             // fontSpacing *= sizeF;
+//             var sizeF = scaledFont.Size / BaseSize;
+//             var pos = rect.TopLeft;
+//             var curWord = string.Empty;
+//             var lineBreakInProcess = false;
+//             Emphasis? lineBreakEmphasis = null;
+//             var curWordWidth = 0f;
+//             var curLineWidth = 0f;
+//
+//             var caretTop = new Vector2();
+//             var caretFound = false;
+//             string completeWord = string.Empty;
+//             
+//             for (int i = 0; i < text.Length; i++)
+//             {
+//                 if (!caretFound && caret.IsValid && i == caret.Index)
+//                 {
+//                     caretFound = true;
+//                     caretTop = pos + new Vector2(curWordWidth + scaledFont.Spacing / 2, 0f);
+//                 }
+//                 
+//                 var c = text[i];
+//                 if (c == '\n') continue;
+//             
+//                 var charBaseSize = scaledFont.GetCharBaseSize(c);
+//                 float glyphWidth = charBaseSize.Width * sizeF;
+//             
+//                 if (curLineWidth + curWordWidth + glyphWidth >= rect.Size.Width && curLineWidth > 0)//break line
+//                 {
+//                     if (c == ' ') 
+//                     {
+//                         var emphasis = GetEmphasis(curWord, emphases);
+//
+//                         if (MouseDetection != null)
+//                         {
+//                             var mouseRect = new Rect(pos, new Size(curWordWidth, scaledFont.Size));
+//                             if (mouseRect.ContainsPoint(MouseDetection.GetMousePosition()))
+//                             {
+//                                 var mouseEmphasis = MouseDetection.OnMouseEntered(curWord, curWord, rect);
+//                                 if(mouseEmphasis != null) DrawWord(curWord, pos, curWordWidth, mouseEmphasis, scaledFont);
+//                                 else
+//                                 {
+//                                     if (emphasis != null) DrawWord(curWord, pos, curWordWidth, emphasis, scaledFont);
+//                                     else DrawWord(curWord, pos, scaledFont);
+//                                 }
+//                             }
+//                             else
+//                             {
+//                                 if (emphasis != null) DrawWord(curWord, pos, curWordWidth, emphasis, scaledFont);
+//                                 else DrawWord(curWord, pos, scaledFont);
+//                             }
+//                         }
+//                         else
+//                         {
+//                             if (emphasis != null) DrawWord(curWord, pos, curWordWidth, emphasis, scaledFont);
+//                             else DrawWord(curWord, pos, scaledFont);
+//                         }
+//                     }
+//                     else
+//                     {
+//                         if (!lineBreakInProcess)
+//                         {
+//                             lineBreakInProcess = true;
+//                             completeWord = curWord;
+//                             for (int j = i; j < text.Length; j++)
+//                             {
+//                                 var nextChar = text[j];
+//                                 if (j >= text.Length - 1)
+//                                 {
+//                                     if (nextChar != ' ') completeWord += nextChar;
+//                                     lineBreakEmphasis = GetEmphasis(completeWord, emphases);
+//                                 }
+//                                 else
+//                                 {
+//                                     if (nextChar == ' ')
+//                                     {
+//                                         lineBreakEmphasis = GetEmphasis(completeWord, emphases);
+//                                         break;
+//                                     }
+//                                     
+//                                     completeWord += nextChar;
+//                                 }
+//                                 
+//                             }
+//                         }
+//
+//                         if (MouseDetection != null)
+//                         {
+//                             var mouseRect = new Rect(pos, new Size(curWordWidth, scaledFont.Size));
+//                             if (mouseRect.ContainsPoint(MouseDetection.GetMousePosition()))
+//                             {
+//                                 var mouseEmphasis = MouseDetection.OnMouseEntered(curWord, completeWord, rect);
+//                                 if(mouseEmphasis != null) DrawWord(curWord, pos, curWordWidth, mouseEmphasis, scaledFont);
+//                                 else
+//                                 {
+//                                     if (lineBreakEmphasis != null) DrawWord(curWord, pos, curWordWidth, lineBreakEmphasis, scaledFont);
+//                                     else DrawWord(curWord, pos, scaledFont);
+//                                 }
+//                             }
+//                             else
+//                             {
+//                                 if (lineBreakEmphasis != null) DrawWord(curWord, pos, curWordWidth, lineBreakEmphasis, scaledFont);
+//                                 else DrawWord(curWord, pos, scaledFont);
+//                             }
+//                         }
+//                         else
+//                         {
+//                             if (lineBreakEmphasis != null) DrawWord(curWord, pos, curWordWidth, lineBreakEmphasis, scaledFont);
+//                             else DrawWord(curWord, pos, scaledFont);
+//                         }
+//                     } 
+//                     
+//                     
+//                     curWord = string.Empty;
+//                     if(c != ' ') curWord += c;
+//                     pos.Y += scaledFont.Size + scaledFont.LineSpacing;
+//                     pos.X = rect.TopLeft.X;
+//                     curLineWidth = 0f;
+//                     curWordWidth = glyphWidth;// 0f;
+//                     
+//                     continue;
+//                 }
+//             
+//                 curWordWidth += glyphWidth + scaledFont.Spacing;
+//                 if (c == ' ')
+//                 {
+//                     if (lineBreakInProcess)
+//                     {
+//                         lineBreakInProcess = false;
+//                         if (MouseDetection != null)
+//                         {
+//                             var mouseRect = new Rect(pos, new Size(curWordWidth - glyphWidth, scaledFont.Size));
+//                             if (mouseRect.ContainsPoint(MouseDetection.GetMousePosition()))
+//                             {
+//                                 var mouseEmphasis = MouseDetection.OnMouseEntered(curWord, completeWord, rect);
+//                                 if(mouseEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, mouseEmphasis, scaledFont);
+//                                 else
+//                                 {
+//                                     if (lineBreakEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, lineBreakEmphasis, scaledFont);
+//                                     else DrawWord(curWord, pos, scaledFont);
+//                                 }
+//                             }
+//                             else
+//                             {
+//                                 if (lineBreakEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, lineBreakEmphasis, scaledFont);
+//                                 else DrawWord(curWord, pos, scaledFont);
+//                             }
+//                         }
+//                         else
+//                         {
+//                             if (lineBreakEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, lineBreakEmphasis, scaledFont);
+//                             else DrawWord(curWord, pos, scaledFont);
+//                         }
+//                     }
+//                     else
+//                     {
+//                         var wordEmphasis = GetEmphasis(curWord, emphases);
+//                         
+//                         if (MouseDetection != null)
+//                         {
+//                             var mouseRect = new Rect(pos, new Size(curWordWidth - glyphWidth, scaledFont.Size));
+//                             if (mouseRect.ContainsPoint(MouseDetection.GetMousePosition()))
+//                             {
+//                                 var mouseEmphasis = MouseDetection.OnMouseEntered(curWord, curWord, rect);
+//                                 if(mouseEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, mouseEmphasis, scaledFont);
+//                                 else
+//                                 {
+//                                     if (wordEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, wordEmphasis, scaledFont);
+//                                     else DrawWord(curWord, pos, scaledFont);
+//                                 }
+//                             }
+//                             else
+//                             {
+//                                 if (wordEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, wordEmphasis, scaledFont);
+//                                 else DrawWord(curWord, pos, scaledFont);
+//                             }
+//                         }
+//                         else
+//                         {
+//                             if (wordEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, wordEmphasis, scaledFont);
+//                             else DrawWord(curWord, pos, scaledFont);
+//                         }
+//                     }
+//             
+//                     curWord = string.Empty;
+//                     curLineWidth += curWordWidth;
+//                     pos.X = rect.TopLeft.X + curLineWidth;
+//                     curWordWidth = 0f;
+//                 }
+//                 else curWord += c;
+//             }
+//             
+//             if (lineBreakInProcess)
+//             {
+//                 if (MouseDetection != null)
+//                 {
+//                     var mouseRect = new Rect(pos, new Size(curWordWidth, scaledFont.Size));
+//                     if (mouseRect.ContainsPoint(MouseDetection.GetMousePosition()))
+//                     {
+//                         var mouseEmphasis = MouseDetection.OnMouseEntered(curWord, completeWord, rect);
+//                         if(mouseEmphasis != null) DrawWord(curWord, pos, curWordWidth, mouseEmphasis, scaledFont);
+//                         else
+//                         {
+//                             if (lineBreakEmphasis != null) DrawWord(curWord, pos, curWordWidth, lineBreakEmphasis, scaledFont);
+//                             else DrawWord(curWord, pos, scaledFont);
+//                         }
+//                     }
+//                     else
+//                     {
+//                         if (lineBreakEmphasis != null) DrawWord(curWord, pos, curWordWidth, lineBreakEmphasis, scaledFont);
+//                         else DrawWord(curWord, pos, scaledFont);
+//                     }
+//                 }
+//                 else
+//                 {
+//                     if (lineBreakEmphasis != null) DrawWord(curWord, pos, curWordWidth, lineBreakEmphasis, scaledFont);
+//                     else DrawWord(curWord, pos, scaledFont);
+//                 }
+//             }
+//             else
+//             {
+//                 var wordEmphasis = GetEmphasis(curWord, emphases);
+//                 if (MouseDetection != null)
+//                 {
+//                     var mouseRect = new Rect(pos, new Size(curWordWidth, scaledFont.Size));
+//                     if (mouseRect.ContainsPoint(MouseDetection.GetMousePosition()))
+//                     {
+//                         var mouseEmphasis = MouseDetection.OnMouseEntered(curWord, curWord, rect);
+//                         if(mouseEmphasis != null) DrawWord(curWord, pos, curWordWidth, mouseEmphasis, scaledFont);
+//                         else
+//                         {
+//                             if (wordEmphasis != null) DrawWord(curWord, pos, curWordWidth, wordEmphasis, scaledFont);
+//                             else DrawWord(curWord, pos, scaledFont);
+//                         }
+//                     }
+//                     else
+//                     {
+//                         if (wordEmphasis != null) DrawWord(curWord, pos, curWordWidth, wordEmphasis, scaledFont);
+//                         else DrawWord(curWord, pos, scaledFont);
+//                     }
+//                 }
+//                 else
+//                 {
+//                     if (wordEmphasis != null) DrawWord(curWord, pos, curWordWidth, wordEmphasis, scaledFont);
+//                     else DrawWord(curWord, pos, scaledFont);
+//                 }
+//             }
+//             
+//             
+//             if (caretFound)
+//             {
+//                 caret.Draw(caretTop, scaledFont.Size);
+//             }
+//             else
+//             {
+//                 if (caret.IsValid)
+//                 {
+//                     var topLeft = pos + new Vector2(curWordWidth + scaledFont.Spacing / 2, 0f);
+//                     caret.Draw(topLeft, scaledFont.Size);
+//                 }
+//             }
+//         }
+//     }
+//     
+//     public void DrawTextWrapWord(string text, Rect rect, Vector2 alignement)
+//     {
+//         DrawTextWrapWord(text, rect, alignement, new(), null);
+//     }
+//     public void DrawTextWrapWord(string text, Rect rect, Vector2 alignement, Caret caret)
+//     {
+//         DrawTextWrapWord(text, rect, alignement, new(), null);
+//     }
+//     public void DrawTextWrapWord(string text, Rect rect, Vector2 alignement, Caret caret, List<TextEmphasis>? emphases)
+//     {
+//         if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
+//         // var rectSize = rect.Size;
+//         var textSize = FontDimensions.GetTextBaseSize(text);
+//
+//         if (textSize.Width < rect.Size.Width)
+//         {
+//             DrawTextWrapNone(text, rect, alignement, caret, emphases);
+//         }
+//         else
+//         {
+//             // var fontSpacing = textFont.FontSpacing;
+//             // var lineSpacing = textFont.LineSpacing;
+//             // var lines = (int)MathF.Ceiling((textSize.X * 1.5f) / rect.Size.X);
+//             // var textHeight = lines * textFont.BaseSize;
+//             // var lineSpacingHeight = lines <= 0 ? 0 : (lines - 1) * lineSpacing;
+//             // var height = textHeight + lineSpacingHeight;
+//             //
+//             // var textArea = rect.Size.X * height;
+//             // var sizeF = MathF.Sqrt(rect.Size.GetArea() / textArea);
+//             // float fontSize = FontSizeRange.Clamp(textFont.BaseSize * sizeF);
+//             // sizeF = fontSize / textFont.BaseSize;
+//             // lineSpacing *= sizeF;
+//             // fontSpacing *= sizeF;
+//             var scaledFont = FontDimensions.ScaleDynamicWrapMode(text, rect.Size, 1.5f);
+//             var sizeF = scaledFont.Size / BaseSize;
+//             var pos = rect.TopLeft;
+//         
+//             var curWord = string.Empty;
+//             var curWordWidth = 0f;
+//             var curLineWidth = 0f;
+//             
+//             var caretTop = new Vector2();
+//             var caretFound = false;
+//             var caretWordOffset = -1f;
+//             
+//             for (int i = 0; i < text.Length; i++)
+//             {
+//                 var c = text[i];
+//                 if (c == '\n') continue;
+//             
+//                 var charBaseSize = scaledFont.GetCharBaseSize(c);
+//                 float glyphWidth = charBaseSize.Width * sizeF;
+//                 
+//                 if (curLineWidth + curWordWidth + glyphWidth >= rect.Width && curLineWidth > 0)//break line
+//                 {
+//                     // if (curLineWidth <= 0) return;
+//                     pos.Y += scaledFont.Size + scaledFont.LineSpacing;
+//                     pos.X = rect.TopLeft.X;
+//                     curLineWidth = 0f;
+//                 }
+//             
+//                 curWordWidth += glyphWidth + scaledFont.Spacing;
+//                 
+//                 if (i == caret.Index - 1 && caret.IsValid)
+//                 {
+//                     caretWordOffset = curWordWidth;
+//                 }
+//                 if (c == ' ')
+//                 {
+//                     var wordEmphasis = GetEmphasis(curWord, emphases);
+//
+//                     if (MouseDetection != null)
+//                     {
+//                         var mouseRect = new Rect(pos, new Size(curWordWidth - glyphWidth, scaledFont.Size));
+//                         if (mouseRect.ContainsPoint(MouseDetection.GetMousePosition()))
+//                         {
+//                             var mouseEmphasis = MouseDetection.OnMouseEntered(curWord, curWord, rect);
+//                             if(mouseEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, mouseEmphasis, scaledFont);
+//                             else
+//                             {
+//                                 if (wordEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, wordEmphasis, scaledFont);
+//                                 else DrawWord(curWord, pos, scaledFont);
+//                             }
+//                         }
+//                         else
+//                         {
+//                             if (wordEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, wordEmphasis, scaledFont);
+//                             else DrawWord(curWord, pos, scaledFont);
+//                         }
+//                     }
+//                     else
+//                     {
+//                         if (wordEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, wordEmphasis, scaledFont);
+//                         else DrawWord(curWord, pos, scaledFont);
+//                     }
+//             
+//                     if (caretWordOffset >= 0)
+//                     {
+//                         caretFound = true;
+//                         caretTop = pos + new Vector2(caretWordOffset + scaledFont.Spacing / 2, 0f);
+//                         caretWordOffset = -1;
+//                     }
+//                     
+//                     curWord = string.Empty;
+//                     curLineWidth += curWordWidth;
+//                     pos.X = rect.TopLeft.X + curLineWidth; // curWordWidth;
+//                     curWordWidth = 0f;
+//                 }
+//                 else  curWord += c;
+//             }
+//             
+//             //draw last word
+//             var lastWordEmphasis = GetEmphasis(curWord, emphases);
+//
+//             if (MouseDetection != null)
+//             {
+//                 var mouseRect = new Rect(pos, new Size(curWordWidth, scaledFont.Size));
+//                 if (mouseRect.ContainsPoint(MouseDetection.GetMousePosition()))
+//                 {
+//                     var mouseEmphasis = MouseDetection.OnMouseEntered(curWord, curWord, rect);
+//                     if(mouseEmphasis != null) DrawWord(curWord, pos, curWordWidth, mouseEmphasis, scaledFont);
+//                     else
+//                     {
+//                         if (lastWordEmphasis != null) DrawWord(curWord, pos, curWordWidth, lastWordEmphasis, scaledFont);
+//                         else DrawWord(curWord, pos, scaledFont);
+//                     }
+//                 }
+//                 else
+//                 {
+//                     if (lastWordEmphasis != null) DrawWord(curWord, pos, curWordWidth, lastWordEmphasis, scaledFont);
+//                     else DrawWord(curWord, pos, scaledFont);
+//                 }
+//             }
+//             else
+//             {
+//                 if (lastWordEmphasis != null) DrawWord(curWord, pos, curWordWidth, lastWordEmphasis, scaledFont);
+//                 else DrawWord(curWord, pos, scaledFont);
+//             }
+//             
+//             
+//             if (caretFound)
+//             {
+//                 caret.Draw(caretTop, scaledFont.Size);
+//             }
+//             else if (caretWordOffset >= 0)
+//             {
+//                 caretTop = pos + new Vector2(caretWordOffset + scaledFont.Spacing / 2, 0f);
+//                 caret.Draw(caretTop, scaledFont.Size);
+//             }
+//             else
+//             {
+//                 if (caret.IsValid)
+//                 {
+//                     caret.Draw(rect.TopLeft, scaledFont.Size);
+//                 }
+//             }
+//         }
+//     }
+//     #endregion
+//
+//     #region Public
+//
+//     public new TextFontWrapping Clone() => MouseDetection != null ? new(FontDimensions, ColorRgba, MouseDetection) : new(FontDimensions, ColorRgba);
+//
+//     #endregion
+//
+// }
+
+/*
     #region Size
 
     // public TextFont ScaleDynamic(string text)
