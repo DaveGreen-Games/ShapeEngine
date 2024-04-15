@@ -110,9 +110,11 @@ namespace Examples.Scenes.ExampleScenes
             var emphasis2 = new Emphasis(new ED_Block(), new(Color.CornflowerBlue), new(Color.Black));
             var emphasis3 = new Emphasis(new ED_Transparent(), new(Color.Black), new(Color.Goldenrod));
             var emphasis4 = new Emphasis(new ED_Transparent(), new(Color.Black), new(Color.ForestGreen));
-            var textEmphasis1 = new TextEmphasis(emphasis1, "(rupture)|(bleed)|(Rupture)|(Bleed)|[\" _ :]");
-            var textEmphasis2 = new TextEmphasis(emphasis2, "(increased)|(added)");
-            var textEmphasis3 = new TextEmphasis(emphasis3, "(\\d)|(sec)|(seconds)");
+            // var textEmphasis1 = new TextEmphasis(emphasis1, "(rupture)|(bleed)|(Rupture)|(Bleed)|[\" _ :]");
+            var textEmphasis1 = new TextEmphasis(emphasis1, ShapeRegex.MatchWords("rupture", "Rupture", "bleed", "Bleed","\"", "_", ":"));
+            var textEmphasis2 = new TextEmphasis(emphasis2, ShapeRegex.MatchWords("increased", "added"));
+            var textEmphasis3 = new TextEmphasis(emphasis3, ShapeRegex.Combine(ShapeRegex.MatchAnyDigit(), ShapeRegex.MatchWords("sec", "seconds")));
+            // var textEmphasis3 = new TextEmphasis(emphasis3, "(\\d)|(sec)|(seconds)");
             var textEmphasis4 = new TextEmphasis(emphasis4, "[A-Z]+$");
             textEmphasisBox.Emphases.Add(textEmphasis1);
             textEmphasisBox.Emphases.Add(textEmphasis2);
@@ -126,6 +128,8 @@ namespace Examples.Scenes.ExampleScenes
             // TextBlock.FontSizeModifier = 2f;
 
         }
+
+        
 
         protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
