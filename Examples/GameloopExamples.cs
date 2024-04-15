@@ -124,6 +124,8 @@ namespace Examples
         }
     }
     
+    
+    
     public class RectContainerMain : RectContainer
     {
         public RectContainerMain(string name) : base(name)
@@ -196,6 +198,7 @@ namespace Examples
         }
     }
 
+    
 
     public class GameloopExamples : Game
     {
@@ -211,6 +214,8 @@ namespace Examples
         public ShapeGamepadDevice? CurGamepad = null;
 
         public RectContainerMain UIRects = new("main");
+
+        public RectNode Main;
 
 
         public readonly uint UIAccessTag = InputAction.NextTag; // BitFlag.GetFlagUint(2);
@@ -269,6 +274,58 @@ namespace Examples
                 WindowSettings.Default
             )
         {
+            
+            Main = new("main");
+            var mainTop = new RectNode(new Vector2(0.5f, 0f), new Vector2(1f, 0.1f), "top");
+            var mainCenter = new RectNode(new Vector2(0.5f, 0.5f), new Vector2(1f, 0.8f), "center");
+            var mainBottom = new RectNode(new Vector2(0.5f, 1f), new Vector2(1f, 0.1f), "bottom");
+            Main.AddChild(mainTop);
+            Main.AddChild(mainCenter);
+            Main.AddChild(mainBottom);
+            
+            var mainTopLeft = new RectNode(new Vector2(0f, 0.5f), new Vector2(0.25f, 1f), "left");
+            var mainTopCenter = new RectNode(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 1f), "center");
+            var mainTopRight = new RectNode(new Vector2(1f, 0.5f), new Vector2(0.25f, 1f), "right");
+            mainTop.AddChild(mainTopLeft);
+            mainTop.AddChild(mainTopCenter);
+            mainTop.AddChild(mainTopRight);
+            
+            var mainCenterLeft = new RectNode(new Vector2(0f, 0.5f), new Vector2(0.25f, 1f), "left");
+            var mainCenterCenter = new RectNode(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 1f), "center");
+            var mainCenterRight = new RectNode(new Vector2(1f, 0.5f), new Vector2(0.25f, 1f), "right");
+            mainCenter.AddChild(mainCenterLeft);
+            mainCenter.AddChild(mainCenterCenter);
+            mainCenter.AddChild(mainCenterRight);
+            
+            var mainBottomLeft = new RectNode(new Vector2(0f, 0.5f), new Vector2(0.25f, 1f), "left");
+            var mainBottomCenter = new RectNode(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 1f), "center");
+            var mainBottomRight = new RectNode(new Vector2(1f, 0.5f), new Vector2(0.25f, 1f), "right");
+            mainBottom.AddChild(mainBottomLeft);
+            mainBottom.AddChild(mainBottomCenter);
+            mainBottom.AddChild(mainBottomRight);
+            
+            var mainTopLeftTop = new RectNode(new Vector2(0.5f, 0f), new Vector2(1f, 0.5f), "top");
+            var mainTopLeftBottom = new RectNode(new Vector2(0.5f, 1f), new Vector2(1f, 0.5f), "bottom");
+            mainTopLeft.AddChild(mainTopLeftTop);
+            mainTopLeft.AddChild(mainTopLeftBottom);
+            
+            var mainTopRightTop = new RectNode(new Vector2(0.5f, 0f), new Vector2(1f, 0.5f), "top");
+            var mainTopRightBottom = new RectNode(new Vector2(0.5f, 1f), new Vector2(1f, 0.5f), "bottom");
+            mainTopRight.AddChild(mainTopRightTop);
+            mainTopRight.AddChild(mainTopRightBottom);
+            
+            var mainBottomLeftTop = new RectNode(new Vector2(0.5f, 0f), new Vector2(1f, 0.5f), "top");
+            var mainBottomLeftBottom = new RectNode(new Vector2(0.5f, 1f), new Vector2(1f, 0.5f), "bottom");
+            mainBottomLeft.AddChild(mainBottomLeftTop);
+            mainBottomLeft.AddChild(mainBottomLeftBottom);
+            
+            var mainBottomRightTop = new RectNode(new Vector2(0.5f, 0f), new Vector2(1f, 0.5f), "top");
+            var mainBottomRightBottom = new RectNode(new Vector2(0.5f, 1f), new Vector2(1f, 0.5f), "bottom");
+            mainBottomRight.AddChild(mainBottomRightTop);
+            mainBottomRight.AddChild(mainBottomRightBottom);
+
+            
+
         }
 
         protected override void LoadContent()

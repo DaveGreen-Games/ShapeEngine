@@ -39,6 +39,77 @@ public class RectNode
     
     #endregion
 
+    #region Constructor
+    public RectNode() { }
+    public RectNode(string name)
+    {
+        Name = name;
+    }
+    public RectNode(Vector2 anchor, Vector2 stretch)
+    {
+        Anchor = anchor;
+        Stretch = stretch;
+    }
+    public RectNode(Vector2 anchor, Vector2 stretch, string name)
+    {
+        Anchor = anchor;
+        Stretch = stretch;
+        Name = name;
+    }
+    public RectNode(Vector2 anchor, Vector2 stretch, MouseFilter mouseFilter)
+    {
+        Anchor = anchor;
+        Stretch = stretch;
+        this.mouseFilter = mouseFilter;
+    }
+    public RectNode(Vector2 anchor, Vector2 stretch, Rect.Margins margins, MouseFilter mouseFilter)
+    {
+        Anchor = anchor;
+        Stretch = stretch;
+        this.mouseFilter = mouseFilter;
+        Margins = margins;
+    }
+    public RectNode(Vector2 anchor, Vector2 stretch, Rect.Margins margins, MouseFilter mouseFilter, string name)
+    {
+        Anchor = anchor;
+        Stretch = stretch;
+        this.mouseFilter = mouseFilter;
+        Margins = margins;
+        Name = name;
+    }
+    public RectNode(Vector2 anchor, Vector2 stretch, MouseFilter mouseFilter, string name)
+    {
+        Anchor = anchor;
+        Stretch = stretch;
+        this.mouseFilter = mouseFilter;
+        Name = name;
+    }
+    public RectNode(Vector2 anchor, Vector2 stretch, Rect.Margins margins)
+    {
+        Anchor = anchor;
+        Stretch = stretch;
+        Margins = margins;
+    }
+    public RectNode(Vector2 anchor, Vector2 stretch, Rect.Margins margins, string name)
+    {
+        Anchor = anchor;
+        Stretch = stretch;
+        Margins = margins;
+        Name = name;
+    }
+    public RectNode(Vector2 anchor, Vector2 stretch, Rect.Margins margins, Size minSize, Size maxSize, MouseFilter mouseFilter, string name)
+    {
+        Anchor = anchor;
+        Stretch = stretch;
+        Margins = margins;
+        Name = name;
+        MinSize = minSize;
+        MaxSize = maxSize;
+        this.mouseFilter = mouseFilter;
+
+    }
+    #endregion
+    
     #region Private Members
     private RectNode? parent = null;
     private readonly List<RectNode> children = new();
@@ -57,7 +128,7 @@ public class RectNode
     public Size MinSize = new(0f);
     public Size MaxSize = new(0f);
     public Rect.Margins Margins = new();
-    
+    public string Name = string.Empty;
     public MouseFilter MouseFilter
     {
         get => mouseFilter;
@@ -166,6 +237,40 @@ public class RectNode
 
         return result.Count - count;
     }
+
+    private RectNode? FindChild(string name)
+    {
+        if (children.Count <= 0) return null;
+        foreach (var child in children)
+        {
+            if (child.Name != string.Empty && child.Name == name) return child;
+        }
+        return null;
+    }
+    
+    public RectNode? GetChild(string path, char separator = ' ')
+    {
+        if (path.Length <= 0) return null;
+        if (path == Name) return this;
+        var names = path.Split(separator);
+        return GetChild(names);
+    }
+    public RectNode? GetChild(params string[] path)
+    {
+        if (path.Length <= 0) return null;
+        
+        var curChild = this;
+        for (var i = 0; i < path.Length; i++)
+        {
+            string name = path[i];
+            if (name == "") return curChild;
+            var next = curChild.FindChild(name);
+            if (next != null) curChild = next;
+        }
+
+        return curChild;
+    }
+    
     
     #endregion
     
