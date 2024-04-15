@@ -86,6 +86,8 @@ namespace Examples.Scenes.ExampleScenes
             textEmphasisBox.Emphases.Add(textEmphasis2);
             textEmphasisBox.Emphases.Add(textEmphasis3);
             textEmphasisBox.Emphases.Add(textEmphasis4);
+            textEmphasisBox.TextFont.MouseEmphasis = new Emphasis(new ED_Block(), new (System.Drawing.Color.Aquamarine),
+                new (System.Drawing.Color.Black));
 
             TextFont.EmphasisRectMargins = new(0.05f, 0f, 0.05f, 0f);
             // TextBlock.FontSizeModifier = 2f;
@@ -121,7 +123,7 @@ namespace Examples.Scenes.ExampleScenes
         protected override void DrawText(Rect rect)
         {
             var text = TextInputBox.Text;
-            textEmphasisBox.Draw(text, rect, new(0), wrapModeChar ? TextWrapType.Char : TextWrapType.Word);
+            textEmphasisBox.Draw(text, rect, new(0), GAMELOOP.UIScreenInfo.MousePos, wrapModeChar ? TextWrapType.Char : TextWrapType.Word);
             // if (autoSize)
             // {
             //     if (wrapModeChar)
@@ -150,7 +152,7 @@ namespace Examples.Scenes.ExampleScenes
         protected override void DrawTextEntry(Rect rect)
         {
             var text = TextInputBox.Text;
-            textEmphasisBox.Draw(text, rect, new(0.5f, 0.5f), wrapModeChar ? TextWrapType.Char : TextWrapType.Word);
+            textEmphasisBox.Draw(text, rect, new(0.5f, 0.5f),GAMELOOP.UIScreenInfo.MousePos, wrapModeChar ? TextWrapType.Char : TextWrapType.Word);
             // if (autoSize)
             // {
             //     if (wrapModeChar)
