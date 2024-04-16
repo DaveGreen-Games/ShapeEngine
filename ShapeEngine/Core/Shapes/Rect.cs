@@ -20,8 +20,25 @@ public readonly struct Rect : IEquatable<Rect>
 
         public Margins()
         {
+            this.Top = 0f;
+            this.Right = 0f;
+            this.Bottom = 0f;
+            this.Left = 0f;
         }
-
+        public Margins(float margin)
+        {
+            this.Top = margin;
+            this.Right = margin;
+            this.Bottom = margin;
+            this.Left = margin;
+        }
+        public Margins(float horizontal, float vertical)
+        {
+            this.Top = vertical;
+            this.Right = horizontal;
+            this.Bottom = vertical;
+            this.Left = horizontal;
+        }
         public Margins(float top, float right, float bottom, float left)
         {
             this.Top = top;

@@ -12,6 +12,7 @@ using ShapeEngine.Screen;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
 using ShapeEngine.UI;
+using Color = System.Drawing.Color;
 
 
 namespace Examples
@@ -126,77 +127,77 @@ namespace Examples
     
     
     
-    public class RectContainerMain : RectContainer
-    {
-        public RectContainerMain(string name) : base(name)
-        {
-            var top = new RectContainerH("top", 0.01f, 0.9f);
-               
-                var topLeft = new RectContainerV("left", 0.01f, 0.8f);
-                    var topLeftTop = new RectContainerH("top", 0f, 0.5f);
-                    var topLeftBottom = new RectContainerH("bottom", 0.5f, 0f);
-                    topLeft.AddChild(topLeftTop);
-                    topLeft.AddChild(topLeftBottom);
-                
-                var topCenter = new RectContainerV("center", 0.2f, 0.2f);
-                
-                var topRight = new RectContainerV("right", 0.8f, 0.01f);
-                    var topRightTop = new RectContainerH("top", 0f, 0.5f);
-                    var topRightBottom = new RectContainerH("bottom", 0.5f, 0f);
-                    topRight.AddChild(topRightTop);
-                    topRight.AddChild(topRightBottom);
-                
-                top.AddChild(topLeft);
-                top.AddChild(topCenter);
-                top.AddChild(topRight);
-            
-            var center = new RectContainerH("center", 0.1f, 0.1f);
-                var centerLeft = new RectContainerV("left", 0.01f, 0.5f);
-                var centerRight = new RectContainerV("right", 0.5f, 0.01f);
-                center.AddChild(centerLeft);
-                center.AddChild(centerRight);
-            
-            var bottom = new RectContainerH("bottom", 0.9f, 0.01f);
-                var bottomLeft = new RectContainerV("left", 0.01f, 0.85f);
-                var bottomCenter = new RectContainerV("center", 0.2f, 0.2f);
-                var bottomRight = new RectContainerV("right", 0.85f, 0.01f);
-                bottom.AddChild(bottomLeft);
-                bottom.AddChild(bottomCenter);
-                bottom.AddChild(bottomRight);
-            
-            AddChild(top);
-            AddChild(center);
-            AddChild(bottom);
-        }
-    }
-    public class RectContainerH : RectContainer
-    {
-        public float TopFactor;
-        public float BottomFactor;
-        public RectContainerH(string name, float topFactor, float bottomFactor) : base(name)
-        {
-            TopFactor = topFactor;
-            BottomFactor = bottomFactor;
-        }
-        protected override Rect OnRectUpdateRequested(Rect newRect)
-        {
-            return newRect.ApplyMargins(0.01f, 0.01f, TopFactor, BottomFactor);
-        }
-    }
-    public class RectContainerV : RectContainer
-    {
-        public float LeftFactor;
-        public float RightFactor;
-        public RectContainerV(string name, float leftFactor, float rightFactor) : base(name)
-        {
-            LeftFactor = leftFactor;
-            RightFactor = rightFactor;
-        }
-        protected override Rect OnRectUpdateRequested(Rect newRect)
-        {
-            return newRect.ApplyMargins(LeftFactor, RightFactor, 0.01f, 0.01f);
-        }
-    }
+    // public class RectContainerMain : RectContainer
+    // {
+    //     public RectContainerMain(string name) : base(name)
+    //     {
+    //         var top = new RectContainerH("top", 0.01f, 0.9f);
+    //            
+    //             var topLeft = new RectContainerV("left", 0.01f, 0.8f);
+    //                 var topLeftTop = new RectContainerH("top", 0f, 0.5f);
+    //                 var topLeftBottom = new RectContainerH("bottom", 0.5f, 0f);
+    //                 topLeft.AddChild(topLeftTop);
+    //                 topLeft.AddChild(topLeftBottom);
+    //             
+    //             var topCenter = new RectContainerV("center", 0.2f, 0.2f);
+    //             
+    //             var topRight = new RectContainerV("right", 0.8f, 0.01f);
+    //                 var topRightTop = new RectContainerH("top", 0f, 0.5f);
+    //                 var topRightBottom = new RectContainerH("bottom", 0.5f, 0f);
+    //                 topRight.AddChild(topRightTop);
+    //                 topRight.AddChild(topRightBottom);
+    //             
+    //             top.AddChild(topLeft);
+    //             top.AddChild(topCenter);
+    //             top.AddChild(topRight);
+    //         
+    //         var center = new RectContainerH("center", 0.1f, 0.1f);
+    //             var centerLeft = new RectContainerV("left", 0.01f, 0.5f);
+    //             var centerRight = new RectContainerV("right", 0.5f, 0.01f);
+    //             center.AddChild(centerLeft);
+    //             center.AddChild(centerRight);
+    //         
+    //         var bottom = new RectContainerH("bottom", 0.9f, 0.01f);
+    //             var bottomLeft = new RectContainerV("left", 0.01f, 0.85f);
+    //             var bottomCenter = new RectContainerV("center", 0.2f, 0.2f);
+    //             var bottomRight = new RectContainerV("right", 0.85f, 0.01f);
+    //             bottom.AddChild(bottomLeft);
+    //             bottom.AddChild(bottomCenter);
+    //             bottom.AddChild(bottomRight);
+    //         
+    //         AddChild(top);
+    //         AddChild(center);
+    //         AddChild(bottom);
+    //     }
+    // }
+    // public class RectContainerH : RectContainer
+    // {
+    //     public float TopFactor;
+    //     public float BottomFactor;
+    //     public RectContainerH(string name, float topFactor, float bottomFactor) : base(name)
+    //     {
+    //         TopFactor = topFactor;
+    //         BottomFactor = bottomFactor;
+    //     }
+    //     protected override Rect OnRectUpdateRequested(Rect newRect)
+    //     {
+    //         return newRect.ApplyMargins(0.01f, 0.01f, TopFactor, BottomFactor);
+    //     }
+    // }
+    // public class RectContainerV : RectContainer
+    // {
+    //     public float LeftFactor;
+    //     public float RightFactor;
+    //     public RectContainerV(string name, float leftFactor, float rightFactor) : base(name)
+    //     {
+    //         LeftFactor = leftFactor;
+    //         RightFactor = rightFactor;
+    //     }
+    //     protected override Rect OnRectUpdateRequested(Rect newRect)
+    //     {
+    //         return newRect.ApplyMargins(LeftFactor, RightFactor, 0.01f, 0.01f);
+    //     }
+    // }
 
     
 
@@ -213,9 +214,9 @@ namespace Examples
         
         public ShapeGamepadDevice? CurGamepad = null;
 
-        public RectContainerMain UIRects = new("main");
+        // public RectContainerMain UIRects = new("main");
 
-        public RectNode Main;
+        public RectNode UIRects;
 
 
         public readonly uint UIAccessTag = InputAction.NextTag; // BitFlag.GetFlagUint(2);
@@ -274,32 +275,33 @@ namespace Examples
                 WindowSettings.Default
             )
         {
-            
-            Main = new("main");
+
+            UIRects = new(new Vector2(0.5f, 0.5f), new Vector2(1f, 1f), new Rect.Margins(0.015f), "main");
             var mainTop = new RectNode(new Vector2(0.5f, 0f), new Vector2(1f, 0.1f), "top");
             var mainCenter = new RectNode(new Vector2(0.5f, 0.5f), new Vector2(1f, 0.8f), "center");
             var mainBottom = new RectNode(new Vector2(0.5f, 1f), new Vector2(1f, 0.1f), "bottom");
-            Main.AddChild(mainTop);
-            Main.AddChild(mainCenter);
-            Main.AddChild(mainBottom);
+            UIRects.AddChild(mainTop);
+            UIRects.AddChild(mainCenter);
+            UIRects.AddChild(mainBottom);
             
-            var mainTopLeft = new RectNode(new Vector2(0f, 0.5f), new Vector2(0.25f, 1f), "left");
-            var mainTopCenter = new RectNode(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 1f), "center");
-            var mainTopRight = new RectNode(new Vector2(1f, 0.5f), new Vector2(0.25f, 1f), "right");
+            var mainTopLeft = new RectNode(new Vector2(0f, 0.5f), new Vector2(0.2f, 1f), new Rect.Margins(0f, 0.1f, 0f, 0f), "left");
+            mainTopLeft.MouseFilter = MouseFilter.Stop;
+            var mainTopCenter = new RectNode(new Vector2(0.5f, 0.5f), new Vector2(0.6f, 1f), new Rect.Margins(0f, 0.005f, 0f, 0.005f), "center");
+            var mainTopRight = new RectNode(new Vector2(1f, 0.5f), new Vector2(0.2f, 1f), new Rect.Margins(0f, 0f, 0f, 0.1f), "right");
             mainTop.AddChild(mainTopLeft);
             mainTop.AddChild(mainTopCenter);
             mainTop.AddChild(mainTopRight);
             
-            var mainCenterLeft = new RectNode(new Vector2(0f, 0.5f), new Vector2(0.25f, 1f), "left");
-            var mainCenterCenter = new RectNode(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 1f), "center");
-            var mainCenterRight = new RectNode(new Vector2(1f, 0.5f), new Vector2(0.25f, 1f), "right");
+            var mainCenterLeft = new RectNode(new Vector2(0f, 0.5f), new Vector2(0.2f, 1f), new Rect.Margins(0f, 0.1f, 0f, 0f), "left");
+            var mainCenterCenter = new RectNode(new Vector2(0.5f, 0.5f), new Vector2(0.6f, 1f), new Rect.Margins(0f, 0.005f, 0f, 0.005f), "center");
+            var mainCenterRight = new RectNode(new Vector2(1f, 0.5f), new Vector2(0.2f, 1f), new Rect.Margins(0f, 0f, 0f, 0.1f), "right");
             mainCenter.AddChild(mainCenterLeft);
             mainCenter.AddChild(mainCenterCenter);
             mainCenter.AddChild(mainCenterRight);
             
-            var mainBottomLeft = new RectNode(new Vector2(0f, 0.5f), new Vector2(0.25f, 1f), "left");
-            var mainBottomCenter = new RectNode(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 1f), "center");
-            var mainBottomRight = new RectNode(new Vector2(1f, 0.5f), new Vector2(0.25f, 1f), "right");
+            var mainBottomLeft = new RectNode(new Vector2(0f, 0.5f), new Vector2(0.2f, 1f), new Rect.Margins(0f, 0.1f, 0f, 0f), "left");
+            var mainBottomCenter = new RectNode(new Vector2(0.5f, 0.5f), new Vector2(0.6f, 1f), new Rect.Margins(0f, 0.005f, 0f, 0.005f), "center");
+            var mainBottomRight = new RectNode(new Vector2(1f, 0.5f), new Vector2(0.2f, 1f), new Rect.Margins(0f, 0f, 0f, 0.1f), "right");
             mainBottom.AddChild(mainBottomLeft);
             mainBottom.AddChild(mainBottomCenter);
             mainBottom.AddChild(mainBottomRight);
@@ -482,7 +484,8 @@ namespace Examples
         protected override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             BackgroundColorRgba = Colors.Background;
-            UIRects.SetRect(ui.Area);
+            UIRects.UpdateRect(ui.Area);
+            UIRects.Update(time.Delta, ui.MousePos);
 
             //int gamepadIndex = CurGamepad?.Index ?? -1;
             InputAction.UpdateActions(time.Delta, CurGamepad, inputActions);
@@ -552,8 +555,9 @@ namespace Examples
         
         protected override void DrawUI(ScreenInfo ui)
         {
-            var fpsRect = UIRects.GetRect("top", "right", "top");
+            var fpsRect = UIRects.GetRect("top right top");//"top", "right", "top");
             fpsLabel.Draw(fpsRect, new(1f, 0f), 1f);
+            // UIRects.DebugDraw(new ColorRgba(Color.Azure), 1f);
         }
 
         public int GetFontCount() { return fonts.Count; }

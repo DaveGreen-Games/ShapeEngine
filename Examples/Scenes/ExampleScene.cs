@@ -121,7 +121,7 @@ namespace Examples.Scenes
             }
             
             OnDrawGameUIExample(ui);
-            var topLine = GAMELOOP.UIRects.GetRectSingle("top").BottomSegment;
+            var topLine = GAMELOOP.UIRects.GetRect("top").BottomSegment;
             topLine.Draw(2f, Colors.Light);
 
             var topCenterRect = GAMELOOP.UIRects.GetRect("top center"); // Get("top").Get("center").GetRect();
@@ -133,8 +133,32 @@ namespace Examples.Scenes
         {
             // var backRect = ui.Area.ApplyMargins(0.012f, 0.85f, 0.012f, 0.95f);
             var curInputDevice = ShapeInput.CurrentInputDeviceTypeNoMouse;
-            var backLabelRect = GAMELOOP.UIRects.GetRect("top left top"); // GetRect("top", "left", "top"); // Get("top").Get("left").Get("top").GetRect();
-            backLabel.Draw(backLabelRect, new(0f, 0f), curInputDevice);
+
+            var rectNode = GAMELOOP.UIRects.GetChild("top left");
+            if (rectNode != null)
+            {
+                var backLabelRect = rectNode.Rect;
+                if (rectNode.MouseInside)
+                {
+                    backLabelRect.DrawLines(2f, Colors.Medium);
+                    if (ShapeInput.MouseDevice.GetButtonState(ShapeMouseButton.LEFT).Pressed)
+                    {
+                        if (IsCancelAllowed())
+                        {
+                            if(GAMELOOP.Paused) GAMELOOP.Paused = false;
+                            GAMELOOP.GoToMainScene();
+                        }
+                    }
+                }
+                // var backLabelRect = GAMELOOP.UIRects.GetRect("top left");
+                backLabel.Draw(backLabelRect, new(0f, 0f), curInputDevice);
+            }
+            
+            
+            
+            
+            
+            
             
             if (GAMELOOP.Paused) return;
 

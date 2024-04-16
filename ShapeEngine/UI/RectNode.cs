@@ -1,6 +1,8 @@
 using System.Numerics;
+using ShapeEngine.Color;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Lib;
 
 namespace ShapeEngine.UI;
 
@@ -247,7 +249,6 @@ public class RectNode
         }
         return null;
     }
-    
     public RectNode? GetChild(string path, char separator = ' ')
     {
         if (path.Length <= 0) return null;
@@ -270,8 +271,21 @@ public class RectNode
 
         return curChild;
     }
-    
-    
+
+    public Rect GetRect(params string[] path)
+    {
+        var child = GetChild(path);
+        if (child != null) return child.Rect;
+
+        return Rect;
+    }
+    public Rect GetRect(string path, char seperator = ' ')
+    {
+        var child = GetChild(path, seperator);
+        if (child != null) return child.Rect;
+
+        return Rect;
+    }
     #endregion
     
     #region Update & Draw
@@ -306,6 +320,14 @@ public class RectNode
     {
         if (parent != null) return;
         InternalDraw();
+    }
+    public void DebugDraw(ColorRgba color, float lineThickness)
+    {
+        Rect.DrawLines(lineThickness, color);
+        foreach (var child in children)
+        {
+            child.DebugDraw(color, lineThickness);
+        }
     }
 
     protected virtual Rect SetChildRect(RectNode child, Rect inputRect) => inputRect;

@@ -785,7 +785,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         protected override void OnDrawGameUIExample(ScreenInfo ui)
         {
-            var screenArea = GAMELOOP.UIRects.GetRectSingle("center");// ui.Area;
+            var screenArea = GAMELOOP.UIRects.GetRect("center");
             
             float lineThickness = MathF.Max(screenArea.Size.Max() * 0.005f, 2f);
             

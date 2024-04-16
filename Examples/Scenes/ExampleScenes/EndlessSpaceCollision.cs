@@ -1969,14 +1969,14 @@ public class EndlessSpaceCollision : ExampleScene
         // DrawInputDescription(GAMELOOP.UIRects.GetRect("bottom center"));
         DrawCameraInfo(GAMELOOP.UIRects.GetRect("bottom right"));
         DrawGameInfo(GAMELOOP.UIRects.GetRect("center"));
-        
-        
-        var rect = ui.Area.ApplyMargins(0.2f, 0.2f, 0.95f, 0.02f);
-        var split = rect.SplitH(0.4f, 0.2f);
+
+        var gunRect = GAMELOOP.UIRects.GetRect("bottom center").ApplyMargins(0.1f, 0.1f, 0.25f, 0.05f);
+        var topBottomRect = gunRect.SplitV(0.55f);
+        var split = topBottomRect.bottom.SplitH(0.4f, 0.2f);
         minigun.DrawUI(split[0].ApplyMargins(0f, 0.025f, 0f, 0f));
         cannon.DrawUI(split[2].ApplyMargins(0.025f, 0f, 0f, 0f));
 
-        var strategemZone = ui.Area.ApplyMargins(0.2f, 0.2f, 0.91f, 0.06f);
+        var strategemZone = topBottomRect.top.ApplyMargins(0f, 0f, 0f, 0.25f); // ui.Area.ApplyMargins(0.2f, 0.2f, 0.91f, 0.06f);
         var splitStrategem = strategemZone.SplitH(0.225f,0.033f,0.225f,0.033f,0.225f,0.033f);
 
         orbitalStrike.DrawUI(splitStrategem[0]);
