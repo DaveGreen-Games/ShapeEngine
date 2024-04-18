@@ -8,92 +8,10 @@ using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
+using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes
 {
-    // internal abstract class GameObjectExample : IGameObject
-    // {
-    //     // protected List<ICollidable> Collidables = new();
-    //     protected GameobjectBody body;
-    //
-    //     // protected GameObject(GameobjectBody body)
-    //     // {
-    //     //     this.body = body;
-    //     // }
-    //     public int Layer { get; set; } = 0;
-    //
-    //     public virtual bool IsDead()
-    //     {
-    //         return false;
-    //     }
-    //
-    //     public virtual bool Kill()
-    //     {
-    //         return false;
-    //     }
-    //     public void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
-    //     {
-    //         body.Update(time.Delta);
-    //         OnUpdate(time.Delta);
-    //         // var collidables = GetCollidables();
-    //         // foreach (var c in collidables)
-    //         // {
-    //         // c.GetCollider().UpdateState(time.Delta);
-    //         // }
-    //     }
-    //
-    //     protected virtual void OnUpdate(float dt)
-    //     {
-    //         
-    //     }
-    //     public abstract void DrawGame(ScreenInfo game);
-    //
-    //
-    //
-    //     public Vector2 GetPosition() => body.Transform.Position;
-    //     public Rect GetBoundingBox() => body.GetBoundingBox();
-    //
-    //     // public abstract bool HasCollidables();
-    //     // public List<ICollidable> GetCollidables() => Collidables;
-    //
-    //     
-    //     public bool HasCollisionBody() => true;
-    //     public CollisionBody? GetCollisionBody() => body;
-    //
-    //     public virtual void AddedToHandler(GameObjectHandler gameObjectHandler) { }
-    //
-    //     public virtual void RemovedFromHandler(GameObjectHandler gameObjectHandler) { }
-    //
-    //     public virtual void DrawGameUI(ScreenInfo ui)
-    //     {
-    //         
-    //     }
-    //
-    //     public bool CheckHandlerBounds()
-    //     {
-    //         return false;
-    //     }
-    //
-    //     public void LeftHandlerBounds(BoundsCollisionInfo info)
-    //     {
-    //         
-    //     }
-    //
-    //     // public void DeltaFactorApplied(float f)
-    //     // {
-    //     // }
-    //
-    //     public bool DrawToGame(Rect gameArea)
-    //     {
-    //         return true;
-    //     }
-    //
-    //     public bool DrawToGameUI(Rect screenArea)
-    //     {
-    //         return false;
-    //     }
-    // }
-
     internal static class SpawnAreaLayers
     {
         public static readonly uint BoundaryFlag = BitFlag.GetFlagUint(1);
@@ -225,28 +143,36 @@ namespace Examples.Scenes.ExampleScenes
     {
         private CircleCollider circleCollider;
         private float deadTimer = 0f;
+        // private Segment lastVelocitySegment;
+        // private CollisionSurface collisionSurface = new();
         public Bullet(Vector2 pos) : base(pos)
         {
             var col = new CircleCollider(new(0f), 8f);
             col.ComputeCollision = true;
-            col.ComputeIntersections = false;
+            col.ComputeIntersections = true;
             col.Enabled = true;
             col.CollisionMask = new(CollisionFlags.WallFlag);
             col.CollisionMask = col.CollisionMask.Add(CollisionFlags.BoundaryFlag);
             col.CollisionLayer = CollisionFlags.BulletFlag;
-            // ProjectShape = true;
+            ProjectShape = true;
 
-            Velocity = ShapeRandom.RandVec2(1500, 2000);
+            Velocity = ShapeRandom.RandVec2(5000, 6000);
             AddCollider(col);
 
             circleCollider = col;
             circleCollider.OnCollision += Overlap;
             
             Layer = SpawnAreaLayers.ObjectFlag;
+
+            // lastVelocitySegment = new(pos, pos);
         }
 
         public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
+            // if (Velocity.LengthSquared() > 0)
+            // {
+            //     lastVelocitySegment = new(Transform.Position, Transform.Position + Velocity * time.Delta);
+            // }
             base.Update(time, game, ui);
             if (deadTimer > 0f)
             {
@@ -259,6 +185,20 @@ namespace Examples.Scenes.ExampleScenes
         {
             if (info.Collisions.Count > 0)
             {
+                
+                var minDisSq = float.PositiveInfinity;
+                Vector2 p = new();
+                foreach (var collision in info.Collisions)
+                {
+                    if(!collision.Intersection.Valid || !collision.Intersection.CollisionSurface.Valid) continue;
+                    var disSq = (Transform.Position - collision.Intersection.CollisionSurface.Point).LengthSquared();
+                    if (disSq < minDisSq)
+                    {
+                        minDisSq = disSq;
+                        p = collision.Intersection.CollisionSurface.Point;
+                    }
+                }
+                Transform = Transform.SetPosition(p);
                 Velocity = new();
                 Enabled = false;
                 deadTimer = 2f;
@@ -271,8 +211,9 @@ namespace Examples.Scenes.ExampleScenes
         }
         public override void DrawGame(ScreenInfo game)
         {
-            circleCollider.GetCircleShape().Draw( Colors.Cold);
-            // polyCollider.GetPolygonShape().DrawLines(4f, Colors.Highlight);
+            // lastVelocitySegment.Draw(3f, Colors.Medium);
+            circleCollider.GetCircleShape().Draw(Colors.Cold);
+            
         }
 
         public override void DrawGameUI(ScreenInfo ui)
@@ -459,447 +400,6 @@ namespace Examples.Scenes.ExampleScenes
         {
         }
     }
-
-
-    
-    
-    // internal class WallCollidable : Collidable
-    // {
-    //     public WallCollidable(Vector2 start, Vector2 end)
-    //     {
-    //         var col = new PolyCollider(new Segment(start, end), 10f, 1f);
-    //         this.collider = col;
-    //         this.collider.ComputeCollision = false;
-    //         this.collider.ComputeIntersections = false;
-    //         this.collider.Enabled = true;
-    //
-    //         
-    //         this.collisionMask = BitFlag.Empty;
-    //         
-    //     }
-    //
-    //     public override uint GetCollisionLayer() => WallFlag;
-    // }
-    // internal class Wall : Gameobject
-    // {
-    //     WallCollidable wallCollidable;
-    //     public Wall(Vector2 start, Vector2 end)
-    //     {
-    //         wallCollidable = new(start, end);
-    //         Collidables.Add(wallCollidable);
-    //     }
-    //     public override void DrawGame(ScreenInfo game)
-    //     {
-    //         wallCollidable.GetCollider().DrawShape(8f, Colors.Highlight);
-    //     }
-    //
-    //     public override Rect GetBoundingBox()
-    //     {
-    //         return wallCollidable.GetCollider().GetShape().GetBoundingBox();
-    //     }
-    //
-    //
-    //     // public override List<ICollidable> GetCollidables() => Collidables;
-    //     // {
-    //     //     return new() { wallCollidable };
-    //     // }
-    //
-    //     public override Vector2 GetPosition()
-    //     {
-    //         return wallCollidable.GetCollider().Pos;
-    //     }
-    //
-    //     public override bool HasCollidables()
-    //     {
-    //         return true;
-    //     }
-    // }
-    //
-    
-
-    // internal class TrapCollidable : Collidable
-    // {
-    //     public TrapCollidable(Vector2 pos, Vector2 size)
-    //     {
-    //         this.collider = new RectCollider(pos, size, new Vector2(0.5f));
-    //         this.collider.ComputeCollision = false;
-    //         this.collider.ComputeIntersections = false;
-    //         this.collider.Enabled = true;
-    //         this.collider.FlippedNormals = true;
-    //         this.collisionMask = new uint[] { };
-    //     }
-    //     public override uint GetCollisionLayer()
-    //     {
-    //         return WALL_ID;
-    //     }
-    // }
-    // internal class Trap : Gameobject
-    // {
-    //     TrapCollidable trapCollidable;
-    //     public Trap(Vector2 pos, Vector2 size)
-    //     {
-    //         this.trapCollidable = new(pos, size);
-    //     }
-    //     public override void DrawGame(ScreenInfo game)
-    //     {
-    //         trapCollidable.GetCollider().DrawShape(2f, ExampleScene.ColorHighlight1);
-    //     }
-    //
-    //     public override Rect GetBoundingBox()
-    //     {
-    //         return trapCollidable.GetCollider().GetShape().GetBoundingBox();
-    //     }
-    //
-    //     
-    //     public override List<ICollidable> GetCollidables()
-    //     {
-    //         return new() { trapCollidable };
-    //     }
-    //
-    //     public override Vector2 GetPosition()
-    //     {
-    //         return trapCollidable.GetCollider().Pos;
-    //     }
-    //
-    //     public override bool HasCollidables()
-    //     {
-    //         return true;
-    //     }
-    // }
-
-    // internal class AuraCollidable : Collidable
-    // {
-    //     float buffFactor = 1f;
-    //     //HashSet<ICollidable> others = new();
-    //     public AuraCollidable(Vector2 pos, float radius, float f)
-    //     {
-    //         var shape = Polygon.Generate(pos, 12, radius * 0.5f, radius);
-    //         this.collider = new PolyCollider(shape, pos, new Vector2(0f));
-    //         this.collider.ComputeCollision = true;
-    //         this.collider.ComputeIntersections = false;
-    //         this.collider.Enabled = true;
-    //
-    //         this.collisionMask = new(RockFlag); // BitFlag.Empty;
-    //         this.collisionMask = this.collisionMask.Add(BallFlag);
-    //         this.collisionMask = this.collisionMask.Add(BoxFlag);
-    //         
-    //         buffFactor= f;
-    //     }
-    //
-    //     public override uint GetCollisionLayer() => AuraFlag;
-    //     public override void Overlap(CollisionInformation info)
-    //     {
-    //         foreach (var c in info.Collisions)
-    //         {
-    //             if (c.FirstContact)
-    //             {
-    //                 if (c.Other is Collidable g) g.Buff(buffFactor);
-    //             }
-    //         }
-    //     }
-    //     public override void OverlapEnded(ICollidable other)
-    //     {
-    //         if (other is Collidable g) g.EndBuff(buffFactor);
-    //     }
-    // }
-    // internal class Aura : Gameobject
-    // {
-    //     AuraCollidable auraCollidable;
-    //     
-    //     public Aura(Vector2 pos, float radius, float f)
-    //     {
-    //         this.auraCollidable = new(pos, radius, f);
-    //         this.Collidables.Add(auraCollidable);
-    //         
-    //     }
-    //
-    //     public override void DrawGame(ScreenInfo game)
-    //     {
-    //         auraCollidable.GetCollider().DrawShape(2f, Colors.Highlight);
-    //     }
-    //
-    //     public override Rect GetBoundingBox()
-    //     {
-    //         return auraCollidable.GetCollider().GetShape().GetBoundingBox();
-    //     }
-    //
-    //
-    //     // public override List<ICollidable> GetCollidables()
-    //     // {
-    //     //     return new() { auraCollidable };
-    //     // }
-    //
-    //     public override Vector2 GetPosition()
-    //     {
-    //         return auraCollidable.GetCollider().Pos;
-    //     }
-    //
-    //     public override bool HasCollidables()
-    //     {
-    //         return true;
-    //     }
-    // }
-    //
-    // internal class RockCollidable : Collidable
-    // {
-    //     float timer = 0f;
-    //     public RockCollidable(Vector2 pos, Vector2 vel, float size)
-    //     {
-    //         this.collider = new CircleCollider(pos, vel, size * 0.5f);
-    //         this.collider.ComputeCollision = true;
-    //         this.collider.ComputeIntersections = true;
-    //         this.collider.Enabled = true;
-    //         this.collider.SimplifyCollision = false;
-    //         this.collisionMask = new BitFlag(WallFlag); // ShapeFlag.SetUintFlag(0, WallFlag);
-    //         this.startSpeed = vel.Length();
-    //     }
-    //
-    //     public override uint GetCollisionLayer() => RockFlag;
-    //     public override void Overlap(CollisionInformation info)
-    //     {
-    //         if (info.CollisionSurface.Valid)
-    //         {
-    //             timer = 0.25f;
-    //             collider.Vel = collider.Vel.Reflect(info.CollisionSurface.Normal);
-    //         }
-    //     }
-    //     public override void Update(float dt)
-    //     {
-    //         if (timer > 0f)
-    //         {
-    //             timer -= dt;
-    //         }
-    //     }
-    //     public void Draw()
-    //     {
-    //         var color = new ColorRgba(System.Drawing.Color.CornflowerBlue);
-    //         if (timer > 0) color = Colors.Highlight;
-    //         if (buffed) color = BuffColorRgba;
-    //         collider.DrawShape(2f, color);
-    //
-    //     }
-    // }
-    // internal class Rock : Gameobject
-    // {
-    //     RockCollidable rockCollidable;
-    //     
-    //     public Rock(Vector2 pos, Vector2 vel, float size)
-    //     {
-    //         this.rockCollidable = new(pos, vel, size);
-    //         this.Collidables.Add(rockCollidable);
-    //     }
-    //
-    //     public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
-    //     {
-    //         base.Update(time, game, ui);
-    //         rockCollidable.Update(time.Delta);
-    //     }
-    //     public override void DrawGame(ScreenInfo game)
-    //     {
-    //         rockCollidable.Draw();
-    //     }
-    //
-    //     // public override void DrawUI(ScreenInfo ui)
-    //     // {
-    //     //     GAMELOOP.Camera.WorldToScreen(GetBoundingBox()).DrawLines(2f, WHITE);
-    //     // }
-    //
-    //     public override Vector2 GetPosition()
-    //     {
-    //         return rockCollidable.GetCollider().Pos;
-    //     }
-    //
-    //     public override Rect GetBoundingBox()
-    //     {
-    //         return rockCollidable.GetCollider().GetShape().GetBoundingBox();
-    //     }
-    //
-    //     public override bool HasCollidables()
-    //     {
-    //         return true;
-    //     }
-    //
-    //     // public override List<ICollidable> GetCollidables()
-    //     // {
-    //     //     return new() { rockCollidable };
-    //     // }
-    //
-    // }
-    //
-    // internal class BoxCollidable : Collidable
-    // {
-    //     float timer = 0f;
-    //     public BoxCollidable(Vector2 pos, Vector2 vel, float size)
-    //     {
-    //         this.collider = new RectCollider(pos, vel, new Vector2(size, size), new Vector2(0.5f));
-    //
-    //         this.collider.ComputeCollision = true;
-    //         this.collider.ComputeIntersections = true;
-    //         this.collider.Enabled = true;
-    //         this.collider.SimplifyCollision = false;
-    //         this.collisionMask = new(WallFlag);
-    //         this.collisionMask = this.collisionMask.Add(BallFlag);
-    //         this.startSpeed = vel.Length();
-    //     }
-    //
-    //     public override uint GetCollisionLayer() => BoxFlag;
-    //     public override void Overlap(CollisionInformation info)
-    //     {
-    //         if (info.CollisionSurface.Valid)
-    //         {
-    //             timer = 0.25f;
-    //             collider.Vel = collider.Vel.Reflect(info.CollisionSurface.Normal);
-    //         }
-    //     }
-    //     public override void Update(float dt)
-    //     {
-    //         if (timer > 0f)
-    //         {
-    //             timer -= dt;
-    //         }
-    //     }
-    //     public void Draw()
-    //     {
-    //         var color = new ColorRgba(System.Drawing.Color.MediumOrchid);
-    //         if (timer > 0) color = Colors.Highlight;
-    //         if (buffed) color = BuffColorRgba;
-    //         if (collider is RectCollider r)
-    //         {
-    //             Rect shape = r.GetRectShape();
-    //             shape.DrawLines(2f, color);
-    //         }
-    //     }
-    // }
-    // internal class Box : Gameobject
-    // {
-    //     BoxCollidable boxCollidable;
-    //
-    //     public Box(Vector2 pos, Vector2 vel, float size)
-    //     {
-    //         this.boxCollidable = new(pos, vel, size);
-    //         this.Collidables.Add(boxCollidable);
-    //     }
-    //
-    //     public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
-    //     {
-    //         base.Update(time, game, ui);
-    //         boxCollidable.Update(time.Delta);
-    //     }
-    //     public override void DrawGame(ScreenInfo game)
-    //     {
-    //         boxCollidable.Draw();
-    //     }
-    //
-    //     public override Vector2 GetPosition()
-    //     {
-    //         return boxCollidable.GetCollider().Pos;
-    //     }
-    //
-    //     public override Rect GetBoundingBox()
-    //     {
-    //         return boxCollidable.GetCollider().GetShape().GetBoundingBox();
-    //     }
-    //
-    //     public override bool HasCollidables()
-    //     {
-    //         return true;
-    //     }
-    //
-    //     // public override List<ICollidable> GetCollidables()
-    //     // {
-    //     //     return new() { boxCollidable };
-    //     // }
-    //
-    // }
-    //
-    // internal class BallCollidable : Collidable
-    // {
-    //     float timer = 0f;
-    //     public BallCollidable(Vector2 pos, Vector2 vel, float size)
-    //     {
-    //         this.collider = new CircleCollider(pos, vel, size);
-    //
-    //         this.collider.ComputeCollision = true;
-    //         this.collider.ComputeIntersections = true;
-    //         this.collider.Enabled = true;
-    //         this.collider.SimplifyCollision = false;
-    //         this.collisionMask = new(WallFlag);
-    //         this.collisionMask = this.collisionMask.Add(BoxFlag);
-    //         this.startSpeed = vel.Length();
-    //     }
-    //
-    //     public override uint GetCollisionLayer() => BallFlag;
-    //     public override void Overlap(CollisionInformation info)
-    //     {
-    //         if (info.CollisionSurface.Valid)
-    //         {
-    //             timer = 0.25f;
-    //             collider.Vel = collider.Vel.Reflect(info.CollisionSurface.Normal);
-    //         }
-    //     }
-    //     public override void Update(float dt)
-    //     {
-    //         if (timer > 0f)
-    //         {
-    //             timer -= dt;
-    //         }
-    //     }
-    //     public void Draw()
-    //     {
-    //         var color = new ColorRgba(System.Drawing.Color.ForestGreen);
-    //         if (timer > 0) color = Colors.Highlight;
-    //         if (buffed) color = BuffColorRgba;
-    //
-    //         if(collider is CircleCollider c)
-    //         {
-    //             ShapeDrawing.DrawCircleFast(c.Pos, c.Radius, color);
-    //
-    //         }
-    //     }
-    // }
-    // internal class Ball : Gameobject
-    // {
-    //     BallCollidable ballCollidable;
-    //
-    //     public Ball(Vector2 pos, Vector2 vel, float size)
-    //     {
-    //         this.ballCollidable = new(pos, vel, size);
-    //         this.Collidables.Add(ballCollidable);
-    //     }
-    //     
-    //
-    //     public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
-    //     {
-    //         base.Update(time, game, ui);
-    //         ballCollidable.Update(time.Delta);
-    //     }
-    //     public override void DrawGame(ScreenInfo game)
-    //     {
-    //         ballCollidable.Draw();
-    //     }
-    //
-    //     public override Vector2 GetPosition()
-    //     {
-    //         return ballCollidable.GetCollider().Pos;
-    //     }
-    //
-    //     public override Rect GetBoundingBox()
-    //     {
-    //         return ballCollidable.GetCollider().GetShape().GetBoundingBox();
-    //     }
-    //
-    //     public override bool HasCollidables()
-    //     {
-    //         return true;
-    //     }
-    //
-    //     // public override List<ICollidable> GetCollidables()
-    //     // {
-    //     //     return new() { ballCollidable };
-    //     // }
-    //
-    // }
-
     
 
     public class GameObjectHandlerExample : ExampleScene
@@ -997,6 +497,10 @@ namespace Examples.Scenes.ExampleScenes
             
             boundaryRect = new(new(0f), new(5000,5000), new(0.5f));
             InitSpawnArea(boundaryRect);
+            if (SpawnArea != null)
+            {
+                SpawnArea.OnGameObjectRemoved += OnGameObjectDied;
+            }
             InitCollisionHandler(boundaryRect, 50, 50);
             // if (InitSpawnArea(boundaryRect))
             // {
@@ -1010,8 +514,14 @@ namespace Examples.Scenes.ExampleScenes
             clearAreaMask = clearAreaMask.Add(CollisionFlags.BirdFlag);
             clearAreaMask = clearAreaMask.Add(CollisionFlags.WallFlag);
         }
-        
-        
+
+        private void OnGameObjectDied(GameObject obj)
+        {
+            if (CollisionHandler == null) return;
+            if(obj is CollisionObject co) CollisionHandler.Remove(co);
+        }
+
+
         public override void Reset()
         {
             SpawnArea?.Clear();
