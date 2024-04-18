@@ -161,7 +161,7 @@ public class ProjectedShapesExample : ExampleScene
 
         public override bool OverlapWith(Polygon polygon) => Segment.OverlapShape(polygon);
 
-        public override CollisionPoints? IntersectWith(Polygon polygon) => Segment.IntersectShape(polygon);
+        public override CollisionPoints? IntersectWith(Polygon polygon) => polygon.IntersectShape(Segment);
         
         public override Polygon? GetProjectionPoints(Vector2 projectionPosition)
         {
@@ -232,7 +232,7 @@ public class ProjectedShapesExample : ExampleScene
 
         public override bool OverlapWith(Polygon polygon) => Circle.OverlapShape(polygon);
 
-        public override CollisionPoints? IntersectWith(Polygon polygon) => Circle.IntersectShape(polygon);
+        public override CollisionPoints? IntersectWith(Polygon polygon) => polygon.IntersectShape(Circle);
         
         public override Polygon? GetProjectionPoints(Vector2 projectionPosition)
         {
@@ -313,7 +313,7 @@ public class ProjectedShapesExample : ExampleScene
 
         public override bool OverlapWith(Polygon polygon) => Triangle.OverlapShape(polygon);
 
-        public override CollisionPoints? IntersectWith(Polygon polygon) => Triangle.IntersectShape(polygon);
+        public override CollisionPoints? IntersectWith(Polygon polygon) => polygon.IntersectShape(Triangle);
         public override Polygon? GetProjectionPoints(Vector2 projectionPosition)
         {
             var v = projectionPosition - position;
@@ -385,7 +385,7 @@ public class ProjectedShapesExample : ExampleScene
 
         public override bool OverlapWith(Polygon polygon) => Quad.OverlapShape(polygon);
 
-        public override CollisionPoints? IntersectWith(Polygon polygon) => Quad.IntersectShape(polygon);
+        public override CollisionPoints? IntersectWith(Polygon polygon) => polygon.IntersectShape(Quad);
         
         public override Polygon? GetProjectionPoints(Vector2 projectionPosition)
         {
@@ -457,7 +457,7 @@ public class ProjectedShapesExample : ExampleScene
 
         public override bool OverlapWith(Polygon polygon) => Rect.OverlapShape(polygon);
 
-        public override CollisionPoints? IntersectWith(Polygon polygon) => Rect.IntersectShape(polygon);
+        public override CollisionPoints? IntersectWith(Polygon polygon) => polygon.IntersectShape(Rect);
         public override Polygon? GetProjectionPoints(Vector2 projectionPosition)
         {
             var v = projectionPosition - Rect.Center;
@@ -531,7 +531,7 @@ public class ProjectedShapesExample : ExampleScene
 
         public override bool OverlapWith(Polygon polygon) => Polygon.OverlapShape(polygon);
 
-        public override CollisionPoints? IntersectWith(Polygon polygon) => Polygon.IntersectShape(polygon);
+        public override CollisionPoints? IntersectWith(Polygon polygon) => polygon.IntersectShape(Polygon);
         public override Polygon? GetProjectionPoints(Vector2 projectionPosition)
         {
             var v = projectionPosition - position;
@@ -612,7 +612,7 @@ public class ProjectedShapesExample : ExampleScene
 
         public override bool OverlapWith(Polygon polygon) => Polyline.OverlapShape(polygon);
 
-        public override CollisionPoints? IntersectWith(Polygon polygon) => Polyline.IntersectShape(polygon);
+        public override CollisionPoints? IntersectWith(Polygon polygon) => polygon.IntersectShape(Polyline);
         public override Polygon? GetProjectionPoints(Vector2 projectionPosition)
         {
             var v = projectionPosition -position;
@@ -737,6 +737,10 @@ public class ProjectedShapesExample : ExampleScene
     }
     protected override void OnDrawGameExample(ScreenInfo game)
     {
+        if (projectionActive)
+        {
+            if(projection != null) projection.DrawLines(4f, Colors.Special);
+        }
         
         if (shapeMode == ShapeMode.Overlap)
         {
@@ -755,6 +759,7 @@ public class ProjectedShapesExample : ExampleScene
         else if (shapeMode == ShapeMode.Intersection)
         {
             var result = projectionActive && projection != null ? staticShape.IntersectWith(projection) : movingShape.IntersectWith(staticShape);
+
             if (result == null || result.Count <= 0)
             {
                 staticShape.Draw(Colors.Highlight.ChangeBrightness(-0.3f));
@@ -767,8 +772,8 @@ public class ProjectedShapesExample : ExampleScene
 
                 foreach (var cp in result)
                 {
-                    cp.Point.Draw(6f, Colors.Special, 16);
-                    ShapeDrawing.DrawLine(cp.Point, cp.Point + cp.Normal * 30f, 2f, Colors.Special, LineCapType.Capped, 4);
+                    cp.Point.Draw(12f, Colors.Cold, 16);
+                    ShapeDrawing.DrawLine(cp.Point, cp.Point + cp.Normal * 75f, 2f, Colors.Cold, LineCapType.Capped, 4);
                 }
             }
             
@@ -789,10 +794,7 @@ public class ProjectedShapesExample : ExampleScene
             }
         }
         
-        if (projectionActive)
-        {
-            if(projection != null) projection.DrawLines(4f, Colors.Special);
-        }
+        
     }
     protected override void OnDrawGameUIExample(ScreenInfo ui)
     {
