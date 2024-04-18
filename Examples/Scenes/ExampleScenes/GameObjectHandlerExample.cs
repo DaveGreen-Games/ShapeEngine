@@ -234,6 +234,7 @@ namespace Examples.Scenes.ExampleScenes
             col.CollisionMask = new(CollisionFlags.WallFlag);
             col.CollisionMask = col.CollisionMask.Add(CollisionFlags.BoundaryFlag);
             col.CollisionLayer = CollisionFlags.BulletFlag;
+            // ProjectShape = true;
 
             Velocity = ShapeRandom.RandVec2(1500, 2000);
             AddCollider(col);

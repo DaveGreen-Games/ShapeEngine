@@ -37,6 +37,11 @@ public class ControlNodeContainer : ControlNode
         }
     }
 
+    /// <summary>
+    /// If true the display index of the container is clamped to childCount - displayCount. If false the display index
+    /// is incremented/decremented by displayCount as long as 0 or childCount is not reached.
+    /// </summary>
+    public bool AlwaysKeepFilled = true;
     private int DisplayCount => grid.Count;
     public int DisplayIndex
     {
@@ -52,8 +57,18 @@ public class ControlNodeContainer : ControlNode
                 return;
             }
 
-            int maxValue = DisplayCount > ChildCount ? 0 : ChildCount - DisplayCount;
-            displayIndex = value > maxValue ? maxValue : value;
+            if (AlwaysKeepFilled)
+            {
+                int maxValue = DisplayCount > ChildCount ? 0 : ChildCount - DisplayCount;
+                displayIndex = value > maxValue ? maxValue : value;
+                
+            }
+            else
+            {
+                if (value > ChildCount) return;
+                displayIndex = value;
+            }
+            
 
         }
     }
@@ -86,12 +101,7 @@ public class ControlNodeContainer : ControlNode
     
 
     #region Private Members
-    private int displayCount = -1;
     private int displayIndex = 0;
-    // private int gridRows = 1;
-    // private int gridColumns = 1;
-
-    // private readonly List<ControlNode> displayedNodes = new();
     
     private bool dirty = false;
     
@@ -374,24 +384,21 @@ public class ControlNodeContainer : ControlNode
         }
         else
         {
-            
-            
-            if (IsFirst(child))
+            if (IsFirstDisplayed(child))
             {
                 if(dir.IsLeft || dir.IsUp || dir.IsUpLeft || dir.IsUpRight)
                 {
-                    // var signedPlacement = grid.Placement.Signed;
-                    // var factor = grid.IsVertical ? signedPlacement.Vertical : signedPlacement.Horizontal;
                     DisplayIndex -= NavigationStep;
                 }
             }
-            else if (IsLast(child))
+            else if (IsLastDisplayed(child))
             {
                 if(dir.IsRight || dir.IsDown || dir.IsDownRight || dir.IsDownLeft)
                 {
-                    // var signedPlacement = grid.Placement.Signed;
-                    // var factor = grid.IsVertical ? signedPlacement.Vertical : signedPlacement.Horizontal;
-                    DisplayIndex += NavigationStep;
+                    if (displayIndex + DisplayCount < ChildCount)
+                    {
+                        DisplayIndex += NavigationStep;
+                    }
                 }
             }
         }
@@ -400,12 +407,12 @@ public class ControlNodeContainer : ControlNode
     protected virtual void FirstNodeWasSelected(ControlNode node) { }
     protected virtual void LastNodeWasSelected(ControlNode node) { }
     protected virtual void NodeWasSelected(ControlNode node) { }
-    protected virtual bool IsFirst(ControlNode node)
+    protected virtual bool IsFirstDisplayed(ControlNode node)
     {
         if (DisplayedChildrenCount <= 0) return false;
         return DisplayedChildren[0] == node;
     }
-    protected virtual bool IsLast(ControlNode node)
+    protected virtual bool IsLastDisplayed(ControlNode node)
     {
         if (DisplayedChildrenCount <= 0) return false;
         return DisplayedChildren[^1] == node;
@@ -416,16 +423,22 @@ public class ControlNodeContainer : ControlNode
     public void NextItem() => DisplayIndex += 1;
     public void PreviousItem() => DisplayIndex -= 1;
 
-    public void NextPage()
+    public int MaxPages => DisplayCount <= 0 ? 1 : (int)MathF.Ceiling((float)ChildCount / (float)DisplayCount);
+    public int CurPage => DisplayCount <= 0 ? 1 : ((DisplayIndex + DisplayCount - 1) / DisplayCount) + 1;
+    public void NextPage(bool wrapAround = false)
     {
         if (DisplayCount <= 0) return;
         
-        DisplayIndex += DisplayCount;
+        if(wrapAround && CurPage >= MaxPages) FirstPage();
+        
+        else DisplayIndex += DisplayCount;
     }
-    public void PrevPage()
+    public void PrevPage(bool wrapAround = false)
     {
         if (DisplayCount <= 0) return;
-        DisplayIndex -= DisplayCount;
+        
+        if(wrapAround && CurPage <= 1) LastPage();
+        else DisplayIndex -= DisplayCount;
     }
     public void MovePage(int pages)
     {
@@ -450,13 +463,14 @@ public class ControlNodeContainer : ControlNode
 
         if (visibleChildren == null) return;
         
-        if (DisplayCount > 0)
-        {
-            if (displayIndex + DisplayCount > visibleChildren.Count)
-            {
-                displayIndex = visibleChildren.Count - DisplayCount;
-            }
-        }
+        //I think this is not necessary anymore?!
+        // if (DisplayCount > 0)
+        // {
+        //     if (displayIndex + DisplayCount > visibleChildren.Count)
+        //     {
+        //         displayIndex = visibleChildren.Count - DisplayCount;
+        //     }
+        // }
         
         for (var i = 0; i < visibleChildren.Count; i++)
         {
@@ -520,8 +534,8 @@ public class ControlNodeContainer : ControlNode
     }
     private void ResolveOnNodeSelected(ControlNode node)
     {
-        if(IsFirst(node)) ResolveOnFirstNodeSelected(node);
-        else if(IsLast(node)) ResolveOnLastNodeSelected(node);
+        if(IsFirstDisplayed(node)) ResolveOnFirstNodeSelected(node);
+        else if(IsLastDisplayed(node)) ResolveOnLastNodeSelected(node);
         
         NodeWasSelected(node);
         OnNodeSelected?.Invoke(this, node);
