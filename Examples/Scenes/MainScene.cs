@@ -33,6 +33,7 @@ namespace Examples.Scenes
             examples.Add(new ScreenEffectsExample());
             examples.Add(new CameraGroupFollowExample());
             examples.Add(new ShipInputExample());
+            examples.Add(new DataExample());
             
             examples.Add(new InputExample());
             examples.Add(new CameraExample());

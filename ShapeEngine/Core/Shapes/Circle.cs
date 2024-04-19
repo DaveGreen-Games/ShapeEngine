@@ -235,6 +235,15 @@ namespace ShapeEngine.Core.Shapes
         public Circle ChangeRadius(float amount) => new(Center, Radius + amount);
         public Circle SetRadius(float radius) => new(Center, radius);
 
+
+        public Circle ChangeRotation(float rotationRad, Vector2 pivot)
+        {
+            var w = Center - pivot;
+            var rotated = w.Rotate(rotationRad);
+            return new(pivot + rotated, Radius);
+        }
+        
+        
         public Circle ChangePosition(Vector2 offset) => this + offset;
         public Circle ChangePosition(float x, float y) => this + new Vector2(x, y);
         public Circle SetPosition(Vector2 position) => new Circle(position, Radius);
