@@ -53,26 +53,35 @@ namespace Examples.UIElements
 
         public override Direction GetNavigationDirection()
         {
+            if (!Selected) return new();
+            if (Scene == null) return new();
+            
+            var downState = GAMELOOP.InputActionUIDown.Consume();
+            var upState = GAMELOOP.InputActionUIUp.Consume();
+            // var leftState = GAMELOOP.InputActionUILeft.Consume();
+            // var rightState = GAMELOOP.InputActionUIRight.Consume();
+            // Console.WriteLine($"Button {Scene.Title} - Down: {downState.Consumed}, Up: {upState.Consumed}, Left: {leftState.Consumed}, Right: {rightState.Consumed}");
+            
             if (inputCooldownTimer > 0f)
             {
-                if (Raylib.IsKeyReleased(KeyboardKey.A) ||
-                    Raylib.IsKeyReleased(KeyboardKey.D) ||
-                    Raylib.IsKeyReleased(KeyboardKey.W) ||
-                    Raylib.IsKeyReleased(KeyboardKey.S))
+                if (downState is {Consumed:false, Released:true} ||
+                    upState is {Consumed:false, Released:true})
+                    // leftState is {Consumed:false, Released:true} ||
+                    // rightState is {Consumed:false, Released:true})
                 {
                     inputCooldownTimer = 0f;
                 }
                 else return new();
             }
             
-            var hor = 0;
+            // var hor = 0;
             var vert = 0;
-            if (Raylib.IsKeyDown(KeyboardKey.A)) hor = -1;
-            else if (Raylib.IsKeyDown(KeyboardKey.D)) hor = 1;
+            // if (leftState is {Consumed:false, Down:true}) hor = -1;
+            // else if (rightState is {Consumed:false, Down:true}) hor = 1;
             
-            if (Raylib.IsKeyDown(KeyboardKey.W)) vert = -1;
-            else if (Raylib.IsKeyDown(KeyboardKey.S)) vert = 1;
-            return new(hor, vert);
+            if (upState is {Consumed:false, Down:true}) vert = -1;
+            else if (downState is {Consumed:false, Down:true}) vert = 1;
+            return new(0, vert);
         }
 
         protected override void SelectedWasChanged(bool value)

@@ -575,7 +575,6 @@ namespace Examples
             GoToScene(mainScene);
         }
 
-
         private void SetupInput()
         {
             // ModifierKeyGamepad = new ModifierKeyGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, false);

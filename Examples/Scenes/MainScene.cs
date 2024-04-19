@@ -150,17 +150,17 @@ namespace Examples.Scenes
                 // NextPage();
             }
 
-            var uiDownState = GAMELOOP.InputActionUIDown.Consume();
-            if (uiDownState is { Consumed: false, Pressed: true })
-            { 
-                // NextButton();
-            }
-
-            var uiUpState = GAMELOOP.InputActionUIUp.Consume();
-            if (uiUpState is { Consumed: false, Pressed: true })
-            { 
-                // PrevButton();
-            }
+            // var uiDownState = GAMELOOP.InputActionUIDown.Consume();
+            // if (uiDownState is { Consumed: false, Pressed: true })
+            // { 
+            //     // NextButton();
+            // }
+            //
+            // var uiUpState = GAMELOOP.InputActionUIUp.Consume();
+            // if (uiUpState is { Consumed: false, Pressed: true })
+            // { 
+            //     // PrevButton();
+            // }
 
             var nextMonitorState = GAMELOOP.InputActionNextMonitor.Consume();
             if (nextMonitorState is { Consumed: false, Pressed: true })
@@ -200,7 +200,7 @@ namespace Examples.Scenes
             string prevName = GAMELOOP.InputActionUIPrevTab.GetInputTypeDescription(ShapeInput.CurrentInputDeviceType, true, 1, false);
             string nextName = GAMELOOP.InputActionUINextTab.GetInputTypeDescription(ShapeInput.CurrentInputDeviceType, true, 1, false);
             
-            string pagesText = $"{prevName} <- Page #{buttonContainer.DisplayIndex} - {curPage}/{pages} -> {nextName}";
+            string pagesText = $"{prevName} <- Page #{curPage}/{pages} -> {nextName}";
             var pageRect = new Rect(uiSize * new Vector2(0.01f, 0.12f), uiSize.ToSize() * new Vector2(0.3f, 0.06f), new Vector2(0f, 0f));
             titleFont.FontSpacing = 4f;
             titleFont.ColorRgba = Colors.Highlight;
