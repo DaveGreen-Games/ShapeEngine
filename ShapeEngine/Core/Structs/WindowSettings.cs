@@ -9,7 +9,7 @@ public struct WindowSettings
         WindowDisplayState = WindowDisplayState.Normal,
         WindowBorder = WindowBorder.Resizabled,
         WindowMinSize = new(480, 270),
-        WindowSize = new(960, 540),
+        WindowSize = new(-1, -1),
         // WindowLocation = new(0, 0),
         Monitor = 0,
         Vsync = false,

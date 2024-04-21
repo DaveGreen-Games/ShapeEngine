@@ -416,7 +416,9 @@ public sealed class GameWindow
 
         WindowBorder = windowSettings.WindowBorder;
         DisplayState = windowSettings.WindowDisplayState;
-        WindowSize = windowSettings.WindowSize;
+        
+        if(windowSettings.WindowSize.Width > 0 && windowSettings.WindowSize.Height > 0)
+            WindowSize = windowSettings.WindowSize;
 
         
         if (Monitor.CurMonitor().Index != windowSettings.Monitor && windowSettings.Monitor >= 0)
@@ -492,7 +494,7 @@ public sealed class GameWindow
             int monitor = Raylib.GetCurrentMonitor();
             int mw = Raylib.GetMonitorWidth(monitor);
             int mh = Raylib.GetMonitorHeight(monitor);
-            var scaleFactor = Raylib.GetWindowScaleDPI();
+            var scaleFactor = Game.IsOSX() ? Raylib.GetWindowScaleDPI() : new Vector2(1f, 1f);
             var scaleX = (int)scaleFactor.X;
             var scaleY = (int)scaleFactor.Y;
             CurScreenSize = new(mw * scaleX, mh * scaleY);
