@@ -20,6 +20,7 @@ namespace Examples.Scenes
         protected TextFont titleFont = new(GAMELOOP.FontDefault, 1f, Colors.Highlight);
         protected TextFont textFont = new(GAMELOOP.GetFont(FontIDs.JetBrains), 1f, Colors.Text);
 
+        protected bool drawInputDeviceInfo = true;
         //protected readonly ShapeInput input = GAMELOOP.Input;
         private InputActionLabel backLabel;
 
@@ -177,6 +178,7 @@ namespace Examples.Scenes
         
         private void DrawInputDeviceInfo(Rect rect)
         {
+            if (!drawInputDeviceInfo) return;
             var infoRect = rect;
             var split = infoRect.SplitV(2);
             var deviceRect = split[0];

@@ -1,4 +1,3 @@
-using System.Drawing;
 using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Screen;
@@ -10,14 +9,73 @@ using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
-using ShapeEngine.Stats;
 using Size = ShapeEngine.Core.Structs.Size;
 
 namespace Examples.Scenes.ExampleScenes;
 
 public class EndlessSpaceCollision : ExampleScene
 {
-    
+    private enum KeyDirection
+    {
+        None = -1,
+        Up = 0,
+        Right = 1,
+        Down = 2,
+        Left = 3
+    }
+    private class PayloadKey
+    {
+        
+        public readonly KeyDirection Direction;
+        
+        public PayloadKey(KeyDirection direction)
+        {
+            this.Direction = direction;
+        }
+        
+        public void Draw(Rect rect, ColorRgba color)
+        {
+            // rect = new Rect(rect.Center, new Size(minSize), new Vector2(0.5f));
+            rect = rect.ApplyMargins(0.05f, 0.05f, 0.05f, 0.05f);
+            var lineThickness = rect.Size.Min() / 18;
+            rect.DrawLines(lineThickness, color);
+            rect = rect.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
+            
+            
+            if (Direction == KeyDirection.Up)
+            {
+                var a = rect.BottomSegment.GetPoint(0.25f);
+                var b = rect.BottomSegment.GetPoint(0.75f);
+                var c = rect.TopSegment.GetPoint(0.5f);
+                ShapeDrawing.DrawLine(a, c, lineThickness, color);
+                ShapeDrawing.DrawLine(b, c, lineThickness, color);
+            }
+            else if (Direction == KeyDirection.Right)
+            {
+                var a = rect.LeftSegment.GetPoint(0.25f);
+                var b = rect.LeftSegment.GetPoint(0.75f);
+                var c = rect.RightSegment.GetPoint(0.5f);
+                ShapeDrawing.DrawLine(a, c, lineThickness, color);
+                ShapeDrawing.DrawLine(b, c, lineThickness, color);
+            }
+            else if (Direction == KeyDirection.Down)
+            {
+                var a = rect.TopSegment.GetPoint(0.25f);
+                var b = rect.TopSegment.GetPoint(0.75f);
+                var c = rect.BottomSegment.GetPoint(0.5f);
+                ShapeDrawing.DrawLine(a, c, lineThickness, color);
+                ShapeDrawing.DrawLine(b, c, lineThickness, color);
+            }
+            else if (Direction == KeyDirection.Left)
+            {
+                var a = rect.RightSegment.GetPoint(0.25f);
+                var b = rect.RightSegment.GetPoint(0.75f);
+                var c = rect.LeftSegment.GetPoint(0.5f);
+                ShapeDrawing.DrawLine(a, c, lineThickness, color);
+                ShapeDrawing.DrawLine(b, c, lineThickness, color);
+            }
+        }
+    }
     private readonly struct AutogunStats
     {
         public enum TargetingType
@@ -179,7 +237,7 @@ public class EndlessSpaceCollision : ExampleScene
             {
                 
                 var f = reloadTimer / Stats.ReloadTime;
-                var marginRect = rect.ApplyMargins(0f, f, 0f, 0f);
+                var marginRect = rect.ApplyMargins(0f, 0, 0f, f);
                 marginRect.Draw(c.ChangeBrightness(-0.5f));
                 rect.DrawLines(2f, c);
             }
@@ -187,7 +245,7 @@ public class EndlessSpaceCollision : ExampleScene
             {
                 
                 var f = 1f - ((float)curClipSize / (float)Stats.Clipsize);
-                var marginRect = rect.ApplyMargins(0f, f, 0f, 0f);
+                var marginRect = rect.ApplyMargins(0f, 0f, 0f, f);
                 marginRect.Draw(c.ChangeBrightness(-0.5f));
                 rect.DrawLines(2f, c);
             }
@@ -1102,6 +1160,7 @@ public class EndlessSpaceCollision : ExampleScene
         private Vector2 curPosition = new();
         private Vector2 startLocation = new();
         private Vector2 targetLocation = new();
+
         
         public ExplosivePayload(ExplosivePayloadInfo info, CollisionHandler collisionHandler, BitFlag mask)
         {
@@ -1231,8 +1290,17 @@ public class EndlessSpaceCollision : ExampleScene
     
     private class Pds : PayloadDeliverySystem
     {
-        public Pds(PdsInfo info, Vector2 position, IPayloadTargetingSystem targetingSystem, CollisionHandler colHandler, BitFlag castMask) : base(info, targetingSystem, new PayloadConstructor(colHandler, castMask), position)
+        private readonly List<PayloadKey> keys;
+        private readonly List<KeyDirection> sequence = new();
+        public bool SequenceFailed { get; private set; } = false;
+        
+        public Pds(PdsInfo info, Vector2 position, IPayloadTargetingSystem targetingSystem, CollisionHandler colHandler, BitFlag castMask, params KeyDirection[] keyDirections) : base(info, targetingSystem, new PayloadConstructor(colHandler, castMask), position)
         {
+            keys = new();
+            foreach (var key in keyDirections)
+            {
+                keys.Add(new(key));
+            }
         }
 
         protected override void WasDrawn()
@@ -1244,42 +1312,84 @@ public class EndlessSpaceCollision : ExampleScene
             }
         }
 
+        public void ResetSequence()
+        {
+            sequence.Clear();
+            SequenceFailed = false;
+        }
+        public bool KeyPressed(KeyDirection direction)
+        {
+            if (!IsReady) return false;
+            if (SequenceFailed) return false;
+            
+            sequence.Add(direction);
+            var index = sequence.Count - 1;
+            var correct = keys[index].Direction == direction;
+            if (!correct)
+            {
+                SequenceFailed = true;
+                return false;
+            }
+
+            if (sequence.Count < keys.Count) return false;
+            
+            return true;
+        }
         public override void DrawUI(Rect rect)
         {
+
+            var split = rect.SplitV(0.6f);
+            var topRect = split.top.ApplyMargins(0f, 0f, 0f, 0.1f);
+            var bottomRect = split.bottom.ApplyMargins(0f, 0f, 0.1f, 0f);
+
+            var dirBaseColor = Colors.PcMedium;
+            if (!IsReady || SequenceFailed) dirBaseColor = Colors.PcDark;
+            var rects = topRect.SplitH(keys.Count);
+            for (int i = 0; i < keys.Count; i++)
+            {
+                var key = keys[i];
+                if (sequence.Count > 0 && !SequenceFailed)
+                {
+                    if(i < sequence.Count) key.Draw(rects[i], Colors.PcLight.ColorRgba);
+                    else key.Draw(rects[i], dirBaseColor.ColorRgba);
+                }
+                else key.Draw(rects[i], dirBaseColor.ColorRgba);
+            }
+            
             if (CooldownF > 0f)
             {
-                var marginRect = rect.ApplyMargins(0f, CooldownF, 0f, 0f);
+                var marginRect = bottomRect.ApplyMargins(0f, CooldownF, 0f, 0f);
                 marginRect.Draw(Colors.Warm.ChangeBrightness(-0.5f));
-                rect.DrawLines(2f, Colors.Warm);
+                bottomRect.DrawLines(2f, Colors.Warm);
             }
             else if(CallInF > 0f)
             {
                 var c = Colors.PcSpecial.ColorRgba;
                 float f = 1f - CallInF;
-                var marginRect = rect.ApplyMargins(0f, f, 0f, 0f);
+                var marginRect = bottomRect.ApplyMargins(0f, f, 0f, 0f);
                 marginRect.Draw(c.ChangeBrightness(-0.5f));
-                rect.DrawLines(2f, c);
+                bottomRect.DrawLines(2f, c);
             }
             else if (curMarker != null && curMarker.TravelF > 0f)
             {
                 var c = Colors.PcMedium.ColorRgba;
                 float f = 1f - curMarker.TravelF;
-                var marginRect = rect.ApplyMargins(0f, f, 0f, 0f);
+                var marginRect = bottomRect.ApplyMargins(0f, f, 0f, 0f);
                 marginRect.Draw(c.ChangeBrightness(-0.5f));
-                rect.DrawLines(2f, c);
+                bottomRect.DrawLines(2f, c);
             }
             else if (ActiveF > 0f)
             {
                 var c = Colors.PcMedium.ColorRgba;
                 float f = 1f - ActiveF;
-                var marginRect = rect.ApplyMargins(0f, f, 0f, 0f);
+                var marginRect = bottomRect.ApplyMargins(0f, f, 0f, 0f);
                 marginRect.Draw(c.ChangeBrightness(-0.5f));
-                rect.DrawLines(2f, c);
+                bottomRect.DrawLines(2f, c);
             }
             else
             {
-                rect.Draw(Colors.Cold.ChangeBrightness(-0.5f));
-                rect.DrawLines(2f, Colors.Cold);
+                bottomRect.Draw(Colors.Cold.ChangeBrightness(-0.5f));
+                bottomRect.DrawLines(2f, Colors.Cold);
             }
         }
     }
@@ -1456,10 +1566,11 @@ public class EndlessSpaceCollision : ExampleScene
     private readonly Autogun minigun;
     private readonly Autogun cannon;
 
-    private readonly Pds orbitalStrike;
-    private readonly Pds barrage350mm;
-    private readonly Pds barrage100mm;
-    private readonly Pds hyperStrafe;
+    // private readonly Pds orbitalStrike;
+    // private readonly Pds barrage350mm;
+    // private readonly Pds barrage100mm;
+    // private readonly Pds hyperStrafe;
+    private readonly List<Pds> pdsList;
     
     // private readonly OrbitalStrike orbitalStrike;
     // private readonly Barrage350mm barrage350mm;
@@ -1475,6 +1586,7 @@ public class EndlessSpaceCollision : ExampleScene
     private bool gameOverScreenActive = false;
     public EndlessSpaceCollision()
     {
+        drawInputDeviceInfo = false;
         Title = "Endless Space Collision";
 
         // var universeWidth = ShapeRandom.RandF(12000, 20000);
@@ -1509,10 +1621,17 @@ public class EndlessSpaceCollision : ExampleScene
         var barrage350mmInfo = new PdsInfo((uint)PayloadConstructor.PayloadIds.Grenade350mm, 4f, 24f, 30f, 15);
         var barrage100mmInfo = new PdsInfo((uint)PayloadConstructor.PayloadIds.Grenade100mm, 4f, 18f, 10f, 40);
         var hypeStrafeInfo = new PdsInfo((uint)PayloadConstructor.PayloadIds.HyperBullet, 1f, 12f, 2f, 100);
-        orbitalStrike = new(orbitalStrikePdsInfo, DestroyerPosition, new PayloadTargetingSystemBarrage(500f), CollisionHandler, new BitFlag(AsteroidObstacle.CollisionLayer));
-        barrage350mm = new(barrage350mmInfo, DestroyerPosition, new PayloadTargetingSystemBarrage(2000f),CollisionHandler, new BitFlag(AsteroidObstacle.CollisionLayer));
-        barrage100mm = new(barrage100mmInfo, DestroyerPosition, new PayloadTargetingSystemBarrage(1000f),CollisionHandler, new BitFlag(AsteroidObstacle.CollisionLayer));
-        hyperStrafe = new(hypeStrafeInfo, DestroyerPosition, new PayloadTargetingSystemStrafe(3000f, 1500f),CollisionHandler, new BitFlag(AsteroidObstacle.CollisionLayer));
+        
+        var orbitalStrike = new Pds(orbitalStrikePdsInfo, DestroyerPosition, new PayloadTargetingSystemBarrage(500f), CollisionHandler, new BitFlag(AsteroidObstacle.CollisionLayer), KeyDirection.Down, KeyDirection.Down, KeyDirection.Right);
+        var barrage350mm = new Pds(barrage350mmInfo, DestroyerPosition, new PayloadTargetingSystemBarrage(2000f),CollisionHandler, new BitFlag(AsteroidObstacle.CollisionLayer), KeyDirection.Up, KeyDirection.Left, KeyDirection.Left, KeyDirection.Down);
+        var barrage100mm = new Pds(barrage100mmInfo, DestroyerPosition, new PayloadTargetingSystemBarrage(1000f),CollisionHandler, new BitFlag(AsteroidObstacle.CollisionLayer), KeyDirection.Up, KeyDirection.Right, KeyDirection.Right, KeyDirection.Down, KeyDirection.Right);
+        var hyperStrafe = new Pds(hypeStrafeInfo, DestroyerPosition, new PayloadTargetingSystemStrafe(3000f, 1500f),CollisionHandler, new BitFlag(AsteroidObstacle.CollisionLayer), KeyDirection.Left, KeyDirection.Right, KeyDirection.Up);
+        
+        pdsList = new()
+        {
+            orbitalStrike, barrage100mm, barrage350mm, hyperStrafe
+        };
+        
         // var orbitalStrikeMask = new BitFlag(AsteroidObstacle.CollisionLayer);
         // orbitalStrike = new OrbitalStrike(CollisionHandler, orbitalStrikeMask);
         
@@ -1588,11 +1707,10 @@ public class EndlessSpaceCollision : ExampleScene
         
         cannon.Reset();
         minigun.Reset();
-        orbitalStrike.Reset();
-        barrage350mm.Reset();
-        barrage100mm.Reset();
-        hyperStrafe.Reset();
-        // barrage350mm.Reset();
+        foreach (var pds in pdsList)
+        {
+            pds.Reset();
+        }
         CollisionHandler?.Add(ship);
         follower.SetTarget(ship);
         
@@ -1669,8 +1787,114 @@ public class EndlessSpaceCollision : ExampleScene
         {
             drawDebug = !drawDebug;
         }
+
+        KeyDirection dir = KeyDirection.None;
         
-        if ((ShapeKeyboardButton.ONE.GetInputState().Pressed || ShapeKeyboardButton.UP.GetInputState().Pressed) && orbitalStrike.IsReady)
+        if (ShapeKeyboardButton.UP.GetInputState().Pressed)
+        {
+            dir = KeyDirection.Up;
+        }
+        
+        if (ShapeKeyboardButton.DOWN.GetInputState().Pressed)
+        {
+            dir = KeyDirection.Down;
+        }
+        
+        if (ShapeKeyboardButton.LEFT.GetInputState().Pressed)
+        {
+            dir = KeyDirection.Left;
+        }
+        
+        if (ShapeKeyboardButton.RIGHT.GetInputState().Pressed)
+        {
+            dir = KeyDirection.Right;
+        }
+
+        if (dir != KeyDirection.None)
+        {
+
+            var launched = false;
+            var sequenceFailedCount = 0;
+            for (int i = 0; i < pdsList.Count; i++)
+            {
+                var pds = pdsList[i];
+                if (pds.KeyPressed(dir))
+                {
+                    PayloadMarkerSimple marker = new();
+                    var speed = ShapeRandom.RandF(3250, 3750);
+                    marker.Launch(ship.GetBarrelPosition(), ship.GetBarrelDirection(), speed, 1f, 1.8f);
+                    pds.RequestPayload(marker);
+                    launched = true;
+                    break;
+                }
+
+                if (pds.SequenceFailed || !pds.IsReady) sequenceFailedCount++;
+
+            }
+
+            if (launched || sequenceFailedCount >= pdsList.Count)
+            {
+                foreach (var pds in pdsList)
+                {
+                    pds.ResetSequence();
+                }
+            }
+            
+            /*var finished = orbitalStrike.KeyPressed(dir);
+            if (finished)
+            {
+                PayloadMarkerSimple marker = new();
+                var speed = ShapeRandom.RandF(3250, 3750);
+                marker.Launch(ship.GetBarrelPosition(), ship.GetBarrelDirection(), speed, 1f, 1.8f);
+                orbitalStrike.RequestPayload(marker);
+            }
+            else
+            {
+                finished = barrage350mm.KeyPressed(dir);
+                if (finished)
+                {
+                    PayloadMarkerSimple marker = new();
+                    var speed = ShapeRandom.RandF(3250, 3750);
+                    marker.Launch(ship.GetBarrelPosition(), ship.GetBarrelDirection(), speed, 1f, 1.8f);
+                    barrage350mm.RequestPayload(marker);
+                }
+                else
+                {
+                    finished = barrage100mm.KeyPressed(dir);
+                    if (finished)
+                    {
+                        PayloadMarkerSimple marker = new();
+                        var speed = ShapeRandom.RandF(3250, 3750);
+                        marker.Launch(ship.GetBarrelPosition(), ship.GetBarrelDirection(), speed, 1f, 1.8f);
+                        barrage100mm.RequestPayload(marker);
+                    }
+                    else
+                    {
+                        finished = hyperStrafe.KeyPressed(dir);
+                        if (finished)
+                        {
+                            PayloadMarkerSimple marker = new();
+                            var speed = ShapeRandom.RandF(3250, 3750);
+                            marker.Launch(ship.GetBarrelPosition(), ship.GetBarrelDirection(), speed, 1f, 1.8f);
+                            hyperStrafe.RequestPayload(marker);
+                        }
+
+                    }
+                }
+            }
+
+            if (finished)
+            {
+                orbitalStrike.ResetSequence();
+                barrage350mm.ResetSequence();
+                barrage100mm.ResetSequence();
+                hyperStrafe.ResetSequence();
+            }*/
+            
+        }
+        
+        
+        /*if ((ShapeKeyboardButton.ONE.GetInputState().Pressed || ShapeKeyboardButton.UP.GetInputState().Pressed) && orbitalStrike.IsReady)
         {
             PayloadMarkerSimple marker = new();
             var speed = ShapeRandom.RandF(3250, 3750);
@@ -1722,6 +1946,8 @@ public class EndlessSpaceCollision : ExampleScene
         //     strategemChargeTimer = 0f;
         // }
         //
+        */
+        
     }
 
     private void UpdateFollower(float size)
@@ -1763,12 +1989,11 @@ public class EndlessSpaceCollision : ExampleScene
             ship.Update(time, game, ui);
             minigun.Update(time.Delta, ship.GetPosition(), ship.GetCurSpeed());
             cannon.Update(time.Delta, ship.GetPosition(), ship.GetCurSpeed());
-        
-            orbitalStrike.Update(time.Delta);
-            barrage350mm.Update(time.Delta);
-            barrage100mm.Update(time.Delta);
-            hyperStrafe.Update(time.Delta);
-            // barrage350mm.Update(time.Delta);
+
+            foreach (var pds in pdsList)
+            {
+                pds.Update(time.Delta);
+            }
 
             UpdateFollower(camera.BaseSize.Min());
 
@@ -1923,11 +2148,11 @@ public class EndlessSpaceCollision : ExampleScene
         ship.DrawGame(game);
         minigun.Draw();
         cannon.Draw();
-        orbitalStrike.Draw();
-        barrage350mm.Draw();
-        barrage100mm.Draw();
-        hyperStrafe.Draw();
-        // barrage350mm.Draw();
+
+        foreach (var pds in pdsList)
+        {
+            pds.Draw();
+        }
 
         foreach (var bullet in bullets)
         {
@@ -1967,33 +2192,32 @@ public class EndlessSpaceCollision : ExampleScene
         }
         
         // DrawInputDescription(GAMELOOP.UIRects.GetRect("bottom center"));
-        DrawCameraInfo(GAMELOOP.UIRects.GetRect("bottom right"));
+        // DrawCameraInfo(GAMELOOP.UIRects.GetRect("bottom right"));
         DrawGameInfo(GAMELOOP.UIRects.GetRect("center"));
 
-        var gunRect = GAMELOOP.UIRects.GetRect("bottom center").ApplyMargins(0.1f, 0.1f, 0.25f, 0.05f);
-        var topBottomRect = gunRect.SplitV(0.55f);
-        var split = topBottomRect.bottom.SplitH(0.4f, 0.2f);
-        minigun.DrawUI(split[0].ApplyMargins(0f, 0.025f, 0f, 0f));
-        cannon.DrawUI(split[2].ApplyMargins(0.025f, 0f, 0f, 0f));
 
-        var strategemZone = topBottomRect.top.ApplyMargins(0f, 0f, 0f, 0.25f); // ui.Area.ApplyMargins(0.2f, 0.2f, 0.91f, 0.06f);
-        var splitStrategem = strategemZone.SplitH(0.225f,0.033f,0.225f,0.033f,0.225f,0.033f);
+        var gunRect = GAMELOOP.UIRects.GetRect("center right");// GAMELOOP.UIRects.GetRect("bottom right").Union(GAMELOOP.UIRects.GetRect("center right"));
+        gunRect = gunRect.ApplyMargins(0.65f, 0f, 0.1f, 0.5f);
+        var gunSplit = gunRect.SplitH(0.2f, 0.35f);
+        minigun.DrawUI(gunSplit[2].ApplyMargins(0.15f, 0f, 0f, 0));
+        cannon.DrawUI(gunSplit[1].ApplyMargins(0.15f, 0f, 0f, 0));
 
-        orbitalStrike.DrawUI(splitStrategem[0]);
-        barrage350mm.DrawUI(splitStrategem[2]);
-        barrage100mm.DrawUI(splitStrategem[4]);
-        hyperStrafe.DrawUI(splitStrategem[6]);
+        var strategemZone = GAMELOOP.UIRects.GetRect("bottom").ApplyMargins(0f, 0f, 0.25f, 0f); // topBottomRect.top.ApplyMargins(0f, 0f, 0f, 0.25f); // ui.Area.ApplyMargins(0.2f, 0.2f, 0.91f, 0.06f);
+        var splitStrategem = strategemZone.SplitH(pdsList.Count);// strategemZone.SplitH(0.225f,0.033f,0.225f,0.033f,0.225f,0.033f);
+
+        for (int i = 0; i < pdsList.Count; i++)
+        {
+            var pds = pdsList[i];
+            var pdsRect = splitStrategem[i].ApplyMargins(0.025f, 0.025f, 0f, 0f);
+            pds.DrawUI(pdsRect);
+        }
+        // orbitalStrike.DrawUI(splitStrategem[0]);
+        // barrage350mm.DrawUI(splitStrategem[2]);
+        // barrage100mm.DrawUI(splitStrategem[4]);
+        // hyperStrafe.DrawUI(splitStrategem[6]);
         
-        // if (strategemChargeTimer > 0f)
-        // {
-        //     var chargeRect = splitStrategem[2].ApplyMargins(0, 1f - StrategemChargeF, 0f, 0f);
-        //     chargeRect.Draw(Colors.Warm.ChangeBrightness(-0.5f));
-        //     chargeRect.DrawLines(4f, Colors.Warm);
-        // }
-        // else barrage350mm.DrawUI(splitStrategem[2]);
-        //
         var count = Ship.MaxHp;
-        var hpRects = split[1].SplitH(count);
+        var hpRects = gunSplit[0].ApplyMargins(0f, 0f, 0f, 0.5f).SplitV(count);
         for (int i = 0; i < count; i++)
         {
             var hpRect = hpRects[i].ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
@@ -2008,50 +2232,31 @@ public class EndlessSpaceCollision : ExampleScene
         }
     }
 
-    private void DrawCameraInfo(Rect rect)
-    {
-        var pos = camera.BasePosition;
-        var x = (int)pos.X;
-        var y = (int)pos.Y;
-        var rot = (int)camera.RotationDeg;
-        var zoom = (int)(ShapeMath.GetFactor(camera.ZoomLevel, 0.1f, 5f) * 100f);
-        
-        // string text = $"Pos {x}/{y} | Rot {rot} | Zoom {zoom}";
-        // string text = $"Path requests {pathfinder.DEBUG_PATH_REQUEST_COUNT}";
-
-        var count = 0;
-        foreach (var asteroid in asteroids)
-        {
-            count += asteroid.GetShape().Count;
-        }
-        
-        textFont.FontSpacing = 1f;
-        textFont.ColorRgba = Colors.Warm;
-        var rects = rect.SplitV(0.33f, 0.33f);
-        textFont.DrawTextWrapNone($"Asteroids {asteroids.Count} | V{count}", rects[0], new(0.5f));
-        textFont.DrawTextWrapNone($"Bullets {bullets.Count}", rects[1], new(0.5f));
-        // textFont.DrawTextWrapNone($"Ship Transform {ship.Transform.Position},{ship.Transform.RotationRad},{ship.Transform.Size}", rects[1], new(0.5f));
-        
-    }
-    private void DrawInputDescription(Rect rect)
-    {
-        var rects = rect.SplitV(0.35f);
-        var curDevice = ShapeInput.CurrentInputDeviceType;
-        string toggleDrawDebugText = iaDrawDebug.GetInputTypeDescription(ShapeInput.CurrentInputDeviceTypeNoMouse, true, 1, false);
-        string moveText = ship.GetInputDescription(curDevice);
-        string drawDebugText = drawDebug ? "ON" : "OFF";
-        string textTop = $"Draw Debug {drawDebugText} - Toggle {toggleDrawDebugText}";
-        string textBottom = $"{moveText}";
-        
-        textFont.FontSpacing = 1f;
-        
-        textFont.ColorRgba = Colors.Medium;
-        textFont.DrawTextWrapNone(textTop, rects.top, new(0.5f));
-        
-        textFont.ColorRgba = Colors.Light;
-        textFont.DrawTextWrapNone(textBottom, rects.bottom, new(0.5f));
-    }
-
+    // private void DrawCameraInfo(Rect rect)
+    // {
+    //     var pos = camera.BasePosition;
+    //     var x = (int)pos.X;
+    //     var y = (int)pos.Y;
+    //     var rot = (int)camera.RotationDeg;
+    //     var zoom = (int)(ShapeMath.GetFactor(camera.ZoomLevel, 0.1f, 5f) * 100f);
+    //     
+    //     // string text = $"Pos {x}/{y} | Rot {rot} | Zoom {zoom}";
+    //     // string text = $"Path requests {pathfinder.DEBUG_PATH_REQUEST_COUNT}";
+    //
+    //     var count = 0;
+    //     foreach (var asteroid in asteroids)
+    //     {
+    //         count += asteroid.GetShape().Count;
+    //     }
+    //     
+    //     textFont.FontSpacing = 1f;
+    //     textFont.ColorRgba = Colors.Warm;
+    //     var rects = rect.SplitV(0.33f, 0.33f);
+    //     textFont.DrawTextWrapNone($"Asteroids {asteroids.Count} | V{count}", rects[0], new(0.5f));
+    //     textFont.DrawTextWrapNone($"Bullets {bullets.Count}", rects[1], new(0.5f));
+    //     // textFont.DrawTextWrapNone($"Ship Transform {ship.Transform.Position},{ship.Transform.RotationRad},{ship.Transform.Size}", rects[1], new(0.5f));
+    //     
+    // }
     private void DrawGameInfo(Rect rect)
     {
         rect = rect.ApplyMargins(0.2f, 0.2f, 0.025f, 0.92f);
