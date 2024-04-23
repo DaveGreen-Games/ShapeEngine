@@ -21,6 +21,7 @@ namespace Examples.Scenes
         protected TextFont textFont = new(GAMELOOP.GetFont(FontIDs.JetBrains), 1f, Colors.Text);
 
         protected bool drawInputDeviceInfo = true;
+        protected bool drawTitle = true;
         //protected readonly ShapeInput input = GAMELOOP.Input;
         private InputActionLabel backLabel;
 
@@ -122,13 +123,18 @@ namespace Examples.Scenes
             }
             
             OnDrawGameUIExample(ui);
-            var topLine = GAMELOOP.UIRects.GetRect("top").BottomSegment;
-            topLine.Draw(2f, Colors.Light);
 
-            var topCenterRect = GAMELOOP.UIRects.GetRect("top center"); // Get("top").Get("center").GetRect();
-            titleFont.LineSpacing = 10f;
-            titleFont.ColorRgba = Colors.Highlight;
-            titleFont.DrawTextWrapNone(Title, topCenterRect, new(0.5f));
+            if (drawTitle)
+            {
+                var topLine = GAMELOOP.UIRects.GetRect("top").BottomSegment;
+                topLine.Draw(2f, Colors.Light);
+
+                var topCenterRect = GAMELOOP.UIRects.GetRect("top center"); // Get("top").Get("center").GetRect();
+                titleFont.LineSpacing = 10f;
+                titleFont.ColorRgba = Colors.Highlight;
+                titleFont.DrawTextWrapNone(Title, topCenterRect, new(0.5f));
+            }
+            
         }
         protected override void OnDrawUI(ScreenInfo ui)
         {

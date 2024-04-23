@@ -3,6 +3,7 @@ using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 using System.Numerics;
 using Examples.PayloadSystem;
+using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Interfaces;
@@ -128,13 +129,17 @@ public class EndlessSpaceCollision : ExampleScene
     private class Autogun
     {
         public event Action<Autogun, Bullet>? BulletFired;
+        public event Action<Autogun>? OnReloadStarted;
         private Vector2 pos;
         private float aimingRotRad = 0f;
         private float firerateTimer = 0f;
         private float curShipSpeed = 0f;
         private int curClipSize;
         private float reloadTimer = 0f;
+        public float ReloadF => reloadTimer / Stats.ReloadTime;
+        public float ClipSizeF => 1f - ((float)curClipSize / (float)Stats.Clipsize);
         private PaletteColor color;
+        public Vector2 AimDir => ShapeVec.VecFromAngleRad(aimingRotRad);
         
         public readonly AutogunStats Stats;
         public readonly BulletStats BulletStats;
@@ -388,6 +393,7 @@ public class EndlessSpaceCollision : ExampleScene
             if (curClipSize <= 0)
             {
                 reloadTimer = Stats.ReloadTime;
+                OnReloadStarted?.Invoke(this);
             }
             var dir = ShapeVec.VecFromAngleRad(aimingRotRad);
             var randRot = ShapeRandom.RandF(-Stats.Accuracy, Stats.Accuracy);
@@ -505,7 +511,7 @@ public class EndlessSpaceCollision : ExampleScene
             
         }
     }
-
+    
     
     
     // public static class BuffLibrary
@@ -600,6 +606,7 @@ public class EndlessSpaceCollision : ExampleScene
         private InputAction iaMoveHor;
         private InputAction iaMoveVer;
         public int Health;
+        public float HealthF => (float)Health / (float)MaxHp;
         public const int MaxHp = 3;
         
         private void SetupInput()
@@ -1104,7 +1111,9 @@ public class EndlessSpaceCollision : ExampleScene
             Bomb = 1,
             Grenade350mm = 2,
             Grenade100mm = 3,
-            HyperBullet = 4
+            HyperBullet = 4,
+            Turret = 5,
+            Penetrator = 6
         }
         
         
@@ -1118,6 +1127,8 @@ public class EndlessSpaceCollision : ExampleScene
                 case PayloadIds.Grenade350mm: return new Grenade350mm(collisionHandler, castMask);
                 case PayloadIds.Grenade100mm: return new Grenade100mm(collisionHandler, castMask);
                 case PayloadIds.HyperBullet: return new HyperBullet(collisionHandler, castMask);
+                case PayloadIds.Turret: return new TurretPayload(collisionHandler, castMask);
+                case PayloadIds.Penetrator: return new Penetrator(collisionHandler, castMask);
             }
             
             return null;
@@ -1141,17 +1152,180 @@ public class EndlessSpaceCollision : ExampleScene
             Radius = radius;
             Force = force;
         }
+        
     }
     private class ExplosivePayload : IPayload
     {
 
-        private ExplosivePayloadInfo info;
-        private List<Collider> castResult = new(128);
-        private float smokeTimer = 0f;
+        protected readonly ExplosivePayloadInfo Info;
+        protected List<Collider> CastResult = new(128);
+        protected float SmokeTimer { get; private set; } = 0f;
         private float travelTimer = 0f;
         private bool launched = false;
         private bool finished = false;
         
+        protected float TravelF => travelTimer <= 0f ? 0f : 1f - (travelTimer / Info.TravelTime);
+
+        protected readonly CollisionHandler ColHandler;
+        protected readonly BitFlag CastMask;
+
+        protected Vector2 CurPosition { get; private set; } = new();
+        protected Vector2 StartLocation = new();
+        protected Vector2 TargetLocation = new();
+
+        
+        public ExplosivePayload(ExplosivePayloadInfo info, CollisionHandler collisionHandler, BitFlag mask)
+        {
+            this.Info = info;
+            ColHandler = collisionHandler;
+            CastMask = mask;
+        }
+        
+        public void Launch(Vector2 launchPosition, Vector2 targetPosition, Vector2 markerPosition, Vector2 markerDirection)
+        {
+            StartLocation = launchPosition;
+            TargetLocation = targetPosition;
+            travelTimer = Info.TravelTime;
+            launched = true;
+            WasLaunched();
+        }
+
+        protected virtual void WasLaunched()
+        {
+            
+        }
+
+        protected virtual void IsMoving()
+        {
+            
+        }
+
+        protected virtual void OnDraw(){}
+        protected virtual void DrawSmoke()
+        {
+            var f = 1f - (SmokeTimer / Info.SmokeDuration);
+            var color = Colors.Warm.Lerp(Colors.PcMedium.ColorRgba.SetAlpha(50), f);
+            var size = ShapeMath.LerpFloat(Info.Radius * 0.5f, Info.Radius * 3f, f);
+            ShapeDrawing.DrawCircle(CurPosition, size, color, 24);
+        }
+        
+        public bool IsFinished() => finished;
+        
+        public void Update(float dt)
+        {
+            if (!launched || finished) return;
+
+            if (travelTimer > 0f)
+            {
+                travelTimer -= dt;
+                if (travelTimer <= 0f)
+                {
+                    CurPosition = TargetLocation;
+                    Explode(TargetLocation, Info.Radius, Info.Damage, Info.Force);
+                }
+                else
+                {
+                    IsMoving();
+                    CurPosition = StartLocation.Lerp(TargetLocation, TravelF);
+                }
+            }
+            
+            if (SmokeTimer > 0f)
+            {
+                SmokeTimer -= dt;
+                if (SmokeTimer <= 0f) finished = true;
+            }
+        }
+        
+        public void Draw()
+        {
+            if (travelTimer > 0f)
+            {
+                var f = TravelF;
+                ShapeDrawing.DrawCircle(TargetLocation, 12f, Colors.PcCold.ColorRgba, 24);
+                ShapeDrawing.DrawCircleLines(TargetLocation, Info.Radius * (1f - f), 6f, Colors.PcMedium.ColorRgba, 6);
+                
+                // var f = TravelF;
+                // ShapeDrawing.DrawCircleLines(targetLocation, Size, 6f, Colors.Dark, 6);
+                // ShapeDrawing.DrawCircleSectorLines(targetLocation, Size, 0f, 359f * f, 6f, Colors.Special, false, 4f);
+                // ShapeDrawing.DrawCircleSectorLines(targetLocation, Size / 12, 0f, 359f * f, 6f, Colors.Special, false, 4f);
+                // ShapeDrawing.DrawCircle(targetLocation, 12f, Colors.Special, 24);
+                
+                var lineEnd = ShapeVec.Lerp(StartLocation, TargetLocation, f);
+                var w = lineEnd - DestroyerPosition;
+                var dir = w.Normalize();
+                var lineStart = lineEnd - dir * 800f;
+                
+                ShapeDrawing.DrawLine(lineStart, lineEnd, 24f * f, Colors.PcCold.ColorRgba);
+            }
+            
+            if (SmokeTimer > 0f)
+            {
+                DrawSmoke();
+            }
+
+            OnDraw();
+        }
+
+        private void Explode(Vector2 pos, float size, float damage, float force)
+        {
+            var circle = new Circle(pos, size);
+            CastResult.Clear();
+            
+            ColHandler.CastSpace(circle, CastMask, ref CastResult);
+            if (CastResult.Count > 0)
+            {
+                foreach (var collider in CastResult)
+                {
+                    if (collider.Parent is AsteroidObstacle a)
+                    {
+                        var dir = (a.Transform.Position - pos).Normalize();
+                        a.Damage(a.Transform.Position, damage, dir * force);
+                    }
+                }
+            }
+            
+            SmokeTimer = Info.SmokeDuration;
+        }
+        
+    }
+    
+    
+    private readonly struct TurretPayloadInfo
+    {
+        public readonly AutogunStats AutogunStats;
+        public readonly BulletStats BulletStats;
+        public readonly float TravelTime;
+        public readonly float SmokeDuration;
+        public readonly float Size;
+        public readonly float ImpactSize;
+        public readonly float ImpactDamage;
+        public readonly float ImpactForce;
+
+        public TurretPayloadInfo(AutogunStats autogun, BulletStats bullet, float smokeDuration, float travelTime, float size, float impactSize, float impactDamage, float impactForce)
+        {
+            SmokeDuration = smokeDuration;
+            TravelTime = travelTime;
+            AutogunStats = autogun;
+            BulletStats = bullet;
+            Size = size;
+            ImpactSize = impactSize;
+            ImpactDamage = impactDamage;
+            ImpactForce = impactForce;
+
+        }
+
+    }
+    private class TurretPayload : IPayload
+    {
+
+        private List<Collider> castResult = new(128);
+        private TurretPayloadInfo info;
+        private float smokeTimer = 0f;
+        private float travelTimer = 0f;
+        private bool launched = false;
+        private bool finished = false;
+        private bool landed = false;
         private float TravelF => travelTimer <= 0f ? 0f : 1f - (travelTimer / info.TravelTime);
 
         private CollisionHandler colHandler;
@@ -1161,14 +1335,24 @@ public class EndlessSpaceCollision : ExampleScene
         private Vector2 startLocation = new();
         private Vector2 targetLocation = new();
 
+        public readonly Autogun Turret;
         
-        public ExplosivePayload(ExplosivePayloadInfo info, CollisionHandler collisionHandler, BitFlag mask)
+        public TurretPayload(CollisionHandler collisionHandler, BitFlag mask)
         {
-            this.info = info;
+            var autogunStats = new AutogunStats(125, 10, 4, 1500, MathF.PI / 30, AutogunStats.TargetingType.Closest);
+            var bulletStats = new BulletStats(24, 1750, 50, 1.5f);
+            info = new(autogunStats, bulletStats, 2, 0.5f, 75, 200, 100, 250);
             colHandler = collisionHandler;
             castMask = mask;
+            Turret = new(collisionHandler, info.AutogunStats, info.BulletStats, Colors.PcCold);
+            Turret.OnReloadStarted += OnTurretReloadStart;
         }
-        
+
+        private void OnTurretReloadStart(Autogun obj)
+        {
+            finished = true;
+        }
+
         public void Launch(Vector2 launchPosition, Vector2 targetPosition, Vector2 markerPosition, Vector2 markerDirection)
         {
             startLocation = launchPosition;
@@ -1189,7 +1373,8 @@ public class EndlessSpaceCollision : ExampleScene
                 if (travelTimer <= 0f)
                 {
                     curPosition = targetLocation;
-                    Explode(targetLocation, info.Radius, info.Damage, info.Force);
+                    landed = true;
+                    Explode(targetLocation, info.ImpactSize, info.ImpactDamage, info.ImpactForce);
                 }
                 else
                 {
@@ -1200,23 +1385,31 @@ public class EndlessSpaceCollision : ExampleScene
             if (smokeTimer > 0f)
             {
                 smokeTimer -= dt;
-                if (smokeTimer <= 0f) finished = true;
+                // if (smokeTimer <= 0f) finished = true;
+            }
+
+            if (landed)
+            {
+                Turret.Update(dt, targetLocation, 0f);
             }
         }
         
         public void Draw()
         {
+            if (landed)
+            {
+                Turret.Draw();
+                Raylib.DrawPoly(targetLocation, 6, info.Size / 2, 0f, Colors.Cold.ToRayColor());
+                ShapeDrawing.DrawCircleLines(targetLocation, info.Size, 6f, Colors.PcCold.ColorRgba, 6);
+                var barrelPos = targetLocation + Turret.AimDir * info.Size;
+                barrelPos.Draw(info.Size / 6, Colors.Cold, 24);
+            }
+            
             if (travelTimer > 0f)
             {
                 var f = TravelF;
                 ShapeDrawing.DrawCircle(targetLocation, 12f, Colors.PcCold.ColorRgba, 24);
-                ShapeDrawing.DrawCircleLines(targetLocation, info.Radius * (1f - f), 6f, Colors.PcMedium.ColorRgba, 6);
-                
-                // var f = TravelF;
-                // ShapeDrawing.DrawCircleLines(targetLocation, Size, 6f, Colors.Dark, 6);
-                // ShapeDrawing.DrawCircleSectorLines(targetLocation, Size, 0f, 359f * f, 6f, Colors.Special, false, 4f);
-                // ShapeDrawing.DrawCircleSectorLines(targetLocation, Size / 12, 0f, 359f * f, 6f, Colors.Special, false, 4f);
-                // ShapeDrawing.DrawCircle(targetLocation, 12f, Colors.Special, 24);
+                ShapeDrawing.DrawCircleLines(targetLocation, info.ImpactSize * (1f - f), 6f, Colors.PcMedium.ColorRgba, 6);
                 
                 var lineEnd = ShapeVec.Lerp(startLocation, targetLocation, f);
                 var w = lineEnd - DestroyerPosition;
@@ -1230,12 +1423,12 @@ public class EndlessSpaceCollision : ExampleScene
             {
                 var f = 1f - (smokeTimer / info.SmokeDuration);
                 var color = Colors.Warm.Lerp(Colors.PcMedium.ColorRgba.SetAlpha(50), f);
-                var size = ShapeMath.LerpFloat(info.Radius * 0.5f, info.Radius * 3f, f);
+                var size = ShapeMath.LerpFloat(info.ImpactSize * 0.5f, info.ImpactSize * 3f, f);
                 ShapeDrawing.DrawCircle(curPosition, size, color, 24);
             }
             
         }
-
+        
         private void Explode(Vector2 pos, float size, float damage, float force)
         {
             var circle = new Circle(pos, size);
@@ -1256,9 +1449,10 @@ public class EndlessSpaceCollision : ExampleScene
             
             smokeTimer = info.SmokeDuration;
         }
-        
     }
-
+    
+    
+    
     private class Bomb : ExplosivePayload
     {
         public Bomb(CollisionHandler collisionHandler, BitFlag mask) : 
@@ -1266,6 +1460,7 @@ public class EndlessSpaceCollision : ExampleScene
         {
         }
     }
+    
     private class Grenade350mm : ExplosivePayload
     {
         public Grenade350mm(CollisionHandler collisionHandler, BitFlag mask) : 
@@ -1287,6 +1482,86 @@ public class EndlessSpaceCollision : ExampleScene
         {
         }
     }
+    private class Penetrator : ExplosivePayload
+    {
+
+        private CollisionObject? target = null;
+        
+        public Penetrator(CollisionHandler collisionHandler, BitFlag mask) : 
+            base(new(6f, 0.5f, 500, 100, 400), collisionHandler, mask)
+        {
+        }
+
+        protected override void WasLaunched()
+        {
+            target = FindTarget(TargetLocation, Info.Radius * 5);
+            if (target != null)
+            {
+                TargetLocation = target.Transform.Position;
+            }
+        }
+
+        protected override void IsMoving()
+        {
+            if (target != null) TargetLocation = target.Transform.Position;
+        }
+
+        protected override void OnDraw()
+        {
+            if (TravelF > 0f)
+            {
+                var w = ShapeMath.LerpFloat(1f, 18f, TravelF);
+                var c = Colors.PcMedium.ColorRgba.Lerp(Colors.PcWarm.ColorRgba, TravelF);
+                ShapeDrawing.DrawLine(StartLocation, TargetLocation, w, c, LineCapType.Capped, 8);
+                // ShapeDrawing.DrawLineGlow(StartLocation, TargetLocation, 4f, 12f, Colors.PcWarm.ColorRgba, Colors.PcWarm.ColorRgba, 12, LineCapType.Capped, 8);
+            }
+        }
+
+        protected override void DrawSmoke()
+        {
+            if (SmokeTimer > 0f)
+            {
+                var f = 1f - (SmokeTimer / Info.SmokeDuration);
+                var color = Colors.PcWarm.ColorRgba.Lerp(Colors.PcMedium.ColorRgba.SetAlpha(50), f);
+                var size = Info.Radius; // ShapeMath.LerpFloat(Info.Radius * 0.5f, Info.Radius * 3f, f);
+                ShapeDrawing.DrawCircle(CurPosition, size, color, 24);
+                // ShapeDrawing.DrawCircle(CurPosition, Info.Radius * 0.05f , color, 18);
+            }
+
+        }
+
+        private CollisionObject? FindTarget(Vector2 pos, float size)
+        {
+            var circle = new Circle(pos, size);
+            CastResult.Clear();
+            
+            ColHandler.CastSpace(circle, CastMask, ref CastResult);
+            if (CastResult.Count > 0)
+            {
+                // var minDisSq = float.PositiveInfinity;
+                var maxHP = float.NegativeInfinity;
+                CollisionObject? target = null;
+                foreach (var collider in CastResult)
+                {
+                    if (collider.Parent is AsteroidObstacle a)
+                    {
+                        // var disSq = (a.Transform.Position - pos).LengthSquared();
+                        if (a.Health > maxHP)
+                        {
+                            maxHP = a.Health;
+                            target = a;
+                        }
+                    }
+                }
+
+                return target;
+            }
+
+            return null;
+        }
+
+    }
+
     
     private class Pds : PayloadDeliverySystem
     {
@@ -1350,7 +1625,7 @@ public class EndlessSpaceCollision : ExampleScene
                 var key = keys[i];
                 if (sequence.Count > 0 && !SequenceFailed)
                 {
-                    if(i < sequence.Count) key.Draw(rects[i], Colors.PcLight.ColorRgba);
+                    if(i < sequence.Count) key.Draw(rects[i], Colors.PcSpecial.ColorRgba);
                     else key.Draw(rects[i], dirBaseColor.ColorRgba);
                 }
                 else key.Draw(rects[i], dirBaseColor.ColorRgba);
@@ -1587,6 +1862,7 @@ public class EndlessSpaceCollision : ExampleScene
     public EndlessSpaceCollision()
     {
         drawInputDeviceInfo = false;
+        drawTitle = false;
         Title = "Endless Space Collision";
 
         // var universeWidth = ShapeRandom.RandF(12000, 20000);
@@ -1620,17 +1896,26 @@ public class EndlessSpaceCollision : ExampleScene
         var orbitalStrikePdsInfo = new PdsInfo((uint)PayloadConstructor.PayloadIds.Bomb, 2f, 8f, 0f, 0);
         var barrage350mmInfo = new PdsInfo((uint)PayloadConstructor.PayloadIds.Grenade350mm, 4f, 24f, 30f, 15);
         var barrage100mmInfo = new PdsInfo((uint)PayloadConstructor.PayloadIds.Grenade100mm, 4f, 18f, 10f, 40);
-        var hypeStrafeInfo = new PdsInfo((uint)PayloadConstructor.PayloadIds.HyperBullet, 1f, 12f, 2f, 100);
+        var hypeStrafeInfo = new PdsInfo((uint)PayloadConstructor.PayloadIds.HyperBullet, 1.5f, 12f, 2f, 100);
+        var turretInfo = new PdsInfo((uint)PayloadConstructor.PayloadIds.Turret, 5f, 60f, 1f, 2);
+        var penetratorInfo = new PdsInfo((uint)PayloadConstructor.PayloadIds.Penetrator, 1f, 5f, 3f, 3);
         
         var orbitalStrike = new Pds(orbitalStrikePdsInfo, DestroyerPosition, new PayloadTargetingSystemBarrage(500f), CollisionHandler, new BitFlag(AsteroidObstacle.CollisionLayer), KeyDirection.Down, KeyDirection.Down, KeyDirection.Right);
         var barrage350mm = new Pds(barrage350mmInfo, DestroyerPosition, new PayloadTargetingSystemBarrage(2000f),CollisionHandler, new BitFlag(AsteroidObstacle.CollisionLayer), KeyDirection.Up, KeyDirection.Left, KeyDirection.Left, KeyDirection.Down);
         var barrage100mm = new Pds(barrage100mmInfo, DestroyerPosition, new PayloadTargetingSystemBarrage(1000f),CollisionHandler, new BitFlag(AsteroidObstacle.CollisionLayer), KeyDirection.Up, KeyDirection.Right, KeyDirection.Right, KeyDirection.Down, KeyDirection.Right);
         var hyperStrafe = new Pds(hypeStrafeInfo, DestroyerPosition, new PayloadTargetingSystemStrafe(3000f, 1500f),CollisionHandler, new BitFlag(AsteroidObstacle.CollisionLayer), KeyDirection.Left, KeyDirection.Right, KeyDirection.Up);
+        var turret = new Pds(turretInfo, DestroyerPosition, new PayloadTargetingSystemBarrage(1500),CollisionHandler, new BitFlag(AsteroidObstacle.CollisionLayer), KeyDirection.Right, KeyDirection.Down, KeyDirection.Down, KeyDirection.Left, KeyDirection.Right);
+        var penetrator = new Pds(penetratorInfo, DestroyerPosition, new PayloadTargetingSystemBarrage(750),CollisionHandler, new BitFlag(AsteroidObstacle.CollisionLayer), KeyDirection.Down, KeyDirection.Down, KeyDirection.Left, KeyDirection.Left);
         
         pdsList = new()
         {
-            orbitalStrike, barrage100mm, barrage350mm, hyperStrafe
+            orbitalStrike, barrage100mm, barrage350mm, hyperStrafe, turret, penetrator
         };
+
+        foreach (var pds in pdsList)
+        {
+            pds.OnPayloadLaunched += OnPdsPayloadLaunched;
+        }
         
         // var orbitalStrikeMask = new BitFlag(AsteroidObstacle.CollisionLayer);
         // orbitalStrike = new OrbitalStrike(CollisionHandler, orbitalStrikeMask);
@@ -1651,6 +1936,14 @@ public class EndlessSpaceCollision : ExampleScene
         AddAsteroids(AsteroidCount);
     }
 
+    private void OnPdsPayloadLaunched(IPayload payload, int cur, int max)
+    {
+        if (payload is TurretPayload tp)
+        {
+            tp.Turret.BulletFired += OnBulletFired;
+        }
+    }
+    
     private void OnShipKilled()
     {
         gameOverScreenActive = true;
@@ -2164,6 +2457,25 @@ public class EndlessSpaceCollision : ExampleScene
         //     cutShape.Draw(cutShapeColor);
         // }
        
+        
+        ShapeDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, -80, -10, 12f, Colors.PcDark.ColorRgba, false, 8f);
+        ShapeDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, -100, -170, 12f, Colors.PcDark.ColorRgba, false, 8f);
+        ShapeDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, 170, 10, 12f, Colors.PcDark.ColorRgba, false, 8f);
+
+        if (minigun.ReloadF > 0f)
+        {
+            ShapeDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, -80, ShapeMath.LerpFloat(-80, -10, minigun.ReloadF), 4f, Colors.PcWarm.ColorRgba, false, 8f);
+        }
+        else ShapeDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, -80, ShapeMath.LerpFloat(-80, -10, 1f - minigun.ClipSizeF), 4f, Colors.PcCold.ColorRgba, false, 8f);
+
+        if (cannon.ReloadF > 0f)
+        {
+            ShapeDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, -100, ShapeMath.LerpFloat(-100, -170, cannon.ReloadF), 4f, Colors.PcWarm.ColorRgba, false, 8f);
+        }
+        else ShapeDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, -100, ShapeMath.LerpFloat(-100, -170, 1f - cannon.ClipSizeF), 4f, Colors.PcCold.ColorRgba, false, 8f);
+        
+        
+        ShapeDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, 170, ShapeMath.LerpFloat(170, 10, ship.HealthF), 4f, Colors.PcWarm.ColorRgba, false, 8f);
     }
     protected override void OnDrawGameUIExample(ScreenInfo ui)
     {
@@ -2193,43 +2505,41 @@ public class EndlessSpaceCollision : ExampleScene
         
         // DrawInputDescription(GAMELOOP.UIRects.GetRect("bottom center"));
         // DrawCameraInfo(GAMELOOP.UIRects.GetRect("bottom right"));
-        DrawGameInfo(GAMELOOP.UIRects.GetRect("center"));
+        
+        if(drawTitle) DrawGameInfo(GAMELOOP.UIRects.GetRect("center"));
+        else DrawGameInfoNoTitle(GAMELOOP.UIRects.GetRect("top center"));
 
 
-        var gunRect = GAMELOOP.UIRects.GetRect("center right");// GAMELOOP.UIRects.GetRect("bottom right").Union(GAMELOOP.UIRects.GetRect("center right"));
-        gunRect = gunRect.ApplyMargins(0.65f, 0f, 0.1f, 0.5f);
-        var gunSplit = gunRect.SplitH(0.2f, 0.35f);
-        minigun.DrawUI(gunSplit[2].ApplyMargins(0.15f, 0f, 0f, 0));
-        cannon.DrawUI(gunSplit[1].ApplyMargins(0.15f, 0f, 0f, 0));
-
+        
         var strategemZone = GAMELOOP.UIRects.GetRect("bottom").ApplyMargins(0f, 0f, 0.25f, 0f); // topBottomRect.top.ApplyMargins(0f, 0f, 0f, 0.25f); // ui.Area.ApplyMargins(0.2f, 0.2f, 0.91f, 0.06f);
         var splitStrategem = strategemZone.SplitH(pdsList.Count);// strategemZone.SplitH(0.225f,0.033f,0.225f,0.033f,0.225f,0.033f);
-
+        
         for (int i = 0; i < pdsList.Count; i++)
         {
             var pds = pdsList[i];
             var pdsRect = splitStrategem[i].ApplyMargins(0.025f, 0.025f, 0f, 0f);
             pds.DrawUI(pdsRect);
         }
-        // orbitalStrike.DrawUI(splitStrategem[0]);
-        // barrage350mm.DrawUI(splitStrategem[2]);
-        // barrage100mm.DrawUI(splitStrategem[4]);
-        // hyperStrafe.DrawUI(splitStrategem[6]);
-        
-        var count = Ship.MaxHp;
-        var hpRects = gunSplit[0].ApplyMargins(0f, 0f, 0f, 0.5f).SplitV(count);
-        for (int i = 0; i < count; i++)
-        {
-            var hpRect = hpRects[i].ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
-            if (i < ship.Health)
-            {
-                hpRect.Draw(Colors.Cold);
-            }
-            else
-            {
-                hpRect.Draw(Colors.Medium);
-            }
-        }
+        // var gunRect = GAMELOOP.UIRects.GetRect("center right");// GAMELOOP.UIRects.GetRect("bottom right").Union(GAMELOOP.UIRects.GetRect("center right"));
+        // gunRect = gunRect.ApplyMargins(0.65f, 0f, 0f, 0.5f);
+        // var gunSplit = gunRect.SplitH(0.2f, 0.35f);
+        // minigun.DrawUI(gunSplit[2].ApplyMargins(0.15f, 0f, 0f, 0));
+        // cannon.DrawUI(gunSplit[1].ApplyMargins(0.15f, 0f, 0f, 0));
+        //
+        // var count = Ship.MaxHp;
+        // var hpRects = gunSplit[0].ApplyMargins(0f, 0f, 0f, 0.5f).SplitV(count);
+        // for (int i = 0; i < count; i++)
+        // {
+        //     var hpRect = hpRects[i].ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
+        //     if (i < ship.Health)
+        //     {
+        //         hpRect.Draw(Colors.Cold);
+        //     }
+        //     else
+        //     {
+        //         hpRect.Draw(Colors.Medium);
+        //     }
+        // }
     }
 
     // private void DrawCameraInfo(Rect rect)
@@ -2260,6 +2570,14 @@ public class EndlessSpaceCollision : ExampleScene
     private void DrawGameInfo(Rect rect)
     {
         rect = rect.ApplyMargins(0.2f, 0.2f, 0.025f, 0.92f);
+        string text =
+            $"[{Difficulty} {ShapeMath.RoundToDecimals(DifficultyScore / DifficultyIncreaseThreshold, 2) * 100}%] | Score: {ShapeMath.RoundToDecimals(CurScore, 2)}";
+        textFont.ColorRgba = Colors.Special;
+        textFont.DrawTextWrapNone(text, rect, new(0.5f, 0f));
+    }
+    private void DrawGameInfoNoTitle(Rect rect)
+    {
+        rect = rect.ApplyMargins(0.1f, 0.1f, 0.025f, 0.5f);
         string text =
             $"[{Difficulty} {ShapeMath.RoundToDecimals(DifficultyScore / DifficultyIncreaseThreshold, 2) * 100}%] | Score: {ShapeMath.RoundToDecimals(CurScore, 2)}";
         textFont.ColorRgba = Colors.Special;
