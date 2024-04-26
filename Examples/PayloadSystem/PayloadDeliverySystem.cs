@@ -128,6 +128,7 @@ public abstract class PayloadDeliverySystem
     
     public void Reset()
     {
+        payloads.Clear();
         cooldownTimer = 0f;
         callInTimer = 0f;
         activeTimer = 0f;

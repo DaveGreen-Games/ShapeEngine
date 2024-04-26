@@ -392,6 +392,7 @@ public class EndlessSpaceCollision : ExampleScene
             curClipSize--;
             if (curClipSize <= 0)
             {
+                curTarget = null;
                 reloadTimer = Stats.ReloadTime;
                 OnReloadStarted?.Invoke(this);
             }
@@ -929,6 +930,8 @@ public class EndlessSpaceCollision : ExampleScene
 
         public void Damage(Vector2 pos, float amount, Vector2 force)
         {
+            if (IsDead) return;
+            
             Health -= amount;
             if (Health <= 0f)
             {
@@ -960,7 +963,9 @@ public class EndlessSpaceCollision : ExampleScene
         // }
         public void MoveTo(Vector2 newPosition)
         {
+            var moved = newPosition - Transform.Position;
             Transform = Transform.SetPosition(newPosition);
+            Triangulation.ChangePosition(moved);
             // moved = true;
         }
 
@@ -974,9 +979,15 @@ public class EndlessSpaceCollision : ExampleScene
         //         triangulation = shape.Triangulate();
         //     }
         // }
-        
+
+        protected override void WasKilled(string? killMessage = null, GameObject? killer = null)
+        {
+            target = null;
+        }
+
         public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
+            if (IsDead) return;
             var prevPosition = Transform.Position;
             base.Update(time, game, ui);
 
@@ -1036,6 +1047,8 @@ public class EndlessSpaceCollision : ExampleScene
 
         public override void DrawGame(ScreenInfo game)
         {
+            if (IsDead) return;
+            
             if (!bb.OverlapShape(game.Area)) return;
 
             Triangulation.Draw(Colors.PcBackground.ColorRgba);
@@ -1351,6 +1364,7 @@ public class EndlessSpaceCollision : ExampleScene
         private void OnTurretReloadStart(Autogun obj)
         {
             finished = true;
+            Turret.Reset();
         }
 
         public void Launch(Vector2 launchPosition, Vector2 targetPosition, Vector2 markerPosition, Vector2 markerDirection)
