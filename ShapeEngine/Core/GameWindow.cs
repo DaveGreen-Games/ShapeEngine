@@ -309,6 +309,22 @@ public sealed class GameWindow
             if(displayState != WindowDisplayState.Minimized) ResetMousePosition();
         }
     }
+
+    // public void BorderlessFullscreen()
+    // {
+    //     Raylib.SetWindowState(ConfigFlags.TopmostWindow);
+    //
+    //     if (displayState == WindowDisplayState.Maximized) Raylib.ClearWindowState(ConfigFlags.MaximizedWindow);
+    //     else if (displayState == WindowDisplayState.Minimized)
+    //     {
+    //         Raylib.ClearWindowState(ConfigFlags.MinimizedWindow);
+    //     }
+    //
+    //     WindowBorder = WindowBorder.Undecorated;
+    //     Raylib.SetWindowPosition(0, 0);
+    //     var mDim = Monitor.CurMonitor().Dimensions;
+    //     Raylib.SetWindowSize(mDim.Width, mDim.Height);
+    // }
     public WindowBorder WindowBorder
     {
         get => windowBorder;

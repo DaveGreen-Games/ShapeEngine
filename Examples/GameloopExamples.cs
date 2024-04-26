@@ -416,6 +416,7 @@ namespace Examples
             var fullscreenState = InputActionFullscreen.Consume();
             if (fullscreenState is { Consumed: false, Pressed: true })
             {
+                // Window.BorderlessFullscreen();
                 Window.DisplayState = Window.DisplayState == WindowDisplayState.Fullscreen ? WindowDisplayState.Normal : WindowDisplayState.Fullscreen;
                 // GAMELOOP.Fullscreen = !GAMELOOP.Fullscreen;
             }
