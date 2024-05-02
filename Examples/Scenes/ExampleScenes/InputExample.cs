@@ -1,6 +1,7 @@
 using Raylib_cs;
 using ShapeEngine.Core;
 using System.Numerics;
+using System.Reflection;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
@@ -258,53 +259,88 @@ namespace Examples.Scenes.ExampleScenes
         {
             float flashF = flashTimer / flashDuration;
             var flashColor1 = Colors.Medium.Lerp(Colors.Highlight, flashF);
-            var flashColor2 = Colors.Medium.Lerp(Colors.Special, flashF);
-            var flashColor3 = Colors.Medium.Lerp(Colors.Warm, flashF);
-            
-            Rect top = area.ApplyMargins(0, 0, 0, 0.8f);
-            Rect bottom = area.ApplyMargins(0, 0, 0.2f, 0);
-            float marginSize = bottom.Size.Max() * 0.025f;
-            Rect insideBottom = bottom.ApplyMarginsAbsolute(marginSize, marginSize, marginSize, marginSize);//  bottom.ApplyMargins(0.025f, 0.025f, 0.025f, 0.025f);
 
-            insideBottom.DrawLines(lineThickness / 2, flashColor1);
+            var margin = area.Size.Min() * 0.1f;
+            var inside = area.ApplyMarginsAbsolute(margin, margin, margin, margin);
             
-            var startRect = insideBottom.ScaleSize(new Vector2(1f, 0f), new Vector2(0f, 1f));
-            //float axisValue = (trigger.State.Axis + 1f) / 2f;
-            var insideRect = startRect.Lerp(insideBottom, trigger.State.Axis);
-            insideRect.Draw(flashColor2);
+            var axis = trigger.State.Axis;
+            var axisRaw = trigger.State.AxisRaw;
             
-            var inputs = trigger.GetInputs(curInputDeviceType);
-            var inputNamesRect = insideBottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
-            var count = inputs.Count + 1;
-            var rects = inputNamesRect.SplitV(count);
-            textFont.ColorRgba = Colors.Medium;
-            for (var i = 0; i < count; i++)
-            {
-                if (inputs.Count > i)
-                {
-                    
-                    textFont.DrawTextWrapNone(inputs[i].GetName(true), rects[i], new(0.5f, 0f));
-                    // font.DrawText(, rects[i], 1f, new Vector2(0.5f, 0f), ExampleScene.ColorMedium);
-                }
-                else
-                {
-                    var p = (int)(trigger.State.Axis * 100f);
-                    var percentageText = $"{p}%";textFont.FontSpacing = 4f;
-                    textFont.DrawTextWrapNone(percentageText, rects[i], new(0.5f, 1f));
-                    // font.DrawText(percentageText, rects[i], 1f, new Vector2(0.5f, 1f), ExampleScene.ColorMedium);
-                }
-            }
-            
-            
+            var splitH = inside.SplitH(0.5f);
+            splitH.left.ApplyMargins(0f, 0.05f, 1f - axis, 0f).Draw(Colors.Special);
+            splitH.right.ApplyMargins(0.05f, 0f, 1f - axisRaw, 0f).Draw(Colors.Special);
 
+            var splitV = inside.SplitV(0.5f, 0.25f);
+            textFont.ColorRgba = flashColor1;
+            textFont.DrawTextWrapNone(title, splitV[0], new(0.5f, 0f));
+            
+            var p = (int)(axis * 100f);
+            var pRaw = (int)(axisRaw * 100f);
+            var pText = $"{p}%";
+            var pRawText = $"{pRaw}%";
+            textFont.DrawTextWrapNone(pText, splitV[1], new(0.5f, 0.5f));
+            textFont.DrawTextWrapNone(pRawText, splitV[2], new(0.5f, 0.5f));
+            
+            
+            area.DrawLines(4f, flashColor1);
             if (trigger.State.Down)
             {
-                bottom.DrawLines(lineThickness, Colors.Special);
+                area.DrawLines(5f, Colors.Special);
             }
-
             
-            textFont.ColorRgba = flashColor1;
-            textFont.DrawTextWrapNone(title, top, new(0.5f, 0f));
+            // float flashF = flashTimer / flashDuration;
+            // var flashColor1 = Colors.Medium.Lerp(Colors.Highlight, flashF);
+            // var flashColor2 = Colors.Medium.Lerp(Colors.Special, flashF);
+            // var flashColor3 = Colors.Medium.Lerp(Colors.Warm, flashF);
+            //
+            // Rect top = area.ApplyMargins(0, 0, 0, 0.8f);
+            // Rect bottom = area.ApplyMargins(0, 0, 0.2f, 0);
+            // float marginSize = bottom.Size.Max() * 0.025f;
+            // Rect insideBottom = bottom.ApplyMarginsAbsolute(marginSize, marginSize, marginSize, marginSize);//  bottom.ApplyMargins(0.025f, 0.025f, 0.025f, 0.025f);
+            //
+            // insideBottom.DrawLines(lineThickness / 2, flashColor1);
+            //
+            // var startRect = insideBottom.ScaleSize(new Vector2(1f, 0f), new Vector2(0f, 1f));
+            // //float axisValue = (trigger.State.Axis + 1f) / 2f;
+            // var insideRect = startRect.Lerp(insideBottom, trigger.State.Axis);
+            // insideRect.Draw(flashColor2);
+            //
+            // var inputs = trigger.GetInputs(curInputDeviceType);
+            // var inputNamesRect = insideBottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
+            // var count = inputs.Count + 1;
+            // var rects = inputNamesRect.SplitV(count);
+            // textFont.ColorRgba = Colors.Medium;
+            // for (var i = 0; i < count; i++)
+            // {
+            //     if (inputs.Count > i)
+            //     {
+            //         
+            //         textFont.DrawTextWrapNone(inputs[i].GetName(true), rects[i], new(0.5f, 0f));
+            //         // font.DrawText(, rects[i], 1f, new Vector2(0.5f, 0f), ExampleScene.ColorMedium);
+            //     }
+            //     else
+            //     {
+            //         var p = (int)(trigger.State.Axis * 100f);
+            //         var pRaw = (int)(trigger.State.AxisRaw * 100f);
+            //         var percentageText = $"{p} | {pRaw}%";textFont.FontSpacing = 4f;
+            //         textFont.DrawTextWrapNone(percentageText, rects[i], new(0.5f, 1f));
+            //         // font.DrawText(percentageText, rects[i], 1f, new Vector2(0.5f, 1f), ExampleScene.ColorMedium);
+            //     }
+            // }
+            
+            
+
+            // if (trigger.State.Down)
+            // {
+            //     bottom.DrawLines(lineThickness, Colors.Special);
+            // }
+            //
+            //
+            // textFont.ColorRgba = flashColor1;
+            // textFont.DrawTextWrapNone(title, top, new(0.5f, 0f));
+            
+            
+            
             // font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), flashColor1);
         }
     }

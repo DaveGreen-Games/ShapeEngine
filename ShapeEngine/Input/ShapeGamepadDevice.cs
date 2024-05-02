@@ -34,7 +34,8 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
     public event Action? OnAvailabilityChanged;
 
     // private bool triggerFix = false;
-    private readonly Dictionary<ShapeGamepadAxis, float> axisCalibrationValues = new();
+    private readonly Dictionary<ShapeGamepadAxis, float> axisZeroCalibration = new();
+    // public Func<float, float>? AxisValueCalibrator = null; 
     
     public ShapeGamepadDevice(int index, bool connected)
     {
@@ -143,18 +144,15 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
         float triggerRight = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.LeftTrigger);
         float triggerLeft = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.RightTrigger);
 
-        axisCalibrationValues[ShapeGamepadAxis.LEFT_X] = leftX;
-        axisCalibrationValues[ShapeGamepadAxis.LEFT_Y] = leftY;
+        axisZeroCalibration[ShapeGamepadAxis.LEFT_X] = leftX;
+        axisZeroCalibration[ShapeGamepadAxis.LEFT_Y] = leftY;
         
-        axisCalibrationValues[ShapeGamepadAxis.RIGHT_X] = rightX;
-        axisCalibrationValues[ShapeGamepadAxis.RIGHT_Y] = rightY;
+        axisZeroCalibration[ShapeGamepadAxis.RIGHT_X] = rightX;
+        axisZeroCalibration[ShapeGamepadAxis.RIGHT_Y] = rightY;
         
-        axisCalibrationValues[ShapeGamepadAxis.RIGHT_TRIGGER] = triggerRight;
-        axisCalibrationValues[ShapeGamepadAxis.LEFT_TRIGGER] = triggerLeft;
+        axisZeroCalibration[ShapeGamepadAxis.RIGHT_TRIGGER] = triggerRight;
+        axisZeroCalibration[ShapeGamepadAxis.LEFT_TRIGGER] = triggerLeft;
 
-        // triggerFix = triggerLeft < 0 || triggerRight < 0;
-        // triggerFix = false;
-        //trigger fix is not necessary anymore I think...
     }
     
     private void UpdateButtonStates()
@@ -317,15 +315,30 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
         if (!Connected || Index < 0 || isLocked) return 0f;
         
         float value = Raylib.GetGamepadAxisMovement(Index, (GamepadAxis)axis);
-        value -= axisCalibrationValues[axis];
-        // if (axis is ShapeGamepadAxis.LEFT_TRIGGER or ShapeGamepadAxis.RIGHT_TRIGGER)
-        // {
-            // if(triggerFix) value = (value + 1f) / 2f;
-        // }
+        // if(axis == ShapeGamepadAxis.RIGHT_TRIGGER) Console.WriteLine($"Axis Movement {value} | Calibration Value: {axisCalibrationValues[axis]} | Final value: {value - axisCalibrationValues[axis]}");
 
+        var calibrationValue = axisZeroCalibration[axis];
+        value -= calibrationValue;
+        value = CalibrateAxis(value, axis);
+        
+        // if (calibrationValue != 0f)
+        // {
+        //     value -= axisZeroCalibration[axis];
+        //     if (axis == ShapeGamepadAxis.LEFT_TRIGGER || axis == ShapeGamepadAxis.RIGHT_TRIGGER) value /= 2f;
+        // }
+        
+        return value;
+        
+        
+    }
+
+    private float CalibrateAxis(float value, ShapeGamepadAxis axis)
+    {
+        //implement a way to detect if further calibration is needed
+        //for instance range goes beyond 1 or under 0 
+        if (axis == ShapeGamepadAxis.LEFT_TRIGGER || axis == ShapeGamepadAxis.RIGHT_TRIGGER) value /= 2f;
         return value;
     }
-    
     public InputState CreateInputState(ShapeGamepadAxis axis, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         float axisValue = GetValue(axis, deadzone, modifierOperator, modifierKeys);
