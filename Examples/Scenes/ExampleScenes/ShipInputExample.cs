@@ -384,7 +384,7 @@ namespace Examples.Scenes.ExampleScenes
 
         private void DrawGamepadInfo(Rect rect)
         {
-            var text = $"Connected {ShapeInput.GamepadDeviceManager.GetConnectedGamepads().Count} | Available {ShapeInput.GamepadDeviceManager.GetAvailableGamepads().Count}";
+            var text = $"Connected {GamepadManager.GetConnectedGamepads().Count} | Available {GamepadManager.GetAvailableGamepads().Count}";
             
             textFont.FontSpacing = 1f;
             textFont.ColorRgba = Colors.Warm;
