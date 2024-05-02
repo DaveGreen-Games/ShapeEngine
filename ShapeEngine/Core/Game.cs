@@ -254,6 +254,37 @@ public class Game
             
             ResolveUpdate(Time, GameScreenInfo, UIScreenInfo);
             
+            DrawToScreen();
+
+            ResolveDeferred();
+        }
+    }
+    private void DrawToScreen()
+    {
+        
+        var activeScreenShaders = ScreenShaders.GetActiveShaders();
+        
+        //no shaders active -> draw directly to screen
+        if (activeScreenShaders.Count <= 0)
+        {
+            Raylib. BeginDrawing();
+            Raylib.ClearBackground(BackgroundColorRgba.ToRayColor());
+
+            Raylib.BeginMode2D(Camera.Camera);
+            ResolveDrawGame(GameScreenInfo);
+            Raylib.EndMode2D();
+            
+            ResolveDrawGameUI(UIScreenInfo);
+            if(Window.MouseOnScreen) Window.Cursor.DrawGameUI(UIScreenInfo);
+            
+            ResolveDrawUI(UIScreenInfo);
+            if(Window.MouseOnScreen) Window.Cursor.DrawUI(UIScreenInfo);
+            
+            Raylib.EndDrawing();
+        }
+        else
+        {
+            //draw to game texture
             Raylib.BeginTextureMode(gameTexture.RenderTexture);
             Raylib.ClearBackground(new(0,0,0,0));
 
@@ -266,80 +297,59 @@ public class Game
             
             Raylib.EndTextureMode();
             
-            //Window.ScreenArea, mousePosUI
-            DrawToScreen();
-
-            ResolveDeferred();
-        }
-    }
-
-    
-    
-    private void DrawToScreen()
-    {
-        //parameters
-        //Rect screenArea, Vector2 mousePosUI
-        // Stopwatch watch = new();
-        // watch.Restart();
-        // Console.WriteLine($"Draw screen {watch.ElapsedMilliseconds}ms");
-        var activeScreenShaders = ScreenShaders.GetActiveShaders();
-        
-        //multi shader support enabled and multiple screen shaders are active
-        if (activeScreenShaders.Count > 1 && screenShaderBuffer.Loaded)
-        {
-            int lastIndex = activeScreenShaders.Count - 1;
-            ShapeShader lastShader = activeScreenShaders[lastIndex];
-            activeScreenShaders.RemoveAt(lastIndex);
-            
-            ScreenTexture source = gameTexture;
-            ScreenTexture target = screenShaderBuffer;
-            ScreenTexture temp;
-            foreach (var shader in activeScreenShaders)
+            //multi shader support enabled and more than 1 shader is active
+            if (activeScreenShaders.Count > 1 && screenShaderBuffer.Loaded)
             {
-                Raylib.BeginTextureMode(target.RenderTexture);
-                Raylib.ClearBackground(new(0,0,0,0));
-                Raylib.BeginShaderMode(shader.Shader);
-                source.Draw();
+                int lastIndex = activeScreenShaders.Count - 1;
+                ShapeShader lastShader = activeScreenShaders[lastIndex];
+                activeScreenShaders.RemoveAt(lastIndex);
+            
+                ScreenTexture source = gameTexture;
+                ScreenTexture target = screenShaderBuffer;
+                ScreenTexture temp;
+                foreach (var shader in activeScreenShaders)
+                {
+                    Raylib.BeginTextureMode(target.RenderTexture);
+                    Raylib.ClearBackground(new(0,0,0,0));
+                    Raylib.BeginShaderMode(shader.Shader);
+                    source.Draw();
+                    Raylib.EndShaderMode();
+                    Raylib.EndTextureMode();
+                    temp = source;
+                    source = target;
+                    target = temp;
+                }
+            
+                Raylib.BeginDrawing();
+                Raylib.ClearBackground(BackgroundColorRgba.ToRayColor());
+
+                Raylib.BeginShaderMode(lastShader.Shader);
+                target.Draw();
                 Raylib.EndShaderMode();
-                Raylib.EndTextureMode();
-                temp = source;
-                source = target;
-                target = temp;
+
+                ResolveDrawUI(UIScreenInfo);
+                if(Window.MouseOnScreen) Window.Cursor.DrawUI(UIScreenInfo);
+                Raylib.EndDrawing();
+            
             }
             
-            Raylib.BeginDrawing();
-            Raylib.ClearBackground(BackgroundColorRgba.ToRayColor());
-
-            Raylib.BeginShaderMode(lastShader.Shader);
-            target.Draw();
-            Raylib.EndShaderMode();
-
-            ResolveDrawUI(UIScreenInfo);
-            if(Window.MouseOnScreen) Window.Cursor.DrawUI(UIScreenInfo);
-            Raylib.EndDrawing();
-            
-        }
-        else //single shader mode or only 1 screen shader is active
-        {
-            Raylib. BeginDrawing();
-            Raylib.ClearBackground(BackgroundColorRgba.ToRayColor());
-
-            if (activeScreenShaders.Count > 0)
+            //no multi shader support or only 1 shader active
+            else
             {
+                Raylib. BeginDrawing();
+                Raylib.ClearBackground(BackgroundColorRgba.ToRayColor());
+
                 Raylib.BeginShaderMode(activeScreenShaders[0].Shader);
                 gameTexture.Draw();
                 Raylib.EndShaderMode();
+            
+                ResolveDrawUI(UIScreenInfo);
+                if(Window.MouseOnScreen) Window.Cursor.DrawUI(UIScreenInfo);
+            
+                Raylib.EndDrawing();
+            
             }
-            else
-            {
-                gameTexture.Draw();
-            }
-            
-            ResolveDrawUI(UIScreenInfo);
-            if(Window.MouseOnScreen) Window.Cursor.DrawUI(UIScreenInfo);
-            
-            Raylib.EndDrawing();
-            
+
         }
     }
     private void EndGameloop()

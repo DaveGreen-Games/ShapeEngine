@@ -194,7 +194,7 @@ namespace Examples
         // public bool UseMouseMovement = true;
         public GameloopExamples() : base
             (
-                new GameSettings(){ DevelopmentDimensions = new(1920, 1080), MultiShaderSupport = true},
+                new GameSettings(){ DevelopmentDimensions = new(1920, 1080), MultiShaderSupport = false},
                 WindowSettings.Default
             )
         {
