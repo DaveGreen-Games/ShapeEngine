@@ -5,6 +5,27 @@ namespace ShapeEngine.Input;
 
 public sealed class ShapeGamepadDevice : ShapeInputDevice
 {
+    private readonly struct AxisRange
+    {
+        public readonly float Minimum;
+        public readonly float Maximum;
+
+        public float TotalRange => MathF.Abs(Maximum - Minimum);
+        public AxisRange(float minimum, float maximum)
+        {
+            Minimum = minimum;
+            Maximum = maximum;
+        }
+
+        public AxisRange UpdateRange(float newValue)
+        {
+            if (newValue < Minimum) return new(newValue, Maximum);
+            if (newValue > Maximum) return new(Minimum, newValue);
+            return new(Minimum, Maximum);
+        }
+    }
+    
+    
     public static readonly GamepadButton[] AllGamepadButtons = Enum.GetValues<GamepadButton>();
     public static readonly GamepadAxis[] AllGamepadAxis = Enum.GetValues<GamepadAxis>();
     
@@ -36,6 +57,7 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
     // private bool triggerFix = false;
     private readonly Dictionary<ShapeGamepadAxis, float> axisZeroCalibration = new();
     // public Func<float, float>? AxisValueCalibrator = null; 
+    private Dictionary<ShapeGamepadAxis, AxisRange> axisRanges = new();
     
     public ShapeGamepadDevice(int index, bool connected)
     {
@@ -334,9 +356,25 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
 
     private float CalibrateAxis(float value, ShapeGamepadAxis axis)
     {
-        //implement a way to detect if further calibration is needed
-        //for instance range goes beyond 1 or under 0 
-        if (axis == ShapeGamepadAxis.LEFT_TRIGGER || axis == ShapeGamepadAxis.RIGHT_TRIGGER) value /= 2f;
+        if (axisRanges.TryGetValue(axis, out var range))
+        {
+            axisRanges[axis] = range.UpdateRange(value);
+        }
+        else
+        {
+            axisRanges[axis] = new(value, value);
+        }
+        
+        if (axis is ShapeGamepadAxis.LEFT_TRIGGER or ShapeGamepadAxis.RIGHT_TRIGGER)
+        {
+            var axisRange = axisRanges[axis];
+            if (axisRange.TotalRange > 1)
+            {
+                value /= axisRange.TotalRange;
+            }
+            
+        }
+        
         return value;
     }
     public InputState CreateInputState(ShapeGamepadAxis axis, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
