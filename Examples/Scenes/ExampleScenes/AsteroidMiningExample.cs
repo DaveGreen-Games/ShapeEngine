@@ -342,7 +342,7 @@ namespace Examples.Scenes.ExampleScenes
             UpdateTriangle();
 
             var shootKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
-            var shootGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
+            var shootGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
             var shootMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
             iaShootLaser = new(shootKB, shootGP, shootMB);
             //this.laserEndPoint = tip;
@@ -580,7 +580,7 @@ namespace Examples.Scenes.ExampleScenes
 
             var addShapeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
             var addShapeMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
-            var addShapeGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
+            var addShapeGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
             iaAddShape = new(addShapeKB, addShapeMB, addShapeGP);
 
             var cutShapeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.C);

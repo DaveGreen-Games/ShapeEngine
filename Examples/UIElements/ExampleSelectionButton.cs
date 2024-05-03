@@ -40,7 +40,7 @@ namespace Examples.UIElements
             if (!MouseInside) return false;
             if (Scene == null) return false;
             var acceptState = GAMELOOP.InputActionUIAcceptMouse.Consume();
-            return acceptState is { Consumed: false, Released: true };
+            return acceptState is { Consumed: false, Pressed: true };
         }
 
         protected override bool GetPressedState()
@@ -48,7 +48,7 @@ namespace Examples.UIElements
             if (!Selected) return false;
             if (Scene == null) return false;
             var acceptState = GAMELOOP.InputActionUIAccept.Consume();
-            return acceptState is { Consumed: false, Released: true };
+            return acceptState is { Consumed: false, Pressed: true };
         }
 
         public override Direction GetNavigationDirection()

@@ -148,7 +148,12 @@ namespace Examples.Scenes
                 if (rectNode.MouseInside)
                 {
                     backLabelRect.DrawLines(2f, Colors.Medium);
-                    if (ShapeInput.MouseDevice.GetButtonState(ShapeMouseButton.LEFT).Pressed)
+                    
+                    var acceptState = GAMELOOP.InputActionUIAccept.Consume();
+                    var acceptMouseState = GAMELOOP.InputActionUIAcceptMouse.Consume();
+                    
+                    // if (GAMELOOP.InputActionUIAccept.State.Pressed || GAMELOOP.InputActionUIAcceptMouse.State.Pressed)// ShapeInput.MouseDevice.GetButtonState(ShapeMouseButton.LEFT).Pressed)
+                    if (acceptState is {Consumed:false, Pressed:true} || acceptMouseState is {Consumed:false, Pressed:true})// ShapeInput.MouseDevice.GetButtonState(ShapeMouseButton.LEFT).Pressed)
                     {
                         if (IsCancelAllowed())
                         {

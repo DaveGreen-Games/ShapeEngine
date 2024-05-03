@@ -132,6 +132,8 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
         AxisCount = Raylib.GetGamepadAxisCount(Index);
         OnConnectionChanged?.Invoke();
         
+        axisRanges.Clear();
+        
         Calibrate();
     }
     public void Disconnect()

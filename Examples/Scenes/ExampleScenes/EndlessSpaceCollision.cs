@@ -613,12 +613,12 @@ public class EndlessSpaceCollision : ExampleScene
         private void SetupInput()
         {
             var moveHorKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
-            var moveHor2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+            var moveHor2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
             var moveHorMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
             iaMoveHor = new(moveHorKB, moveHor2GP, moveHorMW);
             
             var moveVerKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
-            var moveVer2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+            var moveVer2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
             var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
             iaMoveVer = new(moveVerKB, moveVer2GP, moveVerMW);
         }
@@ -785,6 +785,9 @@ public class EndlessSpaceCollision : ExampleScene
                     Velocity = new();
                 }
             }
+
+            var gamepad = GAMELOOP.CurGamepad;
+            GAMELOOP.MouseControlEnabled = gamepad?.IsDown(ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, 0.1f) ?? true;
             
             
             float dt = time.Delta;
@@ -1830,6 +1833,12 @@ public class EndlessSpaceCollision : ExampleScene
     private readonly Ship ship;
     private readonly ShapeCamera camera;
     private readonly InputAction iaDrawDebug;
+
+    private readonly InputAction iaPayloadCallinUp;
+    private readonly InputAction iaPayloadCallinDown;
+    private readonly InputAction iaPayloadCallinLeft;
+    private readonly InputAction iaPayloadCallinRight;
+    
     private bool drawDebug = false;
 
     private readonly CameraFollowerSingle follower;
@@ -1946,6 +1955,22 @@ public class EndlessSpaceCollision : ExampleScene
         var toggleDrawKB = new InputTypeKeyboardButton(ShapeKeyboardButton.T);
         var toggleDrawGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
         iaDrawDebug = new(toggleDrawKB, toggleDrawGP);
+        
+        var callInUpKb = new InputTypeKeyboardButton(ShapeKeyboardButton.UP);
+        var callInUpGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP);
+        iaPayloadCallinUp = new(callInUpKb, callInUpGp);
+            
+        var callInDownKb = new InputTypeKeyboardButton(ShapeKeyboardButton.DOWN);
+        var callInDownGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN);
+        iaPayloadCallinDown = new(callInDownKb, callInDownGp);
+        
+        var callInLeftKb = new InputTypeKeyboardButton(ShapeKeyboardButton.LEFT);
+        var callInLeftGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT);
+        iaPayloadCallinLeft = new(callInLeftKb, callInLeftGp);
+        
+        var callInRightKb = new InputTypeKeyboardButton(ShapeKeyboardButton.RIGHT);
+        var callInRightGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT);
+        iaPayloadCallinRight = new(callInRightKb, callInRightGp);
         
         AddAsteroids(AsteroidCount);
     }
@@ -2090,6 +2115,18 @@ public class EndlessSpaceCollision : ExampleScene
         iaDrawDebug.Gamepad = gamepad;
         iaDrawDebug.Update(dt);
         
+        iaPayloadCallinUp.Gamepad = gamepad;
+        iaPayloadCallinUp.Update(dt);
+        
+        iaPayloadCallinDown.Gamepad = gamepad;
+        iaPayloadCallinDown.Update(dt);
+        
+        iaPayloadCallinLeft.Gamepad = gamepad;
+        iaPayloadCallinLeft.Update(dt);
+        
+        iaPayloadCallinRight.Gamepad = gamepad;
+        iaPayloadCallinRight.Update(dt);
+        
         if (iaDrawDebug.State.Pressed)
         {
             drawDebug = !drawDebug;
@@ -2097,22 +2134,22 @@ public class EndlessSpaceCollision : ExampleScene
 
         KeyDirection dir = KeyDirection.None;
         
-        if (ShapeKeyboardButton.UP.GetInputState().Pressed)
+        if (iaPayloadCallinUp.State.Pressed)
         {
             dir = KeyDirection.Up;
         }
         
-        if (ShapeKeyboardButton.DOWN.GetInputState().Pressed)
+        if (iaPayloadCallinDown.State.Pressed)
         {
             dir = KeyDirection.Down;
         }
         
-        if (ShapeKeyboardButton.LEFT.GetInputState().Pressed)
+        if (iaPayloadCallinLeft.State.Pressed)
         {
             dir = KeyDirection.Left;
         }
         
-        if (ShapeKeyboardButton.RIGHT.GetInputState().Pressed)
+        if (iaPayloadCallinRight.State.Pressed)
         {
             dir = KeyDirection.Right;
         }

@@ -540,17 +540,17 @@ public class ShapesExample : ExampleScene
         Title = "Shapes Example";
 
         var nextStaticShapeMb = new InputTypeMouseButton(ShapeMouseButton.LEFT);
-        var nextStaticShapeGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
+        var nextStaticShapeGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
         var nextStaticShapeKb = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
         nextStaticShape = new(nextStaticShapeMb, nextStaticShapeGp, nextStaticShapeKb);
         
         var nextMovingShapeMb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
-        var nextMovingShapeGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
+        var nextMovingShapeGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
         var nextMovingShapeKb = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
         nextMovingShape = new(nextMovingShapeMb, nextMovingShapeGp, nextMovingShapeKb);
         
         var changeModeMB = new InputTypeMouseButton(ShapeMouseButton.MIDDLE);
-        var changeModeGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
+        var changeModeGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
         var changeModeKb = new InputTypeKeyboardButton(ShapeKeyboardButton.TAB);
         changeMode = new(changeModeMB, changeModeGp, changeModeKb);
         
