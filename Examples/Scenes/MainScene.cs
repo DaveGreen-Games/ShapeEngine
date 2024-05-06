@@ -224,9 +224,11 @@ namespace Examples.Scenes
             titleFont.ColorRgba = Colors.Medium;
             titleFont.DrawTextWrapNone($"Window Focused: {Raylib.IsWindowFocused()} | [{pi}%]", infoAreaRects.top, new Vector2(1f, 1f));
             titleFont.DrawTextWrapNone($"Cursor On Screen: {GameWindow.IsMouseOnScreen}", infoAreaRects.bottom, new Vector2(1f, 1f));
-            
-            var centerRight = GAMELOOP.UIRects.GetRect("center right");
-            var inputInfoRect = centerRight.ApplyMargins(0.25f, -0.025f, 0.15f, 0.55f);
+
+
+            var inputInfoRect = ui.Area.ApplyMargins(0.75f, 0.01f, 0.75f, 0.01f);
+            // var centerRight = GAMELOOP.UIRects.GetRect("center right");//.Union(GAMELOOP.UIRects.GetRect("bottom right"));
+            // var inputInfoRect = centerRight.ApplyMargins(-2f, 0f, 0.65f, 0f);
             DrawInputInfoBox(inputInfoRect);
         }
         
@@ -252,6 +254,12 @@ namespace Examples.Scenes
         private void PrevPage() => buttonContainer.PrevPage(true);
         private void DrawInputInfoBox(Rect area)
         {
+            area.Draw(Colors.PcDark.ColorRgba);
+            area.DrawLines(2f, Colors.PcMedium.ColorRgba);
+
+            var margin = area.Size.Min() * 0.025f;
+            area = area.ApplyMarginsAbsolute(margin, margin, margin, margin);
+            
             var curInputDevice = ShapeInput.CurrentInputDeviceType;
             if (curInputDevice == InputDeviceType.Mouse) curInputDevice = InputDeviceType.Keyboard;
 
@@ -260,18 +268,18 @@ namespace Examples.Scenes
             
             string crtInputTypeNamesPlus = GAMELOOP.InputActionCRTPlus.GetInputTypeDescription(InputDeviceType.Keyboard, true, 1, false, false);
             string crtInputTypeNamesMinus = GAMELOOP.InputActionCRTMinus.GetInputTypeDescription(InputDeviceType.Keyboard, true, 1, false, false);
-            var crtInfo = $"CRT Shader [{crtInputTypeNamesPlus}|{crtInputTypeNamesMinus}]";
+            var crtInfo = $"Shader [{crtInputTypeNamesPlus}|{crtInputTypeNamesMinus}]";
             
             string zoomInputTypeName = GAMELOOP.InputActionZoom.GetInputTypeDescription(ShapeInput.CurrentInputDeviceType, true, 1, false);
-            var zoomInfo = $"Zoom Example {zoomInputTypeName}";
+            var zoomInfo = $"Zoom {zoomInputTypeName}";
             
             string pauseInputTypeName = GAMELOOP.InputActionPause.GetInputTypeDescription(curInputDevice, true, 1, false);
-            var pauseInfo = $"Pause Example {pauseInputTypeName}";
+            var pauseInfo = $"Pause {pauseInputTypeName}";
             
             string resetInputTypeName = GAMELOOP.InputActionReset.GetInputTypeDescription(curInputDevice, true, 1, false);
-            var resetInfo = $"Reset Example {resetInputTypeName}";
+            var resetInfo = $"Reset {resetInputTypeName}";
 
-            var rects = area.SplitV(5);
+            var rects = curInputDevice == InputDeviceType.Gamepad ? area.SplitV(6) : area.SplitV(5);
 
             var color = Colors.Medium;
             var alignement = new Vector2(1f, 0.05f);
@@ -282,6 +290,14 @@ namespace Examples.Scenes
             titleFont.DrawTextWrapNone(resetInfo, rects[2], alignement);
             titleFont.DrawTextWrapNone(zoomInfo, rects[3], alignement);
             titleFont.DrawTextWrapNone(pauseInfo, rects[4], alignement);
+            
+            if (curInputDevice == InputDeviceType.Gamepad)
+            {
+                string mouseMovementModifierName = GameloopExamples.ModifierKeyGamepad.GetName(true);// GAMELOOP.InputActionReset.GetInputTypeDescription(curInputDevice, true, 1, false);
+                var mouseMovementInfo = $"Mouse [{mouseMovementModifierName} + LS]";
+                titleFont.DrawTextWrapNone(mouseMovementInfo, rects[5], alignement);
+            }
+            
         }
         
         private void DrawScreenInfoDebug(Rect uiArea)

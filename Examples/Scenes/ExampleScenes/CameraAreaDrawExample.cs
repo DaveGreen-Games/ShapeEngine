@@ -134,7 +134,9 @@ namespace Examples.Scenes.ExampleScenes
         protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             UpdateFollower(ui.Area.Size.Min());
-            // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
+            
+            GAMELOOP.MouseControlEnabled = GAMELOOP.CurGamepad?.IsDown(ShapeGamepadAxis.RIGHT_TRIGGER, 0.1f) ?? true;
+            
             iaChangeCameraTarget.Gamepad = GAMELOOP.CurGamepad;
             iaChangeCameraTarget.Update(time.Delta);
             

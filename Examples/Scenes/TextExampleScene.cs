@@ -60,15 +60,15 @@ namespace Examples.Scenes
             //font =  new(GAMELOOP.GetFont(fontIndex),1f, ExampleScene.ColorLight);
 
             var enterTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ENTER);
-            var enterTextGP = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_RIGHT);
+            var enterTextGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
             iaEnterText = new(accessTagTextBox,enterTextKB, enterTextGP);
             
             var cancelTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ESCAPE);
-            var cancelTextGP = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_LEFT);
+            var cancelTextGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
             iaCancelText = new(accessTagTextBox,cancelTextKB, cancelTextGP);
             
             var finishTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ENTER);
-            var finishTextGP = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_RIGHT);
+            var finishTextGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
             iaFinishText = new(accessTagTextBox,finishTextKB, finishTextGP);
 
             var modifierKB = new ModifierKeyKeyboardButton(ShapeKeyboardButton.LEFT_SHIFT);

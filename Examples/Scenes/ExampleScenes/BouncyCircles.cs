@@ -117,7 +117,7 @@ namespace Examples.Scenes.ExampleScenes
             iaAdd = new(addKB, addMB, addGP);
 
             var toggleConvexHullKB = new InputTypeKeyboardButton(ShapeKeyboardButton.C);
-            var toggleConvexHullGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_THUMB);
+            var toggleConvexHullGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
             iaToggleConvexHull = new(toggleConvexHullKB, toggleConvexHullGP);
             
             inputActions = new() { iaAdd, iaToggleConvexHull };

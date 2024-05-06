@@ -16,6 +16,11 @@ namespace Examples.UIElements
         public ExampleScene? Scene { get; private set; } = null;
         private TextFont textFont;
         public bool Hidden => Scene == null;
+
+
+        private float pressDelayTimer = 0f;
+        private const float PressDelay = 0.1f;
+        
         public ExampleSelectionButton()
         {
             // Hidden = true;
@@ -99,7 +104,15 @@ namespace Examples.UIElements
             if (value)
             {
                 // Console.WriteLine($"Button Pressed - Scene {Scene.Title}");
-                GAMELOOP.GoToScene(Scene);
+                // GAMELOOP.GoToScene(Scene);
+                if (PressDelay > 0f)
+                {
+                    pressDelayTimer = PressDelay;
+                }
+                else
+                {
+                    GAMELOOP.GoToScene(Scene);
+                }
                 
             }
         }
@@ -110,6 +123,16 @@ namespace Examples.UIElements
             if (inputCooldownTimer > 0)
             {
                 inputCooldownTimer -= dt;
+            }
+
+            if (pressDelayTimer > 0)
+            {
+                pressDelayTimer -= dt;
+                if (pressDelayTimer <= 0f)
+                {
+                    if (Scene != null) GAMELOOP.GoToScene(Scene);
+                    pressDelayTimer = 0f;
+                }
             }
         }
 
