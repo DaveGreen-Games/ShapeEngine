@@ -283,6 +283,32 @@ public abstract class ControlNode
 
     #region Children
 
+    public int GetChildIndex(ControlNode child) => children.IndexOf(child);
+   
+    public ControlNode? GetPreviousChild(ControlNode child)
+    {
+        if (children.Count <= 0) return null;
+        var index = children.IndexOf(child);
+        if (index < 0) return null;
+        if (index == 0)
+        {
+            return children[^1];
+        }
+        return children[index - 1];
+    }
+    public ControlNode? GetNextChild(ControlNode child)
+    {
+        if (children.Count <= 0) return null;
+        var index = children.IndexOf(child);
+        if (index < 0) return null;
+        if (index >= children.Count - 1)
+        {
+            return children[0];
+        }
+        return children[index + 1];
+    }
+    
+    
     public bool AddChild(ControlNode child)
     {
         if (child.Parent != null)
