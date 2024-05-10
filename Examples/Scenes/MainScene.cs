@@ -273,8 +273,10 @@ namespace Examples.Scenes
             string zoomInputTypeName = GAMELOOP.InputActionZoom.GetInputTypeDescription(ShapeInput.CurrentInputDeviceType, true, 1, false);
             var zoomInfo = $"Zoom {zoomInputTypeName}";
             
-            string pauseInputTypeName = GAMELOOP.InputActionPause.GetInputTypeDescription(curInputDevice, true, 1, false);
-            var pauseInfo = $"Pause {pauseInputTypeName}";
+            // string pauseInputTypeName = GAMELOOP.InputActionPause.GetInputTypeDescription(curInputDevice, true, 1, false);
+            // var pauseInfo = $"Pause {pauseInputTypeName}";
+            string palleteInputTypeName = GAMELOOP.InputActionCyclePalette.GetInputTypeDescription(curInputDevice, true, 1, false);
+            var pauseInfo = $"Palette {palleteInputTypeName}";
             
             string resetInputTypeName = GAMELOOP.InputActionReset.GetInputTypeDescription(curInputDevice, true, 1, false);
             var resetInfo = $"Reset {resetInputTypeName}";

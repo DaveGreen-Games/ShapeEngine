@@ -63,12 +63,12 @@ namespace Examples.Scenes
                 }
                 
             }
-
-            var pausedState = GAMELOOP.InputActionPause.Consume();
-            if (pausedState is { Consumed: false, Pressed: true })
-            {
-                GAMELOOP.Paused = !GAMELOOP.Paused;
-            }
+            // var pausedState = GAMELOOP.InputActionPause.Consume();
+            // if (pausedState is { Consumed: false, Pressed: true })
+            // {
+            //     GAMELOOP.Paused = !GAMELOOP.Paused;
+            // }
+            
 
             if (GAMELOOP.Paused) return;
 

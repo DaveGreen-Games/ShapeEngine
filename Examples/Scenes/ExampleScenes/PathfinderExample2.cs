@@ -2,7 +2,6 @@ using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 using System.Numerics;
-using System.Reflection.Metadata;
 using Clipper2Lib;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Collision;
@@ -13,7 +12,6 @@ using ShapeEngine.Input;
 using ShapeEngine.Pathfinding;
 using Color = System.Drawing.Color;
 using Path = ShapeEngine.Pathfinding.Path;
-
 namespace Examples.Scenes.ExampleScenes;
 
      
@@ -48,12 +46,12 @@ public class PathfinderExample2 : ExampleScene
         private void SetupInput()
         {
             var moveHorKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
-            var moveHor2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+            var moveHor2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
             var moveHorMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
             iaMoveHor = new(moveHorKB, moveHor2GP, moveHorMW);
             
             var moveVerKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
-            var moveVer2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+            var moveVer2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
             var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
             iaMoveVer = new(moveVerKB, moveVer2GP, moveVerMW);
         }
@@ -385,8 +383,8 @@ public class PathfinderExample2 : ExampleScene
         {
             if (!body.GetBoundingBox().OverlapShape(cameraRect)) return;
             // body. DrawLines(body.Radius * 0.25f, Colors.Special);
-            var c = Predictor ? Colors.Highlight : Colors.Special;
-            ShapeDrawing.DrawCircleFast(body.Center, body.Radius, c);
+            var c = Predictor ? Colors.PcHighlight : Colors.PcSpecial;
+            ShapeDrawing.DrawCircleFast(body.Center, body.Radius, c.ColorRgba);
 
 
             // if (Predictor)
@@ -539,11 +537,11 @@ public class PathfinderExample2 : ExampleScene
         {
             if (!bb.OverlapShape(cameraRect)) return;
 
-            if(drawFilled) triangulation.Draw(Colors.Background);
+            if(drawFilled) triangulation.Draw(Colors.PcBackground.ColorRgba);
             
             if (AsteroidLineThickness > 1)
             {
-                shape.DrawLines(AsteroidLineThickness, Colors.Highlight);
+                shape.DrawLines(AsteroidLineThickness, Colors.PcHighlight.ColorRgba);
             }
         }
 
@@ -571,6 +569,8 @@ public class PathfinderExample2 : ExampleScene
     private readonly Ship ship;
     private readonly ShapeCamera camera;
     private readonly InputAction iaDrawDebug;
+    private readonly InputAction iaAddChasers;
+    
     private bool drawDebug = false;
 
     private readonly CameraFollowerSingle follower;
@@ -589,6 +589,10 @@ public class PathfinderExample2 : ExampleScene
     private const float ChaserSize = CellSize * 0.45f;
     private const float MinPathRequestDistance = CellSize * 2;
     private const float MinPathRequestDistanceSquared = MinPathRequestDistance * MinPathRequestDistance;
+
+    
+    
+    
     public PathfinderExample2()
     {
         Title = "Pathfinder Example 2";
@@ -608,13 +612,22 @@ public class PathfinderExample2 : ExampleScene
         UpdateFollower(camera.BaseSize.Min());
         
         var toggleDrawKB = new InputTypeKeyboardButton(ShapeKeyboardButton.T);
-        var toggleDrawGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
-        iaDrawDebug = new(toggleDrawKB, toggleDrawGP);
+        var toggleDrawGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
+        var toggleDrawMb = new InputTypeMouseButton(ShapeMouseButton.MIDDLE);
+        iaDrawDebug = new(toggleDrawKB, toggleDrawGP, toggleDrawMb);
+        
+        var addChasersKb = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
+        var addChasersGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
+        var addChasersMb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
+        iaAddChasers = new(addChasersKb, addChasersGp, addChasersMb);
         
         AddAsteroids(AsteroidCount);
         AddChasers(250);
 
         pathfinder.RequestsPerFrame = 30;
+
+
+        
     }
     public override void Activate(Scene oldScene)
     {
@@ -902,25 +915,25 @@ public class PathfinderExample2 : ExampleScene
     protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
     {
         var gamepad = GAMELOOP.CurGamepad;
+        
+        GAMELOOP.MouseControlEnabled = gamepad?.IsDown(ShapeGamepadAxis.RIGHT_TRIGGER, 0.1f) ?? true;
+        
         iaDrawDebug.Gamepad = gamepad;
         iaDrawDebug.Update(dt);
+        
+        iaAddChasers.Gamepad = gamepad;
+        iaAddChasers.Update(dt);
 
-        // if (Raylib.IsMouseButtonPressed(MouseButton.Left))
+        // if (ShapeMouseButton.LEFT.GetInputState().Pressed)
         // {
         //     AddAsteroid(mousePosGame);
         // }
-        
-        if (ShapeMouseButton.LEFT.GetInputState().Pressed)
-        {
-            AddAsteroid(mousePosGame);
-        }
-        
-        if (ShapeMouseButton.RIGHT.GetInputState().Pressed)
+        //
+        if (iaAddChasers.State.Pressed)
         {
             AddChasers(100, mousePosGame);
         }
 
-        
         if (iaDrawDebug.State.Pressed)
         {
             drawDebug = !drawDebug;
@@ -1033,17 +1046,18 @@ public class PathfinderExample2 : ExampleScene
     }
     protected override void OnDrawGameExample(ScreenInfo game)
     {
-        universe.DrawLines(12f, Colors.Dark);
-        pathfinder.Grid.Draw(universe, 4f, Colors.Dark);
+        universe.DrawLines(12f, Colors.PcDark.ColorRgba);
+        pathfinder.Grid.Draw(universe, 4f, Colors.PcDark.ColorRgba);
         
         
         if (drawDebug)
         {
-            var cBounds = new ColorRgba(Color.PapayaWhip);
-            var cBlocked = new ColorRgba(Color.IndianRed);
-            var cDefault = new ColorRgba(Color.Gray);
-            var cDesirable = new ColorRgba(Color.SeaGreen);
-            var cUndesirable = new ColorRgba(Color.Chocolate);
+            var cBounds = Colors.PcLight.ColorRgba;
+            var cBlocked = Colors.PcWarm.ColorRgba.ChangeBrightness(-0.1f);
+            var cDefault = Colors.PcDark.ColorRgba;
+            var cDesirable = Colors.PcCold.ColorRgba.ChangeBrightness(-0.25f);
+            var cUndesirable = Colors.PcSpecial.ColorRgba.ChangeBrightness(-0.25f);
+            
             pathfinder.DrawDebug(cBounds, cDefault, cBlocked, cDesirable, cUndesirable, 0);
             
             
@@ -1054,7 +1068,7 @@ public class PathfinderExample2 : ExampleScene
             if (boundarySize.X > 0)
             {
                 var innerBoundary = new Circle(boundaryCenter, boundarySize.X);
-                var innerColor = Colors.Highlight.ChangeAlpha((byte)150);
+                var innerColor = Colors.PcHighlight.ColorRgba.ChangeAlpha((byte)150);
                 innerBoundary.DrawLines(thickness, innerColor);
                 
             }
@@ -1062,11 +1076,11 @@ public class PathfinderExample2 : ExampleScene
             if (boundarySize.Y > 0)
             {
                 var outerBoundary = new Circle(boundaryCenter, boundarySize.Y);
-                var outerColor = Colors.Special.ChangeAlpha((byte)150);
+                var outerColor = Colors.PcSpecial.ColorRgba.ChangeAlpha((byte)150);
                 outerBoundary.DrawLines(thickness, outerColor);
             }
             
-            ShapeDrawing.DrawCircleLines(ship.GetChasePosition(), MinPathRequestDistance, 8f, new ColorRgba(Color.Aqua));
+            ShapeDrawing.DrawCircleLines(ship.GetChasePosition(), MinPathRequestDistance, 8f, Colors.PcCold.ColorRgba);
             // ShapeDrawing.DrawCircleLines(ship.GetChasePosition(), Chaser.MaxPathRequestDistance, 8f, new ColorRgba(Color.Aqua));
         }
 
@@ -1085,7 +1099,7 @@ public class PathfinderExample2 : ExampleScene
         
         ship.Draw();
 
-        var cutShapeColor = Colors.Warm.SetAlpha(100);//.ChangeBrightness(-0.75f);
+        var cutShapeColor = Colors.PcWarm.ColorRgba.SetAlpha(100);//.ChangeBrightness(-0.75f);
         foreach (var cutShape in lastCutShapes)
         {
             // cutShape.DrawRounded(0.2f, 3, cutShapeColor);
@@ -1122,7 +1136,7 @@ public class PathfinderExample2 : ExampleScene
         }
         
         textFont.FontSpacing = 1f;
-        textFont.ColorRgba = Colors.Warm;
+        textFont.ColorRgba = Colors.PcWarm.ColorRgba;
         var rects = rect.SplitV(0.33f, 0.33f);
         textFont.DrawTextWrapNone($"Asteroids {asteroids.Count} | V{count}", rects[0], new(0.5f));
         textFont.DrawTextWrapNone($"Chasers: {chasers.Count}", rects[1], new(0.5f));
@@ -1133,18 +1147,19 @@ public class PathfinderExample2 : ExampleScene
     {
         var rects = rect.SplitV(0.35f);
         var curDevice = ShapeInput.CurrentInputDeviceType;
-        string toggleDrawDebugText = iaDrawDebug.GetInputTypeDescription(ShapeInput.CurrentInputDeviceTypeNoMouse, true, 1, false);
+        string toggleDrawDebugText = iaDrawDebug.GetInputTypeDescription(curDevice, true, 1, false);
+        string addChasersText = iaAddChasers.GetInputTypeDescription(curDevice, true, 1, false);
         string moveText = ship.GetInputDescription(curDevice);
         string drawDebugText = drawDebug ? "ON" : "OFF";
         string textTop = $"Draw Debug {drawDebugText} - Toggle {toggleDrawDebugText}";
-        string textBottom = $"{moveText}";
+        string textBottom = $"{moveText} | Add Chasers {addChasersText}";
         
         textFont.FontSpacing = 1f;
         
-        textFont.ColorRgba = Colors.Medium;
+        textFont.ColorRgba = Colors.PcMedium.ColorRgba;
         textFont.DrawTextWrapNone(textTop, rects.top, new(0.5f));
         
-        textFont.ColorRgba = Colors.Light;
+        textFont.ColorRgba = Colors.PcLight.ColorRgba;
         textFont.DrawTextWrapNone(textBottom, rects.bottom, new(0.5f));
     }
 }

@@ -1,4 +1,5 @@
 ﻿
+using System.Net.Mime;
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Lib;
@@ -11,12 +12,75 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Screen;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
+using ShapeEngine.Text;
 using ShapeEngine.UI;
 using Color = System.Drawing.Color;
 
 
 namespace Examples
 {
+    internal class PaletteInfoBox
+    {
+        private string name = string.Empty;
+        private float timer = 0f;
+        private float duration = 0f;
+        private readonly TextFont textFont;
+        private bool IsVisible => timer > 0f && name.Length > 0;
+        
+        public PaletteInfoBox()
+        {
+            textFont = new(GAMELOOP.GetFont(FontIDs.JetBrains), 1f, Colors.Text);
+        }
+
+        public void Trigger(string paletteName, float dur)
+        {
+            name = paletteName;
+            duration = dur;
+            timer = dur;
+        }
+        
+        public void Update(float dt)
+        {
+            if (timer > 0f)
+            {
+                timer -= dt;
+                if (timer <= 0f)
+                {
+                    name = string.Empty;
+                    duration = 0f;
+                    timer = 0f;
+                }
+            }
+        }
+
+        public void Draw(Rect rect)
+        {
+            if (!IsVisible) return;
+
+            var lt = rect.Size.Max() * 0.01f;
+            
+            rect.Draw(Colors.PcDark.ColorRgba);
+            rect.DrawLines(lt, Colors.PcLight.ColorRgba);
+
+            var margin = rect.Size.Max() * 0.025f;
+            var textRect = rect.ApplyMarginsAbsolute(margin, margin, margin, margin);
+            var split = textRect.SplitV(0.3f);
+            
+        
+            textFont.ColorRgba = Colors.PcText.ColorRgba;
+            textFont.DrawTextWrapNone("Palette Changed To", split.top, new(0.5f));
+            
+            textFont.ColorRgba = Colors.PcSpecial.ColorRgba;
+            textFont.DrawTextWrapNone(name, split.bottom, new(0.5f));
+
+            var f = timer / duration;
+            var bar = split.bottom.ApplyMargins(0.025f, 0.025f, 0.9f, 0.025f);
+            bar = bar.ApplyMargins(0f, f, 0f, 0f);
+            bar.Draw(Colors.PcCold.ColorRgba);
+        }
+    }
+    
+    
     internal class SimpleCursorGameUI : ICursor
     {
         public uint GetID()
@@ -181,7 +245,8 @@ namespace Examples
         
         //example scene controlled
         public InputAction InputActionZoom {get; private set;}
-        public InputAction InputActionPause {get; private set;}
+        // public InputAction InputActionPause {get; private set;}
+        public InputAction InputActionCyclePalette {get; private set;}
         public InputAction InputActionReset {get; private set;}
 
         private readonly List<InputAction> inputActions = new();
@@ -192,6 +257,8 @@ namespace Examples
         private const float mouseMovementDuration = 2f;
 
         public bool MouseControlEnabled = true;
+
+        private PaletteInfoBox paletteInfoBox;
 
         // public bool UseMouseMovement = true;
         public GameloopExamples() : base
@@ -306,6 +373,8 @@ namespace Examples
             Window.MouseEnabled = true;
             Window.SwitchCursor(new SimpleCursorGameUI());
 
+            paletteInfoBox = new();
+
         }
 
         protected override Vector2 ChangeMousePos(float dt, Vector2 mousePos, Rect screenArea)
@@ -409,7 +478,7 @@ namespace Examples
 
         protected override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
-            BackgroundColorRgba = Colors.Background;
+            
             UIRects.UpdateRect(ui.Area);
             UIRects.Update(time.Delta, ui.MousePos);
 
@@ -438,6 +507,18 @@ namespace Examples
             }
 
             if (Paused) return;
+
+            
+            var paletteState = GAMELOOP.InputActionCyclePalette.Consume();
+            if (paletteState is { Consumed: false, Pressed: true })
+            {
+                Colors.NextColorscheme();
+                BackgroundColorRgba = Colors.PcBackground.ColorRgba;
+                var screenShader = ScreenShaders.Get(crtShaderID);
+                if(screenShader != null) ShapeShader.SetValueColor(screenShader.Shader, "cornerColor", BackgroundColorRgba);
+                
+                paletteInfoBox.Trigger(Colors.CurColorschemeName, 2f);
+            }
             
             
             var crtDefault = new Vector2(6, 4);
@@ -477,6 +558,10 @@ namespace Examples
                     ShapeShader.SetValueVector2(crtShader.Shader, "curvatureAmount", crtCurvature.X, crtCurvature.Y);
                 }
             }
+            
+            
+            
+            paletteInfoBox.Update(time.Delta);
         }
 
         
@@ -484,6 +569,8 @@ namespace Examples
         {
             var fpsRect = UIRects.GetRect("top right top");//"top", "right", "top");
             fpsLabel.Draw(fpsRect, new(1f, 0f), 1f);
+            
+            paletteInfoBox.Draw(ui.Area.ApplyMargins(0.8f,0.025f,0.25f,0.65f));
             // UIRects.DebugDraw(new ColorRgba(Color.Azure), 1f);
         }
 
@@ -542,11 +629,14 @@ namespace Examples
             //var crtMinusGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_THUMB);
             InputActionCRTPlus = new(GameloopAccessTag, crtPlusKB);
             
-            var pauseKB = new InputTypeKeyboardButton(ShapeKeyboardButton.P);
-            var pauseGB = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_RIGHT);
-            InputActionPause = new(SceneAccessTag, pauseKB, pauseGB);
+            // var pauseKB = new InputTypeKeyboardButton(ShapeKeyboardButton.P);
+            // var pauseGB = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_RIGHT);
+            // InputActionPause = new(SceneAccessTag, pauseKB, pauseGB);
             
-            
+            var paletteKb = new InputTypeKeyboardButton(ShapeKeyboardButton.P);
+            var paletteGp = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_RIGHT);
+            var paletteMb = new InputTypeMouseButton(ShapeMouseButton.SIDE);
+            InputActionCyclePalette = new(SceneAccessTag, paletteKb, paletteGp, paletteMb);
             
             //main scene
             var backKB = new InputTypeKeyboardButton(ShapeKeyboardButton.TAB);
@@ -627,7 +717,7 @@ namespace Examples
             inputActions.Add(InputActionCRTMinus);
             inputActions.Add(InputActionCRTPlus);
             inputActions.Add(InputActionZoom);
-            inputActions.Add(InputActionPause);
+            inputActions.Add(InputActionCyclePalette);
             inputActions.Add(InputActionReset);
         }
     }

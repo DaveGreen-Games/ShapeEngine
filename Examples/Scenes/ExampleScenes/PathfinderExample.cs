@@ -330,7 +330,6 @@ internal class PathfinderFlag
             var cBounds = Colors.PcLight.ColorRgba;
             var cBlocked = Colors.PcWarm.ColorRgba.ChangeBrightness(-0.1f);
             var cDefault = Colors.PcDark.ColorRgba;// new ColorRgba(Color.DarkSlateGray).ChangeBrightness(-0.3f);
-            
             var cDesirable = Colors.PcCold.ColorRgba.ChangeBrightness(-0.25f);
             var cUndesirable = Colors.PcSpecial.ColorRgba.ChangeBrightness(-0.25f);
             pathfinder.DrawDebug(cBounds, cDefault, cBlocked, cDesirable, cUndesirable, 0);

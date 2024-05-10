@@ -49,8 +49,8 @@ public static class Colors
 
     public static readonly Colorscheme DefaultColorscheme = new
     (
-        new ColorRgba(System.Drawing.Color.DarkSlateGray),
-        new ColorRgba(System.Drawing.Color.DimGray),
+        new ColorRgba(System.Drawing.Color.DarkSlateGray).ToHSL().ChangeLightness(-0.15f).ToRGB(),
+        new ColorRgba(System.Drawing.Color.DimGray).ToHSL().ChangeLightness(-0.1f).ToRGB(),
         new ColorRgba(System.Drawing.Color.DarkGray),
         new ColorRgba(System.Drawing.Color.LightGray),
         new ColorRgba(System.Drawing.Color.AntiqueWhite),
@@ -63,7 +63,7 @@ public static class Colors
     public static readonly Colorscheme WarmColorscheme = new
     (
         new ColorRgba(System.Drawing.Color.DarkRed).ToHSL().ChangeLightness(-0.2f).ToRGB(),
-        new ColorRgba(System.Drawing.Color.SaddleBrown),
+        new ColorRgba(System.Drawing.Color.SaddleBrown).ToHSL().ChangeLightness(-0.15f).ToRGB(),
         new ColorRgba(System.Drawing.Color.Sienna),
         new ColorRgba(System.Drawing.Color.Salmon),
         new ColorRgba(System.Drawing.Color.Tomato),
@@ -75,8 +75,8 @@ public static class Colors
        
     public static readonly Colorscheme ColdColorscheme = new
     (
-        new ColorRgba(System.Drawing.Color.Navy).ToHSL().ChangeLightness(-0.17f).ToRGB(),
-        new ColorRgba(System.Drawing.Color.DarkSlateBlue),
+        new ColorRgba(System.Drawing.Color.Navy).ToHSL().ChangeLightness(-0.2f).ToRGB(),
+        new ColorRgba(System.Drawing.Color.DarkSlateBlue).ToHSL().ChangeLightness(-0.15f).ToRGB(),
         new ColorRgba(System.Drawing.Color.SlateBlue),
         new ColorRgba(System.Drawing.Color.LightSteelBlue),
         new ColorRgba(System.Drawing.Color.AliceBlue),
@@ -85,6 +85,35 @@ public static class Colors
         new ColorRgba(System.Drawing.Color.GreenYellow),
         new ColorRgba(System.Drawing.Color.RoyalBlue)
     );
-       
+    
+    
+    private static readonly Colorscheme[] Colorschemes = new[] { DefaultColorscheme, WarmColorscheme, ColdColorscheme };
+    private static readonly string[] ColorschemeNames = new[] { "Default", "Warm", "Cold" };
+    private static int curColorschemeIndex = 0;
+    public static int CurColorschemeIndex
+    {
+        get => curColorschemeIndex;
+        private set
+        {
+            if (value < 0) curColorschemeIndex = Colorschemes.Length - 1;
+            else if (value >= Colorschemes.Length) curColorschemeIndex = 0;
+            else curColorschemeIndex = value;
+        }
+    }
+
+    public static string CurColorschemeName => ColorschemeNames[curColorschemeIndex];
+    private static void NextColorschemeIndex() => CurColorschemeIndex += 1;
+    private static void PreviousColorschemeIndex() => CurColorschemeIndex -= 1;
+
+    public static void PreviousColorscheme()
+    {
+        PreviousColorschemeIndex();
+        ApplyColorscheme(Colorschemes[curColorschemeIndex]);
+    }
+    public static void NextColorscheme()
+    {
+        NextColorschemeIndex();
+        ApplyColorscheme(Colorschemes[curColorschemeIndex]);
+    }
     public static void ApplyColorscheme(Colorscheme cc) => cc.Apply(colorPalette);
 }
