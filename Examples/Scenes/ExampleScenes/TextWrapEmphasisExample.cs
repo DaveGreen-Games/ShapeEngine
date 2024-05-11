@@ -16,13 +16,13 @@ namespace Examples.Scenes.ExampleScenes
         private class MouseDetection : IMouseDetection
         {
             public Vector2 MousePos = new();
-            private Emphasis mouseEmphasisBleed = new(new ED_Block(), new (System.Drawing.Color.Chartreuse), new (System.Drawing.Color.Black));
-            private Emphasis mouseEmphasisRupture = new(new ED_Block(), new (System.Drawing.Color.Aqua), new (System.Drawing.Color.Black));
-            private Emphasis mouseEmphasisIncreased = new(new ED_Block(), new (System.Drawing.Color.OrangeRed), new (System.Drawing.Color.Black));
-            private Emphasis mouseEmphasisAdded = new(new ED_Block(), new (System.Drawing.Color.Violet), new (System.Drawing.Color.Black));
-            private Emphasis mouseEmphasisTime = new(new ED_Block(), new (System.Drawing.Color.DeepSkyBlue), new (System.Drawing.Color.Black));
-            private Emphasis mouseEmphasisCaps = new(new ED_Block(), new (System.Drawing.Color.Plum), new (System.Drawing.Color.Black));
-            private Emphasis mouseEmphasisSpecial = new(new ED_Block(), new (System.Drawing.Color.Fuchsia), new (System.Drawing.Color.Black));
+            private Emphasis mouseEmphasisBleed = new(new ED_Block(), Colors.Special2, new (System.Drawing.Color.Black));
+            private Emphasis mouseEmphasisRupture = new(new ED_Block(), Colors.Special2, new (System.Drawing.Color.Black));
+            private Emphasis mouseEmphasisIncreased = new(new ED_Block(), Colors.Special2, new (System.Drawing.Color.Black));
+            private Emphasis mouseEmphasisAdded = new(new ED_Block(), Colors.Special2, new (System.Drawing.Color.Black));
+            private Emphasis mouseEmphasisTime = new(new ED_Block(), Colors.Highlight, new (System.Drawing.Color.Black));
+            private Emphasis mouseEmphasisCaps = new(new ED_Block(), Colors.Special, new (System.Drawing.Color.Black));
+            private Emphasis mouseEmphasisSpecial = new(new ED_Block(), Colors.Special, new (System.Drawing.Color.Black));
             private Regex specialRegex = new("[\" _ : ! ?]");
             private Regex ruptureRegex = new("(rupture)|(Rupture)");
             private Regex bleedRegex = new("(bleed)|(Bleed)");
@@ -41,6 +41,17 @@ namespace Examples.Scenes.ExampleScenes
                 if (capsRegex.IsMatch(completeWord)) return mouseEmphasisCaps;
                 if (specialRegex.IsMatch(completeWord)) return mouseEmphasisSpecial;
                 return null;
+            }
+
+            public void UpdateColors()
+            {
+                mouseEmphasisBleed.ColorRgba =     Colors.Special2;
+                mouseEmphasisRupture.ColorRgba =   Colors.Special2;
+                mouseEmphasisIncreased.ColorRgba = Colors.Special2;
+                mouseEmphasisAdded.ColorRgba =     Colors.Special2;
+                mouseEmphasisTime.ColorRgba =      Colors.Highlight;
+                mouseEmphasisCaps.ColorRgba =      Colors.Special;
+                mouseEmphasisSpecial.ColorRgba =   Colors.Special;
             }
         }
 
@@ -71,6 +82,10 @@ namespace Examples.Scenes.ExampleScenes
         
         // private readonly InputAction iaToggleAutoSize;
         private readonly InputAction iaToggleWrapMode;
+        private readonly TextEmphasis textEmphasis1;
+        private readonly TextEmphasis textEmphasis2;
+        private readonly TextEmphasis textEmphasis3;
+        private readonly TextEmphasis textEmphasis4;
         public TextWrapEmphasisExample() : base()
         {
             Title = "Text Wrap Multi Color Example";
@@ -105,17 +120,16 @@ namespace Examples.Scenes.ExampleScenes
 
             // var tf = new TextFont(textFont.Font, 0f, 0f, WHITE);
             textEmphasisBox = new(textFont);
-            textEmphasisBox.Caret = new(-1, new(Color.OrangeRed));
-            var emphasis1 = new Emphasis(new ED_Block(), new(Color.IndianRed), new(Color.Black));
-            var emphasis2 = new Emphasis(new ED_Block(), new(Color.CornflowerBlue), new(Color.Black));
-            var emphasis3 = new Emphasis(new ED_Transparent(), new(Color.Black), new(Color.Goldenrod));
-            var emphasis4 = new Emphasis(new ED_Transparent(), new(Color.Black), new(Color.ForestGreen));
-            // var textEmphasis1 = new TextEmphasis(emphasis1, "(rupture)|(bleed)|(Rupture)|(Bleed)|[\" _ :]");
-            var textEmphasis1 = new TextEmphasis(emphasis1, ShapeRegex.MatchWords("rupture", "Rupture", "bleed", "Bleed","\"", "_", ":"));
-            var textEmphasis2 = new TextEmphasis(emphasis2, ShapeRegex.MatchWords("increased", "added"));
-            var textEmphasis3 = new TextEmphasis(emphasis3, ShapeRegex.Combine(ShapeRegex.MatchAnyDigit(), ShapeRegex.MatchWords("sec", "seconds")));
-            // var textEmphasis3 = new TextEmphasis(emphasis3, "(\\d)|(sec)|(seconds)");
-            var textEmphasis4 = new TextEmphasis(emphasis4, "[A-Z]+$");
+            textEmphasisBox.Caret = new(-1, Colors.Special);
+            var emphasis1 = new Emphasis(new ED_Block(), Colors.Warm, new(Color.Black));
+            var emphasis2 = new Emphasis(new ED_Block(), Colors.Cold, new(Color.Black));
+            var emphasis3 = new Emphasis(new ED_Transparent(), new(Color.Black), Colors.Highlight);
+            var emphasis4 = new Emphasis(new ED_Transparent(), new(Color.Black), Colors.Special2);
+           
+            textEmphasis1 = new TextEmphasis(emphasis1, ShapeRegex.MatchWords("rupture", "Rupture", "bleed", "Bleed","\"", "_", ":"));
+            textEmphasis2 = new TextEmphasis(emphasis2, ShapeRegex.MatchWords("increased", "added"));
+            textEmphasis3 = new TextEmphasis(emphasis3, ShapeRegex.Combine(ShapeRegex.MatchAnyDigit(), ShapeRegex.MatchWords("sec", "seconds")));
+            textEmphasis4 = new TextEmphasis(emphasis4, "[A-Z]+$");
             textEmphasisBox.Emphases.Add(textEmphasis1);
             textEmphasisBox.Emphases.Add(textEmphasis2);
             textEmphasisBox.Emphases.Add(textEmphasis3);
@@ -134,6 +148,15 @@ namespace Examples.Scenes.ExampleScenes
         protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             mouseDetection.MousePos = ui.MousePos;
+            mouseDetection.UpdateColors();
+
+            textEmphasisBox.Caret.Color = Colors.Special;
+            
+            textEmphasis1.Emphasis.ColorRgba = Colors.Warm;
+            textEmphasis2.Emphasis.ColorRgba = Colors.Cold;
+            textEmphasis3.Emphasis.TextColorRgba = Colors.Highlight;
+            textEmphasis4.Emphasis.TextColorRgba = Colors.Special2;
+            
             
             base.OnUpdateExample(time, game, ui);
         }

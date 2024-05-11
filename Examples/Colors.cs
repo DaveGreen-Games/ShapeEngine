@@ -23,6 +23,7 @@ public static class Colors
     public static ColorRgba Text => PcText.ColorRgba; 
     public static ColorRgba Highlight => PcHighlight.ColorRgba; 
     public static ColorRgba Special => PcSpecial.ColorRgba;
+    public static ColorRgba Special2 => PcSpecial2.ColorRgba;
     public static ColorRgba Warm   => PcWarm.ColorRgba;
     public static ColorRgba Cold   => PcCold.ColorRgba;
 
@@ -35,15 +36,16 @@ public static class Colors
     public static readonly PaletteColor PcText = new(4, new(System.Drawing.Color.AntiqueWhite));
     public static readonly PaletteColor PcHighlight = new(5, new(System.Drawing.Color.Aquamarine));
     public static readonly PaletteColor PcSpecial = new(6, new(System.Drawing.Color.Coral));
-    public static readonly PaletteColor PcWarm = new(7, new(System.Drawing.Color.IndianRed));
-    public static readonly PaletteColor PcCold = new(8, new(System.Drawing.Color.CornflowerBlue));
+    public static readonly PaletteColor PcSpecial2 = new(7, new(System.Drawing.Color.Goldenrod));
+    public static readonly PaletteColor PcWarm = new(8, new(System.Drawing.Color.IndianRed));
+    public static readonly PaletteColor PcCold = new(9, new(System.Drawing.Color.CornflowerBlue));
        
     private static readonly Palette colorPalette = new
     (
         PcBackground, 
         PcDark, PcMedium, PcLight, 
         PcText,
-        PcHighlight, PcSpecial,
+        PcHighlight, PcSpecial, PcSpecial2,
         PcWarm, PcCold
     );
 
@@ -56,6 +58,7 @@ public static class Colors
         new ColorRgba(System.Drawing.Color.AntiqueWhite),
         new ColorRgba(System.Drawing.Color.Aquamarine),
         new ColorRgba(System.Drawing.Color.Coral),
+        new ColorRgba(System.Drawing.Color.Goldenrod),
         new ColorRgba(System.Drawing.Color.IndianRed),
         new ColorRgba(System.Drawing.Color.CornflowerBlue)
     );
@@ -69,6 +72,7 @@ public static class Colors
         new ColorRgba(System.Drawing.Color.Tomato),
         new ColorRgba(System.Drawing.Color.OrangeRed),
         new ColorRgba(System.Drawing.Color.HotPink),
+        new ColorRgba(System.Drawing.Color.PaleVioletRed),
         new ColorRgba(System.Drawing.Color.Crimson),
         new ColorRgba(System.Drawing.Color.Orchid)
     );
@@ -82,6 +86,7 @@ public static class Colors
         new ColorRgba(System.Drawing.Color.AliceBlue),
         new ColorRgba(System.Drawing.Color.Aqua),
         new ColorRgba(System.Drawing.Color.Aquamarine),
+        new ColorRgba(System.Drawing.Color.DeepSkyBlue),
         new ColorRgba(System.Drawing.Color.GreenYellow),
         new ColorRgba(System.Drawing.Color.RoyalBlue)
     );
