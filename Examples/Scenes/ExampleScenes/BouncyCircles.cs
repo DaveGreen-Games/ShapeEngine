@@ -118,7 +118,8 @@ namespace Examples.Scenes.ExampleScenes
 
             var toggleConvexHullKB = new InputTypeKeyboardButton(ShapeKeyboardButton.C);
             var toggleConvexHullGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
-            iaToggleConvexHull = new(toggleConvexHullKB, toggleConvexHullGP);
+            var toggleConvexHullMb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
+            iaToggleConvexHull = new(toggleConvexHullKB, toggleConvexHullGP, toggleConvexHullMb);
             
             inputActions = new() { iaAdd, iaToggleConvexHull };
 
@@ -207,10 +208,9 @@ namespace Examples.Scenes.ExampleScenes
         private void DrawInputDescription(Rect rect)
         {
             var curInputDeviceAll = ShapeInput.CurrentInputDeviceType;
-            var curInputDeviceNoMouse = ShapeInput.CurrentInputDeviceTypeNoMouse;
             
             string addText = iaAdd.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
-            string toggleConvexHullText = iaToggleConvexHull.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
+            string toggleConvexHullText = iaToggleConvexHull.GetInputTypeDescription(curInputDeviceAll, true, 1, false, false);
             
             var text = $"Add {addText} | Convex Hull [{showConvexHull}] {toggleConvexHullText}";
             

@@ -154,7 +154,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             foreach (var star in drawStars)
             {
-                star.Draw(new ColorRgba(20, 150, 150, 200));
+                star.Draw(Colors.Dark);
             }
             ship.Draw();
             ship2.Draw();

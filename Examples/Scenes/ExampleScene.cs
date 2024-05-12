@@ -224,6 +224,28 @@ namespace Examples.Scenes
             GAMELOOP.ResetCamera();
         }
 
+
+
+        public static Vector2 CalculateMouseMovementDirection(Vector2 mousePos, ShapeCamera camera)
+        {
+            var dir = mousePos - camera.BasePosition;
+
+            float minDis = 100 * camera.ZoomFactor;
+            float maxDis = 350 * camera.ZoomFactor;
+            float minDisSq = minDis * minDis;
+            float maxDisSq = maxDis * maxDis;
+            var lsq = dir.LengthSquared();
+            if (lsq <= minDisSq) dir = new();
+            else if (lsq >= maxDisSq) dir = dir.Normalize();
+            else
+            {
+                var f = (lsq - minDisSq) / (maxDisSq - minDisSq);
+                dir = dir.Normalize() * f;
+            }
+
+            return dir;
+        }
+
     }
 
 }

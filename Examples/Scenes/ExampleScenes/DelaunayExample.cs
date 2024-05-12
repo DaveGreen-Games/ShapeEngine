@@ -126,7 +126,8 @@ namespace Examples.Scenes.ExampleScenes
                 {
                     points.RemoveAt(closePointIndex);
                     closePointIndex = -1;
-                    Triangulate();
+                    if (points.Count < 3) curTriangulation = new();
+                    else Triangulate();
                 }
                 
             }
@@ -155,22 +156,22 @@ namespace Examples.Scenes.ExampleScenes
             {
                 var tri = curTriangulation[i];
                 if (i == closeTriangleIndex) continue;
-                tri.DrawLines(lineThickness, new(Color.AntiqueWhite), LineCapType.CappedExtended, 4);
+                tri.DrawLines(lineThickness, Colors.Light, LineCapType.CappedExtended, 4);
             }
             
             
-            if(closeTriangleIndex >= 0) curTriangulation[closeTriangleIndex].DrawLines(lineThicknessBig, new(Color.ForestGreen), LineCapType.CappedExtended, 4);
+            if(closeTriangleIndex >= 0) curTriangulation[closeTriangleIndex].DrawLines(lineThicknessBig, Colors.Highlight, LineCapType.CappedExtended, 4);
 
             for (int i = 0; i < points.Count; i++)
             {
                 var p = points[i];
                 if (i == closePointIndex)
                 {
-                    p.Draw(vertexSizeBig, new(Color.ForestGreen));
+                    p.Draw(vertexSizeBig, Colors.Highlight);
                 }
                 else
                 {
-                    p.Draw(vertexSize, new(Color.MediumPurple));
+                    p.Draw(vertexSize, Colors.Special);
                 }
             }
         }

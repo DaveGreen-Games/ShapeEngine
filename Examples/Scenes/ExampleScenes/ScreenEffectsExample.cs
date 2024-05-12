@@ -26,9 +26,9 @@ namespace Examples.Scenes.ExampleScenes
 
         public void Draw()
         {
-            var color = new ColorRgba(System.Drawing.Color.DarkGray);
-            if (circle.Radius > 2f && circle.Radius <= 3f) color = new(System.Drawing.Color.LightGray);
-            else if (circle.Radius > 3f) color = new(System.Drawing.Color.AntiqueWhite);
+            var color = Colors.Dark; // new ColorRgba(System.Drawing.Color.DarkGray);
+            if (circle.Radius > 2f && circle.Radius <= 3f) color = Colors.Dark.ChangeBrightness(0.025f); // new(System.Drawing.Color.LightGray);
+            else if (circle.Radius > 3f) color = Colors.Dark.ChangeBrightness(0.05f); // new(System.Drawing.Color.AntiqueWhite);
             ShapeDrawing.DrawCircleFast(circle.Center, circle.Radius, color);
         }
         public void Draw(ColorRgba c) => ShapeDrawing.DrawCircleFast(circle.Center, circle.Radius, c);
@@ -171,6 +171,11 @@ namespace Examples.Scenes.ExampleScenes
 
         public string GetInputDescription(InputDeviceType inputDeviceType)
         {
+            if (inputDeviceType == InputDeviceType.Mouse)
+            {
+                return "Move Horizontal [Mx] Vertical [My]";
+            }
+            
             string hor = iaMoveHor.GetInputTypeDescription(inputDeviceType, true, 1, false, false);
             string ver = iaMoveVer.GetInputTypeDescription(inputDeviceType, true, 1, false, false);
             return $"Move Horizontal [{hor}] Vertical [{ver}]";
@@ -211,16 +216,34 @@ namespace Examples.Scenes.ExampleScenes
             
             iaMoveVer.Gamepad = GAMELOOP.CurGamepad;
             iaMoveVer.Update(dt);
-            
-            Vector2 dir = new(iaMoveHor.State.AxisRaw, iaMoveVer.State.AxisRaw);
-            float lsq = dir.LengthSquared();
-            if (lsq > 0f)
+
+
+            if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Mouse)
             {
-                movementDir = dir.Normalize();
-                movementDir = movementDir.RotateDeg(-cameraRotationDeg);
-                var movement = movementDir * Speed * dt;
-                Hull = new Circle(Hull.Center + movement, Hull.Radius);
+                var dir = ExampleScene.CalculateMouseMovementDirection(GAMELOOP.GameScreenInfo.MousePos, GAMELOOP.Camera);
+                float lsq = dir.LengthSquared();
+                if (lsq > 0f)
+                {
+                    movementDir = dir;
+                    movementDir = movementDir.RotateDeg(-cameraRotationDeg);
+                    var movement = movementDir * Speed * dt;
+                    Hull = new Circle(Hull.Center + movement, Hull.Radius);
+                }
             }
+            else
+            {
+                Vector2 dir = new(iaMoveHor.State.AxisRaw, iaMoveVer.State.AxisRaw);
+                float lsq = dir.LengthSquared();
+                if (lsq > 0f)
+                {
+                    movementDir = dir.Normalize();
+                    movementDir = movementDir.RotateDeg(-cameraRotationDeg);
+                    var movement = movementDir * Speed * dt;
+                    Hull = new Circle(Hull.Center + movement, Hull.Radius);
+                }
+            }
+            
+            
             
         }
         public void Draw()

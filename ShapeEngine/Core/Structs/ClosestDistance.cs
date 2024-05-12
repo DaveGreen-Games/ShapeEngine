@@ -9,7 +9,7 @@ public struct ClosestDistance
     public readonly Vector2 B;
     public readonly float DistanceSquared;
     
-    public bool Valid => DistanceSquared > 0;
+    public bool Valid => DistanceSquared >= 0;
 
     private float distance = -1;
     public float Distance
@@ -51,7 +51,7 @@ public struct ClosestDistance
     {
         A = new();
         B = new();
-        DistanceSquared = 0f;
+        DistanceSquared = -1f;
         distance = 0f;
     }
     public ClosestDistance(Vector2 a, Vector2 b)

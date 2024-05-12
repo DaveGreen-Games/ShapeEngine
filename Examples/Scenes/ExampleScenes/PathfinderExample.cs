@@ -119,15 +119,15 @@ internal class PathfinderFlag
             var cameraHorizontalGP =
                 new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad);
             // var cameraHorizontalGP2 = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad2);
-            var cameraHorizontalMW = new InputTypeMouseAxis(ShapeMouseAxis.HORIZONTAL, 0.05f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouse); // new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-            iaMoveCameraH = new(cameraHorizontalKB, cameraHorizontalGP, cameraHorizontalMW);
+            // var cameraHorizontalMW = new InputTypeMouseAxis(ShapeMouseAxis.HORIZONTAL, 0.05f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouse); // new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
+            iaMoveCameraH = new(cameraHorizontalKB, cameraHorizontalGP);
             
             var cameraVerticalKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
             var cameraVerticalGP =
                 new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad);
             // var cameraVerticalGP2 = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_UP, ShapeGamepadButton.LEFT_FACE_DOWN, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad2);
-            var cameraVerticalMW  = new InputTypeMouseAxis(ShapeMouseAxis.VERTICAL, 0.05f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouse); // = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-            iaMoveCameraV = new(cameraVerticalKB, cameraVerticalGP, cameraVerticalMW);
+            // var cameraVerticalMW  = new InputTypeMouseAxis(ShapeMouseAxis.VERTICAL, 0.05f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouse); // = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
+            iaMoveCameraV = new(cameraVerticalKB, cameraVerticalGP);
 
 
             var cycleTerrainTypeKb = new InputTypeKeyboardButton(ShapeKeyboardButton.TAB);
@@ -148,18 +148,18 @@ internal class PathfinderFlag
 
             var positionStartFlagKb = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
             var positionStartFlagGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
-            var positionStartFlagMb = new InputTypeMouseButton(ShapeMouseButton.MW_UP, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-            iaPositionStartFlag = new(positionStartFlagKb, positionStartFlagGp, positionStartFlagMb);
+            // var positionStartFlagMb = new InputTypeMouseButton(ShapeMouseButton.MW_UP, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
+            iaPositionStartFlag = new(positionStartFlagKb, positionStartFlagGp);
             
             var positionEndFlagKb = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
             var positionEndFlagGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
-            var positionEndFlagMb = new InputTypeMouseButton(ShapeMouseButton.MW_DOWN, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-            iaPositionEndFlag = new(positionEndFlagKb, positionEndFlagGp, positionEndFlagMb);
+            // var positionEndFlagMb = new InputTypeMouseButton(ShapeMouseButton.MW_DOWN, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
+            iaPositionEndFlag = new(positionEndFlagKb, positionEndFlagGp);
             
-            var portalKb = new InputTypeKeyboardButton(ShapeKeyboardButton.R);
+            var portalKb = new InputTypeKeyboardButton(ShapeKeyboardButton.G);
             var portalGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
-            var portalMb = new InputTypeMouseButton(ShapeMouseButton.SIDE);
-            iaPortal = new(portalKb, portalGp, portalMb);
+            // var portalMb = new InputTypeMouseButton(ShapeMouseButton.SIDE);
+            iaPortal = new(portalKb, portalGp);
             
             inputActions = new()
             {
@@ -203,12 +203,28 @@ internal class PathfinderFlag
             var gamepad = GAMELOOP.CurGamepad;
             InputAction.UpdateActions(dt, gamepad, inputActions);
 
-            var moveCameraH = iaMoveCameraH.State.AxisRaw;
-            var moveCameraV = iaMoveCameraV.State.AxisRaw;
-            var moveCameraDir = new Vector2(moveCameraH, moveCameraV);
-            var cam = GAMELOOP.Camera;
-            var f = cam.ZoomFactor;
-            cam.BasePosition += moveCameraDir * 500 * dt * f;
+            if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Mouse)
+            {
+                if (ShapeKeyboardButton.LEFT_SHIFT.GetInputState().Down)
+                {
+                    var dir = ExampleScene.CalculateMouseMovementDirection(GAMELOOP.GameScreenInfo.MousePos, GAMELOOP.Camera);
+                    var cam = GAMELOOP.Camera;
+                    var f = cam.ZoomFactor;
+                    cam.BasePosition += dir * 500 * dt * f;
+                }
+                
+            }
+            else
+            {
+                var moveCameraH = iaMoveCameraH.State.AxisRaw;
+                var moveCameraV = iaMoveCameraV.State.AxisRaw;
+                var moveCameraDir = new Vector2(moveCameraH, moveCameraV);
+                var cam = GAMELOOP.Camera;
+                var f = cam.ZoomFactor;
+                cam.BasePosition += moveCameraDir * 500 * dt * f;
+            }
+            
+            
 
 
             if (iaPositionStartFlag.State.Pressed) startFlag.Position = mousePosGame;
@@ -405,8 +421,8 @@ internal class PathfinderFlag
             var curInputDeviceAll = ShapeInput.CurrentInputDeviceType;
             var curInputDeviceNoMouse = ShapeInput.CurrentInputDeviceTypeNoMouse;
             
-            string moveCameraH = iaMoveCameraH.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
-            string moveCameraV = iaMoveCameraV.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
+            string moveCameraH = curInputDeviceAll == InputDeviceType.Mouse ? "[LShift + Mx]" : iaMoveCameraH.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
+            string moveCameraV = curInputDeviceAll == InputDeviceType.Mouse ? "[LShift + My]" : iaMoveCameraV.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
             string zoomCamera = GAMELOOP.InputActionZoom.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
 
         // private readonly InputAction iaCycleTerrainType;
@@ -419,9 +435,9 @@ internal class PathfinderFlag
             string cycleText = iaCycleTerrainType.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
             string zoningText = iaZoning.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
             string calculateText = iaCalculatePath.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
-            string positionStartFlagText = iaPositionStartFlag.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
-            string positionEndFlagText = iaPositionEndFlag.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
-            string portalText = iaPortal.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
+            string positionStartFlagText = iaPositionStartFlag.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            string positionEndFlagText = iaPositionEndFlag.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            string portalText = iaPortal.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
 
             string currentTerrainTypeText = GetTerrainTypeName();
             

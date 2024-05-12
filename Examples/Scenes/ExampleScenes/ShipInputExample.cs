@@ -15,17 +15,20 @@ namespace Examples.Scenes.ExampleScenes
 {
     public class ShipInputExample : ExampleScene
     {
-        internal readonly struct ColorScheme
+        internal class ColorScheme
         {
-            public readonly ColorRgba Hull;
-            public readonly ColorRgba Outline;
-            public readonly ColorRgba Cockpit;
+            public readonly PaletteColor PcHull;
+            public readonly PaletteColor PcOutline;
+            public readonly PaletteColor PcCockpit;
+            public ColorRgba Hull => PcHull.ColorRgba;
+            public ColorRgba Outline => PcOutline.ColorRgba;
+            public ColorRgba Cockpit => PcCockpit.ColorRgba;
 
-            public ColorScheme(ColorRgba hull, ColorRgba outline, ColorRgba cockpit)
+            public ColorScheme(PaletteColor hull, PaletteColor outline, PaletteColor cockpit)
             {
-                this.Hull = hull;
-                this.Outline = outline;
-                this.Cockpit = cockpit;
+                this.PcHull = hull;
+                this.PcOutline = outline;
+                this.PcCockpit = cockpit;
             }
         }
         internal class SpaceShip : ICameraFollowTarget
@@ -37,14 +40,14 @@ namespace Examples.Scenes.ExampleScenes
 
             public static readonly ColorScheme[] ColorSchemes = new[]
             {
-                new ColorScheme(new(Color.DimGray), new(Color.Gray), new(Color.ForestGreen)),
-                new ColorScheme(new(Color.DimGray), new(Color.Gray), new(Color.CornflowerBlue)),
-                new ColorScheme(new(Color.DimGray), new(Color.Gray), new(Color.Goldenrod)),
-                new ColorScheme(new(Color.DimGray), new(Color.Gray), new(Color.IndianRed)),
-                new ColorScheme(new(Color.DimGray), new(Color.Gray), new(Color.DarkOrange)),
-                new ColorScheme(new(Color.DimGray), new(Color.Gray), new(Color.MediumPurple)),
-                new ColorScheme(new(Color.DimGray), new(Color.Gray), new(Color.MediumOrchid)),
-                new ColorScheme(new(Color.DimGray), new(Color.Gray), new(Color.CadetBlue)),
+                new ColorScheme(Colors.PcDark, Colors.PcMedium, Colors.PcCold),
+                new ColorScheme(Colors.PcDark, Colors.PcMedium, Colors.PcWarm),
+                new ColorScheme(Colors.PcDark, Colors.PcMedium, Colors.PcHighlight),
+                new ColorScheme(Colors.PcDark, Colors.PcMedium, Colors.PcSpecial),
+                new ColorScheme(Colors.PcDark, Colors.PcMedium, Colors.PcSpecial2),
+                new ColorScheme(Colors.PcDark, Colors.PcMedium, Colors.PcLight),
+                new ColorScheme(Colors.PcDark, Colors.PcMedium, Colors.PcText),
+                new ColorScheme(Colors.PcDark, Colors.PcMedium, Colors.PcDark),
 
             };
             

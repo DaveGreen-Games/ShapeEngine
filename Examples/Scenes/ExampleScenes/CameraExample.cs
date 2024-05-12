@@ -25,14 +25,13 @@ namespace Examples.Scenes.ExampleScenes
 
         public void Draw()
         {
-            var c = new ColorRgba(Color.IndianRed);
+            var c = Colors.Warm; // new ColorRgba(Color.IndianRed);
             outline.DrawLines(4f, c);
             center.Draw(c);
         }
     }
     public class CameraExample : ExampleScene
     {
-        Font font;
         ShapeCamera camera;
         Rect universe = new(new Vector2(0f), new Size(10000f), new Vector2(0.5f));
 
@@ -47,28 +46,23 @@ namespace Examples.Scenes.ExampleScenes
         {
             Title = "Camera Example";
 
-            font = GAMELOOP.GetFont(FontIDs.JetBrains);
-            
             var cameraHorizontalKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
-            var cameraHorizontalGP =
-                new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+            var cameraHorizontalGP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
             // var cameraHorizontalGP2 = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad2);
-            var cameraHorizontalMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-            iaMoveCameraH = new(cameraHorizontalKB, cameraHorizontalGP, cameraHorizontalMW);
+            // var cameraHorizontalMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
+            iaMoveCameraH = new(cameraHorizontalKB, cameraHorizontalGP);
             
             var cameraVerticalKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
-            var cameraVerticalGP =
-                new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+            var cameraVerticalGP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
             // var cameraVerticalGP2 = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_UP, ShapeGamepadButton.LEFT_FACE_DOWN, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad2);
-            var cameraVerticalMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-            iaMoveCameraV = new(cameraVerticalKB, cameraVerticalGP, cameraVerticalMW);
+            // var cameraVerticalMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
+            iaMoveCameraV = new(cameraVerticalKB, cameraVerticalGP);
 
             var rotateCameraKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.Q, ShapeKeyboardButton.E);
-            var rotateCameraGP =
-                new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad);
-            var rotateCameraWW =
-                new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouse);
-            iaRotateCamera = new(rotateCameraKB, rotateCameraGP, rotateCameraWW);
+            var rotateCameraGP = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad);
+            var rotateCameraMb = new InputTypeMouseButtonAxis(ShapeMouseButton.LEFT, ShapeMouseButton.RIGHT, 0f);
+                //new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouse);
+            iaRotateCamera = new(rotateCameraKB, rotateCameraGP, rotateCameraMb);
 
             inputActions = new() { iaMoveCameraH, iaMoveCameraV, iaRotateCamera };
             
@@ -122,33 +116,32 @@ namespace Examples.Scenes.ExampleScenes
         private void HandleCameraPosition(float dt)
         {
             float speed = 500;
-            float dirX = iaMoveCameraH.State.AxisRaw;
-            float dirY = iaMoveCameraV.State.AxisRaw;
-
-            // if (IsKeyDown(KeyboardKey.KEY_A))
-            // {
-            //     dirX = -1;
-            // }
-            // else if (IsKeyDown(KeyboardKey.KEY_D))
-            // {
-            //     dirX = 1;
-            // }
-            //
-            // if (IsKeyDown(KeyboardKey.KEY_W))
-            // {
-            //     dirY = -1;
-            // }
-            // else if (IsKeyDown(KeyboardKey.KEY_S))
-            // {
-            //     dirY = 1;
-            // }
-            if (dirX != 0 || dirY != 0)
+            if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Mouse)
             {
-                var movement = new Vector2(dirX, dirY).Normalize() * speed * dt * camera.ZoomFactor;
-                movement = movement.Rotate(-camera.RotationDeg * ShapeMath.DEGTORAD);
-                camera.BasePosition += movement;
-                //camera.Translation += movement;
+                var dir = ExampleScene.CalculateMouseMovementDirection(GAMELOOP.GameScreenInfo.MousePos, GAMELOOP.Camera);
+                if (dir.X != 0 || dir.Y != 0)
+                {
+                    var movement = dir * speed * dt * camera.ZoomFactor;
+                    movement = movement.Rotate(-camera.RotationDeg * ShapeMath.DEGTORAD);
+                    camera.BasePosition += movement;
+                    //camera.Translation += movement;
+                }
             }
+            else
+            {
+                float dirX = iaMoveCameraH.State.AxisRaw;
+                float dirY = iaMoveCameraV.State.AxisRaw;
+
+                if (dirX != 0 || dirY != 0)
+                {
+                    var movement = new Vector2(dirX, dirY).Normalize() * speed * dt * camera.ZoomFactor;
+                    movement = movement.Rotate(-camera.RotationDeg * ShapeMath.DEGTORAD);
+                    camera.BasePosition += movement;
+                    //camera.Translation += movement;
+                }
+            }
+            
+            
         }
         
         protected override void OnDrawGameExample(ScreenInfo game)
@@ -158,7 +151,7 @@ namespace Examples.Scenes.ExampleScenes
                 pillar.Draw();
             }
 
-            var c = new ColorRgba(Color.CornflowerBlue);
+            var c = Colors.Cold; // new ColorRgba(Color.CornflowerBlue);
             float f = camera.ZoomFactor;
             ShapeDrawing.DrawCircle(camera.BasePosition, 8f * f, c);
             ShapeDrawing.DrawCircleLines(camera.BasePosition, 64 * f, 2f * f, c);
@@ -197,8 +190,8 @@ namespace Examples.Scenes.ExampleScenes
             sbInfo.Append($"Pos {x}/{y} | ");
             sbInfo.Append($"Rot {rot} | ");
             sbInfo.Append($"Zoom {zoom}");
-            string moveCameraH = iaMoveCameraH.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
-            string moveCameraV = iaMoveCameraV.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
+            string moveCameraH = curInputDeviceAll == InputDeviceType.Mouse ? "Mx" : iaMoveCameraH.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
+            string moveCameraV = curInputDeviceAll == InputDeviceType.Mouse ? "My" : iaMoveCameraV.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
             string zoomCamera = GAMELOOP.InputActionZoom.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
             string rotateCamera = iaRotateCamera.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
             sbCamera.Append($"Move {moveCameraH} {moveCameraV} | ");

@@ -45,15 +45,17 @@ public class PathfinderExample2 : ExampleScene
         
         private void SetupInput()
         {
-            var moveHorKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
-            var moveHor2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-            var moveHorMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-            iaMoveHor = new(moveHorKB, moveHor2GP, moveHorMW);
+            var moveHorKb = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
+            var moveHorGp = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+            // var moveHorMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
+            // var moveHorM = new InputTypeMouseAxis(ShapeMouseAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
+            iaMoveHor = new(moveHorKb, moveHorGp);
             
-            var moveVerKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
-            var moveVer2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-            var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-            iaMoveVer = new(moveVerKB, moveVer2GP, moveVerMW);
+            var moveVerKb = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
+            var moveVerGp = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+            // var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
+            // var moveVerM = new InputTypeMouseAxis(ShapeMouseAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
+            iaMoveVer = new(moveVerKb, moveVerGp);
         }
         public Ship(Vector2 pos, float shipSize, Pathfinder pathfinder)
         {
@@ -85,6 +87,11 @@ public class PathfinderExample2 : ExampleScene
         
         public string GetInputDescription(InputDeviceType inputDeviceType)
         {
+            if (inputDeviceType == InputDeviceType.Mouse)
+            {
+                return "Move Horizontal [Mx] Vertical [My]";
+            }
+            
             string hor = iaMoveHor.GetInputTypeDescription(inputDeviceType, true, 1, false, false);
             string ver = iaMoveVer.GetInputTypeDescription(inputDeviceType, true, 1, false, false);
             return $"Move Horizontal [{hor}] Vertical [{ver}]";
@@ -123,32 +130,84 @@ public class PathfinderExample2 : ExampleScene
             iaMoveVer.Gamepad = GAMELOOP.CurGamepad;
             iaMoveVer.Update(dt);
             
-            Vector2 dir = new(iaMoveHor.State.AxisRaw, iaMoveVer.State.AxisRaw);
-            float lsq = dir.LengthSquared();
-            if (lsq > 0f)
+            
+            if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Mouse)
             {
-                stopTimer = 0f;
+                // var mousePos = GAMELOOP.GameScreenInfo.MousePos;
+                // var camera = GAMELOOP.Camera;
+                // var dir = mousePos - camera.BasePosition;// hull.GetCentroid();
+                //
+                // float minDis = 100 * camera.ZoomFactor;
+                // float maxDis = 350 * camera.ZoomFactor;
+                // float minDisSq = minDis * minDis;
+                // float maxDisSq = maxDis * maxDis;
+                // var lsq = dir.LengthSquared();
+                // if (lsq <= minDisSq) dir = new();
+                // else if (lsq >= maxDisSq) dir = dir.Normalize();
+                // else
+                // {
+                //     var f = (lsq - minDisSq) / (maxDisSq - minDisSq);
+                //     dir = dir.Normalize() * f;
+                // }
 
-                float accelF = 1f;
-                if (accelTimer <= AccelTime)
+                var dir = CalculateMouseMovementDirection(GAMELOOP.GameScreenInfo.MousePos, GAMELOOP.Camera);
+                if (dir.LengthSquared() > 0f)
                 {
-                    accelTimer += dt;
-                    accelF = accelTimer / AccelTime;
-                }
+                    stopTimer = 0f;
+
+                    float accelF = 1f;
+                    if (accelTimer <= AccelTime)
+                    {
+                        accelTimer += dt;
+                        accelF = accelTimer / AccelTime;
+                    }
                 
-                Move(dt, dir.Normalize(), Speed * accelF * accelF);
+                    Move(dt, dir, Speed * accelF * accelF);
+                }
+                else
+                {
+                    accelTimer = 0f;
+                    if (stopTimer <= StopTime)
+                    {
+                        stopTimer += dt;
+                        float stopF = 1f - (stopTimer / StopTime);
+                        Move(dt, movementDir, Speed * stopF * stopF);
+                    }
+                    else movementDir = new();
+                }
             }
             else
             {
-                accelTimer = 0f;
-                if (stopTimer <= StopTime)
+                Vector2 dir = new(iaMoveHor.State.AxisRaw, iaMoveVer.State.AxisRaw);
+                float lsq = dir.LengthSquared();
+                if (lsq > 0f)
                 {
-                    stopTimer += dt;
-                    float stopF = 1f - (stopTimer / StopTime);
-                    Move(dt, movementDir, Speed * stopF * stopF);
+                    stopTimer = 0f;
+
+                    float accelF = 1f;
+                    if (accelTimer <= AccelTime)
+                    {
+                        accelTimer += dt;
+                        accelF = accelTimer / AccelTime;
+                    }
+                
+                    Move(dt, dir.Normalize(), Speed * accelF * accelF);
                 }
-                else movementDir = new();
+                else
+                {
+                    accelTimer = 0f;
+                    if (stopTimer <= StopTime)
+                    {
+                        stopTimer += dt;
+                        float stopF = 1f - (stopTimer / StopTime);
+                        Move(dt, movementDir, Speed * stopF * stopF);
+                    }
+                    else movementDir = new();
+                }
             }
+            
+            
+            
 
             var nodeIndex = pathfinder.GetIndex(hull.A);
             if (lastTraversableNodeIndex != nodeIndex && pathfinder.IsTraversable(nodeIndex))
@@ -1048,6 +1107,11 @@ public class PathfinderExample2 : ExampleScene
     {
         universe.DrawLines(12f, Colors.PcDark.ColorRgba);
         pathfinder.Grid.Draw(universe, 4f, Colors.PcDark.ColorRgba);
+
+        // var cInner = new Circle(camera.BasePosition, 100 * camera.ZoomFactor);
+        // var cOuter = new Circle(camera.BasePosition, 350 * camera.ZoomFactor);
+        // cInner.DrawLines(4f, Colors.Special2);
+        // cOuter.DrawLines(4f, Colors.Warm);
         
         
         if (drawDebug)
