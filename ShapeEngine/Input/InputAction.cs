@@ -8,6 +8,8 @@ namespace ShapeEngine.Input;
 public class InputAction
 {
     #region Members
+
+    public bool Enabled = true;
     public uint ID { get; private set; }
     public uint AccessTag { get; private set; } = DefaultAccessTag;
 
@@ -67,6 +69,7 @@ public class InputAction
         get
         {
             if (Locked && !HasAccess(AccessTag)) return new();
+            if (!Enabled) return new();
 
             return state;
         }
@@ -259,7 +262,8 @@ public class InputAction
         var copy = new InputAction(AccessTag, Gamepad, copied)
         {
             axisSensitivity = axisSensitivity,
-            axisGravitiy = axisGravitiy
+            axisGravitiy = axisGravitiy,
+            Enabled = this.Enabled
         };
         return copy;
     }

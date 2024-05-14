@@ -65,13 +65,13 @@ namespace Examples.Scenes.ExampleScenes
                 
                 var moveHorKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
                 var moveHorGP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-                var moveHorMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-                iaMoveHor = new(moveHorKB, moveHorMW, moveHorGP);
+                // var moveHorMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
+                iaMoveHor = new(moveHorKB, moveHorGP);
                 
                 var moveVerKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
                 var moveVerGP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-                var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-                iaMoveVer = new(moveVerKB, moveVerMW, moveVerGP);
+                // var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
+                iaMoveVer = new(moveVerKB, moveVerGP);
                 
                 
             }
@@ -84,6 +84,11 @@ namespace Examples.Scenes.ExampleScenes
             }
             public string GetInputDescription(InputDeviceType inputDeviceType)
             {
+                if (inputDeviceType == InputDeviceType.Mouse)
+                {
+                    return "Move Horizontal [Mx] Vertical [My]";
+                }
+                
                 string hor = iaMoveHor.GetInputTypeDescription(inputDeviceType, true, 1, false, false);
                 string ver = iaMoveVer.GetInputTypeDescription(inputDeviceType, true, 1, false, false);
                 return $"Move Horizontal [{hor}] Vertical [{ver}]";
@@ -117,19 +122,39 @@ namespace Examples.Scenes.ExampleScenes
                     iaMoveHor.Update(dt);
                     iaMoveVer.Update(dt);
                     
-                    Vector2 dir = new(iaMoveHor.State.AxisRaw, iaMoveVer.State.AxisRaw);
-                    
-                    float lsq = dir.LengthSquared();
-                    if (lsq > 0f)
+                    if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Mouse)
                     {
-                        movementDir = dir.Normalize();
-                        var movement = movementDir * Speed * dt;
-                        hull = new Circle(hull.Center + movement, radius);
+                        var dir = ExampleScene.CalculateMouseMovementDirection(GAMELOOP.GameScreenInfo.MousePos, GAMELOOP.Camera);
+                        float lsq = dir.LengthSquared();
+                        if (lsq > 0f)
+                        {
+                            movementDir = dir;
+                            var movement = movementDir * Speed * dt;
+                            hull = new Circle(hull.Center + movement, radius);
+                        }
+                        else
+                        {
+                            hull = new Circle(hull.Center, radius);
+                        }
                     }
                     else
                     {
-                        hull = new Circle(hull.Center, radius);
+                        Vector2 dir = new(iaMoveHor.State.AxisRaw, iaMoveVer.State.AxisRaw);
+                    
+                        float lsq = dir.LengthSquared();
+                        if (lsq > 0f)
+                        {
+                            movementDir = dir.Normalize();
+                            var movement = movementDir * Speed * dt;
+                            hull = new Circle(hull.Center + movement, radius);
+                        }
+                        else
+                        {
+                            hull = new Circle(hull.Center, radius);
+                        }
                     }
+                    
+                    
                 }
                 else
                 {

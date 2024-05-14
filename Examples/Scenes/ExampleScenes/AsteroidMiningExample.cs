@@ -58,8 +58,8 @@ namespace Examples.Scenes.ExampleScenes
 
         private float delay = 1f;
 
-        private ColorRgba colorRgba;
-        public AsteroidShard(Triangle shape, Vector2 fractureCenter, ColorRgba colorRgba)
+        private PaletteColor color;
+        public AsteroidShard(Triangle shape, Vector2 fractureCenter, PaletteColor color)
         {
             this.shape = shape;
             this.rotDeg = 0f;
@@ -70,10 +70,7 @@ namespace Examples.Scenes.ExampleScenes
             this.lifetime = ShapeRandom.RandF(1.5f, 3f);
             this.lifetimeTimer = this.lifetime;
             this.delay = 0.5f;
-            this.colorRgba = colorRgba;
-            this.colorRgba = new(System.Drawing.Color.Goldenrod);
-            //this.delay = SRNG.randF(0.25f, 1f);
-            //this.lifetime = delay * 3f;
+            this.color = color;
         }
         public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
@@ -109,7 +106,7 @@ namespace Examples.Scenes.ExampleScenes
         public override void DrawGame(ScreenInfo game)
         {
             //SDrawing.DrawCircleFast(pos, 4f, RED);
-            var c = this.colorRgba.ChangeAlpha((byte)(255 * lifetimeF));
+            var c = this.color.ColorRgba.ChangeAlpha((byte)(255 * lifetimeF));
             //color = this.color;
             shape.DrawLines(2f * lifetimeF, c);
         }
@@ -147,7 +144,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 float f = timer / Lifetime;
                 //Color color = YELLOW.ChangeAlpha((byte)(255 * f));
-                Segment.Draw(ShapeRandom.RandF(4, 8) * f, new(System.Drawing.Color.Goldenrod), LineCapType.CappedExtended, 3);
+                Segment.Draw(ShapeRandom.RandF(4, 8) * f, Colors.Special2, LineCapType.CappedExtended, 3);
             }
             public void Renew() { timer = Lifetime; }
         }
@@ -202,7 +199,7 @@ namespace Examples.Scenes.ExampleScenes
         private float curThreshold = DamageThreshold;
 
         public event Action<Asteroid, Vector2>? Fractured;
-        private ColorRgba curColorRgba = new(Color.IndianRed);
+        private PaletteColor curColor = Colors.PcWarm;
 
         private DamagedSegments damagedSegments = new();
         
@@ -239,9 +236,9 @@ namespace Examples.Scenes.ExampleScenes
         {
             overlapped = true;
         }
-        public ColorRgba GetColor()
+        public PaletteColor GetColor()
         {
-            return curColorRgba;
+            return curColor;
         }
         public void Damage(float amount, Vector2 point)
         {
@@ -275,13 +272,13 @@ namespace Examples.Scenes.ExampleScenes
             var p = GetPolygon();
             if (overlapped)
             {
-                curColorRgba = new(Color.ForestGreen);
-                p.DrawLines(6f, new(System.Drawing.Color.ForestGreen));
+                curColor = Colors.PcHighlight;
+                p.DrawLines(6f, curColor.ColorRgba);
             }
             else
             {
-                curColorRgba = new(Color.IndianRed);
-                p.DrawLines(3f, new(System.Drawing.Color.IndianRed));
+                curColor = Colors.PcWarm;
+                p.DrawLines(3f, curColor.ColorRgba);
             }
             damagedSegments.Draw();
 
@@ -464,7 +461,7 @@ namespace Examples.Scenes.ExampleScenes
         public override void DrawGame(ScreenInfo game)
         {
             if (hybernate) return;
-            var c = new ColorRgba(System.Drawing.Color.IndianRed);
+            var c = Colors.Cold;
             shape.DrawLines(4f, c);
             ShapeDrawing.DrawCircle(tip, 8f, c);
 
@@ -516,7 +513,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 float f = timer / Lifetime;
                 //Color color = YELLOW.ChangeAlpha((byte)(255 * f));
-                shape.DrawLines(6f * f, new(System.Drawing.Color.Goldenrod));
+                shape.DrawLines(6f * f, Colors.Special2);
             }
         }
 
@@ -1000,7 +997,7 @@ namespace Examples.Scenes.ExampleScenes
             //boundaryRect.DrawLines(4f, ColorLight);
             if(polyModeActive && curShapeType != ShapeType.None)
             {
-                curShape.DrawLines(2f, new(Color.IndianRed));
+                curShape.DrawLines(2f, Colors.Warm);
             }
 
             // spawnArea.DrawGame(game);
@@ -1029,14 +1026,20 @@ namespace Examples.Scenes.ExampleScenes
 
         private void DrawInputText(Rect rect)
         {
-            var sb = new StringBuilder();
+            var split = rect.SplitV(0.35f);
+            var sbBottom = new StringBuilder();
+            var sbTop = new StringBuilder();
+            
             var curInputDeviceAll = ShapeInput.CurrentInputDeviceType;
             var curInputDeviceNoMouse = ShapeInput.CurrentInputDeviceTypeNoMouse;
             string changeModeText = iaModeChange.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
-            sb.Append($"Mode {changeModeText} | ");
+            string zoomCamera = GAMELOOP.InputActionZoom.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
+            sbTop.Append($"Mode {changeModeText} | ");
             
             if (polyModeActive)
             {
+                
+                
                 string placeText = iaAddShape.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
                 string cutText = iaCutShape.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
                 string pickTri = iaPickTriangleShape.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
@@ -1046,43 +1049,35 @@ namespace Examples.Scenes.ExampleScenes
                 string rotateShape = iaRotateShape.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
                 string scaleShape = iaScaleShape.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
                 
-                sb.Append($"Place {placeText} | ");
-                sb.Append($"Cut {cutText} | ");
-                sb.Append($"Triangle {pickTri} | ");
-                sb.Append($"Rect {pickRect} | ");
-                sb.Append($"Poly {pickPoly} | ");
-                sb.Append($"Regen {regenerateShape} | ");
-                sb.Append($"Rotate {rotateShape} | ");
-                sb.Append($"Scale {scaleShape}");
+                sbTop.Append($"Place {placeText} | ");
+                sbTop.Append($"Cut {cutText} | ");
+                
+                sbBottom.Append($"Triangle {pickTri} | ");
+                sbBottom.Append($"Rect {pickRect} | ");
+                sbBottom.Append($"Poly {pickPoly} | ");
+                
+                sbBottom.Append($"Regen {regenerateShape} | ");
+                sbBottom.Append($"Rotate {rotateShape} | ");
+                sbBottom.Append($"Scale {scaleShape}");
+                
+                
             }
             else
             {
                 string moveLaser = iaDragLaser.GetInputTypeDescription(curInputDeviceAll, true, 1, false);   
                 string shootLaser = laserDevice.iaShootLaser.GetInputTypeDescription(curInputDeviceAll, true, 1, false);   
-                sb.Append($"Laser: Drag {moveLaser} | ");
-                sb.Append($"Shoot {shootLaser}");
+                sbBottom.Append($"Laser: Drag {moveLaser} | ");
+                sbBottom.Append($"Shoot {shootLaser}");
+                
             }
-
+            
+            sbTop.Append($"Zoom {zoomCamera}");
+            textFont.ColorRgba = Colors.Special;
+            textFont.DrawTextWrapNone(sbTop.ToString(), split.top, new(0.5f));
+            
             textFont.ColorRgba = Colors.Light;
-            textFont.DrawTextWrapNone(sb.ToString(), rect, new(0.5f));
-            // font.DrawText(sb.ToString(), rect, 1f, new Vector2(0.5f, 0.95f), ColorLight);
+            textFont.DrawTextWrapNone(sbBottom.ToString(), split.bottom, new(0.5f));
             
-            // var polymodeText = "[Tab] Polymode | [LMB] Place/Merge | [RMB] Cut | [1] Triangle | [2] Rect | [3] Poly | [Q] Regenerate | [X] Rotate | [C] Scale";
-            // var laserText = "[Tab] Lasermode | [LMB] Move | [RMB] Shoot Laser";
-            // string text = polyModeActive ? polymodeText : laserText;
-            
-            // font.DrawText(text, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
-            
-            // Rect bottomCenter = GAMELOOP.UIRects.GetRect("bottom center");
-            
-            // var create = createPoint. GetInputTypeDescription( input.CurrentInputDevice, true, 1, false);
-            // var delete = deletePoint. GetInputTypeDescription( input.CurrentInputDevice, true, 1, false);
-            // var offset = changeOffset.GetInputTypeDescription( input.CurrentInputDevice , true, 1, false);
-            
-            // string infoText =
-                // $"Add Point {create} | Remove Point {delete} | Inflate {offset} {MathF.Round(offsetDelta * 100) / 100}";
-            
-            // font.DrawText(infoText, rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
     }
 }

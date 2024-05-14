@@ -39,18 +39,20 @@ namespace Examples.Scenes.ExampleScenes
         private const float MinSize = 10f;
         private const float MaxSpeed = 150f;
         private const float MinSpeed = 10f;
-        private static ChanceList<ColorRgba> colors = new((50, new(Color.Orange)), (30, new(Color.Goldenrod)), (10, new(Color.IndianRed)), (5, new(Color.MediumPurple)), (1, new(Color.ForestGreen)));
-        private static ChanceList<float> speeds = new((10, MinSpeed), (30, MinSpeed * 2.5f), (50, MinSpeed * 4f), (20, MaxSpeed / 2), (10, MaxSpeed));
+        private static readonly ChanceList<PaletteColor> colors = new((50, Colors.PcSpecial), (35, Colors.PcSpecial2), (15, Colors.PcWarm));
+        private static readonly ChanceList<float> speeds = new((10, MinSpeed), (30, MinSpeed * 2.5f), (50, MinSpeed * 4f), (20, MaxSpeed / 2), (10, MaxSpeed));
         Circle circle;
         Vector2 vel;
-        ColorRgba colorRgba;
+        // ColorRgba colorRgba;
+        private PaletteColor color;
         float speed = 0f;
         public Comet(Vector2 pos)
         {
             this.circle = new(pos, ShapeRandom.RandF(MinSize, MaxSize));
             this.speed = speeds.Next();
             this.vel = ShapeRandom.RandVec2() * this.speed;
-            this.colorRgba = colors.Next();
+            this.color = colors.Next();
+            // this.colorRgba = colors.Next();
 
         }
         public void Update(float dt, Rect universe)
@@ -59,7 +61,8 @@ namespace Examples.Scenes.ExampleScenes
 
             if (!universe.ContainsPoint(circle.Center))
             {
-                circle -= circle.Center; // circle.Center = -circle.Center;
+                // circle -= circle.Center;
+                circle = circle.SetPosition(universe.GetRandomPointInside());
             }
         }
         public bool CheckCollision(Circle ship)
@@ -74,7 +77,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         public void Draw()
         {
-            circle.DrawLines(6f, colorRgba);
+            circle.DrawLines(6f, color.ColorRgba);
         }
     }
 

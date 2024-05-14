@@ -683,7 +683,7 @@ public class ShapesExample : ExampleScene
         var changeModeText = changeMode. GetInputTypeDescription( curDevice, true, 1, false); 
         // var offset = changeOffset.GetInputTypeDescription( curDevice , true, 1, false);
 
-        var topCenter = GAMELOOP.UIRects.GetRect("center").ApplyMargins(0,0,0,0.92f);
+        var topCenter = GAMELOOP.UIRects.GetRect("center").ApplyMargins(0,0,0.05f,0.9f);
         textFont.ColorRgba = Colors.Light;
         var mode = 
             shapeMode == ShapeMode.Overlap ? "Overlap" :

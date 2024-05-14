@@ -421,8 +421,10 @@ namespace Examples.Scenes.ExampleScenes
         private readonly InputAction iaToggleDebug;
         private readonly InputAction iaPlaceWall;
         private readonly InputAction iaCancelWall;
+        
         private readonly InputAction iaMoveCameraH;
         private readonly InputAction iaMoveCameraV;
+        
         private readonly List<InputAction> inputActions;
 
         // private Rect clearArea = new();
@@ -559,13 +561,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             var gamepad = GAMELOOP.CurGamepad;
             InputAction.UpdateActions(dt, gamepad, inputActions);
-            // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
-            // foreach (var ia in inputActions)
-            // {
-            //     ia.Gamepad = gamepadIndex;
-            //     ia.Update(dt);
-            // }
-
+            
             if (iaStartClearArea.State.Pressed)
             {
                 clearAreaStartPoint = mousePosGame;
@@ -589,16 +585,6 @@ namespace Examples.Scenes.ExampleScenes
                 }
             
             }
-            //
-            // if (iaSpawnBox.State.Pressed)
-            // {
-            //     for (int i = 0; i < 5; i++)
-            //     {
-            //         Box b = new(mousePosGame + ShapeRandom.RandVec2(0, 10), ShapeRandom.RandVec2() * 75, 25);
-            //         gameObjectHandler.AddAreaObject(b);
-            //     }
-            //
-            // }
             if (iaSpawnBird.State.Pressed)
             {
                 Bird b = new(mousePosGame);
@@ -628,27 +614,32 @@ namespace Examples.Scenes.ExampleScenes
                 }
                 
             }
-            // if (iaSpawnTrap.State.Pressed)
-            // {
-            //     Trap t = new(mousePosGame, new Vector2(250, 250));
-            //     gameObjectHandler.AddAreaObject(t);
-            // }
-
-            // if (iaSpawnAura.State.Pressed)
-            // {
-            //     Aura a = new(mousePosGame, 150, 0.75f);
-            //     gameObjectHandler.AddAreaObject(a);
-            // }
-
+            
             if (iaToggleDebug.State.Pressed) { drawDebug = !drawDebug; }
 
+            
+            
 
-            var moveCameraH = iaMoveCameraH.State.AxisRaw;
-            var moveCameraV = iaMoveCameraV.State.AxisRaw;
-            var moveCameraDir = new Vector2(moveCameraH, moveCameraV);
-            var cam = GAMELOOP.Camera;
-            var f = cam.ZoomFactor;
-            cam.BasePosition += moveCameraDir * 500 * dt * f;
+            if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Mouse)
+            {
+                if (ShapeKeyboardButton.LEFT_SHIFT.GetInputState().Down)
+                {
+                    var dir = ExampleScene.CalculateMouseMovementDirection(GAMELOOP.GameScreenInfo.MousePos, GAMELOOP.Camera);
+                    var cam = GAMELOOP.Camera;
+                    var f = cam.ZoomFactor;
+                    cam.BasePosition += dir * 500 * dt * f;
+                }
+                
+            }
+            else
+            {
+                var moveCameraH = iaMoveCameraH.State.AxisRaw;
+                var moveCameraV = iaMoveCameraV.State.AxisRaw;
+                var moveCameraDir = new Vector2(moveCameraH, moveCameraV);
+                var cam = GAMELOOP.Camera;
+                var f = cam.ZoomFactor;
+                cam.BasePosition += moveCameraDir * 500 * dt * f;
+            }
             
             HandleWalls(mousePosGame);
         }
@@ -722,12 +713,15 @@ namespace Examples.Scenes.ExampleScenes
             string toggleDebugText = iaToggleDebug.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
             string clearAreaText = iaStartClearArea.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
             
-            string moveCameraH = iaMoveCameraH.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
-            string moveCameraV = iaMoveCameraV.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
+            string moveCameraH = curInputDeviceAll == InputDeviceType.Mouse ? "[LShift + Mx]" :  iaMoveCameraH.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
+            string moveCameraV = curInputDeviceAll == InputDeviceType.Mouse ? "[LShift + My]" : iaMoveCameraV.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
             string zoomCamera = GAMELOOP.InputActionZoom.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
             sbCamera.Append($"Zoom Camera {zoomCamera} | ");
             sbCamera.Append($"Move Camera {moveCameraH} {moveCameraV} | ");
-            sbCamera.Append($"Clear Zone {clearAreaText} + Mouse");
+
+
+            string clearMouseText = curInputDeviceAll != InputDeviceType.Gamepad ? "Mouse" : "LStick";
+            sbCamera.Append($"Clear Zone {clearAreaText} + {clearMouseText}");
             
             sb.Append($"Add/Cancel Wall [{placeWallText}/{cancelWallText}] | ");
             //sb.Append($"Spawn: Rock/Box/Ball/Aura [{spawnRockText}/{spawnBoxText}/{spawnBallText}/{spawnAuraText}] | ");

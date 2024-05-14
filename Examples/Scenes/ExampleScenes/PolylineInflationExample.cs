@@ -51,6 +51,17 @@ namespace Examples.Scenes.ExampleScenes
             textFont.ColorRgba = Colors.Light;
 
         }
+
+        public override void Activate(Scene oldScene)
+        {
+            GAMELOOP.InputActionZoom.Enabled = false;
+        }
+
+        public override void Deactivate()
+        {
+            GAMELOOP.InputActionZoom.Enabled = true;
+        }
+
         public override void Reset()
         {
             polyline = new();
@@ -187,18 +198,18 @@ namespace Examples.Scenes.ExampleScenes
                     if (closestIndex == i)
                     {
                         // segment.Start.Draw(relativeSize / 2, BLUE);
-                        segment.Draw(relativeSize, new(Color.CornflowerBlue), LineCapType.CappedExtended, 4);
+                        segment.Draw(relativeSize, Colors.Cold, LineCapType.CappedExtended, 4);
                     }
                     else
                     {
                         // segment.Start.Draw(relativeSize / 2, WHITE);
-                        segment.Draw(relativeSize, new(Color.AntiqueWhite), LineCapType.CappedExtended, 4);
+                        segment.Draw(relativeSize, Colors.Light, LineCapType.CappedExtended, 4);
                     }
                 }
                 else
                 {
                     // segment.Start.Draw(relativeSize / 2, WHITE);
-                    segment.Draw(relativeSize, new(Color.AntiqueWhite), LineCapType.CappedExtended, 4);
+                    segment.Draw(relativeSize, Colors.Light, LineCapType.CappedExtended, 4);
                 }
             }
 
@@ -210,7 +221,7 @@ namespace Examples.Scenes.ExampleScenes
                 inflatedPolygons = ShapeClipper.Inflate(polyline, lerpOffsetDelta).ToPolygons();
                 foreach (var polygon in inflatedPolygons)
                 {
-                    polygon.DrawLines(relativeSize, new(Color.Goldenrod));
+                    polygon.DrawLines(relativeSize, Colors.Special);
                 }
             }
 
@@ -230,9 +241,9 @@ namespace Examples.Scenes.ExampleScenes
                                 if (p.Valid)
                                 {
                                     if(!intersectionHappend) intersectionHappend = true;
-                                    p.Point.Draw(8f, new ColorRgba(Color.Crimson), 10);
+                                    p.Point.Draw(8f, Colors.Warm, 10);
                                     Segment normal = new(p.Point, p.Point + p.Normal * 50f);
-                                    normal.Draw(4f, new ColorRgba(Color.Crimson));
+                                    normal.Draw(4f, Colors.Warm);
                                 }
                             }
                         }
@@ -248,16 +259,16 @@ namespace Examples.Scenes.ExampleScenes
                             if (p.Valid)
                             {
                                 if(!intersectionHappend) intersectionHappend = true;
-                                p.Point.Draw(8f, new ColorRgba(Color.Crimson), 10);
+                                p.Point.Draw(8f, Colors.Warm, 10);
                                 Segment normal = new(p.Point, p.Point + p.Normal * 50f);
-                                normal.Draw(4f, new ColorRgba(Color.Crimson));
+                                normal.Draw(4f, Colors.Warm);
                             }
                         }
                     }
                 }
                 
-                if(intersectionHappend) collisionSegment.Draw(4f, new ColorRgba(Color.Aquamarine), LineCapType.None);
-                else collisionSegment.Draw(4f, new ColorRgba(Color.Bisque), LineCapType.None);
+                if(intersectionHappend) collisionSegment.Draw(4f, Colors.Highlight, LineCapType.None);
+                else collisionSegment.Draw(4f,Colors.Light, LineCapType.None);
             }
         }
         protected override void OnDrawGameUIExample(ScreenInfo ui)
