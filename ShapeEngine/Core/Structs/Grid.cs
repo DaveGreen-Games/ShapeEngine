@@ -33,7 +33,7 @@ public readonly struct Grid : IEquatable<Grid>
                 return r + c;
             }
         }
-    
+
         public Coordinates()
         {
             this.Row = -1;
@@ -180,6 +180,43 @@ public readonly struct Grid : IEquatable<Grid>
     public readonly int Cols;
     public readonly Direction Placement;
     public readonly bool IsTopToBottomFirst;
+    
+    /// <summary>
+    /// Get the direction for what is considered the next item.
+    /// Standard Vertical Grid with 1 column that is top to bottom first would return new Direction(0, 1)
+    /// </summary>
+    /// <returns></returns>
+    public Direction GetNextDirection()
+    {
+        if (!IsValid) return new();
+
+        if (IsGrid)
+        {
+            return new(0, Placement.Vertical);
+        }
+
+
+        return Placement;
+
+
+    }
+    /// <summary>
+    /// Get the direction for what is considered the previous item.
+    /// Standard Vertical Grid with 1 column that is top to bottom first would return new Direction(0, -1)
+    /// </summary>
+    /// <returns></returns>
+    public Direction GetPreviousDirection()
+    {
+        if (!IsValid) return new();
+        
+        if (IsGrid)
+        {
+            return new(0, -Placement.Vertical);
+        }
+
+
+        return new(-Placement.Horizontal, -Placement.Vertical);//reversed for previous
+    }
     
     public bool IsLeftToRightFirst => !IsTopToBottomFirst;
     public bool IsValid => Rows > 0 && Cols > 0;

@@ -82,6 +82,38 @@ public class ControlNodeNavigator
 
     private bool navigationPending = false;
     private Direction prevDir = new();
+    private ControlNode? nextNodeToSelect = null;
+
+    public void SelectNext(Grid grid)
+    {
+        if (!IsNavigating || selectedNode == null || !grid.IsValid) return;
+        var dir = grid.GetNextDirection();
+        if (grid.IsGrid)
+        {
+            var next = GetNextNode();
+            if (next == null || next == selectedNode) return;
+            nextNodeToSelect = next;
+        }
+        selectedNode.NavigatedTo(dir);
+        navigationPending = true;
+        prevDir = dir;
+    }
+
+    public void SelectPrevious(Grid grid)
+    {
+        if (!IsNavigating || selectedNode == null || !grid.IsValid) return;
+        
+        var dir = grid.GetPreviousDirection();
+        if (grid.IsGrid)
+        {
+            var prev = GetPrevNode();
+            if (prev == null || prev == selectedNode) return;
+            nextNodeToSelect = prev;
+        }
+        selectedNode.NavigatedTo(dir);
+        navigationPending = true;
+        prevDir = dir;
+    }
     public void Update()
     {
         if (!IsNavigating) return;
@@ -106,7 +138,8 @@ public class ControlNodeNavigator
             navigationPending = false;
             var dir = prevDir;
             
-            var nextNode = GetNextNode(dir);
+            var nextNode = nextNodeToSelect ?? GetNextNode(dir);
+            nextNodeToSelect = null;
             if (nextNode != null && CheckNextNode(nextNode, dir))
             {
                 selectedNode.NavigationDeselect();
@@ -132,6 +165,25 @@ public class ControlNodeNavigator
     #endregion
 
     #region Private
+    private static Direction GetDirection(ControlNode from, ControlNode to)
+    {
+        var dir = to.Rect.TopLeft - from.Rect.TopLeft;
+    
+        if (dir.X == 0)
+        {
+            return new Direction(0, MathF.Sign(dir.Y));
+        }
+        else if (dir.Y == 0)
+        {
+            return new Direction(MathF.Sign(dir.X),0);
+        }
+        else
+        {
+            return MathF.Abs(dir.X) < MathF.Abs(dir.Y) ? new Direction(MathF.Sign(dir.X), 0) : new Direction(0, MathF.Sign(dir.Y));
+        }
+    }
+    
+    
     private ControlNode? GetClosestNode(ControlNode node)
     {
         var navigable = GetNavigableNodes();
@@ -150,6 +202,28 @@ public class ControlNodeNavigator
             }
         }
         return closestNode;
+    }
+    private ControlNode? GetNextNode()
+    {
+        if (selectedNode == null) return null;
+        var navigable = GetNavigableNodes();
+        var index = navigable.IndexOf(selectedNode);
+        if (index < 0) return null;
+
+        index += 1;
+        if (index >= navigable.Count) index = 0;
+        return navigable[index];
+    }
+    private ControlNode? GetPrevNode()
+    {
+        if (selectedNode == null) return null;
+        var navigable = GetNavigableNodes();
+        var index = navigable.IndexOf(selectedNode);
+        if (index < 0) return null;
+
+        index -= 1;
+        if (index < 0) index = navigable.Count - 1;
+        return navigable[index];
     }
     private ControlNode? GetNextNode(Direction dir)
     {

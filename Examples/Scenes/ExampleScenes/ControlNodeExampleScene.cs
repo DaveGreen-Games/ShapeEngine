@@ -16,6 +16,8 @@ namespace Examples.Scenes.ExampleScenes
         //     MouseFilter = MouseFilter.Pass;
         // }
 
+        
+
         protected override void OnDraw()
         {
             Rect.DrawLines(2f, Colors.Light);
@@ -188,6 +190,9 @@ namespace Examples.Scenes.ExampleScenes
         }
     }
     
+    
+    
+    
     public class ControlNodeExampleScene : ExampleScene
     {
         // private readonly InputAction iaNextAlignement;
@@ -229,6 +234,8 @@ namespace Examples.Scenes.ExampleScenes
                 Anchor = new(0.5f),
                 Stretch = new(0.98f, 0.7f)
             };
+            container.MouseFilter = MouseFilter.Pass;
+            
             navigator = new();
 
             buttonContainer = new ControlNodeContainer
@@ -236,7 +243,7 @@ namespace Examples.Scenes.ExampleScenes
                 Anchor = new Vector2(0.5f),
                 Stretch = new Vector2(0.8f, 0.6f)
             };
-
+            
             // var startButton = new ControlNodeButton("Nav Start", new(0.5f, 0.5f), new Vector2(0.98f, 0.95f));
             // optionButton = new ControlNodeButton("Active Test", new(0.5f, 0.5f), new Vector2(0.98f, 0.95f));
             // var quitButton = new ControlNodeButton("Nav End", new(0.5f, 0.5f), new Vector2(0.98f, 0.95f));
@@ -341,8 +348,23 @@ namespace Examples.Scenes.ExampleScenes
         
         protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
-            var gamepad = GAMELOOP.CurGamepad;
 
+            if (container.MouseInside)
+            {
+                
+                if (ShapeMouseWheelAxis.VERTICAL.GetInputState().AxisRaw > 0)
+                {
+                    navigator.SelectPrevious(buttonContainer.Grid);
+                }
+                
+                else if (ShapeMouseWheelAxis.VERTICAL.GetInputState().AxisRaw < 0)
+                {
+                    navigator.SelectNext(buttonContainer.Grid);
+                }
+            }
+            
+            var gamepad = GAMELOOP.CurGamepad;
+            
             cycleGridStyles.Gamepad = gamepad;
             cycleGridStyles.Update(time.Delta);
             

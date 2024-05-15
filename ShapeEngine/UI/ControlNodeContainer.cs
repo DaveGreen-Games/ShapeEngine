@@ -37,6 +37,8 @@ public class ControlNodeContainer : ControlNode
         }
     }
 
+    
+    
     /// <summary>
     /// If true the display index of the container is clamped to childCount - displayCount. If false the display index
     /// is incremented/decremented by displayCount as long as 0 or childCount is not reached.
@@ -346,7 +348,7 @@ public class ControlNodeContainer : ControlNode
         if (NavigationStep == 0) return;
 
         if (!Grid.IsValid) return;
-        
+
         var signedPlacement = grid.Placement.Signed;
         // var factor = grid.IsVertical ? signedPlacement.Vertical : signedPlacement.Horizontal;
         dir *= signedPlacement;
