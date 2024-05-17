@@ -557,6 +557,9 @@ public readonly struct Rect : IEquatable<Rect>
         return !margins.Valid ? this : ApplyMarginsAbsolute(margins.Left, margins.Right, margins.Top, margins.Bottom);
     }
 
+    public Rect ApplyMargins(float margin) => ApplyMargins(margin, margin, margin, margin);
+    public Rect ApplyMarginsAbsolute(float margin) => ApplyMarginsAbsolute(margin, margin, margin, margin);
+
     public Rect ApplyMargins(float left, float right, float top, float bottom)
     {
         if (left == 0f && right == 0f && top == 0f && bottom == 0f) return this;
