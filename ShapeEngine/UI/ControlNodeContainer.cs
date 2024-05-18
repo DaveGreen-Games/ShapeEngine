@@ -411,13 +411,29 @@ public class ControlNodeContainer : ControlNode
     protected virtual void NodeWasSelected(ControlNode node) { }
     protected virtual bool IsFirstDisplayed(ControlNode node)
     {
-        if (DisplayedChildrenCount <= 0) return false;
-        return DisplayedChildren[0] == node;
+        if (DisplayedChildren == null || DisplayedChildren.Count <= 0) return false;
+        for (int i = 0; i < DisplayedChildren.Count; i++)
+        {
+            var child = DisplayedChildren[i];
+            if (!child.Active || !child.ParentActive) continue;
+
+            return child == node;
+        }
+
+        return false;
     }
     protected virtual bool IsLastDisplayed(ControlNode node)
     {
-        if (DisplayedChildrenCount <= 0) return false;
-        return DisplayedChildren[^1] == node;
+        if (DisplayedChildren == null || DisplayedChildren.Count <= 0) return false;
+        for (int i = DisplayedChildren.Count - 1; i >= 0; i--)
+        {
+            var child = DisplayedChildren[i];
+            if (!child.Active || !child.ParentActive) continue;
+
+            return child == node;
+        }
+
+        return false;
     }
     #endregion
 
