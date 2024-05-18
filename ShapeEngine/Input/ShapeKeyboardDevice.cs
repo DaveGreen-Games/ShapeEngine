@@ -17,6 +17,10 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
     
     private readonly Dictionary<ShapeKeyboardButton, InputState> buttonStates = new(AllShapeKeyboardButtons.Length);
 
+    public event Action<ShapeKeyboardButton>? OnButtonPressed;
+    public event Action<ShapeKeyboardButton>? OnButtonReleased;
+    
+    
     internal ShapeKeyboardDevice()
     {
         foreach (var button in AllShapeKeyboardButtons)
@@ -160,7 +164,11 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
             var button = state.Key;
             var prevState = state.Value;
             var curState = CreateInputState(button);
-            buttonStates[button] = new InputState(prevState, curState);
+            var nextState = new InputState(prevState, curState);
+            buttonStates[button] = nextState;
+            
+            if(nextState.Pressed) OnButtonPressed?.Invoke(button);
+            else if(nextState.Released) OnButtonReleased?.Invoke(button);
 
         }
     }

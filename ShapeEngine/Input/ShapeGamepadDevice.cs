@@ -36,6 +36,8 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
     private readonly Dictionary<ShapeGamepadButton, InputState> buttonStates = new (AllShapeGamepadButtons.Length);
     private readonly Dictionary<ShapeGamepadAxis, InputState> axisStates = new (AllShapeGamepadAxis.Length);
     
+    public event Action<ShapeGamepadDevice, ShapeGamepadButton>? OnButtonPressed;
+    public event Action<ShapeGamepadDevice, ShapeGamepadButton>? OnButtonReleased;
 
     public readonly int Index;
     
@@ -186,7 +188,11 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
             var button = state.Key;
             var prevState = state.Value;
             var curState = CreateInputState(button);
-            buttonStates[button] = new InputState(prevState, curState);
+            var nextState = new InputState(prevState, curState);
+            buttonStates[button] = nextState;
+            
+            if(nextState.Pressed) OnButtonPressed?.Invoke(this, button);
+            else if(nextState.Released) OnButtonReleased?.Invoke(this, button);
 
         }
     }

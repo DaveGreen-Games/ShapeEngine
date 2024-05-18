@@ -1,9 +1,8 @@
-using System.Diagnostics;
+
 using System.Numerics;
 using System.Runtime.InteropServices;
 using Raylib_cs;
 using ShapeEngine.Color;
-using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
@@ -11,10 +10,6 @@ using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 
 namespace ShapeEngine.Core;
-
-//totalSeconds
-//totalFrames
-//delta
 
 public class Game
 {
@@ -197,9 +192,18 @@ public class Game
     #region  Gameloop
     private void StartGameloop()
     {
+        ShapeInput.KeyboardDevice.OnButtonPressed += OnKeyboardButtonPressed;
+        ShapeInput.KeyboardDevice.OnButtonReleased += OnKeyboardButtonReleased;
+        ShapeInput.MouseDevice.OnButtonPressed += OnMouseButtonPressed;
+        ShapeInput.MouseDevice.OnButtonReleased += OnMouseButtonReleased;
+        ShapeInput.GamepadDeviceManager.OnGamepadButtonPressed += OnGamepadButtonPressed;
+        ShapeInput.GamepadDeviceManager.OnGamepadButtonReleased += OnGamepadButtonReleased;
+        
         LoadContent();
         BeginRun();
     }
+
+    
     private void RunGameloop()
     {
         while (!quit)
@@ -465,6 +469,15 @@ public class Game
     protected virtual void OnWindowHiddenChanged(bool hidden) { }
     protected virtual void OnWindowTopmostChanged(bool topmost) { }
     protected virtual Vector2 ChangeMousePos(float dt, Vector2 mousePos, Rect screenArea) => mousePos;
+
+    protected virtual void OnButtonPressed(InputEvent e)
+    {
+        
+    }
+    protected virtual void OnButtonReleased(InputEvent e)
+    {
+        
+    }
     #endregion
 
     #region Resolve
@@ -478,6 +491,22 @@ public class Game
         }
     }
 
+    private void OnGamepadButtonReleased(ShapeGamepadDevice gamepad, ShapeGamepadButton button) => ResolveOnButtonReleased(new(gamepad, button));
+    private void OnGamepadButtonPressed(ShapeGamepadDevice gamepad, ShapeGamepadButton button) => ResolveOnButtonPressed(new(gamepad, button));
+    private void OnMouseButtonReleased(ShapeMouseButton button) => ResolveOnButtonReleased(new(button));
+    private void OnMouseButtonPressed(ShapeMouseButton button) => ResolveOnButtonPressed(new(button));
+    private void OnKeyboardButtonReleased(ShapeKeyboardButton button) => ResolveOnButtonReleased(new(button));
+    private void OnKeyboardButtonPressed(ShapeKeyboardButton button) => ResolveOnButtonPressed(new(button));
+    private void ResolveOnButtonPressed(InputEvent e)
+    {
+        OnButtonPressed(e);
+        CurScene.OnButtonPressed(e);
+    }
+    private void ResolveOnButtonReleased(InputEvent e)
+    {
+        OnButtonReleased(e);
+        CurScene.OnButtonReleased(e);
+    }
     private void ResolveUpdate(GameTime time, ScreenInfo game, ScreenInfo ui)
     {
         Update(time, game, ui);

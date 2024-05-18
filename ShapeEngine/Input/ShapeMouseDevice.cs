@@ -20,6 +20,11 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
     private readonly Dictionary<ShapeMouseAxis, InputState> axisStates = new(2);
     private readonly Dictionary<ShapeMouseWheelAxis, InputState> wheelAxisStates = new(2);
 
+    
+    public event Action<ShapeMouseButton>? OnButtonPressed;
+    public event Action<ShapeMouseButton>? OnButtonReleased;
+    
+    
     internal ShapeMouseDevice()
     {
         foreach (var button in AllShapeMouseButtons)
@@ -85,7 +90,11 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
             var button = state.Key;
             var prevState = state.Value;
             var curState = CreateInputState(button);
-            buttonStates[button] = new InputState(prevState, curState);
+            var nextState = new InputState(prevState, curState);
+            buttonStates[button] = nextState;
+            
+            if(nextState.Pressed) OnButtonPressed?.Invoke(button);
+            else if(nextState.Released) OnButtonReleased?.Invoke(button);
         }
         foreach (var state in axisStates)
         {

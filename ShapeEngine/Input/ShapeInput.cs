@@ -14,7 +14,6 @@ public static class ShapeInput
     public static readonly ShapeMouseDevice MouseDevice = new();
     public static readonly ShapeGamepadDeviceManager GamepadDeviceManager = new();
 
-
     public static InputState GetInputState(this ShapeKeyboardButton button) => KeyboardDevice.GetButtonState(button);
     public static InputState GetInputState(this ShapeMouseButton button) => MouseDevice.GetButtonState(button);
     public static InputState GetInputState(this ShapeMouseAxis axis) => MouseDevice.GetAxisState(axis);

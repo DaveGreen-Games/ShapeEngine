@@ -3,6 +3,7 @@ namespace ShapeEngine.Input;
 public enum ShapeKeyboardButton
 {
     //None = -1,
+    NONE = -1,
     APOSTROPHE = 39,
     COMMA = 44,
     MINUS = 45,

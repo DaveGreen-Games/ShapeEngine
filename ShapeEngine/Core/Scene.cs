@@ -177,5 +177,8 @@ public abstract class Scene : IUpdateable, IDrawable
     public virtual void OnWindowFocusChanged(bool focused) { }
     public virtual void OnWindowFullscreenChanged(bool fullscreen) { }
     public virtual void OnWindowMaximizeChanged(bool maximized) { }
+    
+    public virtual void OnButtonPressed(InputEvent e) { }
+    public virtual void OnButtonReleased(InputEvent e) { }
         
 }

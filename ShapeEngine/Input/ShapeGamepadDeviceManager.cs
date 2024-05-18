@@ -12,6 +12,9 @@ public sealed class ShapeGamepadDeviceManager
     public readonly List<ShapeGamepadDevice> LastUsedGamepads = new();
 
     public ShapeGamepadDevice? LastUsedGamepad = null;
+    
+    public event Action<ShapeGamepadDevice, ShapeGamepadButton>? OnGamepadButtonPressed;
+    public event Action<ShapeGamepadDevice, ShapeGamepadButton>? OnGamepadButtonReleased;
 
     public ShapeGamepadDeviceManager(int maxGamepads = 8)
     {
@@ -134,9 +137,15 @@ public sealed class ShapeGamepadDeviceManager
         {
             var gamepad =  new ShapeGamepadDevice(i, Raylib.IsGamepadAvailable(i));
             gamepads[i] = gamepad;
+            gamepad.OnButtonPressed += GamepadButtonWasPressed;
+            gamepad.OnButtonReleased += GamepadButtonWasReleased;
             // if(gamepad.Connected) ConnectedGamepads.Add(gamepad);
         }
     }
+
+    private void GamepadButtonWasReleased(ShapeGamepadDevice gamepad, ShapeGamepadButton button) => OnGamepadButtonPressed?.Invoke(gamepad, button);
+    private void GamepadButtonWasPressed(ShapeGamepadDevice gamepad, ShapeGamepadButton button) => OnGamepadButtonReleased?.Invoke(gamepad, button);
+
     #endregion
     
 }
