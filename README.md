@@ -6,8 +6,6 @@ When using Shape Engine everything from Raylib is available as well. ([Raylib Ex
 
 Shape Engine´s examples are available on [Itch](https://solobytegames.itch.io/shape-engine) as well and it is a great way to support me ;)
 
-You can find more info on [Shape Engine´s Website](https://lamps-stay-pof.craft.me/CyQLraxSbtpBze) as well.
-
 ## Showcase
 ![Helldivers](media/helldivers.gif)
 ![Pathfinding](media/pathfinding.gif)
