@@ -1,5 +1,5 @@
 ![](final/title/shape-engine-main5.png)
-# ShapeEngine
+# ShapeEngine 1.0
 My custom-made engine based on the great [Raylib Framework](https://www.raylib.com/examples.html). The Main focus is being performant and only using draw functions instead of textures. I am using Shape Engine for my next game called Galaxy Unknown.
 
 When using Shape Engine everything from Raylib is available as well. ([Raylib Examples](https://www.raylib.com/examples.html), [Raylib Cheatsheet](https://www.raylib.com/cheatsheet/raylib_cheatsheet_v4.0.pdf))
