@@ -16,7 +16,7 @@ Shape Engine´s examples are available on [Itch](https://solobytegames.itch.io/
 ![Fracture](media/fracture.gif)
 
 
-## Main Branch
+## Development Process
 
 The Main Branch contains the current development stage. You can follow the development process here:
 
@@ -43,10 +43,16 @@ There are multiple ways to use Shape Engine:
 
 ## Examples
 
-You can download the newest builds of the Example & Demo Project on [Itch io](https://davegreengames.itch.io/shape-engine). Right now there is no demo project but I will start working on it as soon as I have v1.0 finished. You can also just clone the repo and inspect the example & demo projects there.
+> You can download the newest builds of the Example Project on [Itch io](https://davegreengames.itch.io/shape-engine). You can clone the repo and inspect the example projects there as well.
+
+- Examples are simple scenes that focus on one specific area or feature of Shape Engine.
+- Examples showcase the various capabilities of Shape Engine, allowing users to explore various features.
+- The examples cover all major features of Shape Engine, ensuring that users can grasp its full potential.
 
 
 ## **Features**
+
+> In general my goal is to provide the most relevant system a game dev needs without adding a solution for every possible problem.
 
 - [Polygon Fracturing](https://youtu.be/RaKz4q_zYrg)
 - [Delaunay Triangulation](https://youtu.be/eJqZB-e6m54)
@@ -77,11 +83,37 @@ You will always find the roadmaps on ShapeEngine´s GitHub Discussion page [here
 
 I am just using the [Raylib Cs](https://github.com/ChrisDill/Raylib-cs) c# bindings and the [Cipper2](http://www.angusj.com/clipper2/Docs/Overview.htm) library for polygon clipping.
 
+> If you use the nuget manager to download **Shape Engine as a nuget package** you don't have to take care of any dependencies, because they will be downloaded automatically.
+
 
 ## Limitations
-- There is no physics system because I don´t need one and would´t know how to make one. There is complete collision system but the collision response is up to you. You can also use raylibs physics system.
+There is no physics system because I don´t need one and would´t know how to make one. There is complete collision system but the collision response is up to you. You can also use raylibs physics system.
 
 
 ## History
 I made Shape Engine because I wanted to help myself make games with a specific art style and certain limitations. At first, it started out with some helper scripts but now it is a relatively sophisticated system to make games with raylib. Certain parts of the basic game loop are inspired by [Bytepath](https://github.com/a327ex/BYTEPATH) and other things I already used in games that I made myself (especially [Fracture Hell](https://store.steampowered.com/app/1713770/Fracture_Hell)). 
-Feel free to use any single part if you don´t want to use the whole package. Most scripts in the globals section are self contained and can just be used to make your raylib journey a little bit easier.
+Feel free to use any single part if you don´t want to use the whole package.
+
+
+## Contact
+
+> If you have an **issue**, or a **suggestion** for a new feature GitHub is the best way to get in contact with me.
+
+- [GitHub Issues](https://github.com/DaveGreen-Games/ShapeEngine/issues)
+- [GitHub Discussions](https://github.com/DaveGreen-Games/ShapeEngine/discussions)
+
+> On these platforms you can follow the development process of Shape Engine, get in contact with me and always stay up date.
+
+- [Reddit](https://www.reddit.com/r/ShapeEngine)
+- [Twitter](https://twitter.com/ShapeEngine)
+- [Instagram](https://www.instagram.com/shape.engine/)
+- [YouTube](https://www.youtube.com/playlist?list=PLEbRWc6_ufK3DEopVejxU3_mI00FfFmZ4)
+- [Itch Dev Logs](https://davegreengames.itch.io/shape-engine/devlog)
+
+
+## Linktree
+
+[https://linktr.ee/davegreen.games](https://linktr.ee/davegreen.games)
+
+[https://linktr.ee/shapeengine](https://linktr.ee/shapeengine)
+
