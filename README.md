@@ -4,7 +4,7 @@ My custom-made engine based on the great [Raylib Framework](https://www.raylib.
 
 When using Shape Engine everything from Raylib is available as well. ([Raylib Examples](https://www.raylib.com/examples.html), [Raylib Cheatsheet](https://www.raylib.com/cheatsheet/raylib_cheatsheet_v4.0.pdf))
 
-Shape Engine´s examples are available on [Itch](https://solobytegames.itch.io/shape-engine) as well and it is a great way to support me ;)
+> Shape Engine´s examples are available on [Itch](https://solobytegames.itch.io/shape-engine) as well and it is a great way to support me ;)
 
 ## Showcase
 ![Helldivers](media/helldivers.gif)
@@ -75,8 +75,7 @@ Currently I don't have the time or the resources to create proper documentation 
 
 
 ## Roadmap
-
-You will always find the roadmaps on ShapeEngine´s GitHub Discussion page [here](https://github.com/DaveGreen-Games/ShapeEngine/discussions/4).
+You can find the roadmap and current milestone of ShapeEngine [here](https://github.com/DaveGreen-Games/ShapeEngine/discussions/categories/roadmap).
 
 
 ## Dependencies
