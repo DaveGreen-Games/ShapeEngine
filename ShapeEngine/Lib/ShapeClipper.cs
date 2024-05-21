@@ -20,9 +20,9 @@ namespace ShapeEngine.Lib
     }
     public static class ShapeClipper
     {
-        public static PathsD ClipRect(this Rect rect, Polygon poly, int precision = 2, bool convexOnly = false)
+        public static PathsD ClipRect(this Rect rect, Polygon poly, int precision = 2)
         {
-            return Clipper.ExecuteRectClip(rect.ToClipperRect(), poly.ToClipperPath(), precision, convexOnly);
+            return Clipper.RectClip(rect.ToClipperRect(), poly.ToClipperPath(), precision);
         }
         //public static PathsD Union(this Polygons polygons, FillRule fillRule = FillRule.NonZero) 
         //{
