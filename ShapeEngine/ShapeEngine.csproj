@@ -20,7 +20,7 @@
 	<Product>Shape Engine</Product>
 	<AssemblyVersion>1.0.0</AssemblyVersion>
 	<FileVersion>1.0.0</FileVersion>
-  	<PackageReadmeFile>README.md</PackageReadmeFile>
+  	<PackageReadmeFile>readme-nuget.md</PackageReadmeFile>
   	<NeutralLanguage>en-US</NeutralLanguage>
   	<Copyright>Copyright (c) David Grueneis 2024</Copyright>
   	<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
@@ -59,7 +59,7 @@ New:
 
 
 	<ItemGroup>
-		<None Include="..\README.md" Pack="true" PackagePath="\"/>
+		<None Include="readme-nuget.md" Pack="true" PackagePath="\"/>
 	</ItemGroup>
 	
   <ItemGroup>
