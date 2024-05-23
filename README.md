@@ -17,6 +17,9 @@ When using Shape Engine everything from Raylib is available as well. ([Raylib Ex
 ![Input](media/input.gif)
 ![Fracture](media/fracture.gif)
 
+## Minimal Project Setup
+<img width="1236" alt="shapeengine-minimal-project-setup2" src="https://github.com/DaveGreen-Games/ShapeEngine/assets/34277803/2e515cec-34c7-40b2-98ea-4d4be90f9d08">
+
 
 ## Development Process
 
