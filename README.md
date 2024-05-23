@@ -8,6 +8,7 @@ When using Shape Engine everything from Raylib is available as well. ([Raylib Ex
 
 > You are free to use Shape Engine or any part of Shape Engine for your own projects, but keep in mind that Shape Engine was designed to help me with my specific game dev needs. Nevertheless I am looking forward to creations that Shape Engine made possible :)
 
+
 ## Showcase
 ![Helldivers](media/helldivers.gif)
 ![Pathfinding](media/pathfinding.gif)
@@ -17,8 +18,44 @@ When using Shape Engine everything from Raylib is available as well. ([Raylib Ex
 ![Input](media/input.gif)
 ![Fracture](media/fracture.gif)
 
+
 ## Minimal Project Setup
 <img width="1236" alt="shapeengine-minimal-project-setup2" src="https://github.com/DaveGreen-Games/ShapeEngine/assets/34277803/2e515cec-34c7-40b2-98ea-4d4be90f9d08">
+
+```
+using System.Drawing;
+using ShapeEngine.Color;
+using ShapeEngine.Core;
+using ShapeEngine.Core.Structs;
+using ShapeEngine.Lib;
+
+namespace ShapeEngineProject;
+
+
+public static class Program
+{
+    public static void Main(string[] args)
+    {
+        var gameSettings = new GameSettings()
+        {
+            DevelopmentDimensions = new Dimensions(1920, 1080),
+            MultiShaderSupport = false
+        };
+        var game = new MyGameClass(gameSettings, WindowSettings.Default);
+        game.Run();
+    }
+}
+public class MyGameClass : Game
+{
+    public MyGameClass(GameSettings gameSettings, WindowSettings windowSettings) : base(gameSettings, windowSettings) { }
+    protected override void DrawGame(ScreenInfo game)
+    {
+        game.Area.Draw(new ColorRgba(Color.DarkOliveGreen));
+        game.Area.DrawLines(12f, new ColorRgba(Color.AntiqueWhite));
+        game.MousePos.Draw(24f, new ColorRgba(Color.Lime), 36);
+    }
+}
+```
 
 
 ## Development Process
@@ -32,6 +69,7 @@ The Main Branch contains the current development stage. You can follow the devel
 - [YouTube](https://www.youtube.com/playlist?list=PLEbRWc6_ufK3DEopVejxU3_mI00FfFmZ4)
 - [GitHub Discussions](https://github.com/DaveGreen-Games/ShapeEngine/discussions/categories/dev-updates)
 - [Roadmap](https://github.com/DaveGreen-Games/ShapeEngine/discussions/4)
+
 
 
 ## Installation / How to Use
