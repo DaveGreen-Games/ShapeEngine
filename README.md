@@ -8,6 +8,7 @@ When using Shape Engine everything from Raylib is available as well. ([Raylib Ex
 
 > You are free to use Shape Engine or any part of Shape Engine for your own projects, but keep in mind that Shape Engine was designed to help me with my specific game dev needs. Nevertheless I am looking forward to creations that Shape Engine made possible :)
 
+[Release Trailer](https://youtu.be/fmx9zICSe3Q)
 
 ## Showcase
 ![Helldivers](media/helldivers.gif)
