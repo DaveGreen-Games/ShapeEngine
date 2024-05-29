@@ -55,16 +55,7 @@ packages/
 *.so
 !raylib.rc.o
 
-# Ignore all examples files
-examples/*
-# Unignore all examples dirs
-!examples/*/
-# Unignore all examples files with extension
-!examples/*.c
-!examples/*.lua
-!examples/*.png
-# Unignore examples Makefile
-!examples/Makefile
+
 
 # Ignore files build by xcode
 *.mode*v*

@@ -1,0 +1,87 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	<RunWorkingDirectory>$(MSBuildThisFileDirectory)</RunWorkingDirectory>
+	<ApplicationIcon>shape-engine.ico</ApplicationIcon>
+	<Title>Shape Engine</Title>
+	<Authors>Dave Green</Authors>
+	<RepositoryUrl>https://github.com/DaveGreen-Games/ShapeEngine</RepositoryUrl>
+	<Version>1.0.1</Version>
+	<Description>My custom made 2d game engine based on the great Raylib Framework. Main focus is being performant and only using draw functions instead of textures. Custom input, audio, savegame, collision, shape, pathfinding, ui, camera, color palette, polygon fracturing, and text system are available with a few other nice things!</Description>
+	<PackageProjectUrl>https://davegreengames.itch.io/shape-engine</PackageProjectUrl>
+	<PackageIcon>shapeengine-nuget-icon-128px.png</PackageIcon>
+	<RepositoryType>git</RepositoryType>
+	<PackageTags>GameEngine Framework 2D raylib gamedev graphics shapes polygon rect line clipper2 polygonclipping</PackageTags>
+	<Company>Dave Green Games</Company>
+	<Product>Shape Engine</Product>
+	<AssemblyVersion>1.0.0</AssemblyVersion>
+	<FileVersion>1.0.0</FileVersion>
+  	<PackageReadmeFile>readme-nuget.md</PackageReadmeFile>
+  	<NeutralLanguage>en-US</NeutralLanguage>
+  	<Copyright>Copyright (c) David Grueneis 2024</Copyright>
+  	<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+  	<PackageReleaseNotes>Initially I just wanted to overhaul the input and audio system of Shape Engine. This turned into a year long complete rework . I think there is almost no area of Shape Engine that did not get changed or removed. I took some inspiration from other frameworks (Monogame mostly) on how to setup the basic framework or gameloop. I simplified it and made it more user friendly in general, and removed unnecessary steps.  
+
+One other big part was the new shape and collision system. Now Shape Engine supports a lot of shapes (Segment, Circle, Triangle, Rect, Quad, Polygon, Polyline) and collisions/ intersections work between all of them. The different shapes are all encapsulated in there own struct and I added a lot of helpful functions to them. You can intersect shapes and get all there intersection points with normals, or just overlap them, check if one shape contains the other, or even project shapes along a vector.
+
+Reworking the UI system was really hard. I think it took me 3 iterations to get to the point where it is now. I used Godot’s Control Node system as inspiration for my system and works great now. It is simple enough and it still can do everything I need it to. The UI system now consists of three main parts:
+- Control Node (a button for instance)
+- Control Node Container (can contain any number of control nodes (even containers) and updates &amp; draws them and can also neatly align them in various ways)
+- Control Node Navigator (Navigates through all active &amp; visible control nodes via input)
+
+
+There is a lot more that has changed since the alpha version of Shape Engine (over 600 commits) and too much to write it down here but I think it gives you a good glance at the changes.
+ 
+I think I got relatively close to my goal and once I use Shape Engine for my next game I will find out really quick what areas still need some work.
+
+Changed / Overhauled:
+- Input System
+- Audio System
+- Savegame System
+- Collision System
+- Color System
+- UI System
+- Text &amp; Font System
+- Gameloop
+- Drawing System
+- Screen System
+- Randomization System
+
+New:
+- Pathfinding System
+- Color Palettes
+- Shapes</PackageReleaseNotes>
+  	<PackageId>DaveGreen.ShapeEngine</PackageId>
+  </PropertyGroup>
+
+
+	<ItemGroup>
+		<None Include="readme-nuget.md" Pack="true" PackagePath="\"/>
+	</ItemGroup>
+	
+  <ItemGroup>
+    <Content Include="shape-engine.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Clipper2" Version="1.3.0" />
+    <PackageReference Include="Raylib-cs" Version="6.0.0" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<None Include="shapeengine-nuget-icon-128px.png" Pack="true" Visible="false" PackagePath="shapeengine-nuget-icon-128px.png" />
+	</ItemGroup>
+
+	<PropertyGroup>
+		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="LICENSE.txt" Pack="true" PackagePath=""/>
+	</ItemGroup>
+
+</Project>

@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+	<RunWorkingDirectory>$(MSBuildThisFileDirectory)</RunWorkingDirectory>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+      <ApplicationIcon>shape-engine.ico</ApplicationIcon>
+  </PropertyGroup>
+
+    <ItemGroup>
+        <Content Include="shape-engine.ico" />
+    </ItemGroup>  
+    
+  <ItemGroup>
+    <ProjectReference Include="..\ShapeEngine\ShapeEngine.csproj" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<Content Include="Resources\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+	
+</Project>
