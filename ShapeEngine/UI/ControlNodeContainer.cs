@@ -130,7 +130,7 @@ public class ControlNodeContainer : ControlNode
             {
                 if (i < DisplayedChildrenCount)
                 {
-                    stretchFactorTotal += DisplayedChildren[i].ContainerStretch;
+                    stretchFactorTotal += DisplayedChildren != null ? DisplayedChildren[i].ContainerStretch : 0;
                 }
                 else stretchFactorTotal += 1;
             }
@@ -356,6 +356,7 @@ public class ControlNodeContainer : ControlNode
         if (Grid.IsGrid)
         {
             if (!Grid.IsValid) return;
+            if (DisplayedChildren == null) return;
             var index = DisplayedChildren.IndexOf(child);
             var coords = Grid.IndexToCoordinates(index);
             var coordsDir = Grid.GetDirection(coords);

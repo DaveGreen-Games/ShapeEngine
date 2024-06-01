@@ -123,8 +123,8 @@ public class Game
     private List<ShapeFlash> shapeFlashes = new();
     private List<DeferredInfo> deferred = new();
     
-    private Vector2 lastControlledMousePosition = new();
-    private bool mouseControlled = false;
+    // private Vector2 lastControlledMousePosition = new();
+    // private bool mouseControlled = false;
     #endregion
 
     public Game(GameSettings gameSettings, WindowSettings windowSettings)

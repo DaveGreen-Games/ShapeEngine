@@ -259,13 +259,27 @@ public class InputAction
     public InputAction Copy()
     {
         var copied = GetInputsCopied().ToArray();
-        var copy = new InputAction(AccessTag, Gamepad, copied)
+        if (Gamepad == null)
         {
-            axisSensitivity = axisSensitivity,
-            axisGravitiy = axisGravitiy,
-            Enabled = this.Enabled
-        };
-        return copy;
+            var copy = new InputAction(AccessTag, copied)
+            {
+                axisSensitivity = axisSensitivity,
+                axisGravitiy = axisGravitiy,
+                Enabled = this.Enabled
+            };
+            return copy;
+        }
+        else
+        {
+            var copy = new InputAction(AccessTag, Gamepad, copied)
+            {
+                axisSensitivity = axisSensitivity,
+                axisGravitiy = axisGravitiy,
+                Enabled = this.Enabled
+            };
+            return copy;
+        }
+        
     }
     public List<IInputType> GetInputs()
     {
