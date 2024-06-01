@@ -112,6 +112,32 @@ public readonly struct ColorRgba : IEquatable<ColorRgba>
             (byte)ShapeMath.LerpInt(A, to.A, f));
     }
 
+    public ColorRgba ExpDecayLerp(ColorRgba to, float f, float dt)
+    {
+        return new ColorRgba(
+            (byte)ShapeMath.ExpDecayLerpInt(R, to.R, f, dt),
+            (byte)ShapeMath.ExpDecayLerpInt(G, to.G, f, dt),
+            (byte)ShapeMath.ExpDecayLerpInt(B, to.B, f, dt),
+            (byte)ShapeMath.ExpDecayLerpInt(A, to.A, f, dt));
+    }
+    public ColorRgba PowLerp(ColorRgba to, float remainder, float dt)
+    {
+        return new ColorRgba(
+            (byte)ShapeMath.PowLerpInt(R, to.R, remainder, dt),
+            (byte)ShapeMath.PowLerpInt(G, to.G, remainder, dt),
+            (byte)ShapeMath.PowLerpInt(B, to.B, remainder, dt),
+            (byte)ShapeMath.PowLerpInt(A, to.A, remainder, dt));
+    }
+    public ColorRgba ExpDecayLerpComplex(ColorRgba to, float decay, float dt)
+    {
+        return new ColorRgba(
+            (byte)ShapeMath.ExpDecayLerpIntComplex(R, to.R, decay, dt),
+            (byte)ShapeMath.ExpDecayLerpIntComplex(G, to.G, decay, dt),
+            (byte)ShapeMath.ExpDecayLerpIntComplex(B, to.B, decay, dt),
+            (byte)ShapeMath.ExpDecayLerpIntComplex(A, to.A, decay, dt));
+    }
+    
+    
     public static ColorRgba operator +(ColorRgba left, ColorRgba right)
     {
         return new

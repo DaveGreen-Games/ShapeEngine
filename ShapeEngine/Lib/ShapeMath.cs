@@ -92,7 +92,6 @@ public static class ShapeMath
         return (cur - min) / (max - min);
     }
 
-    
     public static T LerpCollection<T>(List<T> collection, float f)
     {
         int index = WrapIndex(collection.Count, (int)(collection.Count * f));
@@ -108,34 +107,8 @@ public static class ShapeMath
         else return from;
     }
 
-    /// <summary>
-    /// Get a frame independent rate to use in lerp functions as t value.
-    /// </summary>
-    /// <param name="speed">Value has to be positive.
-    /// A value of 1 means the halfway point is reached in 0.5 seconds.
-    /// A value of 2 means twice as fast and so on.</param>
-    /// <param name="dt">The current delta time.</param>
-    /// <param name="power">The power to use.</param>
-    /// <returns>Returns the rate to be used in lerp functions.</returns>
-    public static float FrameIndepentLerpRate(float speed, float dt, float power = 2f)
-    {
-        if (power <= 0f) return 0f;
-        float factor = speed * dt;
-        if (factor < 0f) return 0f;
-        if (factor > 1f) return 1f;
-        
-        return MathF.Pow(-speed * dt, power);
-    }
-    private static float CalculateFrameIndependentLerpFactor_DEPRECATED(float lerpPercentage, float dt)
-    {
-        float rate = 1f - MathF.Pow(1f - lerpPercentage, dt);
-        return rate;
-    }
-
-
     #region Float
     public static float LerpFloat(float from, float to, float f) => (1.0f - f) * from + to * f;
-
     public static float LerpInverseFloat(float from, float to, float value)
     {
         return (value - from) / (to - from);
@@ -144,6 +117,42 @@ public static class ShapeMath
     {
         return LerpFloat(minNew, maxNew, LerpInverseFloat(minOld, maxOld, value));
     }
+    
+    /// <summary>
+    /// Framerate independent lerp. Uses MathF.Pow (very expensive). ExpDecayLerp should be used if possible.
+    /// </summary>
+    /// <param name="from">Starting Value</param>
+    /// <param name="to">Target Value</param>
+    /// <param name="remainder">How much fraction should remain after 1 second</param>
+    /// <param name="dt">Delta Time</param>
+    /// <returns></returns>
+    public static float PowLerpFloat(float from, float to, float remainder, float dt) => to + (from - to) * MathF.Pow(remainder, dt);
+    
+    /// <summary>
+    /// Framerate independent lerp. Cheaper alternative to PowLerp. Base function for ExpDecayLerp.
+    /// </summary>
+    /// <param name="from">Starting Value</param>
+    /// <param name="to">Target Value</param>
+    /// <param name="decay">Decay value, best results between [1 - 25]</param>
+    /// <param name="dt">Delta Time</param>
+    /// <returns></returns>
+    public static float ExpDecayLerpFloatComplex(float from, float to, float decay, float dt) => to + (from - to) * MathF.Exp(-decay * dt);
+
+    /// <summary>
+    /// Framerate independent lerp. Cheaper alternative to PowLerp.
+    /// </summary>
+    /// <param name="from">Starting Value</param>
+    /// <param name="to">Target Value</param>
+    /// <param name="f">Fraction 0 - 1</param>
+    /// <param name="dt">Delta Time</param>
+    /// <returns></returns>
+    public static float ExpDecayLerpFloat(float from, float to, float f, float dt)
+    {
+        var decay = LerpFloat(1, 25, f);
+        return ExpDecayLerpFloatComplex(from, to, decay, dt);
+    }
+
+    
     #endregion
 
     #region Int
@@ -162,15 +171,82 @@ public static class ShapeMath
         return LerpInt(minNew, maxNew, LerpInverseInt(minOld, maxOld, value));
     }
 
-    public static float LerpAngleRad(float from, float to, float f)
+    /// <summary>
+    /// Framerate independent lerp. Uses MathF.Pow (very expensive). ExpDecayLerp should be used if possible.
+    /// </summary>
+    /// <param name="from">Starting Value</param>
+    /// <param name="to">Target Value</param>
+    /// <param name="remainder">How much fraction should remain after 1 second</param>
+    /// <param name="dt">Delta Time</param>
+    /// <returns></returns>
+    public static int PowLerpInt(int from, int to, float remainder, float dt) => (int)PowLerpFloat(from, to, remainder, dt);
+
+    /// <summary>
+    /// Framerate independent lerp. Cheaper alternative to PowLerp. Base function for ExpDecayLerp.
+    /// </summary>
+    /// <param name="from">Starting Value</param>
+    /// <param name="to">Target Value</param>
+    /// <param name="decay">Decay value, best results between [1 - 25]</param>
+    /// <param name="dt">Delta Time</param>
+    /// <returns></returns>
+    public static int ExpDecayLerpIntComplex(int from, int to, float decay, float dt) => (int)ExpDecayLerpFloatComplex(from, to, decay, dt);
+
+    /// <summary>
+    /// Framerate independent lerp. Cheaper alternative to PowLerp.
+    /// </summary>
+    /// <param name="from">Starting Value</param>
+    /// <param name="to">Target Value</param>
+    /// <param name="f">Fraction 0 - 1</param>
+    /// <param name="dt">Delta Time</param>
+    /// <returns></returns>
+    public static int ExpDecayLerpInt(int from, int to, float f, float dt) => (int)ExpDecayLerpFloat(from, to, f, dt);
+
+    
+    
+    
+    #endregion
+
+    #region Angle
+
+    public static float LerpAngleRad(float from, float to, float f) => from + GetShortestAngleRad(from, to) * f;
+
+    public static float LerpAngleDeg(float from, float to, float f) => from + GetShortestAngleDeg(from, to) * f;
+    
+    /// <summary>
+    /// Framerate independent lerp. Uses MathF.Pow (very expensive). ExpDecayLerp should be used if possible.
+    /// </summary>
+    /// <param name="from">Starting Value</param>
+    /// <param name="to">Target Value</param>
+    /// <param name="remainder">How much fraction should remain after 1 second</param>
+    /// <param name="dt">Delta Time</param>
+    /// <returns></returns>
+    public static float PowLerpAngle(float from, float to, float remainder, float dt) => from + GetShortestAngleRad(from, to) * MathF.Pow(remainder, dt);
+
+    /// <summary>
+    /// Framerate independent lerp. Cheaper alternative to PowLerp. Base function for ExpDecayLerp.
+    /// </summary>
+    /// <param name="from">Starting Value</param>
+    /// <param name="to">Target Value</param>
+    /// <param name="decay">Decay value, best results between [1 - 25]</param>
+    /// <param name="dt">Delta Time</param>
+    /// <returns></returns>
+    public static float ExpDecayLerpAngleComplex(float from, float to, float decay, float dt) => from + GetShortestAngleRad(from, to) * MathF.Exp(-decay * dt);
+
+    /// <summary>
+    /// Framerate independent lerp. Cheaper alternative to PowLerp.
+    /// </summary>
+    /// <param name="from">Starting Value</param>
+    /// <param name="to">Target Value</param>
+    /// <param name="f">Fraction 0 - 1</param>
+    /// <param name="dt">Delta Time</param>
+    /// <returns></returns>
+    public static float ExpDecayLerpAngle(float from, float to, float f, float dt)
     {
-        return from + GetShortestAngleRad(from, to) * f;
+        var decay = LerpFloat(1, 25, f);
+        return ExpDecayLerpAngleComplex(from, to, decay, dt);
     }
 
-    public static float LerpAngleDeg(float from, float to, float f)
-    {
-        return from + GetShortestAngleDeg(from, to) * f;
-    }
+
     #endregion
     
     #endregion  
@@ -207,7 +283,7 @@ public static class ShapeMath
     #endregion
 
     #region Angle
-
+    
     public static int GetShortestAngleRadSign(float from, float to) => MathF.Sign(GetShortestAngleRad(from, to));
     public static int GetShortestAngleDegSign(float from, float to) => MathF.Sign(GetShortestAngleDeg(from, to));
 
