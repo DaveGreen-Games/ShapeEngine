@@ -398,21 +398,23 @@ public readonly struct Rect : IEquatable<Rect>
     /// <summary>
     /// Points are ordered in ccw order starting with top left. (tl, bl, br, tr)
     /// </summary>
-    /// <param name="pivot"></param>
+    /// <param name="alignement"></param>
     /// <param name="angleDeg"></param>
     /// <returns></returns>
-    public Polygon Rotate(float angleDeg, Vector2 pivot)
+    public Polygon Rotate(float angleDeg, Vector2 alignement)
     {
         var poly = ToPolygon();
+        var pivot = TopLeft + (Size * alignement).ToVector2();
         poly.ChangeRotation(angleDeg * ShapeMath.DEGTORAD, pivot);
         return poly;
     }
 
-    public Points RotateList(float angleDeg, Vector2 pivot)
+    public Points RotateList(float angleDeg, Vector2 alignement)
     {
-        var poly = ToPolygon();
-        poly.ChangeRotation(angleDeg * ShapeMath.DEGTORAD, pivot);
-        return new() { poly[0], poly[1], poly[2], poly[3] };
+        var points = ToPoints();
+        var pivot = TopLeft + (Size * alignement).ToVector2();
+        points.ChangeRotation(angleDeg * ShapeMath.DEGTORAD, pivot);
+        return points;
     }
 
     public Points ToPoints() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
