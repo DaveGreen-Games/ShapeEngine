@@ -742,7 +742,7 @@ public class EndlessSpaceCollision : ExampleScene
             var angleDif = ShapeMath.GetShortestAngleRad(angleRad, newAngle);
             var movement = movementDir * speed * dt;
 
-            Transform = Transform.MoveBy(movement);
+            Transform = Transform.ChangePosition(movement);
             
             // hull = hull.ChangePosition(movement);
             // pivot += movement;
@@ -750,7 +750,7 @@ public class EndlessSpaceCollision : ExampleScene
             if (collisionStunTimer > 0f)
             {
                 var angleMovement = CollisionRotationSpeedRad * collisionRotationDirection * dt;
-                Transform = Transform.RotateByRad(angleMovement);
+                Transform = Transform.ChangeRotationRad(angleMovement);
                 angleRad += angleMovement; 
             }
             else
@@ -761,7 +761,7 @@ public class EndlessSpaceCollision : ExampleScene
                     angleMovement = angleDif;
                 }
 
-                Transform = Transform.RotateByRad(angleMovement);
+                Transform = Transform.ChangeRotationRad(angleMovement);
                 angleRad += angleMovement; 
             }
             
@@ -1007,7 +1007,7 @@ public class EndlessSpaceCollision : ExampleScene
             
 
             damageForce = PhysicsObject.ApplyDragForce(damageForce, 1.5f, time.Delta);
-            Transform = Transform.MoveBy(damageForce * time.Delta);
+            Transform = Transform.ChangePosition(damageForce * time.Delta);
 
             if (damageFlashTimer > 0f)
             {

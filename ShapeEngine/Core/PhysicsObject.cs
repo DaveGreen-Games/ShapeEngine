@@ -38,7 +38,7 @@ public abstract class PhysicsObject : GameObject
     {
         ApplyAccumulatedForce(dt);
         ApplyAcceleration(dt); 
-        Transform = Transform.MoveBy(Velocity * dt);
+        Transform = Transform.ChangePosition(Velocity * dt);
         OnPhysicsStateUpdated(dt);
     }
     private void ApplyAccumulatedForce(float dt)

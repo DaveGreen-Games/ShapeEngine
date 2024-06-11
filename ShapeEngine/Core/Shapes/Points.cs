@@ -117,7 +117,7 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
     public List<Vector2> GetRelativeVector2List(Transform2D transform)
     {
         var relative = new List<Vector2>(Count);
-        foreach (var p in this)  relative.Add(transform.Revert(p));
+        foreach (var p in this)  relative.Add(transform.RevertPosition(p));
         return relative;
     }
     
@@ -130,7 +130,7 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
     public Points GetRelativePoints(Transform2D transform)
     {
         var relative = new Points(Count);
-        foreach (var p in this)  relative.Add(transform.Revert(p));
+        foreach (var p in this)  relative.Add(transform.RevertPosition(p));
         return relative;
     }
 
@@ -236,13 +236,13 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
     {
         SetPosition(transform.Position, origin);
         SetRotation(transform.RotationRad, origin);
-        SetSize(transform.Size.Width, origin);
+        SetSize(transform.BaseSize.Width, origin);
     }
     public void ApplyTransform(Transform2D transform, Vector2 origin)
     {
         ChangePosition(transform.Position);
         ChangeRotation(transform.RotationRad, origin);
-        ChangeSize(transform.Size.Width, origin);
+        ChangeSize(transform.BaseSize.Width, origin);
         
     }
     
@@ -345,7 +345,7 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
         var newPoints = SetPositionCopy(transform.Position, origin);
         if (newPoints == null) return null;
         newPoints.SetRotation(transform.RotationRad, origin);
-        newPoints.SetSize(transform.Size.Width, origin);
+        newPoints.SetSize(transform.BaseSize.Width, origin);
         return newPoints;
     }
     public Points? ApplyTransformCopy(Transform2D transform, Vector2 origin)
@@ -355,7 +355,7 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
         var newPoints = ChangePositionCopy(transform.Position);
         if (newPoints == null) return null;
         newPoints.ChangeRotation(transform.RotationRad, origin);
-        newPoints.ChangeSize(transform.Size.Width, origin);
+        newPoints.ChangeSize(transform.BaseSize.Width, origin);
         return newPoints;
     }
     

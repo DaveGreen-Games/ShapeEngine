@@ -83,14 +83,12 @@ public class PolyCollider : Collider
     private void UpdateShape()
     {
         Dirty = false;
-        // Transform2D cur = new(Position, RotationRad, Scale);
         var dif = CurTransform.Difference(PrevTransform);
-        // prev = cur;
         
         for (int i = 0; i < curShape.Count; i++)
         {
             var newPos = curShape[i] + dif.Position;//translation
-            var w = (newPos - CurTransform.Position).Rotate(dif.RotationRad) * dif.Size;
+            var w = (newPos - CurTransform.Position).Rotate(dif.RotationRad) * dif.Scale;
             curShape[i] = CurTransform.Position + w;
         }
         

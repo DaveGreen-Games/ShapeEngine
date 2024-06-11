@@ -24,5 +24,5 @@ public class QuadCollider : Collider
     // public override CollisionPoint GetClosestCollisionPoint(Vector2 p) => GetQuadShape().GetClosestCollisionPoint(p);
     public override Rect GetBoundingBox() => GetQuadShape().GetBoundingBox();
     public override ShapeType GetShapeType() => ShapeType.Quad;
-    public override Quad GetQuadShape() => new Quad(CurTransform.Position, Size * CurTransform.Size,CurTransform.RotationRad, Alignement);
+    public override Quad GetQuadShape() => new Quad(CurTransform.Position, Size * CurTransform.Scale, CurTransform.RotationRad, Alignement);
 }

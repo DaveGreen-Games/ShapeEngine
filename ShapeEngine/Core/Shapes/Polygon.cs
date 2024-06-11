@@ -600,7 +600,7 @@ namespace ShapeEngine.Core.Shapes
             var newPolygon = SetPositionCopy(transform.Position);
             if (newPolygon == null) return null;
             newPolygon.SetRotation(transform.RotationRad, origin);
-            newPolygon.SetSize(transform.Size.Width, origin);
+            newPolygon.SetSize(transform.ScaledSize.Width, origin);
             return newPolygon;
         }
         public new Polygon? ApplyTransformCopy(Transform2D transform, Vector2 origin)
@@ -610,7 +610,7 @@ namespace ShapeEngine.Core.Shapes
             var newPolygon = ChangePositionCopy(transform.Position);
             if (newPolygon == null) return null;
             newPolygon.ChangeRotation(transform.RotationRad, origin);
-            newPolygon.ChangeSize(transform.Size.Width, origin);
+            newPolygon.ChangeSize(transform.ScaledSize.Width, origin);
             return newPolygon;
         }
         
@@ -933,7 +933,7 @@ namespace ShapeEngine.Core.Shapes
             Polygon shape = new();
             for (int i = 0; i < relative.Count; i++)
             {
-                shape.Add(transform.Apply(relative[i]));
+                shape.Add(transform.ApplyTranslation(relative[i]));
                 // shape.Add(pos + ShapeVec.Rotate(relative[i], rotRad) * scale);
             }
             return shape;

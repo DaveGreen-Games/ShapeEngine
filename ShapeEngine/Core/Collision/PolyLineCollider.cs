@@ -50,7 +50,7 @@ public class PolyLineCollider : Collider
         for (var i = 0; i < curShape.Count; i++)
         {
             var newPos = curShape[i] + dif.Position;//translation
-            var w = (newPos - CurTransform.Position).Rotate(dif.RotationRad) * dif.Size;
+            var w = (newPos - CurTransform.Position).Rotate(dif.RotationRad) * dif.Scale;
             curShape[i] = CurTransform.Position + w;
         }
     

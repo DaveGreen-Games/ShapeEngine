@@ -32,7 +32,7 @@ namespace ShapeEngine.Effects
             return true;
         }
         
-        public override Rect GetBoundingBox() { return new(Transform.Position, Transform.Size, new(0.5f)); }
+        public override Rect GetBoundingBox() { return new(Transform.Position, Transform.ScaledSize, new(0.5f)); }
         protected float GetTweenFloat(float start, float end) { return ShapeTween.Tween(start, end, LifetimeF, TweenType); }
         protected Vector2 GetTweenVector2(Vector2 start, Vector2 end) { return start.Tween(end, LifetimeF, TweenType); }
         protected ColorRgba GetTweenColor(ColorRgba startColorRgba, ColorRgba endColorRgba) { return startColorRgba.Tween(endColorRgba, LifetimeF, TweenType); }

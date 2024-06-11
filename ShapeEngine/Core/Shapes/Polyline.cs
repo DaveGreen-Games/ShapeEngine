@@ -401,7 +401,7 @@ namespace ShapeEngine.Core.Shapes
             var newPolyline = SetPositionCopy(transform.Position);
             if (newPolyline == null) return null;
             newPolyline.SetRotation(transform.RotationRad, origin);
-            newPolyline.SetSize(transform.Size.Width, origin);
+            newPolyline.SetSize(transform.ScaledSize.Width, origin);
             return newPolyline;
         }
         public new Polyline? ApplyTransformCopy(Transform2D transform, Vector2 origin)
@@ -411,7 +411,7 @@ namespace ShapeEngine.Core.Shapes
             var newPolyline = ChangePositionCopy(transform.Position);
             if (newPolyline == null) return null;
             newPolyline.ChangeRotation(transform.RotationRad, origin);
-            newPolyline.ChangeSize(transform.Size.Width, origin);
+            newPolyline.ChangeSize(transform.ScaledSize.Width, origin);
             return newPolyline;
         }
         
@@ -1119,7 +1119,7 @@ namespace ShapeEngine.Core.Shapes
             Polyline shape = new();
             for (int i = 0; i < relative.Count; i++)
             {
-                shape.Add(transform.Apply(relative[i]));
+                shape.Add(transform.ApplyTranslation(relative[i]));
                 // shape.Add(transform.Position + relative[i].Rotate(transform.RotationRad) * transform.Scale);
             }
             return shape;

@@ -81,11 +81,11 @@ namespace ShapeEngine.Core.Collision
         
         protected Collider()
         {
-            this.Offset = new(new(0f), 0f, new(1f));
+            this.Offset = new(new(0f), 0f, new(0f), 1f);
         }
         protected Collider(Vector2 offset)
         {
-            this.Offset = new(offset, 0f, new(1f));
+            this.Offset = new(offset, 0f, new(0f), 1f);
         }
 
         protected Collider(Transform2D offset)
@@ -121,19 +121,20 @@ namespace ShapeEngine.Core.Collision
             PrevTransform = CurTransform;
 
             var rot = Rotates ? parentTransform.RotationRad + Offset.RotationRad : Offset.RotationRad;
-            var scale = Scales ? parentTransform.Size * Offset.Size : Offset.Size;
+            var size = Scales ? parentTransform.BaseSize + Offset.BaseSize : Offset.BaseSize;
+            var scale = Scales ? parentTransform.Scale * Offset.Scale : Offset.Scale;
             if (Moves)
             {
                 if (Offset.Position.LengthSquared() <= 0) CurTransform = new(parentTransform.Position, rot, scale);
                 else
                 {
                     var pos = parentTransform.Position + Offset.Position.Rotate(rot) * scale;
-                    CurTransform = new(pos, rot, scale);
+                    CurTransform = new(pos, rot, size, scale);
                 }
             }
             else
             {
-                CurTransform = new(Offset.Position, rot, scale);
+                CurTransform = new(Offset.Position, rot, size, scale);
             }
 
             Dirty = PrevTransform != CurTransform;

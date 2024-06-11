@@ -503,7 +503,7 @@ namespace ShapeEngine.Core.Shapes
         {
             var newTriangle = ChangePosition(transform.Position);
             newTriangle = newTriangle.ChangeRotation(transform.RotationRad);
-            return newTriangle.ChangeSize(transform.Size.Width);
+            return newTriangle.ChangeSize(transform.BaseSize.Width);
         }
         
         /// <summary>
@@ -517,7 +517,7 @@ namespace ShapeEngine.Core.Shapes
         {
             var newTriangle = SetPosition(transform.Position);
             newTriangle = newTriangle.SetRotation(transform.RotationRad);
-            return newTriangle.SetSize(transform.Size.Width);
+            return newTriangle.SetSize(transform.BaseSize.Width);
         }
         
         /// <summary>
@@ -532,7 +532,7 @@ namespace ShapeEngine.Core.Shapes
         {
             var newTriangle = ChangePosition(transform.Position);
             newTriangle = newTriangle.ChangeRotation(transform.RotationRad, origin);
-            return newTriangle.ChangeSize(transform.Size.Width, origin);
+            return newTriangle.ChangeSize(transform.BaseSize.Width, origin);
         }
         
         /// <summary>
@@ -547,7 +547,7 @@ namespace ShapeEngine.Core.Shapes
         {
             var newTriangle = SetPosition(transform.Position, origin);
             newTriangle = newTriangle.SetRotation(transform.RotationRad, origin);
-            return newTriangle.SetSize(transform.Size.Width, origin);
+            return newTriangle.SetSize(transform.BaseSize.Width, origin);
         }
 
         #endregion

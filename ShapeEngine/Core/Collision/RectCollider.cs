@@ -25,5 +25,5 @@ public class RectCollider : Collider
     public override Rect GetBoundingBox() => GetRectShape();
     
     public override ShapeType GetShapeType() => ShapeType.Rect;
-    public override Rect GetRectShape() => new(CurTransform.Position, Size * CurTransform.Size, Alignement);
+    public override Rect GetRectShape() => new(CurTransform.Position, Size * CurTransform.Scale, Alignement);
 }
