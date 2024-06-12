@@ -100,13 +100,17 @@ public readonly struct Transform2D : IEquatable<Transform2D>
         // );
     }
 
-    public Vector2 ApplyTransformTo(Vector2 relative) => Position + (relative * ScaledSize.Length).Rotate(RotationRad);
-
-    public Vector2 ApplyTranslation(Vector2 translation)
+    public Vector2 ApplyTransformTo(Vector2 relative)
     {
-        if (translation.LengthSquared() == 0f) return Position;
-        return Position + translation.Rotate(RotationRad) * ScaledSize;
+        if (relative.LengthSquared() == 0f) return Position;
+        return Position + (relative * ScaledSize.Length).Rotate(RotationRad);
     }
+
+    // public Vector2 ApplyTranslation(Vector2 translation)
+    // {
+    //     if (translation.LengthSquared() == 0f) return Position;
+    //     return Position + translation.Rotate(RotationRad) * ScaledSize;
+    // }
     // public Transform2D Difference(Transform2D other)
     // {
     //     var scaleDif = other.Scale <= 0 ? 1f : Scale / other.Scale;

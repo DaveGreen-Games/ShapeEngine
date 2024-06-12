@@ -130,7 +130,7 @@ namespace ShapeEngine.Core.Collision
             var scale = Scales ? parentTransform.Scale * Offset.Scale : Offset.Scale;
             if (Moves)
             {
-                if (Offset.Position.LengthSquared() <= 0) CurTransform = new(parentTransform.Position, rot, scale);
+                if (Offset.Position.LengthSquared() <= 0) CurTransform = new(parentTransform.Position, rot, size, scale);
                 else
                 {
                     var pos = parentTransform.Position + Offset.Position.Rotate(rot) * scale;
@@ -143,11 +143,6 @@ namespace ShapeEngine.Core.Collision
             }
 
             if(PrevTransform != CurTransform) Recalculate();
-            
-            // Dirty = prevTransform != CurTransform;
-            // if(Dirty) Recalculate();
-            // Position = parentTransform.Apply(Offset);
-            // PrevPosition = Position;
         }
 
         
