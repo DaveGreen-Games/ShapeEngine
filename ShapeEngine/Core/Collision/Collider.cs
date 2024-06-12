@@ -77,7 +77,7 @@ namespace ShapeEngine.Core.Collision
         /// </summary>
         public bool ComputeIntersections { get; set; } = false;
 
-        protected bool Dirty = false;
+        // protected bool Dirty = false;
         
         protected Collider()
         {
@@ -114,12 +114,17 @@ namespace ShapeEngine.Core.Collision
         internal void SetupTransform(Transform2D parentTransform)
         {
             UpdateTransform(parentTransform);
-            PrevTransform = CurTransform;
+            // PrevTransform = CurTransform;
+            OnTransformSetupFinished();
         }
+        protected virtual void OnTransformSetupFinished() { }
+        /// <summary>
+        /// Is triggered automatically. Should be used manually if relative shape was changed.
+        /// </summary>
+        public virtual void Recalculate() { }
         internal void UpdateTransform(Transform2D parentTransform)
         {
             PrevTransform = CurTransform;
-
             var rot = Rotates ? parentTransform.RotationRad + Offset.RotationRad : Offset.RotationRad;
             var size = Scales ? parentTransform.BaseSize + Offset.BaseSize : Offset.BaseSize;
             var scale = Scales ? parentTransform.Scale * Offset.Scale : Offset.Scale;
@@ -137,11 +142,15 @@ namespace ShapeEngine.Core.Collision
                 CurTransform = new(Offset.Position, rot, size, scale);
             }
 
-            Dirty = PrevTransform != CurTransform;
+            if(PrevTransform != CurTransform) Recalculate();
+            
+            // Dirty = prevTransform != CurTransform;
+            // if(Dirty) Recalculate();
             // Position = parentTransform.Apply(Offset);
             // PrevPosition = Position;
         }
 
+        
         protected virtual void OnAddedToCollisionBody(CollisionObject newParent) { }
         protected virtual void OnRemovedFromCollisionBody(CollisionObject formerParent) { }
 

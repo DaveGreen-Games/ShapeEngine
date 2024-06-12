@@ -1,4 +1,5 @@
 using System.Numerics;
+using Raylib_cs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
@@ -8,7 +9,6 @@ namespace ShapeEngine.Core.Collision;
 public class SegmentCollider : Collider
 {
     private Vector2 dir;
-    private float length;
     private float originOffset = 0f;
         
         
@@ -34,37 +34,29 @@ public class SegmentCollider : Collider
             Recalculate();
         }
     }
-    public float Length
-    {
-        get => length;
-        set
-        {
-            if (value <= 0) return;
-            length = value;
-            Recalculate();
-        }
-    }
 
         
     public Vector2 Start { get; private set; }  //  => Position;
     public Vector2 End { get; private set; }  // => Position + Dir * Length;
         
-    public Vector2 Center => (Start + End) * 0.5f; // Position + Dir * Length / 2;
+    public Vector2 Center => (Start + End) * 0.5f;
         
     public Vector2 Displacement => End - Start;
 
-    private void Recalculate()
+    protected override void OnTransformSetupFinished()
     {
-        float s = CurTransform.Scale;
-        
-        Start = CurTransform.Position - (Dir * OriginOffset * Length * s).Rotate(CurTransform.RotationRad);
-        End = CurTransform.Position + (Dir * (1f - OriginOffset) * Length * s).Rotate(CurTransform.RotationRad);
+        Recalculate();
     }
 
-    public SegmentCollider(Vector2 offset, Vector2 dir, float length, float originOffset = 0f) : base(offset)
+    public override void Recalculate()
+    {
+        Start = CurTransform.Position - (Dir * OriginOffset * CurTransform.ScaledSize.Length).Rotate(CurTransform.RotationRad);
+        End = CurTransform.Position + (Dir * (1f - OriginOffset) * CurTransform.ScaledSize.Length).Rotate(CurTransform.RotationRad);
+    }
+
+    public SegmentCollider(Transform2D offset, Vector2 dir, float originOffset = 0f) : base(offset)
     {
         this.dir = dir;
-        this.length = length;
         this.originOffset = originOffset;
     }
 

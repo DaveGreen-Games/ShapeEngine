@@ -159,6 +159,41 @@ namespace ShapeEngine.Core.Shapes
         #endregion
 
         #region Shape
+
+        public Points ToRelativePoints(Transform2D transform)
+        {
+            var points = new Points();
+            for (int i = 0; i < this.Count; i++)
+            {
+                var p = transform.RevertPosition(this[i]);
+                points.Add(p);
+            }
+
+            return points;
+        }
+        public Polygon ToRelativePolygon(Transform2D transform)
+        {
+            var points = new Polygon();
+            for (int i = 0; i < this.Count; i++)
+            {
+                var p = transform.RevertPosition(this[i]);
+                points.Add(p);
+            }
+
+            return points;
+        }
+        public List<Vector2> ToRelative(Transform2D transform)
+        {
+            var points = new List<Vector2>();
+            for (int i = 0; i < this.Count; i++)
+            {
+                var p = transform.RevertPosition(this[i]);
+                points.Add(p);
+            }
+
+            return points;
+        }
+        
         public Triangle GetBoundingTriangle(float margin = 3f) { return Polygon.GetBoundingTriangle(this, margin); }
         public Triangulation Triangulate()
         {
@@ -927,6 +962,8 @@ namespace ShapeEngine.Core.Shapes
             return axis;
         }
 
+        
+        
         public static Polygon GetShape(Points relative, Transform2D transform)
         {
             if (relative.Count < 3) return new();
