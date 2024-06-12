@@ -22,8 +22,9 @@ public readonly struct Transform2D : IEquatable<Transform2D>
     public readonly Vector2 Position;
     public readonly float RotationRad;
     public readonly Size BaseSize;
+    public readonly Size ScaledSize;
     public readonly float Scale;
-    public readonly Size ScaledSize => BaseSize * Scale;
+    // public readonly Size ScaledSize => BaseSize * Scale;
     #endregion
     
     #region Constructors
@@ -33,6 +34,7 @@ public readonly struct Transform2D : IEquatable<Transform2D>
         this.RotationRad = 0f;
         this.BaseSize = new(0f);
         this.Scale = 1f;
+        this.ScaledSize = this.BaseSize * this.Scale;
     }
     public Transform2D(Vector2 pos)
     {
@@ -40,6 +42,7 @@ public readonly struct Transform2D : IEquatable<Transform2D>
         this.RotationRad = 0f;
         this.BaseSize = new(0f);
         this.Scale = 1f;
+        this.ScaledSize = this.BaseSize * this.Scale;
     }
     public Transform2D(float rotRad)
     {
@@ -47,6 +50,7 @@ public readonly struct Transform2D : IEquatable<Transform2D>
         this.RotationRad = rotRad;
         this.BaseSize = new(0f);
         this.Scale = 1f;
+        this.ScaledSize = this.BaseSize * this.Scale;
     }
     public Transform2D(Vector2 pos, float rotRad)
     {
@@ -54,6 +58,7 @@ public readonly struct Transform2D : IEquatable<Transform2D>
         this.RotationRad = rotRad;
         this.BaseSize = new(0f);
         this.Scale = 1f;
+        this.ScaledSize = this.BaseSize * this.Scale;
     }
     public Transform2D(Vector2 pos, float rotRad, float scale)
     {
@@ -61,12 +66,14 @@ public readonly struct Transform2D : IEquatable<Transform2D>
         this.RotationRad = rotRad;
         this.BaseSize = new(0f);
         this.Scale = scale;
+        this.ScaledSize = this.BaseSize * this.Scale;
     }
     public Transform2D(Vector2 pos, float rotRad, Size baseSize)
     {
         this.Position = pos; 
         this.RotationRad = rotRad; 
         this.BaseSize = baseSize;
+        this.ScaledSize = this.BaseSize * this.Scale;
     }
     public Transform2D(Vector2 pos, float rotRad, Size baseSize, float scale)
     {
@@ -74,6 +81,7 @@ public readonly struct Transform2D : IEquatable<Transform2D>
         this.RotationRad = rotRad; 
         this.BaseSize = baseSize;
         this.Scale = scale;
+        this.ScaledSize = this.BaseSize * this.Scale;
     }
     #endregion
 
@@ -155,11 +163,6 @@ public readonly struct Transform2D : IEquatable<Transform2D>
 
     #endregion
 
-    
-    
-    
-    
-    
     #region Operators
 
     public readonly Transform2D Multiply(float factor)
