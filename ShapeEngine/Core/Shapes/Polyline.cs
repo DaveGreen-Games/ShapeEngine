@@ -1119,7 +1119,7 @@ namespace ShapeEngine.Core.Shapes
             Polyline shape = new();
             for (int i = 0; i < relative.Count; i++)
             {
-                shape.Add(transform.ApplyTranslation(relative[i]));
+                shape.Add(transform.ApplyTransformTo(relative[i]));
                 // shape.Add(transform.Position + relative[i].Rotate(transform.RotationRad) * transform.Scale);
             }
             return shape;

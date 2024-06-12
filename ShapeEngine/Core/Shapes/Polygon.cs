@@ -970,7 +970,7 @@ namespace ShapeEngine.Core.Shapes
             Polygon shape = new();
             for (int i = 0; i < relative.Count; i++)
             {
-                shape.Add(transform.ApplyTranslation(relative[i]));
+                shape.Add(transform.ApplyTransformTo(relative[i]));
                 // shape.Add(pos + ShapeVec.Rotate(relative[i], rotRad) * scale);
             }
             return shape;
