@@ -160,6 +160,28 @@ namespace ShapeEngine.Core.Shapes
 
         #region Shape
 
+        public (Transform2D transform, Polygon shape) ToRelative()
+        {
+            var pos = GetCentroid();
+            var maxLengthSq = 0f;
+            for (int i = 0; i < this.Count; i++)
+            {
+                var lsq = (this[i] - pos).LengthSquared();
+                if (maxLengthSq < lsq) maxLengthSq = lsq;
+            }
+
+            var size = MathF.Sqrt(maxLengthSq);
+
+            var relativeShape = new Polygon();
+            for (int i = 0; i < this.Count; i++)
+            {
+                var w = this[i] - pos;
+                relativeShape.Add(w / size); //transforms it to range 0 - 1
+            }
+
+            return (new Transform2D(pos, 0f, new Size(size, 0f), 1f), relativeShape);
+        }
+
         public Points ToRelativePoints(Transform2D transform)
         {
             var points = new Points();
@@ -193,6 +215,7 @@ namespace ShapeEngine.Core.Shapes
 
             return points;
         }
+        
         
         public Triangle GetBoundingTriangle(float margin = 3f) { return Polygon.GetBoundingTriangle(this, margin); }
         public Triangulation Triangulate()
@@ -975,18 +998,18 @@ namespace ShapeEngine.Core.Shapes
             }
             return shape;
         }
-        public static Points GenerateRelative(int pointCount, float minLength, float maxLength)
+        public static Polygon GenerateRelative(int pointCount, float minLength, float maxLength)
         {
-            Points points = new();
+            Polygon poly = new();
             float angleStep = ShapeMath.PI * 2.0f / pointCount;
 
             for (int i = 0; i < pointCount; i++)
             {
                 float randLength = ShapeRandom.RandF(minLength, maxLength);
-                Vector2 p = ShapeVec.Rotate(ShapeVec.Right(), -angleStep * i) * randLength;
-                points.Add(p);
+                var p = ShapeVec.Rotate(ShapeVec.Right(), -angleStep * i) * randLength;
+                poly.Add(p);
             }
-            return points;
+            return poly;
         }
         
         public static Polygon Generate(Vector2 center, int pointCount, float minLength, float maxLength)

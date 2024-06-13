@@ -5,17 +5,6 @@ using ShapeEngine.Lib;
 namespace ShapeEngine.Core.Structs;
 
 
-//Polygon can use Transform2D with scale and just not use size
-
-//Other things can use Transform2D with the size and use scale or not
-
-//Transform2D can easily used for offset:
-// -> Position + Offset.Position
-// -> RotRad + Offset.RotRad
-// -> Size + Offset.Size
-// -> Scale * Offset.Scale!!!
-
-
 public readonly struct Transform2D : IEquatable<Transform2D>
 {
     #region Members
@@ -24,7 +13,6 @@ public readonly struct Transform2D : IEquatable<Transform2D>
     public readonly Size BaseSize;
     public readonly Size ScaledSize;
     public readonly float Scale;
-    // public readonly Size ScaledSize => BaseSize * Scale;
     #endregion
     
     #region Constructors
@@ -90,14 +78,6 @@ public readonly struct Transform2D : IEquatable<Transform2D>
     {
         var w = (position - Position).Rotate(-RotationRad) / ScaledSize.Length;
         return Position + w;
-
-
-        // var w = (position - Position).Rotate(-RotationRad);
-        // return new
-        // (
-        //     BaseSize.Width == 0f ? Position.X : Position.X + w.X,
-        //     BaseSize.Height == 0f ? Position.Y : Position.Y + w.Y
-        // );
     }
 
     public Vector2 ApplyTransformTo(Vector2 relative)
@@ -105,23 +85,6 @@ public readonly struct Transform2D : IEquatable<Transform2D>
         if (relative.LengthSquared() == 0f) return Position;
         return Position + (relative * ScaledSize.Length).Rotate(RotationRad);
     }
-
-    // public Vector2 ApplyTranslation(Vector2 translation)
-    // {
-    //     if (translation.LengthSquared() == 0f) return Position;
-    //     return Position + translation.Rotate(RotationRad) * ScaledSize;
-    // }
-    // public Transform2D Difference(Transform2D other)
-    // {
-    //     var scaleDif = other.Scale <= 0 ? 1f : Scale / other.Scale;
-    //     return new
-    //     (
-    //         Position - other.Position,
-    //         RotationRad - other.RotationRad,
-    //         BaseSize - other.BaseSize,
-    //         scaleDif
-    //     );
-    // }
 
     public readonly Transform2D ChangePosition(Vector2 amount) => new(Position + amount, RotationRad, BaseSize, Scale);
     public readonly Transform2D ChangePositionX(float amount) => new(Position with { X = Position.X + amount }, RotationRad, BaseSize, Scale);
@@ -407,35 +370,3 @@ public readonly struct Transform2D : IEquatable<Transform2D>
     public override int GetHashCode() => HashCode.Combine(Position, RotationRad, BaseSize, Scale);
     #endregion
 }
-
-
-
-
-// public readonly Transform2D Subtract(Transform2D other)
-// {
-//     return new
-//     (
-//         Position - other.Position,
-//         RotationRad - other.RotationRad,
-//         Scale - other.Scale
-//     );
-// }
-// public readonly Transform2D Add(Transform2D other)
-// {
-//     return new
-//     (
-//         Position + other.Position,
-//         RotationRad + other.RotationRad,
-//         Scale + other.Scale
-//     );
-// }
-// public readonly Transform2D Multiply(Transform2D other)
-// {
-//     return new
-//     (
-//         Position * other.Position,
-//         RotationRad * other.RotationRad,
-//         Scale * other.Scale
-//     );
-// }
-//

@@ -107,6 +107,27 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
     public Polygon ToPolygon() => new(this);
 
     public Polyline ToPolyline() => new(this);
+    public (Transform2D transform, Polygon shape) ToRelative(Vector2 center)
+    {
+        var maxLengthSq = 0f;
+        for (int i = 0; i < this.Count; i++)
+        {
+            var lsq = (this[i] - center).LengthSquared();
+            if (maxLengthSq < lsq) maxLengthSq = lsq;
+        }
+
+        var size = MathF.Sqrt(maxLengthSq);
+
+        var relativeShape = new Polygon();
+        for (int i = 0; i < this.Count; i++)
+        {
+            var w = this[i] - center;
+            relativeShape.Add(w / size); //transforms it to range 0 - 1
+        }
+
+        return (new Transform2D(center, 0f, new Size(size, 0f), 1f), relativeShape);
+    }
+
 
     public List<Vector2> GetRelativeVector2List(Vector2 origin)
     {
