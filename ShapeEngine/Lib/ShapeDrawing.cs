@@ -466,12 +466,12 @@ public static class ShapeDrawing
     }
     public static void Draw(this Circle c, ColorRgba color) => DrawCircle(c.Center, c.Radius, color);
     public static void Draw(this Circle c, ColorRgba color, int segments) => DrawCircle(c.Center, c.Radius, color, segments);
-    public static void DrawLines(this Circle c, float lineThickness, int sides, ColorRgba color) => Raylib.DrawPolyLinesEx(c.Center, sides, c.Radius, 0f, lineThickness, color.ToRayColor());
-    public static void DrawLines(this Circle c, float lineThickness, float rotDeg, int sides, ColorRgba color) => Raylib.DrawPolyLinesEx(c.Center, sides, c.Radius, rotDeg, lineThickness, color.ToRayColor());
+    public static void DrawLines(this Circle c, float lineThickness, int sides, ColorRgba color) => Raylib.DrawPolyLinesEx(c.Center, sides, c.Radius, 0f, lineThickness * 2, color.ToRayColor());
+    public static void DrawLines(this Circle c, float lineThickness, float rotDeg, int sides, ColorRgba color) => Raylib.DrawPolyLinesEx(c.Center, sides, c.Radius, rotDeg, lineThickness * 2, color.ToRayColor());
     public static void DrawLines(this Circle c, float lineThickness, ColorRgba color, float sideLength = 8f)
     {
         int sides = GetCircleSideCount(c.Radius, sideLength);
-        Raylib.DrawPolyLinesEx(c.Center, sides, c.Radius, 0f, lineThickness, color.ToRayColor());
+        Raylib.DrawPolyLinesEx(c.Center, sides, c.Radius, 0f, lineThickness * 2, color.ToRayColor());
     }
     
     
@@ -488,12 +488,12 @@ public static class ShapeDrawing
         DrawRect(center - new Vector2(radius, radius), center + new Vector2(radius, radius), color);
     }
     
-    public static void DrawCircleLines(Vector2 center, float radius, float lineThickness, int sides, ColorRgba color) => Raylib.DrawPolyLinesEx(center, sides, radius, 0f, lineThickness, color.ToRayColor());
-    public static void DrawCircleLines(Vector2 center, float radius, float lineThickness, float rotDeg, int sides, ColorRgba color) => Raylib.DrawPolyLinesEx(center, sides, radius, rotDeg, lineThickness, color.ToRayColor());
+    public static void DrawCircleLines(Vector2 center, float radius, float lineThickness, int sides, ColorRgba color) => Raylib.DrawPolyLinesEx(center, sides, radius, 0f, lineThickness * 2, color.ToRayColor());
+    public static void DrawCircleLines(Vector2 center, float radius, float lineThickness, float rotDeg, int sides, ColorRgba color) => Raylib.DrawPolyLinesEx(center, sides, radius, rotDeg, lineThickness * 2, color.ToRayColor());
     public static void DrawCircleLines(Vector2 center, float radius, float lineThickness, ColorRgba color, float sideLength = 8f)
     {
         int sides = GetCircleSideCount(radius, sideLength);
-        Raylib.DrawPolyLinesEx(center, sides, radius, 0f, lineThickness, color.ToRayColor());
+        Raylib.DrawPolyLinesEx(center, sides, radius, 0f, lineThickness * 2, color.ToRayColor());
     }
 
     public static void DrawSector(this Circle c, float startAngleDeg, float endAngleDeg, int segments, ColorRgba color)
@@ -784,8 +784,8 @@ public static class ShapeDrawing
 
         for (var i = 0; i < lines; i++)
         {
-            Raylib.DrawLineEx(tl + xOffset * i, bl + xOffset * i, lineThickness, color.ToRayColor());
-            Raylib.DrawLineEx(tl + yOffset * i, tr + yOffset * i, lineThickness, color.ToRayColor());
+            Raylib.DrawLineEx(tl + xOffset * i, bl + xOffset * i, lineThickness * 2, color.ToRayColor());
+            Raylib.DrawLineEx(tl + yOffset * i, tr + yOffset * i, lineThickness * 2, color.ToRayColor());
         }
     }
 
@@ -824,7 +824,7 @@ public static class ShapeDrawing
         // Raylib.DrawTriangle(rr.tl, rr.bl, rr.br, color.ToRayColor());
         // Raylib.DrawTriangle(rr.br, rr.tr, rr.tl, color.ToRayColor());
     }
-    public static void DrawLines(this Rect rect, float lineThickness, ColorRgba color) => Raylib.DrawRectangleLinesEx(rect.Rectangle, lineThickness, color.ToRayColor());
+    public static void DrawLines(this Rect rect, float lineThickness, ColorRgba color) => Raylib.DrawRectangleLinesEx(rect.Rectangle, lineThickness * 2, color.ToRayColor());
     public static void DrawLines(this Rect rect, Vector2 pivot, float rotDeg, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.Extended, int capPoints = 0)
     {
         DrawRectLines(rect.TopLeft, rect.BottomRight, pivot, rotDeg, lineThickness, color, capType, capPoints);
@@ -845,7 +845,7 @@ public static class ShapeDrawing
         DrawCircle(rect.BottomRight, vertexRadius, color, circleSegments);
     }
     public static void DrawRounded(this Rect rect, float roundness, int segments, ColorRgba color) => Raylib.DrawRectangleRounded(rect.Rectangle, roundness, segments, color.ToRayColor());
-    public static void DrawRoundedLines(this Rect rect, float roundness, float lineThickness, int segments, ColorRgba color) => Raylib.DrawRectangleRoundedLines(rect.Rectangle, roundness, segments, lineThickness, color.ToRayColor());
+    public static void DrawRoundedLines(this Rect rect, float roundness, float lineThickness, int segments, ColorRgba color) => Raylib.DrawRectangleRoundedLines(rect.Rectangle, roundness, segments, lineThickness * 2, color.ToRayColor());
 
     //remove polygon use possible?
     public static void DrawSlantedCorners(this Rect rect, ColorRgba color, float tlCorner, float trCorner, float brCorner, float blCorner)
