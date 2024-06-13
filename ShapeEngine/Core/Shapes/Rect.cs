@@ -857,7 +857,7 @@ public readonly struct Rect : IEquatable<Rect>
     public Rect ApplyTransform(Transform2D transform, Vector2 alignement)
     {
         var newQuad = ChangePosition(transform.Position);
-        return newQuad.ChangeSize(transform.Size, alignement);
+        return newQuad.ChangeSize(transform.BaseSize, alignement);
     }
     
     /// <summary>
@@ -870,7 +870,7 @@ public readonly struct Rect : IEquatable<Rect>
     public Rect SetTransform(Transform2D transform, Vector2 alignement)
     {
         var newQuad = SetPosition(transform.Position, alignement);
-        return newQuad.SetSize(transform.Size, alignement);
+        return newQuad.SetSize(transform.BaseSize, alignement);
     }
 
     #endregion

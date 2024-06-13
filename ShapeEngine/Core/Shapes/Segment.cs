@@ -315,7 +315,7 @@ namespace ShapeEngine.Core.Shapes
         {
             var newSegment = ChangePosition(transform.Position, originF);
             newSegment = newSegment.ChangeRotation(transform.RotationRad, originF);
-            return newSegment.ChangeLength(transform.Size.Width, originF);
+            return newSegment.ChangeLength(transform.BaseSize.Width, originF);
         }
 
         /// <summary>
@@ -330,7 +330,7 @@ namespace ShapeEngine.Core.Shapes
         {
             var newSegment = SetPosition(transform.Position, originF);
             newSegment = newSegment.SetRotation(transform.RotationRad, originF);
-            return newSegment.SetLength(transform.Size.Width, originF);
+            return newSegment.SetLength(transform.BaseSize.Width, originF);
         }
 
         #endregion
