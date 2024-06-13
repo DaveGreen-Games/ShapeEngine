@@ -7,6 +7,16 @@ public readonly struct Size : IEquatable<Size>
 {
     public readonly float Width;
     public readonly float Height;
+    
+    /// <summary>
+    /// Returns Width!
+    /// </summary>
+    public float Radius => Width;
+    /// <summary>
+    /// Returns Width!
+    /// </summary>
+    public float Length => Width;
+    
 
     public Size()
     {
@@ -141,8 +151,22 @@ public readonly struct Size : IEquatable<Size>
 
     public Vector2 ToVector2() => new(Width, Height);
 
-    
-    
+    /// <summary>
+    /// Changes width only!
+    /// </summary>
+    public Size SetRadius(float newRadius) => new(newRadius, Height);
+    /// <summary>
+    /// Changes width only!
+    /// </summary>
+    public Size ChangeRadius(float amount) => new(Width + amount, Height);
+    /// <summary>
+    /// Changes width only!
+    /// </summary>
+    public Size SetLength(float newLength) => new(newLength, Height);
+    /// <summary>
+    /// Changes width only!
+    /// </summary>
+    public Size ChangeLength(float amount) => new(Width + amount, Height);
     
 
     public static bool operator ==(Size left, Size right)

@@ -91,9 +91,9 @@ namespace Examples.Scenes.ExampleScenes
     {
         private CircleCollider circleCollider;
         
-        public Ball(Vector2 pos) : base(pos)
+        public Ball(Vector2 pos) : base(new Transform2D(pos, 0f, new Size(12, 0), 1f))
         {
-            var col = new CircleCollider(new(0f), 12f);
+            var col = new CircleCollider(new()); //(new(0f), 12f);
             col.ComputeCollision = true;
             col.ComputeIntersections = true;
             col.Enabled = true;
@@ -145,9 +145,9 @@ namespace Examples.Scenes.ExampleScenes
         private float deadTimer = 0f;
         // private Segment lastVelocitySegment;
         // private CollisionSurface collisionSurface = new();
-        public Bullet(Vector2 pos) : base(pos)
+        public Bullet(Vector2 pos) : base(new Transform2D(pos, 0f, new Size(8f, 0f), 1f))
         {
-            var col = new CircleCollider(new(0f), 8f);
+            var col = new CircleCollider(new()); //(new(0f), 8f);
             col.ComputeCollision = true;
             col.ComputeIntersections = true;
             col.Enabled = true;
@@ -224,14 +224,16 @@ namespace Examples.Scenes.ExampleScenes
     }
     internal class Rock : CollisionObject
     {
+        private const float Size = 50f;
+        
         private PolyCollider polyCollider;
         private float rotationSpeedRad;
         private bool leftGameArea = false;
         private Rect boundingBox;
-        public Rock(Vector2 pos) : base(pos)
+        public Rock(Vector2 pos) : base(new Transform2D(pos, 0f, new Size(Size, 0f), 1f))
         {
-            var shape = Polygon.Generate(pos, 6, 5, 50);
-            var col = new PolyCollider(shape, new(0f));
+            var shape = Polygon.GenerateRelative(6, 0.5f, 1f);
+            var col = new PolyCollider(new(), shape);
             col.ComputeCollision = true;
             col.ComputeIntersections = true;
             col.Enabled = true;
@@ -332,12 +334,12 @@ namespace Examples.Scenes.ExampleScenes
     }
     internal class Bird : CollisionObject
     {
+        private const float Radius = 24f;
         private CircleCollider circleCollider;
         private TriangleCollider triangleCollider;
-        public Bird(Vector2 pos) : base(pos)
+        public Bird(Vector2 pos) : base(new Transform2D(pos, 0f, new Size(Radius, 0f), 1f))
         {
-            const float radius = 24f;
-            var cCol = new CircleCollider(new(0f), radius);
+            var cCol = new CircleCollider(new());
             cCol.ComputeCollision = true;
             cCol.ComputeIntersections = true;
             cCol.Enabled = true;
@@ -345,11 +347,11 @@ namespace Examples.Scenes.ExampleScenes
             cCol.CollisionMask = cCol.CollisionMask.Add(CollisionFlags.BoundaryFlag);
             cCol.CollisionLayer = CollisionFlags.BirdFlag;
 
-            var ta = new Vector2(0, -radius / 2);
-            var tb = new Vector2(0, radius / 2);
-            var tc = new Vector2(radius, 0);
-            var tOffset = new Vector2(radius, 0f);
-            var tCol = new TriangleCollider(ta, tb, tc, tOffset);
+            var ta = new Vector2(0, -0.5f);
+            var tb = new Vector2(0, 0.5f);
+            var tc = new Vector2(1f, 0);
+            var tOffset = new Transform2D(new Vector2(Radius, 0f), 0f, new(), 1f);
+            var tCol = new TriangleCollider(tOffset, ta, tb, tc);
             tCol.ComputeCollision = true;
             tCol.ComputeIntersections = true;
             tCol.Enabled = true;

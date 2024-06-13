@@ -77,15 +77,15 @@ namespace ShapeEngine.Core.Collision
         /// </summary>
         public bool ComputeIntersections { get; set; } = false;
 
-        protected bool Dirty = false;
+        // protected bool Dirty = false;
         
         protected Collider()
         {
-            this.Offset = new(new(0f), 0f, new(1f));
+            this.Offset = new(new(0f), 0f, new(0f), 1f);
         }
         protected Collider(Vector2 offset)
         {
-            this.Offset = new(offset, 0f, new(1f));
+            this.Offset = new(offset, 0f, new(0f), 1f);
         }
 
         protected Collider(Transform2D offset)
@@ -114,33 +114,38 @@ namespace ShapeEngine.Core.Collision
         internal void SetupTransform(Transform2D parentTransform)
         {
             UpdateTransform(parentTransform);
-            PrevTransform = CurTransform;
+            // PrevTransform = CurTransform;
+            OnTransformSetupFinished();
         }
+        protected virtual void OnTransformSetupFinished() { }
+        /// <summary>
+        /// Is triggered automatically. Should be used manually if relative shape was changed.
+        /// </summary>
+        public virtual void Recalculate() { }
         internal void UpdateTransform(Transform2D parentTransform)
         {
             PrevTransform = CurTransform;
-
             var rot = Rotates ? parentTransform.RotationRad + Offset.RotationRad : Offset.RotationRad;
-            var scale = Scales ? parentTransform.Size * Offset.Size : Offset.Size;
+            var size = Scales ? parentTransform.BaseSize + Offset.BaseSize : Offset.BaseSize;
+            var scale = Scales ? parentTransform.Scale * Offset.Scale : Offset.Scale;
             if (Moves)
             {
-                if (Offset.Position.LengthSquared() <= 0) CurTransform = new(parentTransform.Position, rot, scale);
+                if (Offset.Position.LengthSquared() <= 0) CurTransform = new(parentTransform.Position, rot, size, scale);
                 else
                 {
                     var pos = parentTransform.Position + Offset.Position.Rotate(rot) * scale;
-                    CurTransform = new(pos, rot, scale);
+                    CurTransform = new(pos, rot, size, scale);
                 }
             }
             else
             {
-                CurTransform = new(Offset.Position, rot, scale);
+                CurTransform = new(Offset.Position, rot, size, scale);
             }
 
-            Dirty = PrevTransform != CurTransform;
-            // Position = parentTransform.Apply(Offset);
-            // PrevPosition = Position;
+            if(PrevTransform != CurTransform) Recalculate();
         }
 
+        
         protected virtual void OnAddedToCollisionBody(CollisionObject newParent) { }
         protected virtual void OnRemovedFromCollisionBody(CollisionObject formerParent) { }
 

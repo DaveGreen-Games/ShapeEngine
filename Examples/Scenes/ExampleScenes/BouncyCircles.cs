@@ -21,7 +21,7 @@ namespace Examples.Scenes.ExampleScenes
         
         public Circ(Vector2 pos, Vector2 vel, float radius)
         {
-            this.Transform = new(pos, 0f, new(radius));
+            this.Transform = new(pos, 0f, new(radius), 1f);
             this.Layer = layerChances.Next();
             
             var velFactor = Layer switch
@@ -35,7 +35,7 @@ namespace Examples.Scenes.ExampleScenes
 
         public override Rect GetBoundingBox()
         {
-            return new Rect(Transform.Position, Transform.Size * new Size(2), new Vector2(0.5f));
+            return new Rect(Transform.Position, Transform.ScaledSize * new Size(2), new Vector2(0.5f));
         }
         
 
@@ -55,7 +55,7 @@ namespace Examples.Scenes.ExampleScenes
                 _ => Colors.Medium
             };
 
-            ShapeDrawing.DrawCircleFast(Transform.Position, Transform.Size.Width, color);
+            ShapeDrawing.DrawCircleFast(Transform.Position, Transform.ScaledSize.Width, color);
         }
 
         public override void DrawGameUI(ScreenInfo ui)

@@ -159,6 +159,64 @@ namespace ShapeEngine.Core.Shapes
         #endregion
 
         #region Shape
+
+        public (Transform2D transform, Polygon shape) ToRelative()
+        {
+            var pos = GetCentroid();
+            var maxLengthSq = 0f;
+            for (int i = 0; i < this.Count; i++)
+            {
+                var lsq = (this[i] - pos).LengthSquared();
+                if (maxLengthSq < lsq) maxLengthSq = lsq;
+            }
+
+            var size = MathF.Sqrt(maxLengthSq);
+
+            var relativeShape = new Polygon();
+            for (int i = 0; i < this.Count; i++)
+            {
+                var w = this[i] - pos;
+                relativeShape.Add(w / size); //transforms it to range 0 - 1
+            }
+
+            return (new Transform2D(pos, 0f, new Size(size, 0f), 1f), relativeShape);
+        }
+
+        public Points ToRelativePoints(Transform2D transform)
+        {
+            var points = new Points();
+            for (int i = 0; i < this.Count; i++)
+            {
+                var p = transform.RevertPosition(this[i]);
+                points.Add(p);
+            }
+
+            return points;
+        }
+        public Polygon ToRelativePolygon(Transform2D transform)
+        {
+            var points = new Polygon();
+            for (int i = 0; i < this.Count; i++)
+            {
+                var p = transform.RevertPosition(this[i]);
+                points.Add(p);
+            }
+
+            return points;
+        }
+        public List<Vector2> ToRelative(Transform2D transform)
+        {
+            var points = new List<Vector2>();
+            for (int i = 0; i < this.Count; i++)
+            {
+                var p = transform.RevertPosition(this[i]);
+                points.Add(p);
+            }
+
+            return points;
+        }
+        
+        
         public Triangle GetBoundingTriangle(float margin = 3f) { return Polygon.GetBoundingTriangle(this, margin); }
         public Triangulation Triangulate()
         {
@@ -600,7 +658,7 @@ namespace ShapeEngine.Core.Shapes
             var newPolygon = SetPositionCopy(transform.Position);
             if (newPolygon == null) return null;
             newPolygon.SetRotation(transform.RotationRad, origin);
-            newPolygon.SetSize(transform.Size.Width, origin);
+            newPolygon.SetSize(transform.ScaledSize.Width, origin);
             return newPolygon;
         }
         public new Polygon? ApplyTransformCopy(Transform2D transform, Vector2 origin)
@@ -610,7 +668,7 @@ namespace ShapeEngine.Core.Shapes
             var newPolygon = ChangePositionCopy(transform.Position);
             if (newPolygon == null) return null;
             newPolygon.ChangeRotation(transform.RotationRad, origin);
-            newPolygon.ChangeSize(transform.Size.Width, origin);
+            newPolygon.ChangeSize(transform.ScaledSize.Width, origin);
             return newPolygon;
         }
         
@@ -927,29 +985,31 @@ namespace ShapeEngine.Core.Shapes
             return axis;
         }
 
+        
+        
         public static Polygon GetShape(Points relative, Transform2D transform)
         {
             if (relative.Count < 3) return new();
             Polygon shape = new();
             for (int i = 0; i < relative.Count; i++)
             {
-                shape.Add(transform.Apply(relative[i]));
+                shape.Add(transform.ApplyTransformTo(relative[i]));
                 // shape.Add(pos + ShapeVec.Rotate(relative[i], rotRad) * scale);
             }
             return shape;
         }
-        public static Points GenerateRelative(int pointCount, float minLength, float maxLength)
+        public static Polygon GenerateRelative(int pointCount, float minLength, float maxLength)
         {
-            Points points = new();
+            Polygon poly = new();
             float angleStep = ShapeMath.PI * 2.0f / pointCount;
 
             for (int i = 0; i < pointCount; i++)
             {
                 float randLength = ShapeRandom.RandF(minLength, maxLength);
-                Vector2 p = ShapeVec.Rotate(ShapeVec.Right(), -angleStep * i) * randLength;
-                points.Add(p);
+                var p = ShapeVec.Rotate(ShapeVec.Right(), -angleStep * i) * randLength;
+                poly.Add(p);
             }
-            return points;
+            return poly;
         }
         
         public static Polygon Generate(Vector2 center, int pointCount, float minLength, float maxLength)

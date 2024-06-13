@@ -114,8 +114,13 @@ public sealed class ShapeCamera
     }
     public Size BaseSize
     {
-        get => BaseTransform.Size;
+        get => BaseTransform.ScaledSize;
         private set => BaseTransform = BaseTransform.SetSize(value);
+    }
+    public float BaseScale
+    {
+        get => BaseTransform.Scale;
+        private set => BaseTransform = BaseTransform.SetScale(value);
     }
     public float BaseRotationDeg
     {
@@ -124,7 +129,7 @@ public sealed class ShapeCamera
     }
     public Vector2 Alignement{ get; private set; } = new(0.5f);
     
-    public Size BaseOffset => BaseTransform.Size * Alignement;
+    public Size BaseOffset => BaseTransform.BaseSize * Alignement;
     public Size Offset { get; private set; } = new();
     
     
@@ -181,8 +186,8 @@ public sealed class ShapeCamera
     (
         BaseTransform.Position.X - Offset.Width * ZoomFactor, 
         BaseTransform.Position.Y - Offset.Height * ZoomFactor, 
-        BaseTransform.Size.Width * ZoomFactor,
-        BaseTransform.Size.Height * ZoomFactor
+        BaseTransform.BaseSize.Width * ZoomFactor,
+        BaseTransform.BaseSize.Height * ZoomFactor
     );
     public Camera2D Camera => new()
     {
@@ -257,7 +262,7 @@ public sealed class ShapeCamera
 
     private float CalculateZoomLevel(Size targetSize)
     {
-        var size = BaseTransform.Size / zoomAdjustment;
+        var size = BaseTransform.BaseSize / zoomAdjustment;
         var fX = 1f / (targetSize.Width / size.Width);
         var fY = 1f / (targetSize.Height / size.Height);
         return fX < fY ? fX : fY;

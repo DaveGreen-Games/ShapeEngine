@@ -205,21 +205,29 @@ namespace Examples.Scenes.ExampleScenes
         
         private readonly AsteroidCollider collider;
 
-        public Asteroid(Vector2 pos, params Vector2[] shape)
+        // public Asteroid(Vector2 pos, params Vector2[] shape)
+        // {
+        //     collider = new AsteroidCollider(new Polygon(shape), new());
+        //     AddCollider(collider);
+        //     
+        //     SetDamageTreshold(0f);
+        // }
+        public Asteroid(Polygon relativeShape, Vector2 pos, float size)
         {
-            collider = new AsteroidCollider(new Polygon(shape), new());
+            
+            Transform = new(pos, 0f, new Size(size, 0f), 1f);
+            // var pos = shape.GetCentroid();
+            collider = new AsteroidCollider(new(), relativeShape);
             AddCollider(collider);
             
             SetDamageTreshold(0f);
+            
         }
-        public Asteroid(Polygon shape)
+        public Asteroid(Polygon relativeShape, Transform2D transform)
         {
-            // body = new AsteroidCollisionBody(this, pos, shape);
-            // body.OnOverlapped += Overlapped;
 
-            var pos = shape.GetCentroid();
-            Transform = new(pos);
-            collider = new AsteroidCollider(shape, new());
+            Transform = transform;
+            collider = new AsteroidCollider(new(), relativeShape);
             AddCollider(collider);
             
             SetDamageTreshold(0f);
@@ -294,13 +302,21 @@ namespace Examples.Scenes.ExampleScenes
 
     public class AsteroidCollider : PolyCollider
     {
-        public AsteroidCollider(Polygon absoluteShape, Vector2 offset) : base(absoluteShape, offset)
+        public AsteroidCollider(Transform2D offset, Polygon relativeShape) : base(offset, relativeShape)
         {
             ComputeCollision = false;
             ComputeIntersections = false;
             CollisionLayer = AsteroidMiningExample.AsteriodLayer;
             CollisionMask = BitFlag.Empty;
         }
+        
+        // public AsteroidCollider(Polygon absoluteShape, Vector2 offset) : base(absoluteShape, offset)
+        // {
+        //     ComputeCollision = false;
+        //     ComputeIntersections = false;
+        //     CollisionLayer = AsteroidMiningExample.AsteriodLayer;
+        //     CollisionMask = BitFlag.Empty;
+        // }
         // public AsteroidCollider(List<Vector2> relativePoints, Vector2 offset) : base(relativePoints, offset)
         // {
         //     ComputeCollision = false;
@@ -696,7 +712,10 @@ namespace Examples.Scenes.ExampleScenes
                     float shapeArea = shape.GetArea();
                     if (shapeArea > MinPieceArea)
                     {
-                        Asteroid newAsteroid = new(shape);
+
+                        var relativeInfo = shape.ToRelative();
+                        
+                        Asteroid newAsteroid = new(relativeInfo.shape, relativeInfo.transform);
                         AddAsteroid(newAsteroid);
                     }
                 }
@@ -849,21 +868,26 @@ namespace Examples.Scenes.ExampleScenes
                         {
                             foreach (var f in finalShapes)
                             {
-                                Asteroid a = new(f);
+                                var rel = f.ToRelative();
+                                Asteroid a = new(rel.shape, rel.transform);
                                 AddAsteroid(a);
                                 //area.AddAreaObject(a);
                             }
                         }
                         else
                         {
-                            Asteroid a = new(curShape.ToPolygon());
+                            // Asteroid a = new(curShape.ToPolygon());
+                            var rel = curShape.ToRelative();
+                            Asteroid a = new(rel.shape, rel.transform);
                             AddAsteroid(a);
                             //area.AddAreaObject(a);
                         }
                     }
                     else
                     {
-                        Asteroid a = new(curShape.ToPolygon());
+                        // Asteroid a = new(curShape.ToPolygon());
+                        var rel = curShape.ToRelative();
+                        Asteroid a = new(rel.shape, rel.transform);
                         AddAsteroid(a);
                         //area.AddAreaObject(a);
                     }

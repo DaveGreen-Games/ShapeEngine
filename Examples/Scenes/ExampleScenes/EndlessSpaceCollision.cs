@@ -421,14 +421,15 @@ public class EndlessSpaceCollision : ExampleScene
         public Bullet(Vector2 pos, Vector2 dir, BulletStats stats, ColorRgba color)
         {
             
-            this.Transform = new(pos, dir.AngleRad());
+            this.Transform = new(pos, dir.AngleRad(), new(stats.Size, 0f), 1f);
 
             this.stats = stats;
             this.Velocity = dir * stats.Speed;
             
             this.lifetime = stats.Lifetime;
 
-            this.collider = new(new(0f), stats.Size);
+            
+            this.collider = new CircleCollider(new());
             this.collider.ComputeCollision = true;
             this.collider.ComputeIntersections = false;
             this.collider.CollisionLayer = CollisionLayer;
@@ -583,7 +584,7 @@ public class EndlessSpaceCollision : ExampleScene
         public event Action? OnKilled;
         
         public static readonly uint CollisionLayer = BitFlag.GetFlagUint(3);
-        private Triangle hull;
+        // private Triangle hull;
         private float shipSize;
         // private Vector2 pivot;
         private TriangleCollider collider;
@@ -625,18 +626,18 @@ public class EndlessSpaceCollision : ExampleScene
         public Ship(Vector2 pos, float shipSize)
         {
             this.shipSize = shipSize;
-            Transform = new(pos);
+            Transform = new(pos, 0f, new Size(shipSize, 0f), 1f);
             Drag = 5;
-            hull = CreateHull(shipSize);
-            collider = new(hull.A, hull.B, hull.C, new(0f));
+            var hull = CreateHull();
+            collider = new(new(), hull.A, hull.B, hull.C);
             collider.ComputeCollision = true;
             collider.ComputeIntersections = true;
             collider.CollisionLayer = CollisionLayer;
             collider.CollisionMask = new BitFlag(AsteroidObstacle.CollisionLayer);
             collider.OnCollision += OnColliderCollision;
             collider.OnCollisionEnded += OnColliderCollisionEnded;
-            hull = collider.GetTriangleShape();
             AddCollider(collider);
+            hull = collider.GetTriangleShape();
             SetupInput();
 
             Health = MaxHp;
@@ -697,12 +698,11 @@ public class EndlessSpaceCollision : ExampleScene
         //     // pivot = pos;
         //     return new Triangle(a, b, c);
         // }
-        private Triangle CreateHull(float size)
+        private Triangle CreateHull()
         {
-            var a = new Vector2(size, 0);
-            var b = new Vector2(-size, -size * 0.75f);
-            var c = new Vector2(-size, size * 0.75f);
-            // pivot = pos;
+            var a = new Vector2(1, 0);
+            var b = new Vector2(-1, -0.75f);
+            var c = new Vector2(-1, 0.75f);
             return new Triangle(a, b, c);
         }
         public string GetInputDescription(InputDeviceType inputDeviceType)
@@ -716,18 +716,18 @@ public class EndlessSpaceCollision : ExampleScene
             if (IsDead) Revive();
             
             shipSize = size;
-            Transform = new(pos);
+            Transform = new(pos, 0f, new Size(shipSize, 0f), 1f);
             Drag = 5;
-            hull = CreateHull(size);
-            collider = new(hull.A, hull.B, hull.C, new(0f));
+            var hull = CreateHull();
+            collider = new(new(), hull.A, hull.B, hull.C);
             collider.ComputeCollision = true;
             collider.ComputeIntersections = true;
             collider.CollisionLayer = CollisionLayer;
             collider.CollisionMask = new BitFlag(AsteroidObstacle.CollisionLayer);
             collider.OnCollision += OnColliderCollision;
             collider.OnCollisionEnded += OnColliderCollisionEnded;
-            hull = collider.GetTriangleShape();
             AddCollider(collider);
+            hull = collider.GetTriangleShape();
             movementDir = new(0, 0);
             angleRad = 0f;
             collisionStunTimer = 0f;
@@ -742,7 +742,7 @@ public class EndlessSpaceCollision : ExampleScene
             var angleDif = ShapeMath.GetShortestAngleRad(angleRad, newAngle);
             var movement = movementDir * speed * dt;
 
-            Transform = Transform.MoveBy(movement);
+            Transform = Transform.ChangePosition(movement);
             
             // hull = hull.ChangePosition(movement);
             // pivot += movement;
@@ -750,7 +750,7 @@ public class EndlessSpaceCollision : ExampleScene
             if (collisionStunTimer > 0f)
             {
                 var angleMovement = CollisionRotationSpeedRad * collisionRotationDirection * dt;
-                Transform = Transform.RotateByRad(angleMovement);
+                Transform = Transform.ChangeRotationRad(angleMovement);
                 angleRad += angleMovement; 
             }
             else
@@ -761,7 +761,7 @@ public class EndlessSpaceCollision : ExampleScene
                     angleMovement = angleDif;
                 }
 
-                Transform = Transform.RotateByRad(angleMovement);
+                Transform = Transform.ChangeRotationRad(angleMovement);
                 angleRad += angleMovement; 
             }
             
@@ -834,7 +834,7 @@ public class EndlessSpaceCollision : ExampleScene
                 }
             }
             
-            hull = collider.GetTriangleShape();
+            // hull = collider.GetTriangleShape();
         }
 
         public void FollowStarted()
@@ -857,7 +857,7 @@ public class EndlessSpaceCollision : ExampleScene
         public override void DrawGame(ScreenInfo game)
         {
             if(IsDead)return;
-            hull.DrawLines(4f, hullColor.ColorRgba);
+            collider.GetTriangleShape().DrawLines(4f, hullColor.ColorRgba);
         }
 
         public override void DrawGameUI(ScreenInfo ui)
@@ -895,20 +895,20 @@ public class EndlessSpaceCollision : ExampleScene
         //
         // }
 
-        public AsteroidObstacle(Polygon shape, bool big)
+        public AsteroidObstacle(Polygon relativeShape, Vector2 pos, float size, bool big)
         {
             
             this.Big = big;
             if (big) Mass = 12f;
             else Mass = 1f;
-            Transform = new(shape.GetCentroid());
+            Transform = new(pos, 0f, new Size(size, 0f), 1f);
             var s = ShapeMath.LerpFloat(50, Ship.Speed / 5, DifficultyFactor);
             speed = ShapeRandom.RandF(0.9f, 1f) * s;
             Velocity = ShapeRandom.RandVec2() * speed;
             chaseStrength = ShapeMath.LerpFloat(0.5f, 1f, DifficultyFactor);
             if (!big) Velocity *= 3f;
             
-            collider = new PolyCollider(shape, new(0f));
+            collider = new PolyCollider(new(0f), relativeShape);
             collider.ComputeCollision = false;
             collider.ComputeIntersections = false;
             collider.CollisionLayer = CollisionLayer;
@@ -917,6 +917,7 @@ public class EndlessSpaceCollision : ExampleScene
             // collider.OnCollisionEnded += OnColliderCollisionEnded;
             
             AddCollider(collider);
+            var shape = collider.GetPolygonShape();
             this.bb = shape.GetBoundingBox();
             this.Triangulation = shape.Triangulate();
 
@@ -1007,7 +1008,7 @@ public class EndlessSpaceCollision : ExampleScene
             
 
             damageForce = PhysicsObject.ApplyDragForce(damageForce, 1.5f, time.Delta);
-            Transform = Transform.MoveBy(damageForce * time.Delta);
+            Transform = Transform.ChangePosition(damageForce * time.Delta);
 
             if (damageFlashTimer > 0f)
             {
@@ -2064,22 +2065,24 @@ public class EndlessSpaceCollision : ExampleScene
     {
         var pos = GetRandomUniversePosition(2500);
 
-        var minSize = big ? AsteroidMinSize : AsteroidMinSize / 4f;
+        // var minSize = big ? AsteroidMinSize : AsteroidMinSize / 4f;
         var maxSize = big ? AsteroidMaxSize : AsteroidMaxSize / 4f;
         
-        var shape = Polygon.Generate(pos, AsteroidPointCount, minSize, maxSize);
-        var a = new AsteroidObstacle(shape, big);
+        // var shape = Polygon.Generate(pos, AsteroidPointCount, minSize, maxSize);
+        var shape = Polygon.GenerateRelative(AsteroidPointCount, 0.5f, 1f);
+        var a = new AsteroidObstacle(shape, pos, maxSize, big);
         if (!big) a.target = ship;
         asteroids.Add(a);
         CollisionHandler?.Add(a);
     }
     private void AddAsteroid(Vector2 pos, bool big)
     {
-        var minSize = big ? AsteroidMinSize : AsteroidMinSize / 4f;
+        // var minSize = big ? AsteroidMinSize : AsteroidMinSize / 4f;
         var maxSize = big ? AsteroidMaxSize : AsteroidMaxSize / 4f;
         
-        var shape = Polygon.Generate(pos, AsteroidPointCount, minSize, maxSize);
-        var a = new AsteroidObstacle(shape, big);
+        // var shape = Polygon.Generate(pos, AsteroidPointCount, minSize, maxSize);
+        var shape = Polygon.GenerateRelative(AsteroidPointCount, 0.5f, 1f);
+        var a = new AsteroidObstacle(shape, pos, maxSize, big);
         if (!big) a.target = ship;
         asteroids.Add(a);
         CollisionHandler?.Add(a);

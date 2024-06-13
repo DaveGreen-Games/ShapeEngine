@@ -257,7 +257,7 @@ namespace ShapeEngine.Core.Shapes
         public Circle ApplyTransform(Transform2D transform)
         {
             var newCircle = ChangePosition(transform.Position);
-            return newCircle.ChangeRadius(transform.Size.Width);
+            return newCircle.ChangeRadius(transform.BaseSize.Width);
         }
 
         /// <summary>
@@ -269,7 +269,7 @@ namespace ShapeEngine.Core.Shapes
         public Circle SetTransform(Transform2D transform)
         {
             var newCircle = SetPosition(transform.Position);
-            return newCircle.SetRadius(transform.Size.Width);
+            return newCircle.SetRadius(transform.BaseSize.Width);
         }
 
 

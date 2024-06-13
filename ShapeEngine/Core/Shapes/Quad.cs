@@ -461,7 +461,7 @@ public readonly struct Quad : IEquatable<Quad>
     {
         var newQuad = ChangePosition(transform.Position);
         newQuad = newQuad.ChangeRotation(transform.RotationRad);
-        return newQuad.ChangeSize(transform.Size.Width);
+        return newQuad.ChangeSize(transform.BaseSize.Width);
     }
     
     /// <summary>
@@ -475,7 +475,7 @@ public readonly struct Quad : IEquatable<Quad>
     {
         var newQuad = SetPosition(transform.Position);
         newQuad = newQuad.SetRotation(transform.RotationRad);
-        return newQuad.SetSize(transform.Size.Width);
+        return newQuad.SetSize(transform.BaseSize.Width);
     }
     
     /// <summary>
@@ -490,7 +490,7 @@ public readonly struct Quad : IEquatable<Quad>
     {
         var newQuad = ChangePosition(transform.Position);
         newQuad = newQuad.ChangeRotation(transform.RotationRad, alignement);
-        return newQuad.ChangeSize(transform.Size.Width, alignement);
+        return newQuad.ChangeSize(transform.BaseSize.Width, alignement);
     }
     
     /// <summary>
@@ -505,7 +505,7 @@ public readonly struct Quad : IEquatable<Quad>
     {
         var newQuad = SetPosition(transform.Position, alignement);
         newQuad = newQuad.SetRotation(transform.RotationRad, alignement);
-        return newQuad.SetSize(transform.Size.Width, alignement);
+        return newQuad.SetSize(transform.BaseSize.Width, alignement);
     }
     
     
