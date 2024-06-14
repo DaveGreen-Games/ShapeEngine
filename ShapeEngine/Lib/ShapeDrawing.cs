@@ -1,13 +1,10 @@
 ﻿
 using System.Numerics;
-using System.Xml;
 using Raylib_cs;
 using ShapeEngine.Color;
-using ShapeEngine.Core;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.UI;
 
 namespace ShapeEngine.Lib;
 
@@ -42,6 +39,115 @@ public static class ShapeDrawing
     
     public static float LineMinThickness = 0.5f;
 
+
+    #region Gapped
+
+    /// <summary>
+    /// Draws an outline that is interrupted by gaps specified by the parameters.
+    /// 1 gap with 0.5 gap percentage would result in half of the outline visible and the other not visible.
+    /// </summary>
+    /// <param name="poly">The polygon outline.</param>
+    /// <param name="lineThickness">The line thickness for the outline.</param>
+    /// <param name="color">The color of the outline.</param>
+    /// <param name="perimeter">The total length of the perimeter. If less than 0 the functions calculates this (more expensive).</param>
+    /// <param name="startOffset">Value between 0 and 1 to change where the first part is drawn (useful for animating it).
+    /// The offset value is wrapped between 0 and 1. 1.5 would result in 0.5. -0.2 would result in 0.8.</param>
+    /// <param name="gaps">The count of outline areas that are not drawn. The count of outline areas drawn always equals the count of gaps.</param>
+    /// <param name="gapPercentage">How much of the total perimeter should be not drawn. 1 - gapPercentage equals the total amount of perimeter drawn. If 0 normal outline is drawn, if 1 nothing is drawn.</param>
+    public static void DrawGappedOutline(this Polygon poly, float lineThickness, ColorRgba color, float perimeter, float startOffset, int gaps, float gapPercentage = 0.5f)
+    {
+        if (gaps <= 0 || gapPercentage <= 0f)
+        {
+            poly.DrawLines(lineThickness, color);
+            return;
+        }
+
+        if (gapPercentage >= 1f) return;
+
+        var nonGapPercentage = 1f - gapPercentage;
+
+        var gapPercentageRange = gapPercentage / gaps;
+        var nonGapPercentageRange = nonGapPercentage / gaps;
+
+        if (perimeter <= 0f)
+        {
+            var perimeterSquared = 0f;
+            for (int i = 0; i < poly.Count; i++)
+            {
+                var curP = poly[i];
+                var nextP = poly[(i + 1) % poly.Count];
+
+                perimeterSquared += (nextP - curP).LengthSquared();
+            }
+
+            perimeter = MathF.Sqrt(perimeterSquared);
+        }
+
+        startOffset = ShapeMath.WrapF(startOffset, 0f, 1f);
+        var startDistance = perimeter * startOffset;
+        var curDistance = 0f;
+        var nextDistance = startDistance;
+        
+        
+        var curIndex = 0;
+        int foundPointsCount = 0;
+        var curPoint = poly[0];
+        var nextPoint= poly[1 % poly.Count];
+        var curW = nextPoint - curPoint;
+        var curDis = curW.Length();
+        
+        var points = new List<Vector2>(3);
+        
+        while (foundPointsCount < gaps * 2)
+        {
+            if (curDistance + curDis >= nextDistance)
+            {
+                var p = curPoint + (curW / curDis) * (nextDistance - curDistance);
+                if (points.Count == 0)
+                {
+                    nextDistance += nonGapPercentageRange * perimeter;
+                    points.Add(p);
+
+                }
+                else
+                {
+                    nextDistance += gapPercentageRange * perimeter;
+                    points.Add(p);
+                    if (points.Count == 2)
+                    {
+                        DrawLine(points[0], points[1], lineThickness,color, LineCapType.Capped, 4);
+                    }
+                    else if(points.Count == 3)
+                    {
+                        DrawLine(points[0], points[1], lineThickness,color, LineCapType.Capped, 4);
+                        DrawLine(points[1], points[2], lineThickness,color, LineCapType.Capped, 4);
+                    }
+                    
+                    points.Clear();
+                }
+
+                foundPointsCount++;
+            }
+            else
+            {
+                
+                if(points.Count == 1) points.Add(nextPoint);
+                
+                curDistance += curDis;
+                curIndex = (curIndex + 1) % poly.Count;
+                curPoint = poly[curIndex];
+                nextPoint = poly[(curIndex + 1) % poly.Count];
+                curW = nextPoint - curPoint;
+                curDis = curW.Length();
+            }
+            
+        }
+        
+    }
+
+    #endregion
+    
+    
     
     #region Custom Line Drawing
     public static void DrawLine(Vector2 start, Vector2 end, float thickness, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0)
