@@ -868,7 +868,12 @@ public class EndlessSpaceCollision : ExampleScene
     private class AsteroidObstacle : CollisionObject
     {
         public static readonly uint CollisionLayer = BitFlag.GetFlagUint(2);
-        // private Polygon shape;
+        
+        private static readonly LineDrawingInfo GappedLineInfo = new(AsteroidLineThickness, Colors.Special, LineCapType.CappedExtended, 4);
+        private static readonly GappedOutlineDrawingInfo BigAsteroidGappedOutlineInfo = new GappedOutlineDrawingInfo(6, 0f, 0.35f);
+        private static readonly GappedOutlineDrawingInfo SmallAsteroidGappedOutlineInfo = new GappedOutlineDrawingInfo(2, 0f, 0.75f);
+        
+        
         private PolyCollider collider;
         public Triangulation Triangulation;
         private Rect bb;
@@ -881,13 +886,15 @@ public class EndlessSpaceCollision : ExampleScene
         public bool Big;
 
         private float perimeter = 0f;
-        private float gapStartOffset = ShapeRandom.RandF();
+        // private float gapStartOffset = ShapeRandom.RandF();
         
 
         public Ship? target = null;
         private readonly float chaseStrength = 0f;
         private float speed;
         private Vector2 damageForce = new Vector2(0f);
+
+        private GappedOutlineDrawingInfo gappedOutlineInfo;
         
         // private bool moved = false;
         // public AsteroidObstacle(Vector2 center)
@@ -927,12 +934,15 @@ public class EndlessSpaceCollision : ExampleScene
             if (big)
             {
                 Health = ShapeMath.LerpFloat(300, 650, DifficultyFactor) * ShapeRandom.RandF(0.9f, 1.1f);
+                gappedOutlineInfo = BigAsteroidGappedOutlineInfo.ChangeStartOffset(ShapeRandom.RandF());
             }
             else
             {
                 Health = ShapeMath.LerpFloat(25, 100, DifficultyFactor) * ShapeRandom.RandF(0.9f, 1.1f);
+                gappedOutlineInfo = SmallAsteroidGappedOutlineInfo.ChangeStartOffset(ShapeRandom.RandF());
             }
-            
+
+
         }
 
         public void Damage(Vector2 pos, float amount, Vector2 force)
@@ -1062,12 +1072,6 @@ public class EndlessSpaceCollision : ExampleScene
             
             if (AsteroidLineThickness > 1)
             {
-                // if (damageFlashTimer > 0f)
-                // {
-                //     collider.GetPolygonShape().DrawLines(AsteroidLineThickness, Colors.PcWarm.ColorRgba);
-                // }
-                // else collider.GetPolygonShape().DrawLines(AsteroidLineThickness, Colors.PcHighlight.ColorRgba);
-
                 var shape = collider.GetPolygonShape();
                 var c = damageFlashTimer > 0f ? Colors.PcWarm.ColorRgba : Colors.PcHighlight.ColorRgba;
                 shape.DrawLines(AsteroidLineThickness, c);
@@ -1075,20 +1079,17 @@ public class EndlessSpaceCollision : ExampleScene
                 if (Big)
                 {
 
-                    var gapInfo = new GappedOutlineDrawingInfo(6, gapStartOffset, 0.35f);
                     shape.ScaleSize(1.25f);
-                    perimeter = shape.DrawGappedOutline(AsteroidLineThickness, Colors.PcSpecial.ColorRgba, perimeter, gapInfo);
-                    gapStartOffset += GAMELOOP.Time.Delta * 0.1f;
+                    perimeter = shape.DrawGappedOutline(perimeter, GappedLineInfo, gappedOutlineInfo);
+                    gappedOutlineInfo = gappedOutlineInfo.MoveStartOffset(GAMELOOP.Time.Delta * 0.1f);
                 }
                 else
                 {
-                    var gapInfo = new GappedOutlineDrawingInfo(2, gapStartOffset, 0.75f);
                     shape.ScaleSize(1.5f);
-                    perimeter = shape.DrawGappedOutline(AsteroidLineThickness, Colors.PcSpecial.ColorRgba, perimeter, gapInfo);
-                    gapStartOffset += GAMELOOP.Time.Delta * 0.25f;
+                    perimeter = shape.DrawGappedOutline(perimeter, GappedLineInfo, gappedOutlineInfo);
+                    gappedOutlineInfo = gappedOutlineInfo.MoveStartOffset(GAMELOOP.Time.Delta * 0.25f);
                 }
-                
-                
+
             }
         }
         public override void DrawGameUI(ScreenInfo ui)

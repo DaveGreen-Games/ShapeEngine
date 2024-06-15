@@ -8,112 +8,10 @@ using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.Lib;
 
-/// <summary>
-/// Determines how the end of a line is drawn.
-/// </summary>
-public enum LineCapType
-{
-    /// <summary>
-    /// Line is drawn exactly from start to end without any cap.
-    /// </summary>
-    None = 0,
-    /// <summary>
-    /// The line is extended by the thickness without any cap.
-    /// </summary>
-    Extended = 1,
-    /// <summary>
-    /// The line remains the same length and is drawn with a cap.
-    /// Roundness is determined by the cap points.
-    /// </summary>
-    Capped = 2,
-    /// <summary>
-    /// The line is extended by the thickness and is drawn with a cap.
-    /// Roundness is determined by the cap points.
-    /// </summary>
-    CappedExtended = 3
-}
-
-/// <summary>
-/// Used for DrawGappedOutline functions.
-/// </summary>
-public readonly struct GappedOutlineDrawingInfo
-{
-    public readonly float StartOffset;
-    public readonly int Gaps;
-    public readonly float GapPerimeterPercentage;
-
-    public bool IsValid => Gaps > 0 && GapPerimeterPercentage is < 1f and > 0f;
-    
-    /// <summary>
-    /// </summary>
-    /// <param name="startOffset">Value between 0 and 1 to change where the first part is drawn (useful for animating it).
-    /// The offset value is wrapped between 0 and 1. 1.5 would result in 0.5. -0.2 would result in 0.8.</param>
-    /// <param name="gaps">The count of outline areas that are not drawn. The count of outline areas drawn always equals the count of gaps.</param>
-    /// <param name="gapPerimeterPercentage">How much of the total perimeter should be not drawn. 1 - gapPercentage equals the total amount of perimeter drawn. If 0 normal outline is drawn, if 1 nothing is drawn.</param>
-    public GappedOutlineDrawingInfo(int gaps, float startOffset = 0f, float gapPerimeterPercentage = 0.5f)
-    {
-        
-        StartOffset = ShapeMath.WrapF(startOffset, 0f, 1f);;
-        Gaps = gaps;
-        GapPerimeterPercentage = gapPerimeterPercentage;
-    }
-}
-
-public readonly struct LineDrawingInfo
-{
-    public static float LineMinThickness = 0.5f;
-    
-    public readonly float Thickness;
-    public readonly ColorRgba Color;
-    public readonly LineCapType CapType;
-    public readonly int CapPoints;
-
-
-    public static LineDrawingInfo Default => new(1f, ColorRgba.White, LineCapType.None, 0);
-    public static LineDrawingInfo Line => new(1f, ColorRgba.White, LineCapType.Extended, 0);
-    public static LineDrawingInfo Outline => new(1f, ColorRgba.White, LineCapType.CappedExtended, 4);
-
-    public static LineDrawingInfo Capped(float thickness, ColorRgba color, int capPoints) =>
-        new(thickness, color, LineCapType.Capped, capPoints);
-
-    public static LineDrawingInfo CappedExtended(float thickness, ColorRgba color, int capPoints) =>
-        new(thickness, color, LineCapType.CappedExtended, capPoints);
-
-    public static LineDrawingInfo Extended(float thickness, ColorRgba color) => 
-        new(thickness, color, LineCapType.Extended, 0);
-
-    public static LineDrawingInfo None(float thickness, ColorRgba color) => 
-        new(thickness, color, LineCapType.None, 0);
-    
-    
-    public LineDrawingInfo(float thickness, ColorRgba color)
-    {
-        Thickness = MathF.Max(thickness, LineMinThickness);
-        Color = color;
-        CapType = LineCapType.None;
-        CapPoints = 0;
-    }
-    public LineDrawingInfo(float thickness, ColorRgba color, LineCapType capType, int capPoints)
-    {
-        Thickness = MathF.Max(thickness, LineMinThickness);
-        Color = color;
-        CapType = capType;
-        CapPoints = capPoints;
-    }
-
-    
-    public LineDrawingInfo ChangeThickness(float newThickness) => new(newThickness, Color, CapType, CapPoints);
-    public LineDrawingInfo ChangeColor(ColorRgba newColor) => new(Thickness, newColor, CapType, CapPoints);
-    public LineDrawingInfo ChangeCapType(LineCapType newCapType) => new(Thickness, Color, newCapType, CapPoints);
-    public LineDrawingInfo ChangeCapPoints(int newCapPoints) => new(Thickness, Color, CapType, newCapPoints);
-}
-
 public static class ShapeDrawing
 {
     
-    public static float LineMinThickness = 0.5f;
-
-
+    
     #region Gapped
 
     /// <summary>
@@ -121,15 +19,14 @@ public static class ShapeDrawing
     /// 1 gap with 0.5 gap percentage would result in half of the outline visible and the other not visible.
     /// </summary>
     /// <param name="poly">The polygon outline.</param>
-    /// <param name="lineThickness">The line thickness for the outline.</param>
-    /// <param name="color">The color of the outline.</param>
+    /// <param name="lineInfo">The parameters for how to draw the line.</param>
     /// <param name="perimeter">The total length of the perimeter. If less than 0 the functions calculates this (more expensive).</param>
     /// <param name="gapDrawingInfo">Info for how to draw the gaps.</param>
-    public static float DrawGappedOutline(this Polygon poly, float lineThickness, ColorRgba color, float perimeter, GappedOutlineDrawingInfo gapDrawingInfo)
+    public static float DrawGappedOutline(this Polygon poly, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
     {
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
         {
-            poly.DrawLines(lineThickness, color);
+            poly.DrawLines(lineInfo);
             return perimeter > 0f ? perimeter : -1f;
         }
 
@@ -185,7 +82,7 @@ public static class ShapeDrawing
                     points.Add(p);
                     if (points.Count == 2)
                     {
-                        DrawLine(points[0], points[1], lineThickness,color, LineCapType.CappedExtended, 4);
+                        DrawLine(points[0], points[1], lineInfo);
                     }
                     else
                     {
@@ -193,7 +90,7 @@ public static class ShapeDrawing
                         {
                             var p1 = points[i];
                             var p2 = points[(i + 1) % points.Count];
-                            DrawLine(p1, p2, lineThickness,color, LineCapType.CappedExtended, 4);
+                            DrawLine(p1, p2, lineInfo);
                         }
                     }
                     
@@ -220,14 +117,23 @@ public static class ShapeDrawing
         return perimeter;
     }
    
-    #endregion
     
+    //Circle
+    
+    //Triangle
+    
+    //Rect
+    
+    //Quad
+    
+    //Polyline
+    #endregion
     
     
     #region Custom Line Drawing
     public static void DrawLine(Vector2 start, Vector2 end, float thickness, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0)
     {
-        if (thickness < LineMinThickness) thickness = LineMinThickness;
+        if (thickness < LineDrawingInfo.LineMinThickness) thickness = LineDrawingInfo.LineMinThickness;
         var w = end - start;
         float ls = w.X * w.X + w.Y * w.Y; // w.LengthSquared();
         if (ls <= 0f) return;
@@ -293,6 +199,11 @@ public static class ShapeDrawing
         ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0) 
         => DrawLine(new(startX, startY), new(endX, endY), thickness, color, capType, capPoints);
 
+    public static void DrawLine(Vector2 start, Vector2 end, LineDrawingInfo info) => DrawLine(start, end, info.Thickness, info.Color, info.CapType, info.CapPoints);
+    public static void DrawLine(float startX, float startY, float endX, float endY, LineDrawingInfo info) 
+        => DrawLine(new(startX, startY), new(endX, endY), info.Thickness, info.Color, info.CapType, info.CapPoints);
+    
+    
     // public static void DrawLineBackup(Vector2 start, Vector2 end, float thickness, ShapeColor color, LineEndCap lineEndCap = LineEndCap.None, int endCapPoints = 0)
     // {
     //     if (thickness < LineMinThickness) thickness = LineMinThickness;
@@ -391,18 +302,21 @@ public static class ShapeDrawing
     
     public static void Draw(this Segment segment, float thickness, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0 ) 
         => DrawLine(segment.Start, segment.End, thickness, color, capType, capPoints);
+    public static void Draw(this Segment segment, LineDrawingInfo lineInfo) 
+        => DrawLine(segment.Start, segment.End, lineInfo);
     
-    public static void Draw(this Segments segments, float thickness, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0)
+    public static void Draw(this Segments segments, LineDrawingInfo lineInfo)
     {
         if (segments.Count <= 0) return;
         foreach (var seg in segments)
         {
-            seg.Draw(thickness, color, capType, capPoints);
+            seg.Draw(lineInfo);
         }
     }
     public static void Draw(this Segments segments, float thickness, List<ColorRgba> colors, LineCapType capType = LineCapType.None, int capPoints = 0)
     {
         if (segments.Count <= 0 || colors.Count <= 0) return;
+        LineDrawingInfo info = new(thickness, ColorRgba.White, capType, capPoints);
         for (var i = 0; i < segments.Count; i++)
         {
             var c = colors[i % colors.Count];
@@ -512,9 +426,9 @@ public static class ShapeDrawing
         return result;
     }
     
-    public static void DrawLineDotted(Vector2 start, Vector2 end, int gaps, float thickness, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0)
+    public static void DrawLineDotted(Vector2 start, Vector2 end, int gaps, float lineThickness, ColorRgba color, LineCapType capType, int capPoints)
     {
-        if (gaps <= 0) DrawLine(start, end, thickness, color, capType, capPoints);
+        if (gaps <= 0) DrawLine(start, end, lineThickness, color, capType, capPoints);
         else
         {
             var w = end - start;
@@ -530,7 +444,7 @@ public static class ShapeDrawing
                 if (i % 2 == 0)
                 {
                     var next = cur + offset;
-                    DrawLine(cur, next, thickness, color, capType, capPoints);
+                    DrawLine(cur, next, lineThickness, color, capType, capPoints);
                     cur = next;
 
                 }
@@ -541,9 +455,13 @@ public static class ShapeDrawing
             }
         }
     }
-    public static void DrawLineDotted(Vector2 start, Vector2 end, int gaps, float gapSizeF, float thickness, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0)
+    public static void DrawLineDotted(Vector2 start, Vector2 end, int gaps, LineDrawingInfo lineInfo)
     {
-        if (gaps <= 0) DrawLine(start, end, thickness, color, capType, capPoints);
+        DrawLineDotted(start, end, gaps, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+    }
+    public static void DrawLineDotted(Vector2 start, Vector2 end, int gaps, float gapSizeF, float lineThickness, ColorRgba color, LineCapType capType, int capPoints)
+    {
+        if (gaps <= 0) DrawLine(start, end, lineThickness, color, capType, capPoints);
         else
         {
             var w = end - start;
@@ -565,7 +483,7 @@ public static class ShapeDrawing
                 if (i % 2 == 0)
                 {
                     var next = cur + offset;
-                    DrawLine(cur, next, thickness, color, capType, capPoints);
+                    DrawLine(cur, next, lineThickness, color, capType, capPoints);
                     cur = next;
                 }
                 else
@@ -574,6 +492,10 @@ public static class ShapeDrawing
                 }
             }
         }
+    }
+    public static void DrawLineDotted(Vector2 start, Vector2 end, int gaps, float gapSizeF, LineDrawingInfo lineInfo)
+    {
+        DrawLineDotted(start, end, gaps, gapSizeF, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
     }
     public static void DrawLineGlow(Vector2 start, Vector2 end, float width, float endWidth, ColorRgba color, ColorRgba endColorRgba, int steps, LineCapType capType = LineCapType.None, int capPoints = 0)
     {
@@ -601,26 +523,26 @@ public static class ShapeDrawing
             );
         }
     }
-    public static void DrawDotted(this Segment segment, int gaps, float thickness, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0)
+    public static void DrawDotted(this Segment segment, int gaps, LineDrawingInfo lineInfo)
     {
-        DrawLineDotted(segment.Start, segment.End, gaps, thickness, color, capType, capPoints);
+        DrawLineDotted(segment.Start, segment.End, gaps, lineInfo);
     }
-    public static void DrawDotted(this Segment segment, int gaps, float gapSizeF, float thickness, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0)
+    public static void DrawDotted(this Segment segment, int gaps, float gapSizeF, LineDrawingInfo lineInfo)
     {
-        DrawLineDotted(segment.Start, segment.End, gaps, gapSizeF, thickness, color, capType, capPoints);
+        DrawLineDotted(segment.Start, segment.End, gaps, gapSizeF, lineInfo);
     }
-    public static void DrawDotted(this Segments segments, int gaps, float thickness, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0)
+    public static void DrawDotted(this Segments segments, int gaps, LineDrawingInfo lineInfo)
     {
         foreach (var seg in segments)
         {
-            seg.DrawDotted(gaps, thickness, color, capType, capPoints);
+            seg.DrawDotted(gaps, lineInfo);
         }
     }
-    public static void DrawDotted(this Segments segments, int gaps, float gapSizeF, float thickness, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0)
+    public static void DrawDotted(this Segments segments, int gaps, float gapSizeF, LineDrawingInfo lineInfo)
     {
         foreach (var seg in segments)
         {
-            seg.DrawDotted(gaps, gapSizeF, thickness, color, capType, capPoints);
+            seg.DrawDotted(gaps, gapSizeF, lineInfo);
         }
     }
 
@@ -784,6 +706,11 @@ public static class ShapeDrawing
                 remainingSize = size;
             }
         }
+    }
+
+    public static void DrawCircleLinesDotted(Vector2 center, float radius, int sidesPerGap, LineDrawingInfo lineInfo, float sideLength = 8f)
+    {
+        DrawCircleLinesDotted(center, radius, sidesPerGap, lineInfo.Thickness, lineInfo.Color, sideLength, lineInfo.CapType, lineInfo.CapPoints);
     }
     public static void DrawCircleCheckeredLines(Vector2 pos, Vector2 alignement, float radius, float spacing, float lineThickness, float angleDeg, ColorRgba lineColorRgba, ColorRgba bgColorRgba, int circleSegments)
     {
@@ -1289,6 +1216,14 @@ public static class ShapeDrawing
             DrawLineDotted(s.Start, s.End, gapsPerSide, lineThickness, color, capType, capPoints);
         }
     }
+    public static void DrawLinesDotted(this Rect rect, int gapsPerSide, LineDrawingInfo lineInfo)
+    {
+        var segments = rect.GetEdges();
+        foreach (var s in segments)
+        {
+            DrawLineDotted(s.Start, s.End, gapsPerSide, lineInfo);
+        }
+    }
     public static void DrawLinesDotted(this Rect rect, int gapsPerSide, float gapSizeF, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 3)
     {
         // if (cornerCircleSegments > 5)
@@ -1305,6 +1240,10 @@ public static class ShapeDrawing
         {
             DrawLineDotted(s.Start, s.End, gapsPerSide, gapSizeF, lineThickness, color, capType, capPoints);
         }
+    }
+    public static void DrawLinesDotted(this Rect rect, int gapsPerSide, float gapSizeF, LineDrawingInfo lineInfo)
+    {
+        DrawLinesDotted(rect, gapsPerSide, gapSizeF, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
     }
     #endregion
 
@@ -1325,7 +1264,12 @@ public static class ShapeDrawing
 
     public static void DrawLines(this Triangle t, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
-        DrawTriangleLines(t.A, t.B, t.C, lineThickness, color);
+        DrawTriangleLines(t.A, t.B, t.C, lineThickness, color, capType, capPoints);
+        // t.GetEdges().Draw(lineThickness, color);
+    }
+    public static void DrawLines(this Triangle t, LineDrawingInfo lineInfo)
+    {
+        DrawTriangleLines(t.A, t.B, t.C, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
         // t.GetEdges().Draw(lineThickness, color);
     }
 
@@ -1362,7 +1306,15 @@ public static class ShapeDrawing
         
         // new Triangle(a, b, c).GetEdges().Draw(lineThickness, color);
     }
-
+    public static void DrawQuadLines(Vector2 a, Vector2 b, Vector2 c, Vector2 d, LineDrawingInfo lineInfo)
+    {
+        DrawLine(a, b, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        DrawLine(b, c, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        DrawLine(c, d, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        DrawLine(d, a, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        
+        // new Triangle(a, b, c).GetEdges().Draw(lineThickness, color);
+    }
     public static void Draw(this Quad q, ColorRgba color) => DrawQuad(q.A, q.B, q.C, q.D, color);
 
     public static void DrawLines(this Quad q, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
@@ -1370,6 +1322,7 @@ public static class ShapeDrawing
         DrawQuadLines(q.A, q.B, q.C, q.D, lineThickness, color);
         // t.GetEdges().Draw(lineThickness, color);
     }
+    public static void DrawLines(this Quad q, LineDrawingInfo lineInfo) => DrawQuadLines(q.A, q.B, q.C, q.D, lineInfo);
 
     public static void DrawVertices(this Quad q, float vertexRadius, ColorRgba color, int circleSegments = 8)
     {
@@ -1517,10 +1470,6 @@ public static class ShapeDrawing
             // edge.Draw(lineThickness, finalColor);
         // }
     }
-    // public static void DrawLines(this Polygon poly, float lineThickness, ShapeColor color)
-    // {
-    //     poly.DrawLines(lineThickness, color, 2);
-    // }
     public static void DrawLines(this Polygon poly, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         if (poly.Count < 3) return;
@@ -1556,6 +1505,11 @@ public static class ShapeDrawing
         // }
         // DrawLineEx(pos + ShapeVec.Rotate(poly[poly.Count - 1] * size, rotDeg * ShapeMath.DEGTORAD), pos + ShapeVec.Rotate(poly[0] * size, rotDeg * ShapeMath.DEGTORAD), lineThickness, outlineColor);
     }
+    public static void DrawLines(this Polygon poly, LineDrawingInfo lineInfo) => DrawLines(poly, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+
+    public static void DrawLines(this Polygon poly, Vector2 pos, Vector2 size, float rotDeg, LineDrawingInfo lineInfo) => DrawLines(poly, pos, size, rotDeg, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+
+
     public static void DrawVertices(this Polygon poly, float vertexRadius, ColorRgba color, int circleSegments)
     {
         foreach (var p in poly)
@@ -1610,6 +1564,15 @@ public static class ShapeDrawing
             DrawLine(cur, cur.Lerp(prev, cornerF), lineThickness, color, capType, capPoints);
         }
     }
+   
+    public static void DrawCornered(this Polygon poly, LineDrawingInfo lineInfo, float cornerLength) => DrawCornered(poly, lineInfo.Thickness,lineInfo.Color, cornerLength, lineInfo.CapType, lineInfo.CapPoints);
+
+    public static void DrawCornered(this Polygon poly, LineDrawingInfo lineInfo, List<float> cornerLengths) => DrawCornered(poly, lineInfo.Thickness,lineInfo.Color, cornerLengths, lineInfo.CapType, lineInfo.CapPoints);
+
+    public static void DrawCorneredRelative(this Polygon poly, LineDrawingInfo lineInfo, float cornerF) => DrawCornered(poly, lineInfo.Thickness,lineInfo.Color, cornerF, lineInfo.CapType, lineInfo.CapPoints);
+
+    public static void DrawCorneredRelative(this Polygon poly, LineDrawingInfo lineInfo, List<float> cornerFactors) => DrawCornered(poly, lineInfo.Thickness,lineInfo.Color, cornerFactors, lineInfo.CapType, lineInfo.CapPoints);
+
     #endregion
 
     #region Polyline
@@ -1624,6 +1587,16 @@ public static class ShapeDrawing
             DrawLine(start, end, thickness, color, capType, capPoints);
         }
         // polyline.GetEdges().Draw(thickness, color);
+    }
+    public static void Draw(this Polyline polyline, LineDrawingInfo lineInfo)
+    {
+        if (polyline.Count < 2) return;
+        for (var i = 0; i < polyline.Count - 1; i++)
+        {
+            var start = polyline[i];
+            var end = polyline[i + 1];
+            DrawLine(start, end, lineInfo);
+        }
     }
 
     public static void Draw(this Polyline polyline, float thickness, List<ColorRgba> colors, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
@@ -1655,8 +1628,8 @@ public static class ShapeDrawing
             var end = polyline[i + 1];
             DrawLineDotted(start, end, gaps, thickness, color, capType, capPoints);
         }
-         // polyline.GetEdges().DrawDotted(gaps, thickness, color, endCapSegments);
     }
+    public static void DrawDotted(this Polyline polyline, int gaps, LineDrawingInfo lineInfo) => DrawDotted(polyline, gaps, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
 
     public static void DrawDotted(this Polyline polyline, int gaps, float gapSizeF, 
         float thickness, ColorRgba color, LineCapType capType = LineCapType.Capped, int capPoints = 3)
@@ -1670,6 +1643,7 @@ public static class ShapeDrawing
         }
         // polyline.GetEdges().DrawDotted(gaps, gapSizeF, thickness, color, endCapSegments);
     }
+    public static void DrawDotted(this Polyline polyline, int gaps, float gapSizeF, LineDrawingInfo lineInfo) => DrawDotted(polyline, gaps, gapSizeF, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
 
     public static void DrawGlow(this Polyline polyline, float width, float endWidth, ColorRgba color,
         ColorRgba endColorRgba, int steps, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
