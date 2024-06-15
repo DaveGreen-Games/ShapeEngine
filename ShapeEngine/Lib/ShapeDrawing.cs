@@ -58,21 +58,54 @@ public readonly struct GappedOutlineDrawingInfo
         GapPerimeterPercentage = gapPerimeterPercentage;
     }
 }
+
 public readonly struct LineDrawingInfo
 {
+    public static float LineMinThickness = 0.5f;
+    
     public readonly float Thickness;
     public readonly ColorRgba Color;
+    public readonly LineCapType CapType;
+    public readonly int CapPoints;
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="thickness">The line thickness for the outline.</param>
-    /// <param name="color">The color of the outline.</param>
+
+    public static LineDrawingInfo Default => new(1f, ColorRgba.White, LineCapType.None, 0);
+    public static LineDrawingInfo Line => new(1f, ColorRgba.White, LineCapType.Extended, 0);
+    public static LineDrawingInfo Outline => new(1f, ColorRgba.White, LineCapType.CappedExtended, 4);
+
+    public static LineDrawingInfo Capped(float thickness, ColorRgba color, int capPoints) =>
+        new(thickness, color, LineCapType.Capped, capPoints);
+
+    public static LineDrawingInfo CappedExtended(float thickness, ColorRgba color, int capPoints) =>
+        new(thickness, color, LineCapType.CappedExtended, capPoints);
+
+    public static LineDrawingInfo Extended(float thickness, ColorRgba color) => 
+        new(thickness, color, LineCapType.Extended, 0);
+
+    public static LineDrawingInfo None(float thickness, ColorRgba color) => 
+        new(thickness, color, LineCapType.None, 0);
+    
+    
     public LineDrawingInfo(float thickness, ColorRgba color)
     {
-        Thickness = thickness;
+        Thickness = MathF.Max(thickness, LineMinThickness);
         Color = color;
+        CapType = LineCapType.None;
+        CapPoints = 0;
     }
+    public LineDrawingInfo(float thickness, ColorRgba color, LineCapType capType, int capPoints)
+    {
+        Thickness = MathF.Max(thickness, LineMinThickness);
+        Color = color;
+        CapType = capType;
+        CapPoints = capPoints;
+    }
+
+    
+    public LineDrawingInfo ChangeThickness(float newThickness) => new(newThickness, Color, CapType, CapPoints);
+    public LineDrawingInfo ChangeColor(ColorRgba newColor) => new(Thickness, newColor, CapType, CapPoints);
+    public LineDrawingInfo ChangeCapType(LineCapType newCapType) => new(Thickness, Color, newCapType, CapPoints);
+    public LineDrawingInfo ChangeCapPoints(int newCapPoints) => new(Thickness, Color, CapType, newCapPoints);
 }
 
 public static class ShapeDrawing
