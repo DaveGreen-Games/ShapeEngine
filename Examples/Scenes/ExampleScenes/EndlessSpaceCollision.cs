@@ -879,6 +879,9 @@ public class EndlessSpaceCollision : ExampleScene
         public float Health { get; private set; }
 
         public bool Big;
+
+        private float perimeter = 0f;
+        private float gapStartOffset = ShapeRandom.RandF();
         
 
         public Ship? target = null;
@@ -1059,11 +1062,33 @@ public class EndlessSpaceCollision : ExampleScene
             
             if (AsteroidLineThickness > 1)
             {
-                if (damageFlashTimer > 0f)
+                // if (damageFlashTimer > 0f)
+                // {
+                //     collider.GetPolygonShape().DrawLines(AsteroidLineThickness, Colors.PcWarm.ColorRgba);
+                // }
+                // else collider.GetPolygonShape().DrawLines(AsteroidLineThickness, Colors.PcHighlight.ColorRgba);
+
+                var shape = collider.GetPolygonShape();
+                var c = damageFlashTimer > 0f ? Colors.PcWarm.ColorRgba : Colors.PcHighlight.ColorRgba;
+                shape.DrawLines(AsteroidLineThickness, c);
+                
+                if (Big)
                 {
-                    collider.GetPolygonShape().DrawLines(AsteroidLineThickness, Colors.PcWarm.ColorRgba);
+
+                    var gapInfo = new GappedOutlineDrawingInfo(6, gapStartOffset, 0.35f);
+                    shape.ScaleSize(1.25f);
+                    perimeter = shape.DrawGappedOutline(AsteroidLineThickness, Colors.PcSpecial.ColorRgba, perimeter, gapInfo);
+                    gapStartOffset += GAMELOOP.Time.Delta * 0.1f;
                 }
-                else collider.GetPolygonShape().DrawLines(AsteroidLineThickness, Colors.PcHighlight.ColorRgba);
+                else
+                {
+                    var gapInfo = new GappedOutlineDrawingInfo(2, gapStartOffset, 0.75f);
+                    shape.ScaleSize(1.5f);
+                    perimeter = shape.DrawGappedOutline(AsteroidLineThickness, Colors.PcSpecial.ColorRgba, perimeter, gapInfo);
+                    gapStartOffset += GAMELOOP.Time.Delta * 0.25f;
+                }
+                
+                
             }
         }
         public override void DrawGameUI(ScreenInfo ui)

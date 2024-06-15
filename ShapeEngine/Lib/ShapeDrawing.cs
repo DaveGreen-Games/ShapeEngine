@@ -33,6 +33,47 @@ public enum LineCapType
     CappedExtended = 3
 }
 
+/// <summary>
+/// Used for DrawGappedOutline functions.
+/// </summary>
+public readonly struct GappedOutlineDrawingInfo
+{
+    public readonly float StartOffset;
+    public readonly int Gaps;
+    public readonly float GapPerimeterPercentage;
+
+    public bool IsValid => Gaps > 0 && GapPerimeterPercentage is < 1f and > 0f;
+    
+    /// <summary>
+    /// </summary>
+    /// <param name="startOffset">Value between 0 and 1 to change where the first part is drawn (useful for animating it).
+    /// The offset value is wrapped between 0 and 1. 1.5 would result in 0.5. -0.2 would result in 0.8.</param>
+    /// <param name="gaps">The count of outline areas that are not drawn. The count of outline areas drawn always equals the count of gaps.</param>
+    /// <param name="gapPerimeterPercentage">How much of the total perimeter should be not drawn. 1 - gapPercentage equals the total amount of perimeter drawn. If 0 normal outline is drawn, if 1 nothing is drawn.</param>
+    public GappedOutlineDrawingInfo(int gaps, float startOffset = 0f, float gapPerimeterPercentage = 0.5f)
+    {
+        
+        StartOffset = ShapeMath.WrapF(startOffset, 0f, 1f);;
+        Gaps = gaps;
+        GapPerimeterPercentage = gapPerimeterPercentage;
+    }
+}
+public readonly struct LineDrawingInfo
+{
+    public readonly float Thickness;
+    public readonly ColorRgba Color;
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="thickness">The line thickness for the outline.</param>
+    /// <param name="color">The color of the outline.</param>
+    public LineDrawingInfo(float thickness, ColorRgba color)
+    {
+        Thickness = thickness;
+        Color = color;
+    }
+}
 
 public static class ShapeDrawing
 {
@@ -50,24 +91,21 @@ public static class ShapeDrawing
     /// <param name="lineThickness">The line thickness for the outline.</param>
     /// <param name="color">The color of the outline.</param>
     /// <param name="perimeter">The total length of the perimeter. If less than 0 the functions calculates this (more expensive).</param>
-    /// <param name="startOffset">Value between 0 and 1 to change where the first part is drawn (useful for animating it).
-    /// The offset value is wrapped between 0 and 1. 1.5 would result in 0.5. -0.2 would result in 0.8.</param>
-    /// <param name="gaps">The count of outline areas that are not drawn. The count of outline areas drawn always equals the count of gaps.</param>
-    /// <param name="gapPercentage">How much of the total perimeter should be not drawn. 1 - gapPercentage equals the total amount of perimeter drawn. If 0 normal outline is drawn, if 1 nothing is drawn.</param>
-    public static float DrawGappedOutline(this Polygon poly, float lineThickness, ColorRgba color, float perimeter, float startOffset, int gaps, float gapPercentage = 0.5f)
+    /// <param name="gapDrawingInfo">Info for how to draw the gaps.</param>
+    public static float DrawGappedOutline(this Polygon poly, float lineThickness, ColorRgba color, float perimeter, GappedOutlineDrawingInfo gapDrawingInfo)
     {
-        if (gaps <= 0 || gapPercentage <= 0f)
+        if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
         {
             poly.DrawLines(lineThickness, color);
             return perimeter > 0f ? perimeter : -1f;
         }
 
-        if (gapPercentage >= 1f) return perimeter > 0f ? perimeter : -1f;
+        if (gapDrawingInfo.GapPerimeterPercentage >= 1f) return perimeter > 0f ? perimeter : -1f;
 
-        var nonGapPercentage = 1f - gapPercentage;
+        var nonGapPercentage = 1f - gapDrawingInfo.GapPerimeterPercentage;
 
-        var gapPercentageRange = gapPercentage / gaps;
-        var nonGapPercentageRange = nonGapPercentage / gaps;
+        var gapPercentageRange = gapDrawingInfo.GapPerimeterPercentage / gapDrawingInfo.Gaps;
+        var nonGapPercentageRange = nonGapPercentage / gapDrawingInfo.Gaps;
 
         if (perimeter <= 0f)
         {
@@ -80,8 +118,7 @@ public static class ShapeDrawing
             }
         }
 
-        startOffset = ShapeMath.WrapF(startOffset, 0f, 1f);
-        var startDistance = perimeter * startOffset;
+        var startDistance = perimeter * gapDrawingInfo.StartOffset;
         var curDistance = 0f;
         var nextDistance = startDistance;
         
@@ -94,7 +131,7 @@ public static class ShapeDrawing
         
         var points = new List<Vector2>(3);
 
-        int whileCounter = gaps;
+        int whileCounter = gapDrawingInfo.Gaps;
         
         while (whileCounter > 0)
         {
@@ -149,7 +186,7 @@ public static class ShapeDrawing
 
         return perimeter;
     }
-
+   
     #endregion
     
     
@@ -1736,3 +1773,114 @@ public static class ShapeDrawing
 
 
     
+    
+    
+     /*
+    /// <summary>
+    /// Draws the polygon outline normal and with gaps specified by the parameters.
+    /// 1 gap with 0.5 gap percentage would result in half of the outline visible and the other not visible.
+    /// </summary>
+    /// <param name="poly">The polygon outline.</param>
+    /// <param name="outline">The polygon base outline info.</param>
+    /// <param name="gappedOutline ">The polygon gapped outline info.</param>
+    /// <param name="perimeter">The total length of the perimeter. If less than 0 the functions calculates this (more expensive).</param>
+    /// <param name="gapDrawingInfo">Info for how to draw the gaps.</param>
+    public static float DrawGappedOutline(this Polygon poly, LineDrawingInfo outline, LineDrawingInfo gappedOutline, float perimeter, GappedOutlineDrawingInfo gapDrawingInfo)
+    {
+        if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
+        {
+            poly.DrawLines(outline.Thickness, outline.Color);
+            return perimeter > 0f ? perimeter : -1f;
+        }
+
+        if (gapDrawingInfo.GapPerimeterPercentage >= 1f) return perimeter > 0f ? perimeter : -1f;
+
+        var nonGapPercentage = 1f - gapDrawingInfo.GapPerimeterPercentage;
+
+        var gapPercentageRange = gapDrawingInfo.GapPerimeterPercentage / gapDrawingInfo.Gaps;
+        var nonGapPercentageRange = nonGapPercentage / gapDrawingInfo.Gaps;
+
+        if (perimeter <= 0f)
+        {
+            for (int i = 0; i < poly.Count; i++)
+            {
+                var curP = poly[i];
+                var nextP = poly[(i + 1) % poly.Count];
+
+                perimeter += (nextP - curP).Length();
+            }
+        }
+
+        var startDistance = perimeter * gapDrawingInfo.StartOffset;
+        var curDistance = 0f;
+        var nextDistance = startDistance;
+        
+        
+        var curIndex = 0;
+        var curPoint = poly[0];
+        var nextPoint= poly[1 % poly.Count];
+        var curW = nextPoint - curPoint;
+        var curDis = curW.Length();
+        
+        var points = new List<Vector2>(3);
+
+        int whileCounter = gapDrawingInfo.Gaps;
+        
+        DrawLine(curPoint, nextPoint, outline.Thickness, outline.Color, LineCapType.CappedExtended, 4);
+        
+        while (whileCounter > 0)
+        {
+            if (curDistance + curDis >= nextDistance)
+            {
+                var p = curPoint + (curW / curDis) * (nextDistance - curDistance);
+                
+                
+                if (points.Count == 0)
+                {
+                    nextDistance += nonGapPercentageRange * perimeter;
+                    points.Add(p);
+
+                }
+                else
+                {
+                    nextDistance += gapPercentageRange * perimeter;
+                    points.Add(p);
+                    if (points.Count == 2)
+                    {
+                        DrawLine(points[0], points[1], gappedOutline.Thickness, gappedOutline.Color, LineCapType.CappedExtended, 4);
+                    }
+                    else
+                    {
+                        for (var i = 0; i < points.Count - 1; i++)
+                        {
+                            var p1 = points[i];
+                            var p2 = points[(i + 1) % points.Count];
+                            DrawLine(p1, p2, gappedOutline.Thickness, gappedOutline.Color, LineCapType.CappedExtended, 4);
+                        }
+                    }
+                    
+                    points.Clear();
+                    whileCounter--;
+                }
+
+            }
+            else
+            {
+                
+                if(points.Count > 0) points.Add(nextPoint);
+                
+                curDistance += curDis;
+                curIndex = (curIndex + 1) % poly.Count;
+                curPoint = poly[curIndex];
+                nextPoint = poly[(curIndex + 1) % poly.Count];
+                curW = nextPoint - curPoint;
+                curDis = curW.Length();
+                
+                DrawLine(curPoint, nextPoint, outline.Thickness, outline.Color, LineCapType.CappedExtended, 4);
+            }
+            
+        }
+
+        return perimeter;
+    }
+    */
