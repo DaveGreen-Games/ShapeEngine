@@ -148,6 +148,13 @@ namespace ShapeEngine.Core.Shapes
         #endregion
         
         #region Transform
+        public static (Vector2 newStart, Vector2 newEnd) ScaleLength(Vector2 start, Vector2 end, float scale, float originF = 0.5f)
+        {
+            var p = start.Lerp(end, originF);
+            var s = start - p;
+            var e = end - p;
+            return new (p + s * scale, p + e * scale);
+        }
         public Segment ScaleLength(float scale, float originF = 0.5f)
         {
             var p = GetPoint(originF);

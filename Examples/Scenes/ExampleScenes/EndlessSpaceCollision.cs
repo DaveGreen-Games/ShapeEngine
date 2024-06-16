@@ -2471,7 +2471,8 @@ public class EndlessSpaceCollision : ExampleScene
     protected override void OnDrawGameExample(ScreenInfo game)
     {
         universe.DrawLines(12f, Colors.Dark);
-        universe.DrawGrid(CollisionRows, 12f, Colors.Dark.SetAlpha(200));
+        var lineInfo = new LineDrawingInfo(12f, Colors.Dark.SetAlpha(200), LineCapType.None, 0);
+        universe.DrawGrid(CollisionRows, lineInfo);
         
         if (drawDebug)
         {
