@@ -13,6 +13,7 @@ public readonly struct Transform2D : IEquatable<Transform2D>
     public readonly Size BaseSize;
     public readonly Size ScaledSize;
     public readonly float Scale;
+    public float RotationDeg => RotationRad * ShapeMath.RADTODEG;
     #endregion
     
     #region Constructors
