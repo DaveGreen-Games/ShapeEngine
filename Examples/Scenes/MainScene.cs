@@ -24,6 +24,7 @@ namespace Examples.Scenes
         private readonly InputActionLabel quitLabel;
         public MainScene()
         {
+            examples.Add(new ShapeDrawingExample());
             examples.Add(new ShapesExample());
             examples.Add(new ProjectedShapesExample());
             examples.Add(new EndlessSpaceCollision());

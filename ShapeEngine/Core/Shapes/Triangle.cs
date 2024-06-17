@@ -669,6 +669,28 @@ namespace ShapeEngine.Core.Shapes
 
         public static float AreaSigned(Vector2 a, Vector2 b, Vector2 c) { return (a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X); }
 
+        public static Triangle GenerateRelative(float minLength, float maxLength)
+        {
+            float angleStep = ShapeMath.PI * 2.0f / 3;
+
+            var a = ShapeVec.Rotate(ShapeVec.Right(), -angleStep * 0) * ShapeRandom.RandF(minLength, maxLength);
+            var b = ShapeVec.Rotate(ShapeVec.Right(), -angleStep * 1) * ShapeRandom.RandF(minLength, maxLength);
+            var c = ShapeVec.Rotate(ShapeVec.Right(), -angleStep * 2) * ShapeRandom.RandF(minLength, maxLength);
+            
+            return new(a, b, c);
+        }
+        
+        public static Triangle Generate(Vector2 center, float minLength, float maxLength)
+        {
+            float angleStep = (ShapeMath.PI * 2.0f) / 3;
+
+            var a = center + ShapeVec.Rotate(ShapeVec.Right(), -angleStep * 0) * ShapeRandom.RandF(minLength, maxLength);
+            var b = center + ShapeVec.Rotate(ShapeVec.Right(), -angleStep * 1) * ShapeRandom.RandF(minLength, maxLength);
+            var c = center + ShapeVec.Rotate(ShapeVec.Right(), -angleStep * 2) * ShapeRandom.RandF(minLength, maxLength);
+            
+            return new(a, b, c);
+        }
+        
 
         #endregion
 
