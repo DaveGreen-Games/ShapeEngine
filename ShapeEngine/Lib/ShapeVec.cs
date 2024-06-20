@@ -134,29 +134,38 @@ namespace ShapeEngine.Lib
         }
         public static Vector2 Lerp(this Vector2 from, Vector2 to, float t) { return Vector2.Lerp(from, to, t); }
 
+        // public static Vector2 LerpPosition(this Vector2 from, Vector2 to, float t) => from + (to - from) * t;
+
         public static Vector2 ExpDecayLerp(this Vector2 from, Vector2 to, float f, float dt)
         {
-            return new Vector2
-            (
-                ShapeMath.ExpDecayLerpFloat(from.X, to.X, f, dt),
-                ShapeMath.ExpDecayLerpFloat(from.Y, to.Y, f, dt)
-            );
+            var decay = ShapeMath.LerpFloat(1, 25, f);
+            var scalar = MathF.Exp(-decay * dt);
+            return from + (to - from) * scalar;
+            // return new Vector2
+            // (
+                // ShapeMath.ExpDecayLerpFloat(from.X, to.X, f, dt),
+                // ShapeMath.ExpDecayLerpFloat(from.Y, to.Y, f, dt)
+            // );
         }
         public static Vector2 ExpDecayLerpComplex(this Vector2 from, Vector2 to, float decay, float dt)
         {
-            return new Vector2
-            (
-                ShapeMath.ExpDecayLerpFloatComplex(from.X, to.X, decay, dt),
-                ShapeMath.ExpDecayLerpFloatComplex(from.Y, to.Y, decay, dt)
-            );
+            var scalar = MathF.Exp(-decay * dt);
+            return from + (to - from) * scalar;
+            // return new Vector2
+            // (
+                // ShapeMath.ExpDecayLerpFloatComplex(from.X, to.X, decay, dt),
+                // ShapeMath.ExpDecayLerpFloatComplex(from.Y, to.Y, decay, dt)
+            // );
         }
         public static Vector2 PowLerp(this Vector2 from, Vector2 to, float remainder, float dt)
         {
-            return new Vector2
-            (
-                ShapeMath.PowLerpFloat(from.X, to.X, remainder, dt),
-                ShapeMath.PowLerpFloat(from.Y, to.Y, remainder, dt)
-            );
+            var scalar = MathF.Pow(remainder, dt);
+            return from + (to - from) * scalar;
+            // return new Vector2
+            // (
+            //     ShapeMath.PowLerpFloat(from.X, to.X, remainder, dt),
+            //     ShapeMath.PowLerpFloat(from.Y, to.Y, remainder, dt)
+            // );
         }
 
         public static Vector2 LerpTowards(this Vector2 from, Vector2 to, float seconds, float dt)
