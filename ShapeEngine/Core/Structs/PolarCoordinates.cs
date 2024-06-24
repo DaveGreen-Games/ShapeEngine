@@ -24,8 +24,18 @@ public readonly struct PolarCoordinates
     }
     public PolarCoordinates(float radius, float angleRad)
     {
-        AngleRad = ShapeMath.WrapAngleRad(angleRad);
-        Radius = radius;
+        if (radius < 0)
+        {
+            //flip it 180° around 
+            Radius = radius * -1;
+            AngleRad = ShapeMath.WrapAngleRad(angleRad + ShapeMath.PI);
+        }
+        else
+        {
+            AngleRad = ShapeMath.WrapAngleRad(angleRad);
+            Radius = radius;
+        }
+        
     }
     
     public PolarCoordinates(Vector2 v)
@@ -46,37 +56,37 @@ public readonly struct PolarCoordinates
 
     public Vector2 ToVector2(Vector2 origin) => origin + ToVector2();
     
-    public PolarCoordinates ChangeAngleRad(float amount) => new(Radius, ShapeMath.WrapAngleRad(AngleRad + amount));
-
-    public PolarCoordinates ChangeAngleDeg(float amount) => new(Radius, ShapeMath.WrapAngleRad(AngleRad + (amount * ShapeMath.DEGTORAD)) );
-
-    public PolarCoordinates ChangeRadius(float amount)
-    {
-        float r = Radius + amount;
-        if (r < 0)
-        {
-            return new(r * -1f, ShapeMath.WrapAngleRad(AngleRad + ShapeMath.PI));
-        }
-        else
-        {
-            return new(r, AngleRad);
-        }
-    }
+    public PolarCoordinates Flip() => new(Radius, AngleRad + ShapeMath.PI);
     
+    public PolarCoordinates ChangeAngleRad(float amount) => new(Radius, AngleRad + amount);
+
+    public PolarCoordinates ChangeAngleDeg(float amount) => new(Radius, AngleRad + (amount * ShapeMath.DEGTORAD) );
+
+    public PolarCoordinates ChangeRadius(float amount) => new(Radius + amount, AngleRad);
+
+    public PolarCoordinates ScaleRadius(float factor) => new(Radius * factor, AngleRad);
+
     public PolarCoordinates SetAngleRad(float newAngle)  => new(Radius, ShapeMath.WrapAngleRad(newAngle));
 
     public PolarCoordinates SetAngleDeg(float newAngle) => new(Radius, ShapeMath.WrapAngleRad(newAngle * ShapeMath.DEGTORAD) );
+    public PolarCoordinates SetRadius(float newRadius) => new(newRadius, AngleRad);
 
-    public PolarCoordinates SetRadius(float newRadius)
+    /// <summary>
+    ///Transform the target position to polar coordinates useful for minimap / radar.
+    /// </summary>
+    /// <param name="origin">The origin of the radar.</param>
+    /// <param name="target">The target location.</param>
+    /// <param name="maxRange">The max range of the radar.</param>
+    /// <returns>Returns relative polar coordinates for the target.
+    /// The radius is in 0 - 1 range if target is within max range. </returns>
+    public PolarCoordinates Radar(Vector2 origin, Vector2 target, float maxRange)
     {
-        if (newRadius < 0)
-        {
-            return new(newRadius * -1f, ShapeMath.WrapAngleRad(AngleRad + ShapeMath.PI));
-        }
-        else
-        {
-            return new(newRadius, AngleRad);
-        }
+        if (maxRange <= 0) return new();
+        
+        var w = target - origin;
+        var pc = w.ToPolarCoordinates();
+        float f = pc.Radius / maxRange;
+        return pc.SetRadius(f);
     }
     #endregion
     
