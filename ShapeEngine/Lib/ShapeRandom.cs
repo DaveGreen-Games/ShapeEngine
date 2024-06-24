@@ -5,8 +5,6 @@ using ShapeEngine.Random;
 
 namespace ShapeEngine.Lib
 {
-    
-
     public static class ShapeRandom
     {
         //private static Random rand = new Random();
