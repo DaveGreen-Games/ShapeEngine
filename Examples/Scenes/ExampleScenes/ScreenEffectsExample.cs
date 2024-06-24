@@ -84,6 +84,7 @@ namespace Examples.Scenes.ExampleScenes
     
     internal class Slider
     {
+        public int TextValueMax = 100;
         public float CurValue { get; private set; } = 0f;
         public string Title { get; set; } = "";
         private Rect background = new();
@@ -122,7 +123,7 @@ namespace Examples.Scenes.ExampleScenes
             background.DrawRounded(4f, 4, Colors.Dark);
             fill.DrawRounded(4f, 4, Colors.Medium);
             
-            int textValue = (int)(CurValue * 100);
+            int textValue = (int)(CurValue * TextValueMax);
             font.ColorRgba = mouseInside ? Colors.Highlight: Colors.Special;
             font.DrawTextWrapNone($"{Title} {textValue}", background, new Vector2(0.1f, 0.5f));
             // font.DrawText(, background, 1f, new Vector2(0.1f, 0.5f), mouseInside ? ExampleScene.ColorHighlight2 : ExampleScene.ColorHighlight3);

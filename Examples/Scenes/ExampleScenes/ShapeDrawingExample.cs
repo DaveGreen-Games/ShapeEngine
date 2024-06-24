@@ -38,14 +38,21 @@ public class ShapeDrawingExample : ExampleScene
     private float curSideScalingOriginFactor = 0.5f;
     
     private float curStartOffset = 0f;
+    private const int MaxGaps = 30;
     private int curGaps = 4;
     private float curGapPerimeterPercentage = 0.5f;
+    
+    private readonly Slider sideScalingFactorSlider; // 0 - 1
+    private readonly Slider sideScalingOriginFactorSlider; // 0 - 1
+    private readonly Slider startOffsetSlider; // 0 - 1
+    private readonly Slider gapsSlider; // 1 - 100
+    private readonly Slider gapPerimeterPercentageSlider; // 0 - 1
     
     public ShapeDrawingExample()
     {
         Title = "Shape Drawing Example";
 
-        var nextStaticShapeMb = new InputTypeMouseButton(ShapeMouseButton.LEFT);
+        var nextStaticShapeMb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
         var nextStaticShapeGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
         var nextStaticShapeKb = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
         nextShape = new(nextStaticShapeMb, nextStaticShapeGp, nextStaticShapeKb);
@@ -72,7 +79,24 @@ public class ShapeDrawingExample : ExampleScene
         poly = Polygon.Generate(center, 16, radius / 2, radius);
         polyline = Polygon.Generate(center, 16, radius / 2, radius).ToPolyline();
 
+        var font = GAMELOOP.GetFont(FontIDs.JetBrains);
+        sideScalingFactorSlider = new(0.5f, "Scaling", font);
+        sideScalingOriginFactorSlider = new(0.5f, "Origin", font);
+        
+        startOffsetSlider = new(0f, "Offset", font);
+        gapsSlider = new(4f / MaxGaps, "Gaps", font);
+        gapsSlider.TextValueMax = MaxGaps;
+        gapPerimeterPercentageSlider = new(0.5f, "Perimeter", font);
 
+    }
+    private void ActualizeSliderValues()
+    {
+        curSideScalingFactor = sideScalingFactorSlider.CurValue;
+        curSideScalingOriginFactor = sideScalingOriginFactorSlider.CurValue;
+    
+        curStartOffset = startOffsetSlider.CurValue;
+        curGaps = (int)(gapsSlider.CurValue * MaxGaps);
+        curGapPerimeterPercentage = gapPerimeterPercentageSlider.CurValue;
     }
     public override void Reset()
     {
@@ -80,12 +104,41 @@ public class ShapeDrawingExample : ExampleScene
         gappedMode = true;
         
         curSideScalingFactor = 0.5f;
+        sideScalingFactorSlider.SetValue(0.5f);
+        
         curSideScalingOriginFactor = 0.5f;
+        sideScalingOriginFactorSlider.SetValue(0.5f);
     
         curStartOffset = 0f;
+        startOffsetSlider.SetValue(0f);
+        
         curGaps = 4;
+        gapsSlider.SetValue(4f / MaxGaps);
+        
         curGapPerimeterPercentage = 0.5f;
+        gapPerimeterPercentageSlider.SetValue(0.5f);
+        
     }
+
+    protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
+    {
+        var sliderBox = ui.Area.ApplyMargins(0.01f, 0.01f, 0.82f, 0.12f);
+        var sliderRects = sliderBox.SplitH(3);
+        if (!gappedMode)
+        {
+            sideScalingFactorSlider.Update(time.Delta, sliderRects[0].ApplyMargins(0f, 0.05f, 0f, 0f), ui.MousePos);
+            sideScalingOriginFactorSlider.Update(time.Delta, sliderRects[1].ApplyMargins(0.05f, 0f, 0f, 0f), ui.MousePos);
+        }
+        else
+        {
+            startOffsetSlider.Update(time.Delta, sliderRects[0].ApplyMargins(0f, 0.05f, 0f, 0f), ui.MousePos);
+            gapsSlider.Update(time.Delta, sliderRects[1].ApplyMargins(0.025f, 0.025f, 0f, 0f), ui.MousePos);
+            gapPerimeterPercentageSlider.Update(time.Delta, sliderRects[2].ApplyMargins(0.05f, 0f, 0f, 0f), ui.MousePos);
+        }
+        
+        ActualizeSliderValues();
+    }
+
     protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
     {
         base.HandleInput(dt, mousePosGame, mousePosUI);
@@ -194,10 +247,21 @@ public class ShapeDrawingExample : ExampleScene
     }
     protected override void OnDrawGameUIExample(ScreenInfo ui)
     {
-        
+        if (!gappedMode)
+        {
+            sideScalingFactorSlider.Draw();
+            sideScalingOriginFactorSlider.Draw();
+        }
+        else
+        {
+            startOffsetSlider.Draw();
+            gapsSlider.Draw();
+            gapPerimeterPercentageSlider.Draw();
+        }
     }
     protected override void OnDrawUIExample(ScreenInfo ui)
     {
+        
         var curDevice = ShapeInput.CurrentInputDeviceType;
         var nextShapeText = nextShape. GetInputTypeDescription( curDevice, true, 1, false); 
         var changeDrawingModeText = changeDrawingMode. GetInputTypeDescription( curDevice, true, 1, false); 
@@ -215,6 +279,7 @@ public class ShapeDrawingExample : ExampleScene
         
         textFont.ColorRgba = Colors.Highlight;
         textFont.DrawTextWrapNone(textStatic, bottomCenter.ApplyMarginsAbsolute(margin, margin, margin, margin), new(0.5f, 0.5f));
+        
         
     }
     private string GetCurShapeName()

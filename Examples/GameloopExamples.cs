@@ -90,18 +90,16 @@ namespace Examples
 
         public void DrawGameUI(ScreenInfo ui)
         {
-            // Vector2 center = ui.MousePos;
-            // float size = ui.Area.Size.Min() * 0.02f;
-            // Vector2 a = center;
-            // Vector2 b = center + new Vector2(0, size);
-            // Vector2 c = center + new Vector2(size, size);
-            // Triangle cursor = new(a, b, c);
-            // cursor.Draw(ExampleScene.ColorHighlight2);
-            // cursor.DrawLines(1f, ExampleScene.ColorHighlight1);
+            
             float size = ui.Area.Size.Min() * 0.02f;
             SimpleCursorUI.DrawRoundedCursor(ui.MousePos, size, Colors.Warm);
         }
-        public void DrawUI(ScreenInfo ui){}
+
+        public void DrawUI(ScreenInfo ui)
+        {
+            // float size = ui.Area.Size.Min() * 0.02f;
+            // SimpleCursorUI.DrawRoundedCursor(ui.MousePos, size, Colors.Warm);
+        }
         public void Update(float dt, ScreenInfo ui)
         {
             
