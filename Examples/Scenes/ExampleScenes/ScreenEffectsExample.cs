@@ -4,12 +4,14 @@ using ShapeEngine.Lib;
 using ShapeEngine.Random;
 using ShapeEngine.Screen;
 using System.Numerics;
+using System.Security.Cryptography;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
 using ShapeEngine.Text;
+using ShapeEngine.UI;
 using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes
@@ -81,6 +83,124 @@ namespace Examples.Scenes.ExampleScenes
         }
     }
 
+    internal class ControlNodeSlider : ControlNode
+    {
+        public event Action<float, float>? OnValueChanged;
+        
+        public bool Horizontal;
+        
+        //TODO: changes to min max need to change cur value as well if out of bounds!!!
+        public float MinValue;
+        public float MaxValue;
+        public float CurValue => ShapeMath.LerpFloat(MinValue, MaxValue, CurF);
+        public float CurF { get; private set; } = 0f;
+        public Rect Fill { get; private set; }
+
+        public ControlNodeSlider()
+        {
+            MinValue = 0;
+            MaxValue = 100;
+            Horizontal = true;
+            SetCurValue(0);
+            Fill = Rect;
+        }
+        public ControlNodeSlider(bool horizontal)
+        {
+            MinValue = 0;
+            MaxValue = 100;
+            Horizontal = horizontal;
+            SetCurValue(0);
+            Fill = Rect;
+        }
+        public ControlNodeSlider(float maxValue, bool horizontal = true)
+        {
+            MinValue = 0;
+            MaxValue = maxValue;
+            Horizontal = horizontal;
+            SetCurValue(0);
+            Fill = Rect;
+        }
+        public ControlNodeSlider(float minValue, float maxValue, bool horizontal = true)
+        {
+            MinValue = minValue;
+            MaxValue = maxValue;
+            Horizontal = horizontal;
+            SetCurValue(minValue);
+            Fill = Rect;
+        }
+        public ControlNodeSlider(float startValue, float minValue, float maxValue, bool horizontal = true)
+        {
+            MinValue = minValue;
+            MaxValue = maxValue;
+            Horizontal = horizontal;
+            SetCurValue(startValue);
+            Fill = Rect;
+        }
+
+        
+        public bool SetCurF(float f)
+        {
+            if (!Active) return false;
+            var prevF = CurF;
+            var newF = ShapeMath.Clamp(f, 0f, 1f);
+            
+            if (Math.Abs(prevF - newF) > 0.0001f)
+            {
+                ResolveValueChange(prevF, newF);
+            }
+
+            CurF = newF;
+            return true;
+        }
+        public bool SetCurValue(float value)
+        {
+            if (!Active) return false;
+            var f = ShapeMath.LerpInverseFloat(MinValue, MaxValue, value);
+            return SetCurF(f);
+        }
+
+        public bool ChangeValue(float amount)
+        {
+            if (!Active) return false;
+
+            var v = ShapeMath.Clamp(CurValue + amount, MinValue, MaxValue);
+            SetCurValue(v);
+            
+            return true;
+        }
+        
+        
+        protected override void OnUpdate(float dt, Vector2 mousePos, bool mousePosValid)
+        {
+            HandleFill(mousePos);
+        }
+
+        protected virtual void HandleFill(Vector2 mousePos)
+        {
+            if (!Active) return;
+            if (MouseInside)
+            {
+                if (Pressed)
+                {
+                    float f = Horizontal ? Rect.GetWidthPointFactor(mousePos.X) : Rect.GetHeightPointFactor(mousePos.Y);
+                    CurF = f;
+                }
+            }
+            Fill = Rect.SetSize(Rect.Size * GetSizeFactor());
+        }
+
+        protected virtual void ValueHasChanged(float prevValue, float curValue) { }
+
+        private void ResolveValueChange(float prevValue, float curValue)
+        {
+            ValueHasChanged(prevValue, curValue);
+            OnValueChanged?.Invoke(prevValue, curValue);
+        }
+        
+        private Vector2 GetSizeFactor() => Horizontal ? new Vector2(CurF, 1f) : new Vector2(1f, CurF);
+    }
+    
+    
     
     internal class Slider
     {
