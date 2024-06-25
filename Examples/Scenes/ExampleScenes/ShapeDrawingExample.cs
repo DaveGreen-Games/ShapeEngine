@@ -1,13 +1,8 @@
-using System.Diagnostics;
 using System.Numerics;
-using ShapeEngine.Color;
-using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
 using ShapeEngine.Lib;
-using ShapeEngine.Text;
-using Color = System.Drawing.Color;
 namespace Examples.Scenes.ExampleScenes;
 
 
