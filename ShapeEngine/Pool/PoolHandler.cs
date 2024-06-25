@@ -3,38 +3,39 @@ namespace ShapeEngine.Pool
 {
     public class PoolHandler
     {
-        private Dictionary<string, IPool> pools = new();
+        private Dictionary<uint, IPool> pools = new();
 
-        public bool ContainsPool(string poolName) { return pools.ContainsKey(poolName); }
+        public bool ContainsPool(uint poolId) { return pools.ContainsKey(poolId); }
 
-        public void AddPool(string name, IPool pool)
+        public void AddPool(IPool pool)
         {
-            if (ContainsPool(name))
+            var id = pool.GetId();
+            if (ContainsPool(id))
             {
-                pools[name].Clear();
-                pools[name] = pool;
+                pools[id].Clear();
+                pools[id] = pool;
             }
-            else pools.Add(name, pool);
+            else pools.Add(id, pool);
         }
-        public void AddPools(params (string name, IPool pool)[] pools)
+        public void AddPools(params IPool[] pools)
         {
             foreach (var pool in pools)
             {
-                AddPool(pool.name, pool.pool);
+                AddPool(pool);
             }
         }
 
-        public void RemovePool(string name)
+        public void RemovePool(uint id)
         {
-            if (!ContainsPool(name)) return;
-            pools[name].Clear();
-            pools.Remove(name);
+            if (!ContainsPool(id)) return;
+            pools[id].Clear();
+            pools.Remove(id);
         }
-        public void RemovePools(params string[] names)
+        public void RemovePools(params uint[] ids)
         {
-            foreach (var name in names)
+            foreach (var id in ids)
             {
-                RemovePool(name);
+                RemovePool(id);
             }
         }
         public void RemoveAllPools()
@@ -43,23 +44,23 @@ namespace ShapeEngine.Pool
             pools.Clear();
         }
 
-        public IPool? GetPool(string name)
+        public IPool? GetPool(uint id)
         {
-            if (!ContainsPool(name)) return null;
-            return pools[name];
+            if (!ContainsPool(id)) return null;
+            return pools[id];
         }
-        public T? GetPool<T>(string name) where T : IPool
+        public T? GetPool<T>(uint id) where T : IPool
         {
-            if (!ContainsPool(name)) return default(T);
-            var pool = pools[name];
+            if (!ContainsPool(id)) return default(T);
+            var pool = pools[id];
             if (pool is T) return (T)pool;
             else return default(T);
         }
 
-        public void ClearPool(string name)
+        public void ClearPool(uint id)
         {
-            if (!ContainsPool(name)) return;
-            pools[name].Clear();
+            if (!ContainsPool(id)) return;
+            pools[id].Clear();
         }
         public void ClearAllPools()
         {
@@ -69,10 +70,10 @@ namespace ShapeEngine.Pool
             }
         }
 
-        public T? GetInstance<T>(string poolName) where T : IPoolable
+        public T? GetInstance<T>(uint id) where T : IPoolable
         {
-            if (!ContainsPool(poolName)) return default(T);
-            return pools[poolName].GetInstance<T>();
+            if (!ContainsPool(id)) return default(T);
+            return pools[id].GetInstance<T>();
         }
 
 

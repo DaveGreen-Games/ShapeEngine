@@ -1,17 +1,18 @@
 ﻿
 
+using ShapeEngine.Lib;
+
 namespace ShapeEngine.Pool
 {
-
     public interface IPoolable
     {
         public event Action<IPoolable>? OnInstanceFinished;
         public void ReturnToPool();
         public void RemoveFromPool();
     }
-
     public interface IPool
     {
+        public uint GetId();
         public void Clear();
         public bool HasUsableInstances(); 
         public bool HasInstances();
@@ -25,11 +26,15 @@ namespace ShapeEngine.Pool
 
     public class Pool : IPool
     {
+        private static IdCounter IdCounter = new();
+        
         private int count = 0;
         private int maxSize = -1;
-        private List<IPoolable> usable = new();
-        private List<IPoolable> inUse = new();
-        private Func<IPoolable> createInstance;
+        private readonly List<IPoolable> usable = new();
+        private readonly List<IPoolable> inUse = new();
+        private readonly Func<IPoolable> createInstance;
+
+        private uint id;
 
         public Pool(int startSize, Func<IPoolable> createInstance, int maxSize = -1)
         {
@@ -43,7 +48,11 @@ namespace ShapeEngine.Pool
                 instance.OnInstanceFinished += OnInstanceFinished;
                 usable.Add(instance);
             }
+
+            this.id = IdCounter.NextId;
         }
+
+        public uint GetId() => id;
 
         public void Clear()
         {
@@ -74,7 +83,7 @@ namespace ShapeEngine.Pool
                     usable.Add(newInstance);
                     count++;
                 }
-                else //reuse instance from inuse stack
+                else //reuse instance from in-use stack
                 {
                     var oldest = PopBack(inUse);
                     oldest.ReturnToPool();

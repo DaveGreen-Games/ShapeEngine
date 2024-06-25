@@ -3,10 +3,15 @@ namespace ShapeEngine.Lib
 {
     public static class ShapeID
     {
-        private static uint idCounter = 10;
+        private static IdCounter counter = new();
+        public static uint InvalidId => IdCounter.InvalidId;
+        public static uint NextID => counter.NextId;
+    }
 
-        //public static uint NextID() { return idCounter++; }
-        public static readonly uint INVALID_ID = 0;
-        public static uint NextID { get { return idCounter++; } }
+    public class IdCounter
+    {
+        public static readonly uint InvalidId = 0;
+        private uint count = 10;
+        public uint NextId => count++;
     }
 }
