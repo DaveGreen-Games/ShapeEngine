@@ -88,12 +88,22 @@ namespace Examples.Scenes.ExampleScenes
         public event Action<float, float>? OnValueChanged;
         
         public bool Horizontal;
-        
-        //TODO: changes to min max need to change cur value as well if out of bounds!!!
         public float MinValue;
         public float MaxValue;
+        
         public float CurValue => ShapeMath.LerpFloat(MinValue, MaxValue, CurF);
         public float CurF { get; private set; } = 0f;
+        
+        /// <summary>
+        /// How much to increase/decrease CurF if Decreased/Increased input is pressed
+        /// </summary>
+        public float StepF = 0.1f;
+
+        /// <summary>
+        /// Snap value for changing the value of the slider via mouse. <= 0 means disabled.
+        /// </summary>
+        public float MouseSnapF = 0f;
+        
         public Rect Fill { get; private set; }
 
         public ControlNodeSlider()
@@ -169,9 +179,16 @@ namespace Examples.Scenes.ExampleScenes
             return true;
         }
         
-        
+        protected virtual bool GetDecreaseValuePressed() => false;
+        protected virtual bool GetIncreaseValuePressed() => false;
         protected override void OnUpdate(float dt, Vector2 mousePos, bool mousePosValid)
         {
+            if (StepF > 0)
+            {
+                if (GetDecreaseValuePressed()) SetCurF(CurF - StepF);
+                else if (GetIncreaseValuePressed()) SetCurF(CurF + StepF);
+            }
+            
             HandleFill(mousePos);
         }
 
@@ -183,7 +200,19 @@ namespace Examples.Scenes.ExampleScenes
                 if (Pressed)
                 {
                     float f = Horizontal ? Rect.GetWidthPointFactor(mousePos.X) : Rect.GetHeightPointFactor(mousePos.Y);
-                    CurF = f;
+                    if (MouseSnapF > 0)
+                    {
+                        var snap = (f % MouseSnapF);
+                        if (snap / 2 > MouseSnapF) //snap to next bigger value
+                        {
+                            f = (f - snap) + MouseSnapF;
+                        }
+                        else //snap to lower value
+                        {
+                            f -= snap;
+                        }
+                    }
+                    SetCurF(f);
                 }
             }
             Fill = Rect.SetSize(Rect.Size * GetSizeFactor());
