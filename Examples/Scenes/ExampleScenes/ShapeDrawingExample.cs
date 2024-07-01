@@ -79,6 +79,7 @@ public class ShapeDrawingExample : ExampleScene
     private int shapeIndex = 0;
     private const int MaxShapes = 6;
 
+    private Segment segment;
     private Circle circle;
     private Triangle triangle;
     private Rect rect;
@@ -129,6 +130,7 @@ public class ShapeDrawingExample : ExampleScene
         float radius = size / 2;
         var center = new Vector2();
 
+        segment = new(center, size, ShapeRandom.RandAngleRad(), 0.5f, false);
         circle = new(center, radius);
         triangle = Triangle.Generate(center, size / 2, size);
         rect = new Rect(center, new Size(size, size), new Vector2(0.5f, 0.5f));
@@ -237,7 +239,20 @@ public class ShapeDrawingExample : ExampleScene
         
         var curGappedOutlineInfo = new GappedOutlineDrawingInfo(curGaps, curStartOffset, curGapPerimeterPercentage);
 
-        if (shapeIndex == 0) // Circle
+        if (shapeIndex == 0) // Segment
+        {
+            
+            segment.Draw(lineInfoOutline);
+            if (gappedMode)
+            {
+                // ShapeDrawing.DrawGappedOutline(segment.Start, segment.End, -1f, lineInfo, curGappedOutlineInfo);
+            }
+            else
+            {
+                segment.DrawScaled(lineInfo, curSideScalingFactor, curSideScalingOriginFactor);
+            }
+        }
+        else if (shapeIndex == 1) // Circle
         {
             circle.DrawLines(lineInfoOutline, curCircleSides);
             if (gappedMode)
@@ -249,7 +264,7 @@ public class ShapeDrawingExample : ExampleScene
                 circle.DrawLinesScaled(lineInfo, 0f, curCircleSides, curSideScalingFactor, curSideScalingOriginFactor);
             }
         }
-        else if (shapeIndex == 1) // Triangle
+        else if (shapeIndex == 2) // Triangle
         {
             triangle.DrawLines(lineInfoOutline);
             if (gappedMode)
@@ -261,7 +276,7 @@ public class ShapeDrawingExample : ExampleScene
                 triangle.DrawLinesScaled(lineInfo, 0f, new(), curSideScalingFactor, curSideScalingOriginFactor);
             }
         }
-        else if (shapeIndex == 2) // Rect
+        else if (shapeIndex == 3) // Rect
         {
             rect.DrawLines(lineInfoOutline);
             if (gappedMode)
@@ -273,7 +288,7 @@ public class ShapeDrawingExample : ExampleScene
                 rect.DrawLinesScaled(lineInfo, 0f, new(), curSideScalingFactor, curSideScalingOriginFactor);
             }
         }
-        else if (shapeIndex == 3) // Quad
+        else if (shapeIndex == 4) // Quad
         {
             quad.DrawLines(lineInfoOutline);
             if (gappedMode)
@@ -285,7 +300,7 @@ public class ShapeDrawingExample : ExampleScene
                 quad.DrawLinesScaled(lineInfo, 0f, new(), curSideScalingFactor, curSideScalingOriginFactor);
             }
         }
-        else if (shapeIndex == 4) // Polygon
+        else if (shapeIndex == 5) // Polygon
         {
             poly.DrawLines(lineInfoOutline);
             if (gappedMode)
@@ -351,12 +366,13 @@ public class ShapeDrawingExample : ExampleScene
     }
     private string GetCurShapeName()
     {
-        if (shapeIndex == 0) return "Circle";
-        else if (shapeIndex == 1) return "Triangle";
-        else if (shapeIndex == 2) return "Rect";
-        else if (shapeIndex == 3) return "Quad";
-        else if (shapeIndex == 4) return "Polygon";
-        else return "Polyline";
+        if (shapeIndex == 0) return "Segment";
+        if (shapeIndex == 1) return "Circle";
+        if (shapeIndex == 2) return "Triangle";
+        if (shapeIndex == 3) return "Rect";
+        if (shapeIndex == 4) return "Quad";
+        if (shapeIndex == 5) return "Polygon";
+        return "Polyline";
     }
    
 }

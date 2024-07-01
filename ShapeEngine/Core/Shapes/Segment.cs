@@ -40,6 +40,14 @@ namespace ShapeEngine.Core.Shapes
             this.Normal = GetNormal(Start, End, flippedNormal);
             // this.flippedNormals = flippedNormals;
         }
+
+        public Segment(Vector2 origin, float length, float rotRad, float originOffset = 0.5f, bool flippedNormal = false)
+        {
+            var dir = ShapeVec.VecFromAngleRad(rotRad);
+            this.Start = origin - dir * originOffset * length;
+            this.End = origin + dir * (1f - originOffset) * length;
+            this.Normal = GetNormal(Start, End, flippedNormal);
+        }
         #endregion
 
         #region Math

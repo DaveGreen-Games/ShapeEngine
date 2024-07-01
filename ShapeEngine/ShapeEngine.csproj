@@ -10,7 +10,7 @@
 	<Title>Shape Engine</Title>
 	<Authors>Dave Green</Authors>
 	<RepositoryUrl>https://github.com/DaveGreen-Games/ShapeEngine</RepositoryUrl>
-	<Version>1.1.1</Version>
+	<Version>1.1.0</Version>
 	<Description>My custom made 2d game engine based on the great Raylib Framework. Main focus is being performant and only using draw functions instead of textures. Custom input, audio, savegame, collision, shape, pathfinding, ui, camera, color palette, polygon fracturing, and text system are available with a few other nice things!</Description>
 	<PackageProjectUrl>https://davegreengames.itch.io/shape-engine</PackageProjectUrl>
 	<PackageIcon>shapeengine-nuget-icon-128px.png</PackageIcon>

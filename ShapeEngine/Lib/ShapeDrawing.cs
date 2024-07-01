@@ -11,9 +11,98 @@ namespace ShapeEngine.Lib;
 public static class ShapeDrawing
 {
     
-    
     #region Gapped
+    public static float DrawGapped(Vector2 start, Vector2 end, float length, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
+    {
+        if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
+        {
+            DrawLine(start, end, lineInfo);
+            return length > 0f ? length : -1f;
+        }
 
+        if (gapDrawingInfo.GapPerimeterPercentage >= 1f) return length > 0f ? length : -1f;
+
+        var nonGapPercentage = 1f - gapDrawingInfo.GapPerimeterPercentage;
+
+        var gapPercentageRange = gapDrawingInfo.GapPerimeterPercentage / gapDrawingInfo.Gaps;
+        var nonGapPercentageRange = nonGapPercentage / gapDrawingInfo.Gaps;
+
+        var curPoint = start;
+        var nextPoint = end;
+        var curW = nextPoint - curPoint;
+        
+        if (length <= 0f)
+        {
+            length = curW.Length();
+            if (length <= 0f) return 0f;
+        }
+        var curDis = length;
+
+        var startDistance = length * gapDrawingInfo.StartOffset;
+        var curDistance = 0f;
+        var nextDistance = startDistance;
+        
+        var points = new List<Vector2>(3);
+
+        int whileCounter = gapDrawingInfo.Gaps;
+        
+        while (whileCounter > 0)
+        {
+            if (curDistance + curDis >= nextDistance)
+            {
+                var p = curPoint + (curW / curDis) * (nextDistance - curDistance);
+                
+                
+                if (points.Count == 0)
+                {
+                    nextDistance += nonGapPercentageRange * length;
+                    points.Add(p);
+
+                }
+                else
+                {
+                    nextDistance += gapPercentageRange * length;
+                    points.Add(p);
+                    if (points.Count == 2)
+                    {
+                        DrawLine(points[0], points[1], lineInfo);
+                    }
+                    else
+                    {
+                        for (var i = 0; i < points.Count - 1; i++)
+                        {
+                            var p1 = points[i];
+                            var p2 = points[(i + 1) % points.Count];
+                            DrawLine(p1, p2, lineInfo);
+                        }
+                    }
+                    
+                    points.Clear();
+                    whileCounter--;
+                }
+
+            }
+            else
+            {
+                
+                if(points.Count > 0) points.Add(nextPoint);
+                
+                curDistance += curDis;
+                // curIndex = (curIndex + 1) % poly.Count;
+                // curPoint = poly[curIndex];
+                // nextPoint = poly[(curIndex + 1) % poly.Count];
+                // curW = nextPoint - curPoint;
+                curDis = curW.Length();
+            }
+            
+        }
+
+        return length;
+    }
+    
+    
+    
+    
     /// <summary>
     /// Draws an outline that is interrupted by gaps specified by the parameters.
     /// 1 gap with 0.5 gap percentage would result in half of the outline visible and the other not visible.
@@ -128,7 +217,6 @@ public static class ShapeDrawing
     
     //Polyline
     #endregion
-    
     
     #region Custom Line Drawing
     public static void DrawLine(Vector2 start, Vector2 end, float thickness, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0)
@@ -316,6 +404,18 @@ public static class ShapeDrawing
     public static void Draw(this Segment segment, LineDrawingInfo lineInfo) 
         => DrawLine(segment.Start, segment.End, lineInfo);
     
+    public static void Draw(this Segment segment, float originF, float angleRad, LineDrawingInfo lineInfo)
+    {
+        if (angleRad != 0f)
+        {
+            segment.ChangeRotation(angleRad, originF).Draw(lineInfo);
+            return;
+
+        }
+        
+        DrawLine(segment.Start, segment.End, lineInfo);
+    }
+
     public static void Draw(this Segments segments, LineDrawingInfo lineInfo)
     {
         if (segments.Count <= 0) return;
@@ -437,6 +537,95 @@ public static class ShapeDrawing
         return result;
     }
     
+    public static void DrawLineGlow(Vector2 start, Vector2 end, float width, float endWidth, ColorRgba color, ColorRgba endColorRgba, int steps, LineCapType capType = LineCapType.None, int capPoints = 0)
+    {
+        float wStep = (endWidth - width) / steps;
+
+        int rStep = (endColorRgba.R - color.R) / steps;
+        int gStep = (endColorRgba.G - color.G) / steps;
+        int bStep = (endColorRgba.B - color.B) / steps;
+        int aStep = (endColorRgba.A - color.A) / steps;
+
+        for (int i = steps; i >= 0; i--)
+        {
+            DrawLine
+            (
+                start, end, width + wStep * i,
+                new
+                (
+                    color.R + rStep * i,
+                    color.G + gStep * i,
+                    color.B + bStep * i,
+                    color.A + aStep * i
+                ),
+                capType,
+                capPoints
+            );
+        }
+    }
+    public static void DrawGlow(this Segment segment, float width, float endWidth, ColorRgba color, ColorRgba endColorRgba, int steps, LineCapType capType = LineCapType.None, int capPoints = 0)
+    {
+        DrawLineGlow(segment.Start, segment.End, width, endWidth, color, endColorRgba, steps, capType, capPoints);
+    }
+    public static void DrawGlow(this Segments segments, float width, float endWidth, ColorRgba color, ColorRgba endColorRgba, int steps, LineCapType capType = LineCapType.None, int capPoints = 0)
+    {
+        foreach (var seg in segments)
+        {
+            seg.DrawGlow(width, endWidth, color, endColorRgba, steps, capType, capPoints);
+        }
+    }
+
+    
+     
+    /// <summary>
+    /// Draws a segment scaled towards the origin.
+    /// </summary>
+    /// <param name="s">The segment to draw.</param>
+    /// <param name="lineInfo">How to draw the lines.</param>
+    /// <param name="sideScaleFactor">The scale factor for each side. 0f means no triangle is drawn, 1f means normal triangle is drawn,
+    /// 0.5 means each side is half as long.</param>
+    /// <param name="sideScaleOrigin">The point along the line to scale from in both directions.</param>
+    public static void DrawScaled(this Segment s, LineDrawingInfo lineInfo, float sideScaleFactor, float sideScaleOrigin = 0.5f)
+    {
+        if (sideScaleFactor <= 0) return;
+        if (sideScaleFactor >= 1)
+        {
+            s.Draw(lineInfo);
+            return;
+        }
+        
+        DrawLine(s.Start, s.End, lineInfo, sideScaleFactor, sideScaleOrigin);
+    }
+    /// <summary>
+    /// Draws a segment scaled towards the origin.
+    /// </summary>
+    /// <param name="s">The segment to draw.</param>
+    /// <param name="angleRad">The rotation of the segment.</param>
+    /// <param name="originF">Point to rotate the segment around. Value between 0 - 1. (0 = Start, 1 = End)</param>
+    /// <param name="lineInfo">How to draw the lines.</param>
+    /// <param name="sideScaleFactor">The scale factor for each side. 0f means no triangle is drawn, 1f means normal triangle is drawn,
+    /// 0.5 means each side is half as long.</param>
+    /// <param name="sideScaleOrigin">The point along the line to scale from in both directions.</param>
+    public static void DrawScaled(this Segment s, float originF, float angleRad, LineDrawingInfo lineInfo, float sideScaleFactor, float sideScaleOrigin = 0.5f)
+    {
+        if (sideScaleFactor <= 0) return;
+        if (sideScaleFactor >= 1)
+        {
+            s.Draw(originF, angleRad, lineInfo);
+            return;
+        }
+        
+        if(angleRad == 0f) DrawLine(s.Start, s.End, lineInfo, sideScaleFactor, sideScaleOrigin);
+        else
+        {
+            var origin = s.GetPoint(originF);
+            var rStart = origin +  (s.Start - origin).Rotate(angleRad);
+            var rEnd = origin + (s.End - origin).Rotate(angleRad);
+            DrawLine(rStart, rEnd, lineInfo, sideScaleFactor, sideScaleOrigin);
+        }
+    }
+
+    
     public static void DrawLineDotted(Vector2 start, Vector2 end, int gaps, float lineThickness, ColorRgba color, LineCapType capType, int capPoints)
     {
         if (gaps <= 0) DrawLine(start, end, lineThickness, color, capType, capPoints);
@@ -508,32 +697,7 @@ public static class ShapeDrawing
     {
         DrawLineDotted(start, end, gaps, gapSizeF, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
     }
-    public static void DrawLineGlow(Vector2 start, Vector2 end, float width, float endWidth, ColorRgba color, ColorRgba endColorRgba, int steps, LineCapType capType = LineCapType.None, int capPoints = 0)
-    {
-        float wStep = (endWidth - width) / steps;
-
-        int rStep = (endColorRgba.R - color.R) / steps;
-        int gStep = (endColorRgba.G - color.G) / steps;
-        int bStep = (endColorRgba.B - color.B) / steps;
-        int aStep = (endColorRgba.A - color.A) / steps;
-
-        for (int i = steps; i >= 0; i--)
-        {
-            DrawLine
-            (
-                start, end, width + wStep * i,
-                new
-                (
-                    color.R + rStep * i,
-                    color.G + gStep * i,
-                    color.B + bStep * i,
-                    color.A + aStep * i
-                ),
-                capType,
-                capPoints
-            );
-        }
-    }
+   
     public static void DrawDotted(this Segment segment, int gaps, LineDrawingInfo lineInfo)
     {
         DrawLineDotted(segment.Start, segment.End, gaps, lineInfo);
@@ -557,18 +721,7 @@ public static class ShapeDrawing
         }
     }
 
-    public static void DrawGlow(this Segment segment, float width, float endWidth, ColorRgba color, ColorRgba endColorRgba, int steps, LineCapType capType = LineCapType.None, int capPoints = 0)
-    {
-        DrawLineGlow(segment.Start, segment.End, width, endWidth, color, endColorRgba, steps, capType, capPoints);
-    }
-    public static void DrawGlow(this Segments segments, float width, float endWidth, ColorRgba color, ColorRgba endColorRgba, int steps, LineCapType capType = LineCapType.None, int capPoints = 0)
-    {
-        foreach (var seg in segments)
-        {
-            seg.DrawGlow(width, endWidth, color, endColorRgba, steps, capType, capPoints);
-        }
-    }
-
+    
     
     #endregion
 
