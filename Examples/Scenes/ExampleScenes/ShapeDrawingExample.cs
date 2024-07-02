@@ -239,6 +239,7 @@ public class ShapeDrawingExample : ExampleScene
         
         var curGappedOutlineInfo = new GappedOutlineDrawingInfo(curGaps, curStartOffset, curGapPerimeterPercentage);
 
+        
         if (shapeIndex == 0) // Segment
         {
             

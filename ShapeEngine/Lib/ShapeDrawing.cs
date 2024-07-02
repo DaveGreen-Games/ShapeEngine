@@ -802,7 +802,6 @@ public static class ShapeDrawing
         }
     }
 
-    
      
     /// <summary>
     /// Draws a segment scaled towards the origin.
@@ -852,104 +851,6 @@ public static class ShapeDrawing
         }
     }
 
-    
-    public static void DrawLineDotted(Vector2 start, Vector2 end, int gaps, float lineThickness, ColorRgba color, LineCapType capType, int capPoints)
-    {
-        if (gaps <= 0) DrawLine(start, end, lineThickness, color, capType, capPoints);
-        else
-        {
-            var w = end - start;
-            float l = w.Length();
-            var dir = w / l;
-            int totalGaps = gaps * 2 + 1;
-            float size = l / totalGaps;
-            var offset = dir * size;
-
-            var cur = start;
-            for (var i = 0; i < totalGaps; i++)
-            {
-                if (i % 2 == 0)
-                {
-                    var next = cur + offset;
-                    DrawLine(cur, next, lineThickness, color, capType, capPoints);
-                    cur = next;
-
-                }
-                else
-                {
-                    cur += offset; //gap
-                }
-            }
-        }
-    }
-    public static void DrawLineDotted(Vector2 start, Vector2 end, int gaps, LineDrawingInfo lineInfo)
-    {
-        DrawLineDotted(start, end, gaps, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-    }
-    public static void DrawLineDotted(Vector2 start, Vector2 end, int gaps, float gapSizeF, float lineThickness, ColorRgba color, LineCapType capType, int capPoints)
-    {
-        if (gaps <= 0) DrawLine(start, end, lineThickness, color, capType, capPoints);
-        else
-        {
-            var w = end - start;
-            float l = w.Length();
-            var dir = w / l;
-
-            float totalGapSize = l * gapSizeF;
-            float remaining = l - totalGapSize;
-            float gapSize = totalGapSize / gaps;
-            float size = remaining / (gaps + 1);
-
-            var gapOffset = dir * gapSize;
-            var offset = dir * size;
-
-            int totalGaps = gaps * 2 + 1;
-            var cur = start;
-            for (var i = 0; i < totalGaps; i++)
-            {
-                if (i % 2 == 0)
-                {
-                    var next = cur + offset;
-                    DrawLine(cur, next, lineThickness, color, capType, capPoints);
-                    cur = next;
-                }
-                else
-                {
-                    cur += gapOffset; //gap
-                }
-            }
-        }
-    }
-    public static void DrawLineDotted(Vector2 start, Vector2 end, int gaps, float gapSizeF, LineDrawingInfo lineInfo)
-    {
-        DrawLineDotted(start, end, gaps, gapSizeF, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-    }
-   
-    public static void DrawDotted(this Segment segment, int gaps, LineDrawingInfo lineInfo)
-    {
-        DrawLineDotted(segment.Start, segment.End, gaps, lineInfo);
-    }
-    public static void DrawDotted(this Segment segment, int gaps, float gapSizeF, LineDrawingInfo lineInfo)
-    {
-        DrawLineDotted(segment.Start, segment.End, gaps, gapSizeF, lineInfo);
-    }
-    public static void DrawDotted(this Segments segments, int gaps, LineDrawingInfo lineInfo)
-    {
-        foreach (var seg in segments)
-        {
-            seg.DrawDotted(gaps, lineInfo);
-        }
-    }
-    public static void DrawDotted(this Segments segments, int gaps, float gapSizeF, LineDrawingInfo lineInfo)
-    {
-        foreach (var seg in segments)
-        {
-            seg.DrawDotted(gaps, gapSizeF, lineInfo);
-        }
-    }
-
-    
-    
     #endregion
 
     #region Circle
@@ -1015,8 +916,6 @@ public static class ShapeDrawing
         DrawLinesScaled(c, lineInfo, 0f, sides, sideScaleFactor, sideScaleOrigin);
     }
     
-    
-    
     /// <summary>
     /// Draws a circle where each side can be scaled towards the origin of the side.
     /// </summary>
@@ -1049,7 +948,6 @@ public static class ShapeDrawing
             
         }
     }
-    
     
     /// <summary>
     /// Very usefull for drawing small/tiny circles. Drawing the circle as rect increases performance a lot.
@@ -1270,43 +1168,6 @@ public static class ShapeDrawing
         DrawCircleSectorLines(center, radius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, sides, lineThickness, color, closed);
     }
 
-    
-    
-    
-    public static void DrawCircleLinesDotted(Vector2 center, float radius, int sidesPerGap, float lineThickness, ColorRgba color, float sideLength = 8f, LineCapType capType = LineCapType.CappedExtended,  int capPoints = 2)
-    {
-        const float anglePieceRad = 360f * ShapeMath.DEGTORAD;
-        int sides = GetCircleArcSideCount(radius, MathF.Abs(anglePieceRad * ShapeMath.RADTODEG), sideLength);
-        float angleStep = anglePieceRad / sides;
-
-        //int totalGaps = gaps * 2 + 1;
-        //float circum = 2f * PI * radius;
-        //float size = circum / totalGaps;
-        float size = sideLength * sidesPerGap;
-        float remainingSize = size;
-        var gap = false;
-        for (var i = 0; i < sides; i++)
-        {
-            if (!gap)
-            {
-                Vector2 start = center + ShapeVec.Rotate(ShapeVec.Right() * radius, angleStep * i);
-                Vector2 end = center + ShapeVec.Rotate(ShapeVec.Right() * radius, angleStep * (i + 1));
-                DrawLine(start, end, lineThickness, color, capType, capPoints);
-            }
-
-            remainingSize -= sideLength;
-            if (remainingSize <= 0f)
-            {
-                gap = !gap;
-                remainingSize = size;
-            }
-        }
-    }
-
-    public static void DrawCircleLinesDotted(Vector2 center, float radius, int sidesPerGap, LineDrawingInfo lineInfo, float sideLength = 8f)
-    {
-        DrawCircleLinesDotted(center, radius, sidesPerGap, lineInfo.Thickness, lineInfo.Color, sideLength, lineInfo.CapType, lineInfo.CapPoints);
-    }
     public static void DrawCircleCheckeredLines(Vector2 pos, Vector2 alignement, float radius, float spacing, float lineThickness, float angleDeg, ColorRgba lineColorRgba, ColorRgba bgColorRgba, int circleSegments)
     {
 
@@ -1882,7 +1743,7 @@ public static class ShapeDrawing
     public static void DrawRounded(this Rect rect, float roundness, int segments, ColorRgba color) => Raylib.DrawRectangleRounded(rect.Rectangle, roundness, segments, color.ToRayColor());
     public static void DrawRoundedLines(this Rect rect, float roundness, float lineThickness, int segments, ColorRgba color) => Raylib.DrawRectangleRoundedLines(rect.Rectangle, roundness, segments, lineThickness * 2, color.ToRayColor());
 
-    //remove polygon use possible?
+    //TODO: remove polygon use possible?
     public static void DrawSlantedCorners(this Rect rect, ColorRgba color, float tlCorner, float trCorner, float brCorner, float blCorner)
     {
         var points = GetSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner);
@@ -2122,21 +1983,6 @@ public static class ShapeDrawing
         if (outline.Color.A > 0) DrawLines(rect, new Vector2(0.5f, 0.5f), 0f, outline);
     }
 
-    public static void DrawLinesDotted(this Rect rect, int gapsPerSide, LineDrawingInfo lineInfo)
-    {
-        DrawLineDotted(rect.TopLeft, rect.BottomLeft, gapsPerSide, lineInfo);
-        DrawLineDotted(rect.BottomLeft, rect.BottomRight, gapsPerSide, lineInfo);
-        DrawLineDotted(rect.BottomRight, rect.TopRight, gapsPerSide, lineInfo);
-        DrawLineDotted(rect.TopRight, rect.TopLeft, gapsPerSide, lineInfo);
-        
-    }
-    public static void DrawLinesDotted(this Rect rect, int gapsPerSide, float gapSizeF, LineDrawingInfo lineInfo)
-    {
-        DrawLineDotted(rect.TopLeft, rect.BottomLeft, gapsPerSide, gapSizeF, lineInfo);
-        DrawLineDotted(rect.BottomLeft, rect.BottomRight, gapsPerSide, gapSizeF, lineInfo);
-        DrawLineDotted(rect.BottomRight, rect.TopRight, gapsPerSide, gapSizeF, lineInfo);
-        DrawLineDotted(rect.TopRight, rect.TopLeft, gapsPerSide, gapSizeF, lineInfo);
-    }
     #endregion
 
     #region Triangle
@@ -2298,18 +2144,29 @@ public static class ShapeDrawing
 
     #region Shape
     
-    public static void DrawOutline(this List<Vector2> shapePoints, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    public static void DrawOutline(this List<Vector2> points, float lineThickness, ColorRgba startColorRgba, ColorRgba endColorRgba, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
-        if (shapePoints.Count < 3) return;
-        
-        for (var i = 0; i < shapePoints.Count; i++)
+        if (points.Count < 3) return;
+
+        int redStep = (endColorRgba.R - startColorRgba.R) / points.Count;
+        int greenStep = (endColorRgba.G - startColorRgba.G) / points.Count;
+        int blueStep = (endColorRgba.B - startColorRgba.B) / points.Count;
+        int alphaStep = (endColorRgba.A - startColorRgba.A) / points.Count;
+        for (var i = 0; i < points.Count; i++)
         {
-            var start = shapePoints[i];
-            var end = shapePoints[(i + 1) % shapePoints.Count];
-            DrawLine(start, end, lineThickness, color, capType, capPoints);
+            var start = points[i];
+            var end = points[(i + 1) % points.Count];
+            ColorRgba finalColorRgba = new
+            (
+                startColorRgba.R + redStep * i,
+                startColorRgba.G + greenStep * i,
+                startColorRgba.B + blueStep * i,
+                startColorRgba.A + alphaStep * i
+            );
+            DrawLine(start, end, lineThickness, finalColorRgba, capType, capPoints);
         }
     }
-    public static void DrawOutline(this Points shapePoints, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    public static void DrawOutline(this List<Vector2> shapePoints, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         if (shapePoints.Count < 3) return;
         
@@ -2324,10 +2181,210 @@ public static class ShapeDrawing
     {
         DrawOutline(shapePoints, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
     }
-    public static void DrawOutline(this Points shapePoints, LineDrawingInfo lineInfo)
+    public static void DrawOutline(this List<Vector2> relativePoints, Vector2 pos, float size, float rotDeg, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
-        DrawOutline(shapePoints, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        if (relativePoints.Count < 3) return;
+        
+        for (var i = 0; i < relativePoints.Count; i++)
+        {
+            var start = pos + (relativePoints[i] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
+            var end = pos + (relativePoints[(i + 1) % relativePoints.Count] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
+            DrawLine(start, end, lineThickness, color, capType, capPoints);
+        }
     }
+    public static void DrawOutline(this List<Vector2> relativePoints, Transform2D transform, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        DrawOutline(relativePoints, transform.Position, transform.ScaledSize.Length, transform.RotationDeg, lineThickness, color, capType, capPoints);
+    }
+    public static void DrawOutline(this List<Vector2> relativePoints, Vector2 pos, float size, float rotDeg, LineDrawingInfo lineInfo) => DrawOutline(relativePoints, pos, size, rotDeg, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+    public static void DrawOutline(this List<Vector2> relativePoints, Transform2D transform, LineDrawingInfo lineInfo) => DrawOutline(relativePoints, transform.Position, transform.ScaledSize.Length, transform.RotationDeg, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+
+    
+    
+    /// <summary>
+    /// Draws the points as a polygon where each side can be scaled towards the origin of the side.
+    /// </summary>
+    /// <param name="shapePoints">The points to draw.</param>
+    /// <param name="lineInfo">How to draw the lines.</param>
+    /// <param name="sideScaleFactor">The scale factor for each side. 0f means no polygon is drawn, 1f means normal polygon is drawn,
+    /// 0.5 means each side is half as long.</param>
+    /// <param name="sideScaleOrigin">The point along the line to scale from in both directions.</param>
+    public static void DrawLinesScaled(this List<Vector2> shapePoints, LineDrawingInfo lineInfo, float sideScaleFactor, float sideScaleOrigin = 0.5f)
+    {
+        if (shapePoints.Count < 3) return;
+        if (sideScaleFactor <= 0) return;
+        
+        if (sideScaleFactor >= 1)
+        {
+            shapePoints.DrawOutline(lineInfo);
+            return;
+        }
+        for (var i = 0; i < shapePoints.Count; i++)
+        {
+            var start = shapePoints[i];
+            var end = shapePoints[(i + 1) % shapePoints.Count];
+            DrawLine(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
+        }
+        
+    }
+
+    /// <summary>
+    /// Draws the points as a polygon where each side can be scaled towards the origin of the side.
+    /// </summary>
+    /// <param name="relativePoints">The relative points.</param>
+    /// <param name="lineInfo">How to draw the lines.</param>
+    /// <param name="rotDeg">The rotation of the polygon.</param>
+    /// <param name="size">The size of the polygon.</param>
+    /// <param name="pos">The center of the polygon.</param>
+    /// <param name="sideScaleFactor">The scale factor for each side. 0f means no polygon is drawn, 1f means normal polygon is drawn,
+    /// 0.5 means each side is half as long.</param>
+    /// <param name="sideScaleOrigin">The point along the line to scale from in both directions.</param>
+    public static void DrawLinesScaled(this List<Vector2> relativePoints, Vector2 pos, float size, float rotDeg, LineDrawingInfo lineInfo, float sideScaleFactor, float sideScaleOrigin = 0.5f)
+    {
+        if (relativePoints.Count < 3) return;
+        if (sideScaleFactor <= 0) return;
+        
+        if (sideScaleFactor >= 1)
+        {
+            relativePoints.DrawOutline(pos, size, rotDeg, lineInfo);
+            return;
+        }
+        
+        for (var i = 0; i < relativePoints.Count; i++)
+        {
+            var start = pos + (relativePoints[i] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
+            var end = pos + (relativePoints[(i + 1) % relativePoints.Count] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
+            DrawLine(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
+        }
+        
+    }
+    
+    /// <summary>
+    /// Draws the points as a polygon where each side can be scaled towards the origin of the side.
+    /// </summary>
+    /// <param name="relativePoints">The relative points.</param>
+    /// <param name="lineInfo">How to draw the lines.</param>
+    /// <param name="transform">The transform of the polygon.</param>
+    /// <param name="sideScaleFactor">The scale factor for each side. 0f means no polygon is drawn, 1f means normal polygon is drawn,
+    /// 0.5 means each side is half as long.</param>
+    /// <param name="sideScaleOrigin">The point along the line to scale from in both directions.</param>
+    public static void DrawLinesScaled(this List<Vector2> relativePoints, Transform2D transform, LineDrawingInfo lineInfo, float sideScaleFactor, float sideScaleOrigin = 0.5f)
+    {
+        DrawLinesScaled(relativePoints, transform.Position, transform.ScaledSize.Length, transform.RotationDeg, lineInfo, sideScaleFactor, sideScaleOrigin);
+
+    }
+
+    
+    public static void DrawOutlineCornered(this List<Vector2> points, float lineThickness, ColorRgba color, List<float> cornerLengths, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        for (var i = 0; i < points.Count; i++)
+        {
+            float cornerLength = cornerLengths[i%cornerLengths.Count];
+            var prev = points[(i - 1) % points.Count];
+            var cur = points[i];
+            var next = points[(i + 1) % points.Count];
+            DrawLine(cur, cur + next.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
+            DrawLine(cur, cur + prev.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
+        }
+    }
+    public static void DrawOutlineCorneredRelative(this List<Vector2> points, float lineThickness, ColorRgba color, List<float> cornerFactors, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        for (var i = 0; i < points.Count; i++)
+        {
+            float cornerF = cornerFactors[i%cornerFactors.Count];
+            var prev = points[(i - 1) % points.Count];
+            var cur = points[i];
+            var next = points[(i + 1) % points.Count];
+            DrawLine(cur, cur.Lerp(next, cornerF), lineThickness, color, capType, capPoints);
+            DrawLine(cur, cur.Lerp(prev, cornerF), lineThickness, color, capType, capPoints);
+        }
+    }
+    public static void DrawOutlineCornered(this List<Vector2> points, List<float> cornerLengths, LineDrawingInfo lineInfo)
+    {
+        for (var i = 0; i < points.Count; i++)
+        {
+            float cornerLength = cornerLengths[i%cornerLengths.Count];
+            var prev = points[(i - 1) % points.Count];
+            var cur = points[i];
+            var next = points[(i + 1) % points.Count];
+            DrawLine(cur, cur + next.Normalize() * cornerLength, lineInfo);
+            DrawLine(cur, cur + prev.Normalize() * cornerLength, lineInfo);
+        }
+    }
+    public static void DrawOutlineCorneredRelative(this List<Vector2> points, List<float> cornerFactors, LineDrawingInfo lineInfo)
+    {
+        for (var i = 0; i < points.Count; i++)
+        {
+            float cornerF = cornerFactors[i%cornerFactors.Count];
+            var prev = points[(i - 1) % points.Count];
+            var cur = points[i];
+            var next = points[(i + 1) % points.Count];
+            DrawLine(cur, cur.Lerp(next, cornerF), lineInfo);
+            DrawLine(cur, cur.Lerp(prev, cornerF), lineInfo);
+        }
+    }
+
+    public static void DrawOutlineCornered(this List<Vector2> points, float lineThickness, ColorRgba color, float cornerLength, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        for (var i = 0; i < points.Count; i++)
+        {
+            var prev = points[(i-1)%points.Count];
+            var cur = points[i];
+            var next = points[(i+1)%points.Count];
+            DrawLine(cur, cur + next.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
+            DrawLine(cur, cur + prev.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
+        }
+    }
+    public static void DrawOutlineCorneredRelative(this List<Vector2> points, float lineThickness, ColorRgba color, float cornerF, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        for (var i = 0; i < points.Count; i++)
+        {
+            var prev = points[(i - 1) % points.Count];
+            var cur = points[i];
+            var next = points[(i + 1) % points.Count];
+            DrawLine(cur, cur.Lerp(next, cornerF), lineThickness, color, capType, capPoints);
+            DrawLine(cur, cur.Lerp(prev, cornerF), lineThickness, color, capType, capPoints);
+        }
+    }
+    public static void DrawOutlineCornered(this List<Vector2> points, float cornerLength, LineDrawingInfo lineInfo)
+    {
+        for (var i = 0; i < points.Count; i++)
+        {
+            var prev = points[(i-1)%points.Count];
+            var cur = points[i];
+            var next = points[(i+1)%points.Count];
+            DrawLine(cur, cur + next.Normalize() * cornerLength, lineInfo);
+            DrawLine(cur, cur + prev.Normalize() * cornerLength, lineInfo);
+        }
+    }
+    public static void DrawOutlineCorneredRelative(this List<Vector2> points, float cornerF, LineDrawingInfo lineInfo)
+    {
+        for (var i = 0; i < points.Count; i++)
+        {
+            var prev = points[(i - 1) % points.Count];
+            var cur = points[i];
+            var next = points[(i + 1) % points.Count];
+            DrawLine(cur, cur.Lerp(next, cornerF), lineInfo);
+            DrawLine(cur, cur.Lerp(prev, cornerF), lineInfo);
+        }
+    }
+
+    public static void DrawOutlineCornered(this List<Vector2> points, LineDrawingInfo lineInfo, float cornerLength) => DrawOutlineCornered(points, lineInfo.Thickness,lineInfo.Color, cornerLength, lineInfo.CapType, lineInfo.CapPoints);
+
+    public static void DrawOutlineCornered(this List<Vector2> points, LineDrawingInfo lineInfo, List<float> cornerLengths) => DrawOutlineCornered(points, lineInfo.Thickness,lineInfo.Color, cornerLengths, lineInfo.CapType, lineInfo.CapPoints);
+
+    public static void DrawOutlineCorneredRelative(this List<Vector2> points, LineDrawingInfo lineInfo, float cornerF) => DrawOutlineCornered(points, lineInfo.Thickness,lineInfo.Color, cornerF, lineInfo.CapType, lineInfo.CapPoints);
+
+    public static void DrawOutlineCorneredRelative(this List<Vector2> points, LineDrawingInfo lineInfo, List<float> cornerFactors) => DrawOutlineCornered(points, lineInfo.Thickness,lineInfo.Color, cornerFactors, lineInfo.CapType, lineInfo.CapPoints);
+
+    public static void DrawVertices(this List<Vector2> points, float vertexRadius, ColorRgba color, int circleSegments)
+    {
+        foreach (var p in points)
+        {
+            DrawCircle(p, vertexRadius, color, circleSegments);
+        }
+    }
+
     #endregion
     
     #region Polygon
@@ -2471,6 +2528,7 @@ public static class ShapeDrawing
             // edge.Draw(lineThickness, finalColor);
         // }
     }
+    
     public static void DrawLines(this Polygon poly, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         if (poly.Count < 3) return;
@@ -2482,6 +2540,7 @@ public static class ShapeDrawing
             DrawLine(start, end, lineThickness, color, capType, capPoints);
         }
     }
+    
     public static void DrawLines(this Polygon relative, Vector2 pos, float size, float rotDeg, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         if (relative.Count < 3) return;
@@ -2830,32 +2889,7 @@ public static class ShapeDrawing
         }
     }
     
-    public static void DrawDotted(this Polyline polyline, int gaps, float thickness, ColorRgba color, LineCapType capType = LineCapType.Capped, int capPoints = 3)
-    {
-        if (polyline.Count < 2) return;
-        for (var i = 0; i < polyline.Count - 1; i++)
-        {
-            var start = polyline[i];
-            var end = polyline[i + 1];
-            DrawLineDotted(start, end, gaps, thickness, color, capType, capPoints);
-        }
-    }
-    public static void DrawDotted(this Polyline polyline, int gaps, LineDrawingInfo lineInfo) => DrawDotted(polyline, gaps, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-
-    public static void DrawDotted(this Polyline polyline, int gaps, float gapSizeF, 
-        float thickness, ColorRgba color, LineCapType capType = LineCapType.Capped, int capPoints = 3)
-    {
-        if (polyline.Count < 2) return;
-        for (var i = 0; i < polyline.Count - 1; i++)
-        {
-            var start = polyline[i];
-            var end = polyline[i + 1];
-            DrawLineDotted(start, end, gaps, gapSizeF, thickness, color, capType, capPoints);
-        }
-        // polyline.GetEdges().DrawDotted(gaps, gapSizeF, thickness, color, endCapSegments);
-    }
-    public static void DrawDotted(this Polyline polyline, int gaps, float gapSizeF, LineDrawingInfo lineInfo) => DrawDotted(polyline, gaps, gapSizeF, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-
+    
     public static void DrawGlow(this Polyline polyline, float width, float endWidth, ColorRgba color,
         ColorRgba endColorRgba, int steps, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
@@ -2987,6 +3021,182 @@ public static class ShapeDrawing
     }
     #endregion
 
+    #region Deprecated
+
+    public static void DrawLineDotted(Vector2 start, Vector2 end, int gaps, float lineThickness, ColorRgba color, LineCapType capType, int capPoints)
+    {
+        if (gaps <= 0) DrawLine(start, end, lineThickness, color, capType, capPoints);
+        else
+        {
+            var w = end - start;
+            float l = w.Length();
+            var dir = w / l;
+            int totalGaps = gaps * 2 + 1;
+            float size = l / totalGaps;
+            var offset = dir * size;
+
+            var cur = start;
+            for (var i = 0; i < totalGaps; i++)
+            {
+                if (i % 2 == 0)
+                {
+                    var next = cur + offset;
+                    DrawLine(cur, next, lineThickness, color, capType, capPoints);
+                    cur = next;
+
+                }
+                else
+                {
+                    cur += offset; //gap
+                }
+            }
+        }
+    }
+    public static void DrawLineDotted(Vector2 start, Vector2 end, int gaps, LineDrawingInfo lineInfo)
+    {
+        DrawLineDotted(start, end, gaps, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+    }
+    public static void DrawLineDotted(Vector2 start, Vector2 end, int gaps, float gapSizeF, float lineThickness, ColorRgba color, LineCapType capType, int capPoints)
+    {
+        if (gaps <= 0) DrawLine(start, end, lineThickness, color, capType, capPoints);
+        else
+        {
+            var w = end - start;
+            float l = w.Length();
+            var dir = w / l;
+
+            float totalGapSize = l * gapSizeF;
+            float remaining = l - totalGapSize;
+            float gapSize = totalGapSize / gaps;
+            float size = remaining / (gaps + 1);
+
+            var gapOffset = dir * gapSize;
+            var offset = dir * size;
+
+            int totalGaps = gaps * 2 + 1;
+            var cur = start;
+            for (var i = 0; i < totalGaps; i++)
+            {
+                if (i % 2 == 0)
+                {
+                    var next = cur + offset;
+                    DrawLine(cur, next, lineThickness, color, capType, capPoints);
+                    cur = next;
+                }
+                else
+                {
+                    cur += gapOffset; //gap
+                }
+            }
+        }
+    }
+    public static void DrawLineDotted(Vector2 start, Vector2 end, int gaps, float gapSizeF, LineDrawingInfo lineInfo)
+    {
+        DrawLineDotted(start, end, gaps, gapSizeF, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+    }
+   
+    public static void DrawDotted(this Segment segment, int gaps, LineDrawingInfo lineInfo)
+    {
+        DrawLineDotted(segment.Start, segment.End, gaps, lineInfo);
+    }
+    public static void DrawDotted(this Segment segment, int gaps, float gapSizeF, LineDrawingInfo lineInfo)
+    {
+        DrawLineDotted(segment.Start, segment.End, gaps, gapSizeF, lineInfo);
+    }
+    public static void DrawDotted(this Segments segments, int gaps, LineDrawingInfo lineInfo)
+    {
+        foreach (var seg in segments)
+        {
+            seg.DrawDotted(gaps, lineInfo);
+        }
+    }
+    public static void DrawDotted(this Segments segments, int gaps, float gapSizeF, LineDrawingInfo lineInfo)
+    {
+        foreach (var seg in segments)
+        {
+            seg.DrawDotted(gaps, gapSizeF, lineInfo);
+        }
+    }
+
+    public static void DrawCircleLinesDotted(Vector2 center, float radius, int sidesPerGap, float lineThickness, ColorRgba color, float sideLength = 8f, LineCapType capType = LineCapType.CappedExtended,  int capPoints = 2)
+    {
+        const float anglePieceRad = 360f * ShapeMath.DEGTORAD;
+        int sides = GetCircleArcSideCount(radius, MathF.Abs(anglePieceRad * ShapeMath.RADTODEG), sideLength);
+        float angleStep = anglePieceRad / sides;
+
+        //int totalGaps = gaps * 2 + 1;
+        //float circum = 2f * PI * radius;
+        //float size = circum / totalGaps;
+        float size = sideLength * sidesPerGap;
+        float remainingSize = size;
+        var gap = false;
+        for (var i = 0; i < sides; i++)
+        {
+            if (!gap)
+            {
+                Vector2 start = center + ShapeVec.Rotate(ShapeVec.Right() * radius, angleStep * i);
+                Vector2 end = center + ShapeVec.Rotate(ShapeVec.Right() * radius, angleStep * (i + 1));
+                DrawLine(start, end, lineThickness, color, capType, capPoints);
+            }
+
+            remainingSize -= sideLength;
+            if (remainingSize <= 0f)
+            {
+                gap = !gap;
+                remainingSize = size;
+            }
+        }
+    }
+
+    public static void DrawCircleLinesDotted(Vector2 center, float radius, int sidesPerGap, LineDrawingInfo lineInfo, float sideLength = 8f)
+    {
+        DrawCircleLinesDotted(center, radius, sidesPerGap, lineInfo.Thickness, lineInfo.Color, sideLength, lineInfo.CapType, lineInfo.CapPoints);
+    }
+
+    public static void DrawLinesDotted(this Rect rect, int gapsPerSide, LineDrawingInfo lineInfo)
+    {
+        DrawLineDotted(rect.TopLeft, rect.BottomLeft, gapsPerSide, lineInfo);
+        DrawLineDotted(rect.BottomLeft, rect.BottomRight, gapsPerSide, lineInfo);
+        DrawLineDotted(rect.BottomRight, rect.TopRight, gapsPerSide, lineInfo);
+        DrawLineDotted(rect.TopRight, rect.TopLeft, gapsPerSide, lineInfo);
+        
+    }
+    public static void DrawLinesDotted(this Rect rect, int gapsPerSide, float gapSizeF, LineDrawingInfo lineInfo)
+    {
+        DrawLineDotted(rect.TopLeft, rect.BottomLeft, gapsPerSide, gapSizeF, lineInfo);
+        DrawLineDotted(rect.BottomLeft, rect.BottomRight, gapsPerSide, gapSizeF, lineInfo);
+        DrawLineDotted(rect.BottomRight, rect.TopRight, gapsPerSide, gapSizeF, lineInfo);
+        DrawLineDotted(rect.TopRight, rect.TopLeft, gapsPerSide, gapSizeF, lineInfo);
+    }
+
+    public static void DrawDotted(this Polyline polyline, int gaps, float thickness, ColorRgba color, LineCapType capType = LineCapType.Capped, int capPoints = 3)
+    {
+        if (polyline.Count < 2) return;
+        for (var i = 0; i < polyline.Count - 1; i++)
+        {
+            var start = polyline[i];
+            var end = polyline[i + 1];
+            DrawLineDotted(start, end, gaps, thickness, color, capType, capPoints);
+        }
+    }
+    public static void DrawDotted(this Polyline polyline, int gaps, LineDrawingInfo lineInfo) => DrawDotted(polyline, gaps, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+
+    public static void DrawDotted(this Polyline polyline, int gaps, float gapSizeF, 
+        float thickness, ColorRgba color, LineCapType capType = LineCapType.Capped, int capPoints = 3)
+    {
+        if (polyline.Count < 2) return;
+        for (var i = 0; i < polyline.Count - 1; i++)
+        {
+            var start = polyline[i];
+            var end = polyline[i + 1];
+            DrawLineDotted(start, end, gaps, gapSizeF, thickness, color, capType, capPoints);
+        }
+        // polyline.GetEdges().DrawDotted(gaps, gapSizeF, thickness, color, endCapSegments);
+    }
+    public static void DrawDotted(this Polyline polyline, int gaps, float gapSizeF, LineDrawingInfo lineInfo) => DrawDotted(polyline, gaps, gapSizeF, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+
+    
+    #endregion
 }
 
 
