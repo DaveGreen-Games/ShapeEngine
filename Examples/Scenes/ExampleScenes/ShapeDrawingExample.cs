@@ -245,7 +245,8 @@ public class ShapeDrawingExample : ExampleScene
             segment.Draw(lineInfoOutline);
             if (gappedMode)
             {
-                // ShapeDrawing.DrawGappedOutline(segment.Start, segment.End, -1f, lineInfo, curGappedOutlineInfo);
+                // ShapeDrawing.DrawGappedLine(segment.Start, segment.End, -1f, lineInfo, curGappedOutlineInfo);
+                segment.DrawGapped(-1, lineInfo, curGappedOutlineInfo);
             }
             else
             {

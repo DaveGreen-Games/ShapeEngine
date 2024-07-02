@@ -12,7 +12,18 @@ public static class ShapeDrawing
 {
     
     #region Gapped
-    public static float DrawGapped(Vector2 start, Vector2 end, float length, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
+    
+    /// <summary>
+    /// Draws a line that is interrupted by gaps specified by the parameters.
+    /// 1 gap with 0.5 gap percentage would result in half of the line visible and the other not visible.
+    /// </summary>
+    /// <param name="start">The start of the line.</param>
+    /// <param name="end">The end of the line.</param>
+    /// <param name="length">The length of the line. If zero or negative the function will calculate the length and return it. </param>
+    /// <param name="lineInfo">The parameters for how to draw the line.</param>
+    /// <param name="gapDrawingInfo">Info for how to draw the gaps.</param>
+    /// <returns>Returns the length of the line if positive otherwise -1. </returns>
+    public static float DrawGappedLine(Vector2 start, Vector2 end, float length, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
     {
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
         {
@@ -22,25 +33,129 @@ public static class ShapeDrawing
 
         if (gapDrawingInfo.GapPerimeterPercentage >= 1f) return length > 0f ? length : -1f;
 
+        var linePercentage = 1f - gapDrawingInfo.GapPerimeterPercentage;
+        var lines = gapDrawingInfo.Gaps;
+        var gapPercentageRange = gapDrawingInfo.GapPerimeterPercentage / gapDrawingInfo.Gaps;
+        var linePercentageRange = linePercentage / lines;
+
+        var w = end - start;
+        if (length <= 0) length = w.Length();
+        if (length <= 0) return -1f;
+        var dir = w / length;
+
+        var lineLength = length * linePercentageRange;
+        var gapLength = length * gapPercentageRange;
+
+        var curDistance = gapDrawingInfo.StartOffset < 1f ? gapDrawingInfo.StartOffset * length : 0f;
+        var curStart = start + dir * curDistance;
+        Vector2 curEnd;
+        var remainingLineLength = 0f;
+        if (curDistance + lineLength >= length)
+        {
+            curEnd = end;
+            var tempLength = (curEnd - curStart).Length();
+            curDistance = 0;
+            remainingLineLength = lineLength - tempLength;
+        }
+        else
+        {
+            curEnd = curStart + dir * lineLength;
+            curDistance += lineLength;
+        }
+
+        int drawnLines = 0;
+        while (drawnLines <= lines)
+        {
+            DrawLine(curStart, curEnd, lineInfo);
+
+            if (remainingLineLength > 0f)
+            {
+                curStart = start;
+                curEnd = curStart + dir * remainingLineLength;
+                curDistance = remainingLineLength;
+                remainingLineLength = 0f;
+                drawnLines++;
+            }
+            else
+            {
+                if (curDistance + gapLength >= length) //gap overshoots end
+                {
+                    var tempLength = (end - curEnd).Length();
+                    var remaining = gapLength - tempLength;
+                    curDistance = remaining;
+
+                    curStart = start + dir * curDistance;
+                }
+                else //advance gap length to find new start
+                {
+                    curStart = curEnd + dir * gapLength;
+                    curDistance += gapLength;
+                }
+
+                if (curDistance + lineLength >= length) //line overshoots end
+                {
+                    curEnd = end;
+                    var tempLength = (curEnd - curStart).Length();
+                    curDistance = 0;
+                    remainingLineLength = lineLength - tempLength;
+                }
+                else //advance line length to find new end
+                {
+                    curEnd = curStart + dir * lineLength;
+                    curDistance += lineLength;
+                    drawnLines++;
+                }
+            }
+
+        }
+
+        return length;
+    }
+
+    /// <summary>
+    /// Draws an outline that is interrupted by gaps specified by the parameters.
+    /// 1 gap with 0.5 gap percentage would result in half of the outline visible and the other not visible.
+    /// </summary>
+    /// <param name="shapePoints">The points for the outline.</param>
+    /// <param name="lineInfo">The parameters for how to draw the line.</param>
+    /// <param name="perimeter">The total length of the perimeter. If less than 0 the functions calculates this (more expensive).</param>
+    /// <param name="gapDrawingInfo">Info for how to draw the gaps.</param>
+    public static float DrawGappedOutline(this List<Vector2> shapePoints, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
+    {
+        if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
+        {
+            shapePoints.DrawOutline(lineInfo);
+            return perimeter > 0f ? perimeter : -1f;
+        }
+
+        if (gapDrawingInfo.GapPerimeterPercentage >= 1f) return perimeter > 0f ? perimeter : -1f;
+
         var nonGapPercentage = 1f - gapDrawingInfo.GapPerimeterPercentage;
 
         var gapPercentageRange = gapDrawingInfo.GapPerimeterPercentage / gapDrawingInfo.Gaps;
         var nonGapPercentageRange = nonGapPercentage / gapDrawingInfo.Gaps;
 
-        var curPoint = start;
-        var nextPoint = end;
-        var curW = nextPoint - curPoint;
-        
-        if (length <= 0f)
+        if (perimeter <= 0f)
         {
-            length = curW.Length();
-            if (length <= 0f) return 0f;
-        }
-        var curDis = length;
+            for (int i = 0; i < shapePoints.Count; i++)
+            {
+                var curP = shapePoints[i];
+                var nextP = shapePoints[(i + 1) % shapePoints.Count];
 
-        var startDistance = length * gapDrawingInfo.StartOffset;
+                perimeter += (nextP - curP).Length();
+            }
+        }
+
+        var startDistance = perimeter * gapDrawingInfo.StartOffset;
         var curDistance = 0f;
         var nextDistance = startDistance;
+        
+        
+        var curIndex = 0;
+        var curPoint = shapePoints[0];
+        var nextPoint= shapePoints[1 % shapePoints.Count];
+        var curW = nextPoint - curPoint;
+        var curDis = curW.Length();
         
         var points = new List<Vector2>(3);
 
@@ -55,13 +170,13 @@ public static class ShapeDrawing
                 
                 if (points.Count == 0)
                 {
-                    nextDistance += nonGapPercentageRange * length;
+                    nextDistance += nonGapPercentageRange * perimeter;
                     points.Add(p);
 
                 }
                 else
                 {
-                    nextDistance += gapPercentageRange * length;
+                    nextDistance += gapPercentageRange * perimeter;
                     points.Add(p);
                     if (points.Count == 2)
                     {
@@ -88,21 +203,133 @@ public static class ShapeDrawing
                 if(points.Count > 0) points.Add(nextPoint);
                 
                 curDistance += curDis;
-                // curIndex = (curIndex + 1) % poly.Count;
-                // curPoint = poly[curIndex];
-                // nextPoint = poly[(curIndex + 1) % poly.Count];
-                // curW = nextPoint - curPoint;
+                curIndex = (curIndex + 1) % shapePoints.Count;
+                curPoint = shapePoints[curIndex];
+                nextPoint = shapePoints[(curIndex + 1) % shapePoints.Count];
+                curW = nextPoint - curPoint;
                 curDis = curW.Length();
             }
             
         }
 
-        return length;
+        return perimeter;
     }
+   
+    /// <summary>
+    /// Draws an outline that is interrupted by gaps specified by the parameters.
+    /// 1 gap with 0.5 gap percentage would result in half of the outline visible and the other not visible.
+    /// </summary>
+    /// <param name="shapePoints">The points for the outline.</param>
+    /// <param name="lineInfo">The parameters for how to draw the line.</param>
+    /// <param name="perimeter">The total length of the perimeter. If less than 0 the functions calculates this (more expensive).</param>
+    /// <param name="gapDrawingInfo">Info for how to draw the gaps.</param>
+    public static float DrawGappedOutline(this Points shapePoints, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
+    {
+        if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
+        {
+            shapePoints.DrawOutline(lineInfo);
+            return perimeter > 0f ? perimeter : -1f;
+        }
+
+        if (gapDrawingInfo.GapPerimeterPercentage >= 1f) return perimeter > 0f ? perimeter : -1f;
+
+        var nonGapPercentage = 1f - gapDrawingInfo.GapPerimeterPercentage;
+
+        var gapPercentageRange = gapDrawingInfo.GapPerimeterPercentage / gapDrawingInfo.Gaps;
+        var nonGapPercentageRange = nonGapPercentage / gapDrawingInfo.Gaps;
+
+        if (perimeter <= 0f)
+        {
+            for (int i = 0; i < shapePoints.Count; i++)
+            {
+                var curP = shapePoints[i];
+                var nextP = shapePoints[(i + 1) % shapePoints.Count];
+
+                perimeter += (nextP - curP).Length();
+            }
+        }
+
+        var startDistance = perimeter * gapDrawingInfo.StartOffset;
+        var curDistance = 0f;
+        var nextDistance = startDistance;
+        
+        
+        var curIndex = 0;
+        var curPoint = shapePoints[0];
+        var nextPoint= shapePoints[1 % shapePoints.Count];
+        var curW = nextPoint - curPoint;
+        var curDis = curW.Length();
+        
+        var points = new List<Vector2>(3);
+
+        int whileCounter = gapDrawingInfo.Gaps;
+        
+        while (whileCounter > 0)
+        {
+            if (curDistance + curDis >= nextDistance)
+            {
+                var p = curPoint + (curW / curDis) * (nextDistance - curDistance);
+                
+                
+                if (points.Count == 0)
+                {
+                    nextDistance += nonGapPercentageRange * perimeter;
+                    points.Add(p);
+
+                }
+                else
+                {
+                    nextDistance += gapPercentageRange * perimeter;
+                    points.Add(p);
+                    if (points.Count == 2)
+                    {
+                        DrawLine(points[0], points[1], lineInfo);
+                    }
+                    else
+                    {
+                        for (var i = 0; i < points.Count - 1; i++)
+                        {
+                            var p1 = points[i];
+                            var p2 = points[(i + 1) % points.Count];
+                            DrawLine(p1, p2, lineInfo);
+                        }
+                    }
+                    
+                    points.Clear();
+                    whileCounter--;
+                }
+
+            }
+            else
+            {
+                
+                if(points.Count > 0) points.Add(nextPoint);
+                
+                curDistance += curDis;
+                curIndex = (curIndex + 1) % shapePoints.Count;
+                curPoint = shapePoints[curIndex];
+                nextPoint = shapePoints[(curIndex + 1) % shapePoints.Count];
+                curW = nextPoint - curPoint;
+                curDis = curW.Length();
+            }
+            
+        }
+
+        return perimeter;
+    }
+   
     
-    
-    
-    
+    /// <summary>
+    /// Draws a segment that is interrupted by gaps specified by the parameters.
+    /// 1 gap with 0.5 gap percentage would result in half of the segment visible and the other not visible.
+    /// </summary>
+    /// <param name="s">The segment to draw.</param>
+    /// <param name="length">The length of the segment. If zero or negative the function will calculate the length and return it. </param>
+    /// <param name="lineInfo">The parameters for how to draw the segment.</param>
+    /// <param name="gapDrawingInfo">Info for how to draw the gaps.</param>
+    /// <returns>Returns the length of the segment if positive otherwise -1. </returns>
+    public static float DrawGapped(this Segment s, float length, LineDrawingInfo lineInfo,
+        GappedOutlineDrawingInfo gapDrawingInfo) => DrawGappedLine(s.Start, s.End, length, lineInfo, gapDrawingInfo);
     /// <summary>
     /// Draws an outline that is interrupted by gaps specified by the parameters.
     /// 1 gap with 0.5 gap percentage would result in half of the outline visible and the other not visible.
@@ -2067,6 +2294,40 @@ public static class ShapeDrawing
         
     }
 
+    #endregion
+
+    #region Shape
+    
+    public static void DrawOutline(this List<Vector2> shapePoints, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        if (shapePoints.Count < 3) return;
+        
+        for (var i = 0; i < shapePoints.Count; i++)
+        {
+            var start = shapePoints[i];
+            var end = shapePoints[(i + 1) % shapePoints.Count];
+            DrawLine(start, end, lineThickness, color, capType, capPoints);
+        }
+    }
+    public static void DrawOutline(this Points shapePoints, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        if (shapePoints.Count < 3) return;
+        
+        for (var i = 0; i < shapePoints.Count; i++)
+        {
+            var start = shapePoints[i];
+            var end = shapePoints[(i + 1) % shapePoints.Count];
+            DrawLine(start, end, lineThickness, color, capType, capPoints);
+        }
+    }
+    public static void DrawOutline(this List<Vector2> shapePoints, LineDrawingInfo lineInfo)
+    {
+        DrawOutline(shapePoints, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+    }
+    public static void DrawOutline(this Points shapePoints, LineDrawingInfo lineInfo)
+    {
+        DrawOutline(shapePoints, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+    }
     #endregion
     
     #region Polygon
