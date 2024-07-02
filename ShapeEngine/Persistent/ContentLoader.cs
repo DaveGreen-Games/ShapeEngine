@@ -11,10 +11,10 @@ namespace ShapeEngine.Persistent
     {
         public static int GLYPH_COUNT = 0;
 
-        public static Font LoadFont(string filePath, int fontSize = 100)
+        public static Font LoadFont(string filePath, int fontSize = 100, TextureFilter textureFilter = TextureFilter.Trilinear)
         {
             var f = Raylib.LoadFontEx(filePath, fontSize, Array.Empty<int>(), GLYPH_COUNT);
-            Raylib.SetTextureFilter(f.Texture, TextureFilter.Bilinear);
+            Raylib.SetTextureFilter(f.Texture, textureFilter);
             return f;
 
             // unsafe

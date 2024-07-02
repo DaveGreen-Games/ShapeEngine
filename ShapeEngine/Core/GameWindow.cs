@@ -434,6 +434,7 @@ public sealed class GameWindow
     // }
     internal GameWindow(WindowSettings windowSettings)
     {
+        if(windowSettings.Msaa4x) Raylib.SetConfigFlags(ConfigFlags.Msaa4xHint);
         Raylib.InitWindow(0, 0, windowSettings.Title);
         Raylib.SetWindowOpacity(0f);
         
