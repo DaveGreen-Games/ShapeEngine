@@ -11,6 +11,12 @@ internal sealed class ScreenTexture
     public RenderTexture2D RenderTexture { get; private set; } = new();
     public int Width { get; private set; } = 0;
     public int Height { get; private set; } = 0;
+    
+    
+    /// <summary>
+    /// Requires to unload and load the texture to take effect!
+    /// </summary>
+    public TextureFilter TextureFilter = TextureFilter.Bilinear;
 
     public ScreenTexture(){}
 
@@ -60,6 +66,7 @@ internal sealed class ScreenTexture
         Width = dimensions.Width;
         Height = dimensions.Height;
         RenderTexture = Raylib.LoadRenderTexture(Width, Height);
+        Raylib.SetTextureFilter(RenderTexture.Texture, TextureFilter);
     }
     
     //public void DrawTexture(int targetWidth, int targetHeight)

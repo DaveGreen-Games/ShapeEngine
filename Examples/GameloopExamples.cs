@@ -196,6 +196,7 @@ namespace Examples
 
         private uint crtShaderID = ShapeID.NextID;
         private Vector2 crtCurvature = new(6, 4);
+        private uint pixelationShaderID = ShapeID.NextID;
         
         public ShapeGamepadDevice? CurGamepad = null;
 
@@ -261,7 +262,7 @@ namespace Examples
         // public bool UseMouseMovement = true;
         public GameloopExamples() : base
             (
-                new GameSettings(){ DevelopmentDimensions = new(1920, 1080), MultiShaderSupport = false},
+                new GameSettings(){ DevelopmentDimensions = new(1920, 1080), MultiShaderSupport = true},
                 WindowSettings.Default
             )
         {
@@ -352,10 +353,18 @@ namespace Examples
             ShapeShader.SetValueFloat(crtShader.Shader, "renderWidth", Window.CurScreenSize.Width);
             ShapeShader.SetValueFloat(crtShader.Shader, "renderHeight", Window.CurScreenSize.Height);
             var bgColor = BackgroundColorRgba;
-            ShapeShader.SetValueColor(crtShader.Shader, "cornerColor", bgColor);// 1, 0, 0, 1);
+            ShapeShader.SetValueColor(crtShader.Shader, "cornerColor", bgColor);
             ShapeShader.SetValueFloat(crtShader.Shader, "vignetteOpacity", 0.35f);
             ShapeShader.SetValueVector2(crtShader.Shader, "curvatureAmount", crtCurvature.X, crtCurvature.Y);//smaller values = bigger curvature
             ScreenShaders.Add(crtShader);
+            
+            //set enabled to true to use & test pixaltion shader
+            Shader pixel = ContentLoader.LoadFragmentShader("Resources/Shaders/PixelationShader.fs");
+            ShapeShader pixelationShader = new(pixel, pixelationShaderID, false, 2);
+            ShapeShader.SetValueFloat(pixelationShader.Shader, "renderWidth", Window.CurScreenSize.Width);
+            ShapeShader.SetValueFloat(pixelationShader.Shader, "renderHeight", Window.CurScreenSize.Height);
+            ScreenShaders.Add(pixelationShader);
+            
             
             FontDefault = GetFont(FontIDs.JetBrains);
 
@@ -444,6 +453,13 @@ namespace Examples
                 ShapeShader.SetValueFloat(crtShader.Shader, "renderWidth", Window.CurScreenSize.Width);
                 ShapeShader.SetValueFloat(crtShader.Shader, "renderHeight", Window.CurScreenSize.Height);
             }
+
+            var pixelationShader = ScreenShaders.Get(pixelationShaderID);
+            if (pixelationShader != null)
+            {
+                ShapeShader.SetValueFloat(pixelationShader.Shader, "renderWidth", Window.CurScreenSize.Width);
+                ShapeShader.SetValueFloat(pixelationShader.Shader, "renderHeight", Window.CurScreenSize.Height);
+            }
         }
 
         protected override void OnGamepadConnected(ShapeGamepadDevice gamepad)
@@ -486,9 +502,7 @@ namespace Examples
             var fullscreenState = InputActionFullscreen.Consume();
             if (fullscreenState is { Consumed: false, Pressed: true })
             {
-                // Window.BorderlessFullscreen();
                 Window.DisplayState = Window.DisplayState == WindowDisplayState.Fullscreen ? WindowDisplayState.Normal : WindowDisplayState.Fullscreen;
-                // GAMELOOP.Fullscreen = !GAMELOOP.Fullscreen;
             }
 
             var maximizeState = InputActionMaximize.Consume();

@@ -328,7 +328,7 @@ public class Game
                 Raylib.ClearBackground(BackgroundColorRgba.ToRayColor());
 
                 Raylib.BeginShaderMode(lastShader.Shader);
-                target.Draw();
+                source.Draw();
                 Raylib.EndShaderMode();
 
                 ResolveDrawUI(UIScreenInfo);
@@ -625,4 +625,46 @@ public class Game
         ScreenToDevelopment = new(Window.CurScreenSize, DevelopmentDimensions);
         DevelopmentToScreen = new(DevelopmentDimensions, Window.CurScreenSize);
     }
+
+
+    // protected void CycleTextureFilter()
+    // {
+    //     TextureFilter newTextureFilter;
+    //     switch (gameTexture.TextureFilter)
+    //     {
+    //         case TextureFilter.Point:
+    //             newTextureFilter = TextureFilter.Bilinear;
+    //             break;
+    //         case TextureFilter.Bilinear:
+    //             newTextureFilter = TextureFilter.Trilinear;
+    //             break;
+    //         case TextureFilter.Trilinear:
+    //             newTextureFilter = TextureFilter.Anisotropic4X;
+    //             break;
+    //         case TextureFilter.Anisotropic4X:
+    //             newTextureFilter = TextureFilter.Anisotropic8X;
+    //             break;
+    //         case TextureFilter.Anisotropic8X:
+    //             newTextureFilter = TextureFilter.Anisotropic16X;
+    //             break;
+    //         case TextureFilter.Anisotropic16X:
+    //             newTextureFilter = TextureFilter.Point;
+    //             break;
+    //         default:
+    //             newTextureFilter = TextureFilter.Point;
+    //             break;
+    //     }
+    //
+    //     gameTexture.TextureFilter = newTextureFilter;
+    //     gameTexture.Unload();
+    //     gameTexture.Load(Window.CurScreenSize);
+    //
+    //     if (screenShaderBuffer.Loaded)
+    //     {
+    //         screenShaderBuffer.TextureFilter = newTextureFilter;
+    //         screenShaderBuffer.Unload();
+    //         screenShaderBuffer.Load(Window.CurScreenSize);
+    //     }
+    //     
+    // }
 }
