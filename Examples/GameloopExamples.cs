@@ -363,6 +363,7 @@ namespace Examples
             ShapeShader pixelationShader = new(pixel, pixelationShaderID, false, 2);
             ShapeShader.SetValueFloat(pixelationShader.Shader, "renderWidth", Window.CurScreenSize.Width);
             ShapeShader.SetValueFloat(pixelationShader.Shader, "renderHeight", Window.CurScreenSize.Height);
+            
             ScreenShaders.Add(pixelationShader);
             
             
@@ -492,6 +493,17 @@ namespace Examples
 
         protected override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
+           
+            var pixelationShader = ScreenShaders.Get(pixelationShaderID);
+            if (pixelationShader != null && pixelationShader.Enabled)
+            {
+
+                var rPixelValue = ShapeRandom.RandF(5.9f, 6.1f);
+                
+                ShapeShader.SetValueFloat(pixelationShader.Shader, "pixelWidth", rPixelValue * Camera.BaseZoomLevel);
+                ShapeShader.SetValueFloat(pixelationShader.Shader, "pixelHeight", rPixelValue * Camera.BaseZoomLevel);
+            }
+            
             
             UIRects.UpdateRect(ui.Area);
             UIRects.Update(time.Delta, ui.MousePos);
