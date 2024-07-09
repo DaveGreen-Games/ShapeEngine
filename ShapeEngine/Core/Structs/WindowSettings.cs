@@ -20,7 +20,8 @@ public struct WindowSettings
         WindowOpacity = 1f,
         MouseEnabled = true,
         MouseVisible = true,
-        Msaa4x = true
+        Msaa4x = true,
+        HighDPI = true
     };
     
     // public Dimensions WindowLocation;
@@ -44,6 +45,7 @@ public struct WindowSettings
     public bool MouseVisible;
     public bool MouseEnabled;
     public bool Msaa4x;
+    public bool HighDPI;
     // public bool AutoIconify; //(minimizes window automatically if focus changes in fullscreen mode)
 
 }
