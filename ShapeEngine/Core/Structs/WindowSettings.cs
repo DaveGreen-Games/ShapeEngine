@@ -9,7 +9,7 @@ public struct WindowSettings
         WindowDisplayState = WindowDisplayState.Normal,
         WindowBorder = WindowBorder.Resizabled,
         WindowMinSize = new(480, 270),
-        WindowSize = new(-1, -1),
+        WindowSize = new(960, 540),
         // WindowLocation = new(0, 0),
         Monitor = 0,
         Vsync = false,
@@ -21,7 +21,8 @@ public struct WindowSettings
         MouseEnabled = true,
         MouseVisible = true,
         Msaa4x = true,
-        HighDPI = true
+        HighDPI = true,
+        FramebufferTransparent = false
     };
     
     // public Dimensions WindowLocation;
@@ -46,6 +47,7 @@ public struct WindowSettings
     public bool MouseEnabled;
     public bool Msaa4x;
     public bool HighDPI;
+    public bool FramebufferTransparent;
     // public bool AutoIconify; //(minimizes window automatically if focus changes in fullscreen mode)
 
 }

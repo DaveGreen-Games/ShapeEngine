@@ -6,6 +6,97 @@ using ShapeEngine.Screen;
 
 namespace ShapeEngine.Core;
 
+/*
+ 
+Set before init window with window setting struct
+ConfigFlags.TransparentWindow;
+ConfigFlags.Msaa4xHint;
+ConfigFlags.InterlacedHint;
+ConfigFlags.HighDpiWindow;
+            
+WindowMode struct
+ConfigFlags.FullscreenMode;
+ConfigFlags.BorderlessWindowMode;
+ConfigFlags.MaximizedWindow;
+ConfigFlags.MinimizedWindow;
+ConfigFlags.HiddenWindow;
+
+ShapeConfigFlags
+ConfigFlags.TopmostWindow;
+ConfigFlags.UndecoratedWindow;
+ConfigFlags.UnfocusedWindow;
+ConfigFlags.AlwaysRunWindow;
+ConfigFlags.MousePassthroughWindow;
+ConfigFlags.VSyncHint;
+ConfigFlags.ResizableWindow;
+*/
+
+public struct WindowConfigFlags
+{
+    public static WindowConfigFlags AllFalse => new WindowConfigFlags()
+    {
+        Undecorated = false,
+        Resizable = false,
+        Topmost = false,
+        Unfocused = false,
+        AlwaysRun = false,
+        MousePassThrough = false,
+        VSync = false
+    };
+    public static WindowConfigFlags AllTrue => new WindowConfigFlags()
+    {
+        Undecorated = true,
+        Resizable = true,
+        Topmost = true,
+        Unfocused = true,
+        AlwaysRun = true,
+        MousePassThrough = true,
+        VSync = true
+    };
+    public static WindowConfigFlags Default => new WindowConfigFlags()
+    {
+        Undecorated = false,
+        Resizable = true,
+        Topmost = false,
+        Unfocused = false,
+        AlwaysRun = true,
+        MousePassThrough = true,
+        VSync = true
+    };
+    
+    public bool Undecorated;
+    public bool Resizable;
+    public bool Topmost;
+    public bool Unfocused;
+    public bool AlwaysRun;
+    public bool MousePassThrough;
+    public bool VSync;
+
+    public bool HasUndecoratedChanged(WindowConfigFlags other) => Undecorated != other.Undecorated;
+    public bool HasResizableChanged(WindowConfigFlags other) => Resizable != other.Resizable;
+    public bool HasTopmostChanged(WindowConfigFlags other) => Topmost != other.Topmost;
+    public bool HasUnfocusedChanged(WindowConfigFlags other) => Unfocused != other.Unfocused;
+    public bool HasAlwaysRunChanged(WindowConfigFlags other) => AlwaysRun != other.AlwaysRun;
+    public bool HasMousePassThroughChanged(WindowConfigFlags other) => MousePassThrough != other.MousePassThrough;
+    public bool HasVSyncChanged(WindowConfigFlags other) => VSync != other.VSync;
+    
+    
+    public static WindowConfigFlags Get()
+    {
+        return new()
+        {
+            Undecorated = Raylib.IsWindowState(ConfigFlags.UndecoratedWindow),
+            Resizable = Raylib.IsWindowState(ConfigFlags.ResizableWindow),
+            Topmost = Raylib.IsWindowState(ConfigFlags.TopmostWindow),
+            Unfocused = Raylib.IsWindowState(ConfigFlags.UnfocusedWindow),
+            AlwaysRun = Raylib.IsWindowState(ConfigFlags.AlwaysRunWindow),
+            MousePassThrough = Raylib.IsWindowState(ConfigFlags.MousePassthroughWindow),
+            VSync = Raylib.IsWindowState(ConfigFlags.VSyncHint)
+        };
+    }
+}
+
+
 public sealed class GameWindow
 {
     #region Structs
@@ -26,6 +117,7 @@ public sealed class GameWindow
             Hidden = Raylib.IsWindowHidden();
             Focused = Raylib.IsWindowFocused();
             Topmost = Raylib.IsWindowState(ConfigFlags.TopmostWindow);
+
         }
     }
     private readonly struct CursorState
@@ -407,6 +499,9 @@ public sealed class GameWindow
     private CursorState cursorState;
     private WindowFlagState windowFlagState;
     private bool focusLostFullscreen = false;
+
+
+    private WindowConfigFlags prevWindowConfigFlags;
     #endregion
 
     #region Internal
@@ -435,8 +530,10 @@ public sealed class GameWindow
     internal GameWindow(WindowSettings windowSettings)
     {
         if(windowSettings.Msaa4x) Raylib.SetConfigFlags(ConfigFlags.Msaa4xHint);
-        if(windowSettings.HighDPI) Raylib.SetWindowState(ConfigFlags.HighDpiWindow);
-        Raylib.InitWindow(0, 0, windowSettings.Title);
+        if(windowSettings.HighDPI) Raylib.SetConfigFlags(ConfigFlags.HighDpiWindow);
+        if(windowSettings.FramebufferTransparent) Raylib.SetConfigFlags(ConfigFlags.TransparentWindow);
+        
+        Raylib.InitWindow(windowSettings.WindowMinSize.Width, windowSettings.WindowMinSize.Height, windowSettings.Title);
         Raylib.SetWindowOpacity(0f);
         
         Monitor = new MonitorDevice();
@@ -481,6 +578,8 @@ public sealed class GameWindow
 
         Raylib.SetWindowOpacity(windowSettings.WindowOpacity);
         // Raylib.ToggleBorderlessWindowed();
+        
+        prevWindowConfigFlags = WindowConfigFlags.Get();
     }
     
     internal void Update(float dt)
@@ -497,6 +596,8 @@ public sealed class GameWindow
 
         ScreenArea = new Rect(0, 0, CurScreenSize.Width, CurScreenSize.Height);
         
+        //TODO: not implemented yet -> should clean up CheckForWindowFlagChanges()
+        CheckForWindowConfigFlagChanges();
         CheckForWindowFlagChanges();
         CheckForCursorChanges();
         
@@ -555,6 +656,43 @@ public sealed class GameWindow
             CurScreenSize = new(w , h);
         }
     }
+
+    private void CheckForWindowConfigFlagChanges()
+    {
+        var cur = WindowConfigFlags.Get();
+
+        if (cur.HasResizableChanged(prevWindowConfigFlags))
+        {
+            
+        }
+        if (cur.HasTopmostChanged(prevWindowConfigFlags))
+        {
+            
+        }
+        if (cur.HasUndecoratedChanged(prevWindowConfigFlags))
+        {
+            
+        }
+        if (cur.HasUnfocusedChanged(prevWindowConfigFlags))
+        {
+            
+        }
+        if (cur.HasAlwaysRunChanged(prevWindowConfigFlags))
+        {
+            
+        }
+        if (cur.HasMousePassThroughChanged(prevWindowConfigFlags))
+        {
+            
+        }
+        if (cur.HasVSyncChanged(prevWindowConfigFlags))
+        {
+            
+        }
+
+        prevWindowConfigFlags = cur;
+
+    }
     
     private void CheckForWindowChanges()
     {
@@ -605,7 +743,7 @@ public sealed class GameWindow
                 focusLostFullscreen = false;
                 DisplayState = WindowDisplayState.Fullscreen;
             }
-            // if (displayState == WindowDisplayState.Minimized) DisplayState = WindowDisplayState.Normal;
+            
         }
         else if (!curWindowFlagState.Focused && windowFlagState.Focused)
         {
