@@ -14,6 +14,7 @@ public readonly struct Transform2D : IEquatable<Transform2D>
     public readonly Size ScaledSize;
     public readonly float Scale;
     public float RotationDeg => RotationRad * ShapeMath.RADTODEG;
+    public Vector2 GetDirection() => ShapeVec.VecFromAngleRad(RotationRad);
     #endregion
     
     #region Constructors
@@ -62,6 +63,7 @@ public readonly struct Transform2D : IEquatable<Transform2D>
         this.Position = pos; 
         this.RotationRad = rotRad; 
         this.BaseSize = baseSize;
+        this.Scale = 1f;
         this.ScaledSize = this.BaseSize * this.Scale;
     }
     public Transform2D(Vector2 pos, float rotRad, Size baseSize, float scale)
