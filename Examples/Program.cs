@@ -1,6 +1,5 @@
 ﻿global using static Examples.Program;
 
-
 namespace Examples
 {
     public static class Program
@@ -9,12 +8,14 @@ namespace Examples
         public static GameloopExamples GAMELOOP = new();
         public static void Main(string[] args)
         {
+            
             // GAMELOOP = new();
             GAMELOOP.Run(args);
 
             // GAMELOOP.SetupWindow("Shape Engine Examples", false, true);
             // GAMELOOP.Run(args);
         }
+        
     }
     
     

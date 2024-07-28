@@ -275,7 +275,7 @@ public class Game
         //no shaders active -> draw directly to screen
         if (activeScreenShaders.Count <= 0)
         {
-            Raylib. BeginDrawing();
+            Raylib.BeginDrawing();
             Raylib.ClearBackground(BackgroundColorRgba.ToRayColor());
 
             Raylib.BeginMode2D(Camera.Camera);
@@ -711,3 +711,7 @@ public class Game
     //     
     // }
 }
+
+
+
+
