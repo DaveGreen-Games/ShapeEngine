@@ -59,7 +59,8 @@ public class Game
     #region Public Members
     public string[] LaunchParams { get; protected set; } = Array.Empty<string>();
 
-    public int FixedPhysicsTimestep { get; private set; }
+    public int FixedPhysicsFramerate { get; private set; }
+    public float FixedPhysicsTimestep { get; private set; }
     public GameTime Time { get; private set; } = new GameTime();
     public ColorRgba BackgroundColorRgba = ColorRgba.Black;
     public float ScreenEffectIntensity = 1.0f;
@@ -123,7 +124,8 @@ public class Game
     
     private List<ShapeFlash> shapeFlashes = new();
     private List<DeferredInfo> deferred = new();
-    
+
+    private float physicsAccumulator = 0f;
     // private Vector2 lastControlledMousePosition = new();
     // private bool mouseControlled = false;
     #endregion
@@ -155,10 +157,11 @@ public class Game
 
         SetConversionFactors();
 
-        var fixedTimeStep = gameSettings.FixedPhysicsTimestep;
+        var fixedTimeStep = gameSettings.FixedPhysicsFramerate;
         if (fixedTimeStep <= 0) fixedTimeStep = 30;
-        FixedPhysicsTimestep = fixedTimeStep;
-
+        FixedPhysicsFramerate = fixedTimeStep;
+        FixedPhysicsTimestep = 1f / FixedPhysicsFramerate;
+        
         curCamera = basicCamera;
         Camera.Activate();
         Camera.SetSize(Window.CurScreenSize, DevelopmentDimensions);
@@ -375,21 +378,26 @@ public class Game
         const float maxFrameTime = 1f / 30f;
         float frameTime = dt;
         var t = 0.0f;
-        var accumulator = 0.0f;
+        // var accumulator = 0.0f;
 
         if ( frameTime > maxFrameTime ) frameTime = maxFrameTime;
         
-        accumulator += frameTime;
-
-        while ( accumulator >= FixedPhysicsTimestep )
+        physicsAccumulator += frameTime;
+        
+        // Console.WriteLine("---------------------------------");
+        // Console.WriteLine($"Advance physics dt {dt} | frame time {frameTime} | accumulator {physicsAccumulator} | fixed {FixedPhysicsTimestep}");
+        while ( physicsAccumulator >= FixedPhysicsTimestep )
         {
-            ResolvePhysicsTimestep(frameTime, t, GameScreenInfo, UIScreenInfo);
+            ResolvePhysicsTimestep(FixedPhysicsTimestep, t, GameScreenInfo, UIScreenInfo);
             t += FixedPhysicsTimestep;
-            accumulator -= FixedPhysicsTimestep;
+            physicsAccumulator -= FixedPhysicsTimestep;
+            // Console.WriteLine($"Resolve physics t {t} | accumulator {physicsAccumulator}");
         }
 
-        float alpha = accumulator / FixedPhysicsTimestep;
+        float alpha = physicsAccumulator / FixedPhysicsTimestep;
         ResolveInterpolatePhysicsState(alpha);
+        // Console.WriteLine($"Interpolate physics with alpha {alpha}");
+        // Console.WriteLine("---------------------------------");
         // State state = currentState * alpha + previousState * ( 1.0 - alpha );
     }
     
