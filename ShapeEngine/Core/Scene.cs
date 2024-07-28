@@ -112,12 +112,13 @@ public abstract class Scene : IUpdateable, IDrawable
     public void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
     {
         SpawnArea?.Update(time, game, ui);
-        CollisionHandler?.Update(time.Delta);
+        //CollisionHandler?.Update(time.Delta); //moved to UpdatePhysicsState
         Pathfinder?.Update(time.Delta);
         OnUpdateGame(time, game, ui);
     }
     public void UpdatePhysicsState(float dt, float totalFrameTime, ScreenInfo game, ScreenInfo ui)
     {
+        CollisionHandler?.Update(dt);
         OnUpdatePhysicsStateGame(dt, totalFrameTime, game, ui);
     }
 
