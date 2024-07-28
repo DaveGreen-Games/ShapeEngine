@@ -116,6 +116,15 @@ public abstract class Scene : IUpdateable, IDrawable
         Pathfinder?.Update(time.Delta);
         OnUpdateGame(time, game, ui);
     }
+    public void UpdatePhysicsState(float dt, float totalFrameTime, ScreenInfo game, ScreenInfo ui)
+    {
+        OnUpdatePhysicsStateGame(dt, totalFrameTime, game, ui);
+    }
+
+    public void InterpolatePhysicsState(float f)
+    {
+        OnInterpolatePhysicsStateGame(f);
+    }
     public void DrawGame(ScreenInfo game)
     {
         OnPreDrawGame(game);
@@ -135,7 +144,8 @@ public abstract class Scene : IUpdateable, IDrawable
         
         
     protected virtual void OnUpdateGame(GameTime time, ScreenInfo game, ScreenInfo ui) { }
-        
+    protected virtual void OnUpdatePhysicsStateGame(float dt, float totalFrameTime, ScreenInfo game, ScreenInfo ui) { }
+    protected virtual void OnInterpolatePhysicsStateGame(float f) { }
     /// <summary>
     /// Called before SpawnArea DrawGame is called.
     /// </summary>

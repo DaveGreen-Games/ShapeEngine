@@ -59,6 +59,7 @@ public class Game
     #region Public Members
     public string[] LaunchParams { get; protected set; } = Array.Empty<string>();
 
+    public int FixedPhysicsTimestep { get; private set; }
     public GameTime Time { get; private set; } = new GameTime();
     public ColorRgba BackgroundColorRgba = ColorRgba.Black;
     public float ScreenEffectIntensity = 1.0f;
@@ -153,7 +154,10 @@ public class Game
         Window.OnWindowTopmostChanged += ResolveOnWindowTopmostChanged;
 
         SetConversionFactors();
-        
+
+        var fixedTimeStep = gameSettings.FixedPhysicsTimestep;
+        if (fixedTimeStep <= 0) fixedTimeStep = 30;
+        FixedPhysicsTimestep = fixedTimeStep;
 
         curCamera = basicCamera;
         Camera.Activate();
@@ -257,7 +261,7 @@ public class Game
             Window.Cursor.Update(dt, UIScreenInfo);
             
             ResolveUpdate(Time, GameScreenInfo, UIScreenInfo);
-            
+            AdvancePhysics(dt);
             DrawToScreen();
 
             ResolveDeferred();
@@ -364,6 +368,31 @@ public class Game
         screenShaderBuffer.Unload();
         gameTexture.Unload();
     }
+
+
+    private void AdvancePhysics(float dt)
+    {
+        const float maxFrameTime = 1f / 30f;
+        float frameTime = dt;
+        var t = 0.0f;
+        var accumulator = 0.0f;
+
+        if ( frameTime > maxFrameTime ) frameTime = maxFrameTime;
+        
+        accumulator += frameTime;
+
+        while ( accumulator >= FixedPhysicsTimestep )
+        {
+            ResolvePhysicsTimestep(frameTime, t, GameScreenInfo, UIScreenInfo);
+            t += FixedPhysicsTimestep;
+            accumulator -= FixedPhysicsTimestep;
+        }
+
+        float alpha = accumulator / FixedPhysicsTimestep;
+        ResolveInterpolatePhysicsState(alpha);
+        // State state = currentState * alpha + previousState * ( 1.0 - alpha );
+    }
+    
     #endregion
 
     #region Public
@@ -439,6 +468,9 @@ public class Game
     protected virtual void BeginRun() { }
 
     protected virtual void Update(GameTime time, ScreenInfo game, ScreenInfo ui) { }
+    protected virtual void UpdatePhysicsState(float dt, float totalFrameTime, ScreenInfo game, ScreenInfo ui) { }
+    protected virtual void InterpolatePhysicsState(float f) { }
+    
     protected virtual void DrawGame(ScreenInfo game) { }
     protected virtual void DrawGameUI(ScreenInfo ui) { }
     protected virtual void DrawUI(ScreenInfo ui) { }
@@ -511,6 +543,17 @@ public class Game
     {
         Update(time, game, ui);
         CurScene.Update(time, GameScreenInfo, UIScreenInfo);
+    }
+    private void ResolvePhysicsTimestep(float dt, float totalFrameTime, ScreenInfo game, ScreenInfo ui)
+    {
+        UpdatePhysicsState(dt, totalFrameTime, game, ui);
+        CurScene.UpdatePhysicsState(dt, totalFrameTime, GameScreenInfo, UIScreenInfo);
+    }
+
+    private void ResolveInterpolatePhysicsState(float f)
+    {
+        InterpolatePhysicsState(f);
+        CurScene.InterpolatePhysicsState(f);
     }
     private void ResolveDrawGame(ScreenInfo game)
     {
