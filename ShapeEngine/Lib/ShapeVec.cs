@@ -164,11 +164,7 @@ namespace ShapeEngine.Lib
         {
             var scalar = MathF.Pow(remainder, dt);
             return from + (to - from) * scalar;
-            // return new Vector2
-            // (
-            //     ShapeMath.PowLerpFloat(from.X, to.X, remainder, dt),
-            //     ShapeMath.PowLerpFloat(from.Y, to.Y, remainder, dt)
-            // );
+            
         }
 
         public static Vector2 LerpTowards(this Vector2 from, Vector2 to, float seconds, float dt)

@@ -74,6 +74,55 @@ public readonly struct Transform2D : IEquatable<Transform2D>
     }
     #endregion
 
+    #region Lerp
+
+    public Transform2D Lerp(Transform2D to, float f)
+    {
+        return new Transform2D
+        (
+            Position.Lerp(to.Position, f),
+            ShapeMath.LerpFloat(RotationRad, to.RotationRad, f),
+            BaseSize.Lerp(to.BaseSize, f)
+        );
+    }
+    public Transform2D PowLerp(Transform2D to, float remainder, float dt)
+    {
+        var scalar = MathF.Pow(remainder, dt);
+        
+        return new Transform2D
+        (
+            Position + (to.Position - Position) * scalar,
+            RotationRad + (to.RotationRad - RotationRad) * scalar,
+            BaseSize + (to.BaseSize - BaseSize) * scalar
+        );
+    }
+    public Transform2D ExpDecayLerpComplex(Transform2D to, float decay, float dt)
+    {
+        var scalar = MathF.Exp(-decay * dt);
+        
+        return new Transform2D
+        (
+            Position + (to.Position - Position) * scalar,
+            RotationRad + (to.RotationRad - RotationRad) * scalar,
+            BaseSize + (to.BaseSize - BaseSize) * scalar
+        );
+    }
+    public Transform2D ExpDecayLerp(Transform2D to, float f, float dt)
+    {
+        var decay = ShapeMath.LerpFloat(1, 25, f);
+        var scalar = MathF.Exp(-decay * dt);
+        
+        return new Transform2D
+        (
+            Position + (to.Position - Position) * scalar,
+            RotationRad + (to.RotationRad - RotationRad) * scalar,
+            BaseSize + (to.BaseSize - BaseSize) * scalar
+        );
+    }
+
+
+    #endregion
+    
     #region Math
     public Vector2 RevertPosition(Vector2 position)
     {

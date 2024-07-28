@@ -77,7 +77,25 @@ public readonly struct Size : IEquatable<Size>
     }
 
     public Size Switch() => new(Height, Width);
-
+    
+    public Size ExpDecayLerp(Size to, float f, float dt)
+    {
+        var decay = ShapeMath.LerpFloat(1, 25, f);
+        var scalar = MathF.Exp(-decay * dt);
+        return this + (to - this) * scalar;
+        
+    }
+    public Size ExpDecayLerpComplex(Size to, float decay, float dt)
+    {
+        var scalar = MathF.Exp(-decay * dt);
+        return this + (to - this) * scalar;
+    }
+    public Size PowLerp(Size to, float remainder, float dt)
+    {
+        var scalar = MathF.Pow(remainder, dt);
+        return this + (to - this) * scalar;
+            
+    }
     public Size Lerp(Size to, float f)
     {
         return new
