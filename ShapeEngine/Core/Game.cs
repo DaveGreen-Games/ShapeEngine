@@ -378,27 +378,19 @@ public class Game
         const float maxFrameTime = 1f / 30f;
         float frameTime = dt;
         var t = 0.0f;
-        // var accumulator = 0.0f;
 
         if ( frameTime > maxFrameTime ) frameTime = maxFrameTime;
         
         physicsAccumulator += frameTime;
-        
-        // Console.WriteLine("---------------------------------");
-        // Console.WriteLine($"Advance physics dt {dt} | frame time {frameTime} | accumulator {physicsAccumulator} | fixed {FixedPhysicsTimestep}");
         while ( physicsAccumulator >= FixedPhysicsTimestep )
         {
             ResolvePhysicsTimestep(FixedPhysicsTimestep, t, GameScreenInfo, UIScreenInfo);
             t += FixedPhysicsTimestep;
             physicsAccumulator -= FixedPhysicsTimestep;
-            // Console.WriteLine($"Resolve physics t {t} | accumulator {physicsAccumulator}");
         }
 
         float alpha = physicsAccumulator / FixedPhysicsTimestep;
         ResolveInterpolatePhysicsState(alpha);
-        // Console.WriteLine($"Interpolate physics with alpha {alpha}");
-        // Console.WriteLine("---------------------------------");
-        // State state = currentState * alpha + previousState * ( 1.0 - alpha );
     }
     
     #endregion
