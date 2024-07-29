@@ -338,7 +338,6 @@ public static class ShapeDrawing
     /// </summary>
     /// <param name="circle">The circle to use for drawing.</param>
     /// <param name="lineInfo">The parameters for how to draw the line.</param>
-    /// <param name="circumference">The total length of the perimeter. If less than 0 the functions calculates this (more expensive).</param>
     /// <param name="gapDrawingInfo">Info for how to draw the gaps.</param>
     /// <param name="rotDeg">The rotation of the circle.</param>
     /// <param name="sides">With how many sides should the circle be drawn.</param>
@@ -442,9 +441,328 @@ public static class ShapeDrawing
         return;
     }
    
-    
-    
-    
+    /// <summary>
+    /// Draws an outline that is interrupted by gaps specified by the parameters.
+    /// 1 gap with 0.5 gap percentage would result in half of the outline visible and the other not visible.
+    /// </summary>
+    /// <param name="triangle">The triangle for drawing the outline.</param>
+    /// <param name="lineInfo">The parameters for how to draw the line.</param>
+    /// <param name="perimeter">The total length of the perimeter. If less than 0 the functions calculates this (more expensive).</param>
+    /// <param name="gapDrawingInfo">Info for how to draw the gaps.</param>
+    public static float DrawGappedOutline(this Triangle triangle, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
+    {
+        if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
+        {
+            triangle.DrawLines(lineInfo);
+            return perimeter > 0f ? perimeter : -1f;
+        }
+
+        if (gapDrawingInfo.GapPerimeterPercentage >= 1f) return perimeter > 0f ? perimeter : -1f;
+
+        var nonGapPercentage = 1f - gapDrawingInfo.GapPerimeterPercentage;
+
+        var gapPercentageRange = gapDrawingInfo.GapPerimeterPercentage / gapDrawingInfo.Gaps;
+        var nonGapPercentageRange = nonGapPercentage / gapDrawingInfo.Gaps;
+
+        
+        var shapePoints = new[] {triangle.A, triangle.B, triangle.C};
+        int sides = shapePoints.Length;
+
+        if (perimeter <= 0f)
+        {
+            perimeter = 0f;
+            for (int i = 0; i < sides; i++)
+            {
+                var curP = shapePoints[i];
+                var nextP = shapePoints[(i + 1) % sides];
+                perimeter += (nextP - curP).Length();
+            }
+        }
+        
+
+        var startDistance = perimeter * gapDrawingInfo.StartOffset;
+        var curDistance = 0f;
+        var nextDistance = startDistance;
+        
+        //int sides = GetCircleSideCount(circle.Radius, sideLength);
+        
+        var curIndex = 0;
+        var curPoint = shapePoints[0]; //GetCirclePoint(circle, angleRad, angleStep, 0);
+        var nextPoint= shapePoints[1]; //GetCirclePoint(circle, angleRad, angleStep, 1);;
+        var curW = nextPoint - curPoint;
+        var curDis = curW.Length();
+        
+        var points = new List<Vector2>(3);
+
+        int whileCounter = gapDrawingInfo.Gaps;
+        
+        while (whileCounter > 0)
+        {
+            if (curDistance + curDis >= nextDistance)
+            {
+                var p = curPoint + (curW / curDis) * (nextDistance - curDistance);
+                
+                
+                if (points.Count == 0)
+                {
+                    nextDistance += nonGapPercentageRange * perimeter;
+                    points.Add(p);
+
+                }
+                else
+                {
+                    nextDistance += gapPercentageRange * perimeter;
+                    points.Add(p);
+                    if (points.Count == 2)
+                    {
+                        DrawLine(points[0], points[1], lineInfo);
+                    }
+                    else
+                    {
+                        for (var i = 0; i < points.Count - 1; i++)
+                        {
+                            var p1 = points[i];
+                            var p2 = points[(i + 1) % points.Count];
+                            DrawLine(p1, p2, lineInfo);
+                        }
+                    }
+                    
+                    points.Clear();
+                    whileCounter--;
+                }
+
+            }
+            else
+            {
+                
+                if(points.Count > 0) points.Add(nextPoint);
+                
+                curDistance += curDis;
+                curIndex = (curIndex + 1) % sides;
+                curPoint = shapePoints[curIndex];
+                nextPoint = shapePoints[(curIndex + 1) % sides];
+                curW = nextPoint - curPoint;
+                curDis = curW.Length();
+            }
+            
+        }
+
+        return perimeter;
+    }
+   
+    /// <summary>
+    /// Draws an outline that is interrupted by gaps specified by the parameters.
+    /// 1 gap with 0.5 gap percentage would result in half of the outline visible and the other not visible.
+    /// </summary>
+    /// <param name="rect">The rect for drawing the outline.</param>
+    /// <param name="lineInfo">The parameters for how to draw the line.</param>
+    /// <param name="perimeter">The total length of the perimeter. If less than 0 the functions calculates this (more expensive).</param>
+    /// <param name="gapDrawingInfo">Info for how to draw the gaps.</param>
+    public static float DrawGappedOutline(this Rect rect, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
+    {
+        if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
+        {
+            rect.DrawLines(lineInfo);
+            return perimeter > 0f ? perimeter : -1f;
+        }
+
+        if (gapDrawingInfo.GapPerimeterPercentage >= 1f) return perimeter > 0f ? perimeter : -1f;
+
+        var nonGapPercentage = 1f - gapDrawingInfo.GapPerimeterPercentage;
+
+        var gapPercentageRange = gapDrawingInfo.GapPerimeterPercentage / gapDrawingInfo.Gaps;
+        var nonGapPercentageRange = nonGapPercentage / gapDrawingInfo.Gaps;
+
+        
+        var shapePoints = new[] {rect.A, rect.B, rect.C, rect.D};
+        int sides = shapePoints.Length;
+
+        if (perimeter <= 0f)
+        {
+            perimeter = 0f;
+            for (int i = 0; i < sides; i++)
+            {
+                var curP = shapePoints[i];
+                var nextP = shapePoints[(i + 1) % sides];
+                perimeter += (nextP - curP).Length();
+            }
+        }
+
+        var startDistance = perimeter * gapDrawingInfo.StartOffset;
+        var curDistance = 0f;
+        var nextDistance = startDistance;
+        
+        var curIndex = 0;
+        var curPoint = shapePoints[0];
+        var nextPoint= shapePoints[1];
+        var curW = nextPoint - curPoint;
+        var curDis = curW.Length();
+        
+        var points = new List<Vector2>(3);
+
+        int whileCounter = gapDrawingInfo.Gaps;
+        
+        while (whileCounter > 0)
+        {
+            if (curDistance + curDis >= nextDistance)
+            {
+                var p = curPoint + (curW / curDis) * (nextDistance - curDistance);
+                
+                
+                if (points.Count == 0)
+                {
+                    nextDistance += nonGapPercentageRange * perimeter;
+                    points.Add(p);
+
+                }
+                else
+                {
+                    nextDistance += gapPercentageRange * perimeter;
+                    points.Add(p);
+                    if (points.Count == 2)
+                    {
+                        DrawLine(points[0], points[1], lineInfo);
+                    }
+                    else
+                    {
+                        for (var i = 0; i < points.Count - 1; i++)
+                        {
+                            var p1 = points[i];
+                            var p2 = points[(i + 1) % points.Count];
+                            DrawLine(p1, p2, lineInfo);
+                        }
+                    }
+                    
+                    points.Clear();
+                    whileCounter--;
+                }
+
+            }
+            else
+            {
+                
+                if(points.Count > 0) points.Add(nextPoint);
+                
+                curDistance += curDis;
+                curIndex = (curIndex + 1) % sides;
+                curPoint = shapePoints[curIndex];
+                nextPoint = shapePoints[(curIndex + 1) % sides];
+                curW = nextPoint - curPoint;
+                curDis = curW.Length();
+            }
+            
+        }
+
+        return perimeter;
+    }
+   
+    /// <summary>
+    /// Draws an outline that is interrupted by gaps specified by the parameters.
+    /// 1 gap with 0.5 gap percentage would result in half of the outline visible and the other not visible.
+    /// </summary>
+    /// <param name="quad">The quad for drawing the outline.</param>
+    /// <param name="lineInfo">The parameters for how to draw the line.</param>
+    /// <param name="perimeter">The total length of the perimeter. If less than 0 the functions calculates this (more expensive).</param>
+    /// <param name="gapDrawingInfo">Info for how to draw the gaps.</param>
+    public static float DrawGappedOutline(this Quad quad, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
+    {
+        if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
+        {
+            quad.DrawLines(lineInfo);
+            return perimeter > 0f ? perimeter : -1f;
+        }
+
+        if (gapDrawingInfo.GapPerimeterPercentage >= 1f) return perimeter > 0f ? perimeter : -1f;
+
+        var nonGapPercentage = 1f - gapDrawingInfo.GapPerimeterPercentage;
+
+        var gapPercentageRange = gapDrawingInfo.GapPerimeterPercentage / gapDrawingInfo.Gaps;
+        var nonGapPercentageRange = nonGapPercentage / gapDrawingInfo.Gaps;
+
+        
+        var shapePoints = new[] {quad.A, quad.B, quad.C, quad.D};
+        int sides = shapePoints.Length;
+
+        if (perimeter <= 0f)
+        {
+            perimeter = 0f;
+            for (int i = 0; i < sides; i++)
+            {
+                var curP = shapePoints[i];
+                var nextP = shapePoints[(i + 1) % sides];
+                perimeter += (nextP - curP).Length();
+            }
+        }
+        
+
+        var startDistance = perimeter * gapDrawingInfo.StartOffset;
+        var curDistance = 0f;
+        var nextDistance = startDistance;
+        
+        var curIndex = 0;
+        var curPoint = shapePoints[0]; 
+        var nextPoint= shapePoints[1]; 
+        var curW = nextPoint - curPoint;
+        var curDis = curW.Length();
+        
+        var points = new List<Vector2>(3);
+
+        int whileCounter = gapDrawingInfo.Gaps;
+        
+        while (whileCounter > 0)
+        {
+            if (curDistance + curDis >= nextDistance)
+            {
+                var p = curPoint + (curW / curDis) * (nextDistance - curDistance);
+                
+                
+                if (points.Count == 0)
+                {
+                    nextDistance += nonGapPercentageRange * perimeter;
+                    points.Add(p);
+
+                }
+                else
+                {
+                    nextDistance += gapPercentageRange * perimeter;
+                    points.Add(p);
+                    if (points.Count == 2)
+                    {
+                        DrawLine(points[0], points[1], lineInfo);
+                    }
+                    else
+                    {
+                        for (var i = 0; i < points.Count - 1; i++)
+                        {
+                            var p1 = points[i];
+                            var p2 = points[(i + 1) % points.Count];
+                            DrawLine(p1, p2, lineInfo);
+                        }
+                    }
+                    
+                    points.Clear();
+                    whileCounter--;
+                }
+
+            }
+            else
+            {
+                
+                if(points.Count > 0) points.Add(nextPoint);
+                
+                curDistance += curDis;
+                curIndex = (curIndex + 1) % sides;
+                curPoint = shapePoints[curIndex];
+                nextPoint = shapePoints[(curIndex + 1) % sides];
+                curW = nextPoint - curPoint;
+                curDis = curW.Length();
+            }
+            
+        }
+
+        return perimeter;
+    }
+   
     
     
     /// <summary>
@@ -550,6 +868,8 @@ public static class ShapeDrawing
         return perimeter;
     }
    
+    
+    
     
     //Circle
     

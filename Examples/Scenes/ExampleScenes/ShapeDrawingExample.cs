@@ -77,7 +77,7 @@ public class ShapeDrawingExample : ExampleScene
     private InputAction changeDrawingMode;
     private bool gappedMode = true;
     private int shapeIndex = 0;
-    private const int MaxShapes = 6;
+    private const int MaxShapes = 7;
 
     private Segment segment;
     private Circle circle;
@@ -301,7 +301,7 @@ public class ShapeDrawingExample : ExampleScene
             triangle.DrawLines(lineInfoOutline);
             if (gappedMode)
             {
-                
+                triangle.DrawGappedOutline(0f, lineInfo, curGappedOutlineInfo);
             }
             else
             {
@@ -313,7 +313,7 @@ public class ShapeDrawingExample : ExampleScene
             rect.DrawLines(lineInfoOutline);
             if (gappedMode)
             {
-                
+                rect.DrawGappedOutline(0f, lineInfo, curGappedOutlineInfo);
             }
             else
             {
@@ -325,7 +325,7 @@ public class ShapeDrawingExample : ExampleScene
             quad.DrawLines(lineInfoOutline);
             if (gappedMode)
             {
-                
+                quad.DrawGappedOutline(0f, lineInfo, curGappedOutlineInfo);
             }
             else
             {
