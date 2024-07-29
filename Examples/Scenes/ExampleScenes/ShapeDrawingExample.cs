@@ -106,6 +106,8 @@ public class ShapeDrawingExample : ExampleScene
     private readonly ValueSlider gapsSlider; // 1 - 100
     private readonly ValueSlider gapPerimeterPercentageSlider; // 0 - 1
     
+    private readonly ValueSlider circleSideSlider;
+    
     public ShapeDrawingExample()
     {
         Title = "Shape Drawing Example";
@@ -145,6 +147,8 @@ public class ShapeDrawingExample : ExampleScene
         startOffsetSlider = new("Offset", 0f, 0f, 1f, true);
         gapsSlider = new( "Gaps", 4, 1, MaxGaps, true);
         gapsSlider.Percentage = false;
+        circleSideSlider = new( "Sides", 18, 3, 120, true);
+        circleSideSlider.Percentage = false;
         gapPerimeterPercentageSlider = new("Perimeter", 0.5f, 0f, 1f, true);
 
     }
@@ -156,6 +160,8 @@ public class ShapeDrawingExample : ExampleScene
         curStartOffset = startOffsetSlider.CurValue;
         curGaps = (int)(gapsSlider.CurValue);
         curGapPerimeterPercentage = gapPerimeterPercentageSlider.CurValue;
+
+        curCircleSides = (int)circleSideSlider.CurValue;
     }
     public override void Reset()
     {
@@ -174,6 +180,9 @@ public class ShapeDrawingExample : ExampleScene
         curGaps = 4;
         gapsSlider.SetCurValue(4);
         
+        curCircleSides = 18;
+        circleSideSlider.SetCurValue(18);
+        
         curGapPerimeterPercentage = 0.5f;
         gapPerimeterPercentageSlider.SetCurValue(0.5f);
         
@@ -182,9 +191,10 @@ public class ShapeDrawingExample : ExampleScene
     protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
     {
         var sliderBox = ui.Area.ApplyMargins(0.01f, 0.01f, 0.82f, 0.12f);
-        var sliderRects = sliderBox.SplitH(3);
+        
         if (!gappedMode)
         {
+            var sliderRects = sliderBox.SplitH(2);
             // sideScalingFactorSlider.Update(time.Delta, sliderRects[0].ApplyMargins(0f, 0.05f, 0f, 0f), ui.MousePos);
             sideScalingFactorSlider.SetRect(sliderRects[0].ApplyMargins(0f, 0.05f, 0f, 0f));
             sideScalingFactorSlider.Update(time.Delta, ui.MousePos);
@@ -194,15 +204,35 @@ public class ShapeDrawingExample : ExampleScene
         }
         else
         {
+            if (shapeIndex == 1)//circle
+            {
+                var sliderRects = sliderBox.SplitH(4);
+                
+                circleSideSlider.SetRect(sliderRects[0].ApplyMargins(0f, 0.05f, 0f, 0f));
+                circleSideSlider.Update(time.Delta, ui.MousePos);
+                
+                startOffsetSlider.SetRect(sliderRects[1].ApplyMargins(0.025f, 0.025f, 0f, 0f));
+                startOffsetSlider.Update(time.Delta, ui.MousePos);
             
-            startOffsetSlider.SetRect(sliderRects[0].ApplyMargins(0f, 0.05f, 0f, 0f));
-            startOffsetSlider.Update(time.Delta, ui.MousePos);
+                gapsSlider.SetRect(sliderRects[2].ApplyMargins(0.025f, 0.025f, 0f, 0f));
+                gapsSlider.Update(time.Delta, ui.MousePos);
             
-            gapsSlider.SetRect(sliderRects[1].ApplyMargins(0.025f, 0.025f, 0f, 0f));
-            gapsSlider.Update(time.Delta, ui.MousePos);
+                gapPerimeterPercentageSlider.SetRect(sliderRects[3].ApplyMargins(0.05f, 0f, 0f, 0f));
+                gapPerimeterPercentageSlider.Update(time.Delta, ui.MousePos);
+            }
+            else
+            {
+                var sliderRects = sliderBox.SplitH(3);
+                startOffsetSlider.SetRect(sliderRects[0].ApplyMargins(0f, 0.05f, 0f, 0f));
+                startOffsetSlider.Update(time.Delta, ui.MousePos);
             
-            gapPerimeterPercentageSlider.SetRect(sliderRects[2].ApplyMargins(0.05f, 0f, 0f, 0f));
-            gapPerimeterPercentageSlider.Update(time.Delta, ui.MousePos);
+                gapsSlider.SetRect(sliderRects[1].ApplyMargins(0.025f, 0.025f, 0f, 0f));
+                gapsSlider.Update(time.Delta, ui.MousePos);
+            
+                gapPerimeterPercentageSlider.SetRect(sliderRects[2].ApplyMargins(0.05f, 0f, 0f, 0f));
+                gapPerimeterPercentageSlider.Update(time.Delta, ui.MousePos);
+            }
+            
         }
         
         ActualizeSliderValues();
@@ -338,6 +368,10 @@ public class ShapeDrawingExample : ExampleScene
         }
         else
         {
+            if (shapeIndex == 1)
+            {
+                circleSideSlider.Draw();
+            }
             startOffsetSlider.Draw();
             gapsSlider.Draw();
             gapPerimeterPercentageSlider.Draw();
