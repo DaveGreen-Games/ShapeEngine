@@ -330,6 +330,123 @@ public static class ShapeDrawing
     /// <returns>Returns the length of the segment if positive otherwise -1. </returns>
     public static float DrawGapped(this Segment s, float length, LineDrawingInfo lineInfo,
         GappedOutlineDrawingInfo gapDrawingInfo) => DrawGappedLine(s.Start, s.End, length, lineInfo, gapDrawingInfo);
+    
+    
+    /// <summary>
+    /// Draws an outline that is interrupted by gaps specified by the parameters.
+    /// 1 gap with 0.5 gap percentage would result in half of the outline visible and the other not visible.
+    /// </summary>
+    /// <param name="circle">The circle to use for drawing.</param>
+    /// <param name="lineInfo">The parameters for how to draw the line.</param>
+    /// <param name="circumference">The total length of the perimeter. If less than 0 the functions calculates this (more expensive).</param>
+    /// <param name="gapDrawingInfo">Info for how to draw the gaps.</param>
+    /// <param name="rotDeg">The rotation of the circle.</param>
+    /// <param name="sides">With how many sides should the circle be drawn.</param>
+    public static void DrawGappedOutline(this Circle circle, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo, float rotDeg, int sides = 18)
+    {
+        //const float sideLength = 4f;
+        if (sides < 3) return;
+        if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
+        {
+            circle.DrawLines(lineInfo, rotDeg, sides);
+            return;
+        }
+
+        if (gapDrawingInfo.GapPerimeterPercentage >= 1f) return;
+
+        var nonGapPercentage = 1f - gapDrawingInfo.GapPerimeterPercentage;
+
+        var gapPercentageRange = gapDrawingInfo.GapPerimeterPercentage / gapDrawingInfo.Gaps;
+        var nonGapPercentageRange = nonGapPercentage / gapDrawingInfo.Gaps;
+        
+        float angleStep = (MathF.PI * 2) / sides;
+        float angleRad = rotDeg * ShapeMath.DEGTORAD;
+        Vector2[] circlePoints = new Vector2[sides];
+        
+        float circumference = 0f;
+        for (int i = 0; i < sides; i++)
+        {
+            var curP = GetCirclePoint(circle, angleRad, angleStep, i);
+            circlePoints[i] = curP;
+            var nextP = GetCirclePoint(circle, angleRad, angleStep, (i + 1) % sides); 
+            circumference += (nextP - curP).Length();
+        }
+
+        var startDistance = circumference * gapDrawingInfo.StartOffset;
+        var curDistance = 0f;
+        var nextDistance = startDistance;
+        
+        //int sides = GetCircleSideCount(circle.Radius, sideLength);
+        
+        var curIndex = 0;
+        var curPoint = circlePoints[0]; //GetCirclePoint(circle, angleRad, angleStep, 0);
+        var nextPoint= circlePoints[1]; //GetCirclePoint(circle, angleRad, angleStep, 1);;
+        var curW = nextPoint - curPoint;
+        var curDis = curW.Length();
+        
+        var points = new List<Vector2>(3);
+
+        int whileCounter = gapDrawingInfo.Gaps;
+        
+        while (whileCounter > 0)
+        {
+            if (curDistance + curDis >= nextDistance)
+            {
+                var p = curPoint + (curW / curDis) * (nextDistance - curDistance);
+                
+                
+                if (points.Count == 0)
+                {
+                    nextDistance += nonGapPercentageRange * circumference;
+                    points.Add(p);
+
+                }
+                else
+                {
+                    nextDistance += gapPercentageRange * circumference;
+                    points.Add(p);
+                    if (points.Count == 2)
+                    {
+                        DrawLine(points[0], points[1], lineInfo);
+                    }
+                    else
+                    {
+                        for (var i = 0; i < points.Count - 1; i++)
+                        {
+                            var p1 = points[i];
+                            var p2 = points[(i + 1) % points.Count];
+                            DrawLine(p1, p2, lineInfo);
+                        }
+                    }
+                    
+                    points.Clear();
+                    whileCounter--;
+                }
+
+            }
+            else
+            {
+                
+                if(points.Count > 0) points.Add(nextPoint);
+                
+                curDistance += curDis;
+                curIndex = (curIndex + 1) % sides;
+                curPoint = circlePoints[curIndex]; //GetCirclePoint(circle, angleRad, angleStep, curIndex);
+                nextPoint = circlePoints[(curIndex + 1) % sides]; //GetCirclePoint(circle, angleRad, angleStep, (curIndex + 1) % sides);
+                curW = nextPoint - curPoint;
+                curDis = curW.Length();
+            }
+            
+        }
+
+        return;
+    }
+   
+    
+    
+    
+    
+    
     /// <summary>
     /// Draws an outline that is interrupted by gaps specified by the parameters.
     /// 1 gap with 0.5 gap percentage would result in half of the outline visible and the other not visible.
@@ -1217,7 +1334,7 @@ public static class ShapeDrawing
     private static int GetCircleSideCount(float radius, float maxLength = 10f)
     {
         float circumference = 2.0f * ShapeMath.PI * radius;
-        return (int)MathF.Max(circumference / maxLength, 1);
+        return (int)MathF.Max(circumference / maxLength, 5);
     }
     private static int GetCircleArcSideCount(float radius, float angleDeg, float maxLength = 10f)
     {
@@ -1226,7 +1343,10 @@ public static class ShapeDrawing
     }
     private static float TransformAngleDegToRaylib(float angleDeg) { return 450f - angleDeg; }
     // private static float TransformAngleRad(float angleRad) { return 2.5f * ShapeMath.PI - angleRad; }
-    
+    private static Vector2 GetCirclePoint(Circle c, float angleRad, float angleStepRad, int index)
+    {
+        return c.Center + new Vector2(c.Radius, 0f).Rotate(angleRad + angleStepRad * index);
+    }
     #endregion
 
     #region Ring

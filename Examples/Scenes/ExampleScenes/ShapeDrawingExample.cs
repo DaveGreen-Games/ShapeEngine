@@ -90,7 +90,7 @@ public class ShapeDrawingExample : ExampleScene
     private LineDrawingInfo lineInfo;
     private LineDrawingInfo lineInfoOutline;
 
-    private int curCircleSides = 12;
+    private int curCircleSides = 36;
     
     private float curSideScalingFactor = 0.5f;
     private float curSideScalingOriginFactor = 0.5f;
@@ -259,7 +259,7 @@ public class ShapeDrawingExample : ExampleScene
             circle.DrawLines(lineInfoOutline, curCircleSides);
             if (gappedMode)
             {
-                
+                circle.DrawGappedOutline(lineInfo, curGappedOutlineInfo, 0f, curCircleSides);
             }
             else
             {
