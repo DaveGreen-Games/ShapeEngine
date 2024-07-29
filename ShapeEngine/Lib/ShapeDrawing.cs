@@ -366,9 +366,9 @@ public static class ShapeDrawing
         float circumference = 0f;
         for (int i = 0; i < sides; i++)
         {
-            var curP = GetCirclePoint(circle, angleRad, angleStep, i);
+            var curP = circle.GetVertex(angleRad, angleStep, i);
             circlePoints[i] = curP;
-            var nextP = GetCirclePoint(circle, angleRad, angleStep, (i + 1) % sides); 
+            var nextP = circle.GetVertex(angleRad, angleStep, (i + 1) % sides); 
             circumference += (nextP - curP).Length();
         }
 
@@ -1342,11 +1342,7 @@ public static class ShapeDrawing
         return (int)MathF.Max(circumference / maxLength, 1);
     }
     private static float TransformAngleDegToRaylib(float angleDeg) { return 450f - angleDeg; }
-    // private static float TransformAngleRad(float angleRad) { return 2.5f * ShapeMath.PI - angleRad; }
-    private static Vector2 GetCirclePoint(Circle c, float angleRad, float angleStepRad, int index)
-    {
-        return c.Center + new Vector2(c.Radius, 0f).Rotate(angleRad + angleStepRad * index);
-    }
+    
     #endregion
 
     #region Ring

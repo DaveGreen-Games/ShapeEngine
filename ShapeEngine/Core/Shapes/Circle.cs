@@ -98,6 +98,11 @@ namespace ShapeEngine.Core.Shapes
 
         #region Points & Vertext
 
+        public Vector2 GetVertex(float angleRad, float angleStepRad, int index)
+        {
+            return Center + new Vector2(Radius, 0f).Rotate(angleRad + angleStepRad * index);
+        }
+        
         public Vector2 GetPoint(float angleRad, float f) { return Center + new Vector2(Radius * f, 0f).Rotate(angleRad); }
         public Vector2 GetRandomPoint()
         {
