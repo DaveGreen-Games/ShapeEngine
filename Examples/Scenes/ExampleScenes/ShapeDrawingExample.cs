@@ -47,15 +47,27 @@ public class ShapeDrawingExample : ExampleScene
 
         protected override void OnDraw()
         {
+            
             var bgColor = Colors.Dark;
             var fillColor = MouseInside ? Colors.Special : Colors.Medium;
             var textColor = Colors.Highlight;
             var margin = Rect.Size.Min() * 0.1f;
             var fillRect = Fill.ApplyMarginsAbsolute(margin);
+            
+            var curGappedOutlineInfo = new GappedOutlineDrawingInfo(4, CurF, 0.5f);
+            var lineInfo = new LineDrawingInfo(margin / 4, fillColor, LineCapType.Capped, 6);
         
             Rect.Draw(bgColor);
             fillRect.Draw(fillColor);
-            Rect.DrawLines(margin / 4, fillColor);
+
+            if (Selected)
+            {
+                Rect.DrawGappedOutline(0f, lineInfo, curGappedOutlineInfo);
+            }
+            else
+            {
+                Rect.DrawLines(margin / 4, fillColor);
+            }
 
             font.ColorRgba = textColor;
             if (Percentage)
