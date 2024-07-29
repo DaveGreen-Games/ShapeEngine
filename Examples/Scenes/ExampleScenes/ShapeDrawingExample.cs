@@ -361,7 +361,7 @@ public class ShapeDrawingExample : ExampleScene
             polyline.Draw(lineInfoOutline);
             if (gappedMode)
             {
-                
+                polyline.DrawGappedOutline(0f, lineInfo, curGappedOutlineInfo);
             }
             else
             {

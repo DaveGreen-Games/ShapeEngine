@@ -903,18 +903,111 @@ public static class ShapeDrawing
         return perimeter;
     }
    
-    
-    
-    
-    //Circle
-    
-    //Triangle
-    
-    //Rect
-    
-    //Quad
-    
-    //Polyline
+    /// <summary>
+    /// Draws an outline that is interrupted by gaps specified by the parameters.
+    /// 1 gap with 0.5 gap percentage would result in half of the outline visible and the other not visible.
+    /// </summary>
+    /// <param name="polyline">The polyline for drawing the outline.</param>
+    /// <param name="lineInfo">The parameters for how to draw the line.</param>
+    /// <param name="perimeter">The total length of the perimeter. If less than 0 the functions calculates this (more expensive).</param>
+    /// <param name="gapDrawingInfo">Info for how to draw the gaps.</param>
+    public static float DrawGappedOutline(this Polyline polyline, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
+    {
+        if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
+        {
+            polyline.Draw(lineInfo);
+            return perimeter > 0f ? perimeter : -1f;
+        }
+
+        if (gapDrawingInfo.GapPerimeterPercentage >= 1f) return perimeter > 0f ? perimeter : -1f;
+
+        var nonGapPercentage = 1f - gapDrawingInfo.GapPerimeterPercentage;
+
+        var gapPercentageRange = gapDrawingInfo.GapPerimeterPercentage / gapDrawingInfo.Gaps;
+        var nonGapPercentageRange = nonGapPercentage / gapDrawingInfo.Gaps;
+
+        if (perimeter <= 0f)
+        {
+            for (int i = 0; i < polyline.Count - 1; i++)
+            {
+                var curP = polyline[i];
+                var nextP = polyline[i + 1];
+
+                perimeter += (nextP - curP).Length();
+            }
+        }
+
+        var startDistance = perimeter * gapDrawingInfo.StartOffset;
+        var curDistance = 0f;
+        var nextDistance = startDistance;
+        
+        
+        var curIndex = 0;
+        var curPoint = polyline[0];
+        var nextPoint= polyline[1];
+        var curW = nextPoint - curPoint;
+        var curDis = curW.Length();
+        
+        var points = new List<Vector2>(3);
+
+        int whileCounter = gapDrawingInfo.Gaps;
+        
+        while (whileCounter > 0)
+        {
+            if (curDistance + curDis >= nextDistance)
+            {
+                var p = curPoint + (curW / curDis) * (nextDistance - curDistance);
+                
+                
+                if (points.Count == 0)
+                {
+                    nextDistance += nonGapPercentageRange * perimeter;
+                    points.Add(p);
+
+                }
+                else
+                {
+                    nextDistance += gapPercentageRange * perimeter;
+                    points.Add(p);
+                    if (points.Count == 2)
+                    {
+                        DrawLine(points[0], points[1], lineInfo);
+                    }
+                    else
+                    {
+                        for (var i = 0; i < points.Count - 1; i++)
+                        {
+                            var p1 = points[i];
+                            var p2 = points[(i + 1) % points.Count];
+                            DrawLine(p1, p2, lineInfo);
+                        }
+                    }
+                    
+                    points.Clear();
+                    whileCounter--;
+                }
+
+            }
+            else
+            {
+                
+                
+                if(points.Count > 0) points.Add(nextPoint);
+                    
+                curDistance += curDis;
+                curIndex = (curIndex + 1) % polyline.Count;
+                curPoint = polyline[curIndex];
+                nextPoint = polyline[(curIndex + 1) % polyline.Count];
+                curW = nextPoint - curPoint;
+                curDis = curW.Length();
+                
+            }
+            
+        }
+
+        return perimeter;
+    }
+   
     #endregion
     
     #region Custom Line Drawing
