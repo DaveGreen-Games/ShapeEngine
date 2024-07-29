@@ -445,6 +445,41 @@ public static class ShapeDrawing
     /// Draws an outline that is interrupted by gaps specified by the parameters.
     /// 1 gap with 0.5 gap percentage would result in half of the outline visible and the other not visible.
     /// </summary>
+    /// <param name="center">The center of the ring.</param>
+    /// <param name="innerRadius">The radius of the inner ring.</param>
+    /// <param name="outerRadius">The radius of the outer ring.</param>
+    /// <param name="lineInfo">The parameters for how to draw the line.</param>
+    /// <param name="gapDrawingInfo">Info for how to draw the gaps.</param>
+    /// <param name="rotDeg">The rotation of the circle.</param>
+    /// <param name="sideLength">The side lengths of the circle.</param>
+    public static void DrawGappedRing(Vector2 center, float innerRadius, float outerRadius, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo, float rotDeg, float sideLength = 8f)
+    {
+        if (innerRadius <= 0 && outerRadius <= 0) return;
+        
+        
+        int outerSides = GetCircleSideCount(outerRadius, sideLength);
+        if (innerRadius <= 0)
+        {
+            DrawGappedOutline(new Circle(center, outerRadius), lineInfo, gapDrawingInfo, rotDeg, outerSides);
+            return;
+        }
+
+        int innerSides = GetCircleSideCount(innerRadius, sideLength);
+        if (outerRadius <= 0)
+        {
+            DrawGappedOutline(new Circle(center, innerRadius), lineInfo, gapDrawingInfo, rotDeg, innerSides);
+            return;
+        }
+        
+        DrawGappedOutline(new Circle(center, innerRadius), lineInfo, gapDrawingInfo, rotDeg, innerSides);
+        DrawGappedOutline(new Circle(center, outerRadius), lineInfo, gapDrawingInfo, rotDeg, outerSides);
+    }
+   
+    
+    /// <summary>
+    /// Draws an outline that is interrupted by gaps specified by the parameters.
+    /// 1 gap with 0.5 gap percentage would result in half of the outline visible and the other not visible.
+    /// </summary>
     /// <param name="triangle">The triangle for drawing the outline.</param>
     /// <param name="lineInfo">The parameters for how to draw the line.</param>
     /// <param name="perimeter">The total length of the perimeter. If less than 0 the functions calculates this (more expensive).</param>
