@@ -123,8 +123,18 @@ namespace ShapeEngine.Core.Shapes
 
             return new();
         }
-        
-        public float GetLength() => MathF.Sqrt(GetLengthSquared());
+
+        public float GetLength()
+        {
+            if (this.Count < 2) return 0f;
+            var length = 0f;
+            for (var i = 0; i < Count - 1; i++)
+            {
+                var w = this[i+1] - this[i];
+                length += w.Length();
+            }
+            return length;
+        }
         public float GetLengthSquared()
         {
             if (this.Count < 2) return 0f;

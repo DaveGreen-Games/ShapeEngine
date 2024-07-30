@@ -165,13 +165,9 @@ public readonly struct Quad : IEquatable<Quad>
         );
     }
 
-    public float GetPerimeter()
-    {
-        var perimeterSq = GetPerimeterSquared();
-        if (perimeterSq <= 0) return 0f;
-        return MathF.Sqrt(perimeterSq);
-    }
-    public float GetPerimeterSquared() { return AB.LengthSquared() + BC.LengthSquared() + CD.LengthSquared() + DA.LengthSquared(); }
+    public float GetPerimeter() => AB.Length() + BC.Length() + CD.Length() + DA.Length();
+    public float GetPerimeterSquared() => AB.LengthSquared() + BC.LengthSquared() + CD.LengthSquared() + DA.LengthSquared();
+
     public float GetArea()
     {
         Triangle abc = new(A,B,C);

@@ -396,7 +396,17 @@ namespace ShapeEngine.Core.Shapes
             // return result * (1f / (GetArea() * 6f));
         }
 
-        public float GetPerimeter() { return MathF.Sqrt(GetPerimeterSquared()); }
+        public float GetPerimeter()
+        {
+            if (this.Count < 3) return 0f;
+            float length = 0f;
+            for (int i = 0; i < Count; i++)
+            {
+                Vector2 w = this[(i + 1)%Count] - this[i];
+                length += w.Length();
+            }
+            return length;
+        }
         public float GetPerimeterSquared()
         {
             if (this.Count < 3) return 0f;

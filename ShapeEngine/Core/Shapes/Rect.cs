@@ -284,7 +284,7 @@ public readonly struct Rect : IEquatable<Rect>
     }
 
     public float GetPerimeter() { return Width * 2 + Height * 2; }
-    public float GetPerimeterSquared() { return GetPerimeter() * GetPerimeter(); }
+    public float GetPerimeterSquared() { return (Width * Width) * 2 + (Height * Height) * 2; }
     public float GetArea() { return Width * Height; }
 
     
