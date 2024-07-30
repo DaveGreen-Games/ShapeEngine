@@ -37,32 +37,8 @@ namespace ShapeEngine.Core.Shapes
         public override int GetHashCode() => Game.GetHashCode(this);
 
         #endregion
-
-        #region Getter Setter
-        /// <summary>
-        /// Flips the calculated normals for each segment. 
-        /// false means default is used. (facing right)
-        /// </summary>
-
-        public float Length => MathF.Sqrt(LengthSquared);
-        public float LengthSquared
-        {
-            get
-            {
-                if (this.Count < 2) return 0f;
-                var lengthSq = 0f;
-                for (var i = 0; i < Count - 1; i++)
-                {
-                    var w = this[i+1] - this[i];
-                    lengthSq += w.LengthSquared();
-                }
-                return lengthSq;
-            }
-        }
-        #endregion
-
+        
         #region Math
-
         public Points? GetProjectedShapePoints(Vector2 v)
         {
             if (v.LengthSquared() <= 0f) return null;
@@ -74,7 +50,6 @@ namespace ShapeEngine.Core.Shapes
             }
             return points;
         }
-
         public Polygon? ProjectShape(Vector2 v)
         {
             if (v.LengthSquared() <= 0f) return null;
@@ -125,7 +100,7 @@ namespace ShapeEngine.Core.Shapes
             if (f <= 0f) return this[0];
             if (f >= 1f) return this[^1];
             
-            var totalLengthSq = LengthSquared;
+            var totalLengthSq = GetLengthSquared();
             var targetLengthSq = totalLengthSq * f;
             var curLengthSq = 0f;
             for (var i = 0; i < Count - 1; i++)
@@ -147,6 +122,19 @@ namespace ShapeEngine.Core.Shapes
             }
 
             return new();
+        }
+        
+        public float GetLength() => MathF.Sqrt(GetLengthSquared());
+        public float GetLengthSquared()
+        {
+            if (this.Count < 2) return 0f;
+            var lengthSq = 0f;
+            for (var i = 0; i < Count - 1; i++)
+            {
+                var w = this[i+1] - this[i];
+                lengthSq += w.LengthSquared();
+            }
+            return lengthSq;
         }
         #endregion
         

@@ -283,8 +283,8 @@ public readonly struct Rect : IEquatable<Rect>
             MathF.Round(Height));
     }
 
-    public float GetCircumference() { return Width * 2 + Height * 2; }
-    public float GetCircumferenceSquared() { return GetCircumference() * GetCircumference(); }
+    public float GetPerimeter() { return Width * 2 + Height * 2; }
+    public float GetPerimeterSquared() { return GetPerimeter() * GetPerimeter(); }
     public float GetArea() { return Width * Height; }
 
     

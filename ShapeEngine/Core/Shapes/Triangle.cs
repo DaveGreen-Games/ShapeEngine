@@ -103,8 +103,8 @@ namespace ShapeEngine.Core.Shapes
         public Triangle Round() { return new(A.Round(), B.Round(), C.Round()); }
         public Triangle Truncate() { return new(A.Truncate(), B.Truncate(), C.Truncate()); }
 
-        public float GetCircumference() => MathF.Sqrt(GetCircumferenceSquared());
-        public float GetCircumferenceSquared() => SideA.LengthSquared() + SideB.LengthSquared() + SideC.LengthSquared();
+        public float GetPerimeter() => MathF.Sqrt(GetPerimeterSquared());
+        public float GetPerimeterSquared() => SideA.LengthSquared() + SideB.LengthSquared() + SideC.LengthSquared();
         public float GetArea() => MathF.Abs((A.X - C.X) * (B.Y - C.Y) - (A.Y - C.Y) * (B.X - C.X)) / 2f;
 
         public bool IsNarrow(float narrowValue = 0.2f)

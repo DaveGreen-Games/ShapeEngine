@@ -396,8 +396,8 @@ namespace ShapeEngine.Core.Shapes
             // return result * (1f / (GetArea() * 6f));
         }
 
-        public float GetCircumference() { return MathF.Sqrt(GetCircumferenceSquared()); }
-        public float GetCircumferenceSquared()
+        public float GetPerimeter() { return MathF.Sqrt(GetPerimeterSquared()); }
+        public float GetPerimeterSquared()
         {
             if (this.Count < 3) return 0f;
             float lengthSq = 0f;
@@ -422,8 +422,6 @@ namespace ShapeEngine.Core.Shapes
             }
 
             return area/ 2f;
-            
-            // return MathF.Abs(GetAreaSigned());
         }
         public bool IsClockwise() => GetArea() < 0f;
 

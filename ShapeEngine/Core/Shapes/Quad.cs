@@ -31,15 +31,7 @@ public readonly struct Quad : IEquatable<Quad>
     public Segment SegmentCToD => new Segment(C, D);
     public Segment SegmentDToA => new Segment(D, A);
 
-    public float Area
-    {
-        get
-        {
-            Triangle abc = new(A,B,C);
-            Triangle cda= new(C,D,A);
-            return abc.GetArea() + cda.GetArea();
-        }
-    }
+    
     #endregion
 
     #region Constructor
@@ -173,6 +165,19 @@ public readonly struct Quad : IEquatable<Quad>
         );
     }
 
+    public float GetPerimeter()
+    {
+        var perimeterSq = GetPerimeterSquared();
+        if (perimeterSq <= 0) return 0f;
+        return MathF.Sqrt(perimeterSq);
+    }
+    public float GetPerimeterSquared() { return AB.LengthSquared() + BC.LengthSquared() + CD.LengthSquared() + DA.LengthSquared(); }
+    public float GetArea()
+    {
+        Triangle abc = new(A,B,C);
+        Triangle cda= new(C,D,A);
+        return abc.GetArea() + cda.GetArea();
+    }
 
     #endregion
 
@@ -581,7 +586,6 @@ public readonly struct Quad : IEquatable<Quad>
     
 
     #endregion
-        
     
     #region Operators
     public static Quad operator +(Quad left, Quad right)
