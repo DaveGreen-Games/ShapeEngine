@@ -928,13 +928,7 @@ public static class ShapeDrawing
 
         if (perimeter <= 0f)
         {
-            for (int i = 0; i < polyline.Count - 1; i++)
-            {
-                var curP = polyline[i];
-                var nextP = polyline[i + 1];
-
-                perimeter += (nextP - curP).Length();
-            }
+            perimeter = polyline.GetLength();
         }
 
         var startDistance = perimeter * gapDrawingInfo.StartOffset;
@@ -951,24 +945,37 @@ public static class ShapeDrawing
         var points = new List<Vector2>(3);
 
         int whileCounter = gapDrawingInfo.Gaps;
+        // Console.WriteLine("----------------Loop Started------------------");
+        // Console.WriteLine($"    > Gaps: {gapDrawingInfo.Gaps} | Start Offset: {(int)(gapDrawingInfo.StartOffset * 100)}% | Start Distance {startDistance}");
+        // Console.WriteLine($"    > Gap percentage: {(int)(gapDrawingInfo.GapPerimeterPercentage * 100)}%");
+        // Console.WriteLine($"    > Gap Range: {(int)(gapPercentageRange * 100)}% | Line Range: {(int)(nonGapPercentageRange * 100)}%");
+        // Console.WriteLine($"    > Gap size: {gapPercentageRange * perimeter} | Line Size: {nonGapPercentageRange * perimeter}");
+        // Console.WriteLine($"    > Perimeter {perimeter} | Cur Dis: {curDis} | Next Dis: {nextDistance}");
         
         while (whileCounter > 0)
         {
-            if (curDistance + curDis >= nextDistance)
+            if (curDistance + curDis >= nextDistance) //as long as next distance in smaller than the distance to the next polyline point
             {
                 var p = curPoint + (curW / curDis) * (nextDistance - curDistance);
                 
                 
                 if (points.Count == 0)
                 {
+                    var prevDistance = nextDistance;
                     nextDistance += nonGapPercentageRange * perimeter;
                     points.Add(p);
+                    // Console.WriteLine($"        > First Point added | Point Count: {points.Count}");
+                    // Console.WriteLine($"            > Next Distance changed from {prevDistance} to {nextDistance}");
 
                 }
                 else
                 {
+                    var prevDistance = nextDistance;
                     nextDistance += gapPercentageRange * perimeter;
                     points.Add(p);
+                    // Console.WriteLine($"        > Point added | Point Count: {points.Count}");
+                    // Console.WriteLine($"            > Next Distance changed from {prevDistance} to {nextDistance}");
+                    
                     if (points.Count == 2)
                     {
                         DrawLine(points[0], points[1], lineInfo);
@@ -983,6 +990,7 @@ public static class ShapeDrawing
                         }
                     }
                     
+                    // Console.WriteLine($"        > While Counter reduced by one from {whileCounter} to {whileCounter - 1}");
                     points.Clear();
                     whileCounter--;
                 }
@@ -990,21 +998,63 @@ public static class ShapeDrawing
             }
             else
             {
-                
-                
-                if(points.Count > 0) points.Add(nextPoint);
+                // Console.WriteLine("     > Change point started------------------");
+                // Console.WriteLine($"        > Cur Index: {curIndex} | Polyline Count: {polyline.Count} | Remaining: {whileCounter}");
+                // Console.WriteLine($"        > Cur Distance: {curDistance} | Next Distance: {nextDistance} | Segment Length: {curDis}");
+                if (curIndex >= polyline.Count - 2) //last point
+                {
+                    if (points.Count > 0)
+                    {
+                        points.Add(nextPoint);
+                        if (points.Count == 2)
+                        {
+                            DrawLine(points[0], points[1], lineInfo);
+                        }
+                        else
+                        {
+                            for (var i = 0; i < points.Count - 1; i++)
+                            {
+                                var p1 = points[i];
+                                var p2 = points[(i + 1) % points.Count];
+                                DrawLine(p1, p2, lineInfo);
+                            }
+                        }
+                        points.Clear();
+                        points.Add(polyline[0]);
+                    }
                     
-                curDistance += curDis;
-                curIndex = (curIndex + 1) % polyline.Count;
-                curPoint = polyline[curIndex];
-                nextPoint = polyline[(curIndex + 1) % polyline.Count];
-                curW = nextPoint - curPoint;
-                curDis = curW.Length();
-                
+                    curDistance += curDis;
+                    curIndex = 0;
+                    curPoint = polyline[curIndex];
+                    nextPoint = polyline[(curIndex + 1) % polyline.Count];
+                    curW = nextPoint - curPoint;
+                    curDis = curW.Length();
+                    
+                    // Console.WriteLine("             > End Point Reached");
+                    // Console.WriteLine($"                > New Index: {curIndex} | Next Index: {(curIndex + 1) % polyline.Count}");
+                    // Console.WriteLine($"                > Cur Distance: {curDistance} | Next Distance: {nextDistance} | Segment Length: {curDis}");
+                }
+                else
+                {
+                    if(points.Count > 0) points.Add(nextPoint);
+
+                    curDistance += curDis;
+                    curIndex += 1;// (curIndex + 1) % polyline.Count;
+                    curPoint = polyline[curIndex];
+                    nextPoint = polyline[(curIndex + 1) % polyline.Count];
+                    curW = nextPoint - curPoint;
+                    curDis = curW.Length();
+                    
+                    // Console.WriteLine("             > Mid Point Reached");
+                    // Console.WriteLine($"                > New Index: {curIndex} | Next Index: {(curIndex + 1) % polyline.Count}");
+                    // Console.WriteLine($"                > Cur Distance: {curDistance} | Next Distance: {nextDistance} | Segment Length: {curDis}");
+                }
+                // Console.WriteLine("         > Change point ended------------------");
             }
             
         }
 
+        // Console.WriteLine("----------------Loop Ended------------------");
         return perimeter;
     }
    
