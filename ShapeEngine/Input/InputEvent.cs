@@ -8,6 +8,10 @@ public class InputEvent
     public readonly ShapeGamepadButton GamepadButton;
     public readonly ShapeGamepadDevice? Gamepad;
 
+    public bool IsKeyboard => Type == InputDeviceType.Keyboard;
+    public bool IsMouse => Type == InputDeviceType.Mouse;
+    public bool IsGamepad => Type == InputDeviceType.Gamepad;
+
     public InputEvent(ShapeKeyboardButton button)
     {
         Type = InputDeviceType.Keyboard;
@@ -18,7 +22,7 @@ public class InputEvent
     }
     public InputEvent(ShapeMouseButton button)
     {
-        Type = InputDeviceType.Keyboard;
+        Type = InputDeviceType.Mouse;
         KeyboardButton = ShapeKeyboardButton.NONE;
         MouseButton = button;
         GamepadButton = ShapeGamepadButton.NONE;
@@ -26,7 +30,7 @@ public class InputEvent
     }
     public InputEvent(ShapeGamepadDevice gamepad, ShapeGamepadButton button)
     {
-        Type = InputDeviceType.Keyboard;
+        Type = InputDeviceType.Gamepad;
         KeyboardButton = ShapeKeyboardButton.NONE;
         MouseButton = ShapeMouseButton.NONE;
         GamepadButton = button;
