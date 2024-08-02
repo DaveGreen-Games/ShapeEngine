@@ -24,11 +24,11 @@ public class InputEventHandler
     /// Register a callback to be notified when a button was pressed/ released on a keyboard, mouse, or gamepad.
     /// </summary>
     /// <param name="callback">The callback for input events.</param>
-    /// <param name="priority">Lower Priorities are called first.</param>
+    /// <param name="order">Lower order comes first.</param>
     /// <returns>Returns if adding was successfull.</returns>
-    public bool AddListener(InputEventCallback callback, uint priority)
+    public bool AddListener(InputEventCallback callback, uint order)
     {
-        if (!listeners.TryAdd(callback, priority)) return false;
+        if (!listeners.TryAdd(callback, order)) return false;
         SortListeners();
         return true;
     }
