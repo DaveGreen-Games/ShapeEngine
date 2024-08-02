@@ -220,14 +220,11 @@ public class Game
                 Quit();
                 continue;
             }
+            
             var dt = Raylib.GetFrameTime();
             Time = Time.TickF(dt);
-            // Delta = dt;
-
-            
             
             Window.Update(dt);
-            
             
             ShapeInput.Update();
             Camera.SetSize(Window.CurScreenSize, DevelopmentDimensions);
@@ -241,7 +238,6 @@ public class Game
                 }
             }
             
-            
             gameTexture.UpdateDimensions(Window.CurScreenSize);
             screenShaderBuffer.UpdateDimensions(Window.CurScreenSize);
             
@@ -252,17 +248,13 @@ public class Game
             
             GameScreenInfo = new(cameraArea, mousePosGame);
             UIScreenInfo = new(Window.ScreenArea, mousePosUI);
-
             
             if (!Paused)
             {
-                // SlowMotion.Update(dt);
                 UpdateFlashes(dt);
             }
-            // var defaultFactor = SlowMotion.GetFactor(SlowMotion.TagDefault);
-            // DeltaSlow = Delta * defaultFactor;
             Window.Cursor.Update(dt, UIScreenInfo);
-            
+
             ResolveUpdate(Time, GameScreenInfo, UIScreenInfo);
             AdvancePhysics(dt);
             DrawToScreen();

@@ -90,7 +90,6 @@ namespace Examples.Scenes.ExampleScenes
     internal class Ball : CollisionObject
     {
         private CircleCollider circleCollider;
-        
         public Ball(Vector2 pos) : base(new Transform2D(pos, 0f, new Size(12, 0), 1f))
         {
             var col = new CircleCollider(new()); //(new(0f), 12f);

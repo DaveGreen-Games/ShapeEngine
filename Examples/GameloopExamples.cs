@@ -446,6 +446,7 @@ namespace Examples
             GoToScene(mainScene);
         }
         
+        
         protected override void OnWindowSizeChanged(DimensionConversionFactors conversionFactors)
         {
             var crtShader = ScreenShaders.Get(crtShaderID);
@@ -490,6 +491,8 @@ namespace Examples
                 }
             }
         }
+
+        
 
         protected override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
