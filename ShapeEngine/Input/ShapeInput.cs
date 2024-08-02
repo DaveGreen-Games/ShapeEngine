@@ -13,7 +13,7 @@ public static class ShapeInput
     public static readonly ShapeKeyboardDevice KeyboardDevice = new();
     public static readonly ShapeMouseDevice MouseDevice = new();
     public static readonly ShapeGamepadDeviceManager GamepadDeviceManager = new();
-
+    public static readonly InputEventHandler EventHandler = new(KeyboardDevice, MouseDevice, GamepadDeviceManager);
     public static InputState GetInputState(this ShapeKeyboardButton button) => KeyboardDevice.GetButtonState(button);
     public static InputState GetInputState(this ShapeMouseButton button) => MouseDevice.GetButtonState(button);
     public static InputState GetInputState(this ShapeMouseAxis axis) => MouseDevice.GetAxisState(axis);
