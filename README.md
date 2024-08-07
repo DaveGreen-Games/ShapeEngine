@@ -12,12 +12,14 @@ When using Shape Engine everything from Raylib is available as well. ([Raylib Ex
 
 ## Showcase
 ![Helldivers](media/helldivers.gif)
+![Gapped Drawing 1](media/gapped-drawing1.gif)
 ![Pathfinding](media/pathfinding.gif)
 ![UI](media/ui.gif)
 ![Shape Projection](media/shape-projection.gif)
 ![Word Emphasis](media/word-emphasis.gif)
 ![Input](media/input.gif)
 ![Fracture](media/fracture.gif)
+![Gapped Drawing 2](media/gapped-drawing2.gif)
 
 
 ## Minimal Project Setup
