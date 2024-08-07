@@ -21,7 +21,7 @@ public struct WindowSettings
         MouseEnabled = true,
         MouseVisible = true,
         Msaa4x = true,
-        HighDPI = true,
+        HighDPI = false,
         FramebufferTransparent = false
     };
     
@@ -46,6 +46,10 @@ public struct WindowSettings
     public bool MouseVisible;
     public bool MouseEnabled;
     public bool Msaa4x;
+    
+    /// <summary>
+    /// Currently High DPI mode does not work correctly in raylib and until it is fixed it should be set to false!
+    /// </summary>
     public bool HighDPI;
     public bool FramebufferTransparent;
     // public bool AutoIconify; //(minimizes window automatically if focus changes in fullscreen mode)
