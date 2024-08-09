@@ -271,10 +271,13 @@ namespace Examples.Scenes
 
             string fullscreenInputTypeName = GAMELOOP.InputActionFullscreen.GetInputTypeDescription(curInputDevice, true, 1, false);
             var fullscreenInfo = $"Fullscreen {fullscreenInputTypeName}";
+
+            string cycleShaderInputTypeDescription = GAMELOOP.InputActionCycleShaders.GetInputTypeDescription(InputDeviceType.Keyboard, true, 1, false);
+            var cycleShaderInfo = $"Cycle Shaders {cycleShaderInputTypeDescription}";
             
-            string crtInputTypeNamesPlus = GAMELOOP.InputActionCRTPlus.GetInputTypeDescription(InputDeviceType.Keyboard, true, 1, false, false);
-            string crtInputTypeNamesMinus = GAMELOOP.InputActionCRTMinus.GetInputTypeDescription(InputDeviceType.Keyboard, true, 1, false, false);
-            var crtInfo = $"Shader [{crtInputTypeNamesPlus}|{crtInputTypeNamesMinus}]";
+            // string crtInputTypeNamesPlus = GAMELOOP.InputActionCRTPlus.GetInputTypeDescription(InputDeviceType.Keyboard, true, 1, false, false);
+            // string crtInputTypeNamesMinus = GAMELOOP.InputActionCRTMinus.GetInputTypeDescription(InputDeviceType.Keyboard, true, 1, false, false);
+            // var crtInfo = $"Shader [{crtInputTypeNamesPlus}|{crtInputTypeNamesMinus}]";
             
             string zoomInputTypeName = GAMELOOP.InputActionZoom.GetInputTypeDescription(ShapeInput.CurrentInputDeviceType, true, 1, false);
             var zoomInfo = $"Zoom {zoomInputTypeName}";
@@ -294,7 +297,7 @@ namespace Examples.Scenes
             titleFont.FontSpacing = 1f;
             titleFont.ColorRgba = color;
             titleFont.DrawTextWrapNone(fullscreenInfo, rects[0], alignement);
-            titleFont.DrawTextWrapNone(crtInfo, rects[1], alignement);
+            titleFont.DrawTextWrapNone(cycleShaderInfo, rects[1], alignement);
             titleFont.DrawTextWrapNone(resetInfo, rects[2], alignement);
             titleFont.DrawTextWrapNone(zoomInfo, rects[3], alignement);
             titleFont.DrawTextWrapNone(pauseInfo, rects[4], alignement);

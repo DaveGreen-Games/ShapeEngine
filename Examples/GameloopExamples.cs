@@ -1,5 +1,5 @@
 ﻿
-using System.Net.Mime;
+
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Lib;
@@ -14,7 +14,6 @@ using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
 using ShapeEngine.Text;
 using ShapeEngine.UI;
-using Color = System.Drawing.Color;
 
 
 namespace Examples
@@ -194,9 +193,11 @@ namespace Examples
         private List<string> fontNames = new();
         private MainScene? mainScene = null;
 
-        private uint crtShaderID = ShapeID.NextID;
-        private Vector2 crtCurvature = new(6, 4);
-        private uint pixelationShaderID = ShapeID.NextID;
+        private readonly Vector2 crtCurvature = new(6, 4);
+        private readonly uint crtShaderID = ShapeID.NextID;
+        private readonly uint pixelationShaderID = ShapeID.NextID;
+        private readonly uint bloomShaderID = ShapeID.NextID;
+        private uint currentShaderID;
         
         public ShapeGamepadDevice? CurGamepad = null;
 
@@ -239,8 +240,9 @@ namespace Examples
         public InputAction InputActionMaximize {get; private set;}
         public InputAction InputActionMinimize {get; private set;}
         public InputAction InputActionNextMonitor {get; private set;}
-        public InputAction InputActionCRTMinus {get; private set;}
-        public InputAction InputActionCRTPlus {get; private set;}
+        public InputAction InputActionCycleShaders {get; private set;}
+        //public InputAction InputActionCRTMinus {get; private set;}
+        //public InputAction InputActionCRTPlus {get; private set;}
         
         //example scene controlled
         public InputAction InputActionZoom {get; private set;}
@@ -348,7 +350,7 @@ namespace Examples
             fontNames.Add("Jet Brains Mono");
 
 
-            Shader crt = ContentLoader.LoadFragmentShader("Resources/Shaders/CRTShader.fs");
+            var crt = ContentLoader.LoadFragmentShader("Resources/Shaders/CRTShader.frag");
             ShapeShader crtShader = new(crt, crtShaderID, true, 1);
             ShapeShader.SetValueFloat(crtShader.Shader, "renderWidth", Window.CurScreenSize.Width);
             ShapeShader.SetValueFloat(crtShader.Shader, "renderHeight", Window.CurScreenSize.Height);
@@ -358,13 +360,17 @@ namespace Examples
             ShapeShader.SetValueVector2(crtShader.Shader, "curvatureAmount", crtCurvature.X, crtCurvature.Y);//smaller values = bigger curvature
             ScreenShaders.Add(crtShader);
             
-            //set enabled to true to use & test pixaltion shader
-            Shader pixel = ContentLoader.LoadFragmentShader("Resources/Shaders/PixelationShader.fs");
+            var pixel = ContentLoader.LoadFragmentShader("Resources/Shaders/PixelationShader.frag");
             ShapeShader pixelationShader = new(pixel, pixelationShaderID, false, 2);
             ShapeShader.SetValueFloat(pixelationShader.Shader, "renderWidth", Window.CurScreenSize.Width);
             ShapeShader.SetValueFloat(pixelationShader.Shader, "renderHeight", Window.CurScreenSize.Height);
-            
             ScreenShaders.Add(pixelationShader);
+
+            var bloom = ContentLoader.LoadFragmentShader("Resources/Shaders/BloomShader.frag");
+            ShapeShader bloomShader = new(bloom, bloomShaderID, false, 3);
+            ScreenShaders.Add(bloomShader);
+
+            currentShaderID = crtShaderID;
             
             
             FontDefault = GetFont(FontIDs.JetBrains);
@@ -547,44 +553,61 @@ namespace Examples
                 paletteInfoBox.Trigger(Colors.CurColorschemeName, 2f);
             }
             
-            
-            var crtDefault = new Vector2(6, 4);
-            var crtSpeed = crtDefault * 0.5f * time.Delta;
-
-
-            var crtPlusState = InputActionCRTPlus.Consume();
-            if (crtPlusState is { Consumed: false, Down: true })
+            var cycleShaders = InputActionCycleShaders.Consume();
+            if (cycleShaders is { Consumed: false, Pressed: true })
             {
-                var crtShader = ScreenShaders.Get(crtShaderID);
-                if (crtShader is { Enabled: true })
+                var currentShader = ScreenShaders.Get(currentShaderID);
+                if (currentShader != null) currentShader.Enabled = false;
+                
+                var shadersIds = ScreenShaders.GetAllIDs();
+                var nextShaderIDIndex = shadersIds.IndexOf(currentShaderID);
+                nextShaderIDIndex += 1;
+                if (nextShaderIDIndex >= shadersIds.Count) {nextShaderIDIndex = 0;}
+
+                var nextId = shadersIds[nextShaderIDIndex];
+                var nextShader = ScreenShaders.Get(nextId);
+                if (nextShader != null)
                 {
-                    crtCurvature += crtSpeed;
-                    if (crtCurvature.X >= 9f)
-                    {
-                        crtCurvature = new(9f, 6f);
-                        crtShader.Enabled = false;
-                    }
-                    ShapeShader.SetValueVector2(crtShader.Shader, "curvatureAmount", crtCurvature.X, crtCurvature.Y);
+                    currentShaderID = nextId;
+                    nextShader.Enabled = true;
                 }
                 
             }
+            //var crtDefault = new Vector2(6, 4);
+            //var crtSpeed = crtDefault * 0.5f * time.Delta;
+            // var crtPlusState = InputActionCRTPlus.Consume();
+            // if (crtPlusState is { Consumed: false, Down: true })
+            // {
+            //     var crtShader = ScreenShaders.Get(crtShaderID);
+            //     if (crtShader is { Enabled: true })
+            //     {
+            //         crtCurvature += crtSpeed;
+            //         if (crtCurvature.X >= 9f)
+            //         {
+            //             crtCurvature = new(9f, 6f);
+            //             crtShader.Enabled = false;
+            //         }
+            //         ShapeShader.SetValueVector2(crtShader.Shader, "curvatureAmount", crtCurvature.X, crtCurvature.Y);
+            //     }
+            //     
+            // }
 
-            var crtMinusState = InputActionCRTMinus.Consume();
-            if (crtMinusState is { Consumed: false, Down: true })
-            {
-                var crtShader = ScreenShaders.Get(crtShaderID);
-                if (crtShader != null)
-                {
-                    crtCurvature -= crtSpeed;
-                    if (!crtShader.Enabled && crtCurvature.X < 9f) crtShader.Enabled = true;
-                    
-                    if (crtCurvature.X <= 1.5f)
-                    {
-                        crtCurvature = new(1.5f, 1f);
-                    }
-                    ShapeShader.SetValueVector2(crtShader.Shader, "curvatureAmount", crtCurvature.X, crtCurvature.Y);
-                }
-            }
+            // var crtMinusState = InputActionCRTMinus.Consume();
+            // if (crtMinusState is { Consumed: false, Down: true })
+            // {
+            //     var crtShader = ScreenShaders.Get(crtShaderID);
+            //     if (crtShader != null)
+            //     {
+            //         crtCurvature -= crtSpeed;
+            //         if (!crtShader.Enabled && crtCurvature.X < 9f) crtShader.Enabled = true;
+            //         
+            //         if (crtCurvature.X <= 1.5f)
+            //         {
+            //             crtCurvature = new(1.5f, 1f);
+            //         }
+            //         ShapeShader.SetValueVector2(crtShader.Shader, "curvatureAmount", crtCurvature.X, crtCurvature.Y);
+            //     }
+            // }
             
             
             
@@ -645,16 +668,19 @@ namespace Examples
             var nextMonitorKB = new InputTypeKeyboardButton(ShapeKeyboardButton.B);
             //var nextMonitorGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_THUMB);
             InputActionNextMonitor = new(GameloopAccessTag, nextMonitorKB);
+
+            var cycleShaderKB = new InputTypeKeyboardButton(ShapeKeyboardButton.J);
+            InputActionCycleShaders = new InputAction(GameloopAccessTag, cycleShaderKB);
             
-            var crtMinusKB = new InputTypeKeyboardButton(ShapeKeyboardButton.J);
+            //var crtMinusKB = new InputTypeKeyboardButton(ShapeKeyboardButton.J);
             // var crtMinusGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP, 0f, ModifierKeyOperator.Or, ModifierKeyGamepad);
             //var crtPluseGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_THUMB);
-            InputActionCRTMinus = new(GameloopAccessTag, crtMinusKB);
+            //InputActionCRTMinus = new(GameloopAccessTag, crtMinusKB);
             
-            var crtPlusKB = new InputTypeKeyboardButton(ShapeKeyboardButton.K);
+            //var crtPlusKB = new InputTypeKeyboardButton(ShapeKeyboardButton.K);
             // var crtPlusGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP, 0f, ModifierKeyOperator.Or, ModifierKeyGamepad);
             //var crtMinusGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_THUMB);
-            InputActionCRTPlus = new(GameloopAccessTag, crtPlusKB);
+            //InputActionCRTPlus = new(GameloopAccessTag, crtPlusKB);
             
             // var pauseKB = new InputTypeKeyboardButton(ShapeKeyboardButton.P);
             // var pauseGB = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_RIGHT);
@@ -740,8 +766,9 @@ namespace Examples
             inputActions.Add(InputActionMaximize);
             inputActions.Add(InputActionMinimize);
             inputActions.Add(InputActionNextMonitor);
-            inputActions.Add(InputActionCRTMinus);
-            inputActions.Add(InputActionCRTPlus);
+            inputActions.Add(InputActionCycleShaders);
+            // inputActions.Add(InputActionCRTMinus);
+            // inputActions.Add(InputActionCRTPlus);
             inputActions.Add(InputActionZoom);
             inputActions.Add(InputActionCyclePalette);
             inputActions.Add(InputActionReset);
