@@ -21,6 +21,8 @@ void main() {
     
     // Get the pixel color from the texture
     vec4 pixel_color = texture(texture0, fragTexCoord);
-    
+//    float x = fract(fragTexCoord.s);
+//    float final = smoothstep(blend - 0.1, blend + 0.1, x);
     finalColor = mix(pixel_color, overdrawColor, blend);
+    //finalColor = mix(pixel_color, overdrawColor, blend);
 }

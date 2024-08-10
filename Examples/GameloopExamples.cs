@@ -197,6 +197,10 @@ namespace Examples
         private readonly uint crtShaderID = ShapeID.NextID;
         private readonly uint pixelationShaderID = ShapeID.NextID;
         private readonly uint bloomShaderID = ShapeID.NextID;
+        private readonly uint overdrawID = ShapeID.NextID;
+        private readonly uint darknessID = ShapeID.NextID;
+        private readonly uint chromaticAberrationID = ShapeID.NextID;
+        private readonly uint blurID = ShapeID.NextID;
         private uint currentShaderID;
         
         public ShapeGamepadDevice? CurGamepad = null;
@@ -368,8 +372,27 @@ namespace Examples
 
             var bloom = ContentLoader.LoadFragmentShader("Resources/Shaders/BloomShader.frag");
             ShapeShader bloomShader = new(bloom, bloomShaderID, false, 3);
+            ShapeShader.SetValueVector2(bloomShader.Shader, "size", Window.CurScreenSize.ToVector2());
             ScreenShaders.Add(bloomShader);
 
+            var overdraw = ContentLoader.LoadFragmentShader("Resources/Shaders/OverdrawShader.frag");
+            ShapeShader overdrawShader = new(overdraw, overdrawID, false, 4);
+            ScreenShaders.Add(overdrawShader);
+            
+            var darkness = ContentLoader.LoadFragmentShader("Resources/Shaders/Darkness.frag");
+            ShapeShader darknessShader = new(darkness, darknessID, false, 5);
+            ScreenShaders.Add(darknessShader);
+            
+            var blur = ContentLoader.LoadFragmentShader("Resources/Shaders/BlurShader.frag");
+            ShapeShader blurShader = new(blur, blurID, false, 6);
+            ShapeShader.SetValueFloat(blurShader.Shader, "renderWidth", Window.CurScreenSize.Width);
+            ShapeShader.SetValueFloat(blurShader.Shader, "renderHeight", Window.CurScreenSize.Height);
+            ScreenShaders.Add(blurShader);
+            
+            var chromaticAberration = ContentLoader.LoadFragmentShader("Resources/Shaders/ChromaticAberrationShader.frag");
+            ShapeShader chromaticAberrationShader = new(chromaticAberration, chromaticAberrationID, false, 7);
+            ScreenShaders.Add(chromaticAberrationShader);
+            
             currentShaderID = crtShaderID;
             
             
@@ -468,6 +491,19 @@ namespace Examples
                 ShapeShader.SetValueFloat(pixelationShader.Shader, "renderWidth", Window.CurScreenSize.Width);
                 ShapeShader.SetValueFloat(pixelationShader.Shader, "renderHeight", Window.CurScreenSize.Height);
             }
+           
+            var blurShader = ScreenShaders.Get(blurID);
+            if (blurShader != null)
+            {
+                ShapeShader.SetValueFloat(blurShader.Shader, "renderWidth", Window.CurScreenSize.Width);
+                ShapeShader.SetValueFloat(blurShader.Shader, "renderHeight", Window.CurScreenSize.Height);
+            }
+            
+            var bloomShader = ScreenShaders.Get(bloomShaderID);
+            if (bloomShader != null)
+            {
+                ShapeShader.SetValueVector2(bloomShader.Shader, "size", Window.CurScreenSize.ToVector2());
+            }
         }
 
         protected override void OnGamepadConnected(ShapeGamepadDevice gamepad)
@@ -511,6 +547,24 @@ namespace Examples
                 
                 ShapeShader.SetValueFloat(pixelationShader.Shader, "pixelWidth", rPixelValue * Camera.BaseZoomLevel);
                 ShapeShader.SetValueFloat(pixelationShader.Shader, "pixelHeight", rPixelValue * Camera.BaseZoomLevel);
+            }
+            
+            var darknessShader = ScreenShaders.Get(darknessID);
+            if (darknessShader != null && darknessShader.Enabled)
+            {
+                var f = game.MousePos / game.Area.Size.ToVector2();
+                ShapeShader.SetValueVector2(darknessShader.Shader, "origin", f);
+            }
+            
+            var overdrawShader = ScreenShaders.Get(overdrawID);
+            if (overdrawShader != null && overdrawShader.Enabled)
+            {
+                if (ShapeRandom.Chance(0.025f))
+                {
+                    ShapeShader.SetValueColor(overdrawShader.Shader, "overdrawColor", ShapeRandom.RandColor(127, 255, 255));
+                    ShapeShader.SetValueFloat(overdrawShader.Shader, "blend", ShapeRandom.RandF(0.4f, 0.6f));
+                }
+                
             }
             
             
