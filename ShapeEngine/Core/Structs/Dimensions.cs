@@ -23,6 +23,8 @@ public readonly struct Dimensions : IEquatable<Dimensions>, IFormattable
     public int MaxDimension => Width > Height ? Width : Height;
     public int MinDimension => Width < Height ? Width : Height;
 
+    public float RatioW => Width / (float)Height;
+    public float RatioH => Height / (float)Width;
     
     
     public Dimensions MatchAspectRatio(Dimensions targetDimensions)
