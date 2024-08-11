@@ -165,13 +165,13 @@ public sealed class ScreenTexture2
             float virtualRatioH = (float)screenSize.Height/ Height;
             if (virtualRatioW < virtualRatioH)
             {
-                var h = Width * virtualRatioW;
+                var h = Height * virtualRatioW;
                 var offset = new Vector2(0f, screenDimensions.Height / 2f - h / 2f);
                 scaledMousePositionUi = (mousePosition - offset) / virtualRatioW;
             }
             else
             {
-                var w = Height * virtualRatioH;
+                var w = Width * virtualRatioH;
                 var offset = new Vector2(screenDimensions.Width / 2f - w / 2f, 0f);
                 scaledMousePositionUi = (mousePosition - offset) / virtualRatioH;
             }
@@ -217,13 +217,13 @@ public sealed class ScreenTexture2
             float virtualRatioH = (float)screenSize.Height/ Height;
             if (virtualRatioW < virtualRatioH)
             {
-                var h = Width * virtualRatioW;
+                var h = Height * virtualRatioW;
                 var offset = new Vector2(0f, screenDimensions.Height / 2f - h / 2f);
                 scaledMousePositionUi = (mousePosition - offset) / virtualRatioW;
             }
             else
             {
-                var w = Height * virtualRatioH;
+                var w = Width * virtualRatioH;
                 var offset = new Vector2(screenDimensions.Width / 2f - w / 2f, 0f);
                 scaledMousePositionUi = (mousePosition - offset) / virtualRatioH;
             }
@@ -332,13 +332,13 @@ public sealed class ScreenTexture2
         if (virtualRatioW < virtualRatioH)
         {
             var w = Width * virtualRatioW;
-            var h = Width * virtualRatioW;
+            var h = Height * virtualRatioW;
             originY = screenDimensions.Height / 2f - h / 2f;
             destRec = new Rect(originX, originY, w, h);
         }
         else
         {
-            var w = Height * virtualRatioH;
+            var w = Width * virtualRatioH;
             var h = Height * virtualRatioH;
             originX = screenDimensions.Width / 2f - w / 2f;
             destRec = new Rect(originX, originY, w, h);
@@ -361,7 +361,7 @@ public sealed class ScreenTexture2
         var activeScreenShaders = Shaders.GetActiveShaders();
         if (activeScreenShaders.Count <= 0) return;
 
-        if (activeScreenShaders.Count == 1)
+        if (activeScreenShaders.Count == 1 || ShaderSupport == ShaderSupportType.Single)
         {
             var singleShader = activeScreenShaders[0];
             Raylib.BeginTextureMode(shaderBuffer);
@@ -533,6 +533,11 @@ public sealed class ScreenTexture2
     
 }
 
+
+
+
+
+/*
 internal sealed class ScreenTexture
 {
     public bool Loaded { get; private set; } = false;
@@ -619,3 +624,4 @@ internal sealed class ScreenTexture
     //DrawTexturePro(RenderTexture.texture, sourceRec, destRec, origin, 0f, WHITE);
     //
 }
+*/
