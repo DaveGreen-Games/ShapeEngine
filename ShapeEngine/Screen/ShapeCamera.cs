@@ -108,7 +108,7 @@ public sealed class ShapeCamera
     /// <summary>
     /// Used to calculate a zoom adjustment factor to make the camera always display the same amount of area independent of the screen size
     /// </summary>
-    public Dimensions TargetResolution { get; set; } = new(1920, 1080); // Dimensions.GetInvalidDimension();
+    public Dimensions TargetResolution { get; set; } = new(1920,1080);
     public Transform2D BaseTransform { get; set; }
     public Vector2 BasePosition
     {

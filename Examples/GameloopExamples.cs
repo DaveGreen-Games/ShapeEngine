@@ -268,7 +268,7 @@ namespace Examples
         // public bool UseMouseMovement = true;
         public GameloopExamples() : base
             (
-                GameSettings.Fixed, 
+                GameSettings.StretchMode, 
                 WindowSettings.Default
             )
         {
@@ -574,8 +574,6 @@ namespace Examples
                 }
             }
             
-            
-            
             UIRects.UpdateRect(ui.Area);
             UIRects.Update(time.Delta, ui.MousePos);
 
@@ -684,7 +682,18 @@ namespace Examples
             paletteInfoBox.Update(time.Delta);
         }
 
-        
+        // protected override void DrawGame(ScreenInfo game)
+        // {
+        //     game.MousePos.Draw(50, new ColorRgba(Color.Red));
+        //     game.Area.DrawLines(100f, new ColorRgba(Color.Red));
+        // }
+        //
+        // protected override void DrawGameUI(ScreenInfo gameUi)
+        // {
+        //     // gameUi.MousePos.Draw(25, new ColorRgba(Color.Green));
+        //     gameUi.Area.DrawLines(5f, new ColorRgba(Color.Green));
+        // }
+
         protected override void DrawUI(ScreenInfo ui)
         {
             var fpsRect = UIRects.GetRect("top right top");//"top", "right", "top");
