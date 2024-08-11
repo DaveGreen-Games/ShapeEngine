@@ -393,7 +393,7 @@ namespace ShapeEngine.Core
         }
 
         
-        public virtual void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
+        public virtual void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
             // CollisionHandler?.Update();
 
@@ -428,9 +428,9 @@ namespace ShapeEngine.Core
                     obj.UpdateParallaxe(ParallaxePosition);
                     
                     if (obj.IsDrawingToGame(game.Area)) drawToGameTextureObjects.Add(obj);
-                    if (obj.IsDrawingToGameUI(ui.Area)) drawToUITextureObjects.Add(obj);
+                    if (obj.IsDrawingToGameUI(gameUi.Area)) drawToUITextureObjects.Add(obj);
                     
-                    obj.Update(time, game, ui);
+                    obj.Update(time, game, gameUi, ui);
                     
                     if (obj.IsDead || obj.HasLeftBounds(Bounds))
                     {
@@ -461,11 +461,11 @@ namespace ShapeEngine.Core
                 obj.DrawGame(game);
             }
         }
-        public virtual void DrawGameUI(ScreenInfo ui)
+        public virtual void DrawGameUI(ScreenInfo gameUi)
         {
             foreach (var obj in drawToUITextureObjects)
             {
-                obj.DrawGameUI(ui);
+                obj.DrawGameUI(gameUi);
             }
         }
 

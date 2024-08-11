@@ -127,7 +127,7 @@ public class PolygonHolesExample : ExampleScene
     }
     
     
-    protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+    protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi,  Vector2 mousePosUI)
     {
         var gamepad = GAMELOOP.CurGamepad;
         iaAddPolygon.Gamepad = gamepad;
@@ -139,7 +139,7 @@ public class PolygonHolesExample : ExampleScene
         }
     }
 
-    protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
+    protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
         var translation = (game.MousePos - curPolygonPosition);
         curPolygonPosition = game.MousePos;
@@ -206,7 +206,7 @@ public class PolygonHolesExample : ExampleScene
         //
         // curPolygon.DrawLines(5f, Colors.Highlight);
     }
-    protected override void OnDrawGameUIExample(ScreenInfo ui)
+    protected override void OnDrawGameUIExample(ScreenInfo gameUi)
     {
         
     }

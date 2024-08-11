@@ -346,7 +346,7 @@ namespace Examples.Scenes.ExampleScenes
             // if (!value) optionButton.Active = true;
         }
         
-        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
+        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
 
             if (container.MouseInside)
@@ -396,7 +396,7 @@ namespace Examples.Scenes.ExampleScenes
             navigator.Update();
         }
 
-        protected override void OnDrawGameUIExample(ScreenInfo ui)
+        protected override void OnDrawGameUIExample(ScreenInfo gameUi)
         {
             container.Draw();
         }

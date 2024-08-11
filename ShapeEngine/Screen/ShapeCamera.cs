@@ -104,9 +104,12 @@ public sealed class ShapeCamera
             follower?.OnCameraAttached();
         }
     }
-    
-    public Transform2D BaseTransform { get; set; }
 
+    /// <summary>
+    /// Used to calculate a zoom adjustment factor to make the camera always display the same amount of area independent of the screen size
+    /// </summary>
+    public Dimensions TargetResolution { get; set; } = new(1920, 1080); // Dimensions.GetInvalidDimension();
+    public Transform2D BaseTransform { get; set; }
     public Vector2 BasePosition
     {
         get => BaseTransform.Position;
@@ -156,6 +159,24 @@ public sealed class ShapeCamera
         BaseTransform = BaseTransform.SetPosition(pos);
         this.SetAlignement(alignement);
         this.SetZoom(zoomLevel);
+    }
+    public ShapeCamera(Vector2 pos, Dimensions targetResolution)
+    {
+        BaseTransform = BaseTransform.SetPosition(pos);
+        TargetResolution = targetResolution;
+    }
+    public ShapeCamera(Vector2 pos, Vector2 alignement, Dimensions targetResolution)
+    {
+        BaseTransform = BaseTransform.SetPosition(pos);
+        this.SetAlignement(alignement);
+        TargetResolution = targetResolution;
+    }
+    public ShapeCamera(Vector2 pos, Vector2 alignement, float zoomLevel, Dimensions targetResolution)
+    {
+        BaseTransform = BaseTransform.SetPosition(pos);
+        this.SetAlignement(alignement);
+        this.SetZoom(zoomLevel);
+        TargetResolution = targetResolution;
     }
     public ShapeCamera(Vector2 pos, Vector2 alignement, float zoomLevel, float rotationDeg)
     {
@@ -228,37 +249,49 @@ public sealed class ShapeCamera
             SetCameraRect(rect);
         }
     }
-    internal void SetSize(Dimensions curScreenSize, Dimensions targetDimensions)
+    internal void SetSize(Dimensions curScreenSize)
     {
         BaseTransform = BaseTransform.SetSize(curScreenSize.ToSize());
 
-        //VARIANT 2
-        // float xDif = curScreenSize.Width - targetDimensions.Width;
-        // float yDif = curScreenSize.Height - targetDimensions.Width;
-        // if (xDif > yDif)
-        // {
-        //     zoomAdjustment = (float)curScreenSize.Width / (float)targetDimensions.Width;
-        // }
-        // else
-        // {
-        //     zoomAdjustment = (float)curScreenSize.Height / (float)targetDimensions.Height;
-        // }
-
-        //VARIANT 1
-        float curArea = curScreenSize.Area;
-        float targetArea = targetDimensions.Area;
-        zoomAdjustment = MathF.Sqrt( curArea / targetArea );
-        
-        //VARIANT 3
-        // var size = Size;
-        // var targetSize = targetDimensions.ToVector2();
-        // var fX = targetSize.X / size.X;
-        // var fY = targetSize.Y / size.Y;
-        // zoomAdjustment = fX > fY ? fX : fY;
-        
-        
-        // zoomAdjustment = 1f;
+        if (TargetResolution.IsValid())
+        {
+            float curArea = curScreenSize.Area;
+            float targetArea = TargetResolution.Area;
+            zoomAdjustment = MathF.Sqrt(curArea / targetArea);
+        }
+        else zoomAdjustment = 1f;
     }
+    // internal void SetSize(Dimensions curScreenSize, Dimensions targetDimensions)
+    // {
+    //     BaseTransform = BaseTransform.SetSize(curScreenSize.ToSize());
+    //
+    //     //VARIANT 2
+    //     // float xDif = curScreenSize.Width - targetDimensions.Width;
+    //     // float yDif = curScreenSize.Height - targetDimensions.Width;
+    //     // if (xDif > yDif)
+    //     // {
+    //     //     zoomAdjustment = (float)curScreenSize.Width / (float)targetDimensions.Width;
+    //     // }
+    //     // else
+    //     // {
+    //     //     zoomAdjustment = (float)curScreenSize.Height / (float)targetDimensions.Height;
+    //     // }
+    //
+    //     //VARIANT 1
+    //     float curArea = curScreenSize.Area;
+    //     float targetArea = targetDimensions.Area;
+    //     zoomAdjustment = MathF.Sqrt( curArea / targetArea );
+    //     
+    //     //VARIANT 3
+    //     // var size = Size;
+    //     // var targetSize = targetDimensions.ToVector2();
+    //     // var fX = targetSize.X / size.X;
+    //     // var fY = targetSize.Y / size.Y;
+    //     // zoomAdjustment = fX > fY ? fX : fY;
+    //     
+    //     
+    //     // zoomAdjustment = 1f;
+    // }
 
     private float CalculateZoomLevel(Size targetSize)
     {

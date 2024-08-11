@@ -90,10 +90,10 @@ public abstract class CollisionObject : PhysicsObject
     public HashSet<Collider> Colliders { get; } = new();
     public bool HasColliders => Colliders.Count > 0;
 
-    public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
+    public override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
         var trans = Transform;
-        base.Update(time, game, ui); // updates physics state
+        base.Update(time, game, gameUi, ui); // updates physics state
         foreach (var collider in Colliders)
         {
             if (collider.Parent != this)

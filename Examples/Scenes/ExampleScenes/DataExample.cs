@@ -241,7 +241,7 @@ public class DataExample : ExampleScene
         asteroids.Clear();
     }
     
-    protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
+    protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi,  ScreenInfo ui)
     {
         if (asteroidSpawnTimer > 0f)
         {
@@ -285,7 +285,7 @@ public class DataExample : ExampleScene
         DrawDescription(r);
     }
 
-    protected override void OnDrawGameUIExample(ScreenInfo ui)
+    protected override void OnDrawGameUIExample(ScreenInfo gameUi)
     {
         
     }

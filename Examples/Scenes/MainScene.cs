@@ -170,7 +170,7 @@ namespace Examples.Scenes
                 GAMELOOP.Window.NextMonitor();
             }
         }
-        protected override void OnUpdateGame(GameTime time, ScreenInfo game, ScreenInfo ui)
+        protected override void OnUpdateGame(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
             if (tabChangeMouseWheelLockTimer > 0f)
             {
@@ -209,7 +209,8 @@ namespace Examples.Scenes
             titleFont.DrawTextWrapNone(pagesText, pageRect, new(0f, 0.5f));
 
             Segment s = new(uiSize * new Vector2(0f, 0.22f), uiSize * new Vector2(1f, 0.22f));
-            s.Draw(MathF.Max(4f * GAMELOOP.DevelopmentToScreen.AreaFactor, 0.5f), Colors.Light);
+            float thickness = ui.Area.Height * 0.0025f;
+            s.Draw(thickness, Colors.Light);
 
             var backRect = new Rect(uiSize * new Vector2(0.01f, 0.17f), uiSize.ToSize() * new Size(0.2f, 0.04f), new Vector2(0f, 0f));
             var curInputDevice = ShapeInput.CurrentInputDeviceTypeNoMouse;

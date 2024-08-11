@@ -25,7 +25,7 @@ public abstract class PhysicsObject : GameObject
         else Velocity += force / Mass;
     }
 
-    public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
+    public override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
         UpdatePhysicsState(time.Delta);
     }

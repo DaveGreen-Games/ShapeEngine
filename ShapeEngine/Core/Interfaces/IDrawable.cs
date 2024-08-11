@@ -12,8 +12,8 @@ public interface IDrawable
     /// <summary>
     /// Draw to the game ui here. Is affected by screen shaders but NOT by the camera.
     /// </summary>
-    /// <param name="ui"></param>
-    public void DrawGameUI(ScreenInfo ui);
+    /// <param name="gameUi"></param>
+    public void DrawGameUI(ScreenInfo gameUi);
 
     
     //public void DrawToTexture(ScreenTexture texture);

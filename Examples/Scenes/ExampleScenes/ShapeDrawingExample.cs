@@ -200,7 +200,7 @@ public class ShapeDrawingExample : ExampleScene
         
     }
 
-    protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
+    protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
         var sliderBox = ui.Area.ApplyMargins(0.01f, 0.01f, 0.82f, 0.12f);
         
@@ -250,9 +250,9 @@ public class ShapeDrawingExample : ExampleScene
         ActualizeSliderValues();
     }
 
-    protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+    protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
     {
-        base.HandleInput(dt, mousePosGame, mousePosUI);
+        base.HandleInput(dt, mousePosGame, mousePosGameUi, mousePosUI);
         var gamepad = GAMELOOP.CurGamepad;
         
         nextShape.Gamepad = gamepad;
@@ -371,7 +371,7 @@ public class ShapeDrawingExample : ExampleScene
         
         
     }
-    protected override void OnDrawGameUIExample(ScreenInfo ui)
+    protected override void OnDrawGameUIExample(ScreenInfo gameUi)
     {
         if (!gappedMode)
         {

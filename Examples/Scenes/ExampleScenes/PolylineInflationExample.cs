@@ -71,9 +71,9 @@ namespace Examples.Scenes.ExampleScenes
             collisionSegment = new();
             collisionSegmentValid = false;
         }
-        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame,Vector2 mousePosGameUi,  Vector2 mousePosUI)
         {
-            base.HandleInput(dt, mousePosGame, mousePosUI);
+            base.HandleInput(dt, mousePosGame, mousePosGameUi, mousePosUI);
             // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
             var gamepad = GAMELOOP.CurGamepad;
             createPoint.Gamepad = gamepad;
@@ -271,7 +271,7 @@ namespace Examples.Scenes.ExampleScenes
                 else collisionSegment.Draw(4f,Colors.Light, LineCapType.None);
             }
         }
-        protected override void OnDrawGameUIExample(ScreenInfo ui)
+        protected override void OnDrawGameUIExample(ScreenInfo gameUi)
         {
             
         }

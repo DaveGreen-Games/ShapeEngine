@@ -65,7 +65,7 @@ public class Game
     public ColorRgba BackgroundColorRgba = ColorRgba.Black;
     public float ScreenEffectIntensity = 1.0f;
 
-    public readonly ShaderContainer ScreenShaders = new();
+    public ShaderContainer? ScreenShaders => gameTexture.Shaders;
     public ShapeCamera Camera
     {
         get => curCamera;
@@ -74,12 +74,16 @@ public class Game
             if (value == curCamera) return;
             curCamera.Deactivate();
             curCamera = value;
+            gameTexture.Camera = curCamera;
             curCamera.Activate();
-            curCamera.SetSize(Window.CurScreenSize, DevelopmentDimensions);
+            curCamera.SetSize(Window.CurScreenSize);
         }
     }
+
     public ScreenInfo GameScreenInfo { get; private set; } = new();
+    public ScreenInfo GameUiScreenInfo { get; private set; } = new();
     public ScreenInfo UIScreenInfo { get; private set; } = new();
+    
     // public float Delta { get; private set; } = 0f;
     // public float DeltaSlow { get; private set; } = 0f;
     private bool paused = false;
@@ -98,15 +102,15 @@ public class Game
     }
     //public SlowMotion SlowMotion { get; private set; } = new SlowMotion();
 
-    /// <summary>
-    /// Scaling factors from current screen size to development resolution.
-    /// </summary>
-    public DimensionConversionFactors ScreenToDevelopment { get; private set; }
-    /// <summary>
-    /// Scaling factors from development resolution to the current screen size.
-    /// </summary>
-    public DimensionConversionFactors DevelopmentToScreen { get; private set; }
-    public Dimensions DevelopmentDimensions { get; private set; }
+    // /// <summary>
+    // /// Scaling factors from current screen size to development resolution.
+    // /// </summary>
+    // public DimensionConversionFactors ScreenToDevelopment { get; private set; }
+    // /// <summary>
+    // /// Scaling factors from development resolution to the current screen size.
+    // /// </summary>
+    // public DimensionConversionFactors DevelopmentToScreen { get; private set; }
+    // public Dimensions DevelopmentDimensions { get; private set; }
     
     public GameWindow Window { get; private set; }
     public Scene CurScene { get; private set; } = new SceneEmpty();
@@ -114,9 +118,10 @@ public class Game
     
     #region Private Members
 
-    private readonly ScreenTexture gameTexture = new();
-    private readonly ScreenTexture screenShaderBuffer = new();
-    private readonly ShapeCamera basicCamera = new ShapeCamera();
+    // private readonly ScreenTexture gameTexture = new();
+    // private readonly ScreenTexture screenShaderBuffer = new();
+    private readonly ScreenTexture2 gameTexture;
+    private readonly ShapeCamera basicCamera = new();
     private ShapeCamera curCamera;
     
     private bool quit = false;
@@ -137,7 +142,7 @@ public class Game
         ReleaseMode = false;
         #endif
 
-        this.DevelopmentDimensions = gameSettings.DevelopmentDimensions;
+        // this.DevelopmentDimensions = gameSettings.DevelopmentDimensions;
         Window = new(windowSettings);
         Window.OnWindowSizeChanged += ResolveOnWindowSizeChanged;
         Window.OnWindowPositionChanged += ResolveOnWindowPositionChanged;
@@ -155,31 +160,56 @@ public class Game
         Window.OnWindowHiddenChanged += ResolveOnWindowHiddenChanged;
         Window.OnWindowTopmostChanged += ResolveOnWindowTopmostChanged;
 
-        SetConversionFactors();
+        // SetConversionFactors();
 
         var fixedTimeStep = gameSettings.FixedPhysicsFramerate;
         if (fixedTimeStep <= 0) fixedTimeStep = 30;
         FixedPhysicsFramerate = fixedTimeStep;
         FixedPhysicsTimestep = 1f / FixedPhysicsFramerate;
-        
+
+        //basicCamera.TargetResolution = gameSettings.DevelopmentDimensions;
         curCamera = basicCamera;
-        Camera.Activate();
-        Camera.SetSize(Window.CurScreenSize, DevelopmentDimensions);
+        curCamera.Activate();
+        curCamera.SetSize(Window.CurScreenSize);
         
         var mousePosUI = Window.MousePosition;
-        var mousePosGame = Camera.ScreenToWorld(mousePosUI);
-        var cameraArea = Camera.Area;
+        // var mousePosGame = Camera.ScreenToWorld(mousePosUI);
+        // var cameraArea = Camera.Area;
 
-        GameScreenInfo = new(cameraArea, mousePosGame);
+        // GameScreenInfo = new(cameraArea, mousePosGame);
+        
+
+        var screenTextureMode = gameSettings.GetScreenTextureMode();
+        if (screenTextureMode == ScreenTextureMode.Stretch)
+        {
+            gameTexture = new(gameSettings.ShaderSupportType, gameSettings.TextureFilter);
+        }
+        else if (screenTextureMode == ScreenTextureMode.Fixed)
+        {
+            gameTexture = new(gameSettings.FixedDimensions, gameSettings.ShaderSupportType, gameSettings.TextureFilter);
+        }
+        else
+        {
+            gameTexture = new(gameSettings.PixelationFactor, gameSettings.ShaderSupportType, gameSettings.TextureFilter);
+        }
+
+        gameTexture.Initialize(Window.CurScreenSize, mousePosUI, curCamera);
+        gameTexture.OnDrawGame += GameTextureOnDrawGame;
+        gameTexture.OnDrawUI += GameTextureOnDrawUI;
+
+        GameScreenInfo = gameTexture.GameScreenInfo;
+        GameUiScreenInfo = gameTexture.GameUiScreenInfo;
         UIScreenInfo = new(Window.ScreenArea, mousePosUI);
-
-        gameTexture.Load(Window.CurScreenSize);
-        if (gameSettings.MultiShaderSupport) screenShaderBuffer.Load(Window.CurScreenSize);
+        // gameTexture.Load(Window.CurScreenSize);
+        // if (gameSettings.MultiShaderSupport) screenShaderBuffer.Load(Window.CurScreenSize);
 
         ShapeInput.OnInputDeviceChanged += OnInputDeviceChanged;
         ShapeInput.GamepadDeviceManager.OnGamepadConnectionChanged += OnGamepadConnectionChanged;
         
     }
+
+    
+
     public ExitCode Run(params string[] launchParameters)
     {
         this.LaunchParams = launchParameters;
@@ -227,8 +257,11 @@ public class Game
             Window.Update(dt);
             
             ShapeInput.Update();
-            Camera.SetSize(Window.CurScreenSize, DevelopmentDimensions);
-            if(!Paused) Camera.Update(dt);
+            
+            // var cameraArea = Camera.Area;
+            
+            // Camera.SetSize(Window.CurScreenSize);
+            // if(!Paused) Camera.Update(dt);
 
             if (Window.MouseOnScreen)
             {
@@ -238,15 +271,18 @@ public class Game
                 }
             }
             
-            gameTexture.UpdateDimensions(Window.CurScreenSize);
-            screenShaderBuffer.UpdateDimensions(Window.CurScreenSize);
+            var mousePosUI = Window.MousePosition; 
+            gameTexture.Update(dt, Window.CurScreenSize, mousePosUI, Paused);
             
-            var cameraArea = Camera.Area;
-
-            var mousePosUI = Window.MousePosition; //mousePos;// GetMousePosition();
-            var mousePosGame = Camera.ScreenToWorld(mousePosUI);
+            // gameTexture.UpdateDimensions(Window.CurScreenSize);
+            // screenShaderBuffer.UpdateDimensions(Window.CurScreenSize);
             
-            GameScreenInfo = new(cameraArea, mousePosGame);
+            //mousePos;// GetMousePosition();
+            // var mousePosGame = Camera.ScreenToWorld(mousePosUI);
+            
+            // GameScreenInfo = new(cameraArea, mousePosGame);
+            GameScreenInfo = gameTexture.GameScreenInfo;
+            GameUiScreenInfo = gameTexture.GameUiScreenInfo;
             UIScreenInfo = new(Window.ScreenArea, mousePosUI);
             
             if (!Paused)
@@ -255,7 +291,7 @@ public class Game
             }
             Window.Cursor.Update(dt, UIScreenInfo);
 
-            ResolveUpdate(Time, GameScreenInfo, UIScreenInfo);
+            ResolveUpdate();
             AdvancePhysics(dt);
             DrawToScreen();
 
@@ -264,107 +300,126 @@ public class Game
     }
     private void DrawToScreen()
     {
+        gameTexture.DrawOnTexture();
         
-        var activeScreenShaders = ScreenShaders.GetActiveShaders();
+        Raylib.BeginDrawing();
+        Raylib.ClearBackground(BackgroundColorRgba.ToRayColor());
+
+        gameTexture.DrawToScreen();
         
-        //no shaders active -> draw directly to screen
-        if (activeScreenShaders.Count <= 0)
-        {
-            Raylib.BeginDrawing();
-            Raylib.ClearBackground(BackgroundColorRgba.ToRayColor());
-
-            Raylib.BeginMode2D(Camera.Camera);
-            ResolveDrawGame(GameScreenInfo);
-            Raylib.EndMode2D();
-            
-            ResolveDrawGameUI(UIScreenInfo);
-            if(Window.MouseOnScreen) Window.Cursor.DrawGameUI(UIScreenInfo);
-            
-            ResolveDrawUI(UIScreenInfo);
-            if(Window.MouseOnScreen) Window.Cursor.DrawUI(UIScreenInfo);
-            
-            Raylib.EndDrawing();
-        }
-        else
-        {
-            //draw to game texture
-            Raylib.BeginTextureMode(gameTexture.RenderTexture);
-            Raylib.ClearBackground(new(0,0,0,0));
-
-            Raylib.BeginMode2D(Camera.Camera);
-            ResolveDrawGame(GameScreenInfo);
-            Raylib.EndMode2D();
-
-            ResolveDrawGameUI(UIScreenInfo);
-            if(Window.MouseOnScreen) Window.Cursor.DrawGameUI(UIScreenInfo);
-            
-            Raylib.EndTextureMode();
-            
-            //multi shader support enabled and more than 1 shader is active
-            if (activeScreenShaders.Count > 1 && screenShaderBuffer.Loaded)
-            {
-                int lastIndex = activeScreenShaders.Count - 1;
-                ShapeShader lastShader = activeScreenShaders[lastIndex];
-                activeScreenShaders.RemoveAt(lastIndex);
-            
-                ScreenTexture source = gameTexture;
-                ScreenTexture target = screenShaderBuffer;
-                ScreenTexture temp;
-                foreach (var shader in activeScreenShaders)
-                {
-                    Raylib.BeginTextureMode(target.RenderTexture);
-                    Raylib.ClearBackground(new(0,0,0,0));
-                    Raylib.BeginShaderMode(shader.Shader);
-                    source.Draw();
-                    Raylib.EndShaderMode();
-                    Raylib.EndTextureMode();
-                    temp = source;
-                    source = target;
-                    target = temp;
-                }
-            
-                Raylib.BeginDrawing();
-                Raylib.ClearBackground(BackgroundColorRgba.ToRayColor());
-
-                Raylib.BeginShaderMode(lastShader.Shader);
-                source.Draw();
-                Raylib.EndShaderMode();
-
-                ResolveDrawUI(UIScreenInfo);
-                if(Window.MouseOnScreen) Window.Cursor.DrawUI(UIScreenInfo);
-                Raylib.EndDrawing();
-            
-            }
-            
-            //no multi shader support or only 1 shader active
-            else
-            {
-                Raylib. BeginDrawing();
-                Raylib.ClearBackground(BackgroundColorRgba.ToRayColor());
-
-                Raylib.BeginShaderMode(activeScreenShaders[0].Shader);
-                gameTexture.Draw();
-                Raylib.EndShaderMode();
-            
-                ResolveDrawUI(UIScreenInfo);
-                if(Window.MouseOnScreen) Window.Cursor.DrawUI(UIScreenInfo);
-            
-                Raylib.EndDrawing();
-            
-            }
-
-        }
+        ResolveDrawUI(UIScreenInfo);
+        if(Window.MouseOnScreen) Window.Cursor.DrawUI(UIScreenInfo);
+        
+        Raylib.EndDrawing();
+        // var activeScreenShaders = ScreenShaders.GetActiveShaders();
+        //
+        // //no shaders active -> draw directly to screen
+        // if (activeScreenShaders.Count <= 0)
+        // {
+        //     Raylib.BeginDrawing();
+        //     Raylib.ClearBackground(BackgroundColorRgba.ToRayColor());
+        //
+        //     Raylib.BeginMode2D(Camera.Camera);
+        //     ResolveDrawGame(GameScreenInfo);
+        //     Raylib.EndMode2D();
+        //     
+        //     ResolveDrawGameUI(UIScreenInfo);
+        //     if(Window.MouseOnScreen) Window.Cursor.DrawGameUI(UIScreenInfo);
+        //     
+        //     ResolveDrawUI(UIScreenInfo);
+        //     if(Window.MouseOnScreen) Window.Cursor.DrawUI(UIScreenInfo);
+        //     
+        //     Raylib.EndDrawing();
+        // }
+        // else
+        // {
+        //     //draw to game texture
+        //     Raylib.BeginTextureMode(gameTexture.RenderTexture);
+        //     Raylib.ClearBackground(new(0,0,0,0));
+        //
+        //     Raylib.BeginMode2D(Camera.Camera);
+        //     ResolveDrawGame(GameScreenInfo);
+        //     Raylib.EndMode2D();
+        //
+        //     ResolveDrawGameUI(UIScreenInfo);
+        //     if(Window.MouseOnScreen) Window.Cursor.DrawGameUI(UIScreenInfo);
+        //     
+        //     Raylib.EndTextureMode();
+        //     
+        //     //multi shader support enabled and more than 1 shader is active
+        //     if (activeScreenShaders.Count > 1 && screenShaderBuffer.Loaded)
+        //     {
+        //         int lastIndex = activeScreenShaders.Count - 1;
+        //         ShapeShader lastShader = activeScreenShaders[lastIndex];
+        //         activeScreenShaders.RemoveAt(lastIndex);
+        //     
+        //         ScreenTexture source = gameTexture;
+        //         ScreenTexture target = screenShaderBuffer;
+        //         ScreenTexture temp;
+        //         foreach (var shader in activeScreenShaders)
+        //         {
+        //             Raylib.BeginTextureMode(target.RenderTexture);
+        //             Raylib.ClearBackground(new(0,0,0,0));
+        //             Raylib.BeginShaderMode(shader.Shader);
+        //             source.Draw();
+        //             Raylib.EndShaderMode();
+        //             Raylib.EndTextureMode();
+        //             temp = source;
+        //             source = target;
+        //             target = temp;
+        //         }
+        //     
+        //         Raylib.BeginDrawing();
+        //         Raylib.ClearBackground(BackgroundColorRgba.ToRayColor());
+        //
+        //         Raylib.BeginShaderMode(lastShader.Shader);
+        //         source.Draw();
+        //         Raylib.EndShaderMode();
+        //
+        //         ResolveDrawUI(UIScreenInfo);
+        //         if(Window.MouseOnScreen) Window.Cursor.DrawUI(UIScreenInfo);
+        //         Raylib.EndDrawing();
+        //     
+        //     }
+        //     
+        //     //no multi shader support or only 1 shader active
+        //     else
+        //     {
+        //         Raylib. BeginDrawing();
+        //         Raylib.ClearBackground(BackgroundColorRgba.ToRayColor());
+        //
+        //         Raylib.BeginShaderMode(activeScreenShaders[0].Shader);
+        //         gameTexture.Draw();
+        //         Raylib.EndShaderMode();
+        //     
+        //         ResolveDrawUI(UIScreenInfo);
+        //         if(Window.MouseOnScreen) Window.Cursor.DrawUI(UIScreenInfo);
+        //     
+        //         Raylib.EndDrawing();
+        //     
+        //     }
+        //
+        // }
     }
+    
     private void EndGameloop()
     {
         EndRun();
         UnloadContent();
         Window.Close();
-        screenShaderBuffer.Unload();
+        // screenShaderBuffer.Unload();
         gameTexture.Unload();
     }
-
-
+    private void GameTextureOnDrawGame(ScreenInfo gameScreenInfo)
+    {
+        ResolveDrawGame(gameScreenInfo);
+    }
+    private void GameTextureOnDrawUI(ScreenInfo gameUiScreenInfo)
+    {
+        ResolveDrawGameUI(gameUiScreenInfo);
+        if(Window.MouseOnScreen) Window.Cursor.DrawGameUI(gameUiScreenInfo);
+    }
+    
     private void AdvancePhysics(float dt)
     {
         const float maxFrameTime = 1f / 30f;
@@ -459,12 +514,12 @@ public class Game
     /// </summary>
     protected virtual void BeginRun() { }
 
-    protected virtual void Update(GameTime time, ScreenInfo game, ScreenInfo ui) { }
+    protected virtual void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
     protected virtual void UpdatePhysicsState(float dt, float totalFrameTime, ScreenInfo game, ScreenInfo ui) { }
     protected virtual void InterpolatePhysicsState(float f) { }
     
     protected virtual void DrawGame(ScreenInfo game) { }
-    protected virtual void DrawGameUI(ScreenInfo ui) { }
+    protected virtual void DrawGameUI(ScreenInfo gameUi) { }
     protected virtual void DrawUI(ScreenInfo ui) { }
 
     /// <summary>
@@ -531,15 +586,15 @@ public class Game
         OnButtonReleased(e);
         CurScene.OnButtonReleased(e);
     }
-    private void ResolveUpdate(GameTime time, ScreenInfo game, ScreenInfo ui)
+    private void ResolveUpdate()
     {
-        Update(time, game, ui);
-        CurScene.Update(time, GameScreenInfo, UIScreenInfo);
+        Update(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+        CurScene.Update(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
     }
     private void ResolvePhysicsTimestep(float dt, float totalFrameTime, ScreenInfo game, ScreenInfo ui)
     {
         UpdatePhysicsState(dt, totalFrameTime, game, ui);
-        CurScene.UpdatePhysicsState(dt, totalFrameTime, GameScreenInfo, UIScreenInfo);
+        CurScene.UpdatePhysicsState(dt, totalFrameTime, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
     }
 
     private void ResolveInterpolatePhysicsState(float f)
@@ -552,10 +607,10 @@ public class Game
         DrawGame(game);
         CurScene.DrawGame(game);
     }
-    private void ResolveDrawGameUI(ScreenInfo ui)
+    private void ResolveDrawGameUI(ScreenInfo gameUi)
     {
-        DrawGameUI(ui);
-        CurScene.DrawGameUI(ui);
+        DrawGameUI(gameUi);
+        CurScene.DrawGameUI(gameUi);
     }
     private void ResolveDrawUI(ScreenInfo ui)
     {
@@ -655,11 +710,11 @@ public class Game
         OnInputDeviceChanged(prevDeviceType, newDeviceType);
         CurScene.OnInputDeviceChanged(prevDeviceType, newDeviceType);
     }
-    private void SetConversionFactors()
-    {
-        ScreenToDevelopment = new(Window.CurScreenSize, DevelopmentDimensions);
-        DevelopmentToScreen = new(DevelopmentDimensions, Window.CurScreenSize);
-    }
+    // private void SetConversionFactors()
+    // {
+    //     ScreenToDevelopment = new(Window.CurScreenSize, DevelopmentDimensions);
+    //     DevelopmentToScreen = new(DevelopmentDimensions, Window.CurScreenSize);
+    // }
 
 
     // protected void CycleTextureFilter()

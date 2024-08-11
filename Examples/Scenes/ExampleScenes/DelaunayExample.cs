@@ -70,7 +70,7 @@ namespace Examples.Scenes.ExampleScenes
             return new(poly[0], poly[1], poly[2]);
         }
         
-        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
             
             lineThickness = 2f * GAMELOOP.Camera.ZoomFactor;
@@ -175,7 +175,7 @@ namespace Examples.Scenes.ExampleScenes
                 }
             }
         }
-        protected override void OnDrawGameUIExample(ScreenInfo ui)
+        protected override void OnDrawGameUIExample(ScreenInfo gameUi)
         {
             
         }

@@ -512,7 +512,7 @@ namespace Examples.Scenes.ExampleScenes
 
             return next;
         }
-        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
             // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
             var gamepad = GAMELOOP.CurGamepad;
@@ -556,7 +556,7 @@ namespace Examples.Scenes.ExampleScenes
         }
 
         
-        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
+        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
             var targetPos = ActiveSpaceShip?.GetPosition() ?? new();
 
@@ -589,7 +589,7 @@ namespace Examples.Scenes.ExampleScenes
             cameraFollower.DrawDebugRect();
             
         }
-        protected override void OnDrawGameUIExample(ScreenInfo ui)
+        protected override void OnDrawGameUIExample(ScreenInfo gameUi)
         {
             
         }

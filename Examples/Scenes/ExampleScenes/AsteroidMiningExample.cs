@@ -72,7 +72,7 @@ namespace Examples.Scenes.ExampleScenes
             this.delay = 0.5f;
             this.color = color;
         }
-        public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
+        public override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
             if(lifetimeTimer > 0f)
             {
@@ -111,7 +111,7 @@ namespace Examples.Scenes.ExampleScenes
             shape.DrawLines(2f * lifetimeF, c);
         }
 
-        public override void DrawGameUI(ScreenInfo ui)
+        public override void DrawGameUI(ScreenInfo gameUi)
         {
             
         }
@@ -271,7 +271,7 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
 
-        public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui) 
+        public override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi,  ScreenInfo ui) 
         {
             damagedSegments.Update(time.Delta);
         }
@@ -293,7 +293,7 @@ namespace Examples.Scenes.ExampleScenes
             overlapped = false;
         }
 
-        public override void DrawGameUI(ScreenInfo ui)
+        public override void DrawGameUI(ScreenInfo gameUi)
         {
         }
 
@@ -390,7 +390,7 @@ namespace Examples.Scenes.ExampleScenes
             this.tip = a;
         }
 
-        public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
+        public override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
             laserPoints.Clear();
             laserEnabled = false;
@@ -495,7 +495,7 @@ namespace Examples.Scenes.ExampleScenes
 
         }
 
-        public override void DrawGameUI(ScreenInfo ui)
+        public override void DrawGameUI(ScreenInfo gameUi)
         {
         }
 
@@ -666,7 +666,7 @@ namespace Examples.Scenes.ExampleScenes
             boundaryRect = gameArea.ApplyMargins(0.005f, 0.005f, 0.1f, 0.005f);
         }
         
-        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
+        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi,  ScreenInfo ui)
         {
             UpdateBoundaryRect(game.Area);
             SpawnArea?.ResizeBounds(boundaryRect);
@@ -792,7 +792,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             laserDevice.SetHybernate(false);
         }
-        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
             //clipRect = new(mousePosGame, new Vector2(100, 300), new Vector2(0f, 1f));
             //clipperRect = clipRect.ToClipperRect();

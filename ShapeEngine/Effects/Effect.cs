@@ -24,7 +24,7 @@ namespace ShapeEngine.Effects
             
         }
 
-        public override void DrawGameUI(ScreenInfo ui)
+        public override void DrawGameUI(ScreenInfo gameUi)
         {
             
         }

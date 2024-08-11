@@ -141,7 +141,7 @@ namespace Examples.Scenes
         #endregion
 
         #region Base Class
-        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
             var gamepad = GAMELOOP.CurGamepad;
             foreach (var action in inputActions)
@@ -245,7 +245,7 @@ namespace Examples.Scenes
                 HandleInputTextEntryActive(dt, mousePosGame, mousePosUI);
             }
         }
-        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
+        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi,  ScreenInfo ui)
         {
             var uiSize = ui.Area.Size;
             
@@ -291,9 +291,9 @@ namespace Examples.Scenes
             
             UpdateExampleTextEntryInactive(time.Delta, game, ui);
         }
-        protected override void OnDrawGameUIExample(ScreenInfo ui)
+        protected override void OnDrawGameUIExample(ScreenInfo gameUi)
         {
-            var uiSize = ui.Area.Size;
+            var uiSize = gameUi.Area.Size;
             Rect r = new(topLeft, bottomRight);
             
             float lineThickness = uiSize.Min() * 0.01f;

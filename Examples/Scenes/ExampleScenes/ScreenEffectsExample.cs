@@ -420,7 +420,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         
         
-        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
             // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
             var gamepad = GAMELOOP.CurGamepad;
@@ -457,7 +457,7 @@ namespace Examples.Scenes.ExampleScenes
             follower.Speed = ship.Speed;// * Lerp(0.5f, 2f, sliderF);
             follower.BoundaryDis = new(boundary);
         }
-        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
+        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
             UpdateFollower(ui.Area.Size.Min());
             //follower.Update(dt,camera);
@@ -522,7 +522,7 @@ namespace Examples.Scenes.ExampleScenes
                 }
             }
         }
-        protected override void OnDrawGameUIExample(ScreenInfo ui)
+        protected override void OnDrawGameUIExample(ScreenInfo gameUi)
         {
             intensitySlider.Draw();
             cameraFollowSlider.Draw();

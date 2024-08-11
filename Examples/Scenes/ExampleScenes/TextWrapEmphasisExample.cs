@@ -145,7 +145,7 @@ namespace Examples.Scenes.ExampleScenes
 
         
 
-        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
+        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
             mouseDetection.MousePos = ui.MousePos;
             mouseDetection.UpdateColors();
@@ -158,7 +158,7 @@ namespace Examples.Scenes.ExampleScenes
             textEmphasis4.Emphasis.TextColorRgba = Colors.Special2;
             
             
-            base.OnUpdateExample(time, game, ui);
+            base.OnUpdateExample(time, game, gameUi, ui);
         }
 
         protected override void UpdateExampleTextEntryInactive(float dt, ScreenInfo game, ScreenInfo ui)

@@ -971,7 +971,7 @@ public class PathfinderExample2 : ExampleScene
             pathfinder.RemoveAgent(chaser);
         }
     }
-    protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+    protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
     {
         var gamepad = GAMELOOP.CurGamepad;
         
@@ -1008,7 +1008,7 @@ public class PathfinderExample2 : ExampleScene
         follower.Speed = Ship.Speed * 2.5f;
         // follower.BoundaryDis = new(boundary);
     }
-    protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
+    protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
         if (lastCutShapeTimers.Count > 0)
         {
@@ -1171,7 +1171,7 @@ public class PathfinderExample2 : ExampleScene
         }
        
     }
-    protected override void OnDrawGameUIExample(ScreenInfo ui)
+    protected override void OnDrawGameUIExample(ScreenInfo gameUi)
     {
         
     }

@@ -19,11 +19,11 @@ public abstract class GameObject : IUpdateable, IDrawable
 
     public abstract Rect GetBoundingBox();
 
-    public abstract void Update(GameTime time, ScreenInfo game, ScreenInfo ui);
+    public abstract void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui);
 
     public abstract void DrawGame(ScreenInfo game);
 
-    public abstract void DrawGameUI(ScreenInfo ui);
+    public abstract void DrawGameUI(ScreenInfo gameUi);
 
     public virtual bool IsDrawingToGame(Rect gameArea) => true;
     public virtual bool IsDrawingToGameUI(Rect screenArea) => false;

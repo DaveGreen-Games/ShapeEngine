@@ -290,7 +290,7 @@ namespace Examples.Scenes.ExampleScenes
             
         }
 
-        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
             GamepadManager.Update();
             
@@ -318,7 +318,7 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
         
-        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
+        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
             // if (Raylib.IsGamepadAvailable(0))
             // {
@@ -380,7 +380,7 @@ namespace Examples.Scenes.ExampleScenes
             // cameraFollower.Draw();
             
         }
-        protected override void OnDrawGameUIExample(ScreenInfo ui)
+        protected override void OnDrawGameUIExample(ScreenInfo gameUi)
         {
             
         }

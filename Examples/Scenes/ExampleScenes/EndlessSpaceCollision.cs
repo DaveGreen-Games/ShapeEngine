@@ -509,9 +509,9 @@ public class EndlessSpaceCollision : ExampleScene
             }
         }
 
-        public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
+        public override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi,  ScreenInfo ui)
         {
-            base.Update(time, game, ui);
+            base.Update(time, game, gameUi, ui);
 
             if (effectTimer > 0f)
             {
@@ -549,7 +549,7 @@ public class EndlessSpaceCollision : ExampleScene
             
         }
 
-        public override void DrawGameUI(ScreenInfo ui)
+        public override void DrawGameUI(ScreenInfo gameUi)
         {
             
         }
@@ -812,10 +812,10 @@ public class EndlessSpaceCollision : ExampleScene
         }
         
 
-        public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
+        public override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi,  ScreenInfo ui)
         {
             if(IsDead)return;
-            base.Update(time, game, ui);
+            base.Update(time, game, gameUi, ui);
 
             if (collisionStunTimer > 0f)
             {
@@ -901,7 +901,7 @@ public class EndlessSpaceCollision : ExampleScene
             collider.GetTriangleShape().DrawLines(4f, hullColor.ColorRgba);
         }
 
-        public override void DrawGameUI(ScreenInfo ui)
+        public override void DrawGameUI(ScreenInfo gameUi)
         {
             
         }
@@ -1043,11 +1043,11 @@ public class EndlessSpaceCollision : ExampleScene
             target = null;
         }
 
-        public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
+        public override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi,  ScreenInfo ui)
         {
             if (IsDead) return;
             var prevPosition = Transform.Position;
-            base.Update(time, game, ui);
+            base.Update(time, game, gameUi, ui);
 
             if (target != null)
             {
@@ -1133,7 +1133,7 @@ public class EndlessSpaceCollision : ExampleScene
 
             }
         }
-        public override void DrawGameUI(ScreenInfo ui)
+        public override void DrawGameUI(ScreenInfo gameUi)
         {
            
         }
@@ -2168,7 +2168,7 @@ public class EndlessSpaceCollision : ExampleScene
         return pos;
     }
     
-    protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+    protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
     {
         if (gameOverScreenActive)
         {
@@ -2373,7 +2373,7 @@ public class EndlessSpaceCollision : ExampleScene
         follower.Speed = Ship.Speed * 2.5f;
         // follower.BoundaryDis = new(boundary);
     }
-    protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
+    protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi,  ScreenInfo ui)
     {
         // if (lastCutShapeTimers.Count > 0)
         // {
@@ -2400,7 +2400,7 @@ public class EndlessSpaceCollision : ExampleScene
             //     if (strategemChargeTimer > strategemMaxChargeTime) strategemChargeTimer = strategemMaxChargeTime;
             // }
             
-            ship.Update(time, game, ui);
+            ship.Update(time, game, gameUi, ui);
             minigun.Update(time.Delta, ship.GetPosition(), ship.GetCurSpeed());
             cannon.Update(time.Delta, ship.GetPosition(), ship.GetCurSpeed());
 
@@ -2427,7 +2427,7 @@ public class EndlessSpaceCollision : ExampleScene
         for (int i = asteroids.Count - 1; i >= 0; i--)
         {
             var a = asteroids[i];
-            a.Update(time, game, ui);
+            a.Update(time, game, gameUi, ui);
             if (!universe.OverlapShape(a.GetShape()))
             {
                 a.MoveTo(GetRandomUniversePosition(2500));
@@ -2490,7 +2490,7 @@ public class EndlessSpaceCollision : ExampleScene
         for (int i = bullets.Count - 1; i >= 0; i--)
         {
             var bullet = bullets[i];
-            bullet.Update(time, game, ui);
+            bullet.Update(time, game, gameUi, ui);
 
             if (bullet.IsDead)
             {
@@ -2599,9 +2599,8 @@ public class EndlessSpaceCollision : ExampleScene
         
         ShapeDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, 170, ShapeMath.LerpFloat(170, 10, ship.HealthF), 4f, Colors.PcWarm.ColorRgba, false, 8f);
     }
-    protected override void OnDrawGameUIExample(ScreenInfo ui)
+    protected override void OnDrawGameUIExample(ScreenInfo gameUi)
     {
-
     }
     protected override void OnDrawUIExample(ScreenInfo ui)
     {

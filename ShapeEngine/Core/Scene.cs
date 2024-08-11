@@ -109,17 +109,17 @@ public abstract class Scene : IUpdateable, IDrawable
     }
 
         
-    public void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
+    public void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
-        SpawnArea?.Update(time, game, ui);
+        SpawnArea?.Update(time, game, gameUi, ui);
         //CollisionHandler?.Update(time.Delta); //moved to UpdatePhysicsState
         Pathfinder?.Update(time.Delta);
-        OnUpdateGame(time, game, ui);
+        OnUpdateGame(time, game, gameUi, ui);
     }
-    public void UpdatePhysicsState(float dt, float totalFrameTime, ScreenInfo game, ScreenInfo ui)
+    public void UpdatePhysicsState(float dt, float totalFrameTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
         CollisionHandler?.Update(dt);
-        OnUpdatePhysicsStateGame(dt, totalFrameTime, game, ui);
+        OnUpdatePhysicsStateGame(dt, totalFrameTime, game, gameUi, ui);
     }
 
     public void InterpolatePhysicsState(float f)
@@ -132,11 +132,11 @@ public abstract class Scene : IUpdateable, IDrawable
         SpawnArea?.DrawGame(game);
         OnDrawGame(game);
     }
-    public void DrawGameUI(ScreenInfo ui)
+    public void DrawGameUI(ScreenInfo gameUi)
     {
-        OnPreDrawGameUI(ui);
-        SpawnArea?.DrawGameUI(ui);
-        OnDrawGameUI(ui);
+        OnPreDrawGameUI(gameUi);
+        SpawnArea?.DrawGameUI(gameUi);
+        OnDrawGameUI(gameUi);
     }
     public void DrawUI(ScreenInfo ui)
     {
@@ -144,8 +144,8 @@ public abstract class Scene : IUpdateable, IDrawable
     }
         
         
-    protected virtual void OnUpdateGame(GameTime time, ScreenInfo game, ScreenInfo ui) { }
-    protected virtual void OnUpdatePhysicsStateGame(float dt, float totalFrameTime, ScreenInfo game, ScreenInfo ui) { }
+    protected virtual void OnUpdateGame(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
+    protected virtual void OnUpdatePhysicsStateGame(float dt, float totalFrameTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
     protected virtual void OnInterpolatePhysicsStateGame(float f) { }
     /// <summary>
     /// Called before SpawnArea DrawGame is called.
@@ -166,8 +166,8 @@ public abstract class Scene : IUpdateable, IDrawable
     /// <summary>
     /// Draw your game ui. Is affected by screen shaders but not by the camera.
     /// </summary>
-    /// <param name="ui"></param>
-    protected virtual void OnDrawGameUI(ScreenInfo ui) { }
+    /// <param name="gameUi"></param>
+    protected virtual void OnDrawGameUI(ScreenInfo gameUi) { }
         
     /// <summary>
     /// Draw your main ui. Is NOT affected by screen shaders and NOT affected by the camera.

@@ -4,5 +4,5 @@ namespace ShapeEngine.Core.Interfaces;
 
 public interface IUpdateable
 {
-    public void Update(GameTime time, ScreenInfo game, ScreenInfo ui);
+    public void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui);
 }

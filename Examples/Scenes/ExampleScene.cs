@@ -51,7 +51,7 @@ namespace Examples.Scenes
         }
 
         protected virtual bool IsCancelAllowed() => true;
-        protected void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
             var cancelState = GAMELOOP.InputActionUICancel.Consume();
             if (cancelState is { Consumed: false, Pressed: true })
@@ -94,25 +94,25 @@ namespace Examples.Scenes
             // }
         }
 
-        protected override void OnUpdateGame(GameTime time, ScreenInfo game, ScreenInfo ui)
+        protected override void OnUpdateGame(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
-            HandleInput(time.Delta, game.MousePos, ui.MousePos);
+            HandleInput(time.Delta, game.MousePos, gameUi.MousePos, ui.MousePos);
 
             if (GAMELOOP.Paused) return;
-            OnHandleInputExample(time.Delta, game.MousePos, ui.MousePos);
-            OnUpdateExample(time, game, ui);
+            OnHandleInputExample(time.Delta, game.MousePos, gameUi.MousePos, ui.MousePos);
+            OnUpdateExample(time, game, gameUi, ui);
         }
         protected override void OnDrawGame(ScreenInfo game)
         {
             OnDrawGameExample(game);
         }
-        protected override void OnDrawGameUI(ScreenInfo ui)
+        protected override void OnDrawGameUI(ScreenInfo gameUi)
         {
             if (GAMELOOP.Paused)
             {
                 // ui.Area.Draw(ColorDark.ChangeAlpha((byte)150));
-                ui.Area.Draw(Colors.Dark);
-                var pausedRect = ui.Area.ApplyMargins(0.05f, 0.05f, 0.15f, 0.55f);
+                gameUi.Area.Draw(Colors.Dark);
+                var pausedRect = gameUi.Area.ApplyMargins(0.05f, 0.05f, 0.15f, 0.55f);
                 titleFont.LineSpacing = 30f;
                 titleFont.ColorRgba = Colors.Special;
                 titleFont.DrawTextWrapNone("PAUSED", pausedRect, new(0.5f));
@@ -122,7 +122,7 @@ namespace Examples.Scenes
                 
             }
             
-            OnDrawGameUIExample(ui);
+            OnDrawGameUIExample(gameUi);
 
             if (drawTitle)
             {
@@ -180,9 +180,9 @@ namespace Examples.Scenes
             OnDrawUIExample(ui);
         }
         
-        protected virtual void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI) { }
-        protected virtual void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui) { }
-        protected virtual void OnDrawGameUIExample(ScreenInfo ui) { }
+        protected virtual void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI) { }
+        protected virtual void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi,  ScreenInfo ui) { }
+        protected virtual void OnDrawGameUIExample(ScreenInfo gameUi) { }
         protected virtual void OnDrawUIExample(ScreenInfo ui) { }
         protected virtual void OnDrawGameExample(ScreenInfo game) { }
         
