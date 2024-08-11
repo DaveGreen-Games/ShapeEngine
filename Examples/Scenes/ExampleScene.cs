@@ -124,16 +124,7 @@ namespace Examples.Scenes
             
             OnDrawGameUIExample(gameUi);
 
-            if (drawTitle)
-            {
-                var topLine = GAMELOOP.UIRects.GetRect("top").BottomSegment;
-                topLine.Draw(2f, Colors.Light);
-
-                var topCenterRect = GAMELOOP.UIRects.GetRect("top center"); // Get("top").Get("center").GetRect();
-                titleFont.LineSpacing = 10f;
-                titleFont.ColorRgba = Colors.Highlight;
-                titleFont.DrawTextWrapNone(Title, topCenterRect, new(0.5f));
-            }
+            
             
         }
         protected override void OnDrawUI(ScreenInfo ui)
@@ -166,13 +157,18 @@ namespace Examples.Scenes
                 backLabel.Draw(backLabelRect, new(0f, 0f), curInputDevice);
             }
             
-            
-            
-            
-            
-            
-            
             if (GAMELOOP.Paused) return;
+            
+            if (drawTitle)
+            {
+                var topLine = GAMELOOP.UIRects.GetRect("top").BottomSegment;
+                topLine.Draw(2f, Colors.Light);
+
+                var topCenterRect = GAMELOOP.UIRects.GetRect("top center"); // Get("top").Get("center").GetRect();
+                titleFont.LineSpacing = 10f;
+                titleFont.ColorRgba = Colors.Highlight;
+                titleFont.DrawTextWrapNone(Title, topCenterRect, new(0.5f));
+            }
 
             var deviceRect = GAMELOOP.UIRects.GetRect("bottom left"); // GetRect("bottom", "left"); // Get("bottom").Get("left").GetRect();
             DrawInputDeviceInfo(deviceRect);

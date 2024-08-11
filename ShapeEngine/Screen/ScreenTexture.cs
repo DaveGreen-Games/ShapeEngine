@@ -143,60 +143,47 @@ public sealed class ScreenTexture2
     #endregion
 
     #region Public Functions
-
-
     public void Initialize(Dimensions screenSize, Vector2 mousePosition, ShapeCamera? camera = null)
     {
         if(camera != null) Camera = camera;
         
         screenDimensions = screenSize;
         UpdateTexture(screenSize);
-        textureRect = CalculateTextureRect();
+        
+        textureRect = GetTextureRect();
         Camera?.SetSize(new Dimensions(Width, Height));
 
-        var scaledMousePostionGame = mousePosition;
+        Vector2 scaledMousePostionGame;
         var scaledMousePositionUi = mousePosition;
         if (Mode == ScreenTextureMode.Pixelation)
         {
-            scaledMousePositionUi = mousePosition / PixelationFactor;
-            if (Camera != null)
-            {
-                scaledMousePostionGame = Camera.ScreenToWorld(mousePosition);
-            }
-            else
-            {
-                scaledMousePostionGame = scaledMousePositionUi;
-            }
+            scaledMousePositionUi = mousePosition * PixelationFactor;
         }
         else if (Mode == ScreenTextureMode.Fixed)
         {
-            if (textureRect.X > 0)
+            float virtualRatioW = (float)screenSize.Width/ Width;
+            float virtualRatioH = (float)screenSize.Height/ Height;
+            if (virtualRatioW < virtualRatioH)
             {
-                var f = screenSize.Height / textureRect.Height;
-                float xOffset = textureRect.X;
-                float mouseX = (mousePosition.X - xOffset) / f;
-                scaledMousePositionUi = new Vector2(mouseX, mousePosition.Y / f);
-            }
-            else if (textureRect.Y > 0)
-            {
-                var f = screenSize.Width / textureRect.Width;
-                float yOffset = textureRect.Y;
-                float mouseY = (mousePosition.Y - yOffset) / f;
-                scaledMousePositionUi = new Vector2(mousePosition.X / f, mouseY);
+                var h = Width * virtualRatioW;
+                var offset = new Vector2(0f, screenDimensions.Height / 2f - h / 2f);
+                scaledMousePositionUi = (mousePosition - offset) / virtualRatioW;
             }
             else
             {
-                var f = screenSize.Width / textureRect.Width;
-                scaledMousePositionUi = mousePosition / f;
+                var w = Height * virtualRatioH;
+                var offset = new Vector2(screenDimensions.Width / 2f - w / 2f, 0f);
+                scaledMousePositionUi = (mousePosition - offset) / virtualRatioH;
             }
-            if (Camera != null)
-            {
-                scaledMousePostionGame = Camera.ScreenToWorld(mousePosition);
-            }
-            else
-            {
-                scaledMousePostionGame = scaledMousePositionUi;
-            }
+        }
+        
+        if (Camera != null)
+        {
+            scaledMousePostionGame = Camera.ScreenToWorld(scaledMousePositionUi);
+        }
+        else
+        {
+            scaledMousePostionGame = scaledMousePositionUi;
         }
         
         GameScreenInfo = new(Camera?.Area ?? textureRect, scaledMousePostionGame);
@@ -205,76 +192,52 @@ public sealed class ScreenTexture2
     
     public void Update(float dt, Dimensions screenSize, Vector2 mousePosition, bool paused)
     {
-        
         if (screenDimensions != screenSize)
         {
             screenDimensions = screenSize;
             UpdateTexture(screenSize);
         }
         
-        textureRect = CalculateTextureRect();
+        textureRect = GetTextureRect();
         if (Camera != null)
         {
             Camera.SetSize(new Dimensions(Width, Height));
             if(!paused) Camera.Update(dt);
         }
 
-        var scaledMousePostionGame = mousePosition;
+        Vector2 scaledMousePostionGame;
         var scaledMousePositionUi = mousePosition;
         if (Mode == ScreenTextureMode.Pixelation)
         {
-            scaledMousePositionUi = mousePosition / PixelationFactor;
-            if (Camera != null)
-            {
-                scaledMousePostionGame = Camera.ScreenToWorld(mousePosition);
-            }
-            else
-            {
-                scaledMousePostionGame = scaledMousePositionUi;
-            }
+            scaledMousePositionUi = mousePosition * PixelationFactor;
         }
         else if (Mode == ScreenTextureMode.Fixed)
         {
-            if (textureRect.X > 0)
+            float virtualRatioW = (float)screenSize.Width/ Width;
+            float virtualRatioH = (float)screenSize.Height/ Height;
+            if (virtualRatioW < virtualRatioH)
             {
-                var f = screenSize.Height / textureRect.Height;
-                float xOffset = textureRect.X;
-                float mouseX = (mousePosition.X - xOffset) / f;
-                scaledMousePositionUi = new Vector2(mouseX, mousePosition.Y / f);
-            }
-            else if (textureRect.Y > 0)
-            {
-                var f = screenSize.Width / textureRect.Width;
-                float yOffset = textureRect.Y;
-                float mouseY = (mousePosition.Y - yOffset) / f;
-                scaledMousePositionUi = new Vector2(mousePosition.X / f, mouseY);
+                var h = Width * virtualRatioW;
+                var offset = new Vector2(0f, screenDimensions.Height / 2f - h / 2f);
+                scaledMousePositionUi = (mousePosition - offset) / virtualRatioW;
             }
             else
             {
-                var f = screenSize.Width / textureRect.Width;
-                scaledMousePositionUi = mousePosition / f;
+                var w = Height * virtualRatioH;
+                var offset = new Vector2(screenDimensions.Width / 2f - w / 2f, 0f);
+                scaledMousePositionUi = (mousePosition - offset) / virtualRatioH;
             }
-            
-            if (Camera != null)
-            {
-                scaledMousePostionGame = Camera.ScreenToWorld(mousePosition);
-            }
-            else
-            {
-                scaledMousePostionGame = scaledMousePositionUi;
-            }
+        }
+        
+        if (Camera != null)
+        {
+            scaledMousePostionGame = Camera.ScreenToWorld(scaledMousePositionUi);
         }
         else
         {
-            if (Camera != null)
-            {
-                scaledMousePostionGame = Camera.ScreenToWorld(mousePosition);
-            }
-            else
-            {
-                scaledMousePostionGame = scaledMousePositionUi;
-            }
+            scaledMousePostionGame = scaledMousePositionUi;
         }
+        
         GameScreenInfo = new(Camera?.Area ?? textureRect, scaledMousePostionGame);
         GameUiScreenInfo = new(textureRect, scaledMousePositionUi);
     }
@@ -356,37 +319,40 @@ public sealed class ScreenTexture2
         if(ShaderSupport != ShaderSupportType.None) Raylib.UnloadRenderTexture(shaderBuffer);
     }
     
+    public Rect GetDestinationRect()
+    {
+        if(Mode == ScreenTextureMode.Stretch) return new(0, 0, screenDimensions.Width, screenDimensions.Height);
+        if(Mode == ScreenTextureMode.Pixelation) return new(0, 0, screenDimensions.Width, screenDimensions.Height);
+        
+        float virtualRatioW = (float)screenDimensions.Width/ Width;
+        float virtualRatioH = (float)screenDimensions.Height/ Height;
+        Rect destRec;
+        var originX = 0f;
+        var originY = 0f;
+        if (virtualRatioW < virtualRatioH)
+        {
+            var w = Width * virtualRatioW;
+            var h = Width * virtualRatioW;
+            originY = screenDimensions.Height / 2f - h / 2f;
+            destRec = new Rect(originX, originY, w, h);
+        }
+        else
+        {
+            var w = Height * virtualRatioH;
+            var h = Height * virtualRatioH;
+            originX = screenDimensions.Width / 2f - w / 2f;
+            destRec = new Rect(originX, originY, w, h);
+        }
+
+
+        return destRec;
+    }
+    public Rect GetTextureRect() => new(0, 0, Width, Height);
+
     #endregion
 
     #region Private Functions
-    
-    private Rect CalculateTextureRect()
-    {
-        return new Rect(0, 0, Width, Height);
-        // if(Mode is ScreenTextureMode.Stretch or ScreenTextureMode.Pixelation) return new Rect(0, 0, Width, Height);
-        //
-        // var wDif = ShapeMath.AbsInt(screenDimensions.Width - Width);
-        // var hDif = ShapeMath.AbsInt(screenDimensions.Height - Height);
-        // if (wDif == hDif)
-        // {
-        //     return new Rect(0, 0, Width, Height);
-        // }
-        //
-        // if (wDif < hDif)
-        // {
-        //     //scale to height
-        //     float hFactor = (float)screenDimensions.Height / Height;
-        //     var newW = (int)(Width * hFactor);
-        //     return new Rect((screenDimensions.Width - newW) / 2f, 0f, newW, Height);
-        //     
-        // }
-        //
-        // //scale to width
-        // float wFactor = (float)screenDimensions.Width / Width;
-        // var newH = (int)(Height * wFactor);
-        // return new Rect((screenDimensions.Width - newH) / 2f, 0f, Width, newH);
-    }
-   
+
     private void ApplyShaders()
     {
         if (ShaderSupport == ShaderSupportType.None) return;
@@ -487,76 +453,80 @@ public sealed class ScreenTexture2
     }
     private void DrawTextureToScreen(Texture2D texture)
     {
-        if (Mode == ScreenTextureMode.Stretch)
-        {
-            var w = Width;
-            var h = Height;
-            var destRec = new Rectangle
-            {
-                X = w * 0.5f,
-                Y = h * 0.5f,
-                Width = w,
-                Height = h
-            };
-            Vector2 origin = new()
-            {
-                X = w * 0.5f,
-                Y = h * 0.5f
-            };
+        // if (Mode == ScreenTextureMode.Stretch)
+        // {
+        //     var w = Width;
+        //     var h = Height;
+        //     var destRec = new Rectangle
+        //     {
+        //         X = w * 0.5f,
+        //         Y = h * 0.5f,
+        //         Width = w,
+        //         Height = h
+        //     };
+        //     Vector2 origin = new()
+        //     {
+        //         X = w * 0.5f,
+        //         Y = h * 0.5f
+        //     };
+        //
+        //     var sourceRec = new Rectangle(0, 0, w, -h);
+        //     Raylib.DrawTexturePro(texture, sourceRec, destRec, origin, 0f, Tint.ToRayColor());
+        // }
+        // else if (Mode == ScreenTextureMode.Pixelation)
+        // {
+        //     var w = screenDimensions.Width;
+        //     var h = screenDimensions.Height;
+        //     var destRec = new Rectangle
+        //     {
+        //         X = w * 0.5f,
+        //         Y = h * 0.5f,
+        //         Width = w,
+        //         Height = h
+        //     };
+        //     Vector2 origin = new()
+        //     {
+        //         X = w * 0.5f,
+        //         Y = h * 0.5f
+        //     };
+        //
+        //     var sourceRec = new Rectangle(0, 0, Width, -Height);
+        //
+        //     Raylib.DrawTexturePro(texture, sourceRec, destRec, origin, 0f, Tint.ToRayColor());
+        // }
+        // else // Fixed Mode
+        // {
+        //     float virtualRatioW = (float)screenDimensions.Width/ Width;
+        //     float virtualRatioH = (float)screenDimensions.Height/ Height;
+        //     Rectangle destRec;
+        //     var originX = 0f;
+        //     var originY = 0f;
+        //     if (virtualRatioW < virtualRatioH)
+        //     {
+        //         var w = Width * virtualRatioW;
+        //         var h = Width * virtualRatioW;
+        //         originY = screenDimensions.Height / 2f - h / 2f;
+        //         destRec = new Rectangle(originX, originY, w, h);
+        //     }
+        //     else
+        //     {
+        //         var w = Height * virtualRatioH;
+        //         var h = Height * virtualRatioH;
+        //         originX = screenDimensions.Width / 2f - w / 2f;
+        //         destRec = new Rectangle(originX, originY, w, h);
+        //     }
+        //     
+        //     var origin = new Vector2(0, 0);
+        //     var sourceRec = new Rectangle(0, 0, Width, -Height);
+        //     var destRect = GetDestinationRect();
+        //     Raylib.DrawTexturePro(texture, sourceRec, destRec, origin, 0f, Tint.ToRayColor());
+        // }
+        //
         
-            var sourceRec = new Rectangle(0, 0, w, -h);
-        
-            Raylib.DrawTexturePro(texture, sourceRec, destRec, origin, 0f, Tint.ToRayColor());
-        }
-        else if (Mode == ScreenTextureMode.Pixelation)
-        {
-            var w = screenDimensions.Width;
-            var h = screenDimensions.Height;
-            var destRec = new Rectangle
-            {
-                X = w * 0.5f,
-                Y = h * 0.5f,
-                Width = w,
-                Height = h
-            };
-            Vector2 origin = new()
-            {
-                X = w * 0.5f,
-                Y = h * 0.5f
-            };
-        
-            var sourceRec = new Rectangle(0, 0, Width, -Height);
-        
-            Raylib.DrawTexturePro(texture, sourceRec, destRec, origin, 0f, Tint.ToRayColor());
-        }
-        else // Fixed Mode
-        {
-            float virtualRatioW = (float)screenDimensions.Width/ Width;
-            float virtualRatioH = (float)screenDimensions.Height/ Height;
-            Rectangle destRec;
-            var originX = 0f;
-            var originY = 0f;
-            if (virtualRatioW < virtualRatioH)
-            {
-                var w = Width * virtualRatioW;
-                var h = Width * virtualRatioW;
-                originY = screenDimensions.Height / 2f - h / 2f;
-                destRec = new Rectangle(originX, originY, w, h);
-            }
-            else
-            {
-                var w = Height * virtualRatioH;
-                var h = Height * virtualRatioH;
-                originX = screenDimensions.Width / 2f - w / 2f;
-                destRec = new Rectangle(originX, originY, w, h);
-            }
-            
-            var origin = new Vector2(0, 0);
-            var sourceRec = new Rectangle(0, 0, Width, -Height);
-            
-            Raylib.DrawTexturePro(texture, sourceRec, destRec, origin, 0f, Tint.ToRayColor());
-        }
-        
+        var sourceRec = new Rectangle(0, 0, Width, -Height);
+        var destRect = GetDestinationRect().Rectangle;
+        var origin = new Vector2(0, 0);
+        Raylib.DrawTexturePro(texture, sourceRec, destRect, origin, 0f, Tint.ToRayColor());
     }
    
     #endregion

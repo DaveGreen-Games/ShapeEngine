@@ -14,13 +14,13 @@ public readonly struct GameSettings
     //     FixedDimensions = new(),
     //     PixelationFactor = 1f,
     // };
-    public static GameSettings Default => new GameSettings(60, TextureFilter.Bilinear, ShaderSupportType.Multi);
+    public static GameSettings StretchMode => new GameSettings(60, TextureFilter.Bilinear, ShaderSupportType.Multi);
 
-    public static GameSettings Fixed =>
-        new GameSettings(new Dimensions(400, 400), 60, TextureFilter.Bilinear, ShaderSupportType.None);
+    public static GameSettings FixedMode =>
+        new GameSettings(new Dimensions(500, 500), 60, TextureFilter.Bilinear, ShaderSupportType.Multi);
 
-    public static GameSettings Pixelation =>  
-        new GameSettings(0.5f, 60, TextureFilter.Bilinear, ShaderSupportType.Multi);
+    public static GameSettings PixelationMode =>  
+        new GameSettings(0.25f, 60, TextureFilter.Point, ShaderSupportType.None);
 
     public GameSettings(int fixedPhysicsFramerate, TextureFilter textureFilter, ShaderSupportType shaderSupportType)
     {
