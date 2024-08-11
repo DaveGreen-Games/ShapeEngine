@@ -17,10 +17,12 @@ public readonly struct GameSettings
     public static GameSettings StretchMode => new GameSettings(60, TextureFilter.Bilinear, ShaderSupportType.Multi);
 
     public static GameSettings FixedMode =>
-        new GameSettings(new Dimensions(500, 500), 60, TextureFilter.Bilinear, ShaderSupportType.Multi);
+        new GameSettings(new Dimensions(320, 180), 60, TextureFilter.Point, ShaderSupportType.Multi);
+    public static GameSettings FixedNearestMode =>
+        new GameSettings(new Dimensions(320, 180), 60, TextureFilter.Point, ShaderSupportType.Multi, true);
 
     public static GameSettings PixelationMode =>  
-        new GameSettings(0.25f, 60, TextureFilter.Point, ShaderSupportType.None);
+        new GameSettings(0.25f, 60, TextureFilter.Point, ShaderSupportType.Multi);
 
     public GameSettings(int fixedPhysicsFramerate, TextureFilter textureFilter, ShaderSupportType shaderSupportType)
     {
@@ -29,15 +31,35 @@ public readonly struct GameSettings
         ShaderSupportType = shaderSupportType;
         FixedDimensions = Dimensions.GetInvalidDimension();
         PixelationFactor = 1f;
+        ScreenTextureMode = ScreenTextureMode.Stretch;
     }
 
-    public GameSettings(Dimensions fixedDimensions, int fixedPhysicsFramerate, TextureFilter textureFilter, ShaderSupportType shaderSupportType)
+    public GameSettings(Dimensions fixedDimensions, int fixedPhysicsFramerate, TextureFilter textureFilter, ShaderSupportType shaderSupportType, bool nearestScaling = false)
     {
         FixedPhysicsFramerate = fixedPhysicsFramerate;
         TextureFilter = textureFilter;
         ShaderSupportType = shaderSupportType;
-        FixedDimensions = fixedDimensions;
         PixelationFactor = 1f;
+
+        if (fixedDimensions.IsValid())
+        {
+            FixedDimensions = fixedDimensions;
+        
+            if (nearestScaling)
+            {
+                ScreenTextureMode = ScreenTextureMode.NearestFixed;
+            }
+            else
+            {
+                ScreenTextureMode = ScreenTextureMode.Fixed;
+            }
+        }
+        else
+        {
+            FixedDimensions = Dimensions.GetInvalidDimension();
+            ScreenTextureMode = ScreenTextureMode.Stretch;
+        }
+        
     }
     
     public GameSettings(float pixelationFactor, int fixedPhysicsFramerate, TextureFilter textureFilter, ShaderSupportType shaderSupportType)
@@ -46,16 +68,28 @@ public readonly struct GameSettings
         TextureFilter = textureFilter;
         ShaderSupportType = shaderSupportType;
         FixedDimensions = Dimensions.GetInvalidDimension();
-        PixelationFactor = pixelationFactor;
+
+        if (pixelationFactor <= 0 || pixelationFactor >= 1f)
+        {
+            PixelationFactor = 1f;
+            ScreenTextureMode = ScreenTextureMode.Stretch;
+        }
+        else
+        {
+            PixelationFactor = pixelationFactor;
+            ScreenTextureMode = ScreenTextureMode.Pixelation;
+        }
+        
     }
     
-    public ScreenTextureMode GetScreenTextureMode()
-    {
-        if (FixedDimensions.IsValid()) return ScreenTextureMode.Fixed;
-        if (PixelationFactor < 1f) return ScreenTextureMode.Pixelation;
-        return ScreenTextureMode.Stretch;
-    }
+    // public ScreenTextureMode GetScreenTextureMode()
+    // {
+    //     if (FixedDimensions.IsValid()) return ScreenTextureMode.Fixed;
+    //     if (PixelationFactor < 1f) return ScreenTextureMode.Pixelation;
+    //     return ScreenTextureMode.Stretch;
+    // }
 
+    public readonly ScreenTextureMode ScreenTextureMode;
     /// <summary>
     /// Set a fixed framerate for the physics update loop.
     /// The delta time used in the physics update will always be 1/FixedPhysicsFramerate.
