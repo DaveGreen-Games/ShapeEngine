@@ -177,9 +177,9 @@ public class Game
         // var cameraArea = Camera.Area;
 
         // GameScreenInfo = new(cameraArea, mousePosGame);
-        
 
-        var screenTextureMode = gameSettings.GetScreenTextureMode();
+
+        var screenTextureMode = gameSettings.ScreenTextureMode;
         if (screenTextureMode == ScreenTextureMode.Stretch)
         {
             gameTexture = new(gameSettings.ShaderSupportType, gameSettings.TextureFilter);
@@ -188,11 +188,16 @@ public class Game
         {
             gameTexture = new(gameSettings.FixedDimensions, gameSettings.ShaderSupportType, gameSettings.TextureFilter);
         }
+        else if (screenTextureMode == ScreenTextureMode.NearestFixed)
+        {
+            gameTexture = new(gameSettings.FixedDimensions, gameSettings.ShaderSupportType, gameSettings.TextureFilter, true);
+        }
         else
         {
             gameTexture = new(gameSettings.PixelationFactor, gameSettings.ShaderSupportType, gameSettings.TextureFilter);
         }
 
+        gameTexture.OnTextureResized += GameTextureOnTextureResized;
         gameTexture.Initialize(Window.CurScreenSize, mousePosUI, curCamera);
         gameTexture.OnDrawGame += GameTextureOnDrawGame;
         gameTexture.OnDrawUI += GameTextureOnDrawUI;
@@ -207,8 +212,6 @@ public class Game
         ShapeInput.GamepadDeviceManager.OnGamepadConnectionChanged += OnGamepadConnectionChanged;
         
     }
-
-    
 
     public ExitCode Run(params string[] launchParameters)
     {
@@ -419,6 +422,10 @@ public class Game
         ResolveDrawGameUI(gameUiScreenInfo);
         if(Window.MouseOnScreen) Window.Cursor.DrawGameUI(gameUiScreenInfo);
     }
+    private void GameTextureOnTextureResized(int w, int h)
+    {
+        ResolveOnGameTextureResized(w, h);
+    }
     
     private void AdvancePhysics(float dt)
     {
@@ -530,6 +537,8 @@ public class Game
     /// Called after EndRun before the application terminates.
     /// </summary>
     protected virtual void UnloadContent() { }
+
+    protected virtual void OnGameTextureResized(int w, int h) { }
     protected virtual void OnWindowSizeChanged(DimensionConversionFactors conversion) { }
     protected virtual void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos) { }
     protected virtual void OnMonitorChanged(MonitorInfo newMonitor) { }
@@ -601,6 +610,11 @@ public class Game
     {
         InterpolatePhysicsState(f);
         CurScene.InterpolatePhysicsState(f);
+    }
+    private void ResolveOnGameTextureResized(int w, int h)
+    {
+        OnGameTextureResized(w, h);
+        CurScene.GameTextureResized(w, h);
     }
     private void ResolveDrawGame(ScreenInfo game)
     {

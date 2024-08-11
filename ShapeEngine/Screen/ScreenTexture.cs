@@ -1,18 +1,29 @@
-using System.Data;
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Lib;
 
 namespace ShapeEngine.Screen;
 
 public enum ScreenTextureMode
 {
+    /// <summary>
+    /// Texture will always be the same size as the screen.
+    /// </summary>
     Stretch = 1,
+    /// <summary>
+    /// Texture will always be the same aspect ratio as the screen but scaled by the pixelation factor.
+    /// </summary>
     Pixelation = 2,
-    Fixed = 4
+    /// <summary>
+    /// Texture will always be the same size and centered on the screen.
+    /// </summary>
+    Fixed = 4,
+    /// <summary>
+    /// Texture will always be the same aspect ratio as the screen but stay as close as possible to the fixed dimensions
+    /// </summary>
+    NearestFixed = 8
 }
 
 public enum ShaderSupportType
@@ -27,6 +38,7 @@ public sealed class ScreenTexture2
     
     #region Events
     public delegate void DrawToRenderTexture(ScreenInfo screenInfo);
+    public delegate void TextureResized(int w, int h);
     
     /// <summary>
     /// Draw to the render texture
@@ -39,6 +51,8 @@ public sealed class ScreenTexture2
     /// Is called after shaders are applied
     /// </summary>
     public event DrawToRenderTexture? OnDrawUI;
+
+    public event TextureResized? OnTextureResized;
     #endregion
 
     #region Members
@@ -66,9 +80,9 @@ public sealed class ScreenTexture2
     #region Private
     private RenderTexture2D renderTexture = new();
     private RenderTexture2D shaderBuffer = new();
-    // private ShapeShader? singleShader = null;
     private Rect textureRect = new();
     private Dimensions screenDimensions = new();
+    private float nearestFixedFactor = 1f;
     #endregion
     
     #endregion
@@ -105,7 +119,7 @@ public sealed class ScreenTexture2
         }
         else Mode = ScreenTextureMode.Pixelation;
     }
-    public ScreenTexture2(Dimensions fixedDimensions, ShaderSupportType shaderSupportType, TextureFilter textureFilter = TextureFilter.Bilinear)
+    public ScreenTexture2(Dimensions fixedDimensions, ShaderSupportType shaderSupportType, TextureFilter textureFilter = TextureFilter.Bilinear, bool nearest = false)
     {
         TextureFilter = textureFilter;
         ShaderSupport = shaderSupportType;
@@ -123,20 +137,24 @@ public sealed class ScreenTexture2
         }
         else
         {
-            Loaded = true;
-            Mode = ScreenTextureMode.Fixed;
-            Width = FixedDimensions.Width;
-            Height = FixedDimensions.Height;
-            
-            renderTexture = Raylib.LoadRenderTexture(Width, Height);
-            Raylib.SetTextureFilter(renderTexture.Texture, TextureFilter);
-
-            if (shaderSupportType != ShaderSupportType.None)
+            if (!nearest)
             {
-                shaderBuffer = Raylib.LoadRenderTexture(Width, Height);
-                Raylib.SetTextureFilter(shaderBuffer.Texture, TextureFilter);
+                Loaded = true;
+                Mode = ScreenTextureMode.Fixed;
+                Width = FixedDimensions.Width;
+                Height = FixedDimensions.Height;
+
+                renderTexture = Raylib.LoadRenderTexture(Width, Height);
+                Raylib.SetTextureFilter(renderTexture.Texture, TextureFilter);
+
+                if (shaderSupportType != ShaderSupportType.None)
+                {
+                    shaderBuffer = Raylib.LoadRenderTexture(Width, Height);
+                    Raylib.SetTextureFilter(shaderBuffer.Texture, TextureFilter);
+                }
             }
-            
+            else Mode = ScreenTextureMode.NearestFixed;
+
         }
     }
     
@@ -158,6 +176,10 @@ public sealed class ScreenTexture2
         if (Mode == ScreenTextureMode.Pixelation)
         {
             scaledMousePositionUi = mousePosition * PixelationFactor;
+        }
+        else if (Mode == ScreenTextureMode.NearestFixed)
+        {
+            scaledMousePositionUi = mousePosition / nearestFixedFactor;
         }
         else if (Mode == ScreenTextureMode.Fixed)
         {
@@ -210,6 +232,10 @@ public sealed class ScreenTexture2
         if (Mode == ScreenTextureMode.Pixelation)
         {
             scaledMousePositionUi = mousePosition * PixelationFactor;
+        }
+        else if (Mode == ScreenTextureMode.NearestFixed)
+        {
+            scaledMousePositionUi = mousePosition / nearestFixedFactor;
         }
         else if (Mode == ScreenTextureMode.Fixed)
         {
@@ -323,7 +349,7 @@ public sealed class ScreenTexture2
     {
         if(Mode == ScreenTextureMode.Stretch) return new(0, 0, screenDimensions.Width, screenDimensions.Height);
         if(Mode == ScreenTextureMode.Pixelation) return new(0, 0, screenDimensions.Width, screenDimensions.Height);
-        
+        if (Mode == ScreenTextureMode.NearestFixed) return new(0, 0, screenDimensions.Width, screenDimensions.Height);
         float virtualRatioW = (float)screenDimensions.Width/ Width;
         float virtualRatioH = (float)screenDimensions.Height/ Height;
         Rect destRec;
@@ -352,7 +378,12 @@ public sealed class ScreenTexture2
     #endregion
 
     #region Private Functions
-
+    private float GetNearestFixedFactor()
+    {
+        var xF = screenDimensions.Width / (float)FixedDimensions.Width;
+        var yF = screenDimensions.Height / (float)FixedDimensions.Height;
+        return (xF + yF) / 2f;
+    }
     private void ApplyShaders()
     {
         if (ShaderSupport == ShaderSupportType.None) return;
@@ -395,15 +426,15 @@ public sealed class ScreenTexture2
     {
         var destRec = new Rectangle
         {
-            X = Width * 0.5f,
-            Y = Height * 0.5f,
+            X = 0, //Width * 0.5f,
+            Y = 0, //Height * 0.5f,
             Width = Width,
             Height = Height
         };
         Vector2 origin = new()
         {
-            X = Width * 0.5f,
-            Y = Height * 0.5f
+            X = 0, //Width * 0.5f,
+            Y = 0 //Height * 0.5f
         };
         
         var sourceRec = new Rectangle(0, 0, Width, -Height);
@@ -421,6 +452,12 @@ public sealed class ScreenTexture2
         {
             w = (int)(w * PixelationFactor);
             h = (int)(h * PixelationFactor);
+        }
+        else if (Mode == ScreenTextureMode.NearestFixed)
+        {
+            nearestFixedFactor = GetNearestFixedFactor();
+            w = (int)(w / nearestFixedFactor);
+            h = (int)(w / screenSize.RatioW);
         }
         
         ReloadTexture(w, h);
@@ -450,6 +487,8 @@ public sealed class ScreenTexture2
             shaderBuffer = Raylib.LoadRenderTexture(Width, Height);
             Raylib.SetTextureFilter(shaderBuffer.Texture, TextureFilter);
         }
+        
+        OnTextureResized?.Invoke(w, h);
     }
     private void DrawTextureToScreen(Texture2D texture)
     {

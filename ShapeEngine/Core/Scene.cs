@@ -126,6 +126,11 @@ public abstract class Scene : IUpdateable, IDrawable
     {
         OnInterpolatePhysicsStateGame(f);
     }
+
+    public void GameTextureResized(int w, int h)
+    {
+        OnGameTextureResized(w, h);
+    }
     public void DrawGame(ScreenInfo game)
     {
         OnPreDrawGame(game);
@@ -143,7 +148,7 @@ public abstract class Scene : IUpdateable, IDrawable
         OnDrawUI(ui);
     }
         
-        
+    protected virtual void OnGameTextureResized(int w, int h) { }
     protected virtual void OnUpdateGame(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
     protected virtual void OnUpdatePhysicsStateGame(float dt, float totalFrameTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
     protected virtual void OnInterpolatePhysicsStateGame(float f) { }

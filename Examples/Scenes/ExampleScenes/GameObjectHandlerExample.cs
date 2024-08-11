@@ -669,6 +669,8 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
 
+        
+
         protected override void OnDrawUIExample(ScreenInfo ui)
         {
             // Vector2 uiSize = ui.Area.Size;
