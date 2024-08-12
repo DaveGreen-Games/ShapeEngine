@@ -3,6 +3,7 @@ using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Lib;
 
 namespace ShapeEngine.Screen;
 
@@ -12,18 +13,26 @@ public enum ScreenTextureMode
     /// Texture will always be the same size as the screen.
     /// </summary>
     Stretch = 1,
+    
     /// <summary>
     /// Texture will always be the same aspect ratio as the screen but scaled by the pixelation factor.
     /// </summary>
     Pixelation = 2,
+    
     /// <summary>
     /// Texture will always be the same size and centered on the screen.
     /// </summary>
     Fixed = 4,
+    
     /// <summary>
     /// Texture will always be the same aspect ratio as the screen but stay as close as possible to the fixed dimensions
     /// </summary>
-    NearestFixed = 8
+    NearestFixed = 8,
+    
+    /// <summary>
+    /// Texture size will be screensize * anchorstretch and topleft position will be screensize * anchorposition
+    /// </summary>
+    Anchor = 16
 }
 
 public enum ShaderSupportType
@@ -70,6 +79,8 @@ public sealed class ScreenTexture
     public readonly ScreenTextureMode Mode;
     public readonly Dimensions FixedDimensions;
     public readonly float PixelationFactor;
+    public readonly Vector2 AnchorStretch;
+    public readonly Vector2 AnchorPosition;
     
     public readonly TextureFilter TextureFilter;
     public readonly ShaderSupportType ShaderSupport;
@@ -93,13 +104,45 @@ public sealed class ScreenTexture
     {
         TextureFilter = textureFilter;
         ShaderSupport = shaderSupportType;
+        
         if (shaderSupportType != ShaderSupportType.None)
         {
             Shaders = new();
         }
+        
         FixedDimensions = new Dimensions(-1, -1);
         PixelationFactor = 1f;
+        
         Mode = ScreenTextureMode.Stretch;
+        AnchorPosition = new(-1, -1);
+        AnchorStretch = new(-1, -1);
+    }
+    public ScreenTexture(Vector2 anchorStretch, Vector2 anchorPosition, ShaderSupportType shaderSupportType, TextureFilter textureFilter = TextureFilter.Bilinear)
+    {
+        TextureFilter = textureFilter;
+        ShaderSupport = shaderSupportType;
+        
+        if (shaderSupportType != ShaderSupportType.None)
+        {
+            Shaders = new();
+        }
+
+        if (anchorStretch.X <= 0f || anchorStretch.Y <= 0f || anchorStretch.X >= 1f || anchorStretch.Y >= 1f ||
+            anchorPosition.X <= 0f || anchorPosition.Y <= 0f || anchorPosition.X >= 1f || anchorPosition.Y >= 1f)
+        {
+            Mode = ScreenTextureMode.Stretch;
+            anchorPosition = new(-1, -1);
+            anchorStretch = new(-1, -1);
+        }
+        else
+        {
+            Mode = ScreenTextureMode.Anchor;
+            AnchorPosition = anchorPosition;
+            AnchorStretch = anchorStretch;
+        }
+        
+        FixedDimensions = new Dimensions(-1, -1);
+        PixelationFactor = 1f;
     }
     public ScreenTexture(float pixelationFactor, ShaderSupportType shaderSupportType, TextureFilter textureFilter = TextureFilter.Bilinear)
     {
@@ -118,6 +161,9 @@ public sealed class ScreenTexture
             Mode = ScreenTextureMode.Stretch;
         }
         else Mode = ScreenTextureMode.Pixelation;
+        
+        AnchorPosition = new(-1, -1);
+        AnchorStretch = new(-1, -1);
     }
     public ScreenTexture(Dimensions fixedDimensions, ShaderSupportType shaderSupportType, TextureFilter textureFilter = TextureFilter.Bilinear, bool nearest = false)
     {
@@ -156,6 +202,9 @@ public sealed class ScreenTexture
             else Mode = ScreenTextureMode.NearestFixed;
 
         }
+        
+        AnchorPosition = new(-1, -1);
+        AnchorStretch = new(-1, -1);
     }
     
     #endregion
@@ -181,6 +230,15 @@ public sealed class ScreenTexture
         {
             scaledMousePositionUi = mousePosition / nearestFixedFactor;
         }
+        else if (Mode == ScreenTextureMode.Anchor)
+        {
+            var w = screenDimensions.Width * AnchorStretch.X;
+            var h = screenDimensions.Height * AnchorStretch.Y;
+
+            var size = new Vector2(w, h);
+            var topLeft = screenDimensions.ToVector2() * AnchorPosition - size * AnchorPosition;
+            scaledMousePositionUi = (mousePosition - topLeft) * AnchorStretch;
+        }
         else if (Mode == ScreenTextureMode.Fixed)
         {
             float virtualRatioW = (float)screenSize.Width/ Width;
@@ -188,14 +246,14 @@ public sealed class ScreenTexture
             if (virtualRatioW < virtualRatioH)
             {
                 var h = Height * virtualRatioW;
-                var offset = new Vector2(0f, screenDimensions.Height / 2f - h / 2f);
-                scaledMousePositionUi = (mousePosition - offset) / virtualRatioW;
+                var topLeft = new Vector2(0f, screenDimensions.Height / 2f - h / 2f);
+                scaledMousePositionUi = (mousePosition - topLeft) / virtualRatioW;
             }
             else
             {
                 var w = Width * virtualRatioH;
-                var offset = new Vector2(screenDimensions.Width / 2f - w / 2f, 0f);
-                scaledMousePositionUi = (mousePosition - offset) / virtualRatioH;
+                var topLeft = new Vector2(screenDimensions.Width / 2f - w / 2f, 0f);
+                scaledMousePositionUi = (mousePosition - topLeft) / virtualRatioH;
             }
         }
         
@@ -211,7 +269,6 @@ public sealed class ScreenTexture
         GameScreenInfo = new(Camera?.Area ?? textureRect, scaledMousePostionGame);
         GameUiScreenInfo = new(textureRect, scaledMousePositionUi);
     }
-    
     public void Update(float dt, Dimensions screenSize, Vector2 mousePosition, bool paused)
     {
         if (screenDimensions != screenSize)
@@ -237,6 +294,15 @@ public sealed class ScreenTexture
         {
             scaledMousePositionUi = mousePosition / nearestFixedFactor;
         }
+        else if (Mode == ScreenTextureMode.Anchor)
+        {
+            var w = screenDimensions.Width * AnchorStretch.X;
+            var h = screenDimensions.Height * AnchorStretch.Y;
+
+            var size = new Vector2(w, h);
+            var topLeft = screenDimensions.ToVector2() * AnchorPosition - size * AnchorPosition;
+            scaledMousePositionUi = (mousePosition - topLeft) * AnchorStretch;
+        }
         else if (Mode == ScreenTextureMode.Fixed)
         {
             float virtualRatioW = (float)screenSize.Width/ Width;
@@ -244,14 +310,14 @@ public sealed class ScreenTexture
             if (virtualRatioW < virtualRatioH)
             {
                 var h = Height * virtualRatioW;
-                var offset = new Vector2(0f, screenDimensions.Height / 2f - h / 2f);
-                scaledMousePositionUi = (mousePosition - offset) / virtualRatioW;
+                var topLeft = new Vector2(0f, screenDimensions.Height / 2f - h / 2f);
+                scaledMousePositionUi = (mousePosition - topLeft) / virtualRatioW;
             }
             else
             {
                 var w = Width * virtualRatioH;
-                var offset = new Vector2(screenDimensions.Width / 2f - w / 2f, 0f);
-                scaledMousePositionUi = (mousePosition - offset) / virtualRatioH;
+                var topLeft = new Vector2(screenDimensions.Width / 2f - w / 2f, 0f);
+                scaledMousePositionUi = (mousePosition - topLeft) / virtualRatioH;
             }
         }
         
@@ -267,7 +333,6 @@ public sealed class ScreenTexture
         GameScreenInfo = new(Camera?.Area ?? textureRect, scaledMousePostionGame);
         GameUiScreenInfo = new(textureRect, scaledMousePositionUi);
     }
-    
     public void DrawOnTexture()
     {
         bool shaderMode = ShaderSupport != ShaderSupportType.None && Shaders != null && Shaders.HasActiveShaders();
@@ -324,17 +389,6 @@ public sealed class ScreenTexture
     }
     public void DrawToScreen()
     {
-        // if (singleShader != null)
-        // {
-        //     Raylib.BeginShaderMode(singleShader.Shader);
-        //     DrawTextureToScreen(RenderTexture.Texture);
-        //     Raylib.EndShaderMode();
-        // }
-        // else
-        // {
-        //     DrawTextureToScreen(RenderTexture.Texture);
-        // }
-        
         DrawTextureToScreen(renderTexture.Texture);
     }
     public void Unload()
@@ -347,9 +401,18 @@ public sealed class ScreenTexture
     
     public Rect GetDestinationRect()
     {
-        if(Mode == ScreenTextureMode.Stretch) return new(0, 0, screenDimensions.Width, screenDimensions.Height);
-        if(Mode == ScreenTextureMode.Pixelation) return new(0, 0, screenDimensions.Width, screenDimensions.Height);
-        if (Mode == ScreenTextureMode.NearestFixed) return new(0, 0, screenDimensions.Width, screenDimensions.Height);
+        if( Mode == ScreenTextureMode.Stretch ) return new(0, 0, screenDimensions.Width, screenDimensions.Height);
+        if( Mode == ScreenTextureMode.Pixelation ) return new(0, 0, screenDimensions.Width, screenDimensions.Height);
+        if( Mode == ScreenTextureMode.NearestFixed ) return new(0, 0, screenDimensions.Width, screenDimensions.Height);
+        if( Mode == ScreenTextureMode.Anchor )
+        {
+            var w = screenDimensions.Width * AnchorStretch.X;
+            var h = screenDimensions.Height * AnchorStretch.Y;
+
+            var size = new Vector2(w, h);
+            var topLeft = screenDimensions.ToVector2() * AnchorPosition - size * AnchorPosition;
+            return new Rect(topLeft.X, topLeft.Y, w, h);
+        }
         float virtualRatioW = (float)screenDimensions.Width/ Width;
         float virtualRatioH = (float)screenDimensions.Height/ Height;
         Rect destRec;
@@ -369,7 +432,6 @@ public sealed class ScreenTexture
             originX = screenDimensions.Width / 2f - w / 2f;
             destRec = new Rect(originX, originY, w, h);
         }
-
 
         return destRec;
     }
@@ -459,7 +521,11 @@ public sealed class ScreenTexture
             w = (int)(w / nearestFixedFactor);
             h = (int)(w / screenSize.RatioW);
         }
-        
+        else if (Mode == ScreenTextureMode.Anchor)
+        {
+            w = (int) (w * AnchorStretch.X);
+            h = (int) (h * AnchorStretch.Y);
+        }
         ReloadTexture(w, h);
     }
     private void ReloadTexture(int w, int h)
