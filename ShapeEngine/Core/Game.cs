@@ -105,7 +105,7 @@ public class Game
     
     #region Private Members
 
-    private ScreenTexture2 gameTexture;
+    private ScreenTexture gameTexture;
     private readonly ShapeCamera basicCamera = new();
     private ShapeCamera curCamera;
     
@@ -212,7 +212,7 @@ public class Game
         return new ExitCode(restart);
     }
     
-    public ScreenTexture2 GetGameTexture() => gameTexture;
+    public ScreenTexture GetGameTexture() => gameTexture;
 
     /// <summary>
     /// Change the game texture.
@@ -220,7 +220,7 @@ public class Game
     /// <param name="newScreenTexture"> The new screen texture to use.</param>
     /// <returns>Returns the old game texture or null if the newScreenTexture is the same as the game texture.
     /// The old ScreenTexture should be unloaded and disposed of if no longer needed!</returns>
-    public ScreenTexture2? ChangeGameTexture(ScreenTexture2 newScreenTexture)
+    public ScreenTexture? ChangeGameTexture(ScreenTexture newScreenTexture)
     {
         if (gameTexture == newScreenTexture) return null;
 

@@ -33,7 +33,7 @@ public enum ShaderSupportType
     Multi = 4
 }
 
-public sealed class ScreenTexture2
+public sealed class ScreenTexture
 {
     
     #region Events
@@ -89,7 +89,7 @@ public sealed class ScreenTexture2
 
     #region Constructors
     
-    public ScreenTexture2(ShaderSupportType shaderSupportType, TextureFilter textureFilter = TextureFilter.Bilinear)
+    public ScreenTexture(ShaderSupportType shaderSupportType, TextureFilter textureFilter = TextureFilter.Bilinear)
     {
         TextureFilter = textureFilter;
         ShaderSupport = shaderSupportType;
@@ -101,7 +101,7 @@ public sealed class ScreenTexture2
         PixelationFactor = 1f;
         Mode = ScreenTextureMode.Stretch;
     }
-    public ScreenTexture2(float pixelationFactor, ShaderSupportType shaderSupportType, TextureFilter textureFilter = TextureFilter.Bilinear)
+    public ScreenTexture(float pixelationFactor, ShaderSupportType shaderSupportType, TextureFilter textureFilter = TextureFilter.Bilinear)
     {
         TextureFilter = textureFilter;
         ShaderSupport = shaderSupportType;
@@ -119,7 +119,7 @@ public sealed class ScreenTexture2
         }
         else Mode = ScreenTextureMode.Pixelation;
     }
-    public ScreenTexture2(Dimensions fixedDimensions, ShaderSupportType shaderSupportType, TextureFilter textureFilter = TextureFilter.Bilinear, bool nearest = false)
+    public ScreenTexture(Dimensions fixedDimensions, ShaderSupportType shaderSupportType, TextureFilter textureFilter = TextureFilter.Bilinear, bool nearest = false)
     {
         TextureFilter = textureFilter;
         ShaderSupport = shaderSupportType;
