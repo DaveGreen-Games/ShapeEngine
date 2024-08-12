@@ -371,7 +371,8 @@ public class ShapeDrawingExample : ExampleScene
         
         
     }
-    protected override void OnDrawGameUIExample(ScreenInfo gameUi)
+    
+    protected override void OnDrawUIExample(ScreenInfo ui)
     {
         if (!gappedMode)
         {
@@ -388,10 +389,6 @@ public class ShapeDrawingExample : ExampleScene
             gapsSlider.Draw();
             gapPerimeterPercentageSlider.Draw();
         }
-    }
-    protected override void OnDrawUIExample(ScreenInfo ui)
-    {
-        
         var curDevice = ShapeInput.CurrentInputDeviceType;
         var nextShapeText = nextShape. GetInputTypeDescription( curDevice, true, 1, false); 
         var changeDrawingModeText = changeDrawingMode. GetInputTypeDescription( curDevice, true, 1, false); 

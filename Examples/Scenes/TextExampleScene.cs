@@ -291,9 +291,10 @@ namespace Examples.Scenes
             
             UpdateExampleTextEntryInactive(time.Delta, game, ui);
         }
-        protected override void OnDrawGameUIExample(ScreenInfo gameUi)
+        
+        protected override void OnDrawUIExample(ScreenInfo ui)
         {
-            var uiSize = gameUi.Area.Size;
+            var uiSize = ui.Area.Size;
             Rect r = new(topLeft, bottomRight);
             
             float lineThickness = uiSize.Min() * 0.01f;
@@ -352,15 +353,8 @@ namespace Examples.Scenes
             else
             {
                 DrawTextEntry(r);
-                // font.DrawText(textBox.Text, fontSize, fontSpacing, r.GetPoint(curAlignement), curAlignement, ColorLight);
-                
-                // if(textBox.CaretVisible)
-                    // font.DrawCaret(textBox.Text, r, fontSize, fontSpacing, curAlignement, textBox.CaretIndex, 5f, ColorHighlight2);
             }
-
-        }
-        protected override void OnDrawUIExample(ScreenInfo ui)
-        {
+            
             var rects = GAMELOOP.UIRects.GetRect("bottom center").SplitV(0.35f);
             DrawDescription(rects.top, rects.bottom);
            

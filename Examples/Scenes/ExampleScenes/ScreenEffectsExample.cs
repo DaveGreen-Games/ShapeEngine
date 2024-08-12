@@ -522,14 +522,11 @@ namespace Examples.Scenes.ExampleScenes
                 }
             }
         }
-        protected override void OnDrawGameUIExample(ScreenInfo gameUi)
+        
+        protected override void OnDrawUIExample(ScreenInfo ui)
         {
             intensitySlider.Draw();
             cameraFollowSlider.Draw();
-            
-        }
-        protected override void OnDrawUIExample(ScreenInfo ui)
-        {
             DrawInputDescription(GAMELOOP.UIRects.GetRect("bottom center"));
             DrawCameraInfo(GAMELOOP.UIRects.GetRect("bottom right"));
 
