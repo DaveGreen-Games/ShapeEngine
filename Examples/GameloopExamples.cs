@@ -475,40 +475,38 @@ namespace Examples
             mainScene = new MainScene();
             GoToScene(mainScene);
         }
-        
-        
-        protected override void OnWindowSizeChanged(DimensionConversionFactors conversionFactors)
+
+        protected override void OnGameTextureResized(int w, int h)
         {
             if (ScreenShaders != null)
             {
                 var crtShader = ScreenShaders.Get(crtShaderID);
                 if (crtShader != null)
                 {
-                    ShapeShader.SetValueFloat(crtShader.Shader, "renderWidth", Window.CurScreenSize.Width);
-                    ShapeShader.SetValueFloat(crtShader.Shader, "renderHeight", Window.CurScreenSize.Height);
+                    ShapeShader.SetValueFloat(crtShader.Shader, "renderWidth", w);
+                    ShapeShader.SetValueFloat(crtShader.Shader, "renderHeight", h);
                 }
 
                 var pixelationShader = ScreenShaders.Get(pixelationShaderID);
                 if (pixelationShader != null)
                 {
-                    ShapeShader.SetValueFloat(pixelationShader.Shader, "renderWidth", Window.CurScreenSize.Width);
-                    ShapeShader.SetValueFloat(pixelationShader.Shader, "renderHeight", Window.CurScreenSize.Height);
+                    ShapeShader.SetValueFloat(pixelationShader.Shader, "renderWidth", w);
+                    ShapeShader.SetValueFloat(pixelationShader.Shader, "renderHeight", h);
                 }
            
                 var blurShader = ScreenShaders.Get(blurID);
                 if (blurShader != null)
                 {
-                    ShapeShader.SetValueFloat(blurShader.Shader, "renderWidth", Window.CurScreenSize.Width);
-                    ShapeShader.SetValueFloat(blurShader.Shader, "renderHeight", Window.CurScreenSize.Height);
+                    ShapeShader.SetValueFloat(blurShader.Shader, "renderWidth", w);
+                    ShapeShader.SetValueFloat(blurShader.Shader, "renderHeight", h);
                 }
             
                 var bloomShader = ScreenShaders.Get(bloomShaderID);
                 if (bloomShader != null)
                 {
-                    ShapeShader.SetValueVector2(bloomShader.Shader, "size", Window.CurScreenSize.ToVector2());
+                    ShapeShader.SetValueVector2(bloomShader.Shader, "size", new Vector2(w, h));
                 }
             }
-            
         }
 
         protected override void OnGamepadConnected(ShapeGamepadDevice gamepad)
@@ -558,8 +556,8 @@ namespace Examples
                 var darknessShader = ScreenShaders.Get(darknessID);
                 if (darknessShader != null && darknessShader.Enabled)
                 {
-                    var f = game.MousePos / game.Area.Size.ToVector2();
-                    ShapeShader.SetValueVector2(darknessShader.Shader, "origin", f);
+                    // var f = game.MousePos / game.Area.Size.ToVector2();
+                    ShapeShader.SetValueVector2(darknessShader.Shader, "origin", game.RelativeMousePosition);
                 }
             
                 var overdrawShader = ScreenShaders.Get(overdrawID);
