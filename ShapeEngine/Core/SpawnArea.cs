@@ -28,7 +28,7 @@ namespace ShapeEngine.Core
 
         private readonly SortedList<uint, List<GameObject>> allObjects = new();
         private readonly List<GameObject> drawToGameTextureObjects = new();
-        private readonly List<GameObject> drawToUITextureObjects = new();
+        private readonly List<GameObject> drawToGameUiTextureObjects = new();
 
         private Rect clearArea = new();
         private bool clearAreaActive = false;
@@ -347,7 +347,7 @@ namespace ShapeEngine.Core
         public virtual void Clear()
         {
             drawToGameTextureObjects.Clear();
-            drawToUITextureObjects.Clear();
+            drawToGameUiTextureObjects.Clear();
 
             foreach (var layer in allObjects.Keys)
             {
@@ -398,7 +398,7 @@ namespace ShapeEngine.Core
             // CollisionHandler?.Update();
 
             drawToGameTextureObjects.Clear();
-            drawToUITextureObjects.Clear();
+            drawToGameUiTextureObjects.Clear();
 
             if (clearAreaActive)
             {
@@ -428,7 +428,7 @@ namespace ShapeEngine.Core
                     obj.UpdateParallaxe(ParallaxePosition);
                     
                     if (obj.IsDrawingToGame(game.Area)) drawToGameTextureObjects.Add(obj);
-                    if (obj.IsDrawingToGameUI(gameUi.Area)) drawToUITextureObjects.Add(obj);
+                    if (obj.IsDrawingToGameUI(gameUi.Area)) drawToGameUiTextureObjects.Add(obj);
                     
                     obj.Update(time, game, gameUi, ui);
                     
@@ -463,7 +463,7 @@ namespace ShapeEngine.Core
         }
         public virtual void DrawGameUI(ScreenInfo gameUi)
         {
-            foreach (var obj in drawToUITextureObjects)
+            foreach (var obj in drawToGameUiTextureObjects)
             {
                 obj.DrawGameUI(gameUi);
             }

@@ -132,7 +132,7 @@ namespace Examples.Scenes.ExampleScenes
 
         public override bool HasLeftBounds(Rect bounds) => !bounds.OverlapShape(circleCollider.GetCircleShape());
         public override bool IsDrawingToGame(Rect gameArea) => gameArea.OverlapShape(circleCollider.GetCircleShape());
-        public override bool IsDrawingToGameUI(Rect screenArea) => false;
+        public override bool IsDrawingToGameUI(Rect gameUiArea) => false;
 
         public override void DrawGameUI(ScreenInfo gameUi)
         {

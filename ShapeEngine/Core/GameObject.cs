@@ -26,7 +26,7 @@ public abstract class GameObject : IUpdateable, IDrawable
     public abstract void DrawGameUI(ScreenInfo gameUi);
 
     public virtual bool IsDrawingToGame(Rect gameArea) => true;
-    public virtual bool IsDrawingToGameUI(Rect screenArea) => false;
+    public virtual bool IsDrawingToGameUI(Rect gameUiArea) => false;
         
     /// <summary>
     /// The area layer the object is stored in. Higher layers are draw on top of lower layers.
