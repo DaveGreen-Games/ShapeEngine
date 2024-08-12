@@ -116,6 +116,10 @@ public class Game
     private readonly List<DeferredInfo> deferred = new();
 
     private float physicsAccumulator = 0f;
+
+    private List<ScreenTexture>? customScreenTextures = null;
+
+    
     #endregion
 
     public Game(GameSettings gameSettings, WindowSettings windowSettings)
@@ -276,6 +280,14 @@ public class Game
             
             var mousePosUI = Window.MousePosition; 
             gameTexture.Update(dt, Window.CurScreenSize, mousePosUI, Paused);
+
+            if (customScreenTextures is { Count: > 0 })
+            {
+                for (var i = 0; i < customScreenTextures.Count; i++)
+                {
+                    customScreenTextures[i].Update(dt, Window.CurScreenSize, mousePosUI, Paused);
+                }
+            }
             
             // gameTexture.UpdateDimensions(Window.CurScreenSize);
             // screenShaderBuffer.UpdateDimensions(Window.CurScreenSize);
@@ -304,11 +316,25 @@ public class Game
     private void DrawToScreen()
     {
         gameTexture.DrawOnTexture();
+        if (customScreenTextures is { Count: > 0 })
+        {
+            for (var i = 0; i < customScreenTextures.Count; i++)
+            {
+                customScreenTextures[i].DrawOnTexture();
+            }
+        }
         
         Raylib.BeginDrawing();
         Raylib.ClearBackground(BackgroundColorRgba.ToRayColor());
 
         gameTexture.DrawToScreen();
+        if (customScreenTextures is { Count: > 0 })
+        {
+            for (var i = 0; i < customScreenTextures.Count; i++)
+            {
+                customScreenTextures[i].DrawToScreen();
+            }
+        }
         
         ResolveDrawUI(UIScreenInfo);
         if(Window.MouseOnScreen) Cursor.DrawUi(UIScreenInfo);
@@ -361,6 +387,39 @@ public class Game
     
     #endregion
 
+    #region Custom Screen Textures
+
+    public bool AddScreenTexture(ScreenTexture texture)
+    {
+        if (customScreenTextures == null)
+        {
+            customScreenTextures = new(2) { texture };
+            return true;
+        }
+
+        if (customScreenTextures.Contains(texture)) return false;
+
+        customScreenTextures.Add(texture);
+        return true;
+
+    }
+    public bool HasScreenTexture(ScreenTexture texture) => customScreenTextures?.Contains(texture) ?? false;
+    public bool RemoveScreenTexture(ScreenTexture texture)
+    {
+        if (customScreenTextures == null) return false;
+        return customScreenTextures.Remove(texture);
+    }
+    public int ClearScreenTextures()
+    {
+        if (customScreenTextures == null) return 0;
+
+        int count = customScreenTextures.Count;
+        customScreenTextures.Clear();
+        return count;
+    }
+    
+    #endregion
+    
     #region ICursor
 
     public ICursor Cursor { get; private set; } = new NullCursor();
