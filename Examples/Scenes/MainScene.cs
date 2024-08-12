@@ -242,12 +242,12 @@ namespace Examples.Scenes
         
         public override void Activate(Scene oldScene)
         {
-            GAMELOOP.Window.SwitchCursor(new SimpleCursorUI());
+            // GAMELOOP.Window.SwitchCursor(new SimpleCursorUI());
             navigator.StartNavigation();
         }
         public override void Deactivate()
         {
-            GAMELOOP.Window.SwitchCursor(new SimpleCursorGameUI());
+            // GAMELOOP.Window.SwitchCursor(new SimpleCursorGameUI());
             navigator.EndNavigation();
         }
 

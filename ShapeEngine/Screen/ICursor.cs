@@ -8,9 +8,10 @@ namespace ShapeEngine.Screen
     public interface ICursor
     {
         public uint GetID();
-        public void DrawGameUI(ScreenInfo ui);
-        public void DrawUI(ScreenInfo ui);
-        public void Update(float dt, ScreenInfo ui);
+        public void DrawGame(ScreenInfo game);
+        public void DrawGameUi(ScreenInfo gameUi);
+        public void DrawUi(ScreenInfo ui);
+        public void Update(float dt, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui);
         public void TriggerEffect(string effect);
         public void Deactivate();
         public void Activate(ICursor oldCursor);
@@ -29,12 +30,13 @@ namespace ShapeEngine.Screen
 
         public void Deactivate() { }
 
-        public void DrawGameUI(ScreenInfo ui) { }
-        public void DrawUI(ScreenInfo ui) { }
+        public void DrawGame(ScreenInfo game) { }
+        public void DrawGameUi(ScreenInfo gameUi) { }
+        public void DrawUi(ScreenInfo ui) { }
 
         public uint GetID() { return id; }
 
-        public void Update(float dt, ScreenInfo ui) { }
+        public void Update(float dt, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
     }
 
 

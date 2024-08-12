@@ -80,45 +80,46 @@ namespace Examples
     }
     
     
-    internal class SimpleCursorGameUI : ICursor
-    {
-        public uint GetID()
-        {
-            return 0;
-        }
-
-        public void DrawGameUI(ScreenInfo ui)
-        {
-            
-            float size = ui.Area.Size.Min() * 0.02f;
-            SimpleCursorUI.DrawRoundedCursor(ui.MousePos, size, Colors.Warm);
-        }
-
-        public void DrawUI(ScreenInfo ui)
-        {
-            // float size = ui.Area.Size.Min() * 0.02f;
-            // SimpleCursorUI.DrawRoundedCursor(ui.MousePos, size, Colors.Warm);
-        }
-        public void Update(float dt, ScreenInfo ui)
-        {
-            
-        }
-
-        public void TriggerEffect(string effect)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Deactivate()
-        {
-            
-        }
-
-        public void Activate(ICursor oldCursor)
-        {
-            
-        }
-    }
+    // internal class SimpleCursorGameUI : ICursor
+    // {
+    //     public uint GetID()
+    //     {
+    //         return 0;
+    //     }
+    //
+    //     public void DrawGameUI(ScreenInfo ui)
+    //     {
+    //         
+    //         float size = ui.Area.Size.Min() * 0.02f;
+    //         SimpleCursorUI.DrawRoundedCursor(ui.MousePos, size, Colors.Warm);
+    //     }
+    //
+    //     public void DrawUI(ScreenInfo ui)
+    //     {
+    //         // float size = ui.Area.Size.Min() * 0.02f;
+    //         // SimpleCursorUI.DrawRoundedCursor(ui.MousePos, size, Colors.Warm);
+    //     }
+    //     public void Update(float dt, ScreenInfo ui)
+    //     {
+    //         
+    //     }
+    //
+    //     public void TriggerEffect(string effect)
+    //     {
+    //         throw new NotImplementedException();
+    //     }
+    //
+    //     public void Deactivate()
+    //     {
+    //         
+    //     }
+    //
+    //     public void Activate(ICursor oldCursor)
+    //     {
+    //         
+    //     }
+    // }
+    //
     internal class SimpleCursorUI : ICursor
     {
         private float effectTimer = 0f;
@@ -129,12 +130,11 @@ namespace Examples
             return 0;
         }
 
-        public void DrawGameUI(ScreenInfo ui)
-        {
-            
-        }
+        public void DrawGame(ScreenInfo game) { }
 
-        public void DrawUI(ScreenInfo ui)
+        public void DrawGameUi(ScreenInfo gameUi) { }
+
+        public void DrawUi(ScreenInfo ui)
         {
             float size = ui.Area.Size.Min() * 0.02f;
             float t = 1f - (effectTimer / EffectDuration);
@@ -144,7 +144,7 @@ namespace Examples
             
             DrawRoundedCursor(ui.MousePos, size, c);
         }
-        public void Update(float dt, ScreenInfo ui)
+        public void Update(float dt, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
             if (effectTimer > 0f)
             {
@@ -185,6 +185,7 @@ namespace Examples
             ShapeDrawing.DrawCircleSectorLines(circleCenter, size, 180, 270, 1f, colorRgba, false, 4f);
         }
     }
+    
     public class GameloopExamples : Game
     {
         public Font FontDefault { get; private set; }
@@ -409,7 +410,8 @@ namespace Examples
             // HideOSCursor();
             Window.MouseVisible = false;
             Window.MouseEnabled = true;
-            Window.SwitchCursor(new SimpleCursorGameUI());
+            
+            SwitchCursor(new SimpleCursorUI());
 
             paletteInfoBox = new();
 

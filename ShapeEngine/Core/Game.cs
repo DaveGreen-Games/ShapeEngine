@@ -292,7 +292,7 @@ public class Game
             {
                 UpdateFlashes(dt);
             }
-            Window.Cursor.Update(dt, UIScreenInfo);
+            Cursor.Update(dt, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
 
             ResolveUpdate();
             AdvancePhysics(dt);
@@ -311,7 +311,7 @@ public class Game
         gameTexture.DrawToScreen();
         
         ResolveDrawUI(UIScreenInfo);
-        if(Window.MouseOnScreen) Window.Cursor.DrawUI(UIScreenInfo);
+        if(Window.MouseOnScreen) Cursor.DrawUi(UIScreenInfo);
         
         Raylib.EndDrawing();
     }
@@ -327,11 +327,12 @@ public class Game
     private void GameTextureOnDrawGame(ScreenInfo gameScreenInfo)
     {
         ResolveDrawGame(gameScreenInfo);
+        if(Window.MouseOnScreen) Cursor.DrawGame(gameScreenInfo);
     }
     private void GameTextureOnDrawUI(ScreenInfo gameUiScreenInfo)
     {
         ResolveDrawGameUI(gameUiScreenInfo);
-        if(Window.MouseOnScreen) Window.Cursor.DrawGameUI(gameUiScreenInfo);
+        if(Window.MouseOnScreen) Cursor.DrawGameUi(gameUiScreenInfo);
     }
     private void GameTextureOnTextureResized(int w, int h)
     {
@@ -360,6 +361,24 @@ public class Game
     
     #endregion
 
+    #region ICursor
+
+    public ICursor Cursor { get; private set; } = new NullCursor();
+    public bool SwitchCursor(ICursor newCursor)
+    {
+        if (Cursor != newCursor)
+        {
+            Cursor.Deactivate();
+            newCursor.Activate(Cursor);
+            Cursor = newCursor;
+            return true;
+        }
+        return false;
+    }
+    public void HideCursor() => SwitchCursor(new NullCursor());
+
+    #endregion
+    
     #region Public
     public void Restart()
     {

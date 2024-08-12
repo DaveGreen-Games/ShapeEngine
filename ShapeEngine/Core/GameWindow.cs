@@ -505,28 +505,6 @@ public sealed class GameWindow
     #endregion
 
     #region Internal
-
-    // private float opacityLerpTimer = 0;
-    // private const float opacityLerpDuration = 0.25f;
-    //
-    // private void StartOpacityLerp()
-    // {
-    //     Raylib.SetWindowOpacity(0f);
-    //     opacityLerpTimer = opacityLerpDuration;
-    // }
-    //
-    // private void LerpOpacitiy(float dt)
-    // {
-    //     if (opacityLerpTimer > 0)
-    //     {
-    //         opacityLerpTimer -= dt;
-    //
-    //         if (opacityLerpTimer <= 0) opacityLerpTimer = 0f;
-    //
-    //         float f = 1f - (opacityLerpTimer / opacityLerpDuration);
-    //         Raylib.SetWindowOpacity(f);
-    //     }
-    // }
     internal GameWindow(WindowSettings windowSettings)
     {
         if(windowSettings.Msaa4x) Raylib.SetConfigFlags(ConfigFlags.Msaa4xHint);
@@ -1029,24 +1007,7 @@ public sealed class GameWindow
     }
     #endregion
 
-    #region ICursor
-
-    public ICursor Cursor { get; private set; } = new NullCursor();
-    public bool SwitchCursor(ICursor newCursor)
-    {
-        if (Cursor != newCursor)
-        {
-            Cursor.Deactivate();
-            newCursor.Activate(Cursor);
-            Cursor = newCursor;
-            return true;
-        }
-        return false;
-    }
-    public void HideCursor() => SwitchCursor(new NullCursor());
-
-
-    #endregion
+    
 
     #region Window & Cursor State
 
