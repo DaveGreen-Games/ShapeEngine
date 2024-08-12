@@ -349,7 +349,7 @@ public class Game
         physicsAccumulator += frameTime;
         while ( physicsAccumulator >= FixedPhysicsTimestep )
         {
-            ResolvePhysicsTimestep(FixedPhysicsTimestep, t, GameScreenInfo, UIScreenInfo);
+            ResolvePhysicsTimestep(FixedPhysicsTimestep, t);
             t += FixedPhysicsTimestep;
             physicsAccumulator -= FixedPhysicsTimestep;
         }
@@ -433,7 +433,7 @@ public class Game
     protected virtual void BeginRun() { }
 
     protected virtual void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
-    protected virtual void UpdatePhysicsState(float dt, float totalFrameTime, ScreenInfo game, ScreenInfo ui) { }
+    protected virtual void UpdatePhysicsState(float dt, float totalFrameTime, ScreenInfo game, ScreenInfo gameUi) { }
     protected virtual void InterpolatePhysicsState(float f) { }
     
     protected virtual void DrawGame(ScreenInfo game) { }
@@ -511,9 +511,9 @@ public class Game
         Update(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
         CurScene.Update(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
     }
-    private void ResolvePhysicsTimestep(float dt, float totalFrameTime, ScreenInfo game, ScreenInfo ui)
+    private void ResolvePhysicsTimestep(float dt, float totalFrameTime)
     {
-        UpdatePhysicsState(dt, totalFrameTime, game, ui);
+        UpdatePhysicsState(dt, totalFrameTime, GameScreenInfo, GameUiScreenInfo);
         CurScene.UpdatePhysicsState(dt, totalFrameTime, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
     }
 
