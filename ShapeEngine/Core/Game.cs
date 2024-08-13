@@ -266,11 +266,6 @@ public class Game
             
             ShapeInput.Update();
             
-            // var cameraArea = Camera.Area;
-            
-            // Camera.SetSize(Window.CurScreenSize);
-            // if(!Paused) Camera.Update(dt);
-
             if (Window.MouseOnScreen)
             {
                 if (ShapeInput.CurrentInputDeviceType is InputDeviceType.Keyboard or InputDeviceType.Gamepad)
@@ -290,13 +285,6 @@ public class Game
                 }
             }
             
-            // gameTexture.UpdateDimensions(Window.CurScreenSize);
-            // screenShaderBuffer.UpdateDimensions(Window.CurScreenSize);
-            
-            //mousePos;// GetMousePosition();
-            // var mousePosGame = Camera.ScreenToWorld(mousePosUI);
-            
-            // GameScreenInfo = new(cameraArea, mousePosGame);
             GameScreenInfo = gameTexture.GameScreenInfo;
             GameUiScreenInfo = gameTexture.GameUiScreenInfo;
             UIScreenInfo = new(Window.ScreenArea, mousePosUI);
@@ -305,7 +293,8 @@ public class Game
             {
                 UpdateFlashes(dt);
             }
-            Cursor.Update(dt, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+
+            UpdateCursor(dt, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
 
             ResolveUpdate();
             AdvanceFixedUpdate(dt);
@@ -338,7 +327,7 @@ public class Game
         }
         
         ResolveDrawUI(UIScreenInfo);
-        if(Window.MouseOnScreen) Cursor.DrawUi(UIScreenInfo);
+        if (Window.MouseOnScreen) DrawCursorUi(UIScreenInfo);
         
         Raylib.EndDrawing();
     }
@@ -354,12 +343,12 @@ public class Game
     private void GameTextureOnDrawGame(ScreenInfo gameScreenInfo)
     {
         ResolveDrawGame(gameScreenInfo);
-        if(Window.MouseOnScreen) Cursor.DrawGame(gameScreenInfo);
+        if (Window.MouseOnScreen) DrawCursorGame(gameScreenInfo);
     }
     private void GameTextureOnDrawUI(ScreenInfo gameUiScreenInfo)
     {
         ResolveDrawGameUI(gameUiScreenInfo);
-        if(Window.MouseOnScreen) Cursor.DrawGameUi(gameUiScreenInfo);
+        if (Window.MouseOnScreen) DrawCursorGameUi(gameUiScreenInfo);
     }
     private void GameTextureOnTextureResized(int w, int h)
     {
@@ -421,22 +410,41 @@ public class Game
     }
     
     #endregion
-    
-    #region ICursor
 
-    public ICursor Cursor { get; private set; } = new NullCursor();
-    public bool SwitchCursor(ICursor newCursor)
+    #region Cursor
+
+    // private void ResolveUpdateCursor(float dt, ScreenInfo gameInfo, ScreenInfo gameUiInfo, ScreenInfo uiInfo)
+    // {
+    //     UpdateCursor(dt, gameInfo, gameUiInfo, uiInfo);
+    // }
+    // private void ResolveDrawCursorGame(ScreenInfo gameInfo)
+    // {
+    //     DrawCursorGame(gameInfo);
+    // }
+    // private void ResolveDrawCursorGameUi(ScreenInfo gameUiInfo)
+    // {
+    //     DrawCursorGameUi(gameUiInfo);
+    // }
+    // private void ResolveDrawCursorUi(ScreenInfo uiInfo)
+    // {
+    //     DrawCursorUi(uiInfo);   
+    // }
+    protected virtual void UpdateCursor(float dt, ScreenInfo gameInfo, ScreenInfo gameUiInfo, ScreenInfo uiInfo)
     {
-        if (Cursor != newCursor)
-        {
-            Cursor.Deactivate();
-            newCursor.Activate(Cursor);
-            Cursor = newCursor;
-            return true;
-        }
-        return false;
+        
     }
-    public void HideCursor() => SwitchCursor(new NullCursor());
+    protected virtual void DrawCursorGame(ScreenInfo gameInfo)
+    {
+        
+    }
+    protected virtual void DrawCursorGameUi(ScreenInfo gameUiInfo)
+    {
+        
+    }
+    protected virtual void DrawCursorUi(ScreenInfo uiInfo)
+    {
+        
+    }
 
     #endregion
     

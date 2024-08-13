@@ -150,7 +150,7 @@ public abstract class Scene : IUpdateable, IDrawable
     {
         OnDrawUI(ui);
     }
-        
+    
     protected virtual void OnGameTextureResized(int w, int h) { }
     protected virtual void OnUpdateGame(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
     protected virtual void OnFixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }

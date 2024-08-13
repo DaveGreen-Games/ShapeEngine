@@ -200,8 +200,6 @@ namespace Examples.Scenes.ExampleScenes
         
         private readonly ShapeGamepadDeviceManager GamepadManager = new(8);
 
-        private ICursor prevCursor = GAMELOOP.Cursor;
-        
         public ShipInputExample()
         {
             Title = "Multiple Gamepads Example";
@@ -264,7 +262,6 @@ namespace Examples.Scenes.ExampleScenes
         }
         public override void Activate(Scene oldScene)
         {
-            prevCursor = GAMELOOP.Cursor;
             GAMELOOP.Camera = camera;
             BitFlag mask = new(GAMELOOP.SceneAccessTag);
             mask = mask.Add(GAMELOOP.GamepadMouseMovementTag);
@@ -274,7 +271,6 @@ namespace Examples.Scenes.ExampleScenes
         public override void Deactivate()
         {
             GAMELOOP.MouseControlEnabled = true;
-            GAMELOOP.SwitchCursor(prevCursor);
             GAMELOOP.ResetCamera();
             InputAction.Unlock();
         }
@@ -421,7 +417,7 @@ namespace Examples.Scenes.ExampleScenes
                 string textBottom = $"Remove Ship {removeShipText} | Add Ship {addShipText}";
 
                 if(GAMELOOP.MouseControlEnabled) GAMELOOP.MouseControlEnabled = false;
-                GAMELOOP.HideCursor();
+                GAMELOOP.DrawCursor = false;
                 
                 textFont.DrawTextWrapNone(textBottom, rect, new(0.5f));
                 // font.DrawText("textBottom", rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
@@ -430,7 +426,7 @@ namespace Examples.Scenes.ExampleScenes
             {
 
                 if(!GAMELOOP.MouseControlEnabled) GAMELOOP.MouseControlEnabled = true;
-                GAMELOOP.SwitchCursor(prevCursor);
+                GAMELOOP.DrawCursor = true;
                 
                 textFont.DrawTextWrapNone("No gamepads connected.", rect, new(0.5f));
                 // font.DrawText("No gamepads connected.", rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);

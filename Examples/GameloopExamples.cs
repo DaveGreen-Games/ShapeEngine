@@ -79,113 +79,6 @@ namespace Examples
         }
     }
     
-    
-    // internal class SimpleCursorGameUI : ICursor
-    // {
-    //     public uint GetID()
-    //     {
-    //         return 0;
-    //     }
-    //
-    //     public void DrawGameUI(ScreenInfo ui)
-    //     {
-    //         
-    //         float size = ui.Area.Size.Min() * 0.02f;
-    //         SimpleCursorUI.DrawRoundedCursor(ui.MousePos, size, Colors.Warm);
-    //     }
-    //
-    //     public void DrawUI(ScreenInfo ui)
-    //     {
-    //         // float size = ui.Area.Size.Min() * 0.02f;
-    //         // SimpleCursorUI.DrawRoundedCursor(ui.MousePos, size, Colors.Warm);
-    //     }
-    //     public void Update(float dt, ScreenInfo ui)
-    //     {
-    //         
-    //     }
-    //
-    //     public void TriggerEffect(string effect)
-    //     {
-    //         throw new NotImplementedException();
-    //     }
-    //
-    //     public void Deactivate()
-    //     {
-    //         
-    //     }
-    //
-    //     public void Activate(ICursor oldCursor)
-    //     {
-    //         
-    //     }
-    // }
-    //
-    internal class SimpleCursorUI : ICursor
-    {
-        private float effectTimer = 0f;
-        private const float EffectDuration = 0.25f;
-        
-        public uint GetID()
-        {
-            return 0;
-        }
-
-        public void DrawGame(ScreenInfo game) { }
-
-        public void DrawGameUi(ScreenInfo gameUi) { }
-
-        public void DrawUi(ScreenInfo ui)
-        {
-            float size = ui.Area.Size.Min() * 0.02f;
-            float t = 1f - (effectTimer / EffectDuration);
-            //var c = effectTimer <= 0f ? ExampleScene.ColorHighlight1 : ExampleScene.ColorHighlight2;
-            var c = Colors.Special.Lerp(Colors.Warm, t);
-            //float curSize = effectTimer <= 0f ? size : ShapeMath.LerpFloat(size, size * 1.5f, t);// ShapeTween.Tween(size, size * 1.5f, t, TweenType.BOUNCE_OUT);
-            
-            DrawRoundedCursor(ui.MousePos, size, c);
-        }
-        public void Update(float dt, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
-        {
-            if (effectTimer > 0f)
-            {
-                effectTimer -= dt;
-                if (effectTimer <= 0f)
-                {
-                    effectTimer = 0f;
-                }
-            }   
-        }
-
-        public void TriggerEffect(string effect)
-        {
-            if (effect == "scale")
-            {
-                effectTimer = EffectDuration;
-            }
-        }
-
-        public void Deactivate()
-        {
-            
-        }
-
-        public void Activate(ICursor oldCursor)
-        {
-            effectTimer = 0f;
-        }
-
-        internal static void DrawRoundedCursor(Vector2 tip, float size, ColorRgba colorRgba)
-        {
-            var dir = new Vector2(1, 1).Normalize();
-            var circleCenter = tip + dir * size * 2;
-            var left = circleCenter + new Vector2(-1, 0) * size;
-            var top = circleCenter + new Vector2(0, -1) * size;
-            ShapeDrawing.DrawLine(tip, left, 1f, colorRgba, LineCapType.CappedExtended, 3);
-            ShapeDrawing.DrawLine(tip, top, 1f, colorRgba, LineCapType.CappedExtended, 3);
-            ShapeDrawing.DrawCircleSectorLines(circleCenter, size, 180, 270, 1f, colorRgba, false, 4f);
-        }
-    }
-    
     public class GameloopExamples : Game
     {
         public Font FontDefault { get; private set; }
@@ -210,6 +103,7 @@ namespace Examples
 
         public RectNode UIRects;
 
+        public bool DrawCursor = true;
 
         public readonly uint UIAccessTag = InputAction.NextTag; // BitFlag.GetFlagUint(2);
         public readonly uint GameloopAccessTag = InputAction.NextTag; // BitFlag.GetFlagUint(3);
@@ -411,7 +305,7 @@ namespace Examples
             Window.MouseVisible = false;
             Window.MouseEnabled = true;
             
-            SwitchCursor(new SimpleCursorUI());
+            // SwitchCursor(new SimpleCursorUI());
 
             paletteInfoBox = new();
 
@@ -539,7 +433,32 @@ namespace Examples
             }
         }
 
+
+        protected override void UpdateCursor(float dt, ScreenInfo gameInfo, ScreenInfo gameUiInfo, ScreenInfo uiInfo)
+        {
+            
+        }
+
+        protected override void DrawCursorUi(ScreenInfo uiInfo)
+        {
+            if (!DrawCursor) return;
+            
+            float size = uiInfo.Area.Size.Min() * 0.02f;
+            // float t = 1f - (effectTimer / EffectDuration);
+            var c = Colors.Warm; // Colors.Special.Lerp(Colors.Warm, t);
+            DrawRoundedCursor(uiInfo.MousePos, size, c);
+        }
         
+        private void DrawRoundedCursor(Vector2 tip, float size, ColorRgba colorRgba)
+        {
+            var dir = new Vector2(1, 1).Normalize();
+            var circleCenter = tip + dir * size * 2;
+            var left = circleCenter + new Vector2(-1, 0) * size;
+            var top = circleCenter + new Vector2(0, -1) * size;
+            ShapeDrawing.DrawLine(tip, left, 1f, colorRgba, LineCapType.CappedExtended, 3);
+            ShapeDrawing.DrawLine(tip, top, 1f, colorRgba, LineCapType.CappedExtended, 3);
+            ShapeDrawing.DrawCircleSectorLines(circleCenter, size, 180, 270, 1f, colorRgba, false, 4f);
+        }
 
         protected override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
