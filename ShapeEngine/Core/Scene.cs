@@ -113,18 +113,21 @@ public abstract class Scene : IUpdateable, IDrawable
     {
         SpawnArea?.Update(time, game, gameUi, ui);
         //CollisionHandler?.Update(time.Delta); //moved to UpdatePhysicsState
-        Pathfinder?.Update(time.Delta);
+        
         OnUpdateGame(time, game, gameUi, ui);
     }
-    public void UpdatePhysicsState(float dt, float totalFrameTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+    public void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
-        CollisionHandler?.Update(dt);
-        OnUpdatePhysicsStateGame(dt, totalFrameTime, game, gameUi, ui);
+        SpawnArea?.FixedUpdate(fixedTime, game, gameUi, ui);
+        CollisionHandler?.Update(fixedTime.Delta);
+        Pathfinder?.Update(fixedTime.Delta);
+        OnFixedUpdate(fixedTime, game, gameUi, ui);
     }
 
-    public void InterpolatePhysicsState(float f)
+    public void InterpolateFixedUpdate(float f)
     {
-        OnInterpolatePhysicsStateGame(f);
+        SpawnArea?.InterpolateFixedUpdate(f);
+        OnInterpolateFixedUpdate(f);
     }
 
     public void GameTextureResized(int w, int h)
@@ -150,8 +153,8 @@ public abstract class Scene : IUpdateable, IDrawable
         
     protected virtual void OnGameTextureResized(int w, int h) { }
     protected virtual void OnUpdateGame(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
-    protected virtual void OnUpdatePhysicsStateGame(float dt, float totalFrameTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
-    protected virtual void OnInterpolatePhysicsStateGame(float f) { }
+    protected virtual void OnFixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
+    protected virtual void OnInterpolateFixedUpdate(float f) { }
     /// <summary>
     /// Called before SpawnArea DrawGame is called.
     /// </summary>

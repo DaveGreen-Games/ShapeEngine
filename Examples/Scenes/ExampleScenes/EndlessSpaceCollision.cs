@@ -531,7 +531,10 @@ public class EndlessSpaceCollision : ExampleScene
             }
             
         }
-
+        public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+        {
+            
+        }
         public override void DrawGame(ScreenInfo game)
         {
             if (effectTimer > 0f)
@@ -877,7 +880,10 @@ public class EndlessSpaceCollision : ExampleScene
             
             // hull = collider.GetTriangleShape();
         }
-
+        public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+        {
+            
+        }
         public void FollowStarted()
         {
             
@@ -1071,6 +1077,10 @@ public class EndlessSpaceCollision : ExampleScene
 
             var moved = Transform.Position - prevPosition;
             Triangulation.ChangePosition(moved);
+        }
+        public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+        {
+            
         }
         // private void SetTimer()
         // {

@@ -42,7 +42,6 @@ namespace ShapeEngine.Effects
             lifetimeTimer.Update(time.Delta);
             if (lifetimeTimer.IsFinished) Kill();
         }
-
     }
 
     

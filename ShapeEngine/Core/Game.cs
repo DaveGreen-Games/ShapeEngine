@@ -62,6 +62,7 @@ public class Game
     public int FixedPhysicsFramerate { get; private set; }
     public float FixedPhysicsTimestep { get; private set; }
     public GameTime Time { get; private set; } = new GameTime();
+    public GameTime FixedTime { get; private set; } = new GameTime();
     public ColorRgba BackgroundColorRgba = ColorRgba.Black;
     public float ScreenEffectIntensity = 1.0f;
 
@@ -307,7 +308,7 @@ public class Game
             Cursor.Update(dt, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
 
             ResolveUpdate();
-            AdvancePhysics(dt);
+            AdvanceFixedUpdate(dt);
             DrawToScreen();
 
             ResolveDeferred();
@@ -365,24 +366,25 @@ public class Game
         ResolveOnGameTextureResized(w, h);
     }
     
-    private void AdvancePhysics(float dt)
+    private void AdvanceFixedUpdate(float dt)
     {
         const float maxFrameTime = 1f / 30f;
         float frameTime = dt;
-        var t = 0.0f;
+        // var t = 0.0f;
 
         if ( frameTime > maxFrameTime ) frameTime = maxFrameTime;
         
         physicsAccumulator += frameTime;
         while ( physicsAccumulator >= FixedPhysicsTimestep )
         {
-            ResolvePhysicsTimestep(FixedPhysicsTimestep, t);
-            t += FixedPhysicsTimestep;
+            FixedTime = FixedTime.TickF(FixedPhysicsFramerate);
+            ResolveFixedUpdate();
+            // t += FixedPhysicsTimestep;
             physicsAccumulator -= FixedPhysicsTimestep;
         }
 
         float alpha = physicsAccumulator / FixedPhysicsTimestep;
-        ResolveInterpolatePhysicsState(alpha);
+        ResolveInterpolateFixedUpdate(alpha);
     }
     
     #endregion
@@ -511,8 +513,8 @@ public class Game
     protected virtual void BeginRun() { }
 
     protected virtual void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
-    protected virtual void UpdatePhysicsState(float dt, float totalFrameTime, ScreenInfo game, ScreenInfo gameUi) { }
-    protected virtual void InterpolatePhysicsState(float f) { }
+    protected virtual void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
+    protected virtual void InterpolateFixedUpdate(float f) { }
     
     protected virtual void DrawGame(ScreenInfo game) { }
     protected virtual void DrawGameUI(ScreenInfo gameUi) { }
@@ -589,16 +591,16 @@ public class Game
         Update(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
         CurScene.Update(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
     }
-    private void ResolvePhysicsTimestep(float dt, float totalFrameTime)
+    private void ResolveFixedUpdate()
     {
-        UpdatePhysicsState(dt, totalFrameTime, GameScreenInfo, GameUiScreenInfo);
-        CurScene.UpdatePhysicsState(dt, totalFrameTime, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+        FixedUpdate(FixedTime, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+        CurScene.FixedUpdate(FixedTime, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
     }
 
-    private void ResolveInterpolatePhysicsState(float f)
+    private void ResolveInterpolateFixedUpdate(float f)
     {
-        InterpolatePhysicsState(f);
-        CurScene.InterpolatePhysicsState(f);
+        InterpolateFixedUpdate(f);
+        CurScene.InterpolateFixedUpdate(f);
     }
     private void ResolveOnGameTextureResized(int w, int h)
     {

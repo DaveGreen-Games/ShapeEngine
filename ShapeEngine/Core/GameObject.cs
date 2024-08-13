@@ -20,6 +20,8 @@ public abstract class GameObject : IUpdateable, IDrawable
     public abstract Rect GetBoundingBox();
 
     public abstract void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui);
+    public abstract void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui);
+    public virtual void InterpolateFixedUpdate(float f) { }
 
     public abstract void DrawGame(ScreenInfo game);
 

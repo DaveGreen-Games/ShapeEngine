@@ -56,6 +56,11 @@ namespace Examples.Scenes.ExampleScenes
         {
             
         }
+        
+        public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+        {
+            
+        }
     }
     internal class BoundaryWall : CollisionObject
     {
@@ -85,6 +90,10 @@ namespace Examples.Scenes.ExampleScenes
 
         public override void DrawGameUI(ScreenInfo gameUi)
         {
+        }
+        public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+        {
+            
         }
     }
     internal class Ball : CollisionObject
@@ -137,6 +146,10 @@ namespace Examples.Scenes.ExampleScenes
         public override void DrawGameUI(ScreenInfo gameUi)
         {
         }
+        public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+        {
+            
+        }
     }
     internal class Bullet : CollisionObject
     {
@@ -178,6 +191,10 @@ namespace Examples.Scenes.ExampleScenes
                 deadTimer -= time.Delta;
                 if (deadTimer <= 0) Kill();
             }
+        }
+        public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+        {
+            
         }
         
         private void Overlap(Collider col, CollisionInformation info)
@@ -260,6 +277,10 @@ namespace Examples.Scenes.ExampleScenes
             {
                 Transform += rotationSpeedRad * time.Delta;
             }
+        }
+        public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+        {
+            
         }
 
         public override bool HasLeftBounds(Rect bounds)
@@ -399,6 +420,10 @@ namespace Examples.Scenes.ExampleScenes
 
         public override void DrawGameUI(ScreenInfo gameUi)
         {
+        }
+        public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+        {
+            
         }
     }
     

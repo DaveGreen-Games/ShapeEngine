@@ -18,7 +18,11 @@ namespace ShapeEngine.Effects
         public Effect(Vector2 pos, Size size, float rotRad) : base(pos, size) { RotRad = rotRad; }
         public Effect(Vector2 pos, Size size, float rotRad, float lifeTime) : base(pos, size, lifeTime) { RotRad = rotRad; }
 
-
+        public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+        {
+            
+        }
+        
         public override void DrawGame(ScreenInfo game)
         {
             
