@@ -128,7 +128,7 @@ public sealed class ScreenTexture
         }
 
         if (anchorStretch.X <= 0f || anchorStretch.Y <= 0f || anchorStretch.X >= 1f || anchorStretch.Y >= 1f ||
-            anchorPosition.X <= 0f || anchorPosition.Y <= 0f || anchorPosition.X >= 1f || anchorPosition.Y >= 1f)
+            anchorPosition.X < 0f || anchorPosition.Y < 0f || anchorPosition.X > 1f || anchorPosition.Y > 1f)
         {
             Mode = ScreenTextureMode.Stretch;
             anchorPosition = new(-1, -1);
@@ -237,7 +237,7 @@ public sealed class ScreenTexture
 
             var size = new Vector2(w, h);
             var topLeft = screenDimensions.ToVector2() * AnchorPosition - size * AnchorPosition;
-            scaledMousePositionUi = (mousePosition - topLeft) * AnchorStretch;
+            scaledMousePositionUi = mousePosition - topLeft;
         }
         else if (Mode == ScreenTextureMode.Fixed)
         {
@@ -296,12 +296,13 @@ public sealed class ScreenTexture
         }
         else if (Mode == ScreenTextureMode.Anchor)
         {
+            //fix mouse scaling here and in initialize
             var w = screenDimensions.Width * AnchorStretch.X;
             var h = screenDimensions.Height * AnchorStretch.Y;
 
             var size = new Vector2(w, h);
-            var topLeft = screenDimensions.ToVector2() * AnchorPosition - size * AnchorPosition;
-            scaledMousePositionUi = (mousePosition - topLeft) * AnchorStretch;
+            var topleft = screenDimensions.ToVector2() * AnchorPosition - size * AnchorPosition;
+            scaledMousePositionUi = mousePosition - topleft;
         }
         else if (Mode == ScreenTextureMode.Fixed)
         {
