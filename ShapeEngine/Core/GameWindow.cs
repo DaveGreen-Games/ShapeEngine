@@ -430,7 +430,8 @@ public sealed class GameWindow
                     }
                 
                     var mDim = Monitor.CurMonitor().Dimensions;
-                    Raylib.SetWindowSize(mDim.Width, mDim.Height);
+                    var dpi = Raylib.GetWindowScaleDPI();
+                    Raylib.SetWindowSize(mDim.Width * (int)dpi.X, mDim.Height * (int)dpi.Y);
                     Raylib.SetWindowState(ConfigFlags.FullscreenMode);
                 }
                 else
@@ -618,20 +619,21 @@ public sealed class GameWindow
             int monitor = Raylib.GetCurrentMonitor();
             int mw = Raylib.GetMonitorWidth(monitor);
             int mh = Raylib.GetMonitorHeight(monitor);
-            var scaleFactor = Game.IsOSX() ? Raylib.GetWindowScaleDPI() : new Vector2(1f, 1f);
-            var scaleX = (int)scaleFactor.X;
-            var scaleY = (int)scaleFactor.Y;
-            CurScreenSize = new(mw * scaleX, mh * scaleY);
+            // var scaleFactor = Game.IsOSX() ? Raylib.GetWindowScaleDPI() : new Vector2(1f, 1f);
+            // var scaleX = (int)scaleFactor.X;
+            // var scaleY = (int)scaleFactor.Y;
+            // CurScreenSize = new(mw * scaleX, mh * scaleY);
+            CurScreenSize = new(mw , mh );
         }
         else
         {
-            // var scaleFactor = GetWindowScaleDPI();
+            // var scaleFactor = Raylib.GetWindowScaleDPI();
             // int scaleX = (int)scaleFactor.X;
             // int scaleY = (int)scaleFactor.Y;
             
             int w = Raylib.GetScreenWidth();
             int h = Raylib.GetScreenHeight();
-            CurScreenSize = new(w , h);
+            CurScreenSize = new(w, h);
         }
     }
 
