@@ -1,6 +1,5 @@
 using System.Numerics;
 using ShapeEngine.Core.Collision;
-using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
@@ -9,7 +8,7 @@ using ShapeEngine.Screen;
 
 namespace ShapeEngine.Core;
 
-public abstract class Scene : IUpdateable, IDrawable
+public abstract class Scene //: IUpdateable, IDrawable
 {
     public SpawnArea? SpawnArea { get; private set; } = null;
     public CollisionHandler? CollisionHandler { get; private set; } = null;
@@ -40,7 +39,7 @@ public abstract class Scene : IUpdateable, IDrawable
             
         return true;
     }
-    protected bool RemoveSpawnArea()
+    private bool RemoveSpawnArea()
     {
         if (SpawnArea == null) return false;
 
@@ -50,20 +49,20 @@ public abstract class Scene : IUpdateable, IDrawable
         return true;
     }
         
-    public bool InitCollisionHandler(Rect bounds, int rows, int cols)
+    protected bool InitCollisionHandler(Rect bounds, int rows, int cols)
     {
         if (CollisionHandler != null) return false;
         CollisionHandler = new(bounds, rows, cols);
         return true;
     }
-    public bool InitCollisionHandler(CollisionHandler collisionHandler)
+    protected bool InitCollisionHandler(CollisionHandler collisionHandler)
     {
         if (CollisionHandler != null) return false;
         if (CollisionHandler == collisionHandler) return false;
         CollisionHandler = collisionHandler; // new(Bounds, rows, cols);
         return true;
     }
-    public bool RemoveCollisionHandler()
+    private bool RemoveCollisionHandler()
     {
         if (CollisionHandler == null) return false;
         CollisionHandler.Close();
@@ -71,20 +70,20 @@ public abstract class Scene : IUpdateable, IDrawable
         return true;
     }
     
-    public bool InitPathfinder(Rect bounds, int rows, int cols)
+    protected bool InitPathfinder(Rect bounds, int rows, int cols)
     {
         if (Pathfinder != null) return false;
         Pathfinder = new(bounds, rows, cols);
         return true;
     }
-    public bool InitPathfinder(Pathfinder pathfinder)
+    protected bool InitPathfinder(Pathfinder pathfinder)
     {
         if (Pathfinder != null) return false;
         if (Pathfinder == pathfinder) return false;
         Pathfinder = pathfinder;
         return true;
     }
-    public bool RemovePathfinder()
+    private bool RemovePathfinder()
     {
         if (Pathfinder == null) return false;
         Pathfinder.Clear();
@@ -92,65 +91,166 @@ public abstract class Scene : IUpdateable, IDrawable
         return true;
     }
 
+
     
-        
-    public abstract void Activate(Scene oldScene);
-    public abstract void Deactivate();
-    public virtual void OnPauseChanged(bool paused) { }
+    #region Internal
+    internal void ResolveActivate(Scene oldScene)
+    {
+        OnActivate(oldScene);
+    }
+    internal void ResolveDeactivate()
+    {
+        OnDeactivate();
+    }
 
     /// <summary>
     /// Used for cleanup. Should be called once right before the scene gets deleted.
     /// </summary>
-    public virtual void Close()
+    internal void ResolveClose()
     {
         RemoveSpawnArea();
         RemoveCollisionHandler();
         RemovePathfinder();
+        OnClose();
     }
-
-        
-    public void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+    internal void ResolveUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui, bool fixedUpdate)
     {
-        SpawnArea?.Update(time, game, gameUi, ui);
-        //CollisionHandler?.Update(time.Delta); //moved to UpdatePhysicsState
+        if (!fixedUpdate)
+        {
+            SpawnArea?.Update(time, game, gameUi, ui);
+            CollisionHandler?.Update(time.Delta);
+            Pathfinder?.Update(time.Delta);
+        }
         
         OnUpdateGame(time, game, gameUi, ui);
     }
-    public void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+    internal void ResolveFixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
+        //fixed update is only called when fixed update is enabled
+        //therefore we do not need to check it here
         SpawnArea?.FixedUpdate(fixedTime, game, gameUi, ui);
         CollisionHandler?.Update(fixedTime.Delta);
         Pathfinder?.Update(fixedTime.Delta);
+        
         OnFixedUpdate(fixedTime, game, gameUi, ui);
     }
-
-    public void InterpolateFixedUpdate(float f)
+    internal void ResolveInterpolateFixedUpdate(float f)
     {
         SpawnArea?.InterpolateFixedUpdate(f);
         OnInterpolateFixedUpdate(f);
     }
-
-    public void GameTextureResized(int w, int h)
+    internal void ResolveGameTextureResized(int w, int h)
     {
         OnGameTextureResized(w, h);
     }
-    public void DrawGame(ScreenInfo game)
+    internal void ResolveDrawGame(ScreenInfo game)
     {
         OnPreDrawGame(game);
         SpawnArea?.DrawGame(game);
         OnDrawGame(game);
     }
-    public void DrawGameUI(ScreenInfo gameUi)
+    internal void ResolveDrawGameUI(ScreenInfo gameUi)
     {
         OnPreDrawGameUI(gameUi);
         SpawnArea?.DrawGameUI(gameUi);
         OnDrawGameUI(gameUi);
     }
-    public void DrawUI(ScreenInfo ui)
+    internal void ResolveDrawUI(ScreenInfo ui)
     {
         OnDrawUI(ui);
     }
+    internal void ResolveOnWindowSizeChanged(DimensionConversionFactors conversionFactors)
+    {
+        OnWindowSizeChanged(conversionFactors);
+    }
+    internal void ResolveOnWindowPositionChanged(Vector2 oldPos, Vector2 newPos)
+    {
+        OnWindowPositionChanged(oldPos, newPos);
+    }
+    internal void ResolveOnMonitorChanged(MonitorInfo newMonitor)
+    {
+        OnMonitorChanged(newMonitor);   
+    }
+    internal void ResolveOnGamepadConnected(ShapeGamepadDevice gamepad)
+    {
+        OnGamepadConnected(gamepad);
+    }
+    internal void ResolveOnGamepadDisconnected(ShapeGamepadDevice gamepad)
+    {
+        OnGamepadDisconnected(gamepad);
+    }
+    internal void ResolveOnInputDeviceChanged(InputDeviceType prevDeviceType, InputDeviceType curDeviceType)
+    {
+        OnInputDeviceChanged(prevDeviceType, curDeviceType);
+    }
+    internal void ResolveOnPausedChanged(bool newPaused)
+    {
+        OnPausedChanged(newPaused);
+    }
+    internal void ResolveOnMouseEnteredScreen()
+    {
+        OnMouseEnteredScreen();
+    }
+    internal void ResolveOnMouseLeftScreen()
+    {
+        OnMouseLeftScreen();
+    }
+    internal void ResolveOnMouseVisibilityChanged(bool visible)
+    {
+        OnMouseVisibilityChanged(visible);
+    }
+    internal void ResolveOnMouseEnabledChanged(bool enabled)
+    {
+        OnMouseEnabledChanged(enabled);
+    }
+    internal void ResolveOnWindowFocusChanged(bool focused)
+    {
+        OnWindowFocusChanged(focused);
+    }
+    internal void ResolveOnWindowFullscreenChanged(bool fullscreen)
+    {
+        OnWindowFullscreenChanged(fullscreen);
+    }
+    internal void ResolveOnWindowMaximizeChanged(bool maximized)
+    {
+        OnWindowMaximizeChanged(maximized);
+    }
+
+    internal void ResolveOnWindowMinimizedChanged(bool minimized)
+    {
+        OnWindowMinimizedChanged(minimized);
+    }
+
+    internal void ResolveOnWindowHiddenChanged(bool hidden)
+    {
+        OnWindowHiddenChanged(hidden);
+    }
+
+    internal void ResolveOnWindowTopmostChanged(bool topmost)
+    {
+        OnWindowTopmostChanged(topmost);
+    }
+    public void ResolveOnButtonPressed(InputEvent e)
+    {
+        OnButtonPressed(e);
+    }
+    public void ResolveOnButtonReleased(InputEvent e)
+    {
+        OnButtonReleased(e);
+    }
+    #endregion
     
+    #region Protected Virtual
+    protected abstract void OnActivate(Scene oldScene);
+    protected abstract void OnDeactivate();
+
+    /// <summary>
+    /// Used for cleanup. Should be called once right before the scene gets deleted.
+    /// </summary>
+    protected virtual void OnClose()
+    {
+        
+    }
     protected virtual void OnGameTextureResized(int w, int h) { }
     protected virtual void OnUpdateGame(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
     protected virtual void OnFixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
@@ -181,23 +281,25 @@ public abstract class Scene : IUpdateable, IDrawable
     /// Draw your main ui. Is NOT affected by screen shaders and NOT affected by the camera.
     /// </summary>
     protected virtual void OnDrawUI(ScreenInfo ui) { }
-
-    public virtual void OnWindowSizeChanged(DimensionConversionFactors conversionFactors){}
-    public virtual void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos){}
-    public virtual void OnMonitorChanged(MonitorInfo newMonitor){}
-    public virtual void OnGamepadConnected(ShapeGamepadDevice gamepad){}
-    public virtual void OnGamepadDisconnected(ShapeGamepadDevice gamepad){}
-    public virtual void OnInputDeviceChanged(InputDeviceType prevDeviceType, InputDeviceType curDeviceType){}
-    public virtual void OnPausedChanged(bool newPaused) { }
-    public virtual void OnMouseEnteredScreen() { }
-    public virtual void OnMouseLeftScreen() { }
-    public virtual void OnMouseVisibilityChanged(bool visible) { }
-    public virtual void OnMouseEnabledChanged(bool enabled) { }
-    public virtual void OnWindowFocusChanged(bool focused) { }
-    public virtual void OnWindowFullscreenChanged(bool fullscreen) { }
-    public virtual void OnWindowMaximizeChanged(bool maximized) { }
+    protected virtual void OnWindowSizeChanged(DimensionConversionFactors conversionFactors) { }
+    protected virtual void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos){}
+    protected virtual void OnMonitorChanged(MonitorInfo newMonitor){}
+    protected virtual void OnGamepadConnected(ShapeGamepadDevice gamepad){}
+    protected virtual void OnGamepadDisconnected(ShapeGamepadDevice gamepad){}
+    protected virtual void OnInputDeviceChanged(InputDeviceType prevDeviceType, InputDeviceType curDeviceType){}
+    protected virtual void OnPausedChanged(bool newPaused) { }
+    protected virtual void OnMouseEnteredScreen() { }
+    protected virtual void OnMouseLeftScreen() { }
+    protected virtual void OnMouseVisibilityChanged(bool visible) { }
+    protected virtual void OnMouseEnabledChanged(bool enabled) { }
+    protected virtual void OnWindowFocusChanged(bool focused) { }
+    protected virtual void OnWindowFullscreenChanged(bool fullscreen) { }
+    protected virtual void OnWindowMaximizeChanged(bool maximized) { }
+    protected virtual void OnWindowMinimizedChanged(bool minimized) { }
+    protected virtual void OnWindowHiddenChanged(bool hidden) { }
+    protected virtual void OnWindowTopmostChanged(bool topmost) { }
+    protected virtual void OnButtonPressed(InputEvent e) { }
+    protected virtual void OnButtonReleased(InputEvent e) { }
     
-    public virtual void OnButtonPressed(InputEvent e) { }
-    public virtual void OnButtonReleased(InputEvent e) { }
-        
+    #endregion
 }

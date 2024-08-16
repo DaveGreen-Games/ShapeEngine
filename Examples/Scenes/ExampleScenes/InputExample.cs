@@ -767,8 +767,8 @@ namespace Examples.Scenes.ExampleScenes
             buttonDoubleTap = new(font);
         }
 
-        
-        public override void Activate(Scene oldScene)
+
+        protected override void OnActivate(Scene oldScene)
         {
             BitFlag mask = new(GAMELOOP.GameloopAccessTag);
             mask = mask.Add(InputAction.DefaultAccessTag);
@@ -776,7 +776,7 @@ namespace Examples.Scenes.ExampleScenes
             // InputAction.LockWhitelist(GAMELOOP.GameloopAccessTag, InputAction.DefaultAccessTag);
         }
 
-        public override void Deactivate()
+        protected override void OnDeactivate()
         {
             InputAction.Unlock();
         }

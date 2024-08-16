@@ -151,10 +151,6 @@ namespace Examples.Scenes.ExampleScenes
             
         }
 
-        public override void OnPauseChanged(bool paused)
-        {
-            
-        }
 
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {

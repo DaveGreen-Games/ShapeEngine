@@ -451,14 +451,14 @@ namespace Examples.Scenes.ExampleScenes
                 stars.Add(star);
             }
         }
-        
-        public override void Activate(Scene oldScene)
+
+        protected override void OnActivate(Scene oldScene)
         {
             GAMELOOP.Camera = camera;
             
         }
 
-        public override void Deactivate()
+        protected override void OnDeactivate()
         {
             GAMELOOP.ResetCamera();
         }

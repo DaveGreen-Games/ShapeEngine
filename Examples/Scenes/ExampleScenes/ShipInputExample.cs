@@ -260,7 +260,8 @@ namespace Examples.Scenes.ExampleScenes
 
             return null;
         }
-        public override void Activate(Scene oldScene)
+
+        protected override void OnActivate(Scene oldScene)
         {
             GAMELOOP.Camera = camera;
             BitFlag mask = new(GAMELOOP.SceneAccessTag);
@@ -268,7 +269,7 @@ namespace Examples.Scenes.ExampleScenes
             InputAction.LockBlacklist(mask);
         }
 
-        public override void Deactivate()
+        protected override void OnDeactivate()
         {
             GAMELOOP.MouseControlEnabled = true;
             GAMELOOP.ResetCamera();

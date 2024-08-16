@@ -209,12 +209,13 @@ namespace Examples.Scenes
             titleFont.DrawTextWrapNone(gamepadText, gamepadRect, new Vector2(0.01f, 0.5f));
             // titleFont.DrawText(gamepadText, gamepadRect, 1f, new Vector2(0.01f, 0.5f), GAMELOOP.CurGamepad != null ? ColorHighlight3 : ColorMedium);
         }
-        
-        public override void Activate(Scene oldScene)
+
+        protected override void OnActivate(Scene oldScene)
         {
             GAMELOOP.Camera.Reset();
         }
-        public override void Deactivate()
+
+        protected override void OnDeactivate()
         {
             GAMELOOP.Camera.Reset();
             GAMELOOP.ResetCamera();

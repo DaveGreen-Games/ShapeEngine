@@ -52,12 +52,12 @@ namespace Examples.Scenes.ExampleScenes
 
         }
 
-        public override void Activate(Scene oldScene)
+        protected override void OnActivate(Scene oldScene)
         {
             GAMELOOP.InputActionZoom.Enabled = false;
         }
 
-        public override void Deactivate()
+        protected override void OnDeactivate()
         {
             GAMELOOP.InputActionZoom.Enabled = true;
         }

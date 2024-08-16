@@ -2076,7 +2076,7 @@ public class EndlessSpaceCollision : ExampleScene
         bullets.Add(bullet);
     }
 
-    public override void Activate(Scene oldScene)
+    protected override void OnActivate(Scene oldScene)
     {
         GAMELOOP.Camera = camera;
         UpdateFollower(camera.BaseSize.Min());
@@ -2084,7 +2084,7 @@ public class EndlessSpaceCollision : ExampleScene
         follower.SetTarget(ship);
     }
 
-    public override void Deactivate()
+    protected override void OnDeactivate()
     {
         GAMELOOP.ResetCamera();
     }

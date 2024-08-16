@@ -13,6 +13,8 @@ namespace ShapeEngine.Core;
 
 public class Game
 {
+    public static Game CurrentGameInstance { get; private set; } = null!;
+    
     #region Static
     public static readonly string CURRENT_DIRECTORY = AppDomain.CurrentDomain.BaseDirectory; // Environment.CurrentDirectory;
     public static OSPlatform OS_PLATFORM { get; private set; } =
@@ -59,6 +61,7 @@ public class Game
     #region Public Members
     public string[] LaunchParams { get; protected set; } = Array.Empty<string>();
 
+    public bool FixedPhysicsEnabled { get; private set; }
     public int FixedPhysicsFramerate { get; private set; }
     public float FixedPhysicsTimestep { get; private set; }
     public GameTime Time { get; private set; } = new GameTime();
@@ -125,6 +128,8 @@ public class Game
 
     public Game(GameSettings gameSettings, WindowSettings windowSettings)
     {
+        CurrentGameInstance = this;
+        
         #if DEBUG
         DebugMode = true;
         ReleaseMode = false;
@@ -148,14 +153,22 @@ public class Game
         Window.OnWindowHiddenChanged += ResolveOnWindowHiddenChanged;
         Window.OnWindowTopmostChanged += ResolveOnWindowTopmostChanged;
 
-        // SetConversionFactors();
 
-        var fixedTimeStep = gameSettings.FixedPhysicsFramerate;
-        if (fixedTimeStep <= 0) fixedTimeStep = 30;
-        FixedPhysicsFramerate = fixedTimeStep;
-        FixedPhysicsTimestep = 1f / FixedPhysicsFramerate;
-
-        //basicCamera.TargetResolution = gameSettings.DevelopmentDimensions;
+        var fixedFramerate = gameSettings.FixedFramerate;
+        if (fixedFramerate <= 0)
+        {
+            FixedPhysicsFramerate = -1;
+            FixedPhysicsTimestep = -1;
+            FixedPhysicsEnabled = false;
+        }
+        else
+        {
+            if (fixedFramerate < 30) fixedFramerate = 30;
+            FixedPhysicsFramerate = fixedFramerate;
+            FixedPhysicsTimestep = 1f / FixedPhysicsFramerate;
+            FixedPhysicsEnabled = true;
+        }
+        
         curCamera = basicCamera;
         curCamera.Activate();
         curCamera.SetSize(Window.CurScreenSize);
@@ -297,7 +310,7 @@ public class Game
             UpdateCursor(dt, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
 
             ResolveUpdate();
-            AdvanceFixedUpdate(dt);
+            if(FixedPhysicsEnabled) AdvanceFixedUpdate(dt);
             DrawToScreen();
 
             ResolveDeferred();
@@ -467,9 +480,8 @@ public class Game
     public void GoToScene(Scene newScene)
     {
         if (newScene == CurScene) return;
-        CurScene.Deactivate();
-        //newScene.SetInput(Input);
-        newScene.Activate(CurScene);
+        CurScene.ResolveDeactivate();
+        newScene.ResolveActivate(CurScene);
         CurScene = newScene;
     }
 
@@ -587,120 +599,120 @@ public class Game
     private void ResolveOnButtonPressed(InputEvent e)
     {
         OnButtonPressed(e);
-        CurScene.OnButtonPressed(e);
+        CurScene.ResolveOnButtonPressed(e);
     }
     private void ResolveOnButtonReleased(InputEvent e)
     {
         OnButtonReleased(e);
-        CurScene.OnButtonReleased(e);
+        CurScene.ResolveOnButtonReleased(e);
     }
     private void ResolveUpdate()
     {
         Update(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-        CurScene.Update(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+        CurScene.ResolveUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo, FixedPhysicsEnabled);
     }
     private void ResolveFixedUpdate()
     {
         FixedUpdate(FixedTime, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-        CurScene.FixedUpdate(FixedTime, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+        CurScene.ResolveFixedUpdate(FixedTime, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
     }
 
     private void ResolveInterpolateFixedUpdate(float f)
     {
         InterpolateFixedUpdate(f);
-        CurScene.InterpolateFixedUpdate(f);
+        CurScene.ResolveInterpolateFixedUpdate(f);
     }
     private void ResolveOnGameTextureResized(int w, int h)
     {
         OnGameTextureResized(w, h);
-        CurScene.GameTextureResized(w, h);
+        CurScene.ResolveGameTextureResized(w, h);
     }
     private void ResolveDrawGame(ScreenInfo game)
     {
         DrawGame(game);
-        CurScene.DrawGame(game);
+        CurScene.ResolveDrawGame(game);
     }
     private void ResolveDrawGameUI(ScreenInfo gameUi)
     {
         DrawGameUI(gameUi);
-        CurScene.DrawGameUI(gameUi);
+        CurScene.ResolveDrawGameUI(gameUi);
     }
     private void ResolveDrawUI(ScreenInfo ui)
     {
         DrawUI(ui);
-        CurScene.DrawUI(ui);
+        CurScene.ResolveDrawUI(ui);
     }
     private void ResolveOnWindowSizeChanged(DimensionConversionFactors conversion)
     {
         OnWindowSizeChanged(conversion);
-        CurScene.OnWindowSizeChanged(conversion);
+        CurScene.ResolveOnWindowSizeChanged(conversion);
     }
     private void ResolveOnWindowPositionChanged(Vector2 oldPos, Vector2 newPos)
     {
         //Console.WriteLine($"Window Pos: {Raylib.GetWindowPosition()}");
         OnWindowPositionChanged(oldPos, newPos);
-        CurScene.OnWindowPositionChanged(oldPos, newPos);
+        CurScene.ResolveOnWindowPositionChanged(oldPos, newPos);
     }
     private void ResolveOnMonitorChanged(MonitorInfo newMonitor)
     {
         OnMonitorChanged(newMonitor);
-        CurScene.OnMonitorChanged(newMonitor);
+        CurScene.ResolveOnMonitorChanged(newMonitor);
     }
-    
     private void ResolveOnPausedChanged(bool newPaused)
     {
         OnPausedChanged(newPaused);
-        CurScene.OnPauseChanged(newPaused);
+        CurScene.ResolveOnPausedChanged(newPaused);
     }
     private void ResolveOnMouseEnteredScreen()
     {
         OnMouseEnteredScreen();
-        CurScene.OnMouseEnteredScreen();
+        CurScene.ResolveOnMouseEnteredScreen();
     }
     private void ResolveOnMouseLeftScreen()
     {
         OnMouseLeftScreen();
-        CurScene.OnMouseLeftScreen();
+        CurScene.ResolveOnMouseLeftScreen();
     }
     private void ResolveOnMouseVisibilityChanged(bool visible)
     {
         OnMouseVisibilityChanged(visible);
-        CurScene.OnMouseVisibilityChanged(visible);
+        CurScene.ResolveOnMouseVisibilityChanged(visible);
     }
     private void ResolveOnMouseEnabledChanged(bool enabled)
     {
         OnMouseEnabledChanged(enabled);
-        CurScene.OnMouseEnabledChanged(enabled);
+        CurScene.ResolveOnMouseEnabledChanged(enabled);
     }
     private void ResolveOnWindowFocusChanged(bool focused)
     {
         OnWindowFocusChanged(focused);
-        CurScene.OnWindowFocusChanged(focused);
+        CurScene.ResolveOnWindowFocusChanged(focused);
     }
     private void ResolveOnWindowFullscreenChanged(bool fullscreen)
     {
         OnWindowFullscreenChanged(fullscreen);
-        CurScene.OnWindowFullscreenChanged(fullscreen);
+        CurScene.ResolveOnWindowFullscreenChanged(fullscreen);
     }
     private void ResolveOnWindowMaximizeChanged(bool maximized)
     {
         OnWindowMaximizeChanged(maximized);
-        CurScene.OnWindowMaximizeChanged(maximized);
+        CurScene.ResolveOnWindowMaximizeChanged(maximized);
         
     }
-    
     private void ResolveOnWindowMinimizedChanged(bool minimized)
     {
        OnWindowMinimizedChanged(minimized);
+       CurScene.ResolveOnWindowMinimizedChanged(minimized);
     }
     private void ResolveOnWindowHiddenChanged(bool hidden)
     {
         OnWindowHiddenChanged(hidden);
-        
+        CurScene.ResolveOnWindowHiddenChanged(hidden);
     }
     private void ResolveOnWindowTopmostChanged(bool topmost)
     {
         OnWindowTopmostChanged(topmost);
+        CurScene.ResolveOnWindowTopmostChanged(topmost);
     }
 
     #endregion
@@ -710,18 +722,18 @@ public class Game
         if (connected)
         {
             OnGamepadConnected(gamepad);
-            CurScene.OnGamepadConnected(gamepad);
+            CurScene.ResolveOnGamepadConnected(gamepad);
         }
         else
         {
             OnGamepadDisconnected(gamepad);
-            CurScene.OnGamepadDisconnected(gamepad);
+            CurScene.ResolveOnGamepadDisconnected(gamepad);
         }
     }
     private void OnInputInputDeviceChanged(InputDeviceType prevDeviceType, InputDeviceType newDeviceType)
     {
         OnInputDeviceChanged(prevDeviceType, newDeviceType);
-        CurScene.OnInputDeviceChanged(prevDeviceType, newDeviceType);
+        CurScene.ResolveOnInputDeviceChanged(prevDeviceType, newDeviceType);
     }
     // private void SetConversionFactors()
     // {

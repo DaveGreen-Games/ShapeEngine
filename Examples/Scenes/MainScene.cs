@@ -238,20 +238,21 @@ namespace Examples.Scenes
             // binaryDrawerRect.Draw(Colors.Medium);
             // BinaryDrawerTester.BinaryDrawer3x5Standard.Draw("8439567102", binaryDrawerRect.ApplyMargins(0.025f));
         }
-        
-        
-        public override void Activate(Scene oldScene)
+
+
+        protected override void OnActivate(Scene oldScene)
         {
             // GAMELOOP.Window.SwitchCursor(new SimpleCursorUI());
             navigator.StartNavigation();
         }
-        public override void Deactivate()
+
+        protected override void OnDeactivate()
         {
             // GAMELOOP.Window.SwitchCursor(new SimpleCursorGameUI());
             navigator.EndNavigation();
         }
 
-        public override void Close()
+        protected override void OnClose()
         {
             
         }

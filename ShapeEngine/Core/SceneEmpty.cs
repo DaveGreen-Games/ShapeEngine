@@ -5,11 +5,12 @@ namespace ShapeEngine.Core
     public sealed class SceneEmpty : Scene
     {
         public SceneEmpty() { }
-        public override void Activate(Scene oldScene)
+
+        protected override void OnActivate(Scene oldScene)
         {
         }
 
-        public override void Deactivate()
+        protected override void OnDeactivate()
         {
         }
     }

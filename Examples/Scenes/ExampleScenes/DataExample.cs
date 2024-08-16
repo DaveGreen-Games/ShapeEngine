@@ -223,14 +223,15 @@ public class DataExample : ExampleScene
         camera = new();
         CreatePlanet();
     }
-    
-    
-    public override void Activate(Scene oldScene)
+
+
+    protected override void OnActivate(Scene oldScene)
     {
         GAMELOOP.Camera = camera;
         camera.SetZoom(CameraBaseZoom);
     }
-    public override void Deactivate()
+
+    protected override void OnDeactivate()
     {
         GAMELOOP.ResetCamera();
     }

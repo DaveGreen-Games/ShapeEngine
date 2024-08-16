@@ -366,7 +366,8 @@ namespace Examples.Scenes.ExampleScenes
                 comets.Add(comet);
             }
         }
-        public override void Activate(Scene oldScene)
+
+        protected override void OnActivate(Scene oldScene)
         {
             GAMELOOP.Camera = camera;
             UpdateFollower(GAMELOOP.UIScreenInfo.Area.Size.Min());
@@ -377,7 +378,7 @@ namespace Examples.Scenes.ExampleScenes
             // follower.Activate();
         }
 
-        public override void Deactivate()
+        protected override void OnDeactivate()
         {
             GAMELOOP.ResetCamera();
             GAMELOOP.MouseControlEnabled = true;
