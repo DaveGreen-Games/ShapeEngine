@@ -335,12 +335,63 @@ public class Game
         Raylib.BeginDrawing();
         Raylib.ClearBackground(BackgroundColorRgba.ToRayColor());
 
-        gameTexture.DrawToScreen();
+        //split custom screen textures into textures to draw to the screen before the game texture
+        //and textures to draw to the screen after the game texture
+        List<ScreenTexture>? drawBefore = null;
+        List<ScreenTexture>? drawAfter = null;
         if (customScreenTextures is { Count: > 0 })
         {
             for (var i = 0; i < customScreenTextures.Count; i++)
             {
-                customScreenTextures[i].DrawToScreen();
+                //negative draw order means to draw it to screen before the game texture
+                if (customScreenTextures[i].DrawToScreenOrder < 0)
+                {
+                    drawBefore ??= new List<ScreenTexture>();//initialize if it has not been initialized yet
+                    drawBefore.Add(customScreenTextures[i]);
+                }
+                //otherwise it will be drawn to screen after the game texture
+                else
+                {
+                    drawAfter ??= new List<ScreenTexture>();//initialize if it has not been initialized yet
+                    drawAfter.Add(customScreenTextures[i]);
+                }
+            }
+        }
+
+        //draw screen textures to screen before the game texture
+        if (drawBefore is { Count: > 0 })
+        {
+            drawBefore.Sort(
+                (a, b) =>
+                {
+                    if (a.DrawToScreenOrder < b.DrawToScreenOrder) return -1;
+                    if (a.DrawToScreenOrder > b.DrawToScreenOrder) return 1;
+                    return 0;
+                }
+            );
+            for (var i = 0; i < drawBefore.Count; i++)
+            {
+                drawBefore[i].DrawToScreen();
+            }
+        }
+        
+        //draw game texture to screen
+        gameTexture.DrawToScreen();
+        
+        //draw screen textures to screen after the game texture
+        if (drawAfter is { Count: > 0 })
+        {
+            drawAfter.Sort(
+                (a, b) =>
+                {
+                    if (a.DrawToScreenOrder < b.DrawToScreenOrder) return -1;
+                    if (a.DrawToScreenOrder > b.DrawToScreenOrder) return 1;
+                    return 0;
+                }
+            );
+            for (var i = 0; i < drawAfter.Count; i++)
+            {
+                drawAfter[i].DrawToScreen();
             }
         }
         

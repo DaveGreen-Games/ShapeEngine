@@ -74,6 +74,14 @@ public sealed class ScreenTexture
     public ColorRgba BackgroundColor = ColorRgba.Clear;
     public ScreenInfo GameScreenInfo { get; private set; } = new();
     public ScreenInfo GameUiScreenInfo { get; private set; } = new();
+    
+    /// <summary>
+    /// The order in which screen textures are drawn to the screen each frame. Lower numbers will be draw first.
+    /// Negative draw orders will be drawn to screen before the game texture.
+    /// Positive draw orders will be drawn to screen after the game texture (this includes 0).
+    /// If the draw order is the same the order in which the screen textures were added is taken into account.
+    /// </summary>
+    public int DrawToScreenOrder { get; private set; } = 0;
     public bool Loaded { get; private set; } = false;
     public int Width { get; private set; } = 0;
     public int Height { get; private set; } = 0;
@@ -645,95 +653,3 @@ public sealed class ScreenTexture
     
 }
 
-
-
-
-
-/*
-internal sealed class ScreenTexture
-{
-    public bool Loaded { get; private set; } = false;
-    public RenderTexture2D RenderTexture { get; private set; } = new();
-    public int Width { get; private set; } = 0;
-    public int Height { get; private set; } = 0;
-    
-    
-    /// <summary>
-    /// Requires to unload and load the texture to take effect!
-    /// </summary>
-    public TextureFilter TextureFilter = TextureFilter.Bilinear;
-
-    public ScreenTexture(){}
-
-    public void Load(Dimensions dimensions)
-    {
-        if (Loaded) return;
-        Loaded = true;
-        SetTexture(dimensions);
-    }
-    public void Unload()
-    {
-        if (!Loaded) return;
-        Loaded = false;
-        Raylib.UnloadRenderTexture(RenderTexture);
-    }
-    public void UpdateDimensions(Dimensions dimensions)
-    {
-        if (!Loaded) return;
-
-        if (Width == dimensions.Width && Height == dimensions.Height) return;
-        
-        Raylib.UnloadRenderTexture(RenderTexture);
-        SetTexture(dimensions);
-    }
-    public void Draw()
-    {
-        var destRec = new Rectangle
-        {
-            X = Width * 0.5f,
-            Y = Height * 0.5f,
-            Width = Width,
-            Height = Height
-        };
-        Vector2 origin = new()
-        {
-            X = Width * 0.5f,
-            Y = Height * 0.5f
-        };
-        
-        var sourceRec = new Rectangle(0, 0, Width, -Height);
-        
-        Raylib.DrawTexturePro(RenderTexture.Texture, sourceRec, destRec, origin, 0f, new ColorRgba(System.Drawing.Color.White).ToRayColor());
-    }
-    
-    private void SetTexture(Dimensions dimensions)
-    {
-        Width = dimensions.Width;
-        Height = dimensions.Height;
-        RenderTexture = Raylib.LoadRenderTexture(Width, Height);
-        Raylib.SetTextureFilter(RenderTexture.Texture, TextureFilter);
-    }
-    
-    //public void DrawTexture(int targetWidth, int targetHeight)
-    //{
-    //var destRec = new Rectangle
-    //{
-    //    x = targetWidth * 0.5f,
-    //    y = targetHeight * 0.5f,
-    //    width = targetWidth,
-    //    height = targetHeight
-    //};
-    //Vector2 origin = new()
-    //{
-    //    X = targetWidth * 0.5f,
-    //    Y = targetHeight * 0.5f
-    //};
-    //
-    //
-    //
-    //var sourceRec = new Rectangle(0, 0, Width, -Height);
-    //
-    //DrawTexturePro(RenderTexture.texture, sourceRec, destRec, origin, 0f, WHITE);
-    //
-}
-*/
