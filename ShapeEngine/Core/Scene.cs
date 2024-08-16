@@ -143,6 +143,11 @@ public abstract class Scene //: IUpdateable, IDrawable
     {
         OnGameTextureResized(w, h);
     }
+
+    internal void ResolveOnGameTextureClearBackground()
+    {
+        OnGameTextureClearBackground();
+    }
     internal void ResolveDrawGame(ScreenInfo game)
     {
         OnPreDrawGame(game);
@@ -252,6 +257,10 @@ public abstract class Scene //: IUpdateable, IDrawable
         
     }
     protected virtual void OnGameTextureResized(int w, int h) { }
+    /// <summary>
+    /// Can be used to call Raylib.ClearBackground(someColor)
+    /// </summary>
+    protected virtual void OnGameTextureClearBackground() { }
     protected virtual void OnUpdateGame(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
     protected virtual void OnFixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
     protected virtual void OnInterpolateFixedUpdate(float f) { }

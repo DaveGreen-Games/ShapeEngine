@@ -198,11 +198,14 @@ public class Game
             gameTexture = new(gameSettings.PixelationFactor, gameSettings.ShaderSupportType, gameSettings.TextureFilter);
         }
 
+        gameTexture.AutoClearBackground = gameSettings.AutoClearBackground;
+        
         gameTexture.OnTextureResized += GameTextureOnTextureResized;
         gameTexture.Initialize(Window.CurScreenSize, mousePosUI, curCamera);
         gameTexture.OnDrawGame += GameTextureOnDrawGame;
         gameTexture.OnDrawUI += GameTextureOnDrawUI;
-
+        gameTexture.OnClearBackground += GameTextureOnOnClearBackground;
+        
         GameScreenInfo = gameTexture.GameScreenInfo;
         GameUiScreenInfo = gameTexture.GameUiScreenInfo;
         UIScreenInfo = new(Window.ScreenArea, mousePosUI);
@@ -213,6 +216,8 @@ public class Game
         ShapeInput.GamepadDeviceManager.OnGamepadConnectionChanged += OnGamepadConnectionChanged;
         
     }
+
+    
 
     public ExitCode Run(params string[] launchParameters)
     {
@@ -367,7 +372,10 @@ public class Game
     {
         ResolveOnGameTextureResized(w, h);
     }
-    
+    private void GameTextureOnOnClearBackground()
+    {
+        ResolveOnGameTextureClearBackground();
+    }
     private void AdvanceFixedUpdate(float dt)
     {
         const float maxFrameTime = 1f / 30f;
@@ -548,8 +556,11 @@ public class Game
     /// Called after EndRun before the application terminates.
     /// </summary>
     protected virtual void UnloadContent() { }
-
     protected virtual void OnGameTextureResized(int w, int h) { }
+    /// <summary>
+    /// Can be used to call Raylib.ClearBackground(someColor)
+    /// </summary>
+    protected virtual void OnGameTextureClearBackground() { }
     protected virtual void OnWindowSizeChanged(DimensionConversionFactors conversion) { }
     protected virtual void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos) { }
     protected virtual void OnMonitorChanged(MonitorInfo newMonitor) { }
@@ -626,6 +637,12 @@ public class Game
     {
         OnGameTextureResized(w, h);
         CurScene.ResolveGameTextureResized(w, h);
+    }
+
+    private void ResolveOnGameTextureClearBackground()
+    {
+        OnGameTextureClearBackground();
+        CurScene.ResolveOnGameTextureClearBackground();
     }
     private void ResolveDrawGame(ScreenInfo game)
     {

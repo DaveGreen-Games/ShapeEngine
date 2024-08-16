@@ -62,12 +62,16 @@ public sealed class ScreenTexture
     public event DrawToRenderTexture? OnDrawUI;
 
     public event TextureResized? OnTextureResized;
+
+    public event Action? OnClearBackground;
     #endregion
 
     #region Members
 
-    #region Public 
-    
+    #region Public
+
+    public bool AutoClearBackground = true;
+    public ColorRgba BackgroundColor = ColorRgba.Clear;
     public ScreenInfo GameScreenInfo { get; private set; } = new();
     public ScreenInfo GameUiScreenInfo { get; private set; } = new();
     public bool Loaded { get; private set; } = false;
@@ -341,7 +345,8 @@ public sealed class ScreenTexture
         if (shaderMode)
         {
             Raylib.BeginTextureMode(renderTexture);
-            Raylib.ClearBackground(new(0,0,0,0));
+            if(AutoClearBackground) Raylib.ClearBackground(BackgroundColor.ToRayColor());
+            else OnClearBackground?.Invoke();
 
             if (Camera != null)
             {
@@ -370,7 +375,8 @@ public sealed class ScreenTexture
         else
         {
             Raylib.BeginTextureMode(renderTexture);
-            Raylib.ClearBackground(new(0,0,0,0));
+            if(AutoClearBackground) Raylib.ClearBackground(BackgroundColor.ToRayColor());
+            else OnClearBackground?.Invoke();
 
             if (Camera != null)
             {

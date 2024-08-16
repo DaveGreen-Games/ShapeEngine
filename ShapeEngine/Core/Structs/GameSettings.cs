@@ -7,20 +7,20 @@ namespace ShapeEngine.Core.Structs;
 public readonly struct GameSettings
 {
     #region Factory
-    public static GameSettings StretchMode => new GameSettings(-1, TextureFilter.Bilinear, ShaderSupportType.Multi);
+    public static GameSettings StretchMode => new GameSettings(-1, TextureFilter.Bilinear, ShaderSupportType.Multi, true);
 
     public static GameSettings FixedMode =>
-        new GameSettings(new Dimensions(320, 180), -1, TextureFilter.Point, ShaderSupportType.Multi);
+        new GameSettings(new Dimensions(320, 180), -1, TextureFilter.Point, ShaderSupportType.Multi, false, true);
     public static GameSettings FixedNearestMode =>
-        new GameSettings(new Dimensions(320, 180), -1, TextureFilter.Point, ShaderSupportType.Multi, true);
+        new GameSettings(new Dimensions(320, 180), -1, TextureFilter.Point, ShaderSupportType.Multi, true, true);
 
     public static GameSettings PixelationMode =>  
-        new GameSettings(0.25f, -1, TextureFilter.Point, ShaderSupportType.Multi);
+        new GameSettings(0.25f, -1, TextureFilter.Point, ShaderSupportType.Multi, true);
     #endregion
    
     #region Constructors
 
-    public GameSettings(int fixedFramerate, TextureFilter textureFilter, ShaderSupportType shaderSupportType)
+    public GameSettings(int fixedFramerate, TextureFilter textureFilter, ShaderSupportType shaderSupportType, bool autoClearBackground = true)
     {
         FixedFramerate = fixedFramerate;
         TextureFilter = textureFilter;
@@ -28,8 +28,9 @@ public readonly struct GameSettings
         FixedDimensions = Dimensions.GetInvalidDimension();
         PixelationFactor = 1f;
         ScreenTextureMode = ScreenTextureMode.Stretch;
+        AutoClearBackground = autoClearBackground;
     }
-    public GameSettings(Dimensions fixedDimensions, int fixedFramerate, TextureFilter textureFilter, ShaderSupportType shaderSupportType, bool nearestScaling = false)
+    public GameSettings(Dimensions fixedDimensions, int fixedFramerate, TextureFilter textureFilter, ShaderSupportType shaderSupportType, bool nearestScaling = false, bool autoClearBackground = true)
     {
         FixedFramerate = fixedFramerate;
         TextureFilter = textureFilter;
@@ -54,9 +55,9 @@ public readonly struct GameSettings
             FixedDimensions = Dimensions.GetInvalidDimension();
             ScreenTextureMode = ScreenTextureMode.Stretch;
         }
-        
+        AutoClearBackground = autoClearBackground;
     }
-    public GameSettings(float pixelationFactor, int fixedFramerate, TextureFilter textureFilter, ShaderSupportType shaderSupportType)
+    public GameSettings(float pixelationFactor, int fixedFramerate, TextureFilter textureFilter, ShaderSupportType shaderSupportType, bool autoClearBackground = true)
     {
         FixedFramerate = fixedFramerate;
         TextureFilter = textureFilter;
@@ -73,7 +74,7 @@ public readonly struct GameSettings
             PixelationFactor = pixelationFactor;
             ScreenTextureMode = ScreenTextureMode.Pixelation;
         }
-        
+        AutoClearBackground = autoClearBackground;
     }
     
     #endregion
@@ -94,5 +95,6 @@ public readonly struct GameSettings
     public readonly TextureFilter TextureFilter;
     public readonly Dimensions FixedDimensions;
     public readonly float PixelationFactor;
+    public readonly bool AutoClearBackground;
     #endregion
 }
