@@ -314,9 +314,14 @@ public class Game
             }
 
             UpdateCursor(dt, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-
-            ResolveUpdate();
-            if(FixedPhysicsEnabled) AdvanceFixedUpdate(dt);
+            
+            if (FixedPhysicsEnabled)
+            {
+                ResolveHandleInput();
+                AdvanceFixedUpdate(dt);
+            }
+            else ResolveUpdate();
+            
             DrawToScreen();
 
             ResolveDeferred();
@@ -592,9 +597,43 @@ public class Game
     /// </summary>
     protected virtual void BeginRun() { }
 
+    /// <summary>
+    /// Called when fixed framerate is disabled
+    /// </summary>
+    /// <param name="time"></param>
+    /// <param name="game"></param>
+    /// <param name="gameUi"></param>
+    /// <param name="ui"></param>
     protected virtual void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
+    
+    
+    /// <summary>
+    /// Only called when fixed framerate is enabled. This function will be called every frame.
+    /// </summary>
+    /// <param name="time"></param>
+    /// <param name="game"></param>
+    /// <param name="gameUi"></param>
+    /// <param name="ui"></param>
+    protected virtual void HandeInput(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
+    
+    /// <summary>
+    /// Only called when fixed framerate is enabled. This function will be called in fixed interval.
+    /// </summary>
+    /// <param name="fixedTime"></param>
+    /// <param name="game"></param>
+    /// <param name="gameUi"></param>
+    /// <param name="ui"></param>
     protected virtual void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
-    protected virtual void InterpolateFixedUpdate(float f) { }
+    
+    /// <summary>
+    /// Only called when fixed framerate is enabled. This function will be called every frame.
+    /// </summary>
+    /// <param name="time"></param>
+    /// <param name="game"></param>
+    /// <param name="gameUi"></param>
+    /// <param name="ui"></param>
+    /// <param name="f"></param>
+    protected virtual void InterpolateFixedUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui, float f) { }
     
     protected virtual void DrawGame(ScreenInfo game) { }
     protected virtual void DrawGameUI(ScreenInfo gameUi) { }
@@ -670,18 +709,22 @@ public class Game
     private void ResolveUpdate()
     {
         Update(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-        CurScene.ResolveUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo, FixedPhysicsEnabled);
+        CurScene.ResolveUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+    }
+    private void ResolveHandleInput()
+    {
+        HandeInput(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+        CurScene.ResolveHandleInput(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
     }
     private void ResolveFixedUpdate()
     {
         FixedUpdate(FixedTime, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
         CurScene.ResolveFixedUpdate(FixedTime, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
     }
-
     private void ResolveInterpolateFixedUpdate(float f)
     {
-        InterpolateFixedUpdate(f);
-        CurScene.ResolveInterpolateFixedUpdate(f);
+        InterpolateFixedUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo, f);
+        CurScene.ResolveInterpolateFixedUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo, f);
     }
     private void ResolveOnGameTextureResized(int w, int h)
     {

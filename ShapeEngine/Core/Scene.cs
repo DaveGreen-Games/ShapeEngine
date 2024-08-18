@@ -113,31 +113,30 @@ public abstract class Scene //: IUpdateable, IDrawable
         RemovePathfinder();
         OnClose();
     }
-    internal void ResolveUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui, bool fixedUpdate)
+    internal void ResolveUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
-        if (!fixedUpdate)
-        {
-            SpawnArea?.Update(time, game, gameUi, ui);
-            CollisionHandler?.Update(time.Delta);
-            Pathfinder?.Update(time.Delta);
-        }
+        SpawnArea?.Update(time, game, gameUi, ui);
+        CollisionHandler?.Update(time.Delta);
+        Pathfinder?.Update(time.Delta);
         
         OnUpdateGame(time, game, gameUi, ui);
     }
+    internal void ResolveHandleInput(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+    {
+        SpawnArea?.HandleInput(time, game, gameUi, ui);
+        OnHandleInput(time, game, gameUi, ui);
+    }
     internal void ResolveFixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
-        //fixed update is only called when fixed update is enabled
-        //therefore we do not need to check it here
         SpawnArea?.FixedUpdate(fixedTime, game, gameUi, ui);
         CollisionHandler?.Update(fixedTime.Delta);
         Pathfinder?.Update(fixedTime.Delta);
-        
         OnFixedUpdate(fixedTime, game, gameUi, ui);
     }
-    internal void ResolveInterpolateFixedUpdate(float f)
+    internal void ResolveInterpolateFixedUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui, float f)
     {
-        SpawnArea?.InterpolateFixedUpdate(f);
-        OnInterpolateFixedUpdate(f);
+        SpawnArea?.InterpolateFixedUpdate(time, game, gameUi, ui, f);
+        OnInterpolateFixedUpdate(time, game, gameUi, ui, f);
     }
     internal void ResolveGameTextureResized(int w, int h)
     {
@@ -259,9 +258,43 @@ public abstract class Scene //: IUpdateable, IDrawable
     protected virtual void OnGameTextureResized(int w, int h) { }
    
     // protected virtual void OnGameTextureClearBackground() { }
+    
+    /// <summary>
+    /// Only called when fixed framerate is disabled. Called every frame.
+    /// </summary>
+    /// <param name="time"></param>
+    /// <param name="game"></param>
+    /// <param name="gameUi"></param>
+    /// <param name="ui"></param>
     protected virtual void OnUpdateGame(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
+    
+    /// <summary>
+    /// Only called when fixed framerate is enabled. Called every frame before fixed update.
+    /// </summary>
+    /// <param name="time"></param>
+    /// <param name="game"></param>
+    /// <param name="gameUi"></param>
+    /// <param name="ui"></param>
+    protected virtual void OnHandleInput(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
+    
+    /// <summary>
+    /// Only called when fixed framerate is enabled. Called in fixed interval.
+    /// </summary>
+    /// <param name="fixedTime"></param>
+    /// <param name="game"></param>
+    /// <param name="gameUi"></param>
+    /// <param name="ui"></param>
     protected virtual void OnFixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
-    protected virtual void OnInterpolateFixedUpdate(float f) { }
+    
+    /// <summary>
+    /// Only called when fixed framerate is enabled. Called every frame after all fixed update calls.
+    /// </summary>
+    /// <param name="time"></param>
+    /// <param name="game"></param>
+    /// <param name="gameUi"></param>
+    /// <param name="ui"></param>
+    /// <param name="f"></param>
+    protected virtual void OnInterpolateFixedUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui, float f) { }
     /// <summary>
     /// Called before SpawnArea DrawGame is called.
     /// </summary>

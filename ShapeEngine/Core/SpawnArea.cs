@@ -20,10 +20,7 @@ namespace ShapeEngine.Core
         public int Count { get; private set; } = 0;
         public Rect Bounds { get; protected set; }
         public Vector2 ParallaxePosition { get; set; } = new(0f);
-        /// <summary>
-        /// Should FixedUpdate & InterpolateFixedUpdate be called for all gameobjects or not?
-        /// </summary>
-        public bool UseFixedUpdate = false;
+        
         private readonly SortedList<uint, List<GameObject>> allObjects = new();
         private readonly List<GameObject> drawToGameTextureObjects = new();
         private readonly List<GameObject> drawToGameUiTextureObjects = new();
@@ -268,15 +265,13 @@ namespace ShapeEngine.Core
         {
             Clear();
         }
-        
-        
 
         public virtual void DrawDebug(ColorRgba bounds, ColorRgba border, ColorRgba fill)
         {
             this.Bounds.DrawLines(15f, bounds);
         }
-
         
+        #region Open Framerate
         public virtual void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
             drawToGameTextureObjects.Clear();
@@ -323,9 +318,16 @@ namespace ShapeEngine.Core
             clearAreaActive = false;
         }
 
-        public void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+        #endregion
+        
+        #region Fixed Framerate
+        
+        public virtual void HandleInput(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
-            if (!UseFixedUpdate) return;
+            if (clearAreaActive)
+            {
+                if (!Bounds.OverlapShape(clearArea)) clearAreaActive = false;
+            }
             
             foreach (var layer in allObjects)
             {
@@ -335,14 +337,48 @@ namespace ShapeEngine.Core
                 for (int i = objs.Count - 1; i >= 0; i--)
                 {
                     var obj = objs[i];
-                    obj.FixedUpdate(fixedTime, game, gameUi, ui);
+                    
+                    if (clearAreaActive && (clearAreaMask.IsEmpty() || clearAreaMask.Has((uint)layer.Key)))
+                    {
+                        if (clearArea.OverlapShape(obj.GetBoundingBox()))
+                        {
+                            RemoveGameObject(obj);
+                            continue;
+                        }
+                    }
+                    
+                    obj.HandleInput(time, game, gameUi, ui);
+                }
+            }
+            
+            clearAreaActive = false;
+        }
+        public virtual void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+        {
+            foreach (var layer in allObjects)
+            {
+                var objs = allObjects[layer.Key];
+                if (objs.Count <= 0) continue;
+
+                for (int i = objs.Count - 1; i >= 0; i--)
+                {
+                    var obj = objs[i];
+
+                    obj.UpdateParallaxe(ParallaxePosition);
+                    
+                    obj.Update(fixedTime, game, gameUi, ui);
+                    
+                    if (obj.IsDead || obj.HasLeftBounds(Bounds))
+                    {
+                        RemoveGameObject(obj);
+                    }
                 }
             }
         }
-
-        public void InterpolateFixedUpdate(float f)
+        public virtual void InterpolateFixedUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui, float f)
         {
-            if (!UseFixedUpdate) return;
+            drawToGameTextureObjects.Clear();
+            drawToGameUiTextureObjects.Clear();
             
             foreach (var layer in allObjects)
             {
@@ -352,11 +388,15 @@ namespace ShapeEngine.Core
                 for (int i = objs.Count - 1; i >= 0; i--)
                 {
                     var obj = objs[i];
-                    obj.InterpolateFixedUpdate(f);
+                    if (obj.IsDrawingToGame(game.Area)) drawToGameTextureObjects.Add(obj);
+                    if (obj.IsDrawingToGameUI(gameUi.Area)) drawToGameUiTextureObjects.Add(obj);
+                    obj.InterpolateFixedUpdate(time, game, gameUi, ui, f);
                 }
             }
         }
-
+        
+        #endregion
+        
         public virtual void DrawGame(ScreenInfo game)
         {
             foreach (var obj in drawToGameTextureObjects)
