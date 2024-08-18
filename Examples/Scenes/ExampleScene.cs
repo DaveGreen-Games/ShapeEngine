@@ -94,7 +94,7 @@ namespace Examples.Scenes
             // }
         }
 
-        protected override void OnUpdateGame(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+        protected override void OnUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
             HandleInput(time.Delta, game.MousePos, gameUi.MousePos, ui.MousePos);
 

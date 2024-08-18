@@ -119,12 +119,12 @@ public abstract class Scene //: IUpdateable, IDrawable
         CollisionHandler?.Update(time.Delta);
         Pathfinder?.Update(time.Delta);
         
-        OnUpdateGame(time, game, gameUi, ui);
+        OnUpdate(time, game, gameUi, ui);
     }
-    internal void ResolveHandleInput(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+    internal void ResolvePreFixedUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
-        SpawnArea?.HandleInput(time, game, gameUi, ui);
-        OnHandleInput(time, game, gameUi, ui);
+        SpawnArea?.PreFixedUpdate(time, game, gameUi, ui);
+        OnUpdate(time, game, gameUi, ui);
     }
     internal void ResolveFixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
@@ -260,22 +260,22 @@ public abstract class Scene //: IUpdateable, IDrawable
     // protected virtual void OnGameTextureClearBackground() { }
     
     /// <summary>
-    /// Only called when fixed framerate is disabled. Called every frame.
+    /// Called every frame. Called before FixedUpdate if fixed framerate is enabled.
     /// </summary>
     /// <param name="time"></param>
     /// <param name="game"></param>
     /// <param name="gameUi"></param>
     /// <param name="ui"></param>
-    protected virtual void OnUpdateGame(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
+    protected virtual void OnUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
     
-    /// <summary>
-    /// Only called when fixed framerate is enabled. Called every frame before fixed update.
-    /// </summary>
-    /// <param name="time"></param>
-    /// <param name="game"></param>
-    /// <param name="gameUi"></param>
-    /// <param name="ui"></param>
-    protected virtual void OnHandleInput(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
+    // /// <summary>
+    // /// Only called when fixed framerate is enabled. Called every frame before fixed update.
+    // /// </summary>
+    // /// <param name="time"></param>
+    // /// <param name="game"></param>
+    // /// <param name="gameUi"></param>
+    // /// <param name="ui"></param>
+    // protected virtual void OnHandleInput(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
     
     /// <summary>
     /// Only called when fixed framerate is enabled. Called in fixed interval.
@@ -312,7 +312,7 @@ public abstract class Scene //: IUpdateable, IDrawable
     /// <param name="ui"></param>
     protected virtual void OnPreDrawGameUI(ScreenInfo ui) { }
     /// <summary>
-    /// Draw your game ui. Is affected by screen shaders but not by the camera.
+    /// Draw your game ui. Is not affected by screen shaders and not by the camera but uses the same ScreenTextureMode as DrawGame.
     /// </summary>
     /// <param name="gameUi"></param>
     protected virtual void OnDrawGameUI(ScreenInfo gameUi) { }

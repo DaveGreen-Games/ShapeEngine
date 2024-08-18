@@ -6,7 +6,7 @@ public interface IUpdateable
 {
     
     /// <summary>
-    /// Only called when fixed framerate is disabled. Called every frame.
+    /// Called every frame. Called before FixedUpdate if fixed framerate is enabled.
     /// </summary>
     /// <param name="time"></param>
     /// <param name="game"></param>
@@ -14,14 +14,14 @@ public interface IUpdateable
     /// <param name="ui"></param>
     public void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui);
     
-    /// <summary>
-    /// Only called when fixed framerate is enabled. Called every frame before fixed update.
-    /// </summary>
-    /// <param name="time"></param>
-    /// <param name="game"></param>
-    /// <param name="gameUi"></param>
-    /// <param name="ui"></param>
-    public void HandleInput(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui);
+    // /// <summary>
+    // /// Only called when fixed framerate is enabled. Called every frame before fixed update.
+    // /// </summary>
+    // /// <param name="time"></param>
+    // /// <param name="game"></param>
+    // /// <param name="gameUi"></param>
+    // /// <param name="ui"></param>
+    // public void HandleInput(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui);
     
     /// <summary>
     /// Only called when fixed framerate is enabled. Called in fixed interval.

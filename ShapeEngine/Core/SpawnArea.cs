@@ -322,7 +322,7 @@ namespace ShapeEngine.Core
         
         #region Fixed Framerate
         
-        public virtual void HandleInput(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+        public virtual void PreFixedUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
             if (clearAreaActive)
             {
@@ -347,7 +347,7 @@ namespace ShapeEngine.Core
                         }
                     }
                     
-                    obj.HandleInput(time, game, gameUi, ui);
+                    obj.Update(time, game, gameUi, ui);
                 }
             }
             

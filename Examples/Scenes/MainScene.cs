@@ -170,7 +170,7 @@ namespace Examples.Scenes
                 GAMELOOP.Window.NextMonitor();
             }
         }
-        protected override void OnUpdateGame(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+        protected override void OnUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
             if (tabChangeMouseWheelLockTimer > 0f)
             {

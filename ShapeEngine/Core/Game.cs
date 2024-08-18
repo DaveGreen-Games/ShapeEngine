@@ -317,7 +317,7 @@ public class Game
             
             if (FixedPhysicsEnabled)
             {
-                ResolveHandleInput();
+                ResolvePreFixedUpdate();
                 AdvanceFixedUpdate(dt);
             }
             else ResolveUpdate();
@@ -711,10 +711,10 @@ public class Game
         Update(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
         CurScene.ResolveUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
     }
-    private void ResolveHandleInput()
+    private void ResolvePreFixedUpdate()
     {
         HandeInput(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-        CurScene.ResolveHandleInput(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+        CurScene.ResolvePreFixedUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
     }
     private void ResolveFixedUpdate()
     {
