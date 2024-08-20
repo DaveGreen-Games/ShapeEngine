@@ -608,13 +608,13 @@ public class Game
     
     
     /// <summary>
-    /// Only called when fixed framerate is enabled. This function will be called every frame.
+    /// This functions is called every frame before fixed update. Only called when fixed framerate is enabled.
     /// </summary>
     /// <param name="time"></param>
     /// <param name="game"></param>
     /// <param name="gameUi"></param>
     /// <param name="ui"></param>
-    protected virtual void HandeInput(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
+    protected virtual void PreFixedUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
     
     /// <summary>
     /// Only called when fixed framerate is enabled. This function will be called in fixed interval.
@@ -713,7 +713,7 @@ public class Game
     }
     private void ResolvePreFixedUpdate()
     {
-        HandeInput(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+        PreFixedUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
         CurScene.ResolvePreFixedUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
     }
     private void ResolveFixedUpdate()
