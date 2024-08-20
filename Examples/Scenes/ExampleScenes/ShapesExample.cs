@@ -570,9 +570,9 @@ public class ShapesExample : ExampleScene
     {
         
     }
-    protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+    protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
     {
-        base.HandleInput(dt, mousePosGame, mousePosUI);
+        base.HandleInput(dt, mousePosGame, mousePosGameUi, mousePosUI);
         var gamepad = GAMELOOP.CurGamepad;
         
         nextStaticShape.Gamepad = gamepad;
@@ -671,7 +671,7 @@ public class ShapesExample : ExampleScene
             }
         }
     }
-    protected override void OnDrawGameUIExample(ScreenInfo ui)
+    protected override void OnDrawGameUIExample(ScreenInfo gameUi)
     {
         
     }

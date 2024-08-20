@@ -767,8 +767,8 @@ namespace Examples.Scenes.ExampleScenes
             buttonDoubleTap = new(font);
         }
 
-        
-        public override void Activate(Scene oldScene)
+
+        protected override void OnActivate(Scene oldScene)
         {
             BitFlag mask = new(GAMELOOP.GameloopAccessTag);
             mask = mask.Add(InputAction.DefaultAccessTag);
@@ -776,7 +776,7 @@ namespace Examples.Scenes.ExampleScenes
             // InputAction.LockWhitelist(GAMELOOP.GameloopAccessTag, InputAction.DefaultAccessTag);
         }
 
-        public override void Deactivate()
+        protected override void OnDeactivate()
         {
             InputAction.Unlock();
         }
@@ -788,12 +788,12 @@ namespace Examples.Scenes.ExampleScenes
         }
         
         
-        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
             
 
         }
-        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
+        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
             // int gamepadIndex = -1;
             // if (GAMELOOP.CurGamepad != null)
@@ -819,7 +819,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             
         }
-        protected override void OnDrawGameUIExample(ScreenInfo ui)
+        protected override void OnDrawGameUIExample(ScreenInfo gameUi)
         {
             var screenArea = GAMELOOP.UIRects.GetRect("center");
             

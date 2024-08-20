@@ -1,12 +1,9 @@
 ﻿using ShapeEngine.Lib;
 using ShapeEngine.Core.Shapes;
 using System.Numerics;
-using System.Runtime.Serialization;
 using ShapeEngine.Color;
-using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Pathfinding;
 
 namespace ShapeEngine.Core
 {
@@ -22,23 +19,17 @@ namespace ShapeEngine.Core
         public int NewLayerStartCapacity = 128;
         public int Count { get; private set; } = 0;
         public Rect Bounds { get; protected set; }
-        // public CollisionHandler? CollisionHandler { get; private set; } = null;
-        // public Pathfinder? Pathfinder { get; private set; } = null;
         public Vector2 ParallaxePosition { get; set; } = new(0f);
-
+        
         private readonly SortedList<uint, List<GameObject>> allObjects = new();
         private readonly List<GameObject> drawToGameTextureObjects = new();
-        private readonly List<GameObject> drawToUITextureObjects = new();
+        private readonly List<GameObject> drawToGameUiTextureObjects = new();
 
         private Rect clearArea = new();
         private bool clearAreaActive = false;
         private BitFlag clearAreaMask = new();
 
         private List<GameObject> removalList = new(1024);
-        // public SpawnArea()
-        // {
-        //     Bounds = new Rect();
-        // }
         public SpawnArea(float x, float y, float w, float h)
         {
             Bounds = new(x, y, w, h);
@@ -47,54 +38,11 @@ namespace ShapeEngine.Core
         {
             Bounds = bounds;
         }
-        
-        // public virtual bool InitCollisionHandler(int rows, int cols)
-        // {
-        //     if (CollisionHandler != null) return false;
-        //     CollisionHandler = new(Bounds, rows, cols);
-        //     return true;
-        // }
-        // public virtual bool InitCollisionHandler(CollisionHandler collisionHandler)
-        // {
-        //     if (CollisionHandler != null) return false;
-        //     if (CollisionHandler == collisionHandler) return false;
-        //     CollisionHandler = collisionHandler; // new(Bounds, rows, cols);
-        //     return true;
-        // }
-        // public virtual bool RemoveCollisionHandler()
-        // {
-        //     if (CollisionHandler == null) return false;
-        //     CollisionHandler.Close();
-        //     CollisionHandler = null;
-        //     return true;
-        // }
-        //
-        // public virtual bool InitPathfinder(int rows, int cols)
-        // {
-        //     if (Pathfinder != null) return false;
-        //     Pathfinder = new(Bounds, rows, cols);
-        //     return true;
-        // }
-        // public virtual bool InitPathfinder(Pathfinder pathfinder)
-        // {
-        //     if (Pathfinder != null) return false;
-        //     if (Pathfinder == pathfinder) return false;
-        //     Pathfinder = pathfinder;
-        //     return true;
-        // }
-        // public virtual bool RemovePathfinder()
-        // {
-        //     if (Pathfinder == null) return false;
-        //     Pathfinder.Clear();
-        //     Pathfinder = null;
-        //     return true;
-        // }
 
         
         public virtual void ResizeBounds(Rect newBounds)
         {
             Bounds = newBounds;
-            // CollisionHandler?.ResizeBounds(newBounds);
         }
         public bool HasLayer(uint layer) { return allObjects.ContainsKey(layer); }
 
@@ -108,51 +56,42 @@ namespace ShapeEngine.Core
             if (Count <= 0) return;
             if (!HasLayer(layer)) return;
 
-            // var cnt = 0;
             foreach (var obj in allObjects[layer])
             {
-                // cnt++;
                 if (!match.Invoke(obj)) continue;
-                // result ??= new(allObjects[layer].Count - cnt);
                 result.Add(obj);
             }
         }
         public void GetGameObjects(BitFlag layerMask, ref List<GameObject> result)
         {
             if (Count <= 0) return;
-            // var result = new List<GameObject>(Count / 2);
             foreach (var kvp in allObjects)
             {
                 if (layerMask.Has(kvp.Key))
                 {
                     if (kvp.Value.Count > 0)
                     {
-                        // result ??= new(kvp.Value.Count);
                         result.AddRange(kvp.Value);
                     }
                     
                 }
             }
-            // return result;
         }
         public void GetGameObjects(BitFlag layerMask, Predicate<GameObject> match, ref List<GameObject> result)
         {
             if (Count <= 0) return;
             
-            // var result = new List<GameObject>(Count / 2);
             foreach (var kvp in allObjects)
             {
                 if (layerMask.Has(kvp.Key))
                 {
                     if (kvp.Value.Count > 0)
                     {
-                        // result ??= new(kvp.Value.Count);
                         result.AddRange(kvp.Value.FindAll(match));
                     }
                     
                 }
             }
-            // return result;
         }
 
         public List<GameObject>? GetAllGameObjects()
@@ -168,7 +107,6 @@ namespace ShapeEngine.Core
         public void GetAllGameObjects(ref List<GameObject> result)
         {
             if (Count <= 0) return;
-            // result ??= new(Count);
             
             foreach (var layerGroup in allObjects.Values)
             {
@@ -180,7 +118,6 @@ namespace ShapeEngine.Core
         {
             if (Count <= 0) return;
 
-            // result ??= new(Count / 2);
             
             foreach (var layerGroup in allObjects.Values)
             {
@@ -196,9 +133,6 @@ namespace ShapeEngine.Core
                 objects.AddRange(layerGroup.FindAll(match));
             }
             return objects;
-            
-            
-            // return GetAllGameObjects().FindAll(match);
         }
 
         
@@ -208,17 +142,7 @@ namespace ShapeEngine.Core
             AddLayer(layer, NewLayerStartCapacity <= 0 ? 4 : NewLayerStartCapacity);
 
             allObjects[layer].Add(gameObject);
-
-            // if (CollisionHandler != null)
-            // {
-            //     if (gameObject is CollisionObject co) CollisionHandler.Add(co);
-            // }
-            //
-            // if (Pathfinder != null)
-            // {
-            //     if (gameObject is IPathfinderAgent agent) Pathfinder.AddAgent(agent);
-            // }
-
+            
             Count++;
             GameObjectWasAdded(gameObject);
             OnGameObjectAdded?.Invoke(gameObject);
@@ -230,16 +154,6 @@ namespace ShapeEngine.Core
         {
             if (!allObjects.TryGetValue(gameObject.Layer, out var o)) return false;
             if (!o.Remove(gameObject)) return false;
-            
-            // if (CollisionHandler != null)
-            // {
-            //     if (gameObject is CollisionObject co) CollisionHandler.Remove(co);
-            // }
-            //
-            // if (Pathfinder != null)
-            // {
-            //     if (gameObject is IPathfinderAgent agent) Pathfinder.RemoveAgent(agent);
-            // }
             
             Count--;
             GameObjectWasRemoved(gameObject);
@@ -316,30 +230,6 @@ namespace ShapeEngine.Core
             clearAreaMask = areaLayerMask;
             clearAreaActive = true;
         }
-        // public HashSet<CollisionObject>? ClearAreaCollisionObjects(Rect area, BitFlag collisionLayerMask)
-        // {
-        //     if (CollisionHandler == null) return null;
-        //     
-        //     var result = new List<Collider>();
-        //     CollisionHandler.CastSpace(area, collisionLayerMask, ref result);
-        //
-        //     if (result.Count <= 0) return null;
-        //     
-        //     var removedParents = new HashSet<CollisionObject>();
-        //     
-        //     foreach (var collider in result)
-        //     {
-        //         var parent = collider.Parent;
-        //         if (parent != null && !removedParents.Contains(parent))
-        //         {
-        //             RemoveGameObject(parent);
-        //             removedParents.Add(parent);
-        //         }
-        //     }
-        //
-        //     return removedParents;
-        // }
-        //
         
         protected virtual void GameObjectWasAdded(GameObject obj) { }
         protected virtual void GameObjectWasRemoved(GameObject obj) { }
@@ -347,13 +237,12 @@ namespace ShapeEngine.Core
         public virtual void Clear()
         {
             drawToGameTextureObjects.Clear();
-            drawToUITextureObjects.Clear();
+            drawToGameUiTextureObjects.Clear();
 
             foreach (var layer in allObjects.Keys)
             {
                 ClearLayer(layer);
             }
-            // CollisionHandler?.Clear();
             Count = 0;
         }
         public virtual void ClearLayer(uint layer)
@@ -368,41 +257,28 @@ namespace ShapeEngine.Core
                 obj.OnDespawned(this);
                 Count--;
                 
-                // if (CollisionHandler == null) continue;
-                //
-                // if (obj is CollisionObject co) CollisionHandler.Remove(co);
-
             }
-            // objects.Clear();
         }
 
         public virtual void Start() { }
         public virtual void Close()
         {
             Clear();
-            // CollisionHandler?.Close();
         }
-        
-        
 
         public virtual void DrawDebug(ColorRgba bounds, ColorRgba border, ColorRgba fill)
         {
             this.Bounds.DrawLines(15f, bounds);
-            // CollisionHandler?.DebugDraw(border, fill);
-            // Raylib.DrawRectangleLinesEx(this.Bounds.Rectangle, 15f, bounds.ToRayColor());
         }
-
         
-        public virtual void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
+        #region Open Framerate
+        public virtual void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
-            // CollisionHandler?.Update();
-
             drawToGameTextureObjects.Clear();
-            drawToUITextureObjects.Clear();
+            drawToGameUiTextureObjects.Clear();
 
             if (clearAreaActive)
             {
-                //clear area is not within the bounds of the spawn area and therefore irrelevant
                 if (!Bounds.OverlapShape(clearArea)) clearAreaActive = false;
             }
             
@@ -428,32 +304,99 @@ namespace ShapeEngine.Core
                     obj.UpdateParallaxe(ParallaxePosition);
                     
                     if (obj.IsDrawingToGame(game.Area)) drawToGameTextureObjects.Add(obj);
-                    if (obj.IsDrawingToGameUI(ui.Area)) drawToUITextureObjects.Add(obj);
+                    if (obj.IsDrawingToGameUI(gameUi.Area)) drawToGameUiTextureObjects.Add(obj);
                     
-                    obj.Update(time, game, ui);
+                    obj.Update(time, game, gameUi, ui);
                     
                     if (obj.IsDead || obj.HasLeftBounds(Bounds))
                     {
                         RemoveGameObject(obj);
                     }
-                    // else
-                    // {
-                    //     
-                    //     if (obj.IsCheckingHandlerBounds())
-                    //     {
-                    //         var check = HasLeftBounds(obj);
-                    //         if (check.Valid)
-                    //         {
-                    //             obj.OnLeftHandlerBounds(check);
-                    //         }
-                    //     }
-                    // }
-
                 }
             }
 
             clearAreaActive = false;
         }
+
+        #endregion
+        
+        #region Fixed Framerate
+        
+        public virtual void PreFixedUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+        {
+            if (clearAreaActive)
+            {
+                if (!Bounds.OverlapShape(clearArea)) clearAreaActive = false;
+            }
+            
+            foreach (var layer in allObjects)
+            {
+                var objs = allObjects[layer.Key];
+                if (objs.Count <= 0) continue;
+
+                for (int i = objs.Count - 1; i >= 0; i--)
+                {
+                    var obj = objs[i];
+                    
+                    if (clearAreaActive && (clearAreaMask.IsEmpty() || clearAreaMask.Has((uint)layer.Key)))
+                    {
+                        if (clearArea.OverlapShape(obj.GetBoundingBox()))
+                        {
+                            RemoveGameObject(obj);
+                            continue;
+                        }
+                    }
+                    
+                    obj.Update(time, game, gameUi, ui);
+                }
+            }
+            
+            clearAreaActive = false;
+        }
+        public virtual void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+        {
+            foreach (var layer in allObjects)
+            {
+                var objs = allObjects[layer.Key];
+                if (objs.Count <= 0) continue;
+
+                for (int i = objs.Count - 1; i >= 0; i--)
+                {
+                    var obj = objs[i];
+
+                    obj.UpdateParallaxe(ParallaxePosition);
+                    
+                    obj.Update(fixedTime, game, gameUi, ui);
+                    
+                    if (obj.IsDead || obj.HasLeftBounds(Bounds))
+                    {
+                        RemoveGameObject(obj);
+                    }
+                }
+            }
+        }
+        public virtual void InterpolateFixedUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui, float f)
+        {
+            drawToGameTextureObjects.Clear();
+            drawToGameUiTextureObjects.Clear();
+            
+            foreach (var layer in allObjects)
+            {
+                var objs = allObjects[layer.Key];
+                if (objs.Count <= 0) continue;
+
+                for (int i = objs.Count - 1; i >= 0; i--)
+                {
+                    var obj = objs[i];
+                    if (obj.IsDrawingToGame(game.Area)) drawToGameTextureObjects.Add(obj);
+                    if (obj.IsDrawingToGameUI(gameUi.Area)) drawToGameUiTextureObjects.Add(obj);
+                    obj.InterpolateFixedUpdate(time, game, gameUi, ui, f);
+                }
+            }
+        }
+        
+        #endregion
+        
         public virtual void DrawGame(ScreenInfo game)
         {
             foreach (var obj in drawToGameTextureObjects)
@@ -461,11 +404,11 @@ namespace ShapeEngine.Core
                 obj.DrawGame(game);
             }
         }
-        public virtual void DrawGameUI(ScreenInfo ui)
+        public virtual void DrawGameUI(ScreenInfo gameUi)
         {
-            foreach (var obj in drawToUITextureObjects)
+            foreach (var obj in drawToGameUiTextureObjects)
             {
-                obj.DrawGameUI(ui);
+                obj.DrawGameUI(gameUi);
             }
         }
 
@@ -476,142 +419,7 @@ namespace ShapeEngine.Core
                 allObjects.Add(layer, new(capacityEstimate));
             }
         }
-        
-
-        
     }
-    
-
-    // /// <summary>
-    // /// Provides a simple area for managing adding/removing, updating, drawing, and colliding of area objects. 
-    // /// </summary>
-    // public class SpawnAreaCollision: SpawnArea
-    // {
-    //     protected CollisionHandler col;
-    //     public override CollisionHandler GetCollisionHandler() { return col; }
-    //
-    //     
-    //     public SpawnAreaCollision() : base()
-    //     {
-    //         col = new CollisionHandler(0,0,0,0,0,0);
-    //     }
-    //     public SpawnAreaCollision(float x, float y, float w, float h, int rows, int cols) : base(x, y, w, h)
-    //     {
-    //         col = new CollisionHandler(Bounds, rows, cols);
-    //     }
-    //     public SpawnAreaCollision(Rect bounds, int rows, int cols) : base(bounds)
-    //     {
-    //         col = new CollisionHandler(bounds, rows, cols);
-    //     }
-    //
-    //     public override void ResizeBounds(Rect newBounds) { Bounds = newBounds; col.ResizeBounds(newBounds); }
-    //
-    //     protected override void OnGameObjectAdded(GameObject obj)
-    //     {
-    //         if (obj is CollisionObject co)
-    //         {
-    //             col.Add(co);
-    //         }
-    //         // if (!obj.HasCollisionBody()) return;
-    //         // var body = obj.GetCollisionBody();
-    //         // if(body != null) col.Add(body);
-    //         
-    //         // if(obj.HasCollisionBody()) col.Add(obj.GetCollisionBody());
-    //     }
-    //     protected override void OnGameObjectRemoved(GameObject obj)
-    //     {
-    //         if (obj is CollisionObject co)
-    //         {
-    //             col.Remove(co);
-    //         }
-    //         // if (!obj.HasCollisionBody()) return;
-    //         // var body = obj.GetCollisionBody();
-    //         // if(body != null) col.Remove(body);
-    //         // if(obj.HasCollisionBody()) col.Remove(obj.GetCollisionBody());
-    //     }
-    //
-    //     public override void Clear()
-    //     {
-    //         base.Clear();
-    //         col.Clear();
-    //     }
-    //
-    //     public override void Close()
-    //     {
-    //         base.Close();
-    //         col.Close();
-    //     }
-    //
-    //     public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
-    //     {
-    //         col.Update();
-    //
-    //         base.Update(time, game, ui);
-    //     }
-    //     
-    //     public override void DrawDebug(ColorRgba bounds, ColorRgba border, ColorRgba fill)
-    //     {
-    //         base.DrawDebug(bounds, border, fill);
-    //         col.DebugDraw(border, fill);
-    //     }
-    //
-    //     
-    // }
-    //
-    /*
-    public class AreaCollision<TCollisionHandler> : Area where TCollisionHandler : ICollisionHandler
-    {
-        public TCollisionHandler Col { get; protected set; }
-        public override ICollisionHandler GetCollisionHandler() { return Col; }
-
-
-        public AreaCollision(TCollisionHandler col) : base()
-        {
-            this.Col = col;
-        }
-        public AreaCollision(float x, float y, float w, float h, TCollisionHandler col) : base(x, y, w, h)
-        {
-            this.Col = col;
-        }
-        public AreaCollision(Rect bounds, TCollisionHandler col) : base(bounds)
-        {
-            this.Col = col;
-        }
-
-        public override void ResizeBounds(Rect newBounds) { Bounds = newBounds; Col.ResizeBounds(newBounds); }
-
-        protected override void AreaObjectAdded(IAreaObject obj)
-        {
-            if (obj.HasCollidables()) Col.AddRange(obj.GetCollidables());
-        }
-        protected override void AreaObjectRemoved(IAreaObject obj)
-        {
-            if (obj.HasCollidables()) Col.RemoveRange(obj.GetCollidables());
-        }
-
-
-        public override void Close()
-        {
-            Clear();
-            Col.Close();
-        }
-
-        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
-        {
-            Col.Update(dt);
-
-            base.Update(dt, mousePosScreen, game, ui);
-        }
-
-        public override void DrawDebug(Raylib_CsLo.Color bounds, Raylib_CsLo.Color border, Raylib_CsLo.Color fill)
-        {
-            base.DrawDebug(bounds, border, fill);
-            //col.DebugDraw(border, fill);
-        }
-
-
-    }
-    */
 }
 
 

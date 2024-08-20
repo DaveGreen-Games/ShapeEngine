@@ -141,7 +141,7 @@ namespace Examples.Scenes
         #endregion
 
         #region Base Class
-        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
             var gamepad = GAMELOOP.CurGamepad;
             foreach (var action in inputActions)
@@ -245,7 +245,7 @@ namespace Examples.Scenes
                 HandleInputTextEntryActive(dt, mousePosGame, mousePosUI);
             }
         }
-        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
+        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi,  ScreenInfo ui)
         {
             var uiSize = ui.Area.Size;
             
@@ -291,7 +291,8 @@ namespace Examples.Scenes
             
             UpdateExampleTextEntryInactive(time.Delta, game, ui);
         }
-        protected override void OnDrawGameUIExample(ScreenInfo ui)
+        
+        protected override void OnDrawUIExample(ScreenInfo ui)
         {
             var uiSize = ui.Area.Size;
             Rect r = new(topLeft, bottomRight);
@@ -352,15 +353,8 @@ namespace Examples.Scenes
             else
             {
                 DrawTextEntry(r);
-                // font.DrawText(textBox.Text, fontSize, fontSpacing, r.GetPoint(curAlignement), curAlignement, ColorLight);
-                
-                // if(textBox.CaretVisible)
-                    // font.DrawCaret(textBox.Text, r, fontSize, fontSpacing, curAlignement, textBox.CaretIndex, 5f, ColorHighlight2);
             }
-
-        }
-        protected override void OnDrawUIExample(ScreenInfo ui)
-        {
+            
             var rects = GAMELOOP.UIRects.GetRect("bottom center").SplitV(0.35f);
             DrawDescription(rects.top, rects.bottom);
            

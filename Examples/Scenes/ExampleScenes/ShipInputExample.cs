@@ -200,9 +200,6 @@ namespace Examples.Scenes.ExampleScenes
         
         private readonly ShapeGamepadDeviceManager GamepadManager = new(8);
 
-        private ICursor prevCursor = GAMELOOP.Window.Cursor;
-        private ICursor nullCursor = new NullCursor();
-        
         public ShipInputExample()
         {
             Title = "Multiple Gamepads Example";
@@ -263,19 +260,18 @@ namespace Examples.Scenes.ExampleScenes
 
             return null;
         }
-        public override void Activate(Scene oldScene)
+
+        protected override void OnActivate(Scene oldScene)
         {
-            prevCursor = GAMELOOP.Window.Cursor;
             GAMELOOP.Camera = camera;
             BitFlag mask = new(GAMELOOP.SceneAccessTag);
             mask = mask.Add(GAMELOOP.GamepadMouseMovementTag);
             InputAction.LockBlacklist(mask);
         }
 
-        public override void Deactivate()
+        protected override void OnDeactivate()
         {
             GAMELOOP.MouseControlEnabled = true;
-            GAMELOOP.Window.SwitchCursor(prevCursor);
             GAMELOOP.ResetCamera();
             InputAction.Unlock();
         }
@@ -290,7 +286,7 @@ namespace Examples.Scenes.ExampleScenes
             
         }
 
-        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
             GamepadManager.Update();
             
@@ -318,7 +314,7 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
         
-        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
+        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
             // if (Raylib.IsGamepadAvailable(0))
             // {
@@ -380,7 +376,7 @@ namespace Examples.Scenes.ExampleScenes
             // cameraFollower.Draw();
             
         }
-        protected override void OnDrawGameUIExample(ScreenInfo ui)
+        protected override void OnDrawGameUIExample(ScreenInfo gameUi)
         {
             
         }
@@ -422,8 +418,7 @@ namespace Examples.Scenes.ExampleScenes
                 string textBottom = $"Remove Ship {removeShipText} | Add Ship {addShipText}";
 
                 if(GAMELOOP.MouseControlEnabled) GAMELOOP.MouseControlEnabled = false;
-                if(GAMELOOP.Window.Cursor != nullCursor) GAMELOOP.Window.SwitchCursor(nullCursor);
-                
+                GAMELOOP.DrawCursor = false;
                 
                 textFont.DrawTextWrapNone(textBottom, rect, new(0.5f));
                 // font.DrawText("textBottom", rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
@@ -432,7 +427,7 @@ namespace Examples.Scenes.ExampleScenes
             {
 
                 if(!GAMELOOP.MouseControlEnabled) GAMELOOP.MouseControlEnabled = true;
-                if (GAMELOOP.Window.Cursor != prevCursor) GAMELOOP.Window.SwitchCursor(prevCursor);
+                GAMELOOP.DrawCursor = true;
                 
                 textFont.DrawTextWrapNone("No gamepads connected.", rect, new(0.5f));
                 // font.DrawText("No gamepads connected.", rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);

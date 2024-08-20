@@ -170,7 +170,7 @@ namespace Examples.Scenes
                 GAMELOOP.Window.NextMonitor();
             }
         }
-        protected override void OnUpdateGame(GameTime time, ScreenInfo game, ScreenInfo ui)
+        protected override void OnUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
             if (tabChangeMouseWheelLockTimer > 0f)
             {
@@ -209,7 +209,8 @@ namespace Examples.Scenes
             titleFont.DrawTextWrapNone(pagesText, pageRect, new(0f, 0.5f));
 
             Segment s = new(uiSize * new Vector2(0f, 0.22f), uiSize * new Vector2(1f, 0.22f));
-            s.Draw(MathF.Max(4f * GAMELOOP.DevelopmentToScreen.AreaFactor, 0.5f), Colors.Light);
+            float thickness = ui.Area.Height * 0.0025f;
+            s.Draw(thickness, Colors.Light);
 
             var backRect = new Rect(uiSize * new Vector2(0.01f, 0.17f), uiSize.ToSize() * new Size(0.2f, 0.04f), new Vector2(0f, 0f));
             var curInputDevice = ShapeInput.CurrentInputDeviceTypeNoMouse;
@@ -237,20 +238,21 @@ namespace Examples.Scenes
             // binaryDrawerRect.Draw(Colors.Medium);
             // BinaryDrawerTester.BinaryDrawer3x5Standard.Draw("8439567102", binaryDrawerRect.ApplyMargins(0.025f));
         }
-        
-        
-        public override void Activate(Scene oldScene)
+
+
+        protected override void OnActivate(Scene oldScene)
         {
-            GAMELOOP.Window.SwitchCursor(new SimpleCursorUI());
+            // GAMELOOP.Window.SwitchCursor(new SimpleCursorUI());
             navigator.StartNavigation();
         }
-        public override void Deactivate()
+
+        protected override void OnDeactivate()
         {
-            GAMELOOP.Window.SwitchCursor(new SimpleCursorGameUI());
+            // GAMELOOP.Window.SwitchCursor(new SimpleCursorGameUI());
             navigator.EndNavigation();
         }
 
-        public override void Close()
+        protected override void OnClose()
         {
             
         }
@@ -271,10 +273,13 @@ namespace Examples.Scenes
 
             string fullscreenInputTypeName = GAMELOOP.InputActionFullscreen.GetInputTypeDescription(curInputDevice, true, 1, false);
             var fullscreenInfo = $"Fullscreen {fullscreenInputTypeName}";
+
+            string cycleShaderInputTypeDescription = GAMELOOP.InputActionCycleShaders.GetInputTypeDescription(InputDeviceType.Keyboard, true, 1, false);
+            var cycleShaderInfo = $"Cycle Shaders {cycleShaderInputTypeDescription}";
             
-            string crtInputTypeNamesPlus = GAMELOOP.InputActionCRTPlus.GetInputTypeDescription(InputDeviceType.Keyboard, true, 1, false, false);
-            string crtInputTypeNamesMinus = GAMELOOP.InputActionCRTMinus.GetInputTypeDescription(InputDeviceType.Keyboard, true, 1, false, false);
-            var crtInfo = $"Shader [{crtInputTypeNamesPlus}|{crtInputTypeNamesMinus}]";
+            // string crtInputTypeNamesPlus = GAMELOOP.InputActionCRTPlus.GetInputTypeDescription(InputDeviceType.Keyboard, true, 1, false, false);
+            // string crtInputTypeNamesMinus = GAMELOOP.InputActionCRTMinus.GetInputTypeDescription(InputDeviceType.Keyboard, true, 1, false, false);
+            // var crtInfo = $"Shader [{crtInputTypeNamesPlus}|{crtInputTypeNamesMinus}]";
             
             string zoomInputTypeName = GAMELOOP.InputActionZoom.GetInputTypeDescription(ShapeInput.CurrentInputDeviceType, true, 1, false);
             var zoomInfo = $"Zoom {zoomInputTypeName}";
@@ -294,7 +299,7 @@ namespace Examples.Scenes
             titleFont.FontSpacing = 1f;
             titleFont.ColorRgba = color;
             titleFont.DrawTextWrapNone(fullscreenInfo, rects[0], alignement);
-            titleFont.DrawTextWrapNone(crtInfo, rects[1], alignement);
+            titleFont.DrawTextWrapNone(cycleShaderInfo, rects[1], alignement);
             titleFont.DrawTextWrapNone(resetInfo, rects[2], alignement);
             titleFont.DrawTextWrapNone(zoomInfo, rects[3], alignement);
             titleFont.DrawTextWrapNone(pauseInfo, rects[4], alignement);

@@ -67,8 +67,8 @@ namespace Examples.Scenes.ExampleScenes
                 stars.Add(star);
             }
         }
-        
-        public override void Activate(Scene oldScene)
+
+        protected override void OnActivate(Scene oldScene)
         {
             GAMELOOP.Camera = camera;
             follower.SetTarget(ship);
@@ -77,7 +77,7 @@ namespace Examples.Scenes.ExampleScenes
             // GAMELOOP.UseMouseMovement = false;
         }
 
-        public override void Deactivate()
+        protected override void OnDeactivate()
         {
             GAMELOOP.ResetCamera();
             // GAMELOOP.UseMouseMovement = true;
@@ -96,7 +96,7 @@ namespace Examples.Scenes.ExampleScenes
             GenerateStars(ShapeRandom.RandI(15000, 30000));
 
         }
-        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
             if (iaChangeCameraTarget.State.Pressed)
             {
@@ -131,7 +131,7 @@ namespace Examples.Scenes.ExampleScenes
         //         camera.Zoom(zoomDir * zoomSpeed * dt);
         //     }
         // }
-        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
+        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
             UpdateFollower(ui.Area.Size.Min());
             

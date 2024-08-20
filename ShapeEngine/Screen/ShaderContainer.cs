@@ -3,7 +3,18 @@ namespace ShapeEngine.Screen;
 public class ShaderContainer
 {
     private Dictionary<uint, ShapeShader> shaders = new();
-    
+
+    public bool HasActiveShaders()
+    {
+        if (shaders.Count <= 0) return false;
+        
+        foreach (var shader in shaders.Values)
+        {
+            if (shader.Enabled) return true;
+        }
+
+        return false;
+    }
     public uint Add(ShapeShader shader)
     {
         if (shaders.ContainsKey(shader.ID)) shaders[shader.ID] = shader;
@@ -18,13 +29,13 @@ public class ShaderContainer
     public bool HasShader(uint id) => shaders.ContainsKey(id);
     public bool HasShader(ShapeShader shader) => shaders.ContainsKey(shader.ID);
 
-    public void Close()
-    {
-        foreach (var shader in shaders.Values)
-        {
-            shader.Unload();
-        }
-    }
+    // public void Close()
+    // {
+    //     foreach (var shader in shaders.Values)
+    //     {
+    //         shader.Unload();
+    //     }
+    // }
     
     public List<ShapeShader> GetActiveShaders()
     {

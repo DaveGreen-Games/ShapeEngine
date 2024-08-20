@@ -52,7 +52,12 @@ namespace Examples.Scenes.ExampleScenes
             // GetBoundingBox().DrawLines(4f, Colors.Cold);
         }
 
-        public override void DrawGameUI(ScreenInfo ui)
+        public override void DrawGameUI(ScreenInfo gameUi)
+        {
+            
+        }
+        
+        public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
             
         }
@@ -83,8 +88,12 @@ namespace Examples.Scenes.ExampleScenes
             polyCollider.GetPolygonShape().DrawLines(8f, Colors.Highlight);
         }
 
-        public override void DrawGameUI(ScreenInfo ui)
+        public override void DrawGameUI(ScreenInfo gameUi)
         {
+        }
+        public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+        {
+            
         }
     }
     internal class Ball : CollisionObject
@@ -132,10 +141,14 @@ namespace Examples.Scenes.ExampleScenes
 
         public override bool HasLeftBounds(Rect bounds) => !bounds.OverlapShape(circleCollider.GetCircleShape());
         public override bool IsDrawingToGame(Rect gameArea) => gameArea.OverlapShape(circleCollider.GetCircleShape());
-        public override bool IsDrawingToGameUI(Rect screenArea) => false;
+        public override bool IsDrawingToGameUI(Rect gameUiArea) => false;
 
-        public override void DrawGameUI(ScreenInfo ui)
+        public override void DrawGameUI(ScreenInfo gameUi)
         {
+        }
+        public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+        {
+            
         }
     }
     internal class Bullet : CollisionObject
@@ -166,18 +179,22 @@ namespace Examples.Scenes.ExampleScenes
             // lastVelocitySegment = new(pos, pos);
         }
 
-        public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
+        public override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
             // if (Velocity.LengthSquared() > 0)
             // {
             //     lastVelocitySegment = new(Transform.Position, Transform.Position + Velocity * time.Delta);
             // }
-            base.Update(time, game, ui);
+            base.Update(time, game, gameUi, ui);
             if (deadTimer > 0f)
             {
                 deadTimer -= time.Delta;
                 if (deadTimer <= 0) Kill();
             }
+        }
+        public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+        {
+            
         }
         
         private void Overlap(Collider col, CollisionInformation info)
@@ -215,7 +232,7 @@ namespace Examples.Scenes.ExampleScenes
             
         }
 
-        public override void DrawGameUI(ScreenInfo ui)
+        public override void DrawGameUI(ScreenInfo gameUi)
         {
         }
         public override bool HasLeftBounds(Rect bounds) => !bounds.OverlapShape(circleCollider.GetCircleShape());
@@ -253,13 +270,17 @@ namespace Examples.Scenes.ExampleScenes
             
         }
 
-        public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
+        public override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi,  ScreenInfo ui)
         {
-            base.Update(time, game, ui);
+            base.Update(time, game, gameUi, ui);
             if (rotationSpeedRad != 0f)
             {
                 Transform += rotationSpeedRad * time.Delta;
             }
+        }
+        public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+        {
+            
         }
 
         public override bool HasLeftBounds(Rect bounds)
@@ -327,7 +348,7 @@ namespace Examples.Scenes.ExampleScenes
             // polyCollider.GetPolygonShape().DrawLines(4f, Colors.Highlight);
         }
 
-        public override void DrawGameUI(ScreenInfo ui)
+        public override void DrawGameUI(ScreenInfo gameUi)
         {
         }
     }
@@ -397,8 +418,12 @@ namespace Examples.Scenes.ExampleScenes
             // trianglePosCircle.Draw(Colors.Cold);
         }
 
-        public override void DrawGameUI(ScreenInfo ui)
+        public override void DrawGameUI(ScreenInfo gameUi)
         {
+        }
+        public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+        {
+            
         }
     }
     
@@ -558,7 +583,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         
 
-        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
             var gamepad = GAMELOOP.CurGamepad;
             InputAction.UpdateActions(dt, gamepad, inputActions);
@@ -668,6 +693,8 @@ namespace Examples.Scenes.ExampleScenes
                 rect.Draw(new ColorRgba(155, 155, 155, 155));
             }
         }
+
+        
 
         protected override void OnDrawUIExample(ScreenInfo ui)
         {

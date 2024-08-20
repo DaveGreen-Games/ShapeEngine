@@ -16,13 +16,17 @@ public readonly struct Dimensions : IEquatable<Dimensions>, IFormattable
     public Dimensions(float value) { this.Width = (int)value; this.Height = (int)value; }
     public Dimensions(float width, float height) { this.Width = (int)width; this.Height = (int)height; }
     public Dimensions(Vector2 v) { this.Width = (int)v.X; this.Height = (int)v.Y; }
-
+    public static Dimensions GetInvalidDimension() => new(-1, -1);
     public bool IsValid() { return Width >= 0 && Height >= 0; }
     public float Area => Width * Height;
 
     public int MaxDimension => Width > Height ? Width : Height;
     public int MinDimension => Width < Height ? Width : Height;
 
+    public float RatioW => Width / (float)Height;
+    public float RatioH => Height / (float)Width;
+    
+    
     public Dimensions MatchAspectRatio(Dimensions targetDimensions)
     {
         if (Width == targetDimensions.Width && Height == targetDimensions.Height) return targetDimensions;

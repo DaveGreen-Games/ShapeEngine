@@ -39,12 +39,15 @@ namespace Examples.Scenes.ExampleScenes
         }
         
 
-        public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
+        public override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
             Transform += Vel * time.Delta;
             // Pos += Vel * time.Delta;
         }
-
+        public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+        {
+            
+        }
 
         public override void DrawGame(ScreenInfo game)
         {
@@ -58,7 +61,7 @@ namespace Examples.Scenes.ExampleScenes
             ShapeDrawing.DrawCircleFast(Transform.Position, Transform.ScaledSize.Width, color);
         }
 
-        public override void DrawGameUI(ScreenInfo ui)
+        public override void DrawGameUI(ScreenInfo gameUi)
         {
             
         }
@@ -135,7 +138,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             boundaryRect = gameArea.ApplyMargins(0.025f, 0.025f, 0.1f, 0.1f);
         }
-        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
+        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
             UpdateBoundaryRect(game.Area);
             SpawnArea?.ResizeBounds(boundaryRect);
@@ -148,12 +151,8 @@ namespace Examples.Scenes.ExampleScenes
             
         }
 
-        public override void OnPauseChanged(bool paused)
-        {
-            
-        }
 
-        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
             if (iaAdd.State.Pressed)
             {

@@ -13,6 +13,8 @@ namespace ShapeEngine.Core;
 
 public class Game
 {
+    public static Game CurrentGameInstance { get; private set; } = null!;
+    
     #region Static
     public static readonly string CURRENT_DIRECTORY = AppDomain.CurrentDomain.BaseDirectory; // Environment.CurrentDirectory;
     public static OSPlatform OS_PLATFORM { get; private set; } =
@@ -59,13 +61,15 @@ public class Game
     #region Public Members
     public string[] LaunchParams { get; protected set; } = Array.Empty<string>();
 
+    public bool FixedPhysicsEnabled { get; private set; }
     public int FixedPhysicsFramerate { get; private set; }
     public float FixedPhysicsTimestep { get; private set; }
     public GameTime Time { get; private set; } = new GameTime();
+    public GameTime FixedTime { get; private set; } = new GameTime();
     public ColorRgba BackgroundColorRgba = ColorRgba.Black;
     public float ScreenEffectIntensity = 1.0f;
 
-    public readonly ShaderContainer ScreenShaders = new();
+    public ShaderContainer? ScreenShaders => gameTexture.Shaders;
     public ShapeCamera Camera
     {
         get => curCamera;
@@ -74,14 +78,16 @@ public class Game
             if (value == curCamera) return;
             curCamera.Deactivate();
             curCamera = value;
+            gameTexture.Camera = curCamera;
             curCamera.Activate();
-            curCamera.SetSize(Window.CurScreenSize, DevelopmentDimensions);
+            curCamera.SetSize(Window.CurScreenSize);
         }
     }
+
     public ScreenInfo GameScreenInfo { get; private set; } = new();
+    public ScreenInfo GameUiScreenInfo { get; private set; } = new();
     public ScreenInfo UIScreenInfo { get; private set; } = new();
-    // public float Delta { get; private set; } = 0f;
-    // public float DeltaSlow { get; private set; } = 0f;
+    
     private bool paused = false;
     public bool Paused
     {
@@ -96,48 +102,42 @@ public class Game
             
         }
     }
-    //public SlowMotion SlowMotion { get; private set; } = new SlowMotion();
-
-    /// <summary>
-    /// Scaling factors from current screen size to development resolution.
-    /// </summary>
-    public DimensionConversionFactors ScreenToDevelopment { get; private set; }
-    /// <summary>
-    /// Scaling factors from development resolution to the current screen size.
-    /// </summary>
-    public DimensionConversionFactors DevelopmentToScreen { get; private set; }
-    public Dimensions DevelopmentDimensions { get; private set; }
     
     public GameWindow Window { get; private set; }
     public Scene CurScene { get; private set; } = new SceneEmpty();
+    
+    public ScreenTexture GameTexture => gameTexture;
     #endregion
     
     #region Private Members
 
-    private readonly ScreenTexture gameTexture = new();
-    private readonly ScreenTexture screenShaderBuffer = new();
-    private readonly ShapeCamera basicCamera = new ShapeCamera();
+    private ScreenTexture gameTexture;
+    private readonly ShapeCamera basicCamera = new();
     private ShapeCamera curCamera;
     
     private bool quit = false;
     private bool restart = false;
     
-    private List<ShapeFlash> shapeFlashes = new();
-    private List<DeferredInfo> deferred = new();
+    private readonly List<ShapeFlash> shapeFlashes = new();
+    private readonly List<DeferredInfo> deferred = new();
 
     private float physicsAccumulator = 0f;
-    // private Vector2 lastControlledMousePosition = new();
-    // private bool mouseControlled = false;
+
+    private List<ScreenTexture>? customScreenTextures = null;
+
+    
     #endregion
 
     public Game(GameSettings gameSettings, WindowSettings windowSettings)
     {
+        CurrentGameInstance = this;
+        
         #if DEBUG
         DebugMode = true;
         ReleaseMode = false;
         #endif
-
-        this.DevelopmentDimensions = gameSettings.DevelopmentDimensions;
+        
+        // this.DevelopmentDimensions = gameSettings.DevelopmentDimensions;
         Window = new(windowSettings);
         Window.OnWindowSizeChanged += ResolveOnWindowSizeChanged;
         Window.OnWindowPositionChanged += ResolveOnWindowPositionChanged;
@@ -155,31 +155,71 @@ public class Game
         Window.OnWindowHiddenChanged += ResolveOnWindowHiddenChanged;
         Window.OnWindowTopmostChanged += ResolveOnWindowTopmostChanged;
 
-        SetConversionFactors();
 
-        var fixedTimeStep = gameSettings.FixedPhysicsFramerate;
-        if (fixedTimeStep <= 0) fixedTimeStep = 30;
-        FixedPhysicsFramerate = fixedTimeStep;
-        FixedPhysicsTimestep = 1f / FixedPhysicsFramerate;
+        var fixedFramerate = gameSettings.FixedFramerate;
+        if (fixedFramerate <= 0)
+        {
+            FixedPhysicsFramerate = -1;
+            FixedPhysicsTimestep = -1;
+            FixedPhysicsEnabled = false;
+        }
+        else
+        {
+            if (fixedFramerate < 30) fixedFramerate = 30;
+            FixedPhysicsFramerate = fixedFramerate;
+            FixedPhysicsTimestep = 1f / FixedPhysicsFramerate;
+            FixedPhysicsEnabled = true;
+        }
         
         curCamera = basicCamera;
-        Camera.Activate();
-        Camera.SetSize(Window.CurScreenSize, DevelopmentDimensions);
+        curCamera.Activate();
+        curCamera.SetSize(Window.CurScreenSize);
         
         var mousePosUI = Window.MousePosition;
-        var mousePosGame = Camera.ScreenToWorld(mousePosUI);
-        var cameraArea = Camera.Area;
+        // var mousePosGame = Camera.ScreenToWorld(mousePosUI);
+        // var cameraArea = Camera.Area;
 
-        GameScreenInfo = new(cameraArea, mousePosGame);
+        // GameScreenInfo = new(cameraArea, mousePosGame);
+
+
+        var screenTextureMode = gameSettings.ScreenTextureMode;
+        if (screenTextureMode == ScreenTextureMode.Stretch)
+        {
+            gameTexture = new(gameSettings.ShaderSupportType, gameSettings.TextureFilter);
+        }
+        else if (screenTextureMode == ScreenTextureMode.Fixed)
+        {
+            gameTexture = new(gameSettings.FixedDimensions, gameSettings.ShaderSupportType, gameSettings.TextureFilter);
+        }
+        else if (screenTextureMode == ScreenTextureMode.NearestFixed)
+        {
+            gameTexture = new(gameSettings.FixedDimensions, gameSettings.ShaderSupportType, gameSettings.TextureFilter, true);
+        }
+        else
+        {
+            gameTexture = new(gameSettings.PixelationFactor, gameSettings.ShaderSupportType, gameSettings.TextureFilter);
+        }
+
+        // gameTexture.AutoClearBackground = gameSettings.AutoClearBackground;
+        
+        gameTexture.OnTextureResized += GameTextureOnTextureResized;
+        gameTexture.Initialize(Window.CurScreenSize, mousePosUI, curCamera);
+        gameTexture.OnDrawGame += GameTextureOnDrawGame;
+        gameTexture.OnDrawUI += GameTextureOnDrawUI;
+        // gameTexture.OnClearBackground += GameTextureOnOnClearBackground;
+        
+        GameScreenInfo = gameTexture.GameScreenInfo;
+        GameUiScreenInfo = gameTexture.GameUiScreenInfo;
         UIScreenInfo = new(Window.ScreenArea, mousePosUI);
-
-        gameTexture.Load(Window.CurScreenSize);
-        if (gameSettings.MultiShaderSupport) screenShaderBuffer.Load(Window.CurScreenSize);
+        // gameTexture.Load(Window.CurScreenSize);
+        // if (gameSettings.MultiShaderSupport) screenShaderBuffer.Load(Window.CurScreenSize);
 
         ShapeInput.OnInputDeviceChanged += OnInputDeviceChanged;
         ShapeInput.GamepadDeviceManager.OnGamepadConnectionChanged += OnGamepadConnectionChanged;
         
     }
+    
+
     public ExitCode Run(params string[] launchParameters)
     {
         this.LaunchParams = launchParameters;
@@ -194,6 +234,23 @@ public class Game
         Raylib.CloseWindow();
 
         return new ExitCode(restart);
+    }
+    
+    public ScreenTexture GetGameTexture() => gameTexture;
+
+    /// <summary>
+    /// Change the game texture.
+    /// </summary>
+    /// <param name="newScreenTexture"> The new screen texture to use.</param>
+    /// <returns>Returns the old game texture or null if the newScreenTexture is the same as the game texture.
+    /// The old ScreenTexture should be unloaded and disposed of if no longer needed!</returns>
+    public ScreenTexture? ChangeGameTexture(ScreenTexture newScreenTexture)
+    {
+        if (gameTexture == newScreenTexture) return null;
+
+        var old = gameTexture;
+        gameTexture = newScreenTexture;
+        return old;
     }
  
     #region  Gameloop
@@ -227,9 +284,7 @@ public class Game
             Window.Update(dt);
             
             ShapeInput.Update();
-            Camera.SetSize(Window.CurScreenSize, DevelopmentDimensions);
-            if(!Paused) Camera.Update(dt);
-
+            
             if (Window.MouseOnScreen)
             {
                 if (ShapeInput.CurrentInputDeviceType is InputDeviceType.Keyboard or InputDeviceType.Gamepad)
@@ -238,25 +293,35 @@ public class Game
                 }
             }
             
-            gameTexture.UpdateDimensions(Window.CurScreenSize);
-            screenShaderBuffer.UpdateDimensions(Window.CurScreenSize);
-            
-            var cameraArea = Camera.Area;
+            var mousePosUI = Window.MousePosition; 
+            gameTexture.Update(dt, Window.CurScreenSize, mousePosUI, Paused);
 
-            var mousePosUI = Window.MousePosition; //mousePos;// GetMousePosition();
-            var mousePosGame = Camera.ScreenToWorld(mousePosUI);
+            if (customScreenTextures is { Count: > 0 })
+            {
+                for (var i = 0; i < customScreenTextures.Count; i++)
+                {
+                    customScreenTextures[i].Update(dt, Window.CurScreenSize, mousePosUI, Paused);
+                }
+            }
             
-            GameScreenInfo = new(cameraArea, mousePosGame);
+            GameScreenInfo = gameTexture.GameScreenInfo;
+            GameUiScreenInfo = gameTexture.GameUiScreenInfo;
             UIScreenInfo = new(Window.ScreenArea, mousePosUI);
             
             if (!Paused)
             {
                 UpdateFlashes(dt);
             }
-            Window.Cursor.Update(dt, UIScreenInfo);
 
-            ResolveUpdate(Time, GameScreenInfo, UIScreenInfo);
-            AdvancePhysics(dt);
+            UpdateCursor(dt, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+            
+            if (FixedPhysicsEnabled)
+            {
+                ResolvePreFixedUpdate();
+                AdvanceFixedUpdate(dt);
+            }
+            else ResolveUpdate();
+            
             DrawToScreen();
 
             ResolveDeferred();
@@ -264,129 +329,203 @@ public class Game
     }
     private void DrawToScreen()
     {
-        
-        var activeScreenShaders = ScreenShaders.GetActiveShaders();
-        
-        //no shaders active -> draw directly to screen
-        if (activeScreenShaders.Count <= 0)
+        gameTexture.DrawOnTexture();
+        if (customScreenTextures is { Count: > 0 })
         {
-            Raylib.BeginDrawing();
-            Raylib.ClearBackground(BackgroundColorRgba.ToRayColor());
-
-            Raylib.BeginMode2D(Camera.Camera);
-            ResolveDrawGame(GameScreenInfo);
-            Raylib.EndMode2D();
-            
-            ResolveDrawGameUI(UIScreenInfo);
-            if(Window.MouseOnScreen) Window.Cursor.DrawGameUI(UIScreenInfo);
-            
-            ResolveDrawUI(UIScreenInfo);
-            if(Window.MouseOnScreen) Window.Cursor.DrawUI(UIScreenInfo);
-            
-            Raylib.EndDrawing();
-        }
-        else
-        {
-            //draw to game texture
-            Raylib.BeginTextureMode(gameTexture.RenderTexture);
-            Raylib.ClearBackground(new(0,0,0,0));
-
-            Raylib.BeginMode2D(Camera.Camera);
-            ResolveDrawGame(GameScreenInfo);
-            Raylib.EndMode2D();
-
-            ResolveDrawGameUI(UIScreenInfo);
-            if(Window.MouseOnScreen) Window.Cursor.DrawGameUI(UIScreenInfo);
-            
-            Raylib.EndTextureMode();
-            
-            //multi shader support enabled and more than 1 shader is active
-            if (activeScreenShaders.Count > 1 && screenShaderBuffer.Loaded)
+            for (var i = 0; i < customScreenTextures.Count; i++)
             {
-                int lastIndex = activeScreenShaders.Count - 1;
-                ShapeShader lastShader = activeScreenShaders[lastIndex];
-                activeScreenShaders.RemoveAt(lastIndex);
-            
-                ScreenTexture source = gameTexture;
-                ScreenTexture target = screenShaderBuffer;
-                ScreenTexture temp;
-                foreach (var shader in activeScreenShaders)
+                customScreenTextures[i].DrawOnTexture();
+            }
+        }
+        
+        Raylib.BeginDrawing();
+        Raylib.ClearBackground(BackgroundColorRgba.ToRayColor());
+
+        //split custom screen textures into textures to draw to the screen before the game texture
+        //and textures to draw to the screen after the game texture
+        List<ScreenTexture>? drawBefore = null;
+        List<ScreenTexture>? drawAfter = null;
+        if (customScreenTextures is { Count: > 0 })
+        {
+            for (var i = 0; i < customScreenTextures.Count; i++)
+            {
+                //negative draw order means to draw it to screen before the game texture
+                if (customScreenTextures[i].DrawToScreenOrder < 0)
                 {
-                    Raylib.BeginTextureMode(target.RenderTexture);
-                    Raylib.ClearBackground(new(0,0,0,0));
-                    Raylib.BeginShaderMode(shader.Shader);
-                    source.Draw();
-                    Raylib.EndShaderMode();
-                    Raylib.EndTextureMode();
-                    temp = source;
-                    source = target;
-                    target = temp;
+                    drawBefore ??= new List<ScreenTexture>();//initialize if it has not been initialized yet
+                    drawBefore.Add(customScreenTextures[i]);
                 }
-            
-                Raylib.BeginDrawing();
-                Raylib.ClearBackground(BackgroundColorRgba.ToRayColor());
-
-                Raylib.BeginShaderMode(lastShader.Shader);
-                source.Draw();
-                Raylib.EndShaderMode();
-
-                ResolveDrawUI(UIScreenInfo);
-                if(Window.MouseOnScreen) Window.Cursor.DrawUI(UIScreenInfo);
-                Raylib.EndDrawing();
-            
+                //otherwise it will be drawn to screen after the game texture
+                else
+                {
+                    drawAfter ??= new List<ScreenTexture>();//initialize if it has not been initialized yet
+                    drawAfter.Add(customScreenTextures[i]);
+                }
             }
-            
-            //no multi shader support or only 1 shader active
-            else
-            {
-                Raylib. BeginDrawing();
-                Raylib.ClearBackground(BackgroundColorRgba.ToRayColor());
-
-                Raylib.BeginShaderMode(activeScreenShaders[0].Shader);
-                gameTexture.Draw();
-                Raylib.EndShaderMode();
-            
-                ResolveDrawUI(UIScreenInfo);
-                if(Window.MouseOnScreen) Window.Cursor.DrawUI(UIScreenInfo);
-            
-                Raylib.EndDrawing();
-            
-            }
-
         }
+
+        //draw screen textures to screen before the game texture
+        if (drawBefore is { Count: > 0 })
+        {
+            drawBefore.Sort(
+                (a, b) =>
+                {
+                    if (a.DrawToScreenOrder < b.DrawToScreenOrder) return -1;
+                    if (a.DrawToScreenOrder > b.DrawToScreenOrder) return 1;
+                    return 0;
+                }
+            );
+            for (var i = 0; i < drawBefore.Count; i++)
+            {
+                drawBefore[i].DrawToScreen();
+            }
+        }
+        
+        //draw game texture to screen
+        gameTexture.DrawToScreen();
+        
+        //draw screen textures to screen after the game texture
+        if (drawAfter is { Count: > 0 })
+        {
+            drawAfter.Sort(
+                (a, b) =>
+                {
+                    if (a.DrawToScreenOrder < b.DrawToScreenOrder) return -1;
+                    if (a.DrawToScreenOrder > b.DrawToScreenOrder) return 1;
+                    return 0;
+                }
+            );
+            for (var i = 0; i < drawAfter.Count; i++)
+            {
+                drawAfter[i].DrawToScreen();
+            }
+        }
+        
+        ResolveDrawUI(UIScreenInfo);
+        if (Window.MouseOnScreen) DrawCursorUi(UIScreenInfo);
+        
+        Raylib.EndDrawing();
     }
+    
     private void EndGameloop()
     {
         EndRun();
         UnloadContent();
         Window.Close();
-        screenShaderBuffer.Unload();
+        // screenShaderBuffer.Unload();
         gameTexture.Unload();
     }
-
-
-    private void AdvancePhysics(float dt)
+    private void GameTextureOnDrawGame(ScreenInfo gameScreenInfo)
+    {
+        ResolveDrawGame(gameScreenInfo);
+        if (Window.MouseOnScreen) DrawCursorGame(gameScreenInfo);
+    }
+    private void GameTextureOnDrawUI(ScreenInfo gameUiScreenInfo)
+    {
+        ResolveDrawGameUI(gameUiScreenInfo);
+        if (Window.MouseOnScreen) DrawCursorGameUi(gameUiScreenInfo);
+    }
+    private void GameTextureOnTextureResized(int w, int h)
+    {
+        ResolveOnGameTextureResized(w, h);
+    }
+    // private void GameTextureOnOnClearBackground()
+    // {
+    //     ResolveOnGameTextureClearBackground();
+    // }
+    private void AdvanceFixedUpdate(float dt)
     {
         const float maxFrameTime = 1f / 30f;
         float frameTime = dt;
-        var t = 0.0f;
+        // var t = 0.0f;
 
         if ( frameTime > maxFrameTime ) frameTime = maxFrameTime;
         
         physicsAccumulator += frameTime;
         while ( physicsAccumulator >= FixedPhysicsTimestep )
         {
-            ResolvePhysicsTimestep(FixedPhysicsTimestep, t, GameScreenInfo, UIScreenInfo);
-            t += FixedPhysicsTimestep;
+            FixedTime = FixedTime.TickF(FixedPhysicsFramerate);
+            ResolveFixedUpdate();
+            // t += FixedPhysicsTimestep;
             physicsAccumulator -= FixedPhysicsTimestep;
         }
 
         float alpha = physicsAccumulator / FixedPhysicsTimestep;
-        ResolveInterpolatePhysicsState(alpha);
+        ResolveInterpolateFixedUpdate(alpha);
     }
     
     #endregion
 
+    #region Custom Screen Textures
+
+    public bool AddScreenTexture(ScreenTexture texture)
+    {
+        if (customScreenTextures == null)
+        {
+            customScreenTextures = new(2) { texture };
+            return true;
+        }
+
+        if (customScreenTextures.Contains(texture)) return false;
+
+        customScreenTextures.Add(texture);
+        return true;
+
+    }
+    public bool HasScreenTexture(ScreenTexture texture) => customScreenTextures?.Contains(texture) ?? false;
+    public bool RemoveScreenTexture(ScreenTexture texture)
+    {
+        if (customScreenTextures == null) return false;
+        return customScreenTextures.Remove(texture);
+    }
+    public int ClearScreenTextures()
+    {
+        if (customScreenTextures == null) return 0;
+
+        int count = customScreenTextures.Count;
+        customScreenTextures.Clear();
+        return count;
+    }
+    
+    #endregion
+
+    #region Cursor
+
+    // private void ResolveUpdateCursor(float dt, ScreenInfo gameInfo, ScreenInfo gameUiInfo, ScreenInfo uiInfo)
+    // {
+    //     UpdateCursor(dt, gameInfo, gameUiInfo, uiInfo);
+    // }
+    // private void ResolveDrawCursorGame(ScreenInfo gameInfo)
+    // {
+    //     DrawCursorGame(gameInfo);
+    // }
+    // private void ResolveDrawCursorGameUi(ScreenInfo gameUiInfo)
+    // {
+    //     DrawCursorGameUi(gameUiInfo);
+    // }
+    // private void ResolveDrawCursorUi(ScreenInfo uiInfo)
+    // {
+    //     DrawCursorUi(uiInfo);   
+    // }
+    protected virtual void UpdateCursor(float dt, ScreenInfo gameInfo, ScreenInfo gameUiInfo, ScreenInfo uiInfo)
+    {
+        
+    }
+    protected virtual void DrawCursorGame(ScreenInfo gameInfo)
+    {
+        
+    }
+    protected virtual void DrawCursorGameUi(ScreenInfo gameUiInfo)
+    {
+        
+    }
+    protected virtual void DrawCursorUi(ScreenInfo uiInfo)
+    {
+        
+    }
+
+    #endregion
+    
     #region Public
     public void Restart()
     {
@@ -406,9 +545,8 @@ public class Game
     public void GoToScene(Scene newScene)
     {
         if (newScene == CurScene) return;
-        CurScene.Deactivate();
-        //newScene.SetInput(Input);
-        newScene.Activate(CurScene);
+        CurScene.ResolveDeactivate();
+        newScene.ResolveActivate(CurScene);
         CurScene = newScene;
     }
 
@@ -459,12 +597,46 @@ public class Game
     /// </summary>
     protected virtual void BeginRun() { }
 
-    protected virtual void Update(GameTime time, ScreenInfo game, ScreenInfo ui) { }
-    protected virtual void UpdatePhysicsState(float dt, float totalFrameTime, ScreenInfo game, ScreenInfo ui) { }
-    protected virtual void InterpolatePhysicsState(float f) { }
+    /// <summary>
+    /// Called when fixed framerate is disabled
+    /// </summary>
+    /// <param name="time"></param>
+    /// <param name="game"></param>
+    /// <param name="gameUi"></param>
+    /// <param name="ui"></param>
+    protected virtual void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
+    
+    
+    /// <summary>
+    /// This functions is called every frame before fixed update. Only called when fixed framerate is enabled.
+    /// </summary>
+    /// <param name="time"></param>
+    /// <param name="game"></param>
+    /// <param name="gameUi"></param>
+    /// <param name="ui"></param>
+    protected virtual void PreFixedUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
+    
+    /// <summary>
+    /// Only called when fixed framerate is enabled. This function will be called in fixed interval.
+    /// </summary>
+    /// <param name="fixedTime"></param>
+    /// <param name="game"></param>
+    /// <param name="gameUi"></param>
+    /// <param name="ui"></param>
+    protected virtual void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
+    
+    /// <summary>
+    /// Only called when fixed framerate is enabled. This function will be called every frame.
+    /// </summary>
+    /// <param name="time"></param>
+    /// <param name="game"></param>
+    /// <param name="gameUi"></param>
+    /// <param name="ui"></param>
+    /// <param name="f"></param>
+    protected virtual void InterpolateFixedUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui, float f) { }
     
     protected virtual void DrawGame(ScreenInfo game) { }
-    protected virtual void DrawGameUI(ScreenInfo ui) { }
+    protected virtual void DrawGameUI(ScreenInfo gameUi) { }
     protected virtual void DrawUI(ScreenInfo ui) { }
 
     /// <summary>
@@ -475,6 +647,9 @@ public class Game
     /// Called after EndRun before the application terminates.
     /// </summary>
     protected virtual void UnloadContent() { }
+    protected virtual void OnGameTextureResized(int w, int h) { }
+    
+    // protected virtual void OnGameTextureClearBackground() { }
     protected virtual void OnWindowSizeChanged(DimensionConversionFactors conversion) { }
     protected virtual void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos) { }
     protected virtual void OnMonitorChanged(MonitorInfo newMonitor) { }
@@ -524,115 +699,130 @@ public class Game
     private void ResolveOnButtonPressed(InputEvent e)
     {
         OnButtonPressed(e);
-        CurScene.OnButtonPressed(e);
+        CurScene.ResolveOnButtonPressed(e);
     }
     private void ResolveOnButtonReleased(InputEvent e)
     {
         OnButtonReleased(e);
-        CurScene.OnButtonReleased(e);
+        CurScene.ResolveOnButtonReleased(e);
     }
-    private void ResolveUpdate(GameTime time, ScreenInfo game, ScreenInfo ui)
+    private void ResolveUpdate()
     {
-        Update(time, game, ui);
-        CurScene.Update(time, GameScreenInfo, UIScreenInfo);
+        Update(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+        CurScene.ResolveUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
     }
-    private void ResolvePhysicsTimestep(float dt, float totalFrameTime, ScreenInfo game, ScreenInfo ui)
+    private void ResolvePreFixedUpdate()
     {
-        UpdatePhysicsState(dt, totalFrameTime, game, ui);
-        CurScene.UpdatePhysicsState(dt, totalFrameTime, GameScreenInfo, UIScreenInfo);
+        PreFixedUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+        CurScene.ResolvePreFixedUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+    }
+    private void ResolveFixedUpdate()
+    {
+        FixedUpdate(FixedTime, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+        CurScene.ResolveFixedUpdate(FixedTime, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+    }
+    private void ResolveInterpolateFixedUpdate(float f)
+    {
+        InterpolateFixedUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo, f);
+        CurScene.ResolveInterpolateFixedUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo, f);
+    }
+    private void ResolveOnGameTextureResized(int w, int h)
+    {
+        OnGameTextureResized(w, h);
+        CurScene.ResolveGameTextureResized(w, h);
     }
 
-    private void ResolveInterpolatePhysicsState(float f)
-    {
-        InterpolatePhysicsState(f);
-        CurScene.InterpolatePhysicsState(f);
-    }
+    // private void ResolveOnGameTextureClearBackground()
+    // {
+    //     OnGameTextureClearBackground();
+    //     CurScene.ResolveOnGameTextureClearBackground();
+    // }
     private void ResolveDrawGame(ScreenInfo game)
     {
         DrawGame(game);
-        CurScene.DrawGame(game);
+        CurScene.ResolveDrawGame(game);
     }
-    private void ResolveDrawGameUI(ScreenInfo ui)
+    private void ResolveDrawGameUI(ScreenInfo gameUi)
     {
-        DrawGameUI(ui);
-        CurScene.DrawGameUI(ui);
+        DrawGameUI(gameUi);
+        CurScene.ResolveDrawGameUI(gameUi);
     }
     private void ResolveDrawUI(ScreenInfo ui)
     {
         DrawUI(ui);
-        CurScene.DrawUI(ui);
+        CurScene.ResolveDrawUI(ui);
     }
     private void ResolveOnWindowSizeChanged(DimensionConversionFactors conversion)
     {
         OnWindowSizeChanged(conversion);
-        CurScene.OnWindowSizeChanged(conversion);
+        CurScene.ResolveOnWindowSizeChanged(conversion);
     }
     private void ResolveOnWindowPositionChanged(Vector2 oldPos, Vector2 newPos)
     {
         //Console.WriteLine($"Window Pos: {Raylib.GetWindowPosition()}");
         OnWindowPositionChanged(oldPos, newPos);
-        CurScene.OnWindowPositionChanged(oldPos, newPos);
+        CurScene.ResolveOnWindowPositionChanged(oldPos, newPos);
     }
     private void ResolveOnMonitorChanged(MonitorInfo newMonitor)
     {
         OnMonitorChanged(newMonitor);
-        CurScene.OnMonitorChanged(newMonitor);
+        CurScene.ResolveOnMonitorChanged(newMonitor);
     }
-    
     private void ResolveOnPausedChanged(bool newPaused)
     {
         OnPausedChanged(newPaused);
-        CurScene.OnPauseChanged(newPaused);
+        CurScene.ResolveOnPausedChanged(newPaused);
     }
     private void ResolveOnMouseEnteredScreen()
     {
         OnMouseEnteredScreen();
-        CurScene.OnMouseEnteredScreen();
+        CurScene.ResolveOnMouseEnteredScreen();
     }
     private void ResolveOnMouseLeftScreen()
     {
         OnMouseLeftScreen();
-        CurScene.OnMouseLeftScreen();
+        CurScene.ResolveOnMouseLeftScreen();
     }
     private void ResolveOnMouseVisibilityChanged(bool visible)
     {
         OnMouseVisibilityChanged(visible);
-        CurScene.OnMouseVisibilityChanged(visible);
+        CurScene.ResolveOnMouseVisibilityChanged(visible);
     }
     private void ResolveOnMouseEnabledChanged(bool enabled)
     {
         OnMouseEnabledChanged(enabled);
-        CurScene.OnMouseEnabledChanged(enabled);
+        CurScene.ResolveOnMouseEnabledChanged(enabled);
     }
     private void ResolveOnWindowFocusChanged(bool focused)
     {
         OnWindowFocusChanged(focused);
-        CurScene.OnWindowFocusChanged(focused);
+        CurScene.ResolveOnWindowFocusChanged(focused);
     }
     private void ResolveOnWindowFullscreenChanged(bool fullscreen)
     {
         OnWindowFullscreenChanged(fullscreen);
-        CurScene.OnWindowFullscreenChanged(fullscreen);
+        CurScene.ResolveOnWindowFullscreenChanged(fullscreen);
     }
     private void ResolveOnWindowMaximizeChanged(bool maximized)
     {
         OnWindowMaximizeChanged(maximized);
-        CurScene.OnWindowMaximizeChanged(maximized);
+        CurScene.ResolveOnWindowMaximizeChanged(maximized);
         
     }
-    
     private void ResolveOnWindowMinimizedChanged(bool minimized)
     {
        OnWindowMinimizedChanged(minimized);
+       CurScene.ResolveOnWindowMinimizedChanged(minimized);
     }
     private void ResolveOnWindowHiddenChanged(bool hidden)
     {
         OnWindowHiddenChanged(hidden);
-        
+        CurScene.ResolveOnWindowHiddenChanged(hidden);
     }
     private void ResolveOnWindowTopmostChanged(bool topmost)
     {
         OnWindowTopmostChanged(topmost);
+        CurScene.ResolveOnWindowTopmostChanged(topmost);
     }
 
     #endregion
@@ -642,24 +832,24 @@ public class Game
         if (connected)
         {
             OnGamepadConnected(gamepad);
-            CurScene.OnGamepadConnected(gamepad);
+            CurScene.ResolveOnGamepadConnected(gamepad);
         }
         else
         {
             OnGamepadDisconnected(gamepad);
-            CurScene.OnGamepadDisconnected(gamepad);
+            CurScene.ResolveOnGamepadDisconnected(gamepad);
         }
     }
     private void OnInputInputDeviceChanged(InputDeviceType prevDeviceType, InputDeviceType newDeviceType)
     {
         OnInputDeviceChanged(prevDeviceType, newDeviceType);
-        CurScene.OnInputDeviceChanged(prevDeviceType, newDeviceType);
+        CurScene.ResolveOnInputDeviceChanged(prevDeviceType, newDeviceType);
     }
-    private void SetConversionFactors()
-    {
-        ScreenToDevelopment = new(Window.CurScreenSize, DevelopmentDimensions);
-        DevelopmentToScreen = new(DevelopmentDimensions, Window.CurScreenSize);
-    }
+    // private void SetConversionFactors()
+    // {
+    //     ScreenToDevelopment = new(Window.CurScreenSize, DevelopmentDimensions);
+    //     DevelopmentToScreen = new(DevelopmentDimensions, Window.CurScreenSize);
+    // }
 
 
     // protected void CycleTextureFilter()

@@ -673,9 +673,9 @@ public class ProjectedShapesExample : ExampleScene
     {
         
     }
-    protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+    protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
     {
-        base.HandleInput(dt, mousePosGame, mousePosUI);
+        base.HandleInput(dt, mousePosGame, mousePosGameUi, mousePosUI);
         var gamepad = GAMELOOP.CurGamepad;
         
         nextStaticShape.Gamepad = gamepad;
@@ -724,7 +724,7 @@ public class ProjectedShapesExample : ExampleScene
         
         
     }
-    protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
+    protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
         if (projectionActive)
         {
@@ -796,7 +796,7 @@ public class ProjectedShapesExample : ExampleScene
         
         
     }
-    protected override void OnDrawGameUIExample(ScreenInfo ui)
+    protected override void OnDrawGameUIExample(ScreenInfo gameUi)
     {
         
     }

@@ -223,14 +223,15 @@ public class DataExample : ExampleScene
         camera = new();
         CreatePlanet();
     }
-    
-    
-    public override void Activate(Scene oldScene)
+
+
+    protected override void OnActivate(Scene oldScene)
     {
         GAMELOOP.Camera = camera;
         camera.SetZoom(CameraBaseZoom);
     }
-    public override void Deactivate()
+
+    protected override void OnDeactivate()
     {
         GAMELOOP.ResetCamera();
     }
@@ -241,7 +242,7 @@ public class DataExample : ExampleScene
         asteroids.Clear();
     }
     
-    protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
+    protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi,  ScreenInfo ui)
     {
         if (asteroidSpawnTimer > 0f)
         {
@@ -285,7 +286,7 @@ public class DataExample : ExampleScene
         DrawDescription(r);
     }
 
-    protected override void OnDrawGameUIExample(ScreenInfo ui)
+    protected override void OnDrawGameUIExample(ScreenInfo gameUi)
     {
         
     }

@@ -366,7 +366,8 @@ namespace Examples.Scenes.ExampleScenes
                 comets.Add(comet);
             }
         }
-        public override void Activate(Scene oldScene)
+
+        protected override void OnActivate(Scene oldScene)
         {
             GAMELOOP.Camera = camera;
             UpdateFollower(GAMELOOP.UIScreenInfo.Area.Size.Min());
@@ -377,7 +378,7 @@ namespace Examples.Scenes.ExampleScenes
             // follower.Activate();
         }
 
-        public override void Deactivate()
+        protected override void OnDeactivate()
         {
             GAMELOOP.ResetCamera();
             GAMELOOP.MouseControlEnabled = true;
@@ -420,7 +421,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         
         
-        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
             // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
             var gamepad = GAMELOOP.CurGamepad;
@@ -457,7 +458,7 @@ namespace Examples.Scenes.ExampleScenes
             follower.Speed = ship.Speed;// * Lerp(0.5f, 2f, sliderF);
             follower.BoundaryDis = new(boundary);
         }
-        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
+        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
             UpdateFollower(ui.Area.Size.Min());
             //follower.Update(dt,camera);
@@ -522,14 +523,11 @@ namespace Examples.Scenes.ExampleScenes
                 }
             }
         }
-        protected override void OnDrawGameUIExample(ScreenInfo ui)
+        
+        protected override void OnDrawUIExample(ScreenInfo ui)
         {
             intensitySlider.Draw();
             cameraFollowSlider.Draw();
-            
-        }
-        protected override void OnDrawUIExample(ScreenInfo ui)
-        {
             DrawInputDescription(GAMELOOP.UIRects.GetRect("bottom center"));
             DrawCameraInfo(GAMELOOP.UIRects.GetRect("bottom right"));
 
