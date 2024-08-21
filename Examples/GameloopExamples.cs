@@ -351,8 +351,14 @@ namespace Examples
             return mousePos;
         }
 
+        protected override void EndRun()
+        {
+            mainScene?.Close();
+        }
+
         protected override void UnloadContent()
         {
+            
             ContentLoader.UnloadFonts(fonts.Values);
         }
         protected override void BeginRun()

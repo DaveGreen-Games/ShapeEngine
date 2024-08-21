@@ -4,6 +4,9 @@ namespace Examples;
 
 public static class Colors
 {
+    public static event Action? OnColorPaletteChanged;
+    
+    
     public static ColorRgba Background      => PcBackground.ColorRgba;
     public static ColorRgba Dark       => PcDark.ColorRgba; 
     public static ColorRgba Medium     => PcMedium.ColorRgba; 
@@ -100,12 +103,28 @@ public static class Colors
     public static void PreviousColorscheme()
     {
         PreviousColorschemeIndex();
-        colorPalette.ApplyColorScheme(ColorSchemes[curColorschemeIndex]);
+        if (colorPalette.ApplyColorScheme(ColorSchemes[curColorschemeIndex]))
+        {
+            OnColorPaletteChanged?.Invoke();
+        }
     }
     public static void NextColorscheme()
     {
         NextColorschemeIndex();
-        colorPalette.ApplyColorScheme(ColorSchemes[curColorschemeIndex]);
+        if (colorPalette.ApplyColorScheme(ColorSchemes[curColorschemeIndex]))
+        {
+            OnColorPaletteChanged?.Invoke();
+        }
+        
     }
-    public static bool ApplyColorscheme(ColorScheme cc) => colorPalette.ApplyColorScheme(cc);
+    public static bool ApplyColorscheme(ColorScheme cc)
+    {
+        if (colorPalette.ApplyColorScheme(cc))
+        {
+            OnColorPaletteChanged?.Invoke();
+            return true;
+        }
+
+        return false;
+    }
 }

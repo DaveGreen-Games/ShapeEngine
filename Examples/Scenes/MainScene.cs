@@ -254,7 +254,10 @@ namespace Examples.Scenes
 
         protected override void OnClose()
         {
-            
+            foreach (var example in examples)
+            {
+                example.Close();
+            }
         }
         
         

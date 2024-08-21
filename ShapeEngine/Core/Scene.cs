@@ -106,7 +106,7 @@ public abstract class Scene //: IUpdateable, IDrawable
     /// <summary>
     /// Used for cleanup. Should be called once right before the scene gets deleted.
     /// </summary>
-    internal void ResolveClose()
+    public void Close()
     {
         RemoveSpawnArea();
         RemoveCollisionHandler();

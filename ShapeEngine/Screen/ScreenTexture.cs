@@ -11,12 +11,12 @@ public sealed class ScreenTexture
 {
     
     #region Events
-    public delegate void DrawToRenderTexture(ScreenInfo screenInfo);
+    public delegate void DrawToRenderTexture(ScreenInfo screenInfo, ScreenTexture texture);
     public delegate void TextureResized(int w, int h);
     
     /// <summary>
-    /// Draw to the render texture
-    /// Is called before shaders are applied
+    /// Draw to the render texture.
+    /// Is called before shaders are applied.
     /// </summary>
     public event DrawToRenderTexture? OnDrawGame;
     
@@ -57,7 +57,12 @@ public sealed class ScreenTexture
     /// Positive draw orders will be drawn to screen after the game texture (this includes 0).
     /// If the draw order is the same the order in which the screen textures were added is taken into account.
     /// </summary>
-    public int DrawToScreenOrder { get; private set; } = 0;
+    public int DrawToScreenOrder { get; set; } = 0;
+    
+    /// <summary>
+    /// Disable/Enable draw to texture. If disable OnDrawGame & OnDrawGameUi event will not fire.
+    /// </summary>
+    public bool DrawToTextureEnabled { get; set; } = true;
     public bool Loaded { get; private set; } = false;
     public int Width { get; private set; } = 0;
     public int Height { get; private set; } = 0;
@@ -420,8 +425,14 @@ public sealed class ScreenTexture
         GameScreenInfo = new(Camera?.Area ?? textureRect, scaledMousePostionGame);
         GameUiScreenInfo = new(textureRect, scaledMousePositionUi);
     }
+    
+    /// <summary>
+    /// Will invoke events to draw to the texture via OnDrawGame & OnDrawGameUi.
+    /// </summary>
     public void DrawOnTexture()
     {
+        if (!DrawToTextureEnabled) return;
+        
         bool shaderMode = ShaderSupport != ShaderSupportType.None && Shaders != null && Shaders.HasActiveShaders();
 
         if (shaderMode)
@@ -437,14 +448,14 @@ public sealed class ScreenTexture
             if (Camera != null)
             {
                 Raylib.BeginMode2D(Camera.Camera);
-                OnDrawGame?.Invoke(GameScreenInfo);
+                OnDrawGame?.Invoke(GameScreenInfo, this);
                 Raylib.EndMode2D();
                 
                 // OnDrawGameUI?.Invoke(ScreenInfo);
             }
             else
             {
-                OnDrawGame?.Invoke(GameScreenInfo);
+                OnDrawGame?.Invoke(GameScreenInfo, this);
                 // OnDrawGameUI?.Invoke(ScreenInfo);
             }
             
@@ -453,7 +464,7 @@ public sealed class ScreenTexture
             ApplyShaders(); // we know that we have shaders active
             
             Raylib.BeginTextureMode(renderTexture);
-            OnDrawUI?.Invoke(GameUiScreenInfo);
+            OnDrawUI?.Invoke(GameUiScreenInfo, this);
             Raylib.EndTextureMode();
             
             //DrawToScreen();
@@ -471,19 +482,22 @@ public sealed class ScreenTexture
             if (Camera != null)
             {
                 Raylib.BeginMode2D(Camera.Camera);
-                OnDrawGame?.Invoke(GameScreenInfo);
+                OnDrawGame?.Invoke(GameScreenInfo, this);
                 Raylib.EndMode2D();
             }
-            else OnDrawGame?.Invoke(GameScreenInfo);
+            else OnDrawGame?.Invoke(GameScreenInfo, this);
             
             // OnDrawGameUI?.Invoke(ScreenInfo);
-            OnDrawUI?.Invoke(GameUiScreenInfo);
+            OnDrawUI?.Invoke(GameUiScreenInfo, this);
             
             Raylib.EndTextureMode();
             //DrawToScreen();
             
         }
     }
+    /// <summary>
+    /// Is called by the game class to draw the texture to the screen. Should not be used otherwise.
+    /// </summary>
     public void DrawToScreen()
     {
         DrawTextureToScreen(renderTexture.Texture);
@@ -714,3 +728,60 @@ public sealed class ScreenTexture
     
 }
 
+/*
+  /// <summary>
+      /// Used to draw to custom screen textures. Should only be used once or once a frame. Will apply shaders if shader mode is enabled
+      /// and screen shaders are active. Will only run on custom screen textures.
+      /// </summary>
+      /// <param name="backgroundColor"></param>
+      /// <param name="clearBackground"></param>
+      /// <param name="drawGameFunction"></param>
+      /// <param name="drawGameUiFunction"></param>
+      public void DrawOnCustomTexture(ColorRgba backgroundColor, bool clearBackground, Action<ScreenInfo> drawGameFunction, Action<ScreenInfo> drawGameUiFunction)
+      {
+          if (Mode != ScreenTextureMode.Custom) return;
+          
+          bool shaderMode = ShaderSupport != ShaderSupportType.None && Shaders != null && Shaders.HasActiveShaders();
+
+          if (shaderMode)
+          {
+              Raylib.BeginTextureMode(renderTexture);
+              if(clearBackground) Raylib.ClearBackground(backgroundColor.ToRayColor());
+
+              if (Camera != null)
+              {
+                  Raylib.BeginMode2D(Camera.Camera);
+                  drawGameFunction(GameScreenInfo);
+                  Raylib.EndMode2D();
+              }
+              else drawGameFunction(GameScreenInfo);
+              
+              Raylib.EndTextureMode();
+              
+              ApplyShaders(); // we know that we have shaders active
+              
+              Raylib.BeginTextureMode(renderTexture);
+              drawGameUiFunction(GameUiScreenInfo);
+              Raylib.EndTextureMode();
+              
+          }
+          else
+          {
+              Raylib.BeginTextureMode(renderTexture);
+              if(clearBackground) Raylib.ClearBackground(backgroundColor.ToRayColor());
+
+              if (Camera != null)
+              {
+                  Raylib.BeginMode2D(Camera.Camera);
+                  drawGameFunction(GameScreenInfo);
+                  Raylib.EndMode2D();
+              }
+              else drawGameFunction(GameScreenInfo);
+              
+              drawGameUiFunction(GameUiScreenInfo);
+              
+              Raylib.EndTextureMode();
+          }
+      }
+      
+ */

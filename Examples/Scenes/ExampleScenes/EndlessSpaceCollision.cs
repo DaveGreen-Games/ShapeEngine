@@ -10,6 +10,7 @@ using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
+using Color = System.Drawing.Color;
 using Size = ShapeEngine.Core.Structs.Size;
 
 namespace Examples.Scenes.ExampleScenes;
@@ -498,6 +499,7 @@ public class EndlessSpaceCollision : ExampleScene
                     if (other is AsteroidObstacle asteroid)
                     {
                         asteroid.Damage(Transform.Position, stats.Damage, new Vector2(0f));
+                        // EndlessSpaceCollision.currentImpactCraters.Add(new Circle(Transform.Position, stats.Damage / 4));
                     }
 
                     effectTimer = effectDuration;
@@ -1892,8 +1894,44 @@ public class EndlessSpaceCollision : ExampleScene
         }
     }
 
-    
-    
+
+    private class ScreenTextureHandler : CustomScreenTextureHandler
+    {
+        private readonly float parallaxFactor;
+        private Rect cameraRect = new();
+        
+        public ScreenTextureHandler(float parallaxFactor)
+        {
+            this.parallaxFactor = parallaxFactor;
+        }
+        
+        public void SetCameraRect(Rect newCameraRect)
+        {
+            cameraRect = newCameraRect;
+            cameraRect = new Rect
+            (
+                newCameraRect.X * parallaxFactor,
+                newCameraRect.Y * parallaxFactor,
+                newCameraRect.Width,
+                newCameraRect.Height
+            );
+        }
+        public override Rect GetSourceRect(Dimensions screenDimensions, Dimensions textureDimensions)
+        {
+            var offset = textureDimensions.ToVector2() / 2f;
+            return new Rect
+                (
+                    cameraRect.Center + offset,
+                    cameraRect.Size,
+                    new Vector2(0.5f, 0.5f)
+                );
+        }
+
+        public override (ColorRgba color, bool clear) GetBackgroundClearColor() => (ColorRgba.Clear, true);
+    }
+
+    private List<ScreenTexture> starTextures = new(5);
+    private List<ScreenTextureHandler> starTextureHandlers = new(5);
     
     public static Vector2 DestroyerPosition = new(0f);
     public static int Difficulty = 1;
@@ -1921,11 +1959,6 @@ public class EndlessSpaceCollision : ExampleScene
 
     private readonly CameraFollowerSingle follower;
     
-    
-    // private List<Rect> lastCutShapes = new();
-    // private List<float> lastCutShapeTimers = new();
-    // private const float LastCutShapeDuration = 0.25f;
-    
     private readonly List<AsteroidObstacle> asteroids = new(128);
     private readonly List<AsteroidShard> shards = new(512);
     private readonly List<Bullet> bullets = new(1024);
@@ -1942,20 +1975,7 @@ public class EndlessSpaceCollision : ExampleScene
     private readonly Autogun minigun;
     private readonly Autogun cannon;
 
-    // private readonly Pds orbitalStrike;
-    // private readonly Pds barrage350mm;
-    // private readonly Pds barrage100mm;
-    // private readonly Pds hyperStrafe;
     private readonly List<Pds> pdsList;
-    
-    // private readonly OrbitalStrike orbitalStrike;
-    // private readonly Barrage350mm barrage350mm;
-    // private float strategemChargeTimer = 0f;
-    // private const float strategemMaxChargeTime = 0.5f;
-
-    // private float StrategemChargeF => strategemChargeTimer <= 0f
-    //     ? 0f
-    //     : strategemChargeTimer / strategemMaxChargeTime;
     
     private readonly float cellSize;
 
@@ -1966,17 +1986,9 @@ public class EndlessSpaceCollision : ExampleScene
         drawTitle = false;
         Title = "Endless Space Collision";
 
-        // var universeWidth = ShapeRandom.RandF(12000, 20000);
-        // var universeHeight = ShapeRandom.RandF(12000, 20000);
         universe = new(new Vector2(0f), new Size(UniverseSize, UniverseSize) , new Vector2(0.5f));
 
         DestroyerPosition = universe.Center + ShapeRandom.RandVec2(UniverseSize * 1.25f, UniverseSize * 2f);
-        
-        
-        // universeShape = universe.ToPolygon();
-        // var cols = (int)(universeWidth / CellSize);
-        // var rows = (int)(universeHeight / CellSize);
-        // pathfinder = new(universe, cols, rows);
 
         InitCollisionHandler(universe, CollisionRows, CollisionCols);
         cellSize = UniverseSize / CollisionRows;
@@ -2018,12 +2030,6 @@ public class EndlessSpaceCollision : ExampleScene
             pds.OnPayloadLaunched += OnPdsPayloadLaunched;
         }
         
-        // var orbitalStrikeMask = new BitFlag(AsteroidObstacle.CollisionLayer);
-        // orbitalStrike = new OrbitalStrike(CollisionHandler, orbitalStrikeMask);
-        
-        // var barrage350mmMask = new BitFlag(AsteroidObstacle.CollisionLayer);
-        // barrage350mm = new Barrage350mm(CollisionHandler, barrage350mmMask);
-        
         minigun.BulletFired += OnBulletFired;
         cannon.BulletFired += OnBulletFired;
         
@@ -2051,6 +2057,33 @@ public class EndlessSpaceCollision : ExampleScene
         iaPayloadCallinRight = new(callInRightKb, callInRightGp);
         
         AddAsteroids(AsteroidCount);
+
+        var factors = new float[] { 1f, 1f, 0.99f , 0.97f, 0.94f};
+        for (int i = 0; i < 5; i++)
+        {
+            var textureHandler = new ScreenTextureHandler(factors[i]);
+            var texture = new ScreenTexture(new Dimensions(2000, 2000), textureHandler, ShaderSupportType.None, TextureFilter.Point);
+            texture.DrawToScreenOrder = -100 + i;
+            texture.OnDrawGame += OnDrawStarTexture;
+            texture.Initialize(GAMELOOP.Window.CurScreenSize, GAMELOOP.Window.MousePosition, null);
+            starTextures.Add(texture);
+            starTextureHandlers.Add(textureHandler);
+            
+        }
+    }
+
+    
+    private void OnDrawStarTexture(ScreenInfo screeninfo, ScreenTexture texture)
+    {
+        texture.DrawToTextureEnabled = false;
+        float f = (texture.DrawToScreenOrder + 100) / 5f;
+        byte alpha = (byte)ShapeMath.LerpInt(75, 200, f);
+        for (int i = 0; i < 150; i++)
+        {
+            var pos = screeninfo.Area.GetRandomPointInside();
+            
+            ShapeDrawing.DrawCircleFast(pos, ShapeRandom.RandF(1, 5), Colors.Highlight.SetAlpha(alpha));
+        }
     }
 
     private void OnPdsPayloadLaunched(IPayload payload, int cur, int max)
@@ -2078,15 +2111,34 @@ public class EndlessSpaceCollision : ExampleScene
 
     protected override void OnActivate(Scene oldScene)
     {
+        Colors.OnColorPaletteChanged += OnColorPaletteChanged;
+        foreach (var t in starTextures)
+        {
+            t.DrawToTextureEnabled = true; // in case color palette has changed
+            GAMELOOP.AddScreenTexture(t);
+        }
+        
+        
         GAMELOOP.Camera = camera;
         UpdateFollower(camera.BaseSize.Min());
         camera.SetZoom(0.35f);
         follower.SetTarget(ship);
     }
-
     protected override void OnDeactivate()
     {
+        Colors.OnColorPaletteChanged -= OnColorPaletteChanged;
+        foreach (var t in starTextures)
+        {
+            GAMELOOP.RemoveScreenTexture(t);
+        }
         GAMELOOP.ResetCamera();
+    }
+    private void OnColorPaletteChanged()
+    {
+        foreach (var t in starTextures)
+        {
+            t.DrawToTextureEnabled = true;
+        }
     }
     public override void Reset()
     {
@@ -2099,13 +2151,7 @@ public class EndlessSpaceCollision : ExampleScene
         DifficultyScore = 0f;
         killedBigAsteroids = 0;
         
-        // var universeWidth = ShapeRandom.RandF(12000, 20000);
-        // var universeHeight = ShapeRandom.RandF(12000, 20000);
         universe = new(new Vector2(0f), new Size(UniverseSize, UniverseSize) , new Vector2(0.5f));
-        // universeShape = universe.ToPolygon();
-        // var cols = (int)(universeWidth / CellSize);
-        // var rows = (int)(universeHeight / CellSize);
-        // pathfinder = new(universe, cols, rows);
         CollisionHandler?.Clear();
         asteroids.Clear();
         shards.Clear();
@@ -2129,6 +2175,14 @@ public class EndlessSpaceCollision : ExampleScene
 
         AddAsteroids(AsteroidCount);
         
+    }
+
+    protected override void OnClose()
+    {
+        foreach (var t in starTextures)
+        {
+            t.Unload();
+        }
     }
 
     private void AddAsteroids(int amount)
@@ -2385,6 +2439,12 @@ public class EndlessSpaceCollision : ExampleScene
     }
     protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi,  ScreenInfo ui)
     {
+        
+        foreach (var h in starTextureHandlers)
+        {
+            h.SetCameraRect(game.Area);
+        }
+        
         // if (lastCutShapeTimers.Count > 0)
         // {
         //     for (int i = lastCutShapeTimers.Count - 1; i >= 0; i--)

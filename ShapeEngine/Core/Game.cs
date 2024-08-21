@@ -412,15 +412,14 @@ public class Game
         EndRun();
         UnloadContent();
         Window.Close();
-        // screenShaderBuffer.Unload();
         gameTexture.Unload();
     }
-    private void GameTextureOnDrawGame(ScreenInfo gameScreenInfo)
+    private void GameTextureOnDrawGame(ScreenInfo gameScreenInfo, ScreenTexture texture)
     {
         ResolveDrawGame(gameScreenInfo);
         if (Window.MouseOnScreen) DrawCursorGame(gameScreenInfo);
     }
-    private void GameTextureOnDrawUI(ScreenInfo gameUiScreenInfo)
+    private void GameTextureOnDrawUI(ScreenInfo gameUiScreenInfo, ScreenTexture texture)
     {
         ResolveDrawGameUI(gameUiScreenInfo);
         if (Window.MouseOnScreen) DrawCursorGameUi(gameUiScreenInfo);
