@@ -322,37 +322,39 @@ public sealed class GameWindow
                 }
                 else if (displayState == WindowDisplayState.Fullscreen)
                 {
-                    if (Game.IsOSX())
+                    Raylib.ClearWindowState(ConfigFlags.FullscreenMode);
+                    Raylib.SetWindowSize(PrevFullscreenDisplayState.WindowSize.Width, PrevFullscreenDisplayState.WindowSize.Height);
+                    Raylib.SetWindowPosition((int)PrevFullscreenDisplayState.WindowPosition.X, (int)PrevFullscreenDisplayState.WindowPosition.Y);
+
+                    if (PrevFullscreenDisplayState.DisplayState == WindowDisplayState.Minimized)
                     {
-                        Raylib.ClearWindowState(ConfigFlags.FullscreenMode);
-                        Raylib.SetWindowSize(PrevFullscreenDisplayState.WindowSize.Width, PrevFullscreenDisplayState.WindowSize.Height);
-                        Raylib.SetWindowPosition((int)PrevFullscreenDisplayState.WindowPosition.X, (int)PrevFullscreenDisplayState.WindowPosition.Y);
-
-                        if (PrevFullscreenDisplayState.DisplayState == WindowDisplayState.Minimized)
-                        {
-                            Raylib.SetWindowState(ConfigFlags.MinimizedWindow);
-                            newState = WindowDisplayState.Minimized;
-                        }
-
-                        else if (PrevFullscreenDisplayState.DisplayState == WindowDisplayState.Maximized)
-                        {
-                            Raylib.SetWindowState(ConfigFlags.MaximizedWindow);
-                            newState = WindowDisplayState.Maximized;
-                        }
+                        Raylib.SetWindowState(ConfigFlags.MinimizedWindow);
+                        newState = WindowDisplayState.Minimized;
                     }
-                    else
+
+                    else if (PrevFullscreenDisplayState.DisplayState == WindowDisplayState.Maximized)
                     {
-                        Raylib.ToggleBorderlessWindowed();
-                        if (PrevFullscreenDisplayState.DisplayState == WindowDisplayState.Minimized)
-                        {
-                            newState = WindowDisplayState.Minimized;
-                        }
-
-                        else if (PrevFullscreenDisplayState.DisplayState == WindowDisplayState.Maximized)
-                        {
-                            newState = WindowDisplayState.Maximized;
-                        }
+                        Raylib.SetWindowState(ConfigFlags.MaximizedWindow);
+                        newState = WindowDisplayState.Maximized;
                     }
+
+                    // if (Game.IsOSX())
+                    // {
+                    //     
+                    // }
+                    // else
+                    // {
+                    //     Raylib.ToggleBorderlessWindowed();
+                    //     if (PrevFullscreenDisplayState.DisplayState == WindowDisplayState.Minimized)
+                    //     {
+                    //         newState = WindowDisplayState.Minimized;
+                    //     }
+                    //
+                    //     else if (PrevFullscreenDisplayState.DisplayState == WindowDisplayState.Maximized)
+                    //     {
+                    //         newState = WindowDisplayState.Maximized;
+                    //     }
+                    // }
                     
                 }
             }
@@ -409,23 +411,34 @@ public sealed class GameWindow
                 PrevFullscreenDisplayState = new(CurScreenSize, Raylib.GetWindowPosition(), displayState);
                 // Raylib.SetWindowState(ConfigFlags.TopmostWindow);
 
-                if (Game.IsOSX())
+                if (displayState == WindowDisplayState.Maximized) Raylib.ClearWindowState(ConfigFlags.MaximizedWindow);
+                else if (displayState == WindowDisplayState.Minimized)
                 {
-                    if (displayState == WindowDisplayState.Maximized) Raylib.ClearWindowState(ConfigFlags.MaximizedWindow);
-                    else if (displayState == WindowDisplayState.Minimized)
-                    {
-                        Raylib.ClearWindowState(ConfigFlags.MinimizedWindow);
-                    }
+                    Raylib.ClearWindowState(ConfigFlags.MinimizedWindow);
+                }
                 
-                    var mDim = Monitor.CurMonitor().Dimensions;
-                    var dpi = Raylib.GetWindowScaleDPI();
-                    Raylib.SetWindowSize(mDim.Width * (int)dpi.X, mDim.Height * (int)dpi.Y);
-                    Raylib.SetWindowState(ConfigFlags.FullscreenMode);
-                }
-                else
-                {
-                    Raylib.ToggleBorderlessWindowed();
-                }
+                var mDim = Monitor.CurMonitor().Dimensions;
+                var dpi = Raylib.GetWindowScaleDPI();
+                Raylib.SetWindowSize(mDim.Width * (int)dpi.X, mDim.Height * (int)dpi.Y);
+                Raylib.SetWindowState(ConfigFlags.FullscreenMode);
+                
+                // if (Game.IsOSX())
+                // {
+                //     if (displayState == WindowDisplayState.Maximized) Raylib.ClearWindowState(ConfigFlags.MaximizedWindow);
+                //     else if (displayState == WindowDisplayState.Minimized)
+                //     {
+                //         Raylib.ClearWindowState(ConfigFlags.MinimizedWindow);
+                //     }
+                //
+                //     var mDim = Monitor.CurMonitor().Dimensions;
+                //     var dpi = Raylib.GetWindowScaleDPI();
+                //     Raylib.SetWindowSize(mDim.Width * (int)dpi.X, mDim.Height * (int)dpi.Y);
+                //     Raylib.SetWindowState(ConfigFlags.FullscreenMode);
+                // }
+                // else
+                // {
+                //     Raylib.ToggleBorderlessWindowed();
+                // }
             }
             
             displayState = newState;
@@ -684,16 +697,15 @@ public sealed class GameWindow
         if (cur.HasMaximizedChanged(windowConfigFlags))
         {
             OnWindowMaximizeChanged?.Invoke(cur.Maximized);
-            if (cur.Maximized)
-            {
-                displayState = WindowDisplayState.Maximized;
-            }
+            if (cur.Maximized) displayState = WindowDisplayState.Maximized;
+            else displayState = WindowDisplayState.Normal;
         }
         
         if (cur.HasMinimizedChanged(windowConfigFlags))
         {
             OnWindowMinimizedChanged?.Invoke(cur.Minimized);
             if(cur.Minimized) displayState = WindowDisplayState.Minimized;
+            else displayState = WindowDisplayState.Normal;
         }
         if (cur.HasHiddenChanged(windowConfigFlags))
         {
