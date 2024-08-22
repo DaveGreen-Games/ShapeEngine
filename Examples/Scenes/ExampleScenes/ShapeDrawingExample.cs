@@ -421,15 +421,6 @@ public class ShapeDrawingExample : ExampleScene
         return "Polyline";
     }
 
-    protected override void OnActivate(Scene oldScene)
-    {
-        GAMELOOP.Window.MouseVisible = true;
-    }
-
-    protected override void OnDeactivate()
-    {
-        GAMELOOP.Window.MouseVisible = false;
-    }
 }
 
 
