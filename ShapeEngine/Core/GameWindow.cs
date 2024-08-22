@@ -725,8 +725,8 @@ public sealed class GameWindow
     
     private void CheckForCursorChanges()
     {
-        // mouseControlled = false;
-        MouseOnScreen = Raylib.IsCursorOnScreen() || ScreenArea.ContainsPoint(MousePosition);
+        
+        MouseOnScreen = Raylib.IsCursorOnScreen() || (Raylib.IsWindowFocused() && ScreenArea.ContainsPoint(MousePosition));
         
         var curCursorState = GetCurCursorState();
         
