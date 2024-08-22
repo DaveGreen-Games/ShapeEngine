@@ -224,7 +224,7 @@ namespace Examples.Scenes
             
             titleFont.FontSpacing = 1f;
             titleFont.ColorRgba = Colors.Medium;
-            titleFont.DrawTextWrapNone($"Window Focused: {Raylib.IsWindowFocused()} | [{pi}%]", infoAreaRects.top, new Vector2(1f, 1f));
+            titleFont.DrawTextWrapNone($"Window Focused: {GameWindow.IsWindowFocused} | [{pi}%]", infoAreaRects.top, new Vector2(1f, 1f));
             titleFont.DrawTextWrapNone($"Cursor On Screen: {GameWindow.IsMouseOnScreen}", infoAreaRects.bottom, new Vector2(1f, 1f));
 
 

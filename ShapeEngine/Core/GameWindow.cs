@@ -304,6 +304,7 @@ public sealed class GameWindow
         }
     }
     public static bool IsMouseOnScreen { get; private set; }
+    public static bool IsWindowFocused => Raylib.IsWindowFocused();
     public WindowDisplayState DisplayState
     {
         get => displayState;
