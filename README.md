@@ -23,9 +23,9 @@ When using Shape Engine everything from Raylib is available as well. ([Raylib Ex
 
 
 ## Minimal Project Setup
-<img width="1236" alt="shapeengine-minimal-project-setup2" src="https://github.com/DaveGreen-Games/ShapeEngine/assets/34277803/2e515cec-34c7-40b2-98ea-4d4be90f9d08">
 
-```
+```c#
+
 using System.Drawing;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
@@ -34,23 +34,19 @@ using ShapeEngine.Lib;
 
 namespace ShapeEngineProject;
 
-
 public static class Program
 {
     public static void Main(string[] args)
     {
-        var gameSettings = new GameSettings()
-        {
-            DevelopmentDimensions = new Dimensions(1920, 1080),
-            MultiShaderSupport = false
-        };
-        var game = new MyGameClass(gameSettings, WindowSettings.Default);
-        game.Run();
+	var game = new Game(GameSettings.StretchMode, WindowSettings.Default);
+	game.Run();
     }
 }
+
 public class MyGameClass : Game
 {
     public MyGameClass(GameSettings gameSettings, WindowSettings windowSettings) : base(gameSettings, windowSettings) { }
+    
     protected override void DrawGame(ScreenInfo game)
     {
         game.Area.Draw(new ColorRgba(Color.DarkOliveGreen));
@@ -58,6 +54,7 @@ public class MyGameClass : Game
         game.MousePos.Draw(24f, new ColorRgba(Color.Lime), 36);
     }
 }
+
 ```
 
 
