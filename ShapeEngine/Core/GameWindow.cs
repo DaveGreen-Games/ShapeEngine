@@ -79,8 +79,6 @@ public sealed class GameWindow
         public bool HasMaximizedChanged(WindowConfigFlags other) => Maximized != other.Maximized;
         public bool HasFullscreenChanged(WindowConfigFlags other) => Fullscreen != other.Fullscreen;
         public bool HasHiddenChanged(WindowConfigFlags other) => Hidden != other.Hidden;
-
-
         
     }
 
@@ -505,7 +503,8 @@ public sealed class GameWindow
         if(windowSettings.HighDPI) Raylib.SetConfigFlags(ConfigFlags.HighDpiWindow);
         if(windowSettings.FramebufferTransparent) Raylib.SetConfigFlags(ConfigFlags.TransparentWindow);
         
-        Raylib.InitWindow(windowSettings.WindowMinSize.Width, windowSettings.WindowMinSize.Height, windowSettings.Title);
+        // Raylib.InitWindow(windowSettings.WindowMinSize.Width, windowSettings.WindowMinSize.Height, windowSettings.Title);
+        Raylib.InitWindow(0,0, windowSettings.Title);//sets autoiconify to false until my changes are in raylib cs
         Raylib.SetWindowOpacity(0f);
         
         Monitor = new MonitorDevice();
