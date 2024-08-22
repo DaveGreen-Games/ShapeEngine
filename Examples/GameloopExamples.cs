@@ -164,7 +164,27 @@ namespace Examples
         public GameloopExamples() : base
             (
                 GameSettings.StretchMode, 
-                WindowSettings.Default
+                new WindowSettings()
+                {
+                    Undecorated = false,
+                    Focused = true,
+                    WindowDisplayState = WindowDisplayState.Normal,
+                    WindowBorder = WindowBorder.Resizabled,
+                    WindowMinSize = new(480, 270),
+                    WindowSize = new(960, 540),
+                    Monitor = 0,
+                    Vsync = false,
+                    FrameRateLimit = 60,
+                    MinFramerate = 30,
+                    MaxFramerate = 240,
+                    WindowOpacity = 1f,
+                    MouseEnabled = true,
+                    MouseVisible = false,
+                    Msaa4x = true,
+                    HighDPI = false,
+                    FramebufferTransparent = false
+                }
+                // WindowSettings.Default
             )
         {
 
@@ -301,14 +321,7 @@ namespace Examples
 
             fpsLabel = new(FontDefault, Colors.PcCold, Colors.PcText, Colors.PcHighlight);
             
-            // HideOSCursor();
-            Window.MouseVisible = false;
-            Window.MouseEnabled = true;
-            
-            // SwitchCursor(new SimpleCursorUI());
-
             paletteInfoBox = new();
-
         }
 
         protected override Vector2 ChangeMousePos(float dt, Vector2 mousePos, Rect screenArea)

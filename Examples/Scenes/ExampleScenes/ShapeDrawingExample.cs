@@ -1,5 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Color;
+using ShapeEngine.Core;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
@@ -419,7 +420,16 @@ public class ShapeDrawingExample : ExampleScene
         if (shapeIndex == 5) return "Polygon";
         return "Polyline";
     }
-   
+
+    protected override void OnActivate(Scene oldScene)
+    {
+        GAMELOOP.Window.MouseVisible = true;
+    }
+
+    protected override void OnDeactivate()
+    {
+        GAMELOOP.Window.MouseVisible = false;
+    }
 }
 
 

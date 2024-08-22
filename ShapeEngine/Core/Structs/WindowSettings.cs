@@ -53,5 +53,8 @@ public struct WindowSettings
     public bool HighDPI;
     public bool FramebufferTransparent;
     // public bool AutoIconify; //(minimizes window automatically if focus changes in fullscreen mode)
+    
+    
+    
 
 }

@@ -31,95 +31,106 @@ ConfigFlags.VSyncHint;
 ConfigFlags.ResizableWindow;
 */
 
-public struct WindowConfigFlags
-{
-    public static WindowConfigFlags AllFalse => new WindowConfigFlags()
-    {
-        Undecorated = false,
-        Resizable = false,
-        Topmost = false,
-        Unfocused = false,
-        AlwaysRun = false,
-        MousePassThrough = false,
-        VSync = false
-    };
-    public static WindowConfigFlags AllTrue => new WindowConfigFlags()
-    {
-        Undecorated = true,
-        Resizable = true,
-        Topmost = true,
-        Unfocused = true,
-        AlwaysRun = true,
-        MousePassThrough = true,
-        VSync = true
-    };
-    public static WindowConfigFlags Default => new WindowConfigFlags()
-    {
-        Undecorated = false,
-        Resizable = true,
-        Topmost = false,
-        Unfocused = false,
-        AlwaysRun = true,
-        MousePassThrough = true,
-        VSync = true
-    };
-    
-    public bool Undecorated;
-    public bool Resizable;
-    public bool Topmost;
-    public bool Unfocused;
-    public bool AlwaysRun;
-    public bool MousePassThrough;
-    public bool VSync;
-
-    public bool HasUndecoratedChanged(WindowConfigFlags other) => Undecorated != other.Undecorated;
-    public bool HasResizableChanged(WindowConfigFlags other) => Resizable != other.Resizable;
-    public bool HasTopmostChanged(WindowConfigFlags other) => Topmost != other.Topmost;
-    public bool HasUnfocusedChanged(WindowConfigFlags other) => Unfocused != other.Unfocused;
-    public bool HasAlwaysRunChanged(WindowConfigFlags other) => AlwaysRun != other.AlwaysRun;
-    public bool HasMousePassThroughChanged(WindowConfigFlags other) => MousePassThrough != other.MousePassThrough;
-    public bool HasVSyncChanged(WindowConfigFlags other) => VSync != other.VSync;
-    
-    
-    public static WindowConfigFlags Get()
-    {
-        return new()
-        {
-            Undecorated = Raylib.IsWindowState(ConfigFlags.UndecoratedWindow),
-            Resizable = Raylib.IsWindowState(ConfigFlags.ResizableWindow),
-            Topmost = Raylib.IsWindowState(ConfigFlags.TopmostWindow),
-            Unfocused = Raylib.IsWindowState(ConfigFlags.UnfocusedWindow),
-            AlwaysRun = Raylib.IsWindowState(ConfigFlags.AlwaysRunWindow),
-            MousePassThrough = Raylib.IsWindowState(ConfigFlags.MousePassthroughWindow),
-            VSync = Raylib.IsWindowState(ConfigFlags.VSyncHint)
-        };
-    }
-}
 
 
 public sealed class GameWindow
 {
     #region Structs
-    private readonly struct WindowFlagState
+    private readonly struct WindowConfigFlags
     {
+        public static WindowConfigFlags Get() => new();
+        public static WindowConfigFlags GetAllFalse() => new WindowConfigFlags(false);
+        public static WindowConfigFlags GetAllTrue() => new WindowConfigFlags(true);
+
+        
+        /// <summary>
+        /// Sets all flags to value.
+        /// </summary>
+        /// <param name="value"></param>
+        public WindowConfigFlags(bool value)
+        {
+            Undecorated = value;
+            Resizable = value;
+            Topmost = value;
+            Focused = value;
+            AlwaysRun = value;
+            MousePassThrough = value;
+            VSync = value;
+            Minimized = value;
+            Maximized = value;
+            Fullscreen = value;
+            Hidden = value;
+        }
+
+        /// <summary>
+        /// Gets the current values from raylib.
+        /// </summary>
+        public WindowConfigFlags()
+        {
+            Undecorated = Raylib.IsWindowState(ConfigFlags.UndecoratedWindow);
+            Resizable = Raylib.IsWindowState(ConfigFlags.ResizableWindow);
+            Topmost = Raylib.IsWindowState(ConfigFlags.TopmostWindow);
+            Focused = !Raylib.IsWindowState(ConfigFlags.UnfocusedWindow);
+            AlwaysRun = Raylib.IsWindowState(ConfigFlags.AlwaysRunWindow);
+            MousePassThrough = Raylib.IsWindowState(ConfigFlags.MousePassthroughWindow);
+            VSync = Raylib.IsWindowState(ConfigFlags.VSyncHint);
+            Minimized = Raylib.IsWindowState(ConfigFlags.MinimizedWindow);
+            Maximized = Raylib.IsWindowState(ConfigFlags.MaximizedWindow);
+            Fullscreen = Raylib.IsWindowFullscreen();
+            Hidden = Raylib.IsWindowState(ConfigFlags.HiddenWindow);
+        }
+        
         public readonly bool Minimized;
         public readonly bool Maximized;
         public readonly bool Fullscreen;
         public readonly bool Hidden;
         public readonly bool Focused;
+        
+        public readonly bool Undecorated;
+        public readonly bool Resizable;
         public readonly bool Topmost;
+        public readonly bool AlwaysRun;
+        public readonly bool MousePassThrough;
+        public readonly bool VSync;
 
-        public WindowFlagState()
-        {
-            Fullscreen = Raylib.IsWindowFullscreen();
-            Maximized = Raylib.IsWindowMaximized();
-            Minimized = Raylib.IsWindowMinimized();
-            Hidden = Raylib.IsWindowHidden();
-            Focused = Raylib.IsWindowFocused();
-            Topmost = Raylib.IsWindowState(ConfigFlags.TopmostWindow);
+        public bool HasUndecoratedChanged(WindowConfigFlags other) => Undecorated != other.Undecorated;
+        public bool HasResizableChanged(WindowConfigFlags other) => Resizable != other.Resizable;
+        public bool HasTopmostChanged(WindowConfigFlags other) => Topmost != other.Topmost;
+        public bool HasFocusedChanged(WindowConfigFlags other) => Focused != other.Focused;
+        public bool HasAlwaysRunChanged(WindowConfigFlags other) => AlwaysRun != other.AlwaysRun;
+        public bool HasMousePassThroughChanged(WindowConfigFlags other) => MousePassThrough != other.MousePassThrough;
+        public bool HasVSyncChanged(WindowConfigFlags other) => VSync != other.VSync;
+        
+        public bool HasMinimizedChanged(WindowConfigFlags other) => Minimized != other.Minimized;
+        public bool HasMaximizedChanged(WindowConfigFlags other) => Maximized != other.Maximized;
+        public bool HasFullscreenChanged(WindowConfigFlags other) => Fullscreen != other.Fullscreen;
+        public bool HasHiddenChanged(WindowConfigFlags other) => Hidden != other.Hidden;
 
-        }
+
+        
     }
+
+    // private readonly struct WindowFlagState
+    // {
+    //     public readonly bool Minimized;
+    //     public readonly bool Maximized;
+    //     public readonly bool Fullscreen;
+    //     public readonly bool Hidden;
+    //     public readonly bool Focused;
+    //     public readonly bool Topmost;
+    //
+    //     public WindowFlagState()
+    //     {
+    //         Fullscreen = Raylib.IsWindowFullscreen();
+    //         Maximized = Raylib.IsWindowMaximized();
+    //         Minimized = Raylib.IsWindowMinimized();
+    //         Hidden = Raylib.IsWindowHidden();
+    //         Focused = Raylib.IsWindowFocused();
+    //         Topmost = Raylib.IsWindowState(ConfigFlags.TopmostWindow);
+    //
+    //     }
+    // }
+    
     private readonly struct CursorState
     {
         public readonly bool Visible;
@@ -159,26 +170,32 @@ public sealed class GameWindow
 
     public event Action? OnMouseLeftScreen;
     public event Action? OnMouseEnteredScreen;
+    public event Action<bool>? OnMouseVisibilityChanged;
+    public event Action<bool>? OnMouseEnabledChanged;
+    
     public event Action<DimensionConversionFactors>? OnWindowSizeChanged;
     public event Action<Vector2, Vector2>? OnWindowPositionChanged;
     public event Action<MonitorInfo>? OnMonitorChanged;
 
-    public event Action<bool>? OnMouseVisibilityChanged;
-    public event Action<bool>? OnMouseEnabledChanged;
-    
-    
     public event Action<bool>? OnWindowFocusChanged;
     public event Action<bool>? OnWindowFullscreenChanged;
     public event Action<bool>? OnWindowMaximizeChanged;
     public event Action<bool>? OnWindowMinimizedChanged;
     public event Action<bool>? OnWindowHiddenChanged;
     public event Action<bool>? OnWindowTopmostChanged;
+    
+    public event Action<bool>? OnWindowUndecoratedChanged;
+    public event Action<bool>? OnWindowResizableChanged;
+    public event Action<bool>? OnWindowAlwaysRunChanged;
+    public event Action<bool>? OnWindowMousePassThroughChanged;
+    public event Action<bool>? OnWindowVSyncChanged;
+    
+    
     #endregion
 
     #region Public Members
     // public bool MouseOnScreen { get; private set; }
     public MonitorDevice Monitor { get; private set; }
-    
     public Dimensions CurScreenSize { get; private set; }
     public Dimensions WindowMinSize { get; private set; }
     public Dimensions WindowSize
@@ -494,15 +511,15 @@ public sealed class GameWindow
     private bool? wasMouseEnabled = null;
     private bool? wasMouseVisible = null;
     
-    private Vector2 lastControlledMousePosition = new();
-    private bool mouseControlled = false;
 
     private CursorState cursorState;
-    private WindowFlagState windowFlagState;
-    private bool focusLostFullscreen = false;
-
-
-    private WindowConfigFlags prevWindowConfigFlags;
+    private WindowConfigFlags windowConfigFlags;
+    
+    // private Vector2 lastControlledMousePosition = new();
+    // private bool mouseControlled = false;
+    // private bool focusLostFullscreen = false;
+    // private WindowFlagState windowFlagState;
+    // private WindowConfigFlags prevWindowConfigFlags;
     #endregion
 
     #region Internal
@@ -553,17 +570,16 @@ public sealed class GameWindow
         MouseEnabled = windowSettings.MouseEnabled;
         
         cursorState = GetCurCursorState();
-        windowFlagState = new WindowFlagState(); // GetCurWindowFlagState();
+        // windowFlagState = new WindowFlagState(); // GetCurWindowFlagState();
 
         Raylib.SetWindowOpacity(windowSettings.WindowOpacity);
         // Raylib.ToggleBorderlessWindowed();
         
-        prevWindowConfigFlags = WindowConfigFlags.Get();
+        windowConfigFlags = WindowConfigFlags.Get();
     }
     
     internal void Update(float dt)
     {
-        
         // LerpOpacitiy(dt);
         
         var newMonitor = Monitor.HasMonitorChanged();
@@ -575,20 +591,18 @@ public sealed class GameWindow
 
         ScreenArea = new Rect(0, 0, CurScreenSize.Width, CurScreenSize.Height);
         
-        //TODO: not implemented yet -> should clean up CheckForWindowFlagChanges()
         CheckForWindowConfigFlagChanges();
-        CheckForWindowFlagChanges();
+        // CheckForWindowFlagChanges();
         CheckForCursorChanges();
         
-        //still necessary?
         if (MouseVisible == Raylib.IsCursorHidden()) MouseVisible = !Raylib.IsCursorHidden();
         
     }
     internal void MoveMouse(Vector2 mousePos)
     {
         mousePos = Vector2.Clamp(mousePos, new Vector2(0, 0), CurScreenSize.ToVector2());
-        lastControlledMousePosition = mousePos;
-        mouseControlled = true;
+        // lastControlledMousePosition = mousePos;
+        // mouseControlled = true;
 
         var mx = (int)MathF.Round(mousePos.X);
         var my = (int)MathF.Round(mousePos.Y);
@@ -636,42 +650,65 @@ public sealed class GameWindow
             CurScreenSize = new(w, h);
         }
     }
-
+    
     private void CheckForWindowConfigFlagChanges()
     {
         var cur = WindowConfigFlags.Get();
 
-        if (cur.HasResizableChanged(prevWindowConfigFlags))
+        if (cur.HasResizableChanged(windowConfigFlags))
         {
-            
+            OnWindowResizableChanged?.Invoke(cur.Resizable);
         }
-        if (cur.HasTopmostChanged(prevWindowConfigFlags))
+        if (cur.HasTopmostChanged(windowConfigFlags))
         {
-            
+            OnWindowTopmostChanged?.Invoke(cur.Topmost);
         }
-        if (cur.HasUndecoratedChanged(prevWindowConfigFlags))
+        if (cur.HasUndecoratedChanged(windowConfigFlags))
         {
-            
+            OnWindowUndecoratedChanged?.Invoke(cur.Undecorated);
         }
-        if (cur.HasUnfocusedChanged(prevWindowConfigFlags))
+        
+        if (cur.HasFocusedChanged(windowConfigFlags))
         {
-            
+            OnWindowFocusChanged?.Invoke(cur.Focused);
         }
-        if (cur.HasAlwaysRunChanged(prevWindowConfigFlags))
+        if (cur.HasAlwaysRunChanged(windowConfigFlags))
         {
-            
+            OnWindowAlwaysRunChanged?.Invoke(cur.AlwaysRun);
         }
-        if (cur.HasMousePassThroughChanged(prevWindowConfigFlags))
+        if (cur.HasMousePassThroughChanged(windowConfigFlags))
         {
-            
+            OnWindowMousePassThroughChanged?.Invoke(cur.MousePassThrough);
         }
-        if (cur.HasVSyncChanged(prevWindowConfigFlags))
+        
+        if (cur.HasVSyncChanged(windowConfigFlags))
         {
-            
+            OnWindowVSyncChanged?.Invoke(cur.VSync);
         }
-
-        prevWindowConfigFlags = cur;
-
+        if (cur.HasFullscreenChanged(windowConfigFlags))
+        {
+            OnWindowFullscreenChanged?.Invoke(cur.Fullscreen);
+        }
+        if (cur.HasMaximizedChanged(windowConfigFlags))
+        {
+            OnWindowMaximizeChanged?.Invoke(cur.Maximized);
+            if (cur.Maximized)
+            {
+                displayState = WindowDisplayState.Maximized;
+            }
+        }
+        
+        if (cur.HasMinimizedChanged(windowConfigFlags))
+        {
+            OnWindowMinimizedChanged?.Invoke(cur.Minimized);
+            if(cur.Minimized) displayState = WindowDisplayState.Minimized;
+        }
+        if (cur.HasHiddenChanged(windowConfigFlags))
+        {
+            OnWindowHiddenChanged?.Invoke(cur.Hidden);
+        }
+        
+        windowConfigFlags = cur;
     }
     
     private void CheckForWindowChanges()
@@ -681,7 +718,6 @@ public sealed class GameWindow
         if (prev != CurScreenSize)
         {
             if (displayState == WindowDisplayState.Normal) windowSize = CurScreenSize;
-            // SetConversionFactors();
             var conversion = new DimensionConversionFactors(prev, CurScreenSize);
             OnWindowSizeChanged?.Invoke(conversion);
         }
@@ -689,12 +725,67 @@ public sealed class GameWindow
         var curWindowPosition = Raylib.GetWindowPosition();
         if (curWindowPosition != WindowPosition)
         {
-            // prevWindowPosition = WindowPosition;
             WindowPosition = curWindowPosition;
             OnWindowPositionChanged?.Invoke(WindowPosition, curWindowPosition);
         }
     }
+    
+    private void CheckForCursorChanges()
+    {
+        // mouseControlled = false;
+        MouseOnScreen = Raylib.IsCursorOnScreen() || ScreenArea.ContainsPoint(MousePosition);
+        
+        var curCursorState = GetCurCursorState();
+        
+        if (!MouseOnScreen || Raylib.IsWindowState(ConfigFlags.MinimizedWindow))//fullscreen to minimize fix for enabling/showing os cursor
+        {
+            if (cursorState.OnScreen)//prev state
+            {
+                OnMouseLeftScreen?.Invoke();
+                if (wasMouseVisible == null) wasMouseVisible = cursorState.Visible;
+                if (wasMouseEnabled == null) wasMouseEnabled = cursorState.Enabled;
 
+                if (!mouseEnabled)
+                {
+                    Raylib.EnableCursor();
+                    mouseEnabled = true;
+                }
+
+                if (!mouseEnabled)
+                {
+                    Raylib.ShowCursor();
+                    mouseVisible = true;
+                }
+            }
+        }
+        else
+        {
+            if (!cursorState.OnScreen) //prev state
+            {
+                OnMouseEnteredScreen?.Invoke();
+                if (wasMouseVisible != null) MouseVisible = (bool)wasMouseVisible;
+                if (wasMouseEnabled != null) MouseEnabled = (bool)wasMouseEnabled;
+                // if (wasMouseVisible != null && wasMouseVisible == false) MouseVisible = false;
+                // if (wasMouseEnabled != null && wasMouseEnabled == false) MouseEnabled = false;
+
+                wasMouseVisible = null;
+                wasMouseEnabled = null;
+            }
+        }
+
+        if (MouseOnScreen)
+        {
+            if (curCursorState.Visible && !cursorState.Visible) OnMouseVisibilityChanged?.Invoke(false);
+            else if (!curCursorState.Visible && cursorState.Visible) OnMouseVisibilityChanged?.Invoke(true);
+            
+            if (curCursorState.Enabled && !cursorState.Enabled) OnMouseEnabledChanged?.Invoke(false);
+            else if (!curCursorState.Enabled && cursorState.Enabled) OnMouseEnabledChanged?.Invoke(true);
+        }
+        
+        cursorState = curCursorState;
+    }
+    
+    /*
     private void CheckForWindowFlagChanges()
     {
         // Console.WriteLine($"--------Minimized: {Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_MINIMIZED)}");
@@ -735,6 +826,7 @@ public sealed class GameWindow
             }
             Raylib.ClearWindowState(ConfigFlags.TopmostWindow);
         }
+        
         if (curWindowFlagState.Minimized && !windowFlagState.Minimized)
         {
             OnWindowMinimizedChanged?.Invoke(true);
@@ -801,45 +893,9 @@ public sealed class GameWindow
         
         windowFlagState = curWindowFlagState;
     }
-
-    private void CheckForCursorChanges()
-    {
-        var curCursorState = GetCurCursorState();
-        
-        if (!MouseOnScreen || Raylib.IsWindowState(ConfigFlags.MinimizedWindow))//fullscreen to minimize fix for enabling/showing os cursor
-        {
-            if (cursorState.OnScreen)
-            {
-                OnMouseLeftScreen?.Invoke();
-                if (wasMouseVisible == null) wasMouseVisible = cursorState.Visible;
-                if (wasMouseEnabled == null) wasMouseEnabled = cursorState.Enabled;
-                MouseEnabled = true;
-                MouseVisible = true;
-            }
-        }
-        else
-        {
-            if (!cursorState.OnScreen)
-            {
-                OnMouseEnteredScreen?.Invoke();
-                if (wasMouseVisible != null && wasMouseVisible == false) MouseVisible = false;
-                if (wasMouseEnabled != null && wasMouseEnabled == false) MouseEnabled = false;
-
-                wasMouseVisible = null;
-                wasMouseEnabled = null;
-            }
-        }
-        
-        if (curCursorState.Visible && !cursorState.Visible) OnMouseVisibilityChanged?.Invoke(false);
-        else if (!curCursorState.Visible && cursorState.Visible) OnMouseVisibilityChanged?.Invoke(true);
-            
-        if (curCursorState.Enabled && !cursorState.Enabled) OnMouseEnabledChanged?.Invoke(false);
-        else if (!curCursorState.Enabled && cursorState.Enabled) OnMouseEnabledChanged?.Invoke(true);
-
-        cursorState = curCursorState;
-    }
-    #endregion
+    */
     
+    #endregion
     
     #region Window
 
@@ -975,12 +1031,19 @@ public sealed class GameWindow
     public float MouseY => MousePosition.Y;
 
     private bool mouseEnabled = true;
-
+    private bool mouseVisible = true;
     public bool MouseEnabled
     {
         get => mouseEnabled;
         set
         {
+
+            if (!MouseOnScreen)
+            {
+                wasMouseEnabled = value;
+                return;
+            }
+            
             if (value == mouseEnabled) return;
             mouseEnabled = value;
             if(mouseEnabled)Raylib.EnableCursor();
@@ -989,18 +1052,21 @@ public sealed class GameWindow
     }
     public bool MouseVisible
     {
-        get => !Raylib.IsCursorHidden();
+        get => mouseVisible;
         set
         {
-            if (value == !Raylib.IsCursorHidden()) return;
+            if (!MouseOnScreen)
+            {
+                wasMouseVisible = value;
+                return;
+            }
+            
+            if (value == mouseVisible) return;
+            mouseVisible = value;
             if(value) Raylib.ShowCursor();
             else Raylib.HideCursor();
         }
     }
-    // public bool MouseOnScreen
-    // {
-    //     get => Raylib.IsCursorOnScreen();
-    // }
 
     public void ResetMousePosition()
     {
@@ -1010,7 +1076,6 @@ public sealed class GameWindow
     #endregion
 
     
-
     #region Window & Cursor State
 
     private CursorState GetCurCursorState()
