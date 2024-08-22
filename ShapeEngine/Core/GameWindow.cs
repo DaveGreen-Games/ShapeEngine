@@ -6,32 +6,6 @@ using ShapeEngine.Screen;
 
 namespace ShapeEngine.Core;
 
-/*
- 
-Set before init window with window setting struct
-ConfigFlags.TransparentWindow;
-ConfigFlags.Msaa4xHint;
-ConfigFlags.InterlacedHint;
-ConfigFlags.HighDpiWindow;
-            
-WindowMode struct
-ConfigFlags.FullscreenMode;
-ConfigFlags.BorderlessWindowMode;
-ConfigFlags.MaximizedWindow;
-ConfigFlags.MinimizedWindow;
-ConfigFlags.HiddenWindow;
-
-ShapeConfigFlags
-ConfigFlags.TopmostWindow;
-ConfigFlags.UndecoratedWindow;
-ConfigFlags.UnfocusedWindow;
-ConfigFlags.AlwaysRunWindow;
-ConfigFlags.MousePassthroughWindow;
-ConfigFlags.VSyncHint;
-ConfigFlags.ResizableWindow;
-*/
-
-
 
 public sealed class GameWindow
 {
@@ -190,11 +164,9 @@ public sealed class GameWindow
     public event Action<bool>? OnWindowMousePassThroughChanged;
     public event Action<bool>? OnWindowVSyncChanged;
     
-    
     #endregion
 
     #region Public Members
-    // public bool MouseOnScreen { get; private set; }
     public MonitorDevice Monitor { get; private set; }
     public Dimensions CurScreenSize { get; private set; }
     public Dimensions WindowMinSize { get; private set; }
@@ -500,9 +472,6 @@ public sealed class GameWindow
     private WindowDisplayState displayState = WindowDisplayState.Normal;
     private WindowBorder windowBorder = WindowBorder.Fixed;
     
-    // private Dimensions prevDisplayStateChangeWindowSize = new(128, 128);
-    // private Vector2 prevDisplayStateChangeWindowPosition = new(0);
-    // private WindowDisplayState prevDisplayStateChangeDisplayState = WindowDisplayState.Normal;
     private PrevDisplayStateInfo PrevFullscreenDisplayState = new(new(128, 128), new(), WindowDisplayState.Normal);
     private PrevDisplayStateInfo PrevMinimizedDisplayState = new(new(128, 128), new(), WindowDisplayState.Normal);
     
@@ -511,7 +480,6 @@ public sealed class GameWindow
     
     private bool? wasMouseEnabled = null;
     private bool? wasMouseVisible = null;
-    
 
     private CursorState cursorState;
     private WindowConfigFlags windowConfigFlags;
@@ -521,6 +489,9 @@ public sealed class GameWindow
     // private bool focusLostFullscreen = false;
     // private WindowFlagState windowFlagState;
     // private WindowConfigFlags prevWindowConfigFlags;
+    // private Dimensions prevDisplayStateChangeWindowSize = new(128, 128);
+    // private Vector2 prevDisplayStateChangeWindowPosition = new(0);
+    // private WindowDisplayState prevDisplayStateChangeDisplayState = WindowDisplayState.Normal;
     #endregion
 
     #region Internal
