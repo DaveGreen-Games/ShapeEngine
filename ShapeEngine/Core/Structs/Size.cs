@@ -17,7 +17,7 @@ public readonly struct Size : IEquatable<Size>
     /// </summary>
     public float Length => Width;
     
-
+    public bool Positive => Width >= 0 && Height >= 0;
     public Size()
     {
         Width = 0f;

@@ -6,7 +6,7 @@ public struct WindowSettings
     {
         Undecorated = false,
         Focused = true,
-        WindowDisplayState = WindowDisplayState.Normal,
+        // WindowDisplayState = WindowDisplayState.Normal,
         WindowBorder = WindowBorder.Resizabled,
         WindowMinSize = new(480, 270),
         WindowSize = new(960, 540),
@@ -33,7 +33,7 @@ public struct WindowSettings
     public bool Undecorated;
     public bool Focused;
     
-    public WindowDisplayState WindowDisplayState;
+    // public WindowDisplayState WindowDisplayState;
     public WindowBorder WindowBorder;
     
     public bool Vsync;

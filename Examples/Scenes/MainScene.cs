@@ -98,20 +98,17 @@ namespace Examples.Scenes
             var maximizedState = GAMELOOP.InputActionMaximize.Consume();
             if (maximizedState is { Consumed: false, Pressed: true })
             { 
-                // GAMELOOP.Maximized = !GAMELOOP.Maximized;
-                GAMELOOP.Window.DisplayState = GAMELOOP.Window.DisplayState == WindowDisplayState.Maximized ? WindowDisplayState.Normal : WindowDisplayState.Maximized;
+                GAMELOOP.Window.ToggleMaximizeWindow();
             }
             var minimizeState = GAMELOOP.InputActionMinimize.Consume();
             if (minimizeState is { Consumed: false, Pressed: true })
             { 
-                // GAMELOOP.Maximized = !GAMELOOP.Maximized;
-                GAMELOOP.Window.DisplayState = GAMELOOP.Window.DisplayState == WindowDisplayState.Minimized ? WindowDisplayState.Normal : WindowDisplayState.Minimized;
+                GAMELOOP.Window.ToggleMinimizeWindow();
             }
             var fullscreenState = GAMELOOP.InputActionFullscreen.Consume();
             if (fullscreenState is { Consumed: false, Pressed: true })
             { 
-                // GAMELOOP.Fullscreen = !GAMELOOP.Fullscreen;
-                GAMELOOP.Window.DisplayState = GAMELOOP.Window.DisplayState == WindowDisplayState.Fullscreen ? WindowDisplayState.Normal : WindowDisplayState.Fullscreen;
+                GAMELOOP.Window.ToggleBorderlessFullscreen();
             }
 
             var prevTabState = GAMELOOP.InputActionUIPrevTab.Consume();
