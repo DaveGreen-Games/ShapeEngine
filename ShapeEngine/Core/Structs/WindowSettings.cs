@@ -4,36 +4,44 @@ public struct WindowSettings
 {
     public static WindowSettings Default => new()
     {
-        Undecorated = false,
-        Focused = true,
-        // WindowDisplayState = WindowDisplayState.Normal,
+        Title = "Shape Engine Window",
+        FullscreenAutoRestoring = true,
+        Topmost = false,
         WindowBorder = WindowBorder.Resizabled,
         WindowMinSize = new(480, 270),
         WindowSize = new(960, 540),
-        // WindowLocation = new(0, 0),
         Monitor = 0,
         Vsync = false,
         FrameRateLimit = 60,
         MinFramerate = 30,
         MaxFramerate = 240,
-        // AutoIconify = true,
         WindowOpacity = 1f,
         MouseEnabled = true,
         MouseVisible = true,
         Msaa4x = true,
         HighDPI = false,
         FramebufferTransparent = false
+        
+        // Focused = true,
+        // AutoIconify = true,
+        // Undecorated = false,
+        // WindowDisplayState = WindowDisplayState.Normal,
+        // WindowLocation = new(0, 0),
     };
     
-    // public Dimensions WindowLocation;
+    
     public Dimensions WindowSize;
     public Dimensions WindowMinSize;
     
     public string Title;
-    public bool Undecorated;
-    public bool Focused;
+    public bool Topmost;
     
-    // public WindowDisplayState WindowDisplayState;
+    /// <summary>
+    /// Should fullscreen be automatically left when window loses focus and should the window be restored to
+    /// fullscreen when window gains focus again.
+    /// </summary>
+    public bool FullscreenAutoRestoring;
+    
     public WindowBorder WindowBorder;
     
     public bool Vsync;
@@ -52,9 +60,11 @@ public struct WindowSettings
     /// </summary>
     public bool HighDPI;
     public bool FramebufferTransparent;
+    
+    
+    
+    // public bool Focused;
     // public bool AutoIconify; //(minimizes window automatically if focus changes in fullscreen mode)
-    
-    
-    
-
+    // public WindowDisplayState WindowDisplayState;
+    // public Dimensions WindowLocation;
 }

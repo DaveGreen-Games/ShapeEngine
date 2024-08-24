@@ -166,9 +166,9 @@ namespace Examples
                 GameSettings.StretchMode, 
                 new WindowSettings()
                 {
-                    Undecorated = false,
-                    Focused = true,
-                    // WindowDisplayState = WindowDisplayState.Normal,
+                    Title = "Shape Engine Examples",
+                    Topmost = false,
+                    FullscreenAutoRestoring = true,
                     WindowBorder = WindowBorder.Resizabled,
                     WindowMinSize = new(480, 270),
                     WindowSize = new(960, 540),
