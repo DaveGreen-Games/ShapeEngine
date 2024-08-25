@@ -137,14 +137,14 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
     public float GetValue(ShapeMouseAxis axis, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         if (isLocked) return 0f;
-        if (!GameWindow.IsMouseOnScreen) return 0f;
+        if (!GameWindow.CurrentGameWindowInstance.MouseOnScreen) return 0f;
         if (!IModifierKey.IsActive(modifierOperator, modifierKeys, null)) return 0f;
         return GetValue(axis, deadzone);
     }
     public float GetValue(ShapeMouseAxis axis, float deadzone = 0.5f)
     {
         if (isLocked) return 0f;
-        if (!GameWindow.IsMouseOnScreen) return 0f;
+        if (!GameWindow.CurrentGameWindowInstance.MouseOnScreen) return 0f;
        
         var value = Raylib.GetMouseDelta();
         float returnValue = axis == ShapeMouseAxis.VERTICAL ? value.Y : value.X;
@@ -186,14 +186,14 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
     public float GetValue(ShapeMouseWheelAxis axis, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         if (isLocked) return 0f;
-        if (!GameWindow.IsMouseOnScreen) return 0f;
+        if (!GameWindow.CurrentGameWindowInstance.MouseOnScreen) return 0f;
         if (!IModifierKey.IsActive(modifierOperator, modifierKeys, null)) return 0f;
         return GetValue(axis, deadzone);
     }
     public float GetValue(ShapeMouseWheelAxis axis, float deadzone = 0.2f)
     {
         if (isLocked) return 0f;
-        if (!GameWindow.IsMouseOnScreen) return 0f;
+        if (!GameWindow.CurrentGameWindowInstance.MouseOnScreen) return 0f;
         
         var value = Raylib.GetMouseWheelMoveV();
         float returnValue = axis == ShapeMouseWheelAxis.VERTICAL ? value.Y : value.X;
@@ -277,14 +277,14 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
     public float GetValue(ShapeMouseButton button, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         if (isLocked) return 0f;
-        if (!GameWindow.IsMouseOnScreen) return 0f;
+        if (!GameWindow.CurrentGameWindowInstance.MouseOnScreen) return 0f;
         if (!IModifierKey.IsActive(modifierOperator, modifierKeys, null)) return 0f;
         return GetValue(button, deadzone);
     }
     public float GetValue(ShapeMouseButton button, float deadzone = 0f)
     {
         if (isLocked) return 0f;
-        if (!GameWindow.IsMouseOnScreen) return 0f;
+        if (!GameWindow.CurrentGameWindowInstance.MouseOnScreen) return 0f;
         int id = (int)button;
         if (id is >= 10 and < 20)
         {

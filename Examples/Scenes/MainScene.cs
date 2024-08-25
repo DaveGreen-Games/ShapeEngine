@@ -98,20 +98,17 @@ namespace Examples.Scenes
             var maximizedState = GAMELOOP.InputActionMaximize.Consume();
             if (maximizedState is { Consumed: false, Pressed: true })
             { 
-                // GAMELOOP.Maximized = !GAMELOOP.Maximized;
-                GAMELOOP.Window.DisplayState = GAMELOOP.Window.DisplayState == WindowDisplayState.Maximized ? WindowDisplayState.Normal : WindowDisplayState.Maximized;
+                GAMELOOP.Window.ToggleMaximizeWindow();
             }
             var minimizeState = GAMELOOP.InputActionMinimize.Consume();
             if (minimizeState is { Consumed: false, Pressed: true })
             { 
-                // GAMELOOP.Maximized = !GAMELOOP.Maximized;
-                GAMELOOP.Window.DisplayState = GAMELOOP.Window.DisplayState == WindowDisplayState.Minimized ? WindowDisplayState.Normal : WindowDisplayState.Minimized;
+                GAMELOOP.Window.ToggleMinimizeWindow();
             }
             var fullscreenState = GAMELOOP.InputActionFullscreen.Consume();
             if (fullscreenState is { Consumed: false, Pressed: true })
             { 
-                // GAMELOOP.Fullscreen = !GAMELOOP.Fullscreen;
-                GAMELOOP.Window.DisplayState = GAMELOOP.Window.DisplayState == WindowDisplayState.Fullscreen ? WindowDisplayState.Normal : WindowDisplayState.Fullscreen;
+                GAMELOOP.Window.ToggleBorderlessFullscreen();
             }
 
             var prevTabState = GAMELOOP.InputActionUIPrevTab.Consume();
@@ -224,8 +221,8 @@ namespace Examples.Scenes
             
             titleFont.FontSpacing = 1f;
             titleFont.ColorRgba = Colors.Medium;
-            titleFont.DrawTextWrapNone($"Window Focused: {Raylib.IsWindowFocused()} | [{pi}%]", infoAreaRects.top, new Vector2(1f, 1f));
-            titleFont.DrawTextWrapNone($"Cursor On Screen: {GameWindow.IsMouseOnScreen}", infoAreaRects.bottom, new Vector2(1f, 1f));
+            titleFont.DrawTextWrapNone($"Window Focused: {GameWindow.CurrentGameWindowInstance.IsWindowFocused} | [{pi}%]", infoAreaRects.top, new Vector2(1f, 1f));
+            titleFont.DrawTextWrapNone($"Cursor On Screen: {GameWindow.CurrentGameWindowInstance.MouseOnScreen}", infoAreaRects.bottom, new Vector2(1f, 1f));
 
 
             var inputInfoRect = ui.Area.ApplyMargins(0.75f, 0.01f, 0.75f, 0.01f);

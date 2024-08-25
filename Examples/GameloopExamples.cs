@@ -164,7 +164,27 @@ namespace Examples
         public GameloopExamples() : base
             (
                 GameSettings.StretchMode, 
-                WindowSettings.Default
+                new WindowSettings()
+                {
+                    Title = "Shape Engine Examples",
+                    Topmost = false,
+                    FullscreenAutoRestoring = true,
+                    WindowBorder = WindowBorder.Resizabled,
+                    WindowMinSize = new(480, 270),
+                    WindowSize = new(960, 540),
+                    Monitor = 0,
+                    Vsync = false,
+                    FrameRateLimit = 60,
+                    MinFramerate = 30,
+                    MaxFramerate = 240,
+                    WindowOpacity = 1f,
+                    MouseEnabled = true,
+                    MouseVisible = false,
+                    Msaa4x = true,
+                    HighDPI = false,
+                    FramebufferTransparent = false
+                }
+                // WindowSettings.Default
             )
         {
 
@@ -301,14 +321,7 @@ namespace Examples
 
             fpsLabel = new(FontDefault, Colors.PcCold, Colors.PcText, Colors.PcHighlight);
             
-            // HideOSCursor();
-            Window.MouseVisible = false;
-            Window.MouseEnabled = true;
-            
-            // SwitchCursor(new SimpleCursorUI());
-
             paletteInfoBox = new();
-
         }
 
         protected override Vector2 ChangeMousePos(float dt, Vector2 mousePos, Rect screenArea)
@@ -502,26 +515,24 @@ namespace Examples
             UIRects.UpdateRect(ui.Area);
             UIRects.Update(time.Delta, ui.MousePos);
 
-            //int gamepadIndex = CurGamepad?.Index ?? -1;
             InputAction.UpdateActions(time.Delta, CurGamepad, inputActions);
 
             var fullscreenState = InputActionFullscreen.Consume();
             if (fullscreenState is { Consumed: false, Pressed: true })
             {
-                Window.DisplayState = Window.DisplayState == WindowDisplayState.Fullscreen ? WindowDisplayState.Normal : WindowDisplayState.Fullscreen;
+                GAMELOOP.Window.ToggleBorderlessFullscreen();
             }
 
             var maximizeState = InputActionMaximize.Consume();
             if (maximizeState is { Consumed: false, Pressed: true })
             {
-                Window.DisplayState = Window.DisplayState == WindowDisplayState.Maximized ? WindowDisplayState.Normal : WindowDisplayState.Maximized;
-                // GAMELOOP.Maximized = !GAMELOOP.Maximized;
+                GAMELOOP.Window.ToggleMaximizeWindow();
             }
 
             var nextMonitorState = InputActionNextMonitor.Consume();
             if (nextMonitorState is { Consumed: false, Pressed: true })
             {
-               Window.NextMonitor(); // GAMELOOP.NextMonitor();
+               Window.NextMonitor();
             }
 
             if (Paused) return;
