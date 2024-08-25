@@ -2,12 +2,13 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
 	<RunWorkingDirectory>$(MSBuildThisFileDirectory)</RunWorkingDirectory>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
       <ApplicationIcon>shape-engine.ico</ApplicationIcon>
+      <LangVersion>latestmajor</LangVersion>
   </PropertyGroup>
 
     <ItemGroup>
