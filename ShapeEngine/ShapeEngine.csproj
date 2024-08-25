@@ -10,7 +10,7 @@
 	<Title>Shape Engine</Title>
 	<Authors>Dave Green</Authors>
 	<RepositoryUrl>https://github.com/DaveGreen-Games/ShapeEngine</RepositoryUrl>
-	<Version>1.1.0</Version>
+	<Version>2.0</Version>
 	<Description>My custom made 2d game engine based on the great Raylib Framework. Main focus is being performant and only using draw functions instead of textures. Custom input, audio, savegame, collision, shape, pathfinding, ui, camera, color palette, polygon fracturing, and text system are available with a few other nice things!</Description>
 	<PackageProjectUrl>https://davegreengames.itch.io/shape-engine</PackageProjectUrl>
 	<PackageIcon>shapeengine-nuget-icon-128px.png</PackageIcon>
@@ -24,37 +24,86 @@
   	<NeutralLanguage>en-US</NeutralLanguage>
   	<Copyright>Copyright (c) David Grueneis 2024</Copyright>
   	<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-  	<PackageReleaseNotes>Initially I just wanted to overhaul the input and audio system of Shape Engine. This turned into a year long complete rework . I think there is almost no area of Shape Engine that did not get changed or removed. I took some inspiration from other frameworks (Monogame mostly) on how to setup the basic framework or gameloop. I simplified it and made it more user friendly in general, and removed unnecessary steps.  
+  	<PackageReleaseNotes>
+		## Transform2D Overhaul
 
-One other big part was the new shape and collision system. Now Shape Engine supports a lot of shapes (Segment, Circle, Triangle, Rect, Quad, Polygon, Polyline) and collisions/ intersections work between all of them. The different shapes are all encapsulated in there own struct and I added a lot of helpful functions to them. You can intersect shapes and get all there intersection points with normals, or just overlap them, check if one shape contains the other, or even project shapes along a vector.
+		- Transform2D now has a scale value
+		- Transform2D now has a ScaledSize Getter (Size \* Scale)
+		- Transform2D now has Radius and Length Getters (they use Width) for circles, segments, triangles, polylines and polygons
+		- Transform2D is now properly used in the collider / collision system
+		- CollisionObject has Transform2D and each collider has an Transform2D offset which are combined to form the CurTransform of the collider
+		- Examples were updated to reflect the new changes (EndlessCollisionSystem, AsteroidMiningExample, GameObjectHandlerExample, and BouncyCircles)
+		- Transform2D lerp functions added
+		
+		## Screen Texture 2.0
 
-Reworking the UI system was really hard. I think it took me 3 iterations to get to the point where it is now. I used Godot’s Control Node system as inspiration for my system and works great now. It is simple enough and it still can do everything I need it to. The UI system now consists of three main parts:
-- Control Node (a button for instance)
-- Control Node Container (can contain any number of control nodes (even containers) and updates &amp; draws them and can also neatly align them in various ways)
-- Control Node Navigator (Navigates through all active &amp; visible control nodes via input)
+		- Screen Texture has different modes to draw the texture to the screen now:
+		- `Stretch Mode`, the texture will always be the same size as the screen
+		- `Pixelation Mode`, the texture will always be the same aspect ratio as the screen but scaled down by a certain factor (0 - 1 range)
+		- `Fixed Mode`, the texture will always stay at the same (specified) size and will be centered on the screen and upscaled to the closest dimension of the screen with black bars on the other dimension if necessary.
+		- `Nearest Fixed Mode`, the texture will always be the same aspect ratio as the screen (no black bars) but will stay as close as possible to the fixed dimension. 
+		- `Anchor Mode`, a anchor position and stretch value can be specified to position the screen texture anywhere on the screen. This can be useful for splitscreen or minimaps.
+		- `Custom Mode` , the user can control the size of texture, the mouse scaling and how the texture is drawn to the screen.
+		- Mouse Position Scaling works for all modes and the screen texture reports the scaled mouse position
+		- Shaders have moved to the screen texture. Now you can add any amount of shaders to be applied to the screen texture. `ShaderSupportType` enum was also added to specify if the screen texture should support no shaders, a single shaders, or any amount of shaders.
+		- Camera has move to the screen texture as well. A screen texture can have a single camera that is used for the `DrawGame` pass. The game mouse position will be scaled by the camera if one is used.
+		- There are 2 events for drawing now: `OnDrawGame`  and  `OnDrawGameUI`
+		- `OnDrawGame` is called before shaders are applied and the camera affects what area of the game world is drawn
+		- `OnDrawGameUi` is called after shaders are applied and the camera has no effect on it. This is useful for ui elements because it will always be on top.
+		- Clear background system that allows for a fine control of when and how the texture is cleared. In most cases clearing every frame before drawing to the texture is necessary and a custom `BackgroundColor` can be specified for that. In some cases clearing should only happen in certain intervals or not at all and to allow that a function can be set in the screen texture to control that.
+		
+		## Improvements
 
+		- ShapeVec class ExpDecay and Pow Lerp improvements.
+		- Pool system improvements
+		- ShapeId system improvements
+		- Additional Segment constructor implemented
+		- `ScreenTexture TextureFilter` property added. (GameTexture/ScreenShaderBuffer now use Bilinear filtering by default)
+		- Endless Space Example visual improvements.
+		- `WindowSize` in `WindowSettings` now defaults to 960x540.
+		- `SizeLerp*` functions added.
+		- You can now cycle through various screen shaders in the examples project
+		- `ColorPalette` class added. A color palette holds `PaletteColors.` `ColorSchemes` can be applied to color palettes to change the rgba colors of all contained palette colors.
+		- ColorScheme class overhauled.
+		- `PaletteColor` class `Clone()` functions added.
+		- New window handling system with dedicated functions for all `WindowDisplayStates` and a `RestoreWindow()` function.
+		- `GameWindow`  and  `Game` classes now have static `CurrentInstance`\* fields for easy static access to everything. There can only be one `Game`  and  `GameWindow` class anyway and the `GameWindow` constructor is internal, so it should be reasonably safe to use.
+		- `GameWindow` class `MouseOnScreen` system should work better now. This system tells you if the mouse cursor is on the screen of the window or not. Additionally, it takes care of showing/hiding the cursor when the mouse leaves the window or the window loses focus or the window is minimized.
 
-There is a lot more that has changed since the alpha version of Shape Engine (over 600 commits) and too much to write it down here but I think it gives you a good glance at the changes.
- 
-I think I got relatively close to my goal and once I use Shape Engine for my next game I will find out really quick what areas still need some work.
+		## Fixes
 
-Changed / Overhauled:
-- Input System
-- Audio System
-- Savegame System
-- Collision System
-- Color System
-- UI System
-- Text &amp; Font System
-- Gameloop
-- Drawing System
-- Screen System
-- Randomization System
+		- I have adjusted the line thickness of all calls to raylib functions that draw outlines (multiplied line thickness by 2) to make the line thickness look consistent across all functions that use it.
+		- Game multishader bug fixed
+		- Endless Space Collision Example targeting of player guns with short detection range fixed.
+		- GameWindow now calls `InitWindow()` with `WindowSettings.WindowMinSize` (if `InitWindow()` is called with 0,0 then auto iconify is disabled!)
+		
+		## New
 
-New:
-- Pathfinding System
-- Color Palettes
-- Shapes</PackageReleaseNotes>
+		- `LineDrawingInfo` Struct implemented
+		- `DrawGappedOutline*` for all shapes implemented
+		- `DrawLinesScaled*` for all shapes  implemented
+		- `PolarCoordinates` struct implemented
+		- `ControlNodeSlider` UI element implemented
+		- Pixelation shader added to examples.
+		- `FramebufferTransparent` member added to `WindowSettings` because this flag needs to be set before `InitWindow()` as well.
+		- `WindowConfigFlags` struct added in `GameWindow` class. (for detecting flag changes)
+		- Locked Timestep physics update loop added. (Fixed physics frame rate can be set and the physics update will always run at the specified frame rate)
+		- `InputEventHandler` implemented. Listeners can subscribe to the handler to receive input event callbacks. The propagation of the event can be stopped. The listeners are sorted by priority. (Lower priority is handled first, more important)
+		- New screen shaders added to examples
+		- `DrawCursorGame`, `DrawCursorGameUi`, `DrawCursorUi` virtual functions added to Game class. Replaces `ICursor` system.
+		- Fixed Update loop added. Can be enabled by setting a `FixedFramerate` bigger than 0. The fixed update loop has a fixed delta value independent of the current frame rate and delta time of the application and will call `FixedUpdate()` to consume the delta time produced by the application. A fixed update loop can be very helpful for physics and collision because the delta time is predictable. If the fixed update loop is enabled `HandleInput()` will be called every frame before `FixedUpdate()`  and  `InterpolateFixedUpdate()` will be called at the end of the frame with the fraction of  application delta time left.
+		- `WindowSettings``Topmost`  and  `FullscreenAutoRestore` fields added. `FullscreenAutoRestores` automatically exits fullscreen when window loses focus and restores fullscreen when window gains focus again.
+		- `GameWindow` class `SetWindowTopmost(bool topmost)` function added.
+		- There is now a `Fullscreen(int width, int height)` and a `BorderlessFullscreen()` mode.
+		- EndlessSpaceExample star parallax backgrounds added using the new `ScreenTexture` custom mode. The stars are drawn once to each screen texture (there are 5 parallax layers in the example right now) and based on the current camera position a certain rectangle of each screen texture is drawn to the screen.
+
+		## Deprecated/ Removed
+
+		- `DrawDotted*` functions for all shapes removed (replaced by gapped outline)
+		- `ICursor` system removed
+		- `IColorPalette` interface removed (replaced by new `ColorPalette` class)
+		- `PrevDisplayStateInfo` struct removed.
+	</PackageReleaseNotes>
   	<PackageId>DaveGreen.ShapeEngine</PackageId>
   </PropertyGroup>
 
