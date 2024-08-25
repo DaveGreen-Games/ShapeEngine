@@ -1,4 +1,4 @@
-![ShapeEngine 1 0 Release Banner reddit (1920 x 384 px)](https://github.com/DaveGreen-Games/ShapeEngine/assets/34277803/c89b0684-9363-4405-862a-075aa50acef7)
+![ShapeEngine 2 0 Release Banner reddit (1920 x 384 px)](https://github.com/user-attachments/assets/fcc43919-dd4a-4995-98f0-ede997b817a3)
 
 My custom-made engine based on the great [Raylib Framework](https://www.raylib.com/examples.html). The Main focus is being performant and only using draw functions instead of textures.
 
