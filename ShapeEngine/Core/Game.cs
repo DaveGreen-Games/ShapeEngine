@@ -248,8 +248,18 @@ public class Game
     {
         if (gameTexture == newScreenTexture) return null;
 
+        gameTexture.OnTextureResized -= GameTextureOnTextureResized;
+        gameTexture.OnDrawGame -= GameTextureOnDrawGame;
+        gameTexture.OnDrawUI -= GameTextureOnDrawUI;
+        
+        newScreenTexture.OnTextureResized += GameTextureOnTextureResized;
+        if(!newScreenTexture.Initialized) newScreenTexture.Initialize(Window.CurScreenSize, Window.MousePosition, curCamera);
+        newScreenTexture.OnDrawGame += GameTextureOnDrawGame;
+        newScreenTexture.OnDrawUI += GameTextureOnDrawUI;
+        
         var old = gameTexture;
         gameTexture = newScreenTexture;
+        
         return old;
     }
  
