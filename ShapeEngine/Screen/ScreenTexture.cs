@@ -71,14 +71,14 @@ public sealed class ScreenTexture
     
     public readonly ScreenTextureMode Mode;
     public readonly Dimensions FixedDimensions;
-    public readonly float PixelationFactor;
-    public readonly Vector2 AnchorStretch;
-    public readonly Vector2 AnchorPosition;
+    public float PixelationFactor { get; private set; }
+    public Vector2 AnchorStretch { get; private set; }
+    public Vector2 AnchorPosition { get; private set; }
     
     public readonly TextureFilter TextureFilter;
     public readonly ShaderSupportType ShaderSupport;
     public readonly ShaderContainer? Shaders = null;
-    
+    public bool Initialized { get; private set; } = false;
     #endregion
     
     #region Private
@@ -87,7 +87,7 @@ public sealed class ScreenTexture
     private Rect textureRect = new();
     private Dimensions screenDimensions = new();
     private float nearestFixedFactor = 1f;
-    private bool initialized = false;
+    private bool textureReloadRequired = false;
     private CustomScreenTextureHandler? customScreenTextureHandler = null;
     #endregion
     
@@ -284,8 +284,8 @@ public sealed class ScreenTexture
     #region Public Functions
     public void Initialize(Dimensions screenSize, Vector2 mousePosition, ShapeCamera? camera = null)
     {
-        if (initialized) return;
-        initialized = true;
+        if (Initialized) return;
+        Initialized = true;
         
         if(camera != null) Camera = camera;
         
@@ -354,8 +354,9 @@ public sealed class ScreenTexture
     }
     public void Update(float dt, Dimensions screenSize, Vector2 mousePosition, bool paused)
     {
-        if (screenDimensions != screenSize)
+        if (screenDimensions != screenSize || textureReloadRequired)
         {
+            textureReloadRequired = false;
             screenDimensions = screenSize;
             UpdateTexture(screenSize);
         }
@@ -546,6 +547,54 @@ public sealed class ScreenTexture
         return destRec;
     }
     public Rect GetTextureRect() => new(0, 0, Width, Height);
+
+    public bool ChangeAnchorPosition(Vector2 newAnchorPosition)
+    {
+        if(Mode != ScreenTextureMode.Anchor) return false;
+        if (newAnchorPosition.X < 0f || newAnchorPosition.Y < 0f || 
+            newAnchorPosition.X > 1f || newAnchorPosition.Y > 1f ) return false;
+        
+        AnchorPosition = newAnchorPosition;
+        
+        return true;
+
+    }
+
+    /// <summary>
+    /// Requires a reload of the texture!
+    /// Reloads happens next frame!
+    /// </summary>
+    /// <param name="newAnchorStretch">Value Range: Bigger than 0, 0 and smaller than 1, 1. </param>
+    /// <returns></returns>
+    public bool ChangeAnchorStretch(Vector2 newAnchorStretch)
+    {
+        if(Mode != ScreenTextureMode.Anchor) return false;
+        
+        if (newAnchorStretch.X <= 0f || newAnchorStretch.Y <= 0f || 
+            newAnchorStretch.X >= 1f || newAnchorStretch.Y >= 1f ) return false;
+
+        textureReloadRequired = true;
+        AnchorStretch = newAnchorStretch;
+        
+        return true;
+    }
+
+    /// <summary>
+    /// Requires a reload of the texture!
+    /// Reloads happens next frame!
+    /// </summary>
+    /// <param name="newPixelationFactor"> Value Range: Bigger than 0 and smaller than 1!</param>
+    /// <returns></returns>
+    public bool ChangePixelationFactor(float newPixelationFactor)
+    {
+        if(Mode != ScreenTextureMode.Pixelation) return false;
+        if(newPixelationFactor <= 0f || newPixelationFactor >= 1f ) return false;
+        
+        textureReloadRequired = true;
+        PixelationFactor = newPixelationFactor;
+        
+        return true;
+    }
     #endregion
 
     #region Custom Texture Mode Functions
