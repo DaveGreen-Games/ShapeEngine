@@ -581,8 +581,8 @@ namespace Examples
             if (keypadNumber > 0)
             {
                 var anchorTexture = gameTextures[4];
-                var newAnchor = Rect.GetKeypadAnchorPosition(keypadNumber);
-                anchorTexture.ChangeAnchorPosition(newAnchor);
+                var newAnchor = AnchorPoint.GetKeypadAnchorPosition(keypadNumber);
+                anchorTexture.ChangeAnchorPosition(newAnchor.ToVector2());
             }
             
             

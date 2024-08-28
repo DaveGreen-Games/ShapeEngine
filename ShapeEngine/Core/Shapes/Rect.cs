@@ -1110,55 +1110,7 @@ public readonly struct Rect : IEquatable<Rect>
             );
     }
 
-    /// <summary>
-    /// Returns a vector2 between 0,0 and 1,1.
-    /// 7 , 8 , 9
-    /// 4 , 5 , 6
-    /// 1 , 2 , 3
-    /// 7 is top left and returns 0, 0
-    /// 3 is bottom right and returns 1, 1
-    /// </summary>
-    /// <param name="keypadNumber"></param>
-    /// <returns></returns>
-    public static Vector2 GetKeypadAnchorPosition(int keypadNumber)
-    {
-        if(keypadNumber < 1 || keypadNumber > 9) return Vector2.Zero;
-        
-        if(keypadNumber == 1) return new Vector2(0f, 1f);
-        if(keypadNumber == 2) return new Vector2(0.5f, 1f);
-        if(keypadNumber == 3) return new Vector2(1f, 1f);
-        if(keypadNumber == 4) return new Vector2(0f, 0.5f);
-        if(keypadNumber == 5) return new Vector2(0.5f, 0.5f);
-        if(keypadNumber == 6) return new Vector2(1f, 0.5f);
-        if(keypadNumber == 7) return new Vector2(0f, 0f);
-        if(keypadNumber == 8) return new Vector2(0.5f, 0f);
-        return new Vector2(1f, 0f);
-    }
-   
-    /// <summary>
-    /// Returns a vector2 between 0,0 and 1,1.
-    /// 1 , 2 , 3
-    /// 4 , 5 , 6
-    /// 7 , 8 , 9
-    /// 1 is top left and returns 0, 0
-    /// 9 is bottom right and returns 1, 1
-    /// </summary>
-    /// <param name="keypadNumber"></param>
-    /// <returns></returns>
-    public static Vector2 GetKeypadAnchorPositionReversed(int keypadNumber)
-    {
-        if(keypadNumber < 1 || keypadNumber > 9) return Vector2.Zero;
-        
-        if(keypadNumber == 1) return new Vector2(0f, 0f);
-        if(keypadNumber == 2) return new Vector2(0.5f, 0f);
-        if(keypadNumber == 3) return new Vector2(1f, 0f);
-        if(keypadNumber == 4) return new Vector2(0f, 0.5f);
-        if(keypadNumber == 5) return new Vector2(0.5f, 0.5f);
-        if(keypadNumber == 6) return new Vector2(1f, 0.5f);
-        if(keypadNumber == 7) return new Vector2(0f, 1f);
-        if(keypadNumber == 8) return new Vector2(0.5f, 1f);
-        return new Vector2(1f, 1f);
-    }
+    
     
     #endregion
 
