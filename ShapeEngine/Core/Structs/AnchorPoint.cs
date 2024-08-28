@@ -104,4 +104,38 @@ public readonly struct AnchorPoint(float x, float y) : IEquatable<AnchorPoint>
     public override bool Equals(object? obj) => obj is AnchorPoint other && Equals(other);
 
     public override int GetHashCode() => HashCode.Combine(X, Y);
+    
+    public static bool operator ==(AnchorPoint left, AnchorPoint right) => left.Equals(right);
+    public static bool operator !=(AnchorPoint left, AnchorPoint right) => left.Equals(right);
+    public static AnchorPoint operator +(AnchorPoint left, AnchorPoint right) => new(left.X + right.X, left.Y + right.Y);
+    public static AnchorPoint operator -(AnchorPoint left, AnchorPoint right) => new(left.X - right.X, left.Y - right.Y);
+    public static AnchorPoint operator *(AnchorPoint left, AnchorPoint right) => new(left.X * right.X, left.Y * right.Y);
+    public static AnchorPoint operator /(AnchorPoint left, AnchorPoint right) => new(left.X / (right.X == 0f ? 1f : right.X), left.Y / (right.Y == 0f ? 1f : right.Y));
+    public static AnchorPoint operator +(AnchorPoint left, float right) => new(left.X + right, left.Y + right);
+    public static AnchorPoint operator -(AnchorPoint left, float right) => new(left.X - right, left.Y - right);
+    public static AnchorPoint operator *(AnchorPoint left, float right) => new(left.X * right, left.Y * right);
+    public static AnchorPoint operator /(AnchorPoint left, float right)
+    {
+        if(right == 0) return Zero;
+        return new(left.X / right, left.Y / right);
+    }
+    public static Vector2 operator +(AnchorPoint left, Vector2 right) => new(left.X + right.X, left.Y + right.Y);
+    public static Vector2 operator -(AnchorPoint left, Vector2 right) => new(left.X - right.X, left.Y - right.Y);
+    public static Vector2 operator *(AnchorPoint left, Vector2 right) => new(left.X * right.X, left.Y * right.Y);
+    public static Vector2 operator /(AnchorPoint left, Vector2 right) => new(left.X / (right.X == 0f ? 1f : right.X), left.Y / (right.Y == 0f ? 1f : right.Y));
+    
+    public static Vector2 operator +(Vector2 left, AnchorPoint right) => new(left.X + right.X, left.Y + right.Y);
+    public static Vector2 operator -(Vector2 left, AnchorPoint right) => new(left.X - right.X, left.Y - right.Y);
+    public static Vector2 operator *(Vector2 left, AnchorPoint right) => new(left.X * right.X, left.Y * right.Y);
+    public static Vector2 operator /(Vector2 left, AnchorPoint right) => new(left.X / (right.X == 0f ? 1f : right.X), left.Y / (right.Y == 0f ? 1f : right.Y));
+    
+    //public static AnchorPoint operator +(AnchorPoint left, Size right) => new(left.X + right.Width, left.Y + right.Height);
+    // public static AnchorPoint operator -(AnchorPoint left, Size right) => new(left.X - right.Width, left.Y - right.Height);
+    // public static AnchorPoint operator *(AnchorPoint left, Size right) => new(left.X * right.Width, left.Y * right.Height);
+    // public static AnchorPoint operator /(AnchorPoint left, Size right) => new(left.X / (right.Width == 0f ? 1f : right.Width), left.Y / (right.Height == 0f ? 1f : right.Height));
+    
+    // public static AnchorPoint operator +(Size left, AnchorPoint right) => new(left.Width + right.X, left.Height + right.Y);
+    // public static AnchorPoint operator -(Size left, AnchorPoint right) => new(left.Width - right.X, left.Height - right.Y);
+    // public static AnchorPoint operator *(Size left, AnchorPoint right) => new(left.Width * right.X, left.Height * right.Y);
+    // public static AnchorPoint operator /(Size left, AnchorPoint right) => new(left.Width / (right.X == 0f ? 1f : right.X), left.Height / (right.Y == 0f ? 1f : right.Y));
 }

@@ -189,7 +189,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         
         private readonly Font font;
-        private readonly Rect universe = new(new Vector2(0f), new Size(10000f), new Vector2(0.5f));
+        private readonly Rect universe = new(new Vector2(0f), new Size(10000f), new AnchorPoint(0.5f));
         private readonly List<Star> stars = new();
 
         private readonly CameraFollowerMulti cameraFollower = new();

@@ -27,7 +27,7 @@ namespace Examples.Scenes.ExampleScenes
     {
         private static TextFont textFont = new(GAMELOOP.GetFont(FontIDs.JetBrains), 1f, Colors.Text);
         public string Text { get; set; }
-        public ControlNodeLabel(string text, Vector2 anchor, Vector2 stretch)
+        public ControlNodeLabel(string text, AnchorPoint anchor, Vector2 stretch)
         {
             this.Text = text;
             this.Anchor = anchor;
@@ -62,7 +62,7 @@ namespace Examples.Scenes.ExampleScenes
     {
         private static TextFont textFont = new(GAMELOOP.GetFont(FontIDs.JetBrains), 1f, Colors.Text);
         public string Text { get; set; }
-        public ControlNodeTexBox(string text, Vector2 anchor, Vector2 stretch)
+        public ControlNodeTexBox(string text, AnchorPoint anchor, Vector2 stretch)
         {
             this.Text = text;
             this.Anchor = anchor;
@@ -78,7 +78,7 @@ namespace Examples.Scenes.ExampleScenes
     {
         private float inputCooldownTimer = 0f;
         private const float inputCooldown = 0.1f;
-        public ControlNodeButton(string text, Vector2 anchor, Vector2 stretch)
+        public ControlNodeButton(string text, AnchorPoint anchor, Vector2 stretch)
         {
             this.Anchor = anchor;
             this.Stretch = stretch;
@@ -173,7 +173,7 @@ namespace Examples.Scenes.ExampleScenes
                 if (MouseInside)
                 {
                     var amount = Rect.Size.Min() * 0.25f;
-                    var outside = Rect.ChangeSize(amount, new Vector2(0.5f, 0.5f));//  Rect.ScaleSize(1.2f, new Vector2(0.5f));
+                    var outside = Rect.ChangeSize(amount, new AnchorPoint(0.5f, 0.5f));//  Rect.ScaleSize(1.2f, new Vector2(0.5f));
                     outside.DrawLines(2f, Colors.Medium);
                 }
                 
@@ -240,7 +240,7 @@ namespace Examples.Scenes.ExampleScenes
 
             buttonContainer = new ControlNodeContainer
             {
-                Anchor = new Vector2(0.5f),
+                Anchor = new AnchorPoint(0.5f),
                 Stretch = new Vector2(0.8f, 0.6f)
             };
             
@@ -267,17 +267,17 @@ namespace Examples.Scenes.ExampleScenes
             
             container.AddChild(buttonContainer);
 
-            var titleLabel = new ControlNodeLabel("UI System 2.0", new Vector2(0.5f, 0f), new Vector2(0.8f, 0.15f));
+            var titleLabel = new ControlNodeLabel("UI System 2.0", new AnchorPoint(0.5f, 0f), new Vector2(0.8f, 0.15f));
             container.AddChild(titleLabel);
 
             var infoBox = new ControlNodeTexBox(
                 "This is an info box about the new ui system. " +
                 "It improves many long standing issues, simplifies the usage while still being versatile. " +
                 "It is loosely based on Godots Control system.", 
-                new Vector2(0.02f, 0.98f), new Vector2(0.6f, 0.15f));
+                new AnchorPoint(0.02f, 0.98f), new Vector2(0.6f, 0.15f));
             container.AddChild(infoBox);
 
-            var resetButton = new ControlNodeButton("Reset", new Vector2(0.95f, 0.95f), new Vector2(0.2f, 0.1f));
+            var resetButton = new ControlNodeButton("Reset", new AnchorPoint(0.95f, 0.95f), new Vector2(0.2f, 0.1f));
             container.AddChild(resetButton);
             
             navigator.AddNode(container);

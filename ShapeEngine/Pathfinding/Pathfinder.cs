@@ -131,7 +131,7 @@ public class Pathfinder
     {
         var coordinates = Grid.IndexToCoordinates(index);
         var pos = Bounds.TopLeft + CellSize * coordinates.ToVector2();
-        return new Rect(pos, CellSize, new Vector2(0f));
+        return new Rect(pos, CellSize, new (0f));
     }
 
     
@@ -874,10 +874,10 @@ public class Pathfinder
             //     r.ScaleSize(0.9f, new Vector2(0.5f)).Draw(new ColorRgba(System.Drawing.Color.Bisque));
             // }
             //
-            if(node.GetWeight(layer) == 0) r.ScaleSize(0.5f, new Vector2(0.5f)).Draw(blocked);
-            else if(node.GetWeight(layer) > 1) r.ScaleSize(0.65f, new Vector2(0.5f)).Draw(undesirable);
-            else if(node.GetWeight(layer) < 1) r.ScaleSize(0.65f, new Vector2(0.5f)).Draw(desirable);
-            else r.ScaleSize(0.8f, new Vector2(0.5f)).Draw(standard);
+            if(node.GetWeight(layer) == 0) r.ScaleSize(0.5f, new AnchorPoint(0.5f)).Draw(blocked);
+            else if(node.GetWeight(layer) > 1) r.ScaleSize(0.65f, new AnchorPoint(0.5f)).Draw(undesirable);
+            else if(node.GetWeight(layer) < 1) r.ScaleSize(0.65f, new AnchorPoint(0.5f)).Draw(desirable);
+            else r.ScaleSize(0.8f, new AnchorPoint(0.5f)).Draw(standard);
         }
         
     }

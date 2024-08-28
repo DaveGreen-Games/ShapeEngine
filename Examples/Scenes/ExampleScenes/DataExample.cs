@@ -121,7 +121,7 @@ public class DataExample : ExampleScene
             var r = Shape.GetBoundingBox();
             r = r.ChangePosition(new Vector2(Shape.Radius * 2.5f, 0f));
             textFont.ColorRgba = Colors.Highlight;
-            textFont.DrawWord(text, r, new Vector2(0.5f));
+            textFont.DrawWord(text, r, new AnchorPoint(0.5f));
         }
     }
     private readonly struct AsteroidData

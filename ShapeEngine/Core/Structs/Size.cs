@@ -374,6 +374,17 @@ public readonly struct Size : IEquatable<Size>
             left.Height / right   
         );
     }
+    
+    public static Size operator +(AnchorPoint left, Size right) => new(left.X + right.Width, left.Y + right.Height);
+    public static Size operator -(AnchorPoint left, Size right) => new(left.X - right.Width, left.Y - right.Height);
+    public static Size operator *(AnchorPoint left, Size right) => new(left.X * right.Width, left.Y * right.Height);
+    public static Size operator /(AnchorPoint left, Size right) => new(left.X / (right.Width == 0f ? 1f : right.Width), left.Y / (right.Height == 0f ? 1f : right.Height));
+    
+    public static Size operator +(Size left, AnchorPoint right) => new(left.Width + right.X, left.Height + right.Y);
+    public static Size operator -(Size left, AnchorPoint right) => new(left.Width - right.X, left.Height - right.Y);
+    public static Size operator *(Size left, AnchorPoint right) => new(left.Width * right.X, left.Height * right.Y);
+    public static Size operator /(Size left, AnchorPoint right) => new(left.Width / (right.X == 0f ? 1f : right.X), left.Height / (right.Y == 0f ? 1f : right.Y));
+    
     public bool Equals(Size other) => Width.Equals(other.Width) && Height.Equals(other.Height);
 
     public override bool Equals(object? obj) => obj is Size other && Equals(other);

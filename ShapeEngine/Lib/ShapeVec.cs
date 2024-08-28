@@ -106,9 +106,9 @@ namespace ShapeEngine.Lib
             return Vector2.Dot(rotated, b) == 0.0f;
         }
 
-        public static Vector2 Align(this Vector2 pos, Vector2 size, Vector2 alignement)
+        public static Vector2 Align(this Vector2 pos, Size size, AnchorPoint alignement)
         {
-            return pos - size * alignement;
+            return pos - (size * alignement).ToVector2();
         }
 
         public static Vector2 Wrap(this Vector2 v, Vector2 min, Vector2 max)

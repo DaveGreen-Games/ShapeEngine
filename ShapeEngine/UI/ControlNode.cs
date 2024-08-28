@@ -129,7 +129,7 @@ public abstract class ControlNode
 
     #region Public Members
     
-    public Vector2 Anchor = new(0f);
+    public AnchorPoint Anchor = new(0f);
     /// <summary>
     /// Stretch determines the size of the rect based on the parent rect size. Values are relative and in range 0 - 1.
     /// If Stretch values are 0 than the size of the rect can be set manually without it being changed by the parent rect size.

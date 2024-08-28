@@ -101,7 +101,8 @@
 		- `GameWindow` class `SetWindowTopmost(bool topmost)` function added.
 		- There is now a `Fullscreen(int width, int height)` and a `BorderlessFullscreen()` mode.
 		- EndlessSpaceExample star parallax backgrounds added using the new `ScreenTexture` custom mode. The stars are drawn once to each screen texture (there are 5 parallax layers in the example right now) and based on the current camera position a certain rectangle of each screen texture is drawn to the screen.
-
+		- AnchorPoint struct added. Is used for alignment or ui/rect anchor.
+		
 		## Deprecated/ Removed
 
 		- `DrawDotted*` functions for all shapes removed (replaced by gapped outline)

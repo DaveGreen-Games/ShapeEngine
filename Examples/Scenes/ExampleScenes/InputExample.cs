@@ -414,7 +414,7 @@ namespace Examples.Scenes.ExampleScenes
                 
                 insideBottom.DrawLines(lineThickness / 2, flashColor1);
     
-                var insideRect = insideBottom.ScaleSize((float)0f, (Vector2)new(0.5f)).Lerp(insideBottom,  MathF.Abs(button.State.Axis));
+                var insideRect = insideBottom.ScaleSize(0f, new AnchorPoint(0.5f)).Lerp(insideBottom,  MathF.Abs(button.State.Axis));
                 insideRect.Draw(flashColor2);
                 
                 var inputs = button.GetInputs(curInputDeviceType);

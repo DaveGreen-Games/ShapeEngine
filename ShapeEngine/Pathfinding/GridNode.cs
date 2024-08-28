@@ -13,7 +13,7 @@ internal class GridNode : Node
         get
         {
             var pos = parent.Bounds.TopLeft + parent.CellSize * Coordinates.ToVector2();
-            return new Rect(pos, parent.CellSize, new Vector2(0f));
+            return new Rect(pos, parent.CellSize, new AnchorPoint(0f));
         }
     }
     

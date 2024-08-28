@@ -194,7 +194,7 @@ namespace Examples.Scenes
             var deviceText = ShapeInput.GetCurInputDeviceGenericName();
             titleFont.LineSpacing = 1f;
             titleFont.ColorRgba = Colors.Medium;
-            titleFont.DrawTextWrapNone(deviceText, deviceRect, new Vector2(0.01f, 0.5f));
+            titleFont.DrawTextWrapNone(deviceText, deviceRect, new AnchorPoint(0.01f, 0.5f));
             // titleFont.DrawText(deviceText, deviceRect, 1f, new Vector2(0.01f, 0.5f), ColorHighlight3);
             
             string gamepadText = "No Gamepad Connected";
@@ -206,7 +206,7 @@ namespace Examples.Scenes
             
             titleFont.LineSpacing = 1f;
             titleFont.ColorRgba = GAMELOOP.CurGamepad != null ? Colors.Highlight : Colors.Medium;
-            titleFont.DrawTextWrapNone(gamepadText, gamepadRect, new Vector2(0.01f, 0.5f));
+            titleFont.DrawTextWrapNone(gamepadText, gamepadRect, new AnchorPoint(0.01f, 0.5f));
             // titleFont.DrawText(gamepadText, gamepadRect, 1f, new Vector2(0.01f, 0.5f), GAMELOOP.CurGamepad != null ? ColorHighlight3 : ColorMedium);
         }
 

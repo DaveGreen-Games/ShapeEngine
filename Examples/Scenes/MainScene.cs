@@ -51,7 +51,7 @@ namespace Examples.Scenes
             
             buttonContainer = new ControlNodeContainer
             {
-                Anchor = new Vector2(0.05f, 0.92f),
+                Anchor = new AnchorPoint(0.05f, 0.92f),
                 Stretch = new Vector2(0.45f, 0.75f)
             };
             buttonContainer.AlwaysKeepFilled = false;
@@ -190,7 +190,7 @@ namespace Examples.Scenes
             buttonContainer.Draw();
 
             var text = "Shape Engine Examples";
-            var titleRect = new Rect(uiSize * new Vector2(0.5f, 0.01f), uiSize.ToSize() * new Size(0.75f, 0.09f), new Vector2(0.5f, 0f));
+            var titleRect = new Rect(uiSize * new Vector2(0.5f, 0.01f), uiSize.ToSize() * new Size(0.75f, 0.09f), new AnchorPoint(0.5f, 0f));
             titleFont.FontSpacing = 10f;
             titleFont.ColorRgba = Colors.Text;
             titleFont.DrawTextWrapNone(text, titleRect, new(0.5f));
@@ -200,7 +200,7 @@ namespace Examples.Scenes
             string nextName = GAMELOOP.InputActionUINextTab.GetInputTypeDescription(ShapeInput.CurrentInputDeviceType, true, 1, false);
             
             string pagesText = $"{prevName} <- Page #{curPage}/{pages} -> {nextName}";
-            var pageRect = new Rect(uiSize * new Vector2(0.01f, 0.12f), uiSize.ToSize() * new Vector2(0.3f, 0.06f), new Vector2(0f, 0f));
+            var pageRect = new Rect(uiSize * new Vector2(0.01f, 0.12f), uiSize.ToSize() * new Vector2(0.3f, 0.06f), new AnchorPoint(0f, 0f));
             titleFont.FontSpacing = 4f;
             titleFont.ColorRgba = Colors.Highlight;
             titleFont.DrawTextWrapNone(pagesText, pageRect, new(0f, 0.5f));
@@ -209,10 +209,10 @@ namespace Examples.Scenes
             float thickness = ui.Area.Height * 0.0025f;
             s.Draw(thickness, Colors.Light);
 
-            var backRect = new Rect(uiSize * new Vector2(0.01f, 0.17f), uiSize.ToSize() * new Size(0.2f, 0.04f), new Vector2(0f, 0f));
+            var backRect = new Rect(uiSize * new Vector2(0.01f, 0.17f), uiSize.ToSize() * new Size(0.2f, 0.04f), new AnchorPoint(0f, 0f));
             var curInputDevice = ShapeInput.CurrentInputDeviceTypeNoMouse;
             
-            quitLabel.Draw(backRect, new Vector2(0f), curInputDevice);
+            quitLabel.Draw(backRect, new AnchorPoint(0f), curInputDevice);
 
             var infoArea = ui.Area.ApplyMargins(0.7f, 0.025f, 0.14f, 0.79f);
             var infoAreaRects = infoArea.SplitV(0.5f);
@@ -221,8 +221,8 @@ namespace Examples.Scenes
             
             titleFont.FontSpacing = 1f;
             titleFont.ColorRgba = Colors.Medium;
-            titleFont.DrawTextWrapNone($"Window Focused: {GameWindow.Instance.IsWindowFocused} | [{pi}%]", infoAreaRects.top, new Vector2(1f, 1f));
-            titleFont.DrawTextWrapNone($"Cursor On Screen: {GameWindow.Instance.MouseOnScreen}", infoAreaRects.bottom, new Vector2(1f, 1f));
+            titleFont.DrawTextWrapNone($"Window Focused: {GameWindow.Instance.IsWindowFocused} | [{pi}%]", infoAreaRects.top, new AnchorPoint(1f, 1f));
+            titleFont.DrawTextWrapNone($"Cursor On Screen: {GameWindow.Instance.MouseOnScreen}", infoAreaRects.bottom, new AnchorPoint(1f, 1f));
 
 
             var inputInfoRect = ui.Area.ApplyMargins(0.75f, 0.01f, 0.75f, 0.01f);
@@ -295,7 +295,7 @@ namespace Examples.Scenes
             var rects = curInputDevice == InputDeviceType.Gamepad ? area.SplitV(6) : area.SplitV(5);
 
             var color = Colors.Medium;
-            var alignement = new Vector2(1f, 0.05f);
+            var alignement = new AnchorPoint(1f, 0.05f);
             titleFont.FontSpacing = 1f;
             titleFont.ColorRgba = color;
             titleFont.DrawTextWrapNone(fullscreenInfo, rects[0], alignement);
@@ -333,7 +333,7 @@ namespace Examples.Scenes
                 var rect = rects[i];
                 titleFont.FontSpacing = 1f;
                 titleFont.ColorRgba = ColorRgba.White;
-                titleFont.DrawTextWrapNone(infoText, rect, new Vector2(0.95f, 0.5f));
+                titleFont.DrawTextWrapNone(infoText, rect, new AnchorPoint(0.95f, 0.5f));
             }
         }
     }

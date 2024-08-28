@@ -361,7 +361,7 @@ internal class PathfinderFlag
             {
                 foreach (var rect in path.Rects)
                 {
-                    rect.ScaleSize(0.3f, new Vector2(0.5f)).Draw(Colors.PcText.ColorRgba);
+                    rect.ScaleSize(0.3f, new AnchorPoint(0.5f)).Draw(Colors.PcText.ColorRgba);
                 }
             }
 

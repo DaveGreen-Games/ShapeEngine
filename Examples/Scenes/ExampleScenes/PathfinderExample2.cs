@@ -659,7 +659,7 @@ public class PathfinderExample2 : ExampleScene
 
         var universeWidth = Rng.Instance.RandF(8000, 12000);
         var universeHeight = Rng.Instance.RandF(8000, 12000);
-        universe = new(new Vector2(0f), new Size(universeWidth, universeHeight) , new Vector2(0.5f));
+        universe = new(new Vector2(0f), new Size(universeWidth, universeHeight) , new AnchorPoint(0.5f));
         universeShape = universe.ToPolygon();
         var cols = (int)(universeWidth / CellSize);
         var rows = (int)(universeHeight / CellSize);
@@ -706,7 +706,7 @@ public class PathfinderExample2 : ExampleScene
     {
         var universeWidth = Rng.Instance.RandF(8000, 12000);
         var universeHeight = Rng.Instance.RandF(8000, 12000);
-        universe = new(new Vector2(0f), new Size(universeWidth, universeHeight) , new Vector2(0.5f));
+        universe = new(new Vector2(0f), new Size(universeWidth, universeHeight) , new AnchorPoint(0.5f));
         universeShape = universe.ToPolygon();
         var cols = (int)(universeWidth / CellSize);
         var rows = (int)(universeHeight / CellSize);
@@ -749,7 +749,7 @@ public class PathfinderExample2 : ExampleScene
     }
     private void AddChasers(int amount, Vector2 pos)
     {
-        var spawnArea = new Rect(pos, new Size(pathfinder.CellSize.Max() * 4), new Vector2(0.5f));
+        var spawnArea = new Rect(pos, new Size(pathfinder.CellSize.Max() * 4), new AnchorPoint(0.5f));
         var spawnRects = pathfinder.GetRects(spawnArea, true);
         
         for (var i = 0; i < amount; i++)
@@ -1034,8 +1034,8 @@ public class PathfinderExample2 : ExampleScene
         if (!pathfinder.IsTraversable(index))
         {
             var r = pathfinder.GetRect(index);
-            var cutRect = r.ChangeSize(pathfinder.CellSize * 2.05f, new Vector2(0.5f, 0.5f));
-            var nodeValueRect = r.ChangeSize(pathfinder.CellSize * 1.95f, new Vector2(0.5f, 0.5f));
+            var cutRect = r.ChangeSize(pathfinder.CellSize * 2.05f, new AnchorPoint(0.5f, 0.5f));
+            var nodeValueRect = r.ChangeSize(pathfinder.CellSize * 1.95f, new AnchorPoint(0.5f, 0.5f));
             var cutShape = cutRect.ToPolygon(); // ship.GetCutShape(minCellDistance);
             
             for (int i = asteroids.Count - 1; i >= 0; i--)

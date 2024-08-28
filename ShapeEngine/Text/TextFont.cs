@@ -110,7 +110,7 @@ public class TextFont
     
     #region Draw
 
-    public void Draw(char c, Rect rect, Vector2 alignement)
+    public void Draw(char c, Rect rect, AnchorPoint alignement)
     {
         if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
         float f = rect.Size.Height / BaseSize;
@@ -122,24 +122,24 @@ public class TextFont
         
         Raylib.DrawTextCodepoint(Font, c, charRect.TopLeft, fontSize, ColorRgba.ToRayColor());
     }
-    public void Draw(string text, Rect rect, float rotDeg, Vector2 alignement)
+    public void Draw(string text, Rect rect, float rotDeg, AnchorPoint alignement)
     {
         if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
         var scaledFont = FontDimensions.ScaleDynamic(text, rect.Size);
         var textSize = scaledFont.GetTextSize(text);
         Rect r = new(rect.GetPoint(alignement), textSize, alignement);
-        var originOffset = alignement * textSize;
+        var originOffset = (alignement * textSize).ToVector2();
         Raylib.DrawTextPro(scaledFont.Font, text, r.TopLeft + originOffset, originOffset, rotDeg, scaledFont.Size, scaledFont.Spacing, ColorRgba.ToRayColor());
     }
     public void DrawWord(string word, Vector2 topLeft) => Raylib.DrawTextEx(Font, word, topLeft, FontSize, FontSpacing, ColorRgba.ToRayColor());
     public void DrawWord(string word, Vector2 topLeft, FontDimensions fontDimensions) => Raylib.DrawTextEx(fontDimensions.Font, word, topLeft, fontDimensions.Size, fontDimensions.Spacing, ColorRgba.ToRayColor());
-    public void DrawWord(string word, Vector2 topLeft, Vector2 alignement)
+    public void DrawWord(string word, Vector2 topLeft, AnchorPoint alignement)
     {
         var size = FontDimensions.GetTextSize(word);
         Rect r = new(topLeft, size, alignement);
         Raylib.DrawTextEx(Font, word, r.TopLeft, FontSize, FontSpacing, ColorRgba.ToRayColor());
     }
-    public void DrawWord(string word, Vector2 topLeft, Vector2 alignement, Caret caret)
+    public void DrawWord(string word, Vector2 topLeft, AnchorPoint alignement, Caret caret)
     {
         DrawWord(word, topLeft, alignement);
         
@@ -153,7 +153,7 @@ public class TextFont
             caret.Draw(caretTop, FontSize);
         }
     }
-    public void DrawWord(string word, Rect rect, Vector2 alignement)
+    public void DrawWord(string word, Rect rect, AnchorPoint alignement)
     {
         if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
         var scaledFont = FontDimensions.ScaleDynamic(word, rect.Size);
@@ -161,7 +161,7 @@ public class TextFont
         Rect r = new(rect.GetPoint(alignement), textSize, alignement);
         DrawWord(word, r.TopLeft, scaledFont);
     }
-    public void DrawWord(string word, Rect rect, Vector2 alignement, Emphasis emphasis)
+    public void DrawWord(string word, Rect rect, AnchorPoint alignement, Emphasis emphasis)
     {
         if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
         var scaledFont = FontDimensions.ScaleDynamic(word, rect.Size);
@@ -176,14 +176,14 @@ public class TextFont
         
     }
 
-    public void DrawTextWrapNone(string text, Rect rect, Vector2 alignement)
+    public void DrawTextWrapNone(string text, Rect rect, AnchorPoint alignement)
     {
         var scaledFont = FontDimensions.ScaleDynamic(text, rect.Size);
         var textSize = scaledFont.GetTextSize(text);
         Rect r = new(rect.GetPoint(alignement), textSize, alignement);
         DrawWord(text, r.TopLeft, scaledFont);
     }
-    public void DrawTextWrapNone(string text, Rect rect, Vector2 alignement, ColorRgba colorRgba)
+    public void DrawTextWrapNone(string text, Rect rect, AnchorPoint alignement, ColorRgba colorRgba)
     {
         var scaledFont = FontDimensions.ScaleDynamic(text, rect.Size);
         var textSize = scaledFont.GetTextSize(text);
@@ -191,7 +191,7 @@ public class TextFont
         DrawWord(text, r.TopLeft, colorRgba, scaledFont);
     }
 
-    public void DrawTextWrapNone(string text, Rect rect, Vector2 alignement, Caret caret)
+    public void DrawTextWrapNone(string text, Rect rect, AnchorPoint alignement, Caret caret)
     {
         var scaledFont = FontDimensions.ScaleDynamic(text, rect.Size);
         var textSize = scaledFont.GetTextSize(text);
@@ -207,7 +207,7 @@ public class TextFont
             caret.Draw(caretTop, scaledFont.Size);
         }
     }
-    public void DrawTextWrapNone(string text, Rect rect, Vector2 alignement, Caret caret, List<TextEmphasis>? emphases)
+    public void DrawTextWrapNone(string text, Rect rect, AnchorPoint alignement, Caret caret, List<TextEmphasis>? emphases)
     {
         if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
         
@@ -272,15 +272,15 @@ public class TextFont
     }
     
     
-    public void DrawTextWrapChar(string text, Rect rect, Vector2 alignement)
+    public void DrawTextWrapChar(string text, Rect rect, AnchorPoint alignement)
     {
         DrawTextWrapChar(text, rect, alignement, new(), null);
     }
-    public void DrawTextWrapChar(string text, Rect rect, Vector2 alignement, Caret caret)
+    public void DrawTextWrapChar(string text, Rect rect, AnchorPoint alignement, Caret caret)
     {
         DrawTextWrapChar(text, rect, alignement, caret, null);
     }
-    public void DrawTextWrapChar(string text, Rect rect, Vector2 alignement, Caret caret, List<TextEmphasis>? emphases)
+    public void DrawTextWrapChar(string text, Rect rect, AnchorPoint alignement, Caret caret, List<TextEmphasis>? emphases)
     {
         if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
         // var rectSize = rect.Size;
@@ -570,15 +570,15 @@ public class TextFont
         }
     }
     
-    public void DrawTextWrapWord(string text, Rect rect, Vector2 alignement)
+    public void DrawTextWrapWord(string text, Rect rect, AnchorPoint alignement)
     {
         DrawTextWrapWord(text, rect, alignement, new(), null);
     }
-    public void DrawTextWrapWord(string text, Rect rect, Vector2 alignement, Caret caret)
+    public void DrawTextWrapWord(string text, Rect rect, AnchorPoint alignement, Caret caret)
     {
         DrawTextWrapWord(text, rect, alignement, new(), null);
     }
-    public void DrawTextWrapWord(string text, Rect rect, Vector2 alignement, Caret caret, List<TextEmphasis>? emphases)
+    public void DrawTextWrapWord(string text, Rect rect, AnchorPoint alignement, Caret caret, List<TextEmphasis>? emphases)
     {
         if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
         // var rectSize = rect.Size;

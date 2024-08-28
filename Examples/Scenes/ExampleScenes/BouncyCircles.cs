@@ -35,7 +35,7 @@ namespace Examples.Scenes.ExampleScenes
 
         public override Rect GetBoundingBox()
         {
-            return new Rect(Transform.Position, Transform.ScaledSize * new Size(2), new Vector2(0.5f));
+            return new Rect(Transform.Position, Transform.ScaledSize * new Size(2), new AnchorPoint(0.5f));
         }
         
 
@@ -201,7 +201,7 @@ namespace Examples.Scenes.ExampleScenes
             
             textFont.FontSpacing = 1f;
             textFont.ColorRgba = Colors.Warm;
-            textFont.DrawTextWrapNone(objectCountText, GAMELOOP.UIRects.GetRect("bottom right"), new Vector2(0.98f, 0.98f));
+            textFont.DrawTextWrapNone(objectCountText, GAMELOOP.UIRects.GetRect("bottom right"), new AnchorPoint(0.98f, 0.98f));
         }
 
         private void DrawInputDescription(Rect rect)

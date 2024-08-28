@@ -1784,12 +1784,12 @@ public static class ShapeDrawing
         DrawCircleSectorLines(center, radius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, sides, lineThickness, color, closed);
     }
 
-    public static void DrawCircleCheckeredLines(Vector2 pos, Vector2 alignement, float radius, float spacing, float lineThickness, float angleDeg, ColorRgba lineColorRgba, ColorRgba bgColorRgba, int circleSegments)
+    public static void DrawCircleCheckeredLines(Vector2 pos, AnchorPoint alignement, float radius, float spacing, float lineThickness, float angleDeg, ColorRgba lineColorRgba, ColorRgba bgColorRgba, int circleSegments)
     {
 
         float maxDimension = radius;
         var size = new Vector2(radius, radius) * 2f;
-        var aVector = alignement * size;
+        var aVector = alignement.ToVector2() * size;
         var center = pos - aVector + size / 2;
         float rotRad = angleDeg * ShapeMath.DEGTORAD;
 
@@ -2736,7 +2736,7 @@ public static class ShapeDrawing
     /// <param name="sideScaleFactor">The scale factor for each side. 0f means no quad is drawn, 1f means normal quad is drawn,
     /// 0.5 means each side is half as long.</param>
     /// <param name="sideScaleOrigin">The point along the line to scale from in both directions.</param>
-    public static void DrawLinesScaled(this Quad q, LineDrawingInfo lineInfo, float rotDeg, Vector2 alignement, float sideScaleFactor, float sideScaleOrigin = 0.5f)
+    public static void DrawLinesScaled(this Quad q, LineDrawingInfo lineInfo, float rotDeg, AnchorPoint alignement, float sideScaleFactor, float sideScaleOrigin = 0.5f)
     {
         if (sideScaleFactor <= 0) return;
         

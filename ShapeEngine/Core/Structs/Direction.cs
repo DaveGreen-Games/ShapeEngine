@@ -48,7 +48,7 @@ public readonly struct Direction : IEquatable<Direction>
     public static Direction DownRight => new(1, 1);
     
     public Vector2 ToVector2() => new(Horizontal, Vertical);
-    public Vector2 ToAlignement() => new Vector2(Horizontal + 1, Vertical + 1) / 2;
+    public AnchorPoint ToAlignement() => new AnchorPoint(Horizontal + 1, Vertical + 1) / 2;
     public Direction Invert() => new(Horizontal * -1, Vertical * -1);
 
     public Direction Signed => new(Sign(Horizontal), Sign(Vertical));

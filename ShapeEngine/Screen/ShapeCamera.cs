@@ -130,9 +130,9 @@ public sealed class ShapeCamera
         get => BaseTransform.RotationRad * ShapeMath.RADTODEG;
         private set => BaseTransform = BaseTransform.SetRotationRad(value * ShapeMath.RADTODEG);
     }
-    public Vector2 Alignement{ get; private set; } = new(0.5f);
+    public AnchorPoint Alignement{ get; private set; } = new(0.5f);
     
-    public Size BaseOffset => BaseTransform.BaseSize * Alignement;
+    public Size BaseOffset => BaseTransform.BaseSize * Alignement.ToVector2();
     public Size Offset { get; private set; } = new();
     
     
@@ -149,12 +149,12 @@ public sealed class ShapeCamera
     {
         BaseTransform = BaseTransform.SetPosition(pos);
     }
-    public ShapeCamera(Vector2 pos, Vector2 alignement)
+    public ShapeCamera(Vector2 pos, AnchorPoint alignement)
     {
         BaseTransform = BaseTransform.SetPosition(pos);
         this.SetAlignement(alignement);
     }
-    public ShapeCamera(Vector2 pos, Vector2 alignement, float zoomLevel)
+    public ShapeCamera(Vector2 pos, AnchorPoint alignement, float zoomLevel)
     {
         BaseTransform = BaseTransform.SetPosition(pos);
         this.SetAlignement(alignement);
@@ -165,20 +165,20 @@ public sealed class ShapeCamera
         BaseTransform = BaseTransform.SetPosition(pos);
         TargetResolution = targetResolution;
     }
-    public ShapeCamera(Vector2 pos, Vector2 alignement, Dimensions targetResolution)
+    public ShapeCamera(Vector2 pos, AnchorPoint alignement, Dimensions targetResolution)
     {
         BaseTransform = BaseTransform.SetPosition(pos);
         this.SetAlignement(alignement);
         TargetResolution = targetResolution;
     }
-    public ShapeCamera(Vector2 pos, Vector2 alignement, float zoomLevel, Dimensions targetResolution)
+    public ShapeCamera(Vector2 pos, AnchorPoint alignement, float zoomLevel, Dimensions targetResolution)
     {
         BaseTransform = BaseTransform.SetPosition(pos);
         this.SetAlignement(alignement);
         this.SetZoom(zoomLevel);
         TargetResolution = targetResolution;
     }
-    public ShapeCamera(Vector2 pos, Vector2 alignement, float zoomLevel, float rotationDeg)
+    public ShapeCamera(Vector2 pos, AnchorPoint alignement, float zoomLevel, float rotationDeg)
     {
         BaseTransform = BaseTransform.SetPosition(pos);
         this.SetAlignement(alignement);
@@ -335,7 +335,7 @@ public sealed class ShapeCamera
         BaseTransform = BaseTransform.SetRotationRad(deg * ShapeMath.DEGTORAD).WrapRotationRad();
     }
 
-    public void SetAlignement(Vector2 newAlignement) => Alignement = Vector2.Clamp(newAlignement, Vector2.Zero, Vector2.One);
+    public void SetAlignement(AnchorPoint newAlignement) => Alignement = newAlignement;
 
     public Vector2 ScreenToWorld(Vector2 pos)
     {

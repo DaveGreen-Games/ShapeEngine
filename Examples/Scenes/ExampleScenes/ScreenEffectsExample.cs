@@ -127,7 +127,7 @@ namespace Examples.Scenes.ExampleScenes
             
             int textValue = (int)(CurValue * TextValueMax);
             font.ColorRgba = mouseInside ? Colors.Highlight: Colors.Special;
-            font.DrawTextWrapNone($"{Title} {textValue}", background, new Vector2(0.1f, 0.5f));
+            font.DrawTextWrapNone($"{Title} {textValue}", background, new AnchorPoint(0.1f, 0.5f));
             // font.DrawText(, background, 1f, new Vector2(0.1f, 0.5f), mouseInside ? ExampleScene.ColorHighlight2 : ExampleScene.ColorHighlight3);
         }
     }
@@ -280,7 +280,7 @@ namespace Examples.Scenes.ExampleScenes
     public class ScreenEffectsExample : ExampleScene
     {
         private readonly Font font;
-        private readonly Rect universe = new(new Vector2(0f), new Size(10000f), new Vector2(0.5f));
+        private readonly Rect universe = new(new Vector2(0f), new Size(10000f), new AnchorPoint(0.5f));
         private readonly List<Star> stars = new();
         private readonly List<Comet> comets = new();
 

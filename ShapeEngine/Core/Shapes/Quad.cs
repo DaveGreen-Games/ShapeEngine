@@ -65,7 +65,7 @@ public readonly struct Quad : IEquatable<Quad>
         this.B = new(topLeft.X, bottomRight.Y);
         this.D = new(bottomRight.X, topLeft.Y);
     }
-    public Quad(Rect rect, float rotRad, Vector2 pivot)
+    public Quad(Rect rect, float rotRad, AnchorPoint pivot)
     {
         var pivotPoint = rect.GetPoint(pivot);
         var topLeft = rect.TopLeft;
@@ -76,9 +76,9 @@ public readonly struct Quad : IEquatable<Quad>
         this.C = (bottomRight - pivotPoint).Rotate(rotRad);
         this.D = (new Vector2(bottomRight.X, topLeft.Y) - pivotPoint).Rotate(rotRad);
     }
-    public Quad(Vector2 pos, Size size, float rotRad, Vector2 alignement)
+    public Quad(Vector2 pos, Size size, float rotRad, AnchorPoint alignement)
     {
-        var offset = size * alignement;
+        var offset = size * alignement.ToVector2();
         var topLeft = pos - offset;
         
         var a = topLeft;
@@ -213,7 +213,7 @@ public readonly struct Quad : IEquatable<Quad>
 
     #region Points & Vertex
 
-    public Vector2 GetPoint(Vector2 alignement) => GetPoint(alignement.X, alignement.Y);
+    public Vector2 GetPoint(AnchorPoint alignement) => GetPoint(alignement.X, alignement.Y);
     public Vector2 GetPoint(float alignementX, float alignementY)
     {
         var ab = A.Lerp(B, alignementY); // B - A;
@@ -281,7 +281,7 @@ public readonly struct Quad : IEquatable<Quad>
     #endregion
     
     #region Transform
-    public Quad ChangeRotation(float rad, Vector2 alignement)
+    public Quad ChangeRotation(float rad, AnchorPoint alignement)
     {
         var pivotPoint = GetPoint(alignement);
         var a = (A - pivotPoint).Rotate(rad);
@@ -290,14 +290,14 @@ public readonly struct Quad : IEquatable<Quad>
         var d = (D - pivotPoint).Rotate(rad);
         return new(a,b,c,d);
     }
-    public Quad SetRotation(float angleRad, Vector2 alignement)
+    public Quad SetRotation(float angleRad, AnchorPoint alignement)
     {
         float amount = ShapeMath.GetShortestAngleRad(AngleRad, angleRad);
         return ChangeRotation(amount, alignement);
     }
 
-    public Quad ChangeRotation(float rad) => ChangeRotation(rad, Center);
-    public Quad SetRotation(float angleRad) => SetRotation(angleRad, Center);
+    public Quad ChangeRotation(float rad) => ChangeRotation(rad, AnchorPoint.Center);
+    public Quad SetRotation(float angleRad) => SetRotation(angleRad, AnchorPoint.Center);
 
     public Quad ChangePosition(Vector2 offset)
     {
@@ -309,7 +309,7 @@ public readonly struct Quad : IEquatable<Quad>
             D + offset
         );
     }
-    public Quad SetPosition(Vector2 newPosition, Vector2 alignement)
+    public Quad SetPosition(Vector2 newPosition, AnchorPoint alignement)
     {
         var p = GetPoint(alignement);
         var translation = newPosition - p;
@@ -322,13 +322,13 @@ public readonly struct Quad : IEquatable<Quad>
         );
     }
 
-    public Quad SetPosition(Vector2 newPosition) => SetPosition(newPosition, Center);
+    public Quad SetPosition(Vector2 newPosition) => SetPosition(newPosition, AnchorPoint.Center);
 
     
     public Quad ScaleSize(float scale) => this * scale;
     public Quad ScaleSize(Size scale) => new Quad(A * scale, B * scale, C * scale, D * scale);
    
-    public Quad ScaleSize(float scale, Vector2 alignement)
+    public Quad ScaleSize(float scale, AnchorPoint alignement)
     {
         var p = GetPoint(alignement);
         return new
@@ -340,7 +340,7 @@ public readonly struct Quad : IEquatable<Quad>
         );
 
     }
-    public Quad ScaleSize(Size scale, Vector2 alignement)
+    public Quad ScaleSize(Size scale, AnchorPoint alignement)
     {
         var p = GetPoint(alignement);
         return new
@@ -352,8 +352,8 @@ public readonly struct Quad : IEquatable<Quad>
         );
     }
     
-    public Quad ChangeSize(float amount) => ChangeSize(amount, Center);
-    public Quad ChangeSize(float amount, Vector2 alignement)
+    public Quad ChangeSize(float amount) => ChangeSize(amount, AnchorPoint.Center);
+    public Quad ChangeSize(float amount, AnchorPoint alignement)
     {
         Vector2 newA, newB, newC, newD;
 
@@ -401,8 +401,8 @@ public readonly struct Quad : IEquatable<Quad>
         return new(newA, newB, newC, newD);
     }
     
-    public Quad SetSize(float size) => SetSize(size, Center);
-    public Quad SetSize(float size, Vector2 alignement)
+    public Quad SetSize(float size) => SetSize(size, AnchorPoint.Center);
+    public Quad SetSize(float size, AnchorPoint alignement)
     {
         Vector2 newA, newB, newC, newD;
         
@@ -487,7 +487,7 @@ public readonly struct Quad : IEquatable<Quad>
     /// <param name="transform"></param>
     /// <param name="alignement"></param>
     /// <returns></returns>
-    public Quad ApplyTransform(Transform2D transform, Vector2 alignement)
+    public Quad ApplyTransform(Transform2D transform, AnchorPoint alignement)
     {
         var newQuad = ChangePosition(transform.Position);
         newQuad = newQuad.ChangeRotation(transform.RotationRad, alignement);
@@ -502,7 +502,7 @@ public readonly struct Quad : IEquatable<Quad>
     /// <param name="transform"></param>
     /// <param name="alignement"></param>
     /// <returns></returns>
-    public Quad SetTransform(Transform2D transform, Vector2 alignement)
+    public Quad SetTransform(Transform2D transform, AnchorPoint alignement)
     {
         var newQuad = SetPosition(transform.Position, alignement);
         newQuad = newQuad.SetRotation(transform.RotationRad, alignement);

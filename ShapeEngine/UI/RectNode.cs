@@ -47,59 +47,59 @@ public class RectNode
     {
         Name = name;
     }
-    public RectNode(Vector2 anchor, Vector2 stretch)
+    public RectNode(AnchorPoint anchor, Vector2 stretch)
     {
         Anchor = anchor;
         Stretch = stretch;
     }
-    public RectNode(Vector2 anchor, Vector2 stretch, string name)
+    public RectNode(AnchorPoint anchor, Vector2 stretch, string name)
     {
         Anchor = anchor;
         Stretch = stretch;
         Name = name;
     }
-    public RectNode(Vector2 anchor, Vector2 stretch, MouseFilter mouseFilter)
+    public RectNode(AnchorPoint anchor, Vector2 stretch, MouseFilter mouseFilter)
     {
         Anchor = anchor;
         Stretch = stretch;
         this.mouseFilter = mouseFilter;
     }
-    public RectNode(Vector2 anchor, Vector2 stretch, Rect.Margins margins, MouseFilter mouseFilter)
-    {
-        Anchor = anchor;
-        Stretch = stretch;
-        this.mouseFilter = mouseFilter;
-        Margins = margins;
-    }
-    public RectNode(Vector2 anchor, Vector2 stretch, Rect.Margins margins, MouseFilter mouseFilter, string name)
+    public RectNode(AnchorPoint anchor, Vector2 stretch, Rect.Margins margins, MouseFilter mouseFilter)
     {
         Anchor = anchor;
         Stretch = stretch;
         this.mouseFilter = mouseFilter;
         Margins = margins;
-        Name = name;
     }
-    public RectNode(Vector2 anchor, Vector2 stretch, MouseFilter mouseFilter, string name)
+    public RectNode(AnchorPoint anchor, Vector2 stretch, Rect.Margins margins, MouseFilter mouseFilter, string name)
     {
         Anchor = anchor;
         Stretch = stretch;
         this.mouseFilter = mouseFilter;
-        Name = name;
-    }
-    public RectNode(Vector2 anchor, Vector2 stretch, Rect.Margins margins)
-    {
-        Anchor = anchor;
-        Stretch = stretch;
-        Margins = margins;
-    }
-    public RectNode(Vector2 anchor, Vector2 stretch, Rect.Margins margins, string name)
-    {
-        Anchor = anchor;
-        Stretch = stretch;
         Margins = margins;
         Name = name;
     }
-    public RectNode(Vector2 anchor, Vector2 stretch, Rect.Margins margins, Size minSize, Size maxSize, MouseFilter mouseFilter, string name)
+    public RectNode(AnchorPoint anchor, Vector2 stretch, MouseFilter mouseFilter, string name)
+    {
+        Anchor = anchor;
+        Stretch = stretch;
+        this.mouseFilter = mouseFilter;
+        Name = name;
+    }
+    public RectNode(AnchorPoint anchor, Vector2 stretch, Rect.Margins margins)
+    {
+        Anchor = anchor;
+        Stretch = stretch;
+        Margins = margins;
+    }
+    public RectNode(AnchorPoint anchor, Vector2 stretch, Rect.Margins margins, string name)
+    {
+        Anchor = anchor;
+        Stretch = stretch;
+        Margins = margins;
+        Name = name;
+    }
+    public RectNode(AnchorPoint anchor, Vector2 stretch, Rect.Margins margins, Size minSize, Size maxSize, MouseFilter mouseFilter, string name)
     {
         Anchor = anchor;
         Stretch = stretch;
@@ -120,7 +120,7 @@ public class RectNode
 
     #region Public Members
     
-    public Vector2 Anchor = new(0f);
+    public AnchorPoint Anchor = new(0f);
     /// <summary>
     /// Stretch determines the size of the rect based on the parent rect size. Values are relative and in range 0 - 1.
     /// If Stretch values are 0 than the size of the rect can be set manually without it being changed by the parent rect size.

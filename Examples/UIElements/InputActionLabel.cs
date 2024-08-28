@@ -5,6 +5,7 @@ using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
 using ShapeEngine.Text;
 using Raylib_cs;
+using ShapeEngine.Core.Structs;
 
 namespace Examples.UIElements;
 
@@ -21,7 +22,7 @@ public class InputActionLabel
         this.textFont = new(font, fontSpacing, color.ColorRgba);
         this.Title = title;
     }
-    public void Draw(Rect r, Vector2 textAlignement, InputDeviceType curInputDeviceType)
+    public void Draw(Rect r, AnchorPoint textAlignement, InputDeviceType curInputDeviceType)
     {
         textFont.ColorRgba = color.ColorRgba;
         

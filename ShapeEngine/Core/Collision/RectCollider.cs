@@ -6,13 +6,13 @@ namespace ShapeEngine.Core.Collision;
 
 public class RectCollider : Collider
 {
-    public Vector2 Alignement { get; set; }
+    public AnchorPoint Alignement { get; set; }
         
     public RectCollider(Transform2D offset) : base(offset)
     {
         Alignement = new();
     }
-    public RectCollider(Transform2D offset, Vector2 alignement) : base(offset)
+    public RectCollider(Transform2D offset, AnchorPoint alignement) : base(offset)
     {
         Alignement = alignement;
     }

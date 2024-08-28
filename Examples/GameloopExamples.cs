@@ -193,53 +193,53 @@ namespace Examples
             )
         {
 
-            UIRects = new(new Vector2(0.5f, 0.5f), new Vector2(1f, 1f), new Rect.Margins(0.015f), "main");
-            var mainTop = new RectNode(new Vector2(0.5f, 0f), new Vector2(1f, 0.1f), "top");
-            var mainCenter = new RectNode(new Vector2(0.5f, 0.5f), new Vector2(1f, 0.8f), "center");
-            var mainBottom = new RectNode(new Vector2(0.5f, 1f), new Vector2(1f, 0.1f), "bottom");
+            UIRects = new(new AnchorPoint(0.5f, 0.5f), new Vector2(1f, 1f), new Rect.Margins(0.015f), "main");
+            var mainTop = new RectNode(new AnchorPoint(0.5f, 0f), new Vector2(1f, 0.1f), "top");
+            var mainCenter = new RectNode(new AnchorPoint(0.5f, 0.5f), new Vector2(1f, 0.8f), "center");
+            var mainBottom = new RectNode(new AnchorPoint(0.5f, 1f), new Vector2(1f, 0.1f), "bottom");
             UIRects.AddChild(mainTop);
             UIRects.AddChild(mainCenter);
             UIRects.AddChild(mainBottom);
             
-            var mainTopLeft = new RectNode(new Vector2(0f, 0.5f), new Vector2(0.2f, 1f), new Rect.Margins(0f, 0.1f, 0f, 0f), "left");
+            var mainTopLeft = new RectNode(new AnchorPoint(0f, 0.5f), new Vector2(0.2f, 1f), new Rect.Margins(0f, 0.1f, 0f, 0f), "left");
             mainTopLeft.MouseFilter = MouseFilter.Stop;
-            var mainTopCenter = new RectNode(new Vector2(0.5f, 0.5f), new Vector2(0.6f, 1f), new Rect.Margins(0f, 0.005f, 0f, 0.005f), "center");
-            var mainTopRight = new RectNode(new Vector2(1f, 0.5f), new Vector2(0.2f, 1f), new Rect.Margins(0f, 0f, 0f, 0.1f), "right");
+            var mainTopCenter = new RectNode(new AnchorPoint(0.5f, 0.5f), new Vector2(0.6f, 1f), new Rect.Margins(0f, 0.005f, 0f, 0.005f), "center");
+            var mainTopRight = new RectNode(new AnchorPoint(1f, 0.5f), new Vector2(0.2f, 1f), new Rect.Margins(0f, 0f, 0f, 0.1f), "right");
             mainTop.AddChild(mainTopLeft);
             mainTop.AddChild(mainTopCenter);
             mainTop.AddChild(mainTopRight);
             
-            var mainCenterLeft = new RectNode(new Vector2(0f, 0.5f), new Vector2(0.2f, 1f), new Rect.Margins(0f, 0.1f, 0f, 0f), "left");
-            var mainCenterCenter = new RectNode(new Vector2(0.5f, 0.5f), new Vector2(0.6f, 1f), new Rect.Margins(0f, 0.005f, 0f, 0.005f), "center");
-            var mainCenterRight = new RectNode(new Vector2(1f, 0.5f), new Vector2(0.2f, 1f), new Rect.Margins(0f, 0f, 0f, 0.1f), "right");
+            var mainCenterLeft = new RectNode(new AnchorPoint(0f, 0.5f), new Vector2(0.2f, 1f), new Rect.Margins(0f, 0.1f, 0f, 0f), "left");
+            var mainCenterCenter = new RectNode(new AnchorPoint(0.5f, 0.5f), new Vector2(0.6f, 1f), new Rect.Margins(0f, 0.005f, 0f, 0.005f), "center");
+            var mainCenterRight = new RectNode(new AnchorPoint(1f, 0.5f), new Vector2(0.2f, 1f), new Rect.Margins(0f, 0f, 0f, 0.1f), "right");
             mainCenter.AddChild(mainCenterLeft);
             mainCenter.AddChild(mainCenterCenter);
             mainCenter.AddChild(mainCenterRight);
             
-            var mainBottomLeft = new RectNode(new Vector2(0f, 0.5f), new Vector2(0.2f, 1f), new Rect.Margins(0f, 0.1f, 0f, 0f), "left");
-            var mainBottomCenter = new RectNode(new Vector2(0.5f, 0.5f), new Vector2(0.6f, 1f), new Rect.Margins(0f, 0.005f, 0f, 0.005f), "center");
-            var mainBottomRight = new RectNode(new Vector2(1f, 0.5f), new Vector2(0.2f, 1f), new Rect.Margins(0f, 0f, 0f, 0.1f), "right");
+            var mainBottomLeft = new RectNode(new AnchorPoint(0f, 0.5f), new Vector2(0.2f, 1f), new Rect.Margins(0f, 0.1f, 0f, 0f), "left");
+            var mainBottomCenter = new RectNode(new AnchorPoint(0.5f, 0.5f), new Vector2(0.6f, 1f), new Rect.Margins(0f, 0.005f, 0f, 0.005f), "center");
+            var mainBottomRight = new RectNode(new AnchorPoint(1f, 0.5f), new Vector2(0.2f, 1f), new Rect.Margins(0f, 0f, 0f, 0.1f), "right");
             mainBottom.AddChild(mainBottomLeft);
             mainBottom.AddChild(mainBottomCenter);
             mainBottom.AddChild(mainBottomRight);
             
-            var mainTopLeftTop = new RectNode(new Vector2(0.5f, 0f), new Vector2(1f, 0.5f), "top");
-            var mainTopLeftBottom = new RectNode(new Vector2(0.5f, 1f), new Vector2(1f, 0.5f), "bottom");
+            var mainTopLeftTop = new RectNode(new AnchorPoint(0.5f, 0f), new Vector2(1f, 0.5f), "top");
+            var mainTopLeftBottom = new RectNode(new AnchorPoint(0.5f, 1f), new Vector2(1f, 0.5f), "bottom");
             mainTopLeft.AddChild(mainTopLeftTop);
             mainTopLeft.AddChild(mainTopLeftBottom);
             
-            var mainTopRightTop = new RectNode(new Vector2(0.5f, 0f), new Vector2(1f, 0.5f), "top");
-            var mainTopRightBottom = new RectNode(new Vector2(0.5f, 1f), new Vector2(1f, 0.5f), "bottom");
+            var mainTopRightTop = new RectNode(new AnchorPoint(0.5f, 0f), new Vector2(1f, 0.5f), "top");
+            var mainTopRightBottom = new RectNode(new AnchorPoint(0.5f, 1f), new Vector2(1f, 0.5f), "bottom");
             mainTopRight.AddChild(mainTopRightTop);
             mainTopRight.AddChild(mainTopRightBottom);
             
-            var mainBottomLeftTop = new RectNode(new Vector2(0.5f, 0f), new Vector2(1f, 0.5f), "top");
-            var mainBottomLeftBottom = new RectNode(new Vector2(0.5f, 1f), new Vector2(1f, 0.5f), "bottom");
+            var mainBottomLeftTop = new RectNode(new AnchorPoint(0.5f, 0f), new Vector2(1f, 0.5f), "top");
+            var mainBottomLeftBottom = new RectNode(new AnchorPoint(0.5f, 1f), new Vector2(1f, 0.5f), "bottom");
             mainBottomLeft.AddChild(mainBottomLeftTop);
             mainBottomLeft.AddChild(mainBottomLeftBottom);
             
-            var mainBottomRightTop = new RectNode(new Vector2(0.5f, 0f), new Vector2(1f, 0.5f), "top");
-            var mainBottomRightBottom = new RectNode(new Vector2(0.5f, 1f), new Vector2(1f, 0.5f), "bottom");
+            var mainBottomRightTop = new RectNode(new AnchorPoint(0.5f, 0f), new Vector2(1f, 0.5f), "top");
+            var mainBottomRightBottom = new RectNode(new AnchorPoint(0.5f, 1f), new Vector2(1f, 0.5f), "bottom");
             mainBottomRight.AddChild(mainBottomRightTop);
             mainBottomRight.AddChild(mainBottomRightBottom);
 

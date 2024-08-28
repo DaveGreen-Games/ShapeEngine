@@ -2,6 +2,7 @@ using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Shapes;
+using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
 using ShapeEngine.Text;
 using Color = System.Drawing.Color;
@@ -22,7 +23,7 @@ public class FPSLabel
         this.textFont = new(font, 1f, normal.ColorRgba);
 
     }
-    public void Draw(Rect r, Vector2 textAlignement, float fontSpacing = 1f)
+    public void Draw(Rect r, AnchorPoint textAlignement, float fontSpacing = 1f)
     {
         int fps = Raylib.GetFPS();
         float f = (float)fps / (float)GAMELOOP.Window.FpsLimit; //FrameRateLimit;

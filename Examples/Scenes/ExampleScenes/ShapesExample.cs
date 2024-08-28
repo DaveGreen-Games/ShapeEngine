@@ -279,11 +279,11 @@ public class ShapesExample : ExampleScene
         public QuadShape(Vector2 pos, float size)
         {
             var randAngle = Rng.Instance.RandAngleRad();
-            Quad = new(pos, new Size(size * 2), randAngle, new Vector2(0.5f));
+            Quad = new(pos, new Size(size * 2), randAngle, new AnchorPoint(0.5f));
         }
         public override void Move(Vector2 newPosition)
         {
-            Quad = Quad.SetPosition(newPosition, new Vector2(0.5f));
+            Quad = Quad.SetPosition(newPosition, new AnchorPoint(0.5f));
         }
 
         public override void Draw(ColorRgba color)
@@ -338,7 +338,7 @@ public class ShapesExample : ExampleScene
 
         public RectShape(Vector2 pos, float size)
         {
-            Rect = new(pos, new(size * 2, size * 2), new Vector2(0.5f));
+            Rect = new(pos, new(size * 2, size * 2), new AnchorPoint(0.5f));
         }
         public override void Move(Vector2 newPosition)
         {

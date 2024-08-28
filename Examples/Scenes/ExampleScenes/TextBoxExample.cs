@@ -1,6 +1,7 @@
 ﻿
 using System.Numerics;
 using ShapeEngine.Core.Shapes;
+using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
 using ShapeEngine.Text;
 
@@ -10,7 +11,7 @@ namespace Examples.Scenes.ExampleScenes
     {
         private const int MaxFontSpacing = 12;
         private int fontSpacing = 0;
-        private Vector2 curAlignement = new(0f);
+        private AnchorPoint curAlignement = new(0f);
         private int curAlignementIndex = 0;
 
         private readonly InputAction iaNextAlignement;
@@ -103,15 +104,15 @@ namespace Examples.Scenes.ExampleScenes
             if (curAlignementIndex > 8) curAlignementIndex = 0;
             else if (curAlignementIndex < 0) curAlignementIndex = 8;
 
-            if (curAlignementIndex == 0) curAlignement = new Vector2(0f); //top left
-            else if (curAlignementIndex == 1) curAlignement = new Vector2(0.5f, 0f); //top
-            else if (curAlignementIndex == 2) curAlignement = new Vector2(1f, 0f); //top right
-            else if (curAlignementIndex == 3) curAlignement = new Vector2(1f, 0.5f); //right
-            else if (curAlignementIndex == 4) curAlignement = new Vector2(1f, 1f); //bottom right
-            else if (curAlignementIndex == 5) curAlignement = new Vector2(0.5f, 1f); //bottom
-            else if (curAlignementIndex == 6) curAlignement = new Vector2(0f, 1f); //bottom left
-            else if (curAlignementIndex == 7) curAlignement = new Vector2(0f, 0.5f); //left
-            else if (curAlignementIndex == 8) curAlignement = new Vector2(0.5f, 0.5f); //center
+            if (curAlignementIndex == 0) curAlignement = new AnchorPoint(0f); //top left
+            else if (curAlignementIndex == 1) curAlignement = new AnchorPoint(0.5f, 0f); //top
+            else if (curAlignementIndex == 2) curAlignement = new AnchorPoint(1f, 0f); //top right
+            else if (curAlignementIndex == 3) curAlignement = new AnchorPoint(1f, 0.5f); //right
+            else if (curAlignementIndex == 4) curAlignement = new AnchorPoint(1f, 1f); //bottom right
+            else if (curAlignementIndex == 5) curAlignement = new AnchorPoint(0.5f, 1f); //bottom
+            else if (curAlignementIndex == 6) curAlignement = new AnchorPoint(0f, 1f); //bottom left
+            else if (curAlignementIndex == 7) curAlignement = new AnchorPoint(0f, 0.5f); //left
+            else if (curAlignementIndex == 8) curAlignement = new AnchorPoint(0.5f, 0.5f); //center
         }
     }
 

@@ -162,7 +162,7 @@ namespace Examples.UIElements
             if (MouseInside)
             {
                 var amount = Rect.Size.Min() * 0.25f;
-                var outside = Rect.ChangeSize(amount, new Vector2(0.5f, 0.5f));
+                var outside = Rect.ChangeSize(amount, new AnchorPoint(0.5f, 0.5f));
                 outside.DrawLines(2f, Colors.Medium);
             }
         }

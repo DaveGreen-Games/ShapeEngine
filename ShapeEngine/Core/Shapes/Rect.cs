@@ -156,9 +156,9 @@ public readonly struct Rect : IEquatable<Rect>
         this.Width = size.Width;
         this.Height = size.Height;
     }
-    public Rect(Vector2 position, Size size, Vector2 alignement)
+    public Rect(Vector2 position, Size size, AnchorPoint alignement)
     {
-        var offset = size * alignement;
+        var offset = size * alignement.ToVector2();
         var topLeft = position - offset;
         this.X = topLeft.X;
         this.Y = topLeft.Y;
@@ -317,7 +317,7 @@ public readonly struct Rect : IEquatable<Rect>
             );
     }
 
-    public Rect Align(Vector2 alignement)
+    public Rect Align(AnchorPoint alignement)
     {
         return new(TopLeft, Size, alignement);
     }
@@ -401,18 +401,18 @@ public readonly struct Rect : IEquatable<Rect>
     /// <param name="alignement"></param>
     /// <param name="angleDeg"></param>
     /// <returns></returns>
-    public Polygon Rotate(float angleDeg, Vector2 alignement)
+    public Polygon Rotate(float angleDeg, AnchorPoint alignement)
     {
         var poly = ToPolygon();
-        var pivot = TopLeft + (Size * alignement).ToVector2();
+        var pivot = TopLeft + (Size * alignement.ToVector2()).ToVector2();
         poly.ChangeRotation(angleDeg * ShapeMath.DEGTORAD, pivot);
         return poly;
     }
 
-    public Points RotateList(float angleDeg, Vector2 alignement)
+    public Points RotateList(float angleDeg, AnchorPoint alignement)
     {
         var points = ToPoints();
-        var pivot = TopLeft + (Size * alignement).ToVector2();
+        var pivot = TopLeft + (Size * alignement.ToVector2()).ToVector2();
         points.ChangeRotation(angleDeg * ShapeMath.DEGTORAD, pivot);
         return points;
     }
@@ -509,9 +509,9 @@ public readonly struct Rect : IEquatable<Rect>
     
     #region Points & Vertex
 
-    public Vector2 GetPoint(Vector2 alignement)
+    public Vector2 GetPoint(AnchorPoint alignement)
     {
-        var offset = Size * alignement;
+        var offset = Size * alignement.ToVector2();
         return TopLeft + offset;
     }
     public (Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr) RotateCorners(Vector2 pivot, float angleDeg)
@@ -833,17 +833,17 @@ public readonly struct Rect : IEquatable<Rect>
             Height +verticalAmount * 2f
         );
     }
-    public Rect ScaleSize(float scale, Vector2 alignement) => new(GetPoint(alignement), Size * scale, alignement);
-    public Rect ScaleSize(Vector2 scale, Vector2 alignement) => new(GetPoint(alignement), Size * scale, alignement);
+    public Rect ScaleSize(float scale, AnchorPoint alignement) => new(GetPoint(alignement), Size * scale, alignement);
+    public Rect ScaleSize(Vector2 scale, AnchorPoint alignement) => new(GetPoint(alignement), Size * scale, alignement);
    
     public Rect SetSize(Size newSize) => new(TopLeft, newSize);
-    public Rect SetSize(Size newSize, Vector2 alignement) => new(GetPoint(alignement), newSize, alignement);
-    public Rect SetSize(float newSize, Vector2 alignement) => new(GetPoint(alignement), new Size(newSize), alignement);
-    public Rect ChangeSize(float amount, Vector2 alignement) => new(GetPoint(alignement), Size + amount, alignement);
-    public Rect ChangeSize(Size amount, Vector2 alignement) => new(GetPoint(alignement), Size + amount, alignement);
+    public Rect SetSize(Size newSize, AnchorPoint alignement) => new(GetPoint(alignement), newSize, alignement);
+    public Rect SetSize(float newSize, AnchorPoint alignement) => new(GetPoint(alignement), new Size(newSize), alignement);
+    public Rect ChangeSize(float amount, AnchorPoint alignement) => new(GetPoint(alignement), Size + amount, alignement);
+    public Rect ChangeSize(Size amount, AnchorPoint alignement) => new(GetPoint(alignement), Size + amount, alignement);
     
-    public Rect SetPosition(Vector2 newPosition, Vector2 alignement) => new(newPosition, Size, alignement);
-    public Rect SetPosition(Vector2 newPosition) => new(newPosition, Size, new Vector2(0f));
+    public Rect SetPosition(Vector2 newPosition, AnchorPoint alignement) => new(newPosition, Size, alignement);
+    public Rect SetPosition(Vector2 newPosition) => new(newPosition, Size, new AnchorPoint(0f));
     public Rect ChangePosition(Vector2 amount) { return new( TopLeft + amount, Size, new(0f)); }
     
     
@@ -854,7 +854,7 @@ public readonly struct Rect : IEquatable<Rect>
     /// <param name="transform"></param>
     /// <param name="alignement"></param>
     /// <returns></returns>
-    public Rect ApplyTransform(Transform2D transform, Vector2 alignement)
+    public Rect ApplyTransform(Transform2D transform, AnchorPoint alignement)
     {
         var newQuad = ChangePosition(transform.Position);
         return newQuad.ChangeSize(transform.BaseSize, alignement);
@@ -867,7 +867,7 @@ public readonly struct Rect : IEquatable<Rect>
     /// <param name="transform"></param>
     /// <param name="alignement"></param>
     /// <returns></returns>
-    public Rect SetTransform(Transform2D transform, Vector2 alignement)
+    public Rect SetTransform(Transform2D transform, AnchorPoint alignement)
     {
         var newQuad = SetPosition(transform.Position, alignement);
         return newQuad.SetSize(transform.BaseSize, alignement);
@@ -1085,7 +1085,7 @@ public readonly struct Rect : IEquatable<Rect>
 
         return segments;
     }
-    public static Rect FromCircle(Circle c) => new(c.Center, new Size(c.Radius, c.Radius), new Vector2(0.5f, 0.5f));
+    public static Rect FromCircle(Circle c) => new(c.Center, new Size(c.Radius, c.Radius), new (0.5f, 0.5f));
     // public static bool IsPointInRect(Vector2 point, Vector2 topLeft, Vector2 size)
     // {
     //     float left = topLeft.X;

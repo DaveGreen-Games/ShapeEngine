@@ -1,6 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Shapes;
+using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.Text;
 
@@ -23,7 +24,7 @@ public class TextEmphasisBox
     }
 
     public bool HasEmphasis() => UseEmphasis && Emphases.Count > 0;
-    public void Draw(string text, Rect rect, Vector2 alignement, Vector2 mousePos, TextWrapType textWrapType = TextWrapType.None)
+    public void Draw(string text, Rect rect, AnchorPoint alignement, Vector2 mousePos, TextWrapType textWrapType = TextWrapType.None)
     {
         // TextFont.MousePos = mousePos;
         if(textWrapType == TextWrapType.None)

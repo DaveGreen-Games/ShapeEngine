@@ -786,7 +786,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         private void GenerateRect()
         {
-            Rect r = new(curPos, new Size(curSize), new Vector2(0.5f));
+            Rect r = new(curPos, new Size(curSize), new AnchorPoint(0.5f));
             curShape = r.Rotate(curRot, new(0.5f));// r.RotateList(new Vector2(0.5f), curRot);
         }
         private void GeneratePoly()

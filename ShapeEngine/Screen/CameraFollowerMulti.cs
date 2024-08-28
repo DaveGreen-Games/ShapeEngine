@@ -64,7 +64,7 @@ public class CameraFollowerMulti : ICameraFollower
             float width = MathF.Max(leftDif, rightDif) * 2;
             float height = MathF.Max(topDif, bottomDif) * 2;
 
-            newCameraRect = new(pos, new Size(width, height), new Vector2(0.5f, 0.5f));
+            newCameraRect = new(pos, new Size(width, height), new (0.5f, 0.5f));
         }
 
         newCameraRect = newCameraRect.ApplyMarginsAbsolute(-TargetMargin, -TargetMargin, -TargetMargin, -TargetMargin);

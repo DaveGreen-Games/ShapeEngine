@@ -1922,7 +1922,7 @@ public class EndlessSpaceCollision : ExampleScene
                 (
                     cameraRect.Center + offset,
                     cameraRect.Size,
-                    new Vector2(0.5f, 0.5f)
+                    new AnchorPoint(0.5f, 0.5f)
                 );
         }
 
@@ -1985,7 +1985,7 @@ public class EndlessSpaceCollision : ExampleScene
         drawTitle = false;
         Title = "Endless Space Collision";
 
-        universe = new(new Vector2(0f), new Size(UniverseSize, UniverseSize) , new Vector2(0.5f));
+        universe = new(new Vector2(0f), new Size(UniverseSize, UniverseSize) , new AnchorPoint(0.5f));
 
         DestroyerPosition = universe.Center + Rng.Instance.RandVec2(UniverseSize * 1.25f, UniverseSize * 2f);
 
@@ -2150,7 +2150,7 @@ public class EndlessSpaceCollision : ExampleScene
         DifficultyScore = 0f;
         killedBigAsteroids = 0;
         
-        universe = new(new Vector2(0f), new Size(UniverseSize, UniverseSize) , new Vector2(0.5f));
+        universe = new(new Vector2(0f), new Size(UniverseSize, UniverseSize) , new AnchorPoint(0.5f));
         CollisionHandler?.Clear();
         asteroids.Clear();
         shards.Clear();

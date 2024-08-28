@@ -312,25 +312,25 @@ namespace ShapeEngine.Random
         #endregion
 
         #region Rect
-        public Rect RandRect(Vector2 alignement)
+        public Rect RandRect(AnchorPoint alignement)
         {
             var pos = RandVec2();
             var size = RandSize();
             return new(pos, size, alignement);
         }
-        public Rect RandRect(Vector2 origin, Vector2 alignement)
+        public Rect RandRect(Vector2 origin, AnchorPoint alignement)
         {
             var pos = RandVec2();
             var size = RandSize();
             return new(origin + pos, size, alignement);
         }
-        public Rect RandRect(float posMin, float posMax, float sizeMin, float sizeMax, Vector2 alignement)
+        public Rect RandRect(float posMin, float posMax, float sizeMin, float sizeMax, AnchorPoint alignement)
         {
             var pos = RandVec2(posMin, posMax);
             var size = RandSize(sizeMin, sizeMax);
             return new(pos, size, alignement);
         }
-        public Rect RandRect(Vector2 origin, float posMin, float posMax, float sizeMin, float sizeMax, Vector2 alignement)
+        public Rect RandRect(Vector2 origin, float posMin, float posMax, float sizeMin, float sizeMax, AnchorPoint alignement)
         {
             var pos = RandVec2(posMin, posMax);
             var size = RandSize(sizeMin, sizeMax);

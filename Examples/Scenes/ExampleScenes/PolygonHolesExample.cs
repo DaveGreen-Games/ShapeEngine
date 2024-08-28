@@ -113,14 +113,14 @@ public class PolygonHolesExample : ExampleScene
         textFont.ColorRgba = Colors.Light;
         GenerateCurPolygon(new());
 
-        var mainRect = new Rect(new Vector2(0f), new Size(1000), new Vector2(0.5f));
+        var mainRect = new Rect(new Vector2(0f), new Size(1000), new AnchorPoint(0.5f));
         main = mainRect.ToPolygon();
         triangulation = main.Triangulate();
         // polygons.Add(new(mainRect.ToPolygon()));
     }
     public override void Reset()
     {
-        var mainRect = new Rect(new Vector2(0f), new Size(1000), new Vector2(0.5f));
+        var mainRect = new Rect(new Vector2(0f), new Size(1000), new AnchorPoint(0.5f));
         main = mainRect.ToPolygon();
         triangulation = main.Triangulate();
         holes.Clear();

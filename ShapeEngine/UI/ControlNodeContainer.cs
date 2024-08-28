@@ -112,7 +112,7 @@ public class ControlNodeContainer : ControlNode
     private Vector2 startPos = new();
     private Size elementSize = new();
     private Vector2 direction = new();
-    private Vector2 alignement = new();
+    private AnchorPoint alignement = new();
     #endregion
     
     #region Override

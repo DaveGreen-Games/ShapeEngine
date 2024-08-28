@@ -74,12 +74,12 @@ public class ShapeDrawingExample : ExampleScene
             if (Percentage)
             {
                 int textValue =(int)(CurValue * 100);
-                font.DrawTextWrapNone($"{title} {textValue}%", Rect, new Vector2(0.5f, 0.5f));
+                font.DrawTextWrapNone($"{title} {textValue}%", Rect, new AnchorPoint(0.5f, 0.5f));
             }
             else
             {
                 int textValue = (int)CurValue;
-                font.DrawTextWrapNone($"{title} {textValue}", Rect, new Vector2(0.5f, 0.5f));
+                font.DrawTextWrapNone($"{title} {textValue}", Rect, new AnchorPoint(0.5f, 0.5f));
             }
             
             
@@ -148,8 +148,8 @@ public class ShapeDrawingExample : ExampleScene
         segment = new(center, size, Rng.Instance.RandAngleRad(), 0.5f, false);
         circle = new(center, radius);
         triangle = Triangle.Generate(center, size / 2, size);
-        rect = new Rect(center, new Size(size, size), new Vector2(0.5f, 0.5f));
-        quad = new Quad(center, new Size(size, size), 45 * ShapeMath.DEGTORAD, new Vector2(0.5f, 0.5f));
+        rect = new Rect(center, new Size(size, size), new AnchorPoint(0.5f, 0.5f));
+        quad = new Quad(center, new Size(size, size), 45 * ShapeMath.DEGTORAD, new AnchorPoint(0.5f, 0.5f));
         poly = Polygon.Generate(center, 16, radius / 2, radius);
         polyline = Polygon.Generate(center, 16, radius / 2, radius).ToPolyline();
 

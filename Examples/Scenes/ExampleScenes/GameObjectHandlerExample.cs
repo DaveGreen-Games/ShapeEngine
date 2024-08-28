@@ -289,7 +289,7 @@ namespace Examples.Scenes.ExampleScenes
 
             if (leftBounds)
             {
-                var newBounds = bounds.ScaleSize(0.25f, new Vector2(0f));
+                var newBounds = bounds.ScaleSize(0.25f, new AnchorPoint(0f));
                 var spawnPos = newBounds.GetRandomPointInside();
                 Transform = this.Transform.SetPosition(spawnPos);
             }

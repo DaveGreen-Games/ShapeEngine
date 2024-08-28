@@ -7,13 +7,13 @@ namespace ShapeEngine.Core.Collision;
 
 public class QuadCollider : Collider
 {
-    public Vector2 Alignement { get; set; }
+    public AnchorPoint Alignement { get; set; }
     
     public QuadCollider(Transform2D offset) : base(offset)
     {
         this.Alignement = new();
     }
-    public QuadCollider(Transform2D offset, Vector2 alignement) : base(offset)
+    public QuadCollider(Transform2D offset, AnchorPoint alignement) : base(offset)
     {
         this.Alignement = alignement;
     }
