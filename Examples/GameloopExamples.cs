@@ -405,21 +405,6 @@ namespace Examples
             GoToScene(mainScene);
         }
 
-        protected override void OnWindowSizeChanged(DimensionConversionFactors conversion)
-        {
-            // var target = new Dimensions(640, 360);
-            // DimensionConversionFactors conv = new(conversion.To, target);
-            // var f = conv.AreaSideFactor;
-            // gameTextures[1].ChangePixelationFactor(f);
-            
-            Console.WriteLine("-------------- Changed Window Size --------------");
-            Console.WriteLine($"    > From {conversion.From} to {conversion.To}");
-            Console.WriteLine($"    > Pixelation Factor {gameTextures[1].PixelationFactor}");
-            Console.WriteLine($"    > Pixelation Size {gameTextures[1].Width}x{gameTextures[1].Height}");
-            Console.WriteLine("-------------------------------------------------");
-            
-        }
-
         protected override void OnGameTextureResized(int w, int h)
         {
             if (ScreenShaders != null)
@@ -552,7 +537,7 @@ namespace Examples
             var fullscreenState = InputActionFullscreen.Consume();
             if (fullscreenState is { Consumed: false, Pressed: true })
             {
-                // var win = GameWindow.CurrentGameWindowInstance;
+                // var win = GameWindow.Instance;
                 // if (win.IsWindowFullscreen())
                 // {
                 //     win.RestoreWindow();

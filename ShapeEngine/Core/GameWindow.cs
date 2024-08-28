@@ -141,6 +141,8 @@ public sealed class GameWindow
     #endregion
     
     #region Public Members
+    public DimensionConversionFactors ScreenToMonitor { get; private set; }
+    public DimensionConversionFactors MonitorToScreen { get; private set; }
     public MonitorDevice Monitor { get; private set; }
     public Dimensions CurScreenSize { get; private set; }
     public Dimensions WindowMinSize { get; private set; }
@@ -256,7 +258,8 @@ public sealed class GameWindow
     #endregion
 
     #region Private Members
-    
+
+    private Vector2 osxWindowScaleDpi;
     private int fpsLimit = 60;
     private int minFramerate;
     private int maxFramerate;
@@ -340,6 +343,11 @@ public sealed class GameWindow
         
         cursorState = GetCurCursorState();
 
+        if (Game.IsOSX()) osxWindowScaleDpi = Raylib.GetWindowScaleDPI();
+        else osxWindowScaleDpi = new Vector2(1, 1);
+        
+        CalculateMonitorConversionFactors();
+        
         Raylib.SetWindowOpacity(windowSettings.WindowOpacity);
         windowConfigFlags = WindowConfigFlags.Get();
 
@@ -362,6 +370,8 @@ public sealed class GameWindow
         CheckForWindowConfigFlagChanges();
         // CheckForWindowFlagChanges();
         CheckForCursorChanges();
+        
+        CalculateMonitorConversionFactors();
         
         if (MouseVisible == Raylib.IsCursorHidden()) MouseVisible = !Raylib.IsCursorHidden();
         
@@ -675,7 +685,25 @@ public sealed class GameWindow
          var f = intersectionArea / screenArea;
          return f;
      }
-    
+
+    private void CalculateMonitorConversionFactors()
+    {
+        int monitor = Raylib.GetCurrentMonitor();
+        int mw = Raylib.GetMonitorWidth(monitor);
+        int mh = Raylib.GetMonitorHeight(monitor);
+        if (Game.IsOSX())
+        {
+             if (IsWindowBorderlessFullscreen() || IsWindowFullscreen())
+             {
+                 mw = (int)(mw / osxWindowScaleDpi.X);
+                 mh = (int)(mh / osxWindowScaleDpi.Y);
+             }
+        }
+
+        var mDim = new Dimensions(mw, mh);
+        ScreenToMonitor = new DimensionConversionFactors(CurScreenSize, mDim);
+        MonitorToScreen = new DimensionConversionFactors(mDim, CurScreenSize);
+    }
     #endregion
     
     #region Private Methods
@@ -708,7 +736,8 @@ public sealed class GameWindow
             int monitor = Raylib.GetCurrentMonitor();
             int mw = Raylib.GetMonitorWidth(monitor);
             int mh = Raylib.GetMonitorHeight(monitor);
-            CurScreenSize = new(mw , mh );
+            CurScreenSize = new(mw , mh);
+            
             
             // int w = Raylib.GetRenderWidth();
             // int h = Raylib.GetRenderHeight();

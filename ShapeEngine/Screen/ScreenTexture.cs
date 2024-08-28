@@ -1,6 +1,7 @@
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
+using ShapeEngine.Core;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
@@ -703,8 +704,10 @@ public sealed class ScreenTexture
         
         if (Mode == ScreenTextureMode.Pixelation)
         {
-            w = (int)(w * PixelationFactor);
-            h = (int)(h * PixelationFactor);
+            var f = GameWindow.Instance.ScreenToMonitor.AreaSideFactor;
+            
+            w = (int)(w * PixelationFactor * f);
+            h = (int)(h * PixelationFactor * f);
         }
         else if (Mode == ScreenTextureMode.NearestFixed)
         {
