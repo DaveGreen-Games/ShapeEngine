@@ -274,6 +274,8 @@ namespace Examples
 
             if (ScreenShaders != null)
             {
+                var shapeShaders = new List<ShapeShader>(7);
+                
                 var crt = ContentLoader.LoadFragmentShader("Resources/Shaders/CRTShader.frag");
                 ShapeShader crtShader = new(crt, crtShaderID, true, 1);
                 ShapeShader.SetValueFloat(crtShader.Shader, "renderWidth", Window.CurScreenSize.Width);
@@ -282,32 +284,38 @@ namespace Examples
                 ShapeShader.SetValueColor(crtShader.Shader, "cornerColor", bgColor);
                 ShapeShader.SetValueFloat(crtShader.Shader, "vignetteOpacity", 0.35f);
                 ShapeShader.SetValueVector2(crtShader.Shader, "curvatureAmount", crtCurvature.X, crtCurvature.Y);//smaller values = bigger curvature
-                ScreenShaders.Add(crtShader);
+                // ScreenShaders.Add(crtShader);
+                shapeShaders.Add(crtShader);
                 
                 var pixel = ContentLoader.LoadFragmentShader("Resources/Shaders/PixelationShader.frag");
                 ShapeShader pixelationShader = new(pixel, pixelationShaderID, false, 2);
                 ShapeShader.SetValueFloat(pixelationShader.Shader, "renderWidth", Window.CurScreenSize.Width);
                 ShapeShader.SetValueFloat(pixelationShader.Shader, "renderHeight", Window.CurScreenSize.Height);
-                ScreenShaders.Add(pixelationShader);
+                // ScreenShaders.Add(pixelationShader);
+                shapeShaders.Add(pixelationShader);
 
                 var bloom = ContentLoader.LoadFragmentShader("Resources/Shaders/BloomShader.frag");
                 ShapeShader bloomShader = new(bloom, bloomShaderID, false, 3);
                 ShapeShader.SetValueVector2(bloomShader.Shader, "size", Window.CurScreenSize.ToVector2());
-                ScreenShaders.Add(bloomShader);
+                // ScreenShaders.Add(bloomShader);
+                shapeShaders.Add(bloomShader);
 
                 var overdraw = ContentLoader.LoadFragmentShader("Resources/Shaders/OverdrawShader.frag");
                 ShapeShader overdrawShader = new(overdraw, overdrawID, false, 4);
-                ScreenShaders.Add(overdrawShader);
+                // ScreenShaders.Add(overdrawShader);
+                shapeShaders.Add(overdrawShader);
                 
                 var darkness = ContentLoader.LoadFragmentShader("Resources/Shaders/Darkness.frag");
                 ShapeShader darknessShader = new(darkness, darknessID, false, 5);
-                ScreenShaders.Add(darknessShader);
+                // ScreenShaders.Add(darknessShader);
+                shapeShaders.Add(darknessShader);
                 
                 var blur = ContentLoader.LoadFragmentShader("Resources/Shaders/BlurShader.frag");
                 ShapeShader blurShader = new(blur, blurID, false, 6);
                 ShapeShader.SetValueFloat(blurShader.Shader, "renderWidth", Window.CurScreenSize.Width);
                 ShapeShader.SetValueFloat(blurShader.Shader, "renderHeight", Window.CurScreenSize.Height);
-                ScreenShaders.Add(blurShader);
+                // ScreenShaders.Add(blurShader);
+                shapeShaders.Add(blurShader);
                 
                 var chromaticAberration = ContentLoader.LoadFragmentShader("Resources/Shaders/ChromaticAberrationShader.frag");
                 ShapeShader chromaticAberrationShader = new(chromaticAberration, chromaticAberrationID, false, 7);
@@ -315,7 +323,7 @@ namespace Examples
                 
                 currentShaderID = crtShaderID;
                 
-                CreateGameTextures(crtShader);
+                CreateGameTextures(shapeShaders);
                 var old = ChangeGameTexture(gameTextures[curGameTextureIndex]);
                 old?.Unload();
             }
@@ -714,9 +722,9 @@ namespace Examples
             next.Camera = Camera;
             ChangeGameTexture(next);
         }
-        private void CreateGameTextures(ShapeShader? shader)
+        private void CreateGameTextures(List<ShapeShader>? shaders)
         {
-            var shaderMode = shader != null ? ShaderSupportType.Single : ShaderSupportType.None;
+            var shaderMode = shaders != null ? ShaderSupportType.Multi : ShaderSupportType.None;
             
             var stretchTexture = new ScreenTexture(shaderMode, TextureFilter.Trilinear);
             var pixelationTexture = new ScreenTexture(0.25f, shaderMode, TextureFilter.Point);
@@ -731,13 +739,16 @@ namespace Examples
             anchorTexture.BackgroundColor = Colors.Background.ChangeBrightness(-0.5f); //new ColorRgba(0, 0, 0, 255);
             
             
-            if (shader != null)
+            if (shaders != null)
             {
-                stretchTexture.Shaders?.Add(shader);
-                pixelationTexture.Shaders?.Add(shader);
-                fixedTexture.Shaders?.Add(shader);
-                nearestFixedTexture.Shaders?.Add(shader);
-                anchorTexture.Shaders?.Add(shader);
+                foreach (var shader in shaders)
+                {
+                    stretchTexture.Shaders?.Add(shader);
+                    pixelationTexture.Shaders?.Add(shader);
+                    fixedTexture.Shaders?.Add(shader);
+                    nearestFixedTexture.Shaders?.Add(shader);
+                    anchorTexture.Shaders?.Add(shader);
+                }
             }
             
             gameTextures.Add(stretchTexture);
