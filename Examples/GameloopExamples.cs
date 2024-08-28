@@ -160,7 +160,11 @@ namespace Examples
 
         private PaletteInfoBox paletteInfoBox;
 
-        // public bool UseMouseMovement = true;
+
+        private List<ScreenTexture> gameTextures = new(5);
+        private int curGameTextureIndex = 0;
+
+        
         public GameloopExamples() : base
             (
                 GameSettings.StretchMode, 
@@ -310,6 +314,16 @@ namespace Examples
                 ScreenShaders.Add(chromaticAberrationShader);
                 
                 currentShaderID = crtShaderID;
+                
+                CreateGameTextures(crtShader);
+                var old = ChangeGameTexture(gameTextures[curGameTextureIndex]);
+                old?.Unload();
+            }
+            else
+            {
+                CreateGameTextures(null);
+                var old = ChangeGameTexture(gameTextures[curGameTextureIndex]);
+                old?.Unload();
             }
             
             FontDefault = GetFont(FontIDs.JetBrains);
@@ -481,6 +495,9 @@ namespace Examples
 
         protected override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
+            gameTextures[2].BackgroundColor = Colors.Background.ChangeBrightness(-0.25f).SetAlpha(200);
+            gameTextures[4].BackgroundColor = Colors.Background.ChangeBrightness(-0.25f).SetAlpha(200);
+            
             if (ScreenShaders != null)
             {
                 var pixelationShader = ScreenShaders.Get(pixelationShaderID);
@@ -535,6 +552,30 @@ namespace Examples
                Window.NextMonitor();
             }
 
+            if (ShapeKeyboardButton.H.GetInputState().Pressed)
+            {
+                NextGameTexture();
+            }
+
+            int keypadNumber = -1;
+            if (ShapeKeyboardButton.KP_1.GetInputState().Pressed) keypadNumber = 1;
+            else if (ShapeKeyboardButton.KP_2.GetInputState().Pressed) keypadNumber = 2;
+            else if (ShapeKeyboardButton.KP_3.GetInputState().Pressed) keypadNumber = 3;
+            else if (ShapeKeyboardButton.KP_4.GetInputState().Pressed) keypadNumber = 4;
+            else if (ShapeKeyboardButton.KP_5.GetInputState().Pressed) keypadNumber = 5;
+            else if (ShapeKeyboardButton.KP_6.GetInputState().Pressed) keypadNumber = 6;
+            else if (ShapeKeyboardButton.KP_7.GetInputState().Pressed) keypadNumber = 7;
+            else if (ShapeKeyboardButton.KP_8.GetInputState().Pressed) keypadNumber = 8;
+            else if (ShapeKeyboardButton.KP_9.GetInputState().Pressed) keypadNumber = 9;
+
+            if (keypadNumber > 0)
+            {
+                var anchorTexture = gameTextures[4];
+                var newAnchor = Rect.GetKeypadAnchorPosition(keypadNumber);
+                anchorTexture.ChangeAnchorPosition(newAnchor);
+            }
+            
+            
             if (Paused) return;
 
             
@@ -654,6 +695,48 @@ namespace Examples
             GoToScene(mainScene);
         }
 
+        
+        private void NextGameTexture()
+        {
+            curGameTextureIndex++;
+            if(curGameTextureIndex >= gameTextures.Count) curGameTextureIndex = 0;
+            var next = gameTextures[curGameTextureIndex];
+            next.Camera = Camera;
+            ChangeGameTexture(next);
+        }
+        private void CreateGameTextures(ShapeShader? shader)
+        {
+            var shaderMode = shader != null ? ShaderSupportType.Single : ShaderSupportType.None;
+            
+            var stretchTexture = new ScreenTexture(shaderMode, TextureFilter.Trilinear);
+            var pixelationTexture = new ScreenTexture(0.25f, shaderMode, TextureFilter.Point);
+            var fixedTexture = new ScreenTexture(new Dimensions(500, 500), shaderMode, TextureFilter.Point, false);
+            var nearestFixedTexture = new ScreenTexture(new Dimensions(480, 240), shaderMode, TextureFilter.Point, true);
+            var anchorTexture = new ScreenTexture(new Vector2(0.4f, 0.4f), new Vector2(0.05f, 0.5f), shaderMode, TextureFilter.Trilinear);
+
+            // stretchTexture.BackgroundColor = new ColorRgba(0, 0, 0, 1);
+            // pixelationTexture.BackgroundColor = new ColorRgba(0, 0, 0, 1);
+            fixedTexture.BackgroundColor = Colors.Background.ChangeBrightness(-0.5f); // new ColorRgba(0, 0, 0, 255);
+            // nearestFixedTexture.BackgroundColor = new ColorRgba(0, 0, 0, 1);
+            anchorTexture.BackgroundColor = Colors.Background.ChangeBrightness(-0.5f); //new ColorRgba(0, 0, 0, 255);
+            
+            
+            if (shader != null)
+            {
+                stretchTexture.Shaders?.Add(shader);
+                pixelationTexture.Shaders?.Add(shader);
+                fixedTexture.Shaders?.Add(shader);
+                nearestFixedTexture.Shaders?.Add(shader);
+                anchorTexture.Shaders?.Add(shader);
+            }
+            
+            gameTextures.Add(stretchTexture);
+            gameTextures.Add(pixelationTexture);
+            gameTextures.Add(fixedTexture);
+            gameTextures.Add(nearestFixedTexture);
+            gameTextures.Add(anchorTexture);
+        }
+        
         private void SetupInput()
         {
             // ModifierKeyGamepad = new ModifierKeyGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, false);
