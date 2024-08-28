@@ -133,7 +133,7 @@ public sealed class GameWindow
 
     #region Static Members
 
-    public static GameWindow CurrentGameWindowInstance { get; private set; } = null!;
+    public static GameWindow Instance { get; private set; } = null!;
     // public static bool IsMouseOnScreen { get; private set; }
     // public static bool IsWindowFocused => Raylib.IsWindowFocused();
     // public static bool IsWindowTopmost => Raylib.IsWindowState(ConfigFlags.TopmostWindow);
