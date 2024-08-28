@@ -7,17 +7,17 @@ namespace ShapeEngine.Random
         private List<T> values = new();
         private (int amount, T value)[] entries;
 
-        private RandomNumberGenerator rng;
+        private Rng rng;
 
         public ChanceList(params (int amount, T value)[] entries)
         {
-            this.rng = new RandomNumberGenerator();
+            this.rng = new Rng();
             this.entries = entries;
             Generate();
         }
         public ChanceList(int seed, params (int amount, T value)[] entries)
         {
-            this.rng = new RandomNumberGenerator(seed);
+            this.rng = new Rng(seed);
             this.entries = entries;
             Generate();
         }

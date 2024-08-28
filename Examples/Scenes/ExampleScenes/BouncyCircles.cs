@@ -160,8 +160,8 @@ namespace Examples.Scenes.ExampleScenes
                 {
                     for (var i = 0; i < 2500; i++)
                     {
-                        var randPos = mousePosGame + ShapeRandom.RandVec2(0, 250);
-                        var vel = ShapeRandom.RandVec2(100, 200);
+                        var randPos = mousePosGame + Rng.Instance.RandVec2(0, 250);
+                        var vel = Rng.Instance.RandVec2(100, 200);
                         Circ c = new(randPos, vel, 2);
                         SpawnArea.AddGameObject(c);
                         circles.Add(c);

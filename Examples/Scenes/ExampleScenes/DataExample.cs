@@ -57,7 +57,7 @@ public class DataExample : ExampleScene
         public Planet(Vector2 center, float radius)
         {
             Shape = new(center, radius);
-            rotSpeedRad = ShapeRandom.RandF(-25, 25) * ShapeMath.DEGTORAD;
+            rotSpeedRad = Rng.Instance.RandF(-25, 25) * ShapeMath.DEGTORAD;
             // int randImpactCount = ShapeRandom.RandI(2, 16);
             // for (int i = 0; i < randImpactCount; i++)
             // {
@@ -77,11 +77,11 @@ public class DataExample : ExampleScene
             //     pos = Shape.Center + w.Normalize() * (Shape.Radius - r);
             // }
             var rRange = Shape.Radius - r;
-            var impactPos = Shape.Center + w.Normalize() * ShapeRandom.RandF(-rRange, rRange);
+            var impactPos = Shape.Center + w.Normalize() * Rng.Instance.RandF(-rRange, rRange);
             var impact = new Circle(impactPos, r);
             impacts.Add(impact);
 
-            var impactSmoke = new ImpactSmoke(impactPos, r * 4, ShapeRandom.RandF(0.25f, 1f));
+            var impactSmoke = new ImpactSmoke(impactPos, r * 4, Rng.Instance.RandF(0.25f, 1f));
             impactSmokes.Add(impactSmoke);
         }
         public void Update(float dt)
@@ -161,7 +161,7 @@ public class DataExample : ExampleScene
 
         public static Asteroid Create(Vector2 center, float radius, Planet target)
         {
-            var randPos = center + ShapeRandom.RandVec2(radius * 0.95f, radius * 1.05f);
+            var randPos = center + Rng.Instance.RandVec2(radius * 0.95f, radius * 1.05f);
             return new Asteroid(randPos, target, ChanceList.Next());
         }
     }
@@ -179,7 +179,7 @@ public class DataExample : ExampleScene
         {
             this.data = data;
             this.position = pos;
-            var targetPos = target.Shape.Center + ShapeRandom.RandVec2(0f, target.Shape.Radius * 2);
+            var targetPos = target.Shape.Center + Rng.Instance.RandVec2(0f, target.Shape.Radius * 2);
             var w = targetPos - pos;
             velocity = w.Normalize() * data.Speed;
             shape = new(position, data.Size);
@@ -303,6 +303,6 @@ public class DataExample : ExampleScene
     }
     private void CreatePlanet()
     {
-        planet = new(new(), ShapeRandom.RandF(112, 128));
+        planet = new(new(), Rng.Instance.RandF(112, 128));
     }
 }

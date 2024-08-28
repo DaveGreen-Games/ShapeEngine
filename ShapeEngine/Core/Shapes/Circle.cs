@@ -3,6 +3,7 @@ using System.Numerics;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
+using ShapeEngine.Random;
 
 namespace ShapeEngine.Core.Shapes
 {
@@ -106,9 +107,9 @@ namespace ShapeEngine.Core.Shapes
         public Vector2 GetPoint(float angleRad, float f) { return Center + new Vector2(Radius * f, 0f).Rotate(angleRad); }
         public Vector2 GetRandomPoint()
         {
-            float randAngle = ShapeRandom.RandAngleRad();
+            float randAngle = Rng.Instance.RandAngleRad();
             var randDir = ShapeVec.VecFromAngleRad(randAngle);
-            return Center + randDir * ShapeRandom.RandF(0, Radius);
+            return Center + randDir * Rng.Instance.RandF(0, Radius);
         }
         public Points GetRandomPoints(int amount)
         {
@@ -119,8 +120,8 @@ namespace ShapeEngine.Core.Shapes
             }
             return points;
         }
-        public Vector2 GetRandomVertex() { return ShapeRandom.RandCollection(GetVertices(), false); }
-        public Segment GetRandomEdge() { return ShapeRandom.RandCollection(GetEdges(), false); }
+        public Vector2 GetRandomVertex() { return Rng.Instance.RandCollection(GetVertices(), false); }
+        public Segment GetRandomEdge() { return Rng.Instance.RandCollection(GetEdges(), false); }
         public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
         public Points GetRandomPointsOnEdge(int amount)
         {

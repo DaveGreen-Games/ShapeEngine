@@ -7,12 +7,14 @@ using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.Random
 {
-    public class RandomNumberGenerator
+    public class Rng
     {
+        public static readonly Rng Instance = new Rng();
+        
         private System.Random rand;
-
-        /// <summary>Initializes a new instance of the <see cref="ShapeRandom"/> class using a default seed value.</summary>
-        public RandomNumberGenerator() { rand = new System.Random(); }
+        
+        
+        public Rng() { rand = new System.Random(); }
 
 
         /// <summary>Initializes a new instance of the Random class, using the specified seed value.</summary>
@@ -20,7 +22,7 @@ namespace ShapeEngine.Random
         /// A number used to calculate a starting value for the pseudo-random number sequence. If a negative number
         /// is specified, the absolute value of the number is used.
         /// </param>
-        public RandomNumberGenerator(int seed)
+        public Rng(int seed)
         {
             rand = new System.Random(seed);
         }

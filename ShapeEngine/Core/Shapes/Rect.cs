@@ -4,7 +4,7 @@ using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
 using Raylib_cs;
-
+using ShapeEngine.Random;
 namespace ShapeEngine.Core.Shapes;
 
 public readonly struct Rect : IEquatable<Rect>
@@ -520,7 +520,7 @@ public readonly struct Rect : IEquatable<Rect>
         poly.ChangeRotation(angleDeg * ShapeMath.DEGTORAD, pivot);
         return new(poly[0], poly[1], poly[2], poly[3]);
     }
-    public Vector2 GetRandomPointInside() { return new(ShapeRandom.RandF(X, X + Width), ShapeRandom.RandF(Y, Y + Height)); }
+    public Vector2 GetRandomPointInside() { return new(Rng.Instance.RandF(X, X + Width), Rng.Instance.RandF(Y, Y + Height)); }
     
     public Points GetRandomPointsInside(int amount)
     {
@@ -534,7 +534,7 @@ public readonly struct Rect : IEquatable<Rect>
 
     public Vector2 GetRandomVertex()
     {
-        int randIndex = ShapeRandom.RandI(0, 3);
+        int randIndex = Rng.Instance.RandI(0, 3);
         if (randIndex == 0) return TopLeft;
         else if (randIndex == 1) return BottomLeft;
         else if (randIndex == 2) return BottomRight;

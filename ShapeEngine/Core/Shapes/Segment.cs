@@ -4,7 +4,7 @@ using ShapeEngine.Color;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
-
+using ShapeEngine.Random;
 namespace ShapeEngine.Core.Shapes
 {
     public readonly struct Segment : IEquatable<Segment>
@@ -140,7 +140,7 @@ namespace ShapeEngine.Core.Shapes
             return points;
         }
 
-        public Vector2 GetRandomPoint() { return this.GetPoint(ShapeRandom.RandF()); }
+        public Vector2 GetRandomPoint() { return this.GetPoint(Rng.Instance.RandF()); }
         public Points GetRandomPoints(int amount)
         {
             var points = new Points();
@@ -150,7 +150,7 @@ namespace ShapeEngine.Core.Shapes
             }
             return points;
         }
-        public Vector2 GetRandomVertex() { return ShapeRandom.Chance(0.5f) ? Start : End; }
+        public Vector2 GetRandomVertex() { return Rng.Instance.Chance(0.5f) ? Start : End; }
 
 
         #endregion

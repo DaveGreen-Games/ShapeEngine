@@ -5,6 +5,7 @@ using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
 using ShapeEngine.Lib;
+using ShapeEngine.Random;
 namespace Examples.Scenes.ExampleScenes;
 public class ProjectedShapesExample : ExampleScene
 {
@@ -97,7 +98,7 @@ public class ProjectedShapesExample : ExampleScene
         public SegmentShape(Vector2 pos, float size)
         {
             position = pos;
-            var randAngle = ShapeRandom.RandAngleRad();
+            var randAngle = Rng.Instance.RandAngleRad();
             var offset = new Vector2(size, 0f).Rotate(randAngle);
             var start = pos - offset;
             var end = pos + offset;
@@ -249,10 +250,10 @@ public class ProjectedShapesExample : ExampleScene
         public TriangleShape(Vector2 pos, float size)
         {
             position = pos;
-            var randAngle = ShapeRandom.RandAngleRad();
-            var a = pos + new Vector2(size * ShapeRandom.RandF(0.75f, 1.5f), size * ShapeRandom.RandF(-0.5f, 0.5f)).Rotate(randAngle);
-            var b = pos + new Vector2(-size * ShapeRandom.RandF(0.75f, 1.5f), -size * ShapeRandom.RandF(0.5f, 1f)).Rotate(randAngle);
-            var c = pos + new Vector2(-size * ShapeRandom.RandF(0.75f, 1.5f), size * ShapeRandom.RandF(0.5f, 1f)).Rotate(randAngle);
+            var randAngle = Rng.Instance.RandAngleRad();
+            var a = pos + new Vector2(size * Rng.Instance.RandF(0.75f, 1.5f), size * Rng.Instance.RandF(-0.5f, 0.5f)).Rotate(randAngle);
+            var b = pos + new Vector2(-size * Rng.Instance.RandF(0.75f, 1.5f), -size * Rng.Instance.RandF(0.5f, 1f)).Rotate(randAngle);
+            var c = pos + new Vector2(-size * Rng.Instance.RandF(0.75f, 1.5f), size * Rng.Instance.RandF(0.5f, 1f)).Rotate(randAngle);
             Triangle = new(a, b, c);
         }
 
@@ -326,7 +327,7 @@ public class ProjectedShapesExample : ExampleScene
         public Quad Quad;
         public QuadShape(Vector2 pos, float size)
         {
-            var randAngle = ShapeRandom.RandAngleRad();
+            var randAngle = Rng.Instance.RandAngleRad();
             Quad = new(pos, new Size(size * 2), randAngle, new Vector2(0.5f));
         }
         
@@ -472,7 +473,7 @@ public class ProjectedShapesExample : ExampleScene
 
         public PolygonShape(Vector2 pos, float size)
         {
-            Polygon = Polygon.Generate(pos, ShapeRandom.RandI(8, 16), size / 2, size);
+            Polygon = Polygon.Generate(pos, Rng.Instance.RandI(8, 16), size / 2, size);
             position = pos;
         }
         public override Vector2 GetPosition() => position;
@@ -547,7 +548,7 @@ public class ProjectedShapesExample : ExampleScene
         public PolylineShape(Vector2 pos, float size)
         {
             
-            Polyline = Polygon.Generate(pos, ShapeRandom.RandI(8, 16), size / 2, size).ToPolyline();
+            Polyline = Polygon.Generate(pos, Rng.Instance.RandI(8, 16), size / 2, size).ToPolyline();
             position = pos;
         }
         public override Vector2 GetPosition() => position;

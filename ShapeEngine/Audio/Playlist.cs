@@ -1,5 +1,5 @@
 ﻿using ShapeEngine.Lib;
-
+using ShapeEngine.Random;
 namespace ShapeEngine.Audio
 {
     internal class Playlist
@@ -86,7 +86,7 @@ namespace ShapeEngine.Audio
         private uint PopNextID()
         {
             if (queue.Count <= 0) Refill();
-            int index = ShapeRandom.RandI(0, queue.Count);
+            int index = Rng.Instance.RandI(0, queue.Count);
             uint nextID = queue[index];
             queue.RemoveAt(index);
             return nextID;

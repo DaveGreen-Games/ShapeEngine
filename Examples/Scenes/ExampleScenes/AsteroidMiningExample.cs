@@ -8,7 +8,7 @@ using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
 using Color = System.Drawing.Color;
-
+using ShapeEngine.Random;
 namespace Examples.Scenes.ExampleScenes
 {
     // public abstract class SpaceObject : GameObject
@@ -65,9 +65,9 @@ namespace Examples.Scenes.ExampleScenes
             this.rotDeg = 0f;
             this.pos = shape.GetCentroid();
             var dir = (pos - fractureCenter).Normalize();
-            this.vel = dir * ShapeRandom.RandF(100, 300);
-            this.angularVelDeg = ShapeRandom.RandF(-90, 90);
-            this.lifetime = ShapeRandom.RandF(1.5f, 3f);
+            this.vel = dir * Rng.Instance.RandF(100, 300);
+            this.angularVelDeg = Rng.Instance.RandF(-90, 90);
+            this.lifetime = Rng.Instance.RandF(1.5f, 3f);
             this.lifetimeTimer = this.lifetime;
             this.delay = 0.5f;
             this.color = color;
@@ -150,7 +150,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 float f = timer / Lifetime;
                 //Color color = YELLOW.ChangeAlpha((byte)(255 * f));
-                Segment.Draw(ShapeRandom.RandF(4, 8) * f, Colors.Special2, LineCapType.CappedExtended, 3);
+                Segment.Draw(Rng.Instance.RandF(4, 8) * f, Colors.Special2, LineCapType.CappedExtended, 3);
             }
             public void Renew() { timer = Lifetime; }
         }
@@ -244,7 +244,7 @@ namespace Examples.Scenes.ExampleScenes
 
         private void SetDamageTreshold(float overshoot = 0f)
         {
-            curThreshold = DamageThreshold * ShapeRandom.RandF(0.5f, 2f) + overshoot;
+            curThreshold = DamageThreshold * Rng.Instance.RandF(0.5f, 2f) + overshoot;
         }
         public void Overlapped()
         {
@@ -501,7 +501,7 @@ namespace Examples.Scenes.ExampleScenes
                 {
                     Segment laserSegment = new(laserPoints[i], laserPoints[i + 1]);
                     laserSegment.Draw(4f, c);
-                    ShapeDrawing.DrawCircle(laserPoints[i + 1], ShapeRandom.RandF(6f, 12f), c, 12);
+                    ShapeDrawing.DrawCircle(laserPoints[i + 1], Rng.Instance.RandF(6f, 12f), c, 12);
                 }
                 
             }
@@ -696,7 +696,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         private void OnAsteroidFractured(Asteroid a, Vector2 point)
         {
-            var cutShape = Polygon.Generate(point, ShapeRandom.RandI(6, 12), 35, 100);
+            var cutShape = Polygon.Generate(point, Rng.Instance.RandI(6, 12), 35, 100);
             
             FractureAsteroid(a, cutShape);
         }

@@ -5,6 +5,7 @@ using ShapeEngine.Color;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Random;
 
 namespace ShapeEngine.Lib;
 
@@ -1303,7 +1304,7 @@ public static class ShapeDrawing
         };
         while (remainingLength > 0f)
         {
-            float randSegmentLength = ShapeRandom.RandF() * segmentLength;
+            float randSegmentLength = Rng.Instance.RandF() * segmentLength;
             remainingLength -= randSegmentLength;
             if (remainingLength <= 0f)
             {
@@ -1318,7 +1319,7 @@ public static class ShapeDrawing
                 break;
             }
             float scale = randSegmentLength / segmentLength;
-            float displacement = ShapeRandom.RandF(-maxSway, maxSway);
+            float displacement = Rng.Instance.RandF(-maxSway, maxSway);
             displacement -= (displacement - prevDisplacement) * (1 - scale);
             cur = cur + dir * randSegmentLength;
             var p = cur + displacement * n;
@@ -1349,7 +1350,7 @@ public static class ShapeDrawing
         float remainingLength = length;
         while (remainingLength > 0f)
         {
-            float randSegmentLength = ShapeRandom.RandF() * segmentLength;
+            float randSegmentLength = Rng.Instance.RandF() * segmentLength;
             remainingLength -= randSegmentLength;
             if (remainingLength <= 0f)
             {
@@ -1364,7 +1365,7 @@ public static class ShapeDrawing
                 break;
             }
             float scale = randSegmentLength / segmentLength;
-            float displacement = ShapeRandom.RandF(-maxSway, maxSway);
+            float displacement = Rng.Instance.RandF(-maxSway, maxSway);
             displacement -= (displacement - prevDisplacement) * (1 - scale);
             cur = cur + dir * randSegmentLength;
             var p = cur + displacement * n;

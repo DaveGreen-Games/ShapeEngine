@@ -1,7 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
-
+using ShapeEngine.Random;
 namespace ShapeEngine.Core.Shapes;
 
 public class Triangulation : ShapeList<Triangle>
@@ -533,7 +533,7 @@ public class Triangulation : ShapeList<Triangle>
                     chance = (triArea - minArea) / (maxArea - minArea);
                 }
 
-                if (ShapeRandom.Chance(chance)) final.Add(tri);
+                if (Rng.Instance.Chance(chance)) final.Add(tri);
                 else queue.AddRange(tri.Triangulate(minArea));
             }
             queue.RemoveAt(endIndex);

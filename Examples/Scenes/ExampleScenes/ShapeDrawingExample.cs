@@ -7,7 +7,7 @@ using ShapeEngine.Input;
 using ShapeEngine.Lib;
 using ShapeEngine.Text;
 using ShapeEngine.UI;
-
+using ShapeEngine.Random;
 
 namespace Examples.Scenes.ExampleScenes;
 
@@ -145,7 +145,7 @@ public class ShapeDrawingExample : ExampleScene
         float radius = size / 2;
         var center = new Vector2();
 
-        segment = new(center, size, ShapeRandom.RandAngleRad(), 0.5f, false);
+        segment = new(center, size, Rng.Instance.RandAngleRad(), 0.5f, false);
         circle = new(center, radius);
         triangle = Triangle.Generate(center, size / 2, size);
         rect = new Rect(center, new Size(size, size), new Vector2(0.5f, 0.5f));

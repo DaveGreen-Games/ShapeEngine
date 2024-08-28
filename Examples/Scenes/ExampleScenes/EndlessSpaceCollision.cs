@@ -11,7 +11,7 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
 using Size = ShapeEngine.Core.Structs.Size;
-
+using ShapeEngine.Random;
 namespace Examples.Scenes.ExampleScenes;
 
 public class EndlessSpaceCollision : ExampleScene
@@ -123,7 +123,7 @@ public class EndlessSpaceCollision : ExampleScene
 
         public BulletStats RandomizeSpeed(float min = 0.95f, float max = 1.05f, float shipSpeed = 0f)
         {
-            return new(Size, Speed * ShapeRandom.RandF(min, max) + shipSpeed, Damage, Lifetime);
+            return new(Size, Speed * Rng.Instance.RandF(min, max) + shipSpeed, Damage, Lifetime);
         }
     }
     private class Autogun
@@ -438,7 +438,7 @@ public class EndlessSpaceCollision : ExampleScene
                 OnReloadStarted?.Invoke(this);
             }
             var dir = ShapeVec.VecFromAngleRad(aimingRotRad);
-            var randRot = ShapeRandom.RandF(-Stats.Accuracy, Stats.Accuracy);
+            var randRot = Rng.Instance.RandF(-Stats.Accuracy, Stats.Accuracy);
             dir = dir.Rotate(randRot);
             var bullet = new Bullet(pos, dir, BulletStats.RandomizeSpeed(0.95f, 1.05f, curShipSpeed), color.ColorRgba);
             collisionHandler.Add(bullet);
@@ -713,7 +713,7 @@ public class EndlessSpaceCollision : ExampleScene
                         {
                             Velocity = info.CollisionSurface.Normal * 3500;
                             collisionStunTimer = CollisionStunTime;
-                            collisionRotationDirection = ShapeRandom.RandDirF();
+                            collisionRotationDirection = Rng.Instance.RandDirF();
                         }
 
                         return;
@@ -961,8 +961,8 @@ public class EndlessSpaceCollision : ExampleScene
             else Mass = 1f;
             Transform = new(pos, 0f, new Size(size, 0f), 1f);
             var s = ShapeMath.LerpFloat(50, Ship.Speed / 5, DifficultyFactor);
-            speed = ShapeRandom.RandF(0.9f, 1f) * s;
-            Velocity = ShapeRandom.RandVec2() * speed;
+            speed = Rng.Instance.RandF(0.9f, 1f) * s;
+            Velocity = Rng.Instance.RandVec2() * speed;
             chaseStrength = ShapeMath.LerpFloat(0.5f, 1f, DifficultyFactor);
             if (!big) Velocity *= 3f;
             
@@ -981,13 +981,13 @@ public class EndlessSpaceCollision : ExampleScene
 
             if (big)
             {
-                Health = ShapeMath.LerpFloat(300, 650, DifficultyFactor) * ShapeRandom.RandF(0.9f, 1.1f);
-                gappedOutlineInfo = BigAsteroidGappedOutlineInfo.ChangeStartOffset(ShapeRandom.RandF());
+                Health = ShapeMath.LerpFloat(300, 650, DifficultyFactor) * Rng.Instance.RandF(0.9f, 1.1f);
+                gappedOutlineInfo = BigAsteroidGappedOutlineInfo.ChangeStartOffset(Rng.Instance.RandF());
             }
             else
             {
-                Health = ShapeMath.LerpFloat(25, 100, DifficultyFactor) * ShapeRandom.RandF(0.9f, 1.1f);
-                gappedOutlineInfo = SmallAsteroidGappedOutlineInfo.ChangeStartOffset(ShapeRandom.RandF());
+                Health = ShapeMath.LerpFloat(25, 100, DifficultyFactor) * Rng.Instance.RandF(0.9f, 1.1f);
+                gappedOutlineInfo = SmallAsteroidGappedOutlineInfo.ChangeStartOffset(Rng.Instance.RandF());
             }
 
 
@@ -1160,8 +1160,8 @@ public class EndlessSpaceCollision : ExampleScene
         {
             this.Triangle = triangle;
             scaledTriangle = triangle;
-            Velocity = ShapeRandom.RandVec2(1250, 1500);
-            Lifetime = ShapeRandom.RandF(2f, 2.5f);
+            Velocity = Rng.Instance.RandVec2(1250, 1500);
+            Lifetime = Rng.Instance.RandF(2f, 2.5f);
             LifetimeTimer = Lifetime;
         }
 
@@ -1835,7 +1835,7 @@ public class EndlessSpaceCollision : ExampleScene
 
         public Vector2 GetTargetPosition(int curActivation, int maxActivations)
         {
-            return curPosition + ShapeRandom.RandVec2(0, radius);
+            return curPosition + Rng.Instance.RandVec2(0, radius);
         }
 
         public void DrawTargetArea(float f, ColorRgba color)
@@ -1880,7 +1880,7 @@ public class EndlessSpaceCollision : ExampleScene
 
             var p1 = seg1.GetPoint(f);
             var p2 = seg2.GetPoint(f);
-            return new Segment(p1, p2).GetPoint(ShapeRandom.RandF());
+            return new Segment(p1, p2).GetPoint(Rng.Instance.RandF());
 
         }
 
@@ -1987,7 +1987,7 @@ public class EndlessSpaceCollision : ExampleScene
 
         universe = new(new Vector2(0f), new Size(UniverseSize, UniverseSize) , new Vector2(0.5f));
 
-        DestroyerPosition = universe.Center + ShapeRandom.RandVec2(UniverseSize * 1.25f, UniverseSize * 2f);
+        DestroyerPosition = universe.Center + Rng.Instance.RandVec2(UniverseSize * 1.25f, UniverseSize * 2f);
 
         InitCollisionHandler(universe, CollisionRows, CollisionCols);
         cellSize = UniverseSize / CollisionRows;
@@ -2081,7 +2081,7 @@ public class EndlessSpaceCollision : ExampleScene
         {
             var pos = screeninfo.Area.GetRandomPointInside();
             
-            ShapeDrawing.DrawCircleFast(pos, ShapeRandom.RandF(1, 5), Colors.Highlight.SetAlpha(alpha));
+            ShapeDrawing.DrawCircleFast(pos, Rng.Instance.RandF(1, 5), Colors.Highlight.SetAlpha(alpha));
         }
     }
 
@@ -2188,7 +2188,7 @@ public class EndlessSpaceCollision : ExampleScene
     {
         for (int i = 0; i < amount; i++)
         {
-            AddAsteroid(ShapeRandom.Chance(0.85f));
+            AddAsteroid(Rng.Instance.Chance(0.85f));
         }
     }
     private void AddAsteroid(bool big)
@@ -2298,7 +2298,7 @@ public class EndlessSpaceCollision : ExampleScene
                 if (pds.KeyPressed(dir))
                 {
                     PayloadMarkerSimple marker = new();
-                    var speed = ShapeRandom.RandF(3250, 3750);
+                    var speed = Rng.Instance.RandF(3250, 3750);
                     marker.Launch(ship.GetBarrelPosition(), ship.GetBarrelDirection(), speed, 1f, 1.8f);
                     pds.RequestPayload(marker);
                     launched = true;
@@ -2534,7 +2534,7 @@ public class EndlessSpaceCollision : ExampleScene
                     
                     for (int j = 0; j < amount; j++)
                     {
-                        var randPos = a.Transform.Position + ShapeRandom.RandVec2(0, AsteroidMaxSize);
+                        var randPos = a.Transform.Position + Rng.Instance.RandVec2(0, AsteroidMaxSize);
                         AddAsteroid(randPos, false);
                     }
                 }

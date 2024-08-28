@@ -1,18 +1,15 @@
 ﻿using Raylib_cs;
+using System.Numerics;
 using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Random;
 using ShapeEngine.Screen;
-using System.Numerics;
-using System.Security.Cryptography;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
 using ShapeEngine.Text;
-using ShapeEngine.UI;
-using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -50,9 +47,9 @@ namespace Examples.Scenes.ExampleScenes
         float speed = 0f;
         public Comet(Vector2 pos)
         {
-            this.circle = new(pos, ShapeRandom.RandF(MinSize, MaxSize));
+            this.circle = new(pos, Rng.Instance.RandF(MinSize, MaxSize));
             this.speed = speeds.Next();
-            this.vel = ShapeRandom.RandVec2() * this.speed;
+            this.vel = Rng.Instance.RandVec2() * this.speed;
             this.color = colors.Next();
             // this.colorRgba = colors.Next();
 
@@ -417,7 +414,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         private void ShakeCamera()
         {
-            camera.Shake(ShapeRandom.RandF(0.8f, 2f), new Vector2(100, 100), 0, 25, 0.75f);
+            camera.Shake(Rng.Instance.RandF(0.8f, 2f), new Vector2(100, 100), 0, 25, 0.75f);
         }
         
         
@@ -480,7 +477,7 @@ namespace Examples.Scenes.ExampleScenes
                 if (comet.CheckCollision(ship.Hull))
                 {
                     float f = comet.GetCollisionIntensity();
-                    camera.Shake(ShapeRandom.RandF(0.4f, 0.6f), new Vector2(150, 150) * f, 0, 10, 0.75f);
+                    camera.Shake(Rng.Instance.RandF(0.4f, 0.6f), new Vector2(150, 150) * f, 0, 10, 0.75f);
                     comets.RemoveAt(i);
 
                     GAMELOOP.Flash(0.25f, new(255, 255, 255, 150), new(0,0,0,0));

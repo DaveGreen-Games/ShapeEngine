@@ -1,5 +1,5 @@
 using ShapeEngine.Lib;
-
+using ShapeEngine.Random;
 namespace ShapeEngine.Core.Shapes;
 
 public class ShapeList<T> : List<T>
@@ -31,8 +31,8 @@ public class ShapeList<T> : List<T>
         return hash.ToHashCode();
     }
 
-    public T? GetRandomItem() => ShapeRandom.RandCollection(this);
+    public T? GetRandomItem() => Rng.Instance.RandCollection(this);
 
-    public List<T> GetRandomItems(int amount) => ShapeRandom.RandCollection(this, amount);
+    public List<T> GetRandomItems(int amount) => Rng.Instance.RandCollection(this, amount);
     public T? GetItem(int index) => Count <= 0 ? default(T) : this[ShapeMath.WrapIndex(Count, index)];
 }

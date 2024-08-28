@@ -213,8 +213,8 @@ namespace ShapeEngine.Core.Shapes
 
             for (int i = 0; i < pointCount; i++)
             {
-                float f1 = ShapeRandom.RandF();
-                float f2 = ShapeRandom.RandF();
+                float f1 = Rng.Instance.RandF();
+                float f2 = Rng.Instance.RandF();
                 Vector2 randPoint = GetPoint(f1, f2);
                 points.Add(randPoint);
             }
@@ -275,7 +275,7 @@ namespace ShapeEngine.Core.Shapes
             //return new(x, y);
         }
 
-        public Vector2 GetRandomPointInside() => this.GetPoint(ShapeRandom.RandF(), ShapeRandom.RandF());
+        public Vector2 GetRandomPointInside() => this.GetPoint(Rng.Instance.RandF(), Rng.Instance.RandF());
         public Points GetRandomPointsInside(int amount)
         {
             var points = new Points();
@@ -287,7 +287,7 @@ namespace ShapeEngine.Core.Shapes
         }
         public Vector2 GetRandomVertex()
         {
-            var randIndex = ShapeRandom.RandI(0, 2);
+            var randIndex = Rng.Instance.RandI(0, 2);
             if (randIndex == 0) return A;
             else if (randIndex == 1) return B;
             else return C;
@@ -673,9 +673,9 @@ namespace ShapeEngine.Core.Shapes
         {
             float angleStep = ShapeMath.PI * 2.0f / 3;
 
-            var a = ShapeVec.Rotate(ShapeVec.Right(), -angleStep * 0) * ShapeRandom.RandF(minLength, maxLength);
-            var b = ShapeVec.Rotate(ShapeVec.Right(), -angleStep * 1) * ShapeRandom.RandF(minLength, maxLength);
-            var c = ShapeVec.Rotate(ShapeVec.Right(), -angleStep * 2) * ShapeRandom.RandF(minLength, maxLength);
+            var a = ShapeVec.Rotate(ShapeVec.Right(), -angleStep * 0) * Rng.Instance.RandF(minLength, maxLength);
+            var b = ShapeVec.Rotate(ShapeVec.Right(), -angleStep * 1) * Rng.Instance.RandF(minLength, maxLength);
+            var c = ShapeVec.Rotate(ShapeVec.Right(), -angleStep * 2) * Rng.Instance.RandF(minLength, maxLength);
             
             return new(a, b, c);
         }
@@ -684,9 +684,9 @@ namespace ShapeEngine.Core.Shapes
         {
             float angleStep = (ShapeMath.PI * 2.0f) / 3;
 
-            var a = center + ShapeVec.Rotate(ShapeVec.Right(), -angleStep * 0) * ShapeRandom.RandF(minLength, maxLength);
-            var b = center + ShapeVec.Rotate(ShapeVec.Right(), -angleStep * 1) * ShapeRandom.RandF(minLength, maxLength);
-            var c = center + ShapeVec.Rotate(ShapeVec.Right(), -angleStep * 2) * ShapeRandom.RandF(minLength, maxLength);
+            var a = center + ShapeVec.Rotate(ShapeVec.Right(), -angleStep * 0) * Rng.Instance.RandF(minLength, maxLength);
+            var b = center + ShapeVec.Rotate(ShapeVec.Right(), -angleStep * 1) * Rng.Instance.RandF(minLength, maxLength);
+            var c = center + ShapeVec.Rotate(ShapeVec.Right(), -angleStep * 2) * Rng.Instance.RandF(minLength, maxLength);
             
             return new(a, b, c);
         }

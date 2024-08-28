@@ -12,6 +12,7 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Screen;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
+using ShapeEngine.Random;
 using ShapeEngine.Text;
 using ShapeEngine.UI;
 
@@ -512,7 +513,7 @@ namespace Examples
                 if (pixelationShader != null && pixelationShader.Enabled)
                 {
 
-                    var rPixelValue = ShapeRandom.RandF(5.9f, 6.1f);
+                    var rPixelValue = Rng.Instance.RandF(5.9f, 6.1f);
                 
                     ShapeShader.SetValueFloat(pixelationShader.Shader, "pixelWidth", rPixelValue * Camera.BaseZoomLevel);
                     ShapeShader.SetValueFloat(pixelationShader.Shader, "pixelHeight", rPixelValue * Camera.BaseZoomLevel);
@@ -528,10 +529,10 @@ namespace Examples
                 var overdrawShader = ScreenShaders.Get(overdrawID);
                 if (overdrawShader != null && overdrawShader.Enabled)
                 {
-                    if (ShapeRandom.Chance(0.025f))
+                    if (Rng.Instance.Chance(0.025f))
                     {
-                        ShapeShader.SetValueColor(overdrawShader.Shader, "overdrawColor", ShapeRandom.RandColor(127, 255, 255));
-                        ShapeShader.SetValueFloat(overdrawShader.Shader, "blend", ShapeRandom.RandF(0.4f, 0.6f));
+                        ShapeShader.SetValueColor(overdrawShader.Shader, "overdrawColor", Rng.Instance.RandColor(127, 255, 255));
+                        ShapeShader.SetValueFloat(overdrawShader.Shader, "blend", Rng.Instance.RandF(0.4f, 0.6f));
                     }
                 
                 }
@@ -703,7 +704,7 @@ namespace Examples
         public string GetFontName(int id) { return fontNames[id]; }
         public Font GetRandomFont()
         {
-            Font? randFont = ShapeRandom.RandCollection<Font>(fonts.Values.ToList(), false);
+            Font? randFont = Rng.Instance.RandCollection<Font>(fonts.Values.ToList(), false);
             return randFont != null ? (Font)randFont : FontDefault;
         }
         public void GoToMainScene()

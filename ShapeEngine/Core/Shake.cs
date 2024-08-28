@@ -1,4 +1,5 @@
 ﻿using ShapeEngine.Lib;
+using ShapeEngine.Random;
 
 namespace ShapeEngine.Core
 {
@@ -72,7 +73,7 @@ namespace ShapeEngine.Core
             }
         }
         
-        private void UpdateValue(int index) { values[index] = ShapeMath.LerpFloat(ShapeRandom.RandF(-1.0f, 1.0f), values[index], Smoothness) * F; }
+        private void UpdateValue(int index) { values[index] = ShapeMath.LerpFloat(Rng.Instance.RandF(-1.0f, 1.0f), values[index], Smoothness) * F; }
         private void ResetValues() { for (int i = 0; i < values.Length; i++) { values[i] = 0.0f; } }
     }
 

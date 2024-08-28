@@ -1,6 +1,7 @@
 ﻿using System.Text.Json.Nodes;
 using System.Text.Json;
 using ShapeEngine.Lib;
+using ShapeEngine.Random;
 
 namespace ShapeEngine.Persistent
 {
@@ -57,13 +58,13 @@ namespace ShapeEngine.Persistent
         public IDataObject? GetRandomEntry()
         {
             if (data.Count <= 0) return null;
-            int randIndex = ShapeRandom.RandI(data.Count);
+            int randIndex = Rng.Instance.RandI(data.Count);
             return data.ElementAt(randIndex).Value;
         }
         public T? GetRandomEntry<T>()
         {
             if (data.Count <= 0) return default(T);
-            int randIndex = ShapeRandom.RandI(data.Count);
+            int randIndex = Rng.Instance.RandI(data.Count);
             if (data.ElementAt(randIndex).Value is T t) return t;
             return default(T);
         }

@@ -62,7 +62,7 @@ namespace Examples.Scenes.ExampleScenes
             public SpaceShip(Vector2 pos, ShapeGamepadDevice gamepad)
             {
                 hull = new(pos, Size);
-                movementDir = ShapeRandom.RandVec2();
+                movementDir = Rng.Instance.RandVec2();
                 
                 // var moveHorKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
                 var moveHorGP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f);
@@ -119,7 +119,7 @@ namespace Examples.Scenes.ExampleScenes
 
             public Vector2 GetRandomSpawnPosition()
             {
-                return GetPosition() + ShapeRandom.RandVec2(0, hull.Radius * 2);
+                return GetPosition() + Rng.Instance.RandVec2(0, hull.Radius * 2);
             }
             public void Draw()
             {

@@ -2,7 +2,7 @@ using System.Numerics;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
-
+using ShapeEngine.Random;
 namespace ShapeEngine.Core.Shapes;
 
 /// <summary>
@@ -231,7 +231,7 @@ public readonly struct Quad : IEquatable<Quad>
         return D;
     }
 
-    public Vector2 GetRandomPointInside() => GetPoint(ShapeRandom.RandF(), ShapeRandom.RandF());
+    public Vector2 GetRandomPointInside() => GetPoint(Rng.Instance.RandF(), Rng.Instance.RandF());
     public Points GetRandomPointsInside(int amount)
     {
         var points = new Points();
@@ -242,8 +242,8 @@ public readonly struct Quad : IEquatable<Quad>
 
         return points;
     }
-    public Vector2 GetRandomVertex() => GetVertex(ShapeRandom.RandI(0, 3));
-    public Segment GetRandomEdge()  => GetEdge(ShapeRandom.RandI(0, 3));
+    public Vector2 GetRandomVertex() => GetVertex(Rng.Instance.RandI(0, 3));
+    public Segment GetRandomEdge()  => GetEdge(Rng.Instance.RandI(0, 3));
     public Vector2 GetRandomPointOnEdge() => GetRandomEdge().GetRandomPoint();
     public Points GetRandomPointsOnEdge(int amount)
     {
@@ -256,7 +256,7 @@ public readonly struct Quad : IEquatable<Quad>
         
         for (int i = 0; i < amount; i++)
         {
-            var rIndex = ShapeRandom.RandI(0, 3);
+            var rIndex = Rng.Instance.RandI(0, 3);
             switch (rIndex)
             {
                 case 0:

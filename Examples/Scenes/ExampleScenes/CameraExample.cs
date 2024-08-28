@@ -10,7 +10,7 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
 using Color = System.Drawing.Color;
-
+using ShapeEngine.Random;
 namespace Examples.Scenes.ExampleScenes
 {
     internal class Pillar
@@ -73,7 +73,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 //Vector2 pos = SRNG.randVec2(0, 5000);
                 Vector2 pos = universe.GetRandomPointInside();
-                float size = ShapeRandom.RandF(25, 100);
+                float size = Rng.Instance.RandF(25, 100);
                 Pillar p = new(pos, size);
                 pillars.Add(p);
             }

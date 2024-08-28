@@ -3,7 +3,7 @@ using System.Numerics;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
-
+using ShapeEngine.Random;
 namespace ShapeEngine.Core.Shapes
 {
     public class Polyline : Points, IEquatable<Polyline>
@@ -203,7 +203,7 @@ namespace ShapeEngine.Core.Shapes
         #region Points & Vertex
         
         
-        public Vector2 GetRandomVertex() { return ShapeRandom.RandCollection(this); }
+        public Vector2 GetRandomVertex() { return Rng.Instance.RandCollection(this); }
         public Segment GetRandomEdge() => GetEdges().GetRandomSegment();
         //public Vector2 GetRandomPoint() => GetRandomEdge().GetRandomPoint();
         //public Points GetRandomPoints(int amount) => GetEdges().GetRandomPoints(amount);

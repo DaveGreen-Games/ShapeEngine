@@ -1,5 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Lib;
+using ShapeEngine.Random;
 
 namespace ShapeEngine.Core.Structs;
 
@@ -97,8 +98,8 @@ public readonly struct PolarCoordinates
     public static PolarCoordinates Down => new PolarCoordinates(1f, ShapeMath.PI / 2);
     public static PolarCoordinates Left => new PolarCoordinates(1f, ShapeMath.PI);
     public static PolarCoordinates Up => new PolarCoordinates(1f, ShapeMath.PI + ShapeMath.PI / 2);
-    public static PolarCoordinates Random() => new PolarCoordinates(ShapeRandom.RandF(), ShapeRandom.RandAngleRad());
-    public static PolarCoordinates Random(float minR, float maxR) => new PolarCoordinates(ShapeRandom.RandF(minR, maxR), ShapeRandom.RandAngleRad());
+    public static PolarCoordinates Random() => new PolarCoordinates(Rng.Instance.RandF(), Rng.Instance.RandAngleRad());
+    public static PolarCoordinates Random(float minR, float maxR) => new PolarCoordinates(Rng.Instance.RandF(minR, maxR), Rng.Instance.RandAngleRad());
     public static Vector2 GetVector2(float angleRad) => new Vector2(MathF.Cos(angleRad), MathF.Sin(angleRad));
     public static Vector2 GetVector2(float radius, float angleRad) => new Vector2(radius * MathF.Cos(angleRad), radius * MathF.Sin(angleRad));
     #endregion

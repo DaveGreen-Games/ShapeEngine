@@ -142,7 +142,7 @@ public class Segments : ShapeList<Segment>
             var seg = this[i];
             items[i] = new(seg, (int)seg.LengthSquared);
         }
-        return ShapeRandom.PickRandomItem(items);
+        return Rng.Instance.PickRandomItem(items);
     }
     public Vector2 GetRandomPoint() => GetRandomSegment().GetRandomPoint();
     public Points GetRandomPoints(int amount)
@@ -153,7 +153,7 @@ public class Segments : ShapeList<Segment>
             var seg = this[i];
             items[i] = new(seg, (int)seg.LengthSquared);
         }
-        var pickedSegments = ShapeRandom.PickRandomItems(amount, items);
+        var pickedSegments = Rng.Instance.PickRandomItems(amount, items);
         var randomPoints = new Points();
         foreach (var seg in pickedSegments)
         {

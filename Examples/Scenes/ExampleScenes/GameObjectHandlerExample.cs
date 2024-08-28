@@ -9,7 +9,7 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
 using Color = System.Drawing.Color;
-
+using ShapeEngine.Random;
 namespace Examples.Scenes.ExampleScenes
 {
     internal static class SpawnAreaLayers
@@ -109,7 +109,7 @@ namespace Examples.Scenes.ExampleScenes
             col.CollisionMask = col.CollisionMask.Add(CollisionFlags.BoundaryFlag);
             col.CollisionLayer = CollisionFlags.BallFlag;
 
-            Velocity = ShapeRandom.RandVec2(50, 250);
+            Velocity = Rng.Instance.RandVec2(50, 250);
             AddCollider(col);
 
             circleCollider = col;
@@ -168,7 +168,7 @@ namespace Examples.Scenes.ExampleScenes
             col.CollisionLayer = CollisionFlags.BulletFlag;
             ProjectShape = true;
 
-            Velocity = ShapeRandom.RandVec2(5000, 6000);
+            Velocity = Rng.Instance.RandVec2(5000, 6000);
             AddCollider(col);
 
             circleCollider = col;
@@ -258,8 +258,8 @@ namespace Examples.Scenes.ExampleScenes
             col.CollisionMask = col.CollisionMask.Add(CollisionFlags.BoundaryFlag);
             col.CollisionLayer = CollisionFlags.RockFlag;
             
-            rotationSpeedRad = ShapeRandom.RandF(-90, 90) * ShapeMath.DEGTORAD;
-            Velocity = ShapeRandom.RandVec2(50, 250);
+            rotationSpeedRad = Rng.Instance.RandF(-90, 90) * ShapeMath.DEGTORAD;
+            Velocity = Rng.Instance.RandVec2(50, 250);
             AddCollider(col);
 
             polyCollider = col;
@@ -381,7 +381,7 @@ namespace Examples.Scenes.ExampleScenes
             tCol.CollisionLayer = CollisionFlags.BirdFlag;
             
 
-            Velocity = ShapeRandom.RandVec2(50, 250);
+            Velocity = Rng.Instance.RandVec2(50, 250);
             Transform = Transform.SetRotationRad(Velocity.AngleRad());
             AddCollider(cCol);
             AddCollider(tCol);
@@ -604,7 +604,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 for (int i = 0; i < 50; i++)
                 {
-                    var spawnPos = mousePosGame + ShapeRandom.RandVec2(0, 200);
+                    var spawnPos = mousePosGame + Rng.Instance.RandVec2(0, 200);
                     var r = new Rock(spawnPos);
                     SpawnArea?.AddGameObject(r);
                     CollisionHandler?.Add(r);

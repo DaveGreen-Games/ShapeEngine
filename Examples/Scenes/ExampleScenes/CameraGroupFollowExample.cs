@@ -60,7 +60,7 @@ namespace Examples.Scenes.ExampleScenes
             public SpaceShip(Vector2 pos)
             {
                 hull = new(pos, Size);
-                movementDir = ShapeRandom.RandVec2();
+                movementDir = Rng.Instance.RandVec2();
                 invisibleTimer = 2f;
                 
                 var moveHorKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
@@ -166,7 +166,7 @@ namespace Examples.Scenes.ExampleScenes
                     if (targetDis < MinDistance * MinDistance)
                     {
                         outOfBoundsTimer = 0;
-                        dir = ShapeRandom.RandVec2();
+                        dir = Rng.Instance.RandVec2();
                         speed = Speed * 0.25f;
                         turnSpeedDeg = TurningSpeedDeg; 
                     }
@@ -179,7 +179,7 @@ namespace Examples.Scenes.ExampleScenes
                     }
                     else
                     {
-                        dir = ShapeRandom.RandVec2();
+                        dir = Rng.Instance.RandVec2();
                         speed = Speed * 0.25f;
                         turnSpeedDeg = TurningSpeedDeg;
                     }
@@ -202,7 +202,7 @@ namespace Examples.Scenes.ExampleScenes
 
             public Vector2 GetRandomSpawnPosition()
             {
-                return GetPosition() + ShapeRandom.RandVec2(0, hull.Radius * 2);
+                return GetPosition() + Rng.Instance.RandVec2(0, hull.Radius * 2);
             }
             public void Draw()
             {

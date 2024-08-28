@@ -12,6 +12,7 @@ using ShapeEngine.Input;
 using ShapeEngine.Pathfinding;
 using Color = System.Drawing.Color;
 using Path = ShapeEngine.Pathfinding.Path;
+using ShapeEngine.Random;
 namespace Examples.Scenes.ExampleScenes;
 
      
@@ -288,14 +289,14 @@ public class PathfinderExample2 : ExampleScene
 
         public Chaser(Vector2 pos, float size, float speed, Pathfinder pathfinder)
         {
-            var s = ShapeRandom.RandF(size / 4, size);
+            var s = Rng.Instance.RandF(size / 4, size);
             this.body = new(pos, s);
             this.pathfinder = pathfinder;
-            if (ShapeRandom.Chance(0.25f))
-                predictionSeconds = ShapeRandom.RandF(PredictorSeconds * 0.75f, PredictorSeconds * 1f);
+            if (Rng.Instance.Chance(0.25f))
+                predictionSeconds = Rng.Instance.RandF(PredictorSeconds * 0.75f, PredictorSeconds * 1f);
 
 
-            this.speed = speed * (Predictor ? ShapeRandom.RandF(0.4f, 0.5f) : ShapeRandom.RandF(0.25f, 0.35f));
+            this.speed = speed * (Predictor ? Rng.Instance.RandF(0.4f, 0.5f) : Rng.Instance.RandF(0.25f, 0.35f));
             SetPathTimer();
         }
 
@@ -313,10 +314,10 @@ public class PathfinderExample2 : ExampleScene
         {
             if (target == null)
             {
-                pathTimer = ShapeRandom.RandF(pathTimerInterval * 0.5f, pathTimerInterval * 2f);
+                pathTimer = Rng.Instance.RandF(pathTimerInterval * 0.5f, pathTimerInterval * 2f);
                 return;
             }
-            pathTimer = ShapeRandom.RandF(pathTimerInterval * 0.5f, pathTimerInterval * 1.5f);
+            pathTimer = Rng.Instance.RandF(pathTimerInterval * 0.5f, pathTimerInterval * 1.5f);
             // var disSq = (GetTargetPosition() - body.Center).LengthSquared();
             // if (disSq < MaxPathRequestDistanceSquared)
             // {
@@ -656,8 +657,8 @@ public class PathfinderExample2 : ExampleScene
     {
         Title = "Pathfinder Example 2";
 
-        var universeWidth = ShapeRandom.RandF(8000, 12000);
-        var universeHeight = ShapeRandom.RandF(8000, 12000);
+        var universeWidth = Rng.Instance.RandF(8000, 12000);
+        var universeHeight = Rng.Instance.RandF(8000, 12000);
         universe = new(new Vector2(0f), new Size(universeWidth, universeHeight) , new Vector2(0.5f));
         universeShape = universe.ToPolygon();
         var cols = (int)(universeWidth / CellSize);
@@ -703,8 +704,8 @@ public class PathfinderExample2 : ExampleScene
     }
     public override void Reset()
     {
-        var universeWidth = ShapeRandom.RandF(8000, 12000);
-        var universeHeight = ShapeRandom.RandF(8000, 12000);
+        var universeWidth = Rng.Instance.RandF(8000, 12000);
+        var universeHeight = Rng.Instance.RandF(8000, 12000);
         universe = new(new Vector2(0f), new Size(universeWidth, universeHeight) , new Vector2(0.5f));
         universeShape = universe.ToPolygon();
         var cols = (int)(universeWidth / CellSize);
@@ -739,7 +740,7 @@ public class PathfinderExample2 : ExampleScene
         var unblockedRects = pathfinder.GetRects(true);
         for (var i = 0; i < amount; i++)
         {
-            var r = ShapeRandom.RandCollection(unblockedRects, false);
+            var r = Rng.Instance.RandCollection(unblockedRects, false);
             var chaser = new Chaser(r.GetRandomPointInside(), ChaserSize, Ship.Speed , pathfinder);
             chaser.SetTarget(ship);
             chasers.Add(chaser);
@@ -753,7 +754,7 @@ public class PathfinderExample2 : ExampleScene
         
         for (var i = 0; i < amount; i++)
         {
-            var r = ShapeRandom.RandCollection(spawnRects, false);
+            var r = Rng.Instance.RandCollection(spawnRects, false);
             var chaser = new Chaser(r.GetRandomPointInside(), ChaserSize, Ship.Speed , pathfinder);
             chaser.SetTarget(ship);
             chasers.Add(chaser);
