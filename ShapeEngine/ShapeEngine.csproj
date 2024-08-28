@@ -51,6 +51,11 @@
 		- `OnDrawGame` is called before shaders are applied and the camera affects what area of the game world is drawn
 		- `OnDrawGameUi` is called after shaders are applied and the camera has no effect on it. This is useful for ui elements because it will always be on top.
 		- Clear background system that allows for a fine control of when and how the texture is cleared. In most cases clearing every frame before drawing to the texture is necessary and a custom `BackgroundColor` can be specified for that. In some cases clearing should only happen in certain intervals or not at all and to allow that a function can be set in the screen texture to control that.
+
+		## Random Number Generator
+		- ShapeRandom class removed. ShapeRandom was a static class that used a static RandomNumberGenerator field and wrapped every single function. Maintaining this is tedious because any change in the RandomNumberGenerator class that changes functions or function declaration results in duplicate work in the ShapeRandom class.
+		- RandomNumberGenerator class renamed to Rng
+		- Rng class now has a static Instance field that can be used like ShapeRandom
 		
 		## Improvements
 
