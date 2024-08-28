@@ -1,4 +1,6 @@
-namespace ShapeEngine.Lib;
+using ShapeEngine.Lib;
+
+namespace ShapeEngine.Core.Structs;
 
 /// <summary>
 /// Used for DrawGappedOutline functions.
