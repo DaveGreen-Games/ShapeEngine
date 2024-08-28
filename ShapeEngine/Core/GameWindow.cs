@@ -343,7 +343,7 @@ public sealed class GameWindow
         Raylib.SetWindowOpacity(windowSettings.WindowOpacity);
         windowConfigFlags = WindowConfigFlags.Get();
 
-        CurrentGameWindowInstance = this;
+        Instance = this;
     }
     
     internal void Update(float dt)
@@ -457,7 +457,7 @@ public sealed class GameWindow
         
         Raylib.SetWindowSize(width, height);
         Raylib.SetWindowState(ConfigFlags.FullscreenMode);
-        CalculateCurScreenSize();
+        // CalculateCurScreenSize();
         ResetMousePosition();
         return true;
     }
