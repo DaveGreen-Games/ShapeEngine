@@ -108,7 +108,8 @@ There are multiple ways to use Shape Engine:
 - Color Palettes
 - [Input System (Keyboard, Mouse, Gamepad)](https://youtu.be/IUSnUw0x5ek?si=wr7aEmQD8JbeZAfl)
 - [Camera System](https://youtu.be/BascnrqZn6Q)
-
+- Screen Texture System
+- [Gapped Drawing](https://youtu.be/_xBz9cArtBE)
 
 ## Documentation & Getting Started
 
