@@ -300,7 +300,8 @@ public sealed class ScreenTexture
         var scaledMousePositionUi = mousePosition;
         if (Mode == ScreenTextureMode.Pixelation)
         {
-            scaledMousePositionUi = mousePosition * PixelationFactor;
+            var f = GameWindow.Instance.ScreenToMonitor.AreaSideFactor;
+            scaledMousePositionUi = mousePosition * PixelationFactor * f;
         }
         else if (Mode == ScreenTextureMode.NearestFixed)
         {
@@ -373,7 +374,8 @@ public sealed class ScreenTexture
         var scaledMousePositionUi = mousePosition;
         if (Mode == ScreenTextureMode.Pixelation)
         {
-            scaledMousePositionUi = mousePosition * PixelationFactor;
+            var f = GameWindow.Instance.ScreenToMonitor.AreaSideFactor;
+            scaledMousePositionUi = mousePosition * PixelationFactor * f;
         }
         else if (Mode == ScreenTextureMode.NearestFixed)
         {
