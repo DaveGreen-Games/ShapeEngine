@@ -48,7 +48,7 @@ public static class Program
 {     
     public static void Main(string[] args)     
     {         
-        var game = new Game(GameSettings.StretchMode, WindowSettings.Default);
+        var game = new MyGameClass(GameSettings.StretchMode, WindowSettings.Default);
 		game.Run();    
     } 
 } 
