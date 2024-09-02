@@ -196,6 +196,88 @@ namespace ShapeEngine.Core.Shapes
             );
         }
 
+        /// <summary>
+        /// Creates a circle sector with points.
+        /// </summary>
+        /// <param name="direction"> The center direction of the sector.</param>
+        /// <param name="angleRad"> Determines the width of the sector. Half of the angle to the left and half to the right.</param>
+        /// <param name="accuracy"> Determines the amount of points generated for the arc.
+        /// 0 generates a triangle.
+        /// 1 has one arc point in the center at the top of the arc.</param>
+        /// <returns></returns>
+        public Points? GetSectorPoints(Vector2 direction, float angleRad, int accuracy = 3)
+        {
+            if (angleRad <= 0 || (direction.X == 0 && direction.Y == 0)) return null;
+            var result = new Points(3 + accuracy);
+            
+            //ccw order
+            result.Add(Center);
+            var angleStep = angleRad / (accuracy + 1);
+            var currentAngle = -angleStep / 2;
+            for (int i = 0; i < accuracy + 2; i++)
+            {
+                result.Add(Center + direction.Rotate(currentAngle) * Radius);
+                currentAngle += angleStep;
+            }
+            
+            return result;
+        }
+       
+        /// <summary>
+        /// Creates a circle sector with segments.
+        /// </summary>
+        /// <param name="direction"> The center direction of the sector.</param>
+        /// <param name="angleRad"> Determines the width of the sector. Half of the angle to the left and half to the right.</param>
+        /// <param name="accuracy"> Determines the amount of points generated for the arc.
+        /// 0 generates a triangle.
+        /// 1 has one arc point in the center at the top of the arc.</param>
+        /// <returns></returns>
+        public Segments? GetSectorSegments(Vector2 direction, float angleRad, int accuracy = 3)
+        {
+            if (angleRad <= 0 || (direction.X == 0 && direction.Y == 0)) return null;
+            var result = new Segments(3 + accuracy);
+            
+            //ccw order
+            var prevPoint = Center;
+            var angleStep = angleRad / (accuracy + 1);
+            var currentAngle = -angleStep / 2;
+            for (int i = 0; i < accuracy + 2; i++)
+            {
+                var p = Center + direction.Rotate(currentAngle) * Radius;
+                result.Add(new Segment(prevPoint, p));
+                prevPoint = p;
+                currentAngle += angleStep;
+            }
+            
+            return result;
+        }
+
+        /// <summary>
+        /// Creates a circle sector with points.
+        /// </summary>
+        /// <param name="direction"> The center direction of the sector.</param>
+        /// <param name="angleRad"> Determines the width of the sector. Half of the angle to the left and half to the right.</param>
+        /// <param name="accuracy"> Determines the amount of points generated for the arc.
+        /// 0 generates a triangle.
+        /// 1 has one arc point in the center at the top of the arc.</param>
+        /// <returns></returns>
+        public Polygon? GetSectorPolygon(Vector2 direction, float angleRad, int accuracy = 3)
+        {
+            if (angleRad <= 0 || (direction.X == 0 && direction.Y == 0)) return null;
+            var result = new Polygon(3 + accuracy);
+            
+            //ccw order
+            result.Add(Center);
+            var angleStep = angleRad / (accuracy + 1);
+            var currentAngle = -angleStep / 2;
+            for (int i = 0; i < accuracy + 2; i++)
+            {
+                result.Add(Center + direction.Rotate(currentAngle) * Radius);
+                currentAngle += angleStep;
+            }
+            
+            return result;
+        }
 
         #endregion
         
@@ -384,7 +466,16 @@ namespace ShapeEngine.Core.Shapes
         #region Contains
 
         public bool ContainsPoint(Vector2 p) => (Center - p).LengthSquared() <= Radius * Radius;
+        public bool ContainsPoint(Vector2 p, Vector2 dir, float angleRad)
+        {
+            if(angleRad <= 0f || (dir.X == 0 && dir.Y == 0)) return false;
+            if (!ContainsPoint(p)) return false;
+            
+            var a = dir.AngleRad(p - Center);
+            return MathF.Abs(a) < angleRad * 0.5f;
+        }
 
+        
         public bool ContainsCollisionObject(CollisionObject collisionObject)
         {
             if (!collisionObject.HasColliders) return false;
@@ -410,7 +501,6 @@ namespace ShapeEngine.Core.Shapes
 
             return false;
         }
-
         public bool ContainsShape(Segment segment)
         {
             return ContainsPoint(segment.Start) && ContainsPoint(segment.End);
@@ -453,7 +543,94 @@ namespace ShapeEngine.Core.Shapes
             return true;
         }
         
+        
+        public bool ContainsCollisionObject(CollisionObject collisionObject, Vector2 direction, float angleRad)
+        {
+            if(angleRad <= 0f || (direction.X == 0 && direction.Y == 0)) return false;
+            
+            if (!collisionObject.HasColliders) return false;
+            
+            foreach (var collider in collisionObject.Colliders)
+            {
+                if (!ContainsCollider(collider, direction, angleRad)) return false;
+            }
 
+            return true;
+        }
+        public bool ContainsCollider(Collider collider, Vector2 direction, float angleRad)
+        {
+            if(angleRad <= 0f || (direction.X == 0 && direction.Y == 0)) return false;
+            
+            switch (collider.GetShapeType())
+            {
+                case ShapeType.Circle: return ContainsShape(collider.GetCircleShape(), direction, angleRad);
+                case ShapeType.Segment: return ContainsShape(collider.GetSegmentShape(), direction, angleRad);
+                case ShapeType.Triangle: return ContainsShape(collider.GetTriangleShape(), direction, angleRad);
+                case ShapeType.Quad: return ContainsShape(collider.GetQuadShape(), direction, angleRad);
+                case ShapeType.Rect: return ContainsShape(collider.GetRectShape(), direction, angleRad);
+                case ShapeType.Poly: return ContainsShape(collider.GetPolygonShape(), direction, angleRad);
+                case ShapeType.PolyLine: return ContainsShape(collider.GetPolylineShape(), direction, angleRad);
+            }
+
+            return false;
+        }
+        public bool ContainsShape(Segment segment, Vector2 direction, float angleRad)
+        {
+            if(angleRad <= 0f || (direction.X == 0 && direction.Y == 0)) return false;
+            
+            return ContainsPoint(segment.Start, direction, angleRad) && ContainsPoint(segment.End, direction, angleRad);
+        }
+        public bool ContainsShape(Circle circle, Vector2 direction, float angleRad)
+        {
+            if(angleRad <= 0f || (direction.X == 0 && direction.Y == 0)) return false;
+
+            if (!ContainsShape(circle)) return false;
+
+            //not may favourite solution but it is simple
+            var corners = GetCorners();
+            return ContainsPoint(corners.top) && 
+                   ContainsPoint(corners.bottom) && 
+                   ContainsPoint(corners.left) && 
+                   ContainsPoint(corners.right);
+        }
+        public bool ContainsShape(Rect rect, Vector2 direction, float angleRad)
+        {
+            if(angleRad <= 0f || (direction.X == 0 && direction.Y == 0)) return false;
+            
+            return ContainsPoint(rect.TopLeft, direction, angleRad) &&
+                   ContainsPoint(rect.BottomLeft, direction, angleRad) &&
+                   ContainsPoint(rect.BottomRight, direction, angleRad) &&
+                   ContainsPoint(rect.TopRight, direction, angleRad);
+        }
+        public bool ContainsShape(Triangle triangle, Vector2 direction, float angleRad)
+        {
+            if(angleRad <= 0f || (direction.X == 0 && direction.Y == 0)) return false;
+            
+            return ContainsPoint(triangle.A, direction, angleRad) &&
+                   ContainsPoint(triangle.B, direction, angleRad) &&
+                   ContainsPoint(triangle.C, direction, angleRad);
+        }
+        public bool ContainsShape(Quad quad, Vector2 direction, float angleRad)
+        {
+            if(angleRad <= 0f || (direction.X == 0 && direction.Y == 0)) return false;
+            
+            return ContainsPoint(quad.A, direction, angleRad) &&
+                   ContainsPoint(quad.B, direction, angleRad) &&
+                   ContainsPoint(quad.C, direction, angleRad) &&
+                   ContainsPoint(quad.D, direction, angleRad);
+        }
+        public bool ContainsShape(Points points, Vector2 direction, float angleRad)
+        {
+            if(angleRad <= 0f || (direction.X == 0 && direction.Y == 0)) return false;
+            
+            if (points.Count <= 0) return false;
+            foreach (var p in points)
+            {
+                if (!ContainsPoint(p, direction, angleRad)) return false;
+            }
+            return true;
+        }
+        
         #endregion
         
         #region Closest
@@ -882,6 +1059,7 @@ namespace ShapeEngine.Core.Shapes
 
             return false;
         }
+
         public readonly bool OverlapShape(Segments segments)
         {
             foreach (var seg in segments)
@@ -951,6 +1129,8 @@ namespace ShapeEngine.Core.Shapes
             return false;
         }
 
+        
+        
         public readonly bool OverlapCircleLine(Vector2 linePos, Vector2 lineDir) =>
             OverlapCircleLine(Center, Radius, linePos, lineDir);
 
