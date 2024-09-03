@@ -1,16 +1,17 @@
 using System.Numerics;
 using ShapeEngine.Lib;
+using ShapeEngine.Random;
 
 namespace ShapeEngine.Core.Shapes;
 
-public class CircleSector
+public class CircleSector //: Polygon
 {
     #region Public Members
 
     public int Accuracy { get; private set; }
     public float Radius { get; private set; }
     public Vector2 Center { get; private set; }
-    public float AngleDirectionRad { get; private set; }
+    public float RotationRad { get; private set; }
     public float AngleSectorRad { get; private set; }
 
     #endregion
@@ -56,23 +57,7 @@ public class CircleSector
         return shape;
     }
     public Polygon GetShapeCopy() => shape.ToPolygon();
-    public Polygon? GenerateShape()
-    {
-        if (AngleSectorRad <= 0 || Radius <= 0) return null;
-        var result = new Polygon(3 + Accuracy);
-            
-        //ccw order
-        result.Add(Center);
-        var angleStep = AngleSectorRad / (Accuracy + 1);
-        var v = ShapeVec.VecFromAngleRad(AngleDirectionRad - angleStep / 2) * Radius;
-        for (int i = 0; i < Accuracy + 2; i++)
-        {
-            result.Add(Center + v);
-            v = v.Rotate(angleStep);
-        }
-            
-        return result;
-    }
+    public Polygon? GenerateShape() => GeneratePolygon(Center, Radius, RotationRad, AngleSectorRad, Accuracy);
 
     #endregion
     
@@ -98,9 +83,9 @@ public class CircleSector
     }
     public void SetAngleDirection(float radians)
     {
-        if(Math.Abs(AngleDirectionRad - radians) < 0.00001f) return;
+        if(Math.Abs(RotationRad - radians) < 0.00001f) return;
         dirty = true;
-        AngleDirectionRad = ShapeMath.WrapAngleRad(radians);
+        RotationRad = ShapeMath.WrapAngleRad(radians);
     }
     public void SetAngleDirection(Vector2 newDirection)
     {
@@ -136,7 +121,7 @@ public class CircleSector
     public void ChangeAngleDirection(float radians)
     {
         if(radians == 0) return;
-        SetAngleDirection(AngleDirectionRad + radians);
+        SetAngleDirection(RotationRad + radians);
     }
     public void ChangeAngleSector(float radians)
     {
@@ -157,7 +142,7 @@ public class CircleSector
         //ccw order
         shape.Add(Center);
         var angleStep = AngleSectorRad / (Accuracy + 1);
-        var v = ShapeVec.VecFromAngleRad(AngleDirectionRad - angleStep / 2) * Radius;
+        var v = ShapeVec.VecFromAngleRad(RotationRad - angleStep / 2) * Radius;
         for (int i = 0; i < Accuracy + 2; i++)
         {
             shape.Add(Center + v);
@@ -166,4 +151,67 @@ public class CircleSector
     }
     
     #endregion
+
+    #region Static
+
+    public static Polygon? GeneratePolygon(Vector2 center, float radius, float rotationRad, float angleSectorRad, int accuracy = 3)
+    {
+        if (angleSectorRad <= 0 || radius <= 0) return null;
+        var result = new Polygon(3 + accuracy);
+            
+        //ccw order
+        result.Add(center);
+        var angleStep = angleSectorRad / (accuracy + 1);
+        var v = ShapeVec.VecFromAngleRad(rotationRad - angleStep / 2) * radius;
+        for (int i = 0; i < accuracy + 2; i++)
+        {
+            result.Add(center + v);
+            v = v.Rotate(angleStep);
+        }
+            
+        return result;
+    }
+    public static Points? GeneratePoints(Vector2 center, float radius, float rotationRad, float angleSectorRad, int accuracy = 3)
+    {
+        if (angleSectorRad <= 0 || radius <= 0) return null;
+        var result = new Points(3 + accuracy);
+            
+        //ccw order
+        result.Add(center);
+        var angleStep = angleSectorRad / (accuracy + 1);
+        var v = ShapeVec.VecFromAngleRad(rotationRad - angleStep / 2) * radius;
+        for (int i = 0; i < accuracy + 2; i++)
+        {
+            result.Add(center + v);
+            v = v.Rotate(angleStep);
+        }
+            
+        return result;
+    }
+    public static Segments? GenerateSegments(Vector2 center, float radius, float rotationRad, float angleSectorRad, int accuracy = 3)
+    {
+        if (angleSectorRad <= 0 || radius <= 0) return null;
+        var result = new Segments(3 + accuracy);
+            
+        //ccw order
+        var prevPoint = center;
+        var angleStep = angleSectorRad / (accuracy + 1);
+        var v = ShapeVec.VecFromAngleRad(rotationRad - angleStep / 2) * radius;
+        for (int i = 0; i < accuracy + 2; i++)
+        {
+            var p = center + v;
+            result.Add(new Segment(prevPoint, p));
+            prevPoint = p;
+            v = v.Rotate(angleStep);
+        }
+            
+        return result;
+    }
+
+    #endregion
+    
+    
+    
+    
+    
 }
