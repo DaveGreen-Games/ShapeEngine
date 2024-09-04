@@ -25,11 +25,11 @@ public class CircleSector //: Polygon
     
     #region Constructor
 
-    public CircleSector(Vector2 center, float radius, float angleDirectionRad, float angleSectorRad, int accuracy = 3)
+    public CircleSector(Vector2 center, float radius, float rotationRad, float angleSectorRad, int accuracy = 3)
     {
         SetCenter(center);
         SetRadius(radius);
-        SetAngleDirection(angleDirectionRad);
+        SetAngleDirection(rotationRad);
         SetAngleSector(angleSectorRad);
         SetAccuracy(accuracy);
 
