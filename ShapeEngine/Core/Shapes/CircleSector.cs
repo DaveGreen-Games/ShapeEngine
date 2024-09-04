@@ -1,10 +1,10 @@
 using System.Numerics;
 using ShapeEngine.Lib;
-using ShapeEngine.Random;
 
 namespace ShapeEngine.Core.Shapes;
 
-public class CircleSector //: Polygon
+
+public class CircleSector : Polygon
 {
     #region Public Members
 
@@ -18,7 +18,7 @@ public class CircleSector //: Polygon
 
     #region Private Members
 
-    private Polygon shape = new();
+    // private Polygon shape = new();
     private bool dirty = false;
 
     #endregion
@@ -33,7 +33,7 @@ public class CircleSector //: Polygon
         SetAngleSector(angleSectorRad);
         SetAccuracy(accuracy);
 
-        UpdateShape();
+        CalculatePoints();
     }
     
     public CircleSector(Vector2 center, float radius, Vector2 direction, float angleSectorRad, int accuracy = 3)
@@ -44,19 +44,26 @@ public class CircleSector //: Polygon
         SetAngleSector(angleSectorRad);
         SetAccuracy(accuracy);
         
-        UpdateShape();
+        CalculatePoints();
     }
     
     #endregion
     
     #region Public Methods
 
-    public Polygon GetShape()
+    /// <summary>
+    /// Recalculates the polygon points if changes have been made.
+    /// </summary>
+    public override CircleSector Self
     {
-        if (dirty) UpdateShape();
-        return shape;
+        get
+        {
+            if (dirty) CalculatePoints();
+            return this;
+        }
     }
-    public Polygon GetShapeCopy() => shape.ToPolygon();
+    public CircleSector Clone() => new CircleSector(Center, Radius, RotationRad, AngleSectorRad, Accuracy);
+    public Polygon CloneAsPolygon() => Clone();
     public Polygon? GenerateShape() => GeneratePolygon(Center, Radius, RotationRad, AngleSectorRad, Accuracy);
 
     #endregion
@@ -132,20 +139,21 @@ public class CircleSector //: Polygon
     #endregion
     
     #region Private Methods
-    
-    private void UpdateShape()
+    protected override void RecalculatePoints() => CalculatePoints();
+    private void CalculatePoints()
     {
-        shape.Clear();
+        this.Clear();
         dirty = false;
+        
         if (AngleSectorRad <= 0 || Radius <= 0) return;
             
         //ccw order
-        shape.Add(Center);
+        this.Add(Center);
         var angleStep = AngleSectorRad / (Accuracy + 1);
         var v = ShapeVec.VecFromAngleRad(RotationRad - angleStep / 2) * Radius;
         for (int i = 0; i < Accuracy + 2; i++)
         {
-            shape.Add(Center + v);
+            this.Add(Center + v);
             v = v.Rotate(angleStep);
         }
     }
@@ -209,9 +217,6 @@ public class CircleSector //: Polygon
     }
 
     #endregion
-    
-    
-    
-    
+
     
 }

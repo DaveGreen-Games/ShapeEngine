@@ -8,7 +8,7 @@ namespace ShapeEngine.Core.Collision;
 public class PolyCollider : Collider
 {
     public Polygon RelativeShape;
-    private Polygon shape;
+    private readonly Polygon shape;
     
    
     public PolyCollider(Transform2D offset, Points relativePoints) : base(offset)
@@ -39,9 +39,11 @@ public class PolyCollider : Collider
 
     public override void Recalculate()
     {
-        for (int i = 0; i < RelativeShape.Count; i++)
+        //updates the shape in case it is diry (circle sector)
+        var s = RelativeShape.Self;
+        for (int i = 0; i < s.Count; i++)
         {
-            var p = CurTransform.ApplyTransformTo(RelativeShape[i]);
+            var p = CurTransform.ApplyTransformTo(s[i]);
             if (shape.Count <= i)
             {
                 shape.Add(p);

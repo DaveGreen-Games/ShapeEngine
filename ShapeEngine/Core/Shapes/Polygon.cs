@@ -1,10 +1,12 @@
 ﻿
+using System.Drawing;
 using System.Numerics;
 using Clipper2Lib;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
 using ShapeEngine.Random;
+using Size = ShapeEngine.Core.Structs.Size;
 
 namespace ShapeEngine.Core.Shapes
 {
@@ -14,6 +16,11 @@ namespace ShapeEngine.Core.Shapes
     /// </summary>
     public class Polygon : Points, IEquatable<Polygon>
     {
+        /// <summary>
+        /// Use this getter to get a reference to the polygon were all points have been updated
+        /// </summary>
+        public virtual Polygon Self => this;
+        
         #region Constructors
         public Polygon() { }
 
@@ -160,6 +167,11 @@ namespace ShapeEngine.Core.Shapes
 
         #region Shape
 
+        /// <summary>
+        /// Can be used to recalculate points before they are used in a function
+        /// </summary>
+        protected virtual void RecalculatePoints() { }
+        
         public (Transform2D transform, Polygon shape) ToRelative()
         {
             var pos = GetCentroid();
