@@ -39,11 +39,9 @@ public class PolyCollider : Collider
 
     public override void Recalculate()
     {
-        //updates the shape in case it is diry (circle sector)
-        var s = RelativeShape.Self;
-        for (int i = 0; i < s.Count; i++)
+        for (int i = 0; i < RelativeShape.Count; i++)
         {
-            var p = CurTransform.ApplyTransformTo(s[i]);
+            var p = CurTransform.ApplyTransformTo(RelativeShape[i]);
             if (shape.Count <= i)
             {
                 shape.Add(p);
@@ -53,6 +51,12 @@ public class PolyCollider : Collider
                 shape[i] = p;
             }
         }
+    }
+
+    protected override void UpdateColliderShape(bool transformChanged)
+    {
+        if (!transformChanged) return;
+        Recalculate();
     }
 
 

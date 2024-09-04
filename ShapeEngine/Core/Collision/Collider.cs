@@ -119,9 +119,14 @@ namespace ShapeEngine.Core.Collision
         }
         protected virtual void OnTransformSetupFinished() { }
         /// <summary>
-        /// Is triggered automatically. Should be used manually if relative shape was changed.
+        /// Can be used to trigger recalculating the shape.
         /// </summary>
         public virtual void Recalculate() { }
+        /// <summary>
+        /// Called each frame after the transform was actualized from the parents
+        /// </summary>
+        /// <param name="transformChanged"></param>
+        protected virtual void UpdateColliderShape(bool transformChanged) { }
         internal void UpdateTransform(Transform2D parentTransform)
         {
             PrevTransform = CurTransform;
@@ -142,7 +147,8 @@ namespace ShapeEngine.Core.Collision
                 CurTransform = new(Offset.Position, rot, size, scale);
             }
 
-            if(PrevTransform != CurTransform) Recalculate();
+            // if(PrevTransform != CurTransform) Recalculate();
+            UpdateColliderShape(PrevTransform != CurTransform);
         }
 
         

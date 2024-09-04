@@ -1,50 +1,57 @@
 using System.Numerics;
+using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
 
 namespace ShapeEngine.Core.Shapes;
 
 
-public class CircleSector : Polygon
+public class CircleSector
 {
     #region Public Members
+    public Transform2D Transform { get; set; }
+    public int Accuracy { get; set; }
+    public float AngleSectorRad { get; set; }
 
-    public int Accuracy { get; private set; }
-    public float Radius { get; private set; }
-    public Vector2 Center { get; private set; }
-    public float RotationRad { get; private set; }
-    public float AngleSectorRad { get; private set; }
+    public Vector2 Center
+    {
+        get => Transform.Position;
+        set => Transform = Transform.SetPosition(value);
+    }
 
+    public float Radius
+    {
+        get => Transform.ScaledSize.Radius;
+        set => Transform = Transform.SetSize(value);
+    }
+
+    public float RotationRad
+    {
+        get => Transform.RotationRad;
+        set => Transform = Transform.SetRotationRad(value);
+    }
     #endregion
 
-    #region Private Members
-
-    // private Polygon shape = new();
-    private bool dirty = false;
-
-    #endregion
-    
     #region Constructor
 
     public CircleSector(Vector2 center, float radius, float rotationRad, float angleSectorRad, int accuracy = 3)
     {
-        SetCenter(center);
-        SetRadius(radius);
-        SetAngleDirection(rotationRad);
-        SetAngleSector(angleSectorRad);
-        SetAccuracy(accuracy);
-
-        CalculatePoints();
+        Transform = new Transform2D(center, rotationRad, new Size(radius));
+        Accuracy = accuracy;
+        AngleSectorRad = angleSectorRad;
     }
-    
+    public CircleSector(Transform2D transform, float angleSectorRad, int accuracy = 3)
+    {
+        Transform = transform;
+        Accuracy = accuracy;
+        AngleSectorRad = angleSectorRad;
+    }
     public CircleSector(Vector2 center, float radius, Vector2 direction, float angleSectorRad, int accuracy = 3)
     {
-        SetCenter(center);
-        SetRadius(radius);
-        SetAngleDirection(direction);
-        SetAngleSector(angleSectorRad);
-        SetAccuracy(accuracy);
-        
-        CalculatePoints();
+        var rotationRad = 0f;
+        if (direction != Vector2.Zero) rotationRad = direction.AngleRad();
+        Transform = new Transform2D(center, rotationRad, new Size(radius));
+        Accuracy = accuracy;
+        AngleSectorRad = angleSectorRad;
     }
     
     #endregion
@@ -52,119 +59,35 @@ public class CircleSector : Polygon
     #region Public Methods
 
     /// <summary>
-    /// Recalculates the polygon points if changes have been made.
+    /// Clears the given polygon and fills it with new points.
     /// </summary>
-    public override CircleSector Self
+    /// <param name="polygon"></param>
+    /// <returns>Returns true if new points were generated</returns>
+    public bool UpdatePolygon(Polygon polygon)
     {
-        get
+        if (AngleSectorRad <= 0 || Radius <= 0) return false;
+            
+        polygon.Clear();
+        
+        //ccw order
+        polygon.Add(Center);
+        var angleStep = AngleSectorRad / (Accuracy + 1);
+        var v = ShapeVec.VecFromAngleRad(RotationRad - angleStep / 2) * Radius;
+        for (int i = 0; i < Accuracy + 2; i++)
         {
-            if (dirty) CalculatePoints();
-            return this;
+            polygon.Add(Center + v);
+            v = v.Rotate(angleStep);
         }
-    }
-    public override void RecalculatePoints()
-    {
-        if (!dirty) return;
-        CalculatePoints();
-    }
 
-    public override CircleSector Copy() => new CircleSector(Center, Radius, RotationRad, AngleSectorRad, Accuracy);
+        return true;
+    }
+    
+    public CircleSector Copy() => new(Center, Radius, RotationRad, AngleSectorRad, Accuracy);
 
     public Polygon? GeneratePolygon() => GeneratePolygon(Center, Radius, RotationRad, AngleSectorRad, Accuracy);
     public Points? GeneratePoints() => GeneratePoints(Center, Radius, RotationRad, AngleSectorRad, Accuracy);
     public Segments? GenerateSegments() => GenerateSegments(Center, Radius, RotationRad, AngleSectorRad, Accuracy);
 
-    #endregion
-    
-    #region Set Methods
-    
-    public void SetAccuracy(int value)
-    {
-        if(Accuracy == value) return;
-        dirty = true;
-        Accuracy = value <= 0 ? 0 : value;
-    }
-    public void SetRadius(float value)
-    {
-        if(Math.Abs(Radius - value) < 0.00001f) return;
-        dirty = true;
-        Radius = value <= 0f ? 0f : value;
-    }
-    public void SetCenter(Vector2 value)
-    {
-        if(Center == value) return;
-        dirty = true;
-        Center = value;
-    }
-    public void SetAngleDirection(float radians)
-    {
-        if(Math.Abs(RotationRad - radians) < 0.00001f) return;
-        dirty = true;
-        RotationRad = ShapeMath.WrapAngleRad(radians);
-    }
-    public void SetAngleDirection(Vector2 newDirection)
-    {
-        if(newDirection == Vector2.Zero) return;
-        SetAngleDirection(newDirection.AngleRad());
-    }
-    public void SetAngleSector(float radians)
-    {
-        if(Math.Abs(AngleSectorRad - radians) < 0.00001f) return;
-        dirty = true;
-        AngleSectorRad = ShapeMath.Clamp(radians, 0f, ShapeMath.PI * 2f);
-    }
-   
-    #endregion
-    
-    #region Change Methods
-    
-    public void ChangeAccuracy(int amount)
-    {
-        if(amount == 0) return;
-        SetAccuracy(Accuracy + amount);
-    }
-    public void ChangeRadius(float amount)
-    {
-        if(amount == 0) return;
-        SetRadius(Radius + amount);
-    }
-    public void ChangeCenter(Vector2 amount)
-    {
-        if(amount.X == 0 && amount.Y == 0) return;
-        SetCenter(Center + amount);
-    }
-    public void ChangeAngleDirection(float radians)
-    {
-        if(radians == 0) return;
-        SetAngleDirection(RotationRad + radians);
-    }
-    public void ChangeAngleSector(float radians)
-    {
-        if(radians == 0) return;
-        SetAngleSector(AngleSectorRad + radians);
-    }
-    
-    #endregion
-    
-    #region Private Methods
-    private void CalculatePoints()
-    {
-        this.Clear();
-        dirty = false;
-        
-        if (AngleSectorRad <= 0 || Radius <= 0) return;
-            
-        //ccw order
-        this.Add(Center);
-        var angleStep = AngleSectorRad / (Accuracy + 1);
-        var v = ShapeVec.VecFromAngleRad(RotationRad - angleStep / 2) * Radius;
-        for (int i = 0; i < Accuracy + 2; i++)
-        {
-            this.Add(Center + v);
-            v = v.Rotate(angleStep);
-        }
-    }
-    
     #endregion
 
     #region Static
@@ -224,6 +147,5 @@ public class CircleSector : Polygon
     }
 
     #endregion
-
     
 }
