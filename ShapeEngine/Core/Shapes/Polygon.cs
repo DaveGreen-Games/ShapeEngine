@@ -20,7 +20,12 @@ namespace ShapeEngine.Core.Shapes
         /// Use this getter to get a reference to the polygon were all points have been updated
         /// </summary>
         public virtual Polygon Self => this;
-        
+
+        public override Polygon Copy()
+        {
+            return new(this);
+        }
+
         #region Constructors
         public Polygon() { }
 
@@ -170,7 +175,7 @@ namespace ShapeEngine.Core.Shapes
         /// <summary>
         /// Can be used to recalculate points before they are used in a function
         /// </summary>
-        protected virtual void RecalculatePoints() { }
+        public virtual void RecalculatePoints() { }
         
         public (Transform2D transform, Polygon shape) ToRelative()
         {

@@ -62,9 +62,17 @@ public class CircleSector : Polygon
             return this;
         }
     }
-    public CircleSector Clone() => new CircleSector(Center, Radius, RotationRad, AngleSectorRad, Accuracy);
-    public Polygon CloneAsPolygon() => Clone();
-    public Polygon? GenerateShape() => GeneratePolygon(Center, Radius, RotationRad, AngleSectorRad, Accuracy);
+    public override void RecalculatePoints()
+    {
+        if (!dirty) return;
+        CalculatePoints();
+    }
+
+    public override CircleSector Copy() => new CircleSector(Center, Radius, RotationRad, AngleSectorRad, Accuracy);
+
+    public Polygon? GeneratePolygon() => GeneratePolygon(Center, Radius, RotationRad, AngleSectorRad, Accuracy);
+    public Points? GeneratePoints() => GeneratePoints(Center, Radius, RotationRad, AngleSectorRad, Accuracy);
+    public Segments? GenerateSegments() => GenerateSegments(Center, Radius, RotationRad, AngleSectorRad, Accuracy);
 
     #endregion
     
@@ -139,7 +147,6 @@ public class CircleSector : Polygon
     #endregion
     
     #region Private Methods
-    protected override void RecalculatePoints() => CalculatePoints();
     private void CalculatePoints()
     {
         this.Clear();

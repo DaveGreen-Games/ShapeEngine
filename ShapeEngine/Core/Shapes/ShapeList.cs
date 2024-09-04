@@ -11,7 +11,12 @@ public class ShapeList<T> : List<T>
         
     }
     public void AddRange(params T[] items) { AddRange(items as IEnumerable<T>);}
-    public ShapeList<T> Copy()
+    
+    /// <summary>
+    /// Does not deep copy
+    /// </summary>
+    /// <returns></returns>
+    public virtual ShapeList<T> Copy()
     {
         ShapeList<T> newList = new();
         newList.AddRange(this);

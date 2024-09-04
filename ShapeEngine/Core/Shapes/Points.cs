@@ -104,6 +104,8 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
 
     #region Shapes
 
+    public override Points Copy() => new(this);
+
     public Polygon ToPolygon() => new(this);
 
     public Polyline ToPolyline() => new(this);
