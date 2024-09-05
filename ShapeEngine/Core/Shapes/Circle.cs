@@ -195,8 +195,7 @@ namespace ShapeEngine.Core.Shapes
                 Radius + other.Radius
             );
         }
-
-
+        
         #endregion
         
         #region Corners
@@ -384,7 +383,26 @@ namespace ShapeEngine.Core.Shapes
         #region Contains
 
         public bool ContainsPoint(Vector2 p) => (Center - p).LengthSquared() <= Radius * Radius;
+        public bool ContainsPointSector(Vector2 p, float rotationRad, float sectorAngleRad)
+        {
+            if(sectorAngleRad <= 0f) return false;
+            rotationRad = ShapeMath.WrapAngleRad(rotationRad);
 
+            var dir = ShapeVec.VecFromAngleRad(rotationRad);
+            var a = dir.AngleRad(p - Center);
+            return MathF.Abs(a) < sectorAngleRad * 0.5f;
+        }
+        public bool ContainsPointSector(Vector2 p, Vector2 dir, float sectorAngleRad)
+        {
+            if(sectorAngleRad <= 0f) return false;
+            if(dir.X == 0f && dir.Y == 0f) return false;
+            if (!ContainsPoint(p)) return false;
+            
+            var a = dir.AngleRad(p - Center);
+            return MathF.Abs(a) < sectorAngleRad * 0.5f;
+        }
+
+        
         public bool ContainsCollisionObject(CollisionObject collisionObject)
         {
             if (!collisionObject.HasColliders) return false;
@@ -410,7 +428,6 @@ namespace ShapeEngine.Core.Shapes
 
             return false;
         }
-
         public bool ContainsShape(Segment segment)
         {
             return ContainsPoint(segment.Start) && ContainsPoint(segment.End);
@@ -452,8 +469,6 @@ namespace ShapeEngine.Core.Shapes
             }
             return true;
         }
-        
-
         #endregion
         
         #region Closest
@@ -882,6 +897,7 @@ namespace ShapeEngine.Core.Shapes
 
             return false;
         }
+
         public readonly bool OverlapShape(Segments segments)
         {
             foreach (var seg in segments)
@@ -951,6 +967,8 @@ namespace ShapeEngine.Core.Shapes
             return false;
         }
 
+        
+        
         public readonly bool OverlapCircleLine(Vector2 linePos, Vector2 lineDir) =>
             OverlapCircleLine(Center, Radius, linePos, lineDir);
 

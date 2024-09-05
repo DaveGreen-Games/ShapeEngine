@@ -1,10 +1,12 @@
 ﻿
+using System.Drawing;
 using System.Numerics;
 using Clipper2Lib;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
 using ShapeEngine.Random;
+using Size = ShapeEngine.Core.Structs.Size;
 
 namespace ShapeEngine.Core.Shapes
 {
@@ -14,6 +16,10 @@ namespace ShapeEngine.Core.Shapes
     /// </summary>
     public class Polygon : Points, IEquatable<Polygon>
     {
+        
+
+        public override Polygon Copy() => new(this);
+
         #region Constructors
         public Polygon() { }
 
@@ -37,6 +43,7 @@ namespace ShapeEngine.Core.Shapes
         public bool Equals(Polygon? other)
         {
             if (other == null) return false;
+            
             if (Count != other.Count) return false;
             for (var i = 0; i < Count; i++)
             {
@@ -45,20 +52,29 @@ namespace ShapeEngine.Core.Shapes
             }
             return true;
         }
-        public override int GetHashCode() { return Game.GetHashCode(this); }
+
+        public override int GetHashCode() => Game.GetHashCode(this);
+
         #endregion
 
         #region Vertices
-        public void FixWindingOrder() { if (this.IsClockwise()) this.Reverse(); }
+
+        public void FixWindingOrder()
+        {
+            if (IsClockwise())
+            {
+                Reverse();
+            }
+        }
         public void MakeClockwise()
         {
             if (IsClockwise()) return;
-            this.Reverse();
+            Reverse();
         }
         public void MakeCounterClockwise()
         {
             if (!IsClockwise()) return;
-            this.Reverse();
+            Reverse();
         }
         public void ReduceVertexCount(int newCount)
         {
@@ -81,7 +97,11 @@ namespace ShapeEngine.Core.Shapes
             }
 
         }
-        public void ReduceVertexCount(float factor) { ReduceVertexCount(Count - (int)(Count * factor)); }
+
+        public void ReduceVertexCount(float factor)
+        {
+            ReduceVertexCount(Count - (int)(Count * factor));
+        }
         public void IncreaseVertexCount(int newCount)
         {
             if (newCount <= Count) return;
@@ -103,11 +123,8 @@ namespace ShapeEngine.Core.Shapes
                 this.Insert(longestID + 1, m);
             }
         }
-        public Vector2 GetVertex(int index)
-        {
-            return this[ShapeMath.WrapIndex(Count, index)];
-        }
-        
+        public Vector2 GetVertex(int index) => this[ShapeMath.WrapIndex(Count, index)];
+
         public void RemoveColinearVertices()
         {
             if (Count < 3) return;
@@ -143,13 +160,13 @@ namespace ShapeEngine.Core.Shapes
         {
             if (Count < 3) return;
             Points result = new();
-            Vector2 centroid = GetCentroid();
+            var centroid = GetCentroid();
             for (int i = 0; i < Count; i++)
             {
-                Vector2 cur = this[i];
-                Vector2 prev = this[ShapeMath.WrapIndex(Count, i - 1)];
-                Vector2 next = this[ShapeMath.WrapIndex(Count, i + 1)];
-                Vector2 dir = (prev - cur) + (next - cur) + ((cur - centroid) * baseWeight);
+                var cur = this[i];
+                var prev = this[ShapeMath.WrapIndex(Count, i - 1)];
+                var next = this[ShapeMath.WrapIndex(Count, i + 1)];
+                var dir = (prev - cur) + (next - cur) + ((cur - centroid) * baseWeight);
                 result.Add(cur + dir * amount);
             }
 
@@ -159,7 +176,7 @@ namespace ShapeEngine.Core.Shapes
         #endregion
 
         #region Shape
-
+        
         public (Transform2D transform, Polygon shape) ToRelative()
         {
             var pos = GetCentroid();
@@ -171,8 +188,7 @@ namespace ShapeEngine.Core.Shapes
             }
 
             var size = MathF.Sqrt(maxLengthSq);
-
-            var relativeShape = new Polygon();
+            var relativeShape = new Polygon(Count);
             for (int i = 0; i < this.Count; i++)
             {
                 var w = this[i] - pos;
@@ -184,8 +200,8 @@ namespace ShapeEngine.Core.Shapes
 
         public Points ToRelativePoints(Transform2D transform)
         {
-            var points = new Points();
-            for (int i = 0; i < this.Count; i++)
+            var points = new Points(Count);
+            for (int i = 0; i < Count; i++)
             {
                 var p = transform.RevertPosition(this[i]);
                 points.Add(p);
@@ -195,8 +211,8 @@ namespace ShapeEngine.Core.Shapes
         }
         public Polygon ToRelativePolygon(Transform2D transform)
         {
-            var points = new Polygon();
-            for (int i = 0; i < this.Count; i++)
+            var points = new Polygon(Count);
+            for (int i = 0; i < Count; i++)
             {
                 var p = transform.RevertPosition(this[i]);
                 points.Add(p);
@@ -206,8 +222,8 @@ namespace ShapeEngine.Core.Shapes
         }
         public List<Vector2> ToRelative(Transform2D transform)
         {
-            var points = new List<Vector2>();
-            for (int i = 0; i < this.Count; i++)
+            var points = new List<Vector2>(Count);
+            for (int i = 0; i < Count; i++)
             {
                 var p = transform.RevertPosition(this[i]);
                 points.Add(p);
@@ -215,13 +231,14 @@ namespace ShapeEngine.Core.Shapes
 
             return points;
         }
-        
-        
-        public Triangle GetBoundingTriangle(float margin = 3f) { return Polygon.GetBoundingTriangle(this, margin); }
+
+
+        public Triangle GetBoundingTriangle(float margin = 3f) => Polygon.GetBoundingTriangle(this, margin);
+
         public Triangulation Triangulate()
         {
             if (Count < 3) return new();
-            else if (Count == 3) return new() { new(this[0], this[1], this[2]) };
+            if (Count == 3) return new() { new(this[0], this[1], this[2]) };
 
             Triangulation triangles = new();
             List<Vector2> vertices = new();
@@ -293,7 +310,7 @@ namespace ShapeEngine.Core.Shapes
         {
             if (Count <= 1) return new();
             if (Count == 2) return new() { new(this[0], this[1]) };
-            Segments segments = new();
+            Segments segments = new(Count);
             for (int i = 0; i < Count; i++)
             {
                 segments.Add(new(this[i], this[(i + 1) % Count]));
@@ -316,10 +333,11 @@ namespace ShapeEngine.Core.Shapes
 
             return new Circle(origin, MathF.Sqrt(maxD));
         }
+        
         public Rect GetBoundingBox()
         {
             if (Count < 2) return new();
-            Vector2 start = this[0];
+            var start = this[0];
             Rect r = new(start.X, start.Y, 0, 0);
 
             foreach (var p in this)
@@ -329,6 +347,7 @@ namespace ShapeEngine.Core.Shapes
             return r;
         }
         public Polygon ToConvex() => Polygon.FindConvexHull(this);
+
         #endregion
         
         #region Math
@@ -336,6 +355,7 @@ namespace ShapeEngine.Core.Shapes
         public Points? GetProjectedShapePoints(Vector2 v)
         {
             if (v.LengthSquared() <= 0f) return null;
+            
             var points = new Points(Count);
             for (var i = 0; i < Count; i++)
             {
@@ -409,11 +429,11 @@ namespace ShapeEngine.Core.Shapes
         }
         public float GetPerimeterSquared()
         {
-            if (this.Count < 3) return 0f;
-            float lengthSq = 0f;
-            for (int i = 0; i < Count; i++)
+            if (Count < 3) return 0f;
+            var lengthSq = 0f;
+            for (var i = 0; i < Count; i++)
             {
-                Vector2 w = this[(i + 1)%Count] - this[i];
+                var w = this[(i + 1)%Count] - this[i];
                 lengthSq += w.LengthSquared();
             }
             return lengthSq;
@@ -452,7 +472,11 @@ namespace ShapeEngine.Core.Shapes
             }
             return true;
         }
-        public Points ToPoints() { return new(this); }
+
+        public Points ToPoints()
+        {
+            return new(this);
+        }
         public Vector2 GetCentroidMean()
         {
             if (Count <= 0) return new(0f);
@@ -468,10 +492,7 @@ namespace ShapeEngine.Core.Shapes
         /// the polygon is regular. More info: http://en.wikipedia.org/wiki/Apothem
         /// </summary>
         /// <returns>Return the length of the apothem.</returns>
-        public float GetApothem()
-        {
-            return (this.GetCentroid() - (this[0].Lerp(this[1], 0.5f))).Length();
-        }
+        public float GetApothem() => (this.GetCentroid() - (this[0].Lerp(this[1], 0.5f))).Length();
 
         #endregion
         

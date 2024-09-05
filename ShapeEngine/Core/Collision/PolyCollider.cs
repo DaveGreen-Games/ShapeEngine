@@ -8,7 +8,7 @@ namespace ShapeEngine.Core.Collision;
 public class PolyCollider : Collider
 {
     public Polygon RelativeShape;
-    private Polygon shape;
+    private readonly Polygon shape;
     
    
     public PolyCollider(Transform2D offset, Points relativePoints) : base(offset)
@@ -51,6 +51,12 @@ public class PolyCollider : Collider
                 shape[i] = p;
             }
         }
+    }
+
+    protected override void UpdateColliderShape(bool transformChanged)
+    {
+        if (!transformChanged) return;
+        Recalculate();
     }
 
 

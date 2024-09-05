@@ -54,6 +54,12 @@ public class SegmentCollider : Collider
         End = CurTransform.Position + (Dir * (1f - OriginOffset) * CurTransform.ScaledSize.Length).Rotate(CurTransform.RotationRad);
     }
 
+    protected override void UpdateColliderShape(bool transformChanged)
+    {
+        if (!transformChanged) return;
+        Recalculate();
+    }
+
     public SegmentCollider(Transform2D offset, Vector2 dir, float originOffset = 0f) : base(offset)
     {
         this.dir = dir;

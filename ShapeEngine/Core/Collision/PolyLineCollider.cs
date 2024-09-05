@@ -43,6 +43,12 @@ public class PolyLineCollider : Collider
         }
     }
 
+    protected override void UpdateColliderShape(bool transformChanged)
+    {
+        if (!transformChanged) return;
+        Recalculate();
+    }
+
 
     public override Rect GetBoundingBox() => GetPolygonShape().GetBoundingBox();
     
