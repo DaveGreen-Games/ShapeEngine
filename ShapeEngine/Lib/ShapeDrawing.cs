@@ -2549,15 +2549,14 @@ public static class ShapeDrawing
     public static void DrawRounded(this Rect rect, float roundness, int segments, ColorRgba color) => Raylib.DrawRectangleRounded(rect.Rectangle, roundness, segments, color.ToRayColor());
     public static void DrawRoundedLines(this Rect rect, float roundness, float lineThickness, int segments, ColorRgba color) => Raylib.DrawRectangleRoundedLines(rect.Rectangle, roundness, segments, lineThickness * 2, color.ToRayColor());
 
-    //TODO: remove polygon use possible?
     public static void DrawSlantedCorners(this Rect rect, ColorRgba color, float tlCorner, float trCorner, float brCorner, float blCorner)
     {
-        var points = GetSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner);
+        var points = rect.GetSlantedCornerPoints(tlCorner, trCorner, brCorner, blCorner);
         points.DrawPolygonConvex(rect.Center, color);
     }
     public static void DrawSlantedCorners(this Rect rect, Vector2 pivot, float rotDeg, ColorRgba color, float tlCorner, float trCorner, float brCorner, float blCorner)
     {
-        var poly = GetSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner);
+        var poly = rect.GetSlantedCornerPoints(tlCorner, trCorner, brCorner, blCorner);
         poly.ChangeRotation(rotDeg * ShapeMath.DEGTORAD, pivot);
         poly.DrawPolygonConvex(rect.Center, color);
         //DrawPolygonConvex(poly, rect.Center, color);
@@ -2567,93 +2566,15 @@ public static class ShapeDrawing
     
     public static void DrawSlantedCornersLines(this Rect rect, LineDrawingInfo lineInfo, float tlCorner, float trCorner, float brCorner, float blCorner)
     {
-        var points = GetSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner);
+        var points = rect.GetSlantedCornerPoints(tlCorner, trCorner, brCorner, blCorner);
         points.DrawLines(lineInfo);
     }
     public static void DrawSlantedCornersLines(this Rect rect, Vector2 pivot, float rotDeg, LineDrawingInfo lineInfo, float tlCorner, float trCorner, float brCorner, float blCorner)
     {
-        var poly = GetSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner);
+        var poly = rect.GetSlantedCornerPoints(tlCorner, trCorner, brCorner, blCorner);
         poly.ChangeRotation(rotDeg * ShapeMath.DEGTORAD, pivot);
         poly.DrawLines(lineInfo);
     }
-
-    /// <summary>
-    /// Get the points to draw a rectangle with slanted corners.
-    /// </summary>
-    /// <param name="rect"></param>
-    /// <param name="tlCorner"></param>
-    /// <param name="trCorner"></param>
-    /// <param name="brCorner"></param>
-    /// <param name="blCorner"></param>
-    /// <returns>Returns points in ccw order.</returns>
-    private static Polygon GetSlantedCornerPoints(this Rect rect, float tlCorner, float trCorner, float brCorner, float blCorner)
-    {
-        var tl = rect.TopLeft;
-        var tr = rect.TopRight;
-        var br = rect.BottomRight;
-        var bl = rect.BottomLeft;
-        Polygon points = new();
-        if (tlCorner > 0f && tlCorner < 1f)
-        {
-            points.Add(tl + new Vector2(MathF.Min(tlCorner, rect.Width), 0f));
-            points.Add(tl + new Vector2(0f, MathF.Min(tlCorner, rect.Height)));
-        }
-        if (blCorner > 0f && blCorner < 1f)
-        {
-            points.Add(bl - new Vector2(0f, MathF.Min(tlCorner, rect.Height)));
-            points.Add(bl + new Vector2(MathF.Min(tlCorner, rect.Width), 0f));
-        }
-        if (brCorner > 0f && brCorner < 1f)
-        {
-            points.Add(br - new Vector2(MathF.Min(tlCorner, rect.Width), 0f));
-            points.Add(br - new Vector2(0f, MathF.Min(tlCorner, rect.Height)));
-        }
-        if (trCorner > 0f && trCorner < 1f)
-        {
-            points.Add(tr + new Vector2(0f, MathF.Min(tlCorner, rect.Height)));
-            points.Add(tr - new Vector2(MathF.Min(tlCorner, rect.Width), 0f));
-        }
-        return points;
-    }
-    /// <summary>
-    /// Get the points to draw a rectangle with slanted corners. The corner values are the percentage of the width/height of the rectange the should be used for the slant.
-    /// </summary>
-    /// <param name="rect"></param>
-    /// <param name="tlCorner">Should be bewteen 0 - 1</param>
-    /// <param name="trCorner">Should be bewteen 0 - 1</param>
-    /// <param name="brCorner">Should be bewteen 0 - 1</param>
-    /// <param name="blCorner">Should be bewteen 0 - 1</param>
-    /// <returns>Returns points in ccw order.</returns>
-    private static Polygon GetSlantedCornerPointsRelative(this Rect rect, float tlCorner, float trCorner, float brCorner, float blCorner)
-    {
-        var tl = rect.TopLeft;
-        var tr = rect.TopRight;
-        var br = rect.BottomRight;
-        var bl = rect.BottomLeft;
-        Polygon points = new();
-        if (tlCorner > 0f && tlCorner < 1f)
-        {
-            points.Add(tl + new Vector2(tlCorner * rect.Width, 0f));
-            points.Add(tl + new Vector2(0f, tlCorner * rect.Height));
-        }
-        if (blCorner > 0f && blCorner < 1f)
-        {
-            points.Add(bl - new Vector2(0f, tlCorner * rect.Height));
-            points.Add(bl + new Vector2(tlCorner * rect.Width, 0f));
-        }
-        if (brCorner > 0f && brCorner < 1f)
-        {
-            points.Add(br - new Vector2(tlCorner * rect.Width, 0f));
-            points.Add(br - new Vector2(0f, tlCorner * rect.Height));
-        }
-        if (trCorner > 0f && trCorner < 1f)
-        {
-            points.Add(tr + new Vector2(0f, tlCorner * rect.Height));
-            points.Add(tr - new Vector2(tlCorner * rect.Width, 0f));
-        }
-        return points;
-    }
-    //-------------------------------
     
     public static void DrawCorners(this Rect rect, LineDrawingInfo lineInfo, float tlCorner, float trCorner, float brCorner, float blCorner)
     {
