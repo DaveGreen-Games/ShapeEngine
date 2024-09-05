@@ -1126,11 +1126,47 @@ public static class ShapeDrawing
         }
     }
 
+    /// <summary>
+    /// Draws part of a line from start to end depending on f.
+    /// </summary>
+    /// <param name="start">The start point.</param>
+    /// <param name="end">The end point.</param>
+    /// <param name="f">The percentage of the line to draw. A negative value goes from end to start.</param>
+    /// <param name="thickness">The thickness of the line.</param>
+    /// <param name="color">The color of the line.</param>
+    /// <param name="capType">The cap type of the line.</param>
+    /// <param name="capPoints">How many points are used to draw the cap.</param>
+    public static void DrawLine(Vector2 start, Vector2 end, float f, float thickness, ColorRgba color,
+        LineCapType capType = LineCapType.None, int capPoints = 0)
+    {
+        if (f == 0) return;
+        if (f < 0)
+        {
+            var newEnd = end.Lerp(start, f * -1f);
+            DrawLine(newEnd, newEnd, f, thickness, color, capType, capPoints);
+        }
+        else
+        {
+            var newEnd = start.Lerp(end, f);
+            DrawLine(newEnd, newEnd, f, thickness, color, capType, capPoints);
+        }
+        
+    }
+    
+    
     public static void DrawLine(float startX, float startY, float endX, float endY, float thickness, 
         ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0) 
         => DrawLine(new(startX, startY), new(endX, endY), thickness, color, capType, capPoints);
 
     public static void DrawLine(Vector2 start, Vector2 end, LineDrawingInfo info) => DrawLine(start, end, info.Thickness, info.Color, info.CapType, info.CapPoints);
+    /// <summary>
+    /// Draws part of a line from start to end depending on f.
+    /// </summary>
+    /// <param name="start">The start point.</param>
+    /// <param name="end">The end point.</param>
+    /// <param name="f">The percentage of the line to draw. A negative value goes from end to start.</param>
+    /// <param name="info">The line drawing info for how to draw the line.</param>
+    public static void DrawLine(Vector2 start, Vector2 end, float f, LineDrawingInfo info) => DrawLine(start, end, f, info.Thickness, info.Color, info.CapType, info.CapPoints);
     public static void DrawLine(Vector2 start, Vector2 end, LineDrawingInfo info, float scaleFactor, float scaleOrigin = 0.5f)
     {
         var p = start.Lerp(end, scaleOrigin);
@@ -1244,9 +1280,14 @@ public static class ShapeDrawing
     
     public static void Draw(this Segment segment, float thickness, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0 ) 
         => DrawLine(segment.Start, segment.End, thickness, color, capType, capPoints);
+    
+    public static void Draw(this Segment segment, float f, float thickness, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0 ) 
+        => DrawLine(segment.Start, segment.End, f, thickness, color, capType, capPoints);
     public static void Draw(this Segment segment, LineDrawingInfo lineInfo) 
         => DrawLine(segment.Start, segment.End, lineInfo);
     
+    public static void Draw(this Segment segment, float f, LineDrawingInfo lineInfo) 
+        => DrawLine(segment.Start, segment.End, f, lineInfo);
     public static void Draw(this Segment segment, float originF, float angleRad, LineDrawingInfo lineInfo)
     {
         if (angleRad != 0f)
@@ -1480,6 +1521,8 @@ public static class ShapeDrawing
         if (segments < 3) segments = 3;
         Raylib.DrawCircleSector(center, radius, rotDeg, 360 + rotDeg, segments, color.ToRayColor());
     }
+
+    
     public static void Draw(this Circle c, ColorRgba color, float rotDeg, int segments = 16)
     {
         if (segments < 3) segments = 3;
@@ -1506,6 +1549,71 @@ public static class ShapeDrawing
             
         }
     }
+    
+    /// <summary>
+    /// Draws part of a circle outline depending on f.
+    /// </summary>
+    /// <param name="c">The circle parameters.</param>
+    /// <param name="f">The percentage of the outline to draw. A positive value goes counter-clockwise
+    /// and a negative value goes clockwise.</param>
+    /// <param name="lineThickness">The line drawing parameters.</param>
+    /// <param name="rotDeg">The rotation of the circle. The lower the resolution of the circle the more visible is rotation</param>
+    /// <param name="sides">The resolution of the circle. The more sides are used the closer it represents a circle.</param>
+    /// <param name="color">The color of the line.</param>
+    /// <param name="lineCapType">The end cap type of the line.</param>
+    /// <param name="capPoints">How many points are used to draw the end cap.</param>
+    public static void DrawLines(this Circle c, float f, float lineThickness, float rotDeg, int sides, ColorRgba color, LineCapType lineCapType, int capPoints)
+    {
+        if (sides < 3 || f == 0) return;
+
+        bool negative = f < 0;
+        float percentage = ShapeMath.Clamp(negative ? f * -1 : f, 0f, 1f);
+
+        var percentageStep = 1f / sides;
+        var percentageToDraw = percentage;
+        var angleStep = (2f * ShapeMath.PI) / sides;
+        var currentAngle = rotDeg * ShapeMath.DEGTORAD;
+
+        while (percentageToDraw > 0)
+        {
+            var curP = c.Center + new Vector2(c.Radius, 0f).Rotate(currentAngle);
+            if(negative) currentAngle -= angleStep;
+            else currentAngle += angleStep;
+            
+            var nextP = c.Center + new Vector2(c.Radius, 0f).Rotate(currentAngle);
+            if(negative) currentAngle -= angleStep;
+            else currentAngle += angleStep;
+            
+            if (percentageToDraw < percentageStep)
+            {
+                var sideP = percentageToDraw / percentage;
+                DrawLine(curP, nextP, sideP, lineThickness, color, lineCapType, capPoints);
+                percentageToDraw = 0f;
+            }
+            else
+            {
+                DrawLine(curP, nextP, lineThickness, color, lineCapType, capPoints);
+                percentageToDraw -= percentageStep;
+            }
+        }
+
+        
+    }
+    
+    /// <summary>
+    /// Draws part of a circle outline depending on f.
+    /// </summary>
+    /// <param name="c">The circle parameters.</param>
+    /// <param name="f">The percentage of the outline to draw. A positive value goes counter-clockwise
+    /// and a negative value goes clockwise.</param>
+    /// <param name="lineInfo">The line drawing parameters.</param>
+    /// <param name="rotDeg">The rotation of the circle. The lower the resolution of the circle the more visible is rotation</param>
+    /// <param name="sides">The resolution of the circle. The more sides are used the closer it represents a circle.</param>
+    public static void DrawLines(this Circle c, float f, LineDrawingInfo lineInfo, float rotDeg, int sides)
+    {
+        DrawLines(c, f, lineInfo.Thickness, rotDeg, sides, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+    }
+    
     public static void DrawLines(this Circle c, float lineThickness, float rotDeg, int sides, ColorRgba color) => Raylib.DrawPolyLinesEx(c.Center, sides, c.Radius, rotDeg, lineThickness * 2, color.ToRayColor());
     public static void DrawLines(this Circle c, float lineThickness, ColorRgba color, float sideLength = 8f)
     {
@@ -1516,6 +1624,24 @@ public static class ShapeDrawing
     {
         int sides = GetCircleSideCount(c.Radius, sideLength);
         DrawLines(c, lineInfo, rotDeg, sides);
+    }
+    public static void DrawLines(this Circle c, float f, float lineThickness, ColorRgba color, float sideLength = 8f)
+    {
+        if (f == 0) return;
+        int sides = GetCircleSideCount(c.Radius, sideLength);
+        DrawLines(c, f, lineThickness, 0f, sides, color, LineCapType.None, 0);
+    }
+    public static void DrawLines(this Circle c, float f, float lineThickness, float rotDeg, ColorRgba color, LineCapType capType, int capPoints, float sideLength = 8f)
+    {
+        if (f == 0) return;
+        int sides = GetCircleSideCount(c.Radius, sideLength);
+        DrawLines(c, f, lineThickness, rotDeg, sides, color, capType, capPoints);
+    }
+    public static void DrawLines(this Circle c, float f, LineDrawingInfo lineInfo, float rotDeg, float sideLength = 8f)
+    {
+        if (f == 0) return;
+        int sides = GetCircleSideCount(c.Radius, sideLength);
+        DrawLines(c, f, lineInfo, rotDeg, sides);
     }
     
     /// <summary>
