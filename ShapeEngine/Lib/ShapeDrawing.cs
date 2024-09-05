@@ -2468,6 +2468,129 @@ public static class ShapeDrawing
     
     public static void DrawRectLines(Vector2 topLeft, Vector2 bottomRight, float lineThickness, ColorRgba color) => DrawLines(new Rect(topLeft, bottomRight),lineThickness,color);
 
+    public static void DrawRectLinesPercentage(Vector2 topLeft, Vector2 bottomRight, float f, float lineThickness, ColorRgba color)
+    {
+        if (f == 0) return;
+        var r = new Rect(topLeft, bottomRight);
+        if(r.Width <= 0 || r.Height <= 0) return;
+
+        bool negative = false;
+        if (f < 0)
+        {
+            negative = true;
+            f *= -1;
+        }
+        
+        int startCorner = (int)f;
+        float percentage = f - startCorner;
+        if (percentage <= 0) return;
+        
+        startCorner = ShapeMath.Clamp(startCorner, 0, 3);
+
+        var perimeter = r.Width * 2 + r.Height * 2;
+        var perimeterToDraw = perimeter * percentage;
+        
+        if (startCorner == 0)
+        {
+            if (negative)
+            {
+               DrawRectLinesPercentageHelper(r.TopLeft, r.TopRight, r.BottomRight, r.BottomLeft, perimeterToDraw, r.Width, r.Height, lineThickness, color);
+            }
+            else
+            {
+                DrawRectLinesPercentageHelper(r.TopLeft, r.BottomLeft, r.BottomRight, r.TopRight, perimeterToDraw, r.Height, r.Width, lineThickness, color);
+            }
+        }
+        else if (startCorner == 1)
+        {
+            if (negative)
+            {
+                DrawRectLinesPercentageHelper(r.TopRight, r.BottomRight, r.BottomLeft, r.TopLeft, perimeterToDraw, r.Height, r.Width, lineThickness, color);
+            }
+            else
+            {
+                DrawRectLinesPercentageHelper(r.BottomLeft, r.BottomRight, r.TopRight, r.TopLeft, perimeterToDraw, r.Width, r.Height, lineThickness, color);
+            }
+        }
+        else if (startCorner == 2)
+        {
+            if (negative)
+            {
+                DrawRectLinesPercentageHelper(r.BottomRight, r.BottomLeft, r.TopLeft, r.TopRight, perimeterToDraw, r.Width, r.Height, lineThickness, color);
+            }
+            else
+            {
+                DrawRectLinesPercentageHelper(r.BottomRight, r.TopRight, r.TopLeft, r.BottomLeft, perimeterToDraw, r.Height, r.Width, lineThickness, color);
+            }
+        }
+        else if (startCorner == 3)
+        {
+            if (negative)
+            {
+                DrawRectLinesPercentageHelper(r.BottomLeft, r.TopLeft, r.TopRight, r.BottomRight, perimeterToDraw, r.Height, r.Width, lineThickness, color);
+            }
+            else
+            {
+                DrawRectLinesPercentageHelper(r.TopRight, r.TopLeft, r.BottomLeft, r.BottomRight, perimeterToDraw, r.Width, r.Height, lineThickness, color);
+            }
+        }
+        
+    }
+    private static void DrawRectLinesPercentageHelper(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, float perimeterToDraw, float size1, float size2, float lineThickness, ColorRgba color)
+    {
+        // Draw first segment
+        var curP = p1;
+        var nextP = p2;
+        if (perimeterToDraw < size1)
+        {
+            float p = perimeterToDraw / size1;
+            nextP = curP.Lerp(nextP, p);
+            DrawLine(curP, nextP, lineThickness, color);
+            return;
+        }
+                
+        DrawLine(curP, nextP, lineThickness, color);
+        perimeterToDraw -= size1;
+                
+        // Draw second segment
+        curP = nextP;
+        nextP = p3;
+        if (perimeterToDraw < size2)
+        {
+            float p = perimeterToDraw / size2;
+            nextP = curP.Lerp(nextP, p);
+            DrawLine(curP, nextP, lineThickness, color);
+            return;
+        }
+                
+        DrawLine(curP, nextP, lineThickness, color);
+        perimeterToDraw -= size2;
+                
+        // Draw third segment
+        curP = nextP;
+        nextP = p4;
+        if (perimeterToDraw < size1)
+        {
+            float p = perimeterToDraw / size1;
+            nextP = curP.Lerp(nextP, p);
+            DrawLine(curP, nextP, lineThickness, color);
+            return;
+        }
+        
+        DrawLine(curP, nextP, lineThickness, color);
+        perimeterToDraw -= size1;
+               
+        // Draw fourth segment
+        curP = nextP;
+        nextP = p1;
+        if (perimeterToDraw < size2)
+        {
+            float p = perimeterToDraw / size2;
+            nextP = curP.Lerp(nextP, p);
+        }
+        DrawLine(curP, nextP, lineThickness, color);
+    }
+    
     public static void DrawRectLines(Vector2 topLeft, Vector2 bottomRight, LineDrawingInfo lineInfo)
     {
         DrawLines(new Rect(topLeft, bottomRight), lineInfo);
@@ -2480,9 +2603,21 @@ public static class ShapeDrawing
         var d = pivot + (new Vector2(bottomRight.X, topLeft.Y) -pivot).RotateDeg(rotDeg);
         DrawQuadLines(a,b,c,d, lineThickness, color, capType, capPoints);
     }
+    
+    public static void DrawRectLinesPercentage(Vector2 topLeft, Vector2 bottomRight, float f, Vector2 pivot, float rotDeg, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.Extended, int capPoints = 0)
+    {
+        var a = pivot + (topLeft - pivot).RotateDeg(rotDeg);
+        var b = pivot + (new Vector2(topLeft.X, bottomRight.Y) - pivot).RotateDeg(rotDeg);
+        var c = pivot + (bottomRight - pivot).RotateDeg(rotDeg);
+        var d = pivot + (new Vector2(bottomRight.X, topLeft.Y) -pivot).RotateDeg(rotDeg);
+        
+        DrawQuadLinesPercentage(a,b,c,d, f, lineThickness, color, capType, capPoints);
+    }
 
     public static void DrawRectLines(Vector2 topLeft, Vector2 bottomRight, Vector2 pivot, float rotDeg, LineDrawingInfo lineInfo)
         => DrawRectLines(topLeft, bottomRight, pivot, rotDeg, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+    public static void DrawRectLinesPercentage(Vector2 topLeft, Vector2 bottomRight, float f, Vector2 pivot, float rotDeg, LineDrawingInfo lineInfo)
+        => DrawRectLinesPercentage(topLeft, bottomRight, f, pivot, rotDeg, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
     public static void Draw(this Rect rect, ColorRgba color) => Raylib.DrawRectangleRec(rect.Rectangle, color.ToRayColor());
     public static void Draw(this Rect rect, Vector2 pivot, float rotDeg, ColorRgba color) => DrawRect(rect.TopLeft, rect.BottomRight, pivot, rotDeg, color);
     
@@ -2498,11 +2633,18 @@ public static class ShapeDrawing
     {
         DrawRectLines(rect.TopLeft, rect.BottomRight, pivot, rotDeg, lineThickness, color, capType, capPoints);
     }
+    public static void DrawLinesPercentage(this Rect rect, float f, Vector2 pivot, float rotDeg, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.Extended, int capPoints = 0)
+    {
+        DrawRectLinesPercentage(rect.TopLeft, rect.BottomRight, f, pivot, rotDeg, lineThickness, color, capType, capPoints);
+    }
     public static void DrawLines(this Rect rect, Vector2 pivot, float rotDeg, LineDrawingInfo lineInfo)
     {
         DrawRectLines(rect.TopLeft, rect.BottomRight, pivot, rotDeg, lineInfo);
     }
-    
+    public static void DrawLinesPercentage(this Rect rect, float f, Vector2 pivot, float rotDeg, LineDrawingInfo lineInfo)
+    {
+        DrawRectLinesPercentage(rect.TopLeft, rect.BottomRight, f, pivot, rotDeg, lineInfo);
+    }
     
     /// <summary>
     /// Draws a rect where each side can be scaled towards the origin of the side.
@@ -2811,7 +2953,16 @@ public static class ShapeDrawing
         // new Triangle(a, b, c).GetEdges().Draw(lineThickness, color);
     }
     
-
+    public static void DrawQuadLinesPercentage(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        DrawLine(a, b, lineThickness, color, capType, capPoints);
+        DrawLine(b, c, lineThickness, color, capType, capPoints);
+        DrawLine(c, d, lineThickness, color, capType, capPoints);
+        DrawLine(d, a, lineThickness, color, capType, capPoints);
+        
+        // new Triangle(a, b, c).GetEdges().Draw(lineThickness, color);
+    }
+    
     public static void DrawQuadLines(Vector2 a, Vector2 b, Vector2 c, Vector2 d, LineDrawingInfo lineInfo)
     {
         DrawLine(a, b, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
