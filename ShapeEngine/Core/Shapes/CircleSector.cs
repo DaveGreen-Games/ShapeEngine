@@ -9,21 +9,38 @@ public class CircleSector
 {
     #region Public Members
     public Transform2D Transform { get; set; }
-    public int Accuracy { get; set; }
+    
+    /// <summary>
+    /// How many points are used for the circle sector arc. 0 creates a triangle where the arc is a straight line.
+    /// </summary>
+    public int ArcPoints { get; set; }
+    
+    /// <summary>
+    /// How wide the circle sector is. 
+    /// </summary>
     public float AngleSectorRad { get; set; }
 
+    /// <summary>
+    /// Represents Transform.Position
+    /// </summary>
     public Vector2 Center
     {
         get => Transform.Position;
         set => Transform = Transform.SetPosition(value);
     }
 
+    /// <summary>
+    /// Represents Transform.ScaledSize.Radius
+    /// </summary>
     public float Radius
     {
         get => Transform.ScaledSize.Radius;
         set => Transform = Transform.SetSize(value);
     }
 
+    /// <summary>
+    /// Represents Transform.RotationRad
+    /// </summary>
     public float RotationRad
     {
         get => Transform.RotationRad;
@@ -33,24 +50,24 @@ public class CircleSector
 
     #region Constructor
 
-    public CircleSector(Vector2 center, float radius, float rotationRad, float angleSectorRad, int accuracy = 3)
+    public CircleSector(Vector2 center, float radius, float rotationRad, float angleSectorRad, int arcPoints = 3)
     {
         Transform = new Transform2D(center, rotationRad, new Size(radius));
-        Accuracy = accuracy;
+        ArcPoints = arcPoints;
         AngleSectorRad = angleSectorRad;
     }
-    public CircleSector(Transform2D transform, float angleSectorRad, int accuracy = 3)
+    public CircleSector(Transform2D transform, float angleSectorRad, int arcPoints = 3)
     {
         Transform = transform;
-        Accuracy = accuracy;
+        ArcPoints = arcPoints;
         AngleSectorRad = angleSectorRad;
     }
-    public CircleSector(Vector2 center, float radius, Vector2 direction, float angleSectorRad, int accuracy = 3)
+    public CircleSector(Vector2 center, float radius, Vector2 direction, float angleSectorRad, int arcPoints = 3)
     {
         var rotationRad = 0f;
         if (direction != Vector2.Zero) rotationRad = direction.AngleRad();
         Transform = new Transform2D(center, rotationRad, new Size(radius));
-        Accuracy = accuracy;
+        ArcPoints = arcPoints;
         AngleSectorRad = angleSectorRad;
     }
     
@@ -71,9 +88,9 @@ public class CircleSector
         
         //ccw order
         polygon.Add(Center);
-        var angleStep = AngleSectorRad / (Accuracy + 1);
+        var angleStep = AngleSectorRad / (ArcPoints + 1);
         var v = ShapeVec.VecFromAngleRad(RotationRad - angleStep / 2) * Radius;
-        for (int i = 0; i < Accuracy + 2; i++)
+        for (int i = 0; i < ArcPoints + 2; i++)
         {
             polygon.Add(Center + v);
             v = v.Rotate(angleStep);
@@ -82,11 +99,11 @@ public class CircleSector
         return true;
     }
     
-    public CircleSector Copy() => new(Center, Radius, RotationRad, AngleSectorRad, Accuracy);
+    public CircleSector Copy() => new(Center, Radius, RotationRad, AngleSectorRad, ArcPoints);
 
-    public Polygon? GeneratePolygon() => GeneratePolygon(Center, Radius, RotationRad, AngleSectorRad, Accuracy);
-    public Points? GeneratePoints() => GeneratePoints(Center, Radius, RotationRad, AngleSectorRad, Accuracy);
-    public Segments? GenerateSegments() => GenerateSegments(Center, Radius, RotationRad, AngleSectorRad, Accuracy);
+    public Polygon? GeneratePolygon() => GeneratePolygon(Center, Radius, RotationRad, AngleSectorRad, ArcPoints);
+    public Points? GeneratePoints() => GeneratePoints(Center, Radius, RotationRad, AngleSectorRad, ArcPoints);
+    public Segments? GenerateSegments() => GenerateSegments(Center, Radius, RotationRad, AngleSectorRad, ArcPoints);
 
     #endregion
 

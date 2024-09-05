@@ -8,17 +8,40 @@ namespace ShapeEngine.Core.Collision;
 public class CircleSectorCollider : Collider
 {
     
-    public int Accuracy { get; private set; }
+    /// <summary>
+    /// How many points are used for the circle sector arc. 0 creates a triangle where the arc is a straight line.
+    /// </summary>
+    public int ArcPoints { get; private set; }
+    
+    /// <summary>
+    /// How wide the circle sector is. 
+    /// </summary>
     public float AngleSectorRad { get; private set; }
 
+    
+    /// <summary>
+    /// Represents CurTransform.Position
+    /// </summary>
+    public Vector2 Center => CurTransform.Position;
+
+    /// <summary>
+    /// Represents CurTransform.ScaledSize.Radius
+    /// </summary>
+    public float Radius => CurTransform.ScaledSize.Radius;
+
+    /// <summary>
+    /// Represents CurTransform.RotationRad
+    /// </summary>
+    public float RotationRad => CurTransform.RotationRad;
+    
     
     private readonly Polygon shape;
     private bool dirty = false;
    
-    public CircleSectorCollider(Transform2D offset, float angleSectorRad, int accuracy = 5) : base(offset)
+    public CircleSectorCollider(Transform2D offset, float angleSectorRad, int arcPoints = 5) : base(offset)
     {
         AngleSectorRad = angleSectorRad;
-        Accuracy = accuracy;
+        ArcPoints = arcPoints;
         shape = new Polygon();
 
     }
@@ -48,9 +71,9 @@ public class CircleSectorCollider : Collider
         //ccw order
         var center = CurTransform.Position;
         shape.Add(center);
-        var angleStep = AngleSectorRad / (Accuracy + 1);
+        var angleStep = AngleSectorRad / (ArcPoints + 1);
         var v = ShapeVec.VecFromAngleRad(CurTransform.RotationRad - angleStep / 2) * radius;
-        for (int i = 0; i < Accuracy + 2; i++)
+        for (int i = 0; i < ArcPoints + 2; i++)
         {
             shape.Add(center + v);
             v = v.Rotate(angleStep);
@@ -64,9 +87,9 @@ public class CircleSectorCollider : Collider
     
     public void SetAccuracy(int value)
     {
-        if(Accuracy == value) return;
+        if(ArcPoints == value) return;
         dirty = true;
-        Accuracy = value <= 0 ? 0 : value;
+        ArcPoints = value <= 0 ? 0 : value;
     }
     public void SetAngleSector(float radians)
     {
@@ -82,7 +105,7 @@ public class CircleSectorCollider : Collider
     public void ChangeAccuracy(int amount)
     {
         if(amount == 0) return;
-        SetAccuracy(Accuracy + amount);
+        SetAccuracy(ArcPoints + amount);
     }
     public void ChangeAngleSector(float radians)
     {
