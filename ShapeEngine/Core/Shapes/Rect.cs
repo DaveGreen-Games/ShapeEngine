@@ -441,6 +441,73 @@ public readonly struct Rect : IEquatable<Rect>
         return new Triangulation() { a, b };
     }
 
+    public Polygon GetSlantedCornerPoints(float tlCorner, float trCorner, float brCorner, float blCorner)
+    {
+        var tl = TopLeft;
+        var tr = TopRight;
+        var br = BottomRight;
+        var bl = BottomLeft;
+        Polygon points = new();
+        if (tlCorner > 0f && tlCorner < 1f)
+        {
+            points.Add(tl + new Vector2(MathF.Min(tlCorner, Width), 0f));
+            points.Add(tl + new Vector2(0f, MathF.Min(tlCorner, Height)));
+        }
+        if (blCorner > 0f && blCorner < 1f)
+        {
+            points.Add(bl - new Vector2(0f, MathF.Min(tlCorner, Height)));
+            points.Add(bl + new Vector2(MathF.Min(tlCorner, Width), 0f));
+        }
+        if (brCorner > 0f && brCorner < 1f)
+        {
+            points.Add(br - new Vector2(MathF.Min(tlCorner, Width), 0f));
+            points.Add(br - new Vector2(0f, MathF.Min(tlCorner, Height)));
+        }
+        if (trCorner > 0f && trCorner < 1f)
+        {
+            points.Add(tr + new Vector2(0f, MathF.Min(tlCorner, Height)));
+            points.Add(tr - new Vector2(MathF.Min(tlCorner, Width), 0f));
+        }
+        return points;
+    }
+    /// <summary>
+    /// Get the points to draw a rectangle with slanted corners. The corner values are the percentage of the width/height of the rectange the should be used for the slant.
+    /// </summary>
+    /// <param name="tlCorner">Should be bewteen 0 - 1</param>
+    /// <param name="trCorner">Should be bewteen 0 - 1</param>
+    /// <param name="brCorner">Should be bewteen 0 - 1</param>
+    /// <param name="blCorner">Should be bewteen 0 - 1</param>
+    /// <returns>Returns points in ccw order.</returns>
+    public Polygon GetSlantedCornerPointsRelative(float tlCorner, float trCorner, float brCorner, float blCorner)
+    {
+        var tl = TopLeft;
+        var tr = TopRight;
+        var br = BottomRight;
+        var bl = BottomLeft;
+        Polygon points = new();
+        if (tlCorner > 0f && tlCorner < 1f)
+        {
+            points.Add(tl + new Vector2(tlCorner * Width, 0f));
+            points.Add(tl + new Vector2(0f, tlCorner * Height));
+        }
+        if (blCorner > 0f && blCorner < 1f)
+        {
+            points.Add(bl - new Vector2(0f, tlCorner * Height));
+            points.Add(bl + new Vector2(tlCorner * Width, 0f));
+        }
+        if (brCorner > 0f && brCorner < 1f)
+        {
+            points.Add(br - new Vector2(tlCorner * Width, 0f));
+            points.Add(br - new Vector2(0f, tlCorner * Height));
+        }
+        if (trCorner > 0f && trCorner < 1f)
+        {
+            points.Add(tr + new Vector2(0f, tlCorner * Height));
+            points.Add(tr - new Vector2(tlCorner * Width, 0f));
+        }
+        return points;
+    }
+    
     
     #endregion
 
