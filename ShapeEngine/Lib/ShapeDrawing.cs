@@ -4110,45 +4110,32 @@ public static class ShapeDrawing
     {
         if (polyline.Count < 3 || perimeterToDraw == 0) return;
 
-        if (perimeterToDraw < 0) // reverse order
+        bool reverse = perimeterToDraw < 0;
+        if (reverse) perimeterToDraw *= -1;
+
+        int currentIndex = reverse ? polyline.Count - 1 : 0;
+        
+        for (var i = 0; i < polyline.Count - 1; i++)
         {
-            perimeterToDraw *= -1;
-            for (var i = polyline.Count - 1; i >= 1; i--)
+            var start = polyline[currentIndex];
+            currentIndex = reverse ? currentIndex - 1 : currentIndex + 1;
+            var end = polyline[currentIndex];
+            var l = (end - start).Length();
+            if (l < perimeterToDraw)
             {
-                var start = polyline[i];
-                var end = polyline[i - 1];
-                var l = (end - start).Length();
-                if (l < perimeterToDraw)
-                {
-                    perimeterToDraw -= l;
-                }
-                else
-                {
-                    float f = perimeterToDraw / l;
-                    end = start.Lerp(end, f);
-                }
+                perimeterToDraw -= l;
                 DrawLine(start, end, lineThickness, color, capType, capPoints);
             }
-        }
-        else
-        {
-            for (var i = 0; i < polyline.Count - 1; i++)
+            else
             {
-                var start = polyline[i];
-                var end = polyline[i + 1];
-                var l = (end - start).Length();
-                if (l < perimeterToDraw)
-                {
-                    perimeterToDraw -= l;
-                }
-                else
-                {
-                    float f = perimeterToDraw / l;
-                    end = start.Lerp(end, f);
-                }
+                float f = perimeterToDraw / l;
+                end = start.Lerp(end, f);
                 DrawLine(start, end, lineThickness, color, capType, capPoints);
+                return;
             }
+            
         }
+        
         
         
     }
@@ -4174,6 +4161,12 @@ public static class ShapeDrawing
             negative = true;
             f *= -1;
         }
+        if (f >= 1)
+        {
+            DrawOutline(polyline, lineThickness, color, capType, capPoints);
+            return;
+        }
+        
         float perimeter = 0f;
         for (var i = 0; i < polyline.Count - 1; i++)
         {
