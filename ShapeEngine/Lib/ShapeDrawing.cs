@@ -1142,14 +1142,15 @@ public static class ShapeDrawing
         if (f == 0) return;
         if (f < 0)
         {
-            var newEnd = end.Lerp(start, f * -1f);
-            DrawLinePercentage(newEnd, newEnd, f, thickness, color, capType, capPoints);
+            var newStart = end.Lerp(start, f * -1);
+            DrawLine(newStart, end, thickness, color, capType, capPoints);
         }
         else
         {
             var newEnd = start.Lerp(end, f);
-            DrawLinePercentage(newEnd, newEnd, f, thickness, color, capType, capPoints);
+            DrawLine(start, newEnd, thickness, color, capType, capPoints);
         }
+        
         
     }
     
@@ -4091,26 +4092,13 @@ public static class ShapeDrawing
     public static void Draw(this Polyline relative, Transform2D transform, LineDrawingInfo lineInfo) => Draw(relative, transform.Position, transform.ScaledSize.Length, transform.RotationDeg, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
 
     
-    public static void DrawPerimeter(this Polyline polyline, float thickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    public static void DrawPerimeter(this Polyline polyline, float perimeterToDraw, LineDrawingInfo lineInfo)
     {
-        if (polyline.Count < 2) return;
-        for (var i = 0; i < polyline.Count - 1; i++)
-        {
-            var start = polyline[i];
-            var end = polyline[i + 1];
-            DrawLine(start, end, thickness, color, capType, capPoints);
-        }
-        // polyline.GetEdges().Draw(thickness, color);
+        DrawPerimeter(polyline, perimeterToDraw, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
     }
-    public static void DrawPercentage(this Polyline polyline, LineDrawingInfo lineInfo)
+    public static void DrawPercentage(this Polyline polyline, float f, LineDrawingInfo lineInfo)
     {
-        if (polyline.Count < 2) return;
-        for (var i = 0; i < polyline.Count - 1; i++)
-        {
-            var start = polyline[i];
-            var end = polyline[i + 1];
-            DrawLine(start, end, lineInfo);
-        }
+        DrawPercentage(polyline, f, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
     }
 
     /// <summary>
