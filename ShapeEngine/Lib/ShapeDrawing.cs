@@ -3335,8 +3335,109 @@ public static class ShapeDrawing
     public static void DrawOutline(this List<Vector2> relativePoints, Vector2 pos, float size, float rotDeg, LineDrawingInfo lineInfo) => DrawOutline(relativePoints, pos, size, rotDeg, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
     public static void DrawOutline(this List<Vector2> relativePoints, Transform2D transform, LineDrawingInfo lineInfo) => DrawOutline(relativePoints, transform.Position, transform.ScaledSize.Length, transform.RotationDeg, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
 
+    /// <summary>
+    /// Draws a certain amount of perimeter
+    /// </summary>
+    /// <param name="shapePoints"></param>
+    /// <param name="perimeterToDraw">Determines how much of the outline is drawn.
+    /// If perimeter is negative outline will be drawn in cw direction.</param>
+    /// <param name="startIndex">Determines at which corner drawing starts.</param>
+    /// <param name="lineThickness"></param>
+    /// <param name="color"></param>
+    /// <param name="capType"></param>
+    /// <param name="capPoints"></param>
+    public static void DrawOutlinePerimeter(this List<Vector2> shapePoints, float perimeterToDraw, int startIndex, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        if (shapePoints.Count < 3 || perimeterToDraw == 0) return;
+
+        int currentIndex = ShapeMath.Clamp(startIndex, 0, shapePoints.Count - 1);
+        
+        if (perimeterToDraw < 0) // reverse order
+        {
+            perimeterToDraw *= -1;
+            for (var i = shapePoints.Count - 1; i >= 0; i--)
+            {
+                var start = shapePoints[currentIndex];
+                currentIndex = (currentIndex - 1) % shapePoints.Count;
+                var end = shapePoints[currentIndex];
+                var l = (end - start).Length();
+                if (l < perimeterToDraw)
+                {
+                    perimeterToDraw -= l;
+                }
+                else
+                {
+                    float f = perimeterToDraw / l;
+                    end = start.Lerp(end, f);
+                }
+                DrawLine(start, end, lineThickness, color, capType, capPoints);
+            }
+        }
+        else
+        {
+            for (var i = 0; i < shapePoints.Count; i++)
+            {
+                var start = shapePoints[currentIndex];
+                currentIndex = (currentIndex + 1) % shapePoints.Count;
+                var end = shapePoints[currentIndex];
+                var l = (end - start).Length();
+                if (l < perimeterToDraw)
+                {
+                    perimeterToDraw -= l;
+                }
+                else
+                {
+                    float f = perimeterToDraw / l;
+                    end = start.Lerp(end, f);
+                }
+                DrawLine(start, end, lineThickness, color, capType, capPoints);
+            }
+        }
+        
+        
+    }
+    /// <summary>
+    /// Draws a certain percentage of an outline.
+    /// </summary>
+    /// <param name="shapePoints"></param>
+    /// <param name="f">The percentage of the outline to draw. Negative value reverses the direction (cw).
+    /// Integer part can be used to change starting corner.
+    /// 0.35 would start at corner a go in ccw direction and draw 35% of the outline.
+    /// -2.7 would start at b (the third corner in cw direction) and draw in cw direction 70% of the outline.</param>
+    /// <param name="lineThickness"></param>
+    /// <param name="color"></param>
+    /// <param name="capType"></param>
+    /// <param name="capPoints"></param>
+    public static void DrawOutlinePercentage(this List<Vector2> shapePoints, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        if (shapePoints.Count < 3 || f == 0f) return;
+
+        bool negative = false;
+        if (f < 0)
+        {
+            negative = true;
+            f *= -1;
+        }
+        
+        int startIndex = (int)f;
+        float percentage = f - startIndex;
+        if (percentage <= 0) return;
+
+
+        float perimeter = 0f;
+        for (var i = 0; i < shapePoints.Count; i++)
+        {
+            var start = shapePoints[i];
+            var end = shapePoints[(i + 1) % shapePoints.Count];
+            var l = (end - start).Length();
+            perimeter += l;
+        }
+
+        f = ShapeMath.Clamp(f, 0f, 1f);
+        DrawOutlinePerimeter(shapePoints, perimeter * f * (negative ? -1 : 1), startIndex, lineThickness, color, capType, capPoints);
+    }
     
-    
+
     /// <summary>
     /// Draws the points as a polygon where each side can be scaled towards the origin of the side.
     /// </summary>
@@ -3698,6 +3799,52 @@ public static class ShapeDrawing
     public static void DrawLines(this Polygon relative, Vector2 pos, float size, float rotDeg, LineDrawingInfo lineInfo) => DrawLines(relative, pos, size, rotDeg, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
     public static void DrawLines(this Polygon relative, Transform2D transform, LineDrawingInfo lineInfo) => DrawLines(relative, transform.Position, transform.ScaledSize.Length, transform.RotationDeg, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
 
+    
+    /// <summary>
+    /// Draws a certain amount of perimeter
+    /// </summary>
+    /// <param name="poly"></param>
+    /// <param name="perimeterToDraw">Determines how much of the outline is drawn.
+    /// If perimeter is negative outline will be drawn in cw direction.</param>
+    /// <param name="startIndex">Determines at which corner drawing starts.</param>
+    /// <param name="lineThickness"></param>
+    /// <param name="color"></param>
+    /// <param name="capType"></param>
+    /// <param name="capPoints"></param>
+    public static void DrawLinesPerimeter(this Polygon poly, float perimeterToDraw, int startIndex, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        DrawOutlinePerimeter(poly, perimeterToDraw, startIndex, lineThickness, color, capType, capPoints);
+    }
+    /// <summary>
+    /// Draws a certain percentage of an outline.
+    /// </summary>
+    /// <param name="poly"></param>
+    /// <param name="f">The percentage of the outline to draw. Negative value reverses the direction (cw).
+    /// Integer part can be used to change starting corner.
+    /// 0.35 would start at corner a go in ccw direction and draw 35% of the outline.
+    /// -2.7 would start at b (the third corner in cw direction) and draw in cw direction 70% of the outline.</param>
+    /// <param name="lineThickness"></param>
+    /// <param name="color"></param>
+    /// <param name="capType"></param>
+    /// <param name="capPoints"></param>
+    public static void DrawLinesPercentage(this Polygon poly, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        DrawOutlinePercentage(poly, f, lineThickness, color, capType, capPoints);
+    }
+    /// <summary>
+    /// Draws a certain percentage of an outline.
+    /// </summary>
+    /// <param name="poly"></param>
+    /// <param name="f">The percentage of the outline to draw. Negative value reverses the direction (cw).
+    /// Integer part can be used to change starting corner.
+    /// 0.35 would start at corner a go in ccw direction and draw 35% of the outline.
+    /// -2.7 would start at b (the third corner in cw direction) and draw in cw direction 70% of the outline.</param>
+    /// <param name="lineInfo"></param>
+    public static void DrawLinesPercentage(this Polygon poly, float f, LineDrawingInfo lineInfo)
+    {
+        DrawOutlinePercentage(poly, lineInfo.Thickness, f, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+    }
+
 
     public static void DrawVertices(this Polygon poly, float vertexRadius, ColorRgba color, int circleSegments)
     {
@@ -3943,6 +4090,122 @@ public static class ShapeDrawing
     public static void Draw(this Polyline relative, Vector2 pos, float size, float rotDeg, LineDrawingInfo lineInfo) => Draw(relative, pos, size, rotDeg, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
     public static void Draw(this Polyline relative, Transform2D transform, LineDrawingInfo lineInfo) => Draw(relative, transform.Position, transform.ScaledSize.Length, transform.RotationDeg, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
 
+    
+    public static void DrawPerimeter(this Polyline polyline, float thickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        if (polyline.Count < 2) return;
+        for (var i = 0; i < polyline.Count - 1; i++)
+        {
+            var start = polyline[i];
+            var end = polyline[i + 1];
+            DrawLine(start, end, thickness, color, capType, capPoints);
+        }
+        // polyline.GetEdges().Draw(thickness, color);
+    }
+    public static void DrawPercentage(this Polyline polyline, LineDrawingInfo lineInfo)
+    {
+        if (polyline.Count < 2) return;
+        for (var i = 0; i < polyline.Count - 1; i++)
+        {
+            var start = polyline[i];
+            var end = polyline[i + 1];
+            DrawLine(start, end, lineInfo);
+        }
+    }
+
+    /// <summary>
+    /// Draws a certain amount of perimeter
+    /// </summary>
+    /// <param name="polyline"></param>
+    /// <param name="perimeterToDraw">Determines how much of the outline is drawn.
+    /// If perimeter is negative outline will be drawn in cw direction.</param>
+    /// <param name="lineThickness"></param>
+    /// <param name="color"></param>
+    /// <param name="capType"></param>
+    /// <param name="capPoints"></param>
+    public static void DrawPerimeter(this Polyline polyline, float perimeterToDraw, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        if (polyline.Count < 3 || perimeterToDraw == 0) return;
+
+        if (perimeterToDraw < 0) // reverse order
+        {
+            perimeterToDraw *= -1;
+            for (var i = polyline.Count - 1; i >= 1; i--)
+            {
+                var start = polyline[i];
+                var end = polyline[i - 1];
+                var l = (end - start).Length();
+                if (l < perimeterToDraw)
+                {
+                    perimeterToDraw -= l;
+                }
+                else
+                {
+                    float f = perimeterToDraw / l;
+                    end = start.Lerp(end, f);
+                }
+                DrawLine(start, end, lineThickness, color, capType, capPoints);
+            }
+        }
+        else
+        {
+            for (var i = 0; i < polyline.Count - 1; i++)
+            {
+                var start = polyline[i];
+                var end = polyline[i + 1];
+                var l = (end - start).Length();
+                if (l < perimeterToDraw)
+                {
+                    perimeterToDraw -= l;
+                }
+                else
+                {
+                    float f = perimeterToDraw / l;
+                    end = start.Lerp(end, f);
+                }
+                DrawLine(start, end, lineThickness, color, capType, capPoints);
+            }
+        }
+        
+        
+    }
+    /// <summary>
+    /// Draws a certain percentage of an outline.
+    /// </summary>
+    /// <param name="polyline"></param>
+    /// <param name="f">The percentage of the outline to draw. Negative value reverses the direction (cw).
+    /// Integer part can be used to change starting corner.
+    /// 0.35 would start at corner a go in ccw direction and draw 35% of the outline.
+    /// -2.7 would start at b (the third corner in cw direction) and draw in cw direction 70% of the outline.</param>
+    /// <param name="lineThickness"></param>
+    /// <param name="color"></param>
+    /// <param name="capType"></param>
+    /// <param name="capPoints"></param>
+    public static void DrawPercentage(this Polyline polyline, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        if (polyline.Count < 3 || f == 0f) return;
+
+        bool negative = false;
+        if (f < 0)
+        {
+            negative = true;
+            f *= -1;
+        }
+        float perimeter = 0f;
+        for (var i = 0; i < polyline.Count - 1; i++)
+        {
+            var start = polyline[i];
+            var end = polyline[i + 1];
+            var l = (end - start).Length();
+            perimeter += l;
+        }
+
+        f = ShapeMath.Clamp(f, 0f, 1f);
+        DrawPerimeter(polyline, perimeter * f * (negative ? -1 : 1), lineThickness, color, capType, capPoints);
+    }
+    
+    
+    
      /// <summary>
     /// Draws a polyline where each side can be scaled towards the origin of the side.
     /// </summary>
