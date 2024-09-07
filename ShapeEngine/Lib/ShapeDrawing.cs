@@ -3359,47 +3359,30 @@ public static class ShapeDrawing
         if (shapePoints.Count < 3 || perimeterToDraw == 0) return;
 
         int currentIndex = ShapeMath.Clamp(startIndex, 0, shapePoints.Count - 1);
+
+        bool reverse = perimeterToDraw < 0;
+        if (reverse) perimeterToDraw *= -1;
         
-        if (perimeterToDraw < 0) // reverse order
+        for (var i = 0; i < shapePoints.Count; i++)
         {
-            perimeterToDraw *= -1;
-            for (var i = shapePoints.Count - 1; i >= 0; i--)
+            var start = shapePoints[currentIndex];
+            if (reverse) currentIndex = ShapeMath.WrapIndex(shapePoints.Count, currentIndex - 1); // (currentIndex - 1) % shapePoints.Count;
+            else currentIndex = (currentIndex + 1) % shapePoints.Count;
+            var end = shapePoints[currentIndex];
+            var l = (end - start).Length();
+            if (l <= perimeterToDraw)
             {
-                var start = shapePoints[currentIndex];
-                currentIndex = (currentIndex - 1) % shapePoints.Count;
-                var end = shapePoints[currentIndex];
-                var l = (end - start).Length();
-                if (l < perimeterToDraw)
-                {
-                    perimeterToDraw -= l;
-                }
-                else
-                {
-                    float f = perimeterToDraw / l;
-                    end = start.Lerp(end, f);
-                }
+                perimeterToDraw -= l;
                 DrawLine(start, end, lineThickness, color, capType, capPoints);
             }
-        }
-        else
-        {
-            for (var i = 0; i < shapePoints.Count; i++)
+            else
             {
-                var start = shapePoints[currentIndex];
-                currentIndex = (currentIndex + 1) % shapePoints.Count;
-                var end = shapePoints[currentIndex];
-                var l = (end - start).Length();
-                if (l < perimeterToDraw)
-                {
-                    perimeterToDraw -= l;
-                }
-                else
-                {
-                    float f = perimeterToDraw / l;
-                    end = start.Lerp(end, f);
-                }
+                float f = perimeterToDraw / l;
+                end = start.Lerp(end, f);
                 DrawLine(start, end, lineThickness, color, capType, capPoints);
+                return;
             }
+                
         }
         
         
@@ -3426,11 +3409,17 @@ public static class ShapeDrawing
             negative = true;
             f *= -1;
         }
-        
         int startIndex = (int)f;
         float percentage = f - startIndex;
-        if (percentage <= 0) return;
-
+        if (percentage <= 0)
+        {
+            return;
+        }
+        if (percentage >= 1)
+        {
+            DrawOutline(shapePoints, lineThickness, color, capType, capPoints);
+            return;
+        }
 
         float perimeter = 0f;
         for (var i = 0; i < shapePoints.Count; i++)
@@ -3440,8 +3429,7 @@ public static class ShapeDrawing
             var l = (end - start).Length();
             perimeter += l;
         }
-
-        f = ShapeMath.Clamp(f, 0f, 1f);
+        
         DrawOutlinePerimeter(shapePoints, perimeter * f * (negative ? -1 : 1), startIndex, lineThickness, color, capType, capPoints);
     }
     
@@ -3850,7 +3838,7 @@ public static class ShapeDrawing
     /// <param name="lineInfo"></param>
     public static void DrawLinesPercentage(this Polygon poly, float f, LineDrawingInfo lineInfo)
     {
-        DrawOutlinePercentage(poly, lineInfo.Thickness, f, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        DrawOutlinePercentage(poly, f, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
     }
 
 
