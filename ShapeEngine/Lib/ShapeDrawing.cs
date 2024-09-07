@@ -2886,6 +2886,7 @@ public static class ShapeDrawing
     #region Triangle
     public static void DrawTriangle(Vector2 a, Vector2 b, Vector2 c, ColorRgba color) => Raylib.DrawTriangle(a, b, c, color.ToRayColor());
 
+    
     public static void DrawTriangleLines(Vector2 a, Vector2 b, Vector2 c, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         DrawLine(a, b, lineThickness, color, capType, capPoints);
@@ -2902,6 +2903,7 @@ public static class ShapeDrawing
         
     }
 
+    
     public static void Draw(this Triangle t, ColorRgba color) => Raylib.DrawTriangle(t.A, t.B, t.C, color.ToRayColor());
 
     public static void DrawLines(this Triangle t, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
@@ -2910,7 +2912,6 @@ public static class ShapeDrawing
         // t.GetEdges().Draw(lineThickness, color);
     }
     public static void DrawLines(this Triangle t, LineDrawingInfo lineInfo) => DrawTriangleLines(t.A, t.B, t.C, lineInfo);
-
     public static void DrawLines(this Triangle t, LineDrawingInfo lineInfo, float rotDeg, Vector2 rotOrigin)
     {
         t = t.ChangeRotation(rotDeg * ShapeMath.DEGTORAD, rotOrigin);
@@ -2924,8 +2925,10 @@ public static class ShapeDrawing
         DrawCircle(t.B, vertexRadius, color, circleSegments);
         DrawCircle(t.C, vertexRadius, color, circleSegments);
     }
+    
     public static void Draw(this Triangulation triangles, ColorRgba color) { foreach (var t in triangles) t.Draw(color); }
 
+    
     public static void DrawLines(this Triangulation triangles, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         foreach (var t in triangles) t.DrawLines(lineThickness, color, capType, capPoints);
@@ -2935,6 +2938,134 @@ public static class ShapeDrawing
         foreach (var t in triangles) t.DrawLines(lineInfo);
     }
 
+    /// <summary>
+    /// Draws a certain percentage of an outline.
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    /// <param name="c"></param>
+    /// <param name="f">The percentage of the outline to draw. Negative value reverses the direction (cw).
+    /// Integer part can be used to change starting corner.
+    /// 0.35 would start at corner a go in ccw direction and draw 35% of the outline.
+    /// -2.7 would start at b (the third corner in cw direction) and draw in cw direction 70% of the outline.</param>
+    /// <param name="lineThickness"></param>
+    /// <param name="color"></param>
+    /// <param name="capType"></param>
+    /// <param name="capPoints"></param>
+    public static void DrawTriangleLinesPercentage(Vector2 a, Vector2 b, Vector2 c, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        if (f == 0) return;
+
+        bool negative = false;
+        if (f < 0)
+        {
+            negative = true;
+            f *= -1;
+        }
+        
+        int startCorner = (int)f;
+        float percentage = f - startCorner;
+        if (percentage <= 0) return;
+        
+        startCorner = ShapeMath.Clamp(startCorner, 0, 2);
+        
+        if (startCorner == 0)
+        {
+            if (negative)
+            {
+                DrawTriangleLinesPercentageHelper(a, c, b, percentage, lineThickness, color, capType, capPoints);
+            }
+            else
+            {
+                DrawTriangleLinesPercentageHelper(a, b, c, percentage, lineThickness, color, capType, capPoints);
+            }
+        }
+        else if (startCorner == 1)
+        {
+            if (negative)
+            {
+                DrawTriangleLinesPercentageHelper(b, a, c,  percentage, lineThickness, color, capType, capPoints);
+            }
+            else
+            {
+                DrawTriangleLinesPercentageHelper(b, c, a,  percentage, lineThickness, color, capType, capPoints);
+            }
+        }
+        else if (startCorner == 2)
+        {
+            if (negative)
+            {
+                DrawTriangleLinesPercentageHelper(c, b, a, percentage, lineThickness, color, capType, capPoints);
+            }
+            else
+            {
+                DrawTriangleLinesPercentageHelper(c, a, b, percentage, lineThickness, color, capType, capPoints);
+            }
+        }
+    }
+    /// <summary>
+    /// Draws a certain percentage of an outline.
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    /// <param name="c"></param>
+    /// <param name="f">The percentage of the outline to draw. Negative value reverses the direction (cw).
+    /// Integer part can be used to change starting corner.
+    /// 0.35 would start at corner a go in ccw direction and draw 35% of the outline.
+    /// -2.7 would start at b (the third corner in cw direction) and draw in cw direction 70% of the outline.</param>
+    /// <param name="lineInfo"></param>
+    public static void DrawTriangleLinesPercentage(Vector2 a, Vector2 b, Vector2 c, float f, LineDrawingInfo lineInfo)
+    {
+        DrawTriangleLinesPercentage(a, b, c, f, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+    }
+    
+    /// <summary>
+    /// Draws a certain percentage of an outline.
+    /// </summary>
+    /// <param name="t"></param>
+    /// <param name="f">The percentage of the outline to draw. Negative value reverses the direction (cw).
+    /// Integer part can be used to change starting corner.
+    /// 0.35 would start at corner a go in ccw direction and draw 35% of the outline.
+    /// -2.7 would start at b (the third corner in cw direction) and draw in cw direction 70% of the outline.</param>
+    /// <param name="lineThickness"></param>
+    /// <param name="color"></param>
+    /// <param name="capType"></param>
+    /// <param name="capPoints"></param>
+    public static void DrawLinesPercentage(this Triangle t, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        DrawTriangleLinesPercentage(t.A, t.B, t.C, f, lineThickness, color, capType, capPoints);
+    }
+    /// <summary>
+    /// Draws a certain percentage of an outline.
+    /// </summary>
+    /// <param name="t"></param>
+    /// <param name="f">The percentage of the outline to draw. Negative value reverses the direction (cw).
+    /// Integer part can be used to change starting corner.
+    /// 0.35 would start at corner a go in ccw direction and draw 35% of the outline.
+    /// -2.7 would start at b (the third corner in cw direction) and draw in cw direction 70% of the outline.</param>
+    /// <param name="lineInfo"></param>
+    public static void DrawLinesPercentage(this Triangle t, float f, LineDrawingInfo lineInfo)
+    {
+        DrawTriangleLinesPercentage(t.A, t.B, t.C, f, lineInfo);
+    }
+    /// <summary>
+    /// Draws a certain percentage of an outline.
+    /// </summary>
+    /// <param name="t"></param>
+    /// <param name="f">The percentage of the outline to draw. Negative value reverses the direction (cw).
+    /// Integer part can be used to change starting corner.
+    /// 0.35 would start at corner a go in ccw direction and draw 35% of the outline.
+    /// -2.7 would start at b (the third corner in cw direction) and draw in cw direction 70% of the outline.</param>
+    /// <param name="lineInfo"></param>
+    /// <param name="rotDeg"></param>
+    /// <param name="rotOrigin"> Origin is in absolute space.</param>
+    public static void DrawLinesPercentage(this Triangle t, float f, LineDrawingInfo lineInfo, float rotDeg, Vector2 rotOrigin)
+    {
+        t = t.ChangeRotation(rotDeg * ShapeMath.DEGTORAD, rotOrigin);
+        DrawTriangleLinesPercentage(t.A, t.B, t.C, f, lineInfo);
+    }
+
+    
     
     /// <summary>
     /// Draws a rect where each side can be scaled towards the origin of the side.
@@ -2997,7 +3128,6 @@ public static class ShapeDrawing
     /// <param name="capPoints"></param>
     public static void DrawQuadLinesPercentage(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
-       
         if (f == 0) return;
 
         bool negative = false;
