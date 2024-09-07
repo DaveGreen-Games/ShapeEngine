@@ -1677,40 +1677,47 @@ public static class ShapeDrawing
     /// <param name="capPoints">How many points are used to draw the end cap.</param>
     public static void DrawCircleLinesPercentage(Vector2 center, float radius, float f, float lineThickness, float rotDeg, int sides, ColorRgba color, LineCapType lineCapType, int capPoints)
     {
-        if (sides < 3 || f == 0) return;
-
-        bool negative = f < 0;
-        float percentage = ShapeMath.Clamp(negative ? f * -1 : f, 0f, 1f);
-
-        var percentageStep = 1f / sides;
-        var percentageToDraw = percentage;
-        var angleStep = (2f * ShapeMath.PI) / sides;
-        var currentAngle = rotDeg * ShapeMath.DEGTORAD;
-
-        while (percentageToDraw > 0)
+        
+        if (sides < 3 || f == 0 || radius <= 0) return;
+        
+        float angleStep; // = (2f * ShapeMath.PI) / sides;
+        float percentage; // = ShapeMath.Clamp(negative ? f * -1 : f, 0f, 1f);
+        if (f < 0)
         {
-            var curP = center + new Vector2(radius, 0f).Rotate(currentAngle);
-            if(negative) currentAngle -= angleStep;
-            else currentAngle += angleStep;
-            
-            var nextP = center + new Vector2(radius, 0f).Rotate(currentAngle);
-            if(negative) currentAngle -= angleStep;
-            else currentAngle += angleStep;
-            
-            if (percentageToDraw < percentageStep)
+            angleStep = (-2f * ShapeMath.PI) / sides;
+            percentage = ShapeMath.Clamp(-f, 0f, 1f);
+        }
+        else
+        {
+            angleStep = (2f * ShapeMath.PI) / sides;
+            percentage = ShapeMath.Clamp(f, 0f, 1f);
+        }
+        
+        var rotRad = rotDeg * ShapeMath.DEGTORAD;
+        var perimeter = Circle.GetCircumference(radius);
+        var sideLength = perimeter / sides;
+        var perimeterToDraw = perimeter * percentage;
+        for (int i = 0; i < sides; i++)
+        {
+            var nextIndex = (i + 1) % sides;
+            var curP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * i);
+            var nextP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * nextIndex);
+
+            if (sideLength > perimeterToDraw)
             {
-                var sideP = percentageToDraw / percentage;
-                DrawLinePercentage(curP, nextP, sideP, lineThickness, color, lineCapType, capPoints);
-                percentageToDraw = 0f;
+                nextP = curP.Lerp(nextP, perimeterToDraw / sideLength);
+                DrawLine(curP, nextP, lineThickness, color, lineCapType, capPoints);
+                return;
             }
             else
             {
                 DrawLine(curP, nextP, lineThickness, color, lineCapType, capPoints);
-                percentageToDraw -= percentageStep;
+                perimeterToDraw -= sideLength;
             }
+            
+            
+            
         }
-
-        
     }
     
     
