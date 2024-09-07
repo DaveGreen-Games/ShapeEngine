@@ -93,6 +93,7 @@ namespace ShapeEngine.Core.Shapes
         
         public float GetArea() { return MathF.PI * Radius * Radius; }
         public float GetCircumference() { return MathF.PI * Radius * 2f; }
+        public static float GetCircumference(float radius) { return MathF.PI * radius * 2f; }
         public float GetCircumferenceSquared() { return GetCircumference() * GetCircumference(); }
 
         #endregion
