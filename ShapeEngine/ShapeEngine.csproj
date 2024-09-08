@@ -10,7 +10,7 @@
 	<Title>Shape Engine</Title>
 	<Authors>Dave Green</Authors>
 	<RepositoryUrl>https://github.com/DaveGreen-Games/ShapeEngine</RepositoryUrl>
-	<Version>2.0.2</Version>
+	<Version>2.1.0</Version>
 	<Description>My custom made 2d game engine based on the great Raylib Framework. Main focus is being performant and only using draw functions instead of textures. Custom input, audio, savegame, collision, shape, pathfinding, ui, camera, color palette, polygon fracturing, and text system are available with a few other nice things!</Description>
 	<PackageProjectUrl>https://davegreengames.itch.io/shape-engine</PackageProjectUrl>
 	<PackageIcon>shapeengine-nuget-icon-128px.png</PackageIcon>
@@ -25,6 +25,13 @@
   	<Copyright>Copyright (c) David Grueneis 2024</Copyright>
   	<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   	<PackageReleaseNotes>
+		# 2.1.0 Release
+		- Implemented CircleSector shape and CircleSectorCollider (useful for detection cones for instance)
+		- Implemented OutlinePercentage drawing for all shapes
+		- A few fixes and improvements.
+		
+		
+		# 2.0 Release
 		## Transform2D Overhaul
 
 		- Transform2D now has a scale value
