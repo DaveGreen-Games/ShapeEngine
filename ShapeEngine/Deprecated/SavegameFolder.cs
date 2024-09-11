@@ -1,17 +1,17 @@
 ﻿using ShapeEngine.Lib;
 
-namespace ShapeEngine.Persistent
+namespace ShapeEngine.Deprecated
 {
     public class SavegameFolder
     {
         public string Path { get; private set; }
         public SavegameFolder(params string[] folders)
         {
-            Path = ShapeSavegame.ConstructPath(folders);
+            Path = ShapeSavegame.CombinePath(folders);
         }
         public SavegameFolder(SavegameFolder root,  params string[] folders)
         {
-            Path = root.Path + ShapeSavegame.ConstructPath(folders);
+            Path = root.Path + ShapeSavegame.CombinePath(folders);
         }
 
         public bool Save<T>(T data, string filename) { return ShapeSavegame.Save(data, Path, filename); }
