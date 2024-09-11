@@ -9,10 +9,23 @@ using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
+using ShapeEngine.Persistent;
+using ShapeEngine.Random;
 using ShapeEngine.Text;
 
 namespace Examples.Scenes
 {
+    public class TestSaveGame : SavegameObject
+    {
+        public int ID {get; set;}
+        public string Text {get; set;}
+
+        public TestSaveGame(int id, string text)
+        {
+            this.ID = id;
+            this.Text = text;
+        }
+    }
     public class MainScene : Scene
     {
         private readonly List<ExampleScene> examples = new();
@@ -74,7 +87,35 @@ namespace Examples.Scenes
             titleFont = new(GAMELOOP.FontDefault, 10f, Colors.Text);
             var action = GAMELOOP.InputActionUICancel;
             quitLabel = new(action, "Quit", GAMELOOP.FontDefault, Colors.PcWarm);
+            
+            
+            
+
+            // var path = ShapeSavegame.ApplicationDocumentsPath;
+            //
+            // var savegameFolder = ShapeSavegame.CombinePath(path, "savegames");
+            //
+            //
+            // Console.WriteLine("---------------- Savegame loading started ----------------");
+            // var loaded = ShapeSavegame.Load<TestSaveGame>(savegameFolder, "main.txt");
+            // if (loaded == null)
+            // {
+            //     Console.WriteLine("     > File could not be loaded! New Savegame will be created.");
+            //     
+            //     var savegame = new TestSaveGame(Rng.Instance.RandI(0, 1000), "Test savegame text");
+            //     Console.WriteLine($"    > New savegame created with ID: {savegame.ID}");
+            //     
+            //     ShapeSavegame.Save(savegame, savegameFolder, "main.txt");
+            //     Console.WriteLine($"    > Savegame saved to: {savegameFolder}");
+            // }
+            // else
+            // {
+            //     Console.WriteLine($"     > Savegame successfully loaded from {savegameFolder}");
+            //     Console.WriteLine($"    > Savegame ID: {loaded.ID} | Text: {loaded.Text}");
+            // }
+            // Console.WriteLine("---------------- Savegame loading ended ----------------");
         }
+        
         
         private void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
