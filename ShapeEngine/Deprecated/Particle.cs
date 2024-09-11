@@ -1,8 +1,9 @@
 ﻿using System.Numerics;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
+using ShapeEngine.Effects;
 
-namespace ShapeEngine.Effects
+namespace ShapeEngine.Deprecated
 {
     public abstract class Particle : EffectObject
     {
