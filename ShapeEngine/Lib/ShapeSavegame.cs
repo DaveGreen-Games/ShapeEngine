@@ -1,40 +1,33 @@
 ﻿using System.Text.Json;
+using ShapeEngine.Core;
 
 namespace ShapeEngine.Lib
 {
     public static class ShapeSavegame
     {
-        public static string APPLICATION_DATA_PATH = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        public static string ApplicationDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        public static string ApplicationLocalDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        public static string ApplicationCommonDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        public static string ApplicationDocumentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        public static string ApplicationCommonDocumentsPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments);
+        
+        public static string GetSpecialFolderPath(Environment.SpecialFolder folder) => Environment.GetFolderPath(folder);
 
-        /// <summary>
-        /// Constructs a path out of all the folders with a backslash between them. Does not start with backslash but ends with a backslash.
-        /// </summary>
-        /// <param name="folders">The folder names for constructing a path.</param>
-        /// <returns></returns>
-        public static string ConstructPath(params string[] folders)
-        {
-            string path = "";
-            foreach (string folder in folders)
-            {
-                if (path.EndsWith("\\"))
-                {
-                    path += folder;
-                }
-                else path += String.Format("{0}\\", folder);
-            }
-            return path;
-        }
-        public static string AddBackslash(string path) { return path + "\\"; }
+        
+        public static string CombinePath(params string[] paths) => Path.Combine(paths);
+        public static string CombinePath(string path1, string path2) => Path.Combine(path1, path2);
+
+        
         public static bool SaveText(string text, string absolutePath, string fileName)
         {
             if (absolutePath.Length <= 0 || fileName.Length <= 0) return false;
             Directory.CreateDirectory(absolutePath);
-            File.WriteAllText(ConstructPath(absolutePath, fileName), text);
+            File.WriteAllText(CombinePath(absolutePath, fileName), text);
             return true;
         }
         public static string LoadText(string absolutePath, string fileName)
         {
-            string path = ConstructPath(absolutePath, fileName);
+            string path = CombinePath(absolutePath, fileName);
             if (!File.Exists(path)) return String.Empty;
             return File.ReadAllText(path);
         }
@@ -46,14 +39,14 @@ namespace ShapeEngine.Lib
 
             string data_string = JsonSerializer.Serialize(data);
             if (data_string.Length <= 0) return false;
-            File.WriteAllText(ConstructPath(absolutePath, fileName), data_string);
+            File.WriteAllText(CombinePath(absolutePath, fileName), data_string);
             //File.WriteAllText(absolutPath + "\\" + fileName, data_string);
             return true;
         }
         public static T? Load<T>(string absolutePath, string fileName)
         {
             //absolutPath = absolutPath + "\\" + fileName;
-            string path = ConstructPath(absolutePath, fileName);
+            string path = CombinePath(absolutePath, fileName);
             if (!File.Exists(path)) return default;
 
             var data_string = File.ReadAllText(path);
