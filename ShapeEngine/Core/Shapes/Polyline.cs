@@ -850,12 +850,12 @@ namespace ShapeEngine.Core.Shapes
             for (var i = 0; i < Count - 1; i++)
             {
                 var start = this[i];
-                var end = this[(i + 1) % Count];
+                var end = this[i + 1];
 
-                for (var j = 0; j < Count - 1; j++)
+                for (var j = 0; j < b.Count - 1; j++)
                 {
                     var bStart = b[j];
-                    var bEnd = b[(j + 1) % b.Count];
+                    var bEnd = b[j + 1];
 
                     if (Segment.OverlapSegmentSegment(start, end, bStart, bEnd)) return true;
                 }
