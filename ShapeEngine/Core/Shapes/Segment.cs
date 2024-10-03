@@ -1111,7 +1111,7 @@ namespace ShapeEngine.Core.Shapes
         #endregion
         
         #region Overlap
-        public readonly bool Overlap(Collider collider)
+        public bool Overlap(Collider collider)
         {
             if (!collider.Enabled) return false;
 
@@ -1151,23 +1151,23 @@ namespace ShapeEngine.Core.Shapes
             }
             return false;
         }
-
         public bool OverlapShape(Segment b) => OverlapSegmentSegment(Start, End, b.Start, b.End);
         public bool OverlapShape(Circle c) => OverlapSegmentCircle(Start, End, c.Center, c.Radius);
-
         public bool OverlapShape(Triangle t)
         {
+            //we only need to check if 1 point is inside incase the entire segment is inside the shape
             if (t.ContainsPoint(Start)) return true;
-            // if (ContainsPoint(s.End)) return true;
+            // if (t.ContainsPoint(End)) return true;
 
             if (OverlapSegmentSegment(Start, End, t.A, t.B)) return true;
             if (OverlapSegmentSegment(Start, End, t.B, t.C)) return true;
             return OverlapSegmentSegment(Start, End, t.C, t.A);
         }
-
         public bool OverlapShape(Quad q)
         {
+            //we only need to check if 1 point is inside incase the entire segment is inside the shape
             if (q.ContainsPoint(Start)) return true;
+            // if (q.ContainsPoint(End)) return true;
 
             if (OverlapSegmentSegment(Start, End, q.A, q.B)) return true;
             if (OverlapSegmentSegment(Start, End, q.B, q.C)) return true;
@@ -1200,34 +1200,32 @@ namespace ShapeEngine.Core.Shapes
 
             return rectRange.OverlappingRange(segmentRange);
         }
-
         public bool OverlapShape(Polygon poly)
         {
             if (poly.Count < 3) return false;
+            //we only need to check if 1 point is inside incase the entire segment is inside the shape
             if (poly.ContainsPoint(Start)) return true;
-            if (ContainsPoint(poly[0])) return true;
+            //if (poly.ContainsPoint(End)) return true;
             
             for (var i = 0; i < poly.Count; i++)
             {
-                var start = poly[i];
-                var end = poly[(i + 1) % poly.Count];
-                if (OverlapSegmentSegment(Start, End, Start, End)) return true;
+                var a = poly[i];
+                var b = poly[(i + 1) % poly.Count];
+                if (OverlapSegmentSegment(Start, End, a, b)) return true;
             }
             return false;
         }
 
         public bool OverlapShape(Polyline pl)
         {
-            if (pl.Count <= 0) return false;
-            if (pl.Count == 1) return ContainsPoint(pl[0]);
-            
-            if (ContainsPoint(pl[0])) return true;
+            if (pl.Count <= 1) return false;
+            if (pl.Count == 2) return OverlapSegmentSegment(Start, End, pl[0], pl[1]);
             
             for (var i = 0; i < pl.Count - 1; i++)
             {
-                var start = pl[i];
-                var end = pl[(i + 1) % pl.Count];
-                if (OverlapSegmentSegment(Start, End, Start, End)) return true;
+                var a = pl[i];
+                var b = pl[i + 1];
+                if (OverlapSegmentSegment(Start, End, a, b)) return true;
             }
             return false;
         }
@@ -1270,20 +1268,14 @@ namespace ShapeEngine.Core.Shapes
             return null;
         }
         
-        public readonly CollisionPoints? IntersectShape(Segment b)
+        public CollisionPoints? IntersectShape(Segment b)
         {
             var cp = IntersectSegmentSegment(Start, End, b.Start, b.End);
             if (cp != null) return new() { (CollisionPoint)cp };
 
             return null;
-            // var info = IntersectSegmentSegmentInfo(Start, End, b.Start, b.End);
-            // if (info.intersected)
-            // {
-                // return new() { new(info.intersectPoint, b.Normal) };
-            // }
-            // return null;
         }
-        public readonly CollisionPoints? IntersectShape(Circle c)
+        public CollisionPoints? IntersectShape(Circle c)
         {
             var result = IntersectSegmentCircle(Start, End, c.Center, c.Radius);
 
@@ -1297,7 +1289,7 @@ namespace ShapeEngine.Core.Shapes
 
             return null;
         }
-        public readonly CollisionPoints? IntersectShape(Triangle t)
+        public CollisionPoints? IntersectShape(Triangle t)
         {
             CollisionPoints? points = null;
             var cp = IntersectSegmentSegment(Start, End, t.A, t.B);
@@ -1326,7 +1318,7 @@ namespace ShapeEngine.Core.Shapes
 
             return points;
         }
-        public readonly CollisionPoints? IntersectShape(Quad q)
+        public CollisionPoints? IntersectShape(Quad q)
         {
             CollisionPoints? points = null;
             var cp = IntersectSegmentSegment(Start, End, q.A, q.B);
@@ -1364,7 +1356,7 @@ namespace ShapeEngine.Core.Shapes
             }
             return points;
         }
-        public readonly CollisionPoints? IntersectShape(Rect r)
+        public CollisionPoints? IntersectShape(Rect r)
         {
             CollisionPoints? points = null;
             var a = r.TopLeft;
@@ -1407,7 +1399,7 @@ namespace ShapeEngine.Core.Shapes
             }
             return points;
         }
-        public readonly CollisionPoints? IntersectShape(Polygon p)
+        public CollisionPoints? IntersectShape(Polygon p)
         {
             if (p.Count < 3) return null;
             // if (p.Count == 2)
@@ -1435,7 +1427,7 @@ namespace ShapeEngine.Core.Shapes
             }
             return points;
         }
-        public readonly CollisionPoints? IntersectShape(Polyline pl)
+        public CollisionPoints? IntersectShape(Polyline pl)
         {
             if (pl.Count < 2) return null;
             // if (pl.Count == 2)
@@ -1453,7 +1445,7 @@ namespace ShapeEngine.Core.Shapes
             CollisionPoint? colPoint = null;
             for (var i = 0; i < pl.Count - 1; i++)
             {
-                colPoint = IntersectSegmentSegment(Start, End, pl[i], pl[(i + 1) % pl.Count]);
+                colPoint = IntersectSegmentSegment(Start, End, pl[i], pl[i + 1]);
                 if (colPoint != null)
                 {
                     points ??= new();
@@ -1463,7 +1455,7 @@ namespace ShapeEngine.Core.Shapes
             }
             return points;
         }
-        public readonly CollisionPoints? IntersectShape(Segments shape)
+        public CollisionPoints? IntersectShape(Segments shape)
         {
             if (shape.Count <= 0) return null;
             CollisionPoints? points = null;
@@ -1476,11 +1468,6 @@ namespace ShapeEngine.Core.Shapes
                     points ??= new();
                     points.AddRange((CollisionPoint)result);
                 }
-                // var collisionPoints = IntersectShape(seg);
-                // if (collisionPoints != null && collisionPoints.Valid)
-                // {
-                    
-                // }
             }
             return points;
         }
