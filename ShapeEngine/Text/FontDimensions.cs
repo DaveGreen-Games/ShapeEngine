@@ -6,7 +6,7 @@ namespace ShapeEngine.Text;
 
 public readonly struct FontDimensions
 {
-    public static RangeFloat FontSizeRange = new(10, 150);
+    public static ValueRange FontSizeRange = new(10, 150);
 
     public readonly Font Font;
     public float BaseSize => Font.BaseSize;

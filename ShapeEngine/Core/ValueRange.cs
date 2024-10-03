@@ -64,4 +64,11 @@ public readonly struct ValueRange
     public float Clamp(float value) => ShapeMath.Clamp(value, Min, Max);
     
     public bool OverlapValueRange(ValueRange other) => other.Min <= Max && Min <= other.Max;
+
+    public static bool OverlapValueRange(float aMin, float aMax, float bMin, float bMax)
+    {
+        var aRange = new ValueRange(aMin, aMax);
+        var bRange = new ValueRange(bMin, bMax);
+        return aRange.OverlapValueRange(bRange);
+    }
 }

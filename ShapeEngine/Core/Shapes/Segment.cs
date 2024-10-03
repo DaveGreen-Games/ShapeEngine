@@ -375,10 +375,10 @@ namespace ShapeEngine.Core.Shapes
         {
             return IsPointOnRay(point, start, dir) || IsPointOnRay(point, start, -dir);
         }
-        public static RangeFloat ProjectSegment(Vector2 aPos, Vector2 aEnd, Vector2 onto)
+        public static ValueRange ProjectSegment(Vector2 aPos, Vector2 aEnd, Vector2 onto)
         {
-            Vector2 unitOnto = Vector2.Normalize(onto);
-            RangeFloat r = new(ShapeVec.Dot(unitOnto, aPos), ShapeVec.Dot(unitOnto, aEnd));
+            var unitOnto = Vector2.Normalize(onto);
+            ValueRange r = new(ShapeVec.Dot(unitOnto, aPos), ShapeVec.Dot(unitOnto, aEnd));
             return r;
         }
         public static bool SegmentOnOneSide(Vector2 axisPos, Vector2 axisDir, Vector2 segmentStart, Vector2 segmentEnd)
@@ -499,7 +499,7 @@ namespace ShapeEngine.Core.Shapes
             {
                 var rangeA = ProjectSegment(aStart, aEnd, axisADir);
                 var rangeB = ProjectSegment(bStart, bEnd, axisADir);
-                return rangeA.OverlappingRange(rangeB); // Rect.OverlappingRange(rangeA, rangeB);
+                return rangeA.OverlapValueRange(rangeB); // Rect.OverlappingRange(rangeA, rangeB);
             }
             return true;
         }
@@ -1177,28 +1177,30 @@ namespace ShapeEngine.Core.Shapes
         public bool OverlapShape(Rect r)
         {
             if (!r.OverlapRectLine(Start, Displacement)) return false;
-            RangeFloat rectRange = new
+            var rectRange = new ValueRange
                 (
                     r.X,
                     r.X + r.Width
                 );
-            RangeFloat segmentRange = new
+            var segmentRange = new ValueRange
                 (
                     Start.X,
                     End.X
                 );
 
-            if (!rectRange.OverlappingRange(segmentRange)) return false;
+            if (!rectRange.OverlapValueRange(segmentRange)) return false;
 
-            rectRange.Min = r.Y;
-            rectRange.Max = r.Y + r.Height;
-            rectRange.Sort();
+            rectRange = new(r.Y, r.Y + r.Height);
+            // rectRange.Min = r.Y;
+            // rectRange.Max = r.Y + r.Height;
+            // rectRange.Sort();
 
-            segmentRange.Min = Start.Y;
-            segmentRange.Max = End.Y;
-            segmentRange.Sort();
+            segmentRange = new(Start.Y, End.Y);
+            // segmentRange.Min = Start.Y;
+            // segmentRange.Max = End.Y;
+            // segmentRange.Sort();
 
-            return rectRange.OverlappingRange(segmentRange);
+            return rectRange.OverlapValueRange(segmentRange);
         }
         public bool OverlapShape(Polygon poly)
         {

@@ -302,7 +302,7 @@ public readonly struct Rect : IEquatable<Rect>
         var rProjection = RangeHull(edgeARange, edgeBRange);
 
         var axisRange = Segment.ProjectSegment(axisStart, axisEnd, n);
-        return !axisRange.OverlappingRange(rProjection);
+        return !axisRange.OverlapValueRange(rProjection);
     }
 
     public Rect Lerp(Rect to, float f)
@@ -1168,7 +1168,7 @@ public readonly struct Rect : IEquatable<Rect>
     public static Rect Empty => new();
     
     
-    private static RangeFloat RangeHull(RangeFloat a, RangeFloat b)
+    private static ValueRange RangeHull(ValueRange a, ValueRange b)
     {
         return new
             (
@@ -2135,8 +2135,8 @@ public readonly struct Rect : IEquatable<Rect>
         var bTopLeft = new Vector2(b.X, b.Y);
         var bBottomRight = bTopLeft + new Vector2(b.Width, b.Height);
         return
-            RangeFloat.OverlappingRange(aTopLeft.X, aBottomRight.X, bTopLeft.X, bBottomRight.X) &&
-            RangeFloat.OverlappingRange(aTopLeft.Y, aBottomRight.Y, bTopLeft.Y, bBottomRight.Y);
+            ValueRange.OverlapValueRange(aTopLeft.X, aBottomRight.X, bTopLeft.X, bBottomRight.X) &&
+            ValueRange.OverlapValueRange(aTopLeft.Y, aBottomRight.Y, bTopLeft.Y, bBottomRight.Y);
     }
     public readonly bool OverlapShape(Polygon poly)
     {

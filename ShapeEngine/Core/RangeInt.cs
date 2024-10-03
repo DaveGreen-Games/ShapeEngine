@@ -6,6 +6,8 @@ namespace ShapeEngine.Core;
 /// <summary>
 /// Deprecated! Will be removed in a future update. Please use ValueRange & ValueRangeInt.
 /// </summary>
+
+
 public class RangeInt
 {
     public int Min;
@@ -49,3 +51,4 @@ public class RangeInt
         return ShapeMath.Clamp(value, Min, Max);
     }
 }
+

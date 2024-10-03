@@ -12,7 +12,7 @@ public class CameraFollowerSingle : ICameraFollower
     public ICameraFollowTarget? Target { get; private set; } = null;
     public ICameraFollowTarget? NewTarget { get; private set; } = null;
     // public bool Active { get; private set; } = false;
-    public RangeFloat BoundaryDis;
+    public ValueRange BoundaryDis;
     public float Speed;
     
     private float changeTargetDuration = 0f;
