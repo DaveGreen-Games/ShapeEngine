@@ -4,6 +4,9 @@ using ShapeEngine.Random;
 
 namespace ShapeEngine.Core;
 
+/// <summary>
+/// Deprecated! Will be removed in a future update. Please use ValueRange & ValueRangeInt.
+/// </summary>
 public class RangeFloat
 {
     public float Min;
