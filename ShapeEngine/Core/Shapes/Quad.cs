@@ -704,7 +704,7 @@ public readonly struct Quad : IEquatable<Quad>
         if (Polygon.ContainsPointCheck(D, A, p)) oddNodes = !oddNodes;
         if (Polygon.ContainsPointCheck(A, B, p)) oddNodes = !oddNodes;
         if (Polygon.ContainsPointCheck(B, C, p)) oddNodes = !oddNodes;
-        if (Polygon.ContainsPointCheck(D, D, p)) oddNodes = !oddNodes;
+        if (Polygon.ContainsPointCheck(C, D, p)) oddNodes = !oddNodes;
         
         return oddNodes;
     }
