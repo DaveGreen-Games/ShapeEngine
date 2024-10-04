@@ -27,8 +27,8 @@
   	<PackageReleaseNotes>
 		# 2.2.0 Release
 		- Segment Overlap functions fixed.
-		- Polyline improvements / clean up.
 		- Quad ContainsPoint function fixed. (typo was the problem)
+		- Polyline improvements / clean up.
 		- RangeFloat and RangeInt deprecated. Both classes are still available but will be removed in a future update
 		- ValueRange and ValueRangeInt readonly structs implemented to replace RangeFloat and RangeInt classes. They do basically the same but they are readonly structs now.
 		
