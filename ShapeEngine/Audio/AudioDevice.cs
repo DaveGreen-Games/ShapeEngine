@@ -13,6 +13,8 @@ public class AudioDevice
     #region Members
     
     private static bool initialized = false;
+    
+    public readonly IdCounter IdCounter = new();
     public event Action<string>? PlaylistStarted;
     public event Action<string, string>? PlaylistSongStarted;
     public static readonly uint BUS_MASTER = ShapeID.NextID;
@@ -42,7 +44,19 @@ public class AudioDevice
         }
         BusAdd(BUS_MASTER, 1f);
     }
-    
+    public AudioDevice(params uint[] busIds)
+    {
+        if (!initialized)
+        {
+            Raylib.InitAudioDevice();
+            initialized = true;
+        }
+        BusAdd(BUS_MASTER, 1f);
+        foreach (var id in busIds)
+        {
+            BusAdd(id, 1f);
+        }
+    }
     #endregion
     
     #region Public
@@ -64,8 +78,6 @@ public class AudioDevice
     {
         cameraRect = camera.Area;
         if (currentPlaylist != null) currentPlaylist.Update(dt);
-        //if(currentSong != null) UpdateMusicStream(currentSong.GetSong());
-        //if (currentSong != null) currentSong.Update(dt);
 
         if (SpatialTargetOverride != null && SpatialTargetOverride.IsDead) SpatialTargetOverride = null;
 
@@ -82,9 +94,9 @@ public class AudioDevice
         foreach(var loop in loops.Values)
         {
             Vector2 center;
-            if (SpatialTargetOverride == null) center = cameraRect.Center;// cameraPos; // ScreenHandler.CAMERA.RawPos;
+            if (SpatialTargetOverride == null) center = cameraRect.Center;
             else center = SpatialTargetOverride.Transform.Position;
-            //if (SpatialTargetOverride != null) loop.SpatialPos = SpatialTargetOverride.GetPosition();
+            
             loop.Update(dt, center);
         }
     }
@@ -100,38 +112,66 @@ public class AudioDevice
     {
         PlaylistSongStarted?.Invoke(songName, playlistName);
     }
-    public void PlaylistAdd(uint id, string displayName, params uint[] songIDs)
+    
+    public bool PlaylistAdd(uint id, string displayName, params uint[] songIDs)
     {
-        if (playlists.ContainsKey(id)) return;
+        if (playlists.ContainsKey(id)) return false;
+        IdCounter.AdvanceTo(id);
         Playlist playlist = new(id, displayName, songIDs.ToHashSet());
         playlist.RequestNextSong += OnPlaylistRequestSong;
         playlist.SongStarted += OnPlaylistSongStarted;
         playlists.Add(id, playlist);
+        return true;
     }
-    public void PlaylistStart()
+    public uint PlaylistAdd(string displayName, params uint[] songIDs)
     {
-        if (currentPlaylist == null) return;
+        var id = IdCounter.NextId;
+        if (playlists.ContainsKey(id))
+        {
+            var maxId = playlists.Keys.Max();
+            IdCounter.AdvanceTo(maxId);
+            id = IdCounter.NextId;
+        }
+        
+        Playlist playlist = new(id, displayName, songIDs.ToHashSet());
+        playlist.RequestNextSong += OnPlaylistRequestSong;
+        playlist.SongStarted += OnPlaylistSongStarted;
+        playlists.Add(id, playlist);
+        return id;
+    }
+    
+    public bool PlaylistStart()
+    {
+        if (currentPlaylist == null) return false;
         currentPlaylist.Start();
         PlaylistStarted?.Invoke(currentPlaylist.DisplayName);
+        
+        return true;
     }
-    public void PlaylistStop()
+    public bool PlaylistStop()
     {
-        if (currentPlaylist == null) return;
+        if (currentPlaylist == null) return false;
         currentPlaylist.Stop();
+        
+        return true;
     }
-    public void PlaylistPause()
+    public bool PlaylistPause()
     {
-        if (currentPlaylist == null) return;
+        if (currentPlaylist == null) return false;
         currentPlaylist.Pause();
+        
+        return true;
     }
-    public void PlaylistResume()
+    public bool PlaylistResume()
     {
-        if (currentPlaylist == null) return;
+        if (currentPlaylist == null) return false;
         currentPlaylist.Resume();
+        
+        return true;
     }
-    public void PlaylistSwitch(uint id)
+    public bool PlaylistSwitch(uint id)
     {
-        if (!playlists.ContainsKey(id)) return;
+        if (!playlists.ContainsKey(id)) return false;
         
         if(currentPlaylist == null) currentPlaylist = playlists[id];
         else
@@ -141,6 +181,7 @@ public class AudioDevice
         }
         currentPlaylist.Start();
         PlaylistStarted?.Invoke(currentPlaylist.DisplayName);
+        return true;
     }
     public string PlaylistGetName() { return currentPlaylist != null ? currentPlaylist.DisplayName : ""; }
     public string PlaylistGetSongName()
@@ -158,53 +199,130 @@ public class AudioDevice
     #endregion
     
     #region Bus
-    public void BusAdd(uint busID, float volume)
+    public bool BusAdd(uint busId, float volume)
     {
-        if (buses.ContainsKey(busID)) return;
-        Bus bus = new Bus(busID, volume);
-        buses.Add(busID, bus);
+        if (buses.ContainsKey(busId)) return false;
+        var bus = new Bus(busId, volume);
+        buses.Add(busId, bus);
+        return true;
     }
-    public void BusSetVolume(uint busID, float volume)
+    public uint BusAdd(float volume = 1f)
     {
-        if (!buses.ContainsKey(busID)) return;
+        var id = IdCounter.NextId;
+        if (buses.ContainsKey(id))
+        {
+            var maxId = buses.Keys.Max();
+            IdCounter.AdvanceTo(maxId);
+            id = IdCounter.NextId;
+        }
+        var bus = new Bus(id, volume);
+        buses.Add(id, bus);
+        return id;
+    }
+    public bool BusSetVolume(uint busId, float volume)
+    {
+        if (!buses.TryGetValue(busId, out var bus)) return false;
         volume = ShapeMath.Clamp(volume, 0.0f, 1.0f);
-        buses[busID].Volume = volume;
+        bus.Volume = volume;
+        
+        return true;
 
     }
-    public void BusChangeVolume(uint busID, float amount)
+    public bool BusChangeVolume(uint busId, float amount)
     {
-        if (!buses.ContainsKey(busID)) return;
-        float newVolume = ShapeMath.Clamp(buses[busID].Volume + amount, 0.0f, 1.0f);
-        buses[busID].Volume = newVolume;
+        if (!buses.TryGetValue(busId, out var bus)) return false;
+        float newVolume = ShapeMath.Clamp(bus.Volume + amount, 0.0f, 1.0f);
+        buses[busId].Volume = newVolume;
+        
+        return true;
     }
-    public float BusGetVolume(uint busID)
+    public float BusGetVolume(uint busId)
     {
-        if (!buses.ContainsKey(busID)) return 1.0f;
-        return buses[busID].Volume;
+        if (!buses.TryGetValue(busId, out var bus)) return 1.0f;
+        return bus.Volume;
     }
-    public void BusStop(uint busID)
+    public bool BusStop(uint busId)
     {
-        if (!buses.ContainsKey(busID)) return;
-        buses[busID].Stop();
+        if (!buses.TryGetValue(busId, out var bus)) return false;
+        bus.Stop();
+        
+        return true;
     }
     #endregion
 
     #region Sound
-    public void SFXAdd(uint id, Sound sound, float volume = 0.5f, float pitch = 1.0f, params uint[] busIDs)
+    public uint SFXAdd(Sound sound, uint busId, float volume = 0.5f, float pitch = 1.0f)
     {
-        if (sounds.ContainsKey(id)) return;
-        List<Bus> b = new();
-        foreach (var busID in busIDs)
+        var id = IdCounter.NextId;
+        if (sounds.ContainsKey(id))
         {
-            if (buses.ContainsKey(busID)) b.Add(buses[busID]);
+            var maxId = sounds.Keys.Max();
+            IdCounter.AdvanceTo(maxId);
+            id = IdCounter.NextId;
         }
-        SFX sfx = new SFX(id, sound, b.ToArray(), volume, pitch);
+        List<Bus> b = [];
+        if (buses.TryGetValue(busId, out var bus)) b.Add(bus);
+        var sfx = new SFX(id, sound, b.ToArray(), volume, pitch);
 
         sounds.Add(id, sfx);
+
+        return id;
     }
-    public void SFXLoopAdd(uint id, Sound sound, float volume = 0.5f, float pitch = 1.0f, params uint[] busIDs)
+    public uint SFXAdd(Sound sound, float volume = 0.5f, float pitch = 1.0f, params uint[] busIDs)
     {
-        if (sounds.ContainsKey(id)) return;
+        var id = IdCounter.NextId;
+        if (sounds.ContainsKey(id))
+        {
+            var maxId = sounds.Keys.Max();
+            IdCounter.AdvanceTo(maxId);
+            id = IdCounter.NextId;
+        }
+        List<Bus> b = [];
+        foreach (uint busId in busIDs)
+        {
+            if (buses.TryGetValue(busId, out var bus)) b.Add(bus);
+        }
+        var sfx = new SFX(id, sound, b.ToArray(), volume, pitch);
+
+        sounds.Add(id, sfx);
+
+        return id;
+    }
+    public bool SFXAdd(uint id, Sound sound, uint busId, float volume = 0.5f, float pitch = 1.0f)
+    {
+        if (sounds.ContainsKey(id)) return false;
+        List<Bus> b = [];
+        if (buses.TryGetValue(busId, out var bus)) b.Add(bus);
+        var sfx = new SFX(id, sound, b.ToArray(), volume, pitch);
+
+        sounds.Add(id, sfx);
+
+        return true;
+    }
+    public bool SFXAdd(uint id, Sound sound, float volume = 0.5f, float pitch = 1.0f, params uint[] busIDs)
+    {
+        if (sounds.ContainsKey(id)) return false;
+        List<Bus> b = [];
+        foreach (uint busId in busIDs)
+        {
+            if (buses.TryGetValue(busId, out var bus)) b.Add(bus);
+        }
+        var sfx = new SFX(id, sound, b.ToArray(), volume, pitch);
+
+        sounds.Add(id, sfx);
+
+        return true;
+    }
+    
+    public uint SFXLoopAdd(Sound sound, float volume = 0.5f, float pitch = 1.0f, params uint[] busIDs)
+    {
+        var id = IdCounter.NextId;
+        if (sounds.ContainsKey(id))
+        {
+            var maxId = sounds.Keys.Max();
+            IdCounter.AdvanceTo(maxId);
+            id = IdCounter.NextId;
+        }
         List<Bus> b = new();
         foreach (var busID in busIDs)
         {
@@ -213,10 +331,17 @@ public class AudioDevice
         SFXLoop loop = new SFXLoop(id, sound, b.ToArray(), volume, pitch);
 
         loops.Add(id, loop);
+        return id;
     }
-    public void SFXLoopAdd(uint id, Sound sound, float minSpatialRange, float maxSpatialRange, float volume = 0.5f, float pitch = 1.0f, params uint[] busIDs)
+    public uint SFXLoopAdd(Sound sound, float minSpatialRange, float maxSpatialRange, float volume = 0.5f, float pitch = 1.0f, params uint[] busIDs)
     {
-        if (sounds.ContainsKey(id)) return;
+        var id = IdCounter.NextId;
+        if (sounds.ContainsKey(id))
+        {
+            var maxId = sounds.Keys.Max();
+            IdCounter.AdvanceTo(maxId);
+            id = IdCounter.NextId;
+        }
         List<Bus> b = new();
         foreach (var busID in busIDs)
         {
@@ -225,19 +350,163 @@ public class AudioDevice
         SFXLoop loop = new SFXLoop(id, sound, minSpatialRange, maxSpatialRange, b.ToArray(), volume, pitch);
 
         loops.Add(id, loop);
+        return id;
     }
-    public void SongAdd(uint id, Music song, string displayName, float volume = 0.5f, float pitch = 1.0f, params uint[] busIDs)
-    {
-        if(songs.ContainsKey(id)) return;
-        List<Bus> b = new();
-        foreach (var busID in busIDs)
-        {
-            if (buses.ContainsKey(busID)) b.Add(buses[busID]);
-        }
 
-        Song s = new Song(id, displayName, song, b.ToArray(), volume, pitch);
+    public uint SFXLoopAdd(Sound sound, uint busId, float volume = 0.5f, float pitch = 1.0f)
+    {
+        var id = IdCounter.NextId;
+        if (sounds.ContainsKey(id))
+        {
+            var maxId = sounds.Keys.Max();
+            IdCounter.AdvanceTo(maxId);
+            id = IdCounter.NextId;
+        }
+        List<Bus> b = [];
+        if (buses.TryGetValue(busId, out var bus)) b.Add(bus);
+        SFXLoop loop = new SFXLoop(id, sound, b.ToArray(), volume, pitch);
+
+        loops.Add(id, loop);
+
+        return id;
+    }
+    public uint SFXLoopAdd(Sound sound, uint busId, float minSpatialRange, float maxSpatialRange, float volume = 0.5f, float pitch = 1.0f)
+    {
+        var id = IdCounter.NextId;
+        if (sounds.ContainsKey(id))
+        {
+            var maxId = sounds.Keys.Max();
+            IdCounter.AdvanceTo(maxId);
+            id = IdCounter.NextId;
+        }
+        List<Bus> b = [];
+        if (buses.TryGetValue(busId, out var bus)) b.Add(bus);
+        SFXLoop loop = new SFXLoop(id, sound, minSpatialRange, maxSpatialRange, b.ToArray(), volume, pitch);
+
+        loops.Add(id, loop);
+
+        return id;
+    }
+
+    
+    public bool SFXLoopAdd(uint id, Sound sound, uint busId, float volume = 0.5f, float pitch = 1.0f)
+    {
+        if (sounds.ContainsKey(id)) return false;
+        List<Bus> b = [];
+        if (buses.TryGetValue(busId, out var bus)) b.Add(bus);
+        SFXLoop loop = new SFXLoop(id, sound, b.ToArray(), volume, pitch);
+
+        loops.Add(id, loop);
+
+        return true;
+    }
+    public bool SFXLoopAdd(uint id, Sound sound, uint busId, float minSpatialRange, float maxSpatialRange, float volume = 0.5f, float pitch = 1.0f)
+    {
+        if (sounds.ContainsKey(id)) return false;
+        List<Bus> b = [];
+        if (buses.TryGetValue(busId, out var bus)) b.Add(bus);
+        SFXLoop loop = new SFXLoop(id, sound, minSpatialRange, maxSpatialRange, b.ToArray(), volume, pitch);
+
+        loops.Add(id, loop);
+
+        return true;
+    }
+    
+    public bool SFXLoopAdd(uint id, Sound sound, float volume = 0.5f, float pitch = 1.0f, params uint[] busIDs)
+    {
+        if (sounds.ContainsKey(id)) return false;
+        List<Bus> b = [];
+        foreach (uint busId in busIDs)
+        {
+            if (buses.TryGetValue(busId, out var bus)) b.Add(bus);
+        }
+        var loop = new SFXLoop(id, sound, b.ToArray(), volume, pitch);
+
+        loops.Add(id, loop);
+
+        return true;
+    }
+    public bool SFXLoopAdd(uint id, Sound sound, float minSpatialRange, float maxSpatialRange, float volume = 0.5f, float pitch = 1.0f, params uint[] busIDs)
+    {
+        if (sounds.ContainsKey(id)) return false;
+        List<Bus> b = [];
+        foreach (var busId in busIDs)
+        {
+            if (buses.TryGetValue(busId, out var bus)) b.Add(bus);
+        }
+        var loop = new SFXLoop(id, sound, minSpatialRange, maxSpatialRange, b.ToArray(), volume, pitch);
+
+        loops.Add(id, loop);
+
+        return true;
+    }
+    
+    public uint SongAdd(Music song, uint busId, string displayName, float volume = 0.5f, float pitch = 1.0f)
+    {
+        var id = IdCounter.NextId;
+        if (songs.ContainsKey(id))
+        {
+            var maxId = songs.Keys.Max();
+            IdCounter.AdvanceTo(maxId);
+            id = IdCounter.NextId;
+        }
+        List<Bus> b = [];
+        if (buses.TryGetValue(busId, out var bus)) b.Add(bus);
+
+        var s = new Song(id, displayName, song, b.ToArray(), volume, pitch);
 
         songs.Add(id, s);
+
+        return id;
+    }
+    public uint SongAdd(Music song, string displayName, float volume = 0.5f, float pitch = 1.0f, params uint[] busIDs)
+    {
+        var id = IdCounter.NextId;
+        if (songs.ContainsKey(id))
+        {
+            var maxId = songs.Keys.Max();
+            IdCounter.AdvanceTo(maxId);
+            id = IdCounter.NextId;
+        }
+        List<Bus> b = [];
+        foreach (var busId in busIDs)
+        {
+            if (buses.TryGetValue(busId, out var bus)) b.Add(bus);
+        }
+
+        var s = new Song(id, displayName, song, b.ToArray(), volume, pitch);
+
+        songs.Add(id, s);
+
+        return id;
+    }
+    
+    public bool SongAdd(uint id, Music song, uint busId, string displayName, float volume = 0.5f, float pitch = 1.0f)
+    {
+        if(songs.ContainsKey(id)) return false;
+        List<Bus> b = [];
+        if (buses.TryGetValue(busId, out var bus)) b.Add(bus);
+
+        var s = new Song(id, displayName, song, b.ToArray(), volume, pitch);
+
+        songs.Add(id, s);
+
+        return true;
+    }
+    public bool SongAdd(uint id, Music song, string displayName, float volume = 0.5f, float pitch = 1.0f, params uint[] busIDs)
+    {
+        if(songs.ContainsKey(id)) return false;
+        List<Bus> b = [];
+        foreach (var busId in busIDs)
+        {
+            if (buses.TryGetValue(busId, out var bus)) b.Add(bus);
+        }
+
+        var s = new Song(id, displayName, song, b.ToArray(), volume, pitch);
+
+        songs.Add(id, s);
+
+        return true;
     }
     
 
@@ -345,6 +614,12 @@ public class AudioDevice
         loops[id].SpatialPos = pos;
         loops[id].Play(volume, pitch);
     }
+    
+    /// <summary>
+    /// Deprecated. Do not use, will be removed in a future updated!
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="pos"></param>
     public void SFXLoopUpdateSpatialPos(uint id, Vector2 pos)
     {
         if(loops.ContainsKey(id)) loops[id].SpatialPos = pos;
