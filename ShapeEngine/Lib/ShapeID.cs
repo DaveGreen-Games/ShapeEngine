@@ -6,6 +6,10 @@ namespace ShapeEngine.Lib
         private static IdCounter counter = new();
         public static uint InvalidId => IdCounter.InvalidId;
         public static uint NextID => counter.NextId;
+        
+        public static void AdvanceTo(uint id) => counter.AdvanceTo(id);
+
+        public static void Reset() => counter.Reset();
     }
 
     public class IdCounter
