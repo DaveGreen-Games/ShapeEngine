@@ -510,17 +510,17 @@ public class AudioDevice
     }
     
 
-    public void SFXPlay(uint id, float volume = 1f, float pitch = 1f, float blockDuration = 0f)
+    public bool SFXPlay(uint id, float volume = 1f, float pitch = 1f, float blockDuration = 0f)
     {
-        if(!sounds.ContainsKey(id)) return;
-        if (soundBlockers.ContainsKey(id) && soundBlockers[id] > 0f) return;
+        if (!sounds.ContainsKey(id)) return false;
+        if (soundBlockers.ContainsKey(id) && soundBlockers[id] > 0f) return false;
         if (blockDuration > 0f)
         {
-            if (!soundBlockers.ContainsKey(id)) soundBlockers.Add(id, blockDuration);
-            else soundBlockers[id] = blockDuration;
+            soundBlockers[id] = blockDuration;
         }
 
         sounds[id].Play(volume, pitch);
+        return true;
     }
     /// <summary>
     /// Play a sound. If pos is not inside the current camera area the sound is NOT played.
@@ -530,19 +530,20 @@ public class AudioDevice
     /// <param name="volume"></param>
     /// <param name="pitch"></param>
     /// <param name="blockDuration"></param>
-    public void SFXPlay(uint id, Vector2 pos, float volume = 1.0f, float pitch = 1.0f, float blockDuration = 0f)
+    public bool SFXPlay(uint id, Vector2 pos, float volume = 1.0f, float pitch = 1.0f, float blockDuration = 0f)
     {
-        if (!sounds.ContainsKey(id)) return;
-        if (!Raylib.CheckCollisionPointRec(pos, cameraRect.Rectangle)) return;
+        if (!sounds.ContainsKey(id)) return false;
+        if (!Raylib.CheckCollisionPointRec(pos, cameraRect.Rectangle)) return false;
 
-        if (soundBlockers.ContainsKey(id) && soundBlockers[id] > 0f) return;
+        if (soundBlockers.ContainsKey(id) && soundBlockers[id] > 0f) return false;
 
         if (blockDuration > 0f)
         {
-            if (!soundBlockers.ContainsKey(id)) soundBlockers.Add(id, blockDuration);
-            else soundBlockers[id] = blockDuration;
+            soundBlockers[id] = blockDuration;
         }
         sounds[id].Play(volume, pitch);
+        
+        return true;
     }
     /// <summary>
     /// Play the sound. If the pos is less than minRange from the current pos of the camera (or the spatial target override) the sound is played with full volume.
@@ -556,10 +557,10 @@ public class AudioDevice
     /// <param name="volume"></param>
     /// <param name="pitch"></param>
     /// <param name="blockDuration"></param>
-    public void SFXPlay(uint id, Vector2 pos, float minRange, float maxRange, float volume = 1.0f, float pitch = 1.0f, float blockDuration = 0f)
+    public bool SFXPlay(uint id, Vector2 pos, float minRange, float maxRange, float volume = 1.0f, float pitch = 1.0f, float blockDuration = 0f)
     {
-        if (!sounds.ContainsKey(id)) return;
-        if (soundBlockers.ContainsKey(id) && soundBlockers[id] > 0f) return;
+        if (!sounds.ContainsKey(id)) return false;
+        if (soundBlockers.ContainsKey(id) && soundBlockers[id] > 0f) return false;
         
 
         Vector2 center;
@@ -573,46 +574,49 @@ public class AudioDevice
         if (maxRange < 0f || maxRange <= minRange) maxRange = minRange + 1;
         float minSquared = minRange * minRange;
         float maxSquared = maxRange * maxRange;
-        if (disSq >= maxSquared) return;
+        if (disSq >= maxSquared) return false;
 
         if (blockDuration > 0f)
         {
-            if (!soundBlockers.ContainsKey(id)) soundBlockers.Add(id, blockDuration);
-            else soundBlockers[id] = blockDuration;
+            soundBlockers[id] = blockDuration;
         }
 
-        float spatialVolumeFactor = 1f;
+        var spatialVolumeFactor = 1f;
         if(disSq > minSquared)
         {
             spatialVolumeFactor = 1f - ShapeMath.LerpInverseFloat(minSquared, maxSquared, disSq);
         }
 
         sounds[id].Play(volume * spatialVolumeFactor, pitch);
+        
+        return true;
     }
 
-    public void SFXLoopPlay(uint id, float volume = 1f, float pitch = 1f, float blockDuration = 0f)
+    public bool SFXLoopPlay(uint id, float volume = 1f, float pitch = 1f, float blockDuration = 0f)
     {
-        if (!loops.ContainsKey(id)) return;
-        if (soundBlockers.ContainsKey(id) && soundBlockers[id] > 0f) return;
+        if (!loops.ContainsKey(id)) return false;
+        if (soundBlockers.ContainsKey(id) && soundBlockers[id] > 0f) return false;
         if (blockDuration > 0f)
         {
-            if (!soundBlockers.ContainsKey(id)) soundBlockers.Add(id, blockDuration);
-            else soundBlockers[id] = blockDuration;
+            soundBlockers[id] = blockDuration;
         }
 
         loops[id].Play(volume, pitch);
+        
+        return true;
     }
-    public void SFXLoopPlay(uint id, Vector2 pos, float volume = 1f, float pitch = 1f, float blockDuration = 0f)
+    public bool SFXLoopPlay(uint id, Vector2 pos, float volume = 1f, float pitch = 1f, float blockDuration = 0f)
     {
-        if (!loops.ContainsKey(id)) return;
-        if (soundBlockers.ContainsKey(id) && soundBlockers[id] > 0f) return;
+        if (!loops.ContainsKey(id)) return false;
+        if (soundBlockers.ContainsKey(id) && soundBlockers[id] > 0f) return false;
         if (blockDuration > 0f)
         {
-            if (!soundBlockers.ContainsKey(id)) soundBlockers.Add(id, blockDuration);
-            else soundBlockers[id] = blockDuration;
+            soundBlockers[id] = blockDuration;
         }
         loops[id].SpatialPos = pos;
         loops[id].Play(volume, pitch);
+        
+        return true;
     }
     
     /// <summary>
@@ -622,12 +626,14 @@ public class AudioDevice
     /// <param name="pos"></param>
     public void SFXLoopUpdateSpatialPos(uint id, Vector2 pos)
     {
-        if(loops.ContainsKey(id)) loops[id].SpatialPos = pos;
+        if(loops.TryGetValue(id, out var loop)) loop.SpatialPos = pos;
     }
-    public void SFXLoopStop(uint id)
+    public bool SFXLoopStop(uint id)
     {
-        if (!loops.ContainsKey(id)) return;
-        loops[id].Stop();
+        if (!loops.TryGetValue(id, out var loop)) return false;
+        loop.Stop();
+        
+        return true;
     }
     #endregion
     
