@@ -21,7 +21,6 @@ namespace ShapeEngine.Audio
             this.mixtape = songIDs;
             this.Refill();
         }
-
         public void Update(float dt)
         {
             if (Paused) return;
@@ -80,6 +79,16 @@ namespace ShapeEngine.Audio
             if (mixtape.Add(id))
             {
                 queue.Add(id);
+            }
+        }
+        public void AddSongIDs(params uint[] ids)
+        {
+            foreach (var id in ids)
+            {
+                if (mixtape.Add(id))
+                {
+                    queue.Add(id);
+                }
             }
         }
 
