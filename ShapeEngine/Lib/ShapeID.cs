@@ -14,7 +14,11 @@ namespace ShapeEngine.Lib
         private uint count = 10;
         public uint NextId => count++;
 
-        public void AdvanceTo(uint id) => count = id + 1;
+        public void AdvanceTo(uint id)
+        {
+            if(id >= count) count = id + 1;
+        }
+
         public void Reset() => count = 10;
     }
 }
