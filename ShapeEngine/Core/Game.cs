@@ -2,6 +2,7 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
 using Raylib_cs;
+using ShapeEngine.Audio;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
@@ -84,6 +85,8 @@ public class Game
         }
     }
 
+    
+
     public ScreenInfo GameScreenInfo { get; private set; } = new();
     public ScreenInfo GameUiScreenInfo { get; private set; } = new();
     public ScreenInfo UIScreenInfo { get; private set; } = new();
@@ -104,6 +107,7 @@ public class Game
     }
     
     public GameWindow Window { get; private set; }
+    public readonly AudioDevice AudioDevice;
     public Scene CurScene { get; private set; } = new SceneEmpty();
     
     public ScreenTexture GameTexture => gameTexture;
@@ -155,6 +159,7 @@ public class Game
         Window.OnWindowHiddenChanged += ResolveOnWindowHiddenChanged;
         Window.OnWindowTopmostChanged += ResolveOnWindowTopmostChanged;
 
+        AudioDevice = new AudioDevice();
 
         var fixedFramerate = gameSettings.FixedFramerate;
         if (fixedFramerate <= 0)
@@ -292,7 +297,7 @@ public class Game
             Time = Time.TickF(dt);
             
             Window.Update(dt);
-            
+            AudioDevice.Update(dt, curCamera);
             ShapeInput.Update();
             
             if (Window.MouseOnScreen)
