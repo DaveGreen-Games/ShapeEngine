@@ -9,7 +9,7 @@ namespace ShapeEngine.Core;
 public abstract class CollisionObject : PhysicsObject
 {
     /// <summary>
-    /// If enabled this CollisionObject will subscribe to every colliders Collision/ CollisionEnded event and report them.
+    /// If enabled this CollisionObject will subscribe to every colliders Collision/ CollisionEnded /ColliderOverlap / ColliderIntersected event and report them.
     /// </summary>
     protected readonly bool ReportColliderCollisions;
     
@@ -73,6 +73,8 @@ public abstract class CollisionObject : PhysicsObject
             col.Parent = this;
             if (ReportColliderCollisions)
             {
+                col.OnColliderIntersected += ColliderIntersected;
+                col.OnColliderOverlapped += ColliderOverlapped;
                 col.OnCollision += ColliderCollision;
                 col.OnCollisionEnded += ColliderCollisionEnded;
             }
@@ -80,6 +82,7 @@ public abstract class CollisionObject : PhysicsObject
         }
         return false;
     }
+
     public bool RemoveCollider(Collider col)
     {
         if (Colliders.Remove(col))
@@ -87,6 +90,8 @@ public abstract class CollisionObject : PhysicsObject
             col.Parent = null;
             if (ReportColliderCollisions)
             {
+                col.OnColliderIntersected -= ColliderIntersected;
+                col.OnColliderOverlapped -= ColliderOverlapped;
                 col.OnCollision -= ColliderCollision;
                 col.OnCollisionEnded -= ColliderCollisionEnded;
             }
@@ -98,15 +103,32 @@ public abstract class CollisionObject : PhysicsObject
     
     /// <summary>
     /// Called when a collider on this CollisionObject reports a collision.
-    /// Only works when ReportColliderCollision is set to true!
+    /// AdvancedCollisionNotifications have to be enabled on the collider!
+    /// ComputeIntersection has to be enabled on the collider!
+    /// ReportColliderCollision has to be enabled
     /// </summary>
-    protected virtual void ColliderCollision(Collider self, CollisionInformation info) { }
-    
+    protected virtual void ColliderIntersected(Collision.Collision collision) { }
+
+    /// <summary>
+    /// Called when a collider on this CollisionObject reports an overlap.
+    /// AdvancedCollisionNotifications have to be enabled on the collider!
+    /// ComputeIntersection has to be disabled on the collider!
+    /// ReportColliderCollision has to be enabled
+    /// </summary>
+    protected virtual void ColliderOverlapped(Collider self, Collider other, bool firstContact) { }
+
     /// <summary>
     /// Called when a collider on this CollisionObject reports an ended collision.
     /// Only works when ReportColliderCollision is set to true!
     /// </summary>
     protected virtual void ColliderCollisionEnded(Collider self, Collider other) { }
+    
+    /// <summary>
+    /// Called when a collider on this CollisionObject reports a collision.
+    /// Only works when ReportColliderCollision is set to true!
+    /// </summary>
+    protected virtual void ColliderCollision(Collider self, CollisionInformation info) { }
+    
 
     /// <summary>
     /// Is called when collision object is added to a collision handler.

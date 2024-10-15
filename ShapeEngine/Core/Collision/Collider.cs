@@ -9,8 +9,30 @@ namespace ShapeEngine.Core.Collision
 {
     public abstract class Collider : IShape
     {
+        
+        /// <summary>
+        /// This functions is always called when the collider had at least one collision with another collider this frame
+        /// </summary>
         public event Action<Collider, CollisionInformation>? OnCollision;
+        
+        /// <summary>
+        /// This function will always be called when a previous collision with another collider has ended this frame
+        /// </summary>
         public event Action<Collider, Collider>? OnCollisionEnded;
+        
+        /// <summary>
+        /// This event will only be invoked when AdvancedCollisionNotifications is enabled and
+        /// ComputeIntersection is disabled
+        /// If AdvancedCollisionNotification is enabled and ComputeIntersection is enabled OnColliderIntersected will be invoked instead
+        /// </summary>
+        public event Action<Collider, Collider, bool>? OnColliderOverlapped;
+        
+        /// <summary>
+        /// This event will only be invoked when AdvancedCollisionNotifications is enabled and
+        /// ComputeIntersection is enabled
+        /// If AdvancedCollisionNotification is enabled and ComputeIntersection is disabled OnColliderOverlapped will be invoked instead
+        /// </summary>
+        public event Action<Collision>? OnColliderIntersected;
         
         
         private CollisionObject? parent = null;
@@ -76,6 +98,13 @@ namespace ShapeEngine.Core.Collision
         /// If false only overlaps will be reported but no further details on the intersection.
         /// </summary>
         public bool ComputeIntersections { get; set; } = false;
+        /// <summary>
+        /// This determines if ColliderIntersected and ColliderOverlapped will be called and if
+        /// OnColliderOverlapped and OnColliderIntersected events will be invoked.
+        /// Collision and CollisionEnded will always be called.
+        /// This is an additional convenience option to get overlap/intersection information in a different way.
+        /// </summary>
+        public bool AdvancedCollisionNotifications { get; set; } = false;
 
         // protected bool Dirty = false;
         
@@ -93,9 +122,26 @@ namespace ShapeEngine.Core.Collision
             this.Offset = offset;
         }
 
-        // public void ForceShapeRecalculation() => Dirty = true;
         internal void ResolveCollision(CollisionInformation info)
         {
+            if (AdvancedCollisionNotifications)
+            {
+                foreach (var collision in info.Collisions)
+                {
+                    if (ComputeIntersections)
+                    {
+                        ColliderIntersected(collision);
+                        OnColliderIntersected?.Invoke(collision);
+                    }
+                    else
+                    {
+                        ColliderOverlapped(collision.Other, collision.FirstContact);
+                        OnColliderOverlapped?.Invoke(this, collision.Other, collision.FirstContact);
+                    }
+                
+                }
+            }
+            
             Collision(info);
             OnCollision?.Invoke(this, info);
         }
@@ -104,7 +150,30 @@ namespace ShapeEngine.Core.Collision
             CollisionEnded(other);
             OnCollisionEnded?.Invoke(this, other);
         }
+        
+        
+        /// <summary>
+        /// This function will only be called when AdvancedCollisionNotifications is enabled and
+        /// ComputeIntersection is disabled
+        /// If AdvancedCollisionNotification is enabled and ComputeIntersection is enabled ColliderIntersected will be called instead
+        /// </summary>
+        protected virtual void ColliderOverlapped(Collider other, bool firstContact) { }
+        
+        /// <summary>
+        /// This function will only be called when AdvancedCollisionNotifications is enabled and
+        /// ComputeIntersection is enabled
+        /// If AdvancedCollisionNotification is enabled and ComputeIntersection is disabled ColliderOverlapped will be called instead
+        /// </summary>
+        protected virtual void ColliderIntersected(Collision collision) { }
+        
+        /// <summary>
+        /// This functions is always called when this collider had at least one collision with another collider this frame
+        /// </summary>
         protected virtual void Collision(CollisionInformation info) { }
+        
+        /// <summary>
+        /// This function will always be called when a previous collision with another collider has ended this frame
+        /// </summary>
         protected virtual void CollisionEnded(Collider other) { }
         
         public virtual void Update(float dt)
