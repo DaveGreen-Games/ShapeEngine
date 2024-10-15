@@ -21,7 +21,7 @@ namespace Examples.Scenes.ExampleScenes
         
         public Circ(Vector2 pos, Vector2 vel, float radius)
         {
-            this.Transform = new(pos, 0f, new(radius), 1f);
+            this.Transform = new(pos, 0f, new Size(radius), 1f);
             this.Layer = layerChances.Next();
             
             var velFactor = Layer switch

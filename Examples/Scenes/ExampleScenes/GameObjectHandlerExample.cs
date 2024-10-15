@@ -370,7 +370,7 @@ namespace Examples.Scenes.ExampleScenes
             var ta = new Vector2(0, -0.5f);
             var tb = new Vector2(0, 0.5f);
             var tc = new Vector2(1f, 0);
-            var tOffset = new Transform2D(new Vector2(Radius, 0f), 0f, new(), 1f);
+            var tOffset = new Transform2D(new Vector2(Radius, 0f), 0f, new Size(), 1f);
             var tCol = new TriangleCollider(tOffset, ta, tb, tc);
             tCol.ComputeCollision = true;
             tCol.ComputeIntersections = true;
