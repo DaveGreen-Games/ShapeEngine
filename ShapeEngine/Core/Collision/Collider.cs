@@ -81,11 +81,11 @@ namespace ShapeEngine.Core.Collision
         
         protected Collider()
         {
-            this.Offset = new(new(0f), 0f, new(0f), 1f);
+            this.Offset = new(new Vector2(0f), 0f, new Size(0f), 1f);
         }
         protected Collider(Vector2 offset)
         {
-            this.Offset = new(offset, 0f, new(0f), 1f);
+            this.Offset = new(offset, 0f, new Size(0f), 1f);
         }
 
         protected Collider(Transform2D offset)
