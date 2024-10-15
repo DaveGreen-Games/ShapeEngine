@@ -560,7 +560,9 @@ public class Game
     {
         if (newScene == CurScene) return;
         CurScene.ResolveDeactivate();
+        CurScene.SetGameReference(null);
         newScene.ResolveActivate(CurScene);
+        newScene.SetGameReference(this);
         CurScene = newScene;
     }
 

@@ -10,9 +10,22 @@ namespace ShapeEngine.Core;
 
 public abstract class Scene //: IUpdateable, IDrawable
 {
+
+    #region Members
+    
+    public bool Active { get; private set; } = false;
+    /// <summary>
+    /// If the scene is Active Game will be set.
+    /// </summary>
+    public Game? Game { get; private set; } = null;
+    
     public SpawnArea? SpawnArea { get; private set; } = null;
     public CollisionHandler? CollisionHandler { get; private set; } = null;
     public Pathfinder? Pathfinder { get; private set; } = null;
+
+    #endregion
+
+    #region Init Handlers
     
     protected bool InitSpawnArea(Rect bounds)
     {
@@ -90,16 +103,20 @@ public abstract class Scene //: IUpdateable, IDrawable
         Pathfinder = null;
         return true;
     }
-
-
+    #endregion
     
     #region Internal
+
+    internal void SetGameReference(Game? game) => Game = game;
+
     internal void ResolveActivate(Scene oldScene)
     {
+        Active = true;
         OnActivate(oldScene);
     }
     internal void ResolveDeactivate()
     {
+        Active = false;
         OnDeactivate();
     }
 
@@ -342,4 +359,5 @@ public abstract class Scene //: IUpdateable, IDrawable
     protected virtual void OnButtonReleased(InputEvent e) { }
     
     #endregion
+    
 }
