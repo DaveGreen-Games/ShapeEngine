@@ -132,7 +132,7 @@ namespace ShapeEngine.Core.Collision
             PrevTransform = CurTransform;
             var rot = Rotates ? parentTransform.RotationRad + Offset.RotationRad : Offset.RotationRad;
             var size = Scales ? parentTransform.BaseSize + Offset.BaseSize : Offset.BaseSize;
-            var scale = Scales ? parentTransform.Scale * Offset.Scale : Offset.Scale;
+            var scale = Scales ? parentTransform.Scale2d * Offset.Scale2d : Offset.Scale2d;
             if (Moves)
             {
                 if (Offset.Position.LengthSquared() <= 0) CurTransform = new(parentTransform.Position, rot, size, scale);
