@@ -8,16 +8,24 @@ namespace ShapeEngine.Core;
 
 public abstract class CollisionObject : PhysicsObject
 {
-    public CollisionObject()
+    /// <summary>
+    /// If enabled this CollisionObject will subscribe to every colliders Collision/ CollisionEnded event and report them.
+    /// </summary>
+    protected readonly bool ReportColliderCollisions;
+    
+    public CollisionObject(bool reportColliderCollisions = false)
     {
+        ReportColliderCollisions = reportColliderCollisions;
         this.Transform = new();
     }
-    public CollisionObject(Vector2 position)
+    public CollisionObject(Vector2 position, bool reportColliderCollisions = false)
     {
+        ReportColliderCollisions = reportColliderCollisions;
         this.Transform = new(position);
     }
-    public CollisionObject(Transform2D transform)
+    public CollisionObject(Transform2D transform, bool reportColliderCollisions = false)
     {
+        ReportColliderCollisions = reportColliderCollisions;
         this.Transform = transform;
     }
 
@@ -63,6 +71,11 @@ public abstract class CollisionObject : PhysicsObject
         {
             col.SetupTransform(Transform);
             col.Parent = this;
+            if (ReportColliderCollisions)
+            {
+                col.OnCollision += ColliderCollision;
+                col.OnCollisionEnded += ColliderCollisionEnded;
+            }
             return true;
         }
         return false;
@@ -72,11 +85,28 @@ public abstract class CollisionObject : PhysicsObject
         if (Colliders.Remove(col))
         {
             col.Parent = null;
+            if (ReportColliderCollisions)
+            {
+                col.OnCollision -= ColliderCollision;
+                col.OnCollisionEnded -= ColliderCollisionEnded;
+            }
             return true;
         }
             
         return false;
     }
+    
+    /// <summary>
+    /// Called when a collider on this CollisionObject reports a collision.
+    /// Only works when ReportColliderCollision is set to true!
+    /// </summary>
+    protected virtual void ColliderCollision(Collider self, CollisionInformation info) { }
+    
+    /// <summary>
+    /// Called when a collider on this CollisionObject reports an ended collision.
+    /// Only works when ReportColliderCollision is set to true!
+    /// </summary>
+    protected virtual void ColliderCollisionEnded(Collider self, Collider other) { }
 
     /// <summary>
     /// Is called when collision object is added to a collision handler.
