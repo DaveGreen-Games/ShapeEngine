@@ -151,6 +151,36 @@ public readonly struct Dimensions : IEquatable<Dimensions>, IFormattable
     {
         return new Dimensions(0) - value;
     }
+    
+    public static Dimensions operator +(Dimensions left, float right)
+    {
+        return new Dimensions(
+            left.Width + right,
+            left.Height + right
+        );
+    }
+    public static Dimensions operator -(Dimensions left, float right)
+    {
+        return new Dimensions(
+            left.Width - right,
+            left.Height - right
+        );
+    }
+    
+    public static Dimensions operator +(Dimensions left, int right)
+    {
+        return new Dimensions(
+            left.Width + right,
+            left.Height + right
+        );
+    }
+    public static Dimensions operator -(Dimensions left, int right)
+    {
+        return new Dimensions(
+            left.Width - right,
+            left.Height - right
+        );
+    }
 
 
     public static Dimensions Abs(Dimensions value)
