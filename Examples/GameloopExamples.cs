@@ -727,11 +727,19 @@ namespace Examples
         {
             var shaderMode = shaders != null ? ShaderSupportType.Multi : ShaderSupportType.None;
             
-            var stretchTexture = new ScreenTexture(shaderMode, TextureFilter.Trilinear);
+            var stretchTexture = new ScreenTexture(shaderMode, TextureFilter.Bilinear);
             var pixelationTexture = new ScreenTexture(0.25f, shaderMode, TextureFilter.Point);
+            
+            //low res
             var fixedTexture = new ScreenTexture(new Dimensions(500, 500), shaderMode, TextureFilter.Point, false);
-            var nearestFixedTexture = new ScreenTexture(new Dimensions(480, 240), shaderMode, TextureFilter.Point, true);
-            var anchorTexture = new ScreenTexture(new Vector2(0.4f, 0.4f), new Vector2(0.05f, 0.5f), shaderMode, TextureFilter.Trilinear);
+            // var nearestFixedTexture = new ScreenTexture(new Dimensions(480, 240), shaderMode, TextureFilter.Point, true);
+            
+            //high res
+            // var fixedTexture = new ScreenTexture(new Dimensions(1920*2, 1080*2), shaderMode, TextureFilter.Bilinear, false); //high res
+            var nearestFixedTexture = new ScreenTexture(new Dimensions(1920*2, 1080*2), shaderMode, TextureFilter.Bilinear, true);
+            
+            
+            var anchorTexture = new ScreenTexture(new Vector2(0.8f, 0.4f), new Vector2(0.05f, 0.5f), shaderMode, TextureFilter.Bilinear);
 
             // stretchTexture.BackgroundColor = new ColorRgba(0, 0, 0, 1);
             // pixelationTexture.BackgroundColor = new ColorRgba(0, 0, 0, 1);
