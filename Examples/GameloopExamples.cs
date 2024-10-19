@@ -96,6 +96,7 @@ namespace Examples
         private readonly uint darknessID = ShapeID.NextID;
         private readonly uint chromaticAberrationID = ShapeID.NextID;
         private readonly uint blurID = ShapeID.NextID;
+        private readonly uint alphaCircleID = ShapeID.NextID;
         private uint currentShaderID;
         
         public ShapeGamepadDevice? CurGamepad = null;
@@ -315,8 +316,14 @@ namespace Examples
                 ShapeShader blurShader = new(blur, blurID, false, 6);
                 ShapeShader.SetValueFloat(blurShader.Shader, "renderWidth", Window.CurScreenSize.Width);
                 ShapeShader.SetValueFloat(blurShader.Shader, "renderHeight", Window.CurScreenSize.Height);
-                // ScreenShaders.Add(blurShader);
                 shapeShaders.Add(blurShader);
+                
+                var alphaCircle = ContentLoader.LoadFragmentShader("Resources/Shaders/AlphaCircle.frag");
+                ShapeShader alphaCircleShader = new(alphaCircle, alphaCircleID, false, 7);
+                ShapeShader.SetValueVector2(alphaCircleShader.Shader, "origin", new Vector2(0f, 0f));
+                ShapeShader.SetValueFloat(alphaCircleShader.Shader, "minDis", 0.25f);
+                ShapeShader.SetValueFloat(alphaCircleShader.Shader, "maxDis", 1f);
+                shapeShaders.Add(alphaCircleShader);
                 
                 var chromaticAberration = ContentLoader.LoadFragmentShader("Resources/Shaders/ChromaticAberrationShader.frag");
                 ShapeShader chromaticAberrationShader = new(chromaticAberration, chromaticAberrationID, false, 7);
@@ -526,6 +533,13 @@ namespace Examples
                     ShapeShader.SetValueVector2(darknessShader.Shader, "origin", game.RelativeMousePosition);
                 }
             
+                // var alphaCircleShader = ScreenShaders.Get(alphaCircleID);
+                // if (alphaCircleShader != null && alphaCircleShader.Enabled)
+                // {
+                //     ShapeShader.SetValueVector2(alphaCircleShader.Shader, "origin", Camera.BaseTransform.Position);
+                // }
+                
+                
                 var overdrawShader = ScreenShaders.Get(overdrawID);
                 if (overdrawShader != null && overdrawShader.Enabled)
                 {
