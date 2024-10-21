@@ -10,7 +10,7 @@
 	<Title>Shape Engine</Title>
 	<Authors>Dave Green</Authors>
 	<RepositoryUrl>https://github.com/DaveGreen-Games/ShapeEngine</RepositoryUrl>
-	<Version>2.2.0</Version>
+	<Version>2.3.0</Version>
 	<Description>My custom made 2d game engine based on the great Raylib Framework. Main focus is being performant and only using draw functions instead of textures. Custom input, audio, savegame, collision, shape, pathfinding, ui, camera, color palette, polygon fracturing, and text system are available with a few other nice things!</Description>
 	<PackageProjectUrl>https://davegreengames.itch.io/shape-engine</PackageProjectUrl>
 	<PackageIcon>shapeengine-nuget-icon-128px.png</PackageIcon>
@@ -25,6 +25,21 @@
   	<Copyright>Copyright (c) David Grueneis 2024</Copyright>
   	<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   	<PackageReleaseNotes>
+		# 2.3.0 Release
+		- ScreenTextures should now properly scale on macOS when an high dpi monitor is used. (Before ScreenTextures in StretchMode would be not as sharp as they should be)
+		- Audio Device Cleanup
+		- Audio Device more overloads for certain functions added
+		- AudioDevice PlaySFX() functions now return bool for success or failure
+		- Playlist improvements
+		- Game class now has a default AudioDevice initialized from the start
+		- ShapeID and IDCounter Reset() and AdvanveTo() functions added
+		- An active Scene now has a reference to the parent Game class that activated the Scene
+		- CollisionObject now can optionally report collision events like ColliderCollision() and ColliderCollisionEnded(). ReportColliderCollision must be set to true!
+		- Transform2d now has a Vector2 Scale2d field. The Scale field stays intact and reports the Scale2d.X value.
+		- Collider received are more advanced collision notification system
+		- Dimensions now have more operators
+		- AlphaCircle shader added to Examples
+		
 		# 2.2.0 Release
 		- Segment Overlap functions fixed.
 		- Quad ContainsPoint function fixed. (typo was the problem)
