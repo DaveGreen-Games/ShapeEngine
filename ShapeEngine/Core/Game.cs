@@ -559,10 +559,13 @@ public class Game
     public void GoToScene(Scene newScene)
     {
         if (newScene == CurScene) return;
+        
         CurScene.ResolveDeactivate();
         CurScene.SetGameReference(null);
-        newScene.ResolveActivate(CurScene);
+        
         newScene.SetGameReference(this);
+        newScene.ResolveActivate(CurScene);
+       
         CurScene = newScene;
     }
 

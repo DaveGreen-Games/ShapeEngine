@@ -10,7 +10,7 @@
 	<Title>Shape Engine</Title>
 	<Authors>Dave Green</Authors>
 	<RepositoryUrl>https://github.com/DaveGreen-Games/ShapeEngine</RepositoryUrl>
-	<Version>2.3.0</Version>
+	<Version>2.3.1</Version>
 	<Description>My custom made 2d game engine based on the great Raylib Framework. Main focus is being performant and only using draw functions instead of textures. Custom input, audio, savegame, collision, shape, pathfinding, ui, camera, color palette, polygon fracturing, and text system are available with a few other nice things!</Description>
 	<PackageProjectUrl>https://davegreengames.itch.io/shape-engine</PackageProjectUrl>
 	<PackageIcon>shapeengine-nuget-icon-128px.png</PackageIcon>
@@ -25,6 +25,9 @@
   	<Copyright>Copyright (c) David Grueneis 2024</Copyright>
   	<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   	<PackageReleaseNotes>
+		# 2.3.1 Hot Fix
+		- Game reference is now set in Scene before Activate is called on the Scene
+		
 		# 2.3.0 Release
 		- ScreenTextures should now properly scale on macOS when an high dpi monitor is used. (Before ScreenTextures in StretchMode would be not as sharp as they should be)
 		- Audio Device Cleanup
