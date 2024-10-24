@@ -1,5 +1,6 @@
 
 using System.Numerics;
+using Raylib_cs;
 using ShapeEngine.Lib;
 
 namespace ShapeEngine.Core.Structs;
@@ -160,6 +161,47 @@ public readonly struct Transform2D : IEquatable<Transform2D>
     #endregion
     
     #region Math
+
+    /// <summary>
+    /// Calculates an absolute transform for a child based on an offset and a parent transform.
+    /// </summary>
+    /// <param name="parentTransform">The absolute transform of the parent.</param>
+    /// <param name="childOffset">The relative offset of the child to the parent.</param>
+    /// <param name="moves">Dictates if the child stays in a fixed location or moves with the parent.</param>
+    /// <param name="rotates">Dictates if the child rotates with the parent.</param>
+    /// <param name="scales">Dictates if the child scales with the parent.</param>
+    /// <returns>The absolute transform based on the parent transform and the child offset.</returns>
+    public static Transform2D UpdateTransform(Transform2D parentTransform, Transform2D childOffset, bool moves = true, bool rotates = true, bool scales = true)
+    {
+        var rot = rotates ? parentTransform.RotationRad + childOffset.RotationRad : childOffset.RotationRad;
+        var size = scales ? parentTransform.BaseSize + childOffset.BaseSize : childOffset.BaseSize;
+        var scale = scales ? parentTransform.Scale2d * childOffset.Scale2d : childOffset.Scale2d;
+        if (moves)
+        {
+            if (childOffset.Position.LengthSquared() <= 0) return new(parentTransform.Position, rot, size, scale);
+            
+            var pos = parentTransform.Position + childOffset.Position.Rotate(rot) * scale;
+            return new(pos, rot, size, scale);
+        }
+        return new(childOffset.Position, rot, size, scale);
+    }
+    
+    /// <summary>
+    /// Gets a relative transform (offset) and turns it into an absolute transform to be used by the child.
+    /// </summary>
+    /// <param name="childOffset">The relative offset of the child to the parent.</param>
+    /// <returns>The absolute transform based on the parent transform and the child offset.</returns>
+    public Transform2D GetChildTransform(Transform2D childOffset)
+    {
+        var rot = RotationRad + childOffset.RotationRad;
+        var size = BaseSize + childOffset.BaseSize;
+        var scale = Scale2d * childOffset.Scale2d ;
+        if (childOffset.Position.LengthSquared() <= 0) return new(Position, rot, size, scale);
+        
+        var pos = Position + childOffset.Position.Rotate(rot) * scale;
+        return new(pos, rot, size, scale);
+    }
+  
     public Vector2 RevertPosition(Vector2 position)
     {
         var w = (position - Position).Rotate(-RotationRad) / ScaledSize.Length;
