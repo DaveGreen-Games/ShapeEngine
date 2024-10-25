@@ -199,23 +199,8 @@ namespace ShapeEngine.Core.Collision
         internal void UpdateTransform(Transform2D parentTransform)
         {
             PrevTransform = CurTransform;
+            
             CurTransform = Transform2D.UpdateTransform(parentTransform, Offset, Moves, Rotates, Scales);
-            // var rot = Rotates ? parentTransform.RotationRad + Offset.RotationRad : Offset.RotationRad;
-            // var size = Scales ? parentTransform.BaseSize + Offset.BaseSize : Offset.BaseSize;
-            // var scale = Scales ? parentTransform.Scale2d * Offset.Scale2d : Offset.Scale2d;
-            // if (Moves)
-            // {
-            //     if (Offset.Position.LengthSquared() <= 0) CurTransform = new(parentTransform.Position, rot, size, scale);
-            //     else
-            //     {
-            //         var pos = parentTransform.Position + Offset.Position.Rotate(rot) * scale;
-            //         CurTransform = new(pos, rot, size, scale);
-            //     }
-            // }
-            // else
-            // {
-            //     CurTransform = new(Offset.Position, rot, size, scale);
-            // }
 
             UpdateColliderShape(PrevTransform != CurTransform);
         }
