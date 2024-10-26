@@ -261,11 +261,11 @@ public class Segments : ShapeList<Segment>
         }
     }
 
-    public void ApplyTransform(Transform2D transform, float originF = 0.5f)
+    public void ApplyOffset(Transform2D offset, float originF = 0.5f)
     {
         for (var i = 0; i < Count; i++)
         {
-            this[i] = this[i].ApplyTransform(transform, originF);
+            this[i] = this[i].ApplyOffset(offset, originF);
         }
     }
     public void SetTransform(Transform2D transform, float originF = 0.5f)
@@ -364,12 +364,12 @@ public class Segments : ShapeList<Segment>
         return newSegments;
     }
 
-    public Segments ApplyTransformCopy(Transform2D transform, float originF = 0.5f)
+    public Segments ApplyOffsetCopy(Transform2D offset, float originF = 0.5f)
     {
         var newSegments = new Segments(Count);
         for (var i = 0; i < Count; i++)
         {
-            newSegments.Add(this[i].ApplyTransform(transform, originF));
+            newSegments.Add(this[i].ApplyOffset(offset, originF));
         }
 
         return newSegments;
