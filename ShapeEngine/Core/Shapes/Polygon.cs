@@ -681,23 +681,25 @@ namespace ShapeEngine.Core.Shapes
 
         }
 
+       
         public new Polygon? SetTransformCopy(Transform2D transform, Vector2 origin)
         {
             if (Count < 3) return null;
             var newPolygon = SetPositionCopy(transform.Position);
             if (newPolygon == null) return null;
             newPolygon.SetRotation(transform.RotationRad, origin);
-            newPolygon.SetSize(transform.ScaledSize.Width, origin);
+            newPolygon.SetSize(transform.ScaledSize.Length, origin);
             return newPolygon;
         }
-        public new Polygon? ApplyTransformCopy(Transform2D transform, Vector2 origin)
+        
+        public new Polygon? ApplyOffsetCopy(Transform2D offset, Vector2 origin)
         {
             if (Count < 3) return null;
             
-            var newPolygon = ChangePositionCopy(transform.Position);
+            var newPolygon = ChangePositionCopy(offset.Position);
             if (newPolygon == null) return null;
-            newPolygon.ChangeRotation(transform.RotationRad, origin);
-            newPolygon.ChangeSize(transform.ScaledSize.Width, origin);
+            newPolygon.ChangeRotation(offset.RotationRad, origin);
+            newPolygon.ChangeSize(offset.ScaledSize.Length, origin);
             return newPolygon;
         }
         

@@ -492,24 +492,41 @@ namespace ShapeEngine.Core.Shapes
             return ChangePosition(delta);
         }
 
+        
         /// <summary>
         /// Moves the triangle by transform.Position
         /// Rotates the moved triangle by transform.RotationRad
         /// Changes the size of the rotated triangle by transform.Size.Width!
         /// </summary>
-        /// <param name="transform"></param>
+        /// <param name="offset"></param>
         /// <returns></returns>
-        public Triangle ApplyTransform(Transform2D transform)
+        public Triangle ApplyOffset(Transform2D offset)
         {
-            var newTriangle = ChangePosition(transform.Position);
-            newTriangle = newTriangle.ChangeRotation(transform.RotationRad);
-            return newTriangle.ChangeSize(transform.BaseSize.Width);
+            var newTriangle = ChangePosition(offset.Position);
+            newTriangle = newTriangle.ChangeRotation(offset.RotationRad);
+            return newTriangle.ChangeSize(offset.ScaledSize.Length);
         }
+        
+        /// <summary>
+        /// Moves the triangle by transform.Position
+        /// Rotates the moved triangle by transform.RotationRad
+        /// Changes the size of the rotated triangle by transform.Size.Width!
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="origin"></param>
+        /// <returns></returns>
+        public Triangle ApplyOffset(Transform2D offset, Vector2 origin)
+        {
+            var newTriangle = ChangePosition(offset.Position);
+            newTriangle = newTriangle.ChangeRotation(offset.RotationRad, origin);
+            return newTriangle.ChangeSize(offset.ScaledSize.Length, origin);
+        }
+        
         
         /// <summary>
         /// Moves the triangle to transform.Position
         /// Rotates the moved triangle to transform.RotationRad
-        /// Sets the size of the rotated triangle to transform.Size.Width
+        /// Sets the size of the rotated triangle to transform.ScaledSize.Length
         /// </summary>
         /// <param name="transform"></param>
         /// <returns></returns>
@@ -517,28 +534,13 @@ namespace ShapeEngine.Core.Shapes
         {
             var newTriangle = SetPosition(transform.Position);
             newTriangle = newTriangle.SetRotation(transform.RotationRad);
-            return newTriangle.SetSize(transform.BaseSize.Width);
-        }
-        
-        /// <summary>
-        /// Moves the triangle by transform.Position
-        /// Rotates the moved triangle by transform.RotationRad
-        /// Changes the size of the rotated triangle by transform.Size.Width!
-        /// </summary>
-        /// <param name="transform"></param>
-        /// <param name="origin"></param>
-        /// <returns></returns>
-        public Triangle ApplyTransform(Transform2D transform, Vector2 origin)
-        {
-            var newTriangle = ChangePosition(transform.Position);
-            newTriangle = newTriangle.ChangeRotation(transform.RotationRad, origin);
-            return newTriangle.ChangeSize(transform.BaseSize.Width, origin);
+            return newTriangle.SetSize(transform.ScaledSize.Length);
         }
         
         /// <summary>
         /// Moves the triangle to transform.Position
         /// Rotates the moved triangle to transform.RotationRad
-        /// Sets the size of the rotated triangle to transform.Size.Width
+        /// Sets the size of the rotated triangle to transform.ScaledSize.Length
         /// </summary>
         /// <param name="transform"></param>
         /// <param name="origin"></param>
@@ -547,7 +549,7 @@ namespace ShapeEngine.Core.Shapes
         {
             var newTriangle = SetPosition(transform.Position, origin);
             newTriangle = newTriangle.SetRotation(transform.RotationRad, origin);
-            return newTriangle.SetSize(transform.BaseSize.Width, origin);
+            return newTriangle.SetSize(transform.ScaledSize.Length, origin);
         }
 
         #endregion

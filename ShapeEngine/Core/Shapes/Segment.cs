@@ -323,14 +323,14 @@ namespace ShapeEngine.Core.Shapes
         /// Rotates the moved segment by transform.RotationRad
         /// Changes length of the rotated segment by transform.Size.Width!
         /// </summary>
-        /// <param name="transform"></param>
+        /// <param name="offset"></param>
         /// <param name="originF"></param>
         /// <returns></returns>
-        public Segment ApplyTransform(Transform2D transform, float originF = 0.5f)
+        public Segment ApplyOffset(Transform2D offset, float originF = 0.5f)
         {
-            var newSegment = ChangePosition(transform.Position, originF);
-            newSegment = newSegment.ChangeRotation(transform.RotationRad, originF);
-            return newSegment.ChangeLength(transform.BaseSize.Width, originF);
+            var newSegment = ChangePosition(offset.Position, originF);
+            newSegment = newSegment.ChangeRotation(offset.RotationRad, originF);
+            return newSegment.ChangeLength(offset.ScaledSize.Length, originF);
         }
 
         /// <summary>
@@ -345,7 +345,7 @@ namespace ShapeEngine.Core.Shapes
         {
             var newSegment = SetPosition(transform.Position, originF);
             newSegment = newSegment.SetRotation(transform.RotationRad, originF);
-            return newSegment.SetLength(transform.BaseSize.Width, originF);
+            return newSegment.SetLength(transform.ScaledSize.Length, originF);
         }
 
         #endregion

@@ -263,11 +263,11 @@ public class Triangulation : ShapeList<Triangle>
         }
     }
 
-    public void ApplyTransform(Transform2D transform, Vector2 origin)
+    public void ApplyOffset(Transform2D offset, Vector2 origin)
     {
         for (var i = 0; i < Count; i++)
         {
-            this[i] = this[i].ApplyTransform(transform, origin);
+            this[i] = this[i].ApplyOffset(offset, origin);
         }
     }
     public void SetTransform(Transform2D transform, Vector2 origin)
@@ -423,14 +423,14 @@ public class Triangulation : ShapeList<Triangle>
         return newTriangulation;
     }
 
-    public Triangulation ApplyTransformCopy(Transform2D transform, Vector2 origin)
+    public Triangulation ApplyOffsetCopy(Transform2D offset, Vector2 origin)
     {
         var newTriangulation = new Triangulation(Count);
         for (var i = 0; i < Count; i++)
         {
-            newTriangulation.Add(this[i].ApplyTransform(transform, origin));
+            newTriangulation.Add(this[i].ApplyOffset(offset, origin));
         }
-
+    
         return newTriangulation;
     }
     public Triangulation SetTransformCopy(Transform2D transform, Vector2 origin)

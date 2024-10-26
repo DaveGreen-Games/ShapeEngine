@@ -399,17 +399,17 @@ namespace ShapeEngine.Core.Shapes
             var newPolyline = SetPositionCopy(transform.Position);
             if (newPolyline == null) return null;
             newPolyline.SetRotation(transform.RotationRad, origin);
-            newPolyline.SetSize(transform.ScaledSize.Width, origin);
+            newPolyline.SetSize(transform.ScaledSize.Length, origin);
             return newPolyline;
         }
-        public new Polyline? ApplyTransformCopy(Transform2D transform, Vector2 origin)
+        public new Polyline? ApplyOffsetCopy(Transform2D offset, Vector2 origin)
         {
             if (Count < 2) return null;
             
-            var newPolyline = ChangePositionCopy(transform.Position);
+            var newPolyline = ChangePositionCopy(offset.Position);
             if (newPolyline == null) return null;
-            newPolyline.ChangeRotation(transform.RotationRad, origin);
-            newPolyline.ChangeSize(transform.ScaledSize.Width, origin);
+            newPolyline.ChangeRotation(offset.RotationRad, origin);
+            newPolyline.ChangeSize(offset.ScaledSize.Length, origin);
             return newPolyline;
         }
         

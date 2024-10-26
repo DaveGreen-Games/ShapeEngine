@@ -259,13 +259,13 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
     {
         SetPosition(transform.Position, origin);
         SetRotation(transform.RotationRad, origin);
-        SetSize(transform.BaseSize.Width, origin);
+        SetSize(transform.ScaledSize.Length, origin);
     }
-    public void ApplyTransform(Transform2D transform, Vector2 origin)
+    public void ApplyOffset(Transform2D offset, Vector2 origin)
     {
-        ChangePosition(transform.Position);
-        ChangeRotation(transform.RotationRad, origin);
-        ChangeSize(transform.BaseSize.Width, origin);
+        ChangePosition(offset.Position);
+        ChangeRotation(offset.RotationRad, origin);
+        ChangeSize(offset.ScaledSize.Length, origin);
         
     }
     
@@ -368,17 +368,17 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
         var newPoints = SetPositionCopy(transform.Position, origin);
         if (newPoints == null) return null;
         newPoints.SetRotation(transform.RotationRad, origin);
-        newPoints.SetSize(transform.BaseSize.Width, origin);
+        newPoints.SetSize(transform.ScaledSize.Length, origin);
         return newPoints;
     }
-    public Points? ApplyTransformCopy(Transform2D transform, Vector2 origin)
+    public Points? ApplyOffsetCopy(Transform2D offset, Vector2 origin)
     {
         if (Count < 3) return null;
         
-        var newPoints = ChangePositionCopy(transform.Position);
+        var newPoints = ChangePositionCopy(offset.Position);
         if (newPoints == null) return null;
-        newPoints.ChangeRotation(transform.RotationRad, origin);
-        newPoints.ChangeSize(transform.BaseSize.Width, origin);
+        newPoints.ChangeRotation(offset.RotationRad, origin);
+        newPoints.ChangeSize(offset.ScaledSize.Length, origin);
         return newPoints;
     }
     

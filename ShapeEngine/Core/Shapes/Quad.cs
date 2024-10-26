@@ -456,13 +456,13 @@ public readonly struct Quad : IEquatable<Quad>
     /// Rotates the moved quad by transform.RotationRad
     /// Changes the size of the rotated quad by transform.Size!
     /// </summary>
-    /// <param name="transform"></param>
+    /// <param name="offset"></param>
     /// <returns></returns>
-    public Quad ApplyTransform(Transform2D transform)
+    public Quad ApplyOffset(Transform2D offset)
     {
-        var newQuad = ChangePosition(transform.Position);
-        newQuad = newQuad.ChangeRotation(transform.RotationRad);
-        return newQuad.ChangeSize(transform.BaseSize.Width);
+        var newQuad = ChangePosition(offset.Position);
+        newQuad = newQuad.ChangeRotation(offset.RotationRad);
+        return newQuad.ChangeSize(offset.ScaledSize.Length);
     }
     
     /// <summary>
@@ -476,7 +476,7 @@ public readonly struct Quad : IEquatable<Quad>
     {
         var newQuad = SetPosition(transform.Position);
         newQuad = newQuad.SetRotation(transform.RotationRad);
-        return newQuad.SetSize(transform.BaseSize.Width);
+        return newQuad.SetSize(transform.ScaledSize.Length);
     }
     
     /// <summary>
@@ -484,14 +484,14 @@ public readonly struct Quad : IEquatable<Quad>
     /// Rotates the moved quad by transform.RotationRad
     /// Changes the size of the rotated quad by transform.Size.Width!
     /// </summary>
-    /// <param name="transform"></param>
+    /// <param name="offset"></param>
     /// <param name="alignement"></param>
     /// <returns></returns>
-    public Quad ApplyTransform(Transform2D transform, AnchorPoint alignement)
+    public Quad ApplyOffset(Transform2D offset, AnchorPoint alignement)
     {
-        var newQuad = ChangePosition(transform.Position);
-        newQuad = newQuad.ChangeRotation(transform.RotationRad, alignement);
-        return newQuad.ChangeSize(transform.BaseSize.Width, alignement);
+        var newQuad = ChangePosition(offset.Position);
+        newQuad = newQuad.ChangeRotation(offset.RotationRad, alignement);
+        return newQuad.ChangeSize(offset.ScaledSize.Length, alignement);
     }
     
     /// <summary>
@@ -506,7 +506,7 @@ public readonly struct Quad : IEquatable<Quad>
     {
         var newQuad = SetPosition(transform.Position, alignement);
         newQuad = newQuad.SetRotation(transform.RotationRad, alignement);
-        return newQuad.SetSize(transform.BaseSize.Width, alignement);
+        return newQuad.SetSize(transform.ScaledSize.Length, alignement);
     }
     
     

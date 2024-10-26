@@ -32,6 +32,7 @@ namespace ShapeEngine.Core.Shapes
         public Circle(Circle c, float radius) { Center = c.Center; Radius = radius;}
         public Circle(Circle c, Vector2 center) { Center = center; Radius = c.Radius; }
         public Circle(Rect r) { Center = r.Center; Radius = MathF.Max(r.Width, r.Height); }
+        public Circle(Transform2D transform) { Center = transform.Position; Radius = transform.ScaledSize.Radius; }
         #endregion
 
         #region Equality & Hashcode
@@ -254,28 +255,32 @@ namespace ShapeEngine.Core.Shapes
         public Circle ChangePosition(float x, float y) => this + new Vector2(x, y);
         public Circle SetPosition(Vector2 position) => new Circle(position, Radius);
         
+        
+        
+        // public Transform2D GetOffset() => new Transform2D(Center, 0f, new Size(Radius, Radius), new Vector2(1f, 1f));
+        
         /// <summary>
-        /// Moves the circle by transform.Position
-        /// Changes the radius of the moved circle by transform.Size.Width!
+        /// Moves the circle by offset.Position
+        /// Changes the radius of the moved circle by transform.ScaledSize.Radius!
         /// </summary>
-        /// <param name="transform"></param>
+        /// <param name="offset"></param>
         /// <returns></returns>
-        public Circle ApplyTransform(Transform2D transform)
+        public Circle ApplyOffset(Transform2D offset)
         {
-            var newCircle = ChangePosition(transform.Position);
-            return newCircle.ChangeRadius(transform.BaseSize.Width);
+            var newCircle = ChangePosition(offset.Position);
+            return newCircle.ChangeRadius(offset.ScaledSize.Radius);
         }
 
         /// <summary>
         /// Moves the circle to transform.Position
-        /// Set the radius of the moved circle to transform.Size.Width!
+        /// Set the radius of the moved circle to ScaledSize.Radius.
         /// </summary>
         /// <param name="transform"></param>
         /// <returns></returns>
         public Circle SetTransform(Transform2D transform)
         {
             var newCircle = SetPosition(transform.Position);
-            return newCircle.SetRadius(transform.BaseSize.Width);
+            return newCircle.SetRadius(transform.ScaledSize.Radius);
         }
 
 

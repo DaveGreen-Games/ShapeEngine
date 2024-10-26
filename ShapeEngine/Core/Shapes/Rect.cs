@@ -915,16 +915,16 @@ public readonly struct Rect : IEquatable<Rect>
     
     
     /// <summary>
-    /// Moves the rect by transform.Position
-    /// Changes the size of the moved rect by transform.Size
+    /// Moves the rect by offset.Position
+    /// Changes the size of the moved rect by offset.ScaledSize
     /// </summary>
-    /// <param name="transform"></param>
+    /// <param name="offset"></param>
     /// <param name="alignement"></param>
     /// <returns></returns>
-    public Rect ApplyTransform(Transform2D transform, AnchorPoint alignement)
+    public Rect ApplyOffset(Transform2D offset, AnchorPoint alignement)
     {
-        var newQuad = ChangePosition(transform.Position);
-        return newQuad.ChangeSize(transform.BaseSize, alignement);
+        var newRect = ChangePosition(offset.Position);
+        return newRect.ChangeSize(offset.ScaledSize, alignement);
     }
     
     /// <summary>
@@ -936,8 +936,8 @@ public readonly struct Rect : IEquatable<Rect>
     /// <returns></returns>
     public Rect SetTransform(Transform2D transform, AnchorPoint alignement)
     {
-        var newQuad = SetPosition(transform.Position, alignement);
-        return newQuad.SetSize(transform.BaseSize, alignement);
+        var newRect = SetPosition(transform.Position, alignement);
+        return newRect.SetSize(transform.BaseSize, alignement);
     }
 
     #endregion
