@@ -5,13 +5,13 @@ namespace ShapeEngine.Core.Collision;
 public interface IShape
 {
     public ShapeType GetShapeType();
-    public Circle GetCircleShape() => new();
-    public Segment GetSegmentShape() => new();
-    public Triangle GetTriangleShape() => new();
-    public Quad GetQuadShape() => new();
-    public Rect GetRectShape() => new();
-    public Polygon GetPolygonShape() => new();
-    public Polyline GetPolylineShape() => new();
+    public Circle GetCircleShape();
+    public Segment GetSegmentShape();
+    public Triangle GetTriangleShape();
+    public Quad GetQuadShape();
+    public Rect GetRectShape();
+    public Polygon GetPolygonShape();
+    public Polyline GetPolylineShape();
 
     // #region Overlap
     //

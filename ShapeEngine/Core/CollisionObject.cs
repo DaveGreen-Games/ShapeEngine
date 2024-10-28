@@ -69,7 +69,7 @@ public abstract class CollisionObject : PhysicsObject
         
         if (Colliders.Add(col))
         {
-            col.SetupTransform(Transform);
+            col.InitializeShape(Transform);
             col.Parent = this;
             if (ReportColliderCollisions)
             {
@@ -152,8 +152,7 @@ public abstract class CollisionObject : PhysicsObject
             {
                 throw new WarningException("Collision Object tried to update collider with different parent!");
             }
-            collider.UpdateTransform(trans);
-            collider.Update(time.Delta);
+            collider.UpdateShape(time.Delta, trans);
             OnColliderUpdated(collider);
         }
         OnColliderUpdateFinished();

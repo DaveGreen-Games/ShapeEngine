@@ -46,17 +46,17 @@ public class CircleSectorCollider : Collider
 
     }
 
-    protected override void OnTransformSetupFinished()
+    protected override void OnInitialized()
     {
         CalculatePoints();
     }
 
-    public override void Recalculate()
+    public override void RecalculateShape()
     {
         CalculatePoints();
     }
 
-    protected override void UpdateColliderShape(bool transformChanged)
+    protected override void OnShapeTransformChanged(bool transformChanged)
     {
         if(transformChanged || dirty) CalculatePoints();
     }

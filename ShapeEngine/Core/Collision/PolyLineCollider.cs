@@ -22,12 +22,12 @@ public class PolyLineCollider : Collider
     }
     
 
-    protected override void OnTransformSetupFinished()
+    protected override void OnInitialized()
     {
-        Recalculate();
+        RecalculateShape();
     }
 
-    public override void Recalculate()
+    public override void RecalculateShape()
     {
         for (int i = 0; i < RelativeShape.Count; i++)
         {
@@ -43,10 +43,10 @@ public class PolyLineCollider : Collider
         }
     }
 
-    protected override void UpdateColliderShape(bool transformChanged)
+    protected override void OnShapeTransformChanged(bool transformChanged)
     {
         if (!transformChanged) return;
-        Recalculate();
+        RecalculateShape();
     }
 
 

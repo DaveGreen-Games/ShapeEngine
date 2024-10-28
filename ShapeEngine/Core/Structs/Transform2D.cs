@@ -1,10 +1,11 @@
 
 using System.Numerics;
 using Raylib_cs;
+using ShapeEngine.Core.Collision;
+using ShapeEngine.Core.Shapes;
 using ShapeEngine.Lib;
 
 namespace ShapeEngine.Core.Structs;
-
 
 public interface ITransformHierarchyObject
 {
@@ -68,6 +69,7 @@ public readonly struct Transform2D : IEquatable<Transform2D>
     
     public float RotationDeg => RotationRad * ShapeMath.RADTODEG;
     public Vector2 GetDirection() => ShapeVec.VecFromAngleRad(RotationRad);
+    public bool IsEmpty() => Position == Vector2.Zero && RotationRad == 0f && BaseSize == Size.Zero;
     #endregion
     
     #region Constructors
@@ -546,3 +548,39 @@ public readonly struct Transform2D : IEquatable<Transform2D>
     public override int GetHashCode() => HashCode.Combine(Position, RotationRad, BaseSize, Scale2d);
     #endregion
 }
+
+
+/*
+public abstract class ShapeContainer2<T>(Transform2D offset, T shape)
+{
+    public Transform2D Offset = offset;
+    public readonly T Shape = shape;
+    public Transform2D CurTransform = new();
+
+    public Transform2D ApplyTransform(Transform2D parentTransform)
+    {
+        CurTransform = Transform2D.UpdateTransform(parentTransform, Offset);
+        return CurTransform;
+    }
+}
+
+public abstract class ShapeContainer : IShape
+{
+    public Transform2D Offset;
+    public Transform2D CurTransform;
+    
+    
+    
+    public abstract ShapeType GetShapeType();
+    public virtual Circle GetCircleShape() => new();
+    public virtual Segment GetSegmentShape() => new();
+    public virtual Triangle GetTriangleShape() => new();
+    public virtual Quad GetQuadShape() => new();
+    public virtual Rect GetRectShape() => new();
+    public virtual Polygon GetPolygonShape() => new();
+    public virtual Polyline GetPolylineShape() => new();
+    
+}*/
+
+
+
