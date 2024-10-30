@@ -195,7 +195,58 @@ public abstract class ShapeContainer : Shape
     #endregion
 }
 
-//TODO add CircleShape, SegmentShape, TriangleShape, RectShape, QuadShape, PolyShape, PolylineShape
+public class CircleShape : ShapeContainer
+{
+    
+    public override ShapeType GetShapeType() => ShapeType.Circle;
+    public override Circle GetCircleShape() => new(CurTransform.Position, CurTransform.ScaledSize.Radius);
+    
+    
+    //make virtual instead of abstract in shape container!!!
+    public override void RecalculateShape() { }
+    protected override void OnInitialized() { }
+    protected override void OnUpdate(float dt) { }
+    protected override void OnDraw() { }
+    
+    protected override void OnChildInitialized(ShapeContainer child) { }
+    protected override void OnChildUpdated(ShapeContainer child) { }
+    protected override void OnChildDrawn(ShapeContainer child) { }
+    
+    protected override void OnUpdateFinished() { }
+    protected override void OnDrawFinished() { }
+
+    protected override void OnAddedToParent(ShapeContainer parent) { }
+    protected override void OnRemovedFromParent(ShapeContainer parent) { }
+    
+}
+
+/*
+public class SegmentShape : ShapeContainer
+{
+    
+}
+public class TriangleShape : ShapeContainer
+{
+    
+}
+public class RectShape : ShapeContainer
+{
+    
+}
+public class QuadShape : ShapeContainer
+{
+    
+}
+public class PolyShape : ShapeContainer
+{
+    
+}
+public class PolylineShape : ShapeContainer
+{
+    
+}
+*/
+
 
 public abstract class Collider : Shape
 {
