@@ -2,9 +2,14 @@
 using System.Numerics;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Lib;
 
 
 namespace ShapeEngine.Core.Collision;
+
+
+//a way to change absolute position/size of a child
+//calculates offset based on cur transform and new absolute transform!!!
 
 public abstract class Shape : IShape
 {
@@ -31,14 +36,14 @@ public abstract class Shape : IShape
     }
 
 
-    public abstract void InitializeShape(Transform2D parentTransform);
-    public abstract void UpdateShape(float dt, Transform2D parentTransform);
-    public abstract void DrawShape();
-    public abstract void RecalculateShape();
+    public virtual void InitializeShape(Transform2D parentTransform) { }
+    public virtual void UpdateShape(float dt, Transform2D parentTransform)  { }
+    public virtual void DrawShape()  { }
+    public virtual void RecalculateShape() { }
     
-    protected abstract void OnInitialized();
-    protected abstract void OnUpdate(float dt);
-    protected abstract void OnDraw();
+    protected virtual void OnInitialized() { }
+    protected virtual void OnUpdate(float dt) { }
+    protected virtual void OnDraw() { }
     
     
     /// <summary>
@@ -182,70 +187,327 @@ public abstract class ShapeContainer : Shape
 
     #region Protected Functions
 
-    protected abstract void OnChildInitialized(ShapeContainer child);
-    protected abstract void OnChildUpdated(ShapeContainer child);
-    protected abstract void OnChildDrawn(ShapeContainer child);
+    protected virtual void OnChildInitialized(ShapeContainer child) { }
+    protected virtual void OnChildUpdated(ShapeContainer child) { }
+    protected virtual void OnChildDrawn(ShapeContainer child) { }
     
-    protected abstract void OnUpdateFinished();
-    protected abstract void OnDrawFinished();
+    protected virtual void OnUpdateFinished() { }
+    protected virtual void OnDrawFinished() { }
     
-    protected abstract void OnAddedToParent(ShapeContainer parent);
-    protected abstract void OnRemovedFromParent(ShapeContainer parent);
+    protected virtual void OnAddedToParent(ShapeContainer parent) { }
+    protected virtual void OnRemovedFromParent(ShapeContainer parent) { }
     
     #endregion
 }
 
 public class CircleShape : ShapeContainer
 {
+    public float Radius => CurTransform.ScaledSize.Radius;
+    public Vector2 Center => CurTransform.Position;
     
+    public CircleShape(Transform2D offset)
+    {
+        Offset = offset;
+    }
     public override ShapeType GetShapeType() => ShapeType.Circle;
     public override Circle GetCircleShape() => new(CurTransform.Position, CurTransform.ScaledSize.Radius);
     
-    
-    //make virtual instead of abstract in shape container!!!
-    public override void RecalculateShape() { }
-    protected override void OnInitialized() { }
-    protected override void OnUpdate(float dt) { }
-    protected override void OnDraw() { }
-    
-    protected override void OnChildInitialized(ShapeContainer child) { }
-    protected override void OnChildUpdated(ShapeContainer child) { }
-    protected override void OnChildDrawn(ShapeContainer child) { }
-    
-    protected override void OnUpdateFinished() { }
-    protected override void OnDrawFinished() { }
-
-    protected override void OnAddedToParent(ShapeContainer parent) { }
-    protected override void OnRemovedFromParent(ShapeContainer parent) { }
-    
 }
-
-/*
 public class SegmentShape : ShapeContainer
 {
+    private Vector2 dir;
+    private float originOffset = 0f;
+    
+    /// <summary>
+    /// 0 Start = Position / 0.5 Center = Position / 1 End = Position
+    /// </summary>
+    public float OriginOffset
+    {
+        get => originOffset;
+        set
+        {
+            originOffset = ShapeMath.Clamp(value, 0f, 1f);
+            RecalculateShape();
+        } 
+    }
+    public Vector2 Dir
+    {
+        get => dir;
+        set
+        {
+            if (dir.LengthSquared() <= 0f) return;
+            dir = value;
+            RecalculateShape();
+        }
+    }
+    
+    public Vector2 Start { get; private set; }
+    public Vector2 End { get; private set; }
+        
+    public Vector2 Center => (Start + End) * 0.5f;
+        
+    public Vector2 Displacement => End - Start;
+    
+    public SegmentShape(Transform2D offset, Vector2 dir, float originOffset = 0f)
+    {
+        this.Offset = offset;
+        this.dir = dir;
+        this.originOffset = originOffset;
+    }
+    
+    public override ShapeType GetShapeType() => ShapeType.Segment;
+    public override Circle GetCircleShape() => new(CurTransform.Position, CurTransform.ScaledSize.Radius);
+
+
+    public override void RecalculateShape()
+    {
+        Start = CurTransform.Position - (Dir * OriginOffset * CurTransform.ScaledSize.Length).Rotate(CurTransform.RotationRad);
+        End = CurTransform.Position + (Dir * (1f - OriginOffset) * CurTransform.ScaledSize.Length).Rotate(CurTransform.RotationRad);
+    }
+    protected override void OnInitialized()
+    {
+        RecalculateShape();
+    }
     
 }
 public class TriangleShape : ShapeContainer
 {
+    public Vector2 ARelative { get; set; }
+    public Vector2 BRelative { get; set; }
+    public Vector2 CRelative { get; set; }
     
+    public Vector2 AAbsolute => CurTransform.Position + (ARelative * CurTransform.ScaledSize.Length).Rotate(CurTransform.RotationRad);
+    public Vector2 BAbsolute => CurTransform.Position + (BRelative * CurTransform.ScaledSize.Length).Rotate(CurTransform.RotationRad);
+    public Vector2 CAbsolute => CurTransform.Position + (CRelative * CurTransform.ScaledSize.Length).Rotate(CurTransform.RotationRad);
+
+    /// <summary>
+    /// Relative points should be in range -1 to 1 on x & y axis!
+    /// </summary>
+    public TriangleShape(Transform2D offset, List<Vector2> relativePoints)
+    {
+        Offset = offset;
+        
+        if (relativePoints.Count <= 0)
+        {
+            ARelative = new();
+            BRelative = new();
+            CRelative = new();
+        }
+        else if (relativePoints.Count == 1)
+        {
+            ARelative = relativePoints[0];
+            BRelative = new();
+            CRelative = new();
+        }
+        else if (relativePoints.Count == 2)
+        {
+            ARelative = relativePoints[0];
+            BRelative = relativePoints[1];
+            CRelative = new();
+        }
+        else
+        {
+            ARelative = relativePoints[0];
+            BRelative = relativePoints[1];
+            CRelative = relativePoints[2];
+        }
+        
+    }
+    
+    /// <summary>
+    /// Relative points should be in range -1 to 1 on x & y axis!
+    /// </summary>
+    public TriangleShape(Transform2D offset, Vector2[] relativePoints)
+    {
+        Offset = offset;
+        if (relativePoints.Length <= 0)
+        {
+            ARelative = new();
+            BRelative = new();
+            CRelative = new();
+        }
+        else if (relativePoints.Length == 1)
+        {
+            ARelative = relativePoints[0];
+            BRelative = new();
+            CRelative = new();
+        }
+        else if (relativePoints.Length == 2)
+        {
+            ARelative = relativePoints[0];
+            BRelative = relativePoints[1];
+            CRelative = new();
+        }
+        else
+        {
+            ARelative = relativePoints[0];
+            BRelative = relativePoints[1];
+            CRelative = relativePoints[2];
+        }
+    }
+    
+    /// <summary>
+    /// Relative points should be in range -1 to 1 on x & y axis!
+    /// </summary>
+    public TriangleShape(Transform2D offset, Vector2 relA, Vector2 relB, Vector2 relC)
+    {
+        Offset = offset;
+        ARelative = relA;
+        BRelative = relB;
+        CRelative = relC;
+    }
+
+    public override ShapeType GetShapeType() => ShapeType.Triangle;
+    public override Triangle GetTriangleShape() => new(AAbsolute, BAbsolute, CAbsolute);
 }
 public class RectShape : ShapeContainer
 {
+    public AnchorPoint Alignement { get; set; }
+        
+    public RectShape(Transform2D offset)
+    {
+        Offset = offset;
+        Alignement = new();
+    }
+    public RectShape(Transform2D offset, AnchorPoint alignement)
+    {
+        Offset = offset;
+        Alignement = alignement;
+    }
     
+    public override ShapeType GetShapeType() => ShapeType.Rect;
+    public override Rect GetRectShape() => new(CurTransform.Position, CurTransform.ScaledSize, Alignement);
 }
 public class QuadShape : ShapeContainer
 {
+    public AnchorPoint Alignement { get; set; }
     
+    public QuadShape(Transform2D offset)
+    {
+        Offset = offset;
+        this.Alignement = new();
+    }
+    public QuadShape(Transform2D offset, AnchorPoint alignement)
+    {
+        Offset = offset;
+        this.Alignement = alignement;
+    }
+    public override ShapeType GetShapeType() => ShapeType.Quad;
+    public override Quad GetQuadShape() => new Quad(CurTransform.Position, CurTransform.ScaledSize, CurTransform.RotationRad, Alignement);
 }
 public class PolyShape : ShapeContainer
 {
+    public Polygon RelativeShape;
+    private readonly Polygon shape;
     
+   
+    public PolyShape(Transform2D offset, Points relativePoints)
+    {
+        Offset = offset;
+        RelativeShape = relativePoints.ToPolygon();
+        shape = new(RelativeShape.Count);
+
+    }
+    public PolyShape(Transform2D offset, Polygon relativePoints)
+    {
+        Offset = offset;
+        RelativeShape = relativePoints;
+        shape = new(RelativeShape.Count);
+    }
+    public PolyShape(Transform2D offset, Segment s, float inflation, float alignement = 0.5f)
+    {
+        Offset = offset;
+        shape = s.Inflate(inflation, alignement).ToPolygon();
+        RelativeShape = new(shape.Count);
+    }
+
+    protected override void OnInitialized()
+    {
+        if (RelativeShape.Count <= 0 && shape.Count > 0)
+        {
+            RelativeShape = shape.ToRelativePolygon(CurTransform);
+        }
+        else RecalculateShape();
+    }
+
+    public override void RecalculateShape()
+    {
+        for (int i = 0; i < RelativeShape.Count; i++)
+        {
+            var p = CurTransform.ApplyTransformTo(RelativeShape[i]);
+            if (shape.Count <= i)
+            {
+                shape.Add(p);
+            }
+            else
+            {
+                shape[i] = p;
+            }
+        }
+    }
+
+    protected override void OnShapeTransformChanged(bool transformChanged)
+    {
+        if (!transformChanged) return;
+        RecalculateShape();
+    }
+
+
+    public override ShapeType GetShapeType() => ShapeType.Poly;
+    public override Polygon GetPolygonShape() => shape;
+
 }
-public class PolylineShape : ShapeContainer
+public class PolyLineShape : ShapeContainer
 {
+    public Polyline RelativeShape;
+    private Polyline shape;
     
+   
+    public PolyLineShape(Transform2D offset, Points relativePoints)
+    {
+        Offset = offset;
+        RelativeShape = relativePoints.ToPolyline();
+        shape = new(RelativeShape.Count);
+
+    }
+    public PolyLineShape(Transform2D offset, Polyline relativePoints)
+    {
+        Offset = offset;
+        RelativeShape = relativePoints;
+        shape = new(RelativeShape.Count);
+    }
+    
+
+    protected override void OnInitialized()
+    {
+        RecalculateShape();
+    }
+    public override void RecalculateShape()
+    {
+        for (int i = 0; i < RelativeShape.Count; i++)
+        {
+            var p = CurTransform.ApplyTransformTo(RelativeShape[i]);
+            if (shape.Count <= i)
+            {
+                shape.Add(p);
+            }
+            else
+            {
+                shape[i] = p;
+            }
+        }
+    }
+    protected override void OnShapeTransformChanged(bool transformChanged)
+    {
+        if (!transformChanged) return;
+        RecalculateShape();
+    }
+
+    public override ShapeType GetShapeType() => ShapeType.PolyLine;
+    public override Polyline GetPolylineShape() => shape;
+   
 }
-*/
+
 
 
 public abstract class Collider : Shape
