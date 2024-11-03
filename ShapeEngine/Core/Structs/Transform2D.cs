@@ -188,6 +188,26 @@ public readonly struct Transform2D : IEquatable<Transform2D>
         return new(childOffset.Position, rot, size, scale);
     }
     
+    // /// <summary>
+    // /// Calculates an absolute transform for a child based on an offset and a parent transform.
+    // /// </summary>
+    // /// <param name="transform">The absolute transform.</param>
+    // /// <param name="offset">The relative offset of the child to the parent.</param>
+    // /// <param name="moves">Dictates if the child stays in a fixed location or moves with the parent.</param>
+    // /// <param name="rotates">Dictates if the child rotates with the parent.</param>
+    // /// <param name="scales">Dictates if the child scales with the parent.</param>
+    // /// <returns>The absolute transform based on the parent transform and the child offset.</returns>
+    // public static Transform2D RevertTransform(Transform2D transform, Transform2D offset)
+    // {
+    //     var rot = transform.RotationRad - offset.RotationRad;
+    //     var size = transform.BaseSize + offset.BaseSize;
+    //     var scale = transform.Scale2d * offset.Scale2d;
+    //     if (offset.Position.LengthSquared() <= 0) return new(transform.Position, rot, size, scale);
+    //         
+    //     var pos = transform.Position + offset.Position.Rotate(rot) * scale;
+    //     return new(pos, rot, size, scale);
+    // }
+    
     /// <summary>
     /// Gets a relative transform (offset) and turns it into an absolute transform to be used by the child.
     /// </summary>
