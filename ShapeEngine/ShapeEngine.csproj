@@ -10,7 +10,7 @@
 	<Title>Shape Engine</Title>
 	<Authors>Dave Green</Authors>
 	<RepositoryUrl>https://github.com/DaveGreen-Games/ShapeEngine</RepositoryUrl>
-	<Version>2.3.1</Version>
+	<Version>2.4.0</Version>
 	<Description>My custom made 2d game engine based on the great Raylib Framework. Main focus is being performant and only using draw functions instead of textures. Custom input, audio, savegame, collision, shape, pathfinding, ui, camera, color palette, polygon fracturing, and text system are available with a few other nice things!</Description>
 	<PackageProjectUrl>https://davegreengames.itch.io/shape-engine</PackageProjectUrl>
 	<PackageIcon>shapeengine-nuget-icon-128px.png</PackageIcon>
@@ -18,13 +18,23 @@
 	<PackageTags>GameEngine Framework 2D raylib gamedev graphics shapes polygon rect line clipper2 polygonclipping</PackageTags>
 	<Company>Dave Green Games</Company>
 	<Product>Shape Engine</Product>
-	<AssemblyVersion>2.0.0</AssemblyVersion>
-	<FileVersion>2.0.0</FileVersion>
+	<AssemblyVersion>2.4.0</AssemblyVersion>
+	<FileVersion>2.4.0</FileVersion>
   	<PackageReadmeFile>readme-nuget.md</PackageReadmeFile>
   	<NeutralLanguage>en-US</NeutralLanguage>
   	<Copyright>Copyright (c) David Grueneis 2024</Copyright>
   	<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   	<PackageReleaseNotes>
+		# 2.4.0 Minor Release
+		- New functions to Transform2D added (UpdateTransform and GetChildTransform)
+		- Collider now uses UpdateTransform function
+		- Collider cleaned up
+		- ApplyTransform/ApplyTransformCopy functions changed to ApplyOffset/ApplyOffsetCopy in all shapes
+		- New Shape class added that inherits from IShape
+		- Collider now inherits from Shape instead of IShape
+		- ShapeContainer (Parent/Child hierarchy system for shapes) added. A ShapeContainer can have a ShapeContainer parent and any number of ShapeContainer children. The children are updated based on the parent transform and the child offsets.
+		- CircleShape, TriangleShape, SegmentShape, RectShape, QuadShape, PolyShape, PolyLineShape classes added. They inherit from ShapeContainer.
+		
 		# 2.3.1 Hot Fix
 		- Game reference is now set in Scene before Activate is called on the Scene
 		
