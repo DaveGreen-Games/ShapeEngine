@@ -1,53 +1,11 @@
 
 using System.Numerics;
 using Raylib_cs;
+using ShapeEngine.Core.Collision;
+using ShapeEngine.Core.Shapes;
 using ShapeEngine.Lib;
 
 namespace ShapeEngine.Core.Structs;
-
-
-public interface ITransformHierarchyObject
-{
-    public Transform2D CurTransform { get; set; }
-    
-    /// <summary>
-    /// The offset used for children only.
-    /// </summary>
-    public Transform2D Offset { get; set; }
-    public List<ITransformHierarchyObject> GetChildren();
-    
-    public bool IsMoving() => true;
-    public bool IsRotating() => true;
-    public bool IsScaling() => true;
-
-
-    /// <summary>
-    /// Called on the parent to update all children.
-    /// </summary>
-    /// <param name="transform">The transform for this instance.</param>
-    public sealed void UpdateHierarchy(Transform2D transform)
-    {
-        UpdateChildren(transform);
-    }
-
-    public void OnTransformUpdated(Transform2D prevTransform, Transform2D newTransform);
-    private void UpdateChildren(Transform2D parentTransform)
-    {
-        var children = GetChildren();
-        var prevTransform = CurTransform;
-        
-        CurTransform = Transform2D.UpdateTransform(parentTransform, Offset, IsMoving(), IsRotating(), IsScaling());
-        
-        OnTransformUpdated(prevTransform, CurTransform);
-        
-        foreach (var child in children)
-        {
-            child.UpdateChildren(CurTransform);
-        }
-    }
-}
-
-
 
 public readonly struct Transform2D : IEquatable<Transform2D>
 {
@@ -68,6 +26,7 @@ public readonly struct Transform2D : IEquatable<Transform2D>
     
     public float RotationDeg => RotationRad * ShapeMath.RADTODEG;
     public Vector2 GetDirection() => ShapeVec.VecFromAngleRad(RotationRad);
+    public bool IsEmpty() => Position == Vector2.Zero && RotationRad == 0f && BaseSize == Size.Zero;
     #endregion
     
     #region Constructors
@@ -228,6 +187,26 @@ public readonly struct Transform2D : IEquatable<Transform2D>
         }
         return new(childOffset.Position, rot, size, scale);
     }
+    
+    // /// <summary>
+    // /// Calculates an absolute transform for a child based on an offset and a parent transform.
+    // /// </summary>
+    // /// <param name="transform">The absolute transform.</param>
+    // /// <param name="offset">The relative offset of the child to the parent.</param>
+    // /// <param name="moves">Dictates if the child stays in a fixed location or moves with the parent.</param>
+    // /// <param name="rotates">Dictates if the child rotates with the parent.</param>
+    // /// <param name="scales">Dictates if the child scales with the parent.</param>
+    // /// <returns>The absolute transform based on the parent transform and the child offset.</returns>
+    // public static Transform2D RevertTransform(Transform2D transform, Transform2D offset)
+    // {
+    //     var rot = transform.RotationRad - offset.RotationRad;
+    //     var size = transform.BaseSize + offset.BaseSize;
+    //     var scale = transform.Scale2d * offset.Scale2d;
+    //     if (offset.Position.LengthSquared() <= 0) return new(transform.Position, rot, size, scale);
+    //         
+    //     var pos = transform.Position + offset.Position.Rotate(rot) * scale;
+    //     return new(pos, rot, size, scale);
+    // }
     
     /// <summary>
     /// Gets a relative transform (offset) and turns it into an absolute transform to be used by the child.
@@ -546,3 +525,39 @@ public readonly struct Transform2D : IEquatable<Transform2D>
     public override int GetHashCode() => HashCode.Combine(Position, RotationRad, BaseSize, Scale2d);
     #endregion
 }
+
+
+/*
+public abstract class ShapeContainer2<T>(Transform2D offset, T shape)
+{
+    public Transform2D Offset = offset;
+    public readonly T Shape = shape;
+    public Transform2D CurTransform = new();
+
+    public Transform2D ApplyTransform(Transform2D parentTransform)
+    {
+        CurTransform = Transform2D.UpdateTransform(parentTransform, Offset);
+        return CurTransform;
+    }
+}
+
+public abstract class ShapeContainer : IShape
+{
+    public Transform2D Offset;
+    public Transform2D CurTransform;
+    
+    
+    
+    public abstract ShapeType GetShapeType();
+    public virtual Circle GetCircleShape() => new();
+    public virtual Segment GetSegmentShape() => new();
+    public virtual Triangle GetTriangleShape() => new();
+    public virtual Quad GetQuadShape() => new();
+    public virtual Rect GetRectShape() => new();
+    public virtual Polygon GetPolygonShape() => new();
+    public virtual Polyline GetPolylineShape() => new();
+    
+}*/
+
+
+

@@ -1,11 +1,11 @@
 using System.Numerics;
-using ShapeEngine.Core.Shapes;
+using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
 
-namespace ShapeEngine.Core.Collision;
+namespace ShapeEngine.Core.Shapes;
 
-public class TriangleCollider : Collider
+public class TriangleShape : ShapeContainer
 {
     public Vector2 ARelative { get; set; }
     public Vector2 BRelative { get; set; }
@@ -18,8 +18,10 @@ public class TriangleCollider : Collider
     /// <summary>
     /// Relative points should be in range -1 to 1 on x & y axis!
     /// </summary>
-    public TriangleCollider(Transform2D offset, List<Vector2> relativePoints) : base(offset)
+    public TriangleShape(Transform2D offset, List<Vector2> relativePoints)
     {
+        Offset = offset;
+        
         if (relativePoints.Count <= 0)
         {
             ARelative = new();
@@ -50,8 +52,9 @@ public class TriangleCollider : Collider
     /// <summary>
     /// Relative points should be in range -1 to 1 on x & y axis!
     /// </summary>
-    public TriangleCollider(Transform2D offset, Vector2[] relativePoints) : base(offset)
+    public TriangleShape(Transform2D offset, Vector2[] relativePoints)
     {
+        Offset = offset;
         if (relativePoints.Length <= 0)
         {
             ARelative = new();
@@ -81,14 +84,14 @@ public class TriangleCollider : Collider
     /// <summary>
     /// Relative points should be in range -1 to 1 on x & y axis!
     /// </summary>
-    public TriangleCollider(Transform2D offset, Vector2 relA, Vector2 relB, Vector2 relC) : base(offset)
+    public TriangleShape(Transform2D offset, Vector2 relA, Vector2 relB, Vector2 relC)
     {
+        Offset = offset;
         ARelative = relA;
         BRelative = relB;
         CRelative = relC;
     }
-    
-    public override Rect GetBoundingBox() => GetTriangleShape().GetBoundingBox();
+
     public override ShapeType GetShapeType() => ShapeType.Triangle;
     public override Triangle GetTriangleShape() => new(AAbsolute, BAbsolute, CAbsolute);
 }

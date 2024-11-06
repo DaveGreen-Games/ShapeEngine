@@ -21,7 +21,7 @@ public class SegmentCollider : Collider
         set
         {
             originOffset = ShapeMath.Clamp(value, 0f, 1f);
-            Recalculate();
+            RecalculateShape();
         } 
     }
     public Vector2 Dir
@@ -31,7 +31,7 @@ public class SegmentCollider : Collider
         {
             if (dir.LengthSquared() <= 0f) return;
             dir = value;
-            Recalculate();
+            RecalculateShape();
         }
     }
 
@@ -43,21 +43,21 @@ public class SegmentCollider : Collider
         
     public Vector2 Displacement => End - Start;
 
-    protected override void OnTransformSetupFinished()
+    protected override void OnInitialized()
     {
-        Recalculate();
+        RecalculateShape();
     }
 
-    public override void Recalculate()
+    public override void RecalculateShape()
     {
         Start = CurTransform.Position - (Dir * OriginOffset * CurTransform.ScaledSize.Length).Rotate(CurTransform.RotationRad);
         End = CurTransform.Position + (Dir * (1f - OriginOffset) * CurTransform.ScaledSize.Length).Rotate(CurTransform.RotationRad);
     }
 
-    protected override void UpdateColliderShape(bool transformChanged)
+    protected override void OnShapeTransformChanged(bool transformChanged)
     {
         if (!transformChanged) return;
-        Recalculate();
+        RecalculateShape();
     }
 
     public SegmentCollider(Transform2D offset, Vector2 dir, float originOffset = 0f) : base(offset)

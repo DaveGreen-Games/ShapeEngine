@@ -1,22 +1,24 @@
-using ShapeEngine.Core.Shapes;
+using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Structs;
 
-namespace ShapeEngine.Core.Collision;
+namespace ShapeEngine.Core.Shapes;
 
-public class PolyLineCollider : Collider
+public class PolyLineShape : ShapeContainer
 {
     public Polyline RelativeShape;
     private Polyline shape;
     
    
-    public PolyLineCollider(Transform2D offset, Points relativePoints) : base(offset)
+    public PolyLineShape(Transform2D offset, Points relativePoints)
     {
+        Offset = offset;
         RelativeShape = relativePoints.ToPolyline();
         shape = new(RelativeShape.Count);
 
     }
-    public PolyLineCollider(Transform2D offset, Polyline relativePoints) : base(offset)
+    public PolyLineShape(Transform2D offset, Polyline relativePoints)
     {
+        Offset = offset;
         RelativeShape = relativePoints;
         shape = new(RelativeShape.Count);
     }
@@ -26,7 +28,6 @@ public class PolyLineCollider : Collider
     {
         RecalculateShape();
     }
-
     public override void RecalculateShape()
     {
         for (int i = 0; i < RelativeShape.Count; i++)
@@ -42,16 +43,12 @@ public class PolyLineCollider : Collider
             }
         }
     }
-
     protected override void OnShapeTransformChanged(bool transformChanged)
     {
         if (!transformChanged) return;
         RecalculateShape();
     }
 
-
-    public override Rect GetBoundingBox() => GetPolygonShape().GetBoundingBox();
-    
     public override ShapeType GetShapeType() => ShapeType.PolyLine;
     public override Polyline GetPolylineShape() => shape;
    

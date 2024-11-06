@@ -27,6 +27,7 @@ public class CircleCollider : Collider
     //     return c.GetClosestCollisionPoint(p);
     // }
     public override Rect GetBoundingBox() => GetCircleShape().GetBoundingBox();
+
     public override ShapeType GetShapeType() => ShapeType.Circle;
     public override Circle GetCircleShape() => new(CurTransform.Position, CurTransform.ScaledSize.Radius);
 }

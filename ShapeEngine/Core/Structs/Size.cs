@@ -37,7 +37,7 @@ public readonly struct Size : IEquatable<Size>
 
     public float Area => Width < 0 || Height < 0 ? 0 : Width * Height;
     public bool IsSquare => Width > 0 && Height > 0 && Math.Abs(Width - Height) < 0.0001f;
-
+    public static Size Zero => new(0, 0);
     public float Max() => MathF.Max(Width, Height);
     public float Min() => MathF.Min(Width, Height);
     public Size Max(Size other)
