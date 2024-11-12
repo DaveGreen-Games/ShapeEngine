@@ -9,7 +9,9 @@ public class Intersection
     public readonly bool Valid;
     public readonly CollisionSurface CollisionSurface;
     public readonly CollisionPoints? ColPoints;
-
+    
+    public CollisionPoint FirstCollisionPoint =>  ColPoints is { Count: > 0 } ? ColPoints[0] : new();
+    
     public Intersection() { this.Valid = false; this.CollisionSurface = new(); this.ColPoints = null; }
     public Intersection(CollisionPoints? points, Vector2 vel, Vector2 refPoint)
     {
