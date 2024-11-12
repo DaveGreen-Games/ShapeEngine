@@ -31,6 +31,14 @@ public abstract class CollisionObject : PhysicsObject
 
     private bool enabled = true;
 
+    /// <summary>
+    /// If a Passive CollisionObject checks for collisions/intersections against Non-Passive CollisionObjects,
+    /// the CollisionInformation will be generated as if the Non-Passive CollisionObject checked for the collision.
+    /// This mostly affects CollisionPoint normal generation. Normally the normals are pointing towards the CollisionObject that is checking for the collision.
+    /// If this is not wanted and the normals should point away from the CollisionObject that is checking for the collision, the Passive flag should be set to true.
+    /// This only comes into effect for colliders that compute intersections!
+    /// </summary>
+    public bool Passive = false;
     public bool Enabled
     {
         get => enabled && !IsDead;

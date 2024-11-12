@@ -215,6 +215,7 @@ namespace ShapeEngine.Core.Collision
             {
                 if (!collisionBody.Enabled || !collisionBody.HasColliders) continue;
 
+                var passivChecking = collisionBody.Passive;
                 if (collisionBody.ProjectShape)
                 {
                     foreach (var collider in collisionBody.Colliders)
@@ -262,9 +263,16 @@ namespace ShapeEngine.Core.Collision
                                     
                                     if (computeIntersections)
                                     {
-                                        //CollisionChecksPerFrame++;
-                                        var collisionPoints = projected.Intersect(candidate); // ShapeGeometry.Intersect(collider, candidate);
-
+                                        CollisionPoints? collisionPoints = null;
+                                        if (passivChecking)
+                                        {
+                                            collisionPoints = candidate.Intersect(projected);
+                                        }
+                                        else
+                                        {
+                                            collisionPoints = projected.Intersect(candidate);
+                                        }
+                                        
                                         //shapes overlap but no collision points means collidable is completely inside other
                                         //closest point on bounds of other are now used for collision point
                                         if (collisionPoints == null || collisionPoints.Count <= 0)
@@ -346,10 +354,17 @@ namespace ShapeEngine.Core.Collision
                                     }
                                     
                                     if (computeIntersections)
-                                    {
-                                        //CollisionChecksPerFrame++;
-                                        var collisionPoints = collider.Intersect(candidate); // ShapeGeometry.Intersect(collider, candidate);
-
+                                    {                                                         
+                                        CollisionPoints? collisionPoints = null;
+                                        if (passivChecking)
+                                        {
+                                            collisionPoints = candidate.Intersect(collider);
+                                        }
+                                        else
+                                        {
+                                            collisionPoints = collider.Intersect(candidate);
+                                        }
+                                        
                                         //shapes overlap but no collision points means collidable is completely inside other
                                         //closest point on bounds of other are now used for collision point
                                         if (collisionPoints == null || collisionPoints.Count <= 0)
