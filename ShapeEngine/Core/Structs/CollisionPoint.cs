@@ -21,6 +21,30 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
         Normal = n;
     }
 
+    public CollisionPoint(CollisionSurface surface)
+    {
+        Point = surface.Point;
+        Normal = surface.Normal;
+    }
+    public CollisionSurface ToCollisionSurface() => new CollisionSurface(Point, Normal);
+    
+    public CollisionSurface Average(CollisionPoint other) => new((Point + other.Point) / 2, (Normal + other.Normal).Normalize());
+
+    public static CollisionSurface Average(CollisionPoint a, CollisionPoint b) => new((a.Point + b.Point) / 2, (a.Normal + b.Normal).Normalize());
+
+    public static CollisionSurface Average(params CollisionPoint[] points)
+    {
+        if(points.Length == 0) return new CollisionSurface();
+        var avgPoint = Vector2.Zero;
+        var avgNormal = Vector2.Zero;
+        foreach (var point in points)
+        {
+            avgPoint += point.Point;
+            avgNormal += point.Normal;
+        }
+        return new CollisionSurface(avgPoint / points.Length, avgNormal.Normalize());
+    }
+    
     public bool Equals(CollisionPoint other)
     {
         return other.Point == Point && other.Normal == Normal;

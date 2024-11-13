@@ -15,4 +15,10 @@ public readonly struct CollisionSurface
         this.Normal = normal;
     }
 
+    public CollisionSurface(CollisionPoint p)
+    {
+        Point = p.Point;
+        Normal = p.Normal;
+    }
+    public CollisionPoint ToCollisionPoint() => new CollisionPoint(Point, Normal);
 }

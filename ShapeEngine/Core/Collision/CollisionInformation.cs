@@ -42,14 +42,30 @@ public class CollisionInformation
         }
     }
 
-    //public bool ContainsCollidable(TCollidable other)
-    //{
-    //    foreach (var c in Collisions)
-    //    {
-    //        if (c.Other == other) return true;
-    //    }
-    //    return false;
-    //}
+    //return a dictionary of sorted collisions based on parent
+    public Dictionary<CollisionObject, List<Collision>> GetCollisionsSortedByParent()
+    {
+        Dictionary<CollisionObject, List<Collision>> sortedCollisions = new();
+
+        foreach (var col in Collisions)
+        {
+            var parent = col.Other.Parent;
+            if (parent == null) continue;
+            
+            if (sortedCollisions.TryGetValue(parent, out var value))
+            {
+                value.Add(col);
+            }
+            else
+            {
+                var list = new List<Collision>() { col };
+                sortedCollisions[parent] = list;
+            }
+        }
+        
+        return sortedCollisions;
+    }
+    
     public List<Collision> FilterCollisions(Predicate<Collision> match)
     {
         List<Collision> filtered = new();
