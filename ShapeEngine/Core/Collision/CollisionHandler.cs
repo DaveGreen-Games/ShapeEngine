@@ -31,6 +31,18 @@ namespace ShapeEngine.Core.CollisionSystem
             AddRange(overlaps);
         }
 
+        public Overlap? PopOverlap(Collider self, Collider other)
+        {
+            foreach (var overlap in this)
+            {
+                if (overlap.Self == self && overlap.Other == other)
+                {
+                    Remove(overlap);
+                    return overlap;
+                }
+            }
+            return null;
+        }
     }
 
     /*public class ColliderPair(Collider self, Collider other)
@@ -113,7 +125,7 @@ namespace ShapeEngine.Core.CollisionSystem
 
         private class OverlapStack(int capacity) : Dictionary<CollisionObject, OverlapRegister>(capacity)
         {
-            public bool AddCollisionRegister(CollisionObject owner, OverlapRegister register)
+            public bool AddOverlapRegister(CollisionObject owner, OverlapRegister register)
             {
                 if (register.Count <= 0) return false;
                 
@@ -135,11 +147,24 @@ namespace ShapeEngine.Core.CollisionSystem
                 }
             }
 
+            public Overlap? PopOverlap(Collider self, Collider other)
+            {
+                var selfParent = self.Parent;
+                var otherParent = other.Parent;
+                if(selfParent == null || otherParent  == null) return null;
+                
+                if (TryGetValue(selfParent, out var register))
+                {
+                    return register.PopOverlap(otherParent, self, other);
+                }
+
+                return null;
+            }
         }
 
-        private class OverlapRegister : Dictionary<CollisionObject, OverlapInformation>
+        private class OverlapRegister(int capacity) : Dictionary<CollisionObject, OverlapInformation>(capacity)
         {
-            public bool AddCollision(Overlap  overlap)
+            public bool AddOverlap(Overlap  overlap)
             {
                 var selfParent = overlap.Self.Parent;
                 var otherParent = overlap.Other.Parent;
@@ -159,6 +184,16 @@ namespace ShapeEngine.Core.CollisionSystem
                 }
 
                 return true;
+            }
+
+            public Overlap? PopOverlap(CollisionObject obj, Collider self, Collider other)
+            {
+                if (TryGetValue(obj, out var info))
+                {
+                    return info.PopOverlap(self, other);
+                }
+
+                return null;
             }
         }
         
@@ -294,8 +329,8 @@ namespace ShapeEngine.Core.CollisionSystem
         private readonly CollisionStack collisionStack;
         
         //use for detecting when overlap has ended
-        private readonly OverlapRegister activeRegister;
-        private readonly OverlapRegister oldRegister;
+        private OverlapStack activeRegister;
+        private OverlapStack oldRegister;
 
         private readonly HashSet<Collider> collisionCandidateCheckRegister = new();
         private List<SpatialHash.Bucket> collisionCandidateBuckets = new();
@@ -551,9 +586,10 @@ namespace ShapeEngine.Core.CollisionSystem
             collisionStack.ProcessCollisions();
             collisionStack.Clear();
 
-            oldRegister.ProcessEntries();
-            oldRegister.Swap(activeRegister);
-            activeRegister.Clear();
+            oldRegister.ProcessOverlaps();
+            oldRegister.Clear();
+            (oldRegister, activeRegister) = (activeRegister, oldRegister);
+            // activeRegister.Clear();
         }
         
         
