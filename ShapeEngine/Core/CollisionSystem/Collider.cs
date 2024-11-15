@@ -84,13 +84,23 @@ public abstract class Collider : Shape
     
     internal void ResolveCollision(Collision collision)
     {
-       
+        Collision(collision);
+    }
+
+    internal void ResolveOverlap(Collider other, bool firstContact)
+    {
+        Overlap(other, firstContact);
     }
    
     internal void ResolveCollisionEnded(Collider other)
     {
-        
+        CollisionEnded(other);
     } 
+    
+    protected virtual void Collision(Collision info) { }
+    protected virtual void Overlap(Collider other, bool firstContact) { }
+    protected virtual void CollisionEnded(Collider other) { }
+    
 
     public override void InitializeShape(Transform2D parentTransform)
     {

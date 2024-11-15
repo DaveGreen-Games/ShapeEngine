@@ -43,66 +43,49 @@ public abstract class CollisionObject : PhysicsObject
     
     internal void ResolveCollision(CollisionInformation info)
     {
+        //todo invoke events
+        
         Collision(info);
+        
         foreach (var collision in info)
         {
-            collision.Self.ResolveCollision(collision);
+            
+            if (collision.Intersection.Valid)
+            {
+                collision.Self.ResolveCollision(collision);
+                ColliderIntersected(collision);
+            }
+            else
+            {
+                collision.Self.ResolveOverlap(collision.Other, collision.FirstContact);
+                ColliderOverlapped(collision.Self, collision.Other, collision.FirstContact);
+            }
         }
-        //todo invoke events
     }
-   
+
     internal void ResolveCollisionEnded(OverlapInformation info)
     {
+        //todo invoke events
+        
         CollisionEnded(info);
+        
         foreach (var overlap in info)
         {
             overlap.Self.ResolveCollisionEnded(overlap.Other);
+            ColliderOverlapEnded(overlap.Other);
         }
-        //todo invoke events
     }
 
     
     protected virtual void Collision(CollisionInformation info) { }
     protected virtual void CollisionEnded(OverlapInformation info) { }
     
-    
-    
-    
-    //called per collider
-    protected virtual void ColliderOverlapped(Collider self, Collider other, bool firstContact) { }
     protected virtual void ColliderIntersected(Collision collision) { }
+    protected virtual void ColliderOverlapped(Collider self, Collider other, bool firstContact) { }
+    protected virtual void ColliderOverlapEnded(Collider other) { }
     
     
     
-    
-    
-    
-    
-    /*
-    /// <summary>
-    /// This functions is always called when the collider had at least one collision with another collider this frame
-    /// </summary>
-    public event Action<Collider, CollisionInformation>? OnCollision;
-    
-    /// <summary>
-    /// This function will always be called when a previous collision with another collider has ended this frame
-    /// </summary>
-    public event Action<Collider, Collider>? OnCollisionEnded;
-    
-    /// <summary>
-    /// This event will only be invoked when AdvancedCollisionNotifications is enabled and
-    /// ComputeIntersection is disabled
-    /// If AdvancedCollisionNotification is enabled and ComputeIntersection is enabled OnColliderIntersected will be invoked instead
-    /// </summary>
-    public event Action<Collider, Collider, bool>? OnColliderOverlapped;
-    
-    /// <summary>
-    /// This event will only be invoked when AdvancedCollisionNotifications is enabled and
-    /// ComputeIntersection is enabled
-    /// If AdvancedCollisionNotification is enabled and ComputeIntersection is disabled OnColliderOverlapped will be invoked instead
-    /// </summary>
-    public event Action<Collision>? OnColliderIntersected;
-    */
     
     
 
@@ -390,3 +373,34 @@ public abstract class CollisionObject : PhysicsObject
     #endregion
 
 }
+
+
+
+    
+    
+/*
+/// <summary>
+/// This functions is always called when the collider had at least one collision with another collider this frame
+/// </summary>
+public event Action<Collider, CollisionInformation>? OnCollision;
+
+/// <summary>
+/// This function will always be called when a previous collision with another collider has ended this frame
+/// </summary>
+public event Action<Collider, Collider>? OnCollisionEnded;
+
+/// <summary>
+/// This event will only be invoked when AdvancedCollisionNotifications is enabled and
+/// ComputeIntersection is disabled
+/// If AdvancedCollisionNotification is enabled and ComputeIntersection is enabled OnColliderIntersected will be invoked instead
+/// </summary>
+public event Action<Collider, Collider, bool>? OnColliderOverlapped;
+
+/// <summary>
+/// This event will only be invoked when AdvancedCollisionNotifications is enabled and
+/// ComputeIntersection is enabled
+/// If AdvancedCollisionNotification is enabled and ComputeIntersection is disabled OnColliderOverlapped will be invoked instead
+/// </summary>
+public event Action<Collision>? OnColliderIntersected;
+*/
+
