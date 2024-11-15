@@ -5,7 +5,7 @@ using System.Numerics;
 using Examples.PayloadSystem;
 using Raylib_cs;
 using ShapeEngine.Color;
-using ShapeEngine.Core.Collision;
+using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;

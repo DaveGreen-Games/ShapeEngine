@@ -11,7 +11,7 @@ using ShapeEngine.Lib;
 //var ms = watch.Elapsed.TotalMilliseconds;
 //Console.WriteLine(ms);
 
-namespace ShapeEngine.Core.Collision
+namespace ShapeEngine.Core.CollisionSystem
 {
     /*
     public class ScreenTextures : Dictionary<uint, ScreenTexture>

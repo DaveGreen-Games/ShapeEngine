@@ -1,7 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Core.Interfaces;
 
-namespace ShapeEngine.Core.Collision;
+namespace ShapeEngine.Core.CollisionSystem;
 
 public class QueryInfo
 {

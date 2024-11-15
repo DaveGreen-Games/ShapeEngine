@@ -3,7 +3,7 @@ using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using System.Numerics;
 using ShapeEngine.Color;
-using ShapeEngine.Core.Collision;
+using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;

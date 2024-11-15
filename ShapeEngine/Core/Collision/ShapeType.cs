@@ -1,4 +1,4 @@
-namespace ShapeEngine.Core.Collision;
+namespace ShapeEngine.Core.CollisionSystem;
 
 public enum ShapeType
 {

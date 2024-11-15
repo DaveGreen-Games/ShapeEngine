@@ -5,12 +5,165 @@ using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 
-namespace ShapeEngine.Core.Collision
+namespace ShapeEngine.Core.CollisionSystem
 {
+
+    public class Overlap(Collider self, Collider other)
+    {
+        public readonly Collider Self = self;
+        public readonly Collider Other = other;
+    }
+    public class OverlapInformation : List<Overlap>
+    {
+        public readonly CollisionObject Other;
+        public readonly CollisionObject Self;
+        
+        public OverlapInformation(CollisionObject self, CollisionObject other)
+        {
+            Self = self;
+            Other = other;
+        }
+
+        public OverlapInformation(CollisionObject self, CollisionObject other, List<Overlap> overlaps)
+        {
+            Self = self;
+            Other = other;
+            AddRange(overlaps);
+        }
+
+    }
+
+    /*public class ColliderPair(Collider self, Collider other)
+    {
+        public Collider Self = self;
+        public Collider Other = other;
+    }
+    public class ColliderPairs : List<ColliderPair>
+    {
+        public void Add(Collider self, Collider other)
+        {
+            Add(new ColliderPair(self, other));
+        }
+    }*/
     
     public class CollisionHandler : IBounds
     {
-        private class OverlapRegister
+        
+        private class CollisionStack(int capacity) : Dictionary<CollisionObject, CollisionRegister>(capacity)
+        {
+            public bool AddCollisionRegister(CollisionObject owner, CollisionRegister register)
+            {
+                if (register.Count <= 0) return false;
+                
+                return TryAdd(owner, register);
+            }
+
+            public void ProcessCollisions()
+            {
+
+                foreach (var kvp in this)
+                {
+                    var resolver = kvp.Key;
+                    var register = kvp.Value;
+
+                    foreach (var entry in register)
+                    {
+                       resolver.ResolveCollision(entry.Value);
+                    }
+                }
+                
+                /*foreach (var kvp in collisionStack)
+                {
+                    var collider = kvp.Key;
+                    var cols = kvp.Value;
+                    if(cols.Count > 0)
+                    {
+                        CollisionInformation collisionInfo = new(cols, collider.ComputeIntersections);
+                        collider.ResolveCollision(collisionInfo);
+                    }
+                }*/
+            }
+            
+        }
+        
+        private class CollisionRegister : Dictionary<CollisionObject, CollisionInformation>
+        {
+            public bool AddCollision(Collision collision)
+            {
+                var selfParent = collision.Self.Parent;
+                var otherParent = collision.Other.Parent;
+                
+                if(selfParent == null || otherParent  == null) return false;
+                
+                if (TryGetValue(otherParent, out var cols))
+                {
+                    cols.Add(collision);
+                }
+                else
+                {
+                    var colInfo = new CollisionInformation(selfParent, otherParent);
+                    colInfo.Add(collision);
+                    
+                    Add(otherParent, colInfo);
+                }
+
+                return true;
+            }
+        }
+
+        private class OverlapStack(int capacity) : Dictionary<CollisionObject, OverlapRegister>(capacity)
+        {
+            public bool AddCollisionRegister(CollisionObject owner, OverlapRegister register)
+            {
+                if (register.Count <= 0) return false;
+                
+                return TryAdd(owner, register);
+            }
+
+            public void ProcessOverlaps()
+            {
+
+                foreach (var kvp in this)
+                {
+                    var resolver = kvp.Key;
+                    var register = kvp.Value;
+
+                    foreach (var entry in register)
+                    {
+                        resolver.ResolveCollisionEnded(entry.Value);
+                    }
+                }
+            }
+
+        }
+
+        private class OverlapRegister : Dictionary<CollisionObject, OverlapInformation>
+        {
+            public bool AddCollision(Overlap  overlap)
+            {
+                var selfParent = overlap.Self.Parent;
+                var otherParent = overlap.Other.Parent;
+                
+                if(selfParent == null || otherParent  == null) return false;
+                
+                if (TryGetValue(otherParent, out var cols))
+                {
+                    cols.Add(overlap);
+                }
+                else
+                {
+                    var overlapInfo = new OverlapInformation(selfParent, otherParent);
+                    overlapInfo.Add(overlap);
+                    
+                    Add(otherParent, overlapInfo);
+                }
+
+                return true;
+            }
+        }
+        
+        
+        /*private class OverlapRegister
         {
             private HashSet<OverlapEntry> entries;
 
@@ -58,6 +211,8 @@ namespace ShapeEngine.Core.Collision
                 this.Other = other;
             }
         }
+        */
+        
         private class ObjectRegister<T>
         {
             public readonly HashSet<T> AllObjects;
@@ -134,10 +289,9 @@ namespace ShapeEngine.Core.Collision
         
         
         private readonly CollisionObjectRegister collisionBodyRegister;
-        private readonly ObjectRegister<Collider> colliderRegister;
         
         private readonly SpatialHash spatialHash;
-        private readonly Dictionary<Collider, List<Collision>> collisionStack;
+        private readonly CollisionStack collisionStack;
         
         //use for detecting when overlap has ended
         private readonly OverlapRegister activeRegister;
@@ -154,7 +308,6 @@ namespace ShapeEngine.Core.Collision
         {
             spatialHash = new(x, y, w, h, rows, cols);
             collisionBodyRegister = new(startCapacity, this);
-            colliderRegister = new(startCapacity);
             collisionStack = new(startCapacity / 4);
             activeRegister = new(startCapacity / 4);
             oldRegister = new(startCapacity / 4);
@@ -165,7 +318,6 @@ namespace ShapeEngine.Core.Collision
             spatialHash = new(bounds.X, bounds.Y, bounds.Width, bounds.Height, rows, cols);
             
             collisionBodyRegister = new(startCapacity, this);
-            colliderRegister = new(startCapacity);
             collisionStack = new(startCapacity / 4);
             activeRegister = new(startCapacity / 4);
             oldRegister = new(startCapacity / 4);
@@ -181,17 +333,9 @@ namespace ShapeEngine.Core.Collision
         public void RemoveRange(IEnumerable<CollisionObject> collisionObjects)  => collisionBodyRegister.RemoveRange(collisionObjects);
         public void RemoveRange(params CollisionObject[] collisionObjects)  => collisionBodyRegister.RemoveRange(collisionObjects);
         
-        public void Add(Collider collider) => colliderRegister.Add(collider);
-        public void AddRange(IEnumerable<Collider> colliders) => colliderRegister.AddRange(colliders);
-        public void AddRange(params Collider[] colliders)=> colliderRegister.AddRange(colliders);
-        public void Remove(Collider collider)=> colliderRegister.Remove(collider);
-        public void RemoveRange(IEnumerable<Collider> colliders)  => colliderRegister.RemoveRange(colliders);
-        public void RemoveRange(params Collider[] colliders)  => colliderRegister.RemoveRange(colliders);
-        
         public void Clear()
         {
             collisionBodyRegister.Clear();
-            colliderRegister.Clear();
             collisionStack.Clear();
         }
         public void Close()
@@ -203,7 +347,7 @@ namespace ShapeEngine.Core.Collision
 
         public void Update(float dt)
         {
-            spatialHash.Fill(collisionBodyRegister.AllObjects, colliderRegister.AllObjects);
+            spatialHash.Fill(collisionBodyRegister.AllObjects);
 
             ProcessCollisions(dt);
             
@@ -215,6 +359,8 @@ namespace ShapeEngine.Core.Collision
             {
                 if (!collisionBody.Enabled || !collisionBody.HasColliders) continue;
 
+                CollisionRegister? collisionRegister = null;
+                
                 var passivChecking = collisionBody.Passive;
                 if (collisionBody.ProjectShape)
                 {
@@ -232,14 +378,14 @@ namespace ShapeEngine.Core.Collision
                         
                         var mask = collider.CollisionMask;
                         bool computeIntersections = collider.ComputeIntersections;
-                        List<Collision>? cols = null;
                         
                         foreach (var bucket in collisionCandidateBuckets)
                         {
                             foreach (var candidate in bucket)
                             {
                                 if (candidate == collider) continue;
-                                if (candidate.Parent != null && collider.Parent != null && candidate.Parent == collider.Parent) continue;
+                                if (candidate.Parent == null) continue;
+                                if (candidate.Parent == collider.Parent) continue;
                                 if (!mask.Has(candidate.CollisionLayer)) continue;
                                 if (!collisionCandidateCheckRegister.Add(candidate)) continue;
 
@@ -287,26 +433,19 @@ namespace ShapeEngine.Core.Collision
                                         }
 
                                         Collision c = new(collider, candidate, firstContact, collisionPoints);
-                                        cols ??= new();
-                                        cols.Add(c);
+                                        collisionRegister??= new();
+                                        collisionRegister.AddCollision(c);
                                     }
                                     else
                                     {
                                         Collision c = new(collider, candidate, firstContact);
-                                        cols ??= new();
-                                        cols.Add(c);
+                                        collisionRegister??= new();
+                                        collisionRegister.AddCollision(c);
                                     }
                                 }
                             }
                         }
-
-                        if (cols is { Count: > 0 })
-                        {
-                            if (!collisionStack.TryAdd(collider, cols))
-                            {
-                                collisionStack[collider].AddRange(cols);
-                            }
-                        }
+                        
                     }
                 
                 }
@@ -324,14 +463,14 @@ namespace ShapeEngine.Core.Collision
                         
                         var mask = collider.CollisionMask;
                         bool computeIntersections = collider.ComputeIntersections;
-                        List<Collision>? cols = null;
                         
                         foreach (var bucket in collisionCandidateBuckets)
                         {
                             foreach (var candidate in bucket)
                             {
-                                if(candidate == collider) continue;
-                                if (candidate.Parent != null && collider.Parent != null && candidate.Parent == collider.Parent) continue;
+                                if (candidate == collider) continue;
+                                if (candidate.Parent == null) continue;
+                                if (candidate.Parent == collider.Parent) continue;
                                 if (!mask.Has(candidate.CollisionLayer)) continue;
                                 if (!collisionCandidateCheckRegister.Add(candidate)) continue;
 
@@ -382,28 +521,25 @@ namespace ShapeEngine.Core.Collision
                                         }
 
                                         Collision c = new(collider, candidate, firstContact, collisionPoints);
-                                        cols ??= new();
-                                        cols.Add(c);
+                                        collisionRegister??= new();
+                                        collisionRegister.AddCollision(c);
                                     }
                                     else
                                     {
                                         Collision c = new(collider, candidate, firstContact);
-                                        cols ??= new();
-                                        cols.Add(c);
+                                        collisionRegister??= new();
+                                        collisionRegister.AddCollision(c);
                                     }
                                 }
                             }
                         }
-
-                        if (cols is { Count: > 0 })
-                        {
-                            if (!collisionStack.TryAdd(collider, cols))
-                            {
-                                collisionStack[collider].AddRange(cols);
-                            }
-                        }
                     }
                 
+                }
+
+                if (collisionRegister != null)
+                {
+                    collisionStack.AddCollisionRegister(collisionBody, collisionRegister);
                 }
                 
             }
@@ -411,19 +547,8 @@ namespace ShapeEngine.Core.Collision
         private void Resolve()
         {
             collisionBodyRegister.Process();
-            colliderRegister.Process();
 
-
-            foreach (var kvp in collisionStack)
-            {
-                var collider = kvp.Key;
-                var cols = kvp.Value;
-                if(cols.Count > 0)
-                {
-                    CollisionInformation collisionInfo = new(cols, collider.ComputeIntersections);
-                    collider.ResolveCollision(collisionInfo);
-                }
-            }
+            collisionStack.ProcessCollisions();
             collisionStack.Clear();
 
             oldRegister.ProcessEntries();

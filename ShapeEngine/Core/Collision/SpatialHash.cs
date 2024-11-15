@@ -5,7 +5,7 @@ using ShapeEngine.Lib;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 
-namespace ShapeEngine.Core.Collision
+namespace ShapeEngine.Core.CollisionSystem
 {
     
     public class SpatialHash : IBounds
@@ -77,7 +77,7 @@ namespace ShapeEngine.Core.Collision
         #endregion
         
         #region Public
-        public void Fill(IEnumerable<CollisionObject> collisionBodies, IEnumerable<Collider> colliders)
+        public void Fill(IEnumerable<CollisionObject> collisionBodies)
         {
             Clear();
 
@@ -89,10 +89,10 @@ namespace ShapeEngine.Core.Collision
                 }
             }
 
-            foreach (var collider in colliders)
+            /*foreach (var collider in colliders)
             {
                 Add(collider);
-            }
+            }*/
             
             CleanRegister();
         }
@@ -359,35 +359,12 @@ namespace ShapeEngine.Core.Collision
         }
         private void Add(CollisionObject collisionBody)
         {
-            // if (!collisionBody.HasColliders) return;
             foreach (var collider in collisionBody.Colliders)
             {
                 Add(collider);
             }
-            /*
-             if (!collider.Enabled || collider.Parent == null) continue;
-               
-               List<int> ids;
-               if (register.TryGetValue(collider, out var value))
-               {
-                   ids = value;
-                   ids.Clear();
-               }
-               else
-               {
-                   ids = new List<int>();
-                   register.Add(collider, ids);
-               
-               }
-               GetCellIDs(collider, ref ids);
-               if (ids.Count <= 0) return;
-               registerKeys.Remove(collider);
-               foreach (int hash in ids)
-               {
-                   buckets[hash].Add(collider);
-               }
-             */
         }
+       
         private void Add(Collider collider)
         {
             if (!collider.Enabled) return;

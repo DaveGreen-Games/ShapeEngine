@@ -4,7 +4,7 @@ using ShapeEngine.Screen;
 using System.Numerics;
 using Clipper2Lib;
 using ShapeEngine.Color;
-using ShapeEngine.Core.Collision;
+using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;

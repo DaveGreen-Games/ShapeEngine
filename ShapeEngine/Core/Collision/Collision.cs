@@ -2,7 +2,7 @@ using System.Numerics;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 
-namespace ShapeEngine.Core.Collision;
+namespace ShapeEngine.Core.CollisionSystem;
 
 public class Collision
 {

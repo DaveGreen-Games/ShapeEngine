@@ -3,10 +3,25 @@ using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
 
-namespace ShapeEngine.Core.Collision;
+namespace ShapeEngine.Core.CollisionSystem;
 
-public class CollisionInformation
+public class CollisionInformation : List<Collision>
 {
+    public readonly CollisionObject Self;
+    public readonly CollisionObject Other;
+    public CollisionInformation(CollisionObject self, CollisionObject other)
+    {
+        Self = self;
+        Other = other;
+        
+    }
+    public CollisionInformation(CollisionObject self, CollisionObject other, List<Collision> collisions)
+    {
+        Self = self;
+        Other = other;
+        AddRange(collisions);
+    }
+    /*
     public readonly List<Collision> Collisions;
     public readonly CollisionSurface CollisionSurface;
     public CollisionInformation(List<Collision> collisions, bool computesIntersections)
@@ -108,4 +123,7 @@ public class CollisionInformation
         }
         return others;
     }
+    */
+    
+    
 }

@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace ShapeEngine.Core.Collision;
+namespace ShapeEngine.Core.CollisionSystem;
 
 public class QueryInfos : List<QueryInfo>
 {

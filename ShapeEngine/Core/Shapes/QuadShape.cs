@@ -1,4 +1,4 @@
-using ShapeEngine.Core.Collision;
+using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.Core.Shapes;
