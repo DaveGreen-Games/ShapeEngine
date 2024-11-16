@@ -19,5 +19,11 @@ public class Overlap
         Other = other;
         FirstContact = firstContact;
     }
-    
+
+    private Overlap(Overlap overlap)
+    {
+        Self = overlap.Self;
+        Other = overlap.Other;
+    }
+    public Overlap Copy() => new(this);
 }

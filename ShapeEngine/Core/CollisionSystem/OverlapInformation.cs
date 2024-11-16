@@ -1,3 +1,4 @@
+using System.Reflection.Emit;
 using ShapeEngine.Core.CollisionSystem;
 
 namespace ShapeEngine.Core.CollisionSystem;
@@ -20,6 +21,15 @@ public class OverlapInformation : List<Overlap>
         AddRange(overlaps);
     }
 
+    public OverlapInformation Copy()
+    {
+        var newOverlaps = new List<Overlap>();
+        foreach (var overlap in this)
+        {
+            newOverlaps.Add(overlap.Copy());
+        }
+        return new (Self, Other, newOverlaps);
+    }
     internal Overlap? PopOverlap(Collider self, Collider other)
     {
         foreach (var overlap in this)

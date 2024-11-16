@@ -118,6 +118,23 @@ public class Intersection
         }
     }
 
+    private Intersection(Intersection intersection)
+    {
+        Valid = intersection.Valid;
+        CollisionSurface = intersection.CollisionSurface;
+        Closest = intersection.Closest;
+        Furthest = intersection.Furthest;
+        if (intersection.ColPoints == null || intersection.ColPoints.Count <= 0) ColPoints = null;
+        else
+        {
+            var newPoints = new CollisionPoints();
+            newPoints.AddRange(intersection.ColPoints);
+            ColPoints = newPoints;
+        }
+        
+    }
+    public Intersection Copy() => new(this);
+
     public CollisionPoint GetClosestCollisionPoint(Vector2 referencePoint)
     {
         if (!Valid) return new();

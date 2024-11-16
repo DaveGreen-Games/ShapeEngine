@@ -39,6 +39,18 @@ public class Collision
         this.FirstContact = firstContact;
     }
 
+    private Collision(Collision collision)
+    {
+        this.Self = collision.Self;
+        this.Other = collision.Other;
+        this.SelfVel = collision.SelfVel;
+        this.OtherVel = collision.OtherVel;
+        this.Intersection = collision.Intersection.Copy();
+        this.FirstContact = collision.FirstContact;
+    }
+    
+    public Collision Copy() => new(this);
+
     
     public CollisionPoint GetClosestCollisionPointToParent()
     {

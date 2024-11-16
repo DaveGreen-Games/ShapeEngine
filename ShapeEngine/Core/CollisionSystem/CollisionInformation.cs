@@ -21,6 +21,17 @@ public class CollisionInformation : List<Collision>
         Other = other;
         AddRange(collisions);
     }
+
+    public CollisionInformation Copy()
+    {
+        var newCollisions = new List<Collision>();
+        foreach (var collision in this)
+        {
+            newCollisions.Add(collision.Copy());
+        }
+        return new CollisionInformation(Self, Other, newCollisions);
+    }
+    //todo add filter functions agains
     
 }
 
