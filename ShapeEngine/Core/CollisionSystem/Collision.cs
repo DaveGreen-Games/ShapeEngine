@@ -1,6 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.UI;
 
 namespace ShapeEngine.Core.CollisionSystem;
 
@@ -12,6 +13,7 @@ public class Collision
     public readonly Vector2 SelfVel;
     public readonly Vector2 OtherVel;
     public readonly Intersection Intersection;
+    public Overlap Overlap => new(Self, Other, FirstContact);
     
     public CollisionPoint FirstCollisionPoint => Intersection.Valid ? Intersection.FirstCollisionPoint : new();
     public CollisionPoint ClosestCollisionPoint => Intersection.Valid ? Intersection.Closest : new();
