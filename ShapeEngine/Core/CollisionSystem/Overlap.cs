@@ -2,8 +2,22 @@ using ShapeEngine.Core.CollisionSystem;
 
 namespace ShapeEngine.Core.CollisionSystem;
 
-public class Overlap(Collider self, Collider other)
+public class Overlap
 {
-    public readonly Collider Self = self;
-    public readonly Collider Other = other;
+    public readonly Collider Self;
+    public readonly Collider Other;
+    public bool FirstContact { get; internal set; }
+    public Overlap(Collider self, Collider other)
+    {
+        Self = self;
+        Other = other;
+        FirstContact = false;
+    }
+    public Overlap(Collider self, Collider other, bool firstContact)
+    {
+        Self = self;
+        Other = other;
+        FirstContact = firstContact;
+    }
+    
 }
