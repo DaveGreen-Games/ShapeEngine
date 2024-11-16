@@ -4,8 +4,8 @@ namespace ShapeEngine.Core.CollisionSystem;
 
 public class OverlapInformation : List<Overlap>
 {
-    public readonly CollisionObject Other;
     public readonly CollisionObject Self;
+    public readonly CollisionObject Other;
         
     public OverlapInformation(CollisionObject self, CollisionObject other)
     {
@@ -20,7 +20,7 @@ public class OverlapInformation : List<Overlap>
         AddRange(overlaps);
     }
 
-    public Overlap? PopOverlap(Collider self, Collider other)
+    internal Overlap? PopOverlap(Collider self, Collider other)
     {
         foreach (var overlap in this)
         {
