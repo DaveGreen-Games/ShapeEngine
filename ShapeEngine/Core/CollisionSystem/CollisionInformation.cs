@@ -21,7 +21,11 @@ public class CollisionInformation : List<Collision>
         Other = other;
         AddRange(collisions);
     }
-    /*
+    
+}
+
+
+/*
     public readonly List<Collision> Collisions;
     public readonly CollisionSurface CollisionSurface;
     public CollisionInformation(List<Collision> collisions, bool computesIntersections)
@@ -126,4 +130,3 @@ public class CollisionInformation : List<Collision>
     */
     
     
-}
