@@ -475,7 +475,7 @@ public class EndlessSpaceCollision : ExampleScene
             this.collider.ComputeIntersections = false;
             this.collider.CollisionLayer = CollisionLayer;
             this.collider.CollisionMask = new BitFlag(AsteroidObstacle.CollisionLayer);
-            this.collider.OnCollision += OnColliderCollision;
+            this.collider.OnIntersected += OnColliderCollision;
             this.collider.OnCollisionEnded += OnColliderCollisionEnded;
             this.AddCollider(collider);
 
@@ -679,7 +679,7 @@ public class EndlessSpaceCollision : ExampleScene
             collider.ComputeIntersections = true;
             collider.CollisionLayer = CollisionLayer;
             collider.CollisionMask = new BitFlag(AsteroidObstacle.CollisionLayer);
-            collider.OnCollision += OnColliderCollision;
+            collider.OnIntersected += OnColliderCollision;
             collider.OnCollisionEnded += OnColliderCollisionEnded;
             AddCollider(collider);
             hull = collider.GetTriangleShape();
@@ -769,7 +769,7 @@ public class EndlessSpaceCollision : ExampleScene
             collider.ComputeIntersections = true;
             collider.CollisionLayer = CollisionLayer;
             collider.CollisionMask = new BitFlag(AsteroidObstacle.CollisionLayer);
-            collider.OnCollision += OnColliderCollision;
+            collider.OnIntersected += OnColliderCollision;
             collider.OnCollisionEnded += OnColliderCollisionEnded;
             AddCollider(collider);
             hull = collider.GetTriangleShape();

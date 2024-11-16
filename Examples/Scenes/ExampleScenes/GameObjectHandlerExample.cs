@@ -8,7 +8,6 @@ using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
-using Color = System.Drawing.Color;
 using ShapeEngine.Random;
 namespace Examples.Scenes.ExampleScenes
 {
@@ -113,19 +112,32 @@ namespace Examples.Scenes.ExampleScenes
             AddCollider(col);
 
             circleCollider = col;
-            circleCollider.OnCollision += Overlap;
+            // circleCollider.OnIntersected += Overlap;
             
             Layer = SpawnAreaLayers.ObjectFlag;
         }
 
-        private void Overlap(Collider col, CollisionInformation info)
+        protected override void Collision(CollisionInformation info)
         {
-            if (info.CollisionSurface.Valid)
+            if (info.Count > 0)
             {
-                // timer = 0.25f;
-                Velocity = Velocity.Reflect(info.CollisionSurface.Normal);
+                foreach (var collision in info)
+                {
+                    if(!collision.FirstContact) continue;
+                    if(!collision.Intersection.Valid) continue;
+                    Velocity = Velocity.Reflect(collision.Intersection.CollisionSurface.Normal);
+                }
             }
         }
+
+        // private void Overlap(Collider col, CollisionInformation info)
+        // {
+        //     if (info.CollisionSurface.Valid)
+        //     {
+        //         // timer = 0.25f;
+        //         Velocity = Velocity.Reflect(info.CollisionSurface.Normal);
+        //     }
+        // }
         public override void DrawGame(ScreenInfo game)
         {
             var c = circleCollider.GetCircleShape();
@@ -172,7 +184,7 @@ namespace Examples.Scenes.ExampleScenes
             AddCollider(col);
 
             circleCollider = col;
-            circleCollider.OnCollision += Overlap;
+            // circleCollider.OnIntersected += Overlap;
             
             Layer = SpawnAreaLayers.ObjectFlag;
 
@@ -196,35 +208,52 @@ namespace Examples.Scenes.ExampleScenes
         {
             
         }
-        
-        private void Overlap(Collider col, CollisionInformation info)
+
+        protected override void Collision(CollisionInformation info)
         {
-            if (info.Collisions.Count > 0)
+            if (info.Count > 0)
             {
-                
-                var minDisSq = float.PositiveInfinity;
-                Vector2 p = new();
-                foreach (var collision in info.Collisions)
+                foreach (var collision in info)
                 {
-                    if(!collision.Intersection.Valid || !collision.Intersection.CollisionSurface.Valid) continue;
-                    var disSq = (Transform.Position - collision.Intersection.CollisionSurface.Point).LengthSquared();
-                    if (disSq < minDisSq)
-                    {
-                        minDisSq = disSq;
-                        p = collision.Intersection.CollisionSurface.Point;
-                    }
+                    if(!collision.FirstContact) continue;
+                    if(!collision.Intersection.Valid) continue;
+                    
+                    Transform = Transform.SetPosition(collision.Intersection.Closest.Point);
+                    Velocity = new();
+                    Enabled = false;
+                    deadTimer = 2f;
                 }
-                Transform = Transform.SetPosition(p);
-                Velocity = new();
-                Enabled = false;
-                deadTimer = 2f;
             }
-            // if (info.CollisionSurface.Valid)
-            // {
-            //     // timer = 0.25f;
-            //     body.Velocity = body.Velocity.Reflect(info.CollisionSurface.Normal);
-            // }
         }
+
+        // private void Overlap(Collider col, CollisionInformation info)
+        // {
+        //     if (info.Collisions.Count > 0)
+        //     {
+        //         
+        //         var minDisSq = float.PositiveInfinity;
+        //         Vector2 p = new();
+        //         foreach (var collision in info.Collisions)
+        //         {
+        //             if(!collision.Intersection.Valid || !collision.Intersection.CollisionSurface.Valid) continue;
+        //             var disSq = (Transform.Position - collision.Intersection.CollisionSurface.Point).LengthSquared();
+        //             if (disSq < minDisSq)
+        //             {
+        //                 minDisSq = disSq;
+        //                 p = collision.Intersection.CollisionSurface.Point;
+        //             }
+        //         }
+        //         Transform = Transform.SetPosition(p);
+        //         Velocity = new();
+        //         Enabled = false;
+        //         deadTimer = 2f;
+        //     }
+        //     // if (info.CollisionSurface.Valid)
+        //     // {
+        //     //     // timer = 0.25f;
+        //     //     body.Velocity = body.Velocity.Reflect(info.CollisionSurface.Normal);
+        //     // }
+        // }
         public override void DrawGame(ScreenInfo game)
         {
             // lastVelocitySegment.Draw(3f, Colors.Medium);
@@ -263,7 +292,7 @@ namespace Examples.Scenes.ExampleScenes
             AddCollider(col);
 
             polyCollider = col;
-            polyCollider.OnCollision += Overlap;
+            polyCollider.OnIntersected += Overlap;
             
             Layer = SpawnAreaLayers.ObjectFlag;
 
@@ -387,10 +416,10 @@ namespace Examples.Scenes.ExampleScenes
             AddCollider(tCol);
 
             circleCollider = cCol;
-            circleCollider.OnCollision += Overlap;
+            circleCollider.OnIntersected += Overlap;
 
             triangleCollider = tCol;
-            triangleCollider.OnCollision += Overlap;
+            triangleCollider.OnIntersected += Overlap;
             
             Layer = SpawnAreaLayers.ObjectFlag;
         }
