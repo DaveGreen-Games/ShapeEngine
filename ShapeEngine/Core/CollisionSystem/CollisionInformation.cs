@@ -31,7 +31,46 @@ public class CollisionInformation : List<Collision>
         }
         return new CollisionInformation(Self, Other, newCollisions);
     }
-    //todo add filter functions agains
+    
+    public List<Collision>? FilterCollisions(Predicate<Collision> match)
+    {
+        if(Count <= 0) return null;
+        List<Collision>? filtered = null;
+        foreach (var c in this)
+        {
+            if (match(c))
+            {
+                filtered??= new();
+                filtered.Add(c);
+            }
+        }
+        return filtered;
+    }
+    public HashSet<Collider>? GetAllOtherColliders()
+    {
+        if(Count <= 0) return null;
+        HashSet<Collider> others = new();
+        foreach (var c in this)
+        {
+            others.Add(c.Other);
+        }
+        return others;
+    }
+    public List<Collision>? GetAllFirstContactCollisions()
+    {
+        return FilterCollisions((c) => c.FirstContact);
+    }
+    public HashSet<Collider>? GetAllOtherFirstContactColliders()
+    {
+        var filtered = GetAllFirstContactCollisions();
+        if(filtered == null) return null;
+        HashSet<Collider> others = new();
+        foreach (var c in filtered)
+        {
+            others.Add(c.Other);
+        }
+        return others;
+    }
     
 }
 
