@@ -8,6 +8,22 @@ namespace ShapeEngine.Core.CollisionSystem;
 
 public abstract class Collider : Shape
 {
+    /// <summary>
+    /// A collision (Intersection) between this collider and another collider has occurred.
+    /// AvancedCollisionNotification has to be enabled on the parent for this event to be invoked.
+    /// </summary>
+    public event Action<Collision>? OnIntersected;
+    /// <summary>
+    /// A collision (Overlap) between this collider and another collider has occured.
+    ///  AvancedCollisionNotification has to be enabled on the parent for this event to be invoked.
+    /// </summary>
+    public event Action<Overlap>? OnOverlapped;
+    /// <summary>
+    /// A collision (Intersection/Overlap) between this collider and another collider has ended.
+    ///  AvancedCollisionNotification has to be enabled on the parent for this event to be invoked.
+    /// </summary>
+    public event Action<Collider>? OnCollisionEnded;
+    
     
     private CollisionObject? parent = null;
     public CollisionObject? Parent
@@ -82,23 +98,41 @@ public abstract class Collider : Shape
     }
 
     
-    internal void ResolveCollision(Collision collision)
+    internal void ResolveIntersected(Collision collision)
     {
-        Collision(collision);
+        Intersected(collision);
+        OnIntersected?.Invoke(collision);
     }
 
-    internal void ResolveOverlap(Collider other, bool firstContact)
+    internal void ResolveOverlapped(Overlap overlap)
     {
-        Overlap(other, firstContact);
+        Overlapped(overlap);
+        OnOverlapped?.Invoke(overlap);
     }
    
     internal void ResolveCollisionEnded(Collider other)
     {
         CollisionEnded(other);
+        OnCollisionEnded?.Invoke(other);
     } 
     
-    protected virtual void Collision(Collision info) { }
-    protected virtual void Overlap(Collider other, bool firstContact) { }
+    /// <summary>
+    /// Will be called from the parent. Is only called when a collision with this collider occurs where the intersection is valid.
+    /// AvancedCollisionNotification has to be enabled on the parent for this function to be called.
+    /// </summary>
+    /// <param name="info"></param>
+    protected virtual void Intersected(Collision info) { }
+    /// <summary>
+    /// Will be called from the parent. Is only called when an overlap with this collider occurs where the intersection is not valid.
+    /// AvancedCollisionNotification has to be enabled on the parent for this function to be called.
+    /// </summary>
+    /// <param name="overlap"></param>
+    protected virtual void Overlapped(Overlap overlap) { }
+    /// <summary>
+    /// Will be called from the parent. Is only called when a collision (intersection / overlap)  with this collider ends.
+    /// AvancedCollisionNotification has to be enabled on the parent for this function to be called.
+    /// </summary>
+    /// <param name="other"></param>
     protected virtual void CollisionEnded(Collider other) { }
     
 

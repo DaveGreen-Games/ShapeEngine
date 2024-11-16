@@ -8,6 +8,13 @@ namespace ShapeEngine.Core;
 
 public abstract class CollisionObject : PhysicsObject
 {
+    public event Action<CollisionInformation>? OnCollision;
+    public event Action<OverlapInformation>? OnCollisionEnded;
+
+    public event Action<Collision>? OnColliderIntersected;
+    public event Action<Overlap>? OnColliderOverlapped;
+    public event Action<Collider>? OnColliderCollisionEnded;
+    
     
     public CollisionObject()
     {
@@ -40,49 +47,83 @@ public abstract class CollisionObject : PhysicsObject
 
     public bool ProjectShape = false;
 
+    /// <summary>
+    /// If set to true:
+    ///     - ColliderIntersected(), ColliderOverlapped(), and ColliderOverlapEnded() functions will be called on this CollisionObject
+    ///     - OnColliderIntersected, OnColliderOverlapped, and OnColliderOverlapEnded events will be invoked
+    ///     - Collision(), Overlap(), OverlapEnded() functions will be called on the colliders involved
+    /// </summary>
+    public bool AvancedCollisionNotification = false;
     
     internal void ResolveCollision(CollisionInformation info)
     {
-        //todo invoke events
-        
         Collision(info);
+        OnCollision?.Invoke(info);   
+        
+        if(AvancedCollisionNotification == false) return;
         
         foreach (var collision in info)
         {
-            
             if (collision.Intersection.Valid)
             {
-                collision.Self.ResolveCollision(collision);
+                collision.Self.ResolveIntersected(collision);
                 ColliderIntersected(collision);
+                OnColliderIntersected?.Invoke(collision);
             }
             else
             {
-                collision.Self.ResolveOverlap(collision.Other, collision.FirstContact);
-                ColliderOverlapped(collision.Self, collision.Other, collision.FirstContact);
+                var overlap = collision.Overlap;
+                collision.Self.ResolveOverlapped(overlap);
+                ColliderOverlapped(overlap);
+                OnColliderOverlapped?.Invoke(overlap);
             }
         }
     }
 
     internal void ResolveCollisionEnded(OverlapInformation info)
     {
-        //todo invoke events
-        
         CollisionEnded(info);
+        OnCollisionEnded?.Invoke(info);
+        
+        if(AvancedCollisionNotification == false) return;
         
         foreach (var overlap in info)
         {
             overlap.Self.ResolveCollisionEnded(overlap.Other);
-            ColliderOverlapEnded(overlap.Other);
+            ColliderCollisionEnded(overlap.Other);
+            OnColliderCollisionEnded?.Invoke(overlap.Other);
         }
     }
 
     
+    /// <summary>
+    /// Called when 1 or more collider of this CollisionObject is involved in a collision (intersection or overlap)
+    /// </summary>
+    /// <param name="info"></param>
     protected virtual void Collision(CollisionInformation info) { }
+    
+    /// <summary>
+    /// Called when 1 or more collider of this CollisionObject are no longer involved in a collision (intersection or overlap)
+    /// </summary>
+    /// <param name="info"></param>
     protected virtual void CollisionEnded(OverlapInformation info) { }
     
+    
+    /// <summary>
+    /// Only callded when AdvancedCollisionNotification is set to true and the intersection is valid.
+    /// </summary>
+    /// <param name="collision">The information about the collision</param>
     protected virtual void ColliderIntersected(Collision collision) { }
-    protected virtual void ColliderOverlapped(Collider self, Collider other, bool firstContact) { }
-    protected virtual void ColliderOverlapEnded(Collider other) { }
+    /// <summary>
+    /// Only callded when AdvancedCollisionNotification is set to true and the intersection is not valid.
+    /// </summary>
+    /// <param name="overlap">The information about the overlap</param>
+    protected virtual void ColliderOverlapped(Overlap overlap) { }
+    /// <summary>
+    /// Only callded when AdvancedCollisionNotification is set to true.
+    /// </summary>
+    /// <param name="other">The other collider involved</param>
+    protected virtual void ColliderCollisionEnded(Collider other) { }
     
     
     
