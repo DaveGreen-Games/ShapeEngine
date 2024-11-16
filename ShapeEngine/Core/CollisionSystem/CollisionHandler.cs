@@ -378,7 +378,7 @@ public class CollisionHandler : IBounds
                             if (!mask.Has(candidate.CollisionLayer)) continue;
                             if (!collisionCandidateCheckRegister.Add(candidate)) continue;
 
-                            bool overlap = projected.Overlap(candidate); // ShapeGeometry.Overlap(collider, candidate);
+                            bool overlap = projected.Overlap(candidate);
                             if (overlap)
                             {
                                 var oldOverlap = oldOverlapRegister?.PopOverlap(collider, candidate);
@@ -386,13 +386,14 @@ public class CollisionHandler : IBounds
                                 if (oldOverlap != null)
                                 {
                                     firstContact = false;
+                                    oldOverlap.FirstContact = false;
                                     activeOverlapStack.AddOverlap(oldOverlap);
 
                                 }
                                 else
                                 {
                                     firstContact = true;
-                                    activeOverlapStack.AddOverlap(new Overlap(collider, candidate));
+                                    activeOverlapStack.AddOverlap(new Overlap(collider, candidate, true));
                                 }
                                 
                                 if (computeIntersections)
@@ -470,28 +471,15 @@ public class CollisionHandler : IBounds
                                 if (oldOverlap != null)
                                 {
                                     firstContact = false;
+                                    oldOverlap.FirstContact = false;
                                     activeOverlapStack.AddOverlap(oldOverlap);
 
                                 }
                                 else
                                 {
                                     firstContact = true;
-                                    activeOverlapStack.AddOverlap(new Overlap(collider, candidate));
+                                    activeOverlapStack.AddOverlap(new Overlap(collider, candidate, true));
                                 }
-                                /*var oldEntry = oldOverlapStack.FindEntry(collider, candidate);
-                                bool firstContact;
-                                if (oldEntry != null)
-                                {
-                                    firstContact = false;
-                                    oldOverlapStack.RemoveEntry(oldEntry);
-                                    activeOverlapStack.AddEntry(oldEntry);
-
-                                }
-                                else
-                                {
-                                    firstContact = true;
-                                    activeOverlapStack.AddEntry(new OverlapEntry(collider, candidate));
-                                }*/
                                 
                                 if (computeIntersections)
                                 {                                                         
@@ -516,9 +504,6 @@ public class CollisionHandler : IBounds
                                             collisionPoints ??= new();
                                             collisionPoints.Add(closest);
                                         }
-                                        //CollisionPoint closest = shape.GetClosestPoint(refPoint);
-                                        //collisionPoints.Add(closest);
-
                                     }
 
                                     Collision c = new(collider, candidate, firstContact, collisionPoints);
