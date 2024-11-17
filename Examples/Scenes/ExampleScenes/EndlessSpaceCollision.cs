@@ -475,40 +475,58 @@ public class EndlessSpaceCollision : ExampleScene
             this.collider.ComputeIntersections = false;
             this.collider.CollisionLayer = CollisionLayer;
             this.collider.CollisionMask = new BitFlag(AsteroidObstacle.CollisionLayer);
-            this.collider.OnIntersected += OnColliderCollision;
-            this.collider.OnCollisionEnded += OnColliderCollisionEnded;
+            // this.collider.OnIntersected += OnColliderCollision;
+            // this.collider.OnCollisionEnded += OnColliderCollisionEnded;
             this.AddCollider(collider);
 
             this.color = color;
 
         }
 
-        private void OnColliderCollisionEnded(Collider col, Collider other)
+        // private void OnColliderCollisionEnded(Collider col, Collider other)
+        // {
+        //     
+        // }
+        protected override void Collision(CollisionInformation info)
         {
-            
-        }
-
-        private void OnColliderCollision(Collider col, CollisionInformation info)
-        {
-            foreach (var collision in info.Collisions)
+            if (info.Count <= 0) return;
+            foreach (var collision in info)
             {
-                if (collision.FirstContact)
+                if(!collision.FirstContact) continue;
+                var other = info.Other;
+                if (other is AsteroidObstacle asteroid)
                 {
-                    var other = collision.Other.Parent;
-                    if (other is AsteroidObstacle asteroid)
-                    {
-                        asteroid.Damage(Transform.Position, stats.Damage, new Vector2(0f));
-                        // EndlessSpaceCollision.currentImpactCraters.Add(new Circle(Transform.Position, stats.Damage / 4));
-                    }
-
-                    effectTimer = effectDuration;
-                    collider.Enabled = false;
-                    Velocity = new(0f);
-                    return;
-
+                    asteroid.Damage(Transform.Position, stats.Damage, new Vector2(0f));
                 }
+
+                effectTimer = effectDuration;
+                collider.Enabled = false;
+                Velocity = new(0f);
+                return;
             }
         }
+
+        // private void OnColliderCollision(Collider col, CollisionInformation info)
+        // {
+        //     foreach (var collision in info.Collisions)
+        //     {
+        //         if (collision.FirstContact)
+        //         {
+        //             var other = collision.Other.Parent;
+        //             if (other is AsteroidObstacle asteroid)
+        //             {
+        //                 asteroid.Damage(Transform.Position, stats.Damage, new Vector2(0f));
+        //                 // EndlessSpaceCollision.currentImpactCraters.Add(new Circle(Transform.Position, stats.Damage / 4));
+        //             }
+        //
+        //             effectTimer = effectDuration;
+        //             collider.Enabled = false;
+        //             Velocity = new(0f);
+        //             return;
+        //
+        //         }
+        //     }
+        // }
 
         public override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi,  ScreenInfo ui)
         {
@@ -679,8 +697,8 @@ public class EndlessSpaceCollision : ExampleScene
             collider.ComputeIntersections = true;
             collider.CollisionLayer = CollisionLayer;
             collider.CollisionMask = new BitFlag(AsteroidObstacle.CollisionLayer);
-            collider.OnIntersected += OnColliderCollision;
-            collider.OnCollisionEnded += OnColliderCollisionEnded;
+            // collider.OnIntersected += OnColliderCollision;
+            // collider.OnCollisionEnded += OnColliderCollisionEnded;
             AddCollider(collider);
             hull = collider.GetTriangleShape();
             SetupInput();
@@ -688,45 +706,74 @@ public class EndlessSpaceCollision : ExampleScene
             Health = MaxHp;
         }
 
-        private void OnColliderCollision(Collider col, CollisionInformation info)
+        protected override void Collision(CollisionInformation info)
         {
-            if (info.Collisions.Count > 0)
+            if (info.Count <= 0) return;
+            if (info.Other is not AsteroidObstacle a) return;
+            foreach (var collision in info)
             {
-                foreach (var collision in info.Collisions)
+                a.Cut(GetCutShape());
+
+                if (collisionStunTimer <= 0f)
                 {
-                    if (collision.Other.Parent is AsteroidObstacle a)
+                    Health--;
+                    if (Health <= 0)
                     {
-                        a.Cut(GetCutShape());
-
-                        if (collisionStunTimer <= 0f)
-                        {
-                            Health--;
-                            if (Health <= 0)
-                            {
-                                collider.Enabled = false;
-                                Kill();
-                                OnKilled?.Invoke();
-                            }
-                        }
-                        
-                        if (info.CollisionSurface.Valid)
-                        {
-                            Velocity = info.CollisionSurface.Normal * 3500;
-                            collisionStunTimer = CollisionStunTime;
-                            collisionRotationDirection = Rng.Instance.RandDirF();
-                        }
-
-                        return;
+                        collider.Enabled = false;
+                        Kill();
+                        OnKilled?.Invoke();
                     }
                 }
-                
+                        
+                if (collision.Intersection.Valid && collision.Intersection.CollisionSurface.Valid)
+                {
+                    Velocity = collision.Intersection.CollisionSurface.Normal * 3500;
+                    collisionStunTimer = CollisionStunTime;
+                    collisionRotationDirection = Rng.Instance.RandDirF();
+                }
+
+                return;
             }
-            
         }
-        private void OnColliderCollisionEnded(Collider col, Collider other)
-        {
-            
-        }
+        // private void OnColliderCollision(Collider col, CollisionInformation info)
+        // {
+        //     if (info.Collisions.Count > 0)
+        //     {
+        //         foreach (var collision in info.Collisions)
+        //         {
+        //             if (collision.Other.Parent is AsteroidObstacle a)
+        //             {
+        //                 a.Cut(GetCutShape());
+        //
+        //                 if (collisionStunTimer <= 0f)
+        //                 {
+        //                     Health--;
+        //                     if (Health <= 0)
+        //                     {
+        //                         collider.Enabled = false;
+        //                         Kill();
+        //                         OnKilled?.Invoke();
+        //                     }
+        //                 }
+        //                 
+        //                 if (info.CollisionSurface.Valid)
+        //                 {
+        //                     Velocity = info.CollisionSurface.Normal * 3500;
+        //                     collisionStunTimer = CollisionStunTime;
+        //                     collisionRotationDirection = Rng.Instance.RandDirF();
+        //                 }
+        //
+        //                 return;
+        //             }
+        //         }
+        //         
+        //     }
+        //     
+        // }
+        // private void OnColliderCollisionEnded(Collider col, Collider other)
+        // {
+        //     
+        // }
 
         
         
@@ -769,8 +816,8 @@ public class EndlessSpaceCollision : ExampleScene
             collider.ComputeIntersections = true;
             collider.CollisionLayer = CollisionLayer;
             collider.CollisionMask = new BitFlag(AsteroidObstacle.CollisionLayer);
-            collider.OnIntersected += OnColliderCollision;
-            collider.OnCollisionEnded += OnColliderCollisionEnded;
+            // collider.OnIntersected += OnColliderCollision;
+            // collider.OnCollisionEnded += OnColliderCollisionEnded;
             AddCollider(collider);
             hull = collider.GetTriangleShape();
             movementDir = new(0, 0);
@@ -1009,23 +1056,18 @@ public class EndlessSpaceCollision : ExampleScene
             }
         }
 
-        private void OnColliderCollision(Collider col, CollisionInformation info)
+        protected override void Collision(CollisionInformation info)
         {
-            if (info.CollisionSurface.Valid)
+            if (info.Count <= 0) return;
+            foreach (var collision in info)
             {
-                Velocity = Velocity.Reflect(info.CollisionSurface.Normal);
+                if(!collision.Intersection.Valid) continue;
+                if(!collision.FirstContact) continue;
+                var normal = collision.Intersection.Closest.Normal;
+                Velocity = Velocity.Reflect(normal);
             }
         }
-        private void OnColliderCollisionEnded(Collider col, Collider other)
-        {
-            
-        }
-        
-        // private void OnColliderShapeUpdated(PolyCollider col, Polygon shape)
-        // {
-        //     bb = shape.GetBoundingBox();
-        //     triangulation = shape.Triangulate();
-        // }
+
         public void MoveTo(Vector2 newPosition)
         {
             var moved = newPosition - Transform.Position;

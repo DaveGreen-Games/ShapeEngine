@@ -95,6 +95,8 @@ namespace Examples.Scenes.ExampleScenes
             
         }
     }
+   
+    //TODO add overlap ball here
     internal class Ball : CollisionObject
     {
         private CircleCollider circleCollider;
@@ -125,7 +127,9 @@ namespace Examples.Scenes.ExampleScenes
                 {
                     if(!collision.FirstContact) continue;
                     if(!collision.Intersection.Valid) continue;
-                    Velocity = Velocity.Reflect(collision.Intersection.CollisionSurface.Normal);
+                    // var normal = collision.Intersection.CollisionSurface.Normal;
+                    var normal = collision.Intersection.Closest.Normal;
+                    Velocity = Velocity.Reflect(normal);
                 }
             }
         }
@@ -292,7 +296,7 @@ namespace Examples.Scenes.ExampleScenes
             AddCollider(col);
 
             polyCollider = col;
-            polyCollider.OnIntersected += Overlap;
+            // polyCollider.OnIntersected += Overlap;
             
             Layer = SpawnAreaLayers.ObjectFlag;
 
@@ -358,16 +362,31 @@ namespace Examples.Scenes.ExampleScenes
             var col = polyCollider;
             col.CollisionMask = col.CollisionMask.Add(CollisionFlags.RockFlag);
         }
-        private void Overlap(Collider col, CollisionInformation info)
+
+        protected override void Collision(CollisionInformation info)
         {
-            if (info.CollisionSurface.Valid)
+            if (info.Count < 0) return;
+            foreach (var collision in info)
             {
-                // body.Transform = body.Transform.ScaleBy(ShapeRandom.RandF(0.1f, 0.2f));
-                // body.Transform = body.Transform.SetScale(ShapeRandom.RandF(0.5f, 4f));
-                // timer = 0.25f;
-                Velocity = Velocity.Reflect(info.CollisionSurface.Normal);
+                if(!collision.FirstContact) continue;
+                if(!collision.Intersection.Valid) continue;
+                // var normal = collision.Intersection.CollisionSurface.Normal;
+                var normal = collision.Intersection.Closest.Normal;
+                Velocity = Velocity.Reflect(normal);
             }
+
         }
+
+        // private void Overlap(Collider col, CollisionInformation info)
+        // {
+        //     if (info.CollisionSurface.Valid)
+        //     {
+        //         // body.Transform = body.Transform.ScaleBy(ShapeRandom.RandF(0.1f, 0.2f));
+        //         // body.Transform = body.Transform.SetScale(ShapeRandom.RandF(0.5f, 4f));
+        //         // timer = 0.25f;
+        //         Velocity = Velocity.Reflect(info.CollisionSurface.Normal);
+        //     }
+        // }
         public override void DrawGame(ScreenInfo game)
         {
             polyCollider.GetPolygonShape().DrawLines(4f, Colors.Warm);
@@ -416,23 +435,37 @@ namespace Examples.Scenes.ExampleScenes
             AddCollider(tCol);
 
             circleCollider = cCol;
-            circleCollider.OnIntersected += Overlap;
+            // circleCollider.OnIntersected += Overlap;
 
             triangleCollider = tCol;
-            triangleCollider.OnIntersected += Overlap;
+            // triangleCollider.OnIntersected += Overlap;
             
             Layer = SpawnAreaLayers.ObjectFlag;
         }
 
-        private void Overlap(Collider col, CollisionInformation info)
+        protected override void Collision(CollisionInformation info)
         {
-            if (info.CollisionSurface.Valid)
+            if (info.Count < 0) return;
+            foreach (var collision in info)
             {
-                // timer = 0.25f;
-                Velocity = Velocity.Reflect(info.CollisionSurface.Normal);
+                if(!collision.FirstContact) continue;
+                if(!collision.Intersection.Valid) continue;
+                // var normal = collision.Intersection.CollisionSurface.Normal;
+                var normal = collision.Intersection.Closest.Normal;
+                Velocity = Velocity.Reflect(normal);
                 Transform = Transform.SetRotationRad(Velocity.AngleRad());
             }
         }
+
+        // private void Overlap(Collider col, CollisionInformation info)
+        // {
+        //     if (info.CollisionSurface.Valid)
+        //     {
+        //         // timer = 0.25f;
+        //         Velocity = Velocity.Reflect(info.CollisionSurface.Normal);
+        //         Transform = Transform.SetRotationRad(Velocity.AngleRad());
+        //     }
+        // }
         public override void DrawGame(ScreenInfo game)
         {
             circleCollider.GetCircleShape().DrawLines(4f, Colors.Warm);
