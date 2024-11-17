@@ -47,17 +47,21 @@ public class Intersection
             var count = 0;
             foreach (var p in points)
             {
-                var dis = Vector2.DistanceSquared(p.Point, refPoint);
-                if (dis < closestDist)
+                if (p.Valid)
                 {
-                    closestDist = dis;
-                    closest = p;
+                    var dis = Vector2.DistanceSquared(p.Point, refPoint);
+                    if (dis < closestDist)
+                    {
+                        closestDist = dis;
+                        closest = p;
+                    }
+                    else if (dis > furthestDist)
+                    {
+                        furthestDist = dis;
+                        furthest = p;
+                    }
                 }
-                else if (dis > furthestDist)
-                {
-                    furthestDist = dis;
-                    furthest = p;
-                }
+                
                 
                 if (DiscardNormal(p.Normal, vel)) continue;
                 if (DiscardNormal(p, refPoint)) continue;
