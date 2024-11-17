@@ -3,233 +3,238 @@ using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
 
-//Stopwatch functionality
-//using System.Diagnostics;
-//public readonly Stopwatch watch = new();
-//watch.Restart();
-//watch.Stop();
-//var ms = watch.Elapsed.TotalMilliseconds;
-//Console.WriteLine(ms);
+namespace ShapeEngine.Core.CollisionSystem;
 
-namespace ShapeEngine.Core.CollisionSystem
+public class CollisionPoints : ShapeList<CollisionPoint>
 {
-    /*
-    public class ScreenTextures : Dictionary<uint, ScreenTexture>
+    public CollisionPoints()
     {
-        public ActiveScreenTextures GetActive(ScreenTextureMask screenTextureMask)
-        {
-            if (screenTextureMask.Count <= 0)
-                return new(this.Values.Where((st) => st.Active));
-            else
-                return new(this.Values.Where((st) => st.Active && screenTextureMask.Contains(st.ID)));
-        }
-        public ActiveScreenTextures GetActive()
-        {
-            return new(this.Values.Where((st) => st.Active));
-        }
-        public List<ScreenTexture> GetAll() { return this.Values.ToList(); }
-
+        
     }
-    public class ActiveScreenTextures : List<ScreenTexture>
+    public CollisionPoints(params CollisionPoint[] points) { AddRange(points); }
+    public CollisionPoints(IEnumerable<CollisionPoint> points) { AddRange(points); }
+
+
+    
+    public override int GetHashCode() { return Game.GetHashCode(this); }
+    public bool Equals(CollisionPoints? other)
     {
-        public ActiveScreenTextures(IEnumerable<ScreenTexture> textures)
+        if (other == null) return false;
+        if (Count != other.Count) return false;
+        for (var i = 0; i < Count; i++)
         {
-            this.AddRange(textures);
+            if (this[i].Equals(other[i])) return false;
         }
-        public ActiveScreenTextures(params ScreenTexture[] textures)
-        {
-            this.AddRange(textures);
-        }
-        public ActiveScreenTextures SortDrawOrder()
-        {
-            this.Sort(delegate (ScreenTexture x, ScreenTexture y)
-            {
-                //if (x == null || y == null) return 0;
-
-                if (x.DrawOrder < y.DrawOrder) return -1;
-                else if (x.DrawOrder > y.DrawOrder) return 1;
-                else return 0;
-            });
-            return this;
-        }
-    }
-    public class ScreenTextureMask : HashSet<uint>
-    {
-        public ScreenTextureMask() { }
-        public ScreenTextureMask(params uint[] mask)
-        {
-            foreach (var id in mask)
-            {
-                this.Add(id);
-            }
-        }
-        public ScreenTextureMask(IEnumerable<uint> mask)
-        {
-            foreach (var id in mask)
-            {
-                this.Add(id);
-            }
-        }
-        public ScreenTextureMask(HashSet<uint> mask)
-        {
-            foreach (var id in mask)
-            {
-                this.Add(id);
-            }
-        }
-    }
-    */
-
-
-    public class CollisionPoints : ShapeList<CollisionPoint>
-    {
-        public CollisionPoints()
-        {
-            
-        }
-        public CollisionPoints(params CollisionPoint[] points) { AddRange(points); }
-        public CollisionPoints(IEnumerable<CollisionPoint> points) { AddRange(points); }
-
-
-        public bool Valid => Count > 0;
-
-        public void FlipNormals(Vector2 referencePoint)
-        {
-            for (var i = 0; i < Count; i++)
-            {
-                var p = this[i];
-                var dir = referencePoint - p.Point;
-                if (dir.IsFacingTheOppositeDirection(p.Normal))
-                    this[i] = this[i].FlipNormal();
-            }
-        }
-
-        public CollisionPoint GetClosestCollisionPoint(Vector2 p)
-        {
-            if (Count <= 0) return new();
-
-            if (Count == 1) return this[0];
-
-
-            var closestPoint = this[0];
-            var minDisSq = (closestPoint.Point - p).LengthSquared();
-
-            for (var i = 1; i < Count; i++)
-            {
-                var disSq = (this[i].Point - p).LengthSquared();
-                if (disSq >= minDisSq) continue;
-                minDisSq = disSq;
-                closestPoint = this[i];
-            }
-
-            return closestPoint;
-        }
-        public ClosestDistance GetClosestDistanceTo(Vector2 p)
-        {
-            if (Count <= 0) return new();
-
-            if (Count == 1) return new(this[0].Point, p);
-
-
-            var closestPoint = this[0];
-            var minDisSq = (closestPoint.Point - p).LengthSquared();
-
-            for (var i = 1; i < Count; i++)
-            {
-                var disSq = (this[i].Point - p).LengthSquared();
-                if (disSq >= minDisSq) continue;
-                minDisSq = disSq;
-                closestPoint = this[i];
-            }
-
-            return new(closestPoint.Point, p);
-        }
-        // public ClosestPoint GetClosestPoint(Vector2 p)
-        // {
-        //     if (Count <= 0) return new();
-        //
-        //     float minDisSquared = float.PositiveInfinity;
-        //     CollisionPoint closestPoint = new();
-        //
-        //     for (var i = 0; i < Count; i++)
-        //     {
-        //         var point = this[i];
-        //
-        //         float disSquared = (point.Point - p).LengthSquared();
-        //         if (disSquared > minDisSquared) continue;
-        //         minDisSquared = disSquared;
-        //         closestPoint = point;
-        //     }
-        //     return new(closestPoint, minDisSquared);
-        // }
-
-        public override int GetHashCode() { return Game.GetHashCode(this); }
-        public bool Equals(CollisionPoints? other)
-        {
-            if (other == null) return false;
-            if (Count != other.Count) return false;
-            for (var i = 0; i < Count; i++)
-            {
-                if (this[i].Equals(other[i])) return false;
-            }
-            return true;
-        }
-
-
-        public Points GetUniquePoints()
-        {
-            var uniqueVertices = new HashSet<Vector2>();
-            for (var i = 0; i < Count; i++)
-            {
-                uniqueVertices.Add(this[i].Point);
-            }
-            return new(uniqueVertices);
-        }
-        public CollisionPoints GetUniqueCollisionPoints()
-        {
-            var unique = new HashSet<CollisionPoint>();
-            for (var i = 0; i < Count; i++)
-            {
-                unique.Add(this[i]);
-            }
-            return new(unique);
-        }
-
-        public void SortClosest(Vector2 refPoint)
-        {
-            this.Sort
-                (
-                    comparison: (a, b) =>
-                    {
-                        float la = (refPoint - a.Point).LengthSquared();
-                        float lb = (refPoint - b.Point).LengthSquared();
-
-                        if (la > lb) return 1;
-                        else if (MathF.Abs(x: la - lb) < 0.01f) return 0;
-                        else return -1;
-                    }
-                );
-        }
-
+        return true;
     }
 
+    public bool Valid => Count > 0;
 
+    public void FlipNormals(Vector2 referencePoint)
+    {
+        for (var i = 0; i < Count; i++)
+        {
+            var p = this[i];
+            var dir = referencePoint - p.Point;
+            if (dir.IsFacingTheOppositeDirection(p.Normal))
+                this[i] = this[i].FlipNormal();
+        }
+    }
 
+    
+    public CollisionPoint GetClosestCollisionPoint(Vector2 referencePoint)
+    {
+        if (!Valid) return new();
+        if(Count == 1) return this[0];
+        
+        var closest = this[0];
+        var closestDist = (closest.Point - referencePoint).LengthSquared();
+        for (var i = 1; i < Count; i++)
+        {
+            var p = this[i];
+            var dis = (p.Point - referencePoint).LengthSquared();
+            if (dis < closestDist)
+            {
+                closest = p;
+                closestDist = dis;
+            }
+        }
+        
+        return closest;
+    }
+    public CollisionPoint GetFurthestCollisionPoint(Vector2 referencePoint)
+    {
+        if (!Valid) return new();
+        if(Count == 1) return this[0];
+        
+        var furthest = this[0];
+        var furthestDis = (furthest.Point - referencePoint).LengthSquared();
+        for (var i = 1; i < Count; i++)
+        {
+            var p = this[i];
+            var dis = (p.Point - referencePoint).LengthSquared();
+            if (dis > furthestDis)
+            {
+                furthest = p;
+                furthestDis = dis;
+            }
+        }
+        
+        return furthest;
+    }
+
+    /// <summary>
+    /// Finds the collision point with the normal facing most in the direction as the reference point.
+    /// Each collision point normal is checked against the direction from the collision point towards the reference point.
+    /// </summary>
+    /// <returns></returns>
+    public CollisionPoint GetCollisionPointFacingTowardsPoint(Vector2 referencePoint)
+    {
+        if (!Valid) return new();
+        if(Count == 1) return this[0];
+        
+        var best = this[0];
+        var dir = (referencePoint - best.Point).Normalize();
+        var maxDot = dir.Dot(best.Normal);
+        
+        for (var i = 1; i < Count; i++)
+        {
+            var p = this[i];
+            dir = (referencePoint - p.Point).Normalize();
+            var dot = dir.Dot(p.Normal);
+            if (dot > maxDot)
+            {
+                best = p;
+                maxDot = dot;
+            }
+        }
+        
+        return best;
+    }
+   
+    /// <summary>
+    /// Finds the collision point with the normal facing most in the direction as the reference direction.
+    /// </summary>
+    /// <returns></returns>
+    public CollisionPoint GetCollisionPointFacingTowardsDir(Vector2 referenceDir)
+    {
+        if (!Valid) return new();
+        if(Count == 1) return this[0];
+        
+        var best = this[0];
+        var maxDot = referenceDir.Dot(best.Normal);
+        
+        for (var i = 1; i < Count; i++)
+        {
+            var p = this[i];
+            var dot = referenceDir.Dot(p.Normal);
+            if (dot > maxDot)
+            {
+                best = p;
+                maxDot = dot;
+            }
+        }
+        
+        return best;
+    }
+    
+    public void SortClosestFirst(Vector2 referencePoint)
+    {
+        this.Sort
+        (
+            comparison: (a, b) =>
+            {
+                float la = (referencePoint - a.Point).LengthSquared();
+                float lb = (referencePoint - b.Point).LengthSquared();
+
+                if (la > lb) return 1;
+                if (MathF.Abs(x: la - lb) < 0.01f) return 0;
+                return -1;
+            }
+        );
+    }
+    public void SortFurthestFirst(Vector2 referencePoint)
+    {
+        this.Sort
+        (
+            comparison: (a, b) =>
+            {
+                float la = (referencePoint - a.Point).LengthSquared();
+                float lb = (referencePoint - b.Point).LengthSquared();
+
+                if (la < lb) return 1;
+                if (MathF.Abs(x: la - lb) < 0.01f) return 0;
+                return -1;
+            }
+        );
+    }
+    
+
+    public Points GetUniquePoints()
+    {
+        var uniqueVertices = new HashSet<Vector2>();
+        for (var i = 0; i < Count; i++)
+        {
+            uniqueVertices.Add(this[i].Point);
+        }
+        return new(uniqueVertices);
+    }
+    public CollisionPoints GetUniqueCollisionPoints()
+    {
+        var unique = new HashSet<CollisionPoint>();
+        for (var i = 0; i < Count; i++)
+        {
+            unique.Add(this[i]);
+        }
+        return new(unique);
+    }
+
+    
 }
 
-    //public struct QueryInfo
-    //{
-    //    public ICollidable collidable;
-    //    public Intersection intersection;
-    //    public QueryInfo(ICollidable collidable)
-    //    {
-    //        this.collidable = collidable;
-    //        this.intersection = new();
-    //    }
-    //    public QueryInfo(ICollidable collidable, CollisionPoints points)
-    //    {
-    //        this.collidable = collidable;
-    //        this.intersection = new(points);
-    //    }
-    //
-    //}
+
+
+    
+/*public CollisionPoint GetClosestCollisionPoint(Vector2 p)
+{
+    if (Count <= 0) return new();
+
+    if (Count == 1) return this[0];
+
+
+    var closestPoint = this[0];
+    var minDisSq = (closestPoint.Point - p).LengthSquared();
+
+    for (var i = 1; i < Count; i++)
+    {
+        var disSq = (this[i].Point - p).LengthSquared();
+        if (disSq >= minDisSq) continue;
+        minDisSq = disSq;
+        closestPoint = this[i];
+    }
+
+    return closestPoint;
+}
+public ClosestDistance GetClosestDistanceTo(Vector2 p)
+{
+    if (Count <= 0) return new();
+
+    if (Count == 1) return new(this[0].Point, p);
+
+
+    var closestPoint = this[0];
+    var minDisSq = (closestPoint.Point - p).LengthSquared();
+
+    for (var i = 1; i < Count; i++)
+    {
+        var disSq = (this[i].Point - p).LengthSquared();
+        if (disSq >= minDisSq) continue;
+        minDisSq = disSq;
+        closestPoint = this[i];
+    }
+
+    return new(closestPoint.Point, p);
+}
+*/
+
+

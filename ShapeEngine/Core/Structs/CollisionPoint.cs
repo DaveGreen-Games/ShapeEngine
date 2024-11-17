@@ -5,7 +5,7 @@ namespace ShapeEngine.Core.Structs;
 
 public readonly struct CollisionPoint : IEquatable<CollisionPoint>
 {
-    public readonly bool Valid => Normal.X != 0f || Normal.Y != 0f;
+    public bool Valid => Normal.X != 0f || Normal.Y != 0f;
     public readonly Vector2 Point;
     public readonly Vector2 Normal;
 
@@ -20,21 +20,14 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
         Point = p; 
         Normal = n;
     }
-
-    public CollisionPoint(CollisionSurface surface)
-    {
-        Point = surface.Point;
-        Normal = surface.Normal;
-    }
-    public CollisionSurface ToCollisionSurface() => new CollisionSurface(Point, Normal);
     
-    public CollisionSurface Average(CollisionPoint other) => new((Point + other.Point) / 2, (Normal + other.Normal).Normalize());
+    public CollisionPoint Average(CollisionPoint other) => new((Point + other.Point) / 2, (Normal + other.Normal).Normalize());
 
-    public static CollisionSurface Average(CollisionPoint a, CollisionPoint b) => new((a.Point + b.Point) / 2, (a.Normal + b.Normal).Normalize());
+    public static CollisionPoint Average(CollisionPoint a, CollisionPoint b) => new((a.Point + b.Point) / 2, (a.Normal + b.Normal).Normalize());
 
-    public static CollisionSurface Average(params CollisionPoint[] points)
+    public static CollisionPoint Average(params CollisionPoint[] points)
     {
-        if(points.Length == 0) return new CollisionSurface();
+        if(points.Length == 0) return new();
         var avgPoint = Vector2.Zero;
         var avgNormal = Vector2.Zero;
         foreach (var point in points)
@@ -42,7 +35,7 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
             avgPoint += point.Point;
             avgNormal += point.Normal;
         }
-        return new CollisionSurface(avgPoint / points.Length, avgNormal.Normalize());
+        return new(avgPoint / points.Length, avgNormal.Normalize());
     }
     
     public bool Equals(CollisionPoint other)

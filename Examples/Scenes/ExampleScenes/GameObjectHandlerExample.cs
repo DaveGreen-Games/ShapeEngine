@@ -126,7 +126,7 @@ namespace Examples.Scenes.ExampleScenes
                 foreach (var collision in info)
                 {
                     if(!collision.FirstContact) continue;
-                    if(!collision.Intersection.Valid) continue;
+                    if(collision.Intersection == null) continue;
                     // var normal = collision.Intersection.CollisionSurface.Normal;
                     var normal = collision.Intersection.Closest.Normal;
                     Velocity = Velocity.Reflect(normal);
@@ -220,7 +220,7 @@ namespace Examples.Scenes.ExampleScenes
                 foreach (var collision in info)
                 {
                     if(!collision.FirstContact) continue;
-                    if(!collision.Intersection.Valid) continue;
+                    if(collision.Intersection == null) continue;
                     
                     Transform = Transform.SetPosition(collision.Intersection.Closest.Point);
                     Velocity = new();
@@ -369,7 +369,7 @@ namespace Examples.Scenes.ExampleScenes
             foreach (var collision in info)
             {
                 if(!collision.FirstContact) continue;
-                if(!collision.Intersection.Valid) continue;
+                if(collision.Intersection == null) continue;
                 // var normal = collision.Intersection.CollisionSurface.Normal;
                 var normal = collision.Intersection.Closest.Normal;
                 Velocity = Velocity.Reflect(normal);
@@ -449,7 +449,7 @@ namespace Examples.Scenes.ExampleScenes
             foreach (var collision in info)
             {
                 if(!collision.FirstContact) continue;
-                if(!collision.Intersection.Valid) continue;
+                if(collision.Intersection == null) continue;
                 // var normal = collision.Intersection.CollisionSurface.Normal;
                 var normal = collision.Intersection.Closest.Normal;
                 Velocity = Velocity.Reflect(normal);

@@ -58,7 +58,10 @@ public abstract class CollisionObject : PhysicsObject
     internal void ResolveCollision(CollisionInformation info)
     {
         Collision(info);
-        OnCollision?.Invoke(info);   
+        OnCollision?.Invoke(info);
+
+        // if (info.Count <= 0) Overlap(info.Self, info.other);
+        // else Intersected(info);
         
         if(AvancedCollisionNotification == false) return;
         

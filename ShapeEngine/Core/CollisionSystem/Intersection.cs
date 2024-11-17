@@ -4,35 +4,39 @@ using ShapeEngine.Lib;
 
 namespace ShapeEngine.Core.CollisionSystem;
 
-public class Intersection
+//todo should all the filtering and finding of closest/furthest/combined be done automatically?
+//todo there could be a simple function to all of this and save it here?
+//todo maybe some lazy initialization?
+public class Intersection : CollisionPoints
 {
-    public readonly bool Valid;
-    public readonly CollisionSurface CollisionSurface;
+    /// <summary>
+    /// Combined and averaged collision point of all collision points.
+    /// </summary>
+    public readonly CollisionPoint Combined;
+    /// <summary>
+    /// Closest collision point to the reference point.
+    /// </summary>
     public readonly CollisionPoint Closest;
+    /// <summary>
+    /// Furthest collision point to the reference point.
+    /// </summary>
     public readonly CollisionPoint Furthest;
-    public readonly CollisionPoints? ColPoints;
+    public CollisionPoint FirstCollisionPoint =>  this  is { Count: > 0 } ? this[0] : new();
     
-    
-    public CollisionPoint FirstCollisionPoint =>  ColPoints is { Count: > 0 } ? ColPoints[0] : new();
-    
-    public Intersection() { this.Valid = false; this.CollisionSurface = new(); this.ColPoints = null; Closest = new(); Furthest = new(); }
-    public Intersection(CollisionPoints? points, Vector2 vel, Vector2 refPoint)
+    public Intersection(CollisionPoints? points, Vector2 refPoint)
     {
         if (points == null || points.Count <= 0)
         {
-            this.Valid = false;
-            this.CollisionSurface = new();
-            this.ColPoints = null;
+            this.Combined = new();
             this.Closest = new();
             this.Furthest = new();
         }
         else if (points.Count == 1)
         {
-            this.Valid = true;
-            this.ColPoints = points;
-            this.CollisionSurface = new(points[0].Point, points[0].Normal);
+            this.Combined = points[0];
             this.Closest = points[0];
             this.Furthest = points[0];
+            Add(points[0]);
         }
         else
         {
@@ -47,99 +51,127 @@ public class Intersection
             var count = 0;
             foreach (var p in points)
             {
-                if (p.Valid)
+                if (!p.Valid) continue;
+                
+                var dis = Vector2.DistanceSquared(p.Point, refPoint);
+                if (dis < closestDist)
                 {
-                    var dis = Vector2.DistanceSquared(p.Point, refPoint);
-                    if (dis < closestDist)
-                    {
-                        closestDist = dis;
-                        closest = p;
-                    }
-                    else if (dis > furthestDist)
-                    {
-                        furthestDist = dis;
-                        furthest = p;
-                    }
+                    closestDist = dis;
+                    closest = p;
+                }
+                else if (dis > furthestDist)
+                {
+                    furthestDist = dis;
+                    furthest = p;
                 }
                 
-                
-                if (DiscardNormal(p.Normal, vel)) continue;
-                if (DiscardNormal(p, refPoint)) continue;
-
                 count++;
                 avgPoint += p.Point;
                 avgNormal += p.Normal;
+                Add(p);
             }
             
             if (count > 0)
             {
-                this.Valid = true;
-                this.ColPoints = points;
                 avgPoint /= count;
                 avgNormal = avgNormal.Normalize();
-                this.CollisionSurface = new(avgPoint, avgNormal);
+                this.Combined = new(avgPoint, avgNormal);
             }
             else
             {
-                this.Valid = false;
-                this.ColPoints = points;
-                this.CollisionSurface = new();
+                this.Combined = new();
             }
             
             this.Closest = closest;
             this.Furthest = furthest;
         }
     }
-    public Intersection(CollisionPoints? points)
+    public Intersection(CollisionPoints? points, Vector2 vel, Vector2 refPoint, bool filterCollisionPoints)
     {
-        this.Furthest = new();
-        this.Closest = new();
         if (points == null || points.Count <= 0)
         {
-            this.Valid = false;
-            this.CollisionSurface = new();
-            this.ColPoints = null;
+            this.Combined = new();
+            this.Closest = new();
+            this.Furthest = new();
+        }
+        else if (points.Count == 1)
+        {
+            this.Combined = points[0];
+            this.Closest = points[0];
+            this.Furthest = points[0];
+            Add(points[0]);
         }
         else
         {
-            this.Valid = true;
-            this.ColPoints = points;
-
+            var closest = points[0];
+            var closestDist = Vector2.DistanceSquared(closest.Point, refPoint);
+           
+            var furthest = points[0];
+            var furthestDist = closestDist;
+            
             Vector2 avgPoint = new();
             Vector2 avgNormal = new();
+            var count = 0;
             foreach (var p in points)
             {
+                if (!p.Valid) continue;
+                
+                if (filterCollisionPoints)
+                {
+                    if (DiscardNormal(p.Normal, vel)) continue;
+                    if (DiscardNormal(p, refPoint)) continue;
+                }
+                
+                var dis = Vector2.DistanceSquared(p.Point, refPoint);
+                if (dis < closestDist)
+                {
+                    closestDist = dis;
+                    closest = p;
+                }
+                else if (dis > furthestDist)
+                {
+                    furthestDist = dis;
+                    furthest = p;
+                }
+                
+                count++;
                 avgPoint += p.Point;
                 avgNormal += p.Normal;
+                Add(p);
             }
-            if (points.Count > 0)
+            
+            if (count > 0)
             {
-                avgPoint /= points.Count;
+                avgPoint /= count;
                 avgNormal = avgNormal.Normalize();
-                this.CollisionSurface = new(avgPoint, avgNormal);
+                this.Combined = new(avgPoint, avgNormal);
             }
-            else this.CollisionSurface = new();
+            else
+            {
+                this.Combined = new();
+            }
+            
+            this.Closest = closest;
+            this.Furthest = furthest;
         }
     }
-
+    
     private Intersection(Intersection intersection)
     {
-        Valid = intersection.Valid;
-        CollisionSurface = intersection.CollisionSurface;
+        Combined = intersection.Combined;
         Closest = intersection.Closest;
         Furthest = intersection.Furthest;
-        if (intersection.ColPoints == null || intersection.ColPoints.Count <= 0) ColPoints = null;
-        else
-        {
-            var newPoints = new CollisionPoints();
-            newPoints.AddRange(intersection.ColPoints);
-            ColPoints = newPoints;
-        }
+        if (intersection.Count > 0) AddRange(intersection);
         
     }
-    public Intersection Copy() => new(this);
+    public new Intersection Copy() => new(this);
+    
+    
+    private static bool DiscardNormal(Vector2 n, Vector2 vel) => n.IsFacingTheSameDirection(vel);
+    private static bool DiscardNormal(CollisionPoint p, Vector2 refPoint) => p.Normal.IsFacingTheSameDirection( p.Point - refPoint);
+}
 
-    public CollisionPoint GetClosestCollisionPoint(Vector2 referencePoint)
+/*public CollisionPoint GetClosestCollisionPoint(Vector2 referencePoint)
     {
         if (!Valid) return new();
         if(ColPoints == null || ColPoints.Count <= 0) return new();
@@ -238,43 +270,6 @@ public class Intersection
         
         return best;
     }
+    */
     
     
-    private static bool DiscardNormal(Vector2 n, Vector2 vel)
-    {
-        return n.IsFacingTheSameDirection(vel);
-    }
-    private static bool DiscardNormal(CollisionPoint p, Vector2 refPoint)
-    {
-        Vector2 dir = p.Point - refPoint;
-        return p.Normal.IsFacingTheSameDirection(dir);
-    }
-
-    //public void FlipNormals(Vector2 refPoint)
-    //{
-    //    if (points.Count <= 0) return;
-    //
-    //    List<(Vector2 p, Vector2 n)> newPoints = new();
-    //    foreach (var p in points)
-    //    {
-    //        Vector2 dir = refPoint - p.p;
-    //        if (dir.IsFacingTheOppositeDirection(p.n)) newPoints.Add((p.p, p.n.Flip()));
-    //        else newPoints.Add(p);
-    //    }
-    //    this.points = newPoints;
-    //    this.n = points[0].n;
-    //}
-    //public Intersection CheckVelocityNew(Vector2 vel)
-    //{
-    //    List<(Vector2 p, Vector2 n)> newPoints = new();
-    //    
-    //    for (int i = points.Count - 1; i >= 0; i--)
-    //    {
-    //        var intersection = points[i];
-    //        if (intersection.n.IsFacingTheSameDirection(vel)) continue;
-    //        newPoints.Add(intersection);
-    //    }
-    //    return new(newPoints);
-    //}
-
-}

@@ -1247,9 +1247,9 @@ public static class ShapeDrawing
     #region Intersection
     public static void Draw(this Intersection intersection, float lineThickness, ColorRgba intersectColorRgba, ColorRgba normalColorRgba)
     {
-        if (intersection.ColPoints == null || intersection.ColPoints.Count <= 0) return;
+        if ( intersection.Count <= 0) return;
         
-        foreach (var i in intersection.ColPoints)
+        foreach (var i in intersection)
         {
             DrawCircle(i.Point, lineThickness * 2f, intersectColorRgba, 12);
             DrawLine(i.Point, i.Point + i.Normal * lineThickness * 10f, lineThickness, normalColorRgba);

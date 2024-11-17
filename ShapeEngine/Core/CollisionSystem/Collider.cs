@@ -70,6 +70,14 @@ public abstract class Collider : Shape
     public Vector2 Velocity => parent?.Velocity ?? new(0f);
     public BitFlag CollisionMask { get; set; } = BitFlag.Empty;
     public uint CollisionLayer { get; set; } = 0;
+    
+    /// <summary>
+    /// ComputeIntersections and ComputeCollisions have to be true
+    /// If set to true CollisionPoints of any collision will be filtered by velocity and relative.
+    /// - CollisionPoints with Normals  facing in a similar direction of the velocity will be ignored.
+    /// - CollisionPoints with a Normal facing in the opposite direction of the  relative position of the two colliders will be ignored.
+    /// </summary>
+    public bool FilterCollisionPoints = true;
     public bool ComputeCollision { get; set; } = true;
     /// <summary>
     /// If false only overlaps will be reported but no further details on the intersection.

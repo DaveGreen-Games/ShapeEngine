@@ -26,7 +26,7 @@ public class QueryPoints
         else
         {
             this.Valid = true;
-            points.SortClosest(origin);
+            points.SortClosestFirst(origin);
             this.Points = points;
             this.Closest = points[0];
         }

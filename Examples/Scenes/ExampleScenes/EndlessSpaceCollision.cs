@@ -725,9 +725,9 @@ public class EndlessSpaceCollision : ExampleScene
                     }
                 }
                         
-                if (collision.Intersection.Valid && collision.Intersection.CollisionSurface.Valid)
+                if (collision.Intersection.Valid && collision.Intersection.Combined.Valid)
                 {
-                    Velocity = collision.Intersection.CollisionSurface.Normal * 3500;
+                    Velocity = collision.Intersection.Combined.Normal * 3500;
                     collisionStunTimer = CollisionStunTime;
                     collisionRotationDirection = Rng.Instance.RandDirF();
                 }

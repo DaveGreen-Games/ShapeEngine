@@ -421,7 +421,7 @@ public class CollisionHandler : IBounds
                                         }
                                     }
 
-                                    Collision c = new(collider, candidate, firstContact, collisionPoints);
+                                    Collision c = new(collider, candidate, firstContact, collisionPoints, collider.FilterCollisionPoints);
                                     collisionRegister??= new();
                                     collisionRegister.AddCollision(c);
                                 }
@@ -506,7 +506,7 @@ public class CollisionHandler : IBounds
                                         }
                                     }
 
-                                    Collision c = new(collider, candidate, firstContact, collisionPoints);
+                                    Collision c = new(collider, candidate, firstContact, collisionPoints, collider.FilterCollisionPoints);
                                     collisionRegister??= new();
                                     collisionRegister.AddCollision(c);
                                 }

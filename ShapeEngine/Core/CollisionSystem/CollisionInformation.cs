@@ -22,6 +22,10 @@ public class CollisionInformation : List<Collision>
         AddRange(collisions);
     }
 
+    
+    
+    
+    
     public CollisionInformation Copy()
     {
         var newCollisions = new List<Collision>();
