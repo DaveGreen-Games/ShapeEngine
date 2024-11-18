@@ -52,18 +52,28 @@ public class Collision
     public Collision Copy() => new(this);
 
     
-    //TODO!: rename as well
-    public bool CleanCollisionPoints(out CollisionPoint combined)
+    /// <summary>
+    /// Validates the collision points using SelfVel as reference direction and Self.CurTransform.Position as reference point
+    /// </summary>
+    /// <param name="combined">The average CollisionPoint of all valid collision points.</param>
+    /// <returns>Returns true if there are valid collision points left.</returns>
+    public bool ValidateCollisionPoints(out CollisionPoint combined)
     {
         if (Points == null || Points.Count <= 0)
         {
             combined = new CollisionPoint();
             return false;
         }
-        return Points.Clean(SelfVel, Self.CurTransform.Position, out combined);;
+        return Points.Validate(SelfVel, Self.CurTransform.Position, out combined);;
         
     }
-    public bool CleanCollisionPoints(out CollisionPoint combined, out CollisionPoint closest)
+    /// <summary>
+    /// Validates the collision points using SelfVel as reference direction and Self.CurTransform.Position as reference point
+    /// </summary>
+    /// <param name="combined">The average CollisionPoint of all valid collision points.</param>
+    /// <param name="closest">The closest CollisionPoint to the reference point (Self.CurTransform.Position)</param>
+    /// <returns>Returns true if there are valid collision points left.</returns>
+    public bool ValidateCollisionPoints(out CollisionPoint combined, out CollisionPoint closest)
     {
         if (Points == null || Points.Count <= 0)
         {
@@ -72,17 +82,22 @@ public class Collision
             return false;
         }
         
-        return Points.Clean(SelfVel, Self.CurTransform.Position, out combined, out closest);
+        return Points.Validate(SelfVel, Self.CurTransform.Position, out combined, out closest);
     }
-    public bool CleanCollisionPoints(out CollisionPointInfo result)
+    /// <summary>
+    /// Validates the collision points using SelfVel as reference direction and Self.CurTransform.Position as reference point
+    /// </summary>
+    /// <param name="result">A combination of useful collision points.</param>
+    /// <returns>Returns true if there are valid collision points left.</returns>
+    public bool ValidateCollisionPoints(out CollisionPointValidationResult result)
     {
         if (Points == null || Points.Count <= 0)
         {
-            result = new CollisionPointInfo();
+            result = new CollisionPointValidationResult();
             return false;
         }
         
-        return Points.Clean(SelfVel, Self.CurTransform.Position, out result);
+        return Points.Validate(SelfVel, Self.CurTransform.Position, out result);
     }
    
 }
