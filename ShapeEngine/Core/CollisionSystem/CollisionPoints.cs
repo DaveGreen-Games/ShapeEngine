@@ -5,23 +5,6 @@ using ShapeEngine.Lib;
 
 namespace ShapeEngine.Core.CollisionSystem;
 
-// TODO!: find better name!
-// NOTE: Move inside CollisionPoints class?
-public readonly struct CollisionPointInfo(
-    CollisionPoint combined,
-    CollisionPoint closest,
-    CollisionPoint furthest,
-    CollisionPoint pointingTowards)
-{
-    public readonly CollisionPoint Combined = combined;
-    public readonly CollisionPoint Closest = closest;
-    public readonly CollisionPoint Furthest = furthest;
-    public readonly CollisionPoint PointingTowards = pointingTowards;
-
-    public CollisionPointInfo() : this(new CollisionPoint(), new CollisionPoint(), new CollisionPoint(), new CollisionPoint()) { }
-}
-
-
 public class CollisionPoints : ShapeList<CollisionPoint>
 {
     #region Constructors
@@ -48,17 +31,15 @@ public class CollisionPoints : ShapeList<CollisionPoint>
    
     #endregion
     
-    #region Clean
-    // TODO!: find better names!
-    // NOTE: Clean is not a good name and CleanSimple is even worse... 
-    
+    #region Validation
+
     /// <summary>
     /// Removes:
     ///     - invalid CollisionPoints
     /// </summary>
     /// <param name="combined">An averaged CollisionPoint of all remaining CollisionPoints.</param>
     /// <returns>Returns true if there are valid points remaining</returns>
-    public bool Clean(out CollisionPoint combined)
+    public bool Validate(out CollisionPoint combined)
     {
         combined = new CollisionPoint();
         
@@ -107,7 +88,7 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     /// <param name="referenceDirection">The direction to check CollisionPoint Normals against.</param>
     /// <param name="combined">An averaged CollisionPoint of all remaining CollisionPoints.</param>
     /// <returns>Returns true if there are valid points remaining</returns>
-    public bool Clean(Vector2 referenceDirection, out CollisionPoint combined)
+    public bool Validate(Vector2 referenceDirection, out CollisionPoint combined)
     {
         combined = new CollisionPoint();
         
@@ -159,7 +140,7 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     /// <param name="referencePoint">The direction from the reference point towards to CollisionPoint  to check CollisionPoint Normals against.</param>
     /// <param name="combined">An averaged CollisionPoint of all remaining CollisionPoints.</param>
     /// <returns>Returns true if there are valid points remaining</returns>
-    public bool Clean(Vector2 referenceDirection, Vector2 referencePoint,  out CollisionPoint combined)
+    public bool Validate(Vector2 referenceDirection, Vector2 referencePoint,  out CollisionPoint combined)
     {
         combined = new CollisionPoint();
         
@@ -212,7 +193,7 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     /// <param name="combined">An averaged CollisionPoint of all remaining CollisionPoints.</param>
     /// <param name="closest">The CollisionPoint that is closest to the referencePoint.</param>
     /// <returns>Returns true if there are valid points remaining</returns>
-    public bool Clean(Vector2 referenceDirection, Vector2 referencePoint,  out CollisionPoint combined, out CollisionPoint closest)
+    public bool Validate(Vector2 referenceDirection, Vector2 referencePoint,  out CollisionPoint combined, out CollisionPoint closest)
     {
         combined = new CollisionPoint();
         closest = new CollisionPoint();
@@ -276,13 +257,13 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     /// <param name="referencePoint">The direction from the reference point towards to CollisionPoint  to check CollisionPoint Normals against.</param>
     /// <param name="cleanResult">The result of the combined CollisionPoint, and the  closest/furthest collision point from the reference point, and the CollisionPoint with normal facing towards the referencePoint.</param>
     /// <returns>Returns true if there are valid points remaining</returns>
-    public bool Clean(Vector2 referenceDirection, Vector2 referencePoint,  out CollisionPointInfo cleanResult)
+    public bool Validate(Vector2 referenceDirection, Vector2 referencePoint,  out CollisionPointValidationResult cleanResult)
     {
         CollisionPoint combined;
         CollisionPoint closest;
         CollisionPoint furthest;
         CollisionPoint pointingTowards;
-        cleanResult = new CollisionPointInfo();
+        cleanResult = new CollisionPointValidationResult();
         
         if (Count <= 0) return false;
         if (Count == 1)
@@ -298,7 +279,7 @@ public class CollisionPoints : ShapeList<CollisionPoint>
             closest = combined;
             furthest = combined;
             pointingTowards = combined;
-            cleanResult = new CollisionPointInfo(combined, closest, furthest, pointingTowards);
+            cleanResult = new CollisionPointValidationResult(combined, closest, furthest, pointingTowards);
             return true;
         }
         
@@ -351,10 +332,9 @@ public class CollisionPoints : ShapeList<CollisionPoint>
         avgPoint /= count;
         avgNormal = avgNormal.Normalize();
         combined = new CollisionPoint(avgPoint, avgNormal);
-        cleanResult = new CollisionPointInfo(combined, closest, furthest, pointingTowards);
+        cleanResult = new CollisionPointValidationResult(combined, closest, furthest, pointingTowards);
         return true;
     }
-    
     /// <summary>
     /// Removes:
     /// - invalid CollisionPoints
@@ -363,7 +343,7 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     /// <param name="combined">An averaged CollisionPoint of all remaining CollisionPoints.</param>
     /// <param name="closest">The CollisionPoint that is closest to the referencePoint.</param>
     /// <returns>Returns true if there are valid points remaining</returns>
-    public bool CleanSimple(Vector2 referencePoint,  out CollisionPoint combined, out CollisionPoint closest)
+    public bool Validate(Vector2 referencePoint,  out CollisionPoint combined, out CollisionPoint closest)
     {
         combined = new CollisionPoint();
         closest = new CollisionPoint();
@@ -424,13 +404,13 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     /// <param name="referencePoint">The direction from the reference point towards to CollisionPoint  to check CollisionPoint Normals against.</param>
     /// <param name="cleanResult">The result of the combined CollisionPoint, and the  closest/furthest collision point from the reference point, and the CollisionPoint with normal facing towards the referencePoint.</param>
     /// <returns>Returns true if there are valid points remaining</returns>
-    public bool CleanSimple(Vector2 referencePoint,  out CollisionPointInfo cleanResult)
+    public bool Validate(Vector2 referencePoint,  out CollisionPointValidationResult cleanResult)
     {
         CollisionPoint combined;
         CollisionPoint closest;
         CollisionPoint furthest;
         CollisionPoint pointingTowards;
-        cleanResult = new CollisionPointInfo();
+        cleanResult = new CollisionPointValidationResult();
         
         if (Count <= 0) return false;
         if (Count == 1)
@@ -446,7 +426,7 @@ public class CollisionPoints : ShapeList<CollisionPoint>
             closest = combined;
             furthest = combined;
             pointingTowards = combined;
-            cleanResult = new CollisionPointInfo(combined, closest, furthest, pointingTowards);
+            cleanResult = new CollisionPointValidationResult(combined, closest, furthest, pointingTowards);
             return true;
         }
         
@@ -502,13 +482,11 @@ public class CollisionPoints : ShapeList<CollisionPoint>
         avgPoint /= count;
         avgNormal = avgNormal.Normalize();
         combined = new CollisionPoint(avgPoint, avgNormal);
-        cleanResult = new CollisionPointInfo(combined, closest, furthest, pointingTowards);
+        cleanResult = new CollisionPointValidationResult(combined, closest, furthest, pointingTowards);
         return true;
     }
     
     #endregion
-
-    
     
     #region Flip Normals
     public void FlipAllNormals()
