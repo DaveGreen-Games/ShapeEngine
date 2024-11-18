@@ -67,7 +67,7 @@ public abstract class CollisionObject : PhysicsObject
         
         foreach (var collision in info)
         {
-            if (collision.Intersection.Valid)
+            if (collision.Points != null)
             {
                 collision.Self.ResolveIntersected(collision);
                 ColliderIntersected(collision);
