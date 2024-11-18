@@ -16,6 +16,9 @@ public class Collision
     public readonly CollisionPoints? Points = null;
     public Overlap Overlap => new(Self, Other, FirstContact);
 
+    // NOTE: Add convenience functions here for cleaning Points?
+    // NOTE: Could source Position/Velocity from the members and use them automatically?
+    // NOTE: Is there a good way to automate the cleaning of Points into a constructor that automatically sets Points to null if no points remain after cleaning?
 
     
     public Collision(Collider self, Collider other, bool firstContact)
