@@ -555,7 +555,7 @@ public struct TransformMatrix2D : IEquatable<TransformMatrix2D>
 
     /// <summary>
     /// Returns <see langword="true"/> if the transforms are exactly equal.
-    /// Note: Due to floating-point precision errors, consider using
+    /// Note Due to floating-point precision errors, consider using
     /// <see cref="IsEqualApprox"/> instead, which is more reliable.
     /// </summary>
     /// <param name="left">The left transform.</param>
@@ -568,7 +568,7 @@ public struct TransformMatrix2D : IEquatable<TransformMatrix2D>
 
     /// <summary>
     /// Returns <see langword="true"/> if the transforms are not equal.
-    /// Note: Due to floating-point precision errors, consider using
+    /// Note Due to floating-point precision errors, consider using
     /// <see cref="IsEqualApprox"/> instead, which is more reliable.
     /// </summary>
     /// <param name="left">The left transform.</param>
@@ -582,7 +582,7 @@ public struct TransformMatrix2D : IEquatable<TransformMatrix2D>
     /// <summary>
     /// Returns <see langword="true"/> if the transform is exactly equal
     /// to the given object (<paramref name="obj"/>).
-    /// Note: Due to floating-point precision errors, consider using
+    /// Note Due to floating-point precision errors, consider using
     /// <see cref="IsEqualApprox"/> instead, which is more reliable.
     /// </summary>
     /// <param name="obj">The object to compare with.</param>
@@ -594,7 +594,7 @@ public struct TransformMatrix2D : IEquatable<TransformMatrix2D>
 
     /// <summary>
     /// Returns <see langword="true"/> if the transforms are exactly equal.
-    /// Note: Due to floating-point precision errors, consider using
+    /// Note Due to floating-point precision errors, consider using
     /// <see cref="IsEqualApprox"/> instead, which is more reliable.
     /// </summary>
     /// <param name="other">The other transform to compare.</param>

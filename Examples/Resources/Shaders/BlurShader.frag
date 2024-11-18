@@ -4,7 +4,7 @@ in vec2 fragTexCoord;
 out vec4 finalColor;
 uniform sampler2D texture0;
 
-// NOTE: Render size values must be passed from code
+// NOTE Render size values must be passed from code
 uniform float renderWidth = 800;
 uniform float renderHeight = 450;
 
