@@ -58,4 +58,8 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
 
         return this;
     }
+    
+    public bool IsNormalFacing(Vector2 referenceDir) => Normal.IsFacingTheSameDirection(referenceDir);
+    public bool IsNormalFacingPoint(Vector2 referencePoint) => IsNormalFacing(referencePoint - Point);
+    
 }
