@@ -13,13 +13,9 @@ public class Collision
     public readonly Collider Other;
     public readonly Vector2 SelfVel;
     public readonly Vector2 OtherVel;
-    public readonly Intersection? Intersection;
+    public readonly CollisionPoints? Points = null;
     public Overlap Overlap => new(Self, Other, FirstContact);
-    
-    //todo review usefullness
-    public CollisionPoint FirstCollisionPoint => Intersection != null ? Intersection.FirstCollisionPoint : new();
-    public CollisionPoint ClosestCollisionPoint => Intersection != null ? Intersection.Closest : new();
-    public CollisionPoint FurthestCollisionPoint => Intersection != null ? Intersection.Furthest : new();
+
 
     
     public Collision(Collider self, Collider other, bool firstContact)
@@ -29,23 +25,18 @@ public class Collision
         SelfVel = self.Velocity;
         OtherVel = other.Velocity;
         FirstContact = firstContact;
-        Intersection = null;
+        Points = null;
     }
-    public Collision(Collider self, Collider other, bool firstContact, CollisionPoints? collisionPoints, bool filterCollisionPoints = true)
+    public Collision(Collider self, Collider other, bool firstContact, CollisionPoints? collisionPoints)
     {
         Self = self;
         Other = other;
         SelfVel = self.Velocity;
         OtherVel = other.Velocity;
         FirstContact = firstContact;
-        if (collisionPoints == null) Intersection = null;
-        else if (collisionPoints.Count <= 0) Intersection = null;
-        else
-        {
-            var refPoint =  self.CurTransform.Position;
-            Intersection =  new(collisionPoints, SelfVel, refPoint, filterCollisionPoints);
-            if(Intersection.Count <= 0) Intersection = null;
-        }
+        if (collisionPoints == null) Points = null;
+        else if (collisionPoints.Count <= 0) Points = null;
+        else Points = collisionPoints;
         
     }
 
@@ -56,14 +47,16 @@ public class Collision
         SelfVel = collision.SelfVel;
         OtherVel = collision.OtherVel;
         FirstContact = collision.FirstContact;
-        Intersection = collision.Intersection == null ? null : collision.Intersection.Copy();
+        
+        Points = collision.Points == null ? null : collision.Points.Copy();
+        
     }
     
     public Collision Copy() => new(this);
 
     
    
-    public CollisionPoint GetClosestCollisionPoint(Vector2 referencePoint)
+    /*public CollisionPoint GetClosestCollisionPoint(Vector2 referencePoint)
     {
         if (Intersection == null) return new();
         return Intersection.GetClosestCollisionPoint(referencePoint);
@@ -86,32 +79,7 @@ public class Collision
     {
         if (Intersection == null) return new();
         return Intersection.GetCollisionPointFacingTowardsPoint(referencePoint);
-    }
+    }*/
 
     
 }
-
-
-/*
-/// <summary>
-/// Finds the collision point with the normal facing most towards the parent of self.
-/// </summary>
-/// <returns></returns>
-public CollisionPoint GetCollisionPointFacingTowardsParent()
-{
-    if (Intersection == null) return new();
-
-    var parent = Self.Parent;
-    return parent == null ? new() : Intersection.GetCollisionPointFacingTowardsPoint(parent.Transform.Position);
-}
-
-/// <summary>
-/// Finds the collision point with the normal facing most towards self.
-/// </summary>
-/// <returns></returns>
-public CollisionPoint GetCollisionPointFacingTowardsSelf()
-{
-    if (Intersection == null) return new();
-    return  Intersection.GetCollisionPointFacingTowardsPoint(Self.CurTransform.Position);
-}
-*/
