@@ -15,11 +15,6 @@ public class Collision
     public readonly Vector2 OtherVel;
     public readonly CollisionPoints? Points = null;
     public Overlap Overlap => new(Self, Other, FirstContact);
-
-    // NOTE: Add convenience functions here for cleaning Points?
-    // NOTE: Could source Position/Velocity from the members and use them automatically?
-    // NOTE: Is there a good way to automate the cleaning of Points into a constructor that automatically sets Points to null if no points remain after cleaning?
-
     
     public Collision(Collider self, Collider other, bool firstContact)
     {
@@ -42,7 +37,6 @@ public class Collision
         else Points = collisionPoints;
         
     }
-
     private Collision(Collision collision)
     {
         Self = collision.Self;
@@ -58,31 +52,64 @@ public class Collision
     public Collision Copy() => new(this);
 
     
+    //TODO!: rename as well
+    public bool CleanCollisionPoints(out CollisionPoint combined)
+    {
+        if (Points == null || Points.Count <= 0)
+        {
+            combined = new CollisionPoint();
+            return false;
+        }
+        return Points.Clean(SelfVel, Self.CurTransform.Position, out combined);;
+        
+    }
+    public bool CleanCollisionPoints(out CollisionPoint combined, out CollisionPoint closest)
+    {
+        if (Points == null || Points.Count <= 0)
+        {
+            combined = new CollisionPoint();
+            closest = new CollisionPoint(); 
+            return false;
+        }
+        
+        return Points.Clean(SelfVel, Self.CurTransform.Position, out combined, out closest);
+    }
+    public bool CleanCollisionPoints(out CollisionPointInfo result)
+    {
+        if (Points == null || Points.Count <= 0)
+        {
+            result = new CollisionPointInfo();
+            return false;
+        }
+        
+        return Points.Clean(SelfVel, Self.CurTransform.Position, out result);
+    }
    
-    /*public CollisionPoint GetClosestCollisionPoint(Vector2 referencePoint)
-    {
-        if (Intersection == null) return new();
-        return Intersection.GetClosestCollisionPoint(referencePoint);
-    }
-    /// <summary>
-    /// Finds the collision point with the normal facing most towards the reference direction.
-    /// </summary>
-    /// <returns></returns>
-    public CollisionPoint GetCollisionPointFacingTowardsDir(Vector2 referenceDir)
-    {
-        if (Intersection == null) return new();
-        return Intersection.GetCollisionPointFacingTowardsDir(referenceDir);
-    }
-    /// <summary>
-    /// Finds the collision point with the normal facing most towards the reference point.
-    /// The direction used is from each collision point towards the reference point.
-    /// </summary>
-    /// <returns></returns>
-    public CollisionPoint GetCollisionPointFacingTowardsPoint(Vector2 referencePoint)
-    {
-        if (Intersection == null) return new();
-        return Intersection.GetCollisionPointFacingTowardsPoint(referencePoint);
-    }*/
-
-    
 }
+
+
+/*public CollisionPoint GetClosestCollisionPoint(Vector2 referencePoint)
+{
+    if (Intersection == null) return new();
+    return Intersection.GetClosestCollisionPoint(referencePoint);
+}
+/// <summary>
+/// Finds the collision point with the normal facing most towards the reference direction.
+/// </summary>
+/// <returns></returns>
+public CollisionPoint GetCollisionPointFacingTowardsDir(Vector2 referenceDir)
+{
+    if (Intersection == null) return new();
+    return Intersection.GetCollisionPointFacingTowardsDir(referenceDir);
+}
+/// <summary>
+/// Finds the collision point with the normal facing most towards the reference point.
+/// The direction used is from each collision point towards the reference point.
+/// </summary>
+/// <returns></returns>
+public CollisionPoint GetCollisionPointFacingTowardsPoint(Vector2 referencePoint)
+{
+    if (Intersection == null) return new();
+    return Intersection.GetCollisionPointFacingTowardsPoint(referencePoint);
+}*/
+
