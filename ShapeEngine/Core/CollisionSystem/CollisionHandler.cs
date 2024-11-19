@@ -18,37 +18,24 @@ public class CollisionHandler : IBounds
             
             return TryAdd(owner, register);
         }
-
+        
         public void ProcessCollisions()
         {
-
-            foreach (var kvp in this)
+            foreach (var entry in this)
             {
-                var resolver = kvp.Key;
-                var register = kvp.Value;
-
-                foreach (var entry in register)
-                {
-                   resolver.ResolveCollision(entry.Value);
-                }
+                var resolver = entry.Key;
+                var register = entry.Value;
+                var informations = register.GetCollisionInformations();
+                if (informations == null) continue;
+                resolver.ResolveCollision(informations);
             }
-            
-            /*foreach (var kvp in collisionStack)
-            {
-                var collider = kvp.Key;
-                var cols = kvp.Value;
-                if(cols.Count > 0)
-                {
-                    CollisionInformation collisionInfo = new(cols, collider.ComputeIntersections);
-                    collider.ResolveCollision(collisionInfo);
-                }
-            }*/
         }
         
     }
     
     private class CollisionRegister : Dictionary<CollisionObject, CollisionInformation>
     {
+        public List<CollisionInformation>? GetCollisionInformations() => Values.Count <= 0 ? null :  Values.ToList();
         public bool AddCollision(Collision collision)
         {
             var selfParent = collision.Self.Parent;
@@ -100,21 +87,25 @@ public class CollisionHandler : IBounds
         public void ProcessOverlaps()
         {
 
-            foreach (var kvp in this)
+            foreach (var entry in this)
             {
-                var resolver = kvp.Key;
-                var register = kvp.Value;
-
-                foreach (var entry in register)
-                {
-                    resolver.ResolveCollisionEnded(entry.Value);
-                }
+                var resolver = entry.Key;
+                var register = entry.Value;
+                var informations = register.GetOverlapInformations();
+                if(informations == null)continue;
+                resolver.ResolveCollisionEnded(informations);
+               
+                // foreach (var entry in register)
+                // {
+                //     resolver.ResolveCollisionEnded(entry.Value);
+                // }
             }
         }
     }
 
     private class OverlapRegister(int capacity) : Dictionary<CollisionObject, OverlapInformation>(capacity)
     {
+        public List<OverlapInformation>? GetOverlapInformations() => Values.Count <= 0 ? null :  Values.ToList();
         public bool AddOverlap(Overlap  overlap)
         {
             var selfParent = overlap.Self.Parent;
