@@ -86,11 +86,8 @@ void main()
 //    finalColor = vec4(texColor.rgb, texColor.a);
 //}
 
-////---------------------------------------------------------------------------
 //// Fragment
-////---------------------------------------------------------------------------
 //#version 420 core
-////---------------------------------------------------------------------------
 //
 //in vec2 fragTexCoord;                    // screen position <-1,+1>
 //out vec4 finalColor;          // fragment output color
@@ -99,7 +96,6 @@ void main()
 //uniform float renderHeight = 450;
 ////uniform float xs,ys;            // texture resolution
 //float r = 10;                // blur radius
-////---------------------------------------------------------------------------
 //void main()
 //{
 //    float x,y,xx,yy,rr=r*r,dx,dy,w,w0;
@@ -122,13 +118,9 @@ void main()
 //    finalColor=col;
 //
 //}
-//---------------------------------------------------------------------------
 
-////---------------------------------------------------------------------------
 //// Fragment
-////---------------------------------------------------------------------------
 ////#version 330
-////---------------------------------------------------------------------------
 //in vec2 fragTexCoord;                    // screen position <-1,+1>
 //out vec4 finalColor;          // fragment output color
 //uniform sampler2D texture0;          // texture to blur
@@ -137,7 +129,6 @@ void main()
 ////uniform float xs,ys;            // texture resolution
 //float r = 1;                // blur radius
 //int axis = 0;
-////---------------------------------------------------------------------------
 //void main()
 //{
 //    float x,y,rr=r*r,d,w,w0;
@@ -156,7 +147,6 @@ void main()
 //    }
 //    finalColor=col;
 //}
-////---------------------------------------------------------------------------
 
 
 //void main()
@@ -202,7 +192,7 @@ void main()
 //    
 //}
 
-//Did NOT Work !
+//Did NOT Work
 //simple radial/directional blur
 //const int SampleCount = 64; // use a multiple of 2 here
 //float Intensity = 0.1;

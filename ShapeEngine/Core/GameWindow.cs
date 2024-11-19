@@ -1107,7 +1107,7 @@ public sealed class GameWindow
     /*
     private void CheckForWindowFlagChanges()
     {
-        // Console.WriteLine($"--------Minimized: {Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_MINIMIZED)}");
+     
         var mousePos = MousePosition;
         if (mouseControlled) mousePos = lastControlledMousePosition;
         mouseControlled = false;

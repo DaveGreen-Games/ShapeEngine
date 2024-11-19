@@ -560,16 +560,6 @@ namespace Examples
             var fullscreenState = InputActionFullscreen.Consume();
             if (fullscreenState is { Consumed: false, Pressed: true })
             {
-                // var win = GameWindow.Instance;
-                // if (win.IsWindowFullscreen())
-                // {
-                //     win.RestoreWindow();
-                // }
-                // else
-                // {
-                //     Console.WriteLine("---------------------------- Fullscreen mode enabled");
-                //     win.ActivateFullscreen(1920 / 2, 1080 / 2);
-                // }
                 GAMELOOP.Window.ToggleBorderlessFullscreen();
             }
 

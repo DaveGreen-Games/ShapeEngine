@@ -946,7 +946,6 @@ public static class ShapeDrawing
         var points = new List<Vector2>(3);
 
         int whileCounter = gapDrawingInfo.Gaps;
-        // Console.WriteLine("----------------Loop Started------------------");
         // Console.WriteLine($"    > Gaps: {gapDrawingInfo.Gaps} | Start Offset: {(int)(gapDrawingInfo.StartOffset * 100)}% | Start Distance {startDistance}");
         // Console.WriteLine($"    > Gap percentage: {(int)(gapDrawingInfo.GapPerimeterPercentage * 100)}%");
         // Console.WriteLine($"    > Gap Range: {(int)(gapPercentageRange * 100)}% | Line Range: {(int)(nonGapPercentageRange * 100)}%");
@@ -999,7 +998,6 @@ public static class ShapeDrawing
             }
             else
             {
-                // Console.WriteLine("     > Change point started------------------");
                 // Console.WriteLine($"        > Cur Index: {curIndex} | Polyline Count: {polyline.Count} | Remaining: {whileCounter}");
                 // Console.WriteLine($"        > Cur Distance: {curDistance} | Next Distance: {nextDistance} | Segment Length: {curDis}");
                 if (curIndex >= polyline.Count - 2) //last point
@@ -1050,12 +1048,10 @@ public static class ShapeDrawing
                     // Console.WriteLine($"                > New Index: {curIndex} | Next Index: {(curIndex + 1) % polyline.Count}");
                     // Console.WriteLine($"                > Cur Distance: {curDistance} | Next Distance: {nextDistance} | Segment Length: {curDis}");
                 }
-                // Console.WriteLine("         > Change point ended------------------");
             }
             
         }
 
-        // Console.WriteLine("----------------Loop Ended------------------");
         return perimeter;
     }
    

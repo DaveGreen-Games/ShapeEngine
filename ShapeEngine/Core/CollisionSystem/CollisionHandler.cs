@@ -651,12 +651,6 @@ public class CollisionHandler : IBounds
         
                 if (collisionPoints == null || !collisionPoints.Valid) continue;
                 
-                //NOTE: I need a query register that stores the other collision object + the info => Dictionary<CollisionObject, QueryInfo>
-                //N: Foreach collider that is intersected check if the parent exists in the query register
-                //N:     -If yes then add the query result to the existing query info
-                //N:     -If not then create a new QueryInfo in the query register
-                //N: Self collision object does not exist
-                
                 infos ??= new();
                 infos.Add(new(candidate, origin, collisionPoints));
             }

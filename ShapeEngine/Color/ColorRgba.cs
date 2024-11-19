@@ -388,7 +388,7 @@ public readonly struct ColorRgba : IEquatable<ColorRgba>
     //     return FromHSV(hsv.hue, hsv.saturation, hsv.value);
     //     
     //     float newValue = ShapeMath.Clamp(hsv.value + amount, 0f, 1f);
-    //     // Console.WriteLine($"------------------Change Brigthness {hsv} | Old {hsv.value} | New {newValue} | Amount {amount}");
+    //  
     //     return FromHSV(hsv.hue, hsv.saturation, newValue);
     // }
     // public ShapeColor ChangeHue(float amount)
@@ -486,5 +486,3 @@ public readonly struct ColorRgba : IEquatable<ColorRgba>
     //     else
     //         return System.Drawing.Color.FromArgb(255, v, p, q);
     // }
-    //
-    //----------------------------------------------
