@@ -284,7 +284,7 @@ public class CollisionHandler : IBounds
 
     public Rect Bounds => spatialHash.Bounds;
     
-    private Dictionary<CollisionObject, IntersectSpaceRegister> intersectSpaceRegisters = new(256);
+    private readonly Dictionary<CollisionObject, IntersectSpaceRegister> intersectSpaceRegisters = new(128);
     #endregion
 
     #region Constructors
@@ -550,20 +550,107 @@ public class CollisionHandler : IBounds
     
     #endregion
     
-    #region Query Space
+    #region Intersect Space
     
-    //TODO: Variants
-    //--- Collision Object?
-    //--- Collider
-    //--- Segment
-    //--- Circle
-    //--- Triangle
-    //--- Rect
-    //--- Quad
-    //--- Polyline
-    //--- Polygon
+    public IntersectSpaceResult? IntersectSpace(CollisionObject colObject, Vector2 origin)
+    {
+        if(colObject.Colliders.Count <= 0) return null;
+        
+        foreach (var collider in colObject.Colliders)
+        {
+            if(!collider.Enabled) continue;
+            if(!collider.ComputeIntersections) continue;
+            
+            collisionCandidateBuckets.Clear();
+            collisionCandidateCheckRegister.Clear();
+            
+            spatialHash.GetCandidateBuckets(collider, ref collisionCandidateBuckets);
+            if (collisionCandidateBuckets.Count <= 0) return null;
+            var collisionMask = collider.CollisionMask;
+            foreach (var bucket in collisionCandidateBuckets)
+            {
+                foreach (var candidate in bucket)
+                {
+                    if (!collisionMask.Has(candidate.CollisionLayer)) continue;
+                    if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+                    var parent = candidate.Parent;
+                    if(parent == null) continue;
+        
+                    var collisionPoints = collider.Intersect(candidate);
+        
+                    if (collisionPoints == null || !collisionPoints.Valid) continue;
+                    
+                    var entry = new IntersectSpaceEntry(candidate, collisionPoints);
+                    if (intersectSpaceRegisters.TryGetValue(parent, out var register))
+                    {
+                        register.Add(entry);
+                    }
+                    else
+                    {
+                        var newRegister = new IntersectSpaceRegister(parent, 2);
+                        newRegister.Add(entry);
+                        intersectSpaceRegisters.Add(parent, newRegister);
+                    }
+                }
+            }
+        }
+        
+        
+        if(intersectSpaceRegisters.Count <= 0) return null;
+        
+        var result = new IntersectSpaceResult(origin, intersectSpaceRegisters.Count);
+        foreach (var register in intersectSpaceRegisters.Values)
+        {
+            result.Add(register);
+        }
+        intersectSpaceRegisters.Clear();
+        return result;
+    }
+    public IntersectSpaceResult? IntersectSpace(Collider collider, Vector2 origin)
+    {
+        collisionCandidateBuckets.Clear();
+        collisionCandidateCheckRegister.Clear();
+        
+        spatialHash.GetCandidateBuckets(collider, ref collisionCandidateBuckets);
+        if (collisionCandidateBuckets.Count <= 0) return null;
+        var collisionMask = collider.CollisionMask;
+        foreach (var bucket in collisionCandidateBuckets)
+        {
+            foreach (var candidate in bucket)
+            {
+                if (!collisionMask.Has(candidate.CollisionLayer)) continue;
+                if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+                var parent = candidate.Parent;
+                if(parent == null) continue;
     
-
+                var collisionPoints = collider.Intersect(candidate);
+    
+                if (collisionPoints == null || !collisionPoints.Valid) continue;
+                
+                var entry = new IntersectSpaceEntry(candidate, collisionPoints);
+                if (intersectSpaceRegisters.TryGetValue(parent, out var register))
+                {
+                    register.Add(entry);
+                }
+                else
+                {
+                    var newRegister = new IntersectSpaceRegister(parent, 2);
+                    newRegister.Add(entry);
+                    intersectSpaceRegisters.Add(parent, newRegister);
+                }
+            }
+        }
+        
+        if(intersectSpaceRegisters.Count <= 0) return null;
+        
+        var result = new IntersectSpaceResult(origin, intersectSpaceRegisters.Count);
+        foreach (var register in intersectSpaceRegisters.Values)
+        {
+            result.Add(register);
+        }
+        intersectSpaceRegisters.Clear();
+        return result;
+    }
     public IntersectSpaceResult? IntersectSpace(Segment shape, Vector2 origin, BitFlag collisionMask)
     {
         collisionCandidateBuckets.Clear();
@@ -609,211 +696,275 @@ public class CollisionHandler : IBounds
         intersectSpaceRegisters.Clear();
         return result;
     }
-    
-    
-    
-    public Dictionary<Collider, QueryInfos>? QuerySpace(CollisionObject collisionObject, Vector2 origin, bool sorted = true)
+    public IntersectSpaceResult? IntersectSpace(Triangle shape, Vector2 origin, BitFlag collisionMask)
     {
-        if (!collisionObject.Enabled || !collisionObject.HasColliders) return null;
-
-        Dictionary<Collider, QueryInfos>? result = null;
+        collisionCandidateBuckets.Clear();
+        collisionCandidateCheckRegister.Clear();
         
-        foreach (var collider in collisionObject.Colliders)
+        spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
+        if (collisionCandidateBuckets.Count <= 0) return null;
+        
+        foreach (var bucket in collisionCandidateBuckets)
         {
-            var info = QuerySpace(collider, origin, sorted);
-            if (info != null && info.Count > 0)
+            foreach (var candidate in bucket)
             {
-                result ??= new();
-                result.Add(collider, info);
+                if (!collisionMask.Has(candidate.CollisionLayer)) continue;
+                if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+                var parent = candidate.Parent;
+                if(parent == null) continue;
+    
+                var collisionPoints = shape.Intersect(candidate);
+    
+                if (collisionPoints == null || !collisionPoints.Valid) continue;
+                
+                var entry = new IntersectSpaceEntry(candidate, collisionPoints);
+                if (intersectSpaceRegisters.TryGetValue(parent, out var register))
+                {
+                    register.Add(entry);
+                }
+                else
+                {
+                    var newRegister = new IntersectSpaceRegister(parent, 2);
+                    newRegister.Add(entry);
+                    intersectSpaceRegisters.Add(parent, newRegister);
+                }
             }
         }
-
+        
+        if(intersectSpaceRegisters.Count <= 0) return null;
+        
+        var result = new IntersectSpaceResult(origin, intersectSpaceRegisters.Count);
+        foreach (var register in intersectSpaceRegisters.Values)
+        {
+            result.Add(register);
+        }
+        intersectSpaceRegisters.Clear();
         return result;
     }
-    public QueryInfos? QuerySpace(Collider collider, Vector2 origin, bool sorted = true)
-    {
-        QueryInfos? infos = null;
-        
-        collisionCandidateBuckets.Clear();
-        collisionCandidateCheckRegister.Clear();
-        spatialHash.GetCandidateBuckets(collider, ref collisionCandidateBuckets);
-        if (collisionCandidateBuckets.Count <= 0) return null;
-        var mask = collider.CollisionMask;
-        foreach (var bucket in collisionCandidateBuckets)
-        {
-            foreach (var candidate in bucket)
-            {
-                if (candidate == collider) continue;
-                if (!mask.Has(candidate.CollisionLayer)) continue;
-                if (!collisionCandidateCheckRegister.Add(candidate)) continue;
-
-                var collisionPoints = collider.Intersect(candidate);
-        
-                if (collisionPoints == null || !collisionPoints.Valid) continue;
-                
-                infos ??= new();
-                infos.Add(new(candidate, origin, collisionPoints));
-            }
-        }
-        
-        if(sorted && infos is { Count: > 1 }) infos.SortClosest(origin);
-        return infos;
-    }
-    public QueryInfos? QuerySpace(Segment shape, Vector2 origin, BitFlag collisionMask, bool sorted = true)
+    public IntersectSpaceResult? IntersectSpace(Circle shape, Vector2 origin, BitFlag collisionMask)
     {
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
         
         spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
         if (collisionCandidateBuckets.Count <= 0) return null;
-        QueryInfos? infos = null;
+        
         foreach (var bucket in collisionCandidateBuckets)
         {
             foreach (var candidate in bucket)
             {
                 if (!collisionMask.Has(candidate.CollisionLayer)) continue;
                 if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+                var parent = candidate.Parent;
+                if(parent == null) continue;
     
-                var collisionPoints = shape.Intersect(candidate); //  ShapeGeometry.Intersect(shape, candidate.GetCollider().GetShape());
+                var collisionPoints = shape.Intersect(candidate);
     
                 if (collisionPoints == null || !collisionPoints.Valid) continue;
                 
-                infos ??= new();
-                infos.Add(new(candidate, origin, collisionPoints));
+                var entry = new IntersectSpaceEntry(candidate, collisionPoints);
+                if (intersectSpaceRegisters.TryGetValue(parent, out var register))
+                {
+                    register.Add(entry);
+                }
+                else
+                {
+                    var newRegister = new IntersectSpaceRegister(parent, 2);
+                    newRegister.Add(entry);
+                    intersectSpaceRegisters.Add(parent, newRegister);
+                }
             }
         }
-        if(sorted && infos is { Count: > 1 }) infos.SortClosest(origin);
-        return infos;
+        
+        if(intersectSpaceRegisters.Count <= 0) return null;
+        
+        var result = new IntersectSpaceResult(origin, intersectSpaceRegisters.Count);
+        foreach (var register in intersectSpaceRegisters.Values)
+        {
+            result.Add(register);
+        }
+        intersectSpaceRegisters.Clear();
+        return result;
     }
-    public QueryInfos? QuerySpace(Triangle shape, Vector2 origin, BitFlag collisionMask, bool sorted = true)
+    public IntersectSpaceResult? IntersectSpace(Rect shape, Vector2 origin, BitFlag collisionMask)
     {
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
         
         spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
         if (collisionCandidateBuckets.Count <= 0) return null;
-        QueryInfos? infos = null;
+        
         foreach (var bucket in collisionCandidateBuckets)
         {
             foreach (var candidate in bucket)
             {
                 if (!collisionMask.Has(candidate.CollisionLayer)) continue;
                 if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+                var parent = candidate.Parent;
+                if(parent == null) continue;
     
-                var collisionPoints = shape.Intersect(candidate); //  ShapeGeometry.Intersect(shape, candidate.GetCollider().GetShape());
+                var collisionPoints = shape.Intersect(candidate);
     
                 if (collisionPoints == null || !collisionPoints.Valid) continue;
                 
-                infos ??= new();
-                infos.Add(new(candidate, origin, collisionPoints));
+                var entry = new IntersectSpaceEntry(candidate, collisionPoints);
+                if (intersectSpaceRegisters.TryGetValue(parent, out var register))
+                {
+                    register.Add(entry);
+                }
+                else
+                {
+                    var newRegister = new IntersectSpaceRegister(parent, 2);
+                    newRegister.Add(entry);
+                    intersectSpaceRegisters.Add(parent, newRegister);
+                }
             }
         }
-        if(sorted && infos is { Count: > 1 }) infos.SortClosest(origin);
-        return infos;
+        
+        if(intersectSpaceRegisters.Count <= 0) return null;
+        
+        var result = new IntersectSpaceResult(origin, intersectSpaceRegisters.Count);
+        foreach (var register in intersectSpaceRegisters.Values)
+        {
+            result.Add(register);
+        }
+        intersectSpaceRegisters.Clear();
+        return result;
     }
-    public QueryInfos? QuerySpace(Circle shape, Vector2 origin, BitFlag collisionMask, bool sorted = true)
+    public IntersectSpaceResult? IntersectSpace(Quad shape, Vector2 origin, BitFlag collisionMask)
     {
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
         
         spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
         if (collisionCandidateBuckets.Count <= 0) return null;
-        QueryInfos? infos = null;
+        
         foreach (var bucket in collisionCandidateBuckets)
         {
             foreach (var candidate in bucket)
             {
                 if (!collisionMask.Has(candidate.CollisionLayer)) continue;
                 if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+                var parent = candidate.Parent;
+                if(parent == null) continue;
     
-                var collisionPoints = shape.Intersect(candidate); //  ShapeGeometry.Intersect(shape, candidate.GetCollider().GetShape());
+                var collisionPoints = shape.Intersect(candidate);
     
                 if (collisionPoints == null || !collisionPoints.Valid) continue;
                 
-                infos ??= new();
-                infos.Add(new(candidate, origin, collisionPoints));
+                var entry = new IntersectSpaceEntry(candidate, collisionPoints);
+                if (intersectSpaceRegisters.TryGetValue(parent, out var register))
+                {
+                    register.Add(entry);
+                }
+                else
+                {
+                    var newRegister = new IntersectSpaceRegister(parent, 2);
+                    newRegister.Add(entry);
+                    intersectSpaceRegisters.Add(parent, newRegister);
+                }
             }
         }
-        if(sorted && infos is { Count: > 1 }) infos.SortClosest(origin);
-        return infos;
+        
+        if(intersectSpaceRegisters.Count <= 0) return null;
+        
+        var result = new IntersectSpaceResult(origin, intersectSpaceRegisters.Count);
+        foreach (var register in intersectSpaceRegisters.Values)
+        {
+            result.Add(register);
+        }
+        intersectSpaceRegisters.Clear();
+        return result;
     }
-    public QueryInfos? QuerySpace(Rect shape, Vector2 origin, BitFlag collisionMask, bool sorted = true)
+    public IntersectSpaceResult? IntersectSpace(Polygon shape, Vector2 origin, BitFlag collisionMask)
     {
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
         
         spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
         if (collisionCandidateBuckets.Count <= 0) return null;
-        QueryInfos? infos = null;
+        
         foreach (var bucket in collisionCandidateBuckets)
         {
             foreach (var candidate in bucket)
             {
                 if (!collisionMask.Has(candidate.CollisionLayer)) continue;
                 if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+                var parent = candidate.Parent;
+                if(parent == null) continue;
     
-                var collisionPoints = shape.Intersect(candidate); //  ShapeGeometry.Intersect(shape, candidate.GetCollider().GetShape());
+                var collisionPoints = shape.Intersect(candidate);
     
                 if (collisionPoints == null || !collisionPoints.Valid) continue;
                 
-                infos ??= new();
-                infos.Add(new(candidate, origin, collisionPoints));
+                var entry = new IntersectSpaceEntry(candidate, collisionPoints);
+                if (intersectSpaceRegisters.TryGetValue(parent, out var register))
+                {
+                    register.Add(entry);
+                }
+                else
+                {
+                    var newRegister = new IntersectSpaceRegister(parent, 2);
+                    newRegister.Add(entry);
+                    intersectSpaceRegisters.Add(parent, newRegister);
+                }
             }
         }
-        if(sorted && infos is { Count: > 1 }) infos.SortClosest(origin);
-        return infos;
+        
+        if(intersectSpaceRegisters.Count <= 0) return null;
+        
+        var result = new IntersectSpaceResult(origin, intersectSpaceRegisters.Count);
+        foreach (var register in intersectSpaceRegisters.Values)
+        {
+            result.Add(register);
+        }
+        intersectSpaceRegisters.Clear();
+        return result;
     }
-    public QueryInfos? QuerySpace(Polygon shape, Vector2 origin, BitFlag collisionMask, bool sorted = true)
+    public IntersectSpaceResult? IntersectSpace(Polyline shape, Vector2 origin, BitFlag collisionMask)
     {
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
         
         spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
         if (collisionCandidateBuckets.Count <= 0) return null;
-        QueryInfos? infos = null;
-        foreach (var bucket in collisionCandidateBuckets)
-        {
-            foreach (var candidate in bucket)
-            {
-                if (!collisionMask.Has(candidate.CollisionLayer)) continue;
-                if (!collisionCandidateCheckRegister.Add(candidate)) continue;
-    
-                var collisionPoints = shape.Intersect(candidate); //  ShapeGeometry.Intersect(shape, candidate.GetCollider().GetShape());
-    
-                if (collisionPoints == null || !collisionPoints.Valid) continue;
-                
-                infos ??= new();
-                infos.Add(new(candidate, origin, collisionPoints));
-            }
-        }
-        if(sorted && infos is { Count: > 1 }) infos.SortClosest(origin);
-        return infos;
-    }
-    public QueryInfos? QuerySpace(Polyline shape, Vector2 origin, BitFlag collisionMask, bool sorted = true)
-    {
-        collisionCandidateBuckets.Clear();
-        collisionCandidateCheckRegister.Clear();
         
-        spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
-        if (collisionCandidateBuckets.Count <= 0) return null;
-        QueryInfos? infos = null;
         foreach (var bucket in collisionCandidateBuckets)
         {
             foreach (var candidate in bucket)
             {
                 if (!collisionMask.Has(candidate.CollisionLayer)) continue;
                 if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+                var parent = candidate.Parent;
+                if(parent == null) continue;
     
-                var collisionPoints = shape.Intersect(candidate); //  ShapeGeometry.Intersect(shape, candidate.GetCollider().GetShape());
+                var collisionPoints = shape.Intersect(candidate);
     
                 if (collisionPoints == null || !collisionPoints.Valid) continue;
                 
-                infos ??= new();
-                infos.Add(new(candidate, origin, collisionPoints));
+                var entry = new IntersectSpaceEntry(candidate, collisionPoints);
+                if (intersectSpaceRegisters.TryGetValue(parent, out var register))
+                {
+                    register.Add(entry);
+                }
+                else
+                {
+                    var newRegister = new IntersectSpaceRegister(parent, 2);
+                    newRegister.Add(entry);
+                    intersectSpaceRegisters.Add(parent, newRegister);
+                }
             }
         }
-        if(sorted && infos is { Count: > 1 }) infos.SortClosest(origin);
-        return infos;
+        
+        if(intersectSpaceRegisters.Count <= 0) return null;
+        
+        var result = new IntersectSpaceResult(origin, intersectSpaceRegisters.Count);
+        foreach (var register in intersectSpaceRegisters.Values)
+        {
+            result.Add(register);
+        }
+        intersectSpaceRegisters.Clear();
+        return result;
     }
 
     #endregion
@@ -1291,6 +1442,210 @@ public class CollisionHandler : IBounds
 }
 
 
+/*public Dictionary<Collider, QueryInfos>? QuerySpace(CollisionObject collisionObject, Vector2 origin, bool sorted = true)
+    {
+        if (!collisionObject.Enabled || !collisionObject.HasColliders) return null;
+
+        Dictionary<Collider, QueryInfos>? result = null;
+        
+        foreach (var collider in collisionObject.Colliders)
+        {
+            var info = QuerySpace(collider, origin, sorted);
+            if (info != null && info.Count > 0)
+            {
+                result ??= new();
+                result.Add(collider, info);
+            }
+        }
+
+        return result;
+    }
+    public QueryInfos? QuerySpace(Collider collider, Vector2 origin, bool sorted = true)
+    {
+        QueryInfos? infos = null;
+        
+        collisionCandidateBuckets.Clear();
+        collisionCandidateCheckRegister.Clear();
+        spatialHash.GetCandidateBuckets(collider, ref collisionCandidateBuckets);
+        if (collisionCandidateBuckets.Count <= 0) return null;
+        var mask = collider.CollisionMask;
+        foreach (var bucket in collisionCandidateBuckets)
+        {
+            foreach (var candidate in bucket)
+            {
+                if (candidate == collider) continue;
+                if (!mask.Has(candidate.CollisionLayer)) continue;
+                if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+
+                var collisionPoints = collider.Intersect(candidate);
+        
+                if (collisionPoints == null || !collisionPoints.Valid) continue;
+                
+                infos ??= new();
+                infos.Add(new(candidate, origin, collisionPoints));
+            }
+        }
+        
+        if(sorted && infos is { Count: > 1 }) infos.SortClosest(origin);
+        return infos;
+    }
+    public QueryInfos? QuerySpace(Segment shape, Vector2 origin, BitFlag collisionMask, bool sorted = true)
+    {
+        collisionCandidateBuckets.Clear();
+        collisionCandidateCheckRegister.Clear();
+        
+        spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
+        if (collisionCandidateBuckets.Count <= 0) return null;
+        QueryInfos? infos = null;
+        foreach (var bucket in collisionCandidateBuckets)
+        {
+            foreach (var candidate in bucket)
+            {
+                if (!collisionMask.Has(candidate.CollisionLayer)) continue;
+                if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+    
+                var collisionPoints = shape.Intersect(candidate); //  ShapeGeometry.Intersect(shape, candidate.GetCollider().GetShape());
+    
+                if (collisionPoints == null || !collisionPoints.Valid) continue;
+                
+                infos ??= new();
+                infos.Add(new(candidate, origin, collisionPoints));
+            }
+        }
+        if(sorted && infos is { Count: > 1 }) infos.SortClosest(origin);
+        return infos;
+    }
+    public QueryInfos? QuerySpace(Triangle shape, Vector2 origin, BitFlag collisionMask, bool sorted = true)
+    {
+        collisionCandidateBuckets.Clear();
+        collisionCandidateCheckRegister.Clear();
+        
+        spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
+        if (collisionCandidateBuckets.Count <= 0) return null;
+        QueryInfos? infos = null;
+        foreach (var bucket in collisionCandidateBuckets)
+        {
+            foreach (var candidate in bucket)
+            {
+                if (!collisionMask.Has(candidate.CollisionLayer)) continue;
+                if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+    
+                var collisionPoints = shape.Intersect(candidate); //  ShapeGeometry.Intersect(shape, candidate.GetCollider().GetShape());
+    
+                if (collisionPoints == null || !collisionPoints.Valid) continue;
+                
+                infos ??= new();
+                infos.Add(new(candidate, origin, collisionPoints));
+            }
+        }
+        if(sorted && infos is { Count: > 1 }) infos.SortClosest(origin);
+        return infos;
+    }
+    public QueryInfos? QuerySpace(Circle shape, Vector2 origin, BitFlag collisionMask, bool sorted = true)
+    {
+        collisionCandidateBuckets.Clear();
+        collisionCandidateCheckRegister.Clear();
+        
+        spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
+        if (collisionCandidateBuckets.Count <= 0) return null;
+        QueryInfos? infos = null;
+        foreach (var bucket in collisionCandidateBuckets)
+        {
+            foreach (var candidate in bucket)
+            {
+                if (!collisionMask.Has(candidate.CollisionLayer)) continue;
+                if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+    
+                var collisionPoints = shape.Intersect(candidate); //  ShapeGeometry.Intersect(shape, candidate.GetCollider().GetShape());
+    
+                if (collisionPoints == null || !collisionPoints.Valid) continue;
+                
+                infos ??= new();
+                infos.Add(new(candidate, origin, collisionPoints));
+            }
+        }
+        if(sorted && infos is { Count: > 1 }) infos.SortClosest(origin);
+        return infos;
+    }
+    public QueryInfos? QuerySpace(Rect shape, Vector2 origin, BitFlag collisionMask, bool sorted = true)
+    {
+        collisionCandidateBuckets.Clear();
+        collisionCandidateCheckRegister.Clear();
+        
+        spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
+        if (collisionCandidateBuckets.Count <= 0) return null;
+        QueryInfos? infos = null;
+        foreach (var bucket in collisionCandidateBuckets)
+        {
+            foreach (var candidate in bucket)
+            {
+                if (!collisionMask.Has(candidate.CollisionLayer)) continue;
+                if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+    
+                var collisionPoints = shape.Intersect(candidate); //  ShapeGeometry.Intersect(shape, candidate.GetCollider().GetShape());
+    
+                if (collisionPoints == null || !collisionPoints.Valid) continue;
+                
+                infos ??= new();
+                infos.Add(new(candidate, origin, collisionPoints));
+            }
+        }
+        if(sorted && infos is { Count: > 1 }) infos.SortClosest(origin);
+        return infos;
+    }
+    public QueryInfos? QuerySpace(Polygon shape, Vector2 origin, BitFlag collisionMask, bool sorted = true)
+    {
+        collisionCandidateBuckets.Clear();
+        collisionCandidateCheckRegister.Clear();
+        
+        spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
+        if (collisionCandidateBuckets.Count <= 0) return null;
+        QueryInfos? infos = null;
+        foreach (var bucket in collisionCandidateBuckets)
+        {
+            foreach (var candidate in bucket)
+            {
+                if (!collisionMask.Has(candidate.CollisionLayer)) continue;
+                if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+    
+                var collisionPoints = shape.Intersect(candidate); //  ShapeGeometry.Intersect(shape, candidate.GetCollider().GetShape());
+    
+                if (collisionPoints == null || !collisionPoints.Valid) continue;
+                
+                infos ??= new();
+                infos.Add(new(candidate, origin, collisionPoints));
+            }
+        }
+        if(sorted && infos is { Count: > 1 }) infos.SortClosest(origin);
+        return infos;
+    }
+    public QueryInfos? QuerySpace(Polyline shape, Vector2 origin, BitFlag collisionMask, bool sorted = true)
+    {
+        collisionCandidateBuckets.Clear();
+        collisionCandidateCheckRegister.Clear();
+        
+        spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
+        if (collisionCandidateBuckets.Count <= 0) return null;
+        QueryInfos? infos = null;
+        foreach (var bucket in collisionCandidateBuckets)
+        {
+            foreach (var candidate in bucket)
+            {
+                if (!collisionMask.Has(candidate.CollisionLayer)) continue;
+                if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+    
+                var collisionPoints = shape.Intersect(candidate); //  ShapeGeometry.Intersect(shape, candidate.GetCollider().GetShape());
+    
+                if (collisionPoints == null || !collisionPoints.Valid) continue;
+                
+                infos ??= new();
+                infos.Add(new(candidate, origin, collisionPoints));
+            }
+        }
+        if(sorted && infos is { Count: > 1 }) infos.SortClosest(origin);
+        return infos;
+    }
+    */
 
 
 /*
