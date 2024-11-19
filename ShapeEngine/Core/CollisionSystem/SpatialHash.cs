@@ -190,6 +190,13 @@ namespace ShapeEngine.Core.CollisionSystem
             
             FillCandidateBuckets(bucketIds, ref candidateBuckets);
         }
+        public void GetCandidateBuckets(Quad quad, ref List<Bucket> candidateBuckets)
+        {
+            List<int> bucketIds = new();
+            GetCellIDs(quad, ref bucketIds);
+            
+            FillCandidateBuckets(bucketIds, ref candidateBuckets);
+        }
         public void GetCandidateBuckets(Polygon poly, ref List<Bucket> candidateBuckets)
         {
             List<int> bucketIds = new();
@@ -268,6 +275,14 @@ namespace ShapeEngine.Core.CollisionSystem
             
             AccumulateUniqueCandidates(bucketIds, ref candidates);
         }
+        public void GetUniqueCandidates(Quad quad, ref HashSet<Collider> candidates)
+        {
+            List<int> bucketIds = new();
+            GetCellIDs(quad, ref bucketIds);
+            
+            AccumulateUniqueCandidates(bucketIds, ref candidates);
+        }
+
         public void GetUniqueCandidates(Polygon poly, ref HashSet<Collider> candidates)
         {
             List<int> bucketIds = new();
