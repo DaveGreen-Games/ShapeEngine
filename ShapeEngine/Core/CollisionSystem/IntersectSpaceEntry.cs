@@ -21,4 +21,12 @@ public class IntersectSpaceEntry : CollisionPoints
     }
     
     
+    
+    
+    //TODO: Add filter / query methods
+    //--- Find Closest/ Furthest CollisionPoint
+    //--- Get CollisionPoint facing towards collider
+    //--- Validate points
+    //--- Get average collision point
+    //--- sort all points by distance
 }
