@@ -535,7 +535,7 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     #endregion
     
     #region CollisionPoint 
-     public CollisionPoint GetClosestCollisionPoint(Vector2 referencePoint)
+    public CollisionPoint GetClosestCollisionPoint(Vector2 referencePoint)
     {
         if (!Valid) return new();
         if(Count == 1) return this[0];
@@ -570,6 +570,48 @@ public class CollisionPoints : ShapeList<CollisionPoint>
             {
                 furthest = p;
                 furthestDis = dis;
+            }
+        }
+        
+        return furthest;
+    }
+    public CollisionPoint GetClosestCollisionPoint(Vector2 referencePoint, out float closestDistanceSquared)
+    {
+        closestDistanceSquared = -1;
+        if (!Valid) return new();
+        if(Count == 1) return this[0];
+        
+        var closest = this[0];
+        closestDistanceSquared = (closest.Point - referencePoint).LengthSquared();
+        for (var i = 1; i < Count; i++)
+        {
+            var p = this[i];
+            var dis = (p.Point - referencePoint).LengthSquared();
+            if (dis < closestDistanceSquared)
+            {
+                closest = p;
+                closestDistanceSquared = dis;
+            }
+        }
+        
+        return closest;
+    }
+    public CollisionPoint GetFurthestCollisionPoint(Vector2 referencePoint, out float furthestDistanceSquared)
+    {
+        furthestDistanceSquared = -1;
+        if (!Valid) return new();
+        if(Count == 1) return this[0];
+        
+        var furthest = this[0];
+        furthestDistanceSquared = (furthest.Point - referencePoint).LengthSquared();
+        for (var i = 1; i < Count; i++)
+        {
+            var p = this[i];
+            var dis = (p.Point - referencePoint).LengthSquared();
+            if (dis > furthestDistanceSquared)
+            {
+                furthest = p;
+                furthestDistanceSquared = dis;
             }
         }
         
