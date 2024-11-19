@@ -9,7 +9,7 @@ namespace ShapeEngine.Core.CollisionSystem;
 
 public class CollisionHandler : IBounds
 {
-    
+    #region Support Classes
     private class CollisionStack(int capacity) : Dictionary<CollisionObject, CollisionRegister>(capacity)
     {
         public bool AddCollisionRegister(CollisionObject owner, CollisionRegister register)
@@ -265,8 +265,9 @@ public class CollisionHandler : IBounds
             obj.OnCollisionSystemLeft(handler);
         }
     }
+    #endregion
     
-    
+    #region Members
     private readonly CollisionObjectRegister collisionBodyRegister;
     
     private readonly SpatialHash spatialHash;
@@ -282,6 +283,9 @@ public class CollisionHandler : IBounds
     public int Count => collisionBodyRegister.AllObjects.Count; // collisionBodies.Count;
 
     public Rect Bounds => spatialHash.Bounds;
+    #endregion
+
+    #region Constructors
 
     public CollisionHandler(float x, float y, float w, float h, int rows, int cols, int startCapacity = 1024)
     {
@@ -302,16 +306,20 @@ public class CollisionHandler : IBounds
         oldOverlapStack = new(startCapacity / 4);
     }
     
+    #endregion
     
-    public void ResizeBounds(Rect newBounds) { spatialHash.ResizeBounds(newBounds); }
-
+    #region Add & Remove Collision Objects
     public void Add(CollisionObject collisionObject) => collisionBodyRegister.Add(collisionObject);
     public void AddRange(IEnumerable<CollisionObject> collisionObjects) => collisionBodyRegister.AddRange(collisionObjects);
     public void AddRange(params CollisionObject[] collisionObjects)=> collisionBodyRegister.AddRange(collisionObjects);
     public void Remove(CollisionObject collisionObject)=> collisionBodyRegister.Remove(collisionObject);
     public void RemoveRange(IEnumerable<CollisionObject> collisionObjects)  => collisionBodyRegister.RemoveRange(collisionObjects);
     public void RemoveRange(params CollisionObject[] collisionObjects)  => collisionBodyRegister.RemoveRange(collisionObjects);
+    #endregion
     
+    #region Public Functions
+    public void ResizeBounds(Rect newBounds) => spatialHash.ResizeBounds(newBounds);
+
     public void Clear()
     {
         collisionBodyRegister.Clear();
@@ -323,7 +331,6 @@ public class CollisionHandler : IBounds
         spatialHash.Close();
         
     }
-
     public void Update(float dt)
     {
         spatialHash.Fill(collisionBodyRegister.AllObjects);
@@ -332,6 +339,11 @@ public class CollisionHandler : IBounds
         
         Resolve();
     }
+    
+    #endregion
+    
+    #region Private Functions
+    
     private void ProcessCollisions(float dt)
     {
         foreach (var collisionBody in collisionBodyRegister.AllObjects)
@@ -534,7 +546,9 @@ public class CollisionHandler : IBounds
         // activeRegister.Clear();
     }
     
+    #endregion
     
+    #region Query Space
     // public QueryInfos? QuerySpace(CollisionBody collisionBody, Vector2 origin, bool sorted = true)
     // {
     //     if (!collisionBody.HasColliders) return null;
@@ -775,6 +789,9 @@ public class CollisionHandler : IBounds
         return infos;
     }
 
+    #endregion
+    
+    #region Cast Space
     
     public void CastSpace(CollisionObject collisionBody, ref List<Collider> result, bool sorted = false)
     {
@@ -1217,8 +1234,9 @@ public class CollisionHandler : IBounds
         }
     }
 
+    #endregion
     
-    
+    #region Debug
     public void DebugDraw(ColorRgba border, ColorRgba fill)
     {
         spatialHash.DebugDraw(border, fill);
@@ -1242,6 +1260,7 @@ public class CollisionHandler : IBounds
         return parents;
     }
     
+    #endregion
 }
 
 
