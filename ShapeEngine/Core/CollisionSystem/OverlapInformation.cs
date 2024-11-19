@@ -3,6 +3,10 @@ using ShapeEngine.Core.CollisionSystem;
 
 namespace ShapeEngine.Core.CollisionSystem;
 
+/// <summary>
+/// Contains the information of an overlap between two collision objects in form of a list of overlaps.
+/// An overlap contains the information of the two overlapping colliders.
+/// </summary>
 public class OverlapInformation : List<Overlap>
 {
     public readonly CollisionObject Self;

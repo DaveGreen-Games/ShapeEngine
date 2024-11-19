@@ -5,6 +5,10 @@ using ShapeEngine.Lib;
 
 namespace ShapeEngine.Core.CollisionSystem;
 
+/// <summary>
+/// Contains the information of a collision between two collision objects in form of a list of collisions.
+/// Each collision is an intersection or overlap between two colliders
+/// </summary>
 public class CollisionInformation : List<Collision>
 {
     public readonly CollisionObject Self;

@@ -5,7 +5,9 @@ using ShapeEngine.UI;
 
 namespace ShapeEngine.Core.CollisionSystem;
 
-
+/// <summary>
+/// Contains the information of an intersection or an overlap between two colliders.
+/// </summary>
 public class Collision
 {
     public readonly bool FirstContact;

@@ -2,6 +2,9 @@ using ShapeEngine.Core.CollisionSystem;
 
 namespace ShapeEngine.Core.CollisionSystem;
 
+/// <summary>
+/// Contains the information of an overlap between two colliders.
+/// </summary>
 public class Overlap
 {
     public readonly Collider Self;
