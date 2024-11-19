@@ -283,6 +283,8 @@ public class CollisionHandler : IBounds
     public int Count => collisionBodyRegister.AllObjects.Count; // collisionBodies.Count;
 
     public Rect Bounds => spatialHash.Bounds;
+    
+    private Dictionary<CollisionObject, IntersectSpaceRegister> intersectSpaceRegisters = new(256);
     #endregion
 
     #region Constructors
@@ -549,41 +551,67 @@ public class CollisionHandler : IBounds
     #endregion
     
     #region Query Space
-    // public QueryInfos? QuerySpace(CollisionBody collisionBody, Vector2 origin, bool sorted = true)
-    // {
-    //     if (!collisionBody.HasColliders) return null;
-    //     QueryInfos? infos = null;
-    //     
-    //     foreach (var collider in collisionBody.Colliders)
-    //     {
-    //         collisionCandidateBuckets.Clear();
-    //         collisionCandidateCheckRegister.Clear();
-    //         spatialHash.GetCandidateBuckets(collider, ref collisionCandidateBuckets);
-    //         if (collisionCandidateBuckets.Count <= 0) return null;
-    //         
-    //         var mask = collider.CollisionMask;
-    //         foreach (var bucket in collisionCandidateBuckets)
-    //         {
-    //             foreach (var candidate in bucket)
-    //             {
-    //                 if (candidate == collider) continue;
-    //                 if (!mask.Has(candidate.CollisionLayer)) continue;
-    //                 if (!collisionCandidateCheckRegister.Add(candidate)) continue;
-    //
-    //                 var collisionPoints = collider.Intersect(candidate);
-    //         
-    //                 if (collisionPoints == null || !collisionPoints.Valid) continue;
-    //                 
-    //                 infos ??= new();
-    //                 infos.Add(new(collider, candidate, origin, collisionPoints));
-    //             }
-    //         }
-    //     }
-    //     
-    //     if(sorted && infos is { Count: > 1 }) infos.SortClosest(origin);
-    //     return infos;
-    // }
-    //
+    
+    //TODO: Variants
+    //--- Collision Object?
+    //--- Collider
+    //--- Segment
+    //--- Circle
+    //--- Triangle
+    //--- Rect
+    //--- Quad
+    //--- Polyline
+    //--- Polygon
+    
+
+    public IntersectSpaceResult? IntersectSpace(Segment shape, Vector2 origin, BitFlag collisionMask)
+    {
+        collisionCandidateBuckets.Clear();
+        collisionCandidateCheckRegister.Clear();
+        
+        spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
+        if (collisionCandidateBuckets.Count <= 0) return null;
+        
+        foreach (var bucket in collisionCandidateBuckets)
+        {
+            foreach (var candidate in bucket)
+            {
+                if (!collisionMask.Has(candidate.CollisionLayer)) continue;
+                if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+                var parent = candidate.Parent;
+                if(parent == null) continue;
+    
+                var collisionPoints = shape.Intersect(candidate);
+    
+                if (collisionPoints == null || !collisionPoints.Valid) continue;
+                
+                var entry = new IntersectSpaceEntry(candidate, collisionPoints);
+                if (intersectSpaceRegisters.TryGetValue(parent, out var register))
+                {
+                    register.Add(entry);
+                }
+                else
+                {
+                    var newRegister = new IntersectSpaceRegister(parent, 2);
+                    newRegister.Add(entry);
+                    intersectSpaceRegisters.Add(parent, newRegister);
+                }
+            }
+        }
+        
+        if(intersectSpaceRegisters.Count <= 0) return null;
+        
+        var result = new IntersectSpaceResult(origin, intersectSpaceRegisters.Count);
+        foreach (var register in intersectSpaceRegisters.Values)
+        {
+            result.Add(register);
+        }
+        intersectSpaceRegisters.Clear();
+        return result;
+    }
+    
+    
+    
     public Dictionary<Collider, QueryInfos>? QuerySpace(CollisionObject collisionObject, Vector2 origin, bool sorted = true)
     {
         if (!collisionObject.Enabled || !collisionObject.HasColliders) return null;
@@ -610,7 +638,6 @@ public class CollisionHandler : IBounds
         collisionCandidateCheckRegister.Clear();
         spatialHash.GetCandidateBuckets(collider, ref collisionCandidateBuckets);
         if (collisionCandidateBuckets.Count <= 0) return null;
-        
         var mask = collider.CollisionMask;
         foreach (var bucket in collisionCandidateBuckets)
         {
@@ -623,6 +650,12 @@ public class CollisionHandler : IBounds
                 var collisionPoints = collider.Intersect(candidate);
         
                 if (collisionPoints == null || !collisionPoints.Valid) continue;
+                
+                //NOTE: I need a query register that stores the other collision object + the info => Dictionary<CollisionObject, QueryInfo>
+                //N: Foreach collider that is intersected check if the parent exists in the query register
+                //N:     -If yes then add the query result to the existing query info
+                //N:     -If not then create a new QueryInfo in the query register
+                //N: Self collision object does not exist
                 
                 infos ??= new();
                 infos.Add(new(candidate, origin, collisionPoints));
