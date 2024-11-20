@@ -677,8 +677,10 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     
     #region Public
     public new CollisionPoints Copy() => new(this);
-    public void SortClosestFirst(Vector2 referencePoint)
+    public bool SortClosestFirst(Vector2 referencePoint)
     {
+        if(Count <= 0) return false;
+        if(Count == 1) return true;
         this.Sort
         (
             comparison: (a, b) =>
@@ -691,9 +693,12 @@ public class CollisionPoints : ShapeList<CollisionPoint>
                 return -1;
             }
         );
+        return true;
     }
-    public void SortFurthestFirst(Vector2 referencePoint)
+    public bool SortFurthestFirst(Vector2 referencePoint)
     {
+        if(Count <= 0) return false;
+        if(Count == 1) return true;
         this.Sort
         (
             comparison: (a, b) =>
@@ -706,6 +711,7 @@ public class CollisionPoints : ShapeList<CollisionPoint>
                 return -1;
             }
         );
+        return true;
     }
     
 
