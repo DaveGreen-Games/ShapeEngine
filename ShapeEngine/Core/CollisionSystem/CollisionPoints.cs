@@ -534,7 +534,21 @@ public class CollisionPoints : ShapeList<CollisionPoint>
 
     #endregion
     
-    #region CollisionPoint 
+    #region CollisionPoint
+
+    public CollisionPoint GetAverageCollisionPoint()
+    {
+        var avgPoint = new Vector2();
+        var avgNormal = new Vector2();
+        foreach (var p in this)
+        {
+            if(!p.Valid) continue;
+            avgPoint += p.Point;
+            avgNormal += p.Normal;
+        }
+        
+        return new(avgPoint / Count, avgNormal.Normalize());
+    }
     public CollisionPoint GetClosestCollisionPoint(Vector2 referencePoint)
     {
         if (!Valid) return new();
