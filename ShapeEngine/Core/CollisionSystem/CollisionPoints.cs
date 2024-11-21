@@ -255,15 +255,15 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     /// </summary>
     /// <param name="referenceDirection">The direction to check CollisionPoint normals against.</param>
     /// <param name="referencePoint">The direction from the reference point towards to CollisionPoint  to check CollisionPoint Normals against.</param>
-    /// <param name="cleanResult">The result of the combined CollisionPoint, and the  closest/furthest collision point from the reference point, and the CollisionPoint with normal facing towards the referencePoint.</param>
+    /// <param name="validationResult">The result of the combined CollisionPoint, and the  closest/furthest collision point from the reference point, and the CollisionPoint with normal facing towards the referencePoint.</param>
     /// <returns>Returns true if there are valid points remaining</returns>
-    public bool Validate(Vector2 referenceDirection, Vector2 referencePoint,  out CollisionPointValidationResult cleanResult)
+    public bool Validate(Vector2 referenceDirection, Vector2 referencePoint,  out CollisionPointValidationResult validationResult)
     {
         CollisionPoint combined;
         CollisionPoint closest;
         CollisionPoint furthest;
         CollisionPoint pointingTowards;
-        cleanResult = new CollisionPointValidationResult();
+        validationResult = new CollisionPointValidationResult();
         
         if (Count <= 0) return false;
         if (Count == 1)
@@ -279,7 +279,7 @@ public class CollisionPoints : ShapeList<CollisionPoint>
             closest = combined;
             furthest = combined;
             pointingTowards = combined;
-            cleanResult = new CollisionPointValidationResult(combined, closest, furthest, pointingTowards);
+            validationResult = new CollisionPointValidationResult(combined, closest, furthest, pointingTowards);
             return true;
         }
         
@@ -332,7 +332,7 @@ public class CollisionPoints : ShapeList<CollisionPoint>
         avgPoint /= count;
         avgNormal = avgNormal.Normalize();
         combined = new CollisionPoint(avgPoint, avgNormal);
-        cleanResult = new CollisionPointValidationResult(combined, closest, furthest, pointingTowards);
+        validationResult = new CollisionPointValidationResult(combined, closest, furthest, pointingTowards);
         return true;
     }
     /// <summary>
@@ -402,15 +402,15 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     /// - invalid CollisionPoints
     /// </summary>
     /// <param name="referencePoint">The direction from the reference point towards to CollisionPoint  to check CollisionPoint Normals against.</param>
-    /// <param name="cleanResult">The result of the combined CollisionPoint, and the  closest/furthest collision point from the reference point, and the CollisionPoint with normal facing towards the referencePoint.</param>
+    /// <param name="validationResult">The result of the combined CollisionPoint, and the  closest/furthest collision point from the reference point, and the CollisionPoint with normal facing towards the referencePoint.</param>
     /// <returns>Returns true if there are valid points remaining</returns>
-    public bool Validate(Vector2 referencePoint,  out CollisionPointValidationResult cleanResult)
+    public bool Validate(Vector2 referencePoint,  out CollisionPointValidationResult validationResult)
     {
         CollisionPoint combined;
         CollisionPoint closest;
         CollisionPoint furthest;
         CollisionPoint pointingTowards;
-        cleanResult = new CollisionPointValidationResult();
+        validationResult = new CollisionPointValidationResult();
         
         if (Count <= 0) return false;
         if (Count == 1)
@@ -426,7 +426,7 @@ public class CollisionPoints : ShapeList<CollisionPoint>
             closest = combined;
             furthest = combined;
             pointingTowards = combined;
-            cleanResult = new CollisionPointValidationResult(combined, closest, furthest, pointingTowards);
+            validationResult = new CollisionPointValidationResult(combined, closest, furthest, pointingTowards);
             return true;
         }
         
@@ -482,7 +482,7 @@ public class CollisionPoints : ShapeList<CollisionPoint>
         avgPoint /= count;
         avgNormal = avgNormal.Normalize();
         combined = new CollisionPoint(avgPoint, avgNormal);
-        cleanResult = new CollisionPointValidationResult(combined, closest, furthest, pointingTowards);
+        validationResult = new CollisionPointValidationResult(combined, closest, furthest, pointingTowards);
         return true;
     }
     
@@ -540,14 +540,16 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     {
         var avgPoint = new Vector2();
         var avgNormal = new Vector2();
+        var count = 0;
         foreach (var p in this)
         {
             if(!p.Valid) continue;
             avgPoint += p.Point;
             avgNormal += p.Normal;
+            count++;
         }
         
-        return new(avgPoint / Count, avgNormal.Normalize());
+        return new(avgPoint / count, avgNormal.Normalize());
     }
     public CollisionPoint GetClosestCollisionPoint(Vector2 referencePoint)
     {
