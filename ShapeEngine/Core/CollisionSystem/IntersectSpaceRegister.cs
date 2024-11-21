@@ -1,5 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Lib;
 
 namespace ShapeEngine.Core.CollisionSystem;
 
@@ -30,6 +31,18 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
         return true;
     }
 
+    public CollisionPoint GetAverageCollisionPoint()
+    {
+        var avgPoint = new Vector2();
+        var avgNormal = new Vector2();
+        foreach (var entry in this)
+        {
+            var sum = entry.GetAverageCollisionPoint();
+            avgPoint += sum.Point;
+            avgNormal += sum.Normal;
+        }
+        return new CollisionPoint(avgPoint / Count, avgNormal.Normalize());
+    }
     #endregion
     
     #region Sorting
@@ -235,8 +248,164 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
 
     #endregion
     
-    #region Validation
-    //TODO: Validate all entries and get closest collision point/entry
+    #region Pointing Towards
+    public CollisionPoint GetCollisionPointFacingTowardsPoint(Vector2 referencePoint)
+    {
+        if(Count <= 0) return new();
+        if(Count == 1) return this[0].GetCollisionPointFacingTowardsPoint(referencePoint);        
+        var pointing  = new CollisionPoint();
+        var maxDot = -1f;
+        for (int i = Count - 1; i >= 0; i--)
+        {
+            var entry = this[i];
+            if(entry.Count <= 0) continue;
+            
+            var pointingTowards = entry.GetCollisionPointFacingTowardsPoint(referencePoint);
+            var dir = (referencePoint - pointingTowards.Point).Normalize();
+            var dot = dir.Dot(pointingTowards.Normal);
+            if (maxDot < 0 || dot > maxDot)
+            {
+                maxDot = dot;
+                pointing = pointingTowards;
+            }
+        }
+
+        return pointing;
+    }
+    public CollisionPoint GetCollisionPointFacingTowardsDir(Vector2 referenceDirection)
+    {
+        if(Count <= 0) return new();
+        if(Count == 1) return this[0].GetCollisionPointFacingTowardsDir(referenceDirection);        
+        var pointing  = new CollisionPoint();
+        var maxDot = -1f;
+        for (int i = Count - 1; i >= 0; i--)
+        {
+            var entry = this[i];
+            if(entry.Count <= 0) continue;
+            
+            var pointingTowards = entry.GetCollisionPointFacingTowardsDir(referenceDirection);
+            var dot = referenceDirection.Dot(pointingTowards.Normal);
+            if (maxDot < 0 || dot > maxDot)
+            {
+                maxDot = dot;
+                pointing = pointingTowards;
+            }
+        }
+
+        return pointing;
+    }
+    public CollisionPoint GetCollisionPointFacingTowardsPoint()
+    {
+        return GetCollisionPointFacingTowardsPoint(Object.Transform.Position);
+    }
+    public CollisionPoint GetCollisionPointFacingTowardsDir()
+    {
+        return GetCollisionPointFacingTowardsDir(Object.Velocity);
+    }
+
+    #endregion
     
+    #region Validation
+    
+    /// <summary>
+    /// Removes:
+    /// - invalid CollisionPoints
+    /// - CollisionPoints with normals facing in the same direction as the reference direction
+    /// - CollisionPoints with normals facing in the opposite direction as the reference point (from CollisionPoint towards the reference point)
+    /// - Uses Object.Velocity as reference direction.
+    /// - Uses Object.Transform.Position as reference point.
+    /// </summary>
+    /// <param name="combined">An averaged CollisionPoint of all remaining CollisionPoints of all entries.</param>
+    /// <param name="closest">The CollisionPoint that is closest to the referencePoint.</param>
+    /// <returns>Returns true if there are valid points remaining</returns>
+    public bool ValidateSelf(out CollisionPoint combined, out CollisionPoint closest)
+    {
+        var avgPoint = new Vector2();
+        var avgNormal = new Vector2();
+        closest  = new CollisionPoint();
+        var closestDistanceSquared = -1f;
+        var count = 0;
+        for (int i = Count - 1; i >= 0; i--)
+        {
+            var entry = this[i];
+            // var valid = entry.ValidateSelf(out var combinedEntryPoint, out var closestToEntry);
+            var valid = entry.Validate(Object.Velocity, Object.Transform.Position, out var combinedEntryPoint, out var closestToEntry);
+            if (!valid)
+            {
+                RemoveAt(i);
+                continue;
+            }
+            avgPoint += combinedEntryPoint.Point;
+            avgNormal += combinedEntryPoint.Normal;
+            count++;
+            var distanceSquared = (Object.Transform.Position - combinedEntryPoint.Point).LengthSquared();
+            if (closestDistanceSquared < 0 ||  distanceSquared  < closestDistanceSquared)
+            {
+                closestDistanceSquared = distanceSquared;
+                closest = closestToEntry;
+            }
+        }
+        combined = new CollisionPoint(avgPoint / count, avgNormal.Normalize());
+        return true;
+    }
+    /// <summary>
+    /// Removes:
+    /// - invalid CollisionPoints
+    /// - CollisionPoints with normals facing in the same direction as the reference direction
+    /// - CollisionPoints with normals facing in the opposite direction as the reference point (from CollisionPoint towards the reference point)
+    /// - Uses Object.Velocity as reference direction.
+    /// - Uses Object.Transform.Position as reference point.
+    /// </summary>
+    /// <param name="validationResult">The result of the combined CollisionPoint, and the  closest/furthest collision point from the reference point, and the CollisionPoint with normal facing towards the referencePoint.</param>
+    /// <returns>Returns true if there are valid points remaining</returns>
+    public bool ValidateSelf(out CollisionPointValidationResult validationResult)
+    {
+        var avgPoint = new Vector2();
+        var avgNormal = new Vector2();
+        var closest  = new CollisionPoint();
+        var furthest  = new CollisionPoint();
+        var pointing  = new CollisionPoint();
+        var maxDot = -1f;
+        var closestDistanceSquared = -1f;
+        var furthestDistanceSquared = -1f;
+        var count = 0;
+        for (int i = Count - 1; i >= 0; i--)
+        {
+            var entry = this[i];
+            // var valid = entry.ValidateSelf(out var result);
+            var valid = entry.Validate(Object.Velocity, Object.Transform.Position, out CollisionPointValidationResult result);
+            if (!valid)
+            {
+                RemoveAt(i);
+                continue;
+            }
+            avgPoint += result.Combined.Point;
+            avgNormal += result.Combined.Normal;
+            count++;
+            var dot = Object.Velocity.Dot(result.PointingTowards.Normal);
+            if (maxDot < 0 || dot > maxDot)
+            {
+                maxDot = dot;
+                pointing = result.PointingTowards;
+            }
+            var distanceSquared = (Object.Transform.Position - result.Closest.Point).LengthSquared();
+            if (closestDistanceSquared < 0 ||  distanceSquared  < closestDistanceSquared)
+            {
+                closestDistanceSquared = distanceSquared;
+                closest = result.Closest;
+            }
+            
+            distanceSquared = (Object.Transform.Position - result.Furthest.Point).LengthSquared();
+            if (furthestDistanceSquared < 0 ||  distanceSquared  > furthestDistanceSquared)
+            {
+             furthestDistanceSquared = distanceSquared;
+             furthest = result.Furthest;
+            }
+        }
+        var combined = new CollisionPoint(avgPoint / count, avgNormal.Normalize());
+        validationResult = new CollisionPointValidationResult(combined, closest, furthest, pointing);
+        return true;
+    }
+   
     #endregion
 }
