@@ -272,16 +272,16 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
         if (Count == 1)
         {
             var reg = this[0];
-            closestDistanceSquared = (referencePoint - reg.Object.Transform.Position).LengthSquared();
+            closestDistanceSquared = (referencePoint - reg.OtherCollisionObject.Transform.Position).LengthSquared();
             return reg;
         }
         
         var closestReg = this[0];
-        closestDistanceSquared = (referencePoint - closestReg.Object.Transform.Position).LengthSquared();
+        closestDistanceSquared = (referencePoint - closestReg.OtherCollisionObject.Transform.Position).LengthSquared();
         for (int i = 1; i < Count; i++)
         {
             var reg = this[i];
-            var distanceSquared = (referencePoint - reg.Object.Transform.Position).LengthSquared();
+            var distanceSquared = (referencePoint - reg.OtherCollisionObject.Transform.Position).LengthSquared();
             if (distanceSquared < closestDistanceSquared)
             {
                 closestDistanceSquared = distanceSquared;
@@ -303,16 +303,16 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
         if (Count == 1)
         {
             var reg = this[0];
-            furthestDistanceSquared = (referencePoint - reg.Object.Transform.Position).LengthSquared();
+            furthestDistanceSquared = (referencePoint - reg.OtherCollisionObject.Transform.Position).LengthSquared();
             return this[0];
         }
         
         var furthestReg = this[0];
-        furthestDistanceSquared = (referencePoint - furthestReg.Object.Transform.Position).LengthSquared();
+        furthestDistanceSquared = (referencePoint - furthestReg.OtherCollisionObject.Transform.Position).LengthSquared();
         for (int i = 1; i < Count; i++)
         {
             var reg = this[i];
-            var distanceSquared = (referencePoint - reg.Object.Transform.Position).LengthSquared();
+            var distanceSquared = (referencePoint - reg.OtherCollisionObject.Transform.Position).LengthSquared();
             if (distanceSquared > furthestDistanceSquared)
             {
                 furthestDistanceSquared = distanceSquared;

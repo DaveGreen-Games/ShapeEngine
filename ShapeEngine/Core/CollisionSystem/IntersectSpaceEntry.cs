@@ -5,20 +5,34 @@ namespace ShapeEngine.Core.CollisionSystem;
 
 public class IntersectSpaceEntry : CollisionPoints
 {
-    public readonly Collider Collider;
+    public readonly Collider OtherCollider;
     public readonly Vector2 OtherVel;
 
-    public IntersectSpaceEntry(Collider collider, int capacity) : base(capacity)
+    public IntersectSpaceEntry(Collider otherCollider, int capacity) : base(capacity)
     {
-        Collider = collider;
-        OtherVel = collider.Velocity;
+        OtherCollider = otherCollider;
+        OtherVel = otherCollider.Velocity;
     }
-    public IntersectSpaceEntry(Collider collider, List<CollisionPoint> points) : base(points.Count)
+    public IntersectSpaceEntry(Collider otherCollider, List<CollisionPoint> points) : base(points.Count)
     {
-        Collider = collider;
-        OtherVel = collider.Velocity;
+        OtherCollider = otherCollider;
+        OtherVel = otherCollider.Velocity;
         AddRange(points);
     }
+    
+    
+    #region Pointing Towards
+    
+    public CollisionPoint GetCollisionPointFacingTowardsPoint()
+    {
+        return GetCollisionPointFacingTowardsPoint(OtherCollider.CurTransform.Position);
+    }
+    public CollisionPoint GetCollisionPointFacingTowardsDir()
+    {
+        return GetCollisionPointFacingTowardsDir(OtherVel);
+    }
+
+    #endregion
     
     #region Validation
     
@@ -34,7 +48,7 @@ public class IntersectSpaceEntry : CollisionPoints
     /// <returns>Returns true if there are valid points remaining</returns>
     public bool ValidateSelf( out CollisionPoint combined, out CollisionPoint closest)
     {
-        return Validate(OtherVel, Collider.CurTransform.Position, out combined, out closest);
+        return Validate(OtherVel, OtherCollider.CurTransform.Position, out combined, out closest);
     }
     /// <summary>
     /// Removes:
@@ -47,7 +61,7 @@ public class IntersectSpaceEntry : CollisionPoints
     /// <returns>Returns true if there are valid points remaining</returns>
     public bool ValidateSelf(out CollisionPointValidationResult validationResult)
     {
-        return Validate(OtherVel, Collider.CurTransform.Position, out validationResult);
+        return Validate(OtherVel, OtherCollider.CurTransform.Position, out validationResult);
     }
    
     #endregion

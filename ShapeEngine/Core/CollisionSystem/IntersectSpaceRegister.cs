@@ -7,16 +7,16 @@ namespace ShapeEngine.Core.CollisionSystem;
 public class IntersectSpaceRegister : List<IntersectSpaceEntry>
 {
     #region Members
-    public readonly CollisionObject Object;
+    public readonly CollisionObject OtherCollisionObject;
     public IntersectSpaceEntry? First => Count <= 0 ? null : this[0];
     public IntersectSpaceEntry? Last => Count <= 0 ? null : this[Count - 1];
 
     #endregion
     
     #region Constructors
-    public IntersectSpaceRegister(CollisionObject colObject, int capacity) : base(capacity)
+    public IntersectSpaceRegister(CollisionObject colOtherCollisionObject, int capacity) : base(capacity)
     {
-        Object = colObject;
+        OtherCollisionObject = colOtherCollisionObject;
     }
 
     #endregion
@@ -26,7 +26,7 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
     public bool AddEntry(IntersectSpaceEntry entry)
     {
         if (entry.Count <= 0) return false;
-        if (entry.Collider.Parent == null || entry.Collider.Parent == Object) return false;
+        if (entry.OtherCollider.Parent == null || entry.OtherCollider.Parent == OtherCollisionObject) return false;
         Add(entry);
         return true;
     }
@@ -115,11 +115,11 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
         if(Count == 1) return this[0];
         
         var closestEntry = this[0];
-        closestDistanceSquared = (referencePoint - closestEntry.Collider.CurTransform.Position).LengthSquared();
+        closestDistanceSquared = (referencePoint - closestEntry.OtherCollider.CurTransform.Position).LengthSquared();
         for (int i = 1; i < Count; i++)
         {
             var entry = this[i];
-            var distanceSquared = (referencePoint - entry.Collider.CurTransform.Position).LengthSquared();
+            var distanceSquared = (referencePoint - entry.OtherCollider.CurTransform.Position).LengthSquared();
             if (distanceSquared < closestDistanceSquared)
             {
                 closestDistanceSquared = distanceSquared;
@@ -135,11 +135,11 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
         if(Count == 1) return this[0];
         
         var furthestEntry = this[0];
-        furthestDistanceSquared = (referencePoint - furthestEntry.Collider.CurTransform.Position).LengthSquared();
+        furthestDistanceSquared = (referencePoint - furthestEntry.OtherCollider.CurTransform.Position).LengthSquared();
         for (int i = 1; i < Count; i++)
         {
             var entry = this[i];
-            var distanceSquared = (referencePoint - entry.Collider.CurTransform.Position).LengthSquared();
+            var distanceSquared = (referencePoint - entry.OtherCollider.CurTransform.Position).LengthSquared();
             if (distanceSquared > furthestDistanceSquared)
             {
                 furthestDistanceSquared = distanceSquared;
@@ -296,11 +296,11 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
     }
     public CollisionPoint GetCollisionPointFacingTowardsPoint()
     {
-        return GetCollisionPointFacingTowardsPoint(Object.Transform.Position);
+        return GetCollisionPointFacingTowardsPoint(OtherCollisionObject.Transform.Position);
     }
     public CollisionPoint GetCollisionPointFacingTowardsDir()
     {
-        return GetCollisionPointFacingTowardsDir(Object.Velocity);
+        return GetCollisionPointFacingTowardsDir(OtherCollisionObject.Velocity);
     }
 
     #endregion
@@ -329,7 +329,7 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
         {
             var entry = this[i];
             // var valid = entry.ValidateSelf(out var combinedEntryPoint, out var closestToEntry);
-            var valid = entry.Validate(Object.Velocity, Object.Transform.Position, out var combinedEntryPoint, out var closestToEntry);
+            var valid = entry.Validate(OtherCollisionObject.Velocity, OtherCollisionObject.Transform.Position, out var combinedEntryPoint, out var closestToEntry);
             if (!valid)
             {
                 RemoveAt(i);
@@ -338,7 +338,7 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
             avgPoint += combinedEntryPoint.Point;
             avgNormal += combinedEntryPoint.Normal;
             count++;
-            var distanceSquared = (Object.Transform.Position - combinedEntryPoint.Point).LengthSquared();
+            var distanceSquared = (OtherCollisionObject.Transform.Position - combinedEntryPoint.Point).LengthSquared();
             if (closestDistanceSquared < 0 ||  distanceSquared  < closestDistanceSquared)
             {
                 closestDistanceSquared = distanceSquared;
@@ -373,7 +373,7 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
         {
             var entry = this[i];
             // var valid = entry.ValidateSelf(out var result);
-            var valid = entry.Validate(Object.Velocity, Object.Transform.Position, out CollisionPointValidationResult result);
+            var valid = entry.Validate(OtherCollisionObject.Velocity, OtherCollisionObject.Transform.Position, out CollisionPointValidationResult result);
             if (!valid)
             {
                 RemoveAt(i);
@@ -382,20 +382,20 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
             avgPoint += result.Combined.Point;
             avgNormal += result.Combined.Normal;
             count++;
-            var dot = Object.Velocity.Dot(result.PointingTowards.Normal);
+            var dot = OtherCollisionObject.Velocity.Dot(result.PointingTowards.Normal);
             if (maxDot < 0 || dot > maxDot)
             {
                 maxDot = dot;
                 pointing = result.PointingTowards;
             }
-            var distanceSquared = (Object.Transform.Position - result.Closest.Point).LengthSquared();
+            var distanceSquared = (OtherCollisionObject.Transform.Position - result.Closest.Point).LengthSquared();
             if (closestDistanceSquared < 0 ||  distanceSquared  < closestDistanceSquared)
             {
                 closestDistanceSquared = distanceSquared;
                 closest = result.Closest;
             }
             
-            distanceSquared = (Object.Transform.Position - result.Furthest.Point).LengthSquared();
+            distanceSquared = (OtherCollisionObject.Transform.Position - result.Furthest.Point).LengthSquared();
             if (furthestDistanceSquared < 0 ||  distanceSquared  > furthestDistanceSquared)
             {
              furthestDistanceSquared = distanceSquared;
