@@ -971,11 +971,33 @@ public class CollisionHandler : IBounds
     
     #region Cast Space
     
-    public void CastSpace(CollisionObject collisionBody, ref List<Collider> result, bool sorted = false)
+    public void CastSpace(CollisionObject collisionBody, ref CastSpaceResult result)
     {
         if (!collisionBody.HasColliders) return;
+        CastSpace(collisionBody.Colliders, ref result);
+        // if (sorted && result.Count > 1)
+        // {
+        //     var origin = collisionBody.Transform.Position; // collidable.GetCollider().Pos;
+        //     result.Sort
+        //     (
+        //         (a, b) =>
+        //         {
+        //             float la = (origin - a.CurTransform.Position).LengthSquared();
+        //             float lb = (origin - b.CurTransform.Position).LengthSquared();
+        //
+        //             if (la > lb) return 1;
+        //             if (ShapeMath.EqualsF(la, lb)) return 0;
+        //             return -1;
+        //         }
+        //     );
+        // }
+    }
+    public void CastSpace(List<Collider> colliders, ref CastSpaceResult result)
+    {
+        if (colliders.Count <= 0) return;
+        if(result.Count > 0) result.Clear();
 
-        foreach (var collider in collisionBody.Colliders)
+        foreach (var collider in colliders)
         {
             collisionCandidateBuckets.Clear();
             collisionCandidateCheckRegister.Clear();
@@ -987,36 +1009,53 @@ public class CollisionHandler : IBounds
             {
                 foreach (var candidate in bucket)
                 {
+                    if (candidate.Parent == null) continue;
                     if (candidate == collider) continue;
                     if (!mask.Has(candidate.CollisionLayer)) continue;
                     if (!collisionCandidateCheckRegister.Add(candidate)) continue;
 
                     if (collider.Overlap(candidate))
                     {
-                        result.Add(candidate);
+                        result.AddCollider(candidate);
                     }
                 }
             }
         }
-        if (sorted && result.Count > 1)
-        {
-            var origin = collisionBody.Transform.Position; // collidable.GetCollider().Pos;
-            result.Sort
-            (
-                (a, b) =>
-                {
-                    float la = (origin - a.CurTransform.Position).LengthSquared();
-                    float lb = (origin - b.CurTransform.Position).LengthSquared();
+    }
+    public void CastSpace(HashSet<Collider> colliders, ref CastSpaceResult result)
+    {
+        if (colliders.Count <= 0) return;
+        if(result.Count > 0) result.Clear();
 
-                    if (la > lb) return 1;
-                    if (ShapeMath.EqualsF(la, lb)) return 0;
-                    return -1;
+        foreach (var collider in colliders)
+        {
+            collisionCandidateBuckets.Clear();
+            collisionCandidateCheckRegister.Clear();
+            spatialHash.GetCandidateBuckets(collider, ref collisionCandidateBuckets);
+            if (collisionCandidateBuckets.Count <= 0) return;
+
+            var mask = collider.CollisionMask;
+            foreach (var bucket in collisionCandidateBuckets)
+            {
+                foreach (var candidate in bucket)
+                {
+                    if (candidate.Parent == null) continue;
+                    if (candidate == collider) continue;
+                    if (!mask.Has(candidate.CollisionLayer)) continue;
+                    if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+
+                    if (collider.Overlap(candidate))
+                    {
+                        result.AddCollider(candidate);
+                    }
                 }
-            );
+            }
         }
     }
-    public void CastSpace(Collider collider,  ref List<Collider> result, bool sorted = false)
+
+    public void CastSpace(Collider collider,  ref CastSpaceResult result)
     {
+        if(result.Count > 0) result.Clear();
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
         
@@ -1027,35 +1066,37 @@ public class CollisionHandler : IBounds
         {
             foreach (var candidate in bucket)
             {
+                if (candidate.Parent == null) continue;
                 if (candidate == collider) continue;
                 if (!mask.Has(candidate.CollisionLayer)) continue;
                 if (!collisionCandidateCheckRegister.Add(candidate)) continue;
 
                 if (collider.Overlap(candidate))
                 {
-                    result.Add(candidate);
+                    result.AddCollider(candidate);
                 }
             }
         }
-        if (sorted && result.Count > 1)
-        {
-            var origin = collider.CurTransform.Position;
-            result.Sort
-            (
-                (a, b) =>
-                {
-                    float la = (origin - a.CurTransform.Position).LengthSquared();
-                    float lb = (origin - b.CurTransform.Position).LengthSquared();
-
-                    if (la > lb) return 1;
-                    if (ShapeMath.EqualsF(la, lb)) return 0;
-                    return -1;
-                }
-            );
-        }
+        // if (sorted && result.Count > 1)
+        // {
+        //     var origin = collider.CurTransform.Position;
+        //     result.Sort
+        //     (
+        //         (a, b) =>
+        //         {
+        //             float la = (origin - a.CurTransform.Position).LengthSquared();
+        //             float lb = (origin - b.CurTransform.Position).LengthSquared();
+        //
+        //             if (la > lb) return 1;
+        //             if (ShapeMath.EqualsF(la, lb)) return 0;
+        //             return -1;
+        //         }
+        //     );
+        // }
     }
-    public void CastSpace(Segment shape, BitFlag collisionMask, ref List<Collider> result)
+    public void CastSpace(Segment shape, BitFlag collisionMask, ref CastSpaceResult result)
     {
+        if(result.Count > 0) result.Clear();
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
         
@@ -1065,18 +1106,20 @@ public class CollisionHandler : IBounds
         {
             foreach (var candidate in bucket)
             {
+                if (candidate.Parent == null) continue;
                 if (!collisionMask.Has(candidate.CollisionLayer)) continue;
                 if (!collisionCandidateCheckRegister.Add(candidate)) continue;
                 
                 if (candidate.Overlap(shape))
                 {
-                    result.Add(candidate);
+                    result.AddCollider(candidate);
                 }
             }
         }
     }
-    public void CastSpace(Triangle shape, BitFlag collisionMask, ref List<Collider> result)
+    public void CastSpace(Triangle shape, BitFlag collisionMask, ref CastSpaceResult result)
     {
+        if(result.Count > 0) result.Clear();
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
         
@@ -1086,18 +1129,20 @@ public class CollisionHandler : IBounds
         {
             foreach (var candidate in bucket)
             {
+                if (candidate.Parent == null) continue;
                 if (!collisionMask.Has(candidate.CollisionLayer)) continue;
                 if (!collisionCandidateCheckRegister.Add(candidate)) continue;
                 
                 if (candidate.Overlap(shape))
                 {
-                    result.Add(candidate);
+                    result.AddCollider(candidate);
                 }
             }
         }
     }
-    public void CastSpace(Circle shape, BitFlag collisionMask, ref List<Collider> result)
+    public void CastSpace(Circle shape, BitFlag collisionMask, ref CastSpaceResult result)
     {
+        if(result.Count > 0) result.Clear();
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
         
@@ -1107,18 +1152,20 @@ public class CollisionHandler : IBounds
         {
             foreach (var candidate in bucket)
             {
+                if (candidate.Parent == null) continue;
                 if (!collisionMask.Has(candidate.CollisionLayer)) continue;
                 if (!collisionCandidateCheckRegister.Add(candidate)) continue;
                 
                 if (candidate.Overlap(shape))
                 {
-                    result.Add(candidate);
+                    result.AddCollider(candidate);
                 }
             }
         }
     }
-    public void CastSpace(Rect shape, BitFlag collisionMask, ref List<Collider> result)
+    public void CastSpace(Rect shape, BitFlag collisionMask, ref CastSpaceResult result)
     {
+        if(result.Count > 0) result.Clear();
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
         
@@ -1128,18 +1175,20 @@ public class CollisionHandler : IBounds
         {
             foreach (var candidate in bucket)
             {
+                if (candidate.Parent == null) continue;
                 if (!collisionMask.Has(candidate.CollisionLayer)) continue;
                 if (!collisionCandidateCheckRegister.Add(candidate)) continue;
                 
                 if (candidate.Overlap(shape))
                 {
-                    result.Add(candidate);
+                    result.AddCollider(candidate);
                 }
             }
         }
     }
-    public void CastSpace(Polygon shape, BitFlag collisionMask, ref List<Collider> result)
+    public void CastSpace(Polygon shape, BitFlag collisionMask, ref CastSpaceResult result)
     {
+        if(result.Count > 0) result.Clear();
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
         
@@ -1149,18 +1198,20 @@ public class CollisionHandler : IBounds
         {
             foreach (var candidate in bucket)
             {
+                if (candidate.Parent == null) continue;
                 if (!collisionMask.Has(candidate.CollisionLayer)) continue;
                 if (!collisionCandidateCheckRegister.Add(candidate)) continue;
                 
                 if (candidate.Overlap(shape))
                 {
-                    result.Add(candidate);
+                    result.AddCollider(candidate);
                 }
             }
         }
     }
-    public void CastSpace(Polyline shape, BitFlag collisionMask, ref List<Collider> result)
+    public void CastSpace(Polyline shape, BitFlag collisionMask, ref CastSpaceResult result)
     {
+        if(result.Count > 0) result.Clear();
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
         
@@ -1170,12 +1221,13 @@ public class CollisionHandler : IBounds
         {
             foreach (var candidate in bucket)
             {
+                if (candidate.Parent == null) continue;
                 if (!collisionMask.Has(candidate.CollisionLayer)) continue;
                 if (!collisionCandidateCheckRegister.Add(candidate)) continue;
                 
                 if (candidate.Overlap(shape))
                 {
-                    result.Add(candidate);
+                    result.AddCollider(candidate);
                 }
             }
         }

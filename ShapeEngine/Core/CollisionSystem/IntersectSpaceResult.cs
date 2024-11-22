@@ -4,9 +4,6 @@ using ShapeEngine.Lib;
 
 namespace ShapeEngine.Core.CollisionSystem;
 
-
-
-
 public class IntersectSpaceResult : List<IntersectSpaceRegister>
 {
     #region Members
