@@ -1,8 +1,11 @@
-using System.Drawing;
 using System.Numerics;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Lib;
 
 namespace ShapeEngine.Core.CollisionSystem;
+
+
+
 
 public class IntersectSpaceResult : List<IntersectSpaceRegister>
 {
@@ -385,4 +388,57 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
    
     #endregion
     
+     #region Point Towards
+    
+     public CollisionPoint GetCollisionPointFacingTowardsPoint(Vector2 referencePoint)
+     {
+         if(Count <= 0) return new();
+         if(Count == 1) return this[0].GetCollisionPointFacingTowardsPoint(referencePoint);        
+         var pointing  = new CollisionPoint();
+         var maxDot = -1f;
+         for (int i = Count - 1; i >= 0; i--)
+         {
+             var register = this[i];
+             if(register.Count <= 0) continue;
+            
+             var pointingTowards = register.GetCollisionPointFacingTowardsPoint(referencePoint);
+             var dir = (referencePoint - pointingTowards.Point).Normalize();
+             var dot = dir.Dot(pointingTowards.Normal);
+             if (maxDot < 0 || dot > maxDot)
+             {
+                 maxDot = dot;
+                 pointing = pointingTowards;
+             }
+         }
+
+         return pointing;
+     }
+     public CollisionPoint GetCollisionPointFacingTowardsDir(Vector2 referenceDirection)
+     {
+         if(Count <= 0) return new();
+         if(Count == 1) return this[0].GetCollisionPointFacingTowardsDir(referenceDirection);        
+         var pointing  = new CollisionPoint();
+         var maxDot = -1f;
+         for (int i = Count - 1; i >= 0; i--)
+         {
+             var register = this[i];
+             if(register.Count <= 0) continue;
+            
+             var pointingTowards = register.GetCollisionPointFacingTowardsDir(referenceDirection);
+             var dot = referenceDirection.Dot(pointingTowards.Normal);
+             if (maxDot < 0 || dot > maxDot)
+             {
+                 maxDot = dot;
+                 pointing = pointingTowards;
+             }
+         }
+
+         return pointing;
+     }
+     public CollisionPoint GetCollisionPointFacingTowardsOrigin()
+     {
+         return GetCollisionPointFacingTowardsPoint(Origin);
+     }
+     
+    #endregion
 }
