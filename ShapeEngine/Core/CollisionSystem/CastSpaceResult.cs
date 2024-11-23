@@ -1,5 +1,4 @@
 using System.Numerics;
-using Microsoft.VisualBasic;
 
 namespace ShapeEngine.Core.CollisionSystem;
 
@@ -90,8 +89,7 @@ public class CastSpaceResult(int capacity) : Dictionary<CollisionObject, CastSpa
         }
         else
         {
-            var newEntry = new CastSpaceEntry(parent, 2);
-            newEntry.Add(collider);
+            var newEntry = new CastSpaceEntry(parent, 2) { collider };
             Add(parent, newEntry);
         }
 
