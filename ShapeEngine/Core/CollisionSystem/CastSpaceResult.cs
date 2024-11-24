@@ -5,6 +5,7 @@ namespace ShapeEngine.Core.CollisionSystem;
 
 public class CastSpaceResult(int capacity) : Dictionary<CollisionObject, CastSpaceEntry>(capacity)
 {
+    public CastSpaceResult() : this(4) { }
     private CastSpaceResult(Dictionary<CollisionObject, CastSpaceEntry> other) : this(other.Count)
     {
         foreach (var kvp in other)
@@ -12,6 +13,7 @@ public class CastSpaceResult(int capacity) : Dictionary<CollisionObject, CastSpa
             this.Add(kvp.Key, kvp.Value.Copy());
         }
     }
+    
      
     #region Sorting
     
@@ -63,7 +65,8 @@ public class CastSpaceResult(int capacity) : Dictionary<CollisionObject, CastSpa
     #endregion
 
     #region Public Functions
-
+    public bool Valid => Count > 0;
+    public bool HasEntries() => Count > 0;
     public CastSpaceEntry? GetFirstEntry()
     {
         if(Count <= 0) return null;

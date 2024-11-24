@@ -119,18 +119,29 @@ namespace Examples.Scenes.ExampleScenes
             Layer = SpawnAreaLayers.ObjectFlag;
         }
 
-        protected override void Collision(CollisionInformation info)
+        protected override void Collision(List<CollisionInformation> info)
         {
-            if (info.Count > 0)
+            CollisionPoint p = new();
+            foreach (var colInfo in info)
             {
-                foreach (var collision in info)
+                if (colInfo.Count > 0)
                 {
-                    if(!collision.FirstContact) continue;
-                    if(collision.Intersection == null) continue;
-                    // var normal = collision.Intersection.CollisionSurface.Normal;
-                    var normal = collision.Intersection.Closest.Normal;
-                    Velocity = Velocity.Reflect(normal);
+                    foreach (var collision in colInfo)
+                    {
+                        if(!collision.FirstContact) continue;
+                        if(collision.Points == null) continue;
+                        if (collision.ValidateCollisionPoints(out CollisionPoint combined))
+                        {
+                            // var cp = collision.Points.GetAverageCollisionPoint();
+                            if (combined.Valid) p = p.Average(combined);
+                        }
+                    }
                 }
+            }
+
+            if (p.Valid)
+            {
+                Velocity = Velocity.Reflect(p.Normal);
             }
         }
 
@@ -212,24 +223,36 @@ namespace Examples.Scenes.ExampleScenes
         {
             
         }
+        
 
-        protected override void Collision(CollisionInformation info)
+        protected override void Collision(List<CollisionInformation> info)
         {
-            if (info.Count > 0)
+            CollisionPoint p = new();
+            foreach (var colInfo in info)
             {
-                foreach (var collision in info)
+                if (colInfo.Count > 0)
                 {
-                    if(!collision.FirstContact) continue;
-                    if(collision.Intersection == null) continue;
-                    
-                    Transform = Transform.SetPosition(collision.Intersection.Closest.Point);
-                    Velocity = new();
-                    Enabled = false;
-                    deadTimer = 2f;
+                    foreach (var collision in colInfo)
+                    {
+                        if(!collision.FirstContact) continue;
+                        if(collision.Points == null) continue;
+                        if (collision.ValidateCollisionPoints(out var combined, out var closest))
+                        {
+                            Transform = Transform.SetPosition(closest.Point);
+                            Velocity = new();
+                            Enabled = false;
+                            deadTimer = 2f;
+                        }
+                    }
                 }
             }
-        }
 
+            if (p.Valid)
+            {
+                Velocity = Velocity.Reflect(p.Normal);
+            }
+        }
+        
         // private void Overlap(Collider col, CollisionInformation info)
         // {
         //     if (info.Collisions.Count > 0)
@@ -363,20 +386,33 @@ namespace Examples.Scenes.ExampleScenes
             col.CollisionMask = col.CollisionMask.Add(CollisionFlags.RockFlag);
         }
 
-        protected override void Collision(CollisionInformation info)
+        
+        protected override void Collision(List<CollisionInformation> info)
         {
-            if (info.Count < 0) return;
-            foreach (var collision in info)
+            CollisionPoint p = new();
+            foreach (var colInfo in info)
             {
-                if(!collision.FirstContact) continue;
-                if(collision.Intersection == null) continue;
-                // var normal = collision.Intersection.CollisionSurface.Normal;
-                var normal = collision.Intersection.Closest.Normal;
-                Velocity = Velocity.Reflect(normal);
+                if (colInfo.Count > 0)
+                {
+                    foreach (var collision in colInfo)
+                    {
+                        if(!collision.FirstContact) continue;
+                        if(collision.Points == null) continue;
+                        if (collision.ValidateCollisionPoints(out var combined, out var closest))
+                        {
+                            // var cp = collision.Points.GetAverageCollisionPoint();
+                            if (combined.Valid) p = p.Average(combined);
+                        }
+                    }
+                }
             }
 
+            if (p.Valid)
+            {
+                Velocity = Velocity.Reflect(p.Normal);
+            }
         }
-
+        
         // private void Overlap(Collider col, CollisionInformation info)
         // {
         //     if (info.CollisionSurface.Valid)
@@ -443,16 +479,29 @@ namespace Examples.Scenes.ExampleScenes
             Layer = SpawnAreaLayers.ObjectFlag;
         }
 
-        protected override void Collision(CollisionInformation info)
+        protected override void Collision(List<CollisionInformation> info)
         {
-            if (info.Count < 0) return;
-            foreach (var collision in info)
+            CollisionPoint p = new();
+            foreach (var colInfo in info)
             {
-                if(!collision.FirstContact) continue;
-                if(collision.Intersection == null) continue;
-                // var normal = collision.Intersection.CollisionSurface.Normal;
-                var normal = collision.Intersection.Closest.Normal;
-                Velocity = Velocity.Reflect(normal);
+                if (colInfo.Count > 0)
+                {
+                    foreach (var collision in colInfo)
+                    {
+                        if(!collision.FirstContact) continue;
+                        if(collision.Points == null) continue;
+                        if (collision.ValidateCollisionPoints(out CollisionPoint combined))
+                        {
+                            // var cp = collision.Points.GetAverageCollisionPoint();
+                            if (combined.Valid) p = p.Average(combined);
+                        }
+                    }
+                }
+            }
+
+            if (p.Valid)
+            {
+                Velocity = Velocity.Reflect(p.Normal);
                 Transform = Transform.SetRotationRad(Velocity.AngleRad());
             }
         }
@@ -623,24 +672,16 @@ namespace Examples.Scenes.ExampleScenes
         private void ClearAreaCollisionObjects(Rect area, BitFlag collisionLayerMask)
         {
             if (CollisionHandler == null) return;
-            
-            var result = new List<Collider>();
+
+            var result = new CastSpaceResult(12);
             CollisionHandler.CastSpace(area, collisionLayerMask, ref result);
         
             if (result.Count <= 0) return;
             
-            var removedParents = new HashSet<CollisionObject>();
-            
-            foreach (var collider in result)
+            foreach (var colObject in result.Keys)
             {
-                var parent = collider.Parent;
-                if (parent != null && !removedParents.Contains(parent))
-                {
-                    SpawnArea?.RemoveGameObject(parent);
-                    CollisionHandler?.Remove(parent);
-                    // RemoveGameObject(parent);
-                    removedParents.Add(parent);
-                }
+                SpawnArea?.RemoveGameObject(colObject);
+                CollisionHandler?.Remove(colObject);
             }
         }
         
