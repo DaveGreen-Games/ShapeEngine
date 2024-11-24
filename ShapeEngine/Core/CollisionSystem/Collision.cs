@@ -10,6 +10,9 @@ namespace ShapeEngine.Core.CollisionSystem;
 /// </summary>
 public class Collision
 {
+    
+    #region Members
+    
     public readonly bool FirstContact;
     public readonly Collider Self;
     public readonly Collider Other;
@@ -17,7 +20,9 @@ public class Collision
     public readonly Vector2 OtherVel;
     public readonly CollisionPoints? Points = null;
     public Overlap Overlap => new(Self, Other, FirstContact);
+    #endregion
     
+    #region Constructors
     public Collision(Collider self, Collider other, bool firstContact)
     {
         Self = self;
@@ -50,16 +55,22 @@ public class Collision
         Points = collision.Points == null ? null : collision.Points.Copy();
         
     }
-    
+    #endregion
+
+    #region Public Functions
+
     public Collision Copy() => new(this);
 
+    #endregion
+    
+    #region Validation
     
     /// <summary>
     /// Validates the collision points using SelfVel as reference direction and Self.CurTransform.Position as reference point
     /// </summary>
     /// <param name="combined">The average CollisionPoint of all valid collision points.</param>
     /// <returns>Returns true if there are valid collision points left.</returns>
-    public bool ValidateCollisionPoints(out CollisionPoint combined)
+    public bool Validate(out CollisionPoint combined)
     {
         if (Points == null || Points.Count <= 0)
         {
@@ -75,7 +86,7 @@ public class Collision
     /// <param name="combined">The average CollisionPoint of all valid collision points.</param>
     /// <param name="closest">The closest CollisionPoint to the reference point (Self.CurTransform.Position)</param>
     /// <returns>Returns true if there are valid collision points left.</returns>
-    public bool ValidateCollisionPoints(out CollisionPoint combined, out CollisionPoint closest)
+    public bool Validate(out CollisionPoint combined, out CollisionPoint closest)
     {
         if (Points == null || Points.Count <= 0)
         {
@@ -91,7 +102,7 @@ public class Collision
     /// </summary>
     /// <param name="result">A combination of useful collision points.</param>
     /// <returns>Returns true if there are valid collision points left.</returns>
-    public bool ValidateCollisionPoints(out CollisionPointValidationResult result)
+    public bool Validate(out CollisionPointValidationResult result)
     {
         if (Points == null || Points.Count <= 0)
         {
@@ -102,6 +113,61 @@ public class Collision
         return Points.Validate(SelfVel, Self.CurTransform.Position, out result);
     }
    
+    #endregion
+    
+    #region CollisionPoint
+
+    public CollisionPoint GetAverageCollisionPoint()
+    {
+        if(Points == null || Points.Count <= 0) return new CollisionPoint();
+        return Points.GetAverageCollisionPoint();
+    }
+    public CollisionPoint GetClosestCollisionPoint()
+    {
+        if(Points == null || Points.Count <= 0) return new CollisionPoint();
+        return Points.GetClosestCollisionPoint(Self.CurTransform.Position);
+    }
+    public CollisionPoint GetFurthestCollisionPoint()
+    {
+        if(Points == null || Points.Count <= 0) return new CollisionPoint();
+        return Points.GetFurthestCollisionPoint(Self.CurTransform.Position);
+    }
+    public CollisionPoint GetClosestCollisionPoint(out float closestDistanceSquared)
+    {
+        closestDistanceSquared = -1;
+        if(Points == null || Points.Count <= 0) return new CollisionPoint();
+        return Points.GetClosestCollisionPoint(Self.CurTransform.Position, out closestDistanceSquared);
+    }
+    public CollisionPoint GetFurthestCollisionPoint(out float furthestDistanceSquared)
+    {
+        furthestDistanceSquared = -1;
+        if(Points == null || Points.Count <= 0) return new CollisionPoint();
+        return Points.GetFurthestCollisionPoint(Self.CurTransform.Position, out furthestDistanceSquared);
+    }
+
+    /// <summary>
+    /// Finds the collision point with the normal facing most in the direction as the reference point.
+    /// Each collision point normal is checked against the direction from the collision point towards the reference point.
+    /// </summary>
+    /// <returns></returns>
+    public CollisionPoint GetCollisionPointFacingTowardsSelf()
+    {
+        if(Points == null || Points.Count <= 0) return new CollisionPoint();
+        return Points.GetCollisionPointFacingTowardsPoint(Self.CurTransform.Position);
+    }
+   
+    /// <summary>
+    /// Finds the collision point with the normal facing most in the direction as the reference direction.
+    /// </summary>
+    /// <returns></returns>
+    public CollisionPoint GetCollisionPointFacingTowardsSelfVel()
+    {
+        if(SelfVel is { X: 0f, Y: 0f }) return new CollisionPoint();
+        if(Points == null || Points.Count <= 0) return new CollisionPoint();
+        return Points.GetCollisionPointFacingTowardsDir(SelfVel);
+    }
+    
+    #endregion
 }
 
 
