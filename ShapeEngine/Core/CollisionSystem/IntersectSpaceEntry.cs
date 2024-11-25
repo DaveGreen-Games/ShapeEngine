@@ -34,7 +34,6 @@ public class IntersectSpaceEntry : CollisionPoints
 
     #endregion
     
-    
     #region Validation
     
     /// <summary>
