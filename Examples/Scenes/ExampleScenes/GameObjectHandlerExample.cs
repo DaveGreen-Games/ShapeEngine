@@ -130,7 +130,7 @@ namespace Examples.Scenes.ExampleScenes
                     {
                         if(!collision.FirstContact) continue;
                         if(collision.Points == null) continue;
-                        if (collision.ValidateCollisionPoints(out CollisionPoint combined))
+                        if (collision.Validate(out CollisionPoint combined))
                         {
                             // var cp = collision.Points.GetAverageCollisionPoint();
                             if (combined.Valid) p = p.Average(combined);
@@ -236,7 +236,7 @@ namespace Examples.Scenes.ExampleScenes
                     {
                         if(!collision.FirstContact) continue;
                         if(collision.Points == null) continue;
-                        if (collision.ValidateCollisionPoints(out var combined, out var closest))
+                        if (collision.Validate(out var combined, out var closest))
                         {
                             Transform = Transform.SetPosition(closest.Point);
                             Velocity = new();
@@ -398,7 +398,7 @@ namespace Examples.Scenes.ExampleScenes
                     {
                         if(!collision.FirstContact) continue;
                         if(collision.Points == null) continue;
-                        if (collision.ValidateCollisionPoints(out var combined, out var closest))
+                        if (collision.Validate(out var combined, out var closest))
                         {
                             // var cp = collision.Points.GetAverageCollisionPoint();
                             if (combined.Valid) p = p.Average(combined);
@@ -490,7 +490,7 @@ namespace Examples.Scenes.ExampleScenes
                     {
                         if(!collision.FirstContact) continue;
                         if(collision.Points == null) continue;
-                        if (collision.ValidateCollisionPoints(out CollisionPoint combined))
+                        if (collision.Validate(out CollisionPoint combined))
                         {
                             // var cp = collision.Points.GetAverageCollisionPoint();
                             if (combined.Valid) p = p.Average(combined);
