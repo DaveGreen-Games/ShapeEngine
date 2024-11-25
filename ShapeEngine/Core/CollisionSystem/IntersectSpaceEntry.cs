@@ -34,6 +34,7 @@ public class IntersectSpaceEntry : CollisionPoints
 
     #endregion
     
+    
     #region Validation
     
     /// <summary>
@@ -46,7 +47,7 @@ public class IntersectSpaceEntry : CollisionPoints
     /// <param name="combined">An averaged CollisionPoint of all remaining CollisionPoints.</param>
     /// <param name="closest">The CollisionPoint that is closest to the referencePoint.</param>
     /// <returns>Returns true if there are valid points remaining</returns>
-    public bool ValidateSelf( out CollisionPoint combined, out CollisionPoint closest)
+    public bool ValidateByOther( out CollisionPoint combined, out CollisionPoint closest)
     {
         return Validate(OtherVel, OtherCollider.CurTransform.Position, out combined, out closest);
     }
@@ -59,7 +60,7 @@ public class IntersectSpaceEntry : CollisionPoints
     /// </summary>
     /// <param name="validationResult">The result of the combined CollisionPoint, and the  closest/furthest collision point from the reference point, and the CollisionPoint with normal facing towards the referencePoint.</param>
     /// <returns>Returns true if there are valid points remaining</returns>
-    public bool ValidateSelf(out CollisionPointValidationResult validationResult)
+    public bool ValidateByOther(out CollisionPointValidationResult validationResult)
     {
         return Validate(OtherVel, OtherCollider.CurTransform.Position, out validationResult);
     }
