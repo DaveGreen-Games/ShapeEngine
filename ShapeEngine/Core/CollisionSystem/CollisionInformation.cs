@@ -37,7 +37,11 @@ public class CollisionInformation : List<Collision>
     
     #region Validation
     
-    
+    /// <summary>
+    /// Validates the collisions  and removes invalid ones using SelfVel as referenceDirection and Self.CurTransform.Position as reference point.
+    /// </summary>
+    /// <param name="combined">The average CollisionPoint of all valid collision points.</param>
+    /// <returns>Returns true if there are valid collision points left.</returns>
     public bool Validate(out CollisionPoint combined)
     {
         combined = new CollisionPoint();
@@ -55,7 +59,12 @@ public class CollisionInformation : List<Collision>
 
         return Count > 0;
     }
-   
+    /// <summary>
+    /// Validates the collisions  and removes invalid ones using SelfVel as referenceDirection and Self.CurTransform.Position as reference point.
+    /// </summary>
+    /// <param name="combined">The average CollisionPoint of all valid collision points.</param>
+    /// <param name="closest">The closest CollisionPoint to the reference point (Self.CurTransform.Position)</param>
+    /// <returns>Returns true if there are valid collision points left.</returns>
     public bool Validate(out CollisionPoint combined, out CollisionPoint closest)
     {
         combined = new CollisionPoint();
@@ -81,7 +90,11 @@ public class CollisionInformation : List<Collision>
 
         return Count > 0;
     }
-   
+    /// <summary>
+    /// Validates the collisions  and removes invalid ones using SelfVel as referenceDirection and Self.CurTransform.Position as reference point.
+    /// </summary>
+    /// <param name="result">A combination of useful collision points.</param>
+    /// <returns>Returns true if there are valid collision points left.</returns>
     public bool Validate(out CollisionPointValidationResult result)
     {
         result = new CollisionPointValidationResult();
@@ -131,6 +144,45 @@ public class CollisionInformation : List<Collision>
         return Count > 0;
     }
    
+    #endregion
+    
+    #region First Contact
+    
+    public bool IsFirstContact()
+    {
+        if(Count <= 0) return false;
+        foreach (var collision in this)
+        {
+            if(collision.FirstContact) return true;
+        }
+
+        return false;
+    }
+    public int GetFirstContactCount()
+    {
+        if(Count <= 0) return 0;
+        var count = 0;
+        foreach (var collision in this)
+        {
+            if(collision.FirstContact)count++;
+        }
+
+        return count;
+    }
+    public List<Collision>? GetFirstContactCollisions()
+    {
+        List<Collision>? result = null;
+        foreach (var collision in this)
+        {
+            if (collision.FirstContact)
+            {
+                result??= new();
+                result.Add(collision);
+            }
+        }
+        return result;
+    }
+
     #endregion
     
     #region Public Functions
@@ -188,109 +240,3 @@ public class CollisionInformation : List<Collision>
     #endregion
 }
 
-
-/*
-    public readonly List<Collision> Collisions;
-    public readonly CollisionSurface CollisionSurface;
-    public CollisionInformation(List<Collision> collisions, bool computesIntersections)
-    {
-        this.Collisions = collisions;
-        if (!computesIntersections) this.CollisionSurface = new();
-        else
-        {
-            Vector2 avgPoint = new();
-            Vector2 avgNormal = new();
-            var count = 0;
-            foreach (var col in collisions)
-            {
-                if (col.Intersection.Valid)
-                {
-                    count++;
-                    var surface = col.Intersection.CollisionSurface;
-                    avgPoint += surface.Point;
-                    avgNormal += surface.Normal;
-                }
-            }
-
-            if (count > 0)
-            {
-                avgPoint /= count;
-                avgNormal = avgNormal.Normalize();
-                this.CollisionSurface = new(avgPoint, avgNormal);
-            }
-            else
-            {
-                this.CollisionSurface = new();
-            }
-        }
-    }
-
-    //return a dictionary of sorted collisions based on parent
-    public Dictionary<CollisionObject, List<Collision>> GetCollisionsSortedByParent()
-    {
-        Dictionary<CollisionObject, List<Collision>> sortedCollisions = new();
-
-        foreach (var col in Collisions)
-        {
-            var parent = col.Other.Parent;
-            if (parent == null) continue;
-            
-            if (sortedCollisions.TryGetValue(parent, out var value))
-            {
-                value.Add(col);
-            }
-            else
-            {
-                var list = new List<Collision>() { col };
-                sortedCollisions[parent] = list;
-            }
-        }
-        
-        return sortedCollisions;
-    }
-    
-    public List<Collision> FilterCollisions(Predicate<Collision> match)
-    {
-        List<Collision> filtered = new();
-        foreach (var c in Collisions)
-        {
-            if (match(c)) filtered.Add(c);
-        }
-        return filtered;
-    }
-    public HashSet<Collider> FilterColliders(Predicate<Collider> match)
-    {
-        HashSet<Collider> filtered = new();
-        foreach (var c in Collisions)
-        {
-            if (match(c.Other)) filtered.Add(c.Other);
-        }
-        return filtered;
-    }
-    public HashSet<Collider> GetAllColliders()
-    {
-        HashSet<Collider> others = new();
-        foreach (var c in Collisions)
-        {
-            others.Add(c.Other);
-
-        }
-        return others;
-    }
-    public List<Collision> GetFirstContactCollisions()
-    {
-        return FilterCollisions((c) => c.FirstContact);
-    }
-    public HashSet<Collider> GetFirstContactColliders()
-    {
-        var filtered = GetFirstContactCollisions();
-        HashSet<Collider> others = new();
-        foreach (var c in filtered)
-        {
-            others.Add(c.Other);
-        }
-        return others;
-    }
-    */
-    
-    
