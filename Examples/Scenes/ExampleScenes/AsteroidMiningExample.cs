@@ -458,34 +458,33 @@ namespace Examples.Scenes.ExampleScenes
             var newDir = dir;
 
             BitFlag bf = new(AsteroidMiningExample.AsteriodLayer);
-            var queryInfos = col.QuerySpace(new Segment(start, endPoint), start, bf, true);
+            var queryInfos = col.IntersectSpace(new Segment(start, endPoint), start, bf);
             if (queryInfos is { Count: > 0 })
             {
-                var closest = queryInfos[0];
-                if (closest.Points.Valid)
+                queryInfos.SortClosestFirst();
+                var closestRegister = queryInfos[0];
+                if (closestRegister.Count > 0)
                 {
-                    var other = closest.Collider;
-                    if (other is AsteroidCollider a)
+                    var other = closestRegister.OtherCollisionObject;
+                    if (other is Asteroid asteroid)
                     {
-                        //perfect naming:)
-                        if (a.Parent is Asteroid body)
+                        var closestEntry = closestRegister[0];
+                        if (closestEntry.Count > 0)
                         {
-                            newDir = dir.Reflect(closest.Points.Closest.Normal);
-                            newEndPoint = closest.Points.Closest.Point;  //closest.intersection.ColPoints[0].Point;
-                            body.Damage(damagePerSecond * dt, newEndPoint);
+                            var closestPoint = closestEntry[0];
+                            newDir = dir.Reflect(closestPoint.Normal);
+                            newEndPoint = closestPoint.Point;
+                            asteroid.Damage(damagePerSecond * dt, newEndPoint);
                         }
-                        
                     }
                 }
             }
 
             float usedLength = (newEndPoint - start).Length();
-            //if (usedLength < 10) return (newEndPoint, 0, dir);
 
             float remainingLength = length - usedLength;
             if (remainingLength <= 1) return new(newEndPoint, 0f, dir);
             return (newEndPoint - dir * 10f, remainingLength, newDir);
-            //return (newEndPoint, remainingLength, newDir);
         }
 
         public override void DrawGame(ScreenInfo game)
@@ -843,20 +842,17 @@ namespace Examples.Scenes.ExampleScenes
                 SetCurPos(mousePosGame);
                 curShape.SetPosition(curPos);
                 BitFlag mask = new(AsteriodLayer);
-                var candidates = new List<Collider>();
-                CollisionHandler.CastSpace(curShape, mask, ref candidates);
+                var result = new CastSpaceResult();
+                var candidates = result.Keys.ToList();
+                CollisionHandler.CastSpace(curShape, mask, ref result);
                 foreach (var candidate in candidates)
                 {
-                    if (candidate is AsteroidCollider asteroid)
+                    if (candidate is Asteroid asteroid)
                     {
-                        if (asteroid.Parent is Asteroid body)
-                        {
-                            body.Overlapped();
-                        }
-                        
-                        // asteroid.Overlapped();
+                        asteroid.Overlapped();
                     }
                 }
+                
 
                 if (iaAddShape.State.Pressed) //add polygon (merge)
                 {
@@ -866,14 +862,10 @@ namespace Examples.Scenes.ExampleScenes
                     {
                         foreach (var candidate in candidates)
                         {
-                            if (candidate is AsteroidCollider asteroid)
+                            if (candidate is Asteroid  asteroid)
                             {
-                                //area.RemoveAreaObject(asteroid);
-                                if (asteroid.Parent is Asteroid body)
-                                {
-                                    RemoveAsteroid(body);
-                                    polys.Add(asteroid.GetPolygonShape());
-                                }
+                                RemoveAsteroid(asteroid);
+                                polys.Add(asteroid.GetPolygon());
                                 
                             }
                         }
@@ -913,46 +905,10 @@ namespace Examples.Scenes.ExampleScenes
                     Polygons allCutOuts = new();
                     foreach (var candidate in candidates)
                     {
-                        if (candidate is AsteroidCollider asteroid)
+                        if (candidate is Asteroid asteroid)
                         {
-                            if (asteroid.Parent is Asteroid body)
-                            {
-                                FractureAsteroid(body, cutShape);
-                            }
+                            FractureAsteroid(asteroid, cutShape);
                             
-
-                            /*
-                            //area.RemoveAreaObject(asteroid);
-                            RemoveAsteroid(asteroid);
-                            var asteroidShape = asteroid.GetPolygon();
-
-                            var fracture = fractureHelper.Fracture(asteroidShape, cutShape);
-
-                            if (fracture.Cutouts.Count > 0) allCutOuts.AddRange(fracture.Cutouts);
-
-                            foreach (var piece in fracture.Pieces)
-                            {
-                                float pieceArea = piece.GetArea();
-                                //if (pieceArea < MinPieceArea) continue;
-
-                                Vector2 center = piece.GetCentroid();
-                                AsteroidShard shard = new(piece.ToPolygon(), center);
-                                area.AddAreaObject(shard);
-                            }
-                            if(fracture.NewShapes.Count > 0)
-                            {
-                                foreach (var shape in fracture.NewShapes)
-                                {
-                                    float shapeArea = shape.GetArea();
-                                    if(shapeArea > MinPieceArea)
-                                    {
-                                        Asteroid a = new(shape);
-                                        AddAsteroid(a);
-                                        //area.AddAreaObject(a);
-                                    }
-                                }
-                            }
-                            */
                         }
                     }
                     if (allCutOuts.Count > 0)
