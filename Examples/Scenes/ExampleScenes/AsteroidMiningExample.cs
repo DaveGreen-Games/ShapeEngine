@@ -843,8 +843,9 @@ namespace Examples.Scenes.ExampleScenes
                 curShape.SetPosition(curPos);
                 BitFlag mask = new(AsteriodLayer);
                 var result = new CastSpaceResult();
-                var candidates = result.Keys.ToList();
                 CollisionHandler.CastSpace(curShape, mask, ref result);
+                var candidates = result.Keys.ToList();
+                
                 foreach (var candidate in candidates)
                 {
                     if (candidate is Asteroid asteroid)
