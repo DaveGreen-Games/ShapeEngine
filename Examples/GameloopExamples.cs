@@ -196,8 +196,8 @@ namespace Examples
 
             UIRects = new(new AnchorPoint(0.5f, 0.5f), new Vector2(1f, 1f), new Rect.Margins(0.015f), "main");
             var mainTop = new RectNode(new AnchorPoint(0.5f, 0f), new Vector2(1f, 0.1f), "top");
-            var mainCenter = new RectNode(new AnchorPoint(0.5f, 0.5f), new Vector2(1f, 0.8f), "center");
-            var mainBottom = new RectNode(new AnchorPoint(0.5f, 1f), new Vector2(1f, 0.1f), "bottom");
+            var mainCenter = new RectNode(new AnchorPoint(0.5f, 0.1f), new Vector2(1f, 0.75f), "center");
+            var mainBottom = new RectNode(new AnchorPoint(0.5f, 1f), new Vector2(1f, 0.15f), "bottom");
             UIRects.AddChild(mainTop);
             UIRects.AddChild(mainCenter);
             UIRects.AddChild(mainBottom);

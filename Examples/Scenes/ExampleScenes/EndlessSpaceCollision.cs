@@ -1989,6 +1989,14 @@ public class EndlessSpaceCollision : ExampleScene
 
     private readonly CameraFollowerSingle follower;
     private readonly List<Destructor> destructors = new();
+    private const float singleDestructorCooldown = 2f;
+    private const float singleDestructorBurstCooldown = 0.1f;
+    private const int singleDestructorBurstCount = 5;
+    private int singleDestructorBurstsRemaining = 0;
+    private const float multiDestructorCooldown = 12f;
+    private float singleDestructorCooldownTimer = 0f;
+    private float multiDestructorCooldownTimer = 0f;
+    private float singleDestructorBurstTimer = 0f;
     private readonly List<AsteroidObstacle> asteroids = new(128);
     private readonly List<AsteroidShard> shards = new(512);
     private readonly List<Bullet> bullets = new(1024);
@@ -2402,26 +2410,16 @@ public class EndlessSpaceCollision : ExampleScene
             
         }
 
-        var singleDestructorPressed = ShapeKeyboardButton.Q.GetInputState().Pressed || ShapeMouseButton.LEFT.GetInputState().Pressed;
-        var multiDestructorPressed = ShapeKeyboardButton.E.GetInputState().Pressed || ShapeMouseButton.RIGHT.GetInputState().Pressed;
-        
-        
-        if (singleDestructorPressed)
+        if (CollisionHandler != null)
         {
-            if (CollisionHandler != null)
+            var singleDestructorPressed = singleDestructorBurstsRemaining <= 0 && singleDestructorCooldownTimer <= 0f && (ShapeKeyboardButton.Q.GetInputState().Pressed || ShapeMouseButton.LEFT.GetInputState().Pressed);
+            var multiDestructorPressed = multiDestructorCooldownTimer <= 0 && (ShapeKeyboardButton.E.GetInputState().Pressed || ShapeMouseButton.RIGHT.GetInputState().Pressed);
+        
+            if (singleDestructorPressed)
             {
-                var pos = ship.Transform.Position;
-                var direction = (mousePosGame - pos).Normalize(); // ship.Transform.GetDirection();
-                var accuracy = Rng.Instance.RandF(-15, 15) * ShapeMath.DEGTORAD;
-                direction = direction.Rotate(accuracy);
-                var destructor = new Destructor(pos, direction, ship.CurSpeed,  Colors.PcCold.ColorRgba);
-                destructors.Add(destructor);
-                CollisionHandler.Add(destructor);
+                singleDestructorBurstsRemaining = singleDestructorBurstCount;
             }
-        }
-        if (multiDestructorPressed)
-        {
-            if (CollisionHandler != null)
+            if (multiDestructorPressed)
             {
                 var count = 8;
                 var angleStep = 360f / count;
@@ -2434,9 +2432,10 @@ public class EndlessSpaceCollision : ExampleScene
                     destructors.Add(destructor);
                     CollisionHandler.Add(destructor);
                 }
-                
+                multiDestructorCooldownTimer = multiDestructorCooldown;
             }
         }
+        
 
         /*if ((ShapeKeyboardButton.ONE.GetInputState().Pressed || ShapeKeyboardButton.UP.GetInputState().Pressed) && orbitalStrike.IsReady)
         {
@@ -2526,8 +2525,6 @@ public class EndlessSpaceCollision : ExampleScene
         //     }
         // }
 
-        
-
         if (!gameOverScreenActive)
         {
             // if (strategemChargeTimer > 0f)
@@ -2553,8 +2550,60 @@ public class EndlessSpaceCollision : ExampleScene
         
             universe = universe.SetPosition(new Vector2(uX, uY), new(0.5f));
         }
+
+        if (singleDestructorCooldownTimer > 0)
+        {
+            singleDestructorCooldownTimer -= time.Delta;
+            if (singleDestructorCooldownTimer <= 0)
+            {
+                singleDestructorCooldownTimer = 0;
+            }
+        }
+
+        if (CollisionHandler != null && singleDestructorBurstsRemaining > 0)
+        {
+            if (singleDestructorBurstTimer > 0)
+            {
+                singleDestructorBurstTimer -= time.Delta;
+                if (singleDestructorBurstTimer <= 0)
+                {
+                    singleDestructorBurstTimer = 0;
+                }
+            }
+            else
+            {
+                var pos = ship.Transform.Position;
+                var direction = (game.MousePos - pos).Normalize();
+                var accuracy = Rng.Instance.RandF(-15, 15) * ShapeMath.DEGTORAD;
+                direction = direction.Rotate(accuracy);
+                var destructor = new Destructor(pos, direction, ship.CurSpeed,  Colors.PcCold.ColorRgba);
+                destructors.Add(destructor);
+                CollisionHandler.Add(destructor);
+                
+                singleDestructorBurstsRemaining--;
+                if (singleDestructorBurstsRemaining <= 0) // burst finished
+                {
+                    singleDestructorCooldownTimer = singleDestructorCooldown;
+                    singleDestructorBurstTimer = 0f;
+                }
+                else
+                {
+                    singleDestructorBurstTimer = singleDestructorBurstCooldown;
+                }
+                
+            }
+            
+        }
         
-        
+
+        if (multiDestructorCooldownTimer > 0)
+        {
+            multiDestructorCooldownTimer -= time.Delta;
+            if (multiDestructorCooldownTimer <= 0)
+            {
+                multiDestructorCooldownTimer = 0;
+            }
+        }
         
         CollisionHandler?.ResizeBounds(universe);
         CollisionHandler?.Update(time.Delta);
@@ -2780,8 +2829,25 @@ public class EndlessSpaceCollision : ExampleScene
         else DrawGameInfoNoTitle(GAMELOOP.UIRects.GetRect("top center"));
 
 
+        var bottomUiZone = GAMELOOP.UIRects.GetRect("bottom");
+        var bottomUiSplit = bottomUiZone.SplitV(0.3f);
+        var destructorZone = bottomUiSplit.top.ApplyMargins(0.25f, 0.25f, 0f, 0f);
+        var destructorZoneSplit = destructorZone.SplitH(0.4f, 0.2f);
+        var singleDestructorRect = destructorZoneSplit[0];
+        var multiDestructorRect = destructorZoneSplit[2];
+        float thickness = singleDestructorRect.Height * 0.05f;
+        float cornerLength = singleDestructorRect.Height * 0.35f;
+        var singleDestructorRectBar = singleDestructorRect.ApplyMarginsAbsolute(thickness * 2);
+        var multiDestructorRectBar = multiDestructorRect.ApplyMarginsAbsolute(thickness * 2);
+        var singleDestructorF = singleDestructorCooldownTimer / singleDestructorCooldown;
+        var multiDestructorF = multiDestructorCooldownTimer / multiDestructorCooldown;
+        singleDestructorRect.DrawCorners(new LineDrawingInfo(thickness, Colors.Warm, LineCapType.Capped, 4), cornerLength);
+        singleDestructorRectBar.DrawBar(singleDestructorF, Colors.Warm, Colors.Medium, 0.5f, 0.5f, 0f, 0f);
         
-        var strategemZone = GAMELOOP.UIRects.GetRect("bottom").ApplyMargins(0f, 0f, 0.25f, 0f); // topBottomRect.top.ApplyMargins(0f, 0f, 0f, 0.25f); // ui.Area.ApplyMargins(0.2f, 0.2f, 0.91f, 0.06f);
+        multiDestructorRect.DrawCorners(new LineDrawingInfo(thickness, Colors.Warm, LineCapType.Capped, 4), cornerLength);
+        multiDestructorRectBar.DrawBar(multiDestructorF, Colors.Warm, Colors.Medium, 0.5f, 0.5f, 0f, 0f);
+
+        var strategemZone = bottomUiSplit.bottom.ApplyMargins(0f, 0f, 0.1f, 0f);//  GAMELOOP.UIRects.GetRect("bottom").ApplyMargins(0f, 0f, 0.25f, 0f); // topBottomRect.top.ApplyMargins(0f, 0f, 0f, 0.25f); // ui.Area.ApplyMargins(0.2f, 0.2f, 0.91f, 0.06f);
         var splitStrategem = strategemZone.SplitH(pdsList.Count);// strategemZone.SplitH(0.225f,0.033f,0.225f,0.033f,0.225f,0.033f);
         
         for (int i = 0; i < pdsList.Count; i++)
