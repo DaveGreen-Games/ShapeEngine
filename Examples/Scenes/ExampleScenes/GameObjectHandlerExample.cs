@@ -131,38 +131,27 @@ namespace Examples.Scenes.ExampleScenes
         
         protected override void Collision(List<CollisionInformation> info)
         {
+            
             foreach (var colInfo in info)
             {
                 if (colInfo.Count > 0)
                 {
-                    
-                    if (colInfo.Other is BoundaryWall wall)
+                    foreach (var collision in colInfo)
                     {
-                        foreach (var collision in colInfo)
+                        if (!collision.FirstContact) continue;
+
+                        if (colInfo.Other is BoundaryWall wall)
                         {
-                            if(!collision.FirstContact) continue;
                             overlapCount++;
-                            
                             Velocity = -(Transform.Position).Normalize() * Velocity.Length();
                         }
-                    }
-                    else
-                    {
-                        foreach (var collision in colInfo)
+                        else
                         {
-                            if(!collision.FirstContact) continue;
                             overlapCount++;
                         }
                     }
-                    
                 }
             }
-
-            // CollisionPoint p = new();
-            // if (p.Valid)
-            // {
-            //     Velocity = Velocity.Reflect(p.Normal);
-            // }
         }
 
         protected override void CollisionEnded(List<OverlapInformation> info)
