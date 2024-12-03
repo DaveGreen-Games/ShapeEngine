@@ -1903,16 +1903,16 @@ public static class ShapeDrawing
         if (closed)
         {
             var sectorStart = center + (ShapeVec.Right() * radius + new Vector2(lineThickness / 2, 0)).Rotate(startAngleRad);
-            DrawLine(center, sectorStart, lineThickness, color, LineCapType.CappedExtended, 2);
+            DrawLine(center, sectorStart, lineThickness, color, LineCapType.CappedExtended, 4);
 
             var sectorEnd = center + (ShapeVec.Right() * radius + new Vector2(lineThickness / 2, 0)).Rotate(endAngleRad);
-            DrawLine(center, sectorEnd, lineThickness, color, LineCapType.CappedExtended, 2);
+            DrawLine(center, sectorEnd, lineThickness, color, LineCapType.CappedExtended, 4);
         }
         for (var i = 0; i < sides; i++)
         {
             var start = center + (ShapeVec.Right() * radius).Rotate(startAngleRad + angleStep * i);
             var end = center + (ShapeVec.Right() * radius).Rotate(startAngleRad + angleStep * (i + 1));
-            DrawLine(start, end, lineThickness, color, LineCapType.CappedExtended, 2);
+            DrawLine(start, end, lineThickness, color, LineCapType.CappedExtended, 4);
         }
     }
     public static void DrawCircleSectorLines(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, float lineThickness, ColorRgba color, bool closed = true, float sideLength = 8f)
@@ -2332,13 +2332,13 @@ public static class ShapeDrawing
 
         float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
         float endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
-        var innerStart = center + (ShapeVec.Right() * innerRadius - new Vector2(lineThickness / 2, 0)).Rotate(startAngleRad);
-        var outerStart = center + (ShapeVec.Right() * outerRadius + new Vector2(lineThickness / 2, 0)).Rotate(startAngleRad);
-        DrawLine(innerStart, outerStart, lineThickness, color, LineCapType.CappedExtended, 2);
+        var innerStart = center + (ShapeVec.Right() * innerRadius).Rotate(startAngleRad);
+        var outerStart = center + (ShapeVec.Right() * outerRadius).Rotate(startAngleRad);
+        DrawLine(innerStart, outerStart, lineThickness, color, LineCapType.CappedExtended, 4);
 
-        var innerEnd = center + (ShapeVec.Right() * innerRadius - new Vector2(lineThickness / 2, 0)).Rotate(endAngleRad);
-        var outerEnd = center + (ShapeVec.Right() * outerRadius + new Vector2(lineThickness / 2, 0)).Rotate(endAngleRad);
-        DrawLine(innerEnd, outerEnd, lineThickness, color, LineCapType.CappedExtended, 2);
+        var innerEnd = center + (ShapeVec.Right() * innerRadius).Rotate(endAngleRad);
+        var outerEnd = center + (ShapeVec.Right() * outerRadius).Rotate(endAngleRad);
+        DrawLine(innerEnd, outerEnd, lineThickness, color, LineCapType.CappedExtended, 4);
     }
     public static void DrawSectorRingLines(Vector2 center, float innerRadius, float outerRadius, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, float lineThickness, ColorRgba color, float sideLength = 8f)
     {
