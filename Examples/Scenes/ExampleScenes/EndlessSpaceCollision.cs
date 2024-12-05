@@ -2140,6 +2140,10 @@ public class EndlessSpaceCollision : ExampleScene
         {
             a.target = null;
         }
+        destructors.Clear();
+        multiDestructorCooldownTimer = 0f;
+        singleDestructorBurstTimer = 0f;
+        singleDestructorCooldownTimer = 0f;
     }
 
     private void OnBulletFired(Autogun gun, Bullet bullet)
@@ -2197,6 +2201,10 @@ public class EndlessSpaceCollision : ExampleScene
         bullets.Clear();
         camera.Reset();
         follower.Reset();
+
+        multiDestructorCooldownTimer = 0f;
+        singleDestructorBurstTimer = 0f;
+        singleDestructorCooldownTimer = 0f;
         
         ship.Reset(new Vector2(0f), ShipSize);
         
