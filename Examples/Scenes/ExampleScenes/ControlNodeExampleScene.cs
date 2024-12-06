@@ -396,14 +396,10 @@ namespace Examples.Scenes.ExampleScenes
             navigator.Update();
         }
 
-        protected override void OnDrawGameUIExample(ScreenInfo gameUi)
-        {
-            container.Draw();
-        }
-
         protected override void OnDrawUIExample(ScreenInfo ui)
         {
             DrawInputDescription(GAMELOOP.UIRects.GetRect("bottom center"));
+            container.Draw();
         }
         
         private void DrawInputDescription(Rect rect)

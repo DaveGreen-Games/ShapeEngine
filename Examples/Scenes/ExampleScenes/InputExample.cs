@@ -738,11 +738,6 @@ namespace Examples.Scenes.ExampleScenes
       
     public class InputExample : ExampleScene
     {
-        Font font;
-
-        //private Gamepad? gamepad = null;
-        //private InputDevice currentInputDevice = InputDevice.Keyboard;
-
         private JoystickVisualizer joystickLeft;
         private JoystickVisualizer joystickRight;
         private ButtonVisualizer buttonLeft;
@@ -755,7 +750,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             Title = "Input Example";
 
-            font = GAMELOOP.GetFont(FontIDs.JetBrains);
+            var font = GAMELOOP.GetFont(FontIDs.JetBrains);
             joystickLeft = new(true, font);
             joystickRight = new(false, font);
             buttonLeft = new(true, font);
@@ -819,7 +814,8 @@ namespace Examples.Scenes.ExampleScenes
         {
             
         }
-        protected override void OnDrawGameUIExample(ScreenInfo gameUi)
+
+        protected override void OnDrawUIExample(ScreenInfo ui)
         {
             var screenArea = GAMELOOP.UIRects.GetRect("center");
             
@@ -850,51 +846,7 @@ namespace Examples.Scenes.ExampleScenes
             
             var buttonDoubleTapRect = screenArea.ApplyMargins(0.4f, 0.4f, 0.25f, 0.45f);
             buttonDoubleTap.Draw(buttonDoubleTapRect, lineThickness);
-            // DrawGamepadInfo(ui.Area);
-            // DrawInputDeviceInfo(ui.Area);
         }
-
-        private Vector2 lastMouseDelta = new();
-        private Vector2 lastMouseWheel = new();
-        protected override void OnDrawUIExample(ScreenInfo ui)
-        {
-            // Vector2 uiSize = ui.Area.Size;
-
-            // var mouseDelta = Raylib.GetMouseDelta();
-            // var mouseDeltaSq = mouseDelta.LengthSquared();
-            // var mouseWheel = Raylib.GetMouseWheelMoveV();
-            // var mouseWheelSq = mouseWheel.LengthSquared();
-            // if (mouseDeltaSq > 0f) lastMouseDelta = mouseDelta;
-            // if (mouseWheelSq > 0f) lastMouseWheel = mouseWheel;
-            //
-            // string text = $"Mouse Delta {lastMouseDelta} {lastMouseDelta.Length()} | Mouse Wheel {lastMouseWheel} {lastMouseWheel.Length()}";
-            //
-            // Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
-            // // string infoText = $"{moveText} | {rotText} | {scaleText} | {shakeText}";
-            // font.DrawText(text, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
-
-        }
-
-        // private void DrawInputDeviceInfo(Rect rect)
-        // {
-        //     var text = 
-        //         input.CurrentInputDevice == InputDevice.Gamepad ? "GAMEPAD" :
-        //         input.CurrentInputDevice == InputDevice.Keyboard ? "KEYBOARD" : "MOUSE";
-        //     var textRect = rect.ApplyMargins(0f, 0.5f, 0.15f, 0.8f);
-        //     font.DrawText(text, textRect, 1f, new Vector2(0.05f, 0.5f), ColorHighlight3);
-        // }
-        // private void DrawGamepadInfo(Rect rect)
-        // {
-        //     string text = "No Gamepad Connected";
-        //     if (GAMELOOP.CurGamepad != null)
-        //     {
-        //         var gamepadIndex = GAMELOOP.CurGamepad.Index;
-        //         text = $"Gamepad [{gamepadIndex}] Connected";
-        //     }
-        //     
-        //     var textRect = rect.ApplyMargins(0f, 0.5f, 0.1f, 0.85f);
-        //     font.DrawText(text, textRect, 1f, new Vector2(0.05f, 0.5f), GAMELOOP.CurGamepad != null ? ColorHighlight3 : ColorMedium);
-        // }
     }
 
 }
