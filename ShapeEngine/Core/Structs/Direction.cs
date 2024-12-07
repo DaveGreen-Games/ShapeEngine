@@ -48,7 +48,24 @@ public readonly struct Direction : IEquatable<Direction>
     public static Direction DownRight => new(1, 1);
     
     public Vector2 ToVector2() => new(Horizontal, Vertical);
-    public AnchorPoint ToAlignement() => new AnchorPoint(Horizontal + 1, Vertical + 1) / 2;
+    public AnchorPoint ToAlignement()
+    {
+        var h = (Horizontal + 1f) / 2f;
+        var v = (Vertical + 1f) / 2f;
+        return new AnchorPoint(h, v);
+    }
+    
+    /// <summary>
+    /// Inverts the direction and then calculates the alignement
+    /// </summary>
+    /// <returns></returns>
+    public AnchorPoint ToInvertedAlignement()
+    {
+        var inverted = Invert();
+        var h = (inverted.Horizontal + 1f) / 2f;
+        var v = (inverted.Vertical + 1f) / 2f;
+        return new AnchorPoint(h, v);
+    }
     public Direction Invert() => new(Horizontal * -1, Vertical * -1);
 
     public Direction Signed => new(Sign(Horizontal), Sign(Vertical));
