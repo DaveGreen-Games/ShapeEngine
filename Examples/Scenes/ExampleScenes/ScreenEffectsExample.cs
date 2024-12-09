@@ -79,10 +79,6 @@ namespace Examples.Scenes.ExampleScenes
             circle.DrawLines(6f, color.ColorRgba);
         }
     }
-
-    
-    
-    
     
     internal class Slider
     {
@@ -144,7 +140,6 @@ namespace Examples.Scenes.ExampleScenes
         private InputAction iaMoveHor;
         private InputAction iaMoveVer;
         
-        
         private void SetupInput()
         {
             var moveHorKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
@@ -193,29 +188,6 @@ namespace Examples.Scenes.ExampleScenes
         
         public void Update(float dt, float cameraRotationDeg)
         {
-            // int dirX = 0;
-            // int dirY = 0;
-            //
-            //
-            //
-            // if (IsKeyDown(KeyboardKey.KEY_A))
-            // {
-            //     dirX = -1;
-            // }
-            // else if (IsKeyDown(KeyboardKey.KEY_D))
-            // {
-            //     dirX = 1;
-            // }
-            //
-            // if (IsKeyDown(KeyboardKey.KEY_W))
-            // {
-            //     dirY = -1;
-            // }
-            // else if (IsKeyDown(KeyboardKey.KEY_S))
-            // {
-            //     dirY = 1;
-            // }
-            // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
             
             iaMoveHor.Gamepad = GAMELOOP.CurGamepad;
             iaMoveHor.Update(dt);
@@ -231,7 +203,7 @@ namespace Examples.Scenes.ExampleScenes
                 if (lsq > 0f)
                 {
                     movementDir = dir;
-                    movementDir = movementDir.RotateDeg(-cameraRotationDeg);
+                    // movementDir = movementDir.RotateDeg(-cameraRotationDeg); //with this enabled the ship does not follow the mouse correctly when camera is rotated.
                     var movement = movementDir * Speed * dt;
                     Hull = new Circle(Hull.Center + movement, Hull.Radius);
                 }

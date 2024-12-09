@@ -11,9 +11,9 @@ uniform sampler2D texture0;
 // Output fragment color
 out vec4 finalColor;
 
-// NOTE: Add here your custom variables
+// NOTE Add here your custom variables
 
-// NOTE: Render size values must be passed from code
+// NOTE Render size values must be passed from code
 const float renderWidth = 800;
 const float renderHeight = 450;
 

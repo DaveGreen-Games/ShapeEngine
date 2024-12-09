@@ -584,6 +584,12 @@ public class InputAction
         // return tag == AllAccessTag || (lockWhitelist.Contains(tag) && !lockBlacklist.Contains(tag));
     }
 
+    public static bool IsInputAvailable(uint tag)
+    {
+        if (!Locked) return true;
+        return HasAccess(tag);
+    }
+
     public static bool HasAccess(InputAction action) => HasAccess(action.AccessTag);
     #endregion
     

@@ -2,7 +2,7 @@
 using System.Drawing;
 using System.Numerics;
 using Clipper2Lib;
-using ShapeEngine.Core.Collision;
+using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
 using ShapeEngine.Random;

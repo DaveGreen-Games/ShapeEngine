@@ -5,7 +5,7 @@ using ShapeEngine.Lib;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 
-namespace ShapeEngine.Core.Collision
+namespace ShapeEngine.Core.CollisionSystem
 {
     
     public class SpatialHash : IBounds
@@ -77,7 +77,7 @@ namespace ShapeEngine.Core.Collision
         #endregion
         
         #region Public
-        public void Fill(IEnumerable<CollisionObject> collisionBodies, IEnumerable<Collider> colliders)
+        public void Fill(IEnumerable<CollisionObject> collisionBodies)
         {
             Clear();
 
@@ -89,10 +89,10 @@ namespace ShapeEngine.Core.Collision
                 }
             }
 
-            foreach (var collider in colliders)
+            /*foreach (var collider in colliders)
             {
                 Add(collider);
-            }
+            }*/
             
             CleanRegister();
         }
@@ -190,6 +190,13 @@ namespace ShapeEngine.Core.Collision
             
             FillCandidateBuckets(bucketIds, ref candidateBuckets);
         }
+        public void GetCandidateBuckets(Quad quad, ref List<Bucket> candidateBuckets)
+        {
+            List<int> bucketIds = new();
+            GetCellIDs(quad, ref bucketIds);
+            
+            FillCandidateBuckets(bucketIds, ref candidateBuckets);
+        }
         public void GetCandidateBuckets(Polygon poly, ref List<Bucket> candidateBuckets)
         {
             List<int> bucketIds = new();
@@ -268,6 +275,14 @@ namespace ShapeEngine.Core.Collision
             
             AccumulateUniqueCandidates(bucketIds, ref candidates);
         }
+        public void GetUniqueCandidates(Quad quad, ref HashSet<Collider> candidates)
+        {
+            List<int> bucketIds = new();
+            GetCellIDs(quad, ref bucketIds);
+            
+            AccumulateUniqueCandidates(bucketIds, ref candidates);
+        }
+
         public void GetUniqueCandidates(Polygon poly, ref HashSet<Collider> candidates)
         {
             List<int> bucketIds = new();
@@ -359,35 +374,12 @@ namespace ShapeEngine.Core.Collision
         }
         private void Add(CollisionObject collisionBody)
         {
-            // if (!collisionBody.HasColliders) return;
             foreach (var collider in collisionBody.Colliders)
             {
                 Add(collider);
             }
-            /*
-             if (!collider.Enabled || collider.Parent == null) continue;
-               
-               List<int> ids;
-               if (register.TryGetValue(collider, out var value))
-               {
-                   ids = value;
-                   ids.Clear();
-               }
-               else
-               {
-                   ids = new List<int>();
-                   register.Add(collider, ids);
-               
-               }
-               GetCellIDs(collider, ref ids);
-               if (ids.Count <= 0) return;
-               registerKeys.Remove(collider);
-               foreach (int hash in ids)
-               {
-                   buckets[hash].Add(collider);
-               }
-             */
         }
+       
         private void Add(Collider collider)
         {
             if (!collider.Enabled) return;
@@ -592,105 +584,3 @@ namespace ShapeEngine.Core.Collision
         #endregion
     }
 }
-
-
-//
-// /// <summary>
-// /// Get all collision partners for specified collidable without using the mask
-// /// </summary>
-// /// <param name="collidable"></param>
-// /// <param name="result"></param>
-//
-// //simplify & rework all of this -> no mask filtering, just returns the buckets for the cell ids that are 
-// //stored in register or if not, calculated 
-// public void GetRegisteredObjects(ICollidable collidable, ref HashSet<ICollidable> result)
-// {
-//     if (!register.ContainsKey(collidable)) return;
-//     CollectUniqueObjects(register[collidable], collidable.GetCollisionMask(), ref result);
-// }
-//
-// public void GetUniqueObjects(ICollidable collidable, ref HashSet<ICollidable> result)
-// {
-//     if (register.ContainsKey(collidable))
-//     {
-//         CollectUniqueObjects(register[collidable], collidable.GetCollisionMask(), ref result);
-//     }
-//
-//     GetUniqueObjects(collidable.GetCollider(), collidable.GetCollisionMask(), ref result);
-// }
-// public void GetUniqueObjects(ICollider collider, BitFlag mask, ref HashSet<ICollidable> result) => GetUniqueObjects(collider.GetShape(), mask, ref result);
-// public void GetUniqueObjects<T>(T shape, BitFlag mask, ref HashSet<ICollidable> result) where T : IShape
-// {
-//     List<int> bucketIds = new();
-//     GetCellIDs(shape, ref bucketIds);
-//     
-//     if (bucketIds.Count <= 0) return;
-//     CollectUniqueObjects(bucketIds, mask, ref result);
-// }
-//
-// //---------------------------------
-//
-
-//  
-//  /// <summary>
-//  /// Get all the collision partners for the specified collidable and filter the result it by the collision mask
-//  /// </summary>
-//  /// <param name="collidable"></param>
-//  /// <param name="result"></param>
-//  public void GetObjectsFiltered(ICollidable collidable, ref HashSet<ICollidable> result)
-//  {
-//      if (register.ContainsKey(collidable))
-//      {
-//          CollectUniqueObjects(register[collidable], collidable.GetCollisionMask(), ref result);
-//      }
-//
-//      GetObjectsFiltered(collidable.GetCollider(), collidable.GetCollisionMask(), ref result);
-//  }
-// /// <summary>
-// /// Get all the collision partners for the specified collider and filter the result it by the collision mask
-// /// </summary>
-// /// <param name="collider"></param>
-// /// <param name="mask"></param>
-// /// <param name="result"></param>
-//  public void GetObjectsFiltered(ICollider collider, BitFlag mask, ref HashSet<ICollidable> result) => GetObjectsFiltered(collider.GetShape(), mask, ref result);
-//  /// <summary>
-//  /// Get all the collision partners for the specified shape and filter the result it by the collision mask
-//  /// </summary>
-//  /// <param name="shape"></param>
-//  /// <param name="mask"></param>
-//  /// <param name="result"></param>
-//  /// <typeparam name="T"></typeparam>
-//  public void GetObjectsFiltered<T>(T shape, BitFlag mask, ref HashSet<ICollidable> result) where T : IShape
-// {
-//     List<int> bucketIds = new();
-//     GetCellIDs(shape, ref bucketIds);
-//     
-//     if (bucketIds.Count <= 0) return;
-//     CollectUniqueObjectsFiltered(bucketIds, mask, ref result);
-// }
-        
-
-// private void CollectUniqueObjects(List<int> bucketIds, BitFlag mask, ref HashSet<ICollidable> result)
-// {
-//     if (bucketIds.Count <= 0) return;
-//     foreach (var id in bucketIds)
-//     {
-//         var bucket = buckets[id];
-//         if(bucket.Collidables != null && bucket.HasLayer(mask))
-//             result.UnionWith(bucket.Collidables);
-//     }
-// }
-// private void CollectUniqueObjectsFiltered(List<int> bucketIds, BitFlag mask, ref HashSet<ICollidable> result)
-// {
-//     if (bucketIds.Count <= 0 || mask.IsEmpty()) return;
-//     foreach (var id in bucketIds)
-//     {
-//         var bucket = buckets[id];
-//         var bucketObjects = bucket.GetObjects(mask);
-//         if (bucketObjects == null || bucketObjects.Count <= 0) continue;
-//         result.UnionWith(bucketObjects);
-//     }
-//
-//     // if (allObjects == null || allObjects.Count <= 0) return;
-//     // return new HashSet<ICollidable>(allObjects).ToList();
-// }

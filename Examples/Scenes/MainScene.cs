@@ -96,7 +96,7 @@ namespace Examples.Scenes
             // var savegameFolder = ShapeSavegame.CombinePath(path, "savegames");
             //
             //
-            // Console.WriteLine("---------------- Savegame loading started ----------------");
+            
             // var loaded = ShapeSavegame.Load<TestSaveGame>(savegameFolder, "main.txt");
             // if (loaded == null)
             // {
@@ -113,7 +113,6 @@ namespace Examples.Scenes
             //     Console.WriteLine($"     > Savegame successfully loaded from {savegameFolder}");
             //     Console.WriteLine($"    > Savegame ID: {loaded.ID} | Text: {loaded.Text}");
             // }
-            // Console.WriteLine("---------------- Savegame loading ended ----------------");
         }
         
         

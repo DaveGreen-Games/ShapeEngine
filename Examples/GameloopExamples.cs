@@ -142,6 +142,7 @@ namespace Examples
         public InputAction InputActionMinimize {get; private set;}
         public InputAction InputActionNextMonitor {get; private set;}
         public InputAction InputActionCycleShaders {get; private set;}
+        public InputAction InputActionCycleScreenMode {get; private set;}
         //public InputAction InputActionCRTMinus {get; private set;}
         //public InputAction InputActionCRTPlus {get; private set;}
         
@@ -560,16 +561,6 @@ namespace Examples
             var fullscreenState = InputActionFullscreen.Consume();
             if (fullscreenState is { Consumed: false, Pressed: true })
             {
-                // var win = GameWindow.Instance;
-                // if (win.IsWindowFullscreen())
-                // {
-                //     win.RestoreWindow();
-                // }
-                // else
-                // {
-                //     Console.WriteLine("---------------------------- Fullscreen mode enabled");
-                //     win.ActivateFullscreen(1920 / 2, 1080 / 2);
-                // }
                 GAMELOOP.Window.ToggleBorderlessFullscreen();
             }
 
@@ -585,29 +576,37 @@ namespace Examples
                Window.NextMonitor();
             }
 
-            if (ShapeKeyboardButton.H.GetInputState().Pressed)
+            var screenModeState = GAMELOOP.InputActionCycleScreenMode.Consume();
+            if (screenModeState is { Consumed: false, Pressed: true })
             {
                 NextGameTexture();
             }
-
-            int keypadNumber = -1;
-            if (ShapeKeyboardButton.KP_1.GetInputState().Pressed) keypadNumber = 1;
-            else if (ShapeKeyboardButton.KP_2.GetInputState().Pressed) keypadNumber = 2;
-            else if (ShapeKeyboardButton.KP_3.GetInputState().Pressed) keypadNumber = 3;
-            else if (ShapeKeyboardButton.KP_4.GetInputState().Pressed) keypadNumber = 4;
-            else if (ShapeKeyboardButton.KP_5.GetInputState().Pressed) keypadNumber = 5;
-            else if (ShapeKeyboardButton.KP_6.GetInputState().Pressed) keypadNumber = 6;
-            else if (ShapeKeyboardButton.KP_7.GetInputState().Pressed) keypadNumber = 7;
-            else if (ShapeKeyboardButton.KP_8.GetInputState().Pressed) keypadNumber = 8;
-            else if (ShapeKeyboardButton.KP_9.GetInputState().Pressed) keypadNumber = 9;
-
-            if (keypadNumber > 0)
-            {
-                var anchorTexture = gameTextures[4];
-                var newAnchor = AnchorPoint.GetKeypadAnchorPosition(keypadNumber);
-                anchorTexture.ChangeAnchorPosition(newAnchor.ToVector2());
-            }
             
+            // if (ShapeKeyboardButton.H.GetInputState().Pressed)
+            // {
+            //     NextGameTexture();
+            // }
+
+            if (InputAction.IsInputAvailable(GameloopAccessTag))
+            {
+                int keypadNumber = -1;
+                if (ShapeKeyboardButton.KP_1.GetInputState().Pressed) keypadNumber = 1;
+                else if (ShapeKeyboardButton.KP_2.GetInputState().Pressed) keypadNumber = 2;
+                else if (ShapeKeyboardButton.KP_3.GetInputState().Pressed) keypadNumber = 3;
+                else if (ShapeKeyboardButton.KP_4.GetInputState().Pressed) keypadNumber = 4;
+                else if (ShapeKeyboardButton.KP_5.GetInputState().Pressed) keypadNumber = 5;
+                else if (ShapeKeyboardButton.KP_6.GetInputState().Pressed) keypadNumber = 6;
+                else if (ShapeKeyboardButton.KP_7.GetInputState().Pressed) keypadNumber = 7;
+                else if (ShapeKeyboardButton.KP_8.GetInputState().Pressed) keypadNumber = 8;
+                else if (ShapeKeyboardButton.KP_9.GetInputState().Pressed) keypadNumber = 9;
+                
+                if (keypadNumber > 0)
+                {
+                    var anchorTexture = gameTextures[4];
+                    var newAnchor = AnchorPoint.GetKeypadAnchorPosition(keypadNumber);
+                    anchorTexture.ChangeAnchorPosition(newAnchor.ToVector2());
+                }
+            }
             
             if (Paused) return;
 
@@ -651,58 +650,12 @@ namespace Examples
                 }
             }
             
-            //var crtDefault = new Vector2(6, 4);
-            //var crtSpeed = crtDefault * 0.5f * time.Delta;
-            // var crtPlusState = InputActionCRTPlus.Consume();
-            // if (crtPlusState is { Consumed: false, Down: true })
-            // {
-            //     var crtShader = ScreenShaders.Get(crtShaderID);
-            //     if (crtShader is { Enabled: true })
-            //     {
-            //         crtCurvature += crtSpeed;
-            //         if (crtCurvature.X >= 9f)
-            //         {
-            //             crtCurvature = new(9f, 6f);
-            //             crtShader.Enabled = false;
-            //         }
-            //         ShapeShader.SetValueVector2(crtShader.Shader, "curvatureAmount", crtCurvature.X, crtCurvature.Y);
-            //     }
-            //     
-            // }
-
-            // var crtMinusState = InputActionCRTMinus.Consume();
-            // if (crtMinusState is { Consumed: false, Down: true })
-            // {
-            //     var crtShader = ScreenShaders.Get(crtShaderID);
-            //     if (crtShader != null)
-            //     {
-            //         crtCurvature -= crtSpeed;
-            //         if (!crtShader.Enabled && crtCurvature.X < 9f) crtShader.Enabled = true;
-            //         
-            //         if (crtCurvature.X <= 1.5f)
-            //         {
-            //             crtCurvature = new(1.5f, 1f);
-            //         }
-            //         ShapeShader.SetValueVector2(crtShader.Shader, "curvatureAmount", crtCurvature.X, crtCurvature.Y);
-            //     }
-            // }
             
             
             
             paletteInfoBox.Update(time.Delta);
         }
 
-        // protected override void DrawGame(ScreenInfo game)
-        // {
-        //     game.MousePos.Draw(50, new ColorRgba(Color.Red));
-        //     game.Area.DrawLines(100f, new ColorRgba(Color.Red));
-        // }
-        //
-        // protected override void DrawGameUI(ScreenInfo gameUi)
-        // {
-        //     // gameUi.MousePos.Draw(25, new ColorRgba(Color.Green));
-        //     gameUi.Area.DrawLines(5f, new ColorRgba(Color.Green));
-        // }
 
         protected override void DrawUI(ScreenInfo ui)
         {
@@ -814,19 +767,8 @@ namespace Examples
             var cycleShaderKB = new InputTypeKeyboardButton(ShapeKeyboardButton.J);
             InputActionCycleShaders = new InputAction(GameloopAccessTag, cycleShaderKB);
             
-            //var crtMinusKB = new InputTypeKeyboardButton(ShapeKeyboardButton.J);
-            // var crtMinusGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP, 0f, ModifierKeyOperator.Or, ModifierKeyGamepad);
-            //var crtPluseGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_THUMB);
-            //InputActionCRTMinus = new(GameloopAccessTag, crtMinusKB);
-            
-            //var crtPlusKB = new InputTypeKeyboardButton(ShapeKeyboardButton.K);
-            // var crtPlusGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP, 0f, ModifierKeyOperator.Or, ModifierKeyGamepad);
-            //var crtMinusGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_THUMB);
-            //InputActionCRTPlus = new(GameloopAccessTag, crtPlusKB);
-            
-            // var pauseKB = new InputTypeKeyboardButton(ShapeKeyboardButton.P);
-            // var pauseGB = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_RIGHT);
-            // InputActionPause = new(SceneAccessTag, pauseKB, pauseGB);
+            var cycleScreenMode = new InputTypeKeyboardButton(ShapeKeyboardButton.H);
+            InputActionCycleScreenMode = new InputAction(GameloopAccessTag, cycleScreenMode);
             
             var paletteKb = new InputTypeKeyboardButton(ShapeKeyboardButton.P);
             var paletteGp = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_RIGHT);
@@ -909,8 +851,7 @@ namespace Examples
             inputActions.Add(InputActionMinimize);
             inputActions.Add(InputActionNextMonitor);
             inputActions.Add(InputActionCycleShaders);
-            // inputActions.Add(InputActionCRTMinus);
-            // inputActions.Add(InputActionCRTPlus);
+            inputActions.Add(InputActionCycleScreenMode);
             inputActions.Add(InputActionZoom);
             inputActions.Add(InputActionCyclePalette);
             inputActions.Add(InputActionReset);

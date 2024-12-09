@@ -9,7 +9,7 @@ uniform sampler2D texture0;
 // Output fragment color
 out vec4 finalColor;
 
-// NOTE: Add here your custom variables
+// NOTE Add here your custom variables
 uniform vec2 origin = vec2(0, 0);
 uniform vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
 uniform float maxDis = 1;

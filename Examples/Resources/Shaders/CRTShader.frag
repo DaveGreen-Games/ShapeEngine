@@ -12,7 +12,7 @@ uniform sampler2D texture0;
 // Output fragment color
 out vec4 finalColor;
 
-// NOTE: Add here your custom variables
+// NOTE Add here your custom variables
 uniform vec2 curvatureAmount = vec2(6.0, 4.0);//smaller values = bigger curvature
 uniform float renderWidth = 960;
 uniform float renderHeight = 600;

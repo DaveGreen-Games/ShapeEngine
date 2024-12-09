@@ -4,34 +4,25 @@ using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 
 
-namespace ShapeEngine.Core.Collision;
+namespace ShapeEngine.Core.CollisionSystem;
 
 public abstract class Collider : Shape
 {
-    
     /// <summary>
-    /// This functions is always called when the collider had at least one collision with another collider this frame
+    /// A collision (Intersection) between this collider and another collider has occurred.
+    /// AvancedCollisionNotification has to be enabled on the parent for this event to be invoked.
     /// </summary>
-    public event Action<Collider, CollisionInformation>? OnCollision;
-    
+    public event Action<Collision>? OnIntersected;
     /// <summary>
-    /// This function will always be called when a previous collision with another collider has ended this frame
+    /// A collision (Overlap) between this collider and another collider has occured.
+    ///  AvancedCollisionNotification has to be enabled on the parent for this event to be invoked.
     /// </summary>
-    public event Action<Collider, Collider>? OnCollisionEnded;
-    
+    public event Action<Overlap>? OnOverlapped;
     /// <summary>
-    /// This event will only be invoked when AdvancedCollisionNotifications is enabled and
-    /// ComputeIntersection is disabled
-    /// If AdvancedCollisionNotification is enabled and ComputeIntersection is enabled OnColliderIntersected will be invoked instead
+    /// A collision (Intersection/Overlap) between this collider and another collider has ended.
+    ///  AvancedCollisionNotification has to be enabled on the parent for this event to be invoked.
     /// </summary>
-    public event Action<Collider, Collider, bool>? OnColliderOverlapped;
-    
-    /// <summary>
-    /// This event will only be invoked when AdvancedCollisionNotifications is enabled and
-    /// ComputeIntersection is enabled
-    /// If AdvancedCollisionNotification is enabled and ComputeIntersection is disabled OnColliderOverlapped will be invoked instead
-    /// </summary>
-    public event Action<Collision>? OnColliderIntersected;
+    public event Action<Collider>? OnCollisionEnded;
     
     
     private CollisionObject? parent = null;
@@ -77,12 +68,9 @@ public abstract class Collider : Shape
     }
 
     public Vector2 Velocity => parent?.Velocity ?? new(0f);
-    // public Vector2 PrevPosition { get; private set; }
-    
-    // public bool FlippedNormals { get; set; } = false;
-
     public BitFlag CollisionMask { get; set; } = BitFlag.Empty;
     public uint CollisionLayer { get; set; } = 0;
+ 
     public bool ComputeCollision { get; set; } = true;
     /// <summary>
     /// If false only overlaps will be reported but no further details on the intersection.
@@ -94,7 +82,6 @@ public abstract class Collider : Shape
     /// Collision and CollisionEnded will always be called.
     /// This is an additional convenience option to get overlap/intersection information in a different way.
     /// </summary>
-    public bool AdvancedCollisionNotifications { get; set; } = false;
 
     // protected bool Dirty = false;
     
@@ -106,12 +93,49 @@ public abstract class Collider : Shape
     {
         this.Offset = new(offset, 0f, new Size(0f), 1f);
     }
-
     protected Collider(Transform2D offset)
     {
         this.Offset = offset;
     }
 
+    
+    internal void ResolveIntersected(Collision collision)
+    {
+        Intersected(collision);
+        OnIntersected?.Invoke(collision);
+    }
+
+    internal void ResolveOverlapped(Overlap overlap)
+    {
+        Overlapped(overlap);
+        OnOverlapped?.Invoke(overlap);
+    }
+   
+    internal void ResolveCollisionEnded(Collider other)
+    {
+        CollisionEnded(other);
+        OnCollisionEnded?.Invoke(other);
+    } 
+    
+    /// <summary>
+    /// Will be called from the parent. Is only called when a collision with this collider occurs where the intersection is valid.
+    /// AvancedCollisionNotification has to be enabled on the parent for this function to be called.
+    /// </summary>
+    /// <param name="info"></param>
+    protected virtual void Intersected(Collision info) { }
+    /// <summary>
+    /// Will be called from the parent. Is only called when an overlap with this collider occurs where the intersection is not valid.
+    /// AvancedCollisionNotification has to be enabled on the parent for this function to be called.
+    /// </summary>
+    /// <param name="overlap"></param>
+    protected virtual void Overlapped(Overlap overlap) { }
+    /// <summary>
+    /// Will be called from the parent. Is only called when a collision (intersection / overlap)  with this collider ends.
+    /// AvancedCollisionNotification has to be enabled on the parent for this function to be called.
+    /// </summary>
+    /// <param name="other"></param>
+    protected virtual void CollisionEnded(Collider other) { }
+    
 
     public override void InitializeShape(Transform2D parentTransform)
     {
@@ -138,59 +162,8 @@ public abstract class Collider : Shape
 
     protected override void OnDraw() { }
     
-    internal void ResolveCollision(CollisionInformation info)
-    {
-        if (AdvancedCollisionNotifications)
-        {
-            foreach (var collision in info.Collisions)
-            {
-                if (ComputeIntersections)
-                {
-                    ColliderIntersected(collision);
-                    OnColliderIntersected?.Invoke(collision);
-                }
-                else
-                {
-                    ColliderOverlapped(collision.Other, collision.FirstContact);
-                    OnColliderOverlapped?.Invoke(this, collision.Other, collision.FirstContact);
-                }
-            
-            }
-        }
-        
-        Collision(info);
-        OnCollision?.Invoke(this, info);
-    }
-    internal void ResolveCollisionEnded(Collider other)
-    {
-        CollisionEnded(other);
-        OnCollisionEnded?.Invoke(this, other);
-    }
     
     
-    /// <summary>
-    /// This function will only be called when AdvancedCollisionNotifications is enabled and
-    /// ComputeIntersection is disabled
-    /// If AdvancedCollisionNotification is enabled and ComputeIntersection is enabled ColliderIntersected will be called instead
-    /// </summary>
-    protected virtual void ColliderOverlapped(Collider other, bool firstContact) { }
-    
-    /// <summary>
-    /// This function will only be called when AdvancedCollisionNotifications is enabled and
-    /// ComputeIntersection is enabled
-    /// If AdvancedCollisionNotification is enabled and ComputeIntersection is disabled ColliderOverlapped will be called instead
-    /// </summary>
-    protected virtual void ColliderIntersected(Collision collision) { }
-    
-    /// <summary>
-    /// This functions is always called when this collider had at least one collision with another collider this frame
-    /// </summary>
-    protected virtual void Collision(CollisionInformation info) { }
-    
-    /// <summary>
-    /// This function will always be called when a previous collision with another collider has ended this frame
-    /// </summary>
-    protected virtual void CollisionEnded(Collider other) { }
     
     protected virtual void OnAddedToCollisionBody(CollisionObject newParent) { }
     protected virtual void OnRemovedFromCollisionBody(CollisionObject formerParent) { }

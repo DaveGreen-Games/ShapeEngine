@@ -4,11 +4,10 @@ using ShapeEngine.Lib;
 using System.Numerics;
 using System.Text;
 using ShapeEngine.Color;
-using ShapeEngine.Core.Collision;
+using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
-using Color = System.Drawing.Color;
 using ShapeEngine.Random;
 namespace Examples.Scenes.ExampleScenes
 {
@@ -20,12 +19,13 @@ namespace Examples.Scenes.ExampleScenes
     }
     internal static class CollisionFlags
     {
-        public static readonly uint WallFlag = BitFlag.GetFlagUint(1); //2
-        public static readonly uint RockFlag = BitFlag.GetFlagUint(2); //4
-        public static readonly uint BirdFlag = BitFlag.GetFlagUint(3); //8
-        public static readonly uint BallFlag = BitFlag.GetFlagUint(4); //16
-        public static readonly uint BulletFlag = BitFlag.GetFlagUint(5); //32
-        public static readonly uint BoundaryFlag = BitFlag.GetFlagUint(6); //32
+        public static readonly uint WallFlag = BitFlag.GetFlagUint(1);
+        public static readonly uint RockFlag = BitFlag.GetFlagUint(2);
+        public static readonly uint BirdFlag = BitFlag.GetFlagUint(3);
+        public static readonly uint BallFlag = BitFlag.GetFlagUint(4);
+        public static readonly uint BulletFlag = BitFlag.GetFlagUint(5);
+        public static readonly uint BoundaryFlag = BitFlag.GetFlagUint(6);
+        public static readonly uint OverlapperFlag = BitFlag.GetFlagUint(7);
     }
     internal class PolyWall : CollisionObject
     {
@@ -96,6 +96,100 @@ namespace Examples.Scenes.ExampleScenes
             
         }
     }
+    
+    internal class Overlapper : CollisionObject
+    {
+        private CircleCollider circleCollider;
+
+        private int overlapCount = 0;
+        private readonly ColorRgba[] overlapColors = [Colors.Light, Colors.Text, Colors.Cold, Colors.Warm, Colors.Highlight, Colors.Special, Colors.Special2];
+        
+        public Overlapper(Vector2 pos) : base(new Transform2D(pos, 0f, new Size(150, 0), 1f))
+        {
+            var col = new CircleCollider(new()); //(new(0f), 12f);
+            col.ComputeCollision = true;
+            col.ComputeIntersections = false;
+            col.Enabled = true;
+            col.CollisionMask = new(CollisionFlags.WallFlag);
+            col.CollisionMask = col.CollisionMask.Add(CollisionFlags.BoundaryFlag);
+            col.CollisionMask = col.CollisionMask.Add(CollisionFlags.BallFlag);
+            col.CollisionMask = col.CollisionMask.Add(CollisionFlags.RockFlag);
+            col.CollisionMask = col.CollisionMask.Add(CollisionFlags.BirdFlag);
+            col.CollisionMask = col.CollisionMask.Add(CollisionFlags.BulletFlag);
+            col.CollisionMask = col.CollisionMask.Add(CollisionFlags.OverlapperFlag);
+            
+            col.CollisionLayer = CollisionFlags.OverlapperFlag;
+
+            Velocity = Rng.Instance.RandVec2(25, 50) * 10;
+            AddCollider(col);
+
+            circleCollider = col;
+            
+            Layer = SpawnAreaLayers.ObjectFlag;
+        }
+
+        
+        protected override void Collision(List<CollisionInformation> info)
+        {
+            
+            foreach (var colInfo in info)
+            {
+                if (colInfo.Count > 0)
+                {
+                    foreach (var collision in colInfo)
+                    {
+                        if (!collision.FirstContact) continue;
+
+                        if (colInfo.Other is BoundaryWall wall)
+                        {
+                            overlapCount++;
+                            Velocity = -(Transform.Position).Normalize() * Velocity.Length();
+                        }
+                        else
+                        {
+                            overlapCount++;
+                        }
+                    }
+                }
+            }
+        }
+
+        protected override void CollisionEnded(List<OverlapInformation> info)
+        {
+            foreach (var overlapInfo in info)
+            {
+                foreach (var overlap in overlapInfo)
+                {
+                    overlapCount--;
+                }
+            }
+        }
+        
+        public override void DrawGame(ScreenInfo game)
+        {
+            var c = circleCollider.GetCircleShape();
+            var colorIndex = 0;
+           if(overlapCount >= overlapColors.Length) colorIndex = overlapColors.Length - 1;
+           else if(overlapCount < 0) colorIndex = 0;
+           else colorIndex = overlapCount;
+           
+           var color = overlapColors[colorIndex];
+            c.DrawLines(8f, color);
+        }
+
+        public override bool HasLeftBounds(Rect bounds) => !bounds.OverlapShape(circleCollider.GetCircleShape());
+        public override bool IsDrawingToGame(Rect gameArea) => gameArea.OverlapShape(circleCollider.GetCircleShape());
+        public override bool IsDrawingToGameUI(Rect gameUiArea) => false;
+
+        public override void DrawGameUI(ScreenInfo gameUi)
+        {
+        }
+        public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+        {
+            
+        }
+    }
+   
     internal class Ball : CollisionObject
     {
         private CircleCollider circleCollider;
@@ -113,19 +207,45 @@ namespace Examples.Scenes.ExampleScenes
             AddCollider(col);
 
             circleCollider = col;
-            circleCollider.OnCollision += Overlap;
+            // circleCollider.OnIntersected += Overlap;
             
             Layer = SpawnAreaLayers.ObjectFlag;
         }
 
-        private void Overlap(Collider col, CollisionInformation info)
+        protected override void Collision(List<CollisionInformation> info)
         {
-            if (info.CollisionSurface.Valid)
+            CollisionPoint p = new();
+            foreach (var colInfo in info)
             {
-                // timer = 0.25f;
-                Velocity = Velocity.Reflect(info.CollisionSurface.Normal);
+                if (colInfo.Count > 0)
+                {
+                    foreach (var collision in colInfo)
+                    {
+                        if(!collision.FirstContact) continue;
+                        if(collision.Points == null) continue;
+                        if (collision.Validate(out CollisionPoint combined))
+                        {
+                            // var cp = collision.Points.GetAverageCollisionPoint();
+                            if (combined.Valid) p = p.Average(combined);
+                        }
+                    }
+                }
+            }
+
+            if (p.Valid)
+            {
+                Velocity = Velocity.Reflect(p.Normal);
             }
         }
+
+        // private void Overlap(Collider col, CollisionInformation info)
+        // {
+        //     if (info.CollisionSurface.Valid)
+        //     {
+        //         // timer = 0.25f;
+        //         Velocity = Velocity.Reflect(info.CollisionSurface.Normal);
+        //     }
+        // }
         public override void DrawGame(ScreenInfo game)
         {
             var c = circleCollider.GetCircleShape();
@@ -151,6 +271,7 @@ namespace Examples.Scenes.ExampleScenes
             
         }
     }
+   
     internal class Bullet : CollisionObject
     {
         private CircleCollider circleCollider;
@@ -172,7 +293,7 @@ namespace Examples.Scenes.ExampleScenes
             AddCollider(col);
 
             circleCollider = col;
-            circleCollider.OnCollision += Overlap;
+            // circleCollider.OnIntersected += Overlap;
             
             Layer = SpawnAreaLayers.ObjectFlag;
 
@@ -197,34 +318,63 @@ namespace Examples.Scenes.ExampleScenes
             
         }
         
-        private void Overlap(Collider col, CollisionInformation info)
+
+        protected override void Collision(List<CollisionInformation> info)
         {
-            if (info.Collisions.Count > 0)
+            CollisionPoint p = new();
+            foreach (var colInfo in info)
             {
-                
-                var minDisSq = float.PositiveInfinity;
-                Vector2 p = new();
-                foreach (var collision in info.Collisions)
+                if (colInfo.Count > 0)
                 {
-                    if(!collision.Intersection.Valid || !collision.Intersection.CollisionSurface.Valid) continue;
-                    var disSq = (Transform.Position - collision.Intersection.CollisionSurface.Point).LengthSquared();
-                    if (disSq < minDisSq)
+                    foreach (var collision in colInfo)
                     {
-                        minDisSq = disSq;
-                        p = collision.Intersection.CollisionSurface.Point;
+                        if(!collision.FirstContact) continue;
+                        if(collision.Points == null) continue;
+                        if (collision.Validate(out var combined, out var closest))
+                        {
+                            Transform = Transform.SetPosition(closest.Point);
+                            Velocity = new();
+                            Enabled = false;
+                            deadTimer = 2f;
+                        }
                     }
                 }
-                Transform = Transform.SetPosition(p);
-                Velocity = new();
-                Enabled = false;
-                deadTimer = 2f;
             }
-            // if (info.CollisionSurface.Valid)
-            // {
-            //     // timer = 0.25f;
-            //     body.Velocity = body.Velocity.Reflect(info.CollisionSurface.Normal);
-            // }
+
+            if (p.Valid)
+            {
+                Velocity = Velocity.Reflect(p.Normal);
+            }
         }
+        
+        // private void Overlap(Collider col, CollisionInformation info)
+        // {
+        //     if (info.Collisions.Count > 0)
+        //     {
+        //         
+        //         var minDisSq = float.PositiveInfinity;
+        //         Vector2 p = new();
+        //         foreach (var collision in info.Collisions)
+        //         {
+        //             if(!collision.Intersection.Valid || !collision.Intersection.CollisionSurface.Valid) continue;
+        //             var disSq = (Transform.Position - collision.Intersection.CollisionSurface.Point).LengthSquared();
+        //             if (disSq < minDisSq)
+        //             {
+        //                 minDisSq = disSq;
+        //                 p = collision.Intersection.CollisionSurface.Point;
+        //             }
+        //         }
+        //         Transform = Transform.SetPosition(p);
+        //         Velocity = new();
+        //         Enabled = false;
+        //         deadTimer = 2f;
+        //     }
+        //     // if (info.CollisionSurface.Valid)
+        //     // {
+        //     //     // timer = 0.25f;
+        //     //     body.Velocity = body.Velocity.Reflect(info.CollisionSurface.Normal);
+        //     // }
+        // }
         public override void DrawGame(ScreenInfo game)
         {
             // lastVelocitySegment.Draw(3f, Colors.Medium);
@@ -263,7 +413,7 @@ namespace Examples.Scenes.ExampleScenes
             AddCollider(col);
 
             polyCollider = col;
-            polyCollider.OnCollision += Overlap;
+            // polyCollider.OnIntersected += Overlap;
             
             Layer = SpawnAreaLayers.ObjectFlag;
 
@@ -329,16 +479,44 @@ namespace Examples.Scenes.ExampleScenes
             var col = polyCollider;
             col.CollisionMask = col.CollisionMask.Add(CollisionFlags.RockFlag);
         }
-        private void Overlap(Collider col, CollisionInformation info)
+
+        
+        protected override void Collision(List<CollisionInformation> info)
         {
-            if (info.CollisionSurface.Valid)
+            CollisionPoint p = new();
+            foreach (var colInfo in info)
             {
-                // body.Transform = body.Transform.ScaleBy(ShapeRandom.RandF(0.1f, 0.2f));
-                // body.Transform = body.Transform.SetScale(ShapeRandom.RandF(0.5f, 4f));
-                // timer = 0.25f;
-                Velocity = Velocity.Reflect(info.CollisionSurface.Normal);
+                if (colInfo.Count > 0)
+                {
+                    foreach (var collision in colInfo)
+                    {
+                        if(!collision.FirstContact) continue;
+                        if(collision.Points == null) continue;
+                        if (collision.Validate(out var combined, out var closest))
+                        {
+                            // var cp = collision.Points.GetAverageCollisionPoint();
+                            if (combined.Valid) p = p.Average(combined);
+                        }
+                    }
+                }
+            }
+
+            if (p.Valid)
+            {
+                Velocity = Velocity.Reflect(p.Normal);
             }
         }
+        
+        // private void Overlap(Collider col, CollisionInformation info)
+        // {
+        //     if (info.CollisionSurface.Valid)
+        //     {
+        //         // body.Transform = body.Transform.ScaleBy(ShapeRandom.RandF(0.1f, 0.2f));
+        //         // body.Transform = body.Transform.SetScale(ShapeRandom.RandF(0.5f, 4f));
+        //         // timer = 0.25f;
+        //         Velocity = Velocity.Reflect(info.CollisionSurface.Normal);
+        //     }
+        // }
         public override void DrawGame(ScreenInfo game)
         {
             polyCollider.GetPolygonShape().DrawLines(4f, Colors.Warm);
@@ -387,23 +565,50 @@ namespace Examples.Scenes.ExampleScenes
             AddCollider(tCol);
 
             circleCollider = cCol;
-            circleCollider.OnCollision += Overlap;
+            // circleCollider.OnIntersected += Overlap;
 
             triangleCollider = tCol;
-            triangleCollider.OnCollision += Overlap;
+            // triangleCollider.OnIntersected += Overlap;
             
             Layer = SpawnAreaLayers.ObjectFlag;
         }
 
-        private void Overlap(Collider col, CollisionInformation info)
+        protected override void Collision(List<CollisionInformation> info)
         {
-            if (info.CollisionSurface.Valid)
+            CollisionPoint p = new();
+            foreach (var colInfo in info)
             {
-                // timer = 0.25f;
-                Velocity = Velocity.Reflect(info.CollisionSurface.Normal);
+                if (colInfo.Count > 0)
+                {
+                    foreach (var collision in colInfo)
+                    {
+                        if(!collision.FirstContact) continue;
+                        if(collision.Points == null) continue;
+                        if (collision.Validate(out CollisionPoint combined))
+                        {
+                            // var cp = collision.Points.GetAverageCollisionPoint();
+                            if (combined.Valid) p = p.Average(combined);
+                        }
+                    }
+                }
+            }
+
+            if (p.Valid)
+            {
+                Velocity = Velocity.Reflect(p.Normal);
                 Transform = Transform.SetRotationRad(Velocity.AngleRad());
             }
         }
+
+        // private void Overlap(Collider col, CollisionInformation info)
+        // {
+        //     if (info.CollisionSurface.Valid)
+        //     {
+        //         // timer = 0.25f;
+        //         Velocity = Velocity.Reflect(info.CollisionSurface.Normal);
+        //         Transform = Transform.SetRotationRad(Velocity.AngleRad());
+        //     }
+        // }
         public override void DrawGame(ScreenInfo game)
         {
             circleCollider.GetCircleShape().DrawLines(4f, Colors.Warm);
@@ -428,6 +633,7 @@ namespace Examples.Scenes.ExampleScenes
     }
     
 
+    
     public class GameObjectHandlerExample : ExampleScene
     {
         private readonly Rect boundaryRect;
@@ -441,6 +647,7 @@ namespace Examples.Scenes.ExampleScenes
         private readonly InputAction iaSpawnBall;
         private readonly InputAction iaSpawnBird;
         private readonly InputAction iaSpawnBullet;
+        private readonly InputAction iaSpawnOverlapper;
         private readonly InputAction iaStartClearArea;
         // private readonly InputAction iaSpawnBox;
         // private readonly InputAction iaSpawnAura;
@@ -493,6 +700,9 @@ namespace Examples.Scenes.ExampleScenes
             var spawnBulletGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP , 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
             iaSpawnBullet = new(spawnBulletKb, spawnBulletGp);
             
+            var spawnOverlapperKb = new InputTypeKeyboardButton(ShapeKeyboardButton.FIVE);
+            iaSpawnOverlapper = new(spawnOverlapperKb);
+            
             var toggleDebugKB = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
             var toggleDebugGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
             iaToggleDebug = new(toggleDebugKB, toggleDebugGP);
@@ -518,7 +728,7 @@ namespace Examples.Scenes.ExampleScenes
             inputActions = new()
             {
                 iaPlaceWall, iaCancelWall,
-                iaSpawnRock, iaSpawnBall, iaSpawnBird, iaSpawnBullet,
+                iaSpawnRock, iaSpawnBall, iaSpawnBird, iaSpawnBullet, iaSpawnOverlapper,
                 iaToggleDebug, iaStartClearArea,
                 iaMoveCameraH, iaMoveCameraV
             };
@@ -561,24 +771,16 @@ namespace Examples.Scenes.ExampleScenes
         private void ClearAreaCollisionObjects(Rect area, BitFlag collisionLayerMask)
         {
             if (CollisionHandler == null) return;
-            
-            var result = new List<Collider>();
+
+            var result = new CastSpaceResult(12);
             CollisionHandler.CastSpace(area, collisionLayerMask, ref result);
         
             if (result.Count <= 0) return;
             
-            var removedParents = new HashSet<CollisionObject>();
-            
-            foreach (var collider in result)
+            foreach (var colObject in result.Keys)
             {
-                var parent = collider.Parent;
-                if (parent != null && !removedParents.Contains(parent))
-                {
-                    SpawnArea?.RemoveGameObject(parent);
-                    CollisionHandler?.Remove(parent);
-                    // RemoveGameObject(parent);
-                    removedParents.Add(parent);
-                }
+                SpawnArea?.RemoveGameObject(colObject);
+                CollisionHandler?.Remove(colObject);
             }
         }
         
@@ -637,6 +839,16 @@ namespace Examples.Scenes.ExampleScenes
                     var bullet = new Bullet(mousePosGame);
                     SpawnArea?.AddGameObject(bullet);
                     CollisionHandler?.Add(bullet);
+                }
+                
+            }
+            if (iaSpawnOverlapper.State.Pressed)
+            {
+                for (var i = 0; i < 3; i++)
+                {
+                    var overlapper = new Overlapper(mousePosGame);
+                    SpawnArea?.AddGameObject(overlapper);
+                    CollisionHandler?.Add(overlapper);
                 }
                 
             }

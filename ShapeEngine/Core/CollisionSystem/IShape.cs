@@ -1,6 +1,6 @@
 using ShapeEngine.Core.Shapes;
 
-namespace ShapeEngine.Core.Collision;
+namespace ShapeEngine.Core.CollisionSystem;
 
 public interface IShape
 {

@@ -2,7 +2,7 @@
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
-using ShapeEngine.Core.Collision;
+using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Random;
@@ -946,7 +946,6 @@ public static class ShapeDrawing
         var points = new List<Vector2>(3);
 
         int whileCounter = gapDrawingInfo.Gaps;
-        // Console.WriteLine("----------------Loop Started------------------");
         // Console.WriteLine($"    > Gaps: {gapDrawingInfo.Gaps} | Start Offset: {(int)(gapDrawingInfo.StartOffset * 100)}% | Start Distance {startDistance}");
         // Console.WriteLine($"    > Gap percentage: {(int)(gapDrawingInfo.GapPerimeterPercentage * 100)}%");
         // Console.WriteLine($"    > Gap Range: {(int)(gapPercentageRange * 100)}% | Line Range: {(int)(nonGapPercentageRange * 100)}%");
@@ -999,7 +998,6 @@ public static class ShapeDrawing
             }
             else
             {
-                // Console.WriteLine("     > Change point started------------------");
                 // Console.WriteLine($"        > Cur Index: {curIndex} | Polyline Count: {polyline.Count} | Remaining: {whileCounter}");
                 // Console.WriteLine($"        > Cur Distance: {curDistance} | Next Distance: {nextDistance} | Segment Length: {curDis}");
                 if (curIndex >= polyline.Count - 2) //last point
@@ -1050,12 +1048,10 @@ public static class ShapeDrawing
                     // Console.WriteLine($"                > New Index: {curIndex} | Next Index: {(curIndex + 1) % polyline.Count}");
                     // Console.WriteLine($"                > Cur Distance: {curDistance} | Next Distance: {nextDistance} | Segment Length: {curDis}");
                 }
-                // Console.WriteLine("         > Change point ended------------------");
             }
             
         }
 
-        // Console.WriteLine("----------------Loop Ended------------------");
         return perimeter;
     }
    
@@ -1245,11 +1241,11 @@ public static class ShapeDrawing
     #endregion
     
     #region Intersection
-    public static void Draw(this Intersection intersection, float lineThickness, ColorRgba intersectColorRgba, ColorRgba normalColorRgba)
+    public static void Draw(this CollisionPoints colPoints, float lineThickness, ColorRgba intersectColorRgba, ColorRgba normalColorRgba)
     {
-        if (intersection.ColPoints == null || intersection.ColPoints.Count <= 0) return;
+        if ( colPoints.Count <= 0) return;
         
-        foreach (var i in intersection.ColPoints)
+        foreach (var i in colPoints)
         {
             DrawCircle(i.Point, lineThickness * 2f, intersectColorRgba, 12);
             DrawLine(i.Point, i.Point + i.Normal * lineThickness * 10f, lineThickness, normalColorRgba);
@@ -1776,11 +1772,11 @@ public static class ShapeDrawing
     
     public static void DrawSector(this Circle c, float startAngleDeg, float endAngleDeg, int segments, ColorRgba color)
     {
-        Raylib.DrawCircleSector(c.Center, c.Radius, TransformAngleDegToRaylib(startAngleDeg), TransformAngleDegToRaylib(endAngleDeg), segments, color.ToRayColor());
+        Raylib.DrawCircleSector(c.Center, c.Radius, startAngleDeg, endAngleDeg, segments, color.ToRayColor());
     }
     public static void DrawCircleSector(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, int segments, ColorRgba color)
     {
-        Raylib.DrawCircleSector(center, radius, TransformAngleDegToRaylib(startAngleDeg), TransformAngleDegToRaylib(endAngleDeg), segments, color.ToRayColor());
+        Raylib.DrawCircleSector(center, radius, startAngleDeg, endAngleDeg, segments, color.ToRayColor());
     }
     
     public static void DrawSectorLines(this Circle c, float startAngleDeg, float endAngleDeg, LineDrawingInfo lineInfo, bool closed = true, float sideLength = 8f)
@@ -1907,16 +1903,16 @@ public static class ShapeDrawing
         if (closed)
         {
             var sectorStart = center + (ShapeVec.Right() * radius + new Vector2(lineThickness / 2, 0)).Rotate(startAngleRad);
-            DrawLine(center, sectorStart, lineThickness, color, LineCapType.CappedExtended, 2);
+            DrawLine(center, sectorStart, lineThickness, color, LineCapType.CappedExtended, 4);
 
             var sectorEnd = center + (ShapeVec.Right() * radius + new Vector2(lineThickness / 2, 0)).Rotate(endAngleRad);
-            DrawLine(center, sectorEnd, lineThickness, color, LineCapType.CappedExtended, 2);
+            DrawLine(center, sectorEnd, lineThickness, color, LineCapType.CappedExtended, 4);
         }
         for (var i = 0; i < sides; i++)
         {
             var start = center + (ShapeVec.Right() * radius).Rotate(startAngleRad + angleStep * i);
             var end = center + (ShapeVec.Right() * radius).Rotate(startAngleRad + angleStep * (i + 1));
-            DrawLine(start, end, lineThickness, color, LineCapType.CappedExtended, 2);
+            DrawLine(start, end, lineThickness, color, LineCapType.CappedExtended, 4);
         }
     }
     public static void DrawCircleSectorLines(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, float lineThickness, ColorRgba color, bool closed = true, float sideLength = 8f)
@@ -2005,7 +2001,7 @@ public static class ShapeDrawing
         float circumference = 2.0f * ShapeMath.PI * radius * (angleDeg / 360f);
         return (int)MathF.Max(circumference / maxLength, 1);
     }
-    private static float TransformAngleDegToRaylib(float angleDeg) { return 450f - angleDeg; }
+    // private static float TransformAngleDegToRaylib(float angleDeg) { return 450f - angleDeg; }
     
     #endregion
 
@@ -2336,13 +2332,13 @@ public static class ShapeDrawing
 
         float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
         float endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
-        var innerStart = center + (ShapeVec.Right() * innerRadius - new Vector2(lineThickness / 2, 0)).Rotate(startAngleRad);
-        var outerStart = center + (ShapeVec.Right() * outerRadius + new Vector2(lineThickness / 2, 0)).Rotate(startAngleRad);
-        DrawLine(innerStart, outerStart, lineThickness, color, LineCapType.CappedExtended, 2);
+        var innerStart = center + (ShapeVec.Right() * innerRadius).Rotate(startAngleRad);
+        var outerStart = center + (ShapeVec.Right() * outerRadius).Rotate(startAngleRad);
+        DrawLine(innerStart, outerStart, lineThickness, color, LineCapType.CappedExtended, 4);
 
-        var innerEnd = center + (ShapeVec.Right() * innerRadius - new Vector2(lineThickness / 2, 0)).Rotate(endAngleRad);
-        var outerEnd = center + (ShapeVec.Right() * outerRadius + new Vector2(lineThickness / 2, 0)).Rotate(endAngleRad);
-        DrawLine(innerEnd, outerEnd, lineThickness, color, LineCapType.CappedExtended, 2);
+        var innerEnd = center + (ShapeVec.Right() * innerRadius).Rotate(endAngleRad);
+        var outerEnd = center + (ShapeVec.Right() * outerRadius).Rotate(endAngleRad);
+        DrawLine(innerEnd, outerEnd, lineThickness, color, LineCapType.CappedExtended, 4);
     }
     public static void DrawSectorRingLines(Vector2 center, float innerRadius, float outerRadius, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, float lineThickness, ColorRgba color, float sideLength = 8f)
     {
@@ -2370,15 +2366,13 @@ public static class ShapeDrawing
 
     public static void DrawSectorRing(Vector2 center, float innerRadius, float outerRadius, float startAngleDeg, float endAngleDeg, ColorRgba color, float sideLength = 10f)
     {
-        float start = TransformAngleDegToRaylib(startAngleDeg);
-        float end = TransformAngleDegToRaylib(endAngleDeg);
-        float anglePiece = end - start;
+        float anglePiece = endAngleDeg - startAngleDeg;
         int sides = GetCircleArcSideCount(outerRadius, MathF.Abs(anglePiece), sideLength);
-        Raylib.DrawRing(center, innerRadius, outerRadius, start, end, sides, color.ToRayColor());
+        Raylib.DrawRing(center, innerRadius, outerRadius, startAngleDeg, endAngleDeg, sides, color.ToRayColor());
     }
     public static void DrawSectorRing(Vector2 center, float innerRadius, float outerRadius, float startAngleDeg, float endAngleDeg, int sides, ColorRgba color)
     {
-        Raylib.DrawRing(center, innerRadius, outerRadius, TransformAngleDegToRaylib(startAngleDeg), TransformAngleDegToRaylib(endAngleDeg), sides, color.ToRayColor());
+        Raylib.DrawRing(center, innerRadius, outerRadius, startAngleDeg, endAngleDeg, sides, color.ToRayColor());
     }
     public static void DrawSectorRing(Vector2 center, float innerRadius, float outerRadius, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, ColorRgba color, float sideLength = 10f)
     {
