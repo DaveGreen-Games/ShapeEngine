@@ -10,7 +10,7 @@
 	<Title>Shape Engine</Title>
 	<Authors>Dave Green</Authors>
 	<RepositoryUrl>https://github.com/DaveGreen-Games/ShapeEngine</RepositoryUrl>
-	<Version>2.4.0</Version>
+	<Version>3.0.0</Version>
 	<Description>My custom made 2d game engine based on the great Raylib Framework. Main focus is being performant and only using draw functions instead of textures. Custom input, audio, savegame, collision, shape, pathfinding, ui, camera, color palette, polygon fracturing, and text system are available with a few other nice things!</Description>
 	<PackageProjectUrl>https://davegreengames.itch.io/shape-engine</PackageProjectUrl>
 	<PackageIcon>shapeengine-nuget-icon-128px.png</PackageIcon>
@@ -18,142 +18,46 @@
 	<PackageTags>GameEngine Framework 2D raylib gamedev graphics shapes polygon rect line clipper2 polygonclipping</PackageTags>
 	<Company>Dave Green Games</Company>
 	<Product>Shape Engine</Product>
-	<AssemblyVersion>2.4.0</AssemblyVersion>
-	<FileVersion>2.4.0</FileVersion>
+	<AssemblyVersion>3.0.0</AssemblyVersion>
+	<FileVersion>3.0.0</FileVersion>
   	<PackageReadmeFile>readme-nuget.md</PackageReadmeFile>
   	<NeutralLanguage>en-US</NeutralLanguage>
   	<Copyright>Copyright (c) David Grueneis 2024</Copyright>
   	<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   	<PackageReleaseNotes>
-		# 2.4.0 Minor Release
-		- New functions to Transform2D added (UpdateTransform and GetChildTransform)
-		- Collider now uses UpdateTransform function
-		- Collider cleaned up
-		- ApplyTransform/ApplyTransformCopy functions changed to ApplyOffset/ApplyOffsetCopy in all shapes
-		- New Shape class added that inherits from IShape
-		- Collider now inherits from Shape instead of IShape
-		- ShapeContainer (Parent/Child hierarchy system for shapes) added. A ShapeContainer can have a ShapeContainer parent and any number of ShapeContainer children. The children are updated based on the parent transform and the child offsets.
-		- CircleShape, TriangleShape, SegmentShape, RectShape, QuadShape, PolyShape, PolyLineShape classes added. They inherit from ShapeContainer.
+		# 3.0 Release
+		This release improves the way collision/overlap/query information is aggregated and handled.
+		Before information was collected on a per collider basis and events/functions would be called on the active involved collider. This meant the actual collision object and parent of the colliders would not get notified.
 		
-		# 2.3.1 Hot Fix
-		- Game reference is now set in Scene before Activate is called on the Scene
+		Now all the information is grouped together per collision object. The collision/overlap between colliders with all the collision points is still collected together in one class. So each collision object gets notified of all the collisions/overlaps that happend with any of the child colliders at the end of each frame. A collision without collision points is an overlap!
 		
-		# 2.3.0 Release
-		- ScreenTextures should now properly scale on macOS when an high dpi monitor is used. (Before ScreenTextures in StretchMode would be not as sharp as they should be)
-		- Audio Device Cleanup
-		- Audio Device more overloads for certain functions added
-		- AudioDevice PlaySFX() functions now return bool for success or failure
-		- Playlist improvements
-		- Game class now has a default AudioDevice initialized from the start
-		- ShapeID and IDCounter Reset() and AdvanveTo() functions added
-		- An active Scene now has a reference to the parent Game class that activated the Scene
-		- CollisionObject now can optionally report collision events like ColliderCollision() and ColliderCollisionEnded(). ReportColliderCollision must be set to true!
-		- Transform2d now has a Vector2 Scale2d field. The Scale field stays intact and reports the Scale2d.X value.
-		- Collider received are more advanced collision notification system
-		- Dimensions now have more operators
-		- AlphaCircle shader added to Examples
-		
-		# 2.2.0 Release
-		- Segment Overlap functions fixed.
-		- Quad ContainsPoint function fixed. (typo was the problem)
-		- Polyline improvements / clean up.
-		- RangeFloat and RangeInt deprecated. Both classes are still available but will be removed in a future update
-		- ValueRange and ValueRangeInt readonly structs implemented to replace RangeFloat and RangeInt classes. They do basically the same but they are readonly structs now.
-		
-		# 2.1.1 Release
-		- Savegame system path combining fixed.
-		
-		# 2.1.0 Release
-		- Implemented CircleSector shape and CircleSectorCollider (useful for detection cones for instance)
-		- Implemented OutlinePercentage drawing for all shapes
-		- A few fixes and improvements.
-		
-		
-		# 2.0 Release
-		## Transform2D Overhaul
+		These changes should help in making it easier to use the collision information. The actual collision detection and data has not changed just how it is grouped together and presented to the involved collision objects/ colliders.
 
-		- Transform2D now has a scale value
-		- Transform2D now has a ScaledSize Getter (Size \* Scale)
-		- Transform2D now has Radius and Length Getters (they use Width) for circles, segments, triangles, polylines and polygons
-		- Transform2D is now properly used in the collider / collision system
-		- CollisionObject has Transform2D and each collider has an Transform2D offset which are combined to form the CurTransform of the collider
-		- Examples were updated to reflect the new changes (EndlessCollisionSystem, AsteroidMiningExample, GameObjectHandlerExample, and BouncyCircles)
-		- Transform2D lerp functions added
+		- Overlap and OverlapInformation classes added
+		- CollisionInformation class reworked
+		- Collision class improvements
+		- CollisionSystem overhaul:
+		- CollisionObjects now receive relevant CollisionInformation and can choose to pass it down to involved colliders
+		- Collision information is now collected / sorted based on the other involved collision object. This means a collision is now detected and reported for all involved colliders in a collision between 2 collision objects at once.
+		- Functions/ Events involved renamed and reworked to make the system clearer
+		- Collision Namespace changed to CollisionSystem
+		- RangeInt/ RangeFloat classes removed
+		- EffectObject, Effect, Particle classes removed
+		- Copy() Function added to CollisionInformation, OverlapInformation, Collision, Overlap, and Intersection classes
+		- Filter functions added to CollisionInformation and OverlapInformation
+		- Intersection class deleted (replaced by CollisionPoints class)
+		- CollisionPoint IsFacing*() functions added to check if normals are facing the correct way
+		- QuerySpace* functions in CollisionHandler renamed to IntersectSpace*
+		- IntersectSpace* functions now return IntersectSpaceResults that replaced the old QueryInfo system.
+		- CastSpace now uses CastSpaceResult/CastSpaceEntry classes
+		- Direction ToAlignement() Function fixed and ToInvertedAlignement() Function added
+		- Deprecated classes removed:
+			- Particle
+			- PhysicsParticle
+			- RangeFloat
+			- RangeInt
+			- SavegameFolder
 		
-		## Screen Texture 2.0
-
-		- Screen Texture has different modes to draw the texture to the screen now:
-		- `Stretch Mode`, the texture will always be the same size as the screen
-		- `Pixelation Mode`, the texture will always be the same aspect ratio as the screen but scaled down by a certain factor (0 - 1 range)
-		- `Fixed Mode`, the texture will always stay at the same (specified) size and will be centered on the screen and upscaled to the closest dimension of the screen with black bars on the other dimension if necessary.
-		- `Nearest Fixed Mode`, the texture will always be the same aspect ratio as the screen (no black bars) but will stay as close as possible to the fixed dimension. 
-		- `Anchor Mode`, a anchor position and stretch value can be specified to position the screen texture anywhere on the screen. This can be useful for splitscreen or minimaps.
-		- `Custom Mode` , the user can control the size of texture, the mouse scaling and how the texture is drawn to the screen.
-		- Mouse Position Scaling works for all modes and the screen texture reports the scaled mouse position
-		- Shaders have moved to the screen texture. Now you can add any amount of shaders to be applied to the screen texture. `ShaderSupportType` enum was also added to specify if the screen texture should support no shaders, a single shaders, or any amount of shaders.
-		- Camera has move to the screen texture as well. A screen texture can have a single camera that is used for the `DrawGame` pass. The game mouse position will be scaled by the camera if one is used.
-		- There are 2 events for drawing now: `OnDrawGame`  and  `OnDrawGameUI`
-		- `OnDrawGame` is called before shaders are applied and the camera affects what area of the game world is drawn
-		- `OnDrawGameUi` is called after shaders are applied and the camera has no effect on it. This is useful for ui elements because it will always be on top.
-		- Clear background system that allows for a fine control of when and how the texture is cleared. In most cases clearing every frame before drawing to the texture is necessary and a custom `BackgroundColor` can be specified for that. In some cases clearing should only happen in certain intervals or not at all and to allow that a function can be set in the screen texture to control that.
-
-		## Random Number Generator
-		- ShapeRandom class removed. ShapeRandom was a static class that used a static RandomNumberGenerator field and wrapped every single function. Maintaining this is tedious because any change in the RandomNumberGenerator class that changes functions or function declaration results in duplicate work in the ShapeRandom class.
-		- RandomNumberGenerator class renamed to Rng
-		- Rng class now has a static Instance field that can be used like ShapeRandom
-		
-		## Improvements
-
-		- ShapeVec class ExpDecay and Pow Lerp improvements.
-		- Pool system improvements
-		- ShapeId system improvements
-		- Additional Segment constructor implemented
-		- `ScreenTexture TextureFilter` property added. (GameTexture/ScreenShaderBuffer now use Bilinear filtering by default)
-		- Endless Space Example visual improvements.
-		- `WindowSize` in `WindowSettings` now defaults to 960x540.
-		- `SizeLerp*` functions added.
-		- You can now cycle through various screen shaders in the examples project
-		- `ColorPalette` class added. A color palette holds `PaletteColors.` `ColorSchemes` can be applied to color palettes to change the rgba colors of all contained palette colors.
-		- ColorScheme class overhauled.
-		- `PaletteColor` class `Clone()` functions added.
-		- New window handling system with dedicated functions for all `WindowDisplayStates` and a `RestoreWindow()` function.
-		- `GameWindow`  and  `Game` classes now have static `CurrentInstance`\* fields for easy static access to everything. There can only be one `Game`  and  `GameWindow` class anyway and the `GameWindow` constructor is internal, so it should be reasonably safe to use.
-		- `GameWindow` class `MouseOnScreen` system should work better now. This system tells you if the mouse cursor is on the screen of the window or not. Additionally, it takes care of showing/hiding the cursor when the mouse leaves the window or the window loses focus or the window is minimized.
-
-		## Fixes
-
-		- I have adjusted the line thickness of all calls to raylib functions that draw outlines (multiplied line thickness by 2) to make the line thickness look consistent across all functions that use it.
-		- Game multishader bug fixed
-		- Endless Space Collision Example targeting of player guns with short detection range fixed.
-		- GameWindow now calls `InitWindow()` with `WindowSettings.WindowMinSize` (if `InitWindow()` is called with 0,0 then auto iconify is disabled!)
-		
-		## New
-
-		- `LineDrawingInfo` Struct implemented
-		- `DrawGappedOutline*` for all shapes implemented
-		- `DrawLinesScaled*` for all shapes  implemented
-		- `PolarCoordinates` struct implemented
-		- `ControlNodeSlider` UI element implemented
-		- Pixelation shader added to examples.
-		- `FramebufferTransparent` member added to `WindowSettings` because this flag needs to be set before `InitWindow()` as well.
-		- `WindowConfigFlags` struct added in `GameWindow` class. (for detecting flag changes)
-		- Locked Timestep physics update loop added. (Fixed physics frame rate can be set and the physics update will always run at the specified frame rate)
-		- `InputEventHandler` implemented. Listeners can subscribe to the handler to receive input event callbacks. The propagation of the event can be stopped. The listeners are sorted by priority. (Lower priority is handled first, more important)
-		- New screen shaders added to examples
-		- `DrawCursorGame`, `DrawCursorGameUi`, `DrawCursorUi` virtual functions added to Game class. Replaces `ICursor` system.
-		- Fixed Update loop added. Can be enabled by setting a `FixedFramerate` bigger than 0. The fixed update loop has a fixed delta value independent of the current frame rate and delta time of the application and will call `FixedUpdate()` to consume the delta time produced by the application. A fixed update loop can be very helpful for physics and collision because the delta time is predictable. If the fixed update loop is enabled `HandleInput()` will be called every frame before `FixedUpdate()`  and  `InterpolateFixedUpdate()` will be called at the end of the frame with the fraction of  application delta time left.
-		- `WindowSettings``Topmost`  and  `FullscreenAutoRestore` fields added. `FullscreenAutoRestores` automatically exits fullscreen when window loses focus and restores fullscreen when window gains focus again.
-		- `GameWindow` class `SetWindowTopmost(bool topmost)` function added.
-		- There is now a `Fullscreen(int width, int height)` and a `BorderlessFullscreen()` mode.
-		- EndlessSpaceExample star parallax backgrounds added using the new `ScreenTexture` custom mode. The stars are drawn once to each screen texture (there are 5 parallax layers in the example right now) and based on the current camera position a certain rectangle of each screen texture is drawn to the screen.
-		- AnchorPoint struct added. Is used for alignment or ui/rect anchor.
-		
-		## Deprecated/ Removed
-
-		- `DrawDotted*` functions for all shapes removed (replaced by gapped outline)
-		- `ICursor` system removed
-		- `IColorPalette` interface removed (replaced by new `ColorPalette` class)
-		- `PrevDisplayStateInfo` struct removed.
 	</PackageReleaseNotes>
   	<PackageId>DaveGreen.ShapeEngine</PackageId>
   	<LangVersion>latestmajor</LangVersion>
