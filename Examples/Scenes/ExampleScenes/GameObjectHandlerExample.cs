@@ -154,7 +154,7 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
 
-        protected override void CollisionEnded(List<OverlapInformation> info)
+        protected override void ContactEnded(List<ContactEndedInformation> info)
         {
             foreach (var overlapInfo in info)
             {

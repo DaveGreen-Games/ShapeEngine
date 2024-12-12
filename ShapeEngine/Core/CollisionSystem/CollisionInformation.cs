@@ -15,21 +15,23 @@ public class CollisionInformation : List<Collision>
     
     public readonly CollisionObject Self;
     public readonly CollisionObject Other;
-    
+    public readonly bool FirstContact;
     #endregion
     
     #region Constructors
     
-    public CollisionInformation(CollisionObject self, CollisionObject other)
+    public CollisionInformation(CollisionObject self, CollisionObject other, bool firstContact)
     {
         Self = self;
         Other = other;
+        FirstContact = firstContact;
         
     }
-    public CollisionInformation(CollisionObject self, CollisionObject other, List<Collision> collisions)
+    public CollisionInformation(CollisionObject self, CollisionObject other, bool firstContact, List<Collision> collisions)
     {
         Self = self;
         Other = other;
+        FirstContact = firstContact;
         AddRange(collisions);
     }
 
@@ -194,7 +196,7 @@ public class CollisionInformation : List<Collision>
         {
             newCollisions.Add(collision.Copy());
         }
-        return new CollisionInformation(Self, Other, newCollisions);
+        return new CollisionInformation(Self, Other, FirstContact,  newCollisions);
     }
     
     public List<Collision>? FilterCollisions(Predicate<Collision> match)

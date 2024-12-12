@@ -7,50 +7,50 @@ namespace ShapeEngine.Core.CollisionSystem;
 /// Contains the information of an overlap between two collision objects in form of a list of overlaps.
 /// An overlap contains the information of the two overlapping colliders.
 /// </summary>
-public class OverlapInformation : List<Overlap>
+public class ContactEndedInformation : List<Contact>
 {
     public readonly CollisionObject Self;
     public readonly CollisionObject Other;
         
-    public OverlapInformation(CollisionObject self, CollisionObject other)
+    public ContactEndedInformation(CollisionObject self, CollisionObject other)
     {
         Self = self;
         Other = other;
     }
 
-    public OverlapInformation(CollisionObject self, CollisionObject other, List<Overlap> overlaps)
+    public ContactEndedInformation(CollisionObject self, CollisionObject other, List<Contact> overlaps)
     {
         Self = self;
         Other = other;
         AddRange(overlaps);
     }
 
-    public OverlapInformation Copy()
+    public ContactEndedInformation Copy()
     {
-        var newOverlaps = new List<Overlap>();
-        foreach (var overlap in this)
+        var contactsCopy = new List<Contact>();
+        foreach (var contact in this)
         {
-            newOverlaps.Add(overlap.Copy());
+            contactsCopy.Add(contact.Copy());
         }
-        return new (Self, Other, newOverlaps);
+        return new (Self, Other, contactsCopy);
     }
-    internal Overlap? PopOverlap(Collider self, Collider other)
+    internal Contact? PopContact(Collider self, Collider other)
     {
-        foreach (var overlap in this)
+        foreach (var contact in this)
         {
-            if (overlap.Self == self && overlap.Other == other)
+            if (contact.Self == self && contact.Other == other)
             {
-                Remove(overlap);
-                return overlap;
+                Remove(contact);
+                return contact;
             }
         }
         return null;
     }
     
-    public List<Overlap>? FilterOverlaps(Predicate<Overlap> match)
+    public List<Contact>? FilterContacts(Predicate<Contact> match)
     {
         if(Count <= 0) return null;
-        List<Overlap>? filtered = null;
+        List<Contact>? filtered = null;
         foreach (var c in this)
         {
             if (match(c))
@@ -72,7 +72,8 @@ public class OverlapInformation : List<Overlap>
         }
         return others;
     }
-    public List<Overlap>? GetAllFirstContactOverlaps()
+    
+    /*public List<Contact>? GetAllFirstContactOverlaps()
     {
         return FilterOverlaps((c) => c.FirstContact);
     }
@@ -86,6 +87,6 @@ public class OverlapInformation : List<Overlap>
             others.Add(c.Other);
         }
         return others;
-    }
+    }*/
 
 }

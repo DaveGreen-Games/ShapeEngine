@@ -9,11 +9,11 @@ namespace ShapeEngine.Core;
 public abstract class CollisionObject : PhysicsObject
 {
     public event Action<List<CollisionInformation>>? OnCollision;
-    public event Action<List<OverlapInformation>>? OnCollisionEnded;
+    public event Action<List<ContactEndedInformation>>? OnContactEnded;
 
     public event Action<Collision>? OnColliderIntersected;
     public event Action<Overlap>? OnColliderOverlapped;
-    public event Action<Collider>? OnColliderCollisionEnded;
+    public event Action<Collider>? OnColliderContactEnded;
     
     
     public CollisionObject()
@@ -85,19 +85,19 @@ public abstract class CollisionObject : PhysicsObject
         
     }
 
-    internal void ResolveCollisionEnded(List<OverlapInformation> informations)
+    internal void ResolveContactEnded(List<ContactEndedInformation> informations)
     {
-        CollisionEnded(informations);
-        OnCollisionEnded?.Invoke(informations);
+        ContactEnded(informations);
+        OnContactEnded?.Invoke(informations);
         
         if(AvancedCollisionNotification == false) return;
         foreach (var info in informations)
         {
             foreach (var overlap in info)
             {
-                overlap.Self.ResolveCollisionEnded(overlap.Other);
-                ColliderCollisionEnded(overlap.Other);
-                OnColliderCollisionEnded?.Invoke(overlap.Other);
+                overlap.Self.ResolveContactEnded(overlap.Other);
+                ColliderContactEnded(overlap.Other);
+                OnColliderContactEnded?.Invoke(overlap.Other);
             }
         }
     }
@@ -113,7 +113,7 @@ public abstract class CollisionObject : PhysicsObject
     /// Called when 1 or more collider of this CollisionObject are no longer involved in a collision (intersection or overlap)
     /// </summary>
     /// <param name="info"></param>
-    protected virtual void CollisionEnded(List<OverlapInformation> info) { }
+    protected virtual void ContactEnded(List<ContactEndedInformation> info) { }
     
     
     /// <summary>
@@ -130,7 +130,7 @@ public abstract class CollisionObject : PhysicsObject
     /// Only callded when AdvancedCollisionNotification is set to true.
     /// </summary>
     /// <param name="other">The other collider involved</param>
-    protected virtual void ColliderCollisionEnded(Collider other) { }
+    protected virtual void ColliderContactEnded(Collider other) { }
     
     
     

@@ -22,7 +22,7 @@ public abstract class Collider : Shape
     /// A collision (Intersection/Overlap) between this collider and another collider has ended.
     ///  AvancedCollisionNotification has to be enabled on the parent for this event to be invoked.
     /// </summary>
-    public event Action<Collider>? OnCollisionEnded;
+    public event Action<Collider>? OnContactEnded;
     
     
     private CollisionObject? parent = null;
@@ -111,10 +111,10 @@ public abstract class Collider : Shape
         OnOverlapped?.Invoke(overlap);
     }
    
-    internal void ResolveCollisionEnded(Collider other)
+    internal void ResolveContactEnded(Collider other)
     {
-        CollisionEnded(other);
-        OnCollisionEnded?.Invoke(other);
+        ContactEnded(other);
+        OnContactEnded?.Invoke(other);
     } 
     
     /// <summary>
@@ -127,14 +127,14 @@ public abstract class Collider : Shape
     /// Will be called from the parent. Is only called when an overlap with this collider occurs where the intersection is not valid.
     /// AvancedCollisionNotification has to be enabled on the parent for this function to be called.
     /// </summary>
-    /// <param name="overlap"></param>
-    protected virtual void Overlapped(Overlap overlap) { }
+    /// <param name="contact"></param>
+    protected virtual void Overlapped(Overlap contact) { }
     /// <summary>
     /// Will be called from the parent. Is only called when a collision (intersection / overlap)  with this collider ends.
     /// AvancedCollisionNotification has to be enabled on the parent for this function to be called.
     /// </summary>
     /// <param name="other"></param>
-    protected virtual void CollisionEnded(Collider other) { }
+    protected virtual void ContactEnded(Collider other) { }
     
 
     public override void InitializeShape(Transform2D parentTransform)
