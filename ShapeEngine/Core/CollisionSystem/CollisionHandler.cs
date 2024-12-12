@@ -33,12 +33,11 @@ public class CollisionHandler : IBounds
         }
 
     }
-
     private class CollisionRegister : Dictionary<CollisionObject, CollisionInformation>
     {
         public List<CollisionInformation>? GetCollisionInformations() => Values.Count <= 0 ? null : Values.ToList();
 
-        public bool AddCollision(Collision collision)
+        public bool AddCollision(Collision collision, bool firstContact)
         {
             var selfParent = collision.Self.Parent;
             var otherParent = collision.Other.Parent;
@@ -51,7 +50,7 @@ public class CollisionHandler : IBounds
             }
             else
             {
-                var colInfo = new CollisionInformation(selfParent, otherParent);
+                var colInfo = new CollisionInformation(selfParent, otherParent, firstContact);
                 colInfo.Add(collision);
 
                 Add(otherParent, colInfo);
@@ -61,144 +60,7 @@ public class CollisionHandler : IBounds
         }
     }
 
-    //TODO: remove process overlap information:
-    //  - this system is only needed for first contact determination between 2 colliders
-    //  - OverlapEnded  will be ContactEnded between 2 CollisionObjects
-    //  - Rework to new generic stack/ register variant
-    private class OverlapStack(int capacity) : Dictionary<CollisionObject, OverlapRegister>(capacity)
-    {
-        public OverlapRegister? GetRegister(CollisionObject owner) => !TryGetValue(owner, out var register) ? null : register;
-
-        public bool AddOverlap(Contact contact)
-        {
-            var selfParent = contact.Self.Parent;
-            var otherParent = contact.Other.Parent;
-            if (selfParent == null || otherParent == null) return false;
-
-            if (!ContainsKey(selfParent))
-            {
-                var newRegister = new OverlapRegister(2);
-                newRegister.AddOverlap(contact);
-                Add(selfParent, newRegister);
-            }
-            else
-            {
-                var register = this[selfParent];
-                register.AddOverlap(contact);
-            }
-
-            return true;
-        }
-
-        public void ProcessOverlaps()
-        {
-
-            foreach (var entry in this)
-            {
-                var resolver = entry.Key;
-                var register = entry.Value;
-                var informations = register.GetOverlapInformations();
-                if (informations == null) continue;
-                resolver.ResolveContactEnded(informations);
-
-                // foreach (var entry in register)
-                // {
-                //     resolver.ResolveCollisionEnded(entry.Value);
-                // }
-            }
-        }
-    }
-
-    private class OverlapRegister(int capacity) : Dictionary<CollisionObject, ContactEndedInformation>(capacity)
-    {
-        public List<ContactEndedInformation>? GetOverlapInformations() => Values.Count <= 0 ? null : Values.ToList();
-
-        public bool AddOverlap(Contact contact)
-        {
-            var selfParent = contact.Self.Parent;
-            var otherParent = contact.Other.Parent;
-
-            if (selfParent == null || otherParent == null) return false;
-
-            if (TryGetValue(otherParent, out var cols))
-            {
-                cols.Add(contact);
-            }
-            else
-            {
-                var overlapInfo = new ContactEndedInformation(selfParent, otherParent);
-                overlapInfo.Add(contact);
-
-                Add(otherParent, overlapInfo);
-            }
-
-            return true;
-        }
-
-        public Contact? PopOverlap(Collider self, Collider other)
-        {
-            var otherParent = other.Parent;
-            if (otherParent == null) return null;
-            if (TryGetValue(otherParent, out var info))
-            {
-                return info.PopContact(self, other);
-            }
-
-            return null;
-        }
-    }
-
-
-    /*private class OverlapRegister
-    {
-        private HashSet<OverlapEntry> entries;
-
-        public OverlapRegister(int capacity)
-        {
-            entries = new(capacity);
-        }
-
-        public OverlapEntry? FindEntry(Collider self, Collider other)
-        {
-            foreach (var entry in entries)
-            {
-                if (self == entry.Self && other == entry.Other)
-                {
-                    return entry;
-                }
-            }
-
-            return null;
-        }
-
-        public bool AddEntry(OverlapEntry entry) => entries.Add(entry);
-
-        public bool RemoveEntry(OverlapEntry entry) => entries.Remove(entry);
-
-        public void ProcessEntries()
-        {
-            foreach (var entry in entries)
-            {
-                entry.Self.ResolveCollisionEnded(entry.Other);
-            }
-        }
-
-        public void Clear() => entries.Clear();
-        public void Swap(OverlapRegister other) => (entries, other.entries) = (other.entries, entries);
-    }
-    private class OverlapEntry
-    {
-        public readonly Collider Self;
-        public readonly Collider Other;
-
-        public OverlapEntry(Collider self, Collider other)
-        {
-            this.Self = self;
-            this.Other = other;
-        }
-    }
-    */
-
+   
     private class ObjectRegister<T>
     {
         public readonly HashSet<T> AllObjects;
@@ -283,17 +145,14 @@ public class CollisionHandler : IBounds
             obj.OnCollisionSystemLeft(handler);
         }
     }
-
     
-    //TODO: Process function is called on the old stack and every entry that is remaining is to be considered contact ended!
-    // processing has to be handled outside now because of the generic nature of the stack
     private class FirstContactStack<T, M>(int capacity) : Dictionary<T, HashSet<M>>(capacity)
         where T : class
         where M : class
     {
         public bool RemoveEntry(T first, M second)
         {
-            return TryGetValue(first, out var register) && register.Remove(second);
+            return TryGetValue(first, out var register) && register.Count > 0 && register.Remove(second);
         }
 
         public bool AddEntry(T first, M second)
@@ -307,28 +166,7 @@ public class CollisionHandler : IBounds
             Add(first, newRegister);
             return true;
         }
-
-        //implement outside
-        // public abstract void ProcessEntries();
     }
-
-    // private class FirstContactRegister<T>(int capacity) : HashSet<T>(capacity) where T : class
-    // {
-    //     
-    // }
-
-    // private class CollisionObjectFirstContactStack(int capacity) : FirstContactStack<CollisionObject, CollisionObject>(capacity)
-    // {
-    //     public override void ProcessEntries()
-    //     {foreach (var kvp in this)
-    //         {
-    //             var resolver = kvp.Key;
-    //             var register = kvp.Value;
-    //             //!!! implement in collision object!
-    //             //resolver.ContactEnded(register);
-    //         }
-    //     }
-    // }
     #endregion
     
     #region Members
@@ -337,13 +175,12 @@ public class CollisionHandler : IBounds
     private readonly SpatialHash spatialHash;
     private readonly CollisionStack collisionStack;
 
-    private FirstContactStack<CollisionObject, CollisionObject>  collisionObjectFirstContactRegisterActive = new(128);
-    private FirstContactStack<CollisionObject, CollisionObject> collisionObjectFirstContactRegisterTemp = new(128);
+    private  FirstContactStack<CollisionObject, CollisionObject> collisionObjectFirstContactRegisterActive;
+    private  FirstContactStack<CollisionObject, CollisionObject> collisionObjectFirstContactRegisterTemp;
     
-    //use for detecting when overlap has ended
-    private OverlapStack activeOverlapStack;
-    private OverlapStack oldOverlapStack;
-
+    private  FirstContactStack<Collider, Collider> colliderFirstContactRegisterActive;
+    private  FirstContactStack<Collider, Collider> colliderFirstContactRegisterTemp;
+ 
     private readonly HashSet<Collider> collisionCandidateCheckRegister = new();
     private List<SpatialHash.Bucket> collisionCandidateBuckets = new();
 
@@ -361,8 +198,10 @@ public class CollisionHandler : IBounds
         spatialHash = new(x, y, w, h, rows, cols);
         collisionBodyRegister = new(startCapacity, this);
         collisionStack = new(startCapacity / 4);
-        activeOverlapStack = new(startCapacity / 4);
-        oldOverlapStack = new(startCapacity / 4);
+        colliderFirstContactRegisterActive = new(startCapacity / 4);
+        colliderFirstContactRegisterTemp = new(startCapacity / 4);
+        collisionObjectFirstContactRegisterActive = new(startCapacity / 4);
+        collisionObjectFirstContactRegisterTemp = new(startCapacity / 4);
     }
 
     public CollisionHandler(Rect bounds, int rows, int cols, int startCapacity = 1024)
@@ -371,8 +210,10 @@ public class CollisionHandler : IBounds
         
         collisionBodyRegister = new(startCapacity, this);
         collisionStack = new(startCapacity / 4);
-        activeOverlapStack = new(startCapacity / 4);
-        oldOverlapStack = new(startCapacity / 4);
+        colliderFirstContactRegisterActive = new(startCapacity / 4);
+        colliderFirstContactRegisterTemp = new(startCapacity / 4);
+        collisionObjectFirstContactRegisterActive = new(startCapacity / 4);
+        collisionObjectFirstContactRegisterTemp = new(startCapacity / 4);
     }
     
     #endregion
@@ -420,7 +261,7 @@ public class CollisionHandler : IBounds
             if (!collisionBody.Enabled || !collisionBody.HasColliders) continue;
 
             CollisionRegister? collisionRegister = null;
-            var oldOverlapRegister = oldOverlapStack.GetRegister(collisionBody);
+            // var oldOverlapRegister = oldOverlapStack.GetRegister(collisionBody);
             
             var passivChecking = collisionBody.Passive;
             if (collisionBody.ProjectShape)
@@ -428,6 +269,7 @@ public class CollisionHandler : IBounds
                 foreach (var collider in collisionBody.Colliders)
                 {
                     if (!collider.Enabled) continue;
+                    if (collider.Parent == null) continue;
 
                     var projected = collider.Project(collisionBody.Velocity * dt);
                     if(projected == null) continue;
@@ -453,20 +295,11 @@ public class CollisionHandler : IBounds
                             bool overlap = projected.Overlap(candidate);
                             if (overlap)
                             {
-                                var oldOverlap = oldOverlapRegister?.PopOverlap(collider, candidate);
-                                bool firstContact;
-                                if (oldOverlap != null)
-                                {
-                                    firstContact = false;
-                                    oldOverlap.FirstContact = false;
-                                    activeOverlapStack.AddOverlap(oldOverlap);
-
-                                }
-                                else
-                                {
-                                    firstContact = true;
-                                    activeOverlapStack.AddOverlap(new Contact(collider, candidate, true));
-                                }
+                                bool firstContactCollisionObject = !collisionObjectFirstContactRegisterActive.RemoveEntry(collider.Parent, candidate.Parent);
+                                collisionObjectFirstContactRegisterTemp.AddEntry(collider.Parent, candidate.Parent);
+                                
+                                bool firstContactCollider = !colliderFirstContactRegisterActive.RemoveEntry(collider, candidate);
+                                colliderFirstContactRegisterTemp.AddEntry(candidate, collider);
                                 
                                 if (computeIntersections)
                                 {
@@ -493,15 +326,15 @@ public class CollisionHandler : IBounds
                                         }
                                     }
 
-                                    Collision c = new(collider, candidate, firstContact, collisionPoints);
+                                    Collision c = new(collider, candidate, firstContactCollider, collisionPoints);
                                     collisionRegister??= new();
-                                    collisionRegister.AddCollision(c);
+                                    collisionRegister.AddCollision(c, firstContactCollisionObject);
                                 }
                                 else
                                 {
-                                    Collision c = new(collider, candidate, firstContact);
+                                    Collision c = new(collider, candidate, firstContactCollider);
                                     collisionRegister??= new();
-                                    collisionRegister.AddCollision(c);
+                                    collisionRegister.AddCollision(c, firstContactCollisionObject);
                                 }
                             }
                         }
@@ -515,7 +348,7 @@ public class CollisionHandler : IBounds
                 foreach (var collider in collisionBody.Colliders)
                 {
                     if (!collider.Enabled) continue;
-                
+                    if (collider.Parent == null) continue;
                     collisionCandidateBuckets.Clear();
                     collisionCandidateCheckRegister.Clear();
                     spatialHash.GetRegisteredCollisionCandidateBuckets(collider, ref collisionCandidateBuckets);
@@ -538,20 +371,12 @@ public class CollisionHandler : IBounds
                             bool overlap = collider.Overlap(candidate); // ShapeGeometry.Overlap(collider, candidate);
                             if (overlap)
                             {
-                                var oldOverlap = oldOverlapRegister?.PopOverlap(collider, candidate);
-                                bool firstContact;
-                                if (oldOverlap != null)
-                                {
-                                    firstContact = false;
-                                    oldOverlap.FirstContact = false;
-                                    activeOverlapStack.AddOverlap(oldOverlap);
-
-                                }
-                                else
-                                {
-                                    firstContact = true;
-                                    activeOverlapStack.AddOverlap(new Contact(collider, candidate, true));
-                                }
+                                
+                                bool firstContactCollisionObject = !collisionObjectFirstContactRegisterActive.RemoveEntry(collider.Parent, candidate.Parent);
+                                collisionObjectFirstContactRegisterTemp.AddEntry(collider.Parent, candidate.Parent);
+                                
+                                bool firstContactCollider = !colliderFirstContactRegisterActive.RemoveEntry(collider, candidate);
+                                colliderFirstContactRegisterTemp.AddEntry(candidate, collider);
                                 
                                 if (computeIntersections)
                                 {                                                         
@@ -578,15 +403,15 @@ public class CollisionHandler : IBounds
                                         }
                                     }
 
-                                    Collision c = new(collider, candidate, firstContact, collisionPoints);
+                                    Collision c = new(collider, candidate, firstContactCollider, collisionPoints);
                                     collisionRegister??= new();
-                                    collisionRegister.AddCollision(c);
+                                    collisionRegister.AddCollision(c, firstContactCollisionObject);
                                 }
                                 else
                                 {
-                                    Collision c = new(collider, candidate, firstContact);
+                                    Collision c = new(collider, candidate, firstContactCollider);
                                     collisionRegister??= new();
-                                    collisionRegister.AddCollision(c);
+                                    collisionRegister.AddCollision(c, firstContactCollisionObject);
                                 }
                             }
                         }
@@ -609,10 +434,32 @@ public class CollisionHandler : IBounds
         collisionStack.ProcessCollisions();
         collisionStack.Clear();
 
-        oldOverlapStack.ProcessOverlaps();
-        oldOverlapStack.Clear();
-        (oldOverlapStack, activeOverlapStack) = (activeOverlapStack, oldOverlapStack);
-        // activeRegister.Clear();
+        foreach (var kvp in collisionObjectFirstContactRegisterActive)
+        {
+            var resolver = kvp.Key;
+            var others = kvp.Value;
+            if(others.Count <= 0) continue;
+            resolver.ResolveContactEnded(others);
+        }
+        collisionObjectFirstContactRegisterActive.Clear();
+        (collisionObjectFirstContactRegisterActive, collisionObjectFirstContactRegisterTemp) = (collisionObjectFirstContactRegisterTemp, collisionObjectFirstContactRegisterActive);
+        
+        foreach (var kvp in colliderFirstContactRegisterActive)
+        {
+            var self = kvp.Key;
+            var resolver = self.Parent;
+            if(resolver == null) continue;
+            var others = kvp.Value;
+            if(others.Count <= 0) continue;
+            var contacts = new HashSet<Contact>();
+            foreach (var other in others)
+            {
+                contacts.Add(new Contact(self, other));
+            }
+            resolver.ResolveContactEnded(contacts);
+        }
+        colliderFirstContactRegisterActive.Clear();
+        (colliderFirstContactRegisterActive, colliderFirstContactRegisterTemp) = (colliderFirstContactRegisterTemp, colliderFirstContactRegisterActive);
     }
     
     #endregion
@@ -1561,6 +1408,149 @@ public class CollisionHandler : IBounds
 }
 
 
+
+
+
+/* Version 2
+//TODO remove process overlap information:
+//  - this system is only needed for first contact determination between 2 colliders
+//  - OverlapEnded  will be ContactEnded between 2 CollisionObjects
+//  - Rework to new generic stack/ register variant
+private class OverlapStack(int capacity) : Dictionary<CollisionObject, OverlapRegister>(capacity)
+{
+    public OverlapRegister? GetRegister(CollisionObject owner) => !TryGetValue(owner, out var register) ? null : register;
+
+    public bool AddOverlap(Contact contact)
+    {
+        var selfParent = contact.Self.Parent;
+        var otherParent = contact.Other.Parent;
+        if (selfParent == null || otherParent == null) return false;
+
+        if (!ContainsKey(selfParent))
+        {
+            var newRegister = new OverlapRegister(2);
+            newRegister.AddOverlap(contact);
+            Add(selfParent, newRegister);
+        }
+        else
+        {
+            var register = this[selfParent];
+            register.AddOverlap(contact);
+        }
+
+        return true;
+    }
+
+    public void ProcessOverlaps()
+    {
+
+        foreach (var entry in this)
+        {
+            var resolver = entry.Key;
+            var register = entry.Value;
+            var informations = register.GetOverlapInformations();
+            if (informations == null) continue;
+            resolver.ResolveContactEnded(informations);
+
+            // foreach (var entry in register)
+            // {
+            //     resolver.ResolveCollisionEnded(entry.Value);
+            // }
+        }
+    }
+}
+
+private class OverlapRegister(int capacity) : Dictionary<CollisionObject, ContactEndedInformation>(capacity)
+{
+    public List<ContactEndedInformation>? GetOverlapInformations() => Values.Count <= 0 ? null : Values.ToList();
+
+    public bool AddOverlap(Contact contact)
+    {
+        var selfParent = contact.Self.Parent;
+        var otherParent = contact.Other.Parent;
+
+        if (selfParent == null || otherParent == null) return false;
+
+        if (TryGetValue(otherParent, out var cols))
+        {
+            cols.Add(contact);
+        }
+        else
+        {
+            var overlapInfo = new ContactEndedInformation(selfParent, otherParent);
+            overlapInfo.Add(contact);
+
+            Add(otherParent, overlapInfo);
+        }
+
+        return true;
+    }
+
+    public Contact? PopOverlap(Collider self, Collider other)
+    {
+        var otherParent = other.Parent;
+        if (otherParent == null) return null;
+        if (TryGetValue(otherParent, out var info))
+        {
+            return info.PopContact(self, other);
+        }
+
+        return null;
+    }
+}
+*/
+
+/* Version 1
+private class OverlapRegister
+{
+    private HashSet<OverlapEntry> entries;
+
+    public OverlapRegister(int capacity)
+    {
+        entries = new(capacity);
+    }
+
+    public OverlapEntry? FindEntry(Collider self, Collider other)
+    {
+        foreach (var entry in entries)
+        {
+            if (self == entry.Self && other == entry.Other)
+            {
+                return entry;
+            }
+        }
+
+        return null;
+    }
+
+    public bool AddEntry(OverlapEntry entry) => entries.Add(entry);
+
+    public bool RemoveEntry(OverlapEntry entry) => entries.Remove(entry);
+
+    public void ProcessEntries()
+    {
+        foreach (var entry in entries)
+        {
+            entry.Self.ResolveCollisionEnded(entry.Other);
+        }
+    }
+
+    public void Clear() => entries.Clear();
+    public void Swap(OverlapRegister other) => (entries, other.entries) = (other.entries, entries);
+}
+private class OverlapEntry
+{
+    public readonly Collider Self;
+    public readonly Collider Other;
+
+    public OverlapEntry(Collider self, Collider other)
+    {
+        this.Self = self;
+        this.Other = other;
+    }
+}
+*/
+
 /*public Dictionary<Collider, QueryInfos>? QuerySpace(CollisionObject collisionObject, Vector2 origin, bool sorted = true)
     {
         if (!collisionObject.Enabled || !collisionObject.HasColliders) return null;
@@ -1765,7 +1755,6 @@ public class CollisionHandler : IBounds
         return infos;
     }
     */
-
 
 /*
 private void ProcessCollisionsBucketFirst()

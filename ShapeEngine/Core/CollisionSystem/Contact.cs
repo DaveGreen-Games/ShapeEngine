@@ -16,12 +16,12 @@ public class Contact
         Other = other;
         // FirstContact = false;
     }
-    public Contact(Collider self, Collider other, bool firstContact)
-    {
-        Self = self;
-        Other = other;
-        // FirstContact = firstContact;
-    }
+    // public Contact(Collider self, Collider other, bool firstContact)
+    // {
+    //     Self = self;
+    //     Other = other;
+    //     // FirstContact = firstContact;
+    // }
 
     private Contact(Contact contact)
     {

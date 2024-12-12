@@ -85,22 +85,32 @@ public abstract class CollisionObject : PhysicsObject
         
     }
 
-    internal void ResolveContactEnded(List<ContactEndedInformation> informations)
+    
+    internal void ResolveContactEnded(HashSet<CollisionObject> endedContacts)
     {
-        ContactEnded(informations);
-        OnContactEnded?.Invoke(informations);
         
-        if(AvancedCollisionNotification == false) return;
-        foreach (var info in informations)
-        {
-            foreach (var overlap in info)
-            {
-                overlap.Self.ResolveContactEnded(overlap.Other);
-                ColliderContactEnded(overlap.Other);
-                OnColliderContactEnded?.Invoke(overlap.Other);
-            }
-        }
     }
+
+    internal void ResolveContactEnded(HashSet<Contact> endedContacts)
+    {
+        
+    }
+    // internal void ResolveContactEnded(List<ContactEndedInformation> informations)
+    // {
+    //     ContactEnded(informations);
+    //     OnContactEnded?.Invoke(informations);
+    //     
+    //     if(AvancedCollisionNotification == false) return;
+    //     foreach (var info in informations)
+    //     {
+    //         foreach (var overlap in info)
+    //         {
+    //             overlap.Self.ResolveContactEnded(overlap.Other);
+    //             ColliderContactEnded(overlap.Other);
+    //             OnColliderContactEnded?.Invoke(overlap.Other);
+    //         }
+    //     }
+    // }
 
     
     /// <summary>
