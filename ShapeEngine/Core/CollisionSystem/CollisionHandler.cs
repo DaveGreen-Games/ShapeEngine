@@ -152,7 +152,15 @@ public class CollisionHandler : IBounds
     {
         public bool RemoveEntry(T first, M second)
         {
-            return TryGetValue(first, out var register) && register.Count > 0 && register.Remove(second);
+            if (TryGetValue(first, out var register))
+            {
+                bool removed = register.Remove(second);
+                if(register.Count <= 0) Remove(first);
+                return removed;
+            }
+
+            return false;
+            // return TryGetValue(first, out var register) && register.Count > 0 && register.Remove(second);
         }
 
         public bool AddEntry(T first, M second)
@@ -163,6 +171,7 @@ public class CollisionHandler : IBounds
             }
             
             var newRegister = new HashSet<M>(2);
+            newRegister.Add(second);
             Add(first, newRegister);
             return true;
         }
@@ -295,8 +304,10 @@ public class CollisionHandler : IBounds
                             bool overlap = projected.Overlap(candidate);
                             if (overlap)
                             {
-                                bool firstContactCollisionObject = !collisionObjectFirstContactRegisterActive.RemoveEntry(collider.Parent, candidate.Parent);
-                                collisionObjectFirstContactRegisterTemp.AddEntry(collider.Parent, candidate.Parent);
+                                //multiple colliders can be involved with the same pair of collision objects, therefore we also have to check if the collision object pair was already added to the temp register.
+                                var removed = collisionObjectFirstContactRegisterActive.RemoveEntry(collider.Parent, candidate.Parent);
+                                var added = collisionObjectFirstContactRegisterTemp.AddEntry(collider.Parent, candidate.Parent);
+                                bool firstContactCollisionObject = !removed && added;
                                 
                                 bool firstContactCollider = !colliderFirstContactRegisterActive.RemoveEntry(collider, candidate);
                                 colliderFirstContactRegisterTemp.AddEntry(candidate, collider);
@@ -371,9 +382,10 @@ public class CollisionHandler : IBounds
                             bool overlap = collider.Overlap(candidate); // ShapeGeometry.Overlap(collider, candidate);
                             if (overlap)
                             {
-                                
-                                bool firstContactCollisionObject = !collisionObjectFirstContactRegisterActive.RemoveEntry(collider.Parent, candidate.Parent);
-                                collisionObjectFirstContactRegisterTemp.AddEntry(collider.Parent, candidate.Parent);
+                                //multiple colliders can be involved with the same pair of collision objects, therefore we also have to check if the collision object pair was already added to the temp register.
+                                var removed = collisionObjectFirstContactRegisterActive.RemoveEntry(collider.Parent, candidate.Parent);
+                                var added = collisionObjectFirstContactRegisterTemp.AddEntry(collider.Parent, candidate.Parent);
+                                bool firstContactCollisionObject = !removed && added;
                                 
                                 bool firstContactCollider = !colliderFirstContactRegisterActive.RemoveEntry(collider, candidate);
                                 colliderFirstContactRegisterTemp.AddEntry(candidate, collider);
@@ -439,7 +451,10 @@ public class CollisionHandler : IBounds
             var resolver = kvp.Key;
             var others = kvp.Value;
             if(others.Count <= 0) continue;
-            resolver.ResolveContactEnded(others);
+            foreach (var other in others)
+            {
+                resolver.ResolveContactEnded(other);
+            }
         }
         collisionObjectFirstContactRegisterActive.Clear();
         (collisionObjectFirstContactRegisterActive, collisionObjectFirstContactRegisterTemp) = (collisionObjectFirstContactRegisterTemp, collisionObjectFirstContactRegisterActive);
