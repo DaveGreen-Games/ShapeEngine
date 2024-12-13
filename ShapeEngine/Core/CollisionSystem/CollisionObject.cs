@@ -84,13 +84,10 @@ public abstract class CollisionObject : PhysicsObject
         }
         
     }
-    internal void ResolveContactEnded(HashSet<CollisionObject> endedContacts)
+    internal void ResolveContactEnded(CollisionObject other)
     {
-        foreach (var other in endedContacts)
-        {
-            ContactEnded(other);
-            OnContactEnded?.Invoke(this, other);
-        }
+        ContactEnded(other);
+        OnContactEnded?.Invoke(this, other);
     }
     internal void ResolveColliderContactEnded(Collider self, Collider other)
     {
