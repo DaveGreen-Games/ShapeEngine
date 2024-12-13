@@ -451,12 +451,10 @@ public class CollisionHandler : IBounds
             if(resolver == null) continue;
             var others = kvp.Value;
             if(others.Count <= 0) continue;
-            var contacts = new HashSet<Contact>();
             foreach (var other in others)
             {
-                contacts.Add(new Contact(self, other));
+                resolver.ResolveColliderContactEnded(self, other);
             }
-            resolver.ResolveContactEnded(contacts);
         }
         colliderFirstContactRegisterActive.Clear();
         (colliderFirstContactRegisterActive, colliderFirstContactRegisterTemp) = (colliderFirstContactRegisterTemp, colliderFirstContactRegisterActive);
