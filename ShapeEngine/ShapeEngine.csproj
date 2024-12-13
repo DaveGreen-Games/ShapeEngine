@@ -10,7 +10,7 @@
 	<Title>Shape Engine</Title>
 	<Authors>Dave Green</Authors>
 	<RepositoryUrl>https://github.com/DaveGreen-Games/ShapeEngine</RepositoryUrl>
-	<Version>3.0.0</Version>
+	<Version>3.1.0</Version>
 	<Description>My custom made 2d game engine based on the great Raylib Framework. Main focus is being performant and only using draw functions instead of textures. Custom input, audio, savegame, collision, shape, pathfinding, ui, camera, color palette, polygon fracturing, and text system are available with a few other nice things!</Description>
 	<PackageProjectUrl>https://davegreengames.itch.io/shape-engine</PackageProjectUrl>
 	<PackageIcon>shapeengine-nuget-icon-128px.png</PackageIcon>
@@ -18,13 +18,41 @@
 	<PackageTags>GameEngine Framework 2D raylib gamedev graphics shapes polygon rect line clipper2 polygonclipping</PackageTags>
 	<Company>Dave Green Games</Company>
 	<Product>Shape Engine</Product>
-	<AssemblyVersion>3.0.0</AssemblyVersion>
-	<FileVersion>3.0.0</FileVersion>
+	<AssemblyVersion>3.1.0</AssemblyVersion>
+	<FileVersion>3.1.0</FileVersion>
   	<PackageReadmeFile>readme-nuget.md</PackageReadmeFile>
   	<NeutralLanguage>en-US</NeutralLanguage>
   	<Copyright>Copyright (c) David Grueneis 2024</Copyright>
   	<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   	<PackageReleaseNotes>
+		# 3.1 Release
+		This release addresses various fixes and improvements that were missed in the 3.0 release. 
+		Despite introducing some breaking changes, I decided to classify this as a minor release rather than version 4.0, as all the breaking changes pertain to the same systems as the 3.0 release.
+
+		## FirstContact / ContactEnded System Overhaul:
+		- Previously, the FirstContact was only reported for Colliders and not for CollisionObjects. The system has now been split into two separate systems: one for Collider pairs and one for CollisionObject pairs.
+		- CollisionObjects:
+		  + A FirstContact between two CollisionObjects is reported once any Collider of one contacts any Collider of the other CollisionObject.
+		  + The ContactEnded() function for the CollisionObject is called once all contacts between all of the Colliders have ended.
+		- Colliders:
+		  + A FirstContact between two Colliders is reported the first time they contact (no contact in the previous frame).
+		  + The ColliderContactEnded() function is called once the contact ends (contact in the previous frame but no contact in the current frame).
+
+		## Other Changes:
+		- Namespace Changes:
+		  + CollisionObject moved to the CollisionSystem namespace.
+		- Class Removals:
+		  + ContactEndedInformation class removed.
+		  + Contact class removed.
+		- Function Parameter Changes:
+		  + ContactEnded(CollisionObject other) function parameters changed.
+		  + ColliderContactEnded(Collider self, Collider other) function parameters changed.
+		- CollisionInformation Improvements:
+		  + CollisionInformation now includes a FirstContact member, reported only for the two involved CollisionObjects, separate from any FirstContact reporting between Colliders.
+		  + General improvements and cleanup of CollisionInformation, including new functions.
+		- ResolveCollision Update:
+		  + CollisionObject.ResolveCollision() is now called for each generated CollisionInformation instead of receiving a list of CollisionInformation.
+		
 		# 3.0 Release
 		This release improves the way collision/overlap/query information is aggregated and handled.
 		Before information was collected on a per collider basis and events/functions would be called on the active involved collider. This meant the actual collision object and parent of the colliders would not get notified.
