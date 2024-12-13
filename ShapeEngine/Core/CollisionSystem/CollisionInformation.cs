@@ -148,45 +148,6 @@ public class CollisionInformation : List<Collision>
    
     #endregion
     
-    #region First Contact
-    
-    public bool IsFirstContact()
-    {
-        if(Count <= 0) return false;
-        foreach (var collision in this)
-        {
-            if(collision.FirstContact) return true;
-        }
-
-        return false;
-    }
-    public int GetFirstContactCount()
-    {
-        if(Count <= 0) return 0;
-        var count = 0;
-        foreach (var collision in this)
-        {
-            if(collision.FirstContact)count++;
-        }
-
-        return count;
-    }
-    public List<Collision>? GetFirstContactCollisions()
-    {
-        List<Collision>? result = null;
-        foreach (var collision in this)
-        {
-            if (collision.FirstContact)
-            {
-                result??= new();
-                result.Add(collision);
-            }
-        }
-        return result;
-    }
-
-    #endregion
-    
     #region Public Functions
     
     public CollisionInformation Copy()
@@ -238,7 +199,62 @@ public class CollisionInformation : List<Collision>
         }
         return others;
     }
- 
+
+    
+    //TODO: Implement all functions!
+    public CollisionPoint GetClosestCollisionPoint()
+    {
+        return new();
+    }
+
+    public CollisionPoint GetFurthestCollisionPoint()
+    {
+        return new();
+    }
+    
+    public CollisionPoint GetCombinedCollisionPoint()
+    {
+        return new();
+    }
+    
+    public CollisionPoint GetClosestCollisionPoint(Vector2 referencePoint)
+    {
+        return new();
+    }
+
+    public CollisionPoint GetFurthestCollisionPoint(Vector2 referencePoint)
+    {
+        return new();
+    }
+    
+    public CollisionPoint GetCombinedCollisionPoint(Vector2 referencePoint)
+    {
+        return new();
+    }
+    
+    public CollisionPoint GetClosestCollisionPoint(out float minDistanceSquared)
+    {
+        minDistanceSquared = -1f;
+        return new();
+    }
+
+    public CollisionPoint GetFurthestCollisionPoint(out float maxDistanceSquared)
+    {
+        maxDistanceSquared = -1f;
+        return new();
+    }
+    
+    public CollisionPoint GetClosestCollisionPoint(Vector2 referencePoint, out float minDistanceSquared)
+    {
+        minDistanceSquared = -1f;
+        return new();
+    }
+
+    public CollisionPoint GetFurthestCollisionPoint(Vector2 referencePoint, out float maxDistanceSquared)
+    {
+        maxDistanceSquared = -1f;
+        return new();
+    }
     #endregion
 }
 
