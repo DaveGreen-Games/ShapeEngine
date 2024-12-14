@@ -1,5 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Core.Interfaces;
+using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.UI;
 
@@ -117,10 +118,27 @@ public class Collision
     
     #region CollisionPoint
 
-    public CollisionPoint GetAverageCollisionPoint()
+    public bool Exists(Predicate<CollisionPoint> match)
+    {
+        if(Points == null || Points.Count <= 0) return false;
+        return Points.Exists(match);
+    }
+    public CollisionPoint Find(Predicate<CollisionPoint> match)
+    {
+        if(Points == null || Points.Count <= 0) return new();
+        return Points.Find(match);
+    }
+    public CollisionPoints? FindAll(Predicate<CollisionPoint> match)
+    {
+        if (Points == null || Points.Count <= 0) return null;
+        var result = Points.FindAll(match);
+        return new(result);
+    }
+    
+    public CollisionPoint GetCombinedCollisionPoint()
     {
         if(Points == null || Points.Count <= 0) return new CollisionPoint();
-        return Points.GetAverageCollisionPoint();
+        return Points.GetCombinedCollisionPoint();
     }
     public CollisionPoint GetClosestCollisionPoint()
     {
