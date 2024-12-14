@@ -15,6 +15,7 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     }
     public CollisionPoints(params CollisionPoint[] points) : base(points.Length) { AddRange(points); }
     public CollisionPoints(IEnumerable<CollisionPoint> points, int count) : base(count)  { AddRange(points); }
+    public CollisionPoints(List<CollisionPoint> points) : base(points.Count)  { AddRange(points); }
 
     public CollisionPoints(CollisionPoints other) : base(other.Count)
     {
@@ -536,7 +537,7 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     
     #region CollisionPoint
 
-    public CollisionPoint GetAverageCollisionPoint()
+    public CollisionPoint GetCombinedCollisionPoint()
     {
         var avgPoint = new Vector2();
         var avgNormal = new Vector2();
