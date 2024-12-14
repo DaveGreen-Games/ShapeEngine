@@ -50,6 +50,14 @@
 		- CollisionInformation Improvements:
 		  + CollisionInformation now includes a FirstContact member, reported only for the two involved CollisionObjects, separate from any FirstContact reporting between Colliders.
 		  + General improvements and cleanup of CollisionInformation, including new functions.
+		  + New functions for Exists, Find, and FindAll CollisionPoints.
+		  + New functions for finding Closest, Furthest, and Combined CollisionPoint.
+		- Collision Improvements:
+		  + Functions for Exists, Find, and FindAll CollisionPoints added.
+		- CollisionPoints:
+		  + GetClosest/Furthest/FacingTowards functions now skip invalid collision points
+		- Renaming:
+		  + GetAverageCollisionPoint() renamed to GetCombinedCollisionPoint() in multiple classes.
 		- ResolveCollision Update:
 		  + CollisionObject.ResolveCollision() is now called for each generated CollisionInformation instead of receiving a list of CollisionInformation.
 		
