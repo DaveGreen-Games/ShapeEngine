@@ -37,7 +37,7 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
         var avgNormal = new Vector2();
         foreach (var entry in this)
         {
-            var sum = entry.GetAverageCollisionPoint();
+            var sum = entry.GetCombinedCollisionPoint();
             avgPoint += sum.Point;
             avgNormal += sum.Normal;
         }
