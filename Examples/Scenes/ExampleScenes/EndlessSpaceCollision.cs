@@ -483,23 +483,20 @@ public class EndlessSpaceCollision : ExampleScene
 
         }
 
-        protected override void Collision(List<CollisionInformation> info)
+        protected override void Collision(CollisionInformation info)
         {
-            foreach (var i in info)
-            {
-                if (i.Count <= 0) continue;
+            if (info.Count <= 0) return;
                 
-                if (i.Other is AsteroidObstacle asteroid)
+            if (info.Other is AsteroidObstacle asteroid)
+            {
+                foreach (var collision in info)
                 {
-                    foreach (var collision in i)
-                    {
-                        if(!collision.FirstContact) continue;
-                        asteroid.Damage(Transform.Position, stats.Damage, new Vector2(0f));
-                        effectTimer = effectDuration;
-                        collider.Enabled = false;
-                        Velocity = new(0f);
-                        return;
-                    }
+                    if(!collision.FirstContact) continue;
+                    asteroid.Damage(Transform.Position, stats.Damage, new Vector2(0f));
+                    effectTimer = effectDuration;
+                    collider.Enabled = false;
+                    Velocity = new(0f);
+                    return;
                 }
             }
         }
@@ -617,32 +614,28 @@ public class EndlessSpaceCollision : ExampleScene
             Health = MaxHp;
         }
 
-        protected override void Collision(List<CollisionInformation> info)
+        protected override void Collision(CollisionInformation info)
         {
-            foreach (var i in info)
+            if(info.Count <= 0 || info.Other is not AsteroidObstacle a) return;
+            if(!info.Validate(out CollisionPoint combined)) return;
+                
+            a.Cut(GetCutShape());
+                
+            if (collisionStunTimer <= 0f)
             {
-                if(i.Count <= 0 || i.Other is not AsteroidObstacle a) continue;
-                if(!i.Validate(out CollisionPoint combined)) continue;
-                
-                a.Cut(GetCutShape());
-                
-                if (collisionStunTimer <= 0f)
+                Health--;
+                if (Health <= 0)
                 {
-                    Health--;
-                    if (Health <= 0)
-                    {
-                        collider.Enabled = false;
-                        Kill();
-                        OnKilled?.Invoke();
-                    }
+                    collider.Enabled = false;
+                    Kill();
+                    OnKilled?.Invoke();
                 }
-                if (combined.Valid)
-                {
-                    Velocity = combined.Normal * 3500;
-                    collisionStunTimer = CollisionStunTime;
-                    collisionRotationDirection = Rng.Instance.RandDirF();
-                }
-                
+            }
+            if (combined.Valid)
+            {
+                Velocity = combined.Normal * 3500;
+                collisionStunTimer = CollisionStunTime;
+                collisionRotationDirection = Rng.Instance.RandDirF();
             }
         }
         
@@ -926,19 +919,15 @@ public class EndlessSpaceCollision : ExampleScene
             }
         }
 
-        protected override void Collision(List<CollisionInformation> info)
+        protected override void Collision(CollisionInformation info)
         {
-            foreach (var i in info)
+            if(info.Count <= 0) return;
+            if(!info.Validate(out CollisionPoint combined)) return;
+            foreach (var collision in info)
             {
-                if(i.Count <= 0) continue;
-                if(!i.Validate(out CollisionPoint combined)) continue;
-                foreach (var collision in i)
-                {
-                    if(collision.Points == null || collision.Points.Count <= 0 || !collision.FirstContact)continue;
+                if(collision.Points == null || collision.Points.Count <= 0 || !collision.FirstContact)continue;
                     
-                    Velocity = Velocity.Reflect(combined.Normal);
-                }
-                
+                Velocity = Velocity.Reflect(combined.Normal);
             }
         }
         public void MoveTo(Vector2 newPosition)
@@ -1864,18 +1853,14 @@ public class EndlessSpaceCollision : ExampleScene
             Drag = 0f;
         }
 
-        protected override void Collision(List<CollisionInformation> info)
+        protected override void Collision(CollisionInformation info)
         {
             if (info.Count <= 0) return;
-            foreach (var collisionInfo in info)
+            if (info.Other is AsteroidObstacle asteroid)
             {
-                if(collisionInfo.Count <= 0) continue;
-                if (collisionInfo.Other is AsteroidObstacle asteroid)
+                if (info.FirstContact)
                 {
-                    if (collisionInfo[0].FirstContact)
-                    {
-                        asteroid.Damage(Transform.Position, 10000000, Vector2.Zero);
-                    }
+                    asteroid.Damage(Transform.Position, 10000000, Vector2.Zero);
                 }
             }
             

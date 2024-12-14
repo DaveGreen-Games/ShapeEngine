@@ -26,16 +26,18 @@ public class CollisionHandler : IBounds
             {
                 var resolver = entry.Key;
                 var register = entry.Value;
-                var informations = register.GetCollisionInformations();
-                if (informations == null) continue;
-                resolver.ResolveCollision(informations);
+                if(register.Count <= 0) continue;
+                foreach (var info in register.Values)
+                {
+                    resolver.ResolveCollision(info);
+                }
             }
         }
 
     }
     private class CollisionRegister : Dictionary<CollisionObject, CollisionInformation>
     {
-        public List<CollisionInformation>? GetCollisionInformations() => Values.Count <= 0 ? null : Values.ToList();
+        // public List<CollisionInformation>? GetCollisionInformations() => Values.Count <= 0 ? null : Values.ToList();
 
         public bool AddCollision(Collision collision, bool firstContact)
         {

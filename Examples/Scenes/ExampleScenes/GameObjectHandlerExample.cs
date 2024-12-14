@@ -135,20 +135,15 @@ namespace Examples.Scenes.ExampleScenes
         }
 
         
-        protected override void Collision(List<CollisionInformation> info)
+        protected override void Collision(CollisionInformation info)
         {
-            foreach (var colInfo in info)
+            if (info.Count > 0 && info.FirstContact)
             {
-                if (colInfo.Count > 0)
+                contactStartedTimer = contactStartedDuration;
+                overlapCount++;
+                if (info.Other is BoundaryWall wall)
                 {
-                    if (!colInfo.FirstContact) continue;
-
-                    contactStartedTimer = contactStartedDuration;
-                    overlapCount++;
-                    if (colInfo.Other is BoundaryWall wall)
-                    {
-                        Velocity = -(Transform.Position).Normalize() * Velocity.Length();
-                    }
+                    Velocity = -(Transform.Position).Normalize() * Velocity.Length();
                 }
             }
         }
@@ -224,22 +219,18 @@ namespace Examples.Scenes.ExampleScenes
             Layer = SpawnAreaLayers.ObjectFlag;
         }
 
-        protected override void Collision(List<CollisionInformation> info)
+        protected override void Collision(CollisionInformation info)
         {
             CollisionPoint p = new();
-            foreach (var colInfo in info)
+            if (info.Count > 0)
             {
-                if (colInfo.Count > 0)
+                foreach (var collision in info)
                 {
-                    foreach (var collision in colInfo)
+                    if(!collision.FirstContact) continue;
+                    if(collision.Points == null) continue;
+                    if (collision.Validate(out CollisionPoint combined))
                     {
-                        if(!collision.FirstContact) continue;
-                        if(collision.Points == null) continue;
-                        if (collision.Validate(out CollisionPoint combined))
-                        {
-                            // var cp = collision.Points.GetAverageCollisionPoint();
-                            if (combined.Valid) p = p.Average(combined);
-                        }
+                        if (combined.Valid) p = p.Average(combined);
                     }
                 }
             }
@@ -331,24 +322,21 @@ namespace Examples.Scenes.ExampleScenes
         }
         
 
-        protected override void Collision(List<CollisionInformation> info)
+        protected override void Collision(CollisionInformation info)
         {
             CollisionPoint p = new();
-            foreach (var colInfo in info)
+            if (info.Count > 0)
             {
-                if (colInfo.Count > 0)
+                foreach (var collision in info)
                 {
-                    foreach (var collision in colInfo)
+                    if(!collision.FirstContact) continue;
+                    if(collision.Points == null) continue;
+                    if (collision.Validate(out var combined, out var closest))
                     {
-                        if(!collision.FirstContact) continue;
-                        if(collision.Points == null) continue;
-                        if (collision.Validate(out var combined, out var closest))
-                        {
-                            Transform = Transform.SetPosition(closest.Point);
-                            Velocity = new();
-                            Enabled = false;
-                            deadTimer = 2f;
-                        }
+                        Transform = Transform.SetPosition(closest.Point);
+                        Velocity = new();
+                        Enabled = false;
+                        deadTimer = 2f;
                     }
                 }
             }
@@ -493,22 +481,19 @@ namespace Examples.Scenes.ExampleScenes
         }
 
         
-        protected override void Collision(List<CollisionInformation> info)
+        protected override void Collision(CollisionInformation info)
         {
             CollisionPoint p = new();
-            foreach (var colInfo in info)
+            if (info.Count > 0)
             {
-                if (colInfo.Count > 0)
+                foreach (var collision in info)
                 {
-                    foreach (var collision in colInfo)
+                    if(!collision.FirstContact) continue;
+                    if(collision.Points == null) continue;
+                    if (collision.Validate(out var combined, out var closest))
                     {
-                        if(!collision.FirstContact) continue;
-                        if(collision.Points == null) continue;
-                        if (collision.Validate(out var combined, out var closest))
-                        {
-                            // var cp = collision.Points.GetAverageCollisionPoint();
-                            if (combined.Valid) p = p.Average(combined);
-                        }
+                        // var cp = collision.Points.GetAverageCollisionPoint();
+                        if (combined.Valid) p = p.Average(combined);
                     }
                 }
             }
@@ -585,22 +570,19 @@ namespace Examples.Scenes.ExampleScenes
             Layer = SpawnAreaLayers.ObjectFlag;
         }
 
-        protected override void Collision(List<CollisionInformation> info)
+        protected override void Collision(CollisionInformation info)
         {
             CollisionPoint p = new();
-            foreach (var colInfo in info)
+            if (info.Count > 0)
             {
-                if (colInfo.Count > 0)
+                foreach (var collision in info)
                 {
-                    foreach (var collision in colInfo)
+                    if(!collision.FirstContact) continue;
+                    if(collision.Points == null) continue;
+                    if (collision.Validate(out CollisionPoint combined))
                     {
-                        if(!collision.FirstContact) continue;
-                        if(collision.Points == null) continue;
-                        if (collision.Validate(out CollisionPoint combined))
-                        {
-                            // var cp = collision.Points.GetAverageCollisionPoint();
-                            if (combined.Valid) p = p.Average(combined);
-                        }
+                        // var cp = collision.Points.GetAverageCollisionPoint();
+                        if (combined.Valid) p = p.Average(combined);
                     }
                 }
             }
