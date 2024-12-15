@@ -4,16 +4,16 @@ using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 
-namespace ShapeEngine.Core;
+namespace ShapeEngine.Core.CollisionSystem;
 
 public abstract class CollisionObject : PhysicsObject
 {
-    public event Action<List<CollisionInformation>>? OnCollision;
-    public event Action<List<OverlapInformation>>? OnCollisionEnded;
+    public event Action<CollisionInformation>? OnCollision;
+    public event Action<CollisionObject, CollisionObject>? OnContactEnded;
 
     public event Action<Collision>? OnColliderIntersected;
     public event Action<Overlap>? OnColliderOverlapped;
-    public event Action<Collider>? OnColliderCollisionEnded;
+    public event Action<Collider, Collider>? OnColliderContactEnded;
     
     
     public CollisionObject()
@@ -56,50 +56,41 @@ public abstract class CollisionObject : PhysicsObject
     public bool AvancedCollisionNotification = false;
     
     
-    internal void ResolveCollision(List<CollisionInformation> informations)
+    internal void ResolveCollision(CollisionInformation information)
     {
-        Collision(informations);
-        OnCollision?.Invoke(informations);
+        Collision(information);
+        OnCollision?.Invoke(information);
 
         if(AvancedCollisionNotification == false) return;
 
-        foreach (var info in informations)
+        foreach (var collision in information)
         {
-            foreach (var collision in info)
+            if (collision.Points != null)
             {
-                if (collision.Points != null)
-                {
-                    collision.Self.ResolveIntersected(collision);
-                    ColliderIntersected(collision);
-                    OnColliderIntersected?.Invoke(collision);
-                }
-                else
-                {
-                    var overlap = collision.Overlap;
-                    collision.Self.ResolveOverlapped(overlap);
-                    ColliderOverlapped(overlap);
-                    OnColliderOverlapped?.Invoke(overlap);
-                }
+                collision.Self.ResolveIntersected(collision);
+                ColliderIntersected(collision);
+                OnColliderIntersected?.Invoke(collision);
+            }
+            else
+            {
+                var overlap = collision.Overlap;
+                collision.Self.ResolveOverlapped(overlap);
+                ColliderOverlapped(overlap);
+                OnColliderOverlapped?.Invoke(overlap);
             }
         }
         
     }
-
-    internal void ResolveCollisionEnded(List<OverlapInformation> informations)
+    internal void ResolveContactEnded(CollisionObject other)
     {
-        CollisionEnded(informations);
-        OnCollisionEnded?.Invoke(informations);
-        
+        ContactEnded(other);
+        OnContactEnded?.Invoke(this, other);
+    }
+    internal void ResolveColliderContactEnded(Collider self, Collider other)
+    {
         if(AvancedCollisionNotification == false) return;
-        foreach (var info in informations)
-        {
-            foreach (var overlap in info)
-            {
-                overlap.Self.ResolveCollisionEnded(overlap.Other);
-                ColliderCollisionEnded(overlap.Other);
-                OnColliderCollisionEnded?.Invoke(overlap.Other);
-            }
-        }
+        ColliderContactEnded(self, other);
+        OnColliderContactEnded?.Invoke(self, other);
     }
 
     
@@ -107,13 +98,13 @@ public abstract class CollisionObject : PhysicsObject
     /// Called when 1 or more collider of this CollisionObject is involved in a collision (intersection or overlap)
     /// </summary>
     /// <param name="info"></param>
-    protected virtual void Collision(List<CollisionInformation> info) { }
+    protected virtual void Collision(CollisionInformation info) { }
     
     /// <summary>
-    /// Called when 1 or more collider of this CollisionObject are no longer involved in a collision (intersection or overlap)
+    /// Called when all colliders between this CollisionObject and other have ended their contact.
     /// </summary>
-    /// <param name="info"></param>
-    protected virtual void CollisionEnded(List<OverlapInformation> info) { }
+    /// <param name="other">The other collision object the contact has ended with.</param>
+    protected virtual void ContactEnded(CollisionObject other) { }
     
     
     /// <summary>
@@ -127,10 +118,11 @@ public abstract class CollisionObject : PhysicsObject
     /// <param name="overlap">The information about the overlap</param>
     protected virtual void ColliderOverlapped(Overlap overlap) { }
     /// <summary>
-    /// Only callded when AdvancedCollisionNotification is set to true.
+    /// Only called when AdvancedCollisionNotification is set to true. Called when a collider of this CollisionObject and a collider of another CollisionObject have ended their contact.
     /// </summary>
-    /// <param name="other">The other collider involved</param>
-    protected virtual void ColliderCollisionEnded(Collider other) { }
+    /// <param name="self">The collider of this CollisionObject.</param>
+    /// <param name="other">The collider of the other CollisionObject.</param>
+    protected virtual void ColliderContactEnded(Collider self, Collider other) { }
     
     
     

@@ -15,21 +15,23 @@ public class CollisionInformation : List<Collision>
     
     public readonly CollisionObject Self;
     public readonly CollisionObject Other;
-    
+    public readonly bool FirstContact;
     #endregion
     
     #region Constructors
     
-    public CollisionInformation(CollisionObject self, CollisionObject other)
+    public CollisionInformation(CollisionObject self, CollisionObject other, bool firstContact)
     {
         Self = self;
         Other = other;
+        FirstContact = firstContact;
         
     }
-    public CollisionInformation(CollisionObject self, CollisionObject other, List<Collision> collisions)
+    public CollisionInformation(CollisionObject self, CollisionObject other, bool firstContact, List<Collision> collisions)
     {
         Self = self;
         Other = other;
+        FirstContact = firstContact;
         AddRange(collisions);
     }
 
@@ -146,45 +148,6 @@ public class CollisionInformation : List<Collision>
    
     #endregion
     
-    #region First Contact
-    
-    public bool IsFirstContact()
-    {
-        if(Count <= 0) return false;
-        foreach (var collision in this)
-        {
-            if(collision.FirstContact) return true;
-        }
-
-        return false;
-    }
-    public int GetFirstContactCount()
-    {
-        if(Count <= 0) return 0;
-        var count = 0;
-        foreach (var collision in this)
-        {
-            if(collision.FirstContact)count++;
-        }
-
-        return count;
-    }
-    public List<Collision>? GetFirstContactCollisions()
-    {
-        List<Collision>? result = null;
-        foreach (var collision in this)
-        {
-            if (collision.FirstContact)
-            {
-                result??= new();
-                result.Add(collision);
-            }
-        }
-        return result;
-    }
-
-    #endregion
-    
     #region Public Functions
     
     public CollisionInformation Copy()
@@ -194,7 +157,7 @@ public class CollisionInformation : List<Collision>
         {
             newCollisions.Add(collision.Copy());
         }
-        return new CollisionInformation(Self, Other, newCollisions);
+        return new CollisionInformation(Self, Other, FirstContact,  newCollisions);
     }
     
     public List<Collision>? FilterCollisions(Predicate<Collision> match)
@@ -236,7 +199,284 @@ public class CollisionInformation : List<Collision>
         }
         return others;
     }
- 
+
+    
+    /// <summary>
+    /// Return if a collision point exist in any valid collision matching the predicate.
+    /// </summary>
+    /// <param name="match"></param>
+    /// <returns></returns>
+    public bool ExistsCollisionPoint(Predicate<CollisionPoint> match)
+    {
+        if(Count <= 0) return false;
+        foreach (var collision in this)
+        {
+            if (collision.Exists(match)) return true;
+        }
+
+        return false;
+    }
+    /// <summary>
+    /// Returns the first collision point matching the predicate in any valid collision. If no collision point is found an empty CollisionPoint is returned.
+    /// </summary>
+    /// <param name="match"></param>
+    /// <returns></returns>
+    public CollisionPoint FindCollisionPoint(Predicate<CollisionPoint> match)
+    {
+        if(Count <= 0) return new();
+        foreach (var collision in this)
+        {
+            var p = collision.Find(match);
+            if (p.Valid) return p;
+        }
+
+        return new();
+    }
+   /// <summary>
+   /// Finds all collision points matching the predicate in any valid collision. If no collision points are found null is returned.
+   /// </summary>
+   /// <param name="match"></param>
+   /// <returns></returns>
+    public CollisionPoints? FindAllCollisionPoints(Predicate<CollisionPoint> match)
+    {
+        if (Count <= 0) return null;
+        CollisionPoints? result = null;
+        foreach (var collision in this)
+        {
+           var points = collision.FindAll(match);
+           if(points == null) continue;
+           
+           result??= new CollisionPoints();
+           result.AddRange(points);
+        }
+
+        return result;
+    }
+
+    
+    /// <summary>
+    /// Get the closest collision point to Self.Transform.Position within all valid collisions.
+    /// </summary>
+    /// <returns></returns>
+    public CollisionPoint GetClosestCollisionPoint()
+    {
+        if(Count <= 0) return new CollisionPoint();
+        
+        var result = new CollisionPoint();
+        var closestDistanceSquared = -1f;
+        foreach (var collision in this)
+        {
+            if(collision.Points == null || collision.Points.Count <= 0) continue;
+            var cp = collision.Points.GetClosestCollisionPoint(Self.Transform.Position, out float minDistanceSquared);
+            if (!cp.Valid) continue;
+            if (minDistanceSquared < closestDistanceSquared || closestDistanceSquared < 0f)
+            {
+                closestDistanceSquared = minDistanceSquared;
+                result = cp;
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Get the furthest collision point to Self.Transform.Position within all valid collisions.
+    /// </summary>
+    /// <returns></returns>
+    public CollisionPoint GetFurthestCollisionPoint()
+    {
+        if(Count <= 0) return new CollisionPoint();
+        
+        var result = new CollisionPoint();
+        var furthestDistanceSquared = -1f;
+        foreach (var collision in this)
+        {
+            if(collision.Points == null || collision.Points.Count <= 0) continue;
+            var cp = collision.Points.GetFurthestCollisionPoint(Self.Transform.Position, out float maxDistanceSquared);
+            if (!cp.Valid) continue;
+            if (maxDistanceSquared < furthestDistanceSquared || furthestDistanceSquared < 0f)
+            {
+                furthestDistanceSquared = maxDistanceSquared;
+                result = cp;
+            }
+        }
+
+        return result;
+    }
+    
+    /// <summary>
+    /// Get the combined collision point of all valid collision points in all valid collisions.
+    /// </summary>
+    /// <returns></returns>
+    public CollisionPoint GetCombinedCollisionPoint()
+    {
+        if(Count <= 0) return new CollisionPoint();
+        
+        var result = new CollisionPoint();
+        foreach (var collision in this)
+        {
+            if(collision.Points == null || collision.Points.Count <= 0) continue;
+            var cp = collision.Points.GetCombinedCollisionPoint();
+            if (!cp.Valid) continue;
+            result = result.Average(cp);
+        }
+
+        return result;
+    }
+    /// <summary>
+    /// Get the closest collision point to the reference point within all valid collisions.
+    /// </summary>
+    /// <returns></returns>
+    public CollisionPoint GetClosestCollisionPoint(Vector2 referencePoint)
+    {
+        if(Count <= 0) return new CollisionPoint();
+        
+        var result = new CollisionPoint();
+        var closestDistanceSquared = -1f;
+        foreach (var collision in this)
+        {
+            if(collision.Points == null || collision.Points.Count <= 0) continue;
+            var cp = collision.Points.GetClosestCollisionPoint(referencePoint, out float minDistanceSquared);
+            if (!cp.Valid) continue;
+            if (minDistanceSquared < closestDistanceSquared || closestDistanceSquared < 0f)
+            {
+                closestDistanceSquared = minDistanceSquared;
+                result = cp;
+            }
+        }
+
+        return result;
+    }
+    /// <summary>
+    /// Get the furthest collision point to the reference point within all valid collisions.
+    /// </summary>
+    /// <returns></returns>
+    public CollisionPoint GetFurthestCollisionPoint(Vector2 referencePoint)
+    {
+        if(Count <= 0) return new CollisionPoint();
+        
+        var result = new CollisionPoint();
+        var furthestDistanceSquared = -1f;
+        foreach (var collision in this)
+        {
+            if(collision.Points == null || collision.Points.Count <= 0) continue;
+            var cp = collision.Points.GetFurthestCollisionPoint(referencePoint, out float maxDistanceSquared);
+            if (!cp.Valid) continue;
+            if (maxDistanceSquared < furthestDistanceSquared || furthestDistanceSquared < 0f)
+            {
+                furthestDistanceSquared = maxDistanceSquared;
+                result = cp;
+            }
+        }
+
+        return result;
+    }
+    
+    /// <summary>
+    /// Get the closest collision point to Self.Transform.Position within all valid collisions.
+    /// </summary>
+    /// <param name="closestDistanceSquared">The closest distance squared between the closest collision point and Self.Transform.Position. If negative value is invalid.</param>
+    /// <returns></returns>
+    public CollisionPoint GetClosestCollisionPoint(out float closestDistanceSquared)
+    {
+        closestDistanceSquared = -1f;
+        if(Count <= 0) return new CollisionPoint();
+        
+        var result = new CollisionPoint();
+        foreach (var collision in this)
+        {
+            if(collision.Points == null || collision.Points.Count <= 0) continue;
+            var cp = collision.Points.GetClosestCollisionPoint(Self.Transform.Position, out float minDistanceSquared);
+            if (!cp.Valid) continue;
+            if (minDistanceSquared < closestDistanceSquared || closestDistanceSquared < 0f)
+            {
+                closestDistanceSquared = minDistanceSquared;
+                result = cp;
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Get the furthest collision point to Self.Transform.Position within all valid collisions.
+    /// </summary>
+    /// <param name="furthestDistanceSquared">The furthest distance squared between the furthest collision point and Self.Transform.Position. If negative value is invalid.</param>
+    /// <returns></returns>
+    public CollisionPoint GetFurthestCollisionPoint(out float furthestDistanceSquared)
+    {
+        furthestDistanceSquared = -1f;
+        if(Count <= 0) return new CollisionPoint();
+        
+        var result = new CollisionPoint();
+        foreach (var collision in this)
+        {
+            if(collision.Points == null || collision.Points.Count <= 0) continue;
+            var cp = collision.Points.GetFurthestCollisionPoint(Self.Transform.Position, out float maxDistanceSquared);
+            if (!cp.Valid) continue;
+            if (maxDistanceSquared < furthestDistanceSquared || furthestDistanceSquared < 0f)
+            {
+                furthestDistanceSquared = maxDistanceSquared;
+                result = cp;
+            }
+        }
+
+        return result;
+    }
+    
+    /// <summary>
+    /// Get the closest collision point to the reference point  within all valid collisions.
+    /// </summary>
+    /// <param name="referencePoint">The reference point for finding the closest collision point.</param>
+    /// <param name="closestDistanceSquared">The closest distance squared between the closest collision point and the reference point. If negative value is invalid.</param>
+    /// <returns></returns>
+    public CollisionPoint GetClosestCollisionPoint(Vector2 referencePoint, out float closestDistanceSquared)
+    {
+        closestDistanceSquared = -1f;
+        if(Count <= 0) return new CollisionPoint();
+        
+        var result = new CollisionPoint();
+        foreach (var collision in this)
+        {
+            if(collision.Points == null || collision.Points.Count <= 0) continue;
+            var cp = collision.Points.GetClosestCollisionPoint(referencePoint, out float minDistanceSquared);
+            if (!cp.Valid) continue;
+            if (minDistanceSquared < closestDistanceSquared || closestDistanceSquared < 0f)
+            {
+                closestDistanceSquared = minDistanceSquared;
+                result = cp;
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Get the furthest collision point to the reference point  within all valid collisions.
+    /// </summary>
+    /// <param name="referencePoint">The reference point for finding the furthest collision point.</param>
+    /// <param name="furthestDistanceSquared">The furthest distance squared between the furthest collision point and the reference point. If negative value is invalid.</param>
+    /// <returns></returns>
+    public CollisionPoint GetFurthestCollisionPoint(Vector2 referencePoint, out float furthestDistanceSquared)
+    {
+        furthestDistanceSquared = -1f;
+        if(Count <= 0) return new CollisionPoint();
+        
+        var result = new CollisionPoint();
+        foreach (var collision in this)
+        {
+            if(collision.Points == null || collision.Points.Count <= 0) continue;
+            var cp = collision.Points.GetFurthestCollisionPoint(Self.Transform.Position, out float maxDistanceSquared);
+            if (!cp.Valid) continue;
+            if (maxDistanceSquared < furthestDistanceSquared || furthestDistanceSquared < 0f)
+            {
+                furthestDistanceSquared = maxDistanceSquared;
+                result = cp;
+            }
+        }
+
+        return result;
+    }
     #endregion
 }
 

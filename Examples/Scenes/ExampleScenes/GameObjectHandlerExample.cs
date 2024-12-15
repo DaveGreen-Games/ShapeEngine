@@ -102,7 +102,13 @@ namespace Examples.Scenes.ExampleScenes
         private CircleCollider circleCollider;
 
         private int overlapCount = 0;
-        private readonly ColorRgba[] overlapColors = [Colors.Light, Colors.Text, Colors.Cold, Colors.Warm, Colors.Highlight, Colors.Special, Colors.Special2];
+        private readonly ColorRgba basicColor = Colors.Special;
+        private readonly ColorRgba overlapColor = Colors.Special2;
+
+        private const float contactStartedDuration = 0.5f;
+        private const float contactEndedDuration = 0.5f;
+        private float contactStartedTimer = 0f;
+        private float contactEndedTimer = 0f;
         
         public Overlapper(Vector2 pos) : base(new Transform2D(pos, 0f, new Size(150, 0), 1f))
         {
@@ -129,52 +135,57 @@ namespace Examples.Scenes.ExampleScenes
         }
 
         
-        protected override void Collision(List<CollisionInformation> info)
+        protected override void Collision(CollisionInformation info)
         {
-            
-            foreach (var colInfo in info)
+            if (info.Count > 0 && info.FirstContact)
             {
-                if (colInfo.Count > 0)
+                contactStartedTimer = contactStartedDuration;
+                overlapCount++;
+                if (info.Other is BoundaryWall wall)
                 {
-                    foreach (var collision in colInfo)
-                    {
-                        if (!collision.FirstContact) continue;
-
-                        if (colInfo.Other is BoundaryWall wall)
-                        {
-                            overlapCount++;
-                            Velocity = -(Transform.Position).Normalize() * Velocity.Length();
-                        }
-                        else
-                        {
-                            overlapCount++;
-                        }
-                    }
+                    Velocity = -(Transform.Position).Normalize() * Velocity.Length();
                 }
             }
         }
 
-        protected override void CollisionEnded(List<OverlapInformation> info)
+        protected override void ContactEnded(CollisionObject other)
         {
-            foreach (var overlapInfo in info)
+            contactEndedTimer = contactEndedDuration;
+            overlapCount--;
+        }
+
+        public override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+        {
+            base.Update(time, game, gameUi, ui);
+            if (contactStartedTimer > 0)
             {
-                foreach (var overlap in overlapInfo)
-                {
-                    overlapCount--;
-                }
+                contactStartedTimer -= time.Delta;
+                if(contactStartedTimer <= 0) contactStartedTimer = 0;
+            }
+            if (contactEndedTimer > 0)
+            {
+                contactEndedTimer -= time.Delta;
+                if(contactEndedTimer <= 0) contactEndedTimer = 0;
             }
         }
-        
+
         public override void DrawGame(ScreenInfo game)
         {
             var c = circleCollider.GetCircleShape();
-            var colorIndex = 0;
-           if(overlapCount >= overlapColors.Length) colorIndex = overlapColors.Length - 1;
-           else if(overlapCount < 0) colorIndex = 0;
-           else colorIndex = overlapCount;
-           
-           var color = overlapColors[colorIndex];
-            c.DrawLines(8f, color);
+            
+            //animated radius
+            var contactStartedF = contactStartedTimer / contactStartedDuration;
+            contactStartedF = ShapeTween.CircOut(contactStartedF);
+            var radius = ShapeMath.LerpFloat(c.Radius, c.Radius * 1.5f, contactStartedF);
+            c = c.SetRadius(radius);
+            
+            //animate thickness
+            var contactEndedF = contactEndedTimer / contactEndedDuration;
+            contactEndedF = ShapeTween.BounceIn(contactEndedF);
+            var thickness = ShapeMath.LerpFloat(8, 32, contactEndedF);
+            
+            var color = overlapCount > 0 ? overlapColor : basicColor;
+            c.DrawLines(thickness, color);
         }
 
         public override bool HasLeftBounds(Rect bounds) => !bounds.OverlapShape(circleCollider.GetCircleShape());
@@ -183,10 +194,6 @@ namespace Examples.Scenes.ExampleScenes
 
         public override void DrawGameUI(ScreenInfo gameUi)
         {
-        }
-        public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
-        {
-            
         }
     }
    
@@ -212,22 +219,18 @@ namespace Examples.Scenes.ExampleScenes
             Layer = SpawnAreaLayers.ObjectFlag;
         }
 
-        protected override void Collision(List<CollisionInformation> info)
+        protected override void Collision(CollisionInformation info)
         {
             CollisionPoint p = new();
-            foreach (var colInfo in info)
+            if (info.Count > 0)
             {
-                if (colInfo.Count > 0)
+                foreach (var collision in info)
                 {
-                    foreach (var collision in colInfo)
+                    if(!collision.FirstContact) continue;
+                    if(collision.Points == null) continue;
+                    if (collision.Validate(out CollisionPoint combined))
                     {
-                        if(!collision.FirstContact) continue;
-                        if(collision.Points == null) continue;
-                        if (collision.Validate(out CollisionPoint combined))
-                        {
-                            // var cp = collision.Points.GetAverageCollisionPoint();
-                            if (combined.Valid) p = p.Average(combined);
-                        }
+                        if (combined.Valid) p = p.Average(combined);
                     }
                 }
             }
@@ -319,24 +322,21 @@ namespace Examples.Scenes.ExampleScenes
         }
         
 
-        protected override void Collision(List<CollisionInformation> info)
+        protected override void Collision(CollisionInformation info)
         {
             CollisionPoint p = new();
-            foreach (var colInfo in info)
+            if (info.Count > 0)
             {
-                if (colInfo.Count > 0)
+                foreach (var collision in info)
                 {
-                    foreach (var collision in colInfo)
+                    if(!collision.FirstContact) continue;
+                    if(collision.Points == null) continue;
+                    if (collision.Validate(out var combined, out var closest))
                     {
-                        if(!collision.FirstContact) continue;
-                        if(collision.Points == null) continue;
-                        if (collision.Validate(out var combined, out var closest))
-                        {
-                            Transform = Transform.SetPosition(closest.Point);
-                            Velocity = new();
-                            Enabled = false;
-                            deadTimer = 2f;
-                        }
+                        Transform = Transform.SetPosition(closest.Point);
+                        Velocity = new();
+                        Enabled = false;
+                        deadTimer = 2f;
                     }
                 }
             }
@@ -481,22 +481,19 @@ namespace Examples.Scenes.ExampleScenes
         }
 
         
-        protected override void Collision(List<CollisionInformation> info)
+        protected override void Collision(CollisionInformation info)
         {
             CollisionPoint p = new();
-            foreach (var colInfo in info)
+            if (info.Count > 0)
             {
-                if (colInfo.Count > 0)
+                foreach (var collision in info)
                 {
-                    foreach (var collision in colInfo)
+                    if(!collision.FirstContact) continue;
+                    if(collision.Points == null) continue;
+                    if (collision.Validate(out var combined, out var closest))
                     {
-                        if(!collision.FirstContact) continue;
-                        if(collision.Points == null) continue;
-                        if (collision.Validate(out var combined, out var closest))
-                        {
-                            // var cp = collision.Points.GetAverageCollisionPoint();
-                            if (combined.Valid) p = p.Average(combined);
-                        }
+                        // var cp = collision.Points.GetAverageCollisionPoint();
+                        if (combined.Valid) p = p.Average(combined);
                     }
                 }
             }
@@ -573,22 +570,19 @@ namespace Examples.Scenes.ExampleScenes
             Layer = SpawnAreaLayers.ObjectFlag;
         }
 
-        protected override void Collision(List<CollisionInformation> info)
+        protected override void Collision(CollisionInformation info)
         {
             CollisionPoint p = new();
-            foreach (var colInfo in info)
+            if (info.Count > 0)
             {
-                if (colInfo.Count > 0)
+                foreach (var collision in info)
                 {
-                    foreach (var collision in colInfo)
+                    if(!collision.FirstContact) continue;
+                    if(collision.Points == null) continue;
+                    if (collision.Validate(out CollisionPoint combined))
                     {
-                        if(!collision.FirstContact) continue;
-                        if(collision.Points == null) continue;
-                        if (collision.Validate(out CollisionPoint combined))
-                        {
-                            // var cp = collision.Points.GetAverageCollisionPoint();
-                            if (combined.Valid) p = p.Average(combined);
-                        }
+                        // var cp = collision.Points.GetAverageCollisionPoint();
+                        if (combined.Valid) p = p.Average(combined);
                     }
                 }
             }

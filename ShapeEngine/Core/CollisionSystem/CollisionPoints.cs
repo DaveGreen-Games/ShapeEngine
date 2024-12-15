@@ -15,6 +15,7 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     }
     public CollisionPoints(params CollisionPoint[] points) : base(points.Length) { AddRange(points); }
     public CollisionPoints(IEnumerable<CollisionPoint> points, int count) : base(count)  { AddRange(points); }
+    public CollisionPoints(List<CollisionPoint> points) : base(points.Count)  { AddRange(points); }
 
     public CollisionPoints(CollisionPoints other) : base(other.Count)
     {
@@ -536,7 +537,7 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     
     #region CollisionPoint
 
-    public CollisionPoint GetAverageCollisionPoint()
+    public CollisionPoint GetCombinedCollisionPoint()
     {
         var avgPoint = new Vector2();
         var avgNormal = new Vector2();
@@ -555,17 +556,18 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     {
         if (!Valid) return new();
         if(Count == 1) return this[0];
-        
-        var closest = this[0];
-        var closestDist = (closest.Point - referencePoint).LengthSquared();
-        for (var i = 1; i < Count; i++)
+
+        var closest = new CollisionPoint();
+        var closestDistanceSquared = -1f; // (closest.Point - referencePoint).LengthSquared();
+        for (var i = 0; i < Count; i++)
         {
             var p = this[i];
-            var dis = (p.Point - referencePoint).LengthSquared();
-            if (dis < closestDist)
+            if(!p.Valid) continue;
+            var distanceSquared = (p.Point - referencePoint).LengthSquared();
+            if (distanceSquared < closestDistanceSquared || closestDistanceSquared <= 0f)
             {
                 closest = p;
-                closestDist = dis;
+                closestDistanceSquared = distanceSquared;
             }
         }
         
@@ -575,17 +577,18 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     {
         if (!Valid) return new();
         if(Count == 1) return this[0];
-        
-        var furthest = this[0];
-        var furthestDis = (furthest.Point - referencePoint).LengthSquared();
-        for (var i = 1; i < Count; i++)
+
+        var furthest = new CollisionPoint();
+        var furthestDistanceSquared = -1f;
+        for (var i = 0; i < Count; i++)
         {
             var p = this[i];
-            var dis = (p.Point - referencePoint).LengthSquared();
-            if (dis > furthestDis)
+            if(!p.Valid) continue;
+            var distanceSquared = (p.Point - referencePoint).LengthSquared();
+            if (distanceSquared > furthestDistanceSquared || furthestDistanceSquared <= 0f)
             {
                 furthest = p;
-                furthestDis = dis;
+                furthestDistanceSquared = distanceSquared;
             }
         }
         
@@ -596,14 +599,15 @@ public class CollisionPoints : ShapeList<CollisionPoint>
         closestDistanceSquared = -1;
         if (!Valid) return new();
         if(Count == 1) return this[0];
-        
-        var closest = this[0];
-        closestDistanceSquared = (closest.Point - referencePoint).LengthSquared();
-        for (var i = 1; i < Count; i++)
+
+        var closest = new CollisionPoint();
+        closestDistanceSquared = -1f; // (closest.Point - referencePoint).LengthSquared();
+        for (var i = 0; i < Count; i++)
         {
             var p = this[i];
+            if(!p.Valid) continue;
             var dis = (p.Point - referencePoint).LengthSquared();
-            if (dis < closestDistanceSquared)
+            if (dis < closestDistanceSquared || closestDistanceSquared <= 0f)
             {
                 closest = p;
                 closestDistanceSquared = dis;
@@ -617,14 +621,14 @@ public class CollisionPoints : ShapeList<CollisionPoint>
         furthestDistanceSquared = -1;
         if (!Valid) return new();
         if(Count == 1) return this[0];
-        
-        var furthest = this[0];
+
+        var furthest = new CollisionPoint();
         furthestDistanceSquared = (furthest.Point - referencePoint).LengthSquared();
-        for (var i = 1; i < Count; i++)
+        for (var i = 0; i < Count; i++)
         {
             var p = this[i];
             var dis = (p.Point - referencePoint).LengthSquared();
-            if (dis > furthestDistanceSquared)
+            if (dis > furthestDistanceSquared || furthestDistanceSquared <= 0f)
             {
                 furthest = p;
                 furthestDistanceSquared = dis;
@@ -643,17 +647,18 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     {
         if (!Valid) return new();
         if(Count == 1) return this[0];
+
+        var best = new CollisionPoint();
+        // var dir = (referencePoint - best.Point).Normalize();
+        var maxDot = -10f; //dir.Dot(best.Normal);
         
-        var best = this[0];
-        var dir = (referencePoint - best.Point).Normalize();
-        var maxDot = dir.Dot(best.Normal);
-        
-        for (var i = 1; i < Count; i++)
+        for (var i = 0; i < Count; i++)
         {
             var p = this[i];
-            dir = (referencePoint - p.Point).Normalize();
+            if(!p.Valid) continue;
+            var dir = (referencePoint - p.Point).Normalize();
             var dot = dir.Dot(p.Normal);
-            if (dot > maxDot)
+            if (dot > maxDot || maxDot < -5)
             {
                 best = p;
                 maxDot = dot;
@@ -671,15 +676,16 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     {
         if (!Valid) return new();
         if(Count == 1) return this[0];
+
+        var best = new CollisionPoint();
+        var maxDot = -10f; // referenceDir.Dot(best.Normal);
         
-        var best = this[0];
-        var maxDot = referenceDir.Dot(best.Normal);
-        
-        for (var i = 1; i < Count; i++)
+        for (var i = 0; i < Count; i++)
         {
             var p = this[i];
+            if(!p.Valid) continue;
             var dot = referenceDir.Dot(p.Normal);
-            if (dot > maxDot)
+            if (dot > maxDot || maxDot < -5)
             {
                 best = p;
                 maxDot = dot;

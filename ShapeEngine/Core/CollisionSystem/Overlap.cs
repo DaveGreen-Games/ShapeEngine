@@ -1,10 +1,5 @@
-using ShapeEngine.Core.CollisionSystem;
-
 namespace ShapeEngine.Core.CollisionSystem;
 
-/// <summary>
-/// Contains the information of an overlap between two colliders.
-/// </summary>
 public class Overlap
 {
     public readonly Collider Self;
@@ -27,6 +22,7 @@ public class Overlap
     {
         Self = overlap.Self;
         Other = overlap.Other;
+        FirstContact = overlap.FirstContact;
     }
     public Overlap Copy() => new(this);
 }
