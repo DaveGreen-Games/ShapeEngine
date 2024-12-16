@@ -727,8 +727,8 @@ namespace ShapeEngine.Core.Shapes
             return true;
         }
 
-        public static (CollisionPoint? a, CollisionPoint? b) IntersectCircleCircle(Vector2 aPos, float aRadius, Vector2 bPos, float bRadius) { return IntersectCircleCircle(aPos.X, aPos.Y, aRadius, bPos.X, bPos.Y, bRadius); }
-        public static (CollisionPoint? a, CollisionPoint? b) IntersectCircleCircle(float cx0, float cy0, float radius0, float cx1, float cy1, float radius1)
+        public static (CollisionPoint a, CollisionPoint b) IntersectCircleCircle(Vector2 aPos, float aRadius, Vector2 bPos, float bRadius) { return IntersectCircleCircle(aPos.X, aPos.Y, aRadius, bPos.X, bPos.Y, bRadius); }
+        public static (CollisionPoint a, CollisionPoint b) IntersectCircleCircle(float cx0, float cy0, float radius0, float cx1, float cy1, float radius1)
         {
             // Find the distance between the centers.
             float dx = cx0 - cx1;
@@ -739,65 +739,63 @@ namespace ShapeEngine.Core.Shapes
             if (dist > radius0 + radius1)
             {
                 // No solutions, the circles are too far apart.
-                return (null, null);
+                return (new(), new());
             }
-            else if (dist < Math.Abs(radius0 - radius1))
+            if (dist < Math.Abs(radius0 - radius1))
             {
                 // No solutions, one circle contains the other.
-                return (null, null);
+                return (new(), new());
             }
-            else if ((dist == 0) && ShapeMath.EqualsF(radius0, radius1))// (radius0 == radius1))
+            if ((dist == 0) && ShapeMath.EqualsF(radius0, radius1))// (radius0 == radius1))
             {
                 // No solutions, the circles coincide.
-                return (null, null);
+                return (new(), new());
             }
-            else
+            
+            // Find a and h.
+            double a = (radius0 * radius0 - radius1 * radius1 + dist * dist) / (2 * dist);
+            double h = Math.Sqrt(radius0 * radius0 - a * a);
+
+            // Find P2.
+            double cx2 = cx0 + a * (cx1 - cx0) / dist;
+            double cy2 = cy0 + a * (cy1 - cy0) / dist;
+
+            // Get the points P3.
+            var intersection1 = new Vector2(
+                (float)(cx2 + h * (cy1 - cy0) / dist),
+                (float)(cy2 - h * (cx1 - cx0) / dist));
+            var intersection2 = new Vector2(
+                (float)(cx2 - h * (cy1 - cy0) / dist),
+                (float)(cy2 + h * (cx1 - cx0) / dist));
+
+            // See if we have 1 or 2 solutions.
+            if (ShapeMath.EqualsF((float)dist, radius0 + radius1))
             {
-                // Find a and h.
-                double a = (radius0 * radius0 - radius1 * radius1 + dist * dist) / (2 * dist);
-                double h = Math.Sqrt(radius0 * radius0 - a * a);
-
-                // Find P2.
-                double cx2 = cx0 + a * (cx1 - cx0) / dist;
-                double cy2 = cy0 + a * (cy1 - cy0) / dist;
-
-                // Get the points P3.
-                var intersection1 = new Vector2(
-                    (float)(cx2 + h * (cy1 - cy0) / dist),
-                    (float)(cy2 - h * (cx1 - cx0) / dist));
-                var intersection2 = new Vector2(
-                    (float)(cx2 - h * (cy1 - cy0) / dist),
-                    (float)(cy2 + h * (cx1 - cx0) / dist));
-
-                // See if we have 1 or 2 solutions.
-                if (ShapeMath.EqualsF((float)dist, radius0 + radius1))
-                {
-                    var n = intersection1 - new Vector2(cx1, cy1);
-                    var cp = new CollisionPoint(intersection1, n.Normalize());
-                    return (cp, null);
-                }
-                
-                var n1 = intersection1 - new Vector2(cx1, cy1);
-                var cp1 = new CollisionPoint(intersection1, n1.Normalize());
-                
-                var n2 = intersection2 - new Vector2(cx1, cy1);
-                var cp2 = new CollisionPoint(intersection2, n2.Normalize());
-                return (cp1, cp2);
+                var n = intersection1 - new Vector2(cx1, cy1);
+                var cp = new CollisionPoint(intersection1, n.Normalize());
+                return (cp, new());
             }
+                
+            var n1 = intersection1 - new Vector2(cx1, cy1);
+            var cp1 = new CollisionPoint(intersection1, n1.Normalize());
+                
+            var n2 = intersection2 - new Vector2(cx1, cy1);
+            var cp2 = new CollisionPoint(intersection2, n2.Normalize());
+            return (cp1, cp2);
 
         }
-        public static (CollisionPoint? a, CollisionPoint? b) IntersectCircleSegment(Vector2 circlePos, float circleRadius, Vector2 start, Vector2 end) 
+        public static (CollisionPoint a, CollisionPoint b) IntersectCircleSegment(Vector2 circlePos, float circleRadius, Vector2 start, Vector2 end) 
         {
             return IntersectCircleSegment(
                 circlePos.X, circlePos.Y, circleRadius,
                 start.X, start.Y,
                 end.X, end.Y); 
         }
-        public static (CollisionPoint? a, CollisionPoint? b) IntersectCircleSegment(float circleX, float circleY, float circleRadius, float segStartX, float segStartY, float segEndX, float segEndY)
+        public static (CollisionPoint a, CollisionPoint b) IntersectCircleSegment(float circleX, float circleY, float circleRadius, float segStartX, float segStartY, float segEndX, float segEndY)
         {
             float difX = segEndX - segStartX;
             float difY = segEndY - segStartY;
-            if ((difX == 0) && (difY == 0)) return (null, null);
+            if ((difX == 0) && (difY == 0)) return (new(), new());
 
             float dl = (difX * difX + difY * difY);
             float t = ((circleX - segStartX) * difX + (circleY - segStartY) * difY) / dl;
@@ -820,15 +818,15 @@ namespace ShapeEngine.Core.Shapes
                     var p = new Vector2(iX, iY);
                     var n = Segment.GetNormal(new(segStartX, segStartY), new(segEndX, segEndY), false); // p - new Vector2(circleX, circleY);
                     var cp = new CollisionPoint(p, n);
-                    return (cp, null);
+                    return (cp, new());
                 }
-                return (null, null);
+                return (new(), new());
             }
-            else if (dist < circleRadius)
+            if (dist < circleRadius)
             {
                 // List<Vector2>? intersectionPoints = null;
-                CollisionPoint? a = null;
-                CollisionPoint? b = null;
+                CollisionPoint a = new();
+                CollisionPoint b = new();
                 // two possible intersection points
 
                 float dt = MathF.Sqrt(circleRadius * circleRadius - dist * dist) / MathF.Sqrt(dl);
@@ -867,7 +865,7 @@ namespace ShapeEngine.Core.Shapes
                 return (a, b);
             }
 
-            return (null, null);
+            return (new(), new());
         }
         #endregion
 
@@ -984,7 +982,7 @@ namespace ShapeEngine.Core.Shapes
         #endregion
 
         #region Intersect
-        public readonly CollisionPoints? Intersect(Collider collider)
+        public  CollisionPoints? Intersect(Collider collider)
         {
             if (!collider.Enabled) return null;
 
@@ -1016,14 +1014,14 @@ namespace ShapeEngine.Core.Shapes
             return null;
         }
 
-        public readonly CollisionPoints? IntersectShape(Circle c)
+        public  CollisionPoints? IntersectShape(Circle c)
         {
             var result = IntersectCircleCircle(Center, Radius, c.Center, c.Radius);
-            if (result.a != null || result.b != null)
+            if (result.a.Valid || result.b.Valid)
             {
                 var points = new CollisionPoints();
-                if(result.a != null) points.Add((CollisionPoint)result.a);
-                if(result.b != null) points.Add((CollisionPoint)result.b);
+                if(result.a.Valid) points.Add(result.a);
+                if(result.b.Valid) points.Add(result.b);
                 return points;
             }
 
@@ -1093,14 +1091,14 @@ namespace ShapeEngine.Core.Shapes
             // }
 
         }
-        public readonly CollisionPoints? IntersectShape(Segment s)
+        public  CollisionPoints? IntersectShape(Segment s)
         {
             var result = IntersectCircleSegment(Center, Radius, s.Start, s.End);
-            if (result.a != null || result.b != null)
+            if (result.a.Valid || result.b.Valid)
             {
                 var points = new CollisionPoints();
-                if(result.a != null) points.Add((CollisionPoint)result.a);
-                if(result.b != null) points.Add((CollisionPoint)result.b);
+                if(result.a.Valid) points.Add(result.a);
+                if(result.b.Valid) points.Add(result.b);
                 return points;
             }
 
@@ -1183,179 +1181,163 @@ namespace ShapeEngine.Core.Shapes
             //     return null;
             // }
         }
-        public readonly CollisionPoints? IntersectShape(Triangle t)
+        public  CollisionPoints? IntersectShape(Triangle t)
         {
             CollisionPoints? points = null;
             var result = IntersectCircleSegment(Center, Radius, t.A, t.B);
-            if (result.a != null || result.b != null)
+            if (result.a.Valid || result.b.Valid)
             {
                 points ??= new();
-                if(result.a != null) points.Add((CollisionPoint)result.a);
-                if(result.b != null) points.Add((CollisionPoint)result.b);
+                if(result.a.Valid) points.Add(result.a);
+                if(result.b.Valid) points.Add(result.b);
             }
             
             result = IntersectCircleSegment(Center, Radius, t.B, t.C);
-            if (result.a != null || result.b != null)
+            if (result.a.Valid || result.b.Valid)
             {
                 points ??= new();
-                if(result.a != null) points.Add((CollisionPoint)result.a);
-                if(result.b != null) points.Add((CollisionPoint)result.b);
+                if(result.a.Valid) points.Add(result.a);
+                if(result.b.Valid) points.Add(result.b);
             }
 
             result = IntersectCircleSegment(Center, Radius, t.C, t.A);
-            if (result.a != null || result.b != null)
+            if (result.a.Valid || result.b.Valid)
             {
                 points ??= new();
-                if(result.a != null) points.Add((CollisionPoint)result.a);
-                if(result.b != null) points.Add((CollisionPoint)result.b);
+                if(result.a.Valid) points.Add(result.a);
+                if(result.b.Valid) points.Add(result.b);
             }
 
             return points;
         }
-        public readonly CollisionPoints? IntersectShape(Rect r)
+        public  CollisionPoints? IntersectShape(Rect r)
         {
             CollisionPoints? points = null;
             var a = r.TopLeft;
             var b = r.BottomLeft;
             
             var result = IntersectCircleSegment(Center, Radius, a, b);
-            if (result.a != null || result.b != null)
+            if (result.a.Valid || result.b.Valid)
             {
                 points ??= new();
-                if(result.a != null) points.Add((CollisionPoint)result.a);
-                if(result.b != null) points.Add((CollisionPoint)result.b);
+                if(result.a.Valid) points.Add(result.a);
+                if(result.b.Valid) points.Add(result.b);
             }
             
             var c = r.BottomRight;
             result = IntersectCircleSegment(Center, Radius, b, c);
-            if (result.a != null || result.b != null)
+            if (result.a.Valid || result.b.Valid)
             {
                 points ??= new();
-                if(result.a != null) points.Add((CollisionPoint)result.a);
-                if(result.b != null) points.Add((CollisionPoint)result.b);
+                if(result.a.Valid) points.Add(result.a);
+                if(result.b.Valid) points.Add(result.b);
             }
             
             var d = r.TopRight;
             result = IntersectCircleSegment(Center, Radius, c, d);
-            if (result.a != null || result.b != null)
+            if (result.a.Valid || result.b.Valid)
             {
                 points ??= new();
-                if(result.a != null) points.Add((CollisionPoint)result.a);
-                if(result.b != null) points.Add((CollisionPoint)result.b);
+                if(result.a.Valid) points.Add(result.a);
+                if(result.b.Valid) points.Add(result.b);
             }
 
             result = IntersectCircleSegment(Center, Radius, d, a);
-            if (result.a != null || result.b != null)
+            if (result.a.Valid || result.b.Valid)
             {
                 points ??= new();
-                if(result.a != null) points.Add((CollisionPoint)result.a);
-                if(result.b != null) points.Add((CollisionPoint)result.b);
+                if(result.a.Valid) points.Add(result.a);
+                if(result.b.Valid) points.Add(result.b);
             }
             return points;
         }
-        public readonly CollisionPoints? IntersectShape(Quad q)
+        public  CollisionPoints? IntersectShape(Quad q)
         {
             CollisionPoints? points = null;
             
             var result = IntersectCircleSegment(Center, Radius, q.A, q.B);
-            if (result.a != null || result.b != null)
+            if (result.a.Valid || result.b.Valid)
             {
                 points ??= new();
-                if(result.a != null) points.Add((CollisionPoint)result.a);
-                if(result.b != null) points.Add((CollisionPoint)result.b);
+                if(result.a.Valid) points.Add(result.a);
+                if(result.b.Valid) points.Add(result.b);
             }
             
             result = IntersectCircleSegment(Center, Radius, q.B, q.C);
-            if (result.a != null || result.b != null)
+            if (result.a.Valid || result.b.Valid)
             {
                 points ??= new();
-                if(result.a != null) points.Add((CollisionPoint)result.a);
-                if(result.b != null) points.Add((CollisionPoint)result.b);
+                if(result.a.Valid) points.Add(result.a);
+                if(result.b.Valid) points.Add(result.b);
             }
             
             result = IntersectCircleSegment(Center, Radius, q.C, q.D);
-            if (result.a != null || result.b != null)
+            if (result.a.Valid || result.b.Valid)
             {
                 points ??= new();
-                if(result.a != null) points.Add((CollisionPoint)result.a);
-                if(result.b != null) points.Add((CollisionPoint)result.b);
+                if(result.a.Valid) points.Add(result.a);
+                if(result.b.Valid) points.Add(result.b);
             }
 
             result = IntersectCircleSegment(Center, Radius, q.D, q.A);
-            if (result.a != null || result.b != null)
+            if (result.a.Valid || result.b.Valid)
             {
                 points ??= new();
-                if(result.a != null) points.Add((CollisionPoint)result.a);
-                if(result.b != null) points.Add((CollisionPoint)result.b);
+                if(result.a.Valid) points.Add(result.a);
+                if(result.b.Valid) points.Add(result.b);
             }
             return points;
         }
-        public readonly CollisionPoints? IntersectShape(Polygon p)
+        public  CollisionPoints? IntersectShape(Polygon p)
         {
             if (p.Count < 3) return null;
             
             CollisionPoints? points = null;
-            (CollisionPoint? a, CollisionPoint? b) result;
 
             for (var i = 0; i < p.Count; i++)
             {
-                result = IntersectCircleSegment(Center, Radius, p[i], p[(i + 1) % p.Count]);
-                if (result.a != null || result.b != null)
+                var result = IntersectCircleSegment(Center, Radius, p[i], p[(i + 1) % p.Count]);
+                if (result.a.Valid || result.b.Valid)
                 {
                     points ??= new();
-                    if(result.a != null) points.Add((CollisionPoint)result.a);
-                    if(result.b != null) points.Add((CollisionPoint)result.b);
+                    if(result.a.Valid) points.Add(result.a);
+                    if(result.b.Valid) points.Add(result.b);
                 }
                 
             }
             return points;
         }
-        public readonly CollisionPoints? IntersectShape(Polyline pl)
+        public  CollisionPoints? IntersectShape(Polyline pl)
         {
             if (pl.Count < 2) return null;
             
             CollisionPoints? points = null;
-            (CollisionPoint? a, CollisionPoint? b) result;
-            // if (pl.Count == 2)
-            // {
-            //     result = IntersectCircleSegment(Center, Radius, pl[0], pl[1]);
-            //     if (result.a != null || result.b != null)
-            //     {
-            //         points ??= new();
-            //         if(result.a != null) points.Add((CollisionPoint)result.a);
-            //         if(result.b != null) points.Add((CollisionPoint)result.b);
-            //         return points;
-            //     }
-            //
-            //     return null;
-            // }
-
 
             for (var i = 0; i < pl.Count - 1; i++)
             {
-                result = IntersectCircleSegment(Center, Radius, pl[i], pl[(i + 1) % pl.Count]);
-                if (result.a != null || result.b != null)
+                var result = IntersectCircleSegment(Center, Radius, pl[i], pl[(i + 1) % pl.Count]);
+                if (result.a.Valid || result.b.Valid)
                 {
                     points ??= new();
-                    if(result.a != null) points.Add((CollisionPoint)result.a);
-                    if(result.b != null) points.Add((CollisionPoint)result.b);
+                    if(result.a.Valid) points.Add(result.a);
+                    if(result.b.Valid) points.Add(result.b);
                 }
                 
             }
             return points;
         }
 
-        public readonly CollisionPoints? IntersectShape(Segments shape)
+        public CollisionPoints? IntersectShape(Segments shape)
         {
             CollisionPoints? points = null;
             foreach (var seg in shape)
             {
                 var result = IntersectCircleSegment(Center, Radius, seg.Start, seg.End);
-                if (result.a != null || result.b != null)
+                if (result.a.Valid || result.b.Valid)
                 {
                     points ??= new();
-                    if(result.a != null) points.Add((CollisionPoint)result.a);
-                    if(result.b != null) points.Add((CollisionPoint)result.b);
+                    if(result.a.Valid) points.Add(result.a);
+                    if(result.b.Valid) points.Add(result.b);
                 }
             }
             return points;

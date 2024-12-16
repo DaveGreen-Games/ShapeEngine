@@ -2261,31 +2261,31 @@ public readonly struct Rect : IEquatable<Rect>
         foreach (var seg in segments)
         {
             var result = Segment.IntersectSegmentSegment(a, b, seg.Start, seg.End);
-            if (result != null)
+            if (result.Valid)
             {
                 points ??= new();
-                points.AddRange((CollisionPoint)result);
+                points.AddRange(result);
             }
             
             result = Segment.IntersectSegmentSegment(b, c, seg.Start, seg.End);
-            if (result != null)
+            if (result.Valid)
             {
                 points ??= new();
-                points.AddRange((CollisionPoint)result);
+                points.AddRange(result);
             }
             
             result = Segment.IntersectSegmentSegment(c, d, seg.Start, seg.End);
-            if (result != null)
+            if (result.Valid)
             {
                 points ??= new();
-                points.AddRange((CollisionPoint)result);
+                points.AddRange(result);
             }
             
             result = Segment.IntersectSegmentSegment(d, a, seg.Start, seg.End);
-            if (result != null)
+            if (result.Valid)
             {
                 points ??= new();
-                points.AddRange((CollisionPoint)result);
+                points.AddRange(result);
             }
             
         }
@@ -2300,31 +2300,31 @@ public readonly struct Rect : IEquatable<Rect>
         var d = TopRight;  
         
         var result = Segment.IntersectSegmentSegment(a, b, s.Start, s.End);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
        
         result = Segment.IntersectSegmentSegment(b, c, s.Start, s.End);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         
         result = Segment.IntersectSegmentSegment(c, d, s.Start, s.End);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         
         result = Segment.IntersectSegmentSegment(d, a, s.Start, s.End);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         return points;
     }
@@ -2338,35 +2338,35 @@ public readonly struct Rect : IEquatable<Rect>
         var d = TopRight;
         
         var result = Segment.IntersectSegmentCircle(a, b, circle.Center, circle.Radius);
-        if (result.a != null || result.b != null)
+        if (result.a.Valid || result.b.Valid)
         {
             points ??= new();
-            if(result.a != null) points.Add((CollisionPoint)result.a);
-            if(result.b != null) points.Add((CollisionPoint)result.b);
+            if(result.a.Valid) points.Add(result.a);
+            if(result.b.Valid) points.Add(result.b);
             return points;
         }
         result = Segment.IntersectSegmentCircle(b, c, circle.Center, circle.Radius);
-        if (result.a != null || result.b != null)
+        if (result.a.Valid || result.b.Valid)
         {
             points ??= new();
-            if(result.a != null) points.Add((CollisionPoint)result.a);
-            if(result.b != null) points.Add((CollisionPoint)result.b);
+            if(result.a.Valid) points.Add(result.a);
+            if(result.b.Valid) points.Add(result.b);
             return points;
         }
         result = Segment.IntersectSegmentCircle(c, d, circle.Center, circle.Radius);
-        if (result.a != null || result.b != null)
+        if (result.a.Valid || result.b.Valid)
         {
             points ??= new();
-            if(result.a != null) points.Add((CollisionPoint)result.a);
-            if(result.b != null) points.Add((CollisionPoint)result.b);
+            if(result.a.Valid) points.Add(result.a);
+            if(result.b.Valid) points.Add(result.b);
             return points;
         }
         result = Segment.IntersectSegmentCircle(d, a, circle.Center, circle.Radius);
-        if (result.a != null || result.b != null)
+        if (result.a.Valid || result.b.Valid)
         {
             points ??= new();
-            if(result.a != null) points.Add((CollisionPoint)result.a);
-            if(result.b != null) points.Add((CollisionPoint)result.b);
+            if(result.a.Valid) points.Add(result.a);
+            if(result.b.Valid) points.Add(result.b);
             return points;
         }
         return points;
@@ -2381,82 +2381,82 @@ public readonly struct Rect : IEquatable<Rect>
         var d = TopRight;
         
         var result = Segment.IntersectSegmentSegment(a, b, t.A, t.B);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         result = Segment.IntersectSegmentSegment(a, b, t.B, t.C);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         result = Segment.IntersectSegmentSegment(a, b, t.C, t.A);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         
             
        
         result = Segment.IntersectSegmentSegment(b, c, t.A, t.B);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         result = Segment.IntersectSegmentSegment(b, c, t.B, t.C);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         result = Segment.IntersectSegmentSegment(b, c, t.C, t.A);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         
         
         result = Segment.IntersectSegmentSegment(c, d, t.A, t.B);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         result = Segment.IntersectSegmentSegment(c, d, t.B, t.C);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         result = Segment.IntersectSegmentSegment(c, d, t.C, t.A);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         
         result = Segment.IntersectSegmentSegment(d, a, t.A, t.B);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         result = Segment.IntersectSegmentSegment(d, a, t.B, t.C);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         result = Segment.IntersectSegmentSegment(d, a, t.C, t.A);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
 
         return points;
@@ -2475,112 +2475,112 @@ public readonly struct Rect : IEquatable<Rect>
         var rD = r.TopRight;
         
         var result = Segment.IntersectSegmentSegment(a, b, rA, rB);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
 
         
         result = Segment.IntersectSegmentSegment(a, b, rB, rC);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
 
         
         result = Segment.IntersectSegmentSegment(a, b, rC, rD);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         
         result = Segment.IntersectSegmentSegment(a, b, rD, rA);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         
         
         
         result = Segment.IntersectSegmentSegment(b, c, rA, rB);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         result = Segment.IntersectSegmentSegment(b, c, rB, rC);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         result = Segment.IntersectSegmentSegment(b, c, rC, rD);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         result = Segment.IntersectSegmentSegment(b, c, rD, rA);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
 
         
         result = Segment.IntersectSegmentSegment(c, d, rA, rB);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         result = Segment.IntersectSegmentSegment(c, d, rB, rC);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         result = Segment.IntersectSegmentSegment(c, d, rC, rD);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         result = Segment.IntersectSegmentSegment(c, d, rD, rA);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         
         
         result = Segment.IntersectSegmentSegment(d, a, rA, rB);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         result = Segment.IntersectSegmentSegment(d, a, rB, rC);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         result = Segment.IntersectSegmentSegment(d, a, rC, rD);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         result = Segment.IntersectSegmentSegment(d, a, rD, rA);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         return points;
     }
@@ -2592,105 +2592,105 @@ public readonly struct Rect : IEquatable<Rect>
         var c = BottomRight;
         var d = TopRight;
         var result = Segment.IntersectSegmentSegment(a, b, q.A, q.B);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         result = Segment.IntersectSegmentSegment(a, b, q.B, q.C);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         result = Segment.IntersectSegmentSegment(a, b, q.C, q.D);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         result = Segment.IntersectSegmentSegment(a, b, q.D, q.A);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         
         
         result = Segment.IntersectSegmentSegment(b, c, q.A, q.B);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         result = Segment.IntersectSegmentSegment(b, c, q.B, q.C);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         result = Segment.IntersectSegmentSegment(b, c, q.C, q.D);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         result = Segment.IntersectSegmentSegment(b, c, q.D, q.A);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
 
         
         result = Segment.IntersectSegmentSegment(c, d, q.A, q.B);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         result = Segment.IntersectSegmentSegment(c, d, q.B, q.C);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         result = Segment.IntersectSegmentSegment(c, d, q.C, q.D);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         result = Segment.IntersectSegmentSegment(c, d, q.D, q.A);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         
         result = Segment.IntersectSegmentSegment(d, a, q.A, q.B);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         result = Segment.IntersectSegmentSegment(d, a, q.B, q.C);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         result = Segment.IntersectSegmentSegment(d, a, q.C, q.D);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         result = Segment.IntersectSegmentSegment(d, a, q.D, q.A);
-        if (result != null)
+        if (result.Valid)
         {
             points ??= new();
-            points.AddRange((CollisionPoint)result);
+            points.AddRange(result);
         }
         return points;
     }
@@ -2699,7 +2699,6 @@ public readonly struct Rect : IEquatable<Rect>
         if (p.Count < 3) return null;
 
         CollisionPoints? points = null;
-        CollisionPoint? colPoint = null;
         
         var a = TopLeft;
         var b = BottomLeft; 
@@ -2708,32 +2707,32 @@ public readonly struct Rect : IEquatable<Rect>
         
         for (var i = 0; i < p.Count; i++)
         {
-            colPoint = Segment.IntersectSegmentSegment(a, b, p[i], p[(i + 1) % p.Count]);
-            if (colPoint != null)
+            var result = Segment.IntersectSegmentSegment(a, b, p[i], p[(i + 1) % p.Count]);
+            if (result.Valid)
             {
                 points ??= new();
-                points.Add((CollisionPoint)colPoint);
+                points.AddRange(result);
             }
             
-            colPoint = Segment.IntersectSegmentSegment(b, c, p[i], p[(i + 1) % p.Count]);
-            if (colPoint != null)
+            result = Segment.IntersectSegmentSegment(b, c, p[i], p[(i + 1) % p.Count]);
+            if (result.Valid)
             {
                 points ??= new();
-                points.Add((CollisionPoint)colPoint);
+                points.AddRange(result);
             }
             
-            colPoint = Segment.IntersectSegmentSegment(c, d, p[i], p[(i + 1) % p.Count]);
-            if (colPoint != null)
+            result = Segment.IntersectSegmentSegment(c, d, p[i], p[(i + 1) % p.Count]);
+            if (result.Valid)
             {
                 points ??= new();
-                points.Add((CollisionPoint)colPoint);
+                points.AddRange(result);
             }
             
-            colPoint = Segment.IntersectSegmentSegment(d, a, p[i], p[(i + 1) % p.Count]);
-            if (colPoint != null)
+            result = Segment.IntersectSegmentSegment(d, a, p[i], p[(i + 1) % p.Count]);
+            if (result.Valid)
             {
                 points ??= new();
-                points.Add((CollisionPoint)colPoint);
+                points.AddRange(result);
             }
             
         }
@@ -2744,7 +2743,6 @@ public readonly struct Rect : IEquatable<Rect>
         if (pl.Count < 2) return null;
 
         CollisionPoints? points = null;
-        CollisionPoint? colPoint = null;
         
         var a = TopLeft;
         var b = BottomLeft; 
@@ -2752,32 +2750,32 @@ public readonly struct Rect : IEquatable<Rect>
         var d = TopRight;
         for (var i = 0; i < pl.Count - 1; i++)
         {
-            colPoint = Segment.IntersectSegmentSegment(a, b, pl[i], pl[(i + 1) % pl.Count]);
-            if (colPoint != null)
+            var result = Segment.IntersectSegmentSegment(a, b, pl[i], pl[(i + 1) % pl.Count]);
+            if (result.Valid)
             {
                 points ??= new();
-                points.Add((CollisionPoint)colPoint);
+                points.AddRange(result);
             }
             
-            colPoint = Segment.IntersectSegmentSegment(b, c, pl[i], pl[(i + 1) % pl.Count]);
-            if (colPoint != null)
+            result = Segment.IntersectSegmentSegment(b, c, pl[i], pl[(i + 1) % pl.Count]);
+            if (result.Valid)
             {
                 points ??= new();
-                points.Add((CollisionPoint)colPoint);
+                points.AddRange(result);
             }
             
-            colPoint = Segment.IntersectSegmentSegment(c, d, pl[i], pl[(i + 1) % pl.Count]);
-            if (colPoint != null)
+            result = Segment.IntersectSegmentSegment(c, d, pl[i], pl[(i + 1) % pl.Count]);
+            if (result.Valid)
             {
                 points ??= new();
-                points.Add((CollisionPoint)colPoint);
+                points.AddRange(result);
             }
             
-            colPoint = Segment.IntersectSegmentSegment(d, a, pl[i], pl[(i + 1) % pl.Count]);
-            if (colPoint != null)
+            result = Segment.IntersectSegmentSegment(d, a, pl[i], pl[(i + 1) % pl.Count]);
+            if (result.Valid)
             {
                 points ??= new();
-                points.Add((CollisionPoint)colPoint);
+                points.AddRange(result);
             }
         }
         return points;
