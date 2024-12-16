@@ -54,7 +54,7 @@ public class CollisionInformation : List<Collision>
             var collision = this[i];
             if (collision.Validate(out CollisionPoint combinedCollisionPoint))
             {
-                combined = combinedCollisionPoint.Average(combined);
+                combined = combinedCollisionPoint.Combine(combined);
             }
             else RemoveAt(i);
         }
@@ -79,7 +79,7 @@ public class CollisionInformation : List<Collision>
             var collision = this[i];
             if (collision.Validate(out CollisionPoint combinedCollisionPoint, out var closestCollisionPoint))
             {
-                combined = combinedCollisionPoint.Average(combined);
+                combined = combinedCollisionPoint.Combine(combined);
                 var dis = (collision.Self.CurTransform.Position - closestCollisionPoint.Point).LengthSquared();
                 if (closestDistanceSquared < 0f || dis < closestDistanceSquared)
                 {
@@ -115,7 +115,7 @@ public class CollisionInformation : List<Collision>
             var collision = this[i];
             if (collision.Validate(out CollisionPointValidationResult validationResult))
             {
-                combined = validationResult.Combined.Average(combined);
+                combined = validationResult.Combined.Combine(combined);
                 
                 if (collision.SelfVel.X != 0 || collision.SelfVel.Y != 0)
                 {
@@ -318,7 +318,7 @@ public class CollisionInformation : List<Collision>
             if(collision.Points == null || collision.Points.Count <= 0) continue;
             var cp = collision.Points.GetCombinedCollisionPoint();
             if (!cp.Valid) continue;
-            result = result.Average(cp);
+            result = result.Combine(cp);
         }
 
         return result;

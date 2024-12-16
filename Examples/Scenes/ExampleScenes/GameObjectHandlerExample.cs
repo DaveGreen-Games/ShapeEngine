@@ -230,7 +230,7 @@ namespace Examples.Scenes.ExampleScenes
                     if(collision.Points == null) continue;
                     if (collision.Validate(out CollisionPoint combined))
                     {
-                        if (combined.Valid) p = p.Average(combined);
+                        if (combined.Valid) p = p.Combine(combined);
                     }
                 }
             }
@@ -493,7 +493,7 @@ namespace Examples.Scenes.ExampleScenes
                     if (collision.Validate(out var combined, out var closest))
                     {
                         // var cp = collision.Points.GetAverageCollisionPoint();
-                        if (combined.Valid) p = p.Average(combined);
+                        if (combined.Valid) p = p.Combine(combined);
                     }
                 }
             }
@@ -582,7 +582,7 @@ namespace Examples.Scenes.ExampleScenes
                     if (collision.Validate(out CollisionPoint combined))
                     {
                         // var cp = collision.Points.GetAverageCollisionPoint();
-                        if (combined.Valid) p = p.Average(combined);
+                        if (combined.Valid) p = p.Combine(combined);
                     }
                 }
             }
