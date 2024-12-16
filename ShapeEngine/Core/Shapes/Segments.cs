@@ -433,26 +433,13 @@ public class Segments : ShapeList<Segment>
         foreach (var seg in this)
         {
             var result = Segment.IntersectSegmentSegment(seg.Start, seg.End, s.Start, s.End);
-            if (result != null)
+            if (result.Valid)
             {
                 points ??= new();
                 points.AddRange((CollisionPoint)result);
             }
         }
         return points;
-        
-        // CollisionPoints? points = null;
-        //
-        // foreach (var seg in this)
-        // {
-        //     var collisionPoints = seg.IntersectShape(s);
-        //     if (collisionPoints != null && collisionPoints.Valid)
-        //     {
-        //         points ??= new();
-        //         points.AddRange(collisionPoints);
-        //     }
-        // }
-        // return points;
     }
     public CollisionPoints? IntersectShape(Circle c)
     {
@@ -460,19 +447,12 @@ public class Segments : ShapeList<Segment>
         foreach (var seg in this)
         {
             var result = Segment.IntersectSegmentCircle(seg.Start, seg.End, c.Center, c.Radius);
-            if (result.a != null || result.b != null)
+            if (result.a.Valid || result.b.Valid)
             {
                 points ??= new();
-                if(result.a != null) points.Add((CollisionPoint)result.a);
-                if(result.b != null) points.Add((CollisionPoint)result.b);
+                if(result.a.Valid) points.Add(result.a);
+                if(result.b.Valid) points.Add(result.b);
             }
-            // if(intersectPoints == null) continue;
-            // foreach (var p in intersectPoints)
-            // {
-                // var n = ShapeVec.Normalize(p - c.Center);
-                // points ??= new();
-                // points.Add(new(p, n));
-            // }
         }
         return points;
     }
@@ -485,10 +465,10 @@ public class Segments : ShapeList<Segment>
             foreach (var bSeg in b)
             {
                 var result = Segment.IntersectSegmentSegment(seg.Start, seg.End, bSeg.Start, bSeg.End);
-                if (result != null)
+                if (result.Valid)
                 {
                     points ??= new();
-                    points.AddRange((CollisionPoint)result);
+                    points.AddRange(result);
                 }
             }
             
