@@ -1281,11 +1281,24 @@ namespace ShapeEngine.Core.Shapes
         {
             var result = IntersectSegmentCircle(Start, End, c.Center, c.Radius);
 
-            if (result.a.Valid || result.b.Valid)
+            if (result.a.Valid && result.b.Valid)
             {
-                var points = new CollisionPoints();
-                if(result.a.Valid) points.Add(result.a);
-                if(result.b.Valid) points.Add(result.b);
+                var points = new CollisionPoints
+                {
+                    result.a,
+                    result.b
+                };
+                return points;
+            }
+            if (result.a.Valid)
+            {
+                var points = new CollisionPoints { result.a };
+                return points;
+            }
+            
+            if (result.b.Valid)
+            {
+                var points = new CollisionPoints { result.b };
                 return points;
             }
 
