@@ -30,61 +30,8 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
     #endregion
     
     #region Public Functions
-    /*
-    public static CollisionPoint GetAggregatedCollisionPoint(CollisionPoint cur, CollisionPoint next,  CollisionPointAggregationType aggregationType, Vector2 referenceV, float value, out float newValue)
-    {
-        newValue = 0f;
-        if (!cur.Valid) return next;
-        if (!next.Valid) return cur;
-        
-        switch (aggregationType)
-        {
-            case CollisionPointAggregationType.First: return new();
-            
-            case CollisionPointAggregationType.Closest:
-                var minDisSquared = (next.Point - referenceV).LengthSquared();
-                if (minDisSquared < value || value < 0)
-                {
-                    newValue = minDisSquared;
-                    return next;
-                }
-
-                return cur;
-                
-            case CollisionPointAggregationType.Furthest:
-                var maxDisSquared = (next.Point - referenceV).LengthSquared();
-                if (maxDisSquared > value || value < 0)
-                {
-                    newValue = maxDisSquared;
-                    return next;
-                }
-
-                return cur;
-            
-            case CollisionPointAggregationType.Combined: return cur.Combine(next);
-            
-            case CollisionPointAggregationType.PointingTowards:
-                float minDot = next.Normal.Dot(referenceV);
-                if (minDot < value || value == 0f)
-                {
-                    newValue = minDot;
-                    return next;
-                }
-                return cur;
-            case CollisionPointAggregationType.PointingAway:
-                float maxDot = next.Normal.Dot(referenceV);
-                if (maxDot > value || value == 0f)
-                {
-                    newValue = maxDot;
-                    return next;
-                }
-                return cur;;
-        }
-
-        return new();
-    }
-    */
-
+   
+    
     public static bool IsCloser(CollisionPoint p, Vector2 referencePoint, float curMinDisSquared, out float newMinDisSquared)
     {
         var disSquared = (p.Point - referencePoint).LengthSquared();
