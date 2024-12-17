@@ -536,7 +536,80 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     #endregion
     
     #region CollisionPoint
-
+    public CollisionPoint AggregateCollisionPoints( CollisionPointAggregationType aggregationType, Vector2 referencePoint = new())
+    {
+        if (this.Count <= 0) return new();
+        if (this.Count == 1) return this[0];
+        
+        switch (aggregationType)
+        {
+            case CollisionPointAggregationType.First: return this[0];
+            case CollisionPointAggregationType.Closest:
+                CollisionPoint closest = new();
+                float minDisSquared = -1f;
+                foreach (var point in this)
+                {
+                    var disSquared = (point.Point - referencePoint).LengthSquared();
+                    if (disSquared < minDisSquared || minDisSquared < 0)
+                    {
+                        minDisSquared = disSquared;
+                        closest = point;
+                    }
+                }
+                return closest;
+            case CollisionPointAggregationType.Furthest:
+                CollisionPoint furthest = new();
+                float maxDisSquared = -1f;
+                foreach (var point in this)
+                {
+                    var disSquared = (point.Point - referencePoint).LengthSquared();
+                    if (disSquared > maxDisSquared || maxDisSquared < 0)
+                    {
+                        maxDisSquared = disSquared;
+                        furthest = point;
+                    }
+                }
+                return furthest;
+            case CollisionPointAggregationType.Combined:
+                CollisionPoint combined = new();
+                foreach (var point in this)
+                {
+                    if(combined.Valid) combined = combined.Combine(point);
+                    else combined = point;
+                }
+                return combined;
+            case CollisionPointAggregationType.PointingTowards:
+                CollisionPoint pointingTowards = new();
+                float maxDot = -1f;
+                foreach (var point in this)
+                {
+                    var dir = (referencePoint - point.Point).Normalize();
+                    var dot = point.Normal.Dot(dir);
+                    if (dot > maxDot || maxDot < 0)
+                    {
+                        maxDot = dot;
+                        pointingTowards = point;
+                    }
+                }
+                return pointingTowards;
+            case CollisionPointAggregationType.PointingAway:
+                CollisionPoint pointingAway = new();
+                float minDot = -1f;
+                foreach (var point in this)
+                {
+                    var dir = (referencePoint - point.Point).Normalize();
+                    var dot = point.Normal.Dot(dir);
+                    if (dot < minDot || minDot < 0)
+                    {
+                        minDot = dot;
+                        pointingAway = point;
+                    }
+                }
+                return pointingAway;
+            default: return this[0];
+        }
+    }
+    
     public CollisionPoint GetCombinedCollisionPoint()
     {
         var avgPoint = new Vector2();
