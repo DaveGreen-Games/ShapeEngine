@@ -6,6 +6,16 @@ using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.Core.CollisionSystem;
 
+public enum CollisionPointsFilterType
+{
+    First,
+    Closest,
+    Furthest,
+    Combined,
+    PointingTowards,
+    PointingAway
+}
+
 public abstract class CollisionObject : PhysicsObject
 {
     public event Action<CollisionInformation>? OnCollision;
@@ -47,6 +57,24 @@ public abstract class CollisionObject : PhysicsObject
 
     public bool ProjectShape = false;
 
+    
+    /* Variant 1
+    This would work with First, Closest, Furthest, Combined, PointingTowards, PointingAway! 
+    ReferenceV is either used as reference position or direction, depending on the aggregationType.
+    -> collider could calculate reference dir based on referencePosition
+    
+    public CollisionPoint Intersect(Shape other, AggregationType aggregationType, Vector2 referenceV = new())
+    {
+    
+    }
+    
+    This means referenceV has to passed down 
+     */
+    public bool AggregateCollisionPoints = false;
+    public CollisionPointsFilterType CollisionPointsFilterType = CollisionPointsFilterType.Closest;
+
+    
+    
     /// <summary>
     /// If set to true:
     ///     - ColliderIntersected(), ColliderOverlapped(), and ColliderOverlapEnded() functions will be called on this CollisionObject

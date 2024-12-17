@@ -536,15 +536,15 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     #endregion
     
     #region CollisionPoint
-    public CollisionPoint AggregateCollisionPoints( CollisionPointAggregationType aggregationType, Vector2 referencePoint = new())
+    public CollisionPoint Filter(CollisionPointsFilterType filterType, Vector2 referencePoint = new())
     {
         if (this.Count <= 0) return new();
         if (this.Count == 1) return this[0];
         
-        switch (aggregationType)
+        switch (filterType)
         {
-            case CollisionPointAggregationType.First: return this[0];
-            case CollisionPointAggregationType.Closest:
+            case CollisionPointsFilterType.First: return this[0];
+            case CollisionPointsFilterType.Closest:
                 CollisionPoint closest = new();
                 float minDisSquared = -1f;
                 foreach (var point in this)
@@ -557,7 +557,7 @@ public class CollisionPoints : ShapeList<CollisionPoint>
                     }
                 }
                 return closest;
-            case CollisionPointAggregationType.Furthest:
+            case CollisionPointsFilterType.Furthest:
                 CollisionPoint furthest = new();
                 float maxDisSquared = -1f;
                 foreach (var point in this)
@@ -570,7 +570,7 @@ public class CollisionPoints : ShapeList<CollisionPoint>
                     }
                 }
                 return furthest;
-            case CollisionPointAggregationType.Combined:
+            case CollisionPointsFilterType.Combined:
                 CollisionPoint combined = new();
                 foreach (var point in this)
                 {
@@ -578,7 +578,7 @@ public class CollisionPoints : ShapeList<CollisionPoint>
                     else combined = point;
                 }
                 return combined;
-            case CollisionPointAggregationType.PointingTowards:
+            case CollisionPointsFilterType.PointingTowards:
                 CollisionPoint pointingTowards = new();
                 float maxDot = -1f;
                 foreach (var point in this)
@@ -592,7 +592,7 @@ public class CollisionPoints : ShapeList<CollisionPoint>
                     }
                 }
                 return pointingTowards;
-            case CollisionPointAggregationType.PointingAway:
+            case CollisionPointsFilterType.PointingAway:
                 CollisionPoint pointingAway = new();
                 float minDot = -1f;
                 foreach (var point in this)
