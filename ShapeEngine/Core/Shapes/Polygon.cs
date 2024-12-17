@@ -1990,6 +1990,70 @@ namespace ShapeEngine.Core.Shapes
             return points;
         }
 
+        public int Intersect(Collider collider, ref CollisionPoints points, bool returnAfterFirstValid = false)
+        {
+            if (!collider.Enabled) return 0;
+
+            switch (collider.GetShapeType())
+            {
+                case ShapeType.Circle:
+                    var c = collider.GetCircleShape();
+                    return IntersectShape(c, ref points, returnAfterFirstValid);
+                case ShapeType.Segment:
+                    var s = collider.GetSegmentShape();
+                    return IntersectShape(s, ref points);
+                case ShapeType.Triangle:
+                    var t = collider.GetTriangleShape();
+                    return IntersectShape(t, ref points, returnAfterFirstValid);
+                case ShapeType.Rect:
+                    var r = collider.GetRectShape();
+                    return IntersectShape(r, ref points, returnAfterFirstValid);
+                case ShapeType.Quad:
+                    var q = collider.GetQuadShape();
+                    return IntersectShape(q, ref points, returnAfterFirstValid);
+                case ShapeType.Poly:
+                    var p = collider.GetPolygonShape();
+                    return IntersectShape(p, ref points, returnAfterFirstValid);
+                case ShapeType.PolyLine:
+                    var pl = collider.GetPolylineShape();
+                    return IntersectShape(pl, ref points, returnAfterFirstValid);
+            }
+
+            return 0;
+        }
+        public int IntersectShape(Segment b, ref CollisionPoints points, bool returnAfterFirstValid = false)
+        {
+            return 0;
+        }
+        public int IntersectShape(Circle c, ref CollisionPoints points, bool returnAfterFirstValid = false)
+        {
+            return 0;
+        }
+        public int IntersectShape(Triangle t, ref CollisionPoints points, bool returnAfterFirstValid = false)
+        {
+            return 0;
+        }
+        public int IntersectShape(Quad q, ref CollisionPoints points, bool returnAfterFirstValid = false)
+        {
+            return 0;
+        }
+        public int IntersectShape(Rect r, ref CollisionPoints points, bool returnAfterFirstValid = false)
+        {
+            return 0;
+        }
+        public int IntersectShape(Polygon p, ref CollisionPoints points, bool returnAfterFirstValid = false)
+        {
+            return 0;
+        }
+        public int IntersectShape(Polyline pl, ref CollisionPoints points, bool returnAfterFirstValid = false)
+        {
+            return 0;
+        }
+        public int IntersectShape(Segments shape, ref CollisionPoints points, bool returnAfterFirstValid = false)
+        {
+            return 0;
+        }
+       
         #endregion
 
         #region Convex Hull

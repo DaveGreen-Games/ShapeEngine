@@ -488,27 +488,19 @@ public class Segments : ShapeList<Segment>
         // return points;
     }
 
+    public int IntersectShape(Segment b, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        return 0;
+    }
+    public int IntersectShape(Circle c, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        return 0;
+    }
+    public int IntersectShape(Segments shape, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        return 0;
+    }
+   
     #endregion
 
-    /*
-        /// <summary>
-        /// Only add the segment if it not already contained in the list.
-        /// </summary>
-        /// <param name="seg"></param>
-        public void AddUnique(Segment seg)
-        {
-            if (!ContainsSegment(seg)) Add(seg);
-        }
-        /// <summary>
-        /// Only add the segments that are not already contained in the list.
-        /// </summary>
-        /// <param name="edges"></param>
-        public void AddUnique(IEnumerable<Segment> edges)
-        {
-            foreach (var edge in edges)
-            {
-                AddUnique(edge);
-            }
-        }
-        */
 }
