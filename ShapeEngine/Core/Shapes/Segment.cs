@@ -1271,9 +1271,9 @@ namespace ShapeEngine.Core.Shapes
             return null;
         }
         
-        public CollisionPoints? IntersectShape(Segment b)
+        public CollisionPoints? IntersectShape(Segment s)
         {
-            var cp = IntersectSegmentSegment(Start, End, b.Start, b.End);
+            var cp = IntersectSegmentSegment(Start, End, s.Start, s.End);
             if (cp.Valid) return [cp];
 
             return null;
@@ -1494,9 +1494,9 @@ namespace ShapeEngine.Core.Shapes
 
             return 0;
         }
-        public int IntersectShape(Segment b, ref CollisionPoints points)
+        public int IntersectShape(Segment s, ref CollisionPoints points)
         {
-            var cp = IntersectSegmentSegment(Start, End, b.Start, b.End);
+            var cp = IntersectSegmentSegment(Start, End, s.Start, s.End);
             if (cp.Valid)
             {
                 points.Add(cp);

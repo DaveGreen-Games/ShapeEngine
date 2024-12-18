@@ -1235,9 +1235,9 @@ namespace ShapeEngine.Core.Shapes
 
             return 0;
         }
-        public int IntersectShape(Segment b, ref CollisionPoints points, bool returnAfterFirstValid = false)
+        public int IntersectShape(Segment s, ref CollisionPoints points, bool returnAfterFirstValid = false)
         {
-            var result = IntersectCircleSegment(Center, Radius, b.Start, b.End);
+            var result = IntersectCircleSegment(Center, Radius, s.Start, s.End);
             if (result.a.Valid && result.b.Valid)
             {
                 if (returnAfterFirstValid)
