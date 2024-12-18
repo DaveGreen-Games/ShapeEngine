@@ -428,6 +428,7 @@ public class Segments : ShapeList<Segment>
     #region Intersection
     public CollisionPoints? IntersectShape(Segment s)
     {
+        if(Count <= 0) return null;
         CollisionPoints? points = null;
 
         foreach (var seg in this)
@@ -443,6 +444,7 @@ public class Segments : ShapeList<Segment>
     }
     public CollisionPoints? IntersectShape(Circle c)
     {
+        if(Count <= 0) return null;
         CollisionPoints? points = null;
         foreach (var seg in this)
         {
@@ -456,13 +458,14 @@ public class Segments : ShapeList<Segment>
         }
         return points;
     }
-    public CollisionPoints? IntersectShape(Segments b)
+    public CollisionPoints? IntersectShape(Segments shape)
     {
+        if(Count <= 0) return null;
         CollisionPoints? points = null;
 
         foreach (var seg in this)
         {
-            foreach (var bSeg in b)
+            foreach (var bSeg in shape)
             {
                 var result = Segment.IntersectSegmentSegment(seg.Start, seg.End, bSeg.Start, bSeg.End);
                 if (result.Valid)
@@ -474,31 +477,68 @@ public class Segments : ShapeList<Segment>
             
         }
         return points;
-        
-        // CollisionPoints? points = null;
-        // foreach (var seg in this)
-        // {
-            // var collisionPoints = seg.IntersectShape(b);
-            // if (collisionPoints != null && collisionPoints.Valid)
-            // {
-                // points ??= new();
-                // points.AddRange(collisionPoints);
-            // }
-        // }
-        // return points;
     }
 
-    public int IntersectShape(Segment b, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Segment s, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
-        return 0;
+        if (Count <= 0) return 0;
+        var count = 0;
+
+        foreach (var seg in this)
+        {
+            var result = Segment.IntersectSegmentSegment(seg.Start, seg.End, s.Start, s.End);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+        }
+        return count;
     }
     public int IntersectShape(Circle c, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
-        return 0;
+        if(Count <= 0) return 0;
+        var count = 0;
+        foreach (var seg in this)
+        {
+            var result = Segment.IntersectSegmentCircle(seg.Start, seg.End, c.Center, c.Radius);
+            if (result.a.Valid)
+            {
+                points.Add(result.a);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+
+            if (result.b.Valid)
+            {
+                points.Add(result.b);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+        }
+        return count;
     }
     public int IntersectShape(Segments shape, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
-        return 0;
+        if(Count <= 0) return 0;
+        var count = 0;
+
+        foreach (var seg in this)
+        {
+            foreach (var bSeg in shape)
+            {
+                var result = Segment.IntersectSegmentSegment(seg.Start, seg.End, bSeg.Start, bSeg.End);
+                if (result.Valid)
+                {
+                    points.Add(result);
+                    if (returnAfterFirstValid) return 1;
+                    count++;
+                }
+            }
+            
+        }
+        return count;
     }
    
     #endregion
