@@ -52,7 +52,8 @@ public abstract class CollisionObject : PhysicsObject
     /// Determines if all generated collision points are filtered based on the CollisionPointsFilterType.
     /// If enabled there will only be one CollisionPoint in each generated CollisionInformation and all Collisions in that CollisionInformation will be overlaps
     /// instead of Intersections (the Collision does not have any CollisionPoints).
-    /// ComputeIntersections has to be enabled for this to work.
+    /// ComputeIntersections has to be enabled on colliders for this to work. Only colliders that have ComputeIntersections enabled will generate CollisionPoints that
+    /// are then filtered into a single CollisionPoint for each CollisionInformation.
     /// </summary>
     public bool FilterCollisionPoints = false;
     public CollisionPointsFilterType CollisionPointsFilterType = CollisionPointsFilterType.Closest;
