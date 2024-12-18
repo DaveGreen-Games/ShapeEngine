@@ -2853,7 +2853,6 @@ public readonly struct Rect : IEquatable<Rect>
         if (result.Valid)
         {
             points.Add(result);
-            if (returnAfterFirstValid) return 1;
             count++;
         }
         return count;
@@ -2920,7 +2919,6 @@ public readonly struct Rect : IEquatable<Rect>
         if (result.b.Valid)
         {
             points.Add(result.b);
-            if (returnAfterFirstValid) return 1;
             count++;
         }
         return count;
@@ -3021,7 +3019,6 @@ public readonly struct Rect : IEquatable<Rect>
         if (result.Valid)
         {
             points.Add(result);
-            if (returnAfterFirstValid) return 1;
             count++;
         }
 
@@ -3148,7 +3145,6 @@ public readonly struct Rect : IEquatable<Rect>
         if (result.Valid)
         {
             points.Add(result);
-            if (returnAfterFirstValid) return 1;
             count++;
         }
         return count;
@@ -3287,7 +3283,6 @@ public readonly struct Rect : IEquatable<Rect>
         if (result.Valid)
         {
             points.Add(result);
-            if (returnAfterFirstValid) return 1;
             count++;
         }
         return count;

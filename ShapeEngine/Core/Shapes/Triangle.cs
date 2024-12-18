@@ -1876,7 +1876,6 @@ namespace ShapeEngine.Core.Shapes
             if (result.Valid)
             {
                 points.Add(result);
-                if (returnAfterFirstValid) return 1;
                 count++;
             }
 
@@ -1926,7 +1925,6 @@ namespace ShapeEngine.Core.Shapes
             if (result.b.Valid)
             {
                 points.Add(result.b);
-                if (returnAfterFirstValid) return 1;
                 count++;
             }
 
@@ -1999,7 +1997,6 @@ namespace ShapeEngine.Core.Shapes
             if (result.Valid)
             {
                 points.Add(result);
-                if (returnAfterFirstValid) return 1;
                 count++;
             }
 
@@ -2131,7 +2128,6 @@ namespace ShapeEngine.Core.Shapes
                     if (result.Valid)
                     {
                         points.Add(result);
-                        if (returnAfterFirstValid) return 1;
                         count++;
                     }
                 }
@@ -2236,7 +2232,6 @@ namespace ShapeEngine.Core.Shapes
             if (result.Valid)
             {
                 points.Add(result);
-                if (returnAfterFirstValid) return 1;
                 count++;
             }
             return count;
