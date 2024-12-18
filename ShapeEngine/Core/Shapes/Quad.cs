@@ -2011,37 +2011,577 @@ public readonly struct Quad : IEquatable<Quad>
 
             return 0;
         }
-        public int IntersectShape(Segment b, ref CollisionPoints points, bool returnAfterFirstValid = false)
+        public int IntersectShape(Segment s, ref CollisionPoints points, bool returnAfterFirstValid = false)
         {
-            return 0;
+            var count = 0;
+            var result = Segment.IntersectSegmentSegment(A, B, s.Start, s.End);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+                
+            result = Segment.IntersectSegmentSegment(B, C, s.Start, s.End);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+
+            if (count >= 2) return count;
+            
+            result = Segment.IntersectSegmentSegment(C, D, s.Start, s.End);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            
+            if(count >= 2) return count;
+            
+            result = Segment.IntersectSegmentSegment(D, A, s.Start, s.End);
+            if (result.Valid)
+            {
+                points.Add(result);
+                count++;
+            }
+            return count;
         }
         public int IntersectShape(Circle c, ref CollisionPoints points, bool returnAfterFirstValid = false)
         {
-            return 0;
+            var count = 0;
+            var result = Segment.IntersectSegmentCircle(A, B, c.Center, c.Radius);
+            if (result.a.Valid)
+            {
+                points.Add(result.a);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+
+            if (result.b.Valid)
+            {
+                points.Add(result.b);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+                
+            result = Segment.IntersectSegmentCircle(B, C, c.Center, c.Radius);
+            if (result.a.Valid)
+            {
+                points.Add(result.a);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+
+            if (result.b.Valid)
+            {
+                points.Add(result.b);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            
+            result = Segment.IntersectSegmentCircle(C, D, c.Center, c.Radius);
+            if (result.a.Valid)
+            {
+                points.Add(result.a);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+
+            if (result.b.Valid)
+            {
+                points.Add(result.b);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            
+            result = Segment.IntersectSegmentCircle(D, A, c.Center, c.Radius);
+            if (result.a.Valid)
+            {
+                points.Add(result.a);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+
+            if (result.b.Valid)
+            {
+                points.Add(result.b);
+                count++;
+            }
+            return count;
         }
         public int IntersectShape(Triangle t, ref CollisionPoints points, bool returnAfterFirstValid = false)
         {
-            return 0;
+            var count = 0;
+            var result = Segment.IntersectSegmentSegment(A, B, t.A, t.B);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            result = Segment.IntersectSegmentSegment(A, B, t.B, t.C);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            result = Segment.IntersectSegmentSegment(A, B, t.C, t.A);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            
+                
+            result = Segment.IntersectSegmentSegment(B, C, t.A, t.B);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            result = Segment.IntersectSegmentSegment(B, C, t.B, t.C);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            result = Segment.IntersectSegmentSegment(B, C, t.C, t.A);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            
+            result = Segment.IntersectSegmentSegment(C, D, t.A, t.B);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            result = Segment.IntersectSegmentSegment(C, D, t.B, t.C);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            result = Segment.IntersectSegmentSegment(C, D, t.C, t.A);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            
+            result = Segment.IntersectSegmentSegment(D, A, t.A, t.B);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            result = Segment.IntersectSegmentSegment(D, A, t.B, t.C);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            result = Segment.IntersectSegmentSegment(D, A, t.C, t.A);
+            if (result.Valid)
+            {
+                points.Add(result);
+                count++;
+            }
+
+            return count;
         }
         public int IntersectShape(Quad q, ref CollisionPoints points, bool returnAfterFirstValid = false)
         {
-            return 0;
+            var count = 0;
+            var result = Segment.IntersectSegmentSegment(A, B, q.A, q.B);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            result = Segment.IntersectSegmentSegment(A, B, q.B, q.C);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            result = Segment.IntersectSegmentSegment(A, B, q.C, q.D);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            result = Segment.IntersectSegmentSegment(A, B, q.D, q.A);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            
+            
+            result = Segment.IntersectSegmentSegment(B, C, q.A, q.B);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            result = Segment.IntersectSegmentSegment(B, C, q.B, q.C);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            result = Segment.IntersectSegmentSegment(B, C, q.C, q.D);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            result = Segment.IntersectSegmentSegment(B, C, q.D, q.A);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+
+            
+            result = Segment.IntersectSegmentSegment(C, D, q.A, q.B);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            result = Segment.IntersectSegmentSegment(C, D, q.B, q.C);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            result = Segment.IntersectSegmentSegment(C, D, q.C, q.D);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            result = Segment.IntersectSegmentSegment(C, D, q.D, q.A);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            
+            result = Segment.IntersectSegmentSegment(D, A, q.A, q.B);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            result = Segment.IntersectSegmentSegment(D, A, q.B, q.C);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            result = Segment.IntersectSegmentSegment(D, A, q.C, q.D);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            result = Segment.IntersectSegmentSegment(D, A, q.D, q.A);
+            if (result.Valid)
+            {
+                points.Add(result);
+                count++;
+            }
+            return count;
         }
         public int IntersectShape(Rect r, ref CollisionPoints points, bool returnAfterFirstValid = false)
         {
-            return 0;
+            var count = 0;
+            var a = r.TopLeft;
+            var b = r.BottomLeft;
+            var result = Segment.IntersectSegmentSegment(A, B, a, b);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+
+            var c = r.BottomRight;
+            result = Segment.IntersectSegmentSegment(A, B, b, c);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+
+            var d = r.TopRight;
+            result = Segment.IntersectSegmentSegment(A, B, c, d);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            
+            result = Segment.IntersectSegmentSegment(A, B, d, a);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            
+            
+            
+            result = Segment.IntersectSegmentSegment(B, C, a, b);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            result = Segment.IntersectSegmentSegment(B, C, b, c);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            result = Segment.IntersectSegmentSegment(B, C, c, d);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            result = Segment.IntersectSegmentSegment(B, C, d, a);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+
+            
+            result = Segment.IntersectSegmentSegment(C, D, a, b);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            result = Segment.IntersectSegmentSegment(C, D, b, c);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            result = Segment.IntersectSegmentSegment(C, D, c, d);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            result = Segment.IntersectSegmentSegment(C, D, d, a);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            
+            
+            result = Segment.IntersectSegmentSegment(D, A, a, b);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            result = Segment.IntersectSegmentSegment(D, A, b, c);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            result = Segment.IntersectSegmentSegment(D, A, c, d);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            result = Segment.IntersectSegmentSegment(D, A, d, a);
+            if (result.Valid)
+            {
+                points.Add(result);
+                count++;
+            }
+            return count;
         }
         public int IntersectShape(Polygon p, ref CollisionPoints points, bool returnAfterFirstValid = false)
         {
-            return 0;
+            if (p.Count < 3) return 0;
+
+            var count = 0;
+            for (var i = 0; i < p.Count; i++)
+            {
+                var result = Segment.IntersectSegmentSegment(A, B, p[i], p[(i + 1) % p.Count]);
+                if (result.Valid)
+                {
+                    points.Add(result);
+                    if (returnAfterFirstValid) return 1;
+                    count++;
+                }
+                
+                result = Segment.IntersectSegmentSegment(B, C, p[i], p[(i + 1) % p.Count]);
+                if (result.Valid)
+                {
+                    points.Add(result);
+                    if (returnAfterFirstValid) return 1;
+                    count++;
+                }
+                
+                result = Segment.IntersectSegmentSegment(C, D, p[i], p[(i + 1) % p.Count]);
+                if (result.Valid)
+                {
+                    points.Add(result);
+                    if (returnAfterFirstValid) return 1;
+                    count++;
+                }
+                
+                result = Segment.IntersectSegmentSegment(D, A, p[i], p[(i + 1) % p.Count]);
+                if (result.Valid)
+                {
+                    points.Add(result);
+                    if (returnAfterFirstValid) return 1;
+                    count++;
+                }
+                
+            }
+            return count;
         }
         public int IntersectShape(Polyline pl, ref CollisionPoints points, bool returnAfterFirstValid = false)
         {
-            return 0;
+            if (pl.Count < 2) return 0;
+
+            var count = 0;
+            for (var i = 0; i < pl.Count - 1; i++)
+            {
+                var result = Segment.IntersectSegmentSegment(A, B, pl[i], pl[(i + 1) % pl.Count]);
+                if (result.Valid)
+                {
+                    points.Add(result);
+                    if (returnAfterFirstValid) return 1;
+                    count++;
+                }
+                
+                result = Segment.IntersectSegmentSegment(B, C, pl[i], pl[(i + 1) % pl.Count]);
+                if (result.Valid)
+                {
+                    points.Add(result);
+                    if (returnAfterFirstValid) return 1;
+                    count++;
+                }
+                
+                result = Segment.IntersectSegmentSegment(C, D, pl[i], pl[(i + 1) % pl.Count]);
+                if (result.Valid)
+                {
+                    points.Add(result);
+                    if (returnAfterFirstValid) return 1;
+                    count++;
+                }
+                
+                result = Segment.IntersectSegmentSegment(D, A, pl[i], pl[(i + 1) % pl.Count]);
+                if (result.Valid)
+                {
+                    points.Add(result);
+                    if (returnAfterFirstValid) return 1;
+                    count++;
+                }
+            }
+            return count;
         }
         public int IntersectShape(Segments shape, ref CollisionPoints points, bool returnAfterFirstValid = false)
         {
-            return 0;
+            if (shape.Count <= 0) return 0;
+            
+            var count = 0;
+
+            foreach (var seg in shape)
+            {
+                var result = Segment.IntersectSegmentSegment(A, B, seg.Start, seg.End);
+                if (result.Valid)
+                {
+                    points.Add(result);
+                    if (returnAfterFirstValid) return 1;
+                    count++;
+                }
+                
+                result = Segment.IntersectSegmentSegment(B, C, seg.Start, seg.End);
+                if (result.Valid)
+                {
+                    points.Add(result);
+                    if (returnAfterFirstValid) return 1;
+                    count++;
+                }
+                
+                result = Segment.IntersectSegmentSegment(C, D, seg.Start, seg.End);
+                if (result.Valid)
+                {
+                    points.Add(result);
+                    if (returnAfterFirstValid) return 1;
+                    count++;
+                }
+                
+                result = Segment.IntersectSegmentSegment(D, A, seg.Start, seg.End);
+                if (result.Valid)
+                {
+                    points.Add(result);
+                    if (returnAfterFirstValid) return 1;
+                    count++;
+                }
+                
+            }
+            return count;
         }
        
         #endregion
