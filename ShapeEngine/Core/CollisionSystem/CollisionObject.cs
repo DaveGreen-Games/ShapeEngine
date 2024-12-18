@@ -13,7 +13,8 @@ public enum CollisionPointsFilterType
     Furthest,
     Combined,
     PointingTowards,
-    PointingAway
+    PointingAway,
+    Random
 }
 
 public abstract class CollisionObject : PhysicsObject
