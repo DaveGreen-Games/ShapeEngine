@@ -48,20 +48,13 @@ public abstract class CollisionObject : PhysicsObject
 
     public bool ProjectShape = false;
 
-    
-    /* Variant 1
-    This would work with First, Closest, Furthest, Combined, PointingTowards, PointingAway! 
-    ReferenceV is either used as reference position or direction, depending on the aggregationType.
-    -> collider could calculate reference dir based on referencePosition
-    
-    public CollisionPoint Intersect(Shape other, AggregationType aggregationType, Vector2 referenceV = new())
-    {
-    
-    }
-    
-    This means referenceV has to passed down 
-     */
-    public bool AggregateCollisionPoints = false;
+    /// <summary>
+    /// Determines if all generated collision points are filtered based on the CollisionPointsFilterType.
+    /// If enabled there will only be one CollisionPoint in each generated CollisionInformation and all Collisions in that CollisionInformation will be overlaps
+    /// instead of Intersections (the Collision does not have any CollisionPoints).
+    /// ComputeIntersections has to be enabled for this to work.
+    /// </summary>
+    public bool FilterCollisionPoints = false;
     public CollisionPointsFilterType CollisionPointsFilterType = CollisionPointsFilterType.Closest;
 
     
