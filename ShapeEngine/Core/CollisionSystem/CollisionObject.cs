@@ -1,21 +1,11 @@
 using System.ComponentModel;
 using System.Numerics;
-using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.Core.CollisionSystem;
 
-public enum CollisionPointsFilterType
-{
-    First,
-    Closest,
-    Furthest,
-    Combined,
-    PointingTowards,
-    PointingAway,
-    Random
-}
+
 
 public abstract class CollisionObject : PhysicsObject
 {

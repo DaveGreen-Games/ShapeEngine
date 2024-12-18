@@ -6,6 +6,17 @@ using ShapeEngine.Random;
 
 namespace ShapeEngine.Core.CollisionSystem;
 
+public enum CollisionPointsFilterType
+{
+    First,
+    Closest,
+    Furthest,
+    Combined,
+    PointingTowards,
+    PointingAway,
+    Random
+}
+
 public class CollisionPoints : ShapeList<CollisionPoint>
 {
     #region Constructors
