@@ -2,6 +2,7 @@ using System.Numerics;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
+using ShapeEngine.Random;
 
 namespace ShapeEngine.Core.CollisionSystem;
 
@@ -606,6 +607,7 @@ public class CollisionPoints : ShapeList<CollisionPoint>
                     }
                 }
                 return pointingAway;
+            case CollisionPointsFilterType.Random: return this[Rng.Instance.RandI(Count)];
             default: return this[0];
         }
     }
