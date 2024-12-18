@@ -16,6 +16,12 @@ public class CollisionInformation : List<Collision>
     public readonly CollisionObject Self;
     public readonly CollisionObject Other;
     public readonly bool FirstContact;
+
+    /// <summary>
+    /// This point is only valid when the collision object has ComputeIntersection and FilterCollisionPoints enabled.
+    /// If this point is valid then all Collisions will be overlaps (the will not contain any CollisionPoints).
+    /// </summary>
+    public CollisionPoint Filtered;
     #endregion
     
     #region Constructors
@@ -25,6 +31,7 @@ public class CollisionInformation : List<Collision>
         Self = self;
         Other = other;
         FirstContact = firstContact;
+        Filtered = new CollisionPoint();
         
     }
     public CollisionInformation(CollisionObject self, CollisionObject other, bool firstContact, List<Collision> collisions)
@@ -33,8 +40,16 @@ public class CollisionInformation : List<Collision>
         Other = other;
         FirstContact = firstContact;
         AddRange(collisions);
+        Filtered = new CollisionPoint();
     }
-
+    public CollisionInformation(CollisionObject self, CollisionObject other, bool firstContact, CollisionPoint filtered, List<Collision> collisions)
+    {
+        Self = self;
+        Other = other;
+        FirstContact = firstContact;
+        AddRange(collisions);
+        Filtered = filtered;
+    }
     #endregion
     
     #region Validation
