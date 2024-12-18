@@ -1049,6 +1049,273 @@ public abstract class Collider : Shape
 
         return null;
     }
+    
+    
+    
+    public int Intersect(CollisionObject other, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        if (!Enabled || !other.Enabled || !other.HasColliders) return 0;
+        var count = 0;
+        foreach (var otherCol in other.Colliders)
+        {
+            count += Intersect(otherCol, ref points, returnAfterFirstValid);
+        }
+        return count;
+    }
+    public int Intersect(Collider other, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        if (!Enabled || !other.Enabled) return 0;
+
+        switch (other.GetShapeType())
+        {
+            case ShapeType.Circle: return Intersect(other.GetCircleShape(), ref points, returnAfterFirstValid);
+            case ShapeType.Segment: return Intersect(other.GetSegmentShape(), ref points, returnAfterFirstValid);
+            case ShapeType.Triangle: return Intersect(other.GetTriangleShape(), ref points, returnAfterFirstValid);
+            case ShapeType.Rect: return Intersect(other.GetRectShape(), ref points, returnAfterFirstValid);
+            case ShapeType.Quad: return Intersect(other.GetQuadShape(), ref points, returnAfterFirstValid);
+            case ShapeType.Poly: return Intersect(other.GetPolygonShape(), ref points, returnAfterFirstValid);
+            case ShapeType.PolyLine: return Intersect(other.GetPolylineShape(), ref points, returnAfterFirstValid);
+        }
+
+        return 0;
+    }
+    public int Intersect(IShape other, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        if (!Enabled) return 0;
+
+        switch (other.GetShapeType())
+        {
+            case ShapeType.Circle: return Intersect(other.GetCircleShape(), ref points, returnAfterFirstValid);
+            case ShapeType.Segment: return Intersect(other.GetSegmentShape(), ref points, returnAfterFirstValid);
+            case ShapeType.Triangle: return Intersect(other.GetTriangleShape(), ref points, returnAfterFirstValid);
+            case ShapeType.Rect: return Intersect(other.GetRectShape(), ref points, returnAfterFirstValid);
+            case ShapeType.Quad: return Intersect(other.GetQuadShape(), ref points, returnAfterFirstValid);
+            case ShapeType.Poly: return Intersect(other.GetPolygonShape(), ref points, returnAfterFirstValid);
+            case ShapeType.PolyLine: return Intersect(other.GetPolylineShape(), ref points, returnAfterFirstValid);
+        }
+
+        return 0;
+    }
+
+    public int Intersect(Segment segment, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        if (!Enabled) return 0;
+
+        switch (GetShapeType())
+        {
+            case ShapeType.Circle:
+                var c = GetCircleShape();
+                return c.IntersectShape(segment, ref points, returnAfterFirstValid);
+            case ShapeType.Segment:
+                var s = GetSegmentShape();
+                return s.IntersectShape(segment, ref points);
+            case ShapeType.Triangle:
+                var t = GetTriangleShape();
+                return t.IntersectShape(segment, ref points, returnAfterFirstValid);
+            case ShapeType.Rect:
+                var r = GetRectShape();
+                return r.IntersectShape(segment, ref points, returnAfterFirstValid);
+            case ShapeType.Quad:
+                var q = GetQuadShape();
+                return q.IntersectShape(segment, ref points, returnAfterFirstValid);
+            case ShapeType.Poly:
+                var p = GetPolygonShape();
+                return p.IntersectShape(segment, ref points, returnAfterFirstValid);
+            case ShapeType.PolyLine:
+                var pl = GetPolylineShape();
+                return pl.IntersectShape(segment, ref points, returnAfterFirstValid);
+        }
+
+        return 0;
+    }
+    
+    public int Intersect(Triangle triangle, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        if (!Enabled) return 0;
+
+        switch (GetShapeType())
+        {
+            case ShapeType.Circle:
+                var c = GetCircleShape();
+                return c.IntersectShape(triangle, ref points, returnAfterFirstValid);
+            case ShapeType.Segment:
+                var s = GetSegmentShape();
+                return s.IntersectShape(triangle, ref points, returnAfterFirstValid);
+            case ShapeType.Triangle:
+                var t = GetTriangleShape();
+                return t.IntersectShape(triangle, ref points, returnAfterFirstValid);
+            case ShapeType.Rect:
+                var r = GetRectShape();
+                return r.IntersectShape(triangle, ref points, returnAfterFirstValid);
+            case ShapeType.Quad:
+                var q = GetQuadShape();
+                return q.IntersectShape(triangle, ref points, returnAfterFirstValid);
+            case ShapeType.Poly:
+                var p = GetPolygonShape();
+                return p.IntersectShape(triangle, ref points, returnAfterFirstValid);
+            case ShapeType.PolyLine:
+                var pl = GetPolylineShape();
+                return pl.IntersectShape(triangle, ref points, returnAfterFirstValid);
+        }
+
+        return 0;
+    }
+    public int Intersect(Circle circle, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        if (!Enabled) return 0;
+
+        switch (GetShapeType())
+        {
+            case ShapeType.Circle:
+                var c = GetCircleShape();
+                return c.IntersectShape(circle, ref points, returnAfterFirstValid);
+            case ShapeType.Segment:
+                var s = GetSegmentShape();
+                return s.IntersectShape(circle, ref points, returnAfterFirstValid);
+            case ShapeType.Triangle:
+                var t = GetTriangleShape();
+                return t.IntersectShape(circle, ref points, returnAfterFirstValid);
+            case ShapeType.Rect:
+                var r = GetRectShape();
+                return r.IntersectShape(circle, ref points, returnAfterFirstValid);
+            case ShapeType.Quad:
+                var q = GetQuadShape();
+                return q.IntersectShape(circle, ref points, returnAfterFirstValid);
+            case ShapeType.Poly:
+                var p = GetPolygonShape();
+                return p.IntersectShape(circle, ref points, returnAfterFirstValid);
+            case ShapeType.PolyLine:
+                var pl = GetPolylineShape();
+                return pl.IntersectShape(circle, ref points, returnAfterFirstValid);
+        }
+
+        return 0;
+    }
+    public int Intersect(Rect rect, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        if (!Enabled) return 0;
+
+        switch (GetShapeType())
+        {
+            case ShapeType.Circle:
+                var c = GetCircleShape();
+                return c.IntersectShape(rect, ref points, returnAfterFirstValid);
+            case ShapeType.Segment:
+                var s = GetSegmentShape();
+                return s.IntersectShape(rect, ref points, returnAfterFirstValid);
+            case ShapeType.Triangle:
+                var t = GetTriangleShape();
+                return t.IntersectShape(rect, ref points, returnAfterFirstValid);
+            case ShapeType.Rect:
+                var r = GetRectShape();
+                return r.IntersectShape(rect, ref points, returnAfterFirstValid);
+            case ShapeType.Quad:
+                var q = GetQuadShape();
+                return q.IntersectShape(rect, ref points, returnAfterFirstValid);
+            case ShapeType.Poly:
+                var p = GetPolygonShape();
+                return p.IntersectShape(rect, ref points, returnAfterFirstValid);
+            case ShapeType.PolyLine:
+                var pl = GetPolylineShape();
+                return pl.IntersectShape(rect, ref points, returnAfterFirstValid);
+        }
+
+        return 0;
+    }
+    public int Intersect(Quad quad, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        if (!Enabled) return 0;
+
+        switch (GetShapeType())
+        {
+            case ShapeType.Circle:
+                var c = GetCircleShape();
+                return c.IntersectShape(quad, ref points, returnAfterFirstValid);
+            case ShapeType.Segment:
+                var s = GetSegmentShape();
+                return s.IntersectShape(quad, ref points, returnAfterFirstValid);
+            case ShapeType.Triangle:
+                var t = GetTriangleShape();
+                return t.IntersectShape(quad, ref points, returnAfterFirstValid);
+            case ShapeType.Rect:
+                var r = GetRectShape();
+                return r.IntersectShape(quad, ref points, returnAfterFirstValid);
+            case ShapeType.Quad:
+                var q = GetQuadShape();
+                return q.IntersectShape(quad, ref points, returnAfterFirstValid);
+            case ShapeType.Poly:
+                var p = GetPolygonShape();
+                return p.IntersectShape(quad, ref points, returnAfterFirstValid);
+            case ShapeType.PolyLine:
+                var pl = GetPolylineShape();
+                return pl.IntersectShape(quad, ref points, returnAfterFirstValid);
+        }
+
+        return 0;
+    }
+    public int Intersect(Polygon poly, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        if (!Enabled) return 0;
+
+        switch (GetShapeType())
+        {
+            case ShapeType.Circle:
+                var c = GetCircleShape();
+                return c.IntersectShape(poly, ref points, returnAfterFirstValid);
+            case ShapeType.Segment:
+                var s = GetSegmentShape();
+                return s.IntersectShape(poly, ref points, returnAfterFirstValid);
+            case ShapeType.Triangle:
+                var t = GetTriangleShape();
+                return t.IntersectShape(poly, ref points, returnAfterFirstValid);
+            case ShapeType.Rect:
+                var r = GetRectShape();
+                return r.IntersectShape(poly, ref points, returnAfterFirstValid);
+            case ShapeType.Quad:
+                var q = GetQuadShape();
+                return q.IntersectShape(poly, ref points, returnAfterFirstValid);
+            case ShapeType.Poly:
+                var p = GetPolygonShape();
+                return p.IntersectShape(poly, ref points, returnAfterFirstValid);
+            case ShapeType.PolyLine:
+                var pl = GetPolylineShape();
+                return pl.IntersectShape(poly, ref points, returnAfterFirstValid);
+        }
+
+        return 0;
+    }
+    public int Intersect(Polyline polyLine, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        if (!Enabled) return 0;
+
+        switch (GetShapeType())
+        {
+            case ShapeType.Circle:
+                var c = GetCircleShape();
+                return c.IntersectShape(polyLine, ref points, returnAfterFirstValid);
+            case ShapeType.Segment:
+                var s = GetSegmentShape();
+                return s.IntersectShape(polyLine, ref points, returnAfterFirstValid);
+            case ShapeType.Triangle:
+                var t = GetTriangleShape();
+                return t.IntersectShape(polyLine, ref points, returnAfterFirstValid);
+            case ShapeType.Rect:
+                var r = GetRectShape();
+                return r.IntersectShape(polyLine, ref points, returnAfterFirstValid);
+            case ShapeType.Quad:
+                var q = GetQuadShape();
+                return q.IntersectShape(polyLine, ref points, returnAfterFirstValid);
+            case ShapeType.Poly:
+                var p = GetPolygonShape();
+                return p.IntersectShape(polyLine, ref points, returnAfterFirstValid);
+            case ShapeType.PolyLine:
+                var pl = GetPolylineShape();
+                return pl.IntersectShape(polyLine, ref points, returnAfterFirstValid);
+        }
+
+        return 0;
+    }
+    
     #endregion
 
 }
