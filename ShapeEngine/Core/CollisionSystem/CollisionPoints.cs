@@ -6,6 +6,15 @@ using ShapeEngine.Random;
 
 namespace ShapeEngine.Core.CollisionSystem;
 
+/// <summary>
+/// First - Selects the first collision point.
+/// Closest - Selects the collision point closest to the reference point.
+/// Furthest - Selects the collision point furthest from the reference point.
+/// Combined - Computes the average collision point.
+/// PointingTowards - Selects the collision point with a normal pointing the most towards the reference position.
+/// PointingAway - Selects the collision point with a normal pointing the most away from the reference position.
+/// Random - Selects a random collision point.
+/// </summary>
 public enum CollisionPointsFilterType
 {
     First,
@@ -548,6 +557,15 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     #endregion
     
     #region CollisionPoint
+    /// <summary>
+    /// Filters the CollisionPoints list based on a given filter type and reference point.
+    /// PointingTowards and PointingAway calculate the direction from the collision point to the reference point.
+    /// PointingTowards uses the normal that is facing the same direction as the direction from the collision point to the reference point.
+    /// PointingAway uses the normal that is facing the opposite direction as the direction from the collision point to the reference point.
+    /// </summary>
+    /// <param name="filterType">The filter type for selecting a collision point.</param>
+    /// <param name="referencePoint">The reference point that is used for closest, furthest, pointing towards, and pointing away calculations.</param>
+    /// <returns></returns>
     public CollisionPoint Filter(CollisionPointsFilterType filterType, Vector2 referencePoint = new())
     {
         if (this.Count <= 0) return new();
@@ -621,6 +639,56 @@ public class CollisionPoints : ShapeList<CollisionPoint>
             case CollisionPointsFilterType.Random: return this[Rng.Instance.RandI(Count)];
             default: return this[0];
         }
+    }
+  
+    /// <summary>
+    /// Filters the CollisionPoints list based on a given filter type and reference point.
+    /// Closest and Furthest use the reference point.
+    /// PointingTowards and PointingAway use the reference direction.
+    /// PointingTowards uses the Normal that is facing the same direction as the referenceDirection.
+    /// PointingAway uses the Normal that is facing the opposite direction as the reference direction.
+    /// </summary>
+    /// <param name="filterType">The filter type for selecting a collision point.</param>
+    /// <param name="referencePoint">The reference point that is used for closest and furthest calculations.</param>
+    /// <param name="referenceDirection">The reference direction that is used for pointing towards and pointing away calculations.</param>
+    /// <returns></returns>
+    public CollisionPoint Filter(CollisionPointsFilterType filterType, Vector2 referencePoint, Vector2 referenceDirection)
+    {
+        if (this.Count <= 0) return new();
+        if (this.Count == 1) return this[0];
+
+        if (filterType == CollisionPointsFilterType.PointingTowards)
+        {
+            CollisionPoint pointingTowards = new();
+            float maxDot = -1f;
+            foreach (var point in this)
+            {
+                var dot = point.Normal.Dot(referenceDirection);
+                if (dot > maxDot || maxDot < 0)
+                {
+                    maxDot = dot;
+                    pointingTowards = point;
+                }
+            }
+            return pointingTowards;
+            
+        }
+        if (filterType == CollisionPointsFilterType.PointingAway)
+        {
+            CollisionPoint pointingAway = new();
+            float minDot = -1f;
+            foreach (var point in this)
+            {
+                var dot = point.Normal.Dot(referenceDirection);
+                if (dot < minDot || minDot < 0)
+                {
+                    minDot = dot;
+                    pointingAway = point;
+                }
+            }
+            return pointingAway;
+        }
+        return Filter(filterType, referencePoint);
     }
     
     public CollisionPoint GetCombinedCollisionPoint()
