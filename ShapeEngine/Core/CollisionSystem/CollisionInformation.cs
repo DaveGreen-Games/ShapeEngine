@@ -11,16 +11,17 @@ namespace ShapeEngine.Core.CollisionSystem;
 /// </summary>
 public class CollisionInformation : List<Collision>
 {
+    private static readonly CollisionPoints filterList = new CollisionPoints(64);
     #region Members
     
     public readonly CollisionObject Self;
     public readonly CollisionObject Other;
     public readonly bool FirstContact;
-
+    public int TotalCollisionPointCount { get; private set; } = 0;
     /// <summary>
     /// This point is only valid when the collision object has ComputeIntersection and FilterCollisionPoints enabled.
     /// </summary>
-    public CollisionPoint Filtered;
+    public CollisionPoint FilteredCollisionPoint { get; private set; }
     #endregion
     
     #region Constructors
@@ -30,7 +31,7 @@ public class CollisionInformation : List<Collision>
         Self = self;
         Other = other;
         FirstContact = firstContact;
-        Filtered = new CollisionPoint();
+        FilteredCollisionPoint = new CollisionPoint();
         
     }
     public CollisionInformation(CollisionObject self, CollisionObject other, bool firstContact, List<Collision> collisions)
@@ -39,17 +40,33 @@ public class CollisionInformation : List<Collision>
         Other = other;
         FirstContact = firstContact;
         AddRange(collisions);
-        Filtered = new CollisionPoint();
+        FilteredCollisionPoint = new CollisionPoint();
     }
-    public CollisionInformation(CollisionObject self, CollisionObject other, bool firstContact, CollisionPoint filtered, List<Collision> collisions)
-    {
-        Self = self;
-        Other = other;
-        FirstContact = firstContact;
-        AddRange(collisions);
-        Filtered = filtered;
-    }
+    // public CollisionInformation(CollisionObject self, CollisionObject other, bool firstContact, CollisionPoint filtered, List<Collision> collisions)
+    // {
+    //     Self = self;
+    //     Other = other;
+    //     FirstContact = firstContact;
+    //     AddRange(collisions);
+    //     Filtered = filtered;
+    // }
     #endregion
+
+    internal void GenerateFilteredCollisionPoint(CollisionPointsFilterType filterType, Vector2 referencePoint)
+    {
+        if (TotalCollisionPointCount <= 0) return;
+        
+        foreach (var collision in this)
+        {
+            if(collision.Points != null && collision.Points.Count > 0) filterList.AddRange(collision.Points);
+        }
+
+        if (filterList.Count > 0)
+        {
+            FilteredCollisionPoint = filterList.Filter(filterType, referencePoint);
+            filterList.Clear();
+        }
+    }
     
     #region Validation
     
@@ -163,7 +180,12 @@ public class CollisionInformation : List<Collision>
     #endregion
     
     #region Public Functions
-    
+
+    public new void Add(Collision collision)
+    {
+        base.Add(collision);
+        if(collision.Points != null) TotalCollisionPointCount += collision.Points.Count;
+    }
     public CollisionInformation Copy()
     {
         var newCollisions = new List<Collision>();

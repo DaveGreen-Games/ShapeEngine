@@ -29,6 +29,10 @@ public class CollisionHandler : IBounds
                 if(register.Count <= 0) continue;
                 foreach (var info in register.Values)
                 {
+                    if (resolver.FilterCollisionPoints && info.TotalCollisionPointCount > 0)
+                    {
+                        info.GenerateFilteredCollisionPoint(resolver.CollisionPointsFilterType, resolver.Transform.Position);
+                    }
                     resolver.ResolveCollision(info);
                 }
             }
