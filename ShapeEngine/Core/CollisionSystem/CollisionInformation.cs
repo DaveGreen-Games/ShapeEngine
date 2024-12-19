@@ -19,7 +19,6 @@ public class CollisionInformation : List<Collision>
 
     /// <summary>
     /// This point is only valid when the collision object has ComputeIntersection and FilterCollisionPoints enabled.
-    /// If this point is valid then all Collisions will be overlaps (the will not contain any CollisionPoints).
     /// </summary>
     public CollisionPoint Filtered;
     #endregion
