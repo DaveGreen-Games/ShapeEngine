@@ -80,11 +80,22 @@ public readonly struct Ray
 
         return new();
     }
+    public static CollisionPoint IntersectRaySegment(Vector2 rayPoint, Vector2 rayDirection, Vector2 segmentStart, Vector2 segmentEnd, Vector2 segmentNormal)
+    {
+        var result = IntersectRaySegment(rayPoint, rayDirection, segmentStart, segmentEnd);
+        if (result.Valid)
+        {
+            return new(result.Point, segmentNormal);
+        }
+
+        return new();
+    }
+
     public CollisionPoint IntersectSegment(Vector2 segmentStart, Vector2 segmentEnd) => IntersectRaySegment(Point, Direction, segmentStart, segmentEnd);
-    public CollisionPoint IntersectSegment(Segment segment) => IntersectRaySegment(Point, Direction, segment.Start, segment.End);
+    public CollisionPoint IntersectSegment(Segment segment) => IntersectRaySegment(Point, Direction, segment.Start, segment.End, segment.Normal);
     public CollisionPoints? IntersectShape(Segment segment)
     {
-        var result = IntersectRaySegment(Point, Direction, segment.Start, segment.End);
+        var result = IntersectRaySegment(Point, Direction, segment.Start, segment.End, segment.Normal);
         if (result.Valid)
         {
             var colPoints = new CollisionPoints();
@@ -117,11 +128,21 @@ public readonly struct Ray
 
         return new();
     }
+    public static CollisionPoint IntersectRayLine(Vector2 rayPoint, Vector2 rayDirection, Vector2 linePoint, Vector2 lineDirection, Vector2 lineNormal)
+    {
+        var result = IntersectRayLine(rayPoint, rayDirection, linePoint, lineDirection);
+        if (result.Valid)
+        {
+            return new(result.Point, lineNormal);
+        }
+
+        return new();
+    }
     public CollisionPoint IntersectLine(Vector2 linePoint, Vector2 lineDirection) => IntersectRayLine(Point, Direction, linePoint, lineDirection);
-    public CollisionPoint IntersectLine(Line line) => IntersectRayLine(Point, Direction, line.Point, line.Direction);
+    public CollisionPoint IntersectLine(Line line) => IntersectRayLine(Point, Direction, line.Point, line.Direction, line.Normal);
     public CollisionPoints? IntersectShape(Line line)
     {
-        var result = IntersectRayLine(Point, Direction, line.Point, line.Direction);
+        var result = IntersectRayLine(Point, Direction, line.Point, line.Direction, line.Normal);
         if (result.Valid)
         {
             var colPoints = new CollisionPoints();
@@ -155,11 +176,21 @@ public readonly struct Ray
 
         return new();
     }
+    public static CollisionPoint IntersectRayRay(Vector2 ray1Point, Vector2 ray1Direction, Vector2 ray2Point, Vector2 ray2Direction, Vector2 ray2Normal)
+    {
+        var result = IntersectRayRay(ray1Point, ray1Direction, ray2Point, ray2Direction);
+        if (result.Valid)
+        {
+            return new(result.Point, ray2Normal);
+        }
+
+        return new();
+    }
     public CollisionPoint IntersectRay(Vector2 rayPoint, Vector2 rayDirection) => IntersectRayRay(Point, Direction, rayPoint, rayDirection);
-    public CollisionPoint IntersectRayRay(Ray ray) => IntersectRayRay(Point, Direction, ray.Point, ray.Direction);
+    public CollisionPoint IntersectRayRay(Ray ray) => IntersectRayRay(Point, Direction, ray.Point, ray.Direction, ray.Normal);
     public CollisionPoints? IntersectShape(Ray ray)
     {
-        var result = IntersectRayRay(Point, Direction, ray.Point, ray.Direction);
+        var result = IntersectRayRay(Point, Direction, ray.Point, ray.Direction, ray.Normal);
         if (result.Valid)
         {
             var colPoints = new CollisionPoints();
