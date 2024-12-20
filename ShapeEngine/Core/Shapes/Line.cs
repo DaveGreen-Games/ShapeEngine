@@ -242,12 +242,58 @@ public readonly struct Line
     }
     public static (CollisionPoint a, CollisionPoint b) IntersectLineTriangle(Vector2 rayPoint, Vector2 rayDirection, Vector2 a, Vector2 b, Vector2 c)
     {
-        return (new(), new());
+        CollisionPoint resultA = new();
+        CollisionPoint resultB = new();
+        
+        var cpA = IntersectLineSegment(rayPoint, rayDirection,  a, b);
+        if(cpA.Valid) resultA = cpA;
+        
+        var cpB = IntersectLineSegment(rayPoint, rayDirection,  b, c);
+        if (resultA.Valid) resultB = cpB;
+        else resultA = cpB;
+
+        if(resultA.Valid && resultB.Valid) return (resultA, resultB);
+       
+        var cpC= IntersectLineSegment(rayPoint, rayDirection,  c, a);
+        if(resultA.Valid) resultB = cpC;
+        else resultA = cpC;
+        
+        return (resultA, resultB);
     }
-    
     public static (CollisionPoint a, CollisionPoint b) IntersectLineQuad(Vector2 rayPoint, Vector2 rayDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
-        return (new(), new());
+        CollisionPoint resultA = new();
+        CollisionPoint resultB = new();
+        
+        var cp = IntersectLineSegment(rayPoint, rayDirection,  a, b);
+        if(cp.Valid) resultA = cp;
+        
+        cp = IntersectLineSegment(rayPoint, rayDirection,  b, c);
+        if (cp.Valid)
+        {
+            if (resultA.Valid) resultB = cp;
+            else resultA = cp;
+        }
+        
+        if(resultA.Valid && resultB.Valid) return (resultA, resultB);
+       
+        cp = IntersectLineSegment(rayPoint, rayDirection,  c, d);
+        if (cp.Valid)
+        {
+            if (resultA.Valid) resultB = cp;
+            else resultA = cp;
+        }
+        
+        if(resultA.Valid && resultB.Valid) return (resultA, resultB);
+        
+        cp = IntersectLineSegment(rayPoint, rayDirection,  d, a);
+        if (cp.Valid)
+        {
+            if (resultA.Valid) resultB = cp;
+            else resultA = cp;
+        }
+        
+        return (resultA, resultB);
     }
     
     public static (CollisionPoint a, CollisionPoint b) IntersectLineRect(Vector2 rayPoint, Vector2 rayDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
@@ -256,15 +302,49 @@ public readonly struct Line
     }
     public static CollisionPoints? IntersectLinePolygon(Vector2 rayPoint, Vector2 rayDirection, List<Vector2> points)
     {
-        return null;
+        if (points.Count < 3) return null;
+        CollisionPoints? result = null;
+        for (var i = 0; i < points.Count; i++)
+        {
+            var colPoint = IntersectLineSegment(rayPoint, rayDirection, points[i], points[(i + 1) % points.Count]);
+            if (colPoint.Valid)
+            {
+                result ??= new();
+                result.Add(colPoint);
+            }
+        }
+        return result;
     }
     public static CollisionPoints? IntersectLinePolyline(Vector2 rayPoint, Vector2 rayDirection, List<Vector2> points)
     {
-        return null;
+        if (points.Count < 3) return null;
+        CollisionPoints? result = null;
+        for (var i = 0; i < points.Count - 1; i++)
+        {
+            var colPoint = IntersectLineSegment(rayPoint, rayDirection, points[i], points[i + 1]);
+            if (colPoint.Valid)
+            {
+                result ??= new();
+                result.Add(colPoint);
+            }
+        }
+        return result;
     }
     public static CollisionPoints? IntersectLineSegments(Vector2 rayPoint, Vector2 rayDirection, List<Segment> segments)
     {
-        return null;
+        if (segments.Count <= 0) return null;
+        CollisionPoints? points = null;
+
+        foreach (var seg in segments)
+        {
+            var result = IntersectLineSegment(rayPoint, rayDirection, seg.Start, seg.End);
+            if (result.Valid)
+            {
+                points ??= new();
+                points.AddRange(result);
+            }
+        }
+        return points;
     }
 
     

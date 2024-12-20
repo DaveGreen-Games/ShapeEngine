@@ -215,11 +215,58 @@ public readonly struct Ray
     }
     public static (CollisionPoint a, CollisionPoint b) IntersectRayTriangle(Vector2 rayPoint, Vector2 rayDirection, Vector2 a, Vector2 b, Vector2 c)
     {
-        return (new(), new());
+        CollisionPoint resultA = new();
+        CollisionPoint resultB = new();
+        
+        var cpA = IntersectRaySegment(rayPoint, rayDirection,  a, b);
+        if(cpA.Valid) resultA = cpA;
+        
+        var cpB = IntersectRaySegment(rayPoint, rayDirection,  b, c);
+        if (resultA.Valid) resultB = cpB;
+        else resultA = cpB;
+
+        if(resultA.Valid && resultB.Valid) return (resultA, resultB);
+       
+        var cpC= IntersectRaySegment(rayPoint, rayDirection,  c, a);
+        if(resultA.Valid) resultB = cpC;
+        else resultA = cpC;
+        
+        return (resultA, resultB);
     }
     public static (CollisionPoint a, CollisionPoint b) IntersectRayQuad(Vector2 rayPoint, Vector2 rayDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
-        return (new(), new());
+        CollisionPoint resultA = new();
+        CollisionPoint resultB = new();
+        
+        var cp = IntersectRaySegment(rayPoint, rayDirection,  a, b);
+        if(cp.Valid) resultA = cp;
+        
+        cp = IntersectRaySegment(rayPoint, rayDirection,  b, c);
+        if (cp.Valid)
+        {
+            if (resultA.Valid) resultB = cp;
+            else resultA = cp;
+        }
+        
+        if(resultA.Valid && resultB.Valid) return (resultA, resultB);
+       
+        cp = IntersectRaySegment(rayPoint, rayDirection,  c, d);
+        if (cp.Valid)
+        {
+            if (resultA.Valid) resultB = cp;
+            else resultA = cp;
+        }
+        
+        if(resultA.Valid && resultB.Valid) return (resultA, resultB);
+        
+        cp = IntersectRaySegment(rayPoint, rayDirection,  d, a);
+        if (cp.Valid)
+        {
+            if (resultA.Valid) resultB = cp;
+            else resultA = cp;
+        }
+        
+        return (resultA, resultB);
     }
     public static (CollisionPoint a, CollisionPoint b) IntersectRayRect(Vector2 rayPoint, Vector2 rayDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
@@ -227,15 +274,49 @@ public readonly struct Ray
     }
     public static CollisionPoints? IntersectRayPolygon(Vector2 rayPoint, Vector2 rayDirection, List<Vector2> points)
     {
-        return null;
+        if (points.Count < 3) return null;
+        CollisionPoints? result = null;
+        for (var i = 0; i < points.Count; i++)
+        {
+            var colPoint = IntersectRaySegment(rayPoint, rayDirection, points[i], points[(i + 1) % points.Count]);
+            if (colPoint.Valid)
+            {
+                result ??= new();
+                result.Add(colPoint);
+            }
+        }
+        return result;
     }
     public static CollisionPoints? IntersectRayPolyline(Vector2 rayPoint, Vector2 rayDirection, List<Vector2> points)
     {
-        return null;
+        if (points.Count < 3) return null;
+        CollisionPoints? result = null;
+        for (var i = 0; i < points.Count - 1; i++)
+        {
+            var colPoint = IntersectRaySegment(rayPoint, rayDirection, points[i], points[i + 1]);
+            if (colPoint.Valid)
+            {
+                result ??= new();
+                result.Add(colPoint);
+            }
+        }
+        return result;
     }
     public static CollisionPoints? IntersectRaySegments(Vector2 rayPoint, Vector2 rayDirection, List<Segment> segments)
     {
-        return null;
+        if (segments.Count <= 0) return null;
+        CollisionPoints? points = null;
+
+        foreach (var seg in segments)
+        {
+            var result = IntersectRaySegment(rayPoint, rayDirection, seg.Start, seg.End);
+            if (result.Valid)
+            {
+                points ??= new();
+                points.AddRange(result);
+            }
+        }
+        return points;
     }
 
     
