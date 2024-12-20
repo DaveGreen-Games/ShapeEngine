@@ -105,21 +105,8 @@ public readonly struct Ray
 
         return new();
     }
-
     public CollisionPoint IntersectSegment(Vector2 segmentStart, Vector2 segmentEnd) => IntersectRaySegment(Point, Direction, segmentStart, segmentEnd);
     public CollisionPoint IntersectSegment(Segment segment) => IntersectRaySegment(Point, Direction, segment.Start, segment.End, segment.Normal);
-    public CollisionPoints? IntersectShape(Segment segment)
-    {
-        var result = IntersectRaySegment(Point, Direction, segment.Start, segment.End, segment.Normal);
-        if (result.Valid)
-        {
-            var colPoints = new CollisionPoints();
-            colPoints.Add(result);
-            return colPoints;
-        }
-
-        return null;
-    }
     
     public static CollisionPoint IntersectRayLine(Vector2 rayPoint, Vector2 rayDirection, Vector2 linePoint, Vector2 lineDirection)
     {
@@ -155,18 +142,6 @@ public readonly struct Ray
     }
     public CollisionPoint IntersectLine(Vector2 linePoint, Vector2 lineDirection) => IntersectRayLine(Point, Direction, linePoint, lineDirection);
     public CollisionPoint IntersectLine(Line line) => IntersectRayLine(Point, Direction, line.Point, line.Direction, line.Normal);
-    public CollisionPoints? IntersectShape(Line line)
-    {
-        var result = IntersectRayLine(Point, Direction, line.Point, line.Direction, line.Normal);
-        if (result.Valid)
-        {
-            var colPoints = new CollisionPoints();
-            colPoints.Add(result);
-            return colPoints;
-        }
-
-        return null;
-    }
     
     public static CollisionPoint IntersectRayRay(Vector2 ray1Point, Vector2 ray1Direction, Vector2 ray2Point, Vector2 ray2Direction)
     {
@@ -203,22 +178,9 @@ public readonly struct Ray
     }
     public CollisionPoint IntersectRay(Vector2 rayPoint, Vector2 rayDirection) => IntersectRayRay(Point, Direction, rayPoint, rayDirection);
     public CollisionPoint IntersectRayRay(Ray ray) => IntersectRayRay(Point, Direction, ray.Point, ray.Direction, ray.Normal);
-    public CollisionPoints? IntersectShape(Ray ray)
-    {
-        var result = IntersectRayRay(Point, Direction, ray.Point, ray.Direction, ray.Normal);
-        if (result.Valid)
-        {
-            var colPoints = new CollisionPoints();
-            colPoints.Add(result);
-            return colPoints;
-        }
-
-        return null;
-    }
     
-    public static CollisionPoints? IntersectRayCircle(Vector2 rayPoint, Vector2 rayDirection, Vector2 circleCenter, float radius)
+    public static (CollisionPoint a, CollisionPoint b) IntersectRayCircle(Vector2 rayPoint, Vector2 rayDirection, Vector2 circleCenter, float radius)
     {
-        CollisionPoints? result = null;
 
         var toCircle = circleCenter - rayPoint;
         float projectionLength = Vector2.Dot(toCircle, rayDirection);
@@ -231,46 +193,183 @@ public readonly struct Ray
             var intersection1 = closestPoint - offset * rayDirection;
             var intersection2 = closestPoint + offset * rayDirection;
 
+            CollisionPoint a = new();
+            CollisionPoint b = new();
             if (Vector2.Dot(intersection1 - rayPoint, rayDirection) >= 0)
             {
                 var normal1 = Vector2.Normalize(intersection1 - circleCenter);
-                result ??= new();
-                result.Add(new(intersection1, normal1));
+                a = new(intersection1, normal1);
             }
 
             if (Vector2.Dot(intersection2 - rayPoint, rayDirection) >= 0)
             {
                 var normal2 = Vector2.Normalize(intersection2 - circleCenter);
-                result ??= new();
-                result.Add(new(intersection2, normal2));
+                b = new(intersection2, normal2);
                 
             }
+            return (a, b);
         }
         else if (Math.Abs(distanceToCenter - radius) < 1e-10)
         {
             if (Vector2.Dot(closestPoint - rayPoint, rayDirection) >= 0)
             {
-                result ??= new();
-                result.Add(new(closestPoint, Vector2.Normalize(closestPoint - circleCenter)));
+                var cp = new CollisionPoint(closestPoint, Vector2.Normalize(closestPoint - circleCenter));
+                return (cp, new());
             }
         }
 
-        return result;
+        return (new(), new());
     }
-    public CollisionPoints? IntersectCircle(Vector2 circleCenter, float circleRadius) => IntersectRayCircle(Point, Direction, circleCenter, circleRadius);
-    public CollisionPoints? IntersectCircle(Circle circle) => IntersectRayCircle(Point, Direction, circle.Center, circle.Radius);
-    public CollisionPoints? IntersectShape(Circle circle) => IntersectCircle(circle);
     
+    public (CollisionPoint a, CollisionPoint b) IntersectCircle(Vector2 circleCenter, float circleRadius) => IntersectRayCircle(Point, Direction, circleCenter, circleRadius);
+    public (CollisionPoint a, CollisionPoint b) IntersectCircle(Circle circle) => IntersectRayCircle(Point, Direction, circle.Center, circle.Radius);
+    
+    
+    public static (CollisionPoint a, CollisionPoint b) IntersectRayTriangle(Vector2 rayPoint, Vector2 rayDirection, Vector2 a, Vector2 b, Vector2 c)
+    {
+        return (new(), new());
+    }
+    public static (CollisionPoint a, CollisionPoint b) IntersectRayQuad(Vector2 rayPoint, Vector2 rayDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+    {
+        return (new(), new());
+    }
+    public static (CollisionPoint a, CollisionPoint b) IntersectRayRect(Vector2 rayPoint, Vector2 rayDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+    {
+        return IntersectRayQuad(rayPoint, rayDirection, a, b, c, d);
+    }
+    public static CollisionPoints? IntersectRayPolygon(Vector2 rayPoint, Vector2 rayDirection, List<Vector2> points)
+    {
+        return null;
+    }
+    public static CollisionPoints? IntersectRayPolyline(Vector2 rayPoint, Vector2 rayDirection, List<Vector2> points)
+    {
+        return null;
+    }
+    public static CollisionPoints? IntersectRaySegments(Vector2 rayPoint, Vector2 rayDirection, List<Segment> segments)
+    {
+        return null;
+    }
+
+    
+    
+    public CollisionPoints? IntersectShape(Segment segment)
+    {
+        var result = IntersectRaySegment(Point, Direction, segment.Start, segment.End, segment.Normal);
+        if (result.Valid)
+        {
+            var colPoints = new CollisionPoints();
+            colPoints.Add(result);
+            return colPoints;
+        }
+
+        return null;
+    }
+    public CollisionPoints? IntersectShape(Line line)
+    {
+        var result = IntersectRayLine(Point, Direction, line.Point, line.Direction, line.Normal);
+        if (result.Valid)
+        {
+            var colPoints = new CollisionPoints();
+            colPoints.Add(result);
+            return colPoints;
+        }
+
+        return null;
+    }
+    public CollisionPoints? IntersectShape(Ray ray)
+    {
+        var result = IntersectRayRay(Point, Direction, ray.Point, ray.Direction, ray.Normal);
+        if (result.Valid)
+        {
+            var colPoints = new CollisionPoints();
+            colPoints.Add(result);
+            return colPoints;
+        }
+
+        return null;
+    }
+    public CollisionPoints? IntersectShape(Circle circle)
+    {
+        var result = IntersectCircle(circle);
+        if (result.a.Valid || result.b.Valid)
+        {
+            var colPoints = new CollisionPoints();
+            if (result.a.Valid)
+            {
+                colPoints.Add(result.a);
+            }
+            if (result.b.Valid)
+            {
+                colPoints.Add(result.b);
+            }
+            return colPoints;
+        }
+
+        return null;
+    }
+    public CollisionPoints? IntersectShape(Triangle t)
+    {
+        var result = IntersectRayTriangle(Point, Direction, t.A, t.B, t.C);
+        if (result.a.Valid || result.b.Valid)
+        {
+            var colPoints = new CollisionPoints();
+            if (result.a.Valid)
+            {
+                colPoints.Add(result.a);
+            }
+            if (result.b.Valid)
+            {
+                colPoints.Add(result.b);
+            }
+            return colPoints;
+        }
+
+        return null;
+    }
+    public CollisionPoints? IntersectShape(Quad q)
+    {
+        var result =  IntersectRayQuad(Point, Direction, q.A, q.B, q.C, q.D);
+        if (result.a.Valid || result.b.Valid)
+        {
+            var colPoints = new CollisionPoints();
+            if (result.a.Valid)
+            {
+                colPoints.Add(result.a);
+            }
+            if (result.b.Valid)
+            {
+                colPoints.Add(result.b);
+            }
+            return colPoints;
+        }
+
+        return null;
+    }
+    public CollisionPoints? IntersectShape(Rect r)
+    {
+        var result = IntersectRayQuad(Point, Direction, r.A, r.B, r.C, r.D);
+        if (result.a.Valid || result.b.Valid)
+        {
+            var colPoints = new CollisionPoints();
+            if (result.a.Valid)
+            {
+                colPoints.Add(result.a);
+            }
+            if (result.b.Valid)
+            {
+                colPoints.Add(result.b);
+            }
+            return colPoints;
+        }
+
+        return null;
+    }
+    public CollisionPoints? IntersectShape(Polygon p) => IntersectRayPolygon(Point, Direction, p);
+    public CollisionPoints? IntersectShape(Polyline pl) => IntersectRayPolyline(Point, Direction, pl);
+    public CollisionPoints? IntersectShape(Segments segments) => IntersectRaySegments(Point, Direction, segments);
+
     #endregion
     
     //TODO: Implement overlaps functions!
     //TODO: Draw functions for line and ray that take a length as a parameter
-    
-    //TODO: implement for intersection
-    // interect trectangle
-    // intersect quad
-    // intersect rect
-    // intersect polygon
-    // intersect polyline
-    // intersect segments
 }
