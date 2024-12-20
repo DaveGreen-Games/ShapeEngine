@@ -6,6 +6,7 @@ using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Random;
+using Ray = ShapeEngine.Core.Shapes.Ray;
 
 namespace ShapeEngine.Lib;
 
@@ -1179,65 +1180,6 @@ public static class ShapeDrawing
     public static void DrawLine(float startX, float startY, float endX, float endY, LineDrawingInfo info) 
         => DrawLine(new(startX, startY), new(endX, endY), info.Thickness, info.Color, info.CapType, info.CapPoints);
     
-    
-    // public static void DrawLineBackup(Vector2 start, Vector2 end, float thickness, ShapeColor color, LineEndCap lineEndCap = LineEndCap.None, int endCapPoints = 0)
-    // {
-    //     if (thickness < LineMinThickness) thickness = LineMinThickness;
-    //     var w = (end - start);
-    //     if (w.LengthSquared() <= 0f) return;
-    //     
-    //     var dir = w.Normalize();
-    //     var pR = dir.GetPerpendicularRight();
-    //     var pL = dir.GetPerpendicularLeft();
-    //     
-    //     if (lineEndCap == LineEndCap.Extended)
-    //     {
-    //         start -= dir * thickness;
-    //         end += dir * thickness;
-    //     }
-    //     
-    //     var tl = start + pL * thickness;
-    //     var bl = start + pR * thickness;
-    //     var br = end + pR * thickness;
-    //     var tr = end + pL * thickness;
-    //     Raylib.DrawTriangle(tl, bl, br, color);
-    //     Raylib.DrawTriangle(tl, br, tr, color);
-    //     
-    //     if (lineEndCap == LineEndCap.Capped && endCapPoints > 0)
-    //     {
-    //         if (endCapPoints == 1)
-    //         {
-    //             var capStart = start - dir * thickness;
-    //             var capEnd = end + dir * thickness;
-    //         
-    //             Raylib.DrawTriangle(tl, capStart, bl, color);
-    //             Raylib.DrawTriangle(tr, br, capEnd, color);
-    //         }
-    //         else
-    //         {
-    //             var curStart = tl;
-    //             var curEnd = br;
-    //             float angleStep = (180f / (endCapPoints + 1)) * ShapeMath.DEGTORAD;
-    //             
-    //             // DrawCircleV(curEnd, 6f, GREEN);
-    //             for (var i = 1; i <= endCapPoints; i++)
-    //             {
-    //                 var pStart = start + pL.Rotate(- angleStep * i) * thickness;
-    //                 Raylib.DrawTriangle(pStart, start, curStart, color);
-    //                 curStart = pStart;
-    //                 
-    //                 var pEnd = end + pR.Rotate(- angleStep * i) * thickness;
-    //                 Raylib.DrawTriangle(pEnd, end, curEnd, color);
-    //                 // DrawCircleV(pEnd, 6f, WHITE);
-    //                 curEnd = pEnd;
-    //             }
-    //             Raylib.DrawTriangle(curStart, bl, start, color);
-    //             Raylib.DrawTriangle(curEnd, tr, end, color);
-    //             // DrawCircleV(tr, 6f, RED);
-    //
-    //         }
-    //     }
-    // }
     #endregion
     
     #region Intersection
@@ -1508,6 +1450,38 @@ public static class ShapeDrawing
 
     #endregion
 
+    #region Line
+
+    public static void DrawLine(Vector2 point, Vector2 direction, float length, float thickness, ColorRgba color)
+    {
+        if(length <= 0 || thickness <= 0 || (direction.X == 0f && direction.Y == 0f)) return;
+        DrawLine(point - direction * length * 0.5f, point + direction * length * 0.5f, thickness, color);
+    }
+
+    public static void Draw(this Line line, float length, float thickness, ColorRgba color)
+    {
+        if(!line.IsValid || length <= 0f || thickness <= 0f) return;
+        DrawLine(line.Point - line.Direction * length * 0.5f, line.Point + line.Direction * length * 0.5f, thickness, color);
+    }
+
+    #endregion
+
+    #region Ray
+
+    public static void DrawRay(Vector2 point, Vector2 direction, float length, float thickness, ColorRgba color)
+    {
+        if(length <= 0 || thickness <= 0 || (direction.X == 0f && direction.Y == 0f)) return;
+        DrawLine(point, point + direction * length, thickness, color);
+    }
+
+    public static void Draw(this Ray ray, float length, float thickness, ColorRgba color)
+    {
+        if(!ray.IsValid || length <= 0f || thickness <= 0f) return;
+        DrawLine(ray.Point, ray.Point + ray.Direction * length, thickness, color);
+    }
+
+    #endregion
+    
     #region Circle
     public static void DrawCircle(Vector2 center, float radius, ColorRgba color, int segments = 16)
     {
