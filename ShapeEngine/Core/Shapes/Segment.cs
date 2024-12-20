@@ -33,7 +33,12 @@ namespace ShapeEngine.Core.Shapes
             this.Normal = GetNormal(start, end, flippedNormal);
             // this.flippedNormals = flippedNormals;
         }
-        
+        internal Segment(Vector2 start, Vector2 end, Vector2 normal) 
+        { 
+            this.Start = start; 
+            this.End = end;
+            this.Normal = normal;
+        }
         public Segment(float startX, float startY, float endX, float endY, bool flippedNormal = false) 
         { 
             this.Start = new(startX, startY); 

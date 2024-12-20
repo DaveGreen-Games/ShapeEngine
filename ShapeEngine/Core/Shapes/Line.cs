@@ -1,6 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Lib;
 
 namespace ShapeEngine.Core.Shapes;
 
@@ -8,37 +9,52 @@ public readonly struct Line
 {
     public readonly Vector2 Point;
     public readonly Vector2 Direction;
-    //TODO: Normal here
+    public readonly Vector2 Normal;
 
     public Line()
     {
         Point = Vector2.Zero;
         Direction = Vector2.Zero;
+        Normal = Vector2.Zero;
     }
-    public Line(float x, float y, float dx, float dy)
+    public Line(float x, float y, float dx, float dy, bool flippedNormal = false)
     {
         Point = new Vector2(x, y);
         Direction = new Vector2(dx, dy);
+        Normal = flippedNormal ? new Vector2(Direction.Y, -Direction.X) : new Vector2(-Direction.Y, Direction.X);
     }
-    public Line(Vector2 direction)
+    public Line(Vector2 direction, bool flippedNormal = false)
     {
         Point = Vector2.Zero;
         Direction = direction;
+        Normal = flippedNormal ? new Vector2(Direction.Y, -Direction.X) : new Vector2(-Direction.Y, Direction.X);
     }
-    public Line(Vector2 point, Vector2 direction)
+    public Line(Vector2 point, Vector2 direction, bool flippedNormal = false)
     {
         Point = point;
         Direction = direction;
+        Normal = flippedNormal ? new Vector2(Direction.Y, -Direction.X) : new Vector2(-Direction.Y, Direction.X);
     }
-    
-    public bool IsValid => Direction.X != 0 || Direction.Y!= 0;
+    internal Line(Vector2 point, Vector2 direction, Vector2 normal)
+    {
+        Point = point;
+        Direction = direction;
+        Normal = normal;
+    }
+    public bool IsValid => (Direction.X != 0 || Direction.Y!= 0) && (Normal.X != 0 || Normal.Y != 0);
     public Segment ToSegment(float length)
     {
         if (!IsValid) return new();
-        return new Segment(Point - Direction * length, Point + Direction * length);
+        return new Segment(Point - Direction * length, Point + Direction * length, Normal);
     }
-    public Ray ToRay(bool reversed = false) => reversed ? new Ray(Point, -Direction) : new Ray(Point, Direction);
-    // Function to calculate the intersection of an infinite line and a segment
+    public Ray ToRay(bool reversed = false) => reversed ? new Ray(Point, -Direction, -Normal) : new Ray(Point, Direction, Normal);
+    public Line FlipNormal() => new Line(Point, Direction, Normal.Flip());
+    public static Vector2 GetNormal(Vector2 direction, bool flippedNormal)
+    {
+        if (flippedNormal) return direction.GetPerpendicularLeft().Normalize();
+        return direction.GetPerpendicularRight().Normalize();
+    }
+    
     public static CollisionPoint IntersectLineSegment(Vector2 linePoint, Vector2 lineDirection, Vector2 segmentStart, Vector2 segmentEnd)
     {
         // Line AB (infinite line) represented by linePoint and lineDirection
@@ -77,6 +93,19 @@ public readonly struct Line
     }
     public CollisionPoint IntersectSegment(Vector2 segmentStart, Vector2 segmentEnd) => IntersectLineSegment(Point, Direction, segmentStart, segmentEnd);
     public CollisionPoint IntersectSegment(Segment segment) => IntersectLineSegment(Point, Direction, segment.Start, segment.End);
+    public CollisionPoints? IntersectShape(Segment segment)
+    {
+        var result = IntersectLineSegment(Point, Direction, segment.Start, segment.End);
+        if (result.Valid)
+        {
+            var colPoints = new CollisionPoints();
+            colPoints.Add(result);
+            return colPoints;
+        }
+
+        return null;
+    }
+
     public static CollisionPoint IntersectLineLine(Vector2 line1Point, Vector2 line1Direction, Vector2 line2Point, Vector2 line2Direction)
     {
         // Calculate the denominator of the intersection formula
@@ -103,6 +132,19 @@ public readonly struct Line
     }
     public CollisionPoint IntersectLine(Vector2 otherPoint, Vector2 otherDirection) => IntersectLineLine(Point, Direction, otherPoint, otherDirection);
     public CollisionPoint IntersectLine(Line otherLine) => IntersectLineLine(Point, Direction, otherLine.Point, otherLine.Direction);
+    public CollisionPoints? IntersectShape(Line line)
+    {
+        var result = IntersectLineLine(Point, Direction, line.Point, line.Direction);
+        if (result.Valid)
+        {
+            var colPoints = new CollisionPoints();
+            colPoints.Add(result);
+            return colPoints;
+        }
+
+        return null;
+    }
+
     
     public static CollisionPoint IntersectLineRay(Vector2 linePoint, Vector2 lineDirection, Vector2 rayPoint, Vector2 rayDirection)
     {
@@ -139,6 +181,19 @@ public readonly struct Line
     }
     public CollisionPoint IntersectRay(Vector2 otherPoint, Vector2 otherDirection) => IntersectLineRay(Point, Direction, otherPoint, otherDirection);
     public CollisionPoint IntersectRay(Ray otherRay) => IntersectLineRay(Point, Direction, otherRay.Point, otherRay.Direction);
+    public CollisionPoints? IntersectShape(Ray ray)
+    {
+        var result = IntersectLineRay(Point, Direction, ray.Point, ray.Direction);
+        if (result.Valid)
+        {
+            var colPoints = new CollisionPoints();
+            colPoints.Add(result);
+            return colPoints;
+        }
+
+        return null;
+    }
+
     
     public static CollisionPoints? IntersectLineCircle(Vector2 linePoint, Vector2 lineDirection, Vector2 circleCenter, float circleRadius)
     {
@@ -190,6 +245,8 @@ public readonly struct Line
     }
     public CollisionPoints? IntersectCircle(Circle otherCircle) => IntersectLineCircle(Point, Direction, otherCircle.Center, otherCircle.Radius);
     public CollisionPoints? IntersectCircle(Vector2 circleCenter, float circleRadius) => IntersectLineCircle(Point, Direction, circleCenter, circleRadius);
+    public CollisionPoints? IntersectShape(Circle circle) => IntersectCircle(circle);
+    
     
     //TODO: Implement overlaps functions!
     //TODO: Draw functions for line and ray that take a length as a parameter

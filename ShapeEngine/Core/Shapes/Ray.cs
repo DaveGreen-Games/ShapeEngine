@@ -1,6 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Lib;
 
 namespace ShapeEngine.Core.Shapes;
 
@@ -8,37 +9,53 @@ public readonly struct Ray
 {
     public readonly Vector2 Point;
     public readonly Vector2 Direction;
-    //TODO: Normal here
+    public readonly Vector2 Normal;
 
     public Ray()
     {
         Point = Vector2.Zero;
         Direction = Vector2.Zero;
+        Normal = Vector2.Zero;
     }
-    public Ray(float x, float y, float dx, float dy)
+    public Ray(float x, float y, float dx, float dy, bool flippedNormal = false)
     {
         Point = new Vector2(x, y);
         Direction = new Vector2(dx, dy);
+        Normal = flippedNormal ? new Vector2(Direction.Y, -Direction.X) : new Vector2(-Direction.Y, Direction.X);
     }
-    public Ray(Vector2 direction)
+    public Ray(Vector2 direction, bool flippedNormal = false)
     {
         Point = Vector2.Zero;
         Direction = direction;
+        Normal = flippedNormal ? new Vector2(Direction.Y, -Direction.X) : new Vector2(-Direction.Y, Direction.X);
     }
-    public Ray(Vector2 point, Vector2 direction)
+    public Ray(Vector2 point, Vector2 direction, bool flippedNormal = false)
     {
         Point = point;
         Direction = direction;
+        Normal = flippedNormal ? new Vector2(Direction.Y, -Direction.X) : new Vector2(-Direction.Y, Direction.X);
     }
 
-    public bool IsValid => Direction.X!= 0 || Direction.Y!= 0;
+    internal Ray(Vector2 point, Vector2 direction, Vector2 normal)
+    {
+        Point = point;
+        Direction = direction;
+        Normal = normal;
+    }
+
+    public bool IsValid => (Direction.X!= 0 || Direction.Y!= 0) && (Normal.X != 0 || Normal.Y != 0);
     public Segment ToSegment(float length)
     {
         if(!IsValid) return new();
         return new Segment(Point, Point + Direction * length);
     }
     public Line ToLine() => new Line(Point, Direction);
-    
+    public Ray FlipNormal() => new Ray(Point, Direction, Normal.Flip());
+    public static Vector2 GetNormal(Vector2 direction, bool flippedNormal)
+    {
+        if (flippedNormal) return direction.GetPerpendicularLeft().Normalize();
+        return direction.GetPerpendicularRight().Normalize();
+    }
     
     public static CollisionPoint IntersectRaySegment(Vector2 rayPoint, Vector2 rayDirection, Vector2 segmentStart, Vector2 segmentEnd)
     {
@@ -63,6 +80,21 @@ public readonly struct Ray
 
         return new();
     }
+    public CollisionPoint IntersectSegment(Vector2 segmentStart, Vector2 segmentEnd) => IntersectRaySegment(Point, Direction, segmentStart, segmentEnd);
+    public CollisionPoint IntersectSegment(Segment segment) => IntersectRaySegment(Point, Direction, segment.Start, segment.End);
+    public CollisionPoints? IntersectShape(Segment segment)
+    {
+        var result = IntersectRaySegment(Point, Direction, segment.Start, segment.End);
+        if (result.Valid)
+        {
+            var colPoints = new CollisionPoints();
+            colPoints.Add(result);
+            return colPoints;
+        }
+
+        return null;
+    }
+    
     public static CollisionPoint IntersectRayLine(Vector2 rayPoint, Vector2 rayDirection, Vector2 linePoint, Vector2 lineDirection)
     {
         float denominator = rayDirection.X * lineDirection.Y - rayDirection.Y * lineDirection.X;
@@ -85,6 +117,21 @@ public readonly struct Ray
 
         return new();
     }
+    public CollisionPoint IntersectLine(Vector2 linePoint, Vector2 lineDirection) => IntersectRayLine(Point, Direction, linePoint, lineDirection);
+    public CollisionPoint IntersectLine(Line line) => IntersectRayLine(Point, Direction, line.Point, line.Direction);
+    public CollisionPoints? IntersectShape(Line line)
+    {
+        var result = IntersectRayLine(Point, Direction, line.Point, line.Direction);
+        if (result.Valid)
+        {
+            var colPoints = new CollisionPoints();
+            colPoints.Add(result);
+            return colPoints;
+        }
+
+        return null;
+    }
+    
     public static CollisionPoint IntersectRayRay(Vector2 ray1Point, Vector2 ray1Direction, Vector2 ray2Point, Vector2 ray2Direction)
     {
         float denominator = ray1Direction.X * ray2Direction.Y - ray1Direction.Y * ray2Direction.X;
@@ -108,6 +155,21 @@ public readonly struct Ray
 
         return new();
     }
+    public CollisionPoint IntersectRay(Vector2 rayPoint, Vector2 rayDirection) => IntersectRayRay(Point, Direction, rayPoint, rayDirection);
+    public CollisionPoint IntersectRayRay(Ray ray) => IntersectRayRay(Point, Direction, ray.Point, ray.Direction);
+    public CollisionPoints? IntersectShape(Ray ray)
+    {
+        var result = IntersectRayRay(Point, Direction, ray.Point, ray.Direction);
+        if (result.Valid)
+        {
+            var colPoints = new CollisionPoints();
+            colPoints.Add(result);
+            return colPoints;
+        }
+
+        return null;
+    }
+    
     public static CollisionPoints? IntersectRayCircle(Vector2 rayPoint, Vector2 rayDirection, Vector2 circleCenter, float radius)
     {
         CollisionPoints? result = null;
@@ -149,6 +211,9 @@ public readonly struct Ray
 
         return result;
     }
+    public CollisionPoints? IntersectCircle(Vector2 circleCenter, float circleRadius) => IntersectRayCircle(Point, Direction, circleCenter, circleRadius);
+    public CollisionPoints? IntersectCircle(Circle circle) => IntersectRayCircle(Point, Direction, circle.Center, circle.Radius);
+    public CollisionPoints? IntersectShape(Circle circle) => IntersectCircle(circle);
     
     //TODO: Implement overlaps functions!
     //TODO: Draw functions for line and ray that take a length as a parameter
