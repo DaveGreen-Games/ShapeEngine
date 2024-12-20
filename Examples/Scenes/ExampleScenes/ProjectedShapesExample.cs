@@ -774,7 +774,7 @@ public class ProjectedShapesExample : ExampleScene
                 foreach (var cp in result)
                 {
                     cp.Point.Draw(12f, Colors.Cold, 16);
-                    ShapeDrawing.DrawLine(cp.Point, cp.Point + cp.Normal * 75f, 2f, Colors.Cold, LineCapType.Capped, 4);
+                    ShapeDrawing.DrawSegment(cp.Point, cp.Point + cp.Normal * 75f, 2f, Colors.Cold, LineCapType.Capped, 4);
                 }
             }
             

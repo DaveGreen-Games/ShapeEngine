@@ -505,8 +505,8 @@ namespace Examples
             var circleCenter = tip + dir * size * 2;
             var left = circleCenter + new Vector2(-1, 0) * size;
             var top = circleCenter + new Vector2(0, -1) * size;
-            ShapeDrawing.DrawLine(tip, left, 1f, colorRgba, LineCapType.CappedExtended, 3);
-            ShapeDrawing.DrawLine(tip, top, 1f, colorRgba, LineCapType.CappedExtended, 3);
+            ShapeDrawing.DrawSegment(tip, left, 1f, colorRgba, LineCapType.CappedExtended, 3);
+            ShapeDrawing.DrawSegment(tip, top, 1f, colorRgba, LineCapType.CappedExtended, 3);
             ShapeDrawing.DrawCircleSectorLines(circleCenter, size, 180, 270, 1f, colorRgba, false, 4f);
         }
 

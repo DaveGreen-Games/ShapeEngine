@@ -28,7 +28,7 @@ public struct Caret
     public void Draw(Vector2 top, float height)
     {
         var bottom = top + new Vector2(0f, height);
-        ShapeDrawing.DrawLine(top, bottom, WidthRelative * height, Color);
+        ShapeDrawing.DrawSegment(top, bottom, WidthRelative * height, Color);
         // Raylib.DrawLineEx(top, bottom, WidthRelative * height, ColorRgba.ToRayColor());
     }
     // public void Draw(string text, Vector2 topLeft, Font font, float fontSize, float fontSpacing)

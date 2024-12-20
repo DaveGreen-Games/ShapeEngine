@@ -651,7 +651,7 @@ public class ShapesExample : ExampleScene
                 foreach (var cp in result)
                 {
                     cp.Point.Draw(6f, Colors.Special, 16);
-                    ShapeDrawing.DrawLine(cp.Point, cp.Point + cp.Normal * 30f, 2f, Colors.Special, LineCapType.Capped, 4);
+                    ShapeDrawing.DrawSegment(cp.Point, cp.Point + cp.Normal * 30f, 2f, Colors.Special, LineCapType.Capped, 4);
                 }
             }
             

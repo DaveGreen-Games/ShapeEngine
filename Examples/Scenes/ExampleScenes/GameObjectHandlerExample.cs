@@ -217,38 +217,38 @@ namespace Examples.Scenes.ExampleScenes
             // circleCollider.OnIntersected += Overlap;
             
             Layer = SpawnAreaLayers.ObjectFlag;
+
+            FilterCollisionPoints = true;
+            CollisionPointsFilterType = CollisionPointsFilterType.Combined;
         }
 
         protected override void Collision(CollisionInformation info)
         {
-            CollisionPoint p = new();
-            if (info.Count > 0)
-            {
-                foreach (var collision in info)
-                {
-                    if(!collision.FirstContact) continue;
-                    if(collision.Points == null) continue;
-                    if (collision.Validate(out CollisionPoint combined))
-                    {
-                        if (combined.Valid) p = p.Combine(combined);
-                    }
-                }
-            }
+            // CollisionPoint p = new();
+            // if (info.Count > 0)
+            // {
+            //     foreach (var collision in info)
+            //     {
+            //         if(!collision.FirstContact) continue;
+            //         if(collision.Points == null) continue;
+            //         if (collision.Validate(out CollisionPoint combined))
+            //         {
+            //             if (combined.Valid) p = p.Combine(combined);
+            //         }
+            //     }
+            // }
 
+            if(!info.FirstContact) return;
+            
+            var p = info.FilteredCollisionPoint;
             if (p.Valid)
             {
                 Velocity = Velocity.Reflect(p.Normal);
             }
         }
 
-        // private void Overlap(Collider col, CollisionInformation info)
-        // {
-        //     if (info.CollisionSurface.Valid)
-        //     {
-        //         // timer = 0.25f;
-        //         Velocity = Velocity.Reflect(info.CollisionSurface.Normal);
-        //     }
-        // }
+        
+
         public override void DrawGame(ScreenInfo game)
         {
             var c = circleCollider.GetCircleShape();
@@ -269,10 +269,7 @@ namespace Examples.Scenes.ExampleScenes
         public override void DrawGameUI(ScreenInfo gameUi)
         {
         }
-        public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
-        {
-            
-        }
+        
     }
    
     internal class Bullet : CollisionObject
@@ -568,31 +565,36 @@ namespace Examples.Scenes.ExampleScenes
             // triangleCollider.OnIntersected += Overlap;
             
             Layer = SpawnAreaLayers.ObjectFlag;
+            FilterCollisionPoints = true;
+            CollisionPointsFilterType = CollisionPointsFilterType.Closest;
         }
 
         protected override void Collision(CollisionInformation info)
         {
-            CollisionPoint p = new();
-            if (info.Count > 0)
-            {
-                foreach (var collision in info)
-                {
-                    if(!collision.FirstContact) continue;
-                    if(collision.Points == null) continue;
-                    if (collision.Validate(out CollisionPoint combined))
-                    {
-                        // var cp = collision.Points.GetAverageCollisionPoint();
-                        if (combined.Valid) p = p.Combine(combined);
-                    }
-                }
-            }
+            // CollisionPoint p = new();
+            // if (info.Count > 0)
+            // {
+            //     foreach (var collision in info)
+            //     {
+            //         if(!collision.FirstContact) continue;
+            //         if(collision.Points == null) continue;
+            //         if (collision.Validate(out CollisionPoint combined))
+            //         {
+            //             // var cp = collision.Points.GetAverageCollisionPoint();
+            //             if (combined.Valid) p = p.Combine(combined);
+            //         }
+            //     }
+            // }
 
+            if(!info.FirstContact) return;
+            var p = info.FilteredCollisionPoint;
             if (p.Valid)
             {
                 Velocity = Velocity.Reflect(p.Normal);
                 Transform = Transform.SetRotationRad(Velocity.AngleRad());
             }
         }
+        
 
         // private void Overlap(Collider col, CollisionInformation info)
         // {

@@ -48,32 +48,32 @@ public class EndlessSpaceCollision : ExampleScene
                 var a = rect.BottomSegment.GetPoint(0.25f);
                 var b = rect.BottomSegment.GetPoint(0.75f);
                 var c = rect.TopSegment.GetPoint(0.5f);
-                ShapeDrawing.DrawLine(a, c, lineThickness, color);
-                ShapeDrawing.DrawLine(b, c, lineThickness, color);
+                ShapeDrawing.DrawSegment(a, c, lineThickness, color);
+                ShapeDrawing.DrawSegment(b, c, lineThickness, color);
             }
             else if (Direction == KeyDirection.Right)
             {
                 var a = rect.LeftSegment.GetPoint(0.25f);
                 var b = rect.LeftSegment.GetPoint(0.75f);
                 var c = rect.RightSegment.GetPoint(0.5f);
-                ShapeDrawing.DrawLine(a, c, lineThickness, color);
-                ShapeDrawing.DrawLine(b, c, lineThickness, color);
+                ShapeDrawing.DrawSegment(a, c, lineThickness, color);
+                ShapeDrawing.DrawSegment(b, c, lineThickness, color);
             }
             else if (Direction == KeyDirection.Down)
             {
                 var a = rect.TopSegment.GetPoint(0.25f);
                 var b = rect.TopSegment.GetPoint(0.75f);
                 var c = rect.BottomSegment.GetPoint(0.5f);
-                ShapeDrawing.DrawLine(a, c, lineThickness, color);
-                ShapeDrawing.DrawLine(b, c, lineThickness, color);
+                ShapeDrawing.DrawSegment(a, c, lineThickness, color);
+                ShapeDrawing.DrawSegment(b, c, lineThickness, color);
             }
             else if (Direction == KeyDirection.Left)
             {
                 var a = rect.RightSegment.GetPoint(0.25f);
                 var b = rect.RightSegment.GetPoint(0.75f);
                 var c = rect.LeftSegment.GetPoint(0.5f);
-                ShapeDrawing.DrawLine(a, c, lineThickness, color);
-                ShapeDrawing.DrawLine(b, c, lineThickness, color);
+                ShapeDrawing.DrawSegment(a, c, lineThickness, color);
+                ShapeDrawing.DrawSegment(b, c, lineThickness, color);
             }
         }
     }
@@ -260,8 +260,8 @@ public class EndlessSpaceCollision : ExampleScene
                 var targetPos = curTarget.GetBoundingBox().Center;
                 pos.Draw(5f, c);
                 targetPos.Draw(5f, c);
-                ShapeDrawing.DrawLine(pos, pos + ShapeVec.VecFromAngleRad(aimingRotRad) * 50, new LineDrawingInfo(8f, c));
-                ShapeDrawing.DrawLine(pos, targetPos, new LineDrawingInfo(2f, c));
+                ShapeDrawing.DrawSegment(pos, pos + ShapeVec.VecFromAngleRad(aimingRotRad) * 50, new LineDrawingInfo(8f, c));
+                ShapeDrawing.DrawSegment(pos, targetPos, new LineDrawingInfo(2f, c));
                 
             }
         }
@@ -1255,7 +1255,7 @@ public class EndlessSpaceCollision : ExampleScene
                 var dir = w.Normalize();
                 var lineStart = lineEnd - dir * 800f;
                 
-                ShapeDrawing.DrawLine(lineStart, lineEnd, 24f * f, Colors.PcCold.ColorRgba);
+                ShapeDrawing.DrawSegment(lineStart, lineEnd, 24f * f, Colors.PcCold.ColorRgba);
             }
             
             if (SmokeTimer > 0f)
@@ -1415,7 +1415,7 @@ public class EndlessSpaceCollision : ExampleScene
                 var dir = w.Normalize();
                 var lineStart = lineEnd - dir * 800f;
                 
-                ShapeDrawing.DrawLine(lineStart, lineEnd, 24f * f, Colors.PcCold.ColorRgba);
+                ShapeDrawing.DrawSegment(lineStart, lineEnd, 24f * f, Colors.PcCold.ColorRgba);
             }
             
             if (smokeTimer > 0f)
@@ -1511,7 +1511,7 @@ public class EndlessSpaceCollision : ExampleScene
             {
                 var w = ShapeMath.LerpFloat(1f, 18f, TravelF);
                 var c = Colors.PcMedium.ColorRgba.Lerp(Colors.PcWarm.ColorRgba, TravelF);
-                ShapeDrawing.DrawLine(StartLocation, TargetLocation, w, c, LineCapType.Capped, 8);
+                ShapeDrawing.DrawSegment(StartLocation, TargetLocation, w, c, LineCapType.Capped, 8);
                 // ShapeDrawing.DrawLineGlow(StartLocation, TargetLocation, 4f, 12f, Colors.PcWarm.ColorRgba, Colors.PcWarm.ColorRgba, 12, LineCapType.Capped, 8);
             }
         }
