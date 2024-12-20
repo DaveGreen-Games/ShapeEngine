@@ -174,7 +174,6 @@ public readonly struct Ray
     }
     public static (CollisionPoint a, CollisionPoint b) IntersectRayCircle(Vector2 rayPoint, Vector2 rayDirection, Vector2 circleCenter, float radius)
     {
-
         var toCircle = circleCenter - rayPoint;
         float projectionLength = Vector2.Dot(toCircle, rayDirection);
         var closestPoint = rayPoint + projectionLength * rayDirection;
@@ -218,18 +217,24 @@ public readonly struct Ray
         CollisionPoint resultA = new();
         CollisionPoint resultB = new();
         
-        var cpA = IntersectRaySegment(rayPoint, rayDirection,  a, b);
-        if(cpA.Valid) resultA = cpA;
+        var cp = IntersectRaySegment(rayPoint, rayDirection,  a, b);
+        if(cp.Valid) resultA = cp;
         
-        var cpB = IntersectRaySegment(rayPoint, rayDirection,  b, c);
-        if (resultA.Valid) resultB = cpB;
-        else resultA = cpB;
-
+        cp = IntersectRaySegment(rayPoint, rayDirection,  b, c);
+        if (cp.Valid)
+        {
+            if (resultA.Valid) resultB = cp;
+            else resultA = cp;
+        }
+        
         if(resultA.Valid && resultB.Valid) return (resultA, resultB);
        
-        var cpC= IntersectRaySegment(rayPoint, rayDirection,  c, a);
-        if(resultA.Valid) resultB = cpC;
-        else resultA = cpC;
+        cp = IntersectRaySegment(rayPoint, rayDirection,  c, a);
+        if (cp.Valid)
+        {
+            if (resultA.Valid) resultB = cp;
+            else resultA = cp;
+        }
         
         return (resultA, resultB);
     }
@@ -460,6 +465,171 @@ public readonly struct Ray
 
     #endregion
     
-    //TODO: Implement overlaps functions!
-    //TODO: Draw functions for line and ray that take a length as a parameter
+    #region Overlap
+
+    public static bool OverlapRaySegment(Vector2 rayPoint, Vector2 rayDirection, Vector2 segmentStart, Vector2 segmentEnd)
+    {
+        float denominator = rayDirection.X * (segmentEnd.Y - segmentStart.Y) - rayDirection.Y * (segmentEnd.X - segmentStart.X);
+
+        if (Math.Abs(denominator) < 1e-10)
+        {
+            return false;
+        }
+
+        var difference = segmentStart - rayPoint;
+        float t = (difference.X * (segmentEnd.Y - segmentStart.Y) - difference.Y * (segmentEnd.X - segmentStart.X)) / denominator;
+        float u = (difference.X * rayDirection.Y - difference.Y * rayDirection.X) / denominator;
+
+        if (t >= 0 && u >= 0 && u <= 1)
+        {
+            return true;
+        }
+
+        return false;
+    }
+    public static bool OverlapRayLine(Vector2 rayPoint, Vector2 rayDirection, Vector2 linePoint, Vector2 lineDirection)
+    {
+        float denominator = rayDirection.X * lineDirection.Y - rayDirection.Y * lineDirection.X;
+
+        if (Math.Abs(denominator) < 1e-10)
+        {
+            return false;
+        }
+
+        var difference = linePoint - rayPoint;
+        float t = (difference.X * lineDirection.Y - difference.Y * lineDirection.X) / denominator;
+
+        if (t >= 0)
+        {
+            return true;
+        }
+
+        return false;
+    }
+    public static bool OverlapRayRay(Vector2 ray1Point, Vector2 ray1Direction, Vector2 ray2Point, Vector2 ray2Direction)
+    {
+        float denominator = ray1Direction.X * ray2Direction.Y - ray1Direction.Y * ray2Direction.X;
+
+        if (Math.Abs(denominator) < 1e-10)
+        {
+            return false;
+        }
+
+        var difference = ray2Point - ray1Point;
+        float t = (difference.X * ray2Direction.Y - difference.Y * ray2Direction.X) / denominator;
+        float u = (difference.X * ray1Direction.Y - difference.Y * ray1Direction.X) / denominator;
+
+        if (t >= 0 && u >= 0)
+        {
+            return true;
+        }
+
+        return false;
+    }
+    public static bool OverlapRayCircle(Vector2 rayPoint, Vector2 rayDirection, Vector2 circleCenter, float circleRadius)
+    {
+        var toCircle = circleCenter - rayPoint;
+        float projectionLength = Vector2.Dot(toCircle, rayDirection);
+        var closestPoint = rayPoint + projectionLength * rayDirection;
+        float distanceToCenter = Vector2.Distance(closestPoint, circleCenter);
+
+        if (distanceToCenter < circleRadius)
+        {
+            return true;
+        }
+        
+        if (Math.Abs(distanceToCenter - circleRadius) < 1e-10)
+        {
+            if (Vector2.Dot(closestPoint - rayPoint, rayDirection) >= 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    public static bool OverlapRayTriangle(Vector2 rayPoint, Vector2 rayDirection, Vector2 a, Vector2 b, Vector2 c)
+    {
+        if (Triangle.ContainsPoint(a, b, c, rayPoint)) return true;
+        
+        var cp = IntersectRaySegment(rayPoint, rayDirection,  a, b);
+        if (cp.Valid) return true;
+        
+        cp = IntersectRaySegment(rayPoint, rayDirection,  b, c);
+        if (cp.Valid) return true;
+       
+        cp= IntersectRaySegment(rayPoint, rayDirection,  c, a);
+        if (cp.Valid) return true;
+
+        return false;
+    }
+    public static bool OverlapRayQuad(Vector2 rayPoint, Vector2 rayDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+    {
+        if (Quad.ContainsPoint(a, b, c, d,  rayPoint)) return true;
+        
+        var cp = IntersectRaySegment(rayPoint, rayDirection,  a, b);
+        if (cp.Valid) return true;
+        
+        cp = IntersectRaySegment(rayPoint, rayDirection,  b, c);
+        if (cp.Valid) return true;
+       
+        cp = IntersectRaySegment(rayPoint, rayDirection,  c, d);
+        if (cp.Valid) return true;
+
+        cp = IntersectRaySegment(rayPoint, rayDirection,  d, a);
+        if (cp.Valid) return true;
+        
+        return false;
+    }
+    
+    public static bool OverlapRayRect(Vector2 rayPoint, Vector2 rayDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+    {
+        return OverlapRayQuad(rayPoint, rayDirection, a, b, c, d);
+    }
+    public static bool OverlapRayPolygon(Vector2 rayPoint, Vector2 rayDirection, List<Vector2> points)
+    {
+        if (points.Count < 3) return false;
+        
+        for (var i = 0; i < points.Count; i++)
+        {
+            var colPoint = IntersectRaySegment(rayPoint, rayDirection, points[i], points[(i + 1) % points.Count]);
+            if (colPoint.Valid) return true;
+        }
+        return false;
+    }
+    public static bool OverlapRayPolyline(Vector2 rayPoint, Vector2 rayDirection, List<Vector2> points)
+    {
+        if (points.Count < 3) return false;
+        for (var i = 0; i < points.Count - 1; i++)
+        {
+            var colPoint = IntersectRaySegment(rayPoint, rayDirection, points[i], points[i + 1]);
+            if (colPoint.Valid) return true;
+        }
+        return false;
+    }
+    public static bool OverlapRaySegments(Vector2 rayPoint, Vector2 rayDirection, List<Segment> segments)
+    {
+        if (segments.Count <= 0) return false;
+
+        foreach (var seg in segments)
+        {
+            var result = IntersectRaySegment(rayPoint, rayDirection, seg.Start, seg.End);
+            if (result.Valid) return true;
+        }
+        return false;
+    }
+
+    
+    public bool OverlapShape(Segment segment) => OverlapRaySegment(Point, Direction, segment.Start, segment.End);
+    public bool OverlapShape(Line line) => OverlapRayLine(Point, Direction, line.Point, line.Direction);
+    public bool OverlapShape(Ray ray) => OverlapRayRay(Point, Direction, ray.Point, ray.Direction);
+    public bool OverlapShape(Circle circle) => OverlapRayCircle(Point, Direction, circle.Center, circle.Radius);
+    public bool OverlapShape(Triangle t) => OverlapRayTriangle(Point, Direction, t.A, t.B, t.C);
+    public bool OverlapShape(Quad q) => OverlapRayQuad(Point, Direction, q.A, q.B, q.C, q.D);
+    public bool OverlapShape(Rect r) => OverlapRayQuad(Point, Direction, r.A, r.B, r.C, r.D);
+    public bool OverlapShape(Polygon p) => OverlapRayPolygon(Point, Direction, p);
+    public bool OverlapShape(Polyline pl) => OverlapRayPolyline(Point, Direction, pl);
+    public bool OverlapShape(Segments segments) => OverlapRaySegments(Point, Direction, segments);
+
+    #endregion
 }

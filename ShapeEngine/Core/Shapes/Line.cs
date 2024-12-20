@@ -1,4 +1,5 @@
 using System.Numerics;
+using ShapeEngine.Color;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
@@ -240,35 +241,41 @@ public readonly struct Line
 
         return (new(), new());
     }
-    public static (CollisionPoint a, CollisionPoint b) IntersectLineTriangle(Vector2 rayPoint, Vector2 rayDirection, Vector2 a, Vector2 b, Vector2 c)
+    public static (CollisionPoint a, CollisionPoint b) IntersectLineTriangle(Vector2 linePoint, Vector2 lineDirection, Vector2 a, Vector2 b, Vector2 c)
     {
         CollisionPoint resultA = new();
         CollisionPoint resultB = new();
         
-        var cpA = IntersectLineSegment(rayPoint, rayDirection,  a, b);
-        if(cpA.Valid) resultA = cpA;
+        var cp = IntersectLineSegment(linePoint, lineDirection,  a, b);
+        if(cp.Valid) resultA = cp;
         
-        var cpB = IntersectLineSegment(rayPoint, rayDirection,  b, c);
-        if (resultA.Valid) resultB = cpB;
-        else resultA = cpB;
-
+        cp = IntersectLineSegment(linePoint, lineDirection,  b, c);
+        if (cp.Valid)
+        {
+            if (resultA.Valid) resultB = cp;
+            else resultA = cp;
+        }
+        
         if(resultA.Valid && resultB.Valid) return (resultA, resultB);
        
-        var cpC= IntersectLineSegment(rayPoint, rayDirection,  c, a);
-        if(resultA.Valid) resultB = cpC;
-        else resultA = cpC;
+        cp = IntersectLineSegment(linePoint, lineDirection,  c, a);
+        if (cp.Valid)
+        {
+            if (resultA.Valid) resultB = cp;
+            else resultA = cp;
+        }
         
         return (resultA, resultB);
     }
-    public static (CollisionPoint a, CollisionPoint b) IntersectLineQuad(Vector2 rayPoint, Vector2 rayDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+    public static (CollisionPoint a, CollisionPoint b) IntersectLineQuad(Vector2 linePoint, Vector2 lineDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
         CollisionPoint resultA = new();
         CollisionPoint resultB = new();
         
-        var cp = IntersectLineSegment(rayPoint, rayDirection,  a, b);
+        var cp = IntersectLineSegment(linePoint, lineDirection,  a, b);
         if(cp.Valid) resultA = cp;
         
-        cp = IntersectLineSegment(rayPoint, rayDirection,  b, c);
+        cp = IntersectLineSegment(linePoint, lineDirection,  b, c);
         if (cp.Valid)
         {
             if (resultA.Valid) resultB = cp;
@@ -277,7 +284,7 @@ public readonly struct Line
         
         if(resultA.Valid && resultB.Valid) return (resultA, resultB);
        
-        cp = IntersectLineSegment(rayPoint, rayDirection,  c, d);
+        cp = IntersectLineSegment(linePoint, lineDirection,  c, d);
         if (cp.Valid)
         {
             if (resultA.Valid) resultB = cp;
@@ -286,7 +293,7 @@ public readonly struct Line
         
         if(resultA.Valid && resultB.Valid) return (resultA, resultB);
         
-        cp = IntersectLineSegment(rayPoint, rayDirection,  d, a);
+        cp = IntersectLineSegment(linePoint, lineDirection,  d, a);
         if (cp.Valid)
         {
             if (resultA.Valid) resultB = cp;
@@ -296,17 +303,17 @@ public readonly struct Line
         return (resultA, resultB);
     }
     
-    public static (CollisionPoint a, CollisionPoint b) IntersectLineRect(Vector2 rayPoint, Vector2 rayDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+    public static (CollisionPoint a, CollisionPoint b) IntersectLineRect(Vector2 linePoint, Vector2 lineDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
-        return IntersectLineQuad(rayPoint, rayDirection, a, b, c, d);
+        return IntersectLineQuad(linePoint, lineDirection, a, b, c, d);
     }
-    public static CollisionPoints? IntersectLinePolygon(Vector2 rayPoint, Vector2 rayDirection, List<Vector2> points)
+    public static CollisionPoints? IntersectLinePolygon(Vector2 linePoint, Vector2 lineDirection, List<Vector2> points)
     {
         if (points.Count < 3) return null;
         CollisionPoints? result = null;
         for (var i = 0; i < points.Count; i++)
         {
-            var colPoint = IntersectLineSegment(rayPoint, rayDirection, points[i], points[(i + 1) % points.Count]);
+            var colPoint = IntersectLineSegment(linePoint, lineDirection, points[i], points[(i + 1) % points.Count]);
             if (colPoint.Valid)
             {
                 result ??= new();
@@ -315,13 +322,13 @@ public readonly struct Line
         }
         return result;
     }
-    public static CollisionPoints? IntersectLinePolyline(Vector2 rayPoint, Vector2 rayDirection, List<Vector2> points)
+    public static CollisionPoints? IntersectLinePolyline(Vector2 linePoint, Vector2 lineDirection, List<Vector2> points)
     {
         if (points.Count < 3) return null;
         CollisionPoints? result = null;
         for (var i = 0; i < points.Count - 1; i++)
         {
-            var colPoint = IntersectLineSegment(rayPoint, rayDirection, points[i], points[i + 1]);
+            var colPoint = IntersectLineSegment(linePoint, lineDirection, points[i], points[i + 1]);
             if (colPoint.Valid)
             {
                 result ??= new();
@@ -330,14 +337,14 @@ public readonly struct Line
         }
         return result;
     }
-    public static CollisionPoints? IntersectLineSegments(Vector2 rayPoint, Vector2 rayDirection, List<Segment> segments)
+    public static CollisionPoints? IntersectLineSegments(Vector2 linePoint, Vector2 lineDirection, List<Segment> segments)
     {
         if (segments.Count <= 0) return null;
         CollisionPoints? points = null;
 
         foreach (var seg in segments)
         {
-            var result = IntersectLineSegment(rayPoint, rayDirection, seg.Start, seg.End);
+            var result = IntersectLineSegment(linePoint, lineDirection, seg.Start, seg.End);
             if (result.Valid)
             {
                 points ??= new();
@@ -485,8 +492,176 @@ public readonly struct Line
     public CollisionPoints? IntersectShape(Polyline pl) => IntersectLinePolyline(Point, Direction, pl);
     public CollisionPoints? IntersectShape(Segments segments) => IntersectLineSegments(Point, Direction, segments);
     #endregion
+
+    #region Overlap
+
+    public static bool OverlapLineSegment(Vector2 linePoint, Vector2 lineDirection, Vector2 segmentStart, Vector2 segmentEnd)
+    {
+        // Line AB (infinite line) represented by linePoint and lineDirection
+        // Line segment CD represented by segmentStart and segmentEnd
+
+        // Calculate direction vector of the segment
+        var segmentDirection = segmentEnd - segmentStart;
+
+        // Calculate the denominator of the intersection formula
+        float denominator = lineDirection.X * segmentDirection.Y - lineDirection.Y * segmentDirection.X;
+
+        // Check if lines are parallel (denominator is zero)
+        if (Math.Abs(denominator) < 1e-10)
+        {
+            return false;
+        }
+
+        // Calculate the intersection point using parameter t
+        var difference = segmentStart - linePoint;
+        float t = (difference.X * segmentDirection.Y - difference.Y * segmentDirection.X) / denominator;
+
+        // Calculate the intersection point
+        var intersection = linePoint + t * lineDirection;
+        
+        return Segment.IsPointOnSegment(intersection, segmentStart, segmentEnd);
+    }
+    public static bool OverlapLineLine(Vector2 line1Point, Vector2 line1Direction, Vector2 line2Point, Vector2 line2Direction)
+    {
+        // Calculate the denominator of the intersection formula
+        float denominator = line1Direction.X * line2Direction.Y - line1Direction.Y * line2Direction.X;
+
+        // Check if lines are parallel (denominator is zero)
+        if (Math.Abs(denominator) < 1e-10)
+        {
+            return false;
+        }
+        // Calculate the intersection point using parameter t
+        var difference = line2Point - line1Point;
+        float t = (difference.X * line2Direction.Y - difference.Y * line2Direction.X) / denominator;
+
+        return true;
+    }
+    public static bool OverlapLineRay(Vector2 linePoint, Vector2 lineDirection, Vector2 rayPoint, Vector2 rayDirection)
+    {
+        // Calculate the denominator of the intersection formula
+        float denominator = lineDirection.X * rayDirection.Y - lineDirection.Y * rayDirection.X;
+
+        // Check if lines are parallel (denominator is zero)
+        if (Math.Abs(denominator) < 1e-10)
+        {
+            return false;
+        }
+
+        var difference = rayPoint - linePoint;
+        float u = (difference.X * lineDirection.Y - difference.Y * lineDirection.X) / denominator;
+
+        return u >= 0;
+    }
+    public static bool OverlapLineCircle(Vector2 linePoint, Vector2 lineDirection, Vector2 circleCenter, float circleRadius)
+    {
+        // Normalize the direction vector
+        if (Circle.ContainsCirclePoint(circleCenter, circleRadius, linePoint)) return true;
+        
+        lineDirection = Vector2.Normalize(lineDirection);
+
+        // Vector from the line point to the circle center
+        var toCircle = circleCenter - linePoint;
+        
+        // Projection of toCircle onto the line direction to find the closest approach
+        float projectionLength = Vector2.Dot(toCircle, lineDirection);
+
+        // Closest point on the line to the circle center
+        var closestPoint = linePoint + projectionLength * lineDirection;
+
+        // Distance from the closest point to the circle center
+        float distanceToCenter = Vector2.Distance(closestPoint, circleCenter);
+
+        // Check if the line intersects the circle
+        if (distanceToCenter < circleRadius) return true;
+
+        if (Math.Abs(distanceToCenter - circleRadius) < 1e-10) return true;
+
+        return false;
+    }
+    public static bool OverlapLineTriangle(Vector2 linePoint, Vector2 lineDirection, Vector2 a, Vector2 b, Vector2 c)
+    {
+        if (Triangle.ContainsPoint(a, b, c, linePoint)) return true;
+        
+        var cp = IntersectLineSegment(linePoint, lineDirection,  a, b);
+        if (cp.Valid) return true;
+        
+        cp = IntersectLineSegment(linePoint, lineDirection,  b, c);
+        if (cp.Valid) return true;
+       
+        cp= IntersectLineSegment(linePoint, lineDirection,  c, a);
+        if (cp.Valid) return true;
+
+        return false;
+    }
+    public static bool OverlapLineQuad(Vector2 linePoint, Vector2 lineDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+    {
+        if (Quad.ContainsPoint(a, b, c, d,  linePoint)) return true;
+        
+        var cp = IntersectLineSegment(linePoint, lineDirection,  a, b);
+        if (cp.Valid) return true;
+        
+        cp = IntersectLineSegment(linePoint, lineDirection,  b, c);
+        if (cp.Valid) return true;
+       
+        cp = IntersectLineSegment(linePoint, lineDirection,  c, d);
+        if (cp.Valid) return true;
+
+        cp = IntersectLineSegment(linePoint, lineDirection,  d, a);
+        if (cp.Valid) return true;
+        
+        return false;
+    }
     
+    public static bool OverlapLineRect(Vector2 linePoint, Vector2 lineDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+    {
+        return OverlapLineQuad(linePoint, lineDirection, a, b, c, d);
+    }
+    public static bool OverlapLinePolygon(Vector2 linePoint, Vector2 lineDirection, List<Vector2> points)
+    {
+        if (points.Count < 3) return false;
+        
+        for (var i = 0; i < points.Count; i++)
+        {
+            var colPoint = IntersectLineSegment(linePoint, lineDirection, points[i], points[(i + 1) % points.Count]);
+            if (colPoint.Valid) return true;
+        }
+        return false;
+    }
+    public static bool OverlapLinePolyline(Vector2 linePoint, Vector2 lineDirection, List<Vector2> points)
+    {
+        if (points.Count < 3) return false;
+        for (var i = 0; i < points.Count - 1; i++)
+        {
+            var colPoint = IntersectLineSegment(linePoint, lineDirection, points[i], points[i + 1]);
+            if (colPoint.Valid) return true;
+        }
+        return false;
+    }
+    public static bool OverlapLineSegments(Vector2 linePoint, Vector2 lineDirection, List<Segment> segments)
+    {
+        if (segments.Count <= 0) return false;
+
+        foreach (var seg in segments)
+        {
+            var result = IntersectLineSegment(linePoint, lineDirection, seg.Start, seg.End);
+            if (result.Valid) return true;
+        }
+        return false;
+    }
+
     
-    //TODO: Implement overlaps functions!
-    //TODO: Draw functions for line and ray that take a length as a parameter
+    public bool OverlapShape(Segment segment) => OverlapLineSegment(Point, Direction, segment.Start, segment.End);
+    public bool OverlapShape(Line line) => OverlapLineLine(Point, Direction, line.Point, line.Direction);
+    public bool OverlapShape(Ray ray) => OverlapLineRay(Point, Direction, ray.Point, ray.Direction);
+    public bool OverlapShape(Circle circle) => OverlapLineCircle(Point, Direction, circle.Center, circle.Radius);
+    public bool OverlapShape(Triangle t) => OverlapLineTriangle(Point, Direction, t.A, t.B, t.C);
+    public bool OverlapShape(Quad q) => OverlapLineQuad(Point, Direction, q.A, q.B, q.C, q.D);
+    public bool OverlapShape(Rect r) => OverlapLineQuad(Point, Direction, r.A, r.B, r.C, r.D);
+    public bool OverlapShape(Polygon p) => OverlapLinePolygon(Point, Direction, p);
+    public bool OverlapShape(Polyline pl) => OverlapLinePolyline(Point, Direction, pl);
+    public bool OverlapShape(Segments segments) => OverlapLineSegments(Point, Direction, segments);
+
+    #endregion
+    
 }
