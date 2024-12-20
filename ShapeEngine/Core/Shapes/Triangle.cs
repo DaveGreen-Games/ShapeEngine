@@ -698,6 +698,22 @@ namespace ShapeEngine.Core.Shapes
 
         #region Contains
 
+        public static bool ContainsPoint(Vector2 a, Vector2 b, Vector2 c, Vector2 point)
+        {
+            var ab = b - a;
+            var bc = c - b;
+            var ca = a - c;
+
+            var ap = point - a;
+            var bp = point - b;
+            var cp = point - c;
+
+            float c1 = ab.Cross(ap);
+            float c2 = bc.Cross(bp);
+            float c3 = ca.Cross(cp);
+
+            return c1 < 0f && c2 < 0f && c3 < 0f;
+        }
         public bool ContainsPoint(Vector2 p)
         {
             var ab = B - A;

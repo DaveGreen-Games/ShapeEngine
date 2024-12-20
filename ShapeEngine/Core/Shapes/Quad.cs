@@ -697,6 +697,17 @@ public readonly struct Quad : IEquatable<Quad>
     #endregion
 
     #region Contains
+    public static  bool ContainsPoint(Vector2 a, Vector2 b, Vector2 c, Vector2 d, Vector2 p)
+    {
+        var oddNodes = false;
+
+        if (Polygon.ContainsPointCheck(d, a, p)) oddNodes = !oddNodes;
+        if (Polygon.ContainsPointCheck(a, b, p)) oddNodes = !oddNodes;
+        if (Polygon.ContainsPointCheck(b, c, p)) oddNodes = !oddNodes;
+        if (Polygon.ContainsPointCheck(c, d, p)) oddNodes = !oddNodes;
+        
+        return oddNodes;
+    }
     public bool ContainsPoint(Vector2 p)
     {
         var oddNodes = false;
