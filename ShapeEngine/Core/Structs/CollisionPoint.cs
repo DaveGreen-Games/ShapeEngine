@@ -1,5 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Core.CollisionSystem;
+using ShapeEngine.Core.Shapes;
 using ShapeEngine.Lib;
 
 namespace ShapeEngine.Core.Structs;
@@ -30,7 +31,9 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
     #endregion
     
     #region Public Functions
-   
+    public Segment GetNormalSegment(float length) => new Segment(Point, Point + Normal * length);
+    public Ray GetNormalRay() => new Ray(Point, Normal);
+    public Line GetNormalLine() => new Line(Point, Normal);
     
     public static bool IsCloser(CollisionPoint p, Vector2 referencePoint, float curMinDisSquared, out float newMinDisSquared)
     {
