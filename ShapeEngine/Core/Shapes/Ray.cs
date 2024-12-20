@@ -7,10 +7,15 @@ namespace ShapeEngine.Core.Shapes;
 
 public readonly struct Ray
 {
+    #region Members
+    
     public readonly Vector2 Point;
     public readonly Vector2 Direction;
     public readonly Vector2 Normal;
 
+    #endregion
+    
+    #region Constructors
     public Ray()
     {
         Point = Vector2.Zero;
@@ -42,7 +47,9 @@ public readonly struct Ray
         Direction = direction;
         Normal = normal;
     }
-
+    #endregion
+    
+    #region Public Functions
     public bool IsValid => (Direction.X!= 0 || Direction.Y!= 0) && (Normal.X != 0 || Normal.Y != 0);
     public Segment ToSegment(float length)
     {
@@ -57,6 +64,14 @@ public readonly struct Ray
         return direction.GetPerpendicularRight().Normalize();
     }
     
+    #endregion
+   
+    #region Overlaps
+    
+    #endregion
+
+    #region Intersections
+
     public static CollisionPoint IntersectRaySegment(Vector2 rayPoint, Vector2 rayDirection, Vector2 segmentStart, Vector2 segmentEnd)
     {
         float denominator = rayDirection.X * (segmentEnd.Y - segmentStart.Y) - rayDirection.Y * (segmentEnd.X - segmentStart.X);
@@ -245,6 +260,8 @@ public readonly struct Ray
     public CollisionPoints? IntersectCircle(Vector2 circleCenter, float circleRadius) => IntersectRayCircle(Point, Direction, circleCenter, circleRadius);
     public CollisionPoints? IntersectCircle(Circle circle) => IntersectRayCircle(Point, Direction, circle.Center, circle.Radius);
     public CollisionPoints? IntersectShape(Circle circle) => IntersectCircle(circle);
+    
+    #endregion
     
     //TODO: Implement overlaps functions!
     //TODO: Draw functions for line and ray that take a length as a parameter

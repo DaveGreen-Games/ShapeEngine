@@ -7,10 +7,14 @@ namespace ShapeEngine.Core.Shapes;
 
 public readonly struct Line
 {
+    #region Members
+
     public readonly Vector2 Point;
     public readonly Vector2 Direction;
     public readonly Vector2 Normal;
+    #endregion
 
+    #region Constructors
     public Line()
     {
         Point = Vector2.Zero;
@@ -41,6 +45,10 @@ public readonly struct Line
         Direction = direction;
         Normal = normal;
     }
+
+    #endregion
+    
+    #region Public Functions
     public bool IsValid => (Direction.X != 0 || Direction.Y!= 0) && (Normal.X != 0 || Normal.Y != 0);
     public Segment ToSegment(float length)
     {
@@ -54,7 +62,17 @@ public readonly struct Line
         if (flippedNormal) return direction.GetPerpendicularLeft().Normalize();
         return direction.GetPerpendicularRight().Normalize();
     }
+
+    #endregion
     
+    #region Overlaps
+
+    
+
+    #endregion
+    
+    #region Intersections
+
     public static CollisionPoint IntersectLineSegment(Vector2 linePoint, Vector2 lineDirection, Vector2 segmentStart, Vector2 segmentEnd)
     {
         // Line AB (infinite line) represented by linePoint and lineDirection
@@ -279,6 +297,8 @@ public readonly struct Line
     public CollisionPoints? IntersectCircle(Vector2 circleCenter, float circleRadius) => IntersectLineCircle(Point, Direction, circleCenter, circleRadius);
     public CollisionPoints? IntersectShape(Circle circle) => IntersectCircle(circle);
     
+    #endregion
+    
     
     //TODO: Implement overlaps functions!
     //TODO: Draw functions for line and ray that take a length as a parameter
@@ -290,15 +310,4 @@ public readonly struct Line
     // intersect polygon
     // intersect polyline
     // intersect segments
-    
-    /*//Helper function to check if a point is on the segment
-    private static bool IsPointOnSegment(Vector2 point, Vector2 segmentStart, Vector2 segmentEnd)
-    {
-        float minX = Math.Min(segmentStart.X, segmentEnd.X);
-        float maxX = Math.Max(segmentStart.X, segmentEnd.X);
-        float minY = Math.Min(segmentStart.Y, segmentEnd.Y);
-        float maxY = Math.Max(segmentStart.Y, segmentEnd.Y);
-
-        return point.X >= minX && point.X <= maxX && point.Y >= minY && point.Y <= maxY;
-    }*/
 }
