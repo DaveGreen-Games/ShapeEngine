@@ -359,10 +359,18 @@ namespace ShapeEngine.Core.Shapes
         }
         public static bool IsPointOnSegment(Vector2 point, Vector2 start, Vector2 end)
         {
-            var d = end - start;
-            var lp = point - start;
-            var p = lp.Project(d);
-            return lp.IsSimilar(p) && p.LengthSquared() <= d.LengthSquared() && Vector2.Dot(p, d) >= 0.0f;
+            float minX = Math.Min(start.X, end.X);
+            float maxX = Math.Max(start.X, end.X);
+            float minY = Math.Min(start.Y, end.Y);
+            float maxY = Math.Max(start.Y, end.Y);
+
+            return point.X >= minX && point.X <= maxX && point.Y >= minY && point.Y <= maxY;
+            
+            //old version
+            // var d = end - start;
+            // var lp = point - start;
+            // var p = lp.Project(d);
+            // return lp.IsSimilar(p) && p.LengthSquared() <= d.LengthSquared() && Vector2.Dot(p, d) >= 0.0f;
         }
         public static bool IsPointOnRay(Vector2 point, Vector2 start, Vector2 dir)
         {
