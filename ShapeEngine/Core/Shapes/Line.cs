@@ -54,7 +54,7 @@ public readonly struct Line
     public Segment ToSegment(float length)
     {
         if (!IsValid) return new();
-        return new Segment(Point - Direction * length, Point + Direction * length, Normal);
+        return new Segment(Point - Direction * length * 0.5f, Point + Direction * length * 0.5f, Normal);
     }
     public Ray ToRay(bool reversed = false) => reversed ? new Ray(Point, -Direction, -Normal) : new Ray(Point, Direction, Normal);
     public Line FlipNormal() => new Line(Point, Direction, Normal.Flip());
@@ -63,7 +63,7 @@ public readonly struct Line
         if (flippedNormal) return direction.GetPerpendicularLeft().Normalize();
         return direction.GetPerpendicularRight().Normalize();
     }
-
+    public bool IsPointOnLine(Vector2 point) => IsPointOnLine(point, Point, Direction);
     #endregion
     
     #region Overlaps
@@ -74,6 +74,143 @@ public readonly struct Line
     
     #region Intersections
 
+    public static bool IsPointOnLine(Vector2 point, Vector2 linePoint, Vector2 lineDirection)
+    {
+        // Calculate the vector from the line point to the given point
+        var toPoint = point - linePoint;
+
+        // Calculate the cross product of the direction vector and the vector to the point
+        float crossProduct = toPoint.X * lineDirection.Y - toPoint.Y * lineDirection.X;
+
+        // If the cross product is close to zero, the point is on the line
+        return Math.Abs(crossProduct) < 1e-10;
+    }
+    
+    public static (CollisionPoint p, float t) IntersectLineSegmentInfo(Vector2 linePoint, Vector2 lineDirection, Vector2 segmentStart, Vector2 segmentEnd)
+    {
+        // Line AB (infinite line) represented by linePoint and lineDirection
+        // Line segment CD represented by segmentStart and segmentEnd
+
+        // Calculate direction vector of the segment
+        var segmentDirection = segmentEnd - segmentStart;
+
+        // Calculate the denominator of the intersection formula
+        float denominator = lineDirection.X * segmentDirection.Y - lineDirection.Y * segmentDirection.X;
+
+        // Check if lines are parallel (denominator is zero)
+        if (Math.Abs(denominator) < 1e-10)
+        {
+            return (new(), -1f);
+        }
+
+        // Calculate the intersection point using parameter t
+        var difference = segmentStart - linePoint;
+        float t = (difference.X * segmentDirection.Y - difference.Y * segmentDirection.X) / denominator;
+
+        // Calculate the intersection point
+        var intersection = linePoint + t * lineDirection;
+
+        // Check if the intersection point is within the segment
+        if (Segment.IsPointOnSegment(intersection, segmentStart, segmentEnd))
+        {
+            // The normal vector can be taken as perpendicular to the segment direction
+            segmentDirection = Vector2.Normalize(segmentDirection);
+            var normal = new Vector2(-segmentDirection.Y, segmentDirection.X);
+
+            return (new(intersection, normal), t);
+        }
+
+        return (new(), -1f);
+    }
+    public static (CollisionPoint p, float t) IntersectLineSegmentInfo(Vector2 linePoint, Vector2 lineDirection, Vector2 segmentStart, Vector2 segmentEnd, Vector2 segmentNormal)
+    {
+        var result = IntersectLineSegmentInfo(linePoint, lineDirection, segmentStart, segmentEnd);
+        if (result.p.Valid)
+        {
+            return (new(result.p.Point, segmentNormal), result.t);
+        }
+
+        return (new(), -1f);
+    }
+    public static (CollisionPoint p, float t) IntersectLineLineInfo(Vector2 line1Point, Vector2 line1Direction, Vector2 line2Point, Vector2 line2Direction)
+    {
+        // Calculate the denominator of the intersection formula
+        float denominator = line1Direction.X * line2Direction.Y - line1Direction.Y * line2Direction.X;
+
+        // Check if lines are parallel (denominator is zero)
+        if (Math.Abs(denominator) < 1e-10)
+        {
+            return (new(), -1f);
+        }
+
+        // Calculate the intersection point using parameter t
+        var difference = line2Point - line1Point;
+        float t = (difference.X * line2Direction.Y - difference.Y * line2Direction.X) / denominator;
+
+        // Calculate the intersection point
+        var intersection = line1Point + t * line1Direction;
+
+        // Calculate the normal vector as perpendicular to the direction of the first line
+        var normal = new Vector2(-line2Direction.Y, line2Direction.X);
+        normal = Vector2.Normalize(normal);
+
+        return (new(intersection, normal), t);
+    }
+    public static (CollisionPoint p, float t) IntersectLineLineInfo(Vector2 line1Point, Vector2 line1Direction, Vector2 line2Point, Vector2 line2Direction, Vector2 line2Normal)
+    {
+        var result = IntersectLineLineInfo(line1Point, line1Direction, line2Point, line2Direction);
+        if (result.p.Valid)
+        {
+            return (new(result.p.Point, line2Normal), result.t);
+        }
+
+        return (new(), -1f);
+    }
+    public static (CollisionPoint p, float t) IntersectLineRayInfo(Vector2 linePoint, Vector2 lineDirection, Vector2 rayPoint, Vector2 rayDirection)
+    {
+        // Calculate the denominator of the intersection formula
+        float denominator = lineDirection.X * rayDirection.Y - lineDirection.Y * rayDirection.X;
+
+        // Check if lines are parallel (denominator is zero)
+        if (Math.Abs(denominator) < 1e-10)
+        {
+            return (new(), -1f);
+        }
+
+        // Calculate the intersection point using parameter t
+        var difference = rayPoint - linePoint;
+        float t = (difference.X * rayDirection.Y - difference.Y * rayDirection.X) / denominator;
+
+        // Calculate the parameter u for the ray
+        float u = (difference.X * lineDirection.Y - difference.Y * lineDirection.X) / denominator;
+
+        // Check if the intersection point lies in the direction of the ray
+        if (u >= 0)
+        {
+            // Calculate the intersection point
+            var intersection = linePoint + t * lineDirection;
+
+            // Calculate the normal vector as perpendicular to the direction of the line
+            var normal = new Vector2(-rayDirection.Y, rayDirection.X);
+            normal = Vector2.Normalize(normal);
+
+            return (new(intersection, normal), t);
+        }
+        
+        return (new(), -1f);
+    }
+    public static (CollisionPoint p, float t) IntersectLineRayInfo(Vector2 linePoint, Vector2 lineDirection, Vector2 rayPoint, Vector2 rayDirection, Vector2 rayNormal)
+    {
+        var result = IntersectLineRayInfo(linePoint, lineDirection, rayPoint, rayDirection);
+        if (result.p.Valid)
+        {
+            return (new(result.p.Point, rayNormal), result.t);
+        }
+
+        return (new(), -1f);
+    }
+    
+    
     public static CollisionPoint IntersectLineSegment(Vector2 linePoint, Vector2 lineDirection, Vector2 segmentStart, Vector2 segmentEnd)
     {
         // Line AB (infinite line) represented by linePoint and lineDirection
@@ -197,6 +334,7 @@ public readonly struct Line
 
         return new();
     }
+    
     public static (CollisionPoint a, CollisionPoint b) IntersectLineCircle(Vector2 linePoint, Vector2 lineDirection, Vector2 circleCenter, float circleRadius)
     {
         // Normalize the direction vector
@@ -307,9 +445,10 @@ public readonly struct Line
     {
         return IntersectLineQuad(linePoint, lineDirection, a, b, c, d);
     }
-    public static CollisionPoints? IntersectLinePolygon(Vector2 linePoint, Vector2 lineDirection, List<Vector2> points)
+    public static CollisionPoints? IntersectLinePolygon(Vector2 linePoint, Vector2 lineDirection, List<Vector2> points, int maxCollisionPoints = -1)
     {
         if (points.Count < 3) return null;
+        if (maxCollisionPoints == 0) return null;
         CollisionPoints? result = null;
         for (var i = 0; i < points.Count; i++)
         {
@@ -318,13 +457,15 @@ public readonly struct Line
             {
                 result ??= new();
                 result.Add(colPoint);
+                if(maxCollisionPoints > 0 && result.Count >= maxCollisionPoints) return result;
             }
         }
         return result;
     }
-    public static CollisionPoints? IntersectLinePolyline(Vector2 linePoint, Vector2 lineDirection, List<Vector2> points)
+    public static CollisionPoints? IntersectLinePolyline(Vector2 linePoint, Vector2 lineDirection, List<Vector2> points, int maxCollisionPoints = -1)
     {
         if (points.Count < 3) return null;
+        if (maxCollisionPoints == 0) return null;
         CollisionPoints? result = null;
         for (var i = 0; i < points.Count - 1; i++)
         {
@@ -333,25 +474,28 @@ public readonly struct Line
             {
                 result ??= new();
                 result.Add(colPoint);
+                if(maxCollisionPoints > 0 && result.Count >= maxCollisionPoints) return result;
             }
         }
         return result;
     }
-    public static CollisionPoints? IntersectLineSegments(Vector2 linePoint, Vector2 lineDirection, List<Segment> segments)
+    public static CollisionPoints? IntersectLineSegments(Vector2 linePoint, Vector2 lineDirection, List<Segment> segments, int maxCollisionPoints = -1)
     {
         if (segments.Count <= 0) return null;
-        CollisionPoints? points = null;
+        if (maxCollisionPoints == 0) return null;
+        CollisionPoints? result = null;
 
         foreach (var seg in segments)
         {
-            var result = IntersectLineSegment(linePoint, lineDirection, seg.Start, seg.End);
-            if (result.Valid)
+            var colPoint = IntersectLineSegment(linePoint, lineDirection, seg.Start, seg.End);
+            if (colPoint.Valid)
             {
-                points ??= new();
-                points.AddRange(result);
+                result ??= new();
+                result.AddRange(colPoint);
+                if(maxCollisionPoints > 0 && result.Count >= maxCollisionPoints) return result;
             }
         }
-        return points;
+        return result;
     }
 
     
@@ -369,12 +513,13 @@ public readonly struct Line
     public (CollisionPoint a, CollisionPoint b) IntersectQuad(Quad quad) => IntersectLineQuad(Point, Direction, quad.A, quad.B, quad.C, quad.D);
     public (CollisionPoint a, CollisionPoint b) IntersectRect(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => IntersectLineQuad(Point, Direction, a, b, c, d);
     public (CollisionPoint a, CollisionPoint b) IntersectRect(Rect rect) => IntersectLineQuad(Point, Direction, rect.A, rect.B, rect.C, rect.D);
-    public CollisionPoints? IntersectPolygon(List<Vector2> points) => IntersectLinePolygon(Point, Direction, points);
-    public CollisionPoints? IntersectPolygon(Polygon polygon) => IntersectLinePolygon(Point, Direction, polygon);
-    public CollisionPoints? IntersectPolyline(List<Vector2> points) => IntersectLinePolyline(Point, Direction, points);
-    public CollisionPoints? IntersectPolyline(Polyline polyline) => IntersectLinePolyline(Point, Direction, polyline);
-    public CollisionPoints? IntersectSegments(List<Segment> segments) => IntersectLineSegments(Point, Direction, segments);
-    public CollisionPoints? IntersectSegments(Segments segments) => IntersectLineSegments(Point, Direction, segments);
+    
+    public CollisionPoints? IntersectPolygon(List<Vector2> points, int maxCollisionPoints = -1) => IntersectLinePolygon(Point, Direction, points, maxCollisionPoints);
+    public CollisionPoints? IntersectPolygon(Polygon polygon, int maxCollisionPoints = -1) => IntersectLinePolygon(Point, Direction, polygon, maxCollisionPoints);
+    public CollisionPoints? IntersectPolyline(List<Vector2> points, int maxCollisionPoints = -1) => IntersectLinePolyline(Point, Direction, points, maxCollisionPoints);
+    public CollisionPoints? IntersectPolyline(Polyline polyline, int maxCollisionPoints = -1) => IntersectLinePolyline(Point, Direction, polyline, maxCollisionPoints);
+    public CollisionPoints? IntersectSegments(List<Segment> segments, int maxCollisionPoints = -1) => IntersectLineSegments(Point, Direction, segments, maxCollisionPoints);
+    public CollisionPoints? IntersectSegments(Segments segments, int maxCollisionPoints = -1) => IntersectLineSegments(Point, Direction, segments, maxCollisionPoints);
     
     public CollisionPoints? IntersectShape(Segment segment)
     {
@@ -488,9 +633,9 @@ public readonly struct Line
 
         return null;
     }
-    public CollisionPoints? IntersectShape(Polygon p) => IntersectLinePolygon(Point, Direction, p);
-    public CollisionPoints? IntersectShape(Polyline pl) => IntersectLinePolyline(Point, Direction, pl);
-    public CollisionPoints? IntersectShape(Segments segments) => IntersectLineSegments(Point, Direction, segments);
+    public CollisionPoints? IntersectShape(Polygon p, int maxCollisionPoints = -1) => IntersectLinePolygon(Point, Direction, p, maxCollisionPoints);
+    public CollisionPoints? IntersectShape(Polyline pl, int maxCollisionPoints = -1) => IntersectLinePolyline(Point, Direction, pl, maxCollisionPoints);
+    public CollisionPoints? IntersectShape(Segments segments, int maxCollisionPoints = -1) => IntersectLineSegments(Point, Direction, segments, maxCollisionPoints);
     #endregion
 
     #region Overlap

@@ -63,7 +63,7 @@ public readonly struct Ray
         if (flippedNormal) return direction.GetPerpendicularLeft().Normalize();
         return direction.GetPerpendicularRight().Normalize();
     }
-    
+    public bool IsPointOnRay(Vector2 point) => IsPointOnRay(point, Point, Direction);
     #endregion
    
     #region Overlaps
@@ -72,6 +72,119 @@ public readonly struct Ray
 
     #region Intersections
 
+    public static bool IsPointOnRay(Vector2 point, Vector2 rayPoint, Vector2 rayDirection)
+    {
+        // Calculate the vector from the ray point to the given point
+        var toPoint = point - rayPoint;
+
+        // Calculate the dot product of the direction vector and the vector to the point
+        float dotProduct = Vector2.Dot(toPoint, rayDirection);
+
+        // Check if the point is in the same direction as the ray and on the line
+        return dotProduct >= 0 && Line.IsPointOnLine(point, rayPoint, rayDirection);
+    }
+    
+    
+    public static (CollisionPoint p, float t) IntersectRaySegmentInfo(Vector2 rayPoint, Vector2 rayDirection, Vector2 segmentStart, Vector2 segmentEnd)
+    {
+        float denominator = rayDirection.X * (segmentEnd.Y - segmentStart.Y) - rayDirection.Y * (segmentEnd.X - segmentStart.X);
+
+        if (Math.Abs(denominator) < 1e-10)
+        {
+            return (new(), -1f);
+        }
+
+        var difference = segmentStart - rayPoint;
+        float t = (difference.X * (segmentEnd.Y - segmentStart.Y) - difference.Y * (segmentEnd.X - segmentStart.X)) / denominator;
+        float u = (difference.X * rayDirection.Y - difference.Y * rayDirection.X) / denominator;
+
+        if (t >= 0 && u >= 0 && u <= 1)
+        {
+            var intersection = rayPoint + t * rayDirection;
+            var segmentDirection = Vector2.Normalize(segmentEnd - segmentStart);
+            var normal = new Vector2(-segmentDirection.Y, segmentDirection.X);
+            return (new(intersection, normal), t);
+        }
+
+        return (new(), -1f);
+    }
+    public static (CollisionPoint p, float t) IntersectRaySegmentInfo(Vector2 rayPoint, Vector2 rayDirection, Vector2 segmentStart, Vector2 segmentEnd, Vector2 segmentNormal)
+    {
+        var result = IntersectRaySegmentInfo(rayPoint, rayDirection, segmentStart, segmentEnd);
+        if (result.p.Valid)
+        {
+            return (new(result.p.Point, segmentNormal), result.t);
+        }
+
+        return (new(), -1f);
+    }
+    public static (CollisionPoint p, float t) IntersectRayLineInfo(Vector2 rayPoint, Vector2 rayDirection, Vector2 linePoint, Vector2 lineDirection)
+    {
+        float denominator = rayDirection.X * lineDirection.Y - rayDirection.Y * lineDirection.X;
+
+        if (Math.Abs(denominator) < 1e-10)
+        {
+            return (new(), -1f);
+        }
+
+        var difference = linePoint - rayPoint;
+        float t = (difference.X * lineDirection.Y - difference.Y * lineDirection.X) / denominator;
+
+        if (t >= 0)
+        {
+            var intersection = rayPoint + t * rayDirection;
+            var normal = new Vector2(-lineDirection.Y, lineDirection.X);
+            normal = Vector2.Normalize(normal);
+            return (new(intersection, normal), t);
+        }
+
+        return (new(), -1f);
+    }
+    public static (CollisionPoint p, float t) IntersectRayLineInfo(Vector2 rayPoint, Vector2 rayDirection, Vector2 linePoint, Vector2 lineDirection, Vector2 lineNormal)
+    {
+        var result = IntersectRayLineInfo(rayPoint, rayDirection, linePoint, lineDirection);
+        if (result.p.Valid)
+        {
+            return (new(result.p.Point, lineNormal), result.t);
+        }
+
+        return (new(), -1f);
+    }
+    public static (CollisionPoint p, float t) IntersectRayRayInfo(Vector2 ray1Point, Vector2 ray1Direction, Vector2 ray2Point, Vector2 ray2Direction)
+    {
+        float denominator = ray1Direction.X * ray2Direction.Y - ray1Direction.Y * ray2Direction.X;
+
+        if (Math.Abs(denominator) < 1e-10)
+        {
+            return (new(), -1f);
+        }
+
+        var difference = ray2Point - ray1Point;
+        float t = (difference.X * ray2Direction.Y - difference.Y * ray2Direction.X) / denominator;
+        float u = (difference.X * ray1Direction.Y - difference.Y * ray1Direction.X) / denominator;
+
+        if (t >= 0 && u >= 0)
+        {
+            var intersection = ray1Point + t * ray1Direction;
+            var normal = new Vector2(-ray2Direction.Y, ray2Direction.X);
+            normal = Vector2.Normalize(normal);
+            return (new(intersection, normal), t);
+        }
+
+        return (new(), -1f);
+    }
+    public static (CollisionPoint p, float t) IntersectRayRayInfo(Vector2 ray1Point, Vector2 ray1Direction, Vector2 ray2Point, Vector2 ray2Direction, Vector2 ray2Normal)
+    {
+        var result = IntersectRayRayInfo(ray1Point, ray1Direction, ray2Point, ray2Direction);
+        if (result.p.Valid)
+        {
+            return (new(result.p.Point, ray2Normal), result.t);
+        }
+
+        return (new(), -1f);
+    }
+    
+    
     public static CollisionPoint IntersectRaySegment(Vector2 rayPoint, Vector2 rayDirection, Vector2 segmentStart, Vector2 segmentEnd)
     {
         float denominator = rayDirection.X * (segmentEnd.Y - segmentStart.Y) - rayDirection.Y * (segmentEnd.X - segmentStart.X);
@@ -172,6 +285,7 @@ public readonly struct Ray
 
         return new();
     }
+    
     public static (CollisionPoint a, CollisionPoint b) IntersectRayCircle(Vector2 rayPoint, Vector2 rayDirection, Vector2 circleCenter, float radius)
     {
         var toCircle = circleCenter - rayPoint;
@@ -277,9 +391,10 @@ public readonly struct Ray
     {
         return IntersectRayQuad(rayPoint, rayDirection, a, b, c, d);
     }
-    public static CollisionPoints? IntersectRayPolygon(Vector2 rayPoint, Vector2 rayDirection, List<Vector2> points)
+    public static CollisionPoints? IntersectRayPolygon(Vector2 rayPoint, Vector2 rayDirection, List<Vector2> points, int maxCollisionPoints = -1)
     {
         if (points.Count < 3) return null;
+        if (maxCollisionPoints == 0) return null;
         CollisionPoints? result = null;
         for (var i = 0; i < points.Count; i++)
         {
@@ -288,13 +403,15 @@ public readonly struct Ray
             {
                 result ??= new();
                 result.Add(colPoint);
+                if(maxCollisionPoints > 0 && result.Count >= maxCollisionPoints) return result;
             }
         }
         return result;
     }
-    public static CollisionPoints? IntersectRayPolyline(Vector2 rayPoint, Vector2 rayDirection, List<Vector2> points)
+    public static CollisionPoints? IntersectRayPolyline(Vector2 rayPoint, Vector2 rayDirection, List<Vector2> points, int maxCollisionPoints = -1)
     {
         if (points.Count < 3) return null;
+        if (maxCollisionPoints == 0) return null;
         CollisionPoints? result = null;
         for (var i = 0; i < points.Count - 1; i++)
         {
@@ -303,25 +420,28 @@ public readonly struct Ray
             {
                 result ??= new();
                 result.Add(colPoint);
+                if(maxCollisionPoints > 0 && result.Count >= maxCollisionPoints) return result;
             }
         }
         return result;
     }
-    public static CollisionPoints? IntersectRaySegments(Vector2 rayPoint, Vector2 rayDirection, List<Segment> segments)
+    public static CollisionPoints? IntersectRaySegments(Vector2 rayPoint, Vector2 rayDirection, List<Segment> segments, int maxCollisionPoints = -1)
     {
         if (segments.Count <= 0) return null;
-        CollisionPoints? points = null;
+        if (maxCollisionPoints == 0) return null;
+        CollisionPoints? result = null;
 
         foreach (var seg in segments)
         {
-            var result = IntersectRaySegment(rayPoint, rayDirection, seg.Start, seg.End);
-            if (result.Valid)
+            var colPoint = IntersectRaySegment(rayPoint, rayDirection, seg.Start, seg.End);
+            if (colPoint.Valid)
             {
-                points ??= new();
-                points.AddRange(result);
+                result ??= new();
+                result.AddRange(colPoint);
+                if(maxCollisionPoints > 0 && result.Count >= maxCollisionPoints) return result;
             }
         }
-        return points;
+        return result;
     }
 
     
@@ -339,12 +459,13 @@ public readonly struct Ray
     public (CollisionPoint a, CollisionPoint b) IntersectQuad(Quad quad) => IntersectRayQuad(Point, Direction, quad.A, quad.B, quad.C, quad.D);
     public (CollisionPoint a, CollisionPoint b) IntersectRect(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => IntersectRayQuad(Point, Direction, a, b, c, d);
     public (CollisionPoint a, CollisionPoint b) IntersectRect(Rect rect) => IntersectRayQuad(Point, Direction, rect.A, rect.B, rect.C, rect.D);
-    public CollisionPoints? IntersectPolygon(List<Vector2> points) => IntersectRayPolygon(Point, Direction, points);
-    public CollisionPoints? IntersectPolygon(Polygon polygon) => IntersectRayPolygon(Point, Direction, polygon);
-    public CollisionPoints? IntersectPolyline(List<Vector2> points) => IntersectRayPolyline(Point, Direction, points);
-    public CollisionPoints? IntersectPolyline(Polyline polyline) => IntersectRayPolyline(Point, Direction, polyline);
-    public CollisionPoints? IntersectSegments(List<Segment> segments) => IntersectRaySegments(Point, Direction, segments);
-    public CollisionPoints? IntersectSegments(Segments segments) => IntersectRaySegments(Point, Direction, segments);
+    
+    public CollisionPoints? IntersectPolygon(List<Vector2> points, int maxCollisionPoints = -1) => IntersectRayPolygon(Point, Direction, points, maxCollisionPoints);
+    public CollisionPoints? IntersectPolygon(Polygon polygon, int maxCollisionPoints = -1) => IntersectRayPolygon(Point, Direction, polygon, maxCollisionPoints);
+    public CollisionPoints? IntersectPolyline(List<Vector2> points, int maxCollisionPoints = -1) => IntersectRayPolyline(Point, Direction, points, maxCollisionPoints);
+    public CollisionPoints? IntersectPolyline(Polyline polyline, int maxCollisionPoints = -1) => IntersectRayPolyline(Point, Direction, polyline, maxCollisionPoints);
+    public CollisionPoints? IntersectSegments(List<Segment> segments, int maxCollisionPoints = -1) => IntersectRaySegments(Point, Direction, segments, maxCollisionPoints);
+    public CollisionPoints? IntersectSegments(Segments segments, int maxCollisionPoints = -1) => IntersectRaySegments(Point, Direction, segments, maxCollisionPoints);
     
     
     public CollisionPoints? IntersectShape(Segment segment)
@@ -459,9 +580,10 @@ public readonly struct Ray
 
         return null;
     }
-    public CollisionPoints? IntersectShape(Polygon p) => IntersectRayPolygon(Point, Direction, p);
-    public CollisionPoints? IntersectShape(Polyline pl) => IntersectRayPolyline(Point, Direction, pl);
-    public CollisionPoints? IntersectShape(Segments segments) => IntersectRaySegments(Point, Direction, segments);
+    
+    public CollisionPoints? IntersectShape(Polygon p, int maxCollisionPoints = -1) => IntersectRayPolygon(Point, Direction, p, maxCollisionPoints);
+    public CollisionPoints? IntersectShape(Polyline pl, int maxCollisionPoints = -1) => IntersectRayPolyline(Point, Direction, pl, maxCollisionPoints);
+    public CollisionPoints? IntersectShape(Segments segments, int maxCollisionPoints = -1) => IntersectRaySegments(Point, Direction, segments, maxCollisionPoints);
 
     #endregion
     
