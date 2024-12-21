@@ -378,8 +378,8 @@ public readonly struct Segment : IEquatable<Segment>
     
     public static ValueRange ProjectSegment(Vector2 aPos, Vector2 aEnd, Vector2 onto)
     {
-        var unitOnto = Vector2.Normalize(onto);
-        ValueRange r = new(ShapeVec.Dot(unitOnto, aPos), ShapeVec.Dot(unitOnto, aEnd));
+        var unitOnto = onto.Normalize();
+        ValueRange r = new(unitOnto.Dot(aPos), unitOnto.Dot(aEnd));
         return r;
     }
     public static bool SegmentOnOneSide(Vector2 axisPos, Vector2 axisDir, Vector2 segmentStart, Vector2 segmentEnd)
@@ -414,8 +414,7 @@ public readonly struct Segment : IEquatable<Segment>
             var intersection = segment1Start + t * dir1;
 
             // Calculate the normal vector as perpendicular to the direction of the first segment
-            var normal = new Vector2(-dir1.Y, dir1.X);
-            normal = Vector2.Normalize(normal);
+            var normal = new Vector2(-dir1.Y, dir1.X).Normalize();
 
             return (new CollisionPoint(intersection, normal), t);
         }
@@ -445,10 +444,6 @@ public readonly struct Segment : IEquatable<Segment>
         {
             var intersection = segment1Start + t * dir1;
 
-            // Calculate the normal vector as perpendicular to the direction of the first segment
-            var normal = new Vector2(-dir1.Y, dir1.X);
-            // normal = Vector2.Normalize(normal);
-
             return (new CollisionPoint(intersection, segment2Normal), t);
         }
 
@@ -470,8 +465,7 @@ public readonly struct Segment : IEquatable<Segment>
         if (u >= 0 && u <= 1)
         {
             var intersection = segmentStart + t * (segmentEnd - segmentStart);
-            var normal = new Vector2(-lineDirection.Y, lineDirection.X);
-            normal = Vector2.Normalize(normal);
+            var normal = new Vector2(-lineDirection.Y, lineDirection.X).Normalize();
             return (new(intersection, normal), t);
         }
 
@@ -493,7 +487,7 @@ public readonly struct Segment : IEquatable<Segment>
         if (u >= 0 && u <= 1 && t >= 0)
         {
             var intersection = segmentStart + t * (segmentEnd - segmentStart);
-            var segmentDirection = Vector2.Normalize(segmentEnd - segmentStart);
+            var segmentDirection = (segmentEnd - segmentStart).Normalize();
             var normal = new Vector2(-segmentDirection.Y, segmentDirection.X);
             return (new(intersection, normal), t);
         }
@@ -516,8 +510,6 @@ public readonly struct Segment : IEquatable<Segment>
         if (u >= 0 && u <= 1)
         {
             var intersection = segmentStart + t * (segmentEnd - segmentStart);
-            // var normal = new Vector2(-lineDirection.Y, lineDirection.X);
-            // normal = Vector2.Normalize(normal);
             return (new(intersection, lineNormal), t);
         }
 
@@ -539,8 +531,6 @@ public readonly struct Segment : IEquatable<Segment>
         if (u >= 0 && u <= 1 && t >= 0)
         {
             var intersection = segmentStart + t * (segmentEnd - segmentStart);
-            // var segmentDirection = Vector2.Normalize(segmentEnd - segmentStart);
-            // var normal = new Vector2(-segmentDirection.Y, segmentDirection.X);
             return (new(intersection, rayNormal), t);
         }
 
@@ -563,8 +553,7 @@ public readonly struct Segment : IEquatable<Segment>
         if (u >= 0 && u <= 1)
         {
             var intersection = segmentStart + t * (segmentEnd - segmentStart);
-            var normal = new Vector2(-lineDirection.Y, lineDirection.X);
-            normal = Vector2.Normalize(normal);
+            var normal = new Vector2(-lineDirection.Y, lineDirection.X).Normalize();
             return new(intersection, normal);
         }
 
@@ -586,7 +575,7 @@ public readonly struct Segment : IEquatable<Segment>
         if (u >= 0 && u <= 1 && t >= 0)
         {
             var intersection = segmentStart + t * (segmentEnd - segmentStart);
-            var segmentDirection = Vector2.Normalize(segmentEnd - segmentStart);
+            var segmentDirection = (segmentEnd - segmentStart).Normalize();
             var normal = new Vector2(-segmentDirection.Y, segmentDirection.X);
             return new(intersection, normal);
         }
@@ -624,8 +613,7 @@ public readonly struct Segment : IEquatable<Segment>
             var intersection = segment1Start + t * dir1;
 
             // Calculate the normal vector as perpendicular to the direction of the first segment
-            var normal = new Vector2(-dir2.Y, dir2.X);
-            normal = Vector2.Normalize(normal);
+            var normal = new Vector2(-dir2.Y, dir2.X).Normalize();
 
             return new CollisionPoint(intersection, normal);
         }
@@ -683,20 +671,19 @@ public readonly struct Segment : IEquatable<Segment>
         {
             // Calculate the distance from the closest point to the intersection points
             float offset = (float)Math.Sqrt(radius * radius - distanceToCenter * distanceToCenter);
-            var intersection1 = closestPoint - offset * Vector2.Normalize(segmentDirection);
-            var intersection2 = closestPoint + offset * Vector2.Normalize(segmentDirection);
+            var intersection1 = closestPoint - offset * segmentDirection.Normalize();
+            var intersection2 = closestPoint + offset * segmentDirection.Normalize();
 
             // Check if the intersection points are within the segment
             if (IsPointOnSegment(intersection1, segmentStart, segmentEnd))
             {
-                var normal1 = Vector2.Normalize(intersection1 - circleCenter);
-                // results.Add((intersection1, normal1));
+                var normal1 = (intersection1 - circleCenter).Normalize();
                 a = new CollisionPoint(intersection1, normal1);
             }
 
             if (IsPointOnSegment(intersection2, segmentStart, segmentEnd))
             {
-                var normal2 = Vector2.Normalize(intersection2 - circleCenter);
+                var normal2 = (intersection2 - circleCenter).Normalize();
                 if(a.Valid) b = new CollisionPoint(intersection2, normal2);
                 else a = new CollisionPoint(intersection2, normal2);
                 // results.Add((intersection2, normal2));
@@ -707,8 +694,7 @@ public readonly struct Segment : IEquatable<Segment>
             // The segment is tangent to the circle
             if (IsPointOnSegment(closestPoint, segmentStart, segmentEnd))
             {
-                // results.Add((closestPoint, Vector2.Normalize(closestPoint - circleCenter)));
-                a = new(closestPoint, Vector2.Normalize(closestPoint - circleCenter));
+                a = new(closestPoint, (closestPoint - circleCenter).Normalize());
             }
         }
 
@@ -967,6 +953,148 @@ public readonly struct Segment : IEquatable<Segment>
     #endregion
     
     #region Closest
+    public static Vector2 GetClosestPointSegmentPoint(Vector2 segmentStart, Vector2 segmentEnd, Vector2 point)
+    {
+        // Calculate the direction vector of the segment
+        var segmentDirection = segmentEnd - segmentStart;
+
+        // Calculate the vector from the segment's start to the given point
+        var toPoint = point - segmentStart;
+
+        // Project the vector to the point onto the segment direction to find the closest approach
+        float projectionLength = Vector2.Dot(toPoint, segmentDirection) / segmentDirection.LengthSquared();
+
+        // Clamp the projection length to the range [0, 1] to ensure the closest point is on the segment
+        projectionLength = Math.Clamp(projectionLength, 0.0f, 1.0f);
+
+        // Calculate the closest point on the segment
+        var closestPointOnSegment = segmentStart + projectionLength * segmentDirection;
+
+        return closestPointOnSegment;
+    }
+    public static (Vector2 segment1Point, Vector2 segment2Point) GetClosestPointsSegmentSegment(Vector2 segment1Start, Vector2 segment1End, Vector2 segment2Start, Vector2 segment2End)
+    {
+        Vector2 d1 = segment1End - segment1Start;
+        Vector2 d2 = segment2End - segment2Start;
+        Vector2 r = segment1Start - segment2Start;
+
+        float a = Vector2.Dot(d1, d1);
+        float e = Vector2.Dot(d2, d2);
+        float f = Vector2.Dot(d2, r);
+
+        float s, t;
+        if (a <= 1e-10 && e <= 1e-10)
+        {
+            // Both segments degenerate into points
+            s = t = 0.0f;
+            return (segment1Start, segment2Start);
+        }
+        if (a <= 1e-10)
+        {
+            // First segment degenerates into a point
+            s = 0.0f;
+            t = Math.Clamp(f / e, 0.0f, 1.0f);
+        }
+        else
+        {
+            float c = Vector2.Dot(d1, r);
+            if (e <= 1e-10)
+            {
+                // Second segment degenerates into a point
+                t = 0.0f;
+                s = Math.Clamp(-c / a, 0.0f, 1.0f);
+            }
+            else
+            {
+                // The general nondegenerate case starts here
+                float b = Vector2.Dot(d1, d2);
+                float denom = a * e - b * b;
+
+                if (denom != 0.0f)
+                {
+                    s = Math.Clamp((b * f - c * e) / denom, 0.0f, 1.0f);
+                }
+                else
+                {
+                    s = 0.0f;
+                }
+
+                t = (b * s + f) / e;
+
+                if (t < 0.0f)
+                {
+                    t = 0.0f;
+                    s = Math.Clamp(-c / a, 0.0f, 1.0f);
+                }
+                else if (t > 1.0f)
+                {
+                    t = 1.0f;
+                    s = Math.Clamp((b - c) / a, 0.0f, 1.0f);
+                }
+            }
+        }
+
+        Vector2 closestPoint1 = segment1Start + s * d1;
+        Vector2 closestPoint2 = segment2Start + t * d2;
+
+        return (closestPoint1, closestPoint2);
+    }
+    public static (Vector2 segmentPoint, Vector2 linePoint) GetClosestPointsSegmentLine(Vector2 segmentStart, Vector2 segmentEnd, Vector2 linePoint, Vector2 lineDirection)
+    {
+        Vector2 d1 = segmentEnd - segmentStart;
+        Vector2 d2 = Vector2.Normalize(lineDirection);
+        Vector2 r = segmentStart - linePoint;
+
+        float a = Vector2.Dot(d1, d1);
+        float b = Vector2.Dot(d1, d2);
+        float c = Vector2.Dot(d2, r);
+        float e = Vector2.Dot(d2, d2);
+
+        float s = Math.Clamp((b * c - a * c) / (a * e - b * b), 0.0f, 1.0f);
+        float t = (b * s + c) / e;
+
+        Vector2 closestPoint1 = segmentStart + s * d1;
+        Vector2 closestPoint2 = linePoint + t * d2;
+
+        return (closestPoint1, closestPoint2);
+    }
+    public static (Vector2 segmentPoint, Vector2 rayPoint) GetClosestPointsSegmentRay(Vector2 segmentStart, Vector2 segmentEnd, Vector2 rayPoint, Vector2 rayDirection)
+    {
+        Vector2 d1 = segmentEnd - segmentStart;
+        Vector2 d2 = Vector2.Normalize(rayDirection);
+        Vector2 r = segmentStart - rayPoint;
+
+        float a = Vector2.Dot(d1, d1);
+        float b = Vector2.Dot(d1, d2);
+        float c = Vector2.Dot(d2, r);
+        float e = Vector2.Dot(d2, d2);
+
+        float s = Math.Clamp((b * c - a * c) / (a * e - b * b), 0.0f, 1.0f);
+        float t = Math.Max(0.0f, (b * s + c) / e);
+
+        Vector2 closestPoint1 = segmentStart + s * d1;
+        Vector2 closestPoint2 = rayPoint + t * d2;
+
+        return (closestPoint1, closestPoint2);
+    }
+    public static (Vector2 segmentPoint, Vector2 circlePoint) GetClosestPointsSegmentCircle(Vector2 segmentStart, Vector2 segmentEnd, Vector2 circleCenter, float radius)
+    {
+        Vector2 d1 = segmentEnd - segmentStart;
+        Vector2 p1 = circleCenter;
+
+        Vector2 toCenter = p1 - segmentStart;
+        float projectionLength = Vector2.Dot(toCenter, d1) / d1.LengthSquared();
+        projectionLength = Math.Clamp(projectionLength, 0.0f, 1.0f);
+        Vector2 closestPointOnSegment = segmentStart + projectionLength * d1;
+
+        Vector2 offset = Vector2.Normalize(closestPointOnSegment - p1) * radius;
+        Vector2 closestPointOnCircle = p1 + offset;
+
+        return (closestPointOnSegment, closestPointOnCircle);
+    }
+   
+    //TODO: add remaining shapes
+    //TODO: overhaul all closest distance functions
 
     public static Vector2 GetClosestPoint(Vector2 segmentStart, Vector2 segmentEnd, Vector2 p)
     {
@@ -1972,306 +2100,3 @@ public readonly struct Segment : IEquatable<Segment>
         n.Draw(lineThickness, colorRgba);
     }
 }
-
-
-
-/*
-//OLD Version
-// public static bool IsPointOnRay(Vector2 point, Vector2 start, Vector2 dir)
-   // {
-   //     Vector2 displacement = point - start;
-   //     float p = dir.Y * displacement.X - dir.X * displacement.Y;
-   //     if (p != 0.0f) return false;
-   //     float d = displacement.X * dir.X + displacement.Y * dir.Y;
-   //     return d >= 0;
-   // }
-   // public static bool IsPointOnLine(Vector2 point, Vector2 start, Vector2 dir)
-   // {
-   //     return IsPointOnRay(point, start, dir) || IsPointOnRay(point, start, -dir);
-   // }
-   
-// public static (CollisionPoint a, CollisionPoint b) IntersectSegmentCircle(float segStartX, float segStartY, float segEndX, float segEndY, float circleX, float circleY, float circleRadius)
-// {
-//     float difX = segEndX - segStartX;
-//     float difY = segEndY - segStartY;
-//     if ((difX == 0) && (difY == 0)) return (new(), new());
-//
-//     float dl = (difX * difX + difY * difY);
-//     float t = ((circleX - segStartX) * difX + (circleY - segStartY) * difY) / dl;
-//
-//     // point on a line nearest to circle center
-//     float nearestX = segStartX + t * difX;
-//     float nearestY = segStartY + t * difY;
-//
-//     float dist = (new Vector2(nearestX, nearestY) - new Vector2(circleX, circleY)).Length(); // point_dist(nearestX, nearestY, cX, cY);
-//
-//     if (ShapeMath.EqualsF(dist, circleRadius))
-//     {
-//         // line segment touches circle; one intersection point
-//         float iX = nearestX;
-//         float iY = nearestY;
-//
-//         if (t >= 0f && t <= 1f)
-//         {
-//             // intersection point is not actually within line segment
-//             var p = new Vector2(iX, iY);
-//             var n = p - new Vector2(circleX, circleY);
-//             var cp = new CollisionPoint(p, n.Normalize());
-//             return (cp, new());
-//         }
-//         return (new(), new());
-//     }
-//     else if (dist < circleRadius)
-//     {
-//         // List<Vector2>? intersectionPoints = null;
-//         CollisionPoint a = new();
-//         CollisionPoint b = new();
-//         // two possible intersection points
-//
-//         float dt = MathF.Sqrt(circleRadius * circleRadius - dist * dist) / MathF.Sqrt(dl);
-//
-//         // intersection point nearest to A
-//         float t1 = t - dt;
-//         float i1X = segStartX + t1 * difX;
-//         float i1Y = segStartY + t1 * difY;
-//         if (t1 >= 0f && t1 <= 1f)
-//         {
-//             // intersection point is actually within line segment
-//             // intersectionPoints ??= new();
-//             // intersectionPoints.Add(new Vector2(i1X, i1Y));
-//             
-//             var p = new Vector2(i1X, i1Y);
-//             var n = p - new Vector2(circleX, circleY);
-//             a = new CollisionPoint(p, n.Normalize());
-//         }
-//
-//         // intersection point farthest from A
-//         float t2 = t + dt;
-//         float i2X = segStartX + t2 * difX;
-//         float i2Y = segStartY + t2 * difY;
-//         if (t2 >= 0f && t2 <= 1f)
-//         {
-//             // intersection point is actually within line segment
-//             // intersectionPoints ??= new();
-//             // intersectionPoints.Add(new Vector2(i2X, i2Y));
-//             var p = new Vector2(i2X, i2Y);
-//             var n = p - new Vector2(circleX, circleY);
-//             b = new CollisionPoint(p, n.Normalize());
-//         }
-//
-//         return (a, b);
-//     }
-//
-//     return (new(), new());
-// }
-// public static (CollisionPoint a, CollisionPoint b) IntersectSegmentCircle(Vector2 start, Vector2 end, Vector2 circlePos, float circleRadius)
-// {
-//     return IntersectSegmentCircle(
-//         start.X, start.Y, 
-//         end.X, end.Y, 
-//         circlePos.X, circlePos.Y, circleRadius
-//         );
-// }
-//
-
-   // public static (bool intersected, Vector2 intersectPoint, float time) IntersectRaySegmentInfo(Vector2 rayPos, Vector2 rayDir, Vector2 segmentStart, Vector2 segmentEnd)
-        // {
-        //     var vel = segmentEnd - segmentStart;
-        //     var w = rayPos - segmentStart;
-        //     float p = rayDir.X * vel.Y - rayDir.Y * vel.X;
-        //     if (p == 0.0f)
-        //     {
-        //         float c = w.X * rayDir.Y - w.Y * rayDir.X;
-        //         if (c != 0.0f) return new(false, new(0f), 0f);
-        //
-        //         float t;
-        //         if (vel.X == 0.0f) t = w.Y / vel.Y;
-        //         else t = w.X / vel.X;
-        //
-        //         if (t < 0.0f || t > 1.0f) return new(false, new(0f), 0f);
-        //
-        //         return (true, rayPos, t);
-        //     }
-        //     else
-        //     {
-        //         float t = (rayDir.X * w.Y - rayDir.Y * w.X) / p;
-        //         if (t < 0.0f || t > 1.0f) return new(false, new(0f), 0f);
-        //         float tr = (vel.X * w.Y - vel.Y * w.X) / p;
-        //         if (tr < 0.0f) return new(false, new(0f), 0f);
-        //
-        //         Vector2 intersectionPoint = segmentStart + vel * t;
-        //         return (true, intersectionPoint, t);
-        //     }
-        // }
-        //
-        // public static (bool intersected, Vector2 intersectPoint, float time) IntersectLineSegmentInfo(Vector2 dir, Segment segment)
-        // {
-        //     
-        // }
-        // public static (bool intersected, Vector2 intersectPoint, float time) IntersectLineRectInfo(Vector2 dir, Rect rect)
-        // {
-        //    
-        // }
-        //
-        
-        // public static (bool intersected, Vector2 intersectPoint, float time) IntersectSegmentSegmentInfo(Vector2 aStart, Vector2 aEnd, Vector2 bStart, Vector2 bEnd)
-        // {
-        //     //Sign of areas correspond to which side of ab points c and d are
-        //     float a1 = Triangle.AreaSigned(aStart, aEnd, bEnd); // Compute winding of abd (+ or -)
-        //     float a2 = Triangle.AreaSigned(aStart, aEnd, bStart); // To intersect, must have sign opposite of a1
-        //     //If c and d are on different sides of ab, areas have different signs
-        //     if (a1 * a2 < 0.0f)
-        //     {
-        //         //Compute signs for a and b with respect to segment cd
-        //         float a3 = Triangle.AreaSigned(bStart, bEnd, aStart);
-        //         //Compute winding of cda (+ or -)  
-        //         // Since area is constant a1 - a2 = a3 - a4, or a4 = a3 + a2 - a1  
-        //         //float a4 = Signed2DTriArea(bStart, bEnd, aEnd); // Must have opposite sign of a3
-        //         float a4 = a3 + a2 - a1;  // Points a and b on different sides of cd if areas have different signs
-        //         if (a3 * a4 < 0.0f)
-        //         {
-        //             //Segments intersect. Find intersection point along L(t) = a + t * (b - a).  
-        //             //Given height h1 of an over cd and height h2 of b over cd, 
-        //             //t = h1 / (h1 - h2) = (b*h1/2) / (b*h1/2 - b*h2/2) = a3 / (a3 - a4),  
-        //             //where b (the base of the triangles cda and cdb, i.e., the length  
-        //             //of cd) cancels out.
-        //             float t = a3 / (a3 - a4);
-        //             Vector2 p = aStart + t * (aEnd - aStart);
-        //             return (true, p, t);
-        //         }
-        //     }
-        //     //Segments not intersecting (or collinear)
-        //     return (false, new(0f), -1f);
-        // }
-
-*/
-/*
- public Segment MoveTo(Vector2 position)
-   {
-       
-   }
-
-   public Segment MoveBy(Vector2 offset)
-   {
-       
-   }
-
-   public Segment RotateTo(float angleRad)
-   {
-       
-   }
-
-   public Segment RotateBy(float radians)
-   {
-       
-   }
-
-   public Segment ScaleTo(float factor)
-   {
-       
-   }
-
-   public Segment ScaleBy(float factor)
-   {
-       
-   }
-
-   public Segment ScaleByUniform(float amount)
-   {
-       
-   }
-
-   public Segment ApplyTransform(Transform transform)
-   {
-       
-   }
-
-   public Segment SetTransform(Transform transform)
-   {
-       
-   }
-
- */
-//BETTER SEGMENT VS SEGMENT INTERSECTION CHECK ?!
-        // public static Vector2 SegmentSegmentIntersectionPoint(Vector2 aStart, Vector2 aEnd, Vector2 bStart,
-        //     Vector2 bEnd)
-        // {
-        //     var a = GetLineABC(aStart, aEnd);
-        //     var b = GetLineABC(bStart, bEnd);
-        //
-        //     float det = a.a * b.b - b.a * a.b;
-        //     if(det != 0)
-        //     {
-        //         float x = (b.b * a.c - a.b * b.c) / det;
-        //         float y = (a.a * b.c - b.a * a.c) / det;
-        //         return new(x, y);
-        //     }
-        //
-        //     return new();
-        // }
-        // private static (float a, float b, float c) GetLineABC(Vector2 p1, Vector2 p2)
-        // {
-        //     float a = p2.Y - p1.Y;
-        //     float b = p1.X - p2.X;
-        //     float c = a * p1.X + b * p2.Y;
-        //     return (a, b, c);
-        // }
-        
-        // public static bool OverlapLineLine(Vector2 aPos, Vector2 aDir, Vector2 bPos, Vector2 bDir)
-        // {
-        //     if (aDir.Parallel(bDir))
-        //     {
-        //         Vector2 displacement = aPos - bPos;
-        //         return displacement.Parallel(aDir);
-        //     }
-        //     return true;
-        // }
-// public static (CollisionPoint a, CollisionPoint b) IntersectLineCircle(float linePosX, float linePosY, float lineDirX, float lineDirY, float circleX, float circleY, float circleRadius)
-        // {
-        //     if ((lineDirX == 0) && (lineDirY == 0)) return (new(), new());
-        //
-        //     float dl = (lineDirX * lineDirX + lineDirY * lineDirY);
-        //     float t = ((circleX - linePosX) * lineDirX + (circleY - linePosY) * lineDirY) / dl;
-        //
-        //     // point on a line nearest to circle center
-        //     float nearestX = linePosX + t * lineDirX;
-        //     float nearestY = linePosY + t * lineDirY;
-        //
-        //     float dist = (new Vector2(nearestX, nearestY) - new Vector2(circleX, circleY)).Length(); // point_dist(nearestX, nearestY, cX, cY);
-        //
-        //     if (ShapeMath.EqualsF(dist, circleRadius))
-        //     {
-        //         // line segment touches circle; one intersection point
-        //         var p = new Vector2(nearestX, nearestY);
-        //         var n = p - new Vector2(circleX, circleY);
-        //         var cp = new CollisionPoint(p, n.Normalize());
-        //         return (cp, new());
-        //     }
-        //     else if (dist < circleRadius)
-        //     {
-        //         // two possible intersection points
-        //
-        //         float dt = MathF.Sqrt(circleRadius * circleRadius - dist * dist) / MathF.Sqrt(dl);
-        //
-        //         // intersection point nearest to A
-        //         float t1 = t - dt;
-        //         float i1X = linePosX + t1 * lineDirX;
-        //         float i1Y = linePosY + t1 * lineDirY;
-        //         
-        //         var p1 = new Vector2(i1X, i1Y);
-        //         var n1 = p1 - new Vector2(circleX, circleY);
-        //         var cp1 = new CollisionPoint(p1, n1.Normalize());
-        //         
-        //         // intersection point farthest from A
-        //         float t2 = t + dt;
-        //         float i2X = linePosX + t2 * lineDirX;
-        //         float i2Y = linePosY + t2 * lineDirY;
-        //         var p2 = new Vector2(i2X, i2Y);
-        //         var n2 = p2 - new Vector2(circleX, circleY);
-        //         var cp2 = new CollisionPoint(p2, n2.Normalize());
-        //
-        //         return (cp1, cp2);
-        //     }
-        //
-        //     return (new(), new());
-        // }

@@ -67,7 +67,22 @@ public readonly struct Line
     #endregion
    
     #region Closest Point
-    
+    public static Vector2 GetClosestPointLinePoint(Vector2 linePoint, Vector2 lineDirection, Vector2 point)
+    {
+        // Normalize the direction vector of the line
+        var normalizedLineDirection = lineDirection.Normalize();
+
+        // Calculate the vector from the line's point to the given point
+        var toPoint = point - linePoint;
+
+        // Project the vector to the point onto the line direction
+        float projectionLength = Vector2.Dot(toPoint, normalizedLineDirection);
+
+        // Calculate the closest point on the line
+        var closestPointOnLine = linePoint + projectionLength * normalizedLineDirection;
+
+        return closestPointOnLine;
+    }
     public static (Vector2 point1, Vector2 point2) GetClosestPointsLineLine(Vector2 line1Point, Vector2 line1Direction, Vector2 line2Point, Vector2 line2Direction)
     {
         var d1 = line1Direction.Normalize();
@@ -146,7 +161,7 @@ public readonly struct Line
     }
     
     //TODO: add remaining shapes here
-    
+    //TODO: add closest distance functions for all shapes
     #endregion
     
     #region Intersections
