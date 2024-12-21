@@ -10,7 +10,7 @@ namespace ShapeEngine.Lib
 
         public static PolarCoordinates ToPolarCoordinates(this Vector2 v) => new(v);
         
-
+        public static bool IsNormalized(this Vector2 v) => Math.Abs(v.LengthSquared() - 1f) < 0.0000001f;
         public static bool IsFinite(this Vector2 v) => float.IsFinite(v.X) && float.IsFinite(v.Y);
         public static Size ToSize(this Vector2 v) => new(v.X, v.Y);
         public static bool IsSimilar(this Vector2 a, Vector2 b, float tolerance = 0.001f)
@@ -217,20 +217,17 @@ namespace ShapeEngine.Lib
         public static Vector2 Clamp(this Vector2 v, Vector2 min, Vector2 max) { return Vector2.Clamp(v, min, max); }
         public static Vector2 Clamp(this Vector2 v, float min, float max) { return Vector2.Clamp(v, new(min), new(max)); }
         
+        /// <summary>
+        /// Returns v if the squared length of the vector is one.
+        /// Returns a zero vector if the squared length is zero.
+        /// </summary>
+        /// <param name="v"></param>
+        /// <returns></returns>
         public static Vector2 Normalize(this Vector2 v) 
         {
-            // //vector2 with length 0 can not be normalized (division by 0)
-            // //and vector2 normalize does not check for that...
-            // if (v is { X: 0f, Y: 0f }) return new Vector2(0f, 0f);
-            // return Vector2.Normalize(v); 
-
             float ls = v.LengthSquared();
+            if (Math.Abs(ls - 1f) < 0.00001f) return v;
             return ls <= 0f ? new() : v / MathF.Sqrt(ls);
-            
-            // float l = MathF.Sqrt(v.X * v.X + v.Y * v.Y);
-            // if (l <= 0.0f) return new();
-            // float f = 1f / l;
-            // return v * f;
         } 
         public static Vector2 Reflect(this Vector2 v, Vector2 n) { return Vector2.Reflect(v, n); }
         
