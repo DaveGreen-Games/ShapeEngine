@@ -25,32 +25,32 @@ public readonly struct Line
     public Line(float x, float y, float dx, float dy, bool flippedNormal = false)
     {
         Point = new Vector2(x, y);
-        Direction = new Vector2(dx, dy);
+        Direction = new Vector2(dx, dy).Normalize();
         Normal = flippedNormal ? new Vector2(Direction.Y, -Direction.X) : new Vector2(-Direction.Y, Direction.X);
     }
     public Line(Vector2 direction, bool flippedNormal = false)
     {
         Point = Vector2.Zero;
-        Direction = direction;
+        Direction = direction.Normalize();
         Normal = flippedNormal ? new Vector2(Direction.Y, -Direction.X) : new Vector2(-Direction.Y, Direction.X);
     }
     public Line(Vector2 point, Vector2 direction, bool flippedNormal = false)
     {
         Point = point;
-        Direction = direction;
+        Direction = direction.Normalize();
         Normal = flippedNormal ? new Vector2(Direction.Y, -Direction.X) : new Vector2(-Direction.Y, Direction.X);
     }
     internal Line(Vector2 point, Vector2 direction, Vector2 normal)
     {
         Point = point;
-        Direction = direction;
+        Direction = direction.Normalize();
         Normal = normal;
     }
 
     #endregion
     
     #region Public Functions
-    public bool IsValid => (Direction.X != 0 || Direction.Y!= 0) && (Normal.X != 0 || Normal.Y != 0);
+    public bool IsValid => Direction.IsNormalized() && Normal.IsNormalized(); // (Direction.X != 0 || Direction.Y!= 0) && (Normal.X != 0 || Normal.Y != 0);
     public Segment ToSegment(float length)
     {
         if (!IsValid) return new();
@@ -65,11 +65,88 @@ public readonly struct Line
     }
     public bool IsPointOnLine(Vector2 point) => IsPointOnLine(point, Point, Direction);
     #endregion
+   
+    #region Closest Point
     
-    #region Overlaps
+    public static (Vector2 point1, Vector2 point2) GetClosestPointsLineLine(Vector2 line1Point, Vector2 line1Direction, Vector2 line2Point, Vector2 line2Direction)
+    {
+        var d1 = line1Direction.Normalize();
+        var d2 = line2Direction.Normalize();
 
+        float a = Vector2.Dot(d1, d1);
+        float b = Vector2.Dot(d1, d2);
+        float e = Vector2.Dot(d2, d2);
+        var r = line1Point - line2Point;
+        float c = Vector2.Dot(d1, r);
+        float f = Vector2.Dot(d2, r);
+
+        float denominator = a * e - b * b;
+        float t1 = (b * f - c * e) / denominator;
+        float t2 = (a * f - b * c) / denominator;
+
+        var closestPoint1 = line1Point + t1 * d1;
+        var closestPoint2 = line2Point + t2 * d2;
+
+        return (closestPoint1, closestPoint2);
+    }
+    public static (Vector2 linePoint, Vector2 rayPoint) GetClosestPointsLineRay(Vector2 linePoint, Vector2 lineDirection, Vector2 rayPoint, Vector2 rayDirection)
+    {
+        var d1 = lineDirection.Normalize();
+        var d2 = rayDirection.Normalize();
+
+        float a = Vector2.Dot(d1, d1);
+        float b = Vector2.Dot(d1, d2);
+        float e = Vector2.Dot(d2, d2);
+        var r = linePoint - rayPoint;
+        float c = Vector2.Dot(d1, r);
+        float f = Vector2.Dot(d2, r);
+
+        float denominator = a * e - b * b;
+        float t1 = (b * f - c * e) / denominator;
+        float t2 = Math.Max(0, (a * f - b * c) / denominator);
+
+        var closestPoint1 = linePoint + t1 * d1;
+        var closestPoint2 = rayPoint + t2 * d2;
+
+        return (closestPoint1, closestPoint2);
+    }
+    public static (Vector2 linePoint, Vector2 segmentPoint) GetClosestPointsLineSegment(Vector2 linePoint, Vector2 lineDirection, Vector2 segmentStart, Vector2 segmentEnd)
+    {
+        var d1 = lineDirection.Normalize();
+        var d2 = segmentEnd - segmentStart;
+
+        float a = Vector2.Dot(d1, d1);
+        float b = Vector2.Dot(d1, d2);
+        float e = Vector2.Dot(d2, d2);
+        var r = linePoint - segmentStart;
+        float c = Vector2.Dot(d1, r);
+        float f = Vector2.Dot(d2, r);
+
+        float denominator = a * e - b * b;
+        float t1 = (b * f - c * e) / denominator;
+        float t2 = Math.Max(0, Math.Min(1, (a * f - b * c) / denominator));
+
+        var closestPoint1 = linePoint + t1 * d1;
+        var closestPoint2 = segmentStart + t2 * d2;
+
+        return (closestPoint1, closestPoint2);
+    }
+    public static (Vector2 linePoint, Vector2 circlePoint) GetClosestPointsLineCircle(Vector2 linePoint, Vector2 lineDirection, Vector2 circleCenter, float radius)
+    {
+        var d1 = lineDirection.Normalize();
+
+        var toCenter = circleCenter - linePoint;
+        float projectionLength = Vector2.Dot(toCenter, d1);
+        var closestPointOnLine = linePoint + projectionLength * d1;
+
+        var offset = (closestPointOnLine - circleCenter).Normalize() * radius;
+        var closestPointOnCircle = circleCenter + offset;
+
+        return (closestPointOnLine, closestPointOnCircle);
+    }
     
-
+    //TODO: add remaining shapes here
+    
     #endregion
     
     #region Intersections
@@ -114,7 +191,7 @@ public readonly struct Line
         if (Segment.IsPointOnSegment(intersection, segmentStart, segmentEnd))
         {
             // The normal vector can be taken as perpendicular to the segment direction
-            segmentDirection = Vector2.Normalize(segmentDirection);
+            segmentDirection = segmentDirection.Normalize();
             var normal = new Vector2(-segmentDirection.Y, segmentDirection.X);
 
             return (new(intersection, normal), t);
@@ -151,8 +228,7 @@ public readonly struct Line
         var intersection = line1Point + t * line1Direction;
 
         // Calculate the normal vector as perpendicular to the direction of the first line
-        var normal = new Vector2(-line2Direction.Y, line2Direction.X);
-        normal = Vector2.Normalize(normal);
+        var normal = new Vector2(-line2Direction.Y, line2Direction.X).Normalize();
 
         return (new(intersection, normal), t);
     }
@@ -191,8 +267,7 @@ public readonly struct Line
             var intersection = linePoint + t * lineDirection;
 
             // Calculate the normal vector as perpendicular to the direction of the line
-            var normal = new Vector2(-rayDirection.Y, rayDirection.X);
-            normal = Vector2.Normalize(normal);
+            var normal = new Vector2(-rayDirection.Y, rayDirection.X).Normalize();
 
             return (new(intersection, normal), t);
         }
@@ -239,7 +314,7 @@ public readonly struct Line
         if (Segment.IsPointOnSegment(intersection, segmentStart, segmentEnd))
         {
             // The normal vector can be taken as perpendicular to the segment direction
-            segmentDirection = Vector2.Normalize(segmentDirection);
+            segmentDirection = segmentDirection.Normalize();
             var normal = new Vector2(-segmentDirection.Y, segmentDirection.X);
 
             return new(intersection, normal);
@@ -276,8 +351,7 @@ public readonly struct Line
         var intersection = line1Point + t * line1Direction;
 
         // Calculate the normal vector as perpendicular to the direction of the first line
-        var normal = new Vector2(-line2Direction.Y, line2Direction.X);
-        normal = Vector2.Normalize(normal);
+        var normal = new Vector2(-line2Direction.Y, line2Direction.X).Normalize();
 
         return new(intersection, normal);
     }
@@ -316,8 +390,7 @@ public readonly struct Line
             var intersection = linePoint + t * lineDirection;
 
             // Calculate the normal vector as perpendicular to the direction of the line
-            var normal = new Vector2(-rayDirection.Y, rayDirection.X);
-            normal = Vector2.Normalize(normal);
+            var normal = new Vector2(-rayDirection.Y, rayDirection.X).Normalize();
 
             return new(intersection, normal);
         }
@@ -338,7 +411,7 @@ public readonly struct Line
     public static (CollisionPoint a, CollisionPoint b) IntersectLineCircle(Vector2 linePoint, Vector2 lineDirection, Vector2 circleCenter, float circleRadius)
     {
         // Normalize the direction vector
-        lineDirection = Vector2.Normalize(lineDirection);
+        lineDirection = lineDirection.Normalize();
 
         // Vector from the line point to the circle center
         var toCircle = circleCenter - linePoint;
@@ -363,8 +436,8 @@ public readonly struct Line
             var intersection2 = closestPoint + offset * lineDirection;
 
             // Normals at the intersection points
-            var normal1 = Vector2.Normalize(intersection1 - circleCenter);
-            var normal2 = Vector2.Normalize(intersection2 - circleCenter);
+            var normal1 = (intersection1 - circleCenter).Normalize();
+            var normal2 = (intersection2 - circleCenter).Normalize();
 
             var p1 = new CollisionPoint(intersection1, normal1);
             var p2 = new CollisionPoint(intersection2, normal2);
@@ -373,7 +446,7 @@ public readonly struct Line
         
         if (Math.Abs(distanceToCenter - circleRadius) < 1e-10)
         {
-            var p = new CollisionPoint(closestPoint, Vector2.Normalize(closestPoint - circleCenter));
+            var p = new CollisionPoint(closestPoint,(closestPoint - circleCenter).Normalize());
             return (p, new());
         }
 
@@ -702,8 +775,8 @@ public readonly struct Line
     {
         // Normalize the direction vector
         if (Circle.ContainsCirclePoint(circleCenter, circleRadius, linePoint)) return true;
-        
-        lineDirection = Vector2.Normalize(lineDirection);
+
+        lineDirection = lineDirection.Normalize();
 
         // Vector from the line point to the circle center
         var toCircle = circleCenter - linePoint;

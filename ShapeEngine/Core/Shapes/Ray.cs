@@ -66,8 +66,80 @@ public readonly struct Ray
     public bool IsPointOnRay(Vector2 point) => IsPointOnRay(point, Point, Direction);
     #endregion
    
-    #region Overlaps
+    //TODO: fix all normalize calls -> to ShapeVector Normalize()!
+    //TODO: finish all shapes
+    #region Closest Point
     
+    /*public static (Vector2 point1, Vector2 point2) ClosestPointsRayLine(Vector2 rayPoint, Vector2 rayDirection, Vector2 linePoint, Vector2 lineDirection)
+    {
+        return ClosestPointsLineRay(linePoint, lineDirection, rayPoint, rayDirection);
+    }
+    
+    public static (Vector2 point1, Vector2 point2) ClosestPointsRayRay(Vector2 ray1Point, Vector2 ray1Direction, Vector2 ray2Point, Vector2 ray2Direction)
+    {
+        Vector2 p1 = ray1Point;
+        Vector2 d1 = Vector2.Normalize(ray1Direction);
+        Vector2 p2 = ray2Point;
+        Vector2 d2 = Vector2.Normalize(ray2Direction);
+
+        float a = Vector2.Dot(d1, d1);
+        float b = Vector2.Dot(d1, d2);
+        float e = Vector2.Dot(d2, d2);
+        Vector2 r = p1 - p2;
+        float c = Vector2.Dot(d1, r);
+        float f = Vector2.Dot(d2, r);
+
+        float denominator = a * e - b * b;
+        float t1 = Math.Max(0, (b * f - c * e) / denominator);
+        float t2 = Math.Max(0, (a * f - b * c) / denominator);
+
+        Vector2 closestPoint1 = p1 + t1 * d1;
+        Vector2 closestPoint2 = p2 + t2 * d2;
+
+        return (closestPoint1, closestPoint2);
+    }
+    
+    public static (Vector2 point1, Vector2 point2) ClosestPointsRaySegment(Vector2 rayPoint, Vector2 rayDirection, Vector2 segmentStart, Vector2 segmentEnd)
+    {
+        Vector2 p1 = rayPoint;
+        Vector2 d1 = Vector2.Normalize(rayDirection);
+        Vector2 p2 = segmentStart;
+        Vector2 d2 = segmentEnd - segmentStart;
+
+        float a = Vector2.Dot(d1, d1);
+        float b = Vector2.Dot(d1, d2);
+        float e = Vector2.Dot(d2, d2);
+        Vector2 r = p1 - p2;
+        float c = Vector2.Dot(d1, r);
+        float f = Vector2.Dot(d2, r);
+
+        float denominator = a * e - b * b;
+        float t1 = Math.Max(0, (b * f - c * e) / denominator);
+        float t2 = Math.Max(0, Math.Min(1, (a * f - b * c) / denominator));
+
+        Vector2 closestPoint1 = p1 + t1 * d1;
+        Vector2 closestPoint2 = p2 + t2 * d2;
+
+        return (closestPoint1, closestPoint2);
+    }
+    
+    public static (Vector2 point1, Vector2 point2) ClosestPointsRayCircle(Vector2 rayPoint, Vector2 rayDirection, Vector2 circleCenter, float radius)
+    {
+        Vector2 p1 = rayPoint;
+        Vector2 d1 = Vector2.Normalize(rayDirection);
+        Vector2 p2 = circleCenter;
+
+        Vector2 toCenter = p2 - p1;
+        float projectionLength = Math.Max(0, Vector2.Dot(toCenter, d1));
+        Vector2 closestPointOnRay = p1 + projectionLength * d1;
+
+        Vector2 offset = Vector2.Normalize(closestPointOnRay - p2) * radius;
+        Vector2 closestPointOnCircle = p2 + offset;
+
+        return (closestPointOnRay, closestPointOnCircle);
+    }
+    */
+   
     #endregion
 
     #region Intersections
