@@ -2021,7 +2021,8 @@ namespace ShapeEngine.Core.Shapes
         public int IntersectShape(Quad q, ref CollisionPoints points, bool returnAfterFirstValid = false)
         {
             var count = 0;
-            //NOTE: CountPerSegment implemented as an example here (not implemented in any other function yet)
+            //Todo: revert back to original
+            //NOTE: CountPerSegment implemented as an example here (not implemented in any other function yet) - CANCELED!
             //checking the entire quad against each segment of the triangle
             //therefore the maximum number of intersections per segment is 2
             var countPerSegment = 0;
