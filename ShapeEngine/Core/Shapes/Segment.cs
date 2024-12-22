@@ -6,6 +6,20 @@ using ShapeEngine.Lib;
 using ShapeEngine.Random;
 namespace ShapeEngine.Core.Shapes;
 
+//Basically go through those shapes: Segment, Triangle, Quad, Rect, Polygon, Polyline, Segments and:
+// - add new GetClosestPoints functions with all overload variations
+// - add missing Intersect functions
+// - add missing Overlap functions
+//Each category (ClosestPoint, Intersect, Overlap) should have:
+// - static functions with inline parameters (Intersect/Overlap/GetClosestPoint[Shape][Shape])
+// - public functions with other shape inline parameters (Intersect/Overlap/GetClosestPointOn[OtherShape])
+// - public functions with other shape (IntersectShape/OverlapShape/GetClosestPointOn[OtherShape])
+
+//Nameing rules:
+// - GetClosestPoint[Shape][Shape] (static) && GetClosestPointOn[OtherShape] (public)
+// - Intersect[Shape][Shape]Info (static) && Intersect[Shape][Shape] (static) && Intersect[Shape] (public) && IntersectShape (public)
+// - Overlap[Shape][Shape] (static) && Overlap[Shape] (public) && OverlapShape (public)
+
 public readonly struct Segment : IEquatable<Segment>
 {
     #region Members
