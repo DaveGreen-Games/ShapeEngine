@@ -91,13 +91,13 @@ public readonly struct Ray
         return closestPointOnRay;
     }
     
-    public static (Vector2 rayPoint, Vector2 linePoint) ClosestPointsRayLine(Vector2 rayPoint, Vector2 rayDirection, Vector2 linePoint, Vector2 lineDirection)
+    public static (Vector2 rayPoint, Vector2 linePoint) GetClosestPointsRayLine(Vector2 rayPoint, Vector2 rayDirection, Vector2 linePoint, Vector2 lineDirection)
     {
         var result = Line.GetClosestPointsLineRay(linePoint, lineDirection, rayPoint, rayDirection);
         return (result.rayPoint, result.linePoint);
     }
     
-    public static (Vector2 ray1Point, Vector2 ray2Point) ClosestPointsRayRay(Vector2 ray1Point, Vector2 ray1Direction, Vector2 ray2Point, Vector2 ray2Direction)
+    public static (Vector2 ray1Point, Vector2 ray2Point) GetClosestPointsRayRay(Vector2 ray1Point, Vector2 ray1Direction, Vector2 ray2Point, Vector2 ray2Direction)
     {
         var d1 = ray1Direction.Normalize();
         var d2 = ray2Direction.Normalize();
@@ -119,7 +119,7 @@ public readonly struct Ray
         return (closestPoint1, closestPoint2);
     }
     
-    public static (Vector2 rayPoint, Vector2 segmentPoint) ClosestPointsRaySegment(Vector2 rayPoint, Vector2 rayDirection, Vector2 segmentStart, Vector2 segmentEnd)
+    public static (Vector2 rayPoint, Vector2 segmentPoint) GetClosestPointsRaySegment(Vector2 rayPoint, Vector2 rayDirection, Vector2 segmentStart, Vector2 segmentEnd)
     {
         var d1 = rayDirection.Normalize();
         var d2 = segmentEnd - segmentStart;
@@ -141,7 +141,7 @@ public readonly struct Ray
         return (closestPoint1, closestPoint2);
     }
     
-    public static (Vector2 rayPoint, Vector2 circlePoint) ClosestPointsRayCircle(Vector2 rayPoint, Vector2 rayDirection, Vector2 circleCenter, float radius)
+    public static (Vector2 rayPoint, Vector2 circlePoint) GetClosestPointsRayCircle(Vector2 rayPoint, Vector2 rayDirection, Vector2 circleCenter, float radius)
     {
         var d1 = rayDirection.Normalize();
 
@@ -155,8 +155,159 @@ public readonly struct Ray
         return (closestPointOnRay, closestPointOnCircle);
     }
     
-    //TODO: finish all shapes
-    //TODO: add closest distance functions for all shapes
+    public static (Vector2 linePoint, Vector2 trianglePoint) GetClosestPointsRayTriangle(Vector2 rayPoint, Vector2 rayDirection, Vector2 a, Vector2 b, Vector2 c, out float minDisSquared)
+    {
+        var closestResult = GetClosestPointsRaySegment(rayPoint, rayDirection, a, b);
+        minDisSquared = (closestResult.segmentPoint - closestResult.rayPoint).LengthSquared();
+        
+        var result = GetClosestPointsRaySegment(rayPoint, rayDirection, b, c);
+        var disSquared = (result.segmentPoint - closestResult.rayPoint).LengthSquared();
+
+        if (disSquared < minDisSquared)
+        {
+            minDisSquared = disSquared;
+            closestResult = result;
+        }
+        
+        result = GetClosestPointsRaySegment(rayPoint, rayDirection, c, a);
+        disSquared = (result.segmentPoint - closestResult.rayPoint).LengthSquared();
+
+        if (disSquared < minDisSquared)
+        {
+            minDisSquared = disSquared;
+            return result;
+        }
+        
+        return closestResult;
+    }
+    public static (Vector2 linePoint, Vector2 quadPoint) GetClosestPointsRayQuad(Vector2 rayPoint, Vector2 rayDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d, out float minDisSquared)
+    {
+        var closestResult = GetClosestPointsRaySegment(rayPoint, rayDirection, a, b);
+        minDisSquared = (closestResult.segmentPoint - closestResult.rayPoint).LengthSquared();
+        
+        var result = GetClosestPointsRaySegment(rayPoint, rayDirection, b, c);
+        var disSquared = (result.segmentPoint - closestResult.rayPoint).LengthSquared();
+
+        if (disSquared < minDisSquared)
+        {
+            minDisSquared = disSquared;
+            closestResult = result;
+        }
+        
+        result = GetClosestPointsRaySegment(rayPoint, rayDirection, c, d);
+        disSquared = (result.segmentPoint - closestResult.rayPoint).LengthSquared();
+
+        if (disSquared < minDisSquared)
+        {
+            minDisSquared = disSquared;
+            closestResult = result;
+        }
+        
+        result = GetClosestPointsRaySegment(rayPoint, rayDirection, d, a);
+        disSquared = (result.segmentPoint - closestResult.rayPoint).LengthSquared();
+
+        if (disSquared < minDisSquared)
+        {
+            minDisSquared = disSquared;
+            return result;
+        }
+        
+        return closestResult;
+    }
+    public static (Vector2 linePoint, Vector2 rectPoint) GetClosestPointsRayRect(Vector2 rayPoint, Vector2 rayDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d, out float minDisSquared)
+    {
+        return GetClosestPointsRayQuad(rayPoint, rayDirection, a, b, c, d, out minDisSquared);
+    }
+    public static (Vector2 linePoint, Vector2 polygonPoint) GetClosestPointsRayPolygon(Vector2 rayPoint, Vector2 rayDirection, List<Vector2> points, out float minDisSquared)
+    {
+        minDisSquared = -1;
+        if (points.Count < 3) return (new(), new());
+        
+        var closestResult = GetClosestPointsRaySegment(rayPoint, rayDirection, points[0], points[1]);
+        minDisSquared = (closestResult.segmentPoint - closestResult.rayPoint).LengthSquared();
+        
+        for (var i = 1; i < points.Count; i++)
+        {
+            var result = GetClosestPointsRaySegment(rayPoint, rayDirection, points[i], points[(i + 1) % points.Count]);
+            var disSquared = (result.segmentPoint - closestResult.rayPoint).LengthSquared();
+
+            if (disSquared < minDisSquared)
+            {
+                minDisSquared = disSquared;
+                closestResult = result;
+            }
+        }
+        return closestResult;
+    }
+    public static (Vector2 linePoint, Vector2 polylinePoint) GetClosestPointsRayPolyline(Vector2 rayPoint, Vector2 rayDirection, List<Vector2> points, out float minDisSquared)
+    {
+        minDisSquared = -1;
+        if (points.Count < 3) return (new(), new());
+        
+        var closestResult = GetClosestPointsRaySegment(rayPoint, rayDirection, points[0], points[1]);
+        minDisSquared = (closestResult.segmentPoint - closestResult.rayPoint).LengthSquared();
+        
+        for (var i = 1; i < points.Count - 1; i++)
+        {
+            var result = GetClosestPointsRaySegment(rayPoint, rayDirection, points[i], points[i + 1]);
+            var disSquared = (result.segmentPoint - closestResult.rayPoint).LengthSquared();
+
+            if (disSquared < minDisSquared)
+            {
+                minDisSquared = disSquared;
+                closestResult = result;
+            }
+        }
+        return closestResult;
+    }
+    public static (Vector2 linePoint, Vector2 segmentPoint) GetClosestPointsRaySegments(Vector2 rayPoint, Vector2 rayDirection, List<Segment> segments, out float minDisSquared)
+    {
+        minDisSquared = -1;
+        if (segments.Count <= 0) return (new(), new());
+        
+        var curSegment = segments[0];
+        var closestResult = GetClosestPointsRaySegment(rayPoint, rayDirection, curSegment.Start, curSegment.End);
+        minDisSquared = (closestResult.segmentPoint - closestResult.rayPoint).LengthSquared();
+        
+        for (var i = 1; i < segments.Count; i++)
+        {
+            curSegment = segments[i];
+            var result = GetClosestPointsRaySegment(rayPoint, rayDirection, curSegment.Start, curSegment.End);
+            var disSquared = (result.segmentPoint - closestResult.rayPoint).LengthSquared();
+
+            if (disSquared < minDisSquared)
+            {
+                minDisSquared = disSquared;
+                closestResult = result;
+            }
+        }
+        return closestResult;
+    }
+
+
+    public Vector2 GetClosestPointOnPoint(Vector2 point) => GetClosestPointRayPoint(Point, Direction, point);
+    public (Vector2 rayPoint, Vector2 otherPoint) GetClosestPointOnLine(Vector2 linePoint, Vector2 lineDirection) => GetClosestPointsRayLine(Point, Direction, linePoint, lineDirection);
+    public (Vector2 rayPoint, Vector2 otherPoint) GetClosestPointOnRay(Vector2 rayPoint, Vector2 rayDirection) => GetClosestPointsRayRay(Point, Direction, rayPoint, rayDirection);
+    public (Vector2 rayPoint, Vector2 otherPoint) GetClosestPointOnSegment(Vector2 segmentStart, Vector2 segmentEnd) => GetClosestPointsRaySegment(Point, Direction, segmentStart, segmentEnd);
+    public (Vector2 rayPoint, Vector2 otherPoint) GetClosestPointOnCircle(Vector2 circleCenter, float circleRadius) => GetClosestPointsRayCircle(Point, Direction, circleCenter, circleRadius);
+    public (Vector2 rayPoint, Vector2 otherPoint) GetClosestPointOnTriangle(Vector2 a, Vector2 b, Vector2 c, out float minDisSquared) => GetClosestPointsRayTriangle(Point, Direction, a, b, c, out minDisSquared);
+    public (Vector2 rayPoint, Vector2 otherPoint) GetClosestPointOnQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d,  out float minDisSquared) => GetClosestPointsRayQuad(Point, Direction, a, b, c, d, out minDisSquared);
+    public (Vector2 rayPoint, Vector2 otherPoint) GetClosestPointOnRect(Vector2 a, Vector2 b, Vector2 c, Vector2 d,  out float minDisSquared) => GetClosestPointsRayQuad(Point, Direction, a, b, c, d, out minDisSquared);
+    public (Vector2 rayPoint, Vector2 otherPoint) GetClosestPointOnPolygon(List<Vector2> points,  out float minDisSquared) => GetClosestPointsRayPolygon(Point, Direction, points, out minDisSquared);
+    public (Vector2 rayPoint, Vector2 otherPoint) GetClosestPointOnPolyline(List<Vector2> points,  out float minDisSquared) => GetClosestPointsRayPolyline(Point, Direction, points, out minDisSquared);
+    public (Vector2 rayPoint, Vector2 otherPoint) GetClosestPointOnSegments(List<Segment> segments, out float minDisSquared) => GetClosestPointsRaySegments(Point, Direction, segments, out minDisSquared);
+    
+    public (Vector2 rayPoint, Vector2 otherPoint) GetClosestPointOnLine(Line otherLine) => GetClosestPointsRayLine(Point, Direction, otherLine.Point, otherLine.Direction);
+    public (Vector2 rayPoint, Vector2 otherPoint) GetClosestPointOnRay(Ray ray) => GetClosestPointsRayRay(Point, Direction, ray.Point, ray.Direction);
+    public (Vector2 rayPoint, Vector2 otherPoint) GetClosestPointOnSegment(Segment segment) => GetClosestPointsRaySegment(Point, Direction, segment.Start, segment.End);
+    public (Vector2 rayPoint, Vector2 otherPoint) GetClosestPointOnCircle(Circle circle) => GetClosestPointsRayCircle(Point, Direction,  circle.Center, circle.Radius);
+    public (Vector2 rayPoint, Vector2 otherPoint) GetClosestPointOnTriangle(Triangle triangle, out float minDisSquared) => GetClosestPointsRayTriangle(Point, Direction, triangle.A, triangle.B, triangle.C, out minDisSquared);
+    public (Vector2 rayPoint, Vector2 otherPoint) GetClosestPointOnQuad(Quad quad, out float minDisSquared) => GetClosestPointsRayQuad(Point, Direction, quad.A, quad.B, quad.C, quad.D, out minDisSquared);
+    public (Vector2 rayPoint, Vector2 otherPoint) GetClosestPointOnRect(Rect rect,  out float minDisSquared) => GetClosestPointsRayQuad(Point, Direction, rect.A, rect.B, rect.C, rect.D, out minDisSquared);
+    public (Vector2 rayPoint, Vector2 otherPoint) GetClosestPointOnPolygon(Polygon polygon, out float minDisSquared) => GetClosestPointsRayPolygon(Point, Direction, polygon, out minDisSquared);
+    public (Vector2 rayPoint, Vector2 otherPoint) GetClosestPointOnPolyline(Polyline polyline,  out float minDisSquared) => GetClosestPointsRayPolyline(Point, Direction, polyline, out minDisSquared);
+    public (Vector2 rayPoint, Vector2 otherPoint) GetClosestPointOnSegments(Segments segments, out float minDisSquared) => GetClosestPointsRaySegments(Point, Direction, segments, out minDisSquared);
+    
     #endregion
 
     #region Intersections
@@ -826,6 +977,16 @@ public readonly struct Ray
         return false;
     }
 
+    public bool OverlapSegment(Vector2 segmentStart, Vector2 segmentEnd) => OverlapRaySegment(Point, Direction, segmentStart, segmentEnd);
+    public bool OverlapLine(Vector2 linePoint, Vector2 lineDirection) => OverlapRayLine(Point, Direction, linePoint, lineDirection);
+    public bool OverlapRay(Vector2 rayPoint, Vector2 rayDirection) => OverlapRayRay(Point, Direction, rayPoint, rayDirection);
+    public bool OverlapCircle(Vector2 circleCenter, float circleRadius) => OverlapRayCircle(Point, Direction, circleCenter, circleRadius);
+    public bool OverlapTriangle(Vector2 a, Vector2 b, Vector2 c) => OverlapRayTriangle(Point, Direction, a, b, c);
+    public bool OverlapQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => OverlapRayQuad(Point, Direction, a, b, c, d);
+    public bool OverlapRect(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => OverlapRayQuad(Point, Direction, a, b, c, d);
+    public bool OverlapPolygon(List<Vector2> points) => OverlapRayPolygon(Point, Direction, points);
+    public bool OverlapPolyline(List<Vector2> points) => OverlapRayPolyline(Point, Direction, points);
+    public bool OverlapSegments(List<Segment> segments) => OverlapRaySegments(Point, Direction, segments);
     
     public bool OverlapShape(Segment segment) => OverlapRaySegment(Point, Direction, segment.Start, segment.End);
     public bool OverlapShape(Line line) => OverlapRayLine(Point, Direction, line.Point, line.Direction);

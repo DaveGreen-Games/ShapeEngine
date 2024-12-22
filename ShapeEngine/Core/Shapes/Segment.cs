@@ -1461,8 +1461,9 @@ public readonly struct Segment : IEquatable<Segment>
     public bool OverlapLine(Vector2 linePoint, Vector2 lineDirection) => OverlapSegmentLine(Start, End, linePoint, lineDirection);
     public bool OverlapRay(Vector2 rayPoint, Vector2 rayDirection) => OverlapSegmentRay(Start, End, rayPoint, rayDirection);
     public bool OverlapCircle(Vector2 circlePoint, float circleRadius) => OverlapSegmentCircle(Start, End, circlePoint, circleRadius);
+    //TODO: add remaining Overlap methods for each missing shape
+
     
-  
     
     public bool Overlap(Collider collider)
     {
@@ -1587,8 +1588,6 @@ public readonly struct Segment : IEquatable<Segment>
         return false;
     }
 
-    public bool OverlapSegmentLine(Vector2 linePos, Vector2 lineDir) =>
-        OverlapSegmentLine(Start, End, linePos, lineDir);
     
     #endregion
 
