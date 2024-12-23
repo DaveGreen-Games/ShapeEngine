@@ -1221,17 +1221,17 @@ namespace ShapeEngine.Core.Shapes
         }
         public CollisionPoint GetClosestCollisionPoint(Vector2 p)
         {
-            var cp = SegmentAToB.GetClosestCollisionPoint(p);
+            var cp = SegmentAToB.GetClosestPoint(p);
             float minDisSquared = (cp.Point - p).LengthSquared();
 
-            var curCP = SegmentBToC.GetClosestCollisionPoint(p);
+            var curCP = SegmentBToC.GetClosestPoint(p);
             float l = (curCP.Point - p).LengthSquared();
             if (l < minDisSquared)
             {
                 minDisSquared = l;
                 cp = curCP;
             }
-            curCP = SegmentCToA.GetClosestCollisionPoint(p);
+            curCP = SegmentCToA.GetClosestPoint(p);
             l = (curCP.Point - p).LengthSquared();
             if (l < minDisSquared)
             {

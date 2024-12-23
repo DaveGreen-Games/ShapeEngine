@@ -733,7 +733,7 @@ public class Polyline : Points, IEquatable<Polyline>
             var end = this[(i + 1) % Count];
             var edge = new Segment(start, end);
 
-            Vector2 closest = edge.GetClosestCollisionPoint(p).Point;
+            Vector2 closest = edge.GetClosestPoint(p).Point;
             float d = (closest - p).LengthSquared();
             if (d < minD)
             {

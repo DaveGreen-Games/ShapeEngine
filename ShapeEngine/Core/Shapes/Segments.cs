@@ -77,7 +77,7 @@ public class Segments : ShapeList<Segment>
 
         for (int i = 0; i < Count; i++)
         {
-            CollisionPoint c = this[i].GetClosestCollisionPoint(p);
+            CollisionPoint c = this[i].GetClosestPoint(p);
             float d = (c.Point - p).LengthSquared();
             if (d < minD)
             {
@@ -98,7 +98,7 @@ public class Segments : ShapeList<Segment>
         for (var i = 0; i < Count; i++)
         {
             var edge = this[i];
-            var closest = edge.GetClosestCollisionPoint(p).Point;
+            var closest = edge.GetClosestPoint(p).Point;
             float d = (closest - p).LengthSquared();
             if (d < minD)
             {
@@ -385,6 +385,11 @@ public class Segments : ShapeList<Segment>
         return newSegments;
     }
 
+    #endregion
+    
+    //TODO: Implement
+    #region Closest Point
+    
     #endregion
     
     #region Overlap

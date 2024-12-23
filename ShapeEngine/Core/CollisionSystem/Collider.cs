@@ -200,6 +200,12 @@ public abstract class Collider : Shape
         return null;
     }
 
+    
+    //TODO: rework as well!
+    #region Closest Point
+    
+    #endregion
+    
     #region Closest
 
     public CollisionPoint GetClosestCollisionPoint(Vector2 p)
@@ -208,7 +214,7 @@ public abstract class Collider : Shape
         {
             case ShapeType.None: return new();
             case ShapeType.Circle: return GetCircleShape().GetClosestCollisionPoint(p);
-            case ShapeType.Segment:return GetSegmentShape().GetClosestCollisionPoint(p);
+            case ShapeType.Segment:return GetSegmentShape().GetClosestPoint(p);
             case ShapeType.Triangle:return GetTriangleShape().GetClosestCollisionPoint(p);
             case ShapeType.Quad:return GetQuadShape().GetClosestCollisionPoint(p);
             case ShapeType.Rect:return GetRectShape().GetClosestCollisionPoint(p);

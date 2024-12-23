@@ -1791,17 +1791,17 @@ public readonly struct Rect : IEquatable<Rect>
     }
     public CollisionPoint GetClosestCollisionPoint(Vector2 p)
     {
-        var cp = LeftSegment.GetClosestCollisionPoint(p);
+        var cp = LeftSegment.GetClosestPoint(p);
         float minDisSquared = (cp.Point - p).LengthSquared();
 
-        var curCP = BottomSegment.GetClosestCollisionPoint(p);
+        var curCP = BottomSegment.GetClosestPoint(p);
         float l = (curCP.Point - p).LengthSquared();
         if (l < minDisSquared)
         {
             minDisSquared = l;
             cp = curCP;
         }
-        curCP = RightSegment.GetClosestCollisionPoint(p);
+        curCP = RightSegment.GetClosestPoint(p);
         l = (curCP.Point - p).LengthSquared();
         if (l < minDisSquared)
         {
@@ -1809,7 +1809,7 @@ public readonly struct Rect : IEquatable<Rect>
             cp = curCP;
         }
         
-        curCP = TopSegment.GetClosestCollisionPoint(p);
+        curCP = TopSegment.GetClosestPoint(p);
         l = (curCP.Point - p).LengthSquared();
         if (l < minDisSquared) return curCP;
         
