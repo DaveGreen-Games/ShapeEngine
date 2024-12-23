@@ -492,7 +492,7 @@ namespace ShapeEngine.Core.Shapes
         }
         public ClosestDistance GetClosestDistanceTo(Segment segment)
         {
-            var segmentPoint = Segment.GetClosestPoint(segment.Start, segment.End, Center);
+            var segmentPoint = Segment.GetClosestPointSegmentPoint(segment.Start, segment.End, Center);
             var dir = (segmentPoint - Center).Normalize();
             var circlePoint = Center + dir * Radius;
             return new(circlePoint, segmentPoint);
@@ -509,12 +509,12 @@ namespace ShapeEngine.Core.Shapes
 
         public ClosestDistance GetClosestDistanceTo(Triangle triangle)
         {
-            var point = Segment.GetClosestPoint(triangle.A, triangle.B, Center);
+            var point = Segment.GetClosestPointSegmentPoint(triangle.A, triangle.B, Center);
             var disSq = (Center - point).LengthSquared();
             var minDisSq = disSq;
             var closestPoint = point;
             
-            point = Segment.GetClosestPoint(triangle.B, triangle.C, Center);
+            point = Segment.GetClosestPointSegmentPoint(triangle.B, triangle.C, Center);
             disSq = (Center - point).LengthSquared();
             if (disSq < minDisSq)
             {
@@ -522,7 +522,7 @@ namespace ShapeEngine.Core.Shapes
                 closestPoint = point;
             }
             
-            point = Segment.GetClosestPoint(triangle.C, triangle.A, Center);
+            point = Segment.GetClosestPointSegmentPoint(triangle.C, triangle.A, Center);
             disSq = (Center - point).LengthSquared();
             if (disSq < minDisSq) closestPoint = point;
 
@@ -533,12 +533,12 @@ namespace ShapeEngine.Core.Shapes
         }
         public ClosestDistance GetClosestDistanceTo(Quad quad)
         {
-            var point = Segment.GetClosestPoint(quad.A, quad.B, Center);
+            var point = Segment.GetClosestPointSegmentPoint(quad.A, quad.B, Center);
             var disSq = (Center - point).LengthSquared();
             var minDisSq = disSq;
             var closestPoint = point;
             
-            point = Segment.GetClosestPoint(quad.B, quad.C, Center);
+            point = Segment.GetClosestPointSegmentPoint(quad.B, quad.C, Center);
             disSq = (Center - point).LengthSquared();
             if (disSq < minDisSq)
             {
@@ -546,7 +546,7 @@ namespace ShapeEngine.Core.Shapes
                 closestPoint = point;
             }
             
-            point = Segment.GetClosestPoint(quad.C, quad.D, Center);
+            point = Segment.GetClosestPointSegmentPoint(quad.C, quad.D, Center);
             disSq = (Center - point).LengthSquared();
             if (disSq < minDisSq)
             {
@@ -554,7 +554,7 @@ namespace ShapeEngine.Core.Shapes
                 closestPoint = point;
             }
             
-            point = Segment.GetClosestPoint(quad.D, quad.A, Center);
+            point = Segment.GetClosestPointSegmentPoint(quad.D, quad.A, Center);
             disSq = (Center - point).LengthSquared();
             if (disSq < minDisSq) closestPoint = point;
 
@@ -565,12 +565,12 @@ namespace ShapeEngine.Core.Shapes
         }
         public ClosestDistance GetClosestDistanceTo(Rect rect)
         {
-            var point = Segment.GetClosestPoint(rect.TopLeft, rect.BottomLeft, Center);
+            var point = Segment.GetClosestPointSegmentPoint(rect.TopLeft, rect.BottomLeft, Center);
             var disSq = (Center - point).LengthSquared();
             var minDisSq = disSq;
             var closestPoint = point;
             
-            point = Segment.GetClosestPoint(rect.BottomLeft, rect.BottomRight, Center);
+            point = Segment.GetClosestPointSegmentPoint(rect.BottomLeft, rect.BottomRight, Center);
             disSq = (Center - point).LengthSquared();
             if (disSq < minDisSq)
             {
@@ -578,7 +578,7 @@ namespace ShapeEngine.Core.Shapes
                 closestPoint = point;
             }
             
-            point = Segment.GetClosestPoint(rect.BottomRight, rect.TopRight, Center);
+            point = Segment.GetClosestPointSegmentPoint(rect.BottomRight, rect.TopRight, Center);
             disSq = (Center - point).LengthSquared();
             if (disSq < minDisSq)
             {
@@ -586,7 +586,7 @@ namespace ShapeEngine.Core.Shapes
                 closestPoint = point;
             }
             
-            point = Segment.GetClosestPoint(rect.TopRight, rect.TopLeft, Center);
+            point = Segment.GetClosestPointSegmentPoint(rect.TopRight, rect.TopLeft, Center);
             disSq = (Center - point).LengthSquared();
             if (disSq < minDisSq) closestPoint = point;
 
@@ -612,7 +612,7 @@ namespace ShapeEngine.Core.Shapes
                 var p1 = polygon[i];
                 var p2 = polygon[(i + 1) % polygon.Count];
                 
-                var next = Segment.GetClosestPoint(p1, p2, Center);
+                var next = Segment.GetClosestPointSegmentPoint(p1, p2, Center);
                 var w = (next - Center);
                 var disSq = w.LengthSquared();
                 if (disSq < minDisSq)
@@ -641,7 +641,7 @@ namespace ShapeEngine.Core.Shapes
                 var p1 = polyline[i];
                 var p2 = polyline[(i + 1) % polyline.Count];
                 
-                var next = Segment.GetClosestPoint(p1, p2, Center);
+                var next = Segment.GetClosestPointSegmentPoint(p1, p2, Center);
                 var w = (next - Center);
                 var disSq = w.LengthSquared();
                 if (disSq < minDisSq)

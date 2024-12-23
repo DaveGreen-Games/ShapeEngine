@@ -421,7 +421,7 @@ public class Polyline : Points, IEquatable<Polyline>
     {
         if (Count <= 0) return new();
         if (Count == 1) return new(this[0], p);
-        if (Count == 2) return new(Segment.GetClosestPoint(this[0], this[1], p), p);
+        if (Count == 2) return new(Segment.GetClosestPointSegmentPoint(this[0], this[1], p), p);
         if (Count == 3) return new(Triangle.GetClosestPoint(this[0], this[1], this[2], p), p);
         if (Count == 4) return new(Quad.GetClosestPoint(this[0], this[1], this[2], this[3], p), p);
 
@@ -431,7 +431,7 @@ public class Polyline : Points, IEquatable<Polyline>
         {
             var start = this[i];
             var end = this[(i + 1) % Count];
-            var next = Segment.GetClosestPoint(start, end, p);
+            var next = Segment.GetClosestPointSegmentPoint(start, end, p);
             var disSq = (next - p).LengthSquared();
             if (disSq < minDisSq)
             {
@@ -449,7 +449,7 @@ public class Polyline : Points, IEquatable<Polyline>
         if (Count <= 0) return new();
         if (Count == 1)
         {
-            var cp = Segment.GetClosestPoint(segment.Start, segment.End, this[0]);
+            var cp = Segment.GetClosestPointSegmentPoint(segment.Start, segment.End, this[0]);
             return new(this[0], cp);
         }
         if (Count == 2) return new Segment(this[0], this[1]).GetClosestDistanceTo(segment);
@@ -461,19 +461,19 @@ public class Polyline : Points, IEquatable<Polyline>
             var p1 = this[i];
             var p2 = this[(i + 1) % Count];
             
-            var next = Segment.GetClosestPoint(segment.Start, segment.End, p1);
+            var next = Segment.GetClosestPointSegmentPoint(segment.Start, segment.End, p1);
             var cd = new ClosestDistance(p1, next);
             if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
             
-            next = Segment.GetClosestPoint(segment.Start, segment.End, p2);
+            next = Segment.GetClosestPointSegmentPoint(segment.Start, segment.End, p2);
             cd = new ClosestDistance(p2, next);
             if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
             
-            next = Segment.GetClosestPoint(p1, p2, segment.Start);
+            next = Segment.GetClosestPointSegmentPoint(p1, p2, segment.Start);
             cd = new ClosestDistance(next, segment.Start);
             if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
             
-            next = Segment.GetClosestPoint(p1, p2, segment.End);
+            next = Segment.GetClosestPointSegmentPoint(p1, p2, segment.End);
             cd = new ClosestDistance(next, segment.End);
             if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
         }
@@ -498,7 +498,7 @@ public class Polyline : Points, IEquatable<Polyline>
             var p1 = this[i];
             var p2 = this[(i + 1) % Count];
             
-            var next = Segment.GetClosestPoint(p1, p2, circle.Center);
+            var next = Segment.GetClosestPointSegmentPoint(p1, p2, circle.Center);
             var w = (next - circle.Center);
             var disSq = w.LengthSquared();
             if (disSq < minDisSq)
@@ -537,15 +537,15 @@ public class Polyline : Points, IEquatable<Polyline>
             cd = new ClosestDistance(p2, next);
             if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
             
-            next = Segment.GetClosestPoint(p1, p2, triangle.A);
+            next = Segment.GetClosestPointSegmentPoint(p1, p2, triangle.A);
             cd = new ClosestDistance(next, triangle.A);
             if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
             
-            next = Segment.GetClosestPoint(p1, p2, triangle.B);
+            next = Segment.GetClosestPointSegmentPoint(p1, p2, triangle.B);
             cd = new ClosestDistance(next, triangle.B);
             if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
             
-            next = Segment.GetClosestPoint(p1, p2, triangle.C);
+            next = Segment.GetClosestPointSegmentPoint(p1, p2, triangle.C);
             cd = new ClosestDistance( next, triangle.C);
             if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
         }
@@ -576,19 +576,19 @@ public class Polyline : Points, IEquatable<Polyline>
             cd = new ClosestDistance(p2, next);
             if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
             
-            next = Segment.GetClosestPoint(p1, p2, quad.A);
+            next = Segment.GetClosestPointSegmentPoint(p1, p2, quad.A);
             cd = new ClosestDistance(next, quad.A);
             if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
             
-            next = Segment.GetClosestPoint(p1, p2, quad.B);
+            next = Segment.GetClosestPointSegmentPoint(p1, p2, quad.B);
             cd = new ClosestDistance(next, quad.B);
             if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
             
-            next = Segment.GetClosestPoint(p1, p2, quad.C);
+            next = Segment.GetClosestPointSegmentPoint(p1, p2, quad.C);
             cd = new ClosestDistance(next, quad.C);
             if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
             
-            next = Segment.GetClosestPoint(p1, p2, quad.D);
+            next = Segment.GetClosestPointSegmentPoint(p1, p2, quad.D);
             cd = new ClosestDistance(next, quad.D);
             if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
         }
@@ -619,19 +619,19 @@ public class Polyline : Points, IEquatable<Polyline>
             cd = new ClosestDistance(p2, next);
             if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
             
-            next = Segment.GetClosestPoint(p1, p2, rect.A);
+            next = Segment.GetClosestPointSegmentPoint(p1, p2, rect.A);
             cd = new ClosestDistance(next, rect.A);
             if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
             
-            next = Segment.GetClosestPoint(p1, p2, rect.B);
+            next = Segment.GetClosestPointSegmentPoint(p1, p2, rect.B);
             cd = new ClosestDistance(next, rect.B);
             if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
             
-            next = Segment.GetClosestPoint(p1, p2, rect.C);
+            next = Segment.GetClosestPointSegmentPoint(p1, p2, rect.C);
             cd = new ClosestDistance(next, rect.C);
             if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
             
-            next = Segment.GetClosestPoint(p1, p2, rect.D);
+            next = Segment.GetClosestPointSegmentPoint(p1, p2, rect.D);
             cd = new ClosestDistance(next, rect.D);
             if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
         }
@@ -659,19 +659,19 @@ public class Polyline : Points, IEquatable<Polyline>
                 var other1 = polygon[j];
                 var other2 = polygon[(j + 1) % polygon.Count];
 
-                var next = Segment.GetClosestPoint(self1, self2, other1);
+                var next = Segment.GetClosestPointSegmentPoint(self1, self2, other1);
                 var cd = new ClosestDistance(next, other1);
                 if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
                 
-                next = Segment.GetClosestPoint(self1, self2, other2);
+                next = Segment.GetClosestPointSegmentPoint(self1, self2, other2);
                 cd = new ClosestDistance(next, other2);
                 if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
                 
-                next = Segment.GetClosestPoint(other1, other2, self1);
+                next = Segment.GetClosestPointSegmentPoint(other1, other2, self1);
                 cd = new ClosestDistance(self1, next);
                 if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
                 
-                next = Segment.GetClosestPoint(other1, other2, self2);
+                next = Segment.GetClosestPointSegmentPoint(other1, other2, self2);
                 cd = new ClosestDistance(self2, next);
                 if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
             }
@@ -698,19 +698,19 @@ public class Polyline : Points, IEquatable<Polyline>
                 var other1 = polyline[j];
                 var other2 = polyline[(j + 1) % polyline.Count];
 
-                var next = Segment.GetClosestPoint(self1, self2, other1);
+                var next = Segment.GetClosestPointSegmentPoint(self1, self2, other1);
                 var cd = new ClosestDistance(next, other1);
                 if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
                 
-                next = Segment.GetClosestPoint(self1, self2, other2);
+                next = Segment.GetClosestPointSegmentPoint(self1, self2, other2);
                 cd = new ClosestDistance(next, other2);
                 if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
                 
-                next = Segment.GetClosestPoint(other1, other2, self1);
+                next = Segment.GetClosestPointSegmentPoint(other1, other2, self1);
                 cd = new ClosestDistance(self1, next);
                 if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
                 
-                next = Segment.GetClosestPoint(other1, other2, self2);
+                next = Segment.GetClosestPointSegmentPoint(other1, other2, self2);
                 cd = new ClosestDistance(self2, next);
                 if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
             }

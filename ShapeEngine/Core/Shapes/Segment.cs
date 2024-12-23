@@ -15,7 +15,7 @@ namespace ShapeEngine.Core.Shapes;
 // - public functions with other shape inline parameters (Intersect/Overlap/GetClosestPointOn[OtherShape])
 // - public functions with other shape (IntersectShape/OverlapShape/GetClosestPointOn[OtherShape])
 
-//Nameing rules:
+//Naming rules:
 // - GetClosestPoint[Shape][Shape] (static) && GetClosestPointOn[OtherShape] (public)
 // - Intersect[Shape][Shape]Info (static) && Intersect[Shape][Shape] (static) && Intersect[Shape] (public) && IntersectShape (public)
 // - Overlap[Shape][Shape] (static) && Overlap[Shape] (public) && OverlapShape (public)
@@ -965,32 +965,42 @@ public readonly struct Segment : IEquatable<Segment>
     public readonly bool ContainsPoint(Vector2 p) { return IsPointOnSegment(p, Start, End); }
     
     #endregion
-    
-    #region Closest
-    public static Vector2 GetClosestPointSegmentPoint(Vector2 segmentStart, Vector2 segmentEnd, Vector2 point)
+
+
+    #region Closest Point
+    public static Vector2 GetClosestPointSegmentPoint(Vector2 segmentStart, Vector2 segmentEnd, Vector2 p)
     {
-        // Calculate the direction vector of the segment
-        var segmentDirection = segmentEnd - segmentStart;
-
-        // Calculate the vector from the segment's start to the given point
-        var toPoint = point - segmentStart;
-
-        // Project the vector to the point onto the segment direction to find the closest approach
-        float projectionLength = Vector2.Dot(toPoint, segmentDirection) / segmentDirection.LengthSquared();
-
-        // Clamp the projection length to the range [0, 1] to ensure the closest point is on the segment
-        projectionLength = Math.Clamp(projectionLength, 0.0f, 1.0f);
-
-        // Calculate the closest point on the segment
-        var closestPointOnSegment = segmentStart + projectionLength * segmentDirection;
-
-        return closestPointOnSegment;
+        var w = (segmentEnd - segmentStart);
+        float t = (p - segmentStart).Dot(w) / w.LengthSquared();
+        if (t < 0f) return segmentStart;
+        if (t > 1f) return segmentEnd;
+        return segmentStart + w * t;
+        
     }
+    // public static Vector2 GetClosestPointSegmentPoint(Vector2 segmentStart, Vector2 segmentEnd, Vector2 point)
+    // {
+    //     // Calculate the direction vector of the segment
+    //     var segmentDirection = segmentEnd - segmentStart;
+    //
+    //     // Calculate the vector from the segment's start to the given point
+    //     var toPoint = point - segmentStart;
+    //
+    //     // Project the vector to the point onto the segment direction to find the closest approach
+    //     float projectionLength = Vector2.Dot(toPoint, segmentDirection) / segmentDirection.LengthSquared();
+    //
+    //     // Clamp the projection length to the range [0, 1] to ensure the closest point is on the segment
+    //     projectionLength = Math.Clamp(projectionLength, 0.0f, 1.0f);
+    //
+    //     // Calculate the closest point on the segment
+    //     var closestPointOnSegment = segmentStart + projectionLength * segmentDirection;
+    //
+    //     return closestPointOnSegment;
+    // }
     public static (Vector2 segment1Point, Vector2 segment2Point) GetClosestPointsSegmentSegment(Vector2 segment1Start, Vector2 segment1End, Vector2 segment2Start, Vector2 segment2End)
     {
-        Vector2 d1 = segment1End - segment1Start;
-        Vector2 d2 = segment2End - segment2Start;
-        Vector2 r = segment1Start - segment2Start;
+        var d1 = segment1End - segment1Start;
+        var d2 = segment2End - segment2Start;
+        var r = segment1Start - segment2Start;
 
         float a = Vector2.Dot(d1, d1);
         float e = Vector2.Dot(d2, d2);
@@ -1048,16 +1058,16 @@ public readonly struct Segment : IEquatable<Segment>
             }
         }
 
-        Vector2 closestPoint1 = segment1Start + s * d1;
-        Vector2 closestPoint2 = segment2Start + t * d2;
+        var closestPoint1 = segment1Start + s * d1;
+        var closestPoint2 = segment2Start + t * d2;
 
         return (closestPoint1, closestPoint2);
     }
     public static (Vector2 segmentPoint, Vector2 linePoint) GetClosestPointsSegmentLine(Vector2 segmentStart, Vector2 segmentEnd, Vector2 linePoint, Vector2 lineDirection)
     {
-        Vector2 d1 = segmentEnd - segmentStart;
-        Vector2 d2 = Vector2.Normalize(lineDirection);
-        Vector2 r = segmentStart - linePoint;
+        var d1 = segmentEnd - segmentStart;
+        var d2 = Vector2.Normalize(lineDirection);
+        var r = segmentStart - linePoint;
 
         float a = Vector2.Dot(d1, d1);
         float b = Vector2.Dot(d1, d2);
@@ -1067,16 +1077,16 @@ public readonly struct Segment : IEquatable<Segment>
         float s = Math.Clamp((b * c - a * c) / (a * e - b * b), 0.0f, 1.0f);
         float t = (b * s + c) / e;
 
-        Vector2 closestPoint1 = segmentStart + s * d1;
-        Vector2 closestPoint2 = linePoint + t * d2;
+        var closestPoint1 = segmentStart + s * d1;
+        var closestPoint2 = linePoint + t * d2;
 
         return (closestPoint1, closestPoint2);
     }
     public static (Vector2 segmentPoint, Vector2 rayPoint) GetClosestPointsSegmentRay(Vector2 segmentStart, Vector2 segmentEnd, Vector2 rayPoint, Vector2 rayDirection)
     {
-        Vector2 d1 = segmentEnd - segmentStart;
-        Vector2 d2 = Vector2.Normalize(rayDirection);
-        Vector2 r = segmentStart - rayPoint;
+        var d1 = segmentEnd - segmentStart;
+        var d2 = Vector2.Normalize(rayDirection);
+        var r = segmentStart - rayPoint;
 
         float a = Vector2.Dot(d1, d1);
         float b = Vector2.Dot(d1, d2);
@@ -1086,50 +1096,44 @@ public readonly struct Segment : IEquatable<Segment>
         float s = Math.Clamp((b * c - a * c) / (a * e - b * b), 0.0f, 1.0f);
         float t = Math.Max(0.0f, (b * s + c) / e);
 
-        Vector2 closestPoint1 = segmentStart + s * d1;
-        Vector2 closestPoint2 = rayPoint + t * d2;
+        var closestPoint1 = segmentStart + s * d1;
+        var closestPoint2 = rayPoint + t * d2;
 
         return (closestPoint1, closestPoint2);
     }
     public static (Vector2 segmentPoint, Vector2 circlePoint) GetClosestPointsSegmentCircle(Vector2 segmentStart, Vector2 segmentEnd, Vector2 circleCenter, float radius)
     {
-        Vector2 d1 = segmentEnd - segmentStart;
-        Vector2 p1 = circleCenter;
+        var d1 = segmentEnd - segmentStart;
+        var p1 = circleCenter;
 
-        Vector2 toCenter = p1 - segmentStart;
+        var toCenter = p1 - segmentStart;
         float projectionLength = Vector2.Dot(toCenter, d1) / d1.LengthSquared();
         projectionLength = Math.Clamp(projectionLength, 0.0f, 1.0f);
         Vector2 closestPointOnSegment = segmentStart + projectionLength * d1;
 
-        Vector2 offset = Vector2.Normalize(closestPointOnSegment - p1) * radius;
-        Vector2 closestPointOnCircle = p1 + offset;
+        var offset = Vector2.Normalize(closestPointOnSegment - p1) * radius;
+        var closestPointOnCircle = p1 + offset;
 
         return (closestPointOnSegment, closestPointOnCircle);
     }
    
-    //TODO: add remaining shapes
-    //TODO: overhaul all closest distance functions
 
-    public static Vector2 GetClosestPoint(Vector2 segmentStart, Vector2 segmentEnd, Vector2 p)
-    {
-        var w = (segmentEnd - segmentStart);
-        float t = (p - segmentStart).Dot(w) / w.LengthSquared();
-        if (t < 0f) return segmentStart;
-        if (t > 1f) return segmentEnd;
-        return segmentStart + w * t;
-        
-    }
-    public ClosestDistance GetClosestDistanceTo(Vector2 p) => new(GetClosestPoint(Start, End, p), p);
+    #endregion
+    
+    #region Closest
+    
+    
+    public ClosestDistance GetClosestDistanceTo(Vector2 p) => new(GetClosestPointSegmentPoint(Start, End, p), p);
     public ClosestDistance GetClosestDistanceTo(Segment segment)
     {
-        var next = GetClosestPoint(Start, End, segment.Start);
+        var next = GetClosestPointSegmentPoint(Start, End, segment.Start);
         var disSq = (next - segment.Start).LengthSquared();
         var minDisSq = disSq;
         var cpSelf = next;
         var cpOther = segment.Start;
         
         
-        next = GetClosestPoint(Start, End, segment.End);
+        next = GetClosestPointSegmentPoint(Start, End, segment.End);
         disSq = (next - segment.End).LengthSquared();
         if (disSq < minDisSq)
         {
@@ -1138,7 +1142,7 @@ public readonly struct Segment : IEquatable<Segment>
             cpSelf = next;
         }
         
-        next = GetClosestPoint(segment.Start, segment.End, Start);
+        next = GetClosestPointSegmentPoint(segment.Start, segment.End, Start);
         disSq = (next - Start).LengthSquared();
         if (disSq < minDisSq)
         {
@@ -1147,7 +1151,7 @@ public readonly struct Segment : IEquatable<Segment>
             cpSelf = Start;
         }
         
-        next = GetClosestPoint(segment.Start, segment.End, End);
+        next = GetClosestPointSegmentPoint(segment.Start, segment.End, End);
         disSq = (next - End).LengthSquared();
         if (disSq < minDisSq)
         {
@@ -1170,21 +1174,21 @@ public readonly struct Segment : IEquatable<Segment>
     }
     public ClosestDistance GetClosestDistanceTo(Circle circle)
     {
-        var segmentPoint = GetClosestPoint(Start, End, circle.Center);
+        var segmentPoint = GetClosestPointSegmentPoint(Start, End, circle.Center);
         var dir = (segmentPoint - circle.Center).Normalize();
         var circlePoint = circle.Center + dir * circle.Radius;
         return new(segmentPoint, circlePoint);
     }
     public ClosestDistance GetClosestDistanceTo(Triangle triangle)
     {
-        var next = GetClosestPoint(Start, End, triangle.A);
+        var next = GetClosestPointSegmentPoint(Start, End, triangle.A);
         var disSq = (next - triangle.A).LengthSquared();
         var minDisSq = disSq;
         var cpSelf = next;
         var cpOther = triangle.A;
         
         
-        next = GetClosestPoint(Start, End, triangle.B);
+        next = GetClosestPointSegmentPoint(Start, End, triangle.B);
         disSq = (next - triangle.B).LengthSquared();
         if (disSq < minDisSq)
         {
@@ -1193,7 +1197,7 @@ public readonly struct Segment : IEquatable<Segment>
             cpSelf = next;
         }
         
-        next = GetClosestPoint(Start, End, triangle.C);
+        next = GetClosestPointSegmentPoint(Start, End, triangle.C);
         disSq = (next - triangle.C).LengthSquared();
         if (disSq < minDisSq)
         {
@@ -1236,14 +1240,14 @@ public readonly struct Segment : IEquatable<Segment>
     }
     public ClosestDistance GetClosestDistanceTo(Quad quad)
     {
-        var next = GetClosestPoint(Start, End, quad.A);
+        var next = GetClosestPointSegmentPoint(Start, End, quad.A);
         var disSq = (next - quad.A).LengthSquared();
         var minDisSq = disSq;
         var cpSelf = next;
         var cpOther = quad.A;
         
         
-        next = GetClosestPoint(Start, End, quad.B);
+        next = GetClosestPointSegmentPoint(Start, End, quad.B);
         disSq = (next - quad.B).LengthSquared();
         if (disSq < minDisSq)
         {
@@ -1252,7 +1256,7 @@ public readonly struct Segment : IEquatable<Segment>
             cpSelf = next;
         }
         
-        next = GetClosestPoint(Start, End, quad.C);
+        next = GetClosestPointSegmentPoint(Start, End, quad.C);
         disSq = (next - quad.C).LengthSquared();
         if (disSq < minDisSq)
         {
@@ -1261,7 +1265,7 @@ public readonly struct Segment : IEquatable<Segment>
             cpSelf = next;
         }
         
-        next = GetClosestPoint(Start, End, quad.D);
+        next = GetClosestPointSegmentPoint(Start, End, quad.D);
         disSq = (next - quad.D).LengthSquared();
         if (disSq < minDisSq)
         {
@@ -1307,14 +1311,14 @@ public readonly struct Segment : IEquatable<Segment>
     }
     public ClosestDistance GetClosestDistanceTo(Rect rect)
     {
-        var next = GetClosestPoint(Start, End, rect.TopLeft);
+        var next = GetClosestPointSegmentPoint(Start, End, rect.TopLeft);
         var disSq = (next - rect.TopLeft).LengthSquared();
         var minDisSq = disSq;
         var cpSelf = next;
         var cpOther = rect.TopLeft;
         
         
-        next = GetClosestPoint(Start, End, rect.BottomLeft);
+        next = GetClosestPointSegmentPoint(Start, End, rect.BottomLeft);
         disSq = (next - rect.BottomLeft).LengthSquared();
         if (disSq < minDisSq)
         {
@@ -1323,7 +1327,7 @@ public readonly struct Segment : IEquatable<Segment>
             cpSelf = next;
         }
         
-        next = GetClosestPoint(Start, End, rect.BottomRight);
+        next = GetClosestPointSegmentPoint(Start, End, rect.BottomRight);
         disSq = (next - rect.BottomRight).LengthSquared();
         if (disSq < minDisSq)
         {
@@ -1332,7 +1336,7 @@ public readonly struct Segment : IEquatable<Segment>
             cpSelf = next;
         }
         
-        next = GetClosestPoint(Start, End, rect.TopRight);
+        next = GetClosestPointSegmentPoint(Start, End, rect.TopRight);
         disSq = (next - rect.TopRight).LengthSquared();
         if (disSq < minDisSq)
         {
@@ -1391,19 +1395,19 @@ public readonly struct Segment : IEquatable<Segment>
             var p1 = polygon[i];
             var p2 = polygon[(i + 1) % polygon.Count];
             
-            var next = GetClosestPoint(Start, End, p1);
+            var next = GetClosestPointSegmentPoint(Start, End, p1);
             var cd = new ClosestDistance(next, p1);
             if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
             
-            next = GetClosestPoint(Start, End, p2);
+            next = GetClosestPointSegmentPoint(Start, End, p2);
             cd = new ClosestDistance(next, p2);
             if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
             
-            next = GetClosestPoint(p1, p2, Start);
+            next = GetClosestPointSegmentPoint(p1, p2, Start);
             cd = new ClosestDistance(Start, next);
             if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
             
-            next = GetClosestPoint(p1, p2, End);
+            next = GetClosestPointSegmentPoint(p1, p2, End);
             cd = new ClosestDistance(End, next);
             if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
         }
@@ -1422,19 +1426,19 @@ public readonly struct Segment : IEquatable<Segment>
             var p1 = polyline[i];
             var p2 = polyline[(i + 1) % polyline.Count];
             
-            var next = GetClosestPoint(Start, End, p1);
+            var next = GetClosestPointSegmentPoint(Start, End, p1);
             var cd = new ClosestDistance(next, p1);
             if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
             
-            next = GetClosestPoint(Start, End, p2);
+            next = GetClosestPointSegmentPoint(Start, End, p2);
             cd = new ClosestDistance(next, p2);
             if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
             
-            next = GetClosestPoint(p1, p2, Start);
+            next = GetClosestPointSegmentPoint(p1, p2, Start);
             cd = new ClosestDistance(Start, next);
             if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
             
-            next = GetClosestPoint(p1, p2, End);
+            next = GetClosestPointSegmentPoint(p1, p2, End);
             cd = new ClosestDistance(End, next);
             if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
         }
