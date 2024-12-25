@@ -825,46 +825,45 @@ namespace ShapeEngine.Core.Shapes
         #region Closest Point
         public static Vector2 GetClosestPointTrianglePoint(Vector2 a, Vector2 b, Vector2 c, Vector2 p, out float disSquared)
         {
-            var min = Segment.GetClosestPointSegmentPoint(a, b, p, out float minDisSq);
+            var min = Segment.GetClosestPointSegmentPoint(a, b, p, out disSquared);
 
-            var bc = Segment.GetClosestPointSegmentPoint(b, c, p, out float dis);
-            if (dis < minDisSq)
+            var cp = Segment.GetClosestPointSegmentPoint(b, c, p, out float dis);
+            if (dis < disSquared)
             {
-                min = bc;
-                minDisSq = dis;
+                min = cp;
+                disSquared = dis;
             }
-            var ca = Segment.GetClosestPointSegmentPoint(c, a, p, out dis);
-            if (dis < minDisSq)
+            cp = Segment.GetClosestPointSegmentPoint(c, a, p, out dis);
+            if (dis < disSquared)
             {
                 disSquared = dis;
-                return ca;
+                return cp;
             }
-            disSquared = minDisSq;
+            
             return min;
         }
 
         public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared)
         {
-            var min = Segment.GetClosestPointSegmentPoint(A, B, p, out float minDisSq);
+            var min = Segment.GetClosestPointSegmentPoint(A, B, p, out disSquared);
             var normal = B - A;
 
-            var bc = Segment.GetClosestPointSegmentPoint(B, C, p, out float dis);
-            if (dis < minDisSq)
+            var cp = Segment.GetClosestPointSegmentPoint(B, C, p, out float dis);
+            if (dis < disSquared)
             {
-                min = bc;
-                minDisSq = dis;
+                min = cp;
+                disSquared = dis;
                 normal = C - B;
             }
             
-            var ca = Segment.GetClosestPointSegmentPoint(C, A, p, out dis);
-            if (dis < minDisSq)
+            cp = Segment.GetClosestPointSegmentPoint(C, A, p, out dis);
+            if (dis < disSquared)
             {
-                min = ca;
-                minDisSq = dis;
+                min = cp;
+                disSquared = dis;
                 normal = A - C;
             }
 
-            disSquared = minDisSq;
             return new(min, normal.GetPerpendicularRight().Normalize());
         }
         public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Line other, out float disSquared)
@@ -1347,27 +1346,26 @@ namespace ShapeEngine.Core.Shapes
         public (Segment segment, CollisionPoint segmentPoint) GetClosestSegment(Vector2 p, out float disSquared)
         {
             var closestSegment = SegmentAToB;
-            var closestResult = closestSegment.GetClosestPoint(p, out float minDisSquared);
+            var closestResult = closestSegment.GetClosestPoint(p, out disSquared);
             
             var currentSegment = SegmentBToC;
             var result = currentSegment.GetClosestPoint(p, out float dis);
-            if (dis < minDisSquared)
+            if (dis < disSquared)
             {
                 closestSegment = currentSegment;
-                minDisSquared = dis;
+                disSquared = dis;
                 closestResult = result;
             }
             
             currentSegment = SegmentCToA;
             result = currentSegment.GetClosestPoint(p, out dis);
-            if (dis < minDisSquared)
+            if (dis < disSquared)
             {
                 closestSegment = currentSegment;
-                minDisSquared = dis;
+                disSquared = dis;
                 closestResult = result;
             }
 
-            disSquared = minDisSquared;
             return (closestSegment, closestResult);
         }
        
