@@ -1371,20 +1371,20 @@ namespace ShapeEngine.Core.Shapes
             return (closestSegment, closestResult);
         }
        
-        public Vector2 GetClosestVertex(Vector2 p)
+        public Vector2 GetClosestVertex(Vector2 p, out float disSquared)
         {
             var closest = A;
-            float minDisSquared = (A - p).LengthSquared();
+            disSquared = (A - p).LengthSquared();
 
             float l = (B - p).LengthSquared();
-            if (l < minDisSquared)
+            if (l < disSquared)
             {
                 closest = B;
-                minDisSquared = l;
+                disSquared = l;
             }
 
             l = (C - p).LengthSquared();
-            if (l < minDisSquared) closest = C;
+            if (l < disSquared) closest = C;
 
             return closest;
         }
