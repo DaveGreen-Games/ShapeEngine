@@ -1094,18 +1094,17 @@ public readonly struct Segment : IEquatable<Segment>
         disSquared = (closestPoint1 - closestPoint2).LengthSquared();
         return (closestPoint1, closestPoint2);
     }
-    public static (Vector2 self, Vector2 other) GetClosestPointSegmentCircle(Vector2 segmentStart, Vector2 segmentEnd, Vector2 circleCenter, float radius, out float disSquared)
+    public static (Vector2 self, Vector2 other) GetClosestPointSegmentCircle(Vector2 segmentStart, Vector2 segmentEnd, Vector2 circleCenter, float circleRadius, out float disSquared)
     {
         var d1 = segmentEnd - segmentStart;
-        var p1 = circleCenter;
 
-        var toCenter = p1 - segmentStart;
+        var toCenter = circleCenter - segmentStart;
         float projectionLength = Vector2.Dot(toCenter, d1) / d1.LengthSquared();
         projectionLength = Math.Clamp(projectionLength, 0.0f, 1.0f);
-        Vector2 closestPointOnSegment = segmentStart + projectionLength * d1;
+        var closestPointOnSegment = segmentStart + projectionLength * d1;
 
-        var offset = Vector2.Normalize(closestPointOnSegment - p1) * radius;
-        var closestPointOnCircle = p1 + offset;
+        var offset = Vector2.Normalize(closestPointOnSegment - circleCenter) * circleRadius;
+        var closestPointOnCircle = circleCenter + offset;
         disSquared = (closestPointOnCircle - closestPointOnSegment).LengthSquared();
         return (closestPointOnSegment, closestPointOnCircle);
     }
