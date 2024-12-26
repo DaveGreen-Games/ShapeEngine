@@ -1969,7 +1969,7 @@ public readonly struct Rect : IEquatable<Rect>
         var closestSegment = TopSegment;
         var closestResult = closestSegment.GetClosestPoint(p, out float minDisSquared);
         
-        var currentSegment = RightSegment;
+        var currentSegment = LeftSegment;
         var result = currentSegment.GetClosestPoint(p, out float dis);
         if (dis < minDisSquared)
         {
@@ -1987,7 +1987,7 @@ public readonly struct Rect : IEquatable<Rect>
             closestResult = result;
         }
         
-        currentSegment = LeftSegment;
+        currentSegment = RightSegment;
         result = currentSegment.GetClosestPoint(p, out dis);
         if (dis < minDisSquared)
         {
@@ -2000,22 +2000,25 @@ public readonly struct Rect : IEquatable<Rect>
         return (closestSegment, closestResult);
     }
    
-    public Vector2 GetClosestVertex(Vector2 p, out float disSquared)
+    public Vector2 GetClosestVertex(Vector2 p, out float disSquared, out int index)
     {
         var closest = TopLeft;
         disSquared = (TopLeft - p).LengthSquared();
+        index = 0;
 
         float l = (BottomLeft - p).LengthSquared();
         if (l < disSquared)
         {
             closest = BottomLeft;
             disSquared = l;
+            index = 1;
         }
         l = (BottomRight - p).LengthSquared();
         if (l < disSquared)
         {
             closest = BottomRight;
             disSquared = l;
+            index = 2;
         }
 
         l = (TopRight - p).LengthSquared();
@@ -2023,6 +2026,7 @@ public readonly struct Rect : IEquatable<Rect>
         {
             disSquared = l;
             closest = TopRight;
+            index = 3;
         }
 
         return closest;
