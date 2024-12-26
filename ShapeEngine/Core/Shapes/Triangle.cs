@@ -866,6 +866,33 @@ namespace ShapeEngine.Core.Shapes
 
             return new(min, normal.GetPerpendicularRight().Normalize());
         }
+        public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared, out int index)
+        {
+            var min = Segment.GetClosestPointSegmentPoint(A, B, p, out disSquared);
+            var normal = B - A;
+            index = 0;
+
+            var cp = Segment.GetClosestPointSegmentPoint(B, C, p, out float dis);
+            if (dis < disSquared)
+            {
+                min = cp;
+                disSquared = dis;
+                normal = C - B;
+                index = 1;
+            }
+            
+            cp = Segment.GetClosestPointSegmentPoint(C, A, p, out dis);
+            if (dis < disSquared)
+            {
+                min = cp;
+                disSquared = dis;
+                normal = A - C;
+                index = 2;
+            }
+
+            return new(min, normal.GetPerpendicularRight().Normalize());
+        }
+
         public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Line other, out float disSquared)
         {
             var closestResult = Segment.GetClosestPointSegmentLine(A, B, other.Point, other.Direction, out disSquared);

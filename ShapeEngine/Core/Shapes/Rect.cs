@@ -1366,6 +1366,42 @@ public readonly struct Rect : IEquatable<Rect>
 
         return new(min, normal.GetPerpendicularRight().Normalize());
     }
+    public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared, out int index)
+    {
+        var min = Segment.GetClosestPointSegmentPoint(A, B, p, out disSquared);
+        index = 0;
+        var normal = B - A;
+
+        var cp = Segment.GetClosestPointSegmentPoint(B, C, p, out float dis);
+        if (dis < disSquared)
+        {
+            min = cp;
+            disSquared = dis;
+            index = 1;
+            normal = C - B;
+        }
+        
+        cp = Segment.GetClosestPointSegmentPoint(C, D, p, out dis);
+        if (dis < disSquared)
+        {
+            min = cp;
+            disSquared = dis;
+            index = 2;
+            normal = D - C;
+        }
+        
+        cp = Segment.GetClosestPointSegmentPoint(D, A, p, out dis);
+        if (dis < disSquared)
+        {
+            min = cp;
+            disSquared = dis;
+            index = 3;
+            normal = A - D;
+        }
+
+        return new(min, normal.GetPerpendicularRight().Normalize());
+    }
+
     public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Line other, out float disSquared)
     {
         var closestResult = Segment.GetClosestPointSegmentLine(A, B, other.Point, other.Direction, out disSquared);
@@ -2005,7 +2041,7 @@ public readonly struct Rect : IEquatable<Rect>
         var closest = TopLeft;
         disSquared = (TopLeft - p).LengthSquared();
         index = 0;
-
+    
         float l = (BottomLeft - p).LengthSquared();
         if (l < disSquared)
         {
@@ -2020,7 +2056,7 @@ public readonly struct Rect : IEquatable<Rect>
             disSquared = l;
             index = 2;
         }
-
+    
         l = (TopRight - p).LengthSquared();
         if (l < disSquared)
         {
@@ -2028,9 +2064,10 @@ public readonly struct Rect : IEquatable<Rect>
             closest = TopRight;
             index = 3;
         }
-
+    
         return closest;
     }
+    
     #endregion
     
     /*#region Closest

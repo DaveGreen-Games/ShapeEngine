@@ -850,17 +850,18 @@ public readonly struct Quad : IEquatable<Quad>
 
         return new(min, normal.GetPerpendicularRight().Normalize());
     }
-    public Vector2 GetClosestPoint(Vector2 p, out float disSquared, out int index)
+    public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared, out int index)
     {
         var min = Segment.GetClosestPointSegmentPoint(A, B, p, out disSquared);
         index = 0;
-
+        var normal = B - A;
         var cp = Segment.GetClosestPointSegmentPoint(B, C, p, out float dis);
         if (dis < disSquared)
         {
             min = cp;
             disSquared = dis;
             index = 1;
+            normal = C - B;
         }
         
         cp = Segment.GetClosestPointSegmentPoint(C, D, p, out dis);
@@ -869,6 +870,7 @@ public readonly struct Quad : IEquatable<Quad>
             min = cp;
             disSquared = dis;
             index = 2;
+            normal = D - C;
         }
         
         cp = Segment.GetClosestPointSegmentPoint(D, A, p, out dis);
@@ -877,9 +879,10 @@ public readonly struct Quad : IEquatable<Quad>
             min = cp;
             disSquared = dis;
             index = 3;
+            normal = A - D;
         }
 
-        return min;
+        return new(min, normal.GetPerpendicularRight().Normalize());
     }
 
     public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Line other, out float disSquared)
@@ -1515,13 +1518,13 @@ public readonly struct Quad : IEquatable<Quad>
         disSquared = minDisSquared;
         return (closestSegment, closestResult);
     }
-   
+    
     public Vector2 GetClosestVertex(Vector2 p, out float disSquared, out int index)
     {
         var closest = A;
         disSquared = (A - p).LengthSquared();
         index = 0;
-
+    
         float l = (B - p).LengthSquared();
         if (l < disSquared)
         {
@@ -1536,7 +1539,7 @@ public readonly struct Quad : IEquatable<Quad>
             disSquared = l;
             index = 2;
         }
-
+    
         l = (D - p).LengthSquared();
         if (l < disSquared)
         {
@@ -1544,7 +1547,7 @@ public readonly struct Quad : IEquatable<Quad>
             closest = D;
             index = 3;
         }
-
+    
         return closest;
     }
     
