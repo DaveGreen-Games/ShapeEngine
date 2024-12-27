@@ -1121,7 +1121,7 @@ public readonly struct Segment : IEquatable<Segment>
         disSquared = (c.Point - p).LengthSquared();
         return c;
     }
-    public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Line other, out float disSquared)
+    public ClosestPointResult GetClosestPoint(Line other)
     {
         var d1 = End - Start;
         var d2 = other.Direction;
@@ -1137,10 +1137,13 @@ public readonly struct Segment : IEquatable<Segment>
 
         var closestPoint1 = Start + s * d1;
         var closestPoint2 = other.Point + t * d2;
-        disSquared = (closestPoint2 - closestPoint1).LengthSquared();
-        return (new(closestPoint1, Normal), new(closestPoint2, other.Normal));
+        float disSquared = (closestPoint2 - closestPoint1).LengthSquared();
+        return new(
+            new(closestPoint1, Normal), 
+            new(closestPoint2, other.Normal),
+            disSquared);
     }
-    public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Ray other, out float disSquared)
+    public ClosestPointResult GetClosestPoint(Ray other)
     {
         var d1 = End - Start;
         var d2 = other.Direction;
@@ -1156,10 +1159,13 @@ public readonly struct Segment : IEquatable<Segment>
 
         var closestPoint1 = Start + s * d1;
         var closestPoint2 = other.Point + t * d2;
-        disSquared = (closestPoint2 - closestPoint1).LengthSquared();
-        return (new(closestPoint1, Normal), new(closestPoint2, other.Normal));
+        float disSquared = (closestPoint2 - closestPoint1).LengthSquared();
+        return new(
+            new(closestPoint1, Normal), 
+            new(closestPoint2, other.Normal),
+            disSquared);
     }
-    public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Segment other, out float disSquared)
+    public ClosestPointResult GetClosestPoint(Segment other)
     {
         var d1 = End - Start;
         var d2 = other.End - other.Start;
@@ -1174,8 +1180,11 @@ public readonly struct Segment : IEquatable<Segment>
         {
             // Both segments degenerate into points
             // s = t = 0.0f;
-            disSquared = r.LengthSquared();
-            return (new(Start, Normal), new(other.Start, other.Normal));
+            
+            return new(
+                new(Start, Normal), 
+                new(other.Start, other.Normal),
+                r.LengthSquared());
         }
         if (a <= 1e-10)
         {
@@ -1224,10 +1233,13 @@ public readonly struct Segment : IEquatable<Segment>
 
         var closestPoint1 = Start + s * d1;
         var closestPoint2 = other.Start + t * d2;
-        disSquared = (closestPoint2 - closestPoint1).LengthSquared();
-        return (new(closestPoint1, Normal), new(closestPoint2, other.Normal));
+        float disSquared = (closestPoint2 - closestPoint1).LengthSquared();
+        return new(
+            new(closestPoint1, Normal), 
+            new(closestPoint2, other.Normal),
+            disSquared);
     }
-    public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Circle other, out float disSquared)
+    public ClosestPointResult GetClosestPoint(Circle other)
     {
         var d1 = End - Start;
         var p1 = other.Center;
@@ -1240,18 +1252,18 @@ public readonly struct Segment : IEquatable<Segment>
         var offset = Vector2.Normalize(closestPointOnSegment - p1) * other.Radius;
         var closestPointOnCircle = p1 + offset;
 
-        disSquared = (closestPointOnCircle - closestPointOnSegment).LengthSquared();
-        return (new(closestPointOnSegment, Normal), new(closestPointOnCircle, (closestPointOnCircle - other.Center).Normalize()));
+        float disSquared = (closestPointOnCircle - closestPointOnSegment).LengthSquared();
+        return new(
+            new(closestPointOnSegment, Normal), 
+            new(closestPointOnCircle, (closestPointOnCircle - other.Center).Normalize()),
+            disSquared);
     }
-    public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Triangle other, out float minDisSquared)
+    public ClosestPointResult GetClosestPoint(Triangle other)
     {
-        var closestResult = GetClosestPointSegmentSegment(Start, End, other.A, other.B, out minDisSquared);
-        // minDisSquared = (closestResult.other - closestResult.self).LengthSquared();
+        var closestResult = GetClosestPointSegmentSegment(Start, End, other.A, other.B, out float minDisSquared);
         var curNormal = (other.B - other.A);
         
         var result = GetClosestPointSegmentSegment(Start, End, other.B, other.C, out float disSquared);
-        // var disSquared = (result.other - closestResult.self).LengthSquared();
-
         if (disSquared < minDisSquared)
         {
             minDisSquared = disSquared;
@@ -1260,26 +1272,26 @@ public readonly struct Segment : IEquatable<Segment>
         }
         
         result = GetClosestPointSegmentSegment(Start, End, other.C, other.A, out disSquared);
-        // disSquared = (result.other - closestResult.self).LengthSquared();
-
         if (disSquared < minDisSquared)
         {
-            minDisSquared = disSquared;
             var normal = (other.A - other.C).GetPerpendicularRight().Normalize();
-            return (new(result.self, Normal), new(result.self, normal));
+            return new(
+                new(result.self, Normal), 
+                new(result.self, normal),
+                disSquared);
         }
 
-        return (new(closestResult.self, Normal), new(closestResult.other, curNormal.GetPerpendicularRight().Normalize()));
+        return new(
+            new(closestResult.self, Normal), 
+            new(closestResult.other, curNormal.GetPerpendicularRight().Normalize()),
+            minDisSquared);
     }
-    public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Quad other,  out float minDisSquared)
+    public ClosestPointResult GetClosestPoint(Quad other)
     {
-        var closestResult = GetClosestPointSegmentSegment(Start, End, other.A, other.B, out minDisSquared);
-        // minDisSquared = (closestResult.other - closestResult.self).LengthSquared();
+        var closestResult = GetClosestPointSegmentSegment(Start, End, other.A, other.B, out float minDisSquared);
         var curNormal = (other.B - other.A);
         
         var result = GetClosestPointSegmentSegment(Start, End, other.B, other.C, out float disSquared);
-        // var disSquared = (result.other - closestResult.self).LengthSquared();
-
         if (disSquared < minDisSquared)
         {
             minDisSquared = disSquared;
@@ -1288,8 +1300,6 @@ public readonly struct Segment : IEquatable<Segment>
         }
         
         result = GetClosestPointSegmentSegment(Start, End, other.C, other.D, out disSquared);
-        // disSquared = (result.other - closestResult.self).LengthSquared();
-
         if (disSquared < minDisSquared)
         {
             minDisSquared = disSquared;
@@ -1298,26 +1308,26 @@ public readonly struct Segment : IEquatable<Segment>
         }
         
         result = GetClosestPointSegmentSegment(Start, End, other.D, other.A, out disSquared);
-        // disSquared = (result.other - closestResult.self).LengthSquared();
-
         if (disSquared < minDisSquared)
         {
-            minDisSquared = disSquared;
             var normal = (other.A - other.D).GetPerpendicularRight().Normalize();
-            return (new(result.self, Normal), new(result.self, normal));
+            return new(
+                new(result.self, Normal), 
+                new(result.self, normal),
+                disSquared);
         }
 
-        return (new(closestResult.self, Normal), new(closestResult.other, curNormal.GetPerpendicularRight().Normalize()));
+        return new(
+            new(closestResult.self, Normal), 
+            new(closestResult.other, curNormal.GetPerpendicularRight().Normalize()),
+            minDisSquared);
     }
-    public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Rect other, out float minDisSquared)
+    public ClosestPointResult GetClosestPoint(Rect other)
     {
-        var closestResult = GetClosestPointSegmentSegment(Start, End, other.A, other.B, out minDisSquared);
-        // minDisSquared = (closestResult.other - closestResult.self).LengthSquared();
+        var closestResult = GetClosestPointSegmentSegment(Start, End, other.A, other.B, out float minDisSquared);
         var curNormal = (other.B - other.A);
         
         var result = GetClosestPointSegmentSegment(Start, End, other.B, other.C, out float disSquared);
-        // var disSquared = (result.other - closestResult.self).LengthSquared();
-
         if (disSquared < minDisSquared)
         {
             minDisSquared = disSquared;
@@ -1326,8 +1336,6 @@ public readonly struct Segment : IEquatable<Segment>
         }
         
         result = GetClosestPointSegmentSegment(Start, End, other.C, other.D, out disSquared);
-        // disSquared = (result.other - closestResult.self).LengthSquared();
-
         if (disSquared < minDisSquared)
         {
             minDisSquared = disSquared;
@@ -1336,26 +1344,27 @@ public readonly struct Segment : IEquatable<Segment>
         }
         
         result = GetClosestPointSegmentSegment(Start, End, other.D, other.A, out disSquared);
-        // disSquared = (result.other - closestResult.self).LengthSquared();
-
         if (disSquared < minDisSquared)
         {
-            minDisSquared = disSquared;
             var normal = (other.A - other.D).GetPerpendicularRight().Normalize();
-            return (new(result.self, Normal), new(result.self, normal));
+            return new(
+                new(result.self, Normal), 
+                new(result.self, normal),
+                disSquared);
         }
 
-        return (new(closestResult.self, Normal), new(closestResult.other, curNormal.GetPerpendicularRight().Normalize()));
+        return new(
+            new(closestResult.self, Normal), 
+            new(closestResult.other, curNormal.GetPerpendicularRight().Normalize()),
+            minDisSquared);
     }
-    public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Polygon other, out float minDisSquared)
+    public ClosestPointResult GetClosestPoint(Polygon other)
     {
-        minDisSquared = -1;
-        if (other.Count < 3) return (new(), new());
+        if (other.Count < 3) return new();
         
         var p1 = other[0];
         var p2 = other[1];
-        var closestResult = GetClosestPointSegmentSegment(Start, End, p1, p2, out minDisSquared);
-        // minDisSquared = (closestResult.other - closestResult.self).LengthSquared();
+        var closestResult = GetClosestPointSegmentSegment(Start, End, p1, p2, out float minDisSquared);
         var curNormal = (p2 - p1);
         
         for (var i = 1; i < other.Count; i++)
@@ -1363,7 +1372,6 @@ public readonly struct Segment : IEquatable<Segment>
             p1 = other[i];
             p2 = other[(i + 1) % other.Count];
             var result = GetClosestPointSegmentSegment(Start, End, p1, p2, out float disSquared);
-            // var disSquared = (result.other - closestResult.self).LengthSquared();
             
             if (disSquared < minDisSquared)
             {
@@ -1372,17 +1380,18 @@ public readonly struct Segment : IEquatable<Segment>
                 curNormal = (p2 - p1);
             }
         }
-        return (new(closestResult.self, Normal), new(closestResult.other, curNormal.GetPerpendicularRight().Normalize()));
+        return new(
+            new(closestResult.self, Normal), 
+            new(closestResult.other, curNormal.GetPerpendicularRight().Normalize()),
+            minDisSquared);
     }
-    public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Polyline other, out float minDisSquared)
+    public ClosestPointResult GetClosestPoint(Polyline other)
     {
-        minDisSquared = -1;
-        if (other.Count < 2) return (new(), new());
+        if (other.Count < 2) return new();
         
         var p1 = other[0];
         var p2 = other[1];
-        var closestResult = GetClosestPointSegmentSegment(Start, End, p1, p2, out minDisSquared);
-        // minDisSquared = (closestResult.other - closestResult.self).LengthSquared();
+        var closestResult = GetClosestPointSegmentSegment(Start, End, p1, p2, out float minDisSquared);
         var curNormal = (p2 - p1);
         
         for (var i = 1; i < other.Count - 1; i++)
@@ -1390,7 +1399,6 @@ public readonly struct Segment : IEquatable<Segment>
             p1 = other[i];
             p2 = other[i + 1];
             var result = GetClosestPointSegmentSegment(Start, End, p1, p2, out float disSquared);
-            // var disSquared = (result.other - closestResult.self).LengthSquared();
             
             if (disSquared < minDisSquared)
             {
@@ -1399,24 +1407,25 @@ public readonly struct Segment : IEquatable<Segment>
                 curNormal = (p2 - p1);
             }
         }
-        return (new(closestResult.self, Normal), new(closestResult.other, curNormal.GetPerpendicularRight().Normalize()));
+        return new(
+            new(closestResult.self, Normal), 
+            new(closestResult.other, curNormal.GetPerpendicularRight().Normalize()),
+            minDisSquared);
     }
-    public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Segments segments, out float minDisSquared)
+    public ClosestPointResult GetClosestPoint(Segments segments)
     {
-        minDisSquared = -1;
-        if (segments.Count <= 0) return (new(), new());
+        if (segments.Count <= 0) return new();
         
         var curSegment = segments[0];
-        var closestResult = GetClosestPoint(curSegment, out minDisSquared);
+        var closestResult = GetClosestPoint(curSegment);
         
         for (var i = 1; i < segments.Count; i++)
         {
             curSegment = segments[i];
-            var result = GetClosestPoint(curSegment, out float disSquared);
+            var result = GetClosestPoint(curSegment);
 
-            if (disSquared < minDisSquared)
+            if (result.IsCloser(closestResult))
             {
-                minDisSquared = disSquared;
                 closestResult = result;
             }
         }
