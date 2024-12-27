@@ -1988,7 +1988,7 @@ public readonly struct Rect : IEquatable<Rect>
         for (var i = 0; i < other.Count; i++)
         {
             var segment = other[i];
-            var result = segment.GetClosestPoint(this, out float dis);
+            var result = GetClosestPoint(segment, out float dis);
             
             if (dis < disSquared || disSquared < 0)
             {

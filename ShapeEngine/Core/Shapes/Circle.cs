@@ -543,7 +543,7 @@ public readonly struct Circle : IEquatable<Circle>
         disSquared = (closestPoint - p).LengthSquared();
         return new(closestPoint, normal);
     }
-    public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Line other, out float disSquared)
+    public ClosestPointResult GetClosestPoint(Line other)
     {
         var d1 = other.Direction;
 
@@ -553,11 +553,14 @@ public readonly struct Circle : IEquatable<Circle>
 
         var offset = (closestPointOnLine - Center).Normalize() * Radius;
         var closestPointOnCircle = Center + offset;
-        disSquared = (closestPointOnLine - closestPointOnCircle).LengthSquared();
+        float disSquared = (closestPointOnLine - closestPointOnCircle).LengthSquared();
         var circleNormal = (closestPointOnCircle - Center).Normalize();
-        return (new(closestPointOnCircle, circleNormal), new(closestPointOnLine, other.Normal));
+        return new(
+            new(closestPointOnCircle, circleNormal), 
+            new(closestPointOnLine, other.Normal),
+            disSquared);
     }
-    public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Ray other, out float disSquared)
+    public ClosestPointResult GetClosestPoint(Ray other)
     {
         var d1 = other.Direction;
 
@@ -568,10 +571,13 @@ public readonly struct Circle : IEquatable<Circle>
         var offset = (closestPointOnRay - Center).Normalize() * Radius;
         var closestPointOnCircle = Center + offset;
         var circleNormal = (closestPointOnCircle - Center).Normalize();
-        disSquared = (closestPointOnRay - closestPointOnCircle).LengthSquared();
-        return (new(closestPointOnCircle, circleNormal), new(closestPointOnRay, other.Normal));
+        float disSquared = (closestPointOnRay - closestPointOnCircle).LengthSquared();
+        return new(
+            new(closestPointOnCircle, circleNormal), 
+            new(closestPointOnRay, other.Normal),
+            disSquared);
     }
-    public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Segment other, out float disSquared)
+    public ClosestPointResult GetClosestPoint(Segment other)
     {
         var d1 = other.End - other.Start;
 
@@ -583,10 +589,13 @@ public readonly struct Circle : IEquatable<Circle>
         var offset = Vector2.Normalize(closestPointOnSegment - Center) * Radius;
         var closestPointOnCircle = Center + offset;
         var circleNormal = (closestPointOnCircle - Center).Normalize();
-        disSquared = (closestPointOnCircle - closestPointOnSegment).LengthSquared();
-        return (new(closestPointOnCircle, circleNormal), new(closestPointOnSegment, other.Normal));
+        float disSquared = (closestPointOnCircle - closestPointOnSegment).LengthSquared();
+        return new(
+            new(closestPointOnCircle, circleNormal), 
+            new(closestPointOnSegment, other.Normal),
+            disSquared);
     }
-    public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Circle other, out float disSquared)
+    public ClosestPointResult GetClosestPoint(Circle other)
     {
         var w = Center - other.Center;
         var dir = w.Normalize();
@@ -594,12 +603,15 @@ public readonly struct Circle : IEquatable<Circle>
         var aNormal = (a - Center).Normalize();
         var b = other.Center + dir * other.Radius;
         var bNormal = (b - other.Center).Normalize();
-        disSquared = (a - b).LengthSquared();
-        return (new(a, aNormal), new(b, bNormal));
+        float disSquared = (a - b).LengthSquared();
+        return new(
+            new(a, aNormal), 
+            new(b, bNormal),
+            disSquared);
     }
-    public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Triangle other, out float minDisSquared)
+    public ClosestPointResult GetClosestPoint(Triangle other)
     {
-        var closestResult = GetClosestPointCircleSegment(Center, Radius, other.A, other.B, out minDisSquared);
+        var closestResult = GetClosestPointCircleSegment(Center, Radius, other.A, other.B, out float minDisSquared);
         var otherNormal = (other.B - other.A);
         
         var result = GetClosestPointCircleSegment(Center, Radius, other.B, other.C, out float disSquared);
@@ -613,18 +625,23 @@ public readonly struct Circle : IEquatable<Circle>
         result = GetClosestPointCircleSegment(Center, Radius, other.C, other.A, out disSquared);
         if (disSquared < minDisSquared)
         {
-            minDisSquared = disSquared;
             var normal = (other.A - other.C).GetPerpendicularRight().Normalize();
             var circleNormal = (result.self - Center).Normalize();
-            return (new(result.self, circleNormal), new(result.self, normal));
+            return new(
+                new(result.self, circleNormal), 
+                new(result.self, normal),
+                disSquared);
         }
         
         var selfNormal = (closestResult.self - Center).Normalize();
-        return (new(closestResult.self, selfNormal), new(closestResult.other, otherNormal.GetPerpendicularRight().Normalize()));
+        return new(
+            new(closestResult.self, selfNormal), 
+            new(closestResult.other, otherNormal.GetPerpendicularRight().Normalize()),
+            minDisSquared);
     }
-    public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Quad other,  out float minDisSquared)
+    public ClosestPointResult GetClosestPoint(Quad other)
     {
-        var closestResult = GetClosestPointCircleSegment(Center, Radius, other.A, other.B, out minDisSquared);
+        var closestResult = GetClosestPointCircleSegment(Center, Radius, other.A, other.B, out float minDisSquared);
         var otherNormal = (other.B - other.A);
         
         var result = GetClosestPointCircleSegment(Center, Radius, other.B, other.C, out float disSquared);
@@ -646,18 +663,23 @@ public readonly struct Circle : IEquatable<Circle>
         result = GetClosestPointCircleSegment(Center, Radius, other.D, other.A, out disSquared);
         if (disSquared < minDisSquared)
         {
-            minDisSquared = disSquared;
             var normal = (other.A - other.D).GetPerpendicularRight().Normalize();
             var circleNormal = (result.self - Center).Normalize();
-            return (new(result.self, circleNormal), new(result.self, normal));
+            return new(
+                new(result.self, circleNormal), 
+                new(result.self, normal),
+                disSquared);
         }
 
         var selfNormal = (closestResult.self - Center).Normalize();
-        return (new(closestResult.self, selfNormal), new(closestResult.other, otherNormal.GetPerpendicularRight().Normalize()));
+        return new(
+            new(closestResult.self, selfNormal), 
+            new(closestResult.other, otherNormal.GetPerpendicularRight().Normalize()),
+            minDisSquared);
     }
-    public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Rect other, out float minDisSquared)
+    public ClosestPointResult GetClosestPoint(Rect other)
     {
-        var closestResult = GetClosestPointCircleSegment(Center, Radius, other.A, other.B, out minDisSquared);
+        var closestResult = GetClosestPointCircleSegment(Center, Radius, other.A, other.B, out float minDisSquared);
         var otherNormal = (other.B - other.A);
         
         var result = GetClosestPointCircleSegment(Center, Radius, other.B, other.C, out float disSquared);
@@ -679,22 +701,26 @@ public readonly struct Circle : IEquatable<Circle>
         result = GetClosestPointCircleSegment(Center, Radius, other.D, other.A, out disSquared);
         if (disSquared < minDisSquared)
         {
-            minDisSquared = disSquared;
             var normal = (other.A - other.D).GetPerpendicularRight().Normalize();
             var circleNormal = (result.self - Center).Normalize();
-            return (new(result.self, circleNormal), new(result.self, normal));
+            return new(
+                new(result.self, circleNormal), 
+                new(result.self, normal),
+                disSquared);
         }
         var selfNormal = (closestResult.self - Center).Normalize();
-        return (new(closestResult.self, selfNormal), new(closestResult.other, otherNormal.GetPerpendicularRight().Normalize()));
+        return new(
+            new(closestResult.self, selfNormal), 
+            new(closestResult.other, otherNormal.GetPerpendicularRight().Normalize()),
+            minDisSquared);
     }
-    public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Polygon other, out float minDisSquared)
+    public ClosestPointResult GetClosestPoint(Polygon other)
     {
-        minDisSquared = -1;
-        if (other.Count < 3) return (new(), new());
+        if (other.Count < 3) return new();
         
         var p1 = other[0];
         var p2 = other[1];
-        var closestResult = GetClosestPointCircleSegment(Center, Radius, p1, p2, out minDisSquared);
+        var closestResult = GetClosestPointCircleSegment(Center, Radius, p1, p2, out float minDisSquared);
         var otherNormal = (p2 - p1);
         
         for (var i = 1; i < other.Count; i++)
@@ -710,16 +736,18 @@ public readonly struct Circle : IEquatable<Circle>
             }
         }
         var selfNormal = (closestResult.self - Center).Normalize();
-        return (new(closestResult.self, selfNormal), new(closestResult.other, otherNormal.GetPerpendicularRight().Normalize()));
+        return new(
+            new(closestResult.self, selfNormal), 
+            new(closestResult.other, otherNormal.GetPerpendicularRight().Normalize()),
+            minDisSquared);
     }
-    public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Polyline other, out float minDisSquared)
+    public ClosestPointResult GetClosestPoint(Polyline other)
     {
-        minDisSquared = -1;
-        if (other.Count < 2) return (new(), new());
+        if (other.Count < 2) return new();
         
         var p1 = other[0];
         var p2 = other[1];
-        var closestResult = GetClosestPointCircleSegment(Center, Radius, p1, p2, out minDisSquared);
+        var closestResult = GetClosestPointCircleSegment(Center, Radius, p1, p2, out float minDisSquared);
         var otherNormal = (p2 - p1);
         
         for (var i = 1; i < other.Count - 1; i++)
@@ -735,24 +763,25 @@ public readonly struct Circle : IEquatable<Circle>
             }
         }
         var selfNormal = (closestResult.self - Center).Normalize();
-        return (new(closestResult.self, selfNormal), new(closestResult.other, otherNormal.GetPerpendicularRight().Normalize()));
+        return new(
+            new(closestResult.self, selfNormal), 
+            new(closestResult.other, otherNormal.GetPerpendicularRight().Normalize()),
+            minDisSquared);
     }
-    public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Segments segments, out float minDisSquared)
+    public ClosestPointResult GetClosestPoint(Segments segments)
     {
-        minDisSquared = -1;
-        if (segments.Count <= 0) return (new(), new());
+        if (segments.Count <= 0) return new();
         
         var curSegment = segments[0];
-        var closestResult = GetClosestPoint(curSegment, out minDisSquared);
+        var closestResult = GetClosestPoint(curSegment);
         
         for (var i = 1; i < segments.Count; i++)
         {
             curSegment = segments[i];
-            var result = GetClosestPoint(curSegment, out float disSquared);
+            var result = GetClosestPoint(curSegment);
 
-            if (disSquared < minDisSquared)
+            if (result.IsCloser(closestResult))
             {
-                minDisSquared = disSquared;
                 closestResult = result;
             }
         }
