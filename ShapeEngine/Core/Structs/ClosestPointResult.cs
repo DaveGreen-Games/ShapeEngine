@@ -33,4 +33,7 @@ public readonly struct ClosestPointResult
     public ClosestPointResult Switch() => new(Other, Self, DistanceSquared, OtherSegmentIndex, SegmentIndex);
     public bool IsCloser(ClosestPointResult other) => DistanceSquared < other.DistanceSquared;
     public bool IsCloser(float distanceSquared) => DistanceSquared < distanceSquared;
+    
+    public ClosestPointResult SetSegmentIndex(int index) => new(Self, Other, DistanceSquared, index, OtherSegmentIndex);
+    public ClosestPointResult SetOtherSegmentIndex(int index) => new(Self, Other, DistanceSquared, SegmentIndex, index);
 }
