@@ -723,10 +723,10 @@ namespace ShapeEngine.Core.Shapes
         
         public bool MergeShapeSelf(Polygon other, float distanceThreshold)
         {
-            var cd = GetClosestPoint(other, out var disSquared, out var segmentIndex, out var otherSegmentIndex);
-            if (disSquared < distanceThreshold * distanceThreshold)
+            var result = GetClosestPoint(other);
+            if (result.Valid && result.DistanceSquared < distanceThreshold * distanceThreshold)
             {
-                var fillShape = Polygon.Generate(cd.self.Point, 7, distanceThreshold, distanceThreshold * 2);
+                var fillShape = Polygon.Generate(result.Self.Point, 7, distanceThreshold, distanceThreshold * 2);
                 UnionShapeSelf(fillShape, FillRule.NonZero);
                 UnionShapeSelf(other, FillRule.NonZero);
             }
@@ -735,15 +735,15 @@ namespace ShapeEngine.Core.Shapes
         }
         public Polygon? MergeShape(Polygon other, float distanceThreshold)
         {
-            var cd = GetClosestPoint(other, out var disSquared, out var segmentIndex, out var otherSegmentIndex);
-            if (disSquared < distanceThreshold * distanceThreshold)
+            var result = GetClosestPoint(other);
+            if (result.Valid && result.DistanceSquared < distanceThreshold * distanceThreshold)
             {
-                var fillShape = Polygon.Generate(cd.self.Point, 7, distanceThreshold, distanceThreshold * 2);
-                var result = ShapeClipper.Union(this, fillShape, FillRule.NonZero);
-                if (result.Count > 0)
+                var fillShape = Polygon.Generate(result.Self.Point, 7, distanceThreshold, distanceThreshold * 2);
+                var clip = ShapeClipper.Union(this, fillShape, FillRule.NonZero);
+                if (clip.Count > 0)
                 {
-                    result = ShapeClipper.Union(result[0].ToPolygon(), other, FillRule.NonZero);
-                    if (result.Count > 0) return result[0].ToPolygon();
+                    clip = ShapeClipper.Union(clip[0].ToPolygon(), other, FillRule.NonZero);
+                    if (clip.Count > 0) return clip[0].ToPolygon();
                 }
             }
 
@@ -1199,17 +1199,14 @@ namespace ShapeEngine.Core.Shapes
             return closest;
         }
 
-        public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Line other, out float disSquared, out int segmentIndex)
+        public ClosestPointResult GetClosestPoint(Line other)
         {
-            disSquared = -1;
-            segmentIndex = -1;
             if (Count <= 2) return new();
-
-            segmentIndex = 0;
             var first = this[0];
             var second = this[1];
             var normal = second - first;
-            var result = Segment.GetClosestPointSegmentLine(first, second, other.Point, other.Direction, out disSquared);
+            var result = Segment.GetClosestPointSegmentLine(first, second, other.Point, other.Direction, out float disSquared);
+            var selfIndex = 0;
             
             for (var i = 1; i < Count; i++)
             {
@@ -1219,7 +1216,7 @@ namespace ShapeEngine.Core.Shapes
                 var cp = Segment.GetClosestPointSegmentLine(p1, p2, other.Point, other.Direction, out float dis);
                 if (dis < disSquared)
                 {
-                    segmentIndex = i;
+                    selfIndex = i;
                     result = cp;
                     disSquared = dis;
                     normal = p2 - p1;
@@ -1227,19 +1224,21 @@ namespace ShapeEngine.Core.Shapes
             
             }
 
-            return (new(result.self, normal.GetPerpendicularRight().Normalize()), new(result.other, other.Normal));
+            return new(
+                new(result.self, normal.GetPerpendicularRight().Normalize()), 
+                new(result.other, other.Normal),
+                disSquared,
+                selfIndex);
         }
-        public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Ray other, out float disSquared, out int segmentIndex)
+        public ClosestPointResult GetClosestPoint(Ray other)
         {
-            disSquared = -1;
-            segmentIndex = -1;
             if (Count <= 2) return new();
             
-            segmentIndex = 0;
             var first = this[0];
             var second = this[1];
             var normal = second - first;
-            var result = Segment.GetClosestPointSegmentRay(first, second, other.Point, other.Direction, out disSquared);
+            var result = Segment.GetClosestPointSegmentRay(first, second, other.Point, other.Direction, out float disSquared);
+            var selfIndex = 0;
             
             for (var i = 1; i < Count; i++)
             {
@@ -1249,7 +1248,7 @@ namespace ShapeEngine.Core.Shapes
                 var cp = Segment.GetClosestPointSegmentRay(p1, p2, other.Point, other.Direction, out float dis);
                 if (dis < disSquared)
                 {
-                    segmentIndex = i;
+                    selfIndex = i;
                     result = cp;
                     disSquared = dis;
                     normal = p2 - p1;
@@ -1257,19 +1256,21 @@ namespace ShapeEngine.Core.Shapes
             
             }
 
-            return (new(result.self, normal.GetPerpendicularRight().Normalize()), new(result.other, other.Normal));
+            return new(
+                new(result.self, normal.GetPerpendicularRight().Normalize()), 
+                new(result.other, other.Normal),
+                disSquared,
+                selfIndex);
         }
-        public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Segment other, out float disSquared, out int segmentIndex)
+        public ClosestPointResult GetClosestPoint(Segment other)
         {
-            disSquared = -1;
-            segmentIndex = -1;
             if (Count <= 2) return new();
             
-            segmentIndex = 0;
             var first = this[0];
             var second = this[1];
             var normal = second - first;
-            var result = Segment.GetClosestPointSegmentSegment(first, second, other.Start, other.End, out disSquared);
+            var result = Segment.GetClosestPointSegmentSegment(first, second, other.Start, other.End, out float disSquared);
+            var selfIndex = 0;
             
             for (var i = 1; i < Count; i++)
             {
@@ -1279,7 +1280,7 @@ namespace ShapeEngine.Core.Shapes
                 var cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.Start, other.End, out float dis);
                 if (dis < disSquared)
                 {
-                    segmentIndex = i;
+                    selfIndex = i;
                     result = cp;
                     disSquared = dis;
                     normal = p2 - p1;
@@ -1287,19 +1288,21 @@ namespace ShapeEngine.Core.Shapes
             
             }
 
-            return (new(result.self, normal.GetPerpendicularRight().Normalize()), new(result.other, other.Normal));
+            return new (
+                new(result.self, normal.GetPerpendicularRight().Normalize()), 
+                new(result.other, other.Normal),
+                disSquared,
+                selfIndex);
         }
-        public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Circle other, out float disSquared, out int segmentIndex)
+        public ClosestPointResult GetClosestPoint(Circle other)
         {
-            disSquared = -1;
-            segmentIndex = -1;
             if (Count <= 2) return new();
             
-            segmentIndex = 0;
             var first = this[0];
             var second = this[1];
             var normal = second - first;
-            var result = Segment.GetClosestPointSegmentCircle(first, second, other.Center, other.Radius, out disSquared);
+            var result = Segment.GetClosestPointSegmentCircle(first, second, other.Center, other.Radius, out float disSquared);
+            var selfIndex = 0;
             
             for (var i = 1; i < Count; i++)
             {
@@ -1309,28 +1312,30 @@ namespace ShapeEngine.Core.Shapes
                 var cp = Segment.GetClosestPointSegmentCircle(p1, p2, other.Center, other.Radius, out float dis);
                 if (dis < disSquared)
                 {
-                    segmentIndex = i;
+                    selfIndex = i;
                     result = cp;
                     disSquared = dis;
                     normal = p2 - p1;
                 }
             }
 
-            return 
-            (
+            return new (
                 new(result.self, normal.GetPerpendicularRight().Normalize()), 
-                new(result.other, (result.other - other.Center).Normalize())
+                new(result.other, (result.other - other.Center).Normalize()),
+                disSquared,
+                selfIndex
             );
         }
-        public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Triangle other, out float disSquared, out int segmentIndex)
+        public ClosestPointResult GetClosestPoint(Triangle other)
         {
-            disSquared = -1;
-            segmentIndex = -1;
             if (Count <= 2) return new();
             
             (Vector2 self, Vector2 other) result = (Vector2.Zero, Vector2.Zero);
             var selfNormal = Vector2.Zero;
             var otherNormal = Vector2.Zero;
+            int selfIndex = -1;
+            int otherIndex = -1;
+            float disSquared = -1f;
             
             for (var i = 0; i < Count; i++)
             {
@@ -1340,7 +1345,8 @@ namespace ShapeEngine.Core.Shapes
                 var cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.A, other.B, out float dis);
                 if (dis < disSquared || disSquared < 0)
                 {
-                    segmentIndex = i;
+                    selfIndex = i;
+                    otherIndex = 0;
                     result = cp;
                     disSquared = dis;
                     selfNormal = p2 - p1;
@@ -1350,7 +1356,8 @@ namespace ShapeEngine.Core.Shapes
                 cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.B, other.C, out dis);
                 if (dis < disSquared || disSquared < 0)
                 {
-                    segmentIndex = i;
+                    selfIndex = i;
+                    otherIndex = 1;
                     result = cp;
                     disSquared = dis;
                     selfNormal = p2 - p1;
@@ -1360,7 +1367,8 @@ namespace ShapeEngine.Core.Shapes
                 cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.C, other.A, out dis);
                 if (dis < disSquared || disSquared < 0)
                 {
-                    segmentIndex = i;
+                    selfIndex = i;
+                    otherIndex = 2;
                     result = cp;
                     disSquared = dis;
                     selfNormal = p2 - p1;
@@ -1369,17 +1377,23 @@ namespace ShapeEngine.Core.Shapes
             
             }
 
-            return (new(result.self, selfNormal.GetPerpendicularRight().Normalize()), new(result.other, otherNormal.GetPerpendicularRight().Normalize()));
+            return new(
+                new(result.self, selfNormal.GetPerpendicularRight().Normalize()), 
+                new(result.other, otherNormal.GetPerpendicularRight().Normalize()),
+                disSquared,
+                selfIndex,
+                otherIndex);
         }
-        public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Quad other,  out float disSquared, out int segmentIndex)
+        public ClosestPointResult GetClosestPoint(Quad other)
         {
-            disSquared = -1;
-            segmentIndex = -1;
             if (Count <= 2) return new();
             
             (Vector2 self, Vector2 other) result = (Vector2.Zero, Vector2.Zero);
             var selfNormal = Vector2.Zero;
             var otherNormal = Vector2.Zero;
+            int selfIndex = -1;
+            int otherIndex = -1;
+            float disSquared = -1f;
             
             for (var i = 0; i < Count; i++)
             {
@@ -1389,7 +1403,8 @@ namespace ShapeEngine.Core.Shapes
                 var cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.A, other.B, out float dis);
                 if (dis < disSquared || disSquared < 0)
                 {
-                    segmentIndex = i;
+                    selfIndex = i;
+                    otherIndex = 0;
                     result = cp;
                     disSquared = dis;
                     selfNormal = p2 - p1;
@@ -1399,7 +1414,8 @@ namespace ShapeEngine.Core.Shapes
                 cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.B, other.C, out dis);
                 if (dis < disSquared || disSquared < 0)
                 {
-                    segmentIndex = i;
+                    selfIndex = i;
+                    otherIndex = 1;
                     result = cp;
                     disSquared = dis;
                     selfNormal = p2 - p1;
@@ -1409,7 +1425,8 @@ namespace ShapeEngine.Core.Shapes
                 cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.C, other.D, out dis);
                 if (dis < disSquared || disSquared < 0)
                 {
-                    segmentIndex = i;
+                    selfIndex = i;
+                    otherIndex = 2;
                     result = cp;
                     disSquared = dis;
                     selfNormal = p2 - p1;
@@ -1419,7 +1436,8 @@ namespace ShapeEngine.Core.Shapes
                 cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.D, other.A, out dis);
                 if (dis < disSquared || disSquared < 0)
                 {
-                    segmentIndex = i;
+                    selfIndex = i;
+                    otherIndex = 3;
                     result = cp;
                     disSquared = dis;
                     selfNormal = p2 - p1;
@@ -1428,17 +1446,23 @@ namespace ShapeEngine.Core.Shapes
             
             }
 
-            return (new(result.self, selfNormal.GetPerpendicularRight().Normalize()), new(result.other, otherNormal.GetPerpendicularRight().Normalize()));
+            return new(
+                new(result.self, selfNormal.GetPerpendicularRight().Normalize()), 
+                new(result.other, otherNormal.GetPerpendicularRight().Normalize()),
+                disSquared,
+                selfIndex,
+                otherIndex);
         }
-        public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Rect other, out float disSquared, out int segmentIndex)
+        public ClosestPointResult GetClosestPoint(Rect other)
         {
-            disSquared = -1;
-            segmentIndex = -1;
             if (Count <= 2) return new();
             
             (Vector2 self, Vector2 other) result = (Vector2.Zero, Vector2.Zero);
             var selfNormal = Vector2.Zero;
             var otherNormal = Vector2.Zero;
+            int selfIndex = -1;
+            int otherIndex = -1;
+            float disSquared = -1f;
             
             for (var i = 0; i < Count; i++)
             {
@@ -1448,7 +1472,8 @@ namespace ShapeEngine.Core.Shapes
                 var cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.A, other.B, out float dis);
                 if (dis < disSquared || disSquared < 0)
                 {
-                    segmentIndex = i;
+                    selfIndex = i;
+                    otherIndex = 0;
                     result = cp;
                     disSquared = dis;
                     selfNormal = p2 - p1;
@@ -1458,7 +1483,8 @@ namespace ShapeEngine.Core.Shapes
                 cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.B, other.C, out dis);
                 if (dis < disSquared || disSquared < 0)
                 {
-                    segmentIndex = i;
+                    selfIndex = i;
+                    otherIndex = 1;
                     result = cp;
                     disSquared = dis;
                     selfNormal = p2 - p1;
@@ -1468,7 +1494,8 @@ namespace ShapeEngine.Core.Shapes
                 cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.C, other.D, out dis);
                 if (dis < disSquared || disSquared < 0)
                 {
-                    segmentIndex = i;
+                    selfIndex = i;
+                    otherIndex = 2;
                     result = cp;
                     disSquared = dis;
                     selfNormal = p2 - p1;
@@ -1478,7 +1505,8 @@ namespace ShapeEngine.Core.Shapes
                 cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.D, other.A, out dis);
                 if (dis < disSquared || disSquared < 0)
                 {
-                    segmentIndex = i;
+                    selfIndex = i;
+                    otherIndex = 3;
                     result = cp;
                     disSquared = dis;
                     selfNormal = p2 - p1;
@@ -1487,18 +1515,23 @@ namespace ShapeEngine.Core.Shapes
             
             }
 
-            return (new(result.self, selfNormal.GetPerpendicularRight().Normalize()), new(result.other, otherNormal.GetPerpendicularRight().Normalize()));
+            return new(
+                new(result.self, selfNormal.GetPerpendicularRight().Normalize()), 
+                new(result.other, otherNormal.GetPerpendicularRight().Normalize()),
+                disSquared,
+                selfIndex,
+                otherIndex);
         }
-        public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Polygon other, out float disSquared, out int segmentIndex, out int otherSegmentIndex)
+        public ClosestPointResult GetClosestPoint(Polygon other)
         {
-            disSquared = -1;
-            segmentIndex = -1;
-            otherSegmentIndex = -1;
             if (Count <= 2) return new();
             
             (Vector2 self, Vector2 other) result = (Vector2.Zero, Vector2.Zero);
             var selfNormal = Vector2.Zero;
             var otherNormal = Vector2.Zero;
+            int selfIndex = -1;
+            int otherIndex = -1;
+            float disSquared = -1f;
             
             for (var i = 0; i < Count; i++)
             {
@@ -1512,8 +1545,8 @@ namespace ShapeEngine.Core.Shapes
                     var cp = Segment.GetClosestPointSegmentSegment(p1, p2, otherP1, otherP2, out float dis);
                     if (dis < disSquared || disSquared < 0)
                     {
-                        segmentIndex = i;
-                        otherSegmentIndex = j;
+                        selfIndex = i;
+                        otherIndex = j;
                         result = cp;
                         disSquared = dis;
                         selfNormal = p2 - p1;
@@ -1523,18 +1556,23 @@ namespace ShapeEngine.Core.Shapes
             
             }
 
-            return (new(result.self, selfNormal.GetPerpendicularRight().Normalize()), new(result.other, otherNormal.GetPerpendicularRight().Normalize()));
+            return new(
+                new(result.self, selfNormal.GetPerpendicularRight().Normalize()), 
+                new(result.other, otherNormal.GetPerpendicularRight().Normalize()),
+                disSquared,
+                selfIndex,
+                otherIndex);
         }
-        public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Polyline other, out float disSquared, out int segmentIndex, out int otherSegmentIndex)
+        public ClosestPointResult GetClosestPoint(Polyline other)
         {
-            disSquared = -1;
-            segmentIndex = -1;
-            otherSegmentIndex = -1;
             if (Count <= 2) return new();
             
             (Vector2 self, Vector2 other) result = (Vector2.Zero, Vector2.Zero);
             var selfNormal = Vector2.Zero;
             var otherNormal = Vector2.Zero;
+            int selfIndex = -1;
+            int otherIndex = -1;
+            float disSquared = -1f;
             
             for (var i = 0; i < Count; i++)
             {
@@ -1548,8 +1586,8 @@ namespace ShapeEngine.Core.Shapes
                     var cp = Segment.GetClosestPointSegmentSegment(p1, p2, otherP1, otherP2, out float dis);
                     if (dis < disSquared || disSquared < 0)
                     {
-                        segmentIndex = i;
-                        otherSegmentIndex = j;
+                        selfIndex = i;
+                        otherIndex = j;
                         result = cp;
                         disSquared = dis;
                         selfNormal = p2 - p1;
@@ -1559,18 +1597,23 @@ namespace ShapeEngine.Core.Shapes
             
             }
 
-            return (new(result.self, selfNormal.GetPerpendicularRight().Normalize()), new(result.other, otherNormal.GetPerpendicularRight().Normalize()));
+            return new(
+                new(result.self, selfNormal.GetPerpendicularRight().Normalize()), 
+                new(result.other, otherNormal.GetPerpendicularRight().Normalize()),
+                disSquared,
+                selfIndex,
+                otherIndex);
         }
-        public (CollisionPoint self, CollisionPoint other) GetClosestPoint(Segments other, out float disSquared, out int segmentIndex, out int otherSegmentIndex)
+        public ClosestPointResult GetClosestPoint(Segments other)
         {
-            disSquared = -1;
-            segmentIndex = -1;
-            otherSegmentIndex = -1;
             if (Count <= 2) return new();
             
             (Vector2 self, Vector2 other) result = (Vector2.Zero, Vector2.Zero);
             var selfNormal = Vector2.Zero;
             var otherNormal = Vector2.Zero;
+            int selfIndex = -1;
+            int otherIndex = -1;
+            float disSquared = -1f;
             
             for (var i = 0; i < Count; i++)
             {
@@ -1583,8 +1626,8 @@ namespace ShapeEngine.Core.Shapes
                     var cp = Segment.GetClosestPointSegmentSegment(p1, p2, otherSegment.Start, otherSegment.End, out float dis);
                     if (dis < disSquared || disSquared < 0)
                     {
-                        segmentIndex = i;
-                        otherSegmentIndex = j;
+                        selfIndex = i;
+                        otherIndex = j;
                         result = cp;
                         disSquared = dis;
                         selfNormal = p2 - p1;
@@ -1594,7 +1637,12 @@ namespace ShapeEngine.Core.Shapes
             
             }
 
-            return (new(result.self, selfNormal.GetPerpendicularRight().Normalize()), new(result.other, otherNormal));
+            return new(
+                new(result.self, selfNormal.GetPerpendicularRight().Normalize()), 
+                new(result.other, otherNormal),
+                disSquared,
+                selfIndex,
+                otherIndex);
         }
 
         public (Segment segment, CollisionPoint segmentPoint) GetClosestSegment(Vector2 p, out float disSquared)
