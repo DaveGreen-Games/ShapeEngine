@@ -56,6 +56,15 @@ namespace ShapeEngine.Core.Shapes
 
         #endregion
 
+        #region Public Functions
+        public Segment GetSegment(int index)
+        {
+            var first = index % Count;
+            var second = (index + 1) % Count;
+            return new Segment(this[first], this[second]);
+        }
+        #endregion
+        
         #region Vertices
 
         public void FixWindingOrder()

@@ -26,36 +26,62 @@ public class Triangulation : ShapeList<Triangle>
         }
         return true;
     }
-
-    // public static bool operator ==(Triangulation left, Triangulation right) => left.Equals(right);
-    //
-    // public static bool operator !=(Triangulation left, Triangulation right) => !(left == right);
-
     #endregion
-
-    #region Public
-    public ClosestItem<Triangle> GetClosest(Vector2 p)
+    
+    #region Closest Point
+    public ClosestPointResult GetClosestPoint(Vector2 p)
     {
+        
         if (Count <= 0) return new();
 
-        float minDisSquared = float.PositiveInfinity;
-        Triangle closestTriangle = new();
+        var closestPoint = new CollisionPoint();
+        var disSquared = -1f;
+        var triangleIndex = -1;
+
+        for (var i = 0; i < Count; i++)
+        {
+            var tri = this[i];
+            var result = tri.GetClosestPoint(p, out float dis, out int index);
+           
+            if (dis < disSquared)
+            {
+                triangleIndex = index;
+                disSquared = dis;
+                closestPoint = result;
+            }
+        }
+
+        return new(
+            closestPoint,
+            new CollisionPoint(p, (closestPoint.Point - p).Normalize()),
+            disSquared,
+            triangleIndex,
+            -1);
+    }
+    public (CollisionPoint point, Triangle triangle) GetClosestTriangle(Vector2 p, out float disSquared, out int triangleIndex)
+    {
+        disSquared = -1;
+        triangleIndex = -1;
+        if (Count <= 0) return (new(), new());
+
+        var closestTriangle = new Triangle();
         var contained = false;
-        Vector2 closestTrianglePoint = new();
+        var closestPoint = new CollisionPoint();
 
         for (var i = 0; i < Count; i++)
         {
             var tri = this[i];
             bool containsPoint = tri.ContainsPoint(p);
-            var closestPoint = tri.GetClosestCollisionPoint(p);
-            float disSquared = (closestPoint.Point - p).LengthSquared();
-            if (disSquared < minDisSquared)
+            var result = tri.GetClosestPoint(p, out float dis, out int index);
+           
+            if (dis < disSquared)
             {
                 if(containsPoint || !contained)
                 {
-                    minDisSquared = disSquared;
+                    triangleIndex = index;
+                    disSquared = dis;
                     closestTriangle = tri;
-                    closestTrianglePoint = closestPoint.Point;
+                    closestPoint = result;
                     if (containsPoint) contained = true;
                 }
             }
@@ -64,15 +90,370 @@ public class Triangulation : ShapeList<Triangle>
                 if (containsPoint && !contained)
                 {
                     contained = true;
-                    minDisSquared = disSquared;
+                    disSquared = dis;
                     closestTriangle = tri;
-                    closestTrianglePoint = closestPoint.Point;
+                    closestPoint = result;
                 }
             }
         }
-        return new(closestTriangle, closestTrianglePoint, p);
+        return (closestPoint, closestTriangle);
     }
         
+    
+    
+    public static CollisionPoint GetClosestPointTriangulationPoint(List<Triangle> triangles, Vector2 p, out float disSquared)
+    {
+        disSquared = -1;
+        if (triangles.Count <= 0) return new();
+        
+        var curTriangle = triangles[0];
+        var closest = curTriangle.GetClosestPoint(p, out disSquared);
+        
+        for (var i = 1; i < triangles.Count; i++)
+        {
+            curTriangle = triangles[i];
+            var result = curTriangle.GetClosestPoint(p, out float dis);
+            if (dis < disSquared)
+            {
+                closest = result;
+                disSquared = dis;
+            }
+        
+        }
+        return closest;
+    }
+    
+    public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared)
+    {
+        disSquared = -1;
+        if (Count <= 0) return new();
+        
+        var curTriangle = this[0];
+        var closestPoint = curTriangle.GetClosestPoint(p, out disSquared);
+        
+        for (var i = 1; i < Count; i++)
+        {
+            curTriangle = this[i];
+            
+            var cp = curTriangle.GetClosestPoint(p, out float dis);
+            if (dis < disSquared)
+            {
+                closestPoint = cp;
+                disSquared = dis;
+            }
+        
+        }
+
+        return closestPoint;
+    }
+    public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared, out int triangleIndex, out int segmentIndex)
+    {
+        disSquared = -1;
+        triangleIndex = -1;
+        segmentIndex = -1;
+        if (Count <= 0) return new();
+        
+        var curTriangle = this[0];
+        var closestPoint = curTriangle.GetClosestPoint(p, out disSquared, out segmentIndex);
+        triangleIndex = 0;
+        
+        for (var i = 1; i < Count; i++)
+        {
+            curTriangle = this[i];
+            
+            var cp = curTriangle.GetClosestPoint(p, out float dis, out int index);
+            if (dis < disSquared)
+            {
+                triangleIndex = i;
+                segmentIndex = index;
+                closestPoint = cp;
+                disSquared = dis;
+            }
+        
+        }
+
+        return closestPoint;
+    }
+    public Vector2 GetClosestVertex(Vector2 p, out float disSquared, out int triangleIndex, out int segmentIndex)
+    {
+        disSquared = -1;
+        triangleIndex = -1;
+        segmentIndex = -1;
+        if (Count <= 0) return new();
+        
+        triangleIndex = 0;
+        var curTriangle = this[0];
+        var closestVertex = curTriangle.GetClosestVertex(p, out disSquared, out segmentIndex);
+        
+        for (var i = 1; i < Count; i++)
+        {
+            curTriangle = this[i];
+            var vertex = curTriangle.GetClosestVertex(p, out float dis, out int index);
+            
+            if (dis < disSquared)
+            {
+                triangleIndex = i;
+                segmentIndex = index;
+                closestVertex = vertex;
+                disSquared = dis;
+            }
+        }
+        return closestVertex;
+    }
+
+    public ClosestPointResult GetClosestPoint(Line other, out int triangleIndex)
+    {
+        triangleIndex = -1;
+        if (Count <= 0) return new();
+        var curTriangle = this[0];
+        var closestResult = curTriangle.GetClosestPoint(other);
+        
+        for (var i = 1; i < Count; i++)
+        {
+            curTriangle = this[i];
+            
+            var result = curTriangle.GetClosestPoint(other);
+            if (result.IsCloser(closestResult))
+            {
+                closestResult = result;
+                triangleIndex = i;
+            }
+        
+        }
+
+        return closestResult;
+    }
+    public ClosestPointResult GetClosestPoint(Ray other, out int triangleIndex)
+    {
+        triangleIndex = -1;
+        if (Count <= 0) return new();
+        var curTriangle = this[0];
+        var closestResult = curTriangle.GetClosestPoint(other);
+        
+        for (var i = 1; i < Count; i++)
+        {
+            curTriangle = this[i];
+            
+            var result = curTriangle.GetClosestPoint(other);
+            if (result.IsCloser(closestResult))
+            {
+                closestResult = result;
+                triangleIndex = i;
+            }
+        
+        }
+
+        return closestResult;
+    }
+    public ClosestPointResult GetClosestPoint(Segment other, out int triangleIndex)
+    {
+        triangleIndex = -1;
+        if (Count <= 0) return new();
+        var curTriangle = this[0];
+        var closestResult = curTriangle.GetClosestPoint(other);
+        
+        for (var i = 1; i < Count; i++)
+        {
+            curTriangle = this[i];
+            
+            var result = curTriangle.GetClosestPoint(other);
+            if (result.IsCloser(closestResult))
+            {
+                closestResult = result;
+                triangleIndex = i;
+            }
+        
+        }
+
+        return closestResult;
+    }
+    public ClosestPointResult GetClosestPoint(Circle other, out int triangleIndex)
+    {
+        triangleIndex = -1;
+        if (Count <= 0) return new();
+        var curTriangle = this[0];
+        var closestResult = curTriangle.GetClosestPoint(other);
+        
+        for (var i = 1; i < Count; i++)
+        {
+            curTriangle = this[i];
+            
+            var result = curTriangle.GetClosestPoint(other);
+            if (result.IsCloser(closestResult))
+            {
+                closestResult = result;
+                triangleIndex = i;
+            }
+        
+        }
+
+        return closestResult;
+    }
+    public ClosestPointResult GetClosestPoint(Triangle other, out int triangleIndex)
+    {
+        triangleIndex = -1;
+        if (Count <= 0) return new();
+        var curTriangle = this[0];
+        var closestResult = curTriangle.GetClosestPoint(other);
+        
+        for (var i = 1; i < Count; i++)
+        {
+            curTriangle = this[i];
+            
+            var result = curTriangle.GetClosestPoint(other);
+            if (result.IsCloser(closestResult))
+            {
+                closestResult = result;
+                triangleIndex = i;
+            }
+        
+        }
+
+        return closestResult;
+    }
+    public ClosestPointResult GetClosestPoint(Quad other, out int triangleIndex)
+    {
+        triangleIndex = -1;
+        if (Count <= 0) return new();
+        var curTriangle = this[0];
+        var closestResult = curTriangle.GetClosestPoint(other);
+        
+        for (var i = 1; i < Count; i++)
+        {
+            curTriangle = this[i];
+            
+            var result = curTriangle.GetClosestPoint(other);
+            if (result.IsCloser(closestResult))
+            {
+                closestResult = result;
+                triangleIndex = i;
+            }
+        
+        }
+
+        return closestResult;
+    }
+    public ClosestPointResult GetClosestPoint(Rect other, out int triangleIndex)
+    {
+        triangleIndex = -1;
+        if (Count <= 0) return new();
+        var curTriangle = this[0];
+        var closestResult = curTriangle.GetClosestPoint(other);
+        
+        for (var i = 1; i < Count; i++)
+        {
+            curTriangle = this[i];
+            
+            var result = curTriangle.GetClosestPoint(other);
+            if (result.IsCloser(closestResult))
+            {
+                closestResult = result;
+                triangleIndex = i;
+            }
+        
+        }
+
+        return closestResult;
+    }
+    public ClosestPointResult GetClosestPoint(Polygon other, out int triangleIndex)
+    {
+        triangleIndex = -1;
+        if (Count <= 0) return new();
+        var curTriangle = this[0];
+        var closestResult = curTriangle.GetClosestPoint(other);
+        
+        for (var i = 1; i < Count; i++)
+        {
+            curTriangle = this[i];
+            
+            var result = curTriangle.GetClosestPoint(other);
+            if (result.IsCloser(closestResult))
+            {
+                closestResult = result;
+                triangleIndex = i;
+            }
+        
+        }
+
+        return closestResult;
+    }
+    public ClosestPointResult GetClosestPoint(Polyline other, out int triangleIndex)
+    {
+        triangleIndex = -1;
+        if (Count <= 0) return new();
+        var curTriangle = this[0];
+        var closestResult = curTriangle.GetClosestPoint(other);
+        
+        for (var i = 1; i < Count; i++)
+        {
+            curTriangle = this[i];
+            
+            var result = curTriangle.GetClosestPoint(other);
+            if (result.IsCloser(closestResult))
+            {
+                closestResult = result;
+                triangleIndex = i;
+            }
+        
+        }
+
+        return closestResult;
+    }
+    public ClosestPointResult GetClosestPoint(Segments other, out int triangleIndex)
+    {
+        triangleIndex = -1;
+        if (Count <= 0) return new();
+        var curTriangle = this[0];
+        var closestResult = curTriangle.GetClosestPoint(other);
+        
+        for (var i = 1; i < Count; i++)
+        {
+            curTriangle = this[i];
+            
+            var result = curTriangle.GetClosestPoint(other);
+            if (result.IsCloser(closestResult))
+            {
+                closestResult = result;
+                triangleIndex = i;
+            }
+        
+        }
+
+        return closestResult;
+    }
+
+    public (Segment segment, CollisionPoint segmentPoint) GetClosestSegment(Vector2 p, out float disSquared, out int triangleIndex)
+    {
+        triangleIndex = -1;
+        disSquared = -1f;
+        if (Count <= 0) return (new(), new());
+        
+        var curTriangle = this[0];
+        var closestResult = curTriangle.GetClosestPoint(p, out disSquared, out int segmentIndex);
+        
+        for (var i = 1; i < Count; i++)
+        {
+            curTriangle = this[i];
+            
+            var result = curTriangle.GetClosestPoint(p, out float dis, out int index);
+            if (dis < disSquared)
+            {
+                disSquared = dis;
+                closestResult = result;
+                triangleIndex = i;
+                segmentIndex = index;
+            }
+        
+        }
+        var triangle = this[triangleIndex];
+        var segment = triangle.GetSegment(segmentIndex);
+        return (segment, closestResult);
+    }
+    
+    #endregion
+    
+    #region Public
+    
     public Points GetUniquePoints()
     {
         var uniqueVertices = new HashSet<Vector2>();
@@ -121,6 +502,11 @@ public class Triangulation : ShapeList<Triangle>
         return result;
     }
 
+    public Segment GetSegment(int triangleIndex, int segmentIndex)
+    {
+        var i = triangleIndex % Count;
+        return this[i].GetSegment(segmentIndex);
+    }
         
     /// <summary>
     /// Get the total area of all triangles in this triangulation.

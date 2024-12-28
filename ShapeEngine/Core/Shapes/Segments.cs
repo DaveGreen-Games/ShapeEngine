@@ -32,7 +32,12 @@ public class Segments : ShapeList<Segment>
 
     #region Public
     
-        
+    public Segment GetSegment(int index)
+    {
+        var i = index % Count;
+        return this[i];
+    }
+    
     public Points GetUniquePoints()
     {
         var uniqueVertices = new HashSet<Vector2>();

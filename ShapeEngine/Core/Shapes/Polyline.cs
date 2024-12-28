@@ -202,13 +202,15 @@ public class Polyline : Points, IEquatable<Polyline>
     #endregion
     
     #region Points & Vertex
-    
+    public Segment GetSegment(int index)
+    { 
+        var first = index % (Count - 1);
+        var second = index + 1;
+        return new Segment(this[first], this[second]);
+    }
     
     public Vector2 GetRandomVertex() { return Rng.Instance.RandCollection(this); }
     public Segment GetRandomEdge() => GetEdges().GetRandomSegment();
-    //public Vector2 GetRandomPoint() => GetRandomEdge().GetRandomPoint();
-    //public Points GetRandomPoints(int amount) => GetEdges().GetRandomPoints(amount);
-
     #endregion
 
     #region Transform

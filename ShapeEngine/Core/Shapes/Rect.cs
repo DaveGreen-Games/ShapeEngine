@@ -575,7 +575,14 @@ public readonly struct Rect : IEquatable<Rect>
     #endregion
     
     #region Points & Vertex
-
+    public Segment GetSegment(int index)
+    {
+        var i = index % 4;
+        if(i == 0) return new Segment(A, B);
+        if(i == 1) return new Segment(B, C);
+        if(i == 2) return new Segment(C, D);
+        return new Segment(D, A);
+    }
     public Vector2 GetPoint(AnchorPoint alignement)
     {
         var offset = Size * alignement.ToVector2();

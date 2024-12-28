@@ -293,7 +293,13 @@ public readonly struct Triangle : IEquatable<Triangle>
     public Vector2 GetRandomPointOnEdge() => GetRandomEdge().GetRandomPoint();
     public Points GetRandomPointsOnEdge(int amount) => GetEdges().GetRandomPoints(amount);
 
-
+    public Segment GetSegment(int index)
+    {
+        var i = index % 3;
+        if(i == 0) return SegmentAToB;
+        if(i == 1) return SegmentBToC;
+        return SegmentCToA;
+    }
     #endregion
     
     #region Equality & HashCode
