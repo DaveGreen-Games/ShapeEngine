@@ -201,182 +201,162 @@ public abstract class Collider : Shape
     }
 
     
-    //TODO: rework as well!
-    #region Closest Point
-    
-    #endregion
-    
     #region Closest
 
-    public CollisionPoint GetClosestCollisionPoint(Vector2 p)
-    {
-        switch (GetShapeType())
-        {
-            case ShapeType.None: return new();
-            case ShapeType.Circle: return GetCircleShape().GetClosestCollisionPoint(p);
-            case ShapeType.Segment:return GetSegmentShape().GetClosestPoint(p);
-            case ShapeType.Triangle:return GetTriangleShape().GetClosestCollisionPoint(p);
-            case ShapeType.Quad:return GetQuadShape().GetClosestCollisionPoint(p);
-            case ShapeType.Rect:return GetRectShape().GetClosestCollisionPoint(p);
-            case ShapeType.Poly:return GetPolygonShape().GetClosestCollisionPoint(p);
-            case ShapeType.PolyLine:return GetPolylineShape().GetClosestCollisionPoint(p);
-        }
-
-        return new();
-    }
-
-    public ClosestDistance GetClosestDistanceTo(IShape shape)
+    public ClosestPointResult GetClosestPoint(IShape shape)
     {
         switch (shape.GetShapeType())
         {
             case ShapeType.None: return new();
-            case ShapeType.Circle: return GetClosestDistanceTo(shape.GetCircleShape());
-            case ShapeType.Segment: return GetClosestDistanceTo(shape.GetSegmentShape());
-            case ShapeType.Triangle: return GetClosestDistanceTo(shape.GetTriangleShape());
-            case ShapeType.Quad: return GetClosestDistanceTo(shape.GetQuadShape());
-            case ShapeType.Rect: return GetClosestDistanceTo(shape.GetRectShape());
-            case ShapeType.Poly: return GetClosestDistanceTo(shape.GetPolygonShape());
-            case ShapeType.PolyLine: return GetClosestDistanceTo(shape.GetPolylineShape());
+            case ShapeType.Circle: return GetClosestPoint(shape.GetCircleShape());
+            case ShapeType.Segment: return GetClosestPoint(shape.GetSegmentShape());
+            case ShapeType.Triangle: return GetClosestPoint(shape.GetTriangleShape());
+            case ShapeType.Quad: return GetClosestPoint(shape.GetQuadShape());
+            case ShapeType.Rect: return GetClosestPoint(shape.GetRectShape());
+            case ShapeType.Poly: return GetClosestPoint(shape.GetPolygonShape());
+            case ShapeType.PolyLine: return GetClosestPoint(shape.GetPolylineShape());
         }
 
         return new();
     }
     
-    public ClosestDistance GetClosestDistanceTo(Vector2 p)
+    public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared)
     {
+        disSquared = -1;
         switch (GetShapeType())
         {
             case ShapeType.None: return new();
-            case ShapeType.Circle: return GetCircleShape().GetClosestDistanceTo(p);
-            case ShapeType.Segment:return GetSegmentShape().GetClosestDistanceTo(p);
-            case ShapeType.Triangle:return GetTriangleShape().GetClosestDistanceTo(p);
-            case ShapeType.Quad:return GetQuadShape().GetClosestDistanceTo(p);
-            case ShapeType.Rect:return GetRectShape().GetClosestDistanceTo(p);
-            case ShapeType.Poly:return GetPolygonShape().GetClosestDistanceTo(p);
-            case ShapeType.PolyLine:return GetPolylineShape().GetClosestDistanceTo(p);
+            case ShapeType.Circle: return GetCircleShape().GetClosestPoint(p, out disSquared);
+            case ShapeType.Segment:return GetSegmentShape().GetClosestPoint(p, out disSquared);
+            case ShapeType.Triangle:return GetTriangleShape().GetClosestPoint(p, out disSquared);
+            case ShapeType.Quad:return GetQuadShape().GetClosestPoint(p, out disSquared);
+            case ShapeType.Rect:return GetRectShape().GetClosestPoint(p, out disSquared);
+            case ShapeType.Poly:return GetPolygonShape().GetClosestPoint(p, out disSquared);
+            case ShapeType.PolyLine:return GetPolylineShape().GetClosestPoint(p, out disSquared);
         }
 
         return new();
     }
-    public ClosestDistance GetClosestDistanceTo(Segment shape)
-    {
-        
-        switch (GetShapeType())
-        {
-            case ShapeType.None: return new();
-            case ShapeType.Circle: return GetCircleShape().GetClosestDistanceTo(shape);
-            case ShapeType.Segment:return GetSegmentShape().GetClosestDistanceTo(shape);
-            case ShapeType.Triangle:return GetTriangleShape().GetClosestDistanceTo(shape);
-            case ShapeType.Quad:return GetQuadShape().GetClosestDistanceTo(shape);
-            case ShapeType.Rect:return GetRectShape().GetClosestDistanceTo(shape);
-            case ShapeType.Poly:return GetPolygonShape().GetClosestDistanceTo(shape);
-            case ShapeType.PolyLine:return GetPolylineShape().GetClosestDistanceTo(shape);
-        }
-
-        return new();
-    }
-    public ClosestDistance GetClosestDistanceTo(Circle shape)
+    public ClosestPointResult GetClosestPoint(Segment shape)
     {
         
         switch (GetShapeType())
         {
             case ShapeType.None: return new();
-            case ShapeType.Circle: return GetCircleShape().GetClosestDistanceTo(shape);
-            case ShapeType.Segment:return GetSegmentShape().GetClosestDistanceTo(shape);
-            case ShapeType.Triangle:return GetTriangleShape().GetClosestDistanceTo(shape);
-            case ShapeType.Quad:return GetQuadShape().GetClosestDistanceTo(shape);
-            case ShapeType.Rect:return GetRectShape().GetClosestDistanceTo(shape);
-            case ShapeType.Poly:return GetPolygonShape().GetClosestDistanceTo(shape);
-            case ShapeType.PolyLine:return GetPolylineShape().GetClosestDistanceTo(shape);
+            case ShapeType.Circle: return GetCircleShape().GetClosestPoint(shape);
+            case ShapeType.Segment:return GetSegmentShape().GetClosestPoint(shape);
+            case ShapeType.Triangle:return GetTriangleShape().GetClosestPoint(shape);
+            case ShapeType.Quad:return GetQuadShape().GetClosestPoint(shape);
+            case ShapeType.Rect:return GetRectShape().GetClosestPoint(shape);
+            case ShapeType.Poly:return GetPolygonShape().GetClosestPoint(shape);
+            case ShapeType.PolyLine:return GetPolylineShape().GetClosestPoint(shape);
         }
 
         return new();
     }
-    public ClosestDistance GetClosestDistanceTo(Triangle shape)
+    public ClosestPointResult GetClosestPoint(Circle shape)
     {
         
         switch (GetShapeType())
         {
             case ShapeType.None: return new();
-            case ShapeType.Circle: return GetCircleShape().GetClosestDistanceTo(shape);
-            case ShapeType.Segment:return GetSegmentShape().GetClosestDistanceTo(shape);
-            case ShapeType.Triangle:return GetTriangleShape().GetClosestDistanceTo(shape);
-            case ShapeType.Quad:return GetQuadShape().GetClosestDistanceTo(shape);
-            case ShapeType.Rect:return GetRectShape().GetClosestDistanceTo(shape);
-            case ShapeType.Poly:return GetPolygonShape().GetClosestDistanceTo(shape);
-            case ShapeType.PolyLine:return GetPolylineShape().GetClosestDistanceTo(shape);
+            case ShapeType.Circle: return GetCircleShape().GetClosestPoint(shape);
+            case ShapeType.Segment:return GetSegmentShape().GetClosestPoint(shape);
+            case ShapeType.Triangle:return GetTriangleShape().GetClosestPoint(shape);
+            case ShapeType.Quad:return GetQuadShape().GetClosestPoint(shape);
+            case ShapeType.Rect:return GetRectShape().GetClosestPoint(shape);
+            case ShapeType.Poly:return GetPolygonShape().GetClosestPoint(shape);
+            case ShapeType.PolyLine:return GetPolylineShape().GetClosestPoint(shape);
         }
 
         return new();
     }
-    public ClosestDistance GetClosestDistanceTo(Quad shape)
+    public ClosestPointResult GetClosestPoint(Triangle shape)
     {
         
         switch (GetShapeType())
         {
             case ShapeType.None: return new();
-            case ShapeType.Circle: return GetCircleShape().GetClosestDistanceTo(shape);
-            case ShapeType.Segment:return GetSegmentShape().GetClosestDistanceTo(shape);
-            case ShapeType.Triangle:return GetTriangleShape().GetClosestDistanceTo(shape);
-            case ShapeType.Quad:return GetQuadShape().GetClosestDistanceTo(shape);
-            case ShapeType.Rect:return GetRectShape().GetClosestDistanceTo(shape);
-            case ShapeType.Poly:return GetPolygonShape().GetClosestDistanceTo(shape);
-            case ShapeType.PolyLine:return GetPolylineShape().GetClosestDistanceTo(shape);
+            case ShapeType.Circle: return GetCircleShape().GetClosestPoint(shape);
+            case ShapeType.Segment:return GetSegmentShape().GetClosestPoint(shape);
+            case ShapeType.Triangle:return GetTriangleShape().GetClosestPoint(shape);
+            case ShapeType.Quad:return GetQuadShape().GetClosestPoint(shape);
+            case ShapeType.Rect:return GetRectShape().GetClosestPoint(shape);
+            case ShapeType.Poly:return GetPolygonShape().GetClosestPoint(shape);
+            case ShapeType.PolyLine:return GetPolylineShape().GetClosestPoint(shape);
         }
 
         return new();
     }
-    public ClosestDistance GetClosestDistanceTo(Rect shape)
+    public ClosestPointResult GetClosestPoint(Quad shape)
     {
         
         switch (GetShapeType())
         {
             case ShapeType.None: return new();
-            case ShapeType.Circle: return GetCircleShape().GetClosestDistanceTo(shape);
-            case ShapeType.Segment:return GetSegmentShape().GetClosestDistanceTo(shape);
-            case ShapeType.Triangle:return GetTriangleShape().GetClosestDistanceTo(shape);
-            case ShapeType.Quad:return GetQuadShape().GetClosestDistanceTo(shape);
-            case ShapeType.Rect:return GetRectShape().GetClosestDistanceTo(shape);
-            case ShapeType.Poly:return GetPolygonShape().GetClosestDistanceTo(shape);
-            case ShapeType.PolyLine:return GetPolylineShape().GetClosestDistanceTo(shape);
+            case ShapeType.Circle: return GetCircleShape().GetClosestPoint(shape);
+            case ShapeType.Segment:return GetSegmentShape().GetClosestPoint(shape);
+            case ShapeType.Triangle:return GetTriangleShape().GetClosestPoint(shape);
+            case ShapeType.Quad:return GetQuadShape().GetClosestPoint(shape);
+            case ShapeType.Rect:return GetRectShape().GetClosestPoint(shape);
+            case ShapeType.Poly:return GetPolygonShape().GetClosestPoint(shape);
+            case ShapeType.PolyLine:return GetPolylineShape().GetClosestPoint(shape);
         }
 
         return new();
     }
-    public ClosestDistance GetClosestDistanceTo(Polygon shape)
+    public ClosestPointResult GetClosestPoint(Rect shape)
     {
         
         switch (GetShapeType())
         {
             case ShapeType.None: return new();
-            case ShapeType.Circle: return GetCircleShape().GetClosestDistanceTo(shape);
-            case ShapeType.Segment:return GetSegmentShape().GetClosestDistanceTo(shape);
-            case ShapeType.Triangle:return GetTriangleShape().GetClosestDistanceTo(shape);
-            case ShapeType.Quad:return GetQuadShape().GetClosestDistanceTo(shape);
-            case ShapeType.Rect:return GetRectShape().GetClosestDistanceTo(shape);
-            case ShapeType.Poly:return GetPolygonShape().GetClosestDistanceTo(shape);
-            case ShapeType.PolyLine:return GetPolylineShape().GetClosestDistanceTo(shape);
+            case ShapeType.Circle: return GetCircleShape().GetClosestPoint(shape);
+            case ShapeType.Segment:return GetSegmentShape().GetClosestPoint(shape);
+            case ShapeType.Triangle:return GetTriangleShape().GetClosestPoint(shape);
+            case ShapeType.Quad:return GetQuadShape().GetClosestPoint(shape);
+            case ShapeType.Rect:return GetRectShape().GetClosestPoint(shape);
+            case ShapeType.Poly:return GetPolygonShape().GetClosestPoint(shape);
+            case ShapeType.PolyLine:return GetPolylineShape().GetClosestPoint(shape);
         }
 
         return new();
     }
-    public ClosestDistance GetClosestDistanceTo(Polyline shape)
+    public ClosestPointResult GetClosestPoint(Polygon shape)
     {
         
         switch (GetShapeType())
         {
             case ShapeType.None: return new();
-            case ShapeType.Circle: return GetCircleShape().GetClosestDistanceTo(shape);
-            case ShapeType.Segment:return GetSegmentShape().GetClosestDistanceTo(shape);
-            case ShapeType.Triangle:return GetTriangleShape().GetClosestDistanceTo(shape);
-            case ShapeType.Quad:return GetQuadShape().GetClosestDistanceTo(shape);
-            case ShapeType.Rect:return GetRectShape().GetClosestDistanceTo(shape);
-            case ShapeType.Poly:return GetPolygonShape().GetClosestDistanceTo(shape);
-            case ShapeType.PolyLine:return GetPolylineShape().GetClosestDistanceTo(shape);
+            case ShapeType.Circle: return GetCircleShape().GetClosestPoint(shape);
+            case ShapeType.Segment:return GetSegmentShape().GetClosestPoint(shape);
+            case ShapeType.Triangle:return GetTriangleShape().GetClosestPoint(shape);
+            case ShapeType.Quad:return GetQuadShape().GetClosestPoint(shape);
+            case ShapeType.Rect:return GetRectShape().GetClosestPoint(shape);
+            case ShapeType.Poly:return GetPolygonShape().GetClosestPoint(shape);
+            case ShapeType.PolyLine:return GetPolylineShape().GetClosestPoint(shape);
         }
 
         return new();
     }
+    public ClosestPointResult GetClosestPoint(Polyline shape)
+    {
+        
+        switch (GetShapeType())
+        {
+            case ShapeType.None: return new();
+            case ShapeType.Circle: return GetCircleShape().GetClosestPoint(shape);
+            case ShapeType.Segment:return GetSegmentShape().GetClosestPoint(shape);
+            case ShapeType.Triangle:return GetTriangleShape().GetClosestPoint(shape);
+            case ShapeType.Quad:return GetQuadShape().GetClosestPoint(shape);
+            case ShapeType.Rect:return GetRectShape().GetClosestPoint(shape);
+            case ShapeType.Poly:return GetPolygonShape().GetClosestPoint(shape);
+            case ShapeType.PolyLine:return GetPolylineShape().GetClosestPoint(shape);
+        }
+
+        return new();
+    }
+    
     #endregion
 
     #region Contains

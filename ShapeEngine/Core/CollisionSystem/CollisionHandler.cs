@@ -337,7 +337,7 @@ public class CollisionHandler : IBounds
                                         var refPoint = collider.PrevTransform.Position;// PrevPosition;
                                         if (!candidate.ContainsPoint(refPoint))
                                         {
-                                            var closest = candidate.GetClosestCollisionPoint(refPoint);
+                                            var closest = candidate.GetClosestPoint(refPoint, out float disSquared);
                                             collisionPoints ??= new();
                                             collisionPoints.Add(closest);
                                         }
@@ -415,7 +415,7 @@ public class CollisionHandler : IBounds
                                         var refPoint = collider.PrevTransform.Position;// PrevPosition;
                                         if (!candidate.ContainsPoint(refPoint))
                                         {
-                                            var closest = candidate.GetClosestCollisionPoint(refPoint);
+                                            var closest = candidate.GetClosestPoint(refPoint, out float disSquared);
                                             collisionPoints ??= new();
                                             collisionPoints.Add(closest);
                                         }
@@ -483,6 +483,7 @@ public class CollisionHandler : IBounds
     
     #endregion
     
+    //TODO: add ray/line intersection support
     #region Intersect Space
     
     public IntersectSpaceResult? IntersectSpace(CollisionObject colObject, Vector2 origin)
@@ -902,6 +903,7 @@ public class CollisionHandler : IBounds
 
     #endregion
     
+    //TODO: add ray/line cast space support
     #region Cast Space
     
     public void CastSpace(CollisionObject collisionBody, ref CastSpaceResult result)
