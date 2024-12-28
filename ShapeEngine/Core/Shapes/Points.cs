@@ -159,7 +159,6 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
 
     #endregion
     
-    //TODO: Implement this -> all this functions basically find the closest vertex within points and the closest point on the other shape (and distance).
     #region Closest Point
     public Vector2 GetClosestPoint(Vector2 p, out float disSquared)
     {
@@ -216,7 +215,7 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
     {
         if (Count <= 0) return new();
         var closest = this[0];
-        var pointOnLine = Line.GetClosestPointLinePoint(other.Point, other.Direction, closest, out float disSquared);
+        var pointOnOther = Line.GetClosestPointLinePoint(other.Point, other.Direction, closest, out float disSquared);
         var selfIndex = 0;
         
         for (var i = 1; i < Count; i++)
@@ -228,21 +227,21 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
             {
                 selfIndex = i;
                 closest = next;
-                pointOnLine = result;
+                pointOnOther = result;
                 disSquared = dis;
             }
         
         }
 
-        var dir = closest - pointOnLine;
+        var dir = closest - pointOnOther;
         var dot = Vector2.Dot(dir, other.Normal);
         Vector2 otherNormal;
         if (dot >= 0) otherNormal = other.Normal;
         else otherNormal = -other.Normal;
         
         return new(
-            new(closest, -dir.GetPerpendicularRight().Normalize()), 
-            new(pointOnLine, otherNormal),
+            new(closest, -dir.Normalize()), 
+            new(pointOnOther, otherNormal),
             disSquared,
             selfIndex);
     }
@@ -250,7 +249,7 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
     {
         if (Count <= 0) return new();
         var closest = this[0];
-        var pointOnLine = Ray.GetClosestPointRayPoint(other.Point, other.Direction, closest, out float disSquared);
+        var pointOnOther = Ray.GetClosestPointRayPoint(other.Point, other.Direction, closest, out float disSquared);
         var selfIndex = 0;
         
         for (var i = 1; i < Count; i++)
@@ -262,21 +261,21 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
             {
                 selfIndex = i;
                 closest = next;
-                pointOnLine = result;
+                pointOnOther = result;
                 disSquared = dis;
             }
         
         }
 
-        var dir = closest - pointOnLine;
+        var dir = closest - pointOnOther;
         var dot = Vector2.Dot(dir, other.Normal);
         Vector2 otherNormal;
         if (dot >= 0) otherNormal = other.Normal;
         else otherNormal = -other.Normal;
         
         return new(
-            new(closest, -dir.GetPerpendicularRight().Normalize()), 
-            new(pointOnLine, otherNormal),
+            new(closest, -dir.Normalize()), 
+            new(pointOnOther, otherNormal),
             disSquared,
             selfIndex);
     }
@@ -284,7 +283,7 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
     {
         if (Count <= 0) return new();
         var closest = this[0];
-        var pointOnLine = Segment.GetClosestPointSegmentPoint(other.Start, other.End, closest, out float disSquared);
+        var pointOnOther = Segment.GetClosestPointSegmentPoint(other.Start, other.End, closest, out float disSquared);
         var selfIndex = 0;
         
         for (var i = 1; i < Count; i++)
@@ -296,371 +295,238 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
             {
                 selfIndex = i;
                 closest = next;
-                pointOnLine = result;
+                pointOnOther = result;
                 disSquared = dis;
             }
         
         }
 
-        var dir = closest - pointOnLine;
+        var dir = closest - pointOnOther;
         var dot = Vector2.Dot(dir, other.Normal);
         Vector2 otherNormal;
         if (dot >= 0) otherNormal = other.Normal;
         else otherNormal = -other.Normal;
         
         return new(
-            new(closest, -dir.GetPerpendicularRight().Normalize()), 
-            new(pointOnLine, otherNormal),
+            new(closest, -dir.Normalize()), 
+            new(pointOnOther, otherNormal),
             disSquared,
             selfIndex);
     }
     
     public ClosestPointResult GetClosestPoint(Circle other)
     {
-        if (Count <= 2) return new();
-        
-        var first = this[0];
-        var second = this[1];
-        var normal = second - first;
-        var result = Segment.GetClosestPointSegmentCircle(first, second, other.Center, other.Radius, out float disSquared);
+        if (Count <= 0) return new();
+        var closest = this[0];
+        var pointOnOther = Circle.GetClosestPointCirclePoint(other.Center, other.Radius, closest, out float disSquared);
         var selfIndex = 0;
         
         for (var i = 1; i < Count; i++)
         {
-            var p1 = this[i];
-            var p2 = this[(i + 1) % Count];
+            var next = this[i];
             
-            var cp = Segment.GetClosestPointSegmentCircle(p1, p2, other.Center, other.Radius, out float dis);
+            var result = Circle.GetClosestPointCirclePoint(other.Center, other.Radius, next, out float dis);
             if (dis < disSquared)
             {
                 selfIndex = i;
-                result = cp;
+                closest = next;
+                pointOnOther = result;
                 disSquared = dis;
-                normal = p2 - p1;
             }
+        
         }
 
-        return new (
-            new(result.self, normal.GetPerpendicularRight().Normalize()), 
-            new(result.other, (result.other - other.Center).Normalize()),
+        var dir = closest - pointOnOther;
+        var otherNormal = dir.Normalize();
+        
+        return new(
+            new(closest, -otherNormal), 
+            new(pointOnOther, otherNormal),
             disSquared,
-            selfIndex
-        );
+            selfIndex);
     }
     public ClosestPointResult GetClosestPoint(Triangle other)
     {
-        if (Count <= 2) return new();
-        
-        (Vector2 self, Vector2 other) result = (Vector2.Zero, Vector2.Zero);
-        var selfNormal = Vector2.Zero;
-        var otherNormal = Vector2.Zero;
+        if (Count <= 0) return new();
+
+        var closestOther = new CollisionPoint();
         int selfIndex = -1;
         int otherIndex = -1;
         float disSquared = -1f;
         
         for (var i = 0; i < Count; i++)
         {
-            var p1 = this[i];
-            var p2 = this[(i + 1) % Count];
+            var point = this[i];
             
-            var cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.A, other.B, out float dis);
+            var cp = other.GetClosestPoint(point, out float dis, out int index);
             if (dis < disSquared || disSquared < 0)
             {
                 selfIndex = i;
-                otherIndex = 0;
-                result = cp;
+                otherIndex = index;
+                closestOther = cp;
                 disSquared = dis;
-                selfNormal = p2 - p1;
-                otherNormal = other.B - other.A;
             }
-            
-            cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.B, other.C, out dis);
-            if (dis < disSquared || disSquared < 0)
-            {
-                selfIndex = i;
-                otherIndex = 1;
-                result = cp;
-                disSquared = dis;
-                selfNormal = p2 - p1;
-                otherNormal = other.C - other.B;
-            }
-            
-            cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.C, other.A, out dis);
-            if (dis < disSquared || disSquared < 0)
-            {
-                selfIndex = i;
-                otherIndex = 2;
-                result = cp;
-                disSquared = dis;
-                selfNormal = p2 - p1;
-                otherNormal = other.A - other.C;
-            }
-        
         }
 
+        var selfPoint = this[selfIndex];
         return new(
-            new(result.self, selfNormal.GetPerpendicularRight().Normalize()), 
-            new(result.other, otherNormal.GetPerpendicularRight().Normalize()),
+            new(selfPoint, (closestOther.Point - selfPoint).Normalize()), 
+            closestOther,
             disSquared,
             selfIndex,
             otherIndex);
     }
     public ClosestPointResult GetClosestPoint(Quad other)
     {
-        if (Count <= 2) return new();
-        
-        (Vector2 self, Vector2 other) result = (Vector2.Zero, Vector2.Zero);
-        var selfNormal = Vector2.Zero;
-        var otherNormal = Vector2.Zero;
+        if (Count <= 0) return new();
+
+        var closestOther = new CollisionPoint();
         int selfIndex = -1;
         int otherIndex = -1;
         float disSquared = -1f;
         
         for (var i = 0; i < Count; i++)
         {
-            var p1 = this[i];
-            var p2 = this[(i + 1) % Count];
+            var point = this[i];
             
-            var cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.A, other.B, out float dis);
+            var cp = other.GetClosestPoint(point, out float dis, out int index);
             if (dis < disSquared || disSquared < 0)
             {
                 selfIndex = i;
-                otherIndex = 0;
-                result = cp;
+                otherIndex = index;
+                closestOther = cp;
                 disSquared = dis;
-                selfNormal = p2 - p1;
-                otherNormal = other.B - other.A;
             }
-            
-            cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.B, other.C, out dis);
-            if (dis < disSquared || disSquared < 0)
-            {
-                selfIndex = i;
-                otherIndex = 1;
-                result = cp;
-                disSquared = dis;
-                selfNormal = p2 - p1;
-                otherNormal = other.C - other.B;
-            }
-            
-            cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.C, other.D, out dis);
-            if (dis < disSquared || disSquared < 0)
-            {
-                selfIndex = i;
-                otherIndex = 2;
-                result = cp;
-                disSquared = dis;
-                selfNormal = p2 - p1;
-                otherNormal = other.D - other.C;
-            }
-            
-            cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.D, other.A, out dis);
-            if (dis < disSquared || disSquared < 0)
-            {
-                selfIndex = i;
-                otherIndex = 3;
-                result = cp;
-                disSquared = dis;
-                selfNormal = p2 - p1;
-                otherNormal = other.A - other.D;
-            }
-        
         }
 
+        var selfPoint = this[selfIndex];
         return new(
-            new(result.self, selfNormal.GetPerpendicularRight().Normalize()), 
-            new(result.other, otherNormal.GetPerpendicularRight().Normalize()),
+            new(selfPoint, (closestOther.Point - selfPoint).Normalize()), 
+            closestOther,
             disSquared,
             selfIndex,
             otherIndex);
     }
     public ClosestPointResult GetClosestPoint(Rect other)
     {
-        if (Count <= 2) return new();
-        
-        (Vector2 self, Vector2 other) result = (Vector2.Zero, Vector2.Zero);
-        var selfNormal = Vector2.Zero;
-        var otherNormal = Vector2.Zero;
+        if (Count <= 0) return new();
+
+        var closestOther = new CollisionPoint();
         int selfIndex = -1;
         int otherIndex = -1;
         float disSquared = -1f;
         
         for (var i = 0; i < Count; i++)
         {
-            var p1 = this[i];
-            var p2 = this[(i + 1) % Count];
+            var point = this[i];
             
-            var cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.A, other.B, out float dis);
+            var cp = other.GetClosestPoint(point, out float dis, out int index);
             if (dis < disSquared || disSquared < 0)
             {
                 selfIndex = i;
-                otherIndex = 0;
-                result = cp;
+                otherIndex = index;
+                closestOther = cp;
                 disSquared = dis;
-                selfNormal = p2 - p1;
-                otherNormal = other.B - other.A;
             }
-            
-            cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.B, other.C, out dis);
-            if (dis < disSquared || disSquared < 0)
-            {
-                selfIndex = i;
-                otherIndex = 1;
-                result = cp;
-                disSquared = dis;
-                selfNormal = p2 - p1;
-                otherNormal = other.C - other.B;
-            }
-            
-            cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.C, other.D, out dis);
-            if (dis < disSquared || disSquared < 0)
-            {
-                selfIndex = i;
-                otherIndex = 2;
-                result = cp;
-                disSquared = dis;
-                selfNormal = p2 - p1;
-                otherNormal = other.D - other.C;
-            }
-            
-            cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.D, other.A, out dis);
-            if (dis < disSquared || disSquared < 0)
-            {
-                selfIndex = i;
-                otherIndex = 3;
-                result = cp;
-                disSquared = dis;
-                selfNormal = p2 - p1;
-                otherNormal = other.A - other.D;
-            }
-        
         }
 
+        var selfPoint = this[selfIndex];
         return new(
-            new(result.self, selfNormal.GetPerpendicularRight().Normalize()), 
-            new(result.other, otherNormal.GetPerpendicularRight().Normalize()),
+            new(selfPoint, (closestOther.Point - selfPoint).Normalize()), 
+            closestOther,
             disSquared,
             selfIndex,
             otherIndex);
     }
     public ClosestPointResult GetClosestPoint(Polygon other)
     {
-        if (Count <= 2) return new();
-        
-        (Vector2 self, Vector2 other) result = (Vector2.Zero, Vector2.Zero);
-        var selfNormal = Vector2.Zero;
-        var otherNormal = Vector2.Zero;
+        if (Count <= 0) return new();
+
+        var closestOther = new CollisionPoint();
         int selfIndex = -1;
         int otherIndex = -1;
         float disSquared = -1f;
         
         for (var i = 0; i < Count; i++)
         {
-            var p1 = this[i];
-            var p2 = this[(i + 1) % Count];
-
-            for (var j = 0; j < other.Count; j++)
+            var point = this[i];
+            
+            var cp = other.GetClosestPoint(point, out float dis, out int index);
+            if (dis < disSquared || disSquared < 0)
             {
-                var otherP1 = other[j];
-                var otherP2 = other[(j + 1) % Count];
-                var cp = Segment.GetClosestPointSegmentSegment(p1, p2, otherP1, otherP2, out float dis);
-                if (dis < disSquared || disSquared < 0)
-                {
-                    selfIndex = i;
-                    otherIndex = j;
-                    result = cp;
-                    disSquared = dis;
-                    selfNormal = p2 - p1;
-                    otherNormal = otherP2 - otherP1;
-                }
+                selfIndex = i;
+                otherIndex = index;
+                closestOther = cp;
+                disSquared = dis;
             }
-        
         }
 
+        var selfPoint = this[selfIndex];
         return new(
-            new(result.self, selfNormal.GetPerpendicularRight().Normalize()), 
-            new(result.other, otherNormal.GetPerpendicularRight().Normalize()),
+            new(selfPoint, (closestOther.Point - selfPoint).Normalize()), 
+            closestOther,
             disSquared,
             selfIndex,
             otherIndex);
     }
     public ClosestPointResult GetClosestPoint(Polyline other)
     {
-        if (Count <= 2) return new();
-        
-        (Vector2 self, Vector2 other) result = (Vector2.Zero, Vector2.Zero);
-        var selfNormal = Vector2.Zero;
-        var otherNormal = Vector2.Zero;
+        if (Count <= 0) return new();
+
+        var closestOther = new CollisionPoint();
         int selfIndex = -1;
         int otherIndex = -1;
         float disSquared = -1f;
         
         for (var i = 0; i < Count; i++)
         {
-            var p1 = this[i];
-            var p2 = this[(i + 1) % Count];
-
-            for (var j = 0; j < other.Count - 1; j++)
+            var point = this[i];
+            
+            var cp = other.GetClosestPoint(point, out float dis, out int index);
+            if (dis < disSquared || disSquared < 0)
             {
-                var otherP1 = other[j];
-                var otherP2 = other[j + 1];
-                var cp = Segment.GetClosestPointSegmentSegment(p1, p2, otherP1, otherP2, out float dis);
-                if (dis < disSquared || disSquared < 0)
-                {
-                    selfIndex = i;
-                    otherIndex = j;
-                    result = cp;
-                    disSquared = dis;
-                    selfNormal = p2 - p1;
-                    otherNormal = otherP2 - otherP1;
-                }
+                selfIndex = i;
+                otherIndex = index;
+                closestOther = cp;
+                disSquared = dis;
             }
-        
         }
 
+        var selfPoint = this[selfIndex];
         return new(
-            new(result.self, selfNormal.GetPerpendicularRight().Normalize()), 
-            new(result.other, otherNormal.GetPerpendicularRight().Normalize()),
+            new(selfPoint, (closestOther.Point - selfPoint).Normalize()), 
+            closestOther,
             disSquared,
             selfIndex,
             otherIndex);
     }
     public ClosestPointResult GetClosestPoint(Segments other)
     {
-        if (Count <= 2) return new();
-        
-        (Vector2 self, Vector2 other) result = (Vector2.Zero, Vector2.Zero);
-        var selfNormal = Vector2.Zero;
-        var otherNormal = Vector2.Zero;
+        if (Count <= 0) return new();
+
+        var closestOther = new CollisionPoint();
         int selfIndex = -1;
         int otherIndex = -1;
         float disSquared = -1f;
         
         for (var i = 0; i < Count; i++)
         {
-            var p1 = this[i];
-            var p2 = this[(i + 1) % Count];
-
-            for (var j = 0; j < other.Count; j++)
+            var point = this[i];
+            
+            var cp = other.GetClosestPoint(point, out float dis, out int index);
+            if (dis < disSquared || disSquared < 0)
             {
-                var otherSegment = other[j];
-                var cp = Segment.GetClosestPointSegmentSegment(p1, p2, otherSegment.Start, otherSegment.End, out float dis);
-                if (dis < disSquared || disSquared < 0)
-                {
-                    selfIndex = i;
-                    otherIndex = j;
-                    result = cp;
-                    disSquared = dis;
-                    selfNormal = p2 - p1;
-                    otherNormal = otherSegment.Normal;
-                }
+                selfIndex = i;
+                otherIndex = index;
+                closestOther = cp;
+                disSquared = dis;
             }
-        
         }
 
+        var selfPoint = this[selfIndex];
         return new(
-            new(result.self, selfNormal.GetPerpendicularRight().Normalize()), 
-            new(result.other, otherNormal),
+            new(selfPoint, (closestOther.Point - selfPoint).Normalize()), 
+            closestOther,
             disSquared,
             selfIndex,
             otherIndex);
@@ -668,7 +534,6 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
 
     #endregion
     
-
     #region Transform
     public void SetPosition(Vector2 newPosition, Vector2 origin)
     {
