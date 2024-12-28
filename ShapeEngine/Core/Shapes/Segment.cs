@@ -1111,15 +1111,19 @@ public readonly struct Segment : IEquatable<Segment>
    
     public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared)
     {
-        CollisionPoint c;
+        Vector2 c;
         var w = Displacement;
         float t = (p - Start).Dot(w) / w.LengthSquared();
-        if (t < 0f) c = new(Start, Normal); 
-        else if (t > 1f) c = new(End, Normal);
-        else c = new(Start + w * t, Normal);
+        if (t < 0f) c = Start;
+        else if (t > 1f) c = End;
+        else c = Start + w * t;
 
-        disSquared = (c.Point - p).LengthSquared();
-        return c;
+        var dir = p - c;
+        disSquared = dir.LengthSquared();
+        
+        var dot = Vector2.Dot(dir.Normalize(), Normal);
+        if (dot >= 0) return new(c, Normal);
+        return new(c, -Normal);
     }
     public ClosestPointResult GetClosestPoint(Line other)
     {

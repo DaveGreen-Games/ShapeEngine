@@ -170,7 +170,12 @@ public readonly struct Ray
         var closestPointOnRay = Point + projectionLength * Direction;
 
         disSquared = (closestPointOnRay - point).LengthSquared();
-        return new(closestPointOnRay, Normal);
+        
+        var dir = (point - closestPointOnRay).Normalize();
+        var dot = Vector2.Dot(dir, Normal);
+        if (dot >= 0) return new(closestPointOnRay, Normal);
+        return new(closestPointOnRay, -Normal);
+        
     }
     public ClosestPointResult GetClosestPoint(Line other)
     {

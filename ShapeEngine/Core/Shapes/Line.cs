@@ -176,7 +176,11 @@ public readonly struct Line
         // Calculate the closest point on the line
         var closestPointOnLine = Point + projectionLength * normalizedLineDirection;
         disSquared = (closestPointOnLine - point).LengthSquared();
-        return new(closestPointOnLine, Normal);
+        
+        var dir = (point - closestPointOnLine).Normalize();
+        var dot = Vector2.Dot(dir, Normal);
+        if (dot >= 0) return new(closestPointOnLine, Normal);
+        return new(closestPointOnLine, -Normal);
     }
     public ClosestPointResult GetClosestPoint(Line other)
     {

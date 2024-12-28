@@ -417,7 +417,7 @@ public class Polyline : Points, IEquatable<Polyline>
     #endregion
     
     #region Closest Point
-        public static Vector2 GetClosestPointPolygonPoint(List<Vector2> points, Vector2 p, out float disSquared)
+        public static Vector2 GetClosestPointPolylinePoint(List<Vector2> points, Vector2 p, out float disSquared)
         {
             disSquared = -1;
             if (points.Count < 2) return new();
