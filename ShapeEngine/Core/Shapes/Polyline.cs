@@ -444,7 +444,7 @@ public class Polyline : Points, IEquatable<Polyline>
             return closest;
         }
         
-        public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared)
+        public new CollisionPoint GetClosestPoint(Vector2 p, out float disSquared)
         {
             disSquared = -1;
             if (Count < 2) return new();
@@ -470,7 +470,7 @@ public class Polyline : Points, IEquatable<Polyline>
             }
             return new(closest, normal.GetPerpendicularRight().Normalize());
         }
-        public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared, out int index)
+        public new CollisionPoint GetClosestPoint(Vector2 p, out float disSquared, out int index)
         {
             disSquared = -1;
             index = -1;
@@ -499,7 +499,7 @@ public class Polyline : Points, IEquatable<Polyline>
             }
             return new(closest, normal.GetPerpendicularRight().Normalize());
         }
-        public Vector2 GetClosestVertex(Vector2 p, out float disSquared, out int index)
+        public new Vector2 GetClosestVertex(Vector2 p, out float disSquared, out int index)
         {
             disSquared = -1;
             index = -1;
@@ -523,7 +523,7 @@ public class Polyline : Points, IEquatable<Polyline>
             return closest;
         }
 
-        public ClosestPointResult GetClosestPoint(Line other)
+        public new ClosestPointResult GetClosestPoint(Line other)
         {
             if (Count < 2) return new();
             var first = this[0];
@@ -554,7 +554,7 @@ public class Polyline : Points, IEquatable<Polyline>
                 disSquared,
                 selfIndex);
         }
-        public ClosestPointResult GetClosestPoint(Ray other)
+        public new ClosestPointResult GetClosestPoint(Ray other)
         {
             if (Count < 2) return new();
             
@@ -586,7 +586,7 @@ public class Polyline : Points, IEquatable<Polyline>
                 disSquared,
                 selfIndex);
         }
-        public ClosestPointResult GetClosestPoint(Segment other) 
+        public new ClosestPointResult GetClosestPoint(Segment other) 
         {
             if (Count < 2) return new();
             
@@ -618,7 +618,7 @@ public class Polyline : Points, IEquatable<Polyline>
                 disSquared,
                 selfIndex);
         }
-        public ClosestPointResult GetClosestPoint(Circle other)
+        public new ClosestPointResult GetClosestPoint(Circle other)
         {
             if (Count < 2) return new();
             
@@ -650,7 +650,7 @@ public class Polyline : Points, IEquatable<Polyline>
                 selfIndex
             );
         }
-        public ClosestPointResult GetClosestPoint(Triangle other)
+        public new ClosestPointResult GetClosestPoint(Triangle other)
         {
             if (Count < 2) return new();
             
@@ -708,7 +708,7 @@ public class Polyline : Points, IEquatable<Polyline>
                 selfIndex,
                 otherIndex);
         }
-        public ClosestPointResult GetClosestPoint(Quad other)
+        public new ClosestPointResult GetClosestPoint(Quad other)
         {
             if (Count < 2) return new();
             
@@ -777,7 +777,7 @@ public class Polyline : Points, IEquatable<Polyline>
                 selfIndex,
                 otherIndex);
         }
-        public ClosestPointResult GetClosestPoint(Rect other)
+        public new ClosestPointResult GetClosestPoint(Rect other)
         {
             if (Count < 2) return new();
             
@@ -846,7 +846,7 @@ public class Polyline : Points, IEquatable<Polyline>
                 selfIndex,
                 otherIndex);
         }
-        public ClosestPointResult GetClosestPoint(Polygon other)
+        public new ClosestPointResult GetClosestPoint(Polygon other)
         {
             if (Count < 2) return new();
             
@@ -887,7 +887,7 @@ public class Polyline : Points, IEquatable<Polyline>
                 selfIndex,
                 otherIndex);
         }
-        public ClosestPointResult GetClosestPoint(Polyline other)
+        public new ClosestPointResult GetClosestPoint(Polyline other)
         {
             if (Count < 2) return new();
             
@@ -928,7 +928,7 @@ public class Polyline : Points, IEquatable<Polyline>
                 selfIndex,
                 otherIndex);
         }
-        public ClosestPointResult GetClosestPoint(Segments other)
+        public new ClosestPointResult GetClosestPoint(Segments other)
         {
             if (Count < 2) return new();
             
