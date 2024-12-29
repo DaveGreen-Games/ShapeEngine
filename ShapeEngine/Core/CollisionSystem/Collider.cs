@@ -789,6 +789,8 @@ public abstract class Collider : Shape
         switch (other.GetShapeType())
         {
             case ShapeType.Circle: return Intersect(other.GetCircleShape());
+            case ShapeType.Ray: return Intersect(other.GetRayShape());
+            case ShapeType.Line: return Intersect(other.GetLineShape());
             case ShapeType.Segment: return Intersect(other.GetSegmentShape());
             case ShapeType.Triangle: return Intersect(other.GetTriangleShape());
             case ShapeType.Rect: return Intersect(other.GetRectShape());
@@ -806,6 +808,8 @@ public abstract class Collider : Shape
         switch (other.GetShapeType())
         {
             case ShapeType.Circle: return Intersect(other.GetCircleShape());
+            case ShapeType.Ray: return Intersect(other.GetRayShape());
+            case ShapeType.Line: return Intersect(other.GetLineShape());
             case ShapeType.Segment: return Intersect(other.GetSegmentShape());
             case ShapeType.Triangle: return Intersect(other.GetTriangleShape());
             case ShapeType.Rect: return Intersect(other.GetRectShape());
@@ -817,6 +821,80 @@ public abstract class Collider : Shape
         return null;
     }
 
+    public CollisionPoints? Intersect(Ray ray)
+    {
+        if (!Enabled) return null;
+
+        switch (GetShapeType())
+        {
+            case ShapeType.Circle:
+                var c = GetCircleShape();
+                return c.IntersectShape(ray);
+            case ShapeType.Ray:
+                var rayShape = GetRayShape();
+                return rayShape.IntersectShape(ray);
+            case ShapeType.Line:
+                var l = GetLineShape();
+                return l.IntersectShape(ray);
+            case ShapeType.Segment:
+                var s = GetSegmentShape();
+                return s.IntersectShape(ray);
+            case ShapeType.Triangle:
+                var t = GetTriangleShape();
+                return t.IntersectShape(ray);
+            case ShapeType.Rect:
+                var r = GetRectShape();
+                return r.IntersectShape(ray);
+            case ShapeType.Quad:
+                var q = GetQuadShape();
+                return q.IntersectShape(ray);
+            case ShapeType.Poly:
+                var p = GetPolygonShape();
+                return p.IntersectShape(ray);
+            case ShapeType.PolyLine:
+                var pl = GetPolylineShape();
+                return pl.IntersectShape(ray);
+        }
+
+        return null;
+    }
+    public CollisionPoints? Intersect(Line line)
+    {
+        if (!Enabled) return null;
+
+        switch (GetShapeType())
+        {
+            case ShapeType.Circle:
+                var c = GetCircleShape();
+                return c.IntersectShape(line);
+            case ShapeType.Ray:
+                var rayShape = GetRayShape();
+                return rayShape.IntersectShape(line);
+            case ShapeType.Line:
+                var l = GetLineShape();
+                return l.IntersectShape(line);
+            case ShapeType.Segment:
+                var s = GetSegmentShape();
+                return s.IntersectShape(line);
+            case ShapeType.Triangle:
+                var t = GetTriangleShape();
+                return t.IntersectShape(line);
+            case ShapeType.Rect:
+                var r = GetRectShape();
+                return r.IntersectShape(line);
+            case ShapeType.Quad:
+                var q = GetQuadShape();
+                return q.IntersectShape(line);
+            case ShapeType.Poly:
+                var p = GetPolygonShape();
+                return p.IntersectShape(line);
+            case ShapeType.PolyLine:
+                var pl = GetPolylineShape();
+                return pl.IntersectShape(line);
+        }
+
+        return null;
+    }
     public CollisionPoints? Intersect(Segment segment)
     {
         if (!Enabled) return null;
@@ -826,6 +904,12 @@ public abstract class Collider : Shape
             case ShapeType.Circle:
                 var c = GetCircleShape();
                 return c.IntersectShape(segment);
+            case ShapeType.Ray:
+                var rayShape = GetRayShape();
+                return rayShape.IntersectShape(segment);
+            case ShapeType.Line:
+                var l = GetLineShape();
+                return l.IntersectShape(segment);
             case ShapeType.Segment:
                 var s = GetSegmentShape();
                 return s.IntersectShape(segment);
@@ -848,7 +932,6 @@ public abstract class Collider : Shape
 
         return null;
     }
-    
     public CollisionPoints? Intersect(Triangle triangle)
     {
         if (!Enabled) return null;
@@ -858,6 +941,12 @@ public abstract class Collider : Shape
             case ShapeType.Circle:
                 var c = GetCircleShape();
                 return c.IntersectShape(triangle);
+            case ShapeType.Ray:
+                var rayShape = GetRayShape();
+                return rayShape.IntersectShape(triangle);
+            case ShapeType.Line:
+                var l = GetLineShape();
+                return l.IntersectShape(triangle);
             case ShapeType.Segment:
                 var s = GetSegmentShape();
                 return s.IntersectShape(triangle);
@@ -889,6 +978,12 @@ public abstract class Collider : Shape
             case ShapeType.Circle:
                 var c = GetCircleShape();
                 return c.IntersectShape(circle);
+            case ShapeType.Ray:
+                var rayShape = GetRayShape();
+                return rayShape.IntersectShape(circle);
+            case ShapeType.Line:
+                var l = GetLineShape();
+                return l.IntersectShape(circle);
             case ShapeType.Segment:
                 var s = GetSegmentShape();
                 return s.IntersectShape(circle);
@@ -920,6 +1015,12 @@ public abstract class Collider : Shape
             case ShapeType.Circle:
                 var c = GetCircleShape();
                 return c.IntersectShape(rect);
+            case ShapeType.Ray:
+                var rayShape = GetRayShape();
+                return rayShape.IntersectShape(rect);
+            case ShapeType.Line:
+                var l = GetLineShape();
+                return l.IntersectShape(rect);
             case ShapeType.Segment:
                 var s = GetSegmentShape();
                 return s.IntersectShape(rect);
@@ -951,6 +1052,12 @@ public abstract class Collider : Shape
             case ShapeType.Circle:
                 var c = GetCircleShape();
                 return c.IntersectShape(quad);
+            case ShapeType.Ray:
+                var rayShape = GetRayShape();
+                return rayShape.IntersectShape(quad);
+            case ShapeType.Line:
+                var l = GetLineShape();
+                return l.IntersectShape(quad);
             case ShapeType.Segment:
                 var s = GetSegmentShape();
                 return s.IntersectShape(quad);
@@ -982,6 +1089,12 @@ public abstract class Collider : Shape
             case ShapeType.Circle:
                 var c = GetCircleShape();
                 return c.IntersectShape(poly);
+            case ShapeType.Ray:
+                var rayShape = GetRayShape();
+                return rayShape.IntersectShape(poly);
+            case ShapeType.Line:
+                var l = GetLineShape();
+                return l.IntersectShape(poly);
             case ShapeType.Segment:
                 var s = GetSegmentShape();
                 return s.IntersectShape(poly);
@@ -1013,6 +1126,12 @@ public abstract class Collider : Shape
             case ShapeType.Circle:
                 var c = GetCircleShape();
                 return c.IntersectShape(polyLine);
+            case ShapeType.Ray:
+                var rayShape = GetRayShape();
+                return rayShape.IntersectShape(polyLine);
+            case ShapeType.Line:
+                var l = GetLineShape();
+                return l.IntersectShape(polyLine);
             case ShapeType.Segment:
                 var s = GetSegmentShape();
                 return s.IntersectShape(polyLine);
@@ -1055,6 +1174,8 @@ public abstract class Collider : Shape
         switch (other.GetShapeType())
         {
             case ShapeType.Circle: return Intersect(other.GetCircleShape(), ref points, returnAfterFirstValid);
+            case ShapeType.Ray: return Intersect(other.GetRayShape(), ref points, returnAfterFirstValid);
+            case ShapeType.Line: return Intersect(other.GetLineShape(), ref points, returnAfterFirstValid);
             case ShapeType.Segment: return Intersect(other.GetSegmentShape(), ref points, returnAfterFirstValid);
             case ShapeType.Triangle: return Intersect(other.GetTriangleShape(), ref points, returnAfterFirstValid);
             case ShapeType.Rect: return Intersect(other.GetRectShape(), ref points, returnAfterFirstValid);
@@ -1072,12 +1193,89 @@ public abstract class Collider : Shape
         switch (other.GetShapeType())
         {
             case ShapeType.Circle: return Intersect(other.GetCircleShape(), ref points, returnAfterFirstValid);
+            case ShapeType.Ray: return Intersect(other.GetRayShape(), ref points, returnAfterFirstValid);
+            case ShapeType.Line: return Intersect(other.GetLineShape(), ref points, returnAfterFirstValid);
             case ShapeType.Segment: return Intersect(other.GetSegmentShape(), ref points, returnAfterFirstValid);
             case ShapeType.Triangle: return Intersect(other.GetTriangleShape(), ref points, returnAfterFirstValid);
             case ShapeType.Rect: return Intersect(other.GetRectShape(), ref points, returnAfterFirstValid);
             case ShapeType.Quad: return Intersect(other.GetQuadShape(), ref points, returnAfterFirstValid);
             case ShapeType.Poly: return Intersect(other.GetPolygonShape(), ref points, returnAfterFirstValid);
             case ShapeType.PolyLine: return Intersect(other.GetPolylineShape(), ref points, returnAfterFirstValid);
+        }
+
+        return 0;
+    }
+
+    public int Intersect(Ray ray, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        if (!Enabled) return 0;
+
+        switch (GetShapeType())
+        {
+            case ShapeType.Circle:
+                var c = GetCircleShape();
+                return c.IntersectShape(ray, ref points, returnAfterFirstValid);
+            case ShapeType.Ray:
+                var rayShape = GetRayShape();
+                return rayShape.IntersectShape(ray, ref points);
+            case ShapeType.Line:
+                var l = GetLineShape();
+                return l.IntersectShape(ray, ref points);
+            case ShapeType.Segment:
+                var s = GetSegmentShape();
+                return s.IntersectShape(ray, ref points);
+            case ShapeType.Triangle:
+                var t = GetTriangleShape();
+                return t.IntersectShape(ray, ref points, returnAfterFirstValid);
+            case ShapeType.Rect:
+                var r = GetRectShape();
+                return r.IntersectShape(ray, ref points, returnAfterFirstValid);
+            case ShapeType.Quad:
+                var q = GetQuadShape();
+                return q.IntersectShape(ray, ref points, returnAfterFirstValid);
+            case ShapeType.Poly:
+                var p = GetPolygonShape();
+                return p.IntersectShape(ray, ref points, returnAfterFirstValid);
+            case ShapeType.PolyLine:
+                var pl = GetPolylineShape();
+                return pl.IntersectShape(ray, ref points, returnAfterFirstValid);
+        }
+
+        return 0;
+    }
+    public int Intersect(Line line, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        if (!Enabled) return 0;
+
+        switch (GetShapeType())
+        {
+            case ShapeType.Circle:
+                var c = GetCircleShape();
+                return c.IntersectShape(line, ref points, returnAfterFirstValid);
+            case ShapeType.Ray:
+                var rayShape = GetRayShape();
+                return rayShape.IntersectShape(line, ref points);
+            case ShapeType.Line:
+                var l = GetLineShape();
+                return l.IntersectShape(line, ref points);
+            case ShapeType.Segment:
+                var s = GetSegmentShape();
+                return s.IntersectShape(line, ref points);
+            case ShapeType.Triangle:
+                var t = GetTriangleShape();
+                return t.IntersectShape(line, ref points, returnAfterFirstValid);
+            case ShapeType.Rect:
+                var r = GetRectShape();
+                return r.IntersectShape(line, ref points, returnAfterFirstValid);
+            case ShapeType.Quad:
+                var q = GetQuadShape();
+                return q.IntersectShape(line, ref points, returnAfterFirstValid);
+            case ShapeType.Poly:
+                var p = GetPolygonShape();
+                return p.IntersectShape(line, ref points, returnAfterFirstValid);
+            case ShapeType.PolyLine:
+                var pl = GetPolylineShape();
+                return pl.IntersectShape(line, ref points, returnAfterFirstValid);
         }
 
         return 0;
@@ -1092,6 +1290,12 @@ public abstract class Collider : Shape
             case ShapeType.Circle:
                 var c = GetCircleShape();
                 return c.IntersectShape(segment, ref points, returnAfterFirstValid);
+            case ShapeType.Ray:
+                var rayShape = GetRayShape();
+                return rayShape.IntersectShape(segment, ref points);
+            case ShapeType.Line:
+                var l = GetLineShape();
+                return l.IntersectShape(segment, ref points);
             case ShapeType.Segment:
                 var s = GetSegmentShape();
                 return s.IntersectShape(segment, ref points);
@@ -1124,6 +1328,12 @@ public abstract class Collider : Shape
             case ShapeType.Circle:
                 var c = GetCircleShape();
                 return c.IntersectShape(triangle, ref points, returnAfterFirstValid);
+            case ShapeType.Ray:
+                var rayShape = GetRayShape();
+                return rayShape.IntersectShape(triangle, ref points);
+            case ShapeType.Line:
+                var l = GetLineShape();
+                return l.IntersectShape(triangle, ref points);
             case ShapeType.Segment:
                 var s = GetSegmentShape();
                 return s.IntersectShape(triangle, ref points, returnAfterFirstValid);
@@ -1155,6 +1365,12 @@ public abstract class Collider : Shape
             case ShapeType.Circle:
                 var c = GetCircleShape();
                 return c.IntersectShape(circle, ref points, returnAfterFirstValid);
+            case ShapeType.Ray:
+                var rayShape = GetRayShape();
+                return rayShape.IntersectShape(circle, ref points);
+            case ShapeType.Line:
+                var l = GetLineShape();
+                return l.IntersectShape(circle, ref points);
             case ShapeType.Segment:
                 var s = GetSegmentShape();
                 return s.IntersectShape(circle, ref points, returnAfterFirstValid);
@@ -1186,6 +1402,12 @@ public abstract class Collider : Shape
             case ShapeType.Circle:
                 var c = GetCircleShape();
                 return c.IntersectShape(rect, ref points, returnAfterFirstValid);
+            case ShapeType.Ray:
+                var rayShape = GetRayShape();
+                return rayShape.IntersectShape(rect, ref points);
+            case ShapeType.Line:
+                var l = GetLineShape();
+                return l.IntersectShape(rect, ref points);
             case ShapeType.Segment:
                 var s = GetSegmentShape();
                 return s.IntersectShape(rect, ref points, returnAfterFirstValid);
@@ -1217,6 +1439,12 @@ public abstract class Collider : Shape
             case ShapeType.Circle:
                 var c = GetCircleShape();
                 return c.IntersectShape(quad, ref points, returnAfterFirstValid);
+            case ShapeType.Ray:
+                var rayShape = GetRayShape();
+                return rayShape.IntersectShape(quad, ref points);
+            case ShapeType.Line:
+                var l = GetLineShape();
+                return l.IntersectShape(quad, ref points);
             case ShapeType.Segment:
                 var s = GetSegmentShape();
                 return s.IntersectShape(quad, ref points, returnAfterFirstValid);
@@ -1248,6 +1476,12 @@ public abstract class Collider : Shape
             case ShapeType.Circle:
                 var c = GetCircleShape();
                 return c.IntersectShape(poly, ref points, returnAfterFirstValid);
+            case ShapeType.Ray:
+                var rayShape = GetRayShape();
+                return rayShape.IntersectShape(poly, ref points);
+            case ShapeType.Line:
+                var l = GetLineShape();
+                return l.IntersectShape(poly, ref points);
             case ShapeType.Segment:
                 var s = GetSegmentShape();
                 return s.IntersectShape(poly, ref points, returnAfterFirstValid);
@@ -1279,6 +1513,12 @@ public abstract class Collider : Shape
             case ShapeType.Circle:
                 var c = GetCircleShape();
                 return c.IntersectShape(polyLine, ref points, returnAfterFirstValid);
+            case ShapeType.Ray:
+                var rayShape = GetRayShape();
+                return rayShape.IntersectShape(polyLine, ref points);
+            case ShapeType.Line:
+                var l = GetLineShape();
+                return l.IntersectShape(polyLine, ref points);
             case ShapeType.Segment:
                 var s = GetSegmentShape();
                 return s.IntersectShape(polyLine, ref points, returnAfterFirstValid);

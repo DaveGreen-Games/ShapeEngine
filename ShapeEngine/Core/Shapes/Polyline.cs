@@ -1462,6 +1462,12 @@ public class Polyline : Points, IEquatable<Polyline>
             case ShapeType.Circle:
                 var c = collider.GetCircleShape();
                 return IntersectShape(c);
+            case ShapeType.Ray:
+                var rayShape = collider.GetRayShape();
+                return IntersectShape(rayShape);
+            case ShapeType.Line:
+                var l = collider.GetLineShape();
+                return IntersectShape(l);
             case ShapeType.Segment:
                 var s = collider.GetSegmentShape();
                 return IntersectShape(s);
@@ -1485,7 +1491,42 @@ public class Polyline : Points, IEquatable<Polyline>
         return null;
     }
 
-    //other shape center is used for checking segment normal and if necessary normal is flipped
+    public CollisionPoints? IntersectShape(Ray ray)
+    {
+        if (Count < 2) return null;
+
+        CollisionPoints? points = null;
+        for (var i = 0; i < Count - 1; i++)
+        {
+            var result = Segment.IntersectSegmentRay(this[i], this[(i + 1) % Count], ray.Point, ray.Direction, ray.Normal);
+            if (result.Valid)
+            {
+                points ??= new();
+                points.AddRange(result);
+            }
+            
+        }
+        return points;
+    }
+
+    public CollisionPoints? IntersectShape(Line l)
+    {
+        if (Count < 2) return null;
+
+        CollisionPoints? points = null;
+        for (var i = 0; i < Count - 1; i++)
+        {
+            var result = Segment.IntersectSegmentLine(this[i], this[(i + 1) % Count], l.Point, l.Direction, l.Normal);
+            if (result.Valid)
+            {
+                points ??= new();
+                points.AddRange(result);
+            }
+            
+        }
+        return points;
+    }
+
     public CollisionPoints? IntersectShape(Segment s)
     {
         if (Count < 2) return null;
@@ -1503,6 +1544,7 @@ public class Polyline : Points, IEquatable<Polyline>
         }
         return points;
     }
+    
     public CollisionPoints? IntersectShape(Circle c)
     {
         if (Count < 2) return null;
@@ -1702,6 +1744,12 @@ public class Polyline : Points, IEquatable<Polyline>
             case ShapeType.Circle:
                 var c = collider.GetCircleShape();
                 return IntersectShape(c, ref points, returnAfterFirstValid);
+            case ShapeType.Ray:
+                var rayShape = collider.GetRayShape();
+                return IntersectShape(rayShape, ref points);
+            case ShapeType.Line:
+                var l = collider.GetLineShape();
+                return IntersectShape(l, ref points);
             case ShapeType.Segment:
                 var s = collider.GetSegmentShape();
                 return IntersectShape(s, ref points);
@@ -1724,6 +1772,43 @@ public class Polyline : Points, IEquatable<Polyline>
 
         return 0;
     }
+    public int IntersectShape(Ray r, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        if (Count < 2) return 0;
+
+        var count = 0;
+        for (var i = 0; i < Count - 1; i++)
+        {
+            var result = Segment.IntersectSegmentRay(this[i], this[(i + 1) % Count], r.Point, r.Direction, r.Normal);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            
+        }
+        return count;
+    }
+    public int IntersectShape(Line l, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        if (Count < 2) return 0;
+
+        var count = 0;
+        for (var i = 0; i < Count - 1; i++)
+        {
+            var result = Segment.IntersectSegmentLine(this[i], this[(i + 1) % Count], l.Point, l.Direction, l.Normal);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            
+        }
+        return count;
+    }
+
     public int IntersectShape(Segment s, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count < 2) return 0;
@@ -1742,6 +1827,7 @@ public class Polyline : Points, IEquatable<Polyline>
         }
         return count;
     }
+    
     public int IntersectShape(Circle c, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count < 2) return 0;

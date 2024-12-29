@@ -2607,6 +2607,12 @@ public readonly struct Rect : IEquatable<Rect>
             case ShapeType.Circle:
                 var c = collider.GetCircleShape();
                 return IntersectShape(c);
+            case ShapeType.Ray:
+                var rayShape = collider.GetRayShape();
+                return IntersectShape(rayShape);
+            case ShapeType.Line:
+                var l = collider.GetLineShape();
+                return IntersectShape(l);
             case ShapeType.Segment:
                 var s = collider.GetSegmentShape();
                 return IntersectShape(s);
@@ -2674,6 +2680,80 @@ public readonly struct Rect : IEquatable<Rect>
         }
         return points;
     }
+    public CollisionPoints? IntersectShape(Ray r)
+    {
+        CollisionPoints? points = null;
+        var a = TopLeft;
+        var b = BottomLeft;
+        var c = BottomRight;
+        var d = TopRight;  
+        
+        var result = Segment.IntersectSegmentRay(a, b, r.Point, r.Direction, r.Normal);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.AddRange(result);
+        }
+       
+        result = Segment.IntersectSegmentRay(a, b, r.Point, r.Direction, r.Normal);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.AddRange(result);
+        }
+        
+        result = Segment.IntersectSegmentRay(a, b, r.Point, r.Direction, r.Normal);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.AddRange(result);
+        }
+        
+        result = Segment.IntersectSegmentRay(a, b, r.Point, r.Direction, r.Normal);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.AddRange(result);
+        }
+        return points;
+    }
+    public CollisionPoints? IntersectShape(Line l)
+    {
+        CollisionPoints? points = null;
+        var a = TopLeft;
+        var b = BottomLeft;
+        var c = BottomRight;
+        var d = TopRight;  
+        
+        var result = Segment.IntersectSegmentLine(a, b, l.Point, l.Direction, l.Normal);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.AddRange(result);
+        }
+       
+        result = Segment.IntersectSegmentLine(a, b, l.Point, l.Direction, l.Normal);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.AddRange(result);
+        }
+        
+        result = Segment.IntersectSegmentLine(a, b, l.Point, l.Direction, l.Normal);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.AddRange(result);
+        }
+        
+        result = Segment.IntersectSegmentLine(a, b, l.Point, l.Direction, l.Normal);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.AddRange(result);
+        }
+        return points;
+    }
     public CollisionPoints? IntersectShape(Segment s)
     {
         CollisionPoints? points = null;
@@ -2711,6 +2791,7 @@ public readonly struct Rect : IEquatable<Rect>
         }
         return points;
     }
+    
     public  CollisionPoints? IntersectShape(Circle circle)
     {
         CollisionPoints? points = null;
@@ -3174,6 +3255,12 @@ public readonly struct Rect : IEquatable<Rect>
                 case ShapeType.Circle:
                     var c = collider.GetCircleShape();
                     return IntersectShape(c, ref points, returnAfterFirstValid);
+                case ShapeType.Ray:
+                    var rayShape = collider.GetRayShape();
+                    return IntersectShape(rayShape, ref points);
+                case ShapeType.Line:
+                    var l = collider.GetLineShape();
+                    return IntersectShape(l, ref points);
                 case ShapeType.Segment:
                     var s = collider.GetSegmentShape();
                     return IntersectShape(s, ref points);
@@ -3196,6 +3283,94 @@ public readonly struct Rect : IEquatable<Rect>
 
             return 0;
         }
+    public int IntersectShape(Ray r, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        var count = 0;
+        var a = TopLeft;
+        var b = BottomLeft;
+        var c = BottomRight;
+        var d = TopRight;  
+        
+        var result = Segment.IntersectSegmentRay(a, b, r.Point, r.Direction, r.Normal);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+       
+        result = Segment.IntersectSegmentRay(a, b, r.Point, r.Direction, r.Normal);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        if (count >= 2) return count;
+        
+        result = Segment.IntersectSegmentRay(a, b, r.Point, r.Direction, r.Normal);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        if (count >= 2) return count;
+        
+        result = Segment.IntersectSegmentRay(a, b, r.Point, r.Direction, r.Normal);
+        if (result.Valid)
+        {
+            points.Add(result);
+            count++;
+        }
+        return count;
+    }
+    public int IntersectShape(Line l, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        var count = 0;
+        var a = TopLeft;
+        var b = BottomLeft;
+        var c = BottomRight;
+        var d = TopRight;  
+        
+        var result = Segment.IntersectSegmentLine(a, b, l.Point, l.Direction, l.Normal);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+       
+        result = Segment.IntersectSegmentLine(a, b, l.Point, l.Direction, l.Normal);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        if (count >= 2) return count;
+        
+        result = Segment.IntersectSegmentLine(a, b, l.Point, l.Direction, l.Normal);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        if (count >= 2) return count;
+        
+        result = Segment.IntersectSegmentLine(a, b, l.Point, l.Direction, l.Normal);
+        if (result.Valid)
+        {
+            points.Add(result);
+            count++;
+        }
+        return count;
+    }
     public int IntersectShape(Segment s, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
@@ -3240,6 +3415,7 @@ public readonly struct Rect : IEquatable<Rect>
         }
         return count;
     }
+    
     public int IntersectShape(Circle circle, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;

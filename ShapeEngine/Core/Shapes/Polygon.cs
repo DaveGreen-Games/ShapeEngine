@@ -1944,6 +1944,12 @@ namespace ShapeEngine.Core.Shapes
                 case ShapeType.Circle:
                     var c = collider.GetCircleShape();
                     return IntersectShape(c);
+                case ShapeType.Ray:
+                    var rayShape = collider.GetRayShape();
+                    return IntersectShape(rayShape);
+                case ShapeType.Line:
+                    var l = collider.GetLineShape();
+                    return IntersectShape(l);
                 case ShapeType.Segment:
                     var s = collider.GetSegmentShape();
                     return IntersectShape(s);
@@ -1966,6 +1972,40 @@ namespace ShapeEngine.Core.Shapes
 
             return null;
         }
+        
+        public CollisionPoints? IntersectShape(Ray r)
+        {
+            if (Count < 3) return null;
+            CollisionPoints? points = null;
+            for (var i = 0; i < Count; i++)
+            {
+                var result = Segment.IntersectSegmentRay(this[i], this[(i + 1) % Count], r.Point, r.Direction, r.Normal);
+                if (result.Valid)
+                {
+                    points ??= new();
+                    points.AddRange(result);
+                }
+                
+            }
+            return points;
+        }
+
+        public CollisionPoints? IntersectShape(Line l)
+        {
+            if (Count < 3) return null;
+            CollisionPoints? points = null;
+            for (var i = 0; i < Count; i++)
+            {
+                var result = Segment.IntersectSegmentLine(this[i], this[(i + 1) % Count], l.Point, l.Direction, l.Normal);
+                if (result.Valid)
+                {
+                    points ??= new();
+                    points.AddRange(result);
+                }
+                
+            }
+            return points;
+        }
         public CollisionPoints? IntersectShape(Segment s)
         {
             if (Count < 3) return null;
@@ -1982,6 +2022,7 @@ namespace ShapeEngine.Core.Shapes
             }
             return points;
         }
+        
         public CollisionPoints? IntersectShape(Circle c)
         {
             if (Count < 3) return null;
@@ -2176,6 +2217,12 @@ namespace ShapeEngine.Core.Shapes
                 case ShapeType.Circle:
                     var c = collider.GetCircleShape();
                     return IntersectShape(c, ref points, returnAfterFirstValid);
+                case ShapeType.Ray:
+                    var rayShape = collider.GetRayShape();
+                    return IntersectShape(rayShape, ref points);
+                case ShapeType.Line:
+                    var l = collider.GetLineShape();
+                    return IntersectShape(l, ref points);
                 case ShapeType.Segment:
                     var s = collider.GetSegmentShape();
                     return IntersectShape(s, ref points);
@@ -2198,6 +2245,40 @@ namespace ShapeEngine.Core.Shapes
 
             return 0;
         }
+        public int IntersectShape(Ray r, ref CollisionPoints points, bool returnAfterFirstValid = false)
+        {
+            if (Count < 3) return 0;
+            var count = 0;
+            for (var i = 0; i < Count; i++)
+            {
+                var result = Segment.IntersectSegmentRay(this[i], this[(i + 1) % Count],r.Point, r.Direction, r.Normal);
+                if (result.Valid)
+                {
+                    points.Add(result);
+                    if (returnAfterFirstValid) return 1;
+                    count++;
+                }
+                
+            }
+            return count;
+        }
+        public int IntersectShape(Line l, ref CollisionPoints points, bool returnAfterFirstValid = false)
+        {
+            if (Count < 3) return 0;
+            var count = 0;
+            for (var i = 0; i < Count; i++)
+            {
+                var result = Segment.IntersectSegmentLine(this[i], this[(i + 1) % Count],l.Point, l.Direction, l.Normal);
+                if (result.Valid)
+                {
+                    points.Add(result);
+                    if (returnAfterFirstValid) return 1;
+                    count++;
+                }
+                
+            }
+            return count;
+        }
         public int IntersectShape(Segment s, ref CollisionPoints points, bool returnAfterFirstValid = false)
         {
             if (Count < 3) return 0;
@@ -2215,6 +2296,7 @@ namespace ShapeEngine.Core.Shapes
             }
             return count;
         }
+        
         public int IntersectShape(Circle c, ref CollisionPoints points, bool returnAfterFirstValid = false)
         {
             if (Count < 3) return 0;

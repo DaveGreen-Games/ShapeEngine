@@ -949,6 +949,86 @@ public readonly struct Circle : IEquatable<Circle>
             start.X, start.Y,
             end.X, end.Y); 
     }
+    public static (CollisionPoint a, CollisionPoint b) IntersectCircleRay(Vector2 circleCenter, float circleRadius, Vector2 rayPoint, Vector2 rayDirection, Vector2 rayNormal) 
+    {
+        var toCircle = circleCenter - rayPoint;
+        float projectionLength = Vector2.Dot(toCircle, rayDirection);
+        var closestPoint = rayPoint + projectionLength * rayDirection;
+        float distanceToCenter = Vector2.Distance(closestPoint, circleCenter);
+
+        if (distanceToCenter < circleRadius)
+        {
+            var offset = (float)Math.Sqrt(circleRadius * circleRadius - distanceToCenter * distanceToCenter);
+            var intersection1 = closestPoint - offset * rayDirection;
+            var intersection2 = closestPoint + offset * rayDirection;
+
+            CollisionPoint a = new();
+            CollisionPoint b = new();
+            if (Vector2.Dot(intersection1 - rayPoint, rayDirection) >= 0)
+            {
+                a = new(intersection1, rayNormal);
+            }
+
+            if (Vector2.Dot(intersection2 - rayPoint, rayDirection) >= 0)
+            {
+                b = new(intersection2, rayNormal);
+                
+            }
+            return (a, b);
+        }
+        
+        if (Math.Abs(distanceToCenter - circleRadius) < 1e-10)
+        {
+            if (Vector2.Dot(closestPoint - rayPoint, rayDirection) >= 0)
+            {
+                var cp = new CollisionPoint(closestPoint, rayNormal);
+                return (cp, new());
+            }
+        }
+        
+        return (new(), new());
+    }
+    public static (CollisionPoint a, CollisionPoint b) IntersectCircleLine(Vector2 circleCenter, float circleRadius, Vector2 linePoint, Vector2 lineDirection, Vector2 lineNormal)
+    {
+        // Normalize the direction vector
+        lineDirection = lineDirection.Normalize();
+
+        // Vector from the line point to the circle center
+        var toCircle = circleCenter - linePoint;
+        
+        // Projection of toCircle onto the line direction to find the closest approach
+        float projectionLength = Vector2.Dot(toCircle, lineDirection);
+
+        // Closest point on the line to the circle center
+        var closestPoint = linePoint + projectionLength * lineDirection;
+
+        // Distance from the closest point to the circle center
+        float distanceToCenter = Vector2.Distance(closestPoint, circleCenter);
+
+        // Check if the line intersects the circle
+        if (distanceToCenter < circleRadius)
+        {
+            // Calculate the distance from the closest point to the intersection points
+            var offset = (float)Math.Sqrt(circleRadius * circleRadius - distanceToCenter * distanceToCenter);
+
+            // Intersection points
+            var intersection1 = closestPoint - offset * lineDirection;
+            var intersection2 = closestPoint + offset * lineDirection;
+
+            // Normals at the intersection points
+            var p1 = new CollisionPoint(intersection1, lineNormal);
+            var p2 = new CollisionPoint(intersection2, lineNormal);
+            return (p1, p2);
+        }
+        
+        if (Math.Abs(distanceToCenter - circleRadius) < 1e-10)
+        {
+            var p = new CollisionPoint(closestPoint,lineNormal);
+            return (p, new());
+        }
+
+        return (new(), new());
+    }
     public static (CollisionPoint a, CollisionPoint b) IntersectCircleSegment(float circleX, float circleY, float circleRadius, float segStartX, float segStartY, float segEndX, float segEndY)
     {
         float difX = segEndX - segStartX;
@@ -1149,6 +1229,12 @@ public readonly struct Circle : IEquatable<Circle>
             case ShapeType.Circle:
                 var c = collider.GetCircleShape();
                 return IntersectShape(c);
+            case ShapeType.Ray:
+                var rayShape = collider.GetRayShape();
+                return IntersectShape(rayShape);
+            case ShapeType.Line:
+                var l = collider.GetLineShape();
+                return IntersectShape(l);
             case ShapeType.Segment:
                 var s = collider.GetSegmentShape();
                 return IntersectShape(s);
@@ -1171,7 +1257,6 @@ public readonly struct Circle : IEquatable<Circle>
 
         return null;
     }
-
     public  CollisionPoints? IntersectShape(Circle c)
     {
         var result = IntersectCircleCircle(Center, Radius, c.Center, c.Radius);
@@ -1185,6 +1270,33 @@ public readonly struct Circle : IEquatable<Circle>
 
         return null;
 
+    }
+    public  CollisionPoints? IntersectShape(Ray r)
+    {
+        var result = IntersectCircleRay(Center, Radius, r.Point, r.Direction, r.Normal);
+        if (result.a.Valid || result.b.Valid)
+        {
+            var points = new CollisionPoints();
+            if(result.a.Valid) points.Add(result.a);
+            if(result.b.Valid) points.Add(result.b);
+            return points;
+        }
+
+        return null;
+    }
+    public  CollisionPoints? IntersectShape(Line l)
+    {
+        var result = IntersectCircleLine(Center, Radius, l.Point, l.Direction, l.Normal);
+        
+        if (result.a.Valid || result.b.Valid)
+        {
+            var points = new CollisionPoints();
+            if(result.a.Valid) points.Add(result.a);
+            if(result.b.Valid) points.Add(result.b);
+            return points;
+        }
+
+        return null;
     }
     public  CollisionPoints? IntersectShape(Segment s)
     {
@@ -1371,6 +1483,12 @@ public readonly struct Circle : IEquatable<Circle>
             case ShapeType.Circle:
                 var c = collider.GetCircleShape();
                 return IntersectShape(c, ref points, returnAfterFirstValid);
+            case ShapeType.Ray:
+                var rayShape = collider.GetRayShape();
+                return IntersectShape(rayShape, ref points);
+            case ShapeType.Line:
+                var l = collider.GetLineShape();
+                return IntersectShape(l, ref points);
             case ShapeType.Segment:
                 var s = collider.GetSegmentShape();
                 return IntersectShape(s, ref points);
@@ -1389,6 +1507,62 @@ public readonly struct Circle : IEquatable<Circle>
             case ShapeType.PolyLine:
                 var pl = collider.GetPolylineShape();
                 return IntersectShape(pl, ref points, returnAfterFirstValid);
+        }
+
+        return 0;
+    }
+    public int IntersectShape(Ray r, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        var result = IntersectCircleRay(Center, Radius, r.Point, r.Direction, r.Normal);
+        if (result.a.Valid && result.b.Valid)
+        {
+            if (returnAfterFirstValid)
+            {
+                points.Add(result.a);
+                return 1;
+            }
+            points.Add(result.a);
+            points.Add(result.b);
+            return 2;
+        }
+        if (result.a.Valid)
+        {
+            points.Add(result.a);
+            return 1;
+        }
+        
+        if (result.b.Valid)
+        {
+            points.Add(result.b);
+            return 1;
+        }
+
+        return 0;
+    }
+    public int IntersectShape(Line l, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        var result = IntersectCircleLine(Center, Radius, l.Point, l.Direction, l.Normal);
+        if (result.a.Valid && result.b.Valid)
+        {
+            if (returnAfterFirstValid)
+            {
+                points.Add(result.a);
+                return 1;
+            }
+            points.Add(result.a);
+            points.Add(result.b);
+            return 2;
+        }
+        if (result.a.Valid)
+        {
+            points.Add(result.a);
+            return 1;
+        }
+        
+        if (result.b.Valid)
+        {
+            points.Add(result.b);
+            return 1;
         }
 
         return 0;

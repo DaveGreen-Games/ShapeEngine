@@ -5,8 +5,10 @@ namespace ShapeEngine.Core.CollisionSystem;
 public interface IShape
 {
     public ShapeType GetShapeType();
-    public Circle GetCircleShape();
+    public Ray GetRayShape();
+    public Line GetLineShape();
     public Segment GetSegmentShape();
+    public Circle GetCircleShape();
     public Triangle GetTriangleShape();
     public Quad GetQuadShape();
     public Rect GetRectShape();

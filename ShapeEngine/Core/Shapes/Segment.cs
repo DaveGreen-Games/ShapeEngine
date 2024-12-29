@@ -114,7 +114,7 @@ public readonly struct Segment : IEquatable<Segment>
     #endregion
 
     #region Shapes
-    public readonly Rect GetBoundingBox() { return new(Start, End); }
+    public Rect GetBoundingBox() { return new(Start, End); }
 
     public Polyline ToPolyline() { return new Polyline() {Start, End}; }
     public Segments GetEdges() { return new Segments(){this}; }
@@ -1642,6 +1642,12 @@ public readonly struct Segment : IEquatable<Segment>
             case ShapeType.Circle:
                 var c = collider.GetCircleShape();
                 return IntersectShape(c);
+            case ShapeType.Ray:
+                var rayShape = collider.GetRayShape();
+                return IntersectShape(rayShape);
+            case ShapeType.Line:
+                var l = collider.GetLineShape();
+                return IntersectShape(l);
             case ShapeType.Segment:
                 var s = collider.GetSegmentShape();
                 return IntersectShape(s);
@@ -1664,6 +1670,7 @@ public readonly struct Segment : IEquatable<Segment>
 
         return null;
     }
+    
     public CollisionPoints? IntersectShape(Segment s)
     {
         var cp = IntersectSegmentSegment(Start, End, s.Start, s.End, s.Normal);
@@ -1879,6 +1886,12 @@ public readonly struct Segment : IEquatable<Segment>
             case ShapeType.Circle:
                 var c = collider.GetCircleShape();
                 return IntersectShape(c, ref points, returnAfterFirstValid);
+            case ShapeType.Ray:
+                var rayShape = collider.GetRayShape();
+                return IntersectShape(rayShape, ref points);
+            case ShapeType.Line:
+                var l = collider.GetLineShape();
+                return IntersectShape(l, ref points);
             case ShapeType.Segment:
                 var s = collider.GetSegmentShape();
                 return IntersectShape(s, ref points);
@@ -1897,6 +1910,28 @@ public readonly struct Segment : IEquatable<Segment>
             case ShapeType.PolyLine:
                 var pl = collider.GetPolylineShape();
                 return IntersectShape(pl, ref points, returnAfterFirstValid);
+        }
+
+        return 0;
+    }
+    public int IntersectShape(Ray r, ref CollisionPoints points)
+    {
+        var cp = IntersectSegmentRay(Start, End, r.Point, r.Direction, r.Normal);
+        if (cp.Valid)
+        {
+            points.Add(cp);
+            return 1;
+        }
+
+        return 0;
+    }
+    public int IntersectShape(Line l, ref CollisionPoints points)
+    {
+        var cp = IntersectSegmentLine(Start, End, l.Point, l.Direction, l.Normal);
+        if (cp.Valid)
+        {
+            points.Add(cp);
+            return 1;
         }
 
         return 0;

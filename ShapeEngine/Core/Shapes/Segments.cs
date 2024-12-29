@@ -926,6 +926,38 @@ public class Segments : ShapeList<Segment>
     #endregion
 
     #region Intersection
+    public CollisionPoints? IntersectShape(Ray r)
+    {
+        if(Count <= 0) return null;
+        CollisionPoints? points = null;
+
+        foreach (var seg in this)
+        {
+            var result = Segment.IntersectSegmentRay(seg.Start, seg.End, r.Point, r.Direction, r.Normal);
+            if (result.Valid)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+        }
+        return points;
+    }
+    public CollisionPoints? IntersectShape(Line l)
+    {
+        if(Count <= 0) return null;
+        CollisionPoints? points = null;
+
+        foreach (var seg in this)
+        {
+            var result = Segment.IntersectSegmentLine(seg.Start, seg.End, l.Point, l.Direction, l.Normal);
+            if (result.Valid)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+        }
+        return points;
+    }
     public CollisionPoints? IntersectShape(Segment s)
     {
         if(Count <= 0) return null;
@@ -942,6 +974,7 @@ public class Segments : ShapeList<Segment>
         }
         return points;
     }
+    
     public CollisionPoints? IntersectShape(Circle c)
     {
         if(Count <= 0) return null;
@@ -979,6 +1012,40 @@ public class Segments : ShapeList<Segment>
         return points;
     }
 
+    public int IntersectShape(Ray r, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        if (Count <= 0) return 0;
+        var count = 0;
+
+        foreach (var seg in this)
+        {
+            var result = Segment.IntersectSegmentRay(seg.Start, seg.End, r.Point, r.Direction, r.Normal);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+        }
+        return count;
+    }
+    public int IntersectShape(Line l, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        if (Count <= 0) return 0;
+        var count = 0;
+
+        foreach (var seg in this)
+        {
+            var result = Segment.IntersectSegmentLine(seg.Start, seg.End, l.Point, l.Direction, l.Normal);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+        }
+        return count;
+    }
     public int IntersectShape(Segment s, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count <= 0) return 0;

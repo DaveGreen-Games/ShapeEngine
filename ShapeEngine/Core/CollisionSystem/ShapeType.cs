@@ -9,5 +9,7 @@ public enum ShapeType
     Quad = 4,
     Rect = 5,
     Poly = 6,
-    PolyLine = 7
+    PolyLine = 7,
+    Ray = 8,
+    Line = 9
 }

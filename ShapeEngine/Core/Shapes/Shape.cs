@@ -59,8 +59,10 @@ public abstract class Shape : IShape
 
     
     public abstract ShapeType GetShapeType();
-    public virtual Circle GetCircleShape() => new();
+    public virtual Ray GetRayShape() => new();
+    public virtual Line GetLineShape() => new();
     public virtual Segment GetSegmentShape() => new();
+    public virtual Circle GetCircleShape() => new();
     public virtual Triangle GetTriangleShape() => new();
     public virtual Quad GetQuadShape() => new();
     public virtual Rect GetRectShape() => new();
