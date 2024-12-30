@@ -3,34 +3,8 @@ using Raylib_cs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
-using Ray = ShapeEngine.Core.Shapes.Ray;
 
 namespace ShapeEngine.Core.CollisionSystem;
-
-public class RayCollider : Collider
-{
-    
-    public override ShapeType GetShapeType() => ShapeType.Ray;
-
-    public override Rect GetBoundingBox() => GetRayShape().GetBoundingBox(length);
-
-    public override Ray GetRayShape()
-    {
-        return base.GetRayShape();
-    }
-}
-
-public class LineCollider : Collider
-{
-    public override ShapeType GetShapeType() => ShapeType.Line;
-
-    public override Rect GetBoundingBox() => GetLineShape().GetBoundingBox(length);
-
-    public override Line GetLineShape()
-    {
-        return base.GetLineShape();
-    }
-}
 
 public class SegmentCollider : Collider
 {

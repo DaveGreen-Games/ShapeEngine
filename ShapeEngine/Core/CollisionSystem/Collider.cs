@@ -155,14 +155,9 @@ public abstract class Collider : Shape
     }
     
     public override void RecalculateShape() { }
-
     protected override void OnInitialized() { }
-
     protected override void OnUpdate(float dt) { }
-
     protected override void OnDraw() { }
-    
-    
     
     
     protected virtual void OnAddedToCollisionBody(CollisionObject newParent) { }
@@ -367,6 +362,8 @@ public abstract class Collider : Shape
         {
             case ShapeType.Circle: return GetCircleShape().ContainsPoint(p);
             case ShapeType.Segment: return GetSegmentShape().ContainsPoint(p);
+            case ShapeType.Line: return GetLineShape().IsPointOnLine(p);
+            case ShapeType.Ray: return GetRayShape().IsPointOnRay(p);
             case ShapeType.Triangle: return GetTriangleShape().ContainsPoint(p);
             case ShapeType.Quad: return GetQuadShape().ContainsPoint(p);
             case ShapeType.Rect: return GetRectShape().ContainsPoint(p);
@@ -381,8 +378,10 @@ public abstract class Collider : Shape
     {
         switch (shape.GetShapeType())
         {
-            case ShapeType.Circle: return ContainsShape(shape.GetCircleShape());
             case ShapeType.Segment: return ContainsShape(shape.GetSegmentShape());
+            case ShapeType.Line: return false; //ContainsShape(shape.GetLineShape());
+            case ShapeType.Ray: return false; //ContainsShape(shape.GetRayShape());
+            case ShapeType.Circle: return ContainsShape(shape.GetCircleShape());
             case ShapeType.Triangle: return ContainsShape(shape.GetTriangleShape());
             case ShapeType.Quad: return ContainsShape(shape.GetQuadShape());
             case ShapeType.Rect: return ContainsShape(shape.GetRectShape());
@@ -396,6 +395,8 @@ public abstract class Collider : Shape
     {
         switch (GetShapeType())
         {
+            case ShapeType.Line: return false;
+            case ShapeType.Ray: return false;
             case ShapeType.Circle: return GetCircleShape().ContainsShape(shape);
             case ShapeType.Segment: return false;
             case ShapeType.Triangle: return GetTriangleShape().ContainsShape(shape);
@@ -411,6 +412,8 @@ public abstract class Collider : Shape
     {
         switch (GetShapeType())
         {
+            case ShapeType.Line: return false;
+            case ShapeType.Ray: return false;
             case ShapeType.Circle: return GetCircleShape().ContainsShape(shape);
             case ShapeType.Segment: return false;
             case ShapeType.Triangle: return GetTriangleShape().ContainsShape(shape);
@@ -426,6 +429,8 @@ public abstract class Collider : Shape
     {
         switch (GetShapeType())
         {
+            case ShapeType.Line: return false;
+            case ShapeType.Ray: return false;
             case ShapeType.Circle: return GetCircleShape().ContainsShape(shape);
             case ShapeType.Segment: return false;
             case ShapeType.Triangle: return GetTriangleShape().ContainsShape(shape);
@@ -442,6 +447,8 @@ public abstract class Collider : Shape
     {
         switch (GetShapeType())
         {
+            case ShapeType.Line: return false;
+            case ShapeType.Ray: return false;
             case ShapeType.Circle: return GetCircleShape().ContainsShape(shape);
             case ShapeType.Segment: return false;
             case ShapeType.Triangle: return GetTriangleShape().ContainsShape(shape);
@@ -457,6 +464,8 @@ public abstract class Collider : Shape
     {
         switch (GetShapeType())
         {
+            case ShapeType.Line: return false;
+            case ShapeType.Ray: return false;
             case ShapeType.Circle: return GetCircleShape().ContainsShape(shape);
             case ShapeType.Segment: return false;
             case ShapeType.Triangle: return GetTriangleShape().ContainsShape(shape);
@@ -472,6 +481,8 @@ public abstract class Collider : Shape
     {
         switch (GetShapeType())
         {
+            case ShapeType.Line: return false;
+            case ShapeType.Ray: return false;
             case ShapeType.Circle: return GetCircleShape().ContainsShape(shape);
             case ShapeType.Segment: return false;
             case ShapeType.Triangle: return GetTriangleShape().ContainsShape(shape);
@@ -487,6 +498,8 @@ public abstract class Collider : Shape
     {
         switch (GetShapeType())
         {
+            case ShapeType.Line: return false;
+            case ShapeType.Ray: return false;
             case ShapeType.Circle: return GetCircleShape().ContainsShape(shape);
             case ShapeType.Segment: return false;
             case ShapeType.Triangle: return GetTriangleShape().ContainsShape(shape);
