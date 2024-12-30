@@ -879,6 +879,77 @@ public readonly struct Segment : IEquatable<Segment>
     }
     public static bool OverlapSegmentCircle(Vector2 segStart, Vector2 segEnd, Vector2 circlePos, float circleRadius) => Circle.OverlapCircleSegment(circlePos, circleRadius, segStart, segEnd);
     
+    public static bool OverlapSegmentTriangle(Vector2 segStart, Vector2 segEnd, Vector2 a, Vector2 b, Vector2 c)
+    {
+        if (Triangle.ContainsPoint(a, b, c, segStart)) return true;
+        
+        var cp = IntersectSegmentSegment(segStart, segEnd,  a, b);
+        if (cp.Valid) return true;
+        
+        cp = IntersectSegmentSegment(segStart, segEnd,  b, c);
+        if (cp.Valid) return true;
+       
+        cp= IntersectSegmentSegment(segStart, segEnd,  c, a);
+        if (cp.Valid) return true;
+
+        return false;
+    }
+    public static bool OverlapSegmentQuad(Vector2 segStart, Vector2 segEnd, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+    {
+        if (Quad.ContainsPoint(a, b, c, d,  segStart)) return true;
+        
+        var cp = IntersectSegmentSegment(segStart, segEnd,  a, b);
+        if (cp.Valid) return true;
+        
+        cp = IntersectSegmentSegment(segStart, segEnd,  b, c);
+        if (cp.Valid) return true;
+       
+        cp = IntersectSegmentSegment(segStart, segEnd,  c, d);
+        if (cp.Valid) return true;
+
+        cp = IntersectSegmentSegment(segStart, segEnd,  d, a);
+        if (cp.Valid) return true;
+        
+        return false;
+    }
+    public static bool OverlapSegmentRect(Vector2 segStart, Vector2 segEnd, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+    {
+        return OverlapSegmentQuad(segStart, segEnd, a, b, c, d);
+    }
+    public static bool OverlapSegmentPolygon(Vector2 segStart, Vector2 segEnd, List<Vector2> points)
+    {
+        if (points.Count < 3) return false;
+        if (Polygon.ContainsPoints(points, segStart)) return true;
+        for (var i = 0; i < points.Count; i++)
+        {
+            var colPoint = IntersectSegmentSegment(segStart, segEnd, points[i], points[(i + 1) % points.Count]);
+            if (colPoint.Valid) return true;
+        }
+        return false;
+    }
+    public static bool OverlapSegmentPolyline(Vector2 segStart, Vector2 segEnd, List<Vector2> points)
+    {
+        if (points.Count < 3) return false;
+        for (var i = 0; i < points.Count - 1; i++)
+        {
+            var colPoint = IntersectSegmentSegment(segStart, segEnd, points[i], points[i + 1]);
+            if (colPoint.Valid) return true;
+        }
+        return false;
+    }
+    public static bool OverlapSegmentSegments(Vector2 segStart, Vector2 segEnd, List<Segment> segments)
+    {
+        if (segments.Count <= 0) return false;
+
+        foreach (var seg in segments)
+        {
+            var result = IntersectSegmentSegment(segStart, segEnd, seg.Start, seg.End);
+            if (result.Valid) return true;
+        }
+        return false;
+    }
+
+    
     #endregion
 
     #region Operators
@@ -1479,8 +1550,12 @@ public readonly struct Segment : IEquatable<Segment>
     public bool OverlapLine(Vector2 linePoint, Vector2 lineDirection) => OverlapSegmentLine(Start, End, linePoint, lineDirection);
     public bool OverlapRay(Vector2 rayPoint, Vector2 rayDirection) => OverlapSegmentRay(Start, End, rayPoint, rayDirection);
     public bool OverlapCircle(Vector2 circlePoint, float circleRadius) => OverlapSegmentCircle(Start, End, circlePoint, circleRadius);
-    //TODO: add remaining Overlap methods for each missing shape
-
+    public bool OverlapTriangle(Vector2 a, Vector2 b, Vector2 c) => OverlapSegmentTriangle(Start, End, a, b, c);
+    public bool OverlapQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => OverlapSegmentQuad(Start, End, a, b, c, d);
+    public bool OverlapRect(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => OverlapSegmentQuad(Start, End, a, b, c, d);
+    public bool OverlapPolygon(List<Vector2> points) => OverlapSegmentPolygon(Start, End, points);
+    public bool OverlapPolyline(List<Vector2> points) => OverlapSegmentPolyline(Start, End, points);
+    public bool OverlapSegments(List<Segment> segments) => OverlapSegmentSegments(Start, End, segments);
     
     
     public bool Overlap(Collider collider)
@@ -1495,6 +1570,12 @@ public readonly struct Segment : IEquatable<Segment>
             case ShapeType.Segment:
                 var s = collider.GetSegmentShape();
                 return OverlapShape(s);
+            case ShapeType.Ray:
+                var rayShape = collider.GetRayShape();
+                return OverlapShape(rayShape);
+            case ShapeType.Line:
+                var l = collider.GetLineShape();
+                return OverlapShape(l);
             case ShapeType.Triangle:
                 var t = collider.GetTriangleShape();
                 return OverlapShape(t);
@@ -1514,7 +1595,7 @@ public readonly struct Segment : IEquatable<Segment>
 
         return false;
     }
-
+    
     public bool OverlapShape(Segments segments)
     {
         foreach (var seg in segments)
@@ -1591,7 +1672,6 @@ public readonly struct Segment : IEquatable<Segment>
         }
         return false;
     }
-
     public bool OverlapShape(Polyline pl)
     {
         if (pl.Count <= 1) return false;

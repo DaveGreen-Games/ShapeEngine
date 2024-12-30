@@ -1686,6 +1686,84 @@ namespace ShapeEngine.Core.Shapes
         #endregion
         
         #region Contains
+        public static bool ContainsPoints(List<Vector2> points, Vector2 p)
+        {
+            var oddNodes = false;
+            int num = points.Count;
+            int j = num - 1;
+            for (int i = 0; i < num; i++)
+            {
+                var vi = points[i];
+                var vj = points[j];
+                if (ContainsPointCheck(vi, vj, p)) oddNodes = !oddNodes;
+                j = i;
+            }
+
+            return oddNodes;
+        }
+        public static bool ContainsPoints(List<Vector2> points, Vector2 a, Vector2 b)
+        {
+            var oddNodesA = false;
+            var oddNodesB = false;
+            int num = points.Count;
+            int j = num - 1;
+            for (var i = 0; i < num; i++)
+            {
+                var vi = points[i];
+                var vj = points[j];
+                if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
+                if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
+                
+                j = i;
+            }
+
+            return oddNodesA && oddNodesB;
+        }
+        public static bool ContainsPoints(List<Vector2> points, Vector2 a, Vector2 b, Vector2 c)
+        {
+            var oddNodesA = false;
+            var oddNodesB = false;
+            var oddNodesC = false;
+            int num = points.Count;
+            int j = num - 1;
+            for (int i = 0; i < num; i++)
+            {
+                var vi = points[i];
+                var vj = points[j];
+                if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
+                if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
+                if(ContainsPointCheck(vi, vj, c)) oddNodesC = !oddNodesC;
+                
+                j = i;
+            }
+
+            return oddNodesA && oddNodesB && oddNodesC;
+        }
+        public static bool ContainsPoints(List<Vector2> points, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+        {
+            var oddNodesA = false;
+            var oddNodesB = false;
+            var oddNodesC = false;
+            var oddNodesD = false;
+            int num = points.Count;
+            int j = num - 1;
+            for (int i = 0; i < num; i++)
+            {
+                var vi = points[i];
+                var vj = points[j];
+                if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
+                if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
+                if(ContainsPointCheck(vi, vj, c)) oddNodesC = !oddNodesC;
+                if(ContainsPointCheck(vi, vj, d)) oddNodesD = !oddNodesD;
+                
+                j = i;
+            }
+
+            return oddNodesA && oddNodesB && oddNodesC && oddNodesD;
+        }
+
+        
+        
         public bool ContainsPoint(Vector2 p) { return IsPointInPoly(p); }
 
         public bool ContainsCollisionObject(CollisionObject collisionObject)

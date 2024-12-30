@@ -1408,7 +1408,7 @@ public readonly struct Ray
     public static bool OverlapRayPolygon(Vector2 rayPoint, Vector2 rayDirection, List<Vector2> points)
     {
         if (points.Count < 3) return false;
-        
+        if (Polygon.ContainsPoints(points, rayPoint)) return true;
         for (var i = 0; i < points.Count; i++)
         {
             var colPoint = IntersectRaySegment(rayPoint, rayDirection, points[i], points[(i + 1) % points.Count]);
@@ -1449,6 +1449,43 @@ public readonly struct Ray
     public bool OverlapPolyline(List<Vector2> points) => OverlapRayPolyline(Point, Direction, points);
     public bool OverlapSegments(List<Segment> segments) => OverlapRaySegments(Point, Direction, segments);
     
+    public bool Overlap(Collider collider)
+    {
+        if (!collider.Enabled) return false;
+
+        switch (collider.GetShapeType())
+        {
+            case ShapeType.Circle:
+                var c = collider.GetCircleShape();
+                return OverlapShape(c);
+            case ShapeType.Segment:
+                var s = collider.GetSegmentShape();
+                return OverlapShape(s);
+            case ShapeType.Ray:
+                var rayShape = collider.GetRayShape();
+                return OverlapShape(rayShape);
+            case ShapeType.Line:
+                var l = collider.GetLineShape();
+                return OverlapShape(l);
+            case ShapeType.Triangle:
+                var t = collider.GetTriangleShape();
+                return OverlapShape(t);
+            case ShapeType.Rect:
+                var r = collider.GetRectShape();
+                return OverlapShape(r);
+            case ShapeType.Quad:
+                var q = collider.GetQuadShape();
+                return OverlapShape(q);
+            case ShapeType.Poly:
+                var p = collider.GetPolygonShape();
+                return OverlapShape(p);
+            case ShapeType.PolyLine:
+                var pl = collider.GetPolylineShape();
+                return OverlapShape(pl);
+        }
+
+        return false;
+    }
     public bool OverlapShape(Segment segment) => OverlapRaySegment(Point, Direction, segment.Start, segment.End);
     public bool OverlapShape(Line line) => OverlapRayLine(Point, Direction, line.Point, line.Direction);
     public bool OverlapShape(Ray ray) => OverlapRayRay(Point, Direction, ray.Point, ray.Direction);
