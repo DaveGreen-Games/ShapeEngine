@@ -1723,7 +1723,143 @@ public readonly struct Quad : IEquatable<Quad>
     #endregion
     
     #region Overlap
+    public static bool OverlapQuadSegment(Vector2 a, Vector2 b, Vector2 c, Vector2 d, Vector2 segmentStart, Vector2 segmentEnd)
+    {
+        return Segment.OverlapSegmentQuad(segmentStart, segmentEnd, a, b, c, d);
+    }
+    public static bool OverlapQuadLine(Vector2 a, Vector2 b, Vector2 c, Vector2 d,Vector2 linePoint, Vector2 lineDirection)
+    {
+        return Line.OverlapLineQuad(linePoint, lineDirection, a, b, c, d);
+    }
+    public static bool OverlapQuadRay(Vector2 a, Vector2 b, Vector2 c, Vector2 d,Vector2 rayPoint, Vector2 rayDirection)
+    {
+        return Ray.OverlapRayQuad(rayPoint, rayDirection, a, b, c, d);
+    }
+    public static bool OverlapQuadCircle(Vector2 a, Vector2 b, Vector2 c, Vector2 d,Vector2 circleCenter, float circleRadius)
+    {
+        return Circle.OverlapCircleQuad(circleCenter, circleRadius, a, b, c, d);
+    }
+    public static bool OverlapQuadTriangle(Vector2 a, Vector2 b, Vector2 c, Vector2 d, Vector2 ta, Vector2 tb, Vector2 tc)
+    {
+        return Triangle.OverlapTriangleQuad(ta, tb, tc, a, b, c, d);
 
+    }
+    public static bool OverlapQuadQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d,Vector2 qa, Vector2 qb, Vector2 qc, Vector2 qd)
+    {
+        if (Quad.ContainsPoint(a, b, c, d, qa)) return true;
+        if (Quad.ContainsPoint(qa, qb, qc,qd,a)) return true;
+
+        var cp = Segment.IntersectSegmentSegment(a, b, qa, qb);
+        if (cp.Valid) return true;
+        cp = Segment.IntersectSegmentSegment(a, b, qb, qc);
+        if (cp.Valid) return true; 
+        cp = Segment.IntersectSegmentSegment(a, b, qc, qd);
+        if (cp.Valid) return true;
+        cp = Segment.IntersectSegmentSegment(a, b, qd, qa);
+        if (cp.Valid) return true;
+        
+        cp = Segment.IntersectSegmentSegment(b, c, qa, qb);
+        if (cp.Valid) return true;
+        cp = Segment.IntersectSegmentSegment(b, c, qb, qc);
+        if (cp.Valid) return true;
+        cp = Segment.IntersectSegmentSegment(b, c, qc, qd);
+        if (cp.Valid) return true;
+        cp = Segment.IntersectSegmentSegment(b, c, qd, qa);
+        if (cp.Valid) return true;
+        
+        cp = Segment.IntersectSegmentSegment(c, d, qa, qb);
+        if (cp.Valid) return true;
+        cp = Segment.IntersectSegmentSegment(c, d, qb, qc);
+        if (cp.Valid) return true;
+        cp = Segment.IntersectSegmentSegment(c, d, qc, qd);
+        if (cp.Valid) return true;
+        cp = Segment.IntersectSegmentSegment(c, d, qd, qa);
+        if (cp.Valid) return true;
+        
+        cp = Segment.IntersectSegmentSegment(d, a, qa, qb);
+        if (cp.Valid) return true;
+        cp = Segment.IntersectSegmentSegment(d, a, qb, qc);
+        if (cp.Valid) return true;
+        cp = Segment.IntersectSegmentSegment(d, a, qc, qd);
+        if (cp.Valid) return true;
+        cp = Segment.IntersectSegmentSegment(d, a, qd, qa);
+        if (cp.Valid) return true;
+
+        return false;
+    }
+    public static bool OverlapQuadRect(Vector2 a, Vector2 b, Vector2 c,  Vector2 d,Vector2 ra, Vector2 rb, Vector2 rc, Vector2 rd)
+    {
+        return OverlapQuadQuad(a, b, c, d, ra, rb, rc, rd);
+    }
+    public static bool OverlapQuadPolygon(Vector2 a, Vector2 b, Vector2 c, Vector2 d,List<Vector2> points)
+    {
+        if (points.Count < 3) return false;
+        if (Polygon.ContainsPoints(points, a)) return true;
+        for (var i = 0; i < points.Count; i++)
+        {
+            var p1 = points[i];
+            var p2 = points[(i + 1) % points.Count];
+            var cp = Segment.IntersectSegmentSegment(a, b, p1, p2);
+            if (cp.Valid) return true;
+            cp = Segment.IntersectSegmentSegment(b, c, p1, p2);
+            if (cp.Valid) return true; 
+            cp = Segment.IntersectSegmentSegment(c, d, p1, p2);
+            if (cp.Valid) return true;
+            cp = Segment.IntersectSegmentSegment(d, a, p1, p2);
+            if (cp.Valid) return true;
+        }
+        return false;
+    }
+    public static bool OverlapQuadPolyline(Vector2 a, Vector2 b, Vector2 c,  Vector2 d,List<Vector2> points)
+    {
+        if (points.Count < 2) return false;
+        for (var i = 0; i < points.Count - 1; i++)
+        {
+            var p1 = points[i];
+            var p2 = points[i + 1];
+            var cp = Segment.IntersectSegmentSegment(a, b, p1, p2);
+            if (cp.Valid) return true;
+            cp = Segment.IntersectSegmentSegment(b, c, p1, p2);
+            if (cp.Valid) return true; 
+            cp = Segment.IntersectSegmentSegment(c, d, p1, p2);
+            if (cp.Valid) return true;
+            cp = Segment.IntersectSegmentSegment(d, a, p1, p2);
+            if (cp.Valid) return true;
+        }
+        return false;
+    }
+    public static bool OverlapQuadSegments(Vector2 a, Vector2 b, Vector2 c, Vector2 d,List<Segment> segments)
+    {
+        if (segments.Count < 3) return false;
+        for (var i = 0; i < segments.Count; i++)
+        {
+            var segment = segments[i];
+            var cp = Segment.IntersectSegmentSegment(a, b, segment.Start, segment.End);
+            if (cp.Valid) return true;
+            cp = Segment.IntersectSegmentSegment(b, c, segment.Start, segment.End);
+            if (cp.Valid) return true; 
+            cp = Segment.IntersectSegmentSegment(c, d, segment.Start, segment.End);
+            if (cp.Valid) return true;
+            cp = Segment.IntersectSegmentSegment(d, a, segment.Start, segment.End);
+            if (cp.Valid) return true;
+        }
+        return false;
+    }
+
+    public bool OverlapSegment(Vector2 segmentStart, Vector2 segmentEnd) => OverlapQuadSegment(A, B, C, D, segmentStart, segmentEnd);
+    public bool OverlapLine(Vector2 linePoint, Vector2 lineDirection) => OverlapQuadLine(A, B, C,D,linePoint, lineDirection);
+    public bool OverlapRay(Vector2 rayPoint, Vector2 rayDirection) => OverlapQuadRay(A, B, C,D,rayPoint, rayDirection);
+    public bool OverlapCircle(Vector2 circleCenter, float circleRadius) => OverlapQuadCircle(A, B, C,D,circleCenter, circleRadius);
+    public bool OverlapTriangle(Vector2 a, Vector2 b, Vector2 c) => OverlapQuadTriangle(A, B, C,D,a, b, c);
+    public bool OverlapQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => OverlapQuadQuad(A, B, C,D,a, b, c, d);
+    public bool OverlapRect(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => OverlapQuadQuad(A, B, C,D,a, b, c, d);
+    public bool OverlapPolygon(List<Vector2> points) => OverlapQuadPolygon(A, B, C,D,points);
+    public bool OverlapPolyline(List<Vector2> points) => OverlapQuadPolyline(A, B, C,D,points);
+    public bool OverlapSegments(List<Segment> segments) => OverlapQuadSegments(A, B, C,D,segments);
+    
+    public bool OverlapShape(Line line) => OverlapQuadLine(A, B, C, D,line.Point, line.Direction);
+    public bool OverlapShape(Ray ray) => OverlapQuadRay(A, B, C, D,ray.Point, ray.Direction);
+    
     public bool Overlap(Collider collider)
     {
         if (!collider.Enabled) return false;
@@ -1736,6 +1872,12 @@ public readonly struct Quad : IEquatable<Quad>
             case ShapeType.Segment:
                 var s = collider.GetSegmentShape();
                 return OverlapShape(s);
+            case ShapeType.Line:
+                var l = collider.GetLineShape();
+                return OverlapShape(l);
+            case ShapeType.Ray:
+                var rayShape = collider.GetRayShape();
+                return OverlapShape(rayShape);
             case ShapeType.Triangle:
                 var t = collider.GetTriangleShape();
                 return OverlapShape(t);

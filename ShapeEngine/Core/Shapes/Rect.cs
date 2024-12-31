@@ -1174,7 +1174,6 @@ public readonly struct Rect : IEquatable<Rect>
 
     public static Rect Empty => new();
     
-    
     private static ValueRange RangeHull(ValueRange a, ValueRange b)
     {
         return new
@@ -1184,8 +1183,6 @@ public readonly struct Rect : IEquatable<Rect>
             );
     }
 
-    
-    
     #endregion
 
     #region Operators
@@ -2467,6 +2464,61 @@ public readonly struct Rect : IEquatable<Rect>
     #endregion
     
     #region Overlap
+    public static bool OverlapRectSegment(Vector2 a, Vector2 b, Vector2 c, Vector2 d, Vector2 segmentStart, Vector2 segmentEnd)
+    {
+        return Segment.OverlapSegmentQuad(segmentStart, segmentEnd, a, b, c, d);
+    }
+    public static bool OverlapRectLine(Vector2 a, Vector2 b, Vector2 c, Vector2 d,Vector2 linePoint, Vector2 lineDirection)
+    {
+        return Line.OverlapLineQuad(linePoint, lineDirection, a, b, c, d);
+    }
+    public static bool OverlapRectRay(Vector2 a, Vector2 b, Vector2 c, Vector2 d,Vector2 rayPoint, Vector2 rayDirection)
+    {
+        return Ray.OverlapRayQuad(rayPoint, rayDirection, a, b, c, d);
+    }
+    public static bool OverlapRectCircle(Vector2 a, Vector2 b, Vector2 c, Vector2 d,Vector2 circleCenter, float circleRadius)
+    {
+        return Circle.OverlapCircleQuad(circleCenter, circleRadius, a, b, c, d);
+    }
+    public static bool OverlapRectTriangle(Vector2 a, Vector2 b, Vector2 c, Vector2 d, Vector2 ta, Vector2 tb, Vector2 tc)
+    {
+        return Triangle.OverlapTriangleQuad(ta, tb, tc, a, b, c, d);
+
+    }
+    public static bool OverlapRectQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d,Vector2 qa, Vector2 qb, Vector2 qc, Vector2 qd)
+    {
+        return Quad.OverlapQuadQuad(a, b, c, d, qa, qb, qc, qd);
+    }
+    public static bool OverlapRectRect(Vector2 a, Vector2 b, Vector2 c,  Vector2 d,Vector2 ra, Vector2 rb, Vector2 rc, Vector2 rd)
+    {
+        return Quad.OverlapQuadQuad(a, b, c, d, ra, rb, rc, rd);
+    }
+    public static bool OverlapRectPolygon(Vector2 a, Vector2 b, Vector2 c, Vector2 d,List<Vector2> points)
+    {
+        return Quad.OverlapQuadPolygon(a, b, c, d, points);
+    }
+    public static bool OverlapRectPolyline(Vector2 a, Vector2 b, Vector2 c,  Vector2 d,List<Vector2> points)
+    {
+        return Quad.OverlapQuadPolyline(a, b, c, d, points);
+    }
+    public static bool OverlapRectSegments(Vector2 a, Vector2 b, Vector2 c, Vector2 d,List<Segment> segments)
+    {
+        return Quad.OverlapQuadSegments(a, b, c, d, segments);
+    }
+
+    public bool OverlapSegment(Vector2 segmentStart, Vector2 segmentEnd) => OverlapRectSegment(A, B, C, D, segmentStart, segmentEnd);
+    public bool OverlapLine(Vector2 linePoint, Vector2 lineDirection) => OverlapRectLine(A, B, C,D,linePoint, lineDirection);
+    public bool OverlapRay(Vector2 rayPoint, Vector2 rayDirection) => OverlapRectRay(A, B, C,D,rayPoint, rayDirection);
+    public bool OverlapCircle(Vector2 circleCenter, float circleRadius) => OverlapRectCircle(A, B, C,D,circleCenter, circleRadius);
+    public bool OverlapTriangle(Vector2 a, Vector2 b, Vector2 c) => OverlapRectTriangle(A, B, C,D,a, b, c);
+    public bool OverlapQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => OverlapRectQuad(A, B, C,D,a, b, c, d);
+    public bool OverlapRect(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => OverlapRectQuad(A, B, C,D,a, b, c, d);
+    public bool OverlapPolygon(List<Vector2> points) => OverlapRectPolygon(A, B, C,D,points);
+    public bool OverlapPolyline(List<Vector2> points) => OverlapRectPolyline(A, B, C,D,points);
+    public bool OverlapSegments(List<Segment> segments) => OverlapRectSegments(A, B, C,D,segments);
+    
+    public bool OverlapShape(Line line) => OverlapRectLine(A, B, C, D,line.Point, line.Direction);
+    public bool OverlapShape(Ray ray) => OverlapRectRay(A, B, C, D,ray.Point, ray.Direction);
     public bool Overlap(Collider collider)
     {
         if (!collider.Enabled) return false;
@@ -2479,6 +2531,12 @@ public readonly struct Rect : IEquatable<Rect>
             case ShapeType.Segment:
                 var s = collider.GetSegmentShape();
                 return OverlapShape(s);
+            case ShapeType.Line:
+                var l = collider.GetLineShape();
+                return OverlapShape(l);
+            case ShapeType.Ray:
+                var rayShape = collider.GetRayShape();
+                return OverlapShape(rayShape);
             case ShapeType.Triangle:
                 var t = collider.GetTriangleShape();
                 return OverlapShape(t);

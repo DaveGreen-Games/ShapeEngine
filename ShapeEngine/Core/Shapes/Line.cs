@@ -1516,6 +1516,7 @@ public readonly struct Line
     public bool OverlapPolyline(List<Vector2> points) => OverlapLinePolyline(Point, Direction, points);
     public bool OverlapSegments(List<Segment> segments) => OverlapLineSegments(Point, Direction, segments);
     
+    
     public bool Overlap(Collider collider)
     {
         if (!collider.Enabled) return false;
@@ -1553,9 +1554,9 @@ public readonly struct Line
 
         return false;
     }
-    public bool OverlapShape(Segment segment) => OverlapLineSegment(Point, Direction, segment.Start, segment.End);
     public bool OverlapShape(Line line) => OverlapLineLine(Point, Direction, line.Point, line.Direction);
     public bool OverlapShape(Ray ray) => OverlapLineRay(Point, Direction, ray.Point, ray.Direction);
+    public bool OverlapShape(Segment segment) => OverlapLineSegment(Point, Direction, segment.Start, segment.End);
     public bool OverlapShape(Circle circle) => OverlapLineCircle(Point, Direction, circle.Center, circle.Radius);
     public bool OverlapShape(Triangle t) => OverlapLineTriangle(Point, Direction, t.A, t.B, t.C);
     public bool OverlapShape(Quad q) => OverlapLineQuad(Point, Direction, q.A, q.B, q.C, q.D);
