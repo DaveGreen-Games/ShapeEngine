@@ -13,6 +13,6 @@ public class RayCollider(Transform2D offset) : Collider(offset)
 
     public override Ray GetRayShape() => new(Point, Direction);
     public override ShapeType GetShapeType() => ShapeType.Ray;
-    public override Rect GetBoundingBox() => GetRayShape().GetBoundingBox(CurTransform.ScaledSize.Length);
+    public override Rect GetBoundingBox() => GetRayShape().GetBoundingBox();
     
 }

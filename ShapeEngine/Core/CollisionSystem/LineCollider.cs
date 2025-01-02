@@ -12,6 +12,6 @@ public class LineCollider(Transform2D offset) : Collider(offset)
     
     public override Line GetLineShape() => new(Point, Direction);
     public override ShapeType GetShapeType() => ShapeType.Line;
-    public override Rect GetBoundingBox() => GetRayShape().GetBoundingBox(CurTransform.ScaledSize.Length);
+    public override Rect GetBoundingBox() => GetRayShape().GetBoundingBox();
     
 }

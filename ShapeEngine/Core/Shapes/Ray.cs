@@ -7,7 +7,7 @@ namespace ShapeEngine.Core.Shapes;
 
 public readonly struct Ray
 {
-    public static float MaxLength = 1000000;
+    public static float MaxLength = float.MaxValue;
     
     #region Members
     
@@ -160,7 +160,7 @@ public readonly struct Ray
     }
     
    
-    public CollisionPoint GetClosestPointTo(Vector2 point, out float disSquared)
+    public CollisionPoint GetClosestPoint(Vector2 point, out float disSquared)
     {
         var toPoint = point - Point;
 

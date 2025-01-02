@@ -7,7 +7,7 @@ namespace ShapeEngine.Core.Shapes;
 
 public readonly struct Line
 {
-    public static float MaxLength = 1000000;
+    public static float MaxLength = float.MaxValue;
     
     
     #region Members
