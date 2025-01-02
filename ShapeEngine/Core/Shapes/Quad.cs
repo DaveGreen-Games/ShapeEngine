@@ -1746,44 +1746,25 @@ public readonly struct Quad : IEquatable<Quad>
     }
     public static bool OverlapQuadQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d,Vector2 qa, Vector2 qb, Vector2 qc, Vector2 qd)
     {
-        if (Quad.ContainsPoint(a, b, c, d, qa)) return true;
-        if (Quad.ContainsPoint(qa, qb, qc,qd,a)) return true;
+        if (ContainsPoint(a, b, c, d, qa)) return true;
+        if (ContainsPoint(qa, qb, qc,qd,a)) return true;
 
-        var cp = Segment.IntersectSegmentSegment(a, b, qa, qb);
-        if (cp.Valid) return true;
-        cp = Segment.IntersectSegmentSegment(a, b, qb, qc);
-        if (cp.Valid) return true; 
-        cp = Segment.IntersectSegmentSegment(a, b, qc, qd);
-        if (cp.Valid) return true;
-        cp = Segment.IntersectSegmentSegment(a, b, qd, qa);
-        if (cp.Valid) return true;
-        
-        cp = Segment.IntersectSegmentSegment(b, c, qa, qb);
-        if (cp.Valid) return true;
-        cp = Segment.IntersectSegmentSegment(b, c, qb, qc);
-        if (cp.Valid) return true;
-        cp = Segment.IntersectSegmentSegment(b, c, qc, qd);
-        if (cp.Valid) return true;
-        cp = Segment.IntersectSegmentSegment(b, c, qd, qa);
-        if (cp.Valid) return true;
-        
-        cp = Segment.IntersectSegmentSegment(c, d, qa, qb);
-        if (cp.Valid) return true;
-        cp = Segment.IntersectSegmentSegment(c, d, qb, qc);
-        if (cp.Valid) return true;
-        cp = Segment.IntersectSegmentSegment(c, d, qc, qd);
-        if (cp.Valid) return true;
-        cp = Segment.IntersectSegmentSegment(c, d, qd, qa);
-        if (cp.Valid) return true;
-        
-        cp = Segment.IntersectSegmentSegment(d, a, qa, qb);
-        if (cp.Valid) return true;
-        cp = Segment.IntersectSegmentSegment(d, a, qb, qc);
-        if (cp.Valid) return true;
-        cp = Segment.IntersectSegmentSegment(d, a, qc, qd);
-        if (cp.Valid) return true;
-        cp = Segment.IntersectSegmentSegment(d, a, qd, qa);
-        if (cp.Valid) return true;
+        if( Segment.OverlapSegmentSegment(a, b, qa, qb) ) return true;
+        if( Segment.OverlapSegmentSegment(a, b, qb, qc) ) return true;
+        if( Segment.OverlapSegmentSegment(a, b, qc, qd) ) return true;
+        if( Segment.OverlapSegmentSegment(a, b, qd, qa) ) return true;
+        if( Segment.OverlapSegmentSegment(b, c, qa, qb) ) return true;
+        if( Segment.OverlapSegmentSegment(b, c, qb, qc) ) return true;
+        if( Segment.OverlapSegmentSegment(b, c, qc, qd) ) return true;
+        if( Segment.OverlapSegmentSegment(b, c, qd, qa) ) return true;
+        if( Segment.OverlapSegmentSegment(c, d, qa, qb) ) return true;
+        if( Segment.OverlapSegmentSegment(c, d, qb, qc) ) return true;
+        if( Segment.OverlapSegmentSegment(c, d, qc, qd) ) return true;
+        if( Segment.OverlapSegmentSegment(c, d, qd, qa) ) return true;
+        if( Segment.OverlapSegmentSegment(d, a, qa, qb) ) return true;
+        if( Segment.OverlapSegmentSegment(d, a, qb, qc) ) return true;
+        if( Segment.OverlapSegmentSegment(d, a, qc, qd) ) return true;
+        if( Segment.OverlapSegmentSegment(d, a, qd, qa) ) return true;
 
         return false;
     }
@@ -1794,21 +1775,20 @@ public readonly struct Quad : IEquatable<Quad>
     public static bool OverlapQuadPolygon(Vector2 a, Vector2 b, Vector2 c, Vector2 d,List<Vector2> points)
     {
         if (points.Count < 3) return false;
-        if (Polygon.ContainsPoints(points, a)) return true;
+        // if (Polygon.ContainsPoints(points, a)) return true;
+        var oddNodes = false;
         for (var i = 0; i < points.Count; i++)
         {
             var p1 = points[i];
             var p2 = points[(i + 1) % points.Count];
-            var cp = Segment.IntersectSegmentSegment(a, b, p1, p2);
-            if (cp.Valid) return true;
-            cp = Segment.IntersectSegmentSegment(b, c, p1, p2);
-            if (cp.Valid) return true; 
-            cp = Segment.IntersectSegmentSegment(c, d, p1, p2);
-            if (cp.Valid) return true;
-            cp = Segment.IntersectSegmentSegment(d, a, p1, p2);
-            if (cp.Valid) return true;
+            if( Segment.OverlapSegmentSegment(a, b, p1, p2) ) return true;
+            if( Segment.OverlapSegmentSegment(b, c, p1, p2) ) return true;
+            if( Segment.OverlapSegmentSegment(c, d, p1, p2) ) return true;
+            if( Segment.OverlapSegmentSegment(d, a, p1, p2) ) return true;
+            if(Polygon.ContainsPointCheck(p1, p2, a)) oddNodes = !oddNodes;
         }
-        return false;
+
+        return oddNodes;
     }
     public static bool OverlapQuadPolyline(Vector2 a, Vector2 b, Vector2 c,  Vector2 d,List<Vector2> points)
     {
@@ -1817,14 +1797,10 @@ public readonly struct Quad : IEquatable<Quad>
         {
             var p1 = points[i];
             var p2 = points[i + 1];
-            var cp = Segment.IntersectSegmentSegment(a, b, p1, p2);
-            if (cp.Valid) return true;
-            cp = Segment.IntersectSegmentSegment(b, c, p1, p2);
-            if (cp.Valid) return true; 
-            cp = Segment.IntersectSegmentSegment(c, d, p1, p2);
-            if (cp.Valid) return true;
-            cp = Segment.IntersectSegmentSegment(d, a, p1, p2);
-            if (cp.Valid) return true;
+            if( Segment.OverlapSegmentSegment(a, b, p1, p2) ) return true;
+            if( Segment.OverlapSegmentSegment(b, c, p1, p2) ) return true;
+            if( Segment.OverlapSegmentSegment(c, d, p1, p2) ) return true;
+            if( Segment.OverlapSegmentSegment(d, a, p1, p2) ) return true;
         }
         return false;
     }
@@ -1834,14 +1810,10 @@ public readonly struct Quad : IEquatable<Quad>
         for (var i = 0; i < segments.Count; i++)
         {
             var segment = segments[i];
-            var cp = Segment.IntersectSegmentSegment(a, b, segment.Start, segment.End);
-            if (cp.Valid) return true;
-            cp = Segment.IntersectSegmentSegment(b, c, segment.Start, segment.End);
-            if (cp.Valid) return true; 
-            cp = Segment.IntersectSegmentSegment(c, d, segment.Start, segment.End);
-            if (cp.Valid) return true;
-            cp = Segment.IntersectSegmentSegment(d, a, segment.Start, segment.End);
-            if (cp.Valid) return true;
+            if( Segment.OverlapSegmentSegment(a, b, segment.Start, segment.End) ) return true;
+            if( Segment.OverlapSegmentSegment(b, c, segment.Start, segment.End) ) return true;
+            if( Segment.OverlapSegmentSegment(c, d, segment.Start, segment.End) ) return true;
+            if( Segment.OverlapSegmentSegment(d, a, segment.Start, segment.End) ) return true;
         }
         return false;
     }

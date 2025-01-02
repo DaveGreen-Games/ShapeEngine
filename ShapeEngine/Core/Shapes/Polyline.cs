@@ -1000,366 +1000,6 @@ public class Polyline : Points, IEquatable<Polyline>
         
         #endregion
     
-    /*
-    #region Closest
-    public new ClosestDistance GetClosestDistanceTo(Vector2 p)
-    {
-        if (Count <= 0) return new();
-        if (Count == 1) return new(this[0], p);
-        if (Count == 2) return new(Segment.GetClosestPointSegmentPoint(this[0], this[1], p), p);
-        if (Count == 3) return new(Triangle.GetClosestPointTrianglePoint(this[0], this[1], this[2], p), p);
-        if (Count == 4) return new(Quad.GetClosestPoint(this[0], this[1], this[2], this[3], p), p);
-
-        var cp = new Vector2();
-        var minDisSq = float.PositiveInfinity;
-        for (var i = 0; i < Count - 1; i++)
-        {
-            var start = this[i];
-            var end = this[(i + 1) % Count];
-            var next = Segment.GetClosestPointSegmentPoint(start, end, p);
-            var disSq = (next - p).LengthSquared();
-            if (disSq < minDisSq)
-            {
-                minDisSq = disSq;
-                cp = next;
-            }
-
-        }
-
-        return new(cp, p);
-    }
-    
-    public ClosestDistance GetClosestDistanceTo(Segment segment)
-    {
-        if (Count <= 0) return new();
-        if (Count == 1)
-        {
-            var cp = Segment.GetClosestPointSegmentPoint(segment.Start, segment.End, this[0]);
-            return new(this[0], cp);
-        }
-        if (Count == 2) return new Segment(this[0], this[1]).GetClosestDistanceTo(segment);
-        
-        ClosestDistance closestDistance = new(new(), new(), float.PositiveInfinity);
-        
-        for (var i = 0; i < Count - 1; i++)
-        {
-            var p1 = this[i];
-            var p2 = this[(i + 1) % Count];
-            
-            var next = Segment.GetClosestPointSegmentPoint(segment.Start, segment.End, p1);
-            var cd = new ClosestDistance(p1, next);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-            
-            next = Segment.GetClosestPointSegmentPoint(segment.Start, segment.End, p2);
-            cd = new ClosestDistance(p2, next);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-            
-            next = Segment.GetClosestPointSegmentPoint(p1, p2, segment.Start);
-            cd = new ClosestDistance(next, segment.Start);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-            
-            next = Segment.GetClosestPointSegmentPoint(p1, p2, segment.End);
-            cd = new ClosestDistance(next, segment.End);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-        }
-        return closestDistance;
-    }
-    public ClosestDistance GetClosestDistanceTo(Circle circle)
-    {
-        if (Count <= 0) return new();
-        if (Count == 1)
-        {
-            var cp = Circle.GetClosestPoint(circle.Center, circle.Radius, this[0]);
-            return new(this[0], cp);
-        }
-        if (Count == 2) return new Segment(this[0], this[1]).GetClosestDistanceTo(circle);
-        
-        Vector2 closestPoint = new();
-        Vector2 displacement = new();
-        float minDisSq = float.PositiveInfinity;
-        
-        for (var i = 0; i < Count - 1; i++)
-        {
-            var p1 = this[i];
-            var p2 = this[(i + 1) % Count];
-            
-            var next = Segment.GetClosestPointSegmentPoint(p1, p2, circle.Center);
-            var w = (next - circle.Center);
-            var disSq = w.LengthSquared();
-            if (disSq < minDisSq)
-            {
-                minDisSq = disSq;
-                displacement = w;
-                closestPoint = next;
-            }
-        }
-
-        var dir = displacement.Normalize();
-        return new(closestPoint, circle.Center + dir * circle.Radius);
-    }
-    public ClosestDistance GetClosestDistanceTo(Triangle triangle)
-    {
-        if (Count <= 0) return new();
-        if (Count == 1)
-        {
-            var cp = Triangle.GetClosestPointTrianglePoint(triangle.A, triangle.B, triangle.C, this[0]);
-            return new(this[0], cp);
-        }
-        if (Count == 2) return new Segment(this[0], this[1]).GetClosestDistanceTo(triangle);
-        
-        ClosestDistance closestDistance = new(new(), new(), float.PositiveInfinity);
-        
-        for (var i = 0; i < Count - 1; i++)
-        {
-            var p1 = this[i];
-            var p2 = this[(i + 1) % Count];
-            
-            var next = Triangle.GetClosestPointTrianglePoint(triangle.A, triangle.B, triangle.C, p1);
-            var cd = new ClosestDistance(p1, next);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-            
-            next = Triangle.GetClosestPointTrianglePoint(triangle.A, triangle.B, triangle.C, p2);
-            cd = new ClosestDistance(p2, next);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-            
-            next = Segment.GetClosestPointSegmentPoint(p1, p2, triangle.A);
-            cd = new ClosestDistance(next, triangle.A);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-            
-            next = Segment.GetClosestPointSegmentPoint(p1, p2, triangle.B);
-            cd = new ClosestDistance(next, triangle.B);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-            
-            next = Segment.GetClosestPointSegmentPoint(p1, p2, triangle.C);
-            cd = new ClosestDistance( next, triangle.C);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-        }
-        return closestDistance;
-    }
-    public ClosestDistance GetClosestDistanceTo(Quad quad)
-    {
-        if (Count <= 0) return new();
-        if (Count == 1)
-        {
-            var cp = Quad.GetClosestPoint(quad.A, quad.B, quad.C, quad.D, this[0]);
-            return new(this[0], cp);
-        }
-        if (Count == 2) return new Segment(this[0], this[1]).GetClosestDistanceTo(quad);
-        
-        ClosestDistance closestDistance = new(new(), new(), float.PositiveInfinity);
-        
-        for (var i = 0; i < Count - 1; i++)
-        {
-            var p1 = this[i];
-            var p2 = this[(i + 1) % Count];
-            
-            var next = Quad.GetClosestPoint(quad.A, quad.B, quad.C, quad.D, p1);
-            var cd = new ClosestDistance(p1, next);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-            
-            next = Quad.GetClosestPoint(quad.A, quad.B, quad.C, quad.D, p2);
-            cd = new ClosestDistance(p2, next);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-            
-            next = Segment.GetClosestPointSegmentPoint(p1, p2, quad.A);
-            cd = new ClosestDistance(next, quad.A);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-            
-            next = Segment.GetClosestPointSegmentPoint(p1, p2, quad.B);
-            cd = new ClosestDistance(next, quad.B);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-            
-            next = Segment.GetClosestPointSegmentPoint(p1, p2, quad.C);
-            cd = new ClosestDistance(next, quad.C);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-            
-            next = Segment.GetClosestPointSegmentPoint(p1, p2, quad.D);
-            cd = new ClosestDistance(next, quad.D);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-        }
-        return closestDistance;
-    }
-    public ClosestDistance GetClosestDistanceTo(Rect rect)
-    {
-        if (Count <= 0) return new();
-        if (Count == 1)
-        {
-            var cp = Quad.GetClosestPoint(rect.A, rect.B, rect.C, rect.D, this[0]);
-            return new(this[0], cp);
-        }
-        if (Count == 2) return new Segment(this[0], this[1]).GetClosestDistanceTo(rect);
-        
-        ClosestDistance closestDistance = new(new(), new(), float.PositiveInfinity);
-        
-        for (var i = 0; i < Count - 1; i++)
-        {
-            var p1 = this[i];
-            var p2 = this[(i + 1) % Count];
-            
-            var next = Quad.GetClosestPoint(rect.A, rect.B, rect.C, rect.D, p1);
-            var cd = new ClosestDistance(p1, next);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-            
-            next = Quad.GetClosestPoint(rect.A, rect.B, rect.C, rect.D, p2);
-            cd = new ClosestDistance(p2, next);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-            
-            next = Segment.GetClosestPointSegmentPoint(p1, p2, rect.A);
-            cd = new ClosestDistance(next, rect.A);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-            
-            next = Segment.GetClosestPointSegmentPoint(p1, p2, rect.B);
-            cd = new ClosestDistance(next, rect.B);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-            
-            next = Segment.GetClosestPointSegmentPoint(p1, p2, rect.C);
-            cd = new ClosestDistance(next, rect.C);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-            
-            next = Segment.GetClosestPointSegmentPoint(p1, p2, rect.D);
-            cd = new ClosestDistance(next, rect.D);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-        }
-        return closestDistance;
-    }
-    public ClosestDistance GetClosestDistanceTo(Polygon polygon)
-    {
-        if (Count <= 0 || polygon.Count <= 0) return new();
-        if (Count == 1) return polygon.GetClosestDistanceTo(this[0]).ReversePoints();
-        if (Count == 2) return new Segment(this[0], this[1]).GetClosestDistanceTo(polygon);
-        if (polygon.Count == 1) return GetClosestDistanceTo(polygon[0]);
-        if (polygon.Count == 2) return GetClosestDistanceTo(new Segment(polygon[0], polygon[1]));
-        if (polygon.Count == 3) return GetClosestDistanceTo(new Triangle(polygon[0], polygon[1], polygon[2]));
-        if (polygon.Count == 4) return GetClosestDistanceTo(new Quad(polygon[0], polygon[1], polygon[2], polygon[3]));
-        
-        ClosestDistance closestDistance = new(new(), new(), float.PositiveInfinity);
-        
-        for (var i = 0; i < Count - 1; i++)
-        {
-            var self1 = this[i];
-            var self2 = this[(i + 1) % Count];
-
-            for (var j = 0; j < polygon.Count; j++)
-            {
-                var other1 = polygon[j];
-                var other2 = polygon[(j + 1) % polygon.Count];
-
-                var next = Segment.GetClosestPointSegmentPoint(self1, self2, other1);
-                var cd = new ClosestDistance(next, other1);
-                if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-                
-                next = Segment.GetClosestPointSegmentPoint(self1, self2, other2);
-                cd = new ClosestDistance(next, other2);
-                if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-                
-                next = Segment.GetClosestPointSegmentPoint(other1, other2, self1);
-                cd = new ClosestDistance(self1, next);
-                if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-                
-                next = Segment.GetClosestPointSegmentPoint(other1, other2, self2);
-                cd = new ClosestDistance(self2, next);
-                if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-            }
-        }
-        return closestDistance;
-    }
-    public ClosestDistance GetClosestDistanceTo(Polyline polyline)
-    {
-        if (Count <= 0 || polyline.Count <= 0) return new();
-        if (Count == 1) return polyline.GetClosestDistanceTo(this[0]).ReversePoints();
-        if (Count == 2) return new Segment(this[0], this[1]).GetClosestDistanceTo(polyline);
-        if (polyline.Count == 1) return GetClosestDistanceTo(polyline[0]);
-        if (polyline.Count == 2) return GetClosestDistanceTo(new Segment(polyline[0], polyline[1]));
-        
-        ClosestDistance closestDistance = new(new(), new(), float.PositiveInfinity);
-        
-        for (var i = 0; i < Count - 1; i++)
-        {
-            var self1 = this[i];
-            var self2 = this[(i + 1) % Count];
-
-            for (var j = 0; j < polyline.Count - 1; j++)
-            {
-                var other1 = polyline[j];
-                var other2 = polyline[(j + 1) % polyline.Count];
-
-                var next = Segment.GetClosestPointSegmentPoint(self1, self2, other1);
-                var cd = new ClosestDistance(next, other1);
-                if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-                
-                next = Segment.GetClosestPointSegmentPoint(self1, self2, other2);
-                cd = new ClosestDistance(next, other2);
-                if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-                
-                next = Segment.GetClosestPointSegmentPoint(other1, other2, self1);
-                cd = new ClosestDistance(self1, next);
-                if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-                
-                next = Segment.GetClosestPointSegmentPoint(other1, other2, self2);
-                cd = new ClosestDistance(self2, next);
-                if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-            }
-        }
-        return closestDistance;
-    }
-    
-    
-    public int GetClosestIndexOnEdge(Vector2 p)
-    {
-        if (Count <= 0) return -1;
-        if (Count == 1) return 0;
-
-        float minD = float.PositiveInfinity;
-        int closestIndex = -1;
-
-        for (var i = 0; i < Count; i++)
-        {
-            var start = this[i];
-            var end = this[(i + 1) % Count];
-            var edge = new Segment(start, end);
-
-            Vector2 closest = edge.GetClosestPoint(p).Point;
-            float d = (closest - p).LengthSquared();
-            if (d < minD)
-            {
-                closestIndex = i;
-                minD = d;
-            }
-        }
-        return closestIndex;
-    }
-    // internal ClosestPoint GetClosestPoint(Vector2 p)
-    // {
-    //     var cp = GetEdges().GetClosestCollisionPoint(p);
-    //     return new(cp, (cp.Point - p).Length());
-    // }
-    public CollisionPoint GetClosestCollisionPoint(Vector2 p) => GetEdges().GetClosestCollisionPoint(p);
-    public ClosestSegment GetClosestSegment(Vector2 p)
-    {
-        if (Count <= 1) return new();
-
-        var closestSegment = new Segment(this[0], this[1]);
-        var closestDistance = closestSegment.GetClosestDistanceTo(p);
-        
-        for (var i = 1; i < Count - 1; i++)
-        {
-            var p1 = this[i];
-            var p2 = this[(i + 1) % Count];
-            var segment = new Segment(p1, p2);
-            var cd = segment.GetClosestDistanceTo(p);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared)
-            {
-                closestDistance = cd;
-                closestSegment = segment;
-            }
-
-        }
-
-        return new(closestSegment, closestDistance);
-    }
-    #endregion
-    */
-
     #region Contains
     public bool ContainsPoint(Vector2 p)
     {
@@ -1376,6 +1016,91 @@ public class Polyline : Points, IEquatable<Polyline>
     #endregion
     
     #region Overlap
+    public static bool OverlapPolylineSegment(List<Vector2> points, Vector2 segmentStart, Vector2 segmentEnd)
+    {
+        return Segment.OverlapSegmentPolyline(segmentStart, segmentEnd, points);
+    }
+    public static bool OverlapPolylineLine(List<Vector2> points, Vector2 linePoint, Vector2 lineDirection)
+    {
+        return Line.OverlapLinePolyline(linePoint, lineDirection, points);
+    }
+    public static bool OverlapPolylineRay(List<Vector2> points, Vector2 rayPoint, Vector2 rayDirection)
+    {
+        return Ray.OverlapRayPolyline(rayPoint, rayDirection, points);
+    }
+    public static bool OverlapPolylineCircle(List<Vector2> points, Vector2 circleCenter, float circleRadius)
+    {
+        return Circle.OverlapCirclePolyline(circleCenter, circleRadius, points);
+    }
+    public static bool OverlapPolylineTriangle(List<Vector2> points, Vector2 ta, Vector2 tb, Vector2 tc)
+    {
+        return Triangle.OverlapTrianglePolyline(ta, tb, tc, points);
+
+    }
+    public static bool OverlapPolylineQuad(List<Vector2> points, Vector2 qa, Vector2 qb, Vector2 qc, Vector2 qd)
+    {
+        return Quad.OverlapQuadPolyline(qa, qb, qc, qd, points);
+    }
+    public static bool OverlapPolylineRect(List<Vector2> points, Vector2 ra, Vector2 rb, Vector2 rc, Vector2 rd)
+    {
+        return Quad.OverlapQuadPolyline(ra, rb, rc, rd, points);
+    }
+    public static bool OverlapPolylinePolygon(List<Vector2> points1, List<Vector2> points2)
+    {
+        return Polygon.OverlapPolygonPolyline(points2, points1);
+    }
+    public static bool OverlapPolylinePolyline(List<Vector2> points1, List<Vector2> points2)
+    {
+        
+        if (points1.Count < 2 || points2.Count < 2) return false;
+        
+        for (var i = 0; i < points1.Count - 1; i++)
+        {
+            var start = points1[i];
+            var end = points1[i + 1];
+
+            for (var j = 0; j < points2.Count - 1; j++)
+            {
+                var bStart = points2[j];
+                var bEnd = points2[j + 1];
+
+                if (Segment.OverlapSegmentSegment(start, end, bStart, bEnd)) return true;
+            }
+        }
+
+        return false;
+    }
+    public static bool OverlapPolylineSegments(List<Vector2> points, List<Segment> segments)
+    {
+        if (points.Count < 2 || segments.Count <= 0) return false;
+        
+        for (var i = 0; i < points.Count - 1; i++)
+        {
+            var start = points[i];
+            var end = points[i + 1];
+
+            foreach (var seg in segments)
+            {
+                if (Segment.OverlapSegmentSegment(start, end, seg.Start, seg.End)) return true;
+            }
+        }
+
+        return false;
+    }
+
+    public bool OverlapSegment(Vector2 segmentStart, Vector2 segmentEnd) => OverlapPolylineSegment(this, segmentStart, segmentEnd);
+    public bool OverlapLine(Vector2 linePoint, Vector2 lineDirection) => OverlapPolylineLine(this, linePoint, lineDirection);
+    public bool OverlapRay(Vector2 rayPoint, Vector2 rayDirection) => OverlapPolylineRay(this, rayPoint, rayDirection);
+    public bool OverlapCircle(Vector2 circleCenter, float circleRadius) => OverlapPolylineCircle(this, circleCenter, circleRadius);
+    public bool OverlapTriangle(Vector2 a, Vector2 b, Vector2 c) => OverlapPolylineTriangle(this, a, b, c);
+    public bool OverlapQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => OverlapPolylineQuad(this, a, b, c, d);
+    public bool OverlapRect(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => OverlapPolylineQuad(this, a, b, c, d);
+    public bool OverlapPolygon(List<Vector2> points) => OverlapPolylinePolygon(this, points);
+    public bool OverlapPolyline(List<Vector2> points) => OverlapPolylinePolyline(this, points);
+    public bool OverlapSegments(List<Segment> segments) => OverlapPolylineSegments(this, segments);
+    
+    public bool OverlapShape(Line line) => OverlapPolylineLine(this, line.Point, line.Direction);
+    public bool OverlapShape(Ray ray) => OverlapPolylineRay(this, ray.Point, ray.Direction);
     public bool Overlap(Collider collider)
     {
         if (!collider.Enabled) return false;
@@ -1388,6 +1113,12 @@ public class Polyline : Points, IEquatable<Polyline>
             case ShapeType.Segment:
                 var s = collider.GetSegmentShape();
                 return OverlapShape(s);
+            case ShapeType.Ray:
+                var rayShape = collider.GetRayShape();
+                return OverlapShape(rayShape);
+            case ShapeType.Line:
+                var l = collider.GetLineShape();
+                return OverlapShape(l);
             case ShapeType.Triangle:
                 var t = collider.GetTriangleShape();
                 return OverlapShape(t);

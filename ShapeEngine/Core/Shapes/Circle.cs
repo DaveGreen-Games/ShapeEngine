@@ -852,7 +852,7 @@ public readonly struct Circle : IEquatable<Circle>
     {
         if (cRadius <= 0.0f) return Segment.IsPointOnSegment(cPos, segStart, segEnd);
         if (ContainsCirclePoint(cPos, cRadius, segStart)) return true;
-        if (ContainsCirclePoint(cPos, cRadius, segEnd)) return true;
+        // if (ContainsCirclePoint(cPos, cRadius, segEnd)) return true;
 
         var d = segEnd - segStart;
         var lc = cPos - segStart;
@@ -889,14 +889,9 @@ public readonly struct Circle : IEquatable<Circle>
     {
         if (Triangle.ContainsPoint(a, b, c, center)) return true;
         
-        var cp = IntersectCircleSegment(center, radius,  a, b);
-        if (cp.a.Valid || cp.b.Valid) return true;
-        
-        cp = IntersectCircleSegment(center, radius,  b, c);
-        if (cp.a.Valid || cp.b.Valid) return true;
-       
-        cp = IntersectCircleSegment(center, radius,  c, a);
-        if (cp.a.Valid || cp.b.Valid) return true;
+        if( OverlapCircleSegment(center, radius,  a, b) ) return true;
+        if( OverlapCircleSegment(center, radius,  b, c) ) return true;
+        if( OverlapCircleSegment(center, radius,  c, a) ) return true;
 
         return false;
     }
@@ -904,17 +899,10 @@ public readonly struct Circle : IEquatable<Circle>
     {
         if (Quad.ContainsPoint(a, b, c, d,  center)) return true;
         
-        var cp = IntersectCircleSegment(center, radius,  a, b);
-        if (cp.a.Valid || cp.b.Valid) return true;
-        
-        cp = IntersectCircleSegment(center, radius,  b, c);
-        if (cp.a.Valid || cp.b.Valid) return true;
-       
-        cp = IntersectCircleSegment(center, radius,  c, d);
-        if (cp.a.Valid || cp.b.Valid) return true;
-
-        cp = IntersectCircleSegment(center, radius,  d, a);
-        if (cp.a.Valid || cp.b.Valid) return true;
+        if( OverlapCircleSegment(center, radius,  a, b) ) return true;
+        if( OverlapCircleSegment(center, radius,  b, c) ) return true;
+        if( OverlapCircleSegment(center, radius,  c, d) ) return true;
+        if( OverlapCircleSegment(center, radius,  d, a) ) return true;
         
         return false;
     }
@@ -925,21 +913,24 @@ public readonly struct Circle : IEquatable<Circle>
     public static bool OverlapCirclePolygon(Vector2 center, float radius, List<Vector2> points)
     {
         if (points.Count < 3) return false;
-        if (Polygon.ContainsPoints(points, center)) return true;
+        if (Circle.ContainsCirclePoint(center, radius, points[0])) return true;
+
+        var oddNodes = false;
         for (var i = 0; i < points.Count; i++)
         {
-            var result = IntersectCircleSegment(center, radius, points[i], points[(i + 1) % points.Count]);
-            if (result.a.Valid || result.b.Valid) return true;
+            var p1 = points[i];
+            var p2 = points[(i + 1) % points.Count];
+            if(OverlapCircleSegment(center, radius, p1, p2)) return true;
+            if(Polygon.ContainsPointCheck(p1, p2, center)) oddNodes = !oddNodes;
         }
-        return false;
+        return oddNodes;
     }
     public static bool OverlapCirclePolyline(Vector2 center, float radius, List<Vector2> points)
     {
         if (points.Count < 3) return false;
         for (var i = 0; i < points.Count - 1; i++)
         {
-            var result = IntersectCircleSegment(center, radius, points[i], points[i + 1]);
-            if (result.a.Valid || result.b.Valid) return true;
+            if(OverlapCircleSegment(center, radius, points[i], points[i + 1])) return true;
         }
         return false;
     }
@@ -949,8 +940,7 @@ public readonly struct Circle : IEquatable<Circle>
 
         foreach (var seg in segments)
         {
-            var result = IntersectCircleSegment(center, radius, seg.Start, seg.End);
-            if (result.a.Valid || result.b.Valid) return true;
+            if( OverlapCircleSegment(center, radius, seg.Start, seg.End) ) return true;
         }
         return false;
     }
@@ -1222,7 +1212,8 @@ public readonly struct Circle : IEquatable<Circle>
     {
         foreach (var seg in segments)
         {
-            if (seg.OverlapShape(this)) return true;
+            if(OverlapCircleSegment(Center, Radius, seg.Start, seg.End)) return true;
+            // if (seg.OverlapShape(this)) return true;
         }
         return false;
     }
@@ -1242,9 +1233,6 @@ public readonly struct Circle : IEquatable<Circle>
     public bool OverlapShape(Quad q)
     {
         if (ContainsPoint(q.A)) return true;
-        // if (ContainsPoint(q.B)) return true;
-        // if (ContainsPoint(q.C)) return true;
-        // if (ContainsPoint(q.D)) return true;
         if (q.ContainsPoint(Center)) return true;
     
         if (Segment.OverlapSegmentCircle(q.A, q.B, Center, Radius)) return true;
@@ -1261,14 +1249,16 @@ public readonly struct Circle : IEquatable<Circle>
     {
         if (poly.Count < 3) return false;
         if (ContainsPoint(poly[0])) return true;
-        if (poly.ContainsPoint(Center)) return true;
+        
+        var oddNodes = false;
         for (var i = 0; i < poly.Count; i++)
         {
             var start = poly[i];
             var end = poly[(i + 1) % poly.Count];
             if (Circle.OverlapCircleSegment(Center, Radius, start, end)) return true;
+            if (Polygon.ContainsPointCheck(start, end, Center)) oddNodes = !oddNodes;
         }
-        return false;
+        return oddNodes;
     }
     public bool OverlapShape(Polyline pl)
     {

@@ -888,6 +888,70 @@ public class Segments : ShapeList<Segment>
     #endregion
     
     #region Overlap
+    public static bool OverlapSegmentsSegment(List<Segment> segments, Vector2 segmentStart, Vector2 segmentEnd)
+    {
+        return Segment.OverlapSegmentSegments(segmentStart, segmentEnd, segments);
+    }
+    public static bool OverlapSegmentsLine(List<Segment> segments, Vector2 linePoint, Vector2 lineDirection)
+    {
+        return Line.OverlapLineSegments(linePoint, lineDirection, segments);
+    }
+    public static bool OverlapSegmentsRay(List<Segment> segments, Vector2 rayPoint, Vector2 rayDirection)
+    {
+        return Ray.OverlapRaySegments(rayPoint, rayDirection, segments);
+    }
+    public static bool OverlapSegmentsCircle(List<Segment> segments, Vector2 circleCenter, float circleRadius)
+    {
+        return Circle.OverlapCircleSegments(circleCenter, circleRadius, segments);
+    }
+    public static bool OverlapSegmentsTriangle(List<Segment> segments, Vector2 ta, Vector2 tb, Vector2 tc)
+    {
+        return Triangle.OverlapTriangleSegments(ta, tb, tc, segments);
+
+    }
+    public static bool OverlapSegmentsQuad(List<Segment> segments, Vector2 qa, Vector2 qb, Vector2 qc, Vector2 qd)
+    {
+        return Quad.OverlapQuadSegments(qa, qb, qc, qd, segments);
+    }
+    public static bool OverlapSegmentsRect(List<Segment> segments, Vector2 ra, Vector2 rb, Vector2 rc, Vector2 rd)
+    {
+        return Quad.OverlapQuadSegments(ra, rb, rc, rd, segments);
+    }
+    public static bool OverlapSegmentsPolygon(List<Segment> segments, List<Vector2> points)
+    {
+        return Polygon.OverlapPolygonSegments(points, segments);
+    }
+    public static bool OverlapSegmentsPolyline(List<Segment> segments, List<Vector2> points)
+    {
+        return Polyline.OverlapPolylineSegments(points, segments);
+    }
+    public static bool OverlapSegmentsSegments(List<Segment> segments1, List<Segment> segments2)
+    {
+        foreach (var seg in segments1)
+        {
+            foreach (var bSeg in segments2)
+            {
+                if(Segment.OverlapSegmentSegment(seg.Start, seg.End, bSeg.Start, bSeg.End)) return true;
+            }
+            
+        }
+        return false;
+    }
+
+    public bool OverlapSegment(Vector2 segmentStart, Vector2 segmentEnd) => OverlapSegmentsSegment(this, segmentStart, segmentEnd);
+    public bool OverlapLine(Vector2 linePoint, Vector2 lineDirection) => OverlapSegmentsLine(this, linePoint, lineDirection);
+    public bool OverlapRay(Vector2 rayPoint, Vector2 rayDirection) => OverlapSegmentsRay(this, rayPoint, rayDirection);
+    public bool OverlapCircle(Vector2 circleCenter, float circleRadius) => OverlapSegmentsCircle(this, circleCenter, circleRadius);
+    public bool OverlapTriangle(Vector2 a, Vector2 b, Vector2 c) => OverlapSegmentsTriangle(this, a, b, c);
+    public bool OverlapQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => OverlapSegmentsQuad(this, a, b, c, d);
+    public bool OverlapRect(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => OverlapSegmentsQuad(this, a, b, c, d);
+    public bool OverlapPolygon(List<Vector2> points) => OverlapSegmentsPolygon(this, points);
+    public bool OverlapPolyline(List<Vector2> points) => OverlapSegmentsPolyline(this, points);
+    public bool OverlapSegments(List<Segment> segments) => OverlapSegmentsSegments(this, segments);
+    
+    public bool OverlapShape(Line line) => OverlapSegmentsLine(this, line.Point, line.Direction);
+    public bool OverlapShape(Ray ray) => OverlapSegmentsRay(this, ray.Point, ray.Direction);
+    
     public bool OverlapShape(Segments b)
     {
         foreach (var seg in this)

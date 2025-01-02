@@ -533,6 +533,8 @@ public abstract class Collider : Shape
         {
             case ShapeType.Circle: return Overlap(other.GetCircleShape());
             case ShapeType.Segment: return Overlap(other.GetSegmentShape());
+            case ShapeType.Line: return Overlap(other.GetLineShape());
+            case ShapeType.Ray: return Overlap(other.GetRayShape());
             case ShapeType.Triangle: return Overlap(other.GetTriangleShape());
             case ShapeType.Quad: return Overlap(other.GetQuadShape());
             case ShapeType.Rect: return Overlap(other.GetRectShape());
@@ -587,6 +589,80 @@ public abstract class Collider : Shape
             case ShapeType.PolyLine:
                 var pl = GetPolylineShape();
                 return pl.OverlapShape(segment);
+        }
+
+        return false;
+    }
+    public bool Overlap(Line line)
+    { 
+        if (!Enabled) return false;
+        
+        switch (GetShapeType())
+        {
+            case ShapeType.Circle:
+                var c = GetCircleShape();
+                return c.OverlapShape(line);
+            case ShapeType.Segment:
+                var s = GetSegmentShape();
+                return s.OverlapShape(line);
+            case ShapeType.Line:
+                var l = GetLineShape();
+                return l.OverlapShape(line);
+            case ShapeType.Ray:
+                var rayShape = GetRayShape();
+                return rayShape.OverlapShape(line);
+            case ShapeType.Triangle:
+                var t = GetTriangleShape();
+                return t.OverlapShape(line);
+            case ShapeType.Rect:
+                var r = GetRectShape();
+                return r.OverlapShape(line);
+            case ShapeType.Quad:
+                var q = GetQuadShape();
+                return q.OverlapShape(line);
+            case ShapeType.Poly:
+                var p = GetPolygonShape();
+                return p.OverlapShape(line);
+            case ShapeType.PolyLine:
+                var pl = GetPolylineShape();
+                return pl.OverlapShape(line);
+        }
+
+        return false;
+    }
+    public bool Overlap(Ray ray)
+    { 
+        if (!Enabled) return false;
+        
+        switch (GetShapeType())
+        {
+            case ShapeType.Circle:
+                var c = GetCircleShape();
+                return c.OverlapShape(ray);
+            case ShapeType.Segment:
+                var s = GetSegmentShape();
+                return s.OverlapShape(ray);
+            case ShapeType.Line:
+                var l = GetLineShape();
+                return l.OverlapShape(ray);
+            case ShapeType.Ray:
+                var rayShape = GetRayShape();
+                return rayShape.OverlapShape(ray);
+            case ShapeType.Triangle:
+                var t = GetTriangleShape();
+                return t.OverlapShape(ray);
+            case ShapeType.Rect:
+                var r = GetRectShape();
+                return r.OverlapShape(ray);
+            case ShapeType.Quad:
+                var q = GetQuadShape();
+                return q.OverlapShape(ray);
+            case ShapeType.Poly:
+                var p = GetPolygonShape();
+                return p.OverlapShape(ray);
+            case ShapeType.PolyLine:
+                var pl = GetPolylineShape();
+                return pl.OverlapShape(ray);
         }
 
         return false;
