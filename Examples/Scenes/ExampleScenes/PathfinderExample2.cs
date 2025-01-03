@@ -543,7 +543,7 @@ public class PathfinderExample2 : ExampleScene
                 if (path.Rects.Count > 0)
                 {
                     lastTargetPosition = request.End;
-                    nextPathPoint = path.Rects[0].GetClosestDistanceTo(request.End).A; // path.Rects[0].GetClosestPoint(request.End).Closest.Point;
+                    nextPathPoint = path.Rects[0].GetClosestPoint(request.End, out float disSquared).Point; // path.Rects[0].GetClosestPoint(request.End).Closest.Point;
                     currentPathIndex = 1;
                     return;
                 }
@@ -792,10 +792,10 @@ public class PathfinderExample2 : ExampleScene
                 }
                 else
                 {
-                    var cd = newShape.GetClosestDistanceTo(existingShape);
+                    var cd = newShape.GetClosestPoint(existingShape);
                     if (cd.DistanceSquared <= cellDisSq)
                     {
-                        var fillShape = Polygon.Generate(cd.A, 7, cellDistance, cellDistance * 2);
+                        var fillShape = Polygon.Generate(cd.Self.Point, 7, cellDistance, cellDistance * 2);
                         newShape.UnionShapeSelf(fillShape, FillRule.NonZero);
                         newShape.UnionShapeSelf(existingShape, FillRule.NonZero);
                         shapes.RemoveAt(j);
@@ -891,10 +891,10 @@ public class PathfinderExample2 : ExampleScene
             }
             else
             {
-                var cd = asteroidShape.GetClosestDistanceTo(otherShape);
+                var cd = asteroidShape.GetClosestPoint(otherShape);
                 if (cd.DistanceSquared < cellDisSq)
                 {
-                    fillShape = Polygon.Generate(cd.A, 7, cellDistance, cellDistance * 2);
+                    fillShape = Polygon.Generate(cd.Self.Point, 7, cellDistance, cellDistance * 2);
                     var unionResult = Clipper.Union(asteroidShape.ToClipperPaths(), fillShape.ToClipperPaths(), FillRule.NonZero);
                     if (unionResult.Count > 0)
                     {

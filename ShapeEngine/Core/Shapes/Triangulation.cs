@@ -451,7 +451,7 @@ public class Triangulation : ShapeList<Triangle>
     }
     
     #endregion
-    
+     
     #region Public
     
     public Points GetUniquePoints()

@@ -262,8 +262,8 @@ namespace Examples.Scenes.ExampleScenes
 
 
             var shape = GetPolygon();
-            var seg = shape.GetClosestSegment(point);
-            damagedSegments.AddSegment(seg.Segment);
+            var seg = shape.GetClosestSegment(point, out float distanceSquared);
+            damagedSegments.AddSegment(seg.segment);
 
             curThreshold -= amount;
             if(curThreshold <= 0f)

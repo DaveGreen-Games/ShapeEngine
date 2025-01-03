@@ -29,10 +29,10 @@ public class ShapesExample : ExampleScene
         public abstract void Move(Vector2 newPosition);
         public abstract void Draw(ColorRgba color);
         public abstract ShapeType GetShapeType();
-        public abstract ClosestDistance GetClosestDistanceTo(Shape shape);
+        public abstract ClosestPointResult GetClosestPointToShape(Shape shape);
         public abstract bool OverlapWith(Shape shape);
         public abstract CollisionPoints? IntersectWith(Shape shape);
-
+        public abstract bool GetSegment(int index, out Segment segment);
         
         public string GetName()
         {
@@ -73,9 +73,17 @@ public class ShapesExample : ExampleScene
 
         public override ShapeType GetShapeType() => ShapeType.None;
         
-        public override ClosestDistance GetClosestDistanceTo(Shape shape)
+        public override ClosestPointResult GetClosestPointToShape(Shape shape)
         {
-            return new();
+            var result = shape.GetClosestPointToShape(this);
+            return result.Switch();
+
+        }
+
+        public override bool GetSegment(int index, out Segment segment)
+        {
+            segment = new();
+            return false;
         }
         public override bool OverlapWith(Shape shape)
         {
@@ -113,16 +121,25 @@ public class ShapesExample : ExampleScene
 
         public override ShapeType GetShapeType() => ShapeType.Segment;
         
-        public override ClosestDistance GetClosestDistanceTo(Shape shape)
+        public override ClosestPointResult GetClosestPointToShape(Shape shape)
         {
-            if (shape is PointShape pointShape) return Segment.GetClosestDistanceTo(pointShape.Position);
-            if (shape is SegmentShape segmentShape) return Segment.GetClosestDistanceTo(segmentShape.Segment);
-            if (shape is CircleShape circleShape) return Segment.GetClosestDistanceTo(circleShape.Circle);
-            if (shape is TriangleShape triangleShape) return Segment.GetClosestDistanceTo(triangleShape.Triangle);
-            if (shape is QuadShape quadShape) return Segment.GetClosestDistanceTo(quadShape.Quad);
-            if (shape is RectShape rectShape) return Segment.GetClosestDistanceTo(rectShape.Rect);
-            if (shape is PolygonShape polygonShape) return Segment.GetClosestDistanceTo(polygonShape.Polygon);
-            if (shape is PolylineShape polylineShape) return Segment.GetClosestDistanceTo(polylineShape.Polyline);
+            if (shape is PointShape pointShape)
+            {
+                var point = pointShape.Position;
+                var p= Segment.GetClosestPoint(point, out float distance);
+                return new ClosestPointResult(
+                    p,
+                    new CollisionPoint(point, (p.Point - point).Normalize()),
+                    distance
+                    );
+            }
+            if (shape is SegmentShape segmentShape) return Segment.GetClosestPoint(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Segment.GetClosestPoint(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Segment.GetClosestPoint(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Segment.GetClosestPoint(quadShape.Quad);
+            if (shape is RectShape rectShape) return Segment.GetClosestPoint(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Segment.GetClosestPoint(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Segment.GetClosestPoint(polylineShape.Polyline);
             return new();
         }
         public override bool OverlapWith(Shape shape)
@@ -149,6 +166,11 @@ public class ShapesExample : ExampleScene
             if (shape is PolylineShape polylineShape) return Segment.IntersectShape(polylineShape.Polyline);
             return new();
         }
+        public override bool GetSegment(int index, out Segment segment)
+        {
+            segment = Segment;
+            return false;
+        }
     }
     private class CircleShape : Shape
     {
@@ -169,16 +191,25 @@ public class ShapesExample : ExampleScene
 
         public override ShapeType GetShapeType() => ShapeType.Circle;
         
-        public override ClosestDistance GetClosestDistanceTo(Shape shape)
+        public override ClosestPointResult GetClosestPointToShape(Shape shape)
         {
-            if (shape is PointShape pointShape) return Circle.GetClosestDistanceTo(pointShape.Position);
-            if (shape is SegmentShape segmentShape) return Circle.GetClosestDistanceTo(segmentShape.Segment);
-            if (shape is CircleShape circleShape) return Circle.GetClosestDistanceTo(circleShape.Circle);
-            if (shape is TriangleShape triangleShape) return Circle.GetClosestDistanceTo(triangleShape.Triangle);
-            if (shape is QuadShape quadShape) return Circle.GetClosestDistanceTo(quadShape.Quad);
-            if (shape is RectShape rectShape) return Circle.GetClosestDistanceTo(rectShape.Rect);
-            if (shape is PolygonShape polygonShape) return Circle.GetClosestDistanceTo(polygonShape.Polygon);
-            if (shape is PolylineShape polylineShape) return Circle.GetClosestDistanceTo(polylineShape.Polyline);
+            if (shape is PointShape pointShape)
+            {
+                var point = pointShape.Position;
+                var p= Circle.GetClosestPoint(point, out float distance);
+                return new ClosestPointResult(
+                    p,
+                    new CollisionPoint(point, (p.Point - point).Normalize()),
+                    distance
+                );
+            }
+            if (shape is SegmentShape segmentShape) return Circle.GetClosestPoint(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Circle.GetClosestPoint(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Circle.GetClosestPoint(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Circle.GetClosestPoint(quadShape.Quad);
+            if (shape is RectShape rectShape) return Circle.GetClosestPoint(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Circle.GetClosestPoint(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Circle.GetClosestPoint(polylineShape.Polyline);
             return new();
         }
         public override bool OverlapWith(Shape shape)
@@ -204,6 +235,11 @@ public class ShapesExample : ExampleScene
             if (shape is PolygonShape polygonShape) return Circle.IntersectShape(polygonShape.Polygon);
             if (shape is PolylineShape polylineShape) return Circle.IntersectShape(polylineShape.Polyline);
             return new();
+        }
+        public override bool GetSegment(int index, out Segment segment)
+        {
+            segment = new();
+            return false;
         }
     }
     private class TriangleShape : Shape
@@ -235,16 +271,25 @@ public class ShapesExample : ExampleScene
 
         public override ShapeType GetShapeType() => ShapeType.Triangle;
         
-        public override ClosestDistance GetClosestDistanceTo(Shape shape)
+        public override ClosestPointResult GetClosestPointToShape(Shape shape)
         {
-            if (shape is PointShape pointShape) return Triangle.GetClosestDistanceTo(pointShape.Position);
-            if (shape is SegmentShape segmentShape) return Triangle.GetClosestDistanceTo(segmentShape.Segment);
-            if (shape is CircleShape circleShape) return Triangle.GetClosestDistanceTo(circleShape.Circle);
-            if (shape is TriangleShape triangleShape) return Triangle.GetClosestDistanceTo(triangleShape.Triangle);
-            if (shape is QuadShape quadShape) return Triangle.GetClosestDistanceTo(quadShape.Quad);
-            if (shape is RectShape rectShape) return Triangle.GetClosestDistanceTo(rectShape.Rect);
-            if (shape is PolygonShape polygonShape) return Triangle.GetClosestDistanceTo(polygonShape.Polygon);
-            if (shape is PolylineShape polylineShape) return Triangle.GetClosestDistanceTo(polylineShape.Polyline);
+            if (shape is PointShape pointShape)
+            {
+                var point = pointShape.Position;
+                var p= Triangle.GetClosestPoint(point, out float distance);
+                return new ClosestPointResult(
+                    p,
+                    new CollisionPoint(point, (p.Point - point).Normalize()),
+                    distance
+                );
+            }
+            if (shape is SegmentShape segmentShape) return Triangle.GetClosestPoint(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Triangle.GetClosestPoint(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Triangle.GetClosestPoint(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Triangle.GetClosestPoint(quadShape.Quad);
+            if (shape is RectShape rectShape) return Triangle.GetClosestPoint(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Triangle.GetClosestPoint(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Triangle.GetClosestPoint(polylineShape.Polyline);
             return new();
         }
         
@@ -272,6 +317,11 @@ public class ShapesExample : ExampleScene
             if (shape is PolylineShape polylineShape) return Triangle.IntersectShape(polylineShape.Polyline);
             return new();
         }
+        public override bool GetSegment(int index, out Segment segment)
+        {
+            segment = Triangle.GetSegment(index);
+            return true;
+        }
     }
     private class QuadShape : Shape
     {
@@ -293,16 +343,25 @@ public class ShapesExample : ExampleScene
 
         public override ShapeType GetShapeType() => ShapeType.Quad;
         
-        public override ClosestDistance GetClosestDistanceTo(Shape shape)
+        public override ClosestPointResult GetClosestPointToShape(Shape shape)
         {
-            if (shape is PointShape pointShape) return Quad.GetClosestDistanceTo(pointShape.Position);
-            if (shape is SegmentShape segmentShape) return Quad.GetClosestDistanceTo(segmentShape.Segment);
-            if (shape is CircleShape circleShape) return Quad.GetClosestDistanceTo(circleShape.Circle);
-            if (shape is TriangleShape triangleShape) return Quad.GetClosestDistanceTo(triangleShape.Triangle);
-            if (shape is QuadShape quadShape) return Quad.GetClosestDistanceTo(quadShape.Quad);
-            if (shape is RectShape rectShape) return Quad.GetClosestDistanceTo(rectShape.Rect);
-            if (shape is PolygonShape polygonShape) return Quad.GetClosestDistanceTo(polygonShape.Polygon);
-            if (shape is PolylineShape polylineShape) return Quad.GetClosestDistanceTo(polylineShape.Polyline);
+            if (shape is PointShape pointShape)
+            {
+                var point = pointShape.Position;
+                var p= Quad.GetClosestPoint(point, out float distance);
+                return new ClosestPointResult(
+                    p,
+                    new CollisionPoint(point, (p.Point - point).Normalize()),
+                    distance
+                );
+            }
+            if (shape is SegmentShape segmentShape) return Quad.GetClosestPoint(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Quad.GetClosestPoint(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Quad.GetClosestPoint(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Quad.GetClosestPoint(quadShape.Quad);
+            if (shape is RectShape rectShape) return Quad.GetClosestPoint(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Quad.GetClosestPoint(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Quad.GetClosestPoint(polylineShape.Polyline);
             return new();
         }
         
@@ -330,7 +389,11 @@ public class ShapesExample : ExampleScene
             if (shape is PolylineShape polylineShape) return Quad.IntersectShape(polylineShape.Polyline);
             return new();
         }
-        
+        public override bool GetSegment(int index, out Segment segment)
+        {
+            segment = Quad.GetSegment(index);
+            return true;
+        }
     }
     private class RectShape : Shape
     {
@@ -353,16 +416,25 @@ public class ShapesExample : ExampleScene
 
         public override ShapeType GetShapeType() => ShapeType.Rect;
         
-        public override ClosestDistance GetClosestDistanceTo(Shape shape)
+        public override ClosestPointResult GetClosestPointToShape(Shape shape)
         {
-            if (shape is PointShape pointShape) return Rect.GetClosestDistanceTo(pointShape.Position);
-            if (shape is SegmentShape segmentShape) return Rect.GetClosestDistanceTo(segmentShape.Segment);
-            if (shape is CircleShape circleShape) return Rect.GetClosestDistanceTo(circleShape.Circle);
-            if (shape is TriangleShape triangleShape) return Rect.GetClosestDistanceTo(triangleShape.Triangle);
-            if (shape is QuadShape quadShape) return Rect.GetClosestDistanceTo(quadShape.Quad);
-            if (shape is RectShape rectShape) return Rect.GetClosestDistanceTo(rectShape.Rect);
-            if (shape is PolygonShape polygonShape) return Rect.GetClosestDistanceTo(polygonShape.Polygon);
-            if (shape is PolylineShape polylineShape) return Rect.GetClosestDistanceTo(polylineShape.Polyline);
+            if (shape is PointShape pointShape)
+            {
+                var point = pointShape.Position;
+                var p= Rect.GetClosestPoint(point, out float distance);
+                return new ClosestPointResult(
+                    p,
+                    new CollisionPoint(point, (p.Point - point).Normalize()),
+                    distance
+                );
+            }
+            if (shape is SegmentShape segmentShape) return Rect.GetClosestPoint(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Rect.GetClosestPoint(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Rect.GetClosestPoint(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Rect.GetClosestPoint(quadShape.Quad);
+            if (shape is RectShape rectShape) return Rect.GetClosestPoint(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Rect.GetClosestPoint(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Rect.GetClosestPoint(polylineShape.Polyline);
             return new();
         }
         
@@ -390,7 +462,11 @@ public class ShapesExample : ExampleScene
             if (shape is PolylineShape polylineShape) return Rect.IntersectShape(polylineShape.Polyline);
             return new();
         }
-
+        public override bool GetSegment(int index, out Segment segment)
+        {
+            segment = Rect.GetSegment(index);
+            return true;
+        }
     }
     private class PolygonShape : Shape
     {
@@ -416,16 +492,25 @@ public class ShapesExample : ExampleScene
 
         public override ShapeType GetShapeType() => ShapeType.Poly;
         
-        public override ClosestDistance GetClosestDistanceTo(Shape shape)
+        public override ClosestPointResult GetClosestPointToShape(Shape shape)
         {
-            if (shape is PointShape pointShape) return Polygon.GetClosestDistanceTo(pointShape.Position);
-            if (shape is SegmentShape segmentShape) return Polygon.GetClosestDistanceTo(segmentShape.Segment);
-            if (shape is CircleShape circleShape) return Polygon.GetClosestDistanceTo(circleShape.Circle);
-            if (shape is TriangleShape triangleShape) return Polygon.GetClosestDistanceTo(triangleShape.Triangle);
-            if (shape is QuadShape quadShape) return Polygon.GetClosestDistanceTo(quadShape.Quad);
-            if (shape is RectShape rectShape) return Polygon.GetClosestDistanceTo(rectShape.Rect);
-            if (shape is PolygonShape polygonShape) return Polygon.GetClosestDistanceTo(polygonShape.Polygon);
-            if (shape is PolylineShape polylineShape) return Polygon.GetClosestDistanceTo(polylineShape.Polyline);
+            if (shape is PointShape pointShape)
+            {
+                var point = pointShape.Position;
+                var p= Polygon.GetClosestPoint(point, out float distance);
+                return new ClosestPointResult(
+                    p,
+                    new CollisionPoint(point, (p.Point - point).Normalize()),
+                    distance
+                );
+            }
+            if (shape is SegmentShape segmentShape) return Polygon.GetClosestPoint(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Polygon.GetClosestPoint(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Polygon.GetClosestPoint(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Polygon.GetClosestPoint(quadShape.Quad);
+            if (shape is RectShape rectShape) return Polygon.GetClosestPoint(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Polygon.GetClosestPoint(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Polygon.GetClosestPoint(polylineShape.Polyline);
             return new();
         }
         
@@ -453,7 +538,11 @@ public class ShapesExample : ExampleScene
             if (shape is PolylineShape polylineShape) return Polygon.IntersectShape(polylineShape.Polyline);
             return new();
         }
-
+        public override bool GetSegment(int index, out Segment segment)
+        {
+            segment = Polygon.GetSegment(index);
+            return true;
+        }
     }
     private class PolylineShape : Shape
     {
@@ -486,16 +575,25 @@ public class ShapesExample : ExampleScene
 
         public override ShapeType GetShapeType() => ShapeType.PolyLine;
         
-        public override ClosestDistance GetClosestDistanceTo(Shape shape)
+        public override ClosestPointResult GetClosestPointToShape(Shape shape)
         {
-            if (shape is PointShape pointShape) return Polyline.GetClosestDistanceTo(pointShape.Position);
-            if (shape is SegmentShape segmentShape) return Polyline.GetClosestDistanceTo(segmentShape.Segment);
-            if (shape is CircleShape circleShape) return Polyline.GetClosestDistanceTo(circleShape.Circle);
-            if (shape is TriangleShape triangleShape) return Polyline.GetClosestDistanceTo(triangleShape.Triangle);
-            if (shape is QuadShape quadShape) return Polyline.GetClosestDistanceTo(quadShape.Quad);
-            if (shape is RectShape rectShape) return Polyline.GetClosestDistanceTo(rectShape.Rect);
-            if (shape is PolygonShape polygonShape) return Polyline.GetClosestDistanceTo(polygonShape.Polygon);
-            if (shape is PolylineShape polylineShape) return Polyline.GetClosestDistanceTo(polylineShape.Polyline);
+            if (shape is PointShape pointShape)
+            {
+                var point = pointShape.Position;
+                var p= Polyline.GetClosestPoint(point, out float distance);
+                return new ClosestPointResult(
+                    p,
+                    new CollisionPoint(point, (p.Point - point).Normalize()),
+                    distance
+                );
+            }
+            if (shape is SegmentShape segmentShape) return Polyline.GetClosestPoint(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Polyline.GetClosestPoint(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Polyline.GetClosestPoint(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Polyline.GetClosestPoint(quadShape.Quad);
+            if (shape is RectShape rectShape) return Polyline.GetClosestPoint(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Polyline.GetClosestPoint(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Polyline.GetClosestPoint(polylineShape.Polyline);
             return new();
         }
         
@@ -523,7 +621,11 @@ public class ShapesExample : ExampleScene
             if (shape is PolylineShape polylineShape) return Polyline.IntersectShape(polylineShape.Polyline);
             return new();
         }
-
+        public override bool GetSegment(int index, out Segment segment)
+        {
+            segment = Polyline.GetSegment(index);
+            return true;
+        }
     }
     
     
@@ -661,13 +763,21 @@ public class ShapesExample : ExampleScene
             staticShape.Draw(Colors.Highlight.ChangeBrightness(-0.3f));
             movingShape.Draw(Colors.Warm.ChangeBrightness(-0.3f));
             
-            var closestDistance = staticShape.GetClosestDistanceTo(movingShape);
-            if (closestDistance.DistanceSquared > 0)
+            var closestPointResult = staticShape.GetClosestPointToShape(movingShape);
+            if (closestPointResult.DistanceSquared > 0)
             {
-                var seg = closestDistance.GetSegment();
-                seg.Draw(LineThickness / 2, Colors.Light);
-                closestDistance.A.Draw(12f, Colors.Highlight);
-                closestDistance.B.Draw(12f, Colors.Warm);
+                if (staticShape.GetSegment(closestPointResult.SegmentIndex, out var staticSeg))
+                {
+                    staticSeg.Draw(LineThickness / 2, Colors.Light);
+                }
+
+                if (movingShape.GetSegment(closestPointResult.SegmentIndex, out var movingSeg))
+                {
+                    movingSeg.Draw(LineThickness / 2, Colors.Light);
+                }
+                
+                closestPointResult.Self.Point.Draw(12f, Colors.Highlight);
+                closestPointResult.Other.Point.Draw(12f, Colors.Warm);
             
             }
         }
