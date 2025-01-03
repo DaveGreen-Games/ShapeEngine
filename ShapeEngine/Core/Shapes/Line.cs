@@ -2,6 +2,7 @@ using System.Numerics;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
+using ShapeEngine.Random;
 
 namespace ShapeEngine.Core.Shapes;
 
@@ -53,6 +54,11 @@ public readonly struct Line
     
     #region Public Functions
     public bool IsValid => Direction.IsNormalized() && Normal.IsNormalized(); // (Direction.X != 0 || Direction.Y!= 0) && (Normal.X != 0 || Normal.Y != 0);
+    public bool IsNormalFlipped()
+    {
+        if(!IsValid) return false;
+        return Math.Abs(Normal.X - Direction.Y) < 0.0000001f && Math.Abs(Normal.Y - (-Direction.X)) < 0.0000001f;
+    }
     public Segment ToSegment(float length)
     {
         if (!IsValid) return new();
@@ -69,6 +75,31 @@ public readonly struct Line
     
     public Rect GetBoundingBox() { return new(Point - Direction * MaxLength * 0.5f, Point + Direction * MaxLength * 0.5f); }
     public Rect GetBoundingBox(float length) { return new(Point - Direction * length * 0.5f, Point + Direction * length * 0.5f); }
+    
+    public Line RandomLine() => RandomLine(0, 359);
+    public Line RandomLine(float maxAngleDeg) => RandomLine(0, maxAngleDeg);
+    public Line RandomLine(float minAngleDeg, float maxAngleDeg) => RandomLine(Vector2.Zero, 0, 0, minAngleDeg, maxAngleDeg);
+    public Line RandomLine(Vector2 origin, float minLength, float maxLength, float minAngleDeg, float maxAngleDeg)
+    {
+        Vector2 point;
+        if(minLength < 0 || maxLength < 0 || minLength >= maxLength) point = origin;
+        else point = origin + Rng.Instance.RandVec2(minLength, maxLength);
+        return new(point, Rng.Instance.RandVec2(minAngleDeg, maxAngleDeg));
+    }
+    public Line SetPoint(Vector2 newPoint) => new (newPoint, Direction, Normal);
+    public Line ChangePoint(Vector2 amount) => new (Point + amount, Direction, Normal);
+    
+    public Line SetDirection(Vector2 newDirection)
+    {
+        var normalFlipped = IsNormalFlipped();
+        return new (Point, newDirection, normalFlipped);
+    }
+    public Line ChangeDirection(Vector2 amount)
+    {
+        var normalFlipped = IsNormalFlipped();
+        return new (Point, Direction + amount, normalFlipped);
+    }
+
     #endregion
    
     #region Closest Point
