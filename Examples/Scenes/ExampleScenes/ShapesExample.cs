@@ -169,7 +169,141 @@ public class ShapesExample : ExampleScene
         public override bool GetSegment(int index, out Segment segment)
         {
             segment = Segment;
-            return false;
+            return true;
+        }
+    }
+    private class RayShape(Vector2 pos, Vector2 dir) : Shape
+    {
+        public Ray Ray = new(pos, dir);
+
+        public override void Move(Vector2 newPosition)
+        {
+            Ray = Ray.SetPoint(newPosition);
+        }
+
+        public override void Draw(ColorRgba color)
+        {
+            Ray.Draw(Ray.MaxLength, LineThickness, color);
+        }
+
+        public override ShapeType GetShapeType() => ShapeType.Ray;
+        
+        public override ClosestPointResult GetClosestPointToShape(Shape shape)
+        {
+            if (shape is PointShape pointShape)
+            {
+                var point = pointShape.Position;
+                var p= Ray.GetClosestPoint(point, out float distance);
+                return new ClosestPointResult(
+                    p,
+                    new CollisionPoint(point, (p.Point - point).Normalize()),
+                    distance
+                    );
+            }
+            if (shape is SegmentShape segmentShape) return Ray.GetClosestPoint(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Ray.GetClosestPoint(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Ray.GetClosestPoint(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Ray.GetClosestPoint(quadShape.Quad);
+            if (shape is RectShape rectShape) return Ray.GetClosestPoint(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Ray.GetClosestPoint(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Ray.GetClosestPoint(polylineShape.Polyline);
+            return new();
+        }
+        public override bool OverlapWith(Shape shape)
+        {
+            if (shape is PointShape pointShape) return Ray.IsPointOnRay(pointShape.Position);
+            if (shape is SegmentShape segmentShape) return Ray.OverlapShape(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Ray.OverlapShape(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Ray.OverlapShape(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Ray.OverlapShape(quadShape.Quad);
+            if (shape is RectShape rectShape) return Ray.OverlapShape(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Ray.OverlapShape(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Ray.OverlapShape(polylineShape.Polyline);
+            return new();
+        }
+        public override CollisionPoints? IntersectWith(Shape shape)
+        {
+            if (shape is PointShape pointShape) return null;
+            if (shape is SegmentShape segmentShape) return Ray.IntersectShape(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Ray.IntersectShape(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Ray.IntersectShape(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Ray.IntersectShape(quadShape.Quad);
+            if (shape is RectShape rectShape) return Ray.IntersectShape(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Ray.IntersectShape(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Ray.IntersectShape(polylineShape.Polyline);
+            return new();
+        }
+        public override bool GetSegment(int index, out Segment segment)
+        {
+            segment = Ray.ToSegment(Ray.MaxLength);
+            return true;
+        }
+    }
+    private class LineShape(Vector2 pos, Vector2 dir) : Shape
+    {
+        public Line Line = new(pos, dir);
+
+        public override void Move(Vector2 newPosition)
+        {
+            Line = Line.SetPoint(newPosition);
+        }
+
+        public override void Draw(ColorRgba color)
+        {
+            Line.Draw(Line.MaxLength, LineThickness, color);
+        }
+
+        public override ShapeType GetShapeType() => ShapeType.Ray;
+        
+        public override ClosestPointResult GetClosestPointToShape(Shape shape)
+        {
+            if (shape is PointShape pointShape)
+            {
+                var point = pointShape.Position;
+                var p= Line.GetClosestPoint(point, out float distance);
+                return new ClosestPointResult(
+                    p,
+                    new CollisionPoint(point, (p.Point - point).Normalize()),
+                    distance
+                    );
+            }
+            if (shape is SegmentShape segmentShape) return Line.GetClosestPoint(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Line.GetClosestPoint(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Line.GetClosestPoint(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Line.GetClosestPoint(quadShape.Quad);
+            if (shape is RectShape rectShape) return Line.GetClosestPoint(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Line.GetClosestPoint(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Line.GetClosestPoint(polylineShape.Polyline);
+            return new();
+        }
+        public override bool OverlapWith(Shape shape)
+        {
+            if (shape is PointShape pointShape) return Line.IsPointOnLine(pointShape.Position);
+            if (shape is SegmentShape segmentShape) return Line.OverlapShape(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Line.OverlapShape(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Line.OverlapShape(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Line.OverlapShape(quadShape.Quad);
+            if (shape is RectShape rectShape) return Line.OverlapShape(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Line.OverlapShape(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Line.OverlapShape(polylineShape.Polyline);
+            return new();
+        }
+        public override CollisionPoints? IntersectWith(Shape shape)
+        {
+            if (shape is PointShape pointShape) return null;
+            if (shape is SegmentShape segmentShape) return Line.IntersectShape(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Line.IntersectShape(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Line.IntersectShape(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Line.IntersectShape(quadShape.Quad);
+            if (shape is RectShape rectShape) return Line.IntersectShape(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Line.IntersectShape(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Line.IntersectShape(polylineShape.Polyline);
+            return new();
+        }
+        public override bool GetSegment(int index, out Segment segment)
+        {
+            segment = Line.ToSegment(Line.MaxLength);
+            return true;
         }
     }
     private class CircleShape : Shape
