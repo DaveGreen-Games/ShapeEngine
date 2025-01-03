@@ -2543,53 +2543,39 @@ public readonly struct Triangle : IEquatable<Triangle>
     public int IntersectShape(Quad q, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
-        //Todo: revert back to original
-        //NOTE: CountPerSegment implemented as an example here (not implemented in any other function yet) - CANCELED!
-        //checking the entire quad against each segment of the triangle
-        //therefore the maximum number of intersections per segment is 2
-        var countPerSegment = 0;
         var result = Segment.IntersectSegmentSegment(A, B, q.A, q.B);
         if (result.Valid)
         {
             points.Add(result);
             if (returnAfterFirstValid) return 1;
             count++;
-            countPerSegment++;
         }
+
         result = Segment.IntersectSegmentSegment(A, B, q.B, q.C);
         if (result.Valid)
         {
             points.Add(result);
             if (returnAfterFirstValid) return 1;
             count++;
-            countPerSegment++;
         }
 
-        if (countPerSegment < 2)
+        result = Segment.IntersectSegmentSegment(A, B, q.C, q.D);
+        if (result.Valid)
         {
-            result = Segment.IntersectSegmentSegment(A, B, q.C, q.D);
-            if (result.Valid)
-            {
-                points.Add(result);
-                if (returnAfterFirstValid) return 1;
-                count++;
-                countPerSegment++;
-            }
-
-            if (countPerSegment < 2)
-            {
-                result = Segment.IntersectSegmentSegment(A, B, q.D, q.A);
-                if (result.Valid)
-                {
-                    points.Add(result);
-                    if (returnAfterFirstValid) return 1;
-                    count++;
-                }
-            }
-            
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
         }
-
-        countPerSegment = 0;
+        
+        result = Segment.IntersectSegmentSegment(A, B, q.D, q.A);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        
+        
         
         result = Segment.IntersectSegmentSegment(B, C, q.A, q.B);
         if (result.Valid)
@@ -2597,7 +2583,6 @@ public readonly struct Triangle : IEquatable<Triangle>
             points.Add(result);
             if (returnAfterFirstValid) return 1;
             count++;
-            countPerSegment++;
         }
         result = Segment.IntersectSegmentSegment(B, C, q.B, q.C);
         if (result.Valid)
@@ -2605,33 +2590,22 @@ public readonly struct Triangle : IEquatable<Triangle>
             points.Add(result);
             if (returnAfterFirstValid) return 1;
             count++;
-            countPerSegment++;
         }
-
-        if (countPerSegment < 2)
+        result = Segment.IntersectSegmentSegment(B, C, q.C, q.D);
+        if (result.Valid)
         {
-            result = Segment.IntersectSegmentSegment(B, C, q.C, q.D);
-            if (result.Valid)
-            {
-                points.Add(result);
-                if (returnAfterFirstValid) return 1;
-                count++;
-                countPerSegment++;
-            }
-            if (countPerSegment < 2)
-            {
-                result = Segment.IntersectSegmentSegment(B, C, q.D, q.A);
-                if (result.Valid)
-                {
-                    points.Add(result);
-                    if (returnAfterFirstValid) return 1;
-                    count++;
-                }
-            }
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(B, C, q.D, q.A);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
         }
 
-
-        countPerSegment = 0;
         
         result = Segment.IntersectSegmentSegment(C, A, q.A, q.B);
         if (result.Valid)
@@ -2639,7 +2613,6 @@ public readonly struct Triangle : IEquatable<Triangle>
             points.Add(result);
             if (returnAfterFirstValid) return 1;
             count++;
-            countPerSegment++;
         }
         result = Segment.IntersectSegmentSegment(C, A, q.B, q.C);
         if (result.Valid)
@@ -2647,32 +2620,20 @@ public readonly struct Triangle : IEquatable<Triangle>
             points.Add(result);
             if (returnAfterFirstValid) return 1;
             count++;
-            countPerSegment++;
         }
-
-        if (countPerSegment < 2)
+        result = Segment.IntersectSegmentSegment(C, A, q.C, q.D);
+        if (result.Valid)
         {
-            result = Segment.IntersectSegmentSegment(C, A, q.C, q.D);
-            if (result.Valid)
-            {
-                points.Add(result);
-                if (returnAfterFirstValid) return 1;
-                count++;
-                countPerSegment++;
-            }
-        
-            if (countPerSegment < 2)
-            {
-                result = Segment.IntersectSegmentSegment(C, A, q.D, q.A);
-                if (result.Valid)
-                {
-                    points.Add(result);
-                    count++;
-                }
-            }
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
         }
-        
-        
+        result = Segment.IntersectSegmentSegment(C, A, q.D, q.A);
+        if (result.Valid)
+        {
+            points.Add(result);
+            count++;
+        }
         return count;
     }
     public int IntersectShape(Rect r, ref CollisionPoints points, bool returnAfterFirstValid = false)

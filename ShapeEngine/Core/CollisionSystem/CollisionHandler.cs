@@ -483,7 +483,6 @@ public class CollisionHandler : IBounds
     
     #endregion
     
-    
     #region Intersect Space
     
     public IntersectSpaceResult? IntersectSpace(CollisionObject colObject, Vector2 origin)
