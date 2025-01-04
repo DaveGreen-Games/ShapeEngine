@@ -8,7 +8,7 @@ namespace ShapeEngine.Core.Shapes;
 
 public readonly struct Ray
 {
-    public static float MaxLength = float.MaxValue;
+    public static float MaxLength = 250000;
     
     #region Members
     

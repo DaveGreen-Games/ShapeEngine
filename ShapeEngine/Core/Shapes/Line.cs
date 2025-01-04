@@ -8,7 +8,7 @@ namespace ShapeEngine.Core.Shapes;
 
 public readonly struct Line
 {
-    public static float MaxLength = float.MaxValue;
+    public static float MaxLength = 250000;
     
     
     #region Members
@@ -53,7 +53,7 @@ public readonly struct Line
     #endregion
     
     #region Public Functions
-    public bool IsValid => Direction.IsNormalized() && Normal.IsNormalized(); // (Direction.X != 0 || Direction.Y!= 0) && (Normal.X != 0 || Normal.Y != 0);
+    public bool IsValid => (Direction.X!= 0 || Direction.Y!= 0) && (Normal.X != 0 || Normal.Y != 0);
     public bool IsNormalFlipped()
     {
         if(!IsValid) return false;
