@@ -1,3 +1,4 @@
+/*
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.CollisionSystem;
@@ -654,7 +655,6 @@ public class ProjectedShapesExample : ExampleScene
         var changeModeKb = new InputTypeKeyboardButton(ShapeKeyboardButton.TAB);
         changeMode = new(changeModeMB, changeModeGp, changeModeKb);
         
-        // var toggleProjectionMB = new InputTypeMouseButton(ShapeMouseButton.MIDDLE);
         var toggleProjectionGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
         var toggleProjectionKb = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
         toggleProjection = new(toggleProjectionGp, toggleProjectionKb);
@@ -907,5 +907,6 @@ public class ProjectedShapesExample : ExampleScene
     }
     
 }
+*/
 
 
