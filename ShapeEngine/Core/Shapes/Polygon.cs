@@ -59,6 +59,8 @@ namespace ShapeEngine.Core.Shapes
         #region Public Functions
         public Segment GetSegment(int index)
         {
+            if (index < 0) return new Segment();
+            if (Count < 2) return new Segment();
             var first = index % Count;
             var second = (index + 1) % Count;
             return new Segment(this[first], this[second]);

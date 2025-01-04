@@ -34,6 +34,8 @@ public class Segments : ShapeList<Segment>
     
     public Segment GetSegment(int index)
     {
+        if (index < 0) return new Segment();
+        if (Count <= 0) return new Segment();
         var i = index % Count;
         return this[i];
     }

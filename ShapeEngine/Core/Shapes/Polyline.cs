@@ -204,8 +204,10 @@ public class Polyline : Points, IEquatable<Polyline>
     #region Points & Vertex
     public Segment GetSegment(int index)
     { 
+        if (index < 0) return new Segment();
+        if (Count < 2) return new Segment();
         var first = index % (Count - 1);
-        var second = index + 1;
+        var second = (index + 1) % (Count - 1);
         return new Segment(this[first], this[second]);
     }
     

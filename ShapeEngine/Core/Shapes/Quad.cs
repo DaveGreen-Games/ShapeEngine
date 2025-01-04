@@ -214,6 +214,7 @@ public readonly struct Quad : IEquatable<Quad>
     #region Points & Vertex
     public Segment GetSegment(int index)
     {
+        if (index < 0) return new Segment();
         var i = index % 4;
         if(i == 0) return new Segment(A, B);
         if(i == 1) return new Segment(B, C);
