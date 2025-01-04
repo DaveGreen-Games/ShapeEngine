@@ -1461,7 +1461,7 @@ public static class ShapeDrawing
     public static void Draw(this Line line, float length, float thickness, ColorRgba color)
     {
         if(!line.IsValid || length <= 0f || thickness <= 0f) return;
-        DrawSegment(line.Point - line.Direction * length * 0.5f, line.Point + line.Direction * length * 0.5f, thickness, color);
+        DrawSegment(line.Point - (line.Direction * length * 0.5f), line.Point + (line.Direction * length * 0.5f), thickness, color);
     }
 
     #endregion

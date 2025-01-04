@@ -358,7 +358,7 @@ public class ShapesExample : ExampleScene
             Line.Draw(Line.MaxLength, LineThickness, color);
         }
 
-        public override ShapeType GetShapeType() => ShapeType.Ray;
+        public override ShapeType GetShapeType() => ShapeType.Line;
         
         public override ClosestPointResult GetClosestPointToShape(Shape shape)
         {
@@ -1283,14 +1283,16 @@ public class ShapesExample : ExampleScene
             {
                 if (staticShape.GetSegment(closestPointResult.SegmentIndex, out var staticSeg))
                 {
-                    staticSeg.Draw(LineThickness / 2, Colors.Light);
+                    staticSeg.Draw(LineThickness, Colors.Light);
                 }
 
                 if (movingShape.GetSegment(closestPointResult.SegmentIndex, out var movingSeg))
                 {
-                    movingSeg.Draw(LineThickness / 2, Colors.Light);
+                    movingSeg.Draw(LineThickness, Colors.Light);
                 }
                 
+                var segment = new Segment(closestPointResult.Self.Point, closestPointResult.Other.Point);
+                segment.Draw(LineThickness, Colors.Light);
                 closestPointResult.Self.Point.Draw(12f, Colors.Highlight);
                 closestPointResult.Other.Point.Draw(12f, Colors.Warm);
             
