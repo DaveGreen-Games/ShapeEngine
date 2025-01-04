@@ -99,7 +99,18 @@ public readonly struct Line
         var normalFlipped = IsNormalFlipped();
         return new (Point, Direction + amount, normalFlipped);
     }
-
+    public Line ChangeRotation(float angleRad)
+    {
+        var normalFlipped = IsNormalFlipped();
+        var newDir = Direction.Rotate(angleRad);
+        return new (Point, newDir, normalFlipped);
+    }
+    public Line SetRotation(float angleRad)
+    {
+        var normalFlipped = IsNormalFlipped();
+        var newDir = ShapeVec.VecFromAngleRad(angleRad);
+        return new (Point, newDir, normalFlipped);
+    }
     #endregion
    
     #region Closest Point

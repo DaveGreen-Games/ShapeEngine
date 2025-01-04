@@ -101,6 +101,18 @@ public readonly struct Ray
         return new Ray(Point, Direction + amount, normalFlipped);
     }
 
+    public Ray ChangeRotation(float angleRad)
+    {
+        var normalFlipped = IsNormalFlipped();
+        var newDir = Direction.Rotate(angleRad);
+        return new Ray(Point, newDir, normalFlipped);
+    }
+    public Ray SetRotation(float angleRad)
+    {
+        var normalFlipped = IsNormalFlipped();
+        var newDir = ShapeVec.VecFromAngleRad(angleRad);
+        return new Ray(Point, newDir, normalFlipped);
+    }
     #endregion
     
     #region Closest Point
