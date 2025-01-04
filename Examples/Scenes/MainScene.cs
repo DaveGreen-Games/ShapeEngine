@@ -39,7 +39,6 @@ namespace Examples.Scenes
         {
             examples.Add(new ShapeDrawingExample());
             examples.Add(new ShapesExample());
-            examples.Add(new ProjectedShapesExample());
             examples.Add(new EndlessSpaceCollision());
             examples.Add(new PolylineInflationExample());
             examples.Add(new AsteroidMiningExample());
