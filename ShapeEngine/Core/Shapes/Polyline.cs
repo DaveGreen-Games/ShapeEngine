@@ -867,7 +867,7 @@ public class Polyline : Points, IEquatable<Polyline>
                 for (var j = 0; j < other.Count; j++)
                 {
                     var otherP1 = other[j];
-                    var otherP2 = other[(j + 1) % Count];
+                    var otherP2 = other[(j + 1) % other.Count];
                     var cp = Segment.GetClosestPointSegmentSegment(p1, p2, otherP1, otherP2, out float dis);
                     if (dis < disSquared || disSquared < 0)
                     {
