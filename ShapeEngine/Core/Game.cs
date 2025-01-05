@@ -864,53 +864,68 @@ public class Game
         OnInputDeviceChanged(prevDeviceType, newDeviceType);
         CurScene.ResolveOnInputDeviceChanged(prevDeviceType, newDeviceType);
     }
-    // private void SetConversionFactors()
-    // {
-    //     ScreenToDevelopment = new(Window.CurScreenSize, DevelopmentDimensions);
-    //     DevelopmentToScreen = new(DevelopmentDimensions, Window.CurScreenSize);
-    // }
 
+    
+    /// <summary>
+    /// Use the writeAction to write to the text file.
+    /// </summary>
+    /// <param name="path">The path were the file should be. A new one is created if it does not exist.</param>
+    /// <param name="fileName">The name of the file. Needs a valid extension.</param>
+    /// <param name="writeAction">The function that is called with the active StreamWriter. Use Write/ WriteLine functions to write.</param>
+    /// <exception cref="ArgumentException">Filename has no valid extension.</exception>
+    public static void WriteToFile(string path, string fileName, Action<StreamWriter> writeAction)
+    {
+        if (!Path.HasExtension(fileName))
+        {
+            throw new ArgumentException("File name must have a valid extension.");
+        }
+        
+        try
+        {
+            var fullPath = Path.Combine(path, fileName);
+            using (var writer = new StreamWriter(fullPath))
+            {
+                writeAction(writer);
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("The file could not be read:");
+            Console.WriteLine(e.Message);
+        }
+    }
 
-    // protected void CycleTextureFilter()
-    // {
-    //     TextureFilter newTextureFilter;
-    //     switch (gameTexture.TextureFilter)
-    //     {
-    //         case TextureFilter.Point:
-    //             newTextureFilter = TextureFilter.Bilinear;
-    //             break;
-    //         case TextureFilter.Bilinear:
-    //             newTextureFilter = TextureFilter.Trilinear;
-    //             break;
-    //         case TextureFilter.Trilinear:
-    //             newTextureFilter = TextureFilter.Anisotropic4X;
-    //             break;
-    //         case TextureFilter.Anisotropic4X:
-    //             newTextureFilter = TextureFilter.Anisotropic8X;
-    //             break;
-    //         case TextureFilter.Anisotropic8X:
-    //             newTextureFilter = TextureFilter.Anisotropic16X;
-    //             break;
-    //         case TextureFilter.Anisotropic16X:
-    //             newTextureFilter = TextureFilter.Point;
-    //             break;
-    //         default:
-    //             newTextureFilter = TextureFilter.Point;
-    //             break;
-    //     }
-    //
-    //     gameTexture.TextureFilter = newTextureFilter;
-    //     gameTexture.Unload();
-    //     gameTexture.Load(Window.CurScreenSize);
-    //
-    //     if (screenShaderBuffer.Loaded)
-    //     {
-    //         screenShaderBuffer.TextureFilter = newTextureFilter;
-    //         screenShaderBuffer.Unload();
-    //         screenShaderBuffer.Load(Window.CurScreenSize);
-    //     }
-    //     
-    // }
+    /// <summary>
+    /// Use the readAction to read from the file.
+    /// </summary>
+    /// <param name="path">The path were the file should be. A new one is created if it does not exist.</param>
+    /// <param name="fileName">The name of the file. Needs a valid extension.</param>
+    /// <param name="readAction">The function that is called with the active StreamReader. Use Read/ ReadLine functions to read.</param>
+    /// <exception cref="ArgumentException">Filename has no valid extension.</exception>
+    public static void ReadFromFile(string path, string fileName, Action<StreamReader> readAction)
+    {
+        
+        if (!Path.HasExtension(fileName))
+        {
+            throw new ArgumentException("File name must have a valid extension.");
+        }
+        
+        var fullPath = Path.Combine(path, fileName);
+        try
+        {
+            // Open the text file using a StreamReader.
+            using (StreamReader sr = new StreamReader(fullPath))
+            {
+                readAction(sr);
+            }
+        }
+        catch (Exception e)
+        {
+            // Print any errors to the console.
+            Console.WriteLine("The file could not be read:");
+            Console.WriteLine(e.Message);
+        }
+    }
 }
 
 
