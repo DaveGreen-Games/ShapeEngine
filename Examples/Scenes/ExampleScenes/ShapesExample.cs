@@ -1,4 +1,4 @@
-using System.Diagnostics;
+
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.CollisionSystem;
@@ -6,8 +6,6 @@ using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
 using ShapeEngine.Lib;
-using ShapeEngine.Text;
-using Color = System.Drawing.Color;
 using ShapeEngine.Random;
 namespace Examples.Scenes.ExampleScenes;
 
@@ -93,6 +91,13 @@ public class ShapesExample : ExampleScene
         
         public override ClosestPointResult GetClosestPointToShape(Shape shape)
         {
+            if(shape is PointShape pointShape)
+            {
+                var disSquared = (pointShape.Position - Position).LengthSquared();
+                var cpSelf = new CollisionPoint(Position, (pointShape.Position - Position).Normalize());
+                var cpOther = new CollisionPoint(pointShape.Position, (Position - pointShape.Position).Normalize());
+                return new(cpSelf, cpOther, disSquared);
+            }
             var result = shape.GetClosestPointToShape(this);
             return result.Switch();
 
@@ -1094,7 +1099,10 @@ public class ShapesExample : ExampleScene
             return true;
         }
     }
-    
+
+
+    private bool automatedTestingEnabled = false;
+    private List<(ShapeType moving, ShapeType stat, ShapeMode mode, bool projection, bool success)> automatedTestResults = new();
     
     private InputAction nextStaticShape;
     private InputAction nextMovingShape;
@@ -1173,38 +1181,41 @@ public class ShapesExample : ExampleScene
         
         rotateStaticShape.Gamepad = gamepad;
         rotateStaticShape.Update(dt);
-        
-        if (nextStaticShape.State.Pressed)
-        {
-            NextStaticShape();   
-        }
-        
-        if (nextMovingShape.State.Pressed)
-        {
-            NextMovingShape(mousePosGame);   
-        }
 
-        if (changeMode.State.Pressed)
+        if (!automatedTestingEnabled)
         {
-            switch (shapeMode)
+            if (nextStaticShape.State.Pressed)
             {
-                case ShapeMode.Overlap: 
-                    shapeMode = ShapeMode.Intersection;
-                    break;
-                case ShapeMode.Intersection:
-                    shapeMode = ShapeMode.ClosestDistance;
-                    break;
-                case ShapeMode.ClosestDistance:
-                    shapeMode = ShapeMode.Overlap;
-                    break;
+                NextStaticShape();
+            }
+
+            if (nextMovingShape.State.Pressed)
+            {
+                NextMovingShape(mousePosGame);
+            }
+
+            if (changeMode.State.Pressed)
+            {
+                switch (shapeMode)
+                {
+                    case ShapeMode.Overlap:
+                        shapeMode = ShapeMode.Intersection;
+                        break;
+                    case ShapeMode.Intersection:
+                        shapeMode = ShapeMode.ClosestDistance;
+                        break;
+                    case ShapeMode.ClosestDistance:
+                        shapeMode = ShapeMode.Overlap;
+                        break;
+                }
+            }
+
+            if (toggleProjection.State.Pressed)
+            {
+                projectionActive = !projectionActive;
             }
         }
-        
-        if (toggleProjection.State.Pressed)
-        {
-            projectionActive = !projectionActive;
-        }
-        
+
         if (rotateMovingShape.State.Down)
         {
             movingShape.Rotate(rotationSpeedRad * dt * rotateMovingShape.State.AxisRaw);
@@ -1216,6 +1227,25 @@ public class ShapesExample : ExampleScene
         }
         
         movingShape.Move(mousePosGame);
+
+
+        if (ShapeKeyboardButton.T.GetInputState().Pressed)
+        {
+            ToggleAutomatedTesting();
+        }
+        if (automatedTestingEnabled)
+        {
+            if (ShapeKeyboardButton.N.GetInputState().Pressed)
+            {
+                NextAutomatedTest(false, mousePosGame);
+            }
+
+            if (ShapeKeyboardButton.Z.GetInputState().Pressed)
+            {
+                NextAutomatedTest(true, mousePosGame);
+            }
+        }
+        
     }
 
     protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
@@ -1347,6 +1377,21 @@ public class ShapesExample : ExampleScene
         textFont.DrawTextWrapNone(textMiddle, middleRect, new(0.5f));
         textFont.ColorRgba = Colors.Warm;
         textFont.DrawTextWrapNone(textMoving, rightRect.ApplyMarginsAbsolute(margin, margin, margin, margin), new(1f, 0.5f));
+
+        var testingTagRect = GAMELOOP.UIRects.GetRect("bottom right");
+        if (automatedTestingEnabled)
+        {
+            var testingTagSplit = testingTagRect.SplitV(0.5f);
+            textFont.ColorRgba = Colors.Special2;
+            textFont.DrawTextWrapNone("Testing - Stop[T]", testingTagSplit.top, new(0.5f, 0f));
+            textFont.DrawTextWrapNone("[Y] / [N]", testingTagSplit.bottom, new(0.5f, 1f));
+        }
+        else
+        {
+            textFont.ColorRgba = Colors.Special2;
+            textFont.DrawTextWrapNone("Press T to Start Testing", testingTagRect, new(0.5f, 0.5f));
+        }
+        
         
         
         // var curDevice = ShapeInput.CurrentInputDeviceType;
@@ -1444,7 +1489,7 @@ public class ShapesExample : ExampleScene
     {
         switch (type)
         {
-            case ShapeType.None: return new PointShape(pos, size);
+            case ShapeType.None: return new PointShape(pos, 15);
             case ShapeType.Circle: return new CircleShape(pos, size);
             case ShapeType.Segment: return new SegmentShape(pos, size);
             case ShapeType.Ray: return new RayShape(pos, Rng.Instance.RandVec2().Normalize());
@@ -1458,7 +1503,202 @@ public class ShapesExample : ExampleScene
         
         return new PointShape(pos, size);
     }
+
     
+    private void NextAutomatedTest(bool success, Vector2 mousePos)
+    {
+        var movingType = movingShape.GetShapeType();
+        var staticType = staticShape.GetShapeType();
+        var result = (movingType, staticType, shapeMode, projectionActive, success);
+        automatedTestResults.Add(result);
+        
+
+        if (projectionActive && movingType == ShapeType.PolyLine && staticType == ShapeType.PolyLine && shapeMode == ShapeMode.ClosestDistance)
+        {
+            EndAutomatedTesting();
+        }
+        else
+        {
+            if (staticType == ShapeType.PolyLine && movingType == ShapeType.PolyLine)
+            {
+                if (shapeMode == ShapeMode.ClosestDistance)
+                {
+                    projectionActive = true;
+                    shapeMode = ShapeMode.Overlap;
+                }
+                else if (shapeMode == ShapeMode.Overlap)
+                {
+                    shapeMode = ShapeMode.Intersection;
+                }
+                else shapeMode = ShapeMode.ClosestDistance;
+                
+                movingShape = CreateShape(new(), 10f, ShapeType.None);
+                staticShape = CreateShape(new(), 10f, ShapeType.None);
+            }
+            else
+            {
+                if (movingType == ShapeType.PolyLine)
+                {
+                    movingShape = CreateShape(new(), 10f, ShapeType.None);
+                    NextStaticShape();
+                }
+                else
+                {
+                    NextMovingShape(mousePos);
+                }
+            }
+        }
+    }
+    private void StartAutomatedTesting()
+    {
+        if (automatedTestingEnabled) return;
+        
+        automatedTestingEnabled = true;
+        movingShape = CreateShape(new(), 10f, ShapeType.None);
+        staticShape = CreateShape(new(), 10f, ShapeType.None);
+        projectionActive = false;
+        shapeMode = ShapeMode.Overlap;
+    }
+    private void EndAutomatedTesting()
+    {
+        if (!automatedTestingEnabled) return;
+        
+        automatedTestingEnabled = false;
+        PrintAutomatedTestResults();
+    }
+    private void ToggleAutomatedTesting()
+    {
+        if (automatedTestingEnabled)
+        {
+            EndAutomatedTesting();
+        }
+        else
+        {
+            StartAutomatedTesting();
+        }
+    }
+    private void PrintAutomatedTestResults()
+    {
+        Console.WriteLine("Automated Test Results -----------------------------------------");
+        var failures = automatedTestResults.Where(r => !r.success).ToList();
+        var successes = automatedTestResults.Where(r => r.success).ToList();
+        var overlaps = automatedTestResults.Where(r => r.mode == ShapeMode.Overlap).ToList();
+        var intersections = automatedTestResults.Where(r => r.mode == ShapeMode.Intersection).ToList();
+        var closestPoints = automatedTestResults.Where(r => r.mode == ShapeMode.ClosestDistance).ToList();
+        int successCount = successes.Count;
+        int failureCount = failures.Count;
+        float successRate = (float)successCount / (successCount + failureCount) * 100;
+        float failureRate = 100 - successRate;
+        Console.WriteLine($"Successes: {successCount} ({successRate:F2}%), Failures: {failureCount} ({failureRate:F2}%), Total: {automatedTestResults.Count}" );
+        
+        var path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+        var fileName = "automated_test_results.txt";
+        var fullPath = Path.Combine(path, fileName);
+        
+        using (var writer = new StreamWriter(fullPath))
+        {
+            writer.WriteLine($"Shape Engine Automated Test Results - {DateTime.Now:dd-MM-yyyy HH:mm:ss} by Dave Green");
+            writer.WriteLine($"Successes: {successCount} ({successRate:F2}%), Failures: {failureCount} ({failureRate:F2}%), Total: {automatedTestResults.Count}");
+            writer.WriteLine("[x] = Success / [ ] = Failure");
+            
+            writer.WriteLine(" ");
+            writer.WriteLine(" -------------------------------------------------------------------------------------- ");
+            writer.WriteLine(" ////////////////////////////////////////////////////////////////////////////////////// ");
+            writer.WriteLine(" -------------------------------------------------------------------------------------- ");
+            writer.WriteLine(" ");
+            
+            writer.WriteLine("All Results:");
+            foreach (var result in automatedTestResults)
+            {
+                var line = $"[{(result.success ? "x" : " ")}] - [{result.moving} vs {result.stat}] - Mode: {result.mode} - Projection: {result.projection}";
+                writer.WriteLine(line);
+            }
+
+            writer.WriteLine(" ");
+            writer.WriteLine(" -------------------------------------------------------------------------------------- ");
+            writer.WriteLine(" ////////////////////////////////////////////////////////////////////////////////////// ");
+            writer.WriteLine(" -------------------------------------------------------------------------------------- ");
+            writer.WriteLine(" ");
+            
+            writer.WriteLine("Failures:");
+            foreach (var result in failures)
+            {
+                var line = $"-> [{result.moving} vs {result.stat}] - Mode: {result.mode} - Projection: {result.projection}";
+                writer.WriteLine(line);
+            }
+            
+            writer.WriteLine(" ");
+            writer.WriteLine(" -------------------------------------------------------------------------------------- ");
+            writer.WriteLine(" ////////////////////////////////////////////////////////////////////////////////////// ");
+            writer.WriteLine(" -------------------------------------------------------------------------------------- ");
+            writer.WriteLine(" ");
+            
+            writer.WriteLine("Successes:");
+            foreach (var result in successes)
+            {
+                var line = $"-> [{result.moving} vs {result.stat}] - Mode: {result.mode} - Projection: {result.projection}";
+                writer.WriteLine(line);
+            }
+            
+            writer.WriteLine(" ");
+            writer.WriteLine(" -------------------------------------------------------------------------------------- ");
+            writer.WriteLine(" ////////////////////////////////////////////////////////////////////////////////////// ");
+            writer.WriteLine(" -------------------------------------------------------------------------------------- ");
+            writer.WriteLine(" ");
+            
+            writer.WriteLine("Overlaps:");
+            foreach (var result in overlaps)
+            {
+                var line = $"[{(result.success ? "x" : " ")}] - [{result.moving} vs {result.stat}] - Projection: {result.projection}";
+                writer.WriteLine(line);
+            }
+            
+            writer.WriteLine(" ");
+            writer.WriteLine(" -------------------------------------------------------------------------------------- ");
+            writer.WriteLine(" ////////////////////////////////////////////////////////////////////////////////////// ");
+            writer.WriteLine(" -------------------------------------------------------------------------------------- ");
+            writer.WriteLine(" ");
+            
+            writer.WriteLine("Intersections:");
+            foreach (var result in intersections)
+            {
+                var line = $"[{(result.success ? "x" : " ")}] - [{result.moving} vs {result.stat}] - Projection: {result.projection}";
+                writer.WriteLine(line);
+            }
+            
+            writer.WriteLine(" ");
+            writer.WriteLine(" -------------------------------------------------------------------------------------- ");
+            writer.WriteLine(" ////////////////////////////////////////////////////////////////////////////////////// ");
+            writer.WriteLine(" -------------------------------------------------------------------------------------- ");
+            writer.WriteLine(" ");
+            
+            writer.WriteLine("ClosestPoints:");
+            foreach (var result in closestPoints)
+            {
+                var line = $"[{(result.success ? "x" : " ")}] - [{result.moving} vs {result.stat}] - Projection: {result.projection}";
+                writer.WriteLine(line);
+            }
+        }
+
+        Console.WriteLine($"Automated test results saved to {fullPath}");
+        
+        Console.WriteLine("Failures:");
+        foreach (var result in failures)
+        {
+            Console.WriteLine($"{result.moving} vs {result.stat} - Mode: {result.mode} - Projection: {result.projection}");
+            // if (result.success)
+            // {
+            //     Console.WriteLine($"[Success] - {result.moving} vs {result.stat} - Mode: {result.mode} - Projection: {result.projection}");
+            // }
+            // else
+            // {
+            //     Console.WriteLine($"[Failed] - {result.moving} vs {result.stat} - Mode: {result.mode} - Projection: {result.projection}");
+            // }
+        }
+        
+        
+        Console.WriteLine("End -----------------------------------------");
+    }
 }
 
 
