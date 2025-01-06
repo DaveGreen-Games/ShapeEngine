@@ -1231,7 +1231,11 @@ public class ShapesExample : ExampleScene
 
         if (ShapeKeyboardButton.T.GetInputState().Pressed)
         {
-            ToggleAutomatedTesting();
+            ToggleAutomatedTesting(false);
+        }
+        if (ShapeKeyboardButton.U.GetInputState().Pressed)
+        {
+            ToggleAutomatedTesting(true);
         }
         if (automatedTestingEnabled)
         {
@@ -1511,7 +1515,7 @@ public class ShapesExample : ExampleScene
         var staticType = staticShape.GetShapeType();
         var result = (movingType, staticType, shapeMode, projectionActive, success);
         automatedTestResults.Add(result);
-        
+        WriteAutomatedTestResults();
 
         if (projectionActive && movingType == ShapeType.PolyLine && staticType == ShapeType.PolyLine && shapeMode == ShapeMode.ClosestDistance)
         {
@@ -1549,24 +1553,104 @@ public class ShapesExample : ExampleScene
             }
         }
     }
-    private void StartAutomatedTesting()
+    private void StartAutomatedTesting(bool continueTesting)
     {
         if (automatedTestingEnabled) return;
-        
         automatedTestingEnabled = true;
+        
+        if (continueTesting)
+        {
+            if (TryLoadLastTest()) return;
+        }
+        
         movingShape = CreateShape(new(), 10f, ShapeType.None);
         staticShape = CreateShape(new(), 10f, ShapeType.None);
         projectionActive = false;
         shapeMode = ShapeMode.Overlap;
     }
+
+    private bool TryLoadLastTest()
+    {
+        var path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+        var fileName = "automated_test_results.txt";
+        bool loadingSuccess = false;
+        ShapeEngine.Core.Game.ReadFromFile(path, fileName, (reader) =>
+        {
+            var movingShapeText = reader.ReadLine();
+            var staticShapeText = reader.ReadLine();
+            var shapeModeText = reader.ReadLine();
+            var projectionText = reader.ReadLine();
+
+            if (movingShapeText != null && staticShapeText != null && shapeModeText != null && projectionText != null)
+            {
+                var movingShapeParse = ShapeEngine.Core.Game.TryParseEnum(movingShapeText, out ShapeType parsedMovingType);
+                var staticShapeParse = ShapeEngine.Core.Game.TryParseEnum(staticShapeText, out ShapeType parsedStaticType);
+                var shapeModeParse = ShapeEngine.Core.Game.TryParseEnum(shapeModeText, out ShapeMode parsedShapeMode);
+                bool projectionParse = false;
+                bool parsedProjectionValue = false;
+                if (projectionText == "True")
+                {
+                    projectionParse = true;
+                    parsedProjectionValue = true;
+                }
+                else if (projectionText == "False")
+                {
+                    projectionParse = true;
+                    parsedProjectionValue = false;
+                }
+
+
+                if (movingShapeParse && staticShapeParse && shapeModeParse && projectionParse)
+                {
+                    movingShape = CreateShape(new(), 150f, parsedMovingType);
+                    staticShape = CreateShape(new(), 300f, parsedStaticType);
+                    shapeMode = parsedShapeMode;
+                    projectionActive = parsedProjectionValue;
+                    loadingSuccess = true;
+                    Console.WriteLine("Automated testing loaded successfully.");
+                    Console.WriteLine($"Moving shape: {parsedMovingType} - Static shape: {parsedStaticType} - Shape mode: {parsedShapeMode} - Projection active: {parsedProjectionValue}");
+                }
+                
+            }
+        }
+        );
+    
+        if (loadingSuccess)
+        {
+            return true;
+        }
+        
+        Console.WriteLine("Automated testing failed to load.");
+
+        return false;
+    }
+    private bool ParseShapeTypeEnum(string text, out ShapeType type)
+    {
+        if (Enum.TryParse(text, true, out  type))
+        {
+            return true;
+        }
+
+        return false;
+    }
+    private bool ParseShapeModeEnum(string text, out ShapeMode mode)
+    {
+        if (Enum.TryParse(text, true, out  mode))
+        {
+            return true;
+        }
+
+        return false;
+    }
+    
     private void EndAutomatedTesting()
     {
         if (!automatedTestingEnabled) return;
         
         automatedTestingEnabled = false;
-        PrintAutomatedTestResults();
+        WriteAutomatedTestResults();
     }
-    private void ToggleAutomatedTesting()
+    private void ToggleAutomatedTesting(bool continueTesting)
     {
         if (automatedTestingEnabled)
         {
@@ -1574,12 +1658,20 @@ public class ShapesExample : ExampleScene
         }
         else
         {
-            StartAutomatedTesting();
+            StartAutomatedTesting(continueTesting);
         }
     }
-    private void PrintAutomatedTestResults()
+    
+    //TODO: Add automated tester to catch crashes -> goes through all shapes rapidly (~2-3frames per shape)
+    private void TestForCrash(float dt)
     {
-        Console.WriteLine("Automated Test Results -----------------------------------------");
+        
+    }
+    
+    private void WriteAutomatedTestResults()
+    {
+        
+        Console.WriteLine("Automated Test Results:");
         var failures = automatedTestResults.Where(r => !r.success).ToList();
         var successes = automatedTestResults.Where(r => r.success).ToList();
         var overlaps = automatedTestResults.Where(r => r.mode == ShapeMode.Overlap).ToList();
@@ -1589,14 +1681,20 @@ public class ShapesExample : ExampleScene
         int failureCount = failures.Count;
         float successRate = (float)successCount / (successCount + failureCount) * 100;
         float failureRate = 100 - successRate;
-        Console.WriteLine($"Successes: {successCount} ({successRate:F2}%), Failures: {failureCount} ({failureRate:F2}%), Total: {automatedTestResults.Count}" );
+        Console.WriteLine($" - Successes: {successCount} ({successRate:F2}%), Failures: {failureCount} ({failureRate:F2}%), Total: {automatedTestResults.Count}" );
+        
         
         var path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
         var fileName = "automated_test_results.txt";
         var fullPath = Path.Combine(path, fileName);
-        
+        var currentResult = automatedTestResults[^1];
         using (var writer = new StreamWriter(fullPath))
         {
+            writer.WriteLine($"{currentResult.moving}");
+            writer.WriteLine($"{currentResult.stat}");
+            writer.WriteLine($"{currentResult.mode}");
+            writer.WriteLine($"{currentResult.projection}");
+            writer.WriteLine(" ");
             writer.WriteLine($"Shape Engine Automated Test Results - {DateTime.Now:dd-MM-yyyy HH:mm:ss} by Dave Green");
             writer.WriteLine($"Successes: {successCount} ({successRate:F2}%), Failures: {failureCount} ({failureRate:F2}%), Total: {automatedTestResults.Count}");
             writer.WriteLine("[x] = Success / [ ] = Failure");
@@ -1680,7 +1778,10 @@ public class ShapesExample : ExampleScene
             }
         }
 
-        Console.WriteLine($"Automated test results saved to {fullPath}");
+        Console.WriteLine($" - Results saved to {fullPath}");
+        Console.WriteLine($" - Current Mode: {currentResult.moving} vs {currentResult.stat} - Mode: {currentResult.mode} - Projection: {currentResult.projection}");
+        
+        /*
         
         Console.WriteLine("Failures:");
         foreach (var result in failures)
@@ -1697,7 +1798,8 @@ public class ShapesExample : ExampleScene
         }
         
         
-        Console.WriteLine("End -----------------------------------------");
+        Console.WriteLine("End -----------------------------------------");*/
+        
     }
 }
 

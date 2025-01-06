@@ -926,6 +926,22 @@ public class Game
             Console.WriteLine(e.Message);
         }
     }
+    
+    public static bool TryParseEnum<TEnum>(string value, out TEnum result) where TEnum : struct
+    {
+        if (typeof(TEnum).IsEnum)
+        {
+            if (Enum.TryParse(value, true, out TEnum parsedValue))
+            {
+                result = parsedValue;
+                return true;
+            }
+        }
+
+        result = default(TEnum);
+        return false;
+    }
+    
 }
 
 
