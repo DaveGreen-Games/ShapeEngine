@@ -1,5 +1,6 @@
 
 using System.Numerics;
+using System.Reflection.Metadata.Ecma335;
 using ShapeEngine.Color;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Shapes;
@@ -1116,7 +1117,10 @@ public class ShapesExample : ExampleScene
     private Polygon? projection = null;
     private bool projectionActive = false;
     private ShapeMode shapeMode = ShapeMode.Overlap;
-    
+    private float crashTestTimer = 0f;
+    private bool crashTestSuccessfull = false;
+    private bool continueTestingAfterCrashTest = false;
+    private int crashTestCount = 0;
     public ShapesExample()
     {
         Title = "Shapes Example";
@@ -1225,9 +1229,6 @@ public class ShapesExample : ExampleScene
         {
             staticShape.Rotate(rotationSpeedRad * dt * rotateStaticShape.State.AxisRaw);
         }
-        
-        movingShape.Move(mousePosGame);
-
 
         if (ShapeKeyboardButton.T.GetInputState().Pressed)
         {
@@ -1254,9 +1255,18 @@ public class ShapesExample : ExampleScene
 
     protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
+        TestForCrash(time.Delta, game.MousePos);
+        
         if (projectionActive)
         {
-            projection = movingShape.GetProjectionPoints(game.MousePos);
+            if (crashTestTimer > 0)
+            {
+                projection = movingShape.GetProjectionPoints(new Vector2(0, 0));
+            }
+            else
+            {
+                projection = movingShape.GetProjectionPoints(game.MousePos);
+            }
         }
         else
         {
@@ -1339,6 +1349,41 @@ public class ShapesExample : ExampleScene
     }
     protected override void OnDrawUIExample(ScreenInfo ui)
     {
+        if (crashTestTimer > 0f)
+        {
+            var centerRect = ui.Area.ApplyMargins(0.2f, 0.2f, 0.2f, 0.2f);
+            centerRect.Draw(Colors.Dark.SetAlpha(150));
+            var marginValue = centerRect.Size.Min() * 0.025f;
+            centerRect = centerRect.ApplyMarginsAbsolute(marginValue);
+            var centerSplit = centerRect.SplitV(0.25f, 0.25f);
+            //10 vs 10 shapes, 3 modes, projection or no projection => 600
+            var total = 10 * 10 * 3 * 2;
+            
+            var progressPercentage = ((float)crashTestCount / total);
+            var progressBarText = "[";
+            var barCount = 20; 
+            var currentBar = (int)(barCount * progressPercentage);
+            for (int i = 0; i < barCount; i++)
+            {
+                if (i < currentBar)
+                {
+                    progressBarText += "/";
+                }
+                else
+                {
+                    progressBarText += "_";
+                }
+                
+            }
+            progressBarText += "]";
+            
+            textFont.ColorRgba = Colors.Special;
+            textFont.DrawTextWrapNone("Automatic Crash Test in progress...!", centerSplit[0], new(0.5f, 0.5f));
+            progressPercentage *= 100f;
+            textFont.DrawTextWrapNone($"{progressBarText} [{progressPercentage:F2}%]", centerSplit[1], new(0.5f, 0.5f));
+            textFont.DrawTextWrapNone($"[{crashTestCount}] of [{total}] Checks completed.", centerSplit[2], new(0.5f, 0.5f));
+            return;
+        }
         
         var curDevice = ShapeInput.CurrentInputDeviceType;
         var curDeviceNoMouse = ShapeInput.CurrentInputDeviceTypeNoMouse;
@@ -1383,9 +1428,9 @@ public class ShapesExample : ExampleScene
         textFont.DrawTextWrapNone(textMoving, rightRect.ApplyMarginsAbsolute(margin, margin, margin, margin), new(1f, 0.5f));
 
         var testingTagRect = GAMELOOP.UIRects.GetRect("bottom right");
+        var testingTagSplit = testingTagRect.SplitV(0.5f);
         if (automatedTestingEnabled)
         {
-            var testingTagSplit = testingTagRect.SplitV(0.5f);
             textFont.ColorRgba = Colors.Special2;
             textFont.DrawTextWrapNone("Testing - Stop[T]", testingTagSplit.top, new(0.5f, 0f));
             textFont.DrawTextWrapNone("[Y] / [N]", testingTagSplit.bottom, new(0.5f, 1f));
@@ -1393,7 +1438,8 @@ public class ShapesExample : ExampleScene
         else
         {
             textFont.ColorRgba = Colors.Special2;
-            textFont.DrawTextWrapNone("Press T to Start Testing", testingTagRect, new(0.5f, 0.5f));
+            textFont.DrawTextWrapNone("Press T to Start Testing", testingTagSplit.top, new(0.5f, 0.5f));
+            textFont.DrawTextWrapNone("Press U to Load Test", testingTagSplit.bottom, new(0.5f, 0.5f));
         }
         
         
@@ -1556,6 +1602,19 @@ public class ShapesExample : ExampleScene
     private void StartAutomatedTesting(bool continueTesting)
     {
         if (automatedTestingEnabled) return;
+        if (!crashTestSuccessfull)
+        {
+            Console.WriteLine("Crash test started. Automated testing start suspended.");
+            
+            movingShape = CreateShape(new(), 10f, ShapeType.None);
+            staticShape = CreateShape(new(), 10f, ShapeType.None);
+            projectionActive = false;
+            
+            crashTestTimer = 0.04f;
+            continueTestingAfterCrashTest = continueTesting;
+            return;
+        }
+        
         automatedTestingEnabled = true;
         
         if (continueTesting)
@@ -1662,14 +1721,76 @@ public class ShapesExample : ExampleScene
         }
     }
     
-    //TODO: Add automated tester to catch crashes -> goes through all shapes rapidly (~2-3frames per shape)
-    private void TestForCrash(float dt)
-    {
-        
-    }
     
+    private void TestForCrash(float dt, Vector2 mousePos)
+    {
+        if (crashTestTimer <= 0) return;
+        
+        if (crashTestTimer > 0)
+        {
+            crashTestTimer -= dt;
+            if (crashTestTimer <= 0)
+            {
+                crashTestTimer = 0.04f;
+                crashTestCount++;
+            }
+            else return;
+        }
+        
+        
+        var movingType = movingShape.GetShapeType();
+        var staticType = staticShape.GetShapeType();
+
+        if (projectionActive && movingType == ShapeType.PolyLine && staticType == ShapeType.PolyLine && shapeMode == ShapeMode.ClosestDistance)
+        {
+            crashTestSuccessfull = true;
+            crashTestTimer = -1f;
+            StartAutomatedTesting(continueTestingAfterCrashTest);
+            Console.WriteLine("Crash test successful. Automated testing started.");
+        }
+        else
+        {
+            if (staticType == ShapeType.PolyLine && movingType == ShapeType.PolyLine)
+            {
+                if (shapeMode == ShapeMode.ClosestDistance)
+                {
+                    projectionActive = true;
+                    shapeMode = ShapeMode.Overlap;
+                    Console.WriteLine("Crash test changed to projection mode and overlap mode.");
+                }
+                else if (shapeMode == ShapeMode.Overlap)
+                {
+                    shapeMode = ShapeMode.Intersection;
+                    Console.WriteLine("Crash test changed to intersection mode.");
+                }
+                else
+                {
+                    shapeMode = ShapeMode.ClosestDistance;
+                    Console.WriteLine("Crash test changed to closest distance mode.");
+                }
+                
+                movingShape = CreateShape(new(), 10f, ShapeType.None);
+                staticShape = CreateShape(new(), 10f, ShapeType.None);
+            }
+            else
+            {
+                if (movingType == ShapeType.PolyLine)
+                {
+                    movingShape = CreateShape(new(), 10f, ShapeType.None);
+                    NextStaticShape();
+                    Console.WriteLine("Crash test changed to next static shape.");
+                }
+                else
+                {
+                    NextMovingShape(mousePos);
+                    Console.WriteLine("Crash test changed to next moving shape.");
+                }
+            }
+        }
+    }
     private void WriteAutomatedTestResults()
     {
+        if(automatedTestResults.Count <= 0) return;
         
         Console.WriteLine("Automated Test Results:");
         var failures = automatedTestResults.Where(r => !r.success).ToList();
