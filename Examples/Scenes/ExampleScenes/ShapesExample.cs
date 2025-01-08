@@ -1721,7 +1721,6 @@ public class ShapesExample : ExampleScene
         }
     }
     
-    
     private void TestForCrash(float dt, Vector2 mousePos)
     {
         if (crashTestTimer <= 0) return;
@@ -1736,7 +1735,6 @@ public class ShapesExample : ExampleScene
             }
             else return;
         }
-        
         
         var movingType = movingShape.GetShapeType();
         var staticType = staticShape.GetShapeType();
