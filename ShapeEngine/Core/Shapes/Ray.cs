@@ -72,7 +72,7 @@ public readonly struct Ray
         if (flippedNormal) return direction.GetPerpendicularLeft().Normalize();
         return direction.GetPerpendicularRight().Normalize();
     }
-    public bool IsPointOnRay(Vector2 point) => IsPointOnRay(point, Point, Direction);
+    // public bool IsPointOnRay(Vector2 point) => IsPointOnRay(point, Point, Direction);
     
     public Rect GetBoundingBox() { return new(Point, Point + Direction * MaxLength); }
     public Rect GetBoundingBox(float length) { return new(Point, Point + Direction * length); }
@@ -943,6 +943,7 @@ public readonly struct Ray
     public CollisionPoints? IntersectShape(Segment segment)
     {
         var result = IntersectRaySegment(Point, Direction, segment.Start, segment.End, segment.Normal);
+        Console.WriteLine($"Point of intersection: {result.Point} - Normal: {result.Normal} - Valid: {result.Valid}");
         if (result.Valid)
         {
             var colPoints = new CollisionPoints();
@@ -1349,6 +1350,7 @@ public readonly struct Ray
         }
 
         return false;
+        
     }
     public static bool OverlapRayLine(Vector2 rayPoint, Vector2 rayDirection, Vector2 linePoint, Vector2 lineDirection)
     {
@@ -1398,7 +1400,19 @@ public readonly struct Ray
 
         if (distanceToCenter < circleRadius)
         {
-            return true;
+            var offset = (float)Math.Sqrt(circleRadius * circleRadius - distanceToCenter * distanceToCenter);
+            var intersection1 = closestPoint - offset * rayDirection;
+            var intersection2 = closestPoint + offset * rayDirection;
+
+            if (Vector2.Dot(intersection1 - rayPoint, rayDirection) >= 0)
+            {
+                return true;
+            }
+
+            if (Vector2.Dot(intersection2 - rayPoint, rayDirection) >= 0)
+            {
+                return true;
+            }
         }
         
         if (Math.Abs(distanceToCenter - circleRadius) < 1e-10)
@@ -1482,6 +1496,7 @@ public readonly struct Ray
         return false;
     }
 
+    public bool OverlapPoint(Vector2 p) => IsPointOnRay(Point, Direction, p);
     public bool OverlapSegment(Vector2 segmentStart, Vector2 segmentEnd) => OverlapRaySegment(Point, Direction, segmentStart, segmentEnd);
     public bool OverlapLine(Vector2 linePoint, Vector2 lineDirection) => OverlapRayLine(Point, Direction, linePoint, lineDirection);
     public bool OverlapRay(Vector2 rayPoint, Vector2 rayDirection) => OverlapRayRay(Point, Direction, rayPoint, rayDirection);

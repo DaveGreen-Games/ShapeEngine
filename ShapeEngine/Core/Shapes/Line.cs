@@ -71,7 +71,7 @@ public readonly struct Line
         if (flippedNormal) return direction.GetPerpendicularLeft().Normalize();
         return direction.GetPerpendicularRight().Normalize();
     }
-    public bool IsPointOnLine(Vector2 point) => IsPointOnLine(point, Point, Direction);
+    // public bool IsPointOnLine(Vector2 point) => IsPointOnLine(point, Point, Direction);
     
     public Rect GetBoundingBox() { return new(Point - Direction * MaxLength * 0.5f, Point + Direction * MaxLength * 0.5f); }
     public Rect GetBoundingBox(float length) { return new(Point - Direction * length * 0.5f, Point + Direction * length * 0.5f); }
@@ -1547,6 +1547,7 @@ public readonly struct Line
         return false;
     }
 
+    public bool OverlapPoint(Vector2 p) => IsPointOnLine(Point, Direction, p);
     public bool OverlapSegment(Vector2 segmentStart, Vector2 segmentEnd) => OverlapLineSegment(Point, Direction, segmentStart, segmentEnd);
     public bool OverlapLine(Vector2 linePoint, Vector2 lineDirection) => OverlapLineLine(Point, Direction, linePoint, lineDirection);
     public bool OverlapRay(Vector2 rayPoint, Vector2 rayDirection) => OverlapLineRay(Point, Direction, rayPoint, rayDirection);

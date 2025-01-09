@@ -1002,20 +1002,7 @@ public class Polyline : Points, IEquatable<Polyline>
         
         #endregion
     
-    #region Contains
-    public bool ContainsPoint(Vector2 p)
-    {
-        var segments = GetEdges();
-        foreach (var segment in segments)
-        {
-            if (segment.ContainsPoint(p)) return true;
-        }
-        return false;
-    }
-
     
-
-    #endregion
     
     #region Overlap
     public static bool OverlapPolylineSegment(List<Vector2> points, Vector2 segmentStart, Vector2 segmentEnd)
@@ -1090,6 +1077,15 @@ public class Polyline : Points, IEquatable<Polyline>
         return false;
     }
 
+    public bool OverlapPoint(Vector2 p)
+    {
+        var segments = GetEdges();
+        foreach (var segment in segments)
+        {
+            if (segment.OverlapPoint(p)) return true;
+        }
+        return false;
+    }
     public bool OverlapSegment(Vector2 segmentStart, Vector2 segmentEnd) => OverlapPolylineSegment(this, segmentStart, segmentEnd);
     public bool OverlapLine(Vector2 linePoint, Vector2 lineDirection) => OverlapPolylineLine(this, linePoint, lineDirection);
     public bool OverlapRay(Vector2 rayPoint, Vector2 rayDirection) => OverlapPolylineRay(this, rayPoint, rayDirection);

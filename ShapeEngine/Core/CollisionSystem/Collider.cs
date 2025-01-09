@@ -417,14 +417,14 @@ public abstract class Collider : Shape
         switch (GetShapeType())
         {
             case ShapeType.Circle: return GetCircleShape().ContainsPoint(p);
-            case ShapeType.Segment: return GetSegmentShape().ContainsPoint(p);
-            case ShapeType.Line: return GetLineShape().IsPointOnLine(p);
-            case ShapeType.Ray: return GetRayShape().IsPointOnRay(p);
+            case ShapeType.Segment: return GetSegmentShape().OverlapPoint(p);
+            case ShapeType.Line: return GetLineShape().OverlapPoint(p);
+            case ShapeType.Ray: return GetRayShape().OverlapPoint(p);
             case ShapeType.Triangle: return GetTriangleShape().ContainsPoint(p);
             case ShapeType.Quad: return GetQuadShape().ContainsPoint(p);
             case ShapeType.Rect: return GetRectShape().ContainsPoint(p);
             case ShapeType.Poly: return GetPolygonShape().ContainsPoint(p);
-            case ShapeType.PolyLine: return GetPolylineShape().ContainsPoint(p);
+            case ShapeType.PolyLine: return GetPolylineShape().OverlapPoint(p);
         }
 
         return false;

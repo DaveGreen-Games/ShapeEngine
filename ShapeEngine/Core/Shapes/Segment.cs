@@ -562,7 +562,7 @@ public readonly struct Segment : IEquatable<Segment>
     }
     public static CollisionPoint IntersectSegmentRay(Vector2 segmentStart, Vector2 segmentEnd, Vector2 rayPoint, Vector2 rayDirection)
     {
-        float denominator = (segmentEnd.X - segmentStart.X) * rayDirection.Y - (segmentEnd.Y - segmentStart.Y) * rayDirection.X;
+        float denominator = rayDirection.X * (segmentEnd.Y - segmentStart.Y) - rayDirection.Y * (segmentEnd.X - segmentStart.X);
 
         if (Math.Abs(denominator) < 1e-10)
         {
@@ -570,14 +570,13 @@ public readonly struct Segment : IEquatable<Segment>
         }
 
         var difference = segmentStart - rayPoint;
-        float t = (difference.X * rayDirection.Y - difference.Y * rayDirection.X) / denominator;
-        float u = (difference.X * (segmentEnd.Y - segmentStart.Y) - difference.Y * (segmentEnd.X - segmentStart.X)) / denominator;
+        float t = (difference.X * (segmentEnd.Y - segmentStart.Y) - difference.Y * (segmentEnd.X - segmentStart.X)) / denominator;
+        float u = (difference.X * rayDirection.Y - difference.Y * rayDirection.X) / denominator;
 
-        if (u >= 0 && u <= 1 && t >= 0)
+        if (t >= 0 && u >= 0 && u <= 1)
         {
-            var intersection = segmentStart + t * (segmentEnd - segmentStart);
-            var segmentDirection = (segmentEnd - segmentStart).Normalize();
-            var normal = new Vector2(-segmentDirection.Y, segmentDirection.X);
+            var intersection = rayPoint + t * rayDirection;
+            var normal = new Vector2(-rayDirection.Y, rayDirection.X);
             return new(intersection, normal);
         }
 
@@ -846,7 +845,7 @@ public readonly struct Segment : IEquatable<Segment>
 
     public static bool OverlapSegmentRay(Vector2 segmentStart, Vector2 segmentEnd, Vector2 rayPoint, Vector2 rayDirection)
     {
-        float denominator = (segmentEnd.X - segmentStart.X) * rayDirection.Y - (segmentEnd.Y - segmentStart.Y) * rayDirection.X;
+        float denominator = rayDirection.X * (segmentEnd.Y - segmentStart.Y) - rayDirection.Y * (segmentEnd.X - segmentStart.X);
 
         if (Math.Abs(denominator) < 1e-10)
         {
@@ -854,15 +853,33 @@ public readonly struct Segment : IEquatable<Segment>
         }
 
         var difference = segmentStart - rayPoint;
-        float t = (difference.X * rayDirection.Y - difference.Y * rayDirection.X) / denominator;
-        float u = (difference.X * (segmentEnd.Y - segmentStart.Y) - difference.Y * (segmentEnd.X - segmentStart.X)) / denominator;
+        float t = (difference.X * (segmentEnd.Y - segmentStart.Y) - difference.Y * (segmentEnd.X - segmentStart.X)) / denominator;
+        float u = (difference.X * rayDirection.Y - difference.Y * rayDirection.X) / denominator;
 
-        if (u >= 0 && u <= 1 && t >= 0)
+        if (t >= 0 && u >= 0 && u <= 1)
         {
             return true;
         }
 
         return false;
+        
+        // float denominator = (segmentEnd.X - segmentStart.X) * rayDirection.Y - (segmentEnd.Y - segmentStart.Y) * rayDirection.X;
+        //
+        // if (Math.Abs(denominator) < 1e-10)
+        // {
+        //     return false;
+        // }
+        //
+        // var difference = segmentStart - rayPoint;
+        // float t = (difference.X * rayDirection.Y - difference.Y * rayDirection.X) / denominator;
+        // float u = (difference.X * (segmentEnd.Y - segmentStart.Y) - difference.Y * (segmentEnd.X - segmentStart.X)) / denominator;
+        //
+        // if (u >= 0 && u <= 1 && t >= 0)
+        // {
+        //     return true;
+        // }
+        //
+        // return false;
     }
     
     public static bool OverlapSegmentCircle(Vector2 segStart, Vector2 segEnd, Vector2 circlePos, float circleRadius) => Circle.OverlapCircleSegment(circlePos, circleRadius, segStart, segEnd);
@@ -1011,11 +1028,11 @@ public readonly struct Segment : IEquatable<Segment>
     }
     #endregion
 
-    #region Contains
-    
-    public readonly bool ContainsPoint(Vector2 p) { return IsPointOnSegment(p, Start, End); }
-    
-    #endregion
+    // #region Contains
+    //
+    // public bool ContainsPoint(Vector2 p) { return IsPointOnSegment(p, Start, End); }
+    //
+    // #endregion
 
     #region Closest Point
     public static Vector2 GetClosestPointSegmentPoint(Vector2 segmentStart, Vector2 segmentEnd, Vector2 p, out float disSquared)
@@ -1526,6 +1543,7 @@ public readonly struct Segment : IEquatable<Segment>
     #endregion
     
     #region Overlap
+    public bool OverlapPoint(Vector2 p) => IsPointOnSegment(Start, End, p);
     public bool OverlapSegment(Vector2 segStart, Vector2 segEnd) => OverlapSegmentSegment(Start, End, segStart, segEnd);
     public bool OverlapLine(Vector2 linePoint, Vector2 lineDirection) => OverlapSegmentLine(Start, End, linePoint, lineDirection);
     public bool OverlapRay(Vector2 rayPoint, Vector2 rayDirection) => OverlapSegmentRay(Start, End, rayPoint, rayDirection);
