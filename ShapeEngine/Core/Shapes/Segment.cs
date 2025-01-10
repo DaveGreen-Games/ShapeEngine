@@ -540,25 +540,54 @@ public readonly struct Segment : IEquatable<Segment>
     
     public static CollisionPoint IntersectSegmentLine(Vector2 segmentStart, Vector2 segmentEnd, Vector2 linePoint, Vector2 lineDirection)
     {
-        float denominator = (segmentEnd.X - segmentStart.X) * lineDirection.Y - (segmentEnd.Y - segmentStart.Y) * lineDirection.X;
+        var segmentDirection = segmentEnd - segmentStart;
 
+        // Calculate the denominator of the intersection formula
+        float denominator = lineDirection.X * segmentDirection.Y - lineDirection.Y * segmentDirection.X;
+
+        // Check if lines are parallel (denominator is zero)
         if (Math.Abs(denominator) < 1e-10)
         {
             return new();
         }
 
+        // Calculate the intersection point using parameter t
         var difference = segmentStart - linePoint;
-        float t = (difference.X * lineDirection.Y - difference.Y * lineDirection.X) / denominator;
-        float u = (difference.X * (segmentEnd.Y - segmentStart.Y) - difference.Y * (segmentEnd.X - segmentStart.X)) / denominator;
+        float t = (difference.X * segmentDirection.Y - difference.Y * segmentDirection.X) / denominator;
 
-        if (u >= 0 && u <= 1)
+        // Calculate the intersection point
+        var intersection = linePoint + t * lineDirection;
+
+        // Check if the intersection point is within the segment
+        if (Segment.IsPointOnSegment(intersection, segmentStart, segmentEnd))
         {
-            var intersection = segmentStart + t * (segmentEnd - segmentStart);
+            // The normal vector can be taken as perpendicular to the segment direction
             var normal = new Vector2(-lineDirection.Y, lineDirection.X).Normalize();
+
             return new(intersection, normal);
         }
 
         return new();
+        
+        // float denominator = (segmentEnd.X - segmentStart.X) * lineDirection.Y - (segmentEnd.Y - segmentStart.Y) * lineDirection.X;
+        //
+        // if (Math.Abs(denominator) < 1e-10)
+        // {
+        //     return new();
+        // }
+        //
+        // var difference = segmentStart - linePoint;
+        // float t = (difference.X * lineDirection.Y - difference.Y * lineDirection.X) / denominator;
+        // float u = (difference.X * (segmentEnd.Y - segmentStart.Y) - difference.Y * (segmentEnd.X - segmentStart.X)) / denominator;
+        //
+        // if (u >= 0 && u <= 1)
+        // {
+        //     var intersection = segmentStart + t * (segmentEnd - segmentStart);
+        //     var normal = new Vector2(-lineDirection.Y, lineDirection.X).Normalize();
+        //     return new(intersection, normal);
+        // }
+        //
+        // return new();
     }
     public static CollisionPoint IntersectSegmentRay(Vector2 segmentStart, Vector2 segmentEnd, Vector2 rayPoint, Vector2 rayDirection)
     {

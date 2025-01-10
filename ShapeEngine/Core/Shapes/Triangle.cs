@@ -1899,14 +1899,14 @@ public readonly struct Triangle : IEquatable<Triangle>
             points.Add(result);
         }
             
-        result = Segment.IntersectSegmentRay(A, B, r.Point, r.Direction, r.Normal);
+        result = Segment.IntersectSegmentRay(B, C, r.Point, r.Direction, r.Normal);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
             
-        result = Segment.IntersectSegmentRay(A, B, r.Point, r.Direction, r.Normal);
+        result = Segment.IntersectSegmentRay(C, A, r.Point, r.Direction, r.Normal);
         if (result.Valid)
         {
             points ??= new();
@@ -1925,14 +1925,14 @@ public readonly struct Triangle : IEquatable<Triangle>
             points.Add(result);
         }
             
-        result = Segment.IntersectSegmentLine(A, B, l.Point, l.Direction, l.Normal);
+        result = Segment.IntersectSegmentLine(B, C, l.Point, l.Direction, l.Normal);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
             
-        result = Segment.IntersectSegmentLine(A, B, l.Point, l.Direction, l.Normal);
+        result = Segment.IntersectSegmentLine(C, A, l.Point, l.Direction, l.Normal);
         if (result.Valid)
         {
             points ??= new();
@@ -2342,7 +2342,7 @@ public readonly struct Triangle : IEquatable<Triangle>
             count++;
         }
             
-        result = Segment.IntersectSegmentRay(A, B, r.Point, r.Direction, r.Normal);
+        result = Segment.IntersectSegmentRay(B, C, r.Point, r.Direction, r.Normal);
         if (result.Valid)
         {
             points.Add(result);
@@ -2352,7 +2352,7 @@ public readonly struct Triangle : IEquatable<Triangle>
 
         if (count >= 2) return count;
             
-        result = Segment.IntersectSegmentRay(A, B, r.Point, r.Direction, r.Normal);
+        result = Segment.IntersectSegmentRay(C, A, r.Point, r.Direction, r.Normal);
         if (result.Valid)
         {
             points.Add(result);
@@ -2372,7 +2372,7 @@ public readonly struct Triangle : IEquatable<Triangle>
             count++;
         }
             
-        result = Segment.IntersectSegmentLine(A, B, l.Point, l.Direction, l.Normal);
+        result = Segment.IntersectSegmentLine(B, C, l.Point, l.Direction, l.Normal);
         if (result.Valid)
         {
             points.Add(result);
@@ -2382,7 +2382,7 @@ public readonly struct Triangle : IEquatable<Triangle>
 
         if (count >= 2) return count;
             
-        result = Segment.IntersectSegmentLine(A, B, l.Point, l.Direction, l.Normal);
+        result = Segment.IntersectSegmentLine(C, A, l.Point, l.Direction, l.Normal);
         if (result.Valid)
         {
             points.Add(result);

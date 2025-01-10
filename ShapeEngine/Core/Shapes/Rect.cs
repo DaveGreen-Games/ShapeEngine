@@ -2754,21 +2754,21 @@ public readonly struct Rect : IEquatable<Rect>
             points.AddRange(result);
         }
        
-        result = Segment.IntersectSegmentRay(a, b, r.Point, r.Direction, r.Normal);
+        result = Segment.IntersectSegmentRay(b, c, r.Point, r.Direction, r.Normal);
         if (result.Valid)
         {
             points ??= new();
             points.AddRange(result);
         }
         
-        result = Segment.IntersectSegmentRay(a, b, r.Point, r.Direction, r.Normal);
+        result = Segment.IntersectSegmentRay(c, d, r.Point, r.Direction, r.Normal);
         if (result.Valid)
         {
             points ??= new();
             points.AddRange(result);
         }
         
-        result = Segment.IntersectSegmentRay(a, b, r.Point, r.Direction, r.Normal);
+        result = Segment.IntersectSegmentRay(d, a, r.Point, r.Direction, r.Normal);
         if (result.Valid)
         {
             points ??= new();
@@ -2791,21 +2791,21 @@ public readonly struct Rect : IEquatable<Rect>
             points.AddRange(result);
         }
        
-        result = Segment.IntersectSegmentLine(a, b, l.Point, l.Direction, l.Normal);
+        result = Segment.IntersectSegmentLine(b, c, l.Point, l.Direction, l.Normal);
         if (result.Valid)
         {
             points ??= new();
             points.AddRange(result);
         }
         
-        result = Segment.IntersectSegmentLine(a, b, l.Point, l.Direction, l.Normal);
+        result = Segment.IntersectSegmentLine(c, d, l.Point, l.Direction, l.Normal);
         if (result.Valid)
         {
             points ??= new();
             points.AddRange(result);
         }
         
-        result = Segment.IntersectSegmentLine(a, b, l.Point, l.Direction, l.Normal);
+        result = Segment.IntersectSegmentLine(d, a, l.Point, l.Direction, l.Normal);
         if (result.Valid)
         {
             points ??= new();
@@ -3358,7 +3358,7 @@ public readonly struct Rect : IEquatable<Rect>
             count++;
         }
        
-        result = Segment.IntersectSegmentRay(a, b, r.Point, r.Direction, r.Normal);
+        result = Segment.IntersectSegmentRay(b, c, r.Point, r.Direction, r.Normal);
         if (result.Valid)
         {
             points.Add(result);
@@ -3368,7 +3368,7 @@ public readonly struct Rect : IEquatable<Rect>
 
         if (count >= 2) return count;
         
-        result = Segment.IntersectSegmentRay(a, b, r.Point, r.Direction, r.Normal);
+        result = Segment.IntersectSegmentRay(c, d, r.Point, r.Direction, r.Normal);
         if (result.Valid)
         {
             points.Add(result);
@@ -3378,7 +3378,7 @@ public readonly struct Rect : IEquatable<Rect>
 
         if (count >= 2) return count;
         
-        result = Segment.IntersectSegmentRay(a, b, r.Point, r.Direction, r.Normal);
+        result = Segment.IntersectSegmentRay(d, a, r.Point, r.Direction, r.Normal);
         if (result.Valid)
         {
             points.Add(result);
@@ -3402,7 +3402,7 @@ public readonly struct Rect : IEquatable<Rect>
             count++;
         }
        
-        result = Segment.IntersectSegmentLine(a, b, l.Point, l.Direction, l.Normal);
+        result = Segment.IntersectSegmentLine(b, c, l.Point, l.Direction, l.Normal);
         if (result.Valid)
         {
             points.Add(result);
@@ -3412,7 +3412,7 @@ public readonly struct Rect : IEquatable<Rect>
 
         if (count >= 2) return count;
         
-        result = Segment.IntersectSegmentLine(a, b, l.Point, l.Direction, l.Normal);
+        result = Segment.IntersectSegmentLine(c, d, l.Point, l.Direction, l.Normal);
         if (result.Valid)
         {
             points.Add(result);
@@ -3422,7 +3422,7 @@ public readonly struct Rect : IEquatable<Rect>
 
         if (count >= 2) return count;
         
-        result = Segment.IntersectSegmentLine(a, b, l.Point, l.Direction, l.Normal);
+        result = Segment.IntersectSegmentLine(d, a, l.Point, l.Direction, l.Normal);
         if (result.Valid)
         {
             points.Add(result);

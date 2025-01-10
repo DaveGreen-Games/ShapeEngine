@@ -2075,21 +2075,21 @@ public readonly struct Quad : IEquatable<Quad>
                 points.AddRange(result);
             }
                 
-            result = Segment.IntersectSegmentRay(A, B, r.Point, r.Direction, r.Normal);
+            result = Segment.IntersectSegmentRay(B, C, r.Point, r.Direction, r.Normal);
             if (result.Valid)
             {
                 points ??= new();
                 points.AddRange(result);
             }
                 
-            result = Segment.IntersectSegmentRay(A, B, r.Point, r.Direction, r.Normal);
+            result = Segment.IntersectSegmentRay(C, D, r.Point, r.Direction, r.Normal);
             if (result.Valid)
             {
                 points ??= new();
                 points.AddRange(result);
             }
             
-            result = Segment.IntersectSegmentRay(A, B, r.Point, r.Direction, r.Normal);
+            result = Segment.IntersectSegmentRay(D, A, r.Point, r.Direction, r.Normal);
             if (result.Valid)
             {
                 points ??= new();
@@ -2107,21 +2107,21 @@ public readonly struct Quad : IEquatable<Quad>
                 points.AddRange(result);
             }
                 
-            result = Segment.IntersectSegmentLine(A, B, l.Point, l.Direction, l.Normal);
+            result = Segment.IntersectSegmentLine(B, C, l.Point, l.Direction, l.Normal);
             if (result.Valid)
             {
                 points ??= new();
                 points.AddRange(result);
             }
                 
-            result = Segment.IntersectSegmentLine(A, B, l.Point, l.Direction, l.Normal);
+            result = Segment.IntersectSegmentLine(C, D, l.Point, l.Direction, l.Normal);
             if (result.Valid)
             {
                 points ??= new();
                 points.AddRange(result);
             }
             
-            result = Segment.IntersectSegmentLine(A, B, l.Point, l.Direction, l.Normal);
+            result = Segment.IntersectSegmentLine(D, A, l.Point, l.Direction, l.Normal);
             if (result.Valid)
             {
                 points ??= new();
@@ -2629,7 +2629,7 @@ public readonly struct Quad : IEquatable<Quad>
                 count++;
             }
                 
-            result = Segment.IntersectSegmentRay(A, B, r.Point, r.Direction, r.Normal);
+            result = Segment.IntersectSegmentRay(B, C, r.Point, r.Direction, r.Normal);
             if (result.Valid)
             {
                 points.Add(result);
@@ -2639,7 +2639,7 @@ public readonly struct Quad : IEquatable<Quad>
 
             if (count >= 2) return count;
             
-            result = Segment.IntersectSegmentRay(A, B, r.Point, r.Direction, r.Normal);
+            result = Segment.IntersectSegmentRay(C, D, r.Point, r.Direction, r.Normal);
             if (result.Valid)
             {
                 points.Add(result);
@@ -2649,7 +2649,7 @@ public readonly struct Quad : IEquatable<Quad>
             
             if(count >= 2) return count;
             
-            result = Segment.IntersectSegmentRay(A, B, r.Point, r.Direction, r.Normal);
+            result = Segment.IntersectSegmentRay(D, A, r.Point, r.Direction, r.Normal);
             if (result.Valid)
             {
                 points.Add(result);
@@ -2668,7 +2668,7 @@ public readonly struct Quad : IEquatable<Quad>
                 count++;
             }
                 
-            result = Segment.IntersectSegmentLine(A, B, l.Point, l.Direction, l.Normal);
+            result = Segment.IntersectSegmentLine(B, C, l.Point, l.Direction, l.Normal);
             if (result.Valid)
             {
                 points.Add(result);
@@ -2678,7 +2678,7 @@ public readonly struct Quad : IEquatable<Quad>
 
             if (count >= 2) return count;
             
-            result = Segment.IntersectSegmentLine(A, B, l.Point, l.Direction, l.Normal);
+            result = Segment.IntersectSegmentLine(C, D, l.Point, l.Direction, l.Normal);
             if (result.Valid)
             {
                 points.Add(result);
@@ -2688,7 +2688,7 @@ public readonly struct Quad : IEquatable<Quad>
             
             if(count >= 2) return count;
             
-            result = Segment.IntersectSegmentLine(A, B, l.Point, l.Direction, l.Normal);
+            result = Segment.IntersectSegmentLine(D, A, l.Point, l.Direction, l.Normal);
             if (result.Valid)
             {
                 points.Add(result);

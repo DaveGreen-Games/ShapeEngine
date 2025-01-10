@@ -2198,7 +2198,7 @@ namespace ShapeEngine.Core.Shapes
                 if (result.Valid)
                 {
                     points ??= new();
-                    points.AddRange(result);
+                    points.Add(result);
                 }
                 
             }
@@ -2215,7 +2215,7 @@ namespace ShapeEngine.Core.Shapes
                 if (result.Valid)
                 {
                     points ??= new();
-                    points.AddRange(result);
+                    points.Add(result);
                 }
                 
             }
@@ -2231,7 +2231,7 @@ namespace ShapeEngine.Core.Shapes
                 if (result.Valid)
                 {
                     points ??= new();
-                    points.AddRange(result);
+                    points.Add(result);
                 }
                 
             }
@@ -2268,21 +2268,21 @@ namespace ShapeEngine.Core.Shapes
                 if (result.Valid)
                 {
                     points ??= new();
-                    points.AddRange(result);
+                    points.Add(result);
                 }
                 
                 result = Segment.IntersectSegmentSegment( this[i], this[(i + 1) % Count], t.B, t.C);
                 if (result.Valid)
                 {
                     points ??= new();
-                    points.AddRange(result);
+                    points.Add(result);
                 }
                 
                 result = Segment.IntersectSegmentSegment( this[i], this[(i + 1) % Count], t.C, t.A);
                 if (result.Valid)
                 {
                     points ??= new();
-                    points.AddRange(result);
+                    points.Add(result);
                 }
                 
             }
@@ -2305,27 +2305,27 @@ namespace ShapeEngine.Core.Shapes
                 if (result.Valid)
                 {
                     points ??= new();
-                    points.AddRange(result);
+                    points.Add(result);
                 }
                 
                 result = Segment.IntersectSegmentSegment( this[i], this[(i + 1) % Count], b, c);
                 if (result.Valid)
                 {
                     points ??= new();
-                    points.AddRange(result);
+                    points.Add(result);
                 }
                 
                 result = Segment.IntersectSegmentSegment( this[i], this[(i + 1) % Count], c, d);
                 if (result.Valid)
                 {
                     points ??= new();
-                    points.AddRange(result);
+                    points.Add(result);
                 }
                 result = Segment.IntersectSegmentSegment( this[i], this[(i + 1) % Count], d, a);
                 if (result.Valid)
                 {
                     points ??= new();
-                    points.AddRange(result);
+                    points.Add(result);
                 }
             }
             return points;
@@ -2341,28 +2341,28 @@ namespace ShapeEngine.Core.Shapes
                 if (result.Valid)
                 {
                     points ??= new();
-                    points.AddRange(result);
+                    points.Add(result);
                 }
                 
                 result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], q.B, q.C);
                 if (result.Valid)
                 {
                     points ??= new();
-                    points.AddRange(result);
+                    points.Add(result);
                 }
                 
                 result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count],q.C, q.D);
                 if (result.Valid)
                 {
                     points ??= new();
-                    points.AddRange(result);
+                    points.Add(result);
                 }
                 
                 result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count],q.D, q.A);
                 if (result.Valid)
                 {
                     points ??= new();
-                    points.AddRange(result);
+                    points.Add(result);
                 }
                 
             }
@@ -2380,7 +2380,7 @@ namespace ShapeEngine.Core.Shapes
                     if (result.Valid)
                     {
                         points ??= new();
-                        points.AddRange(result);
+                        points.Add(result);
                     }
                 }
             }
@@ -2398,7 +2398,7 @@ namespace ShapeEngine.Core.Shapes
                     if (result.Valid)
                     {
                         points ??= new();
-                        points.AddRange(result);
+                        points.Add(result);
                     }
                 }
             }
@@ -2416,7 +2416,7 @@ namespace ShapeEngine.Core.Shapes
                     if (result.Valid)
                     {
                         points ??= new();
-                        points.AddRange(result);
+                        points.Add(result);
                     }
                 }
             }
