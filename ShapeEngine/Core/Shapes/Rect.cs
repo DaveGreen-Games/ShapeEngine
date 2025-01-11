@@ -2712,28 +2712,28 @@ public readonly struct Rect : IEquatable<Rect>
             if (result.Valid)
             {
                 points ??= new();
-                points.AddRange(result);
+                points.Add(result);
             }
             
             result = Segment.IntersectSegmentSegment(b, c, seg.Start, seg.End);
             if (result.Valid)
             {
                 points ??= new();
-                points.AddRange(result);
+                points.Add(result);
             }
             
             result = Segment.IntersectSegmentSegment(c, d, seg.Start, seg.End);
             if (result.Valid)
             {
                 points ??= new();
-                points.AddRange(result);
+                points.Add(result);
             }
             
             result = Segment.IntersectSegmentSegment(d, a, seg.Start, seg.End);
             if (result.Valid)
             {
                 points ??= new();
-                points.AddRange(result);
+                points.Add(result);
             }
             
         }
@@ -2751,28 +2751,28 @@ public readonly struct Rect : IEquatable<Rect>
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
        
         result = Segment.IntersectSegmentRay(b, c, r.Point, r.Direction, r.Normal);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         
         result = Segment.IntersectSegmentRay(c, d, r.Point, r.Direction, r.Normal);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         
         result = Segment.IntersectSegmentRay(d, a, r.Point, r.Direction, r.Normal);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         return points;
     }
@@ -2788,28 +2788,28 @@ public readonly struct Rect : IEquatable<Rect>
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
        
         result = Segment.IntersectSegmentLine(b, c, l.Point, l.Direction, l.Normal);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         
         result = Segment.IntersectSegmentLine(c, d, l.Point, l.Direction, l.Normal);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         
         result = Segment.IntersectSegmentLine(d, a, l.Point, l.Direction, l.Normal);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         return points;
     }
@@ -2825,28 +2825,28 @@ public readonly struct Rect : IEquatable<Rect>
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
        
         result = Segment.IntersectSegmentSegment(b, c, s.Start, s.End);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         
         result = Segment.IntersectSegmentSegment(c, d, s.Start, s.End);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         
         result = Segment.IntersectSegmentSegment(d, a, s.Start, s.End);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         return points;
     }
@@ -2866,7 +2866,6 @@ public readonly struct Rect : IEquatable<Rect>
             points ??= new();
             if(result.a.Valid) points.Add(result.a);
             if(result.b.Valid) points.Add(result.b);
-            return points;
         }
         result = Segment.IntersectSegmentCircle(b, c, circle.Center, circle.Radius);
         if (result.a.Valid || result.b.Valid)
@@ -2874,7 +2873,6 @@ public readonly struct Rect : IEquatable<Rect>
             points ??= new();
             if(result.a.Valid) points.Add(result.a);
             if(result.b.Valid) points.Add(result.b);
-            return points;
         }
         result = Segment.IntersectSegmentCircle(c, d, circle.Center, circle.Radius);
         if (result.a.Valid || result.b.Valid)
@@ -2882,7 +2880,6 @@ public readonly struct Rect : IEquatable<Rect>
             points ??= new();
             if(result.a.Valid) points.Add(result.a);
             if(result.b.Valid) points.Add(result.b);
-            return points;
         }
         result = Segment.IntersectSegmentCircle(d, a, circle.Center, circle.Radius);
         if (result.a.Valid || result.b.Valid)
@@ -2890,7 +2887,6 @@ public readonly struct Rect : IEquatable<Rect>
             points ??= new();
             if(result.a.Valid) points.Add(result.a);
             if(result.b.Valid) points.Add(result.b);
-            return points;
         }
         return points;
     }
@@ -2907,19 +2903,19 @@ public readonly struct Rect : IEquatable<Rect>
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         result = Segment.IntersectSegmentSegment(a, b, t.B, t.C);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         result = Segment.IntersectSegmentSegment(a, b, t.C, t.A);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         
             
@@ -2928,19 +2924,19 @@ public readonly struct Rect : IEquatable<Rect>
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         result = Segment.IntersectSegmentSegment(b, c, t.B, t.C);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         result = Segment.IntersectSegmentSegment(b, c, t.C, t.A);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         
         
@@ -2948,38 +2944,38 @@ public readonly struct Rect : IEquatable<Rect>
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         result = Segment.IntersectSegmentSegment(c, d, t.B, t.C);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         result = Segment.IntersectSegmentSegment(c, d, t.C, t.A);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         
         result = Segment.IntersectSegmentSegment(d, a, t.A, t.B);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         result = Segment.IntersectSegmentSegment(d, a, t.B, t.C);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         result = Segment.IntersectSegmentSegment(d, a, t.C, t.A);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
 
         return points;
@@ -3001,7 +2997,7 @@ public readonly struct Rect : IEquatable<Rect>
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
 
         
@@ -3009,7 +3005,7 @@ public readonly struct Rect : IEquatable<Rect>
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
 
         
@@ -3017,14 +3013,14 @@ public readonly struct Rect : IEquatable<Rect>
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         
         result = Segment.IntersectSegmentSegment(a, b, rD, rA);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         
         
@@ -3033,25 +3029,25 @@ public readonly struct Rect : IEquatable<Rect>
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         result = Segment.IntersectSegmentSegment(b, c, rB, rC);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         result = Segment.IntersectSegmentSegment(b, c, rC, rD);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         result = Segment.IntersectSegmentSegment(b, c, rD, rA);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
 
         
@@ -3059,25 +3055,25 @@ public readonly struct Rect : IEquatable<Rect>
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         result = Segment.IntersectSegmentSegment(c, d, rB, rC);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         result = Segment.IntersectSegmentSegment(c, d, rC, rD);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         result = Segment.IntersectSegmentSegment(c, d, rD, rA);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         
         
@@ -3085,25 +3081,25 @@ public readonly struct Rect : IEquatable<Rect>
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         result = Segment.IntersectSegmentSegment(d, a, rB, rC);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         result = Segment.IntersectSegmentSegment(d, a, rC, rD);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         result = Segment.IntersectSegmentSegment(d, a, rD, rA);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         return points;
     }
@@ -3118,25 +3114,25 @@ public readonly struct Rect : IEquatable<Rect>
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         result = Segment.IntersectSegmentSegment(a, b, q.B, q.C);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         result = Segment.IntersectSegmentSegment(a, b, q.C, q.D);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         result = Segment.IntersectSegmentSegment(a, b, q.D, q.A);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         
         
@@ -3144,25 +3140,25 @@ public readonly struct Rect : IEquatable<Rect>
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         result = Segment.IntersectSegmentSegment(b, c, q.B, q.C);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         result = Segment.IntersectSegmentSegment(b, c, q.C, q.D);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         result = Segment.IntersectSegmentSegment(b, c, q.D, q.A);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
 
         
@@ -3170,50 +3166,50 @@ public readonly struct Rect : IEquatable<Rect>
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         result = Segment.IntersectSegmentSegment(c, d, q.B, q.C);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         result = Segment.IntersectSegmentSegment(c, d, q.C, q.D);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         result = Segment.IntersectSegmentSegment(c, d, q.D, q.A);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         
         result = Segment.IntersectSegmentSegment(d, a, q.A, q.B);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         result = Segment.IntersectSegmentSegment(d, a, q.B, q.C);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         result = Segment.IntersectSegmentSegment(d, a, q.C, q.D);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         result = Segment.IntersectSegmentSegment(d, a, q.D, q.A);
         if (result.Valid)
         {
             points ??= new();
-            points.AddRange(result);
+            points.Add(result);
         }
         return points;
     }
@@ -3234,28 +3230,28 @@ public readonly struct Rect : IEquatable<Rect>
             if (result.Valid)
             {
                 points ??= new();
-                points.AddRange(result);
+                points.Add(result);
             }
             
             result = Segment.IntersectSegmentSegment(b, c, p[i], p[(i + 1) % p.Count]);
             if (result.Valid)
             {
                 points ??= new();
-                points.AddRange(result);
+                points.Add(result);
             }
             
             result = Segment.IntersectSegmentSegment(c, d, p[i], p[(i + 1) % p.Count]);
             if (result.Valid)
             {
                 points ??= new();
-                points.AddRange(result);
+                points.Add(result);
             }
             
             result = Segment.IntersectSegmentSegment(d, a, p[i], p[(i + 1) % p.Count]);
             if (result.Valid)
             {
                 points ??= new();
-                points.AddRange(result);
+                points.Add(result);
             }
             
         }
@@ -3277,28 +3273,28 @@ public readonly struct Rect : IEquatable<Rect>
             if (result.Valid)
             {
                 points ??= new();
-                points.AddRange(result);
+                points.Add(result);
             }
             
             result = Segment.IntersectSegmentSegment(b, c, pl[i], pl[(i + 1) % pl.Count]);
             if (result.Valid)
             {
                 points ??= new();
-                points.AddRange(result);
+                points.Add(result);
             }
             
             result = Segment.IntersectSegmentSegment(c, d, pl[i], pl[(i + 1) % pl.Count]);
             if (result.Valid)
             {
                 points ??= new();
-                points.AddRange(result);
+                points.Add(result);
             }
             
             result = Segment.IntersectSegmentSegment(d, a, pl[i], pl[(i + 1) % pl.Count]);
             if (result.Valid)
             {
                 points ??= new();
-                points.AddRange(result);
+                points.Add(result);
             }
         }
         return points;

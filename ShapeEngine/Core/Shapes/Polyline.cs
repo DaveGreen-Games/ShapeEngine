@@ -1001,9 +1001,7 @@ public class Polyline : Points, IEquatable<Polyline>
         
         
         #endregion
-    
-    
-    
+        
     #region Overlap
     public static bool OverlapPolylineSegment(List<Vector2> points, Vector2 segmentStart, Vector2 segmentEnd)
     {
@@ -1227,11 +1225,11 @@ public class Polyline : Points, IEquatable<Polyline>
         CollisionPoints? points = null;
         for (var i = 0; i < Count - 1; i++)
         {
-            var result = Segment.IntersectSegmentRay(this[i], this[(i + 1) % Count], ray.Point, ray.Direction, ray.Normal);
+            var result = Segment.IntersectSegmentRay(this[i], this[i + 1], ray.Point, ray.Direction, ray.Normal);
             if (result.Valid)
             {
                 points ??= new();
-                points.AddRange(result);
+                points.Add(result);
             }
             
         }
@@ -1245,11 +1243,11 @@ public class Polyline : Points, IEquatable<Polyline>
         CollisionPoints? points = null;
         for (var i = 0; i < Count - 1; i++)
         {
-            var result = Segment.IntersectSegmentLine(this[i], this[(i + 1) % Count], l.Point, l.Direction, l.Normal);
+            var result = Segment.IntersectSegmentLine(this[i], this[i + 1], l.Point, l.Direction, l.Normal);
             if (result.Valid)
             {
                 points ??= new();
-                points.AddRange(result);
+                points.Add(result);
             }
             
         }
@@ -1263,11 +1261,11 @@ public class Polyline : Points, IEquatable<Polyline>
         CollisionPoints? points = null;
         for (var i = 0; i < Count - 1; i++)
         {
-            var result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], s.Start, s.End);
+            var result = Segment.IntersectSegmentSegment(this[i], this[i + 1], s.Start, s.End);
             if (result.Valid)
             {
                 points ??= new();
-                points.AddRange(result);
+                points.Add(result);
             }
             
         }
@@ -1282,13 +1280,12 @@ public class Polyline : Points, IEquatable<Polyline>
 
         for (var i = 0; i < Count - 1; i++)
         {
-            var result = Segment.IntersectSegmentCircle(this[i], this[(i + 1) % Count], c.Center, c.Radius);
+            var result = Segment.IntersectSegmentCircle(this[i], this[i + 1], c.Center, c.Radius);
             if (result.a.Valid || result.b.Valid)
             {
                 points ??= new();
                 if(result.a.Valid) points.Add(result.a);
                 if(result.b.Valid) points.Add(result.b);
-                return points;
             }
             
         }
@@ -1301,25 +1298,27 @@ public class Polyline : Points, IEquatable<Polyline>
         CollisionPoints? points = null;
         for (var i = 0; i < Count - 1; i++)
         {
-            var result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], t.A, t.B);
+            var p1 = this[i];
+            var p2 = this[i + 1];
+            var result = Segment.IntersectSegmentSegment(p1, p2, t.A, t.B);
             if (result.Valid)
             {
                 points ??= new();
-                points.AddRange(result);
+                points.Add(result);
             }
             
-            result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], t.B, t.C);
+            result = Segment.IntersectSegmentSegment(p1, p2, t.B, t.C);
             if (result.Valid)
             {
                 points ??= new();
-                points.AddRange(result);
+                points.Add(result);
             }
             
-            result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], t.C, t.A);
+            result = Segment.IntersectSegmentSegment(p1, p2, t.C, t.A);
             if (result.Valid)
             {
                 points ??= new();
-                points.AddRange(result);
+                points.Add(result);
             }
             
         }
@@ -1336,32 +1335,34 @@ public class Polyline : Points, IEquatable<Polyline>
         var d = r.TopRight;
         for (var i = 0; i < Count - 1; i++)
         {
-            var result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], a, b);
+            var p1 = this[i];
+            var p2 = this[i + 1];
+            var result = Segment.IntersectSegmentSegment(p1, p2, a, b);
             if (result.Valid)
             {
                 points ??= new();
-                points.AddRange(result);
+                points.Add(result);
             }
             
-            result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], b, c);
+            result = Segment.IntersectSegmentSegment(p1, p2, b, c);
             if (result.Valid)
             {
                 points ??= new();
-                points.AddRange(result);
+                points.Add(result);
             }
             
-            result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], c, d);
+            result = Segment.IntersectSegmentSegment(p1, p2, c, d);
             if (result.Valid)
             {
                 points ??= new();
-                points.AddRange(result);
+                points.Add(result);
             }
             
-            result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], d, a);
+            result = Segment.IntersectSegmentSegment(p1, p2, d, a);
             if (result.Valid)
             {
                 points ??= new();
-                points.AddRange(result);
+                points.Add(result);
             }
             
         }
@@ -1374,32 +1375,34 @@ public class Polyline : Points, IEquatable<Polyline>
         CollisionPoints? points = null;
         for (var i = 0; i < Count - 1; i++)
         {
-            var result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], q.A, q.B);
+            var p1 = this[i];
+            var p2 = this[i + 1];
+            var result = Segment.IntersectSegmentSegment(p1, p2, q.A, q.B);
             if (result.Valid)
             {
                 points ??= new();
-                points.AddRange(result);
+                points.Add(result);
             }
             
-            result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], q.B, q.C);
+            result = Segment.IntersectSegmentSegment(p1, p2, q.B, q.C);
             if (result.Valid)
             {
                 points ??= new();
-                points.AddRange(result);
+                points.Add(result);
             }
             
-            result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], q.C, q.D);
+            result = Segment.IntersectSegmentSegment(p1, p2, q.C, q.D);
             if (result.Valid)
             {
                 points ??= new();
-                points.AddRange(result);
+                points.Add(result);
             }
             
-            result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], q.D, q.A);
+            result = Segment.IntersectSegmentSegment(p1, p2, q.D, q.A);
             if (result.Valid)
             {
                 points ??= new();
-                points.AddRange(result);
+                points.Add(result);
             }
         }
         return points;
@@ -1412,11 +1415,11 @@ public class Polyline : Points, IEquatable<Polyline>
         {
             for (var j = 0; j < p.Count; j++)
             {
-                var result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count],p[j], p[(j + 1) % p.Count]);
+                var result = Segment.IntersectSegmentSegment(this[i], this[i + 1],p[j], p[(j + 1) % p.Count]);
                 if (result.Valid)
                 {
                     points ??= new();
-                    points.AddRange(result);
+                    points.Add(result);
                 }
             }
             
@@ -1432,11 +1435,11 @@ public class Polyline : Points, IEquatable<Polyline>
         {
             for (var j = 0; j < pl.Count - 1; j++)
             {
-                var result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count],pl[j], pl[(j + 1) % pl.Count]);
+                var result = Segment.IntersectSegmentSegment(this[i], this[i + 1],pl[j], pl[j + 1]);
                 if (result.Valid)
                 {
                     points ??= new();
-                    points.AddRange(result);
+                    points.Add(result);
                 }
             }
             
@@ -1452,11 +1455,11 @@ public class Polyline : Points, IEquatable<Polyline>
         {
             foreach (var seg in segments)
             {
-                var result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count],seg.Start, seg.End);
+                var result = Segment.IntersectSegmentSegment(this[i], this[i + 1],seg.Start, seg.End);
                 if (result.Valid)
                 {
                     points ??= new();
-                    points.AddRange(result);
+                    points.Add(result);
                 }
             }
         }
