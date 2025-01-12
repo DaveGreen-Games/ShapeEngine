@@ -1153,43 +1153,168 @@ public readonly struct Segment : IEquatable<Segment>
         disSquared = (closestPoint1 - closestPoint2).LengthSquared();
         return (closestPoint1, closestPoint2);
     }
+    private static Vector2 ClosestPointOnLineHelper(Vector2 linePoint, Vector2 lineDirection, Vector2 point)
+    {
+        Vector2 lineDirectionNormalized = Vector2.Normalize(lineDirection);
+        Vector2 toPoint = point - linePoint;
+        float projectionLength = Vector2.Dot(toPoint, lineDirectionNormalized);
+        return linePoint + projectionLength * lineDirectionNormalized;
+    }
     public static (Vector2 self, Vector2 other) GetClosestPointSegmentLine(Vector2 segmentStart, Vector2 segmentEnd, Vector2 linePoint, Vector2 lineDirection, out float disSquared)
     {
-        var d1 = segmentEnd - segmentStart;
-        var d2 = Vector2.Normalize(lineDirection);
-        var r = segmentStart - linePoint;
+        var segmentDirection = segmentEnd - segmentStart;
+        var lineDirectionNormalized = Vector2.Normalize(lineDirection);
 
-        float a = Vector2.Dot(d1, d1);
-        float b = Vector2.Dot(d1, d2);
-        float c = Vector2.Dot(d2, r);
-        float e = Vector2.Dot(d2, d2);
+        var diff = segmentStart - linePoint;
+        float a = Vector2.Dot(segmentDirection, segmentDirection);
+        float b = Vector2.Dot(segmentDirection, lineDirectionNormalized);
+        float c = Vector2.Dot(lineDirectionNormalized, lineDirectionNormalized);
+        float d = Vector2.Dot(segmentDirection, diff);
+        float e = Vector2.Dot(lineDirectionNormalized, diff);
 
-        float s = Math.Clamp((b * c - a * c) / (a * e - b * b), 0.0f, 1.0f);
-        float t = (b * s + c) / e;
+        float denominator = a * c - b * b;
 
-        var closestPoint1 = segmentStart + s * d1;
-        var closestPoint2 = linePoint + t * d2;
-        disSquared = (closestPoint1 - closestPoint2).LengthSquared();
-        return (closestPoint1, closestPoint2);
+        float s, tLine;
+
+        if (Math.Abs(denominator) < 1e-10)
+        {
+            // The segment and line are parallel
+            s = Math.Clamp(-d / a, 0.0f, 1.0f);
+            tLine = 0.0f;
+        }
+        else
+        {
+            s = (b * e - c * d) / denominator;
+            tLine = (a * e - b * d) / denominator;
+
+            // Clamp s to the segment range [0, 1]
+            s = Math.Clamp(s, 0.0f, 1.0f);
+        }
+
+        var closestPointOnSegment = segmentStart + s * segmentDirection;
+        var closestPointOnLine = linePoint + tLine * lineDirectionNormalized;
+
+        // Check distances to segment endpoints
+        var closestToSegmentStart = ClosestPointOnLineHelper(linePoint, lineDirectionNormalized, segmentStart);
+        var closestToSegmentEnd = ClosestPointOnLineHelper(linePoint, lineDirectionNormalized, segmentEnd);
+
+        float distance = (closestPointOnSegment - closestPointOnLine).LengthSquared();
+        float distanceToSegmentStart = (segmentStart - closestToSegmentStart).LengthSquared();
+        float distanceToSegmentEnd = (segmentEnd - closestToSegmentEnd).LengthSquared();
+
+        if (distanceToSegmentStart < distance)
+        {
+            closestPointOnSegment = segmentStart;
+            closestPointOnLine = closestToSegmentStart;
+            distance = distanceToSegmentStart;
+        }
+
+        if (distanceToSegmentEnd < distance)
+        {
+            closestPointOnSegment = segmentEnd;
+            closestPointOnLine = closestToSegmentEnd;
+            distance = distanceToSegmentEnd;
+        }
+        disSquared = distance;
+        return (closestPointOnSegment, closestPointOnLine);
+        // var d1 = segmentEnd - segmentStart;
+        // var d2 = Vector2.Normalize(lineDirection);
+        // var r = segmentStart - linePoint;
+        //
+        // float a = Vector2.Dot(d1, d1);
+        // float b = Vector2.Dot(d1, d2);
+        // float c = Vector2.Dot(d2, r);
+        // float e = Vector2.Dot(d2, d2);
+        //
+        // float s = Math.Clamp((b * c - a * c) / (a * e - b * b), 0.0f, 1.0f);
+        // float t = (b * s + c) / e;
+        //
+        // var closestPoint1 = segmentStart + s * d1;
+        // var closestPoint2 = linePoint + t * d2;
+        // disSquared = (closestPoint1 - closestPoint2).LengthSquared();
+        // return (closestPoint1, closestPoint2);
+    }
+    
+    
+    private static Vector2 ClosestPointOnRayHelper(Vector2 rayStart, Vector2 rayDirection, Vector2 point)
+    {
+        Vector2 rayDirectionNormalized = Vector2.Normalize(rayDirection);
+        Vector2 toPoint = point - rayStart;
+        float projectionLength = Vector2.Dot(toPoint, rayDirectionNormalized);
+        projectionLength = Math.Max(projectionLength, 0.0f); // Ensure the closest point is on the ray
+        return rayStart + projectionLength * rayDirectionNormalized;
     }
     public static (Vector2 self, Vector2 other) GetClosestPointSegmentRay(Vector2 segmentStart, Vector2 segmentEnd, Vector2 rayPoint, Vector2 rayDirection, out float disSquared)
     {
-        var d1 = segmentEnd - segmentStart;
-        var d2 = Vector2.Normalize(rayDirection);
-        var r = segmentStart - rayPoint;
+        var segmentDirection = segmentEnd - segmentStart;
+        var rayDirectionNormalized = Vector2.Normalize(rayDirection);
 
-        float a = Vector2.Dot(d1, d1);
-        float b = Vector2.Dot(d1, d2);
-        float c = Vector2.Dot(d2, r);
-        float e = Vector2.Dot(d2, d2);
+        var diff = segmentStart - rayPoint;
+        float a = Vector2.Dot(segmentDirection, segmentDirection);
+        float b = Vector2.Dot(segmentDirection, rayDirectionNormalized);
+        float c = Vector2.Dot(rayDirectionNormalized, rayDirectionNormalized);
+        float d = Vector2.Dot(segmentDirection, diff);
+        float e = Vector2.Dot(rayDirectionNormalized, diff);
 
-        float s = Math.Clamp((b * c - a * c) / (a * e - b * b), 0.0f, 1.0f);
-        float t = Math.Max(0.0f, (b * s + c) / e);
+        float denominator = a * c - b * b;
 
-        var closestPoint1 = segmentStart + s * d1;
-        var closestPoint2 = rayPoint + t * d2;
-        disSquared = (closestPoint1 - closestPoint2).LengthSquared();
-        return (closestPoint1, closestPoint2);
+        float s, tRay;
+
+        if (Math.Abs(denominator) < 1e-10)
+        {
+            // The segment and ray are parallel
+            s = Math.Clamp(-d / a, 0.0f, 1.0f);
+            tRay = 0.0f;
+        }
+        else
+        {
+            s = (b * e - c * d) / denominator;
+            tRay = (a * e - b * d) / denominator;
+
+            // Clamp s to the segment range [0, 1]
+            s = Math.Clamp(s, 0.0f, 1.0f);
+
+            // Ensure t is non-negative for the ray
+            if (tRay < 0.0f)
+            {
+                tRay = 0.0f;
+                s = Math.Clamp(-d / a, 0.0f, 1.0f);
+            }
+        }
+
+        var closestPointOnSegment = segmentStart + s * segmentDirection;
+        var closestPointOnRay = rayPoint + tRay * rayDirectionNormalized;
+
+        // Check if the closest point on the ray is actually far behind the ray start
+        if (tRay < 0.0f)
+        {
+            closestPointOnRay = rayPoint;
+        }
+
+        // Check distances to segment endpoints
+        var closestToSegmentStart = ClosestPointOnRayHelper(rayPoint, rayDirectionNormalized, segmentStart);
+        var closestToSegmentEnd = ClosestPointOnRayHelper(rayPoint, rayDirectionNormalized, segmentEnd);
+
+        float distance = (closestPointOnSegment - closestPointOnRay).LengthSquared();
+        float distanceToSegmentStart = (segmentStart - closestToSegmentStart).LengthSquared();
+        float distanceToSegmentEnd = (segmentEnd - closestToSegmentEnd).LengthSquared();
+
+        if (distanceToSegmentStart < distance)
+        {
+            closestPointOnSegment = segmentStart;
+            closestPointOnRay = closestToSegmentStart;
+            distance = distanceToSegmentStart;
+        }
+
+        if (distanceToSegmentEnd < distance)
+        {
+            closestPointOnSegment = segmentEnd;
+            closestPointOnRay = closestToSegmentEnd;
+            distance = distanceToSegmentEnd;
+        }
+
+        disSquared = distance;
+        return (closestPointOnSegment, closestPointOnRay);
     }
     public static (Vector2 self, Vector2 other) GetClosestPointSegmentCircle(Vector2 segmentStart, Vector2 segmentEnd, Vector2 circleCenter, float circleRadius, out float disSquared)
     {
@@ -1224,47 +1349,54 @@ public readonly struct Segment : IEquatable<Segment>
     }
     public ClosestPointResult GetClosestPoint(Line other)
     {
-        var d1 = End - Start;
-        var d2 = other.Direction;
-        var r = Start - other.Point;
-
-        float a = Vector2.Dot(d1, d1);
-        float b = Vector2.Dot(d1, d2);
-        float c = Vector2.Dot(d2, r);
-        float e = Vector2.Dot(d2, d2);
-
-        float s = Math.Clamp((b * c - a * c) / (a * e - b * b), 0.0f, 1.0f);
-        float t = (b * s + c) / e;
-
-        var closestPoint1 = Start + s * d1;
-        var closestPoint2 = other.Point + t * d2;
-        float disSquared = (closestPoint2 - closestPoint1).LengthSquared();
+        var result = GetClosestPointSegmentLine(Start, End, other.Point, other.Direction, out float disSquared);
         return new(
-            new(closestPoint1, Normal), 
-            new(closestPoint2, other.Normal),
+            new(result.self, Normal), 
+            new(result.other, other.Normal),
             disSquared);
+        // var d1 = End - Start;
+        // var d2 = other.Direction;
+        // var r = Start - other.Point;
+        //
+        // float a = Vector2.Dot(d1, d1);
+        // float b = Vector2.Dot(d1, d2);
+        // float c = Vector2.Dot(d2, r);
+        // float e = Vector2.Dot(d2, d2);
+        //
+        // float s = Math.Clamp((b * c - a * c) / (a * e - b * b), 0.0f, 1.0f);
+        // float t = (b * s + c) / e;
+        //
+        // var closestPoint1 = Start + s * d1;
+        // var closestPoint2 = other.Point + t * d2;
+        // float disSquared = (closestPoint2 - closestPoint1).LengthSquared();
+        // return new(
+        //     new(closestPoint1, Normal), 
+        //     new(closestPoint2, other.Normal),
+        //     disSquared);
     }
     public ClosestPointResult GetClosestPoint(Ray other)
     {
-        var d1 = End - Start;
-        var d2 = other.Direction;
-        var r = Start - other.Point;
-
-        float a = Vector2.Dot(d1, d1);
-        float b = Vector2.Dot(d1, d2);
-        float c = Vector2.Dot(d2, r);
-        float e = Vector2.Dot(d2, d2);
-
-        float s = Math.Clamp((b * c - a * c) / (a * e - b * b), 0.0f, 1.0f);
-        float t = Math.Max(0.0f, (b * s + c) / e);
-
-        var closestPoint1 = Start + s * d1;
-        var closestPoint2 = other.Point + t * d2;
-        float disSquared = (closestPoint2 - closestPoint1).LengthSquared();
+        var result = GetClosestPointSegmentRay(Start, End, other.Point, other.Direction, out var disSquared);
         return new(
-            new(closestPoint1, Normal), 
-            new(closestPoint2, other.Normal),
+            new(result.self, Normal), 
+            new(result.other, other.Normal),
             disSquared);
+        // var d1 = End - Start;
+        // var d2 = other.Direction;
+        // var r = Start - other.Point;
+        //
+        // float a = Vector2.Dot(d1, d1);
+        // float b = Vector2.Dot(d1, d2);
+        // float c = Vector2.Dot(d2, r);
+        // float e = Vector2.Dot(d2, d2);
+        //
+        // float s = Math.Clamp((b * c - a * c) / (a * e - b * b), 0.0f, 1.0f);
+        // float t = Math.Max(0.0f, (b * s + c) / e);
+        //
+        // var closestPoint1 = Start + s * d1;
+        // var closestPoint2 = other.Point + t * d2;
+        // float disSquared = (closestPoint2 - closestPoint1).LengthSquared();
+        
     }
     public ClosestPointResult GetClosestPoint(Segment other)
     {
@@ -1379,10 +1511,10 @@ public readonly struct Segment : IEquatable<Segment>
             var normal = (other.A - other.C).GetPerpendicularRight().Normalize();
             return new(
                 new(result.self, Normal), 
-                new(result.self, normal),
+                new(result.other, normal),
                 disSquared,
                 -1,
-                otherIndex);
+                2);
         }
 
         return new(
@@ -1421,7 +1553,7 @@ public readonly struct Segment : IEquatable<Segment>
             var normal = (other.A - other.D).GetPerpendicularRight().Normalize();
             return new(
                 new(result.self, Normal), 
-                new(result.self, normal),
+                new(result.other, normal),
                 disSquared,
                 -1,
                 3);
@@ -1463,7 +1595,7 @@ public readonly struct Segment : IEquatable<Segment>
             var normal = (other.A - other.D).GetPerpendicularRight().Normalize();
             return new(
                 new(result.self, Normal), 
-                new(result.self, normal),
+                new(result.other, normal),
                 disSquared,
                 -1,
                 3);

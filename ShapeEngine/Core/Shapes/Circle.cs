@@ -631,7 +631,7 @@ public readonly struct Circle : IEquatable<Circle>
             var circleNormal = (result.self - Center).Normalize();
             return new(
                 new(result.self, circleNormal), 
-                new(result.self, normal),
+                new(result.other, normal),
                 disSquared,
                 -1,
                 2);
@@ -676,7 +676,7 @@ public readonly struct Circle : IEquatable<Circle>
             var circleNormal = (result.self - Center).Normalize();
             return new(
                 new(result.self, circleNormal), 
-                new(result.self, normal),
+                new(result.other, normal),
                 disSquared,
                 -1,
                 3);
@@ -721,7 +721,7 @@ public readonly struct Circle : IEquatable<Circle>
             var circleNormal = (result.self - Center).Normalize();
             return new(
                 new(result.self, circleNormal), 
-                new(result.self, normal),
+                new(result.other, normal),
                 disSquared,
                 -1,
                 3);

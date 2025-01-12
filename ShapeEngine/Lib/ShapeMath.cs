@@ -40,6 +40,12 @@ public static class ShapeMath
     #endregion
    
     #region Clamp
+
+    public static float Clamp(float value)
+    {
+        return Clamp(value, 0f, 1f);
+    }
+    
     public static float Clamp(float value, float min, float max)
     {
         if (value < min) return min;
