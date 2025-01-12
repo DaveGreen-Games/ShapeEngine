@@ -133,24 +133,33 @@ public readonly struct Line
     }
     public static (Vector2 self, Vector2 other) GetClosestPointLineLine(Vector2 line1Point, Vector2 line1Direction, Vector2 line2Point, Vector2 line2Direction, out float disSquared)
     {
-        var d1 = line1Direction.Normalize();
-        var d2 = line2Direction.Normalize();
+        var result = IntersectLineLine(line1Point, line1Direction, line2Point, line2Direction);
+        if (result.Valid)
+        {
+            disSquared = 0f;
+            return (result.Point, result.Point);
+        }
 
-        float a = Vector2.Dot(d1, d1);
-        float b = Vector2.Dot(d1, d2);
-        float e = Vector2.Dot(d2, d2);
-        var r = line1Point - line2Point;
-        float c = Vector2.Dot(d1, r);
-        float f = Vector2.Dot(d2, r);
-
-        float denominator = a * e - b * b;
-        float t1 = (b * f - c * e) / denominator;
-        float t2 = (a * f - b * c) / denominator;
-
-        var closestPoint1 = line1Point + t1 * d1;
-        var closestPoint2 = line2Point + t2 * d2;
-        disSquared = (closestPoint1 - closestPoint2).LengthSquared();
-        return (closestPoint1, closestPoint2);
+        disSquared = -1f;
+        return (line1Point, line2Point);
+        // var d1 = line1Direction.Normalize();
+        // var d2 = line2Direction.Normalize();
+        //
+        // float a = Vector2.Dot(d1, d1);
+        // float b = Vector2.Dot(d1, d2);
+        // float e = Vector2.Dot(d2, d2);
+        // var r = line1Point - line2Point;
+        // float c = Vector2.Dot(d1, r);
+        // float f = Vector2.Dot(d2, r);
+        //
+        // float denominator = a * e - b * b;
+        // float t1 = (b * f - c * e) / denominator;
+        // float t2 = (a * f - b * c) / denominator;
+        //
+        // var closestPoint1 = line1Point + t1 * d1;
+        // var closestPoint2 = line2Point + t2 * d2;
+        // disSquared = (closestPoint1 - closestPoint2).LengthSquared();
+        // return (closestPoint1, closestPoint2);
     }
     public static (Vector2 self, Vector2 other) GetClosestPointLineRay(Vector2 linePoint, Vector2 lineDirection, Vector2 rayPoint, Vector2 rayDirection, out float disSquared)
     {
@@ -198,16 +207,21 @@ public readonly struct Line
     }
     public static (Vector2 self, Vector2 other) GetClosestPointLineCircle(Vector2 linePoint, Vector2 lineDirection, Vector2 circleCenter, float circleRadius, out float disSquared)
     {
-        var d1 = lineDirection.Normalize();
+        // var d1 = lineDirection.Normalize();
+        //
+        // var toCenter = circleCenter - linePoint;
+        // float projectionLength = Vector2.Dot(toCenter, d1);
+        // var closestPointOnLine = linePoint + projectionLength * d1;
+        //
+        // var offset = (closestPointOnLine - circleCenter).Normalize() * circleRadius;
+        // var closestPointOnCircle = circleCenter + offset;
+        // disSquared = (closestPointOnLine - closestPointOnCircle).LengthSquared();
+        // return (closestPointOnLine, closestPointOnCircle);
+        var result = GetClosestPointLinePoint(linePoint, lineDirection, circleCenter, out disSquared);
+        var other = circleCenter + (result - circleCenter).Normalize() * circleRadius;
+        disSquared = (result - other).LengthSquared();
+        return (result, other);
 
-        var toCenter = circleCenter - linePoint;
-        float projectionLength = Vector2.Dot(toCenter, d1);
-        var closestPointOnLine = linePoint + projectionLength * d1;
-
-        var offset = (closestPointOnLine - circleCenter).Normalize() * circleRadius;
-        var closestPointOnCircle = circleCenter + offset;
-        disSquared = (closestPointOnLine - closestPointOnCircle).LengthSquared();
-        return (closestPointOnLine, closestPointOnCircle);
     }
     
     
@@ -233,28 +247,39 @@ public readonly struct Line
     }
     public ClosestPointResult GetClosestPoint(Line other)
     {
-        var d1 = Direction;
-        var d2 = other.Direction;
-
-        float a = Vector2.Dot(d1, d1);
-        float b = Vector2.Dot(d1, d2);
-        float e = Vector2.Dot(d2, d2);
-        var r = Point - other.Point;
-        float c = Vector2.Dot(d1, r);
-        float f = Vector2.Dot(d2, r);
-
-        float denominator = a * e - b * b;
-        float t1 = (b * f - c * e) / denominator;
-        float t2 = (a * f - b * c) / denominator;
-
-        var closestPoint1 = Point + t1 * d1;
-        var closestPoint2 = other.Point + t2 * d2;
-
-        float disSquared = (closestPoint1 - closestPoint2).LengthSquared();
-        return new(
-            new(closestPoint1, Normal), 
-            new(closestPoint2, other.Normal),
-            disSquared);
+        var result = IntersectLineLine(Point, Direction, other.Point, other.Direction);
+        if (result.Valid)
+        {
+            return new
+                (
+                    new(result.Point, Normal),
+                    new(result.Point, other.Normal),
+                    0f
+                    );
+        }
+        return new();
+        // var d1 = Direction;
+        // var d2 = other.Direction;
+        //
+        // float a = Vector2.Dot(d1, d1);
+        // float b = Vector2.Dot(d1, d2);
+        // float e = Vector2.Dot(d2, d2);
+        // var r = Point - other.Point;
+        // float c = Vector2.Dot(d1, r);
+        // float f = Vector2.Dot(d2, r);
+        //
+        // float denominator = a * e - b * b;
+        // float t1 = (b * f - c * e) / denominator;
+        // float t2 = (a * f - b * c) / denominator;
+        //
+        // var closestPoint1 = Point + t1 * d1;
+        // var closestPoint2 = other.Point + t2 * d2;
+        //
+        // float disSquared = (closestPoint1 - closestPoint2).LengthSquared();
+        // return new(
+        //     new(closestPoint1, Normal), 
+        //     new(closestPoint2, other.Normal),
+        //     disSquared);
     }
     public ClosestPointResult GetClosestPoint(Ray other)
     {
@@ -314,20 +339,30 @@ public readonly struct Line
     }
     public ClosestPointResult GetClosestPoint(Circle other)
     {
-        var d1 = Direction;
+        var pointOnLine = GetClosestPointLinePoint(Point, Direction, other.Center, out float disSquared);
 
-        var toCenter = other.Center - Point;
-        float projectionLength = Vector2.Dot(toCenter, d1);
-        var closestPointOnLine = Point + projectionLength * d1;
-
-        var offset = (closestPointOnLine - other.Center).Normalize() * other.Radius;
-        var closestPointOnCircle = other.Center + offset;
-
-        float disSquared = (closestPointOnCircle - closestPointOnLine).LengthSquared();
+        var dir = (pointOnLine - other.Center).Normalize();
+        var pointOnCircle = other.Center + dir * other.Radius;
+        disSquared = (pointOnLine - pointOnCircle).LengthSquared();
         return new(
-            new(closestPointOnLine, Normal),
-            new(closestPointOnCircle, (closestPointOnCircle - other.Center).Normalize()),
-            disSquared);
+            new(pointOnLine, Normal),
+            new(pointOnCircle, dir),
+            disSquared
+        );
+        // var d1 = Direction;
+        //
+        // var toCenter = other.Center - Point;
+        // float projectionLength = Vector2.Dot(toCenter, d1);
+        // var closestPointOnLine = Point + projectionLength * d1;
+        //
+        // var offset = (closestPointOnLine - other.Center).Normalize() * other.Radius;
+        // var closestPointOnCircle = other.Center + offset;
+        //
+        // float disSquared = (closestPointOnCircle - closestPointOnLine).LengthSquared();
+        // return new(
+        //     new(closestPointOnLine, Normal),
+        //     new(closestPointOnCircle, (closestPointOnCircle - other.Center).Normalize()),
+        //     disSquared);
     }
     
     public ClosestPointResult GetClosestPoint(Triangle other)
@@ -356,7 +391,7 @@ public readonly struct Line
                 -1,
                 2);
         }
-
+        
         return new(
             new(closestResult.self, Normal), 
             new(closestResult.other, otherNormal.GetPerpendicularRight().Normalize()),
