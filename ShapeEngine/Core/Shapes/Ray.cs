@@ -139,6 +139,7 @@ public readonly struct Ray
         var closestPointOnRay = rayPoint + projectionLength * normalizedRayDirection;
         
         disSquared = (closestPointOnRay - point).LengthSquared();
+        disSquared = ShapeMath.ClampToZero(disSquared);
         return closestPointOnRay;
     }
     public static (Vector2 self, Vector2 other) GetClosestPointRayLine(Vector2 rayPoint, Vector2 rayDirection, Vector2 linePoint, Vector2 lineDirection, out float disSquared)
@@ -202,6 +203,7 @@ public readonly struct Ray
         var offset = (closestPointOnRay - circleCenter).Normalize() * circleRadius;
         var closestPointOnCircle = circleCenter + offset;
         disSquared = (closestPointOnRay - closestPointOnCircle).LengthSquared();
+        disSquared = ShapeMath.ClampToZero(disSquared);
         return (closestPointOnRay, closestPointOnCircle);
     }
     
@@ -221,7 +223,7 @@ public readonly struct Ray
         var closestPointOnRay = Point + projectionLength * Direction;
 
         disSquared = (closestPointOnRay - point).LengthSquared();
-        
+        disSquared = ShapeMath.ClampToZero(disSquared);
         var dir = (point - closestPointOnRay).Normalize();
         var dot = Vector2.Dot(dir, Normal);
         if (dot >= 0) return new(closestPointOnRay, Normal);
@@ -302,6 +304,7 @@ public readonly struct Ray
         var closestPointOnCircle = other.Center + offset;
 
         float disSquared = (closestPointOnRay - closestPointOnCircle).LengthSquared();
+        disSquared = ShapeMath.ClampToZero(disSquared);
         return new(
             new(closestPointOnRay, Normal), 
             new(closestPointOnCircle, (closestPointOnCircle - other.Center).Normalize()),

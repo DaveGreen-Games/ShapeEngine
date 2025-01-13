@@ -1158,7 +1158,6 @@ public readonly struct Segment : IEquatable<Segment>
         var closestPoint2 = segment2Start + t * d2;
         disSquared = (closestPoint1 - closestPoint2).LengthSquared();
         disSquared = ShapeMath.ClampToZero(disSquared);
-        Console.WriteLine($"DisSquared: {disSquared:F12}");
         return (closestPoint1, closestPoint2);
     }
     private static Vector2 ClosestPointOnLineHelper(Vector2 linePoint, Vector2 lineDirection, Vector2 point)

@@ -222,6 +222,7 @@ public readonly struct Line
         var result = GetClosestPointLinePoint(linePoint, lineDirection, circleCenter, out disSquared);
         var other = circleCenter + (result - circleCenter).Normalize() * circleRadius;
         disSquared = (result - other).LengthSquared();
+        disSquared = ShapeMath.ClampToZero(disSquared);
         return (result, other);
 
     }
@@ -241,7 +242,7 @@ public readonly struct Line
         // Calculate the closest point on the line
         var closestPointOnLine = Point + projectionLength * normalizedLineDirection;
         disSquared = (closestPointOnLine - point).LengthSquared();
-        
+        disSquared = ShapeMath.ClampToZero(disSquared);
         var dir = (point - closestPointOnLine).Normalize();
         var dot = Vector2.Dot(dir, Normal);
         if (dot >= 0) return new(closestPointOnLine, Normal);
@@ -361,6 +362,7 @@ public readonly struct Line
         var closestPointOnCircle = other.Center + offset;
         
         float disSquared = (closestPointOnCircle - closestPointOnLine).LengthSquared();
+        disSquared = ShapeMath.ClampToZero(disSquared);
         return new(
             new(closestPointOnLine, Normal),
             new(closestPointOnCircle, (closestPointOnCircle - other.Center).Normalize()),

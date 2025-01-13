@@ -483,6 +483,7 @@ public readonly struct Circle : IEquatable<Circle>
         var dir = (p - center).Normalize();
         var closestPoint = center + dir * radius;
         disSquared = (closestPoint - p).LengthSquared();
+        disSquared = ShapeMath.ClampToZero(disSquared);
         return closestPoint;
     }
     public static (Vector2 self, Vector2 other) GetClosestPointCircleSegment(Vector2 circleCenter, float circleRadius, Vector2 segmentStart, Vector2 segmentEnd, out float disSquared)
@@ -497,6 +498,7 @@ public readonly struct Circle : IEquatable<Circle>
         var offset = Vector2.Normalize(closestPointOnSegment - circleCenter) * circleRadius;
         var closestPointOnCircle = circleCenter + offset;
         disSquared = (closestPointOnCircle - closestPointOnSegment).LengthSquared();
+        disSquared = ShapeMath.ClampToZero(disSquared);
         return (closestPointOnCircle, closestPointOnSegment);
     }
     public static (Vector2 self, Vector2 other) GetClosestPointCircleLine(Vector2 circleCenter, float circleRadius, Vector2 linePoint, Vector2 lineDirection, out float disSquared)
@@ -524,6 +526,7 @@ public readonly struct Circle : IEquatable<Circle>
         var offset = (closestPointOnRay - circleCenter).Normalize() * circleRadius;
         var closestPointOnCircle = circleCenter + offset;
         disSquared = (closestPointOnRay - closestPointOnCircle).LengthSquared();
+        disSquared = ShapeMath.ClampToZero(disSquared);
         return (closestPointOnCircle, closestPointOnRay);
     }
     public static (Vector2 self, Vector2 other) GetClosestPointCircleCircle(Vector2 circle1Center, float circle1Radius, Vector2 circle2Center, float circle2Radius, out float disSquared)
@@ -533,6 +536,7 @@ public readonly struct Circle : IEquatable<Circle>
         var a = circle1Center - dir * circle1Radius;
         var b = circle2Center + dir * circle2Radius;
         disSquared = (a - b).LengthSquared();
+        disSquared = ShapeMath.ClampToZero(disSquared);
         return (a, b);
     }
    
@@ -542,6 +546,7 @@ public readonly struct Circle : IEquatable<Circle>
         var closestPoint = Center + dir * Radius;
         var normal = (closestPoint - Center).Normalize();
         disSquared = (closestPoint - p).LengthSquared();
+        disSquared = ShapeMath.ClampToZero(disSquared);
         return new(closestPoint, normal);
     }
     public ClosestPointResult GetClosestPoint(Line other)
@@ -575,6 +580,7 @@ public readonly struct Circle : IEquatable<Circle>
         var closestPointOnCircle = Center + offset;
         var circleNormal = (closestPointOnCircle - Center).Normalize();
         float disSquared = (closestPointOnRay - closestPointOnCircle).LengthSquared();
+        disSquared = ShapeMath.ClampToZero(disSquared);
         return new(
             new(closestPointOnCircle, circleNormal), 
             new(closestPointOnRay, other.Normal),
@@ -593,6 +599,7 @@ public readonly struct Circle : IEquatable<Circle>
         var closestPointOnCircle = Center + offset;
         var circleNormal = (closestPointOnCircle - Center).Normalize();
         float disSquared = (closestPointOnCircle - closestPointOnSegment).LengthSquared();
+        disSquared = ShapeMath.ClampToZero(disSquared);
         return new(
             new(closestPointOnCircle, circleNormal), 
             new(closestPointOnSegment, other.Normal),
@@ -607,6 +614,7 @@ public readonly struct Circle : IEquatable<Circle>
         var b = other.Center + dir * other.Radius;
         var bNormal = (b - other.Center).Normalize();
         float disSquared = (a - b).LengthSquared();
+        disSquared = ShapeMath.ClampToZero(disSquared);
         return new(
             new(a, aNormal), 
             new(b, bNormal),
