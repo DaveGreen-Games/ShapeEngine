@@ -510,6 +510,7 @@ public readonly struct Circle : IEquatable<Circle>
         var offset = (closestPointOnLine - circleCenter).Normalize() * circleRadius;
         var closestPointOnCircle = circleCenter + offset;
         disSquared = (closestPointOnLine - closestPointOnCircle).LengthSquared();
+        disSquared = ShapeMath.ClampToZero(disSquared);
         return (closestPointOnCircle, closestPointOnLine);
     }
     public static (Vector2 self, Vector2 other) GetClosestPointCircleRay(Vector2 circleCenter, float circleRadius, Vector2 rayPoint, Vector2 rayDirection, out float disSquared)
@@ -554,7 +555,9 @@ public readonly struct Circle : IEquatable<Circle>
         var offset = (closestPointOnLine - Center).Normalize() * Radius;
         var closestPointOnCircle = Center + offset;
         float disSquared = (closestPointOnLine - closestPointOnCircle).LengthSquared();
+        disSquared = ShapeMath.ClampToZero(disSquared);
         var circleNormal = (closestPointOnCircle - Center).Normalize();
+        
         return new(
             new(closestPointOnCircle, circleNormal), 
             new(closestPointOnLine, other.Normal),

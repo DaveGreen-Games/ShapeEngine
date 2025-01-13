@@ -1390,7 +1390,7 @@ public class ShapesExample : ExampleScene
             movingShape.Draw(Colors.Warm.ChangeBrightness(-0.3f));
             
             var closestPointResult = projectionActive && projection != null ? staticShape.GetClosestPointToPolygon(projection) : staticShape.GetClosestPointToShape(movingShape);
-            if (closestPointResult.DistanceSquared > 0)
+            if (closestPointResult.DistanceSquared >= 0)
             {
                 if (closestPointResult.SegmentIndex >= 0 && staticShape.GetSegment(closestPointResult.SegmentIndex, out var staticSeg))
                 {

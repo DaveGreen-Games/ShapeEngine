@@ -40,7 +40,14 @@ public static class ShapeMath
     #endregion
    
     #region Clamp
-
+    public static float ClampToZero(float value, float epsilon = 0.0000001f)
+    {
+        if (value < 0 || Math.Abs(value) < epsilon)
+        {
+            return 0;
+        }
+        return value;
+    }
     public static float Clamp(float value)
     {
         return Clamp(value, 0f, 1f);
