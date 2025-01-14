@@ -1059,6 +1059,14 @@ public static class ShapeDrawing
     #endregion
     
     #region Custom Line Drawing
+    
+    public static void DrawSegment(Vector2 start, Vector2 end, float thickness, ColorRgba color, float sideLengthFactor, LineCapType capType = LineCapType.None, int capPoints = 0)
+    {
+        var dir = end - start;
+        var newEnd = start + dir * sideLengthFactor;
+        DrawSegment(start, newEnd, thickness, color, capType, capPoints);
+    }
+
     public static void DrawSegment(Vector2 start, Vector2 end, float thickness, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0)
     {
         if (thickness < LineDrawingInfo.LineMinThickness) thickness = LineDrawingInfo.LineMinThickness;
@@ -2446,6 +2454,33 @@ public static class ShapeDrawing
     
     
     public static void DrawRectLines(Vector2 topLeft, Vector2 bottomRight, float lineThickness, ColorRgba color) => DrawLines(new Rect(topLeft, bottomRight),lineThickness,color);
+
+    public static void DrawRectLines(Vector2 topLeft, Vector2 bottomRight, float lineThickness, ColorRgba color, float sideLengthFactor,
+        LineCapType capType = LineCapType.Extended, int capPoints = 0)
+    {
+        var a = topLeft;
+        var b = new Vector2(topLeft.X, bottomRight.Y);
+        var c = bottomRight;
+        var d = new Vector2(bottomRight.X, topLeft.Y);
+        
+        var side1 = b - a;
+        var end1 = a + side1 * sideLengthFactor;
+        
+        var side2 = c - b;
+        var end2 = b + side2 * sideLengthFactor;
+        
+        var side3 = d - c;
+        var end3 = c + side3 * sideLengthFactor;
+        
+        var side4 = a - d;
+        var end4 = d + side4 * sideLengthFactor;
+        
+        DrawSegment(a, end1, lineThickness, color, capType, capPoints);
+        DrawSegment(b, end2, lineThickness, color, capType, capPoints);
+        DrawSegment(c, end3, lineThickness, color, capType, capPoints);
+        DrawSegment(d, end4, lineThickness, color, capType, capPoints);
+    }
+    
     public static void DrawRectLines(Vector2 topLeft, Vector2 bottomRight, LineDrawingInfo lineInfo)
     {
         DrawLines(new Rect(topLeft, bottomRight), lineInfo);
@@ -2477,6 +2512,10 @@ public static class ShapeDrawing
     public static void DrawLines(this Rect rect, Vector2 pivot, float rotDeg, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.Extended, int capPoints = 0)
     {
         DrawRectLines(rect.TopLeft, rect.BottomRight, pivot, rotDeg, lineThickness, color, capType, capPoints);
+    }
+    public static void DrawLines(this Rect rect, float lineThickness, ColorRgba color, float sideLengthFactor, LineCapType capType = LineCapType.Extended, int capPoints = 0)
+    {
+        DrawRectLines(rect.TopLeft, rect.BottomRight, lineThickness, color, sideLengthFactor, capType, capPoints);
     }
     public static void DrawLines(this Rect rect, Vector2 pivot, float rotDeg, LineDrawingInfo lineInfo)
     {
@@ -2868,8 +2907,21 @@ public static class ShapeDrawing
         DrawSegment(a, b, lineThickness, color, capType, capPoints);
         DrawSegment(b, c, lineThickness, color, capType, capPoints);
         DrawSegment(c, a, lineThickness, color, capType, capPoints);
+    }
+    public static void DrawTriangleLines(Vector2 a, Vector2 b, Vector2 c, float lineThickness, ColorRgba color, float sideLengthFactor, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        var side1 = b - a;
+        var end1 = a + side1 * sideLengthFactor;
         
-        // new Triangle(a, b, c).GetEdges().Draw(lineThickness, color);
+        var side2 = c - b;
+        var end2 = b + side2 * sideLengthFactor;
+        
+        var side3 = a - c;
+        var end3 = c + side3 * sideLengthFactor;
+        
+        DrawSegment(a, end1, lineThickness, color, capType, capPoints);
+        DrawSegment(b, end2, lineThickness, color, capType, capPoints);
+        DrawSegment(c, end3, lineThickness, color, capType, capPoints);
     }
     public static void DrawTriangleLines(Vector2 a, Vector2 b, Vector2 c, LineDrawingInfo lineInfo)
     {
@@ -2885,8 +2937,12 @@ public static class ShapeDrawing
     public static void DrawLines(this Triangle t, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         DrawTriangleLines(t.A, t.B, t.C, lineThickness, color, capType, capPoints);
-        // t.GetEdges().Draw(lineThickness, color);
     }
+    public static void DrawLines(this Triangle t, float lineThickness, ColorRgba color, float sideLengthFactor,  LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        DrawTriangleLines(t.A, t.B, t.C, lineThickness, color, sideLengthFactor, capType, capPoints);
+    }
+    
     public static void DrawLines(this Triangle t, LineDrawingInfo lineInfo) => DrawTriangleLines(t.A, t.B, t.C, lineInfo);
     public static void DrawLines(this Triangle t, LineDrawingInfo lineInfo, float rotDeg, Vector2 rotOrigin)
     {
@@ -3086,6 +3142,25 @@ public static class ShapeDrawing
         DrawSegment(c, d, lineThickness, color, capType, capPoints);
         DrawSegment(d, a, lineThickness, color, capType, capPoints);
     }
+    public static void DrawQuadLines(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float lineThickness, ColorRgba color, float sideLengthFactor, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        var side1 = b - a;
+        var end1 = a + side1 * sideLengthFactor;
+        
+        var side2 = c - b;
+        var end2 = b + side2 * sideLengthFactor;
+        
+        var side3 = d - c;
+        var end3 = c + side3 * sideLengthFactor;
+        
+        var side4 = a - d;
+        var end4 = d + side4 * sideLengthFactor;
+        
+        DrawSegment(a, end1, lineThickness, color, capType, capPoints);
+        DrawSegment(b, end2, lineThickness, color, capType, capPoints);
+        DrawSegment(c, end3, lineThickness, color, capType, capPoints);
+        DrawSegment(d, end4, lineThickness, color, capType, capPoints);
+    }
     
     /// <summary>
     /// Draws a certain percentage of an outline.
@@ -3178,8 +3253,11 @@ public static class ShapeDrawing
 
     public static void DrawLines(this Quad q, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
-        DrawQuadLines(q.A, q.B, q.C, q.D, lineThickness, color);
-        // t.GetEdges().Draw(lineThickness, color);
+        DrawQuadLines(q.A, q.B, q.C, q.D, lineThickness, color, capType, capPoints);
+    }
+    public static void DrawLines(this Quad q, float lineThickness, ColorRgba color, float sideLengthFactor, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        DrawQuadLines(q.A, q.B, q.C, q.D, lineThickness, color, sideLengthFactor, capType, capPoints);
     }
     public static void DrawLines(this Quad q, LineDrawingInfo lineInfo) => DrawQuadLines(q.A, q.B, q.C, q.D, lineInfo);
 
@@ -3287,6 +3365,17 @@ public static class ShapeDrawing
             var start = shapePoints[i];
             var end = shapePoints[(i + 1) % shapePoints.Count];
             DrawSegment(start, end, lineThickness, color, capType, capPoints);
+        }
+    }
+    public static void DrawOutline(this List<Vector2> shapePoints, float lineThickness, ColorRgba color, float sideLengthFactor,  LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        if (shapePoints.Count < 3) return;
+        
+        for (var i = 0; i < shapePoints.Count; i++)
+        {
+            var start = shapePoints[i];
+            var end = shapePoints[(i + 1) % shapePoints.Count];
+            DrawSegment(start, end, lineThickness, color, sideLengthFactor,  capType, capPoints);
         }
     }
     public static void DrawOutline(this List<Vector2> shapePoints, LineDrawingInfo lineInfo)
@@ -3729,7 +3818,7 @@ public static class ShapeDrawing
             // edge.Draw(lineThickness, finalColor);
         // }
     }
-    
+
     public static void DrawLines(this Polygon poly, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         if (poly.Count < 3) return;
@@ -3741,7 +3830,17 @@ public static class ShapeDrawing
             DrawSegment(start, end, lineThickness, color, capType, capPoints);
         }
     }
-    
+    public static void DrawLines(this Polygon poly, float lineThickness, ColorRgba color, float sideLengthFactor,  LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        if (poly.Count < 3) return;
+        
+        for (var i = 0; i < poly.Count; i++)
+        {
+            var start = poly[i];
+            var end = poly[(i + 1) % poly.Count];
+            DrawSegment(start, end, lineThickness, color, sideLengthFactor,  capType, capPoints);
+        }
+    }
     public static void DrawLines(this Polygon relative, Vector2 pos, float size, float rotDeg, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         if (relative.Count < 3) return;
@@ -4007,8 +4106,18 @@ public static class ShapeDrawing
             var end = polyline[i + 1];
             DrawSegment(start, end, thickness, color, capType, capPoints);
         }
-        // polyline.GetEdges().Draw(thickness, color);
     }
+    //not a closed shape therefore it does not get sideLengthFactor overload -> might change in the future...
+    // public static void Draw(this Polyline polyline, float thickness, ColorRgba color, float sideLengthFactor,  LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    // {
+    //     if (polyline.Count < 2) return;
+    //     for (var i = 0; i < polyline.Count - 1; i++)
+    //     {
+    //         var start = polyline[i];
+    //         var end = polyline[i + 1];
+    //         DrawSegment(start, end, thickness, color, sideLengthFactor, capType, capPoints);
+    //     }
+    // }
     public static void Draw(this Polyline polyline, LineDrawingInfo lineInfo)
     {
         if (polyline.Count < 2) return;
