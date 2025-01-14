@@ -164,25 +164,34 @@ public readonly struct Line
     }
     public static (Vector2 self, Vector2 other) GetClosestPointLineRay(Vector2 linePoint, Vector2 lineDirection, Vector2 rayPoint, Vector2 rayDirection, out float disSquared)
     {
-        var d1 = lineDirection.Normalize();
-        var d2 = rayDirection.Normalize();
-
-        float a = Vector2.Dot(d1, d1);
-        float b = Vector2.Dot(d1, d2);
-        float e = Vector2.Dot(d2, d2);
-        var r = linePoint - rayPoint;
-        float c = Vector2.Dot(d1, r);
-        float f = Vector2.Dot(d2, r);
-
-        float denominator = a * e - b * b;
-        float t1 = (b * f - c * e) / denominator;
-        float t2 = Math.Max(0, (a * f - b * c) / denominator);
-
-        var closestPoint1 = linePoint + t1 * d1;
-        var closestPoint2 = rayPoint + t2 * d2;
-        disSquared = (closestPoint1 - closestPoint2).LengthSquared();
-        // disSquared = ShapeMath.ClampToZero(disSquared);
-        return (closestPoint1, closestPoint2);
+        var intersection = IntersectLineRay(linePoint, lineDirection, rayPoint, rayDirection);
+        if (intersection.Valid)
+        {
+            disSquared = 0;
+            return (intersection.Point, intersection.Point);
+        }
+        
+        var cp = GetClosestPointLinePoint(linePoint, lineDirection, rayPoint, out disSquared);
+        return (cp, rayPoint);
+        // var d1 = lineDirection.Normalize();
+        // var d2 = rayDirection.Normalize();
+        //
+        // float a = Vector2.Dot(d1, d1);
+        // float b = Vector2.Dot(d1, d2);
+        // float e = Vector2.Dot(d2, d2);
+        // var r = linePoint - rayPoint;
+        // float c = Vector2.Dot(d1, r);
+        // float f = Vector2.Dot(d2, r);
+        //
+        // float denominator = a * e - b * b;
+        // float t1 = (b * f - c * e) / denominator;
+        // float t2 = Math.Max(0, (a * f - b * c) / denominator);
+        //
+        // var closestPoint1 = linePoint + t1 * d1;
+        // var closestPoint2 = rayPoint + t2 * d2;
+        // disSquared = (closestPoint1 - closestPoint2).LengthSquared();
+        // // disSquared = ShapeMath.ClampToZero(disSquared);
+        // return (closestPoint1, closestPoint2);
     }
     public static (Vector2 self, Vector2 other) GetClosestPointLineSegment(Vector2 linePoint, Vector2 lineDirection, Vector2 segmentStart, Vector2 segmentEnd, out float disSquared)
     {
@@ -286,29 +295,34 @@ public readonly struct Line
     }
     public ClosestPointResult GetClosestPoint(Ray other)
     {
-        var d1 = Direction;
-        var d2 = other.Direction;
-
-        float a = Vector2.Dot(d1, d1);
-        float b = Vector2.Dot(d1, d2);
-        float e = Vector2.Dot(d2, d2);
-        var r = Point - other.Point;
-        float c = Vector2.Dot(d1, r);
-        float f = Vector2.Dot(d2, r);
-
-        float denominator = a * e - b * b;
-        float t1 = (b * f - c * e) / denominator;
-        float t2 = Math.Max(0, (a * f - b * c) / denominator);
-
-        var closestPoint1 = Point + t1 * d1;
-        var closestPoint2 = other.Point + t2 * d2;
-        float disSquared = (closestPoint1 - closestPoint2).LengthSquared();
-        return new
-        (
-            new(closestPoint1, Normal), 
-            new(closestPoint2, other.Normal),
-            disSquared
-        );
+        var result = GetClosestPointLineRay(Point, Direction, other.Point, other.Direction, out float disSquared);
+        return new(
+            new(result.self, Normal),
+            new(result.other, other.Normal),
+            disSquared);
+        // var d1 = Direction;
+        // var d2 = other.Direction;
+        //
+        // float a = Vector2.Dot(d1, d1);
+        // float b = Vector2.Dot(d1, d2);
+        // float e = Vector2.Dot(d2, d2);
+        // var r = Point - other.Point;
+        // float c = Vector2.Dot(d1, r);
+        // float f = Vector2.Dot(d2, r);
+        //
+        // float denominator = a * e - b * b;
+        // float t1 = (b * f - c * e) / denominator;
+        // float t2 = Math.Max(0, (a * f - b * c) / denominator);
+        //
+        // var closestPoint1 = Point + t1 * d1;
+        // var closestPoint2 = other.Point + t2 * d2;
+        // float disSquared = (closestPoint1 - closestPoint2).LengthSquared();
+        // return new
+        // (
+        //     new(closestPoint1, Normal), 
+        //     new(closestPoint2, other.Normal),
+        //     disSquared
+        // );
     }
     public ClosestPointResult GetClosestPoint(Segment other)
     {
