@@ -2829,8 +2829,44 @@ public static class ShapeDrawing
     }
     public static void DrawCornersRelative(this Rect rect, LineDrawingInfo lineInfo, float cornerLengthFactor) 
         => DrawCornersRelative(rect, lineInfo, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor);
-    
-    
+
+    public static void DrawCheckered2(this Quad quad, float spacing, float angleDeg, LineDrawingInfo checkered, LineDrawingInfo outline, ColorRgba bgColor)
+    {
+        if (bgColor.A > 0) quad.Draw(bgColor); 
+        
+        if (outline.Color.A > 0) DrawLines(quad, outline);
+    }
+    public static void DrawCheckered2(this Rect rect, float spacing, float angleDeg, LineDrawingInfo checkered)
+    {
+        if (spacing <= 0) return;
+        float maxDimension = (rect.TopLeft - rect.BottomRight).Length();
+
+        if (spacing > maxDimension) return;
+        
+        var center = rect.Center;
+        var dir = ShapeVec.VecFromAngleDeg(angleDeg);
+        var lineDir = dir.GetPerpendicularRight();
+        var start = center - dir * maxDimension * 0.5f;
+        int steps = (int)(maxDimension / spacing);
+        
+        var a = rect.A;
+        var b = rect.B;
+        var c = rect.C;
+        var d = rect.D;
+        
+        var cur = start + dir * spacing;
+        for (int i = 0; i < steps; i++)
+        {
+            var intersection = Line.IntersectLineRect(cur, lineDir, a, b, c, d);
+            if (intersection.a.Valid && intersection.b.Valid)
+            {
+                var segment = new Segment(intersection.a.Point, intersection.b.Point);
+                segment.Draw(checkered);
+            }
+            cur += dir * spacing;
+        }
+        
+    }
     public static void DrawCheckered(this Rect rect, float spacing, float angleDeg, LineDrawingInfo checkered, LineDrawingInfo outline, ColorRgba bgColor)
     {
         var size = new Vector2(rect.Width, rect.Height);
