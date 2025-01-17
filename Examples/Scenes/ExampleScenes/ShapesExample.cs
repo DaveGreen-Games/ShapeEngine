@@ -1,4 +1,5 @@
 
+using System.Drawing;
 using System.Numerics;
 using System.Reflection.Metadata.Ecma335;
 using ShapeEngine.Color;
@@ -8,6 +9,8 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
 using ShapeEngine.Lib;
 using ShapeEngine.Random;
+using Size = ShapeEngine.Core.Structs.Size;
+
 namespace Examples.Scenes.ExampleScenes;
 
 
@@ -25,10 +28,13 @@ public class ShapesExample : ExampleScene
     }
     private abstract class Shape
     {
+        protected const float StripedRotSpeedDeg = 5f;
+        protected const float StripedSpacing = 25f;
+        protected float stripedRotDeg = Rng.Instance.RandAngleDeg();
         public abstract Vector2 GetPosition();
         public abstract void Rotate(float angleRad);
         public abstract void Move(Vector2 newPosition);
-        public abstract void Draw(ColorRgba color);
+        public abstract void Draw(ColorRgba color, bool movingShape = false);
         public abstract ShapeType GetShapeType();
         
         public abstract ClosestPointResult GetClosestPointToShape(Shape shape);
@@ -83,7 +89,7 @@ public class ShapesExample : ExampleScene
         {
             // No rotation for point shape
         }
-        public override void Draw(ColorRgba color)
+        public override void Draw(ColorRgba color, bool movingShape = false)
         {
             Position.Draw(Size, color, 16);
         }
@@ -218,7 +224,7 @@ public class ShapesExample : ExampleScene
         {
             Segment = Segment.ChangeRotation(angleRad, 0.5f);
         }
-        public override void Draw(ColorRgba color)
+        public override void Draw(ColorRgba color, bool movingShape = false)
         {
             Segment.Draw(LineThickness, color);
         }
@@ -318,7 +324,7 @@ public class ShapesExample : ExampleScene
         {
             Ray = Ray.ChangeRotation(angleRad);
         }
-        public override void Draw(ColorRgba color)
+        public override void Draw(ColorRgba color, bool movingShape = false)
         {
             Ray.Draw(Ray.MaxLength, LineThickness, color);
         }
@@ -415,9 +421,10 @@ public class ShapesExample : ExampleScene
         {
             Line = Line.ChangeRotation(angleRad);
         }
-        public override void Draw(ColorRgba color)
+        public override void Draw(ColorRgba color, bool movingShape = false)
         {
             Line.Draw(Line.MaxLength, LineThickness, color);
+            Line.Point.Draw(LineThickness * 2, new ColorRgba(Color.White));
         }
 
         public override ShapeType GetShapeType() => ShapeType.Line;
@@ -517,8 +524,19 @@ public class ShapesExample : ExampleScene
         {
            //no rotation for circle
         }
-        public override void Draw(ColorRgba color)
+        public override void Draw(ColorRgba color, bool movingShape = false)
         {
+            if (!movingShape)
+            {
+                
+                var dt = ShapeEngine.Core.Game.CurrentGameInstance.Time.Delta;
+                
+                stripedRotDeg += StripedRotSpeedDeg * dt;
+                
+                LineDrawingInfo checkered = new(LineThickness / 2, color.ChangeBrightness(-0.75f), LineCapType.Capped, 6);
+                Circle.DrawStriped(StripedSpacing, stripedRotDeg, checkered);
+            }
+            
             Circle.DrawLines(LineThickness, color);
         }
 
@@ -631,8 +649,18 @@ public class ShapesExample : ExampleScene
         {
             Triangle = Triangle.ChangeRotation(angleRad);
         }
-        public override void Draw(ColorRgba color)
+        public override void Draw(ColorRgba color, bool movingShape = false)
         {
+            if (!movingShape)
+            {
+                var dt = ShapeEngine.Core.Game.CurrentGameInstance.Time.Delta;
+                
+                stripedRotDeg += StripedRotSpeedDeg * dt;
+                
+                LineDrawingInfo checkered = new(LineThickness / 2, color.ChangeBrightness(-0.75f), LineCapType.Capped, 6);
+                Triangle.DrawStriped(StripedSpacing, stripedRotDeg, checkered);
+            }
+            
             Triangle.DrawLines(LineThickness, color);
         }
 
@@ -738,9 +766,18 @@ public class ShapesExample : ExampleScene
         {
             Quad = Quad.ChangeRotation(angleRad);
         }
-        public override void Draw(ColorRgba color)
+        public override void Draw(ColorRgba color, bool movingShape = false)
         {
-           Quad.DrawLines(LineThickness, color);
+            if (!movingShape)
+            {
+                var dt = ShapeEngine.Core.Game.CurrentGameInstance.Time.Delta;
+                
+                stripedRotDeg += StripedRotSpeedDeg * dt;
+                
+                LineDrawingInfo checkered = new(LineThickness / 2, color.ChangeBrightness(-0.75f), LineCapType.Capped, 6);
+                Quad.DrawStriped(StripedSpacing, stripedRotDeg, checkered);
+            }
+            Quad.DrawLines(LineThickness, color);
         }
 
         public override ShapeType GetShapeType() => ShapeType.Quad;
@@ -832,6 +869,7 @@ public class ShapesExample : ExampleScene
     private class RectShape : Shape
     {
         public Rect Rect;
+        private float rotDeg = Rng.Instance.RandAngleDeg();
 
         public RectShape(Vector2 pos, float size)
         {
@@ -846,8 +884,19 @@ public class ShapesExample : ExampleScene
         {
             //no rotation for rectangles
         }
-        public override void Draw(ColorRgba color)
+        public override void Draw(ColorRgba color, bool movingShape = false)
         {
+
+            if (!movingShape)
+            {
+                var dt = ShapeEngine.Core.Game.CurrentGameInstance.Time.Delta;
+                
+                stripedRotDeg += StripedRotSpeedDeg * dt;
+                
+                LineDrawingInfo checkered = new(LineThickness / 2, color.ChangeBrightness(-0.75f), LineCapType.Capped, 6);
+                Rect.DrawStriped(StripedSpacing, stripedRotDeg, checkered);
+            }
+            
             Rect.DrawLines(LineThickness, color);
         }
 
@@ -941,10 +990,11 @@ public class ShapesExample : ExampleScene
     {
         private Vector2 position;
         public readonly Polygon Polygon;
+       
 
         public PolygonShape(Vector2 pos, float size)
         {
-            Polygon = Polygon.Generate(pos, Rng.Instance.RandI(8, 16), size / 2, size);
+            Polygon = Polygon.Generate(pos, Rng.Instance.RandI(8, 16), size / 10, size);
             position = pos;
         }
         public override void Move(Vector2 newPosition)
@@ -957,9 +1007,20 @@ public class ShapesExample : ExampleScene
         {
             Polygon.ChangeRotation(angleRad, position);
         }
-        public override void Draw(ColorRgba color)
+        public override void Draw(ColorRgba color, bool movingShape = false)
         {
             Polygon.DrawLines(LineThickness, color);
+            if (!movingShape)
+            {
+                var dt = ShapeEngine.Core.Game.CurrentGameInstance.Time.Delta;
+                
+                stripedRotDeg += StripedRotSpeedDeg * dt;
+                
+                LineDrawingInfo checkered = new(LineThickness / 2, color.ChangeBrightness(-0.75f), LineCapType.Capped, 6);
+                Polygon.DrawStriped(StripedSpacing, stripedRotDeg, checkered);
+            }
+            
+            
         }
 
         public override ShapeType GetShapeType() => ShapeType.Poly;
@@ -1075,7 +1136,7 @@ public class ShapesExample : ExampleScene
         {
             Polyline.ChangeRotation(angleRad, position);
         }
-        public override void Draw(ColorRgba color)
+        public override void Draw(ColorRgba color, bool movingShape = false)
         {
             Polyline.Draw(LineThickness, color);
         }
@@ -1352,13 +1413,13 @@ public class ShapesExample : ExampleScene
             bool overlap = projectionActive && projection != null ? staticShape.OverlapWith(projection) : staticShape.OverlapWith(movingShape);
             if (overlap)
             {
-                staticShape.Draw(Colors.Highlight);
-                movingShape.Draw(Colors.Warm);
+                staticShape.Draw(Colors.Highlight, false);
+                movingShape.Draw(Colors.Warm, true);
             }
             else
             {
-                staticShape.Draw(Colors.Highlight.ChangeBrightness(-0.3f));
-                movingShape.Draw(Colors.Warm.ChangeBrightness(-0.3f));
+                staticShape.Draw(Colors.Highlight.ChangeBrightness(-0.3f), false);
+                movingShape.Draw(Colors.Warm.ChangeBrightness(-0.3f), true);
             }
         }
         else if (shapeMode == ShapeMode.Intersection)
@@ -1368,13 +1429,13 @@ public class ShapesExample : ExampleScene
 
             if (result == null || result.Count <= 0)
             {
-                staticShape.Draw(Colors.Highlight.ChangeBrightness(-0.3f));
-                movingShape.Draw(Colors.Warm.ChangeBrightness(-0.3f));
+                staticShape.Draw(Colors.Highlight.ChangeBrightness(-0.3f), false);
+                movingShape.Draw(Colors.Warm.ChangeBrightness(-0.3f), true);
             }
             else
             {
-                staticShape.Draw(Colors.Highlight);
-                movingShape.Draw(Colors.Warm);
+                staticShape.Draw(Colors.Highlight, false);
+                movingShape.Draw(Colors.Warm, true);
 
                 foreach (var cp in result)
                 {
@@ -1386,8 +1447,8 @@ public class ShapesExample : ExampleScene
         }
         else
         {
-            staticShape.Draw(Colors.Highlight.ChangeBrightness(-0.3f));
-            movingShape.Draw(Colors.Warm.ChangeBrightness(-0.3f));
+            staticShape.Draw(Colors.Highlight.ChangeBrightness(-0.3f), false);
+            movingShape.Draw(Colors.Warm.ChangeBrightness(-0.3f), true);
             
             var closestPointResult = projectionActive && projection != null ? staticShape.GetClosestPointToPolygon(projection) : staticShape.GetClosestPointToShape(movingShape);
             if (closestPointResult.DistanceSquared >= 0)
@@ -1610,7 +1671,9 @@ public class ShapesExample : ExampleScene
             case ShapeType.Circle: return new CircleShape(pos, size);
             case ShapeType.Segment: return new SegmentShape(pos, size);
             case ShapeType.Ray: return new RayShape(pos, Rng.Instance.RandVec2().Normalize());
-            case ShapeType.Line: return new LineShape(pos, Rng.Instance.RandVec2().Normalize());
+            case ShapeType.Line:
+                var dir = Rng.Instance.RandVec2().Normalize();
+                return new LineShape(pos, dir);
             case ShapeType.Triangle: return new TriangleShape(pos, size);
             case ShapeType.Quad: return new QuadShape(pos, size);
             case ShapeType.Rect: return new RectShape(pos, size);
