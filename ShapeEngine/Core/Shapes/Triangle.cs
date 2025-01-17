@@ -64,6 +64,7 @@ public readonly struct Triangle : IEquatable<Triangle>
     
     public bool IsValid() { return GetArea() > 0f; }
 
+    
     public Vector2 GetCentroid()  => (A + B + C) / 3;
 
     public Points? GetProjectedShapePoints(Vector2 v)
@@ -1529,6 +1530,30 @@ public readonly struct Triangle : IEquatable<Triangle>
         }
 
         return closest;
+    }
+    
+    public Vector2 GetFurthestVertex(Vector2 p, out float disSquared, out int index)
+    {
+        var furthest = A;
+        disSquared = (A - p).LengthSquared();
+        index = 0;
+        float l = (B - p).LengthSquared();
+        if (l > disSquared)
+        {
+            furthest = B;
+            disSquared = l;
+            index = 1;
+        }
+
+        l = (C - p).LengthSquared();
+        if (l > disSquared)
+        {
+            furthest = C;
+            disSquared = l;
+            index = 2;
+        }
+
+        return furthest;
     }
     #endregion
     

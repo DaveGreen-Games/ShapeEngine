@@ -1704,6 +1704,18 @@ public readonly struct Segment : IEquatable<Segment>
         disSquared = disSqB; 
         return End;
     }
+    public Vector2 GetFurthestVertex(Vector2 p, out float disSquared)
+    {
+        float disSqA = (p - Start).LengthSquared();
+        float disSqB = (p - End).LengthSquared();
+        if (disSqA > disSqB)
+        {
+            disSquared = disSqA;
+            return Start;
+        }
+        disSquared = disSqB; 
+        return End;
+    }
     #endregion
     
     #region Overlap

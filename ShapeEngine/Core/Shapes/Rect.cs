@@ -2233,7 +2233,37 @@ public readonly struct Rect : IEquatable<Rect>
     
         return closest;
     }
+    public Vector2 GetFurthestVertex(Vector2 p, out float disSquared, out int index)
+    {
+        var furthest = TopLeft;
+        disSquared = (TopLeft - p).LengthSquared();
+        index = 0;
     
+        float l = (BottomLeft - p).LengthSquared();
+        if (l > disSquared)
+        {
+            furthest = BottomLeft;
+            disSquared = l;
+            index = 1;
+        }
+        l = (BottomRight - p).LengthSquared();
+        if (l > disSquared)
+        {
+            furthest = BottomRight;
+            disSquared = l;
+            index = 2;
+        }
+    
+        l = (TopRight - p).LengthSquared();
+        if (l > disSquared)
+        {
+            disSquared = l;
+            furthest = TopRight;
+            index = 3;
+        }
+    
+        return furthest;
+    }
     #endregion
     
     #region Contains

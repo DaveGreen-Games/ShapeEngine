@@ -1719,7 +1719,38 @@ public readonly struct Quad : IEquatable<Quad>
     
         return closest;
     }
+    public Vector2 GetFurthestVertex(Vector2 p, out float disSquared, out int index)
+    {
+        var furthest = A;
+        disSquared = (A - p).LengthSquared();
+        index = 0;
     
+        float l = (B - p).LengthSquared();
+        if (l > disSquared)
+        {
+            furthest = B;
+            disSquared = l;
+            index = 1;
+        }
+        l = (C - p).LengthSquared();
+        if (l > disSquared)
+        {
+            furthest = C;
+            disSquared = l;
+            index = 2;
+        }
+    
+        l = (D - p).LengthSquared();
+        if (l > disSquared)
+        {
+            disSquared = l;
+            furthest = D;
+            index = 3;
+        }
+    
+        return furthest;
+    }
+
     
     #endregion
     

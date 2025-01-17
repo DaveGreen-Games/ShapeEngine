@@ -524,6 +524,29 @@ public class Polyline : Points, IEquatable<Polyline>
             }
             return closest;
         }
+        public new Vector2 GetFurthestVertex(Vector2 p, out float disSquared, out int index)
+        {
+            disSquared = -1;
+            index = -1;
+            if (Count < 2) return new();
+            
+            index = 0;
+            var furthest = this[index];
+            disSquared = (furthest - p).LengthSquared();
+            
+            for (var i = 1; i < Count; i++)
+            {
+                var cp = this[i];
+                var dis = (cp - p).LengthSquared();
+                if (dis > disSquared)
+                {
+                    index = i;
+                    furthest = cp;
+                    disSquared = dis;
+                }
+            }
+            return furthest;
+        }
 
         public new ClosestPointResult GetClosestPoint(Line other)
         {
