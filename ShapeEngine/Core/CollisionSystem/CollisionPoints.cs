@@ -890,6 +890,79 @@ public class CollisionPoints : ShapeList<CollisionPoint>
         return true;
     }
     
+    public bool SortFirstLeft()
+    {
+        if(Count <= 0) return false;
+        if(Count == 1) return true;
+        this.Sort
+        (
+            comparison: (a, b) =>
+            {
+                float valueA = a.Point.X;
+                float valueB = b.Point.X;
+
+                if (valueA > valueB) return 1;
+                if (MathF.Abs(x: valueA - valueB) < 0.01f) return 0;
+                return -1;
+            }
+        );
+        return true;
+    }
+    public bool SortFirstRight()
+    {
+        if(Count <= 0) return false;
+        if(Count == 1) return true;
+        this.Sort
+        (
+            comparison: (a, b) =>
+            {
+                float valueA = a.Point.X;
+                float valueB = b.Point.X;
+
+                if (valueA < valueB) return 1;
+                if (MathF.Abs(x: valueA - valueB) < 0.01f) return 0;
+                return -1;
+            }
+        );
+        return true;
+    }
+    
+    public bool SortFirstTop()
+    {
+        if(Count <= 0) return false;
+        if(Count == 1) return true;
+        this.Sort
+        (
+            comparison: (a, b) =>
+            {
+                float valueA = a.Point.Y;
+                float valueB = b.Point.Y;
+
+                if (valueA > valueB) return 1;
+                if (MathF.Abs(x: valueA - valueB) < 0.01f) return 0;
+                return -1;
+            }
+        );
+        return true;
+    }
+    public bool SortFirstBottom()
+    {
+        if(Count <= 0) return false;
+        if(Count == 1) return true;
+        this.Sort
+        (
+            comparison: (a, b) =>
+            {
+                float valueA = a.Point.Y;
+                float valueB = b.Point.Y;
+
+                if (valueA < valueB) return 1;
+                if (MathF.Abs(x: valueA - valueB) < 0.01f) return 0;
+                return -1;
+            }
+        );
+        return true;
+    }
 
     public Points GetUniquePoints()
     {
