@@ -4473,15 +4473,13 @@ public static class ShapeDrawing
                 cur += dir * spacing;
                 continue;
             }
-
-           
             
             for (int j = 0; j < intersection.Count; j++)
             {
                 var p1 = intersection[j].Point;
                 var p2 = intersection[(j+1) % intersection.Count].Point;
+                if(!Polygon.IsSegmentInsidePolygon(p1, p2, polygon)) continue;
                 var segment = new Segment(p1, p2);
-                if(!polygon.ContainsShape(segment)) continue;
                 segment.Draw(checkered);
             }
             foreach (var p in intersection)

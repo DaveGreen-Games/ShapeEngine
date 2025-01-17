@@ -1788,9 +1788,83 @@ namespace ShapeEngine.Core.Shapes
         }
 
         
+        //clean up
+        public static bool IsSegmentInsidePolygon(Vector2 segmentStart, Vector2 segmentEnd, List<Vector2> polygon)
+    {
+        // Check if both endpoints are inside the polygon
+        if (!IsPointInsidePolygon(segmentStart, polygon) || !IsPointInsidePolygon(segmentEnd, polygon))
+        {
+            return false;
+        }
+
+        // Check if the segment intersects any of the polygon's edges
+        for (int i = 0; i < polygon.Count; i++)
+        {
+            Vector2 polyStart = polygon[i];
+            Vector2 polyEnd = polygon[(i + 1) % polygon.Count];
+            if (DoSegmentsIntersect(segmentStart, segmentEnd, polyStart, polyEnd))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+        private static bool IsPointInsidePolygon(Vector2 point, List<Vector2> polygon)
+        {
+            bool inside = false;
+            for (int i = 0, j = polygon.Count - 1; i < polygon.Count; j = i++)
+            {
+                if ((polygon[i].Y > point.Y) != (polygon[j].Y > point.Y) &&
+                    (point.X < (polygon[j].X - polygon[i].X) * (point.Y - polygon[i].Y) / (polygon[j].Y - polygon[i].Y) + polygon[i].X))
+                {
+                    inside = !inside;
+                }
+            }
+            return inside;
+        }
+        private static bool DoSegmentsIntersect(Vector2 p1, Vector2 q1, Vector2 p2, Vector2 q2)
+        {
+            float o1 = Orientation(p1, q1, p2);
+            float o2 = Orientation(p1, q1, q2);
+            float o3 = Orientation(p2, q2, p1);
+            float o4 = Orientation(p2, q2, q1);
+
+            // General case
+            if (o1 != o2 && o3 != o4)
+            {
+                return true;
+            }
+
+            // Special cases
+            if (o1 == 0 && OnSegment(p1, p2, q1)) return true;
+            if (o2 == 0 && OnSegment(p1, q2, q1)) return true;
+            if (o3 == 0 && OnSegment(p2, p1, q2)) return true;
+            if (o4 == 0 && OnSegment(p2, q1, q2)) return true;
+
+            return false;
+        }
+        private static float Orientation(Vector2 p, Vector2 q, Vector2 r)
+        {
+            float val = (q.Y - p.Y) * (r.X - q.X) - (q.X - p.X) * (r.Y - q.Y);
+            if (Math.Abs(val) < 1e-10) return 0; // collinear
+            return (val > 0) ? 1 : 2; // clock or counterclock wise
+        }
+
+        private static bool OnSegment(Vector2 p, Vector2 q, Vector2 r)
+        {
+            if (q.X <= Math.Max(p.X, r.X) && q.X >= Math.Min(p.X, r.X) &&
+                q.Y <= Math.Max(p.Y, r.Y) && q.Y >= Math.Min(p.Y, r.Y))
+            {
+                return true;
+            }
+            return false;
+        }
         
         public bool ContainsPoint(Vector2 p) { return IsPointInPoly(p); }
 
+        //TODO: overhaul all this functions to also check for intersections of the segments of each shape
+        //-> use ShapeDrawing functions
         public bool ContainsCollisionObject(CollisionObject collisionObject)
         {
             if (!collisionObject.HasColliders) return false;
@@ -1821,6 +1895,8 @@ namespace ShapeEngine.Core.Shapes
         public bool ContainsShape(Rect rect) => ContainsPoints(rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight);
         public bool ContainsShape(Triangle triangle) => ContainsPoints(triangle.A, triangle.B, triangle.C);
         public bool ContainsShape(Quad quad) => ContainsPoints(quad.A, quad.B, quad.C, quad.D);
+        
+        //TODO: this stays the same because it can not/ should not be considered segment based
         public bool ContainsShape(Points points)
         {
             if (points.Count <= 0) return false;
@@ -1831,6 +1907,7 @@ namespace ShapeEngine.Core.Shapes
             return true;
         }
         
+        //TODO: add the same (or replace) for also checking for intersections of the segments of each shape
         public bool IsPointInPoly(Vector2 p)
         {
             var oddNodes = false;

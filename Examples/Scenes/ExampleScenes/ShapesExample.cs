@@ -1010,15 +1010,15 @@ public class ShapesExample : ExampleScene
         public override void Draw(ColorRgba color, bool movingShape = false)
         {
             Polygon.DrawLines(LineThickness, color);
-            if (!movingShape)
-            {
-                var dt = ShapeEngine.Core.Game.CurrentGameInstance.Time.Delta;
-                
-                stripedRotDeg += StripedRotSpeedDeg * dt;
-                
-                LineDrawingInfo checkered = new(LineThickness / 2, color.ChangeBrightness(-0.75f), LineCapType.Capped, 6);
-                Polygon.DrawStriped(StripedSpacing, stripedRotDeg, checkered);
-            }
+            // if (!movingShape)
+            // {
+            //     var dt = ShapeEngine.Core.Game.CurrentGameInstance.Time.Delta;
+            //     
+            //     stripedRotDeg += StripedRotSpeedDeg * dt;
+            //     
+            //     LineDrawingInfo checkered = new(LineThickness / 2, color.ChangeBrightness(-0.75f), LineCapType.Capped, 6);
+            //     Polygon.DrawStriped(StripedSpacing, stripedRotDeg, checkered);
+            // }
             
             
         }
@@ -1053,7 +1053,9 @@ public class ShapesExample : ExampleScene
         public override bool OverlapWith(Shape shape)
         {
             if (shape is PointShape pointShape) return pointShape.OverlapWith(this); //  Polygon.ContainsPoint(pointShape.Position);
-            if (shape is SegmentShape segmentShape) return Polygon.OverlapShape(segmentShape.Segment);
+            if (shape is SegmentShape segmentShape) 
+                // return Polygon.IsSegmentInsidePolygon(segmentShape.Segment.Start, segmentShape.Segment.End, Polygon);
+                return Polygon.OverlapShape(segmentShape.Segment);
             if (shape is RayShape rayShape) return Polygon.OverlapShape(rayShape.Ray);
             if (shape is LineShape lineShape) return Polygon.OverlapShape(lineShape.Line);
             if (shape is CircleShape circleShape) return Polygon.OverlapShape(circleShape.Circle);
