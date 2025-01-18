@@ -15,8 +15,6 @@ namespace ShapeEngine.Core.Shapes
     /// </summary>
     public class Polygon : Points, IEquatable<Polygon>
     {
-        
-
         public override Polygon Copy() => new(this);
 
         #region Constructors
@@ -859,6 +857,20 @@ namespace ShapeEngine.Core.Shapes
             return false;
         }
         
+        //Variant 2
+        // private static bool IsPointInsidePolygon(Vector2 point, List<Vector2> polygon)
+        // {
+        //     bool inside = false;
+        //     for (int i = 0, j = polygon.Count - 1; i < polygon.Count; j = i++)
+        //     {
+        //         if ((polygon[i].Y > point.Y) != (polygon[j].Y > point.Y) &&
+        //             (point.X < (polygon[j].X - polygon[i].X) * (point.Y - polygon[i].Y) / (polygon[j].Y - polygon[i].Y) + polygon[i].X))
+        //         {
+        //             inside = !inside;
+        //         }
+        //     }
+        //     return inside;
+        // }
         
         /// <summary>
         /// Triangulates a set of points. Only works with non self intersecting shapes.
@@ -1711,31 +1723,31 @@ namespace ShapeEngine.Core.Shapes
         #endregion
         
         #region Contains
-        public static bool ContainsPoints(List<Vector2> points, Vector2 p)
+        public static bool ContainsPoint(List<Vector2> polygon, Vector2 p)
         {
             var oddNodes = false;
-            int num = points.Count;
+            int num = polygon.Count;
             int j = num - 1;
             for (int i = 0; i < num; i++)
             {
-                var vi = points[i];
-                var vj = points[j];
+                var vi = polygon[i];
+                var vj = polygon[j];
                 if (ContainsPointCheck(vi, vj, p)) oddNodes = !oddNodes;
                 j = i;
             }
 
             return oddNodes;
         }
-        public static bool ContainsPoints(List<Vector2> points, Vector2 a, Vector2 b)
+        public static bool ContainsPoints(List<Vector2> polygon, Vector2 a, Vector2 b)
         {
             var oddNodesA = false;
             var oddNodesB = false;
-            int num = points.Count;
+            int num = polygon.Count;
             int j = num - 1;
             for (var i = 0; i < num; i++)
             {
-                var vi = points[i];
-                var vj = points[j];
+                var vi = polygon[i];
+                var vj = polygon[j];
                 if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
                 if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
                 
@@ -1744,17 +1756,17 @@ namespace ShapeEngine.Core.Shapes
 
             return oddNodesA && oddNodesB;
         }
-        public static bool ContainsPoints(List<Vector2> points, Vector2 a, Vector2 b, Vector2 c)
+        public static bool ContainsPoints(List<Vector2> polygon, Vector2 a, Vector2 b, Vector2 c)
         {
             var oddNodesA = false;
             var oddNodesB = false;
             var oddNodesC = false;
-            int num = points.Count;
+            int num = polygon.Count;
             int j = num - 1;
             for (int i = 0; i < num; i++)
             {
-                var vi = points[i];
-                var vj = points[j];
+                var vi = polygon[i];
+                var vj = polygon[j];
                 if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
                 if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
                 if(ContainsPointCheck(vi, vj, c)) oddNodesC = !oddNodesC;
@@ -1764,18 +1776,18 @@ namespace ShapeEngine.Core.Shapes
 
             return oddNodesA && oddNodesB && oddNodesC;
         }
-        public static bool ContainsPoints(List<Vector2> points, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+        public static bool ContainsPoints(List<Vector2> polygon, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
         {
             var oddNodesA = false;
             var oddNodesB = false;
             var oddNodesC = false;
             var oddNodesD = false;
-            int num = points.Count;
+            int num = polygon.Count;
             int j = num - 1;
             for (int i = 0; i < num; i++)
             {
-                var vi = points[i];
-                var vj = points[j];
+                var vi = polygon[i];
+                var vj = polygon[j];
                 if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
                 if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
                 if(ContainsPointCheck(vi, vj, c)) oddNodesC = !oddNodesC;
@@ -1786,85 +1798,151 @@ namespace ShapeEngine.Core.Shapes
 
             return oddNodesA && oddNodesB && oddNodesC && oddNodesD;
         }
-
-        
-        //clean up
-        public static bool IsSegmentInsidePolygon(Vector2 segmentStart, Vector2 segmentEnd, List<Vector2> polygon)
-    {
-        // Check if both endpoints are inside the polygon
-        if (!IsPointInsidePolygon(segmentStart, polygon) || !IsPointInsidePolygon(segmentEnd, polygon))
+        public static bool ContainsPoints(List<Vector2> polygon, List<Vector2> points)
         {
-            return false;
-        }
-
-        // Check if the segment intersects any of the polygon's edges
-        for (int i = 0; i < polygon.Count; i++)
-        {
-            Vector2 polyStart = polygon[i];
-            Vector2 polyEnd = polygon[(i + 1) % polygon.Count];
-            if (DoSegmentsIntersect(segmentStart, segmentEnd, polyStart, polyEnd))
+            if (polygon.Count <= 0 || points.Count <= 0) return false;
+            foreach (var p in points)
             {
-                return false;
+                if (!ContainsPoint(polygon, p)) return false;
             }
+            return true;
         }
-
-        return true;
-    }
-        private static bool IsPointInsidePolygon(Vector2 point, List<Vector2> polygon)
+        //clean up
+        public static bool ContainsPolygonSegment(List<Vector2> polygon, Vector2 segmentStart, Vector2 segmentEnd)
         {
-            bool inside = false;
-            for (int i = 0, j = polygon.Count - 1; i < polygon.Count; j = i++)
+            if (!ContainsPoints(polygon, segmentStart, segmentEnd)) return false;
+            
+            for (int i = 0; i < polygon.Count; i++)
             {
-                if ((polygon[i].Y > point.Y) != (polygon[j].Y > point.Y) &&
-                    (point.X < (polygon[j].X - polygon[i].X) * (point.Y - polygon[i].Y) / (polygon[j].Y - polygon[i].Y) + polygon[i].X))
+                var polyStart = polygon[i];
+                var polyEnd = polygon[(i + 1) % polygon.Count];
+                if (Segment.IntersectSegmentSegment(segmentStart, segmentEnd, polyStart, polyEnd).Valid)
                 {
-                    inside = !inside;
+                    return false;
                 }
             }
-            return inside;
-        }
-        private static bool DoSegmentsIntersect(Vector2 p1, Vector2 q1, Vector2 p2, Vector2 q2)
-        {
-            float o1 = Orientation(p1, q1, p2);
-            float o2 = Orientation(p1, q1, q2);
-            float o3 = Orientation(p2, q2, p1);
-            float o4 = Orientation(p2, q2, q1);
 
-            // General case
-            if (o1 != o2 && o3 != o4)
+            return true;
+        }
+        public static bool ContainsPolygonCircle(List<Vector2> polygon, Vector2 circleCenter, float circleRadius)
+        {
+            if (!ContainsPoint(polygon, circleCenter)) return false;
+            
+            for (int i = 0; i < polygon.Count; i++)
             {
-                return true;
+                var polyStart = polygon[i];
+                var polyEnd = polygon[(i + 1) % polygon.Count];
+                var result = Segment.IntersectSegmentCircle(polyStart, polyEnd, circleCenter, circleRadius);
+                if (result.a.Valid || result.b.Valid)
+                {
+                    return false;
+                }
             }
 
-            // Special cases
-            if (o1 == 0 && OnSegment(p1, p2, q1)) return true;
-            if (o2 == 0 && OnSegment(p1, q2, q1)) return true;
-            if (o3 == 0 && OnSegment(p2, p1, q2)) return true;
-            if (o4 == 0 && OnSegment(p2, q1, q2)) return true;
-
-            return false;
+            return true;
         }
-        private static float Orientation(Vector2 p, Vector2 q, Vector2 r)
+        public static bool ContainsPolygonTriangle(List<Vector2> polygon, Vector2 a, Vector2 b, Vector2 c)
         {
-            float val = (q.Y - p.Y) * (r.X - q.X) - (q.X - p.X) * (r.Y - q.Y);
-            if (Math.Abs(val) < 1e-10) return 0; // collinear
-            return (val > 0) ? 1 : 2; // clock or counterclock wise
-        }
-
-        private static bool OnSegment(Vector2 p, Vector2 q, Vector2 r)
-        {
-            if (q.X <= Math.Max(p.X, r.X) && q.X >= Math.Min(p.X, r.X) &&
-                q.Y <= Math.Max(p.Y, r.Y) && q.Y >= Math.Min(p.Y, r.Y))
+            if (!ContainsPoints(polygon, a, b, c)) return false;
+            
+            for (int i = 0; i < polygon.Count; i++)
             {
-                return true;
+                var polyStart = polygon[i];
+                var polyEnd = polygon[(i + 1) % polygon.Count];
+                if (Segment.IntersectSegmentSegment(polyStart, polyEnd, a, b).Valid)
+                {
+                    return false;
+                }
+                if (Segment.IntersectSegmentSegment(polyStart, polyEnd, b, c).Valid)
+                {
+                    return false;
+                }
+                if (Segment.IntersectSegmentSegment(polyStart, polyEnd, c, a).Valid)
+                {
+                    return false;
+                }
             }
-            return false;
+
+            return true;
+        }
+        public static bool ContainsPolygonQuad(List<Vector2> polygon, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+        {
+            if (!ContainsPoints(polygon, a, b, c, d)) return false;
+            
+            for (int i = 0; i < polygon.Count; i++)
+            {
+                var polyStart = polygon[i];
+                var polyEnd = polygon[(i + 1) % polygon.Count];
+                if (Segment.IntersectSegmentSegment(polyStart, polyEnd, a, b).Valid)
+                {
+                    return false;
+                }
+                if (Segment.IntersectSegmentSegment(polyStart, polyEnd, b, c).Valid)
+                {
+                    return false;
+                }
+                if (Segment.IntersectSegmentSegment(polyStart, polyEnd, c, d).Valid)
+                {
+                    return false;
+                }
+                if (Segment.IntersectSegmentSegment(polyStart, polyEnd, d, a).Valid)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        public static bool ContainsPolygonRect(List<Vector2> polygon, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+        {
+            return ContainsPolygonQuad(polygon, a, b, c, d);
+        }
+        public static bool ContainsPolygonPolyline(List<Vector2> polygon, List<Vector2> polyline)
+        {
+            if (!ContainsPoints(polygon, polyline)) return false;
+            
+            for (int i = 0; i < polygon.Count; i++)
+            {
+                var polyStart = polygon[i];
+                var polyEnd = polygon[(i + 1) % polygon.Count];
+                for (int j = 0; j < polyline.Count - 1; j++)
+                {
+                    var polylineStart = polyline[j];
+                    var polylineEnd = polyline[j + 1];
+                    
+                    if (Segment.IntersectSegmentSegment(polyStart, polyEnd, polylineStart, polylineEnd).Valid)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+        public static bool ContainsPolygonPolygon(List<Vector2> polygon, List<Vector2> other)
+        {
+            if (!ContainsPoints(polygon, other)) return false;
+            
+            for (int i = 0; i < polygon.Count; i++)
+            {
+                var polyStart = polygon[i];
+                var polyEnd = polygon[(i + 1) % polygon.Count];
+                for (int j = 0; j < other.Count; j++)
+                {
+                    var polylineStart = other[j];
+                    var polylineEnd = other[(j + 1) % other.Count];
+                    
+                    if (Segment.IntersectSegmentSegment(polyStart, polyEnd, polylineStart, polylineEnd).Valid)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
         }
         
-        public bool ContainsPoint(Vector2 p) { return IsPointInPoly(p); }
-
-        //TODO: overhaul all this functions to also check for intersections of the segments of each shape
-        //-> use ShapeDrawing functions
+        
         public bool ContainsCollisionObject(CollisionObject collisionObject)
         {
             if (!collisionObject.HasColliders) return false;
@@ -1880,6 +1958,8 @@ namespace ShapeEngine.Core.Shapes
             switch (collider.GetShapeType())
             {
                 case ShapeType.Circle: return ContainsShape(collider.GetCircleShape());
+                case ShapeType.Line: return false;
+                case ShapeType.Ray: return false;
                 case ShapeType.Segment: return ContainsShape(collider.GetSegmentShape());
                 case ShapeType.Triangle: return ContainsShape(collider.GetTriangleShape());
                 case ShapeType.Quad: return ContainsShape(collider.GetQuadShape());
@@ -1890,100 +1970,107 @@ namespace ShapeEngine.Core.Shapes
 
             return false;
         }
-        public bool ContainsShape(Segment segment) => ContainsPoints(segment.Start, segment.End);
-        public bool ContainsShape(Circle circle) => ContainsPoints(circle.Top, circle.Left, circle.Bottom, circle.Right);
-        public bool ContainsShape(Rect rect) => ContainsPoints(rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight);
-        public bool ContainsShape(Triangle triangle) => ContainsPoints(triangle.A, triangle.B, triangle.C);
-        public bool ContainsShape(Quad quad) => ContainsPoints(quad.A, quad.B, quad.C, quad.D);
-        
-        //TODO: this stays the same because it can not/ should not be considered segment based
-        public bool ContainsShape(Points points)
-        {
-            if (points.Count <= 0) return false;
-            foreach (var p in points)
-            {
-                if (!ContainsPoint(p)) return false;
-            }
-            return true;
-        }
-        
-        //TODO: add the same (or replace) for also checking for intersections of the segments of each shape
-        public bool IsPointInPoly(Vector2 p)
-        {
-            var oddNodes = false;
-            int num = Count;
-            int j = num - 1;
-            for (int i = 0; i < num; i++)
-            {
-                var vi = this[i];
-                var vj = this[j];
-                if (ContainsPointCheck(vi, vj, p)) oddNodes = !oddNodes;
-                j = i;
-            }
+        public bool ContainsShape(Segment segment) => ContainsPolygonSegment(this, segment.Start, segment.End);
+        public bool ContainsShape(Circle circle) => ContainsPolygonCircle(this, circle.Center, circle.Radius);
+        public bool ContainsShape(Rect rect) => ContainsPolygonRect(this, rect.A, rect.B, rect.C, rect.D);
+        public bool ContainsShape(Triangle triangle) => ContainsPolygonTriangle(this, triangle.A, triangle.B, triangle.C);
+        public bool ContainsShape(Quad quad) => ContainsPolygonQuad(this, quad.A, quad.B, quad.C, quad.D);
+        public bool ContainsShape(Polyline polyline) => ContainsPolygonPolyline(this, polyline);
+        public bool ContainsShape(Polygon polygon) => ContainsPolygonPolygon(this, polygon);
+       
+        public bool ContainsSegment(Vector2 segmentStart, Vector2 segmentEnd) => ContainsPolygonSegment(this, segmentStart, segmentEnd);
+        public bool ContainsTriangle(Vector2 a, Vector2 b, Vector2 c) => ContainsPolygonTriangle(this, a, b, c);
+        public bool ContainsQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => ContainsPolygonQuad(this, a, b, c, d);
 
-            return oddNodes;
+        public bool ContainsPoint(Vector2 p)
+        {
+            return ContainsPoint(this, p);
+            // var oddNodes = false;
+            // int num = Count;
+            // int j = num - 1;
+            // for (int i = 0; i < num; i++)
+            // {
+            //     var vi = this[i];
+            //     var vj = this[j];
+            //     if (ContainsPointCheck(vi, vj, p)) oddNodes = !oddNodes;
+            //     j = i;
+            // }
+            //
+            // return oddNodes;
         }
         public bool ContainsPoints(Vector2 a, Vector2 b)
         {
-            var oddNodesA = false;
-            var oddNodesB = false;
-            int num = Count;
-            int j = num - 1;
-            for (var i = 0; i < num; i++)
-            {
-                var vi = this[i];
-                var vj = this[j];
-                if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
-                if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
-                
-                j = i;
-            }
-
-            return oddNodesA && oddNodesB;
+            return ContainsPoints(this, a, b);
+            // var oddNodesA = false;
+            // var oddNodesB = false;
+            // int num = Count;
+            // int j = num - 1;
+            // for (var i = 0; i < num; i++)
+            // {
+            //     var vi = this[i];
+            //     var vj = this[j];
+            //     if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
+            //     if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
+            //     
+            //     j = i;
+            // }
+            //
+            // return oddNodesA && oddNodesB;
         }
         public bool ContainsPoints(Vector2 a, Vector2 b, Vector2 c)
         {
-            var oddNodesA = false;
-            var oddNodesB = false;
-            var oddNodesC = false;
-            int num = Count;
-            int j = num - 1;
-            for (int i = 0; i < num; i++)
-            {
-                var vi = this[i];
-                var vj = this[j];
-                if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
-                if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
-                if(ContainsPointCheck(vi, vj, c)) oddNodesC = !oddNodesC;
-                
-                j = i;
-            }
-
-            return oddNodesA && oddNodesB && oddNodesC;
+            return ContainsPoints(this, a, b, c);
+            // var oddNodesA = false;
+            // var oddNodesB = false;
+            // var oddNodesC = false;
+            // int num = Count;
+            // int j = num - 1;
+            // for (int i = 0; i < num; i++)
+            // {
+            //     var vi = this[i];
+            //     var vj = this[j];
+            //     if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
+            //     if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
+            //     if(ContainsPointCheck(vi, vj, c)) oddNodesC = !oddNodesC;
+            //     
+            //     j = i;
+            // }
+            //
+            // return oddNodesA && oddNodesB && oddNodesC;
         }
         public bool ContainsPoints(Vector2 a, Vector2 b, Vector2 c, Vector2 d)
         {
-            var oddNodesA = false;
-            var oddNodesB = false;
-            var oddNodesC = false;
-            var oddNodesD = false;
-            int num = Count;
-            int j = num - 1;
-            for (int i = 0; i < num; i++)
-            {
-                var vi = this[i];
-                var vj = this[j];
-                if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
-                if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
-                if(ContainsPointCheck(vi, vj, c)) oddNodesC = !oddNodesC;
-                if(ContainsPointCheck(vi, vj, d)) oddNodesD = !oddNodesD;
-                
-                j = i;
-            }
-
-            return oddNodesA && oddNodesB && oddNodesC && oddNodesD;
+            return ContainsPoints(this, a, b, c, d);
+            // var oddNodesA = false;
+            // var oddNodesB = false;
+            // var oddNodesC = false;
+            // var oddNodesD = false;
+            // int num = Count;
+            // int j = num - 1;
+            // for (int i = 0; i < num; i++)
+            // {
+            //     var vi = this[i];
+            //     var vj = this[j];
+            //     if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
+            //     if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
+            //     if(ContainsPointCheck(vi, vj, c)) oddNodesC = !oddNodesC;
+            //     if(ContainsPointCheck(vi, vj, d)) oddNodesD = !oddNodesD;
+            //     
+            //     j = i;
+            // }
+            //
+            // return oddNodesA && oddNodesB && oddNodesC && oddNodesD;
         }
-
+        public bool ContainsPoints(Points points)
+        {
+            return ContainsPoints(this, points);
+            // if (points.Count <= 0) return false;
+            // foreach (var p in points)
+            // {
+            //     if (!ContainsPoint(p)) return false;
+            // }
+            // return true;
+        }
         
         #endregion
         
@@ -2250,6 +2337,64 @@ namespace ShapeEngine.Core.Shapes
         #endregion
 
         #region Intersect
+        public static List<(Vector2 segmentStart, Vector2 segmentEnd)> IntersectPolygonWithLine(List<Vector2> polygon, Vector2 linePoint, Vector2 lineDirection)
+        {
+            var intersectionPoints = new List<Vector2>();
+
+            // Normalize the line direction
+            var lineDirectionNormalized = lineDirection.Normalize();
+
+            // Find intersection points between the line and the polygon edges
+            for (int i = 0; i < polygon.Count; i++)
+            {
+                var polyStart = polygon[i];
+                var polyEnd = polygon[(i + 1) % polygon.Count];
+                if (LineSegmentIntersection(linePoint, lineDirectionNormalized, polyStart, polyEnd, out Vector2 intersection))
+                {
+                    intersectionPoints.Add(intersection);
+                }
+            }
+
+            // Sort intersection points along the line
+            intersectionPoints = intersectionPoints.OrderBy(p => Vector2.Dot(p - linePoint, lineDirectionNormalized)).ToList();
+
+            // Generate segments between consecutive intersection points
+            List<(Vector2 segmentStart, Vector2 segmentEnd)> segments = new List<(Vector2 segmentStart, Vector2 segmentEnd)>();
+            for (int i = 0; i < intersectionPoints.Count - 1; i += 2)
+            {
+                segments.Add((intersectionPoints[i], intersectionPoints[i + 1]));
+            }
+
+            return segments;
+        }
+
+        private static bool LineSegmentIntersection(Vector2 linePoint, Vector2 lineDirection, Vector2 segmentStart, Vector2 segmentEnd, out Vector2 intersection)
+        {
+            intersection = Vector2.Zero;
+            Vector2 segmentDirection = segmentEnd - segmentStart;
+
+            float denominator = lineDirection.X * segmentDirection.Y - lineDirection.Y * segmentDirection.X;
+            if (Math.Abs(denominator) < 1e-10)
+            {
+                // Lines are parallel
+                return false;
+            }
+
+            Vector2 diff = segmentStart - linePoint;
+            float t1 = (diff.X * segmentDirection.Y - diff.Y * segmentDirection.X) / denominator;
+            float t2 = (diff.X * lineDirection.Y - diff.Y * lineDirection.X) / denominator;
+
+            // Check if the intersection is within the segment and on the correct side of the line
+            if (t1 >= 0 && t2 >= 0 && t2 <= 1)
+            {
+                intersection = linePoint + t1 * lineDirection;
+                return true;
+            }
+
+            return false;
+        }
+        
+        
         public CollisionPoints? Intersect(Collider collider)
         {
             if (!collider.Enabled) return null;

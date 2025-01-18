@@ -4465,28 +4465,36 @@ public static class ShapeDrawing
         var cur = start + dir * spacing;
         for (int i = 0; i < steps; i++)
         {
-            
-            var intersection = Line.IntersectLinePolygon(cur, lineDir, polygon);
-            if (intersection == null || intersection.Count <= 0)
+            var segments = Polygon.IntersectPolygonWithLine(polygon, cur, lineDir);
+            if (segments.Count > 0)
             {
-                DrawCircle(cur, 4f, ColorRgba.White, 8);
-                cur += dir * spacing;
-                continue;
+                foreach (var tuple in segments)
+                {
+                    var segment = new Segment(tuple.segmentStart, tuple.segmentEnd);
+                    segment.Draw(checkered);
+                }
             }
-            
-            for (int j = 0; j < intersection.Count; j++)
-            {
-                var p1 = intersection[j].Point;
-                var p2 = intersection[(j+1) % intersection.Count].Point;
-                if(!Polygon.IsSegmentInsidePolygon(p1, p2, polygon)) continue;
-                var segment = new Segment(p1, p2);
-                segment.Draw(checkered);
-            }
-            foreach (var p in intersection)
-            {
-                DrawCircle(p.Point, 6f, ColorRgba.White, 8);
-            }
-            DrawCircle(cur, 4f, ColorRgba.White, 8);
+            // var intersection = Line.IntersectLinePolygon(cur, lineDir, polygon);
+            // if (intersection == null || intersection.Count <= 0)
+            // {
+            //     DrawCircle(cur, 4f, ColorRgba.White, 8);
+            //     cur += dir * spacing;
+            //     continue;
+            // }
+            //
+            // for (int j = 0; j < intersection.Count; j++)
+            // {
+            //     var p1 = intersection[j].Point;
+            //     var p2 = intersection[(j+1) % intersection.Count].Point;
+            //     if(!Polygon.ContainsPolygonSegment(polygon, p1, p2)) continue;
+            //     var segment = new Segment(p1, p2);
+            //     segment.Draw(checkered);
+            // }
+            // foreach (var p in intersection)
+            // {
+            //     DrawCircle(p.Point, 6f, ColorRgba.White, 8);
+            // }
+            // DrawCircle(cur, 4f, ColorRgba.White, 8);
             cur += dir * spacing;
         }
     }

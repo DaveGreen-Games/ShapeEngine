@@ -1499,7 +1499,7 @@ public readonly struct Ray
     public static bool OverlapRayPolygon(Vector2 rayPoint, Vector2 rayDirection, List<Vector2> points)
     {
         if (points.Count < 3) return false;
-        if (Polygon.ContainsPoints(points, rayPoint)) return true;
+        if (Polygon.ContainsPoint(points, rayPoint)) return true;
         for (var i = 0; i < points.Count; i++)
         {
             var colPoint = IntersectRaySegment(rayPoint, rayDirection, points[i], points[(i + 1) % points.Count]);

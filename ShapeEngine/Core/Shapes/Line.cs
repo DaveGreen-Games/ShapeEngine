@@ -1579,7 +1579,7 @@ public readonly struct Line
     public static bool OverlapLinePolygon(Vector2 linePoint, Vector2 lineDirection, List<Vector2> points)
     {
         if (points.Count < 3) return false;
-        if (Polygon.ContainsPoints(points, linePoint)) return true;
+        if (Polygon.ContainsPoint(points, linePoint)) return true;
         for (var i = 0; i < points.Count; i++)
         {
             var colPoint = IntersectLineSegment(linePoint, lineDirection, points[i], points[(i + 1) % points.Count]);

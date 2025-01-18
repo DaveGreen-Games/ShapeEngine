@@ -561,7 +561,7 @@ public abstract class Collider : Shape
             case ShapeType.Triangle: return GetTriangleShape().ContainsShape(shape);
             case ShapeType.Quad: return GetQuadShape().ContainsShape(shape);
             case ShapeType.Rect: return GetRectShape().ContainsShape(shape);
-            case ShapeType.Poly: return GetPolygonShape().ContainsShape(shape);
+            case ShapeType.Poly: return GetPolygonShape().ContainsPoints(shape);
             case ShapeType.PolyLine: return false;
         }
 
