@@ -1,3 +1,4 @@
+
 using System.Numerics;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
@@ -724,39 +725,49 @@ public readonly struct Line
     
     public static CollisionPoint IntersectLineSegment(Vector2 linePoint, Vector2 lineDirection, Vector2 segmentStart, Vector2 segmentEnd)
     {
-        // Line AB (infinite line) represented by linePoint and lineDirection
-        // Line segment CD represented by segmentStart and segmentEnd
-
-        // Calculate direction vector of the segment
-        var segmentDirection = segmentEnd - segmentStart;
-
-        // Calculate the denominator of the intersection formula
-        float denominator = lineDirection.X * segmentDirection.Y - lineDirection.Y * segmentDirection.X;
-
-        // Check if lines are parallel (denominator is zero)
-        if (Math.Abs(denominator) < 1e-10)
-        {
-            return new();
-        }
-
-        // Calculate the intersection point using parameter t
-        var difference = segmentStart - linePoint;
-        float t = (difference.X * segmentDirection.Y - difference.Y * segmentDirection.X) / denominator;
-
-        // Calculate the intersection point
-        var intersection = linePoint + t * lineDirection;
-
-        // Check if the intersection point is within the segment
-        if (Segment.IsPointOnSegment(intersection, segmentStart, segmentEnd))
-        {
-            // The normal vector can be taken as perpendicular to the segment direction
-            segmentDirection = segmentDirection.Normalize();
-            var normal = new Vector2(-segmentDirection.Y, segmentDirection.X);
-
-            return new(intersection, normal);
-        }
-
-        return new();
+        
+        var result = Ray.IntersectRaySegment(linePoint, lineDirection, segmentStart, segmentEnd);
+        if (result.Valid) return result;
+        return Ray.IntersectRaySegment(linePoint, -lineDirection, segmentEnd, segmentStart);
+        
+        //for some reason the code below works perfectly for every shape except for line vs rect
+        //something about the segments of a rect makes this not work correctly
+        //the above code works just fine when a line is split into two rays....
+        
+        
+        // // Line AB (infinite line) represented by linePoint and lineDirection
+        // // Line segment CD represented by segmentStart and segmentEnd
+        //
+        // // Calculate direction vector of the segment
+        // var segmentDirection = segmentEnd - segmentStart;
+        //
+        // // Calculate the denominator of the intersection formula
+        // float denominator = lineDirection.X * segmentDirection.Y - lineDirection.Y * segmentDirection.X;
+        //
+        // // Check if lines are parallel (denominator is zero)
+        // if (Math.Abs(denominator) < 1e-10)
+        // {
+        //     return new();
+        // }
+        //
+        // // Calculate the intersection point using parameter t
+        // var difference = segmentStart - linePoint;
+        // float t = (difference.X * segmentDirection.Y - difference.Y * segmentDirection.X) / denominator;
+        //
+        // // Calculate the intersection point
+        // var intersection = linePoint + t * lineDirection;
+        //
+        // // Check if the intersection point is within the segment
+        // if (Segment.IsPointOnSegment(intersection, segmentStart, segmentEnd))
+        // {
+        //     // The normal vector can be taken as perpendicular to the segment direction
+        //     segmentDirection = segmentDirection.Normalize();
+        //     var normal = new Vector2(-segmentDirection.Y, segmentDirection.X);
+        //
+        //     return new(intersection, normal);
+        // }
+        //
+        // return new();
     }
     public static CollisionPoint IntersectLineSegment(Vector2 linePoint, Vector2 lineDirection, Vector2 segmentStart, Vector2 segmentEnd, Vector2 segmentNormal)
     {
@@ -920,7 +931,10 @@ public readonly struct Line
         CollisionPoint resultB = new();
         
         var cp = IntersectLineSegment(linePoint, lineDirection,  a, b);
-        if(cp.Valid) resultA = cp;
+        if (cp.Valid)
+        {
+            resultA = cp;
+        }
         
         cp = IntersectLineSegment(linePoint, lineDirection,  b, c);
         if (cp.Valid)
@@ -928,8 +942,11 @@ public readonly struct Line
             if (resultA.Valid) resultB = cp;
             else resultA = cp;
         }
-        
-        if(resultA.Valid && resultB.Valid) return (resultA, resultB);
+
+        if (resultA.Valid && resultB.Valid)
+        {
+            return (resultA, resultB);
+        }
        
         cp = IntersectLineSegment(linePoint, lineDirection,  c, d);
         if (cp.Valid)
@@ -937,8 +954,11 @@ public readonly struct Line
             if (resultA.Valid) resultB = cp;
             else resultA = cp;
         }
-        
-        if(resultA.Valid && resultB.Valid) return (resultA, resultB);
+
+        if (resultA.Valid && resultB.Valid)
+        {
+            return (resultA, resultB);
+        }
         
         cp = IntersectLineSegment(linePoint, lineDirection,  d, a);
         if (cp.Valid)
@@ -946,7 +966,6 @@ public readonly struct Line
             if (resultA.Valid) resultB = cp;
             else resultA = cp;
         }
-        
         return (resultA, resultB);
     }
     
@@ -1162,6 +1181,34 @@ public readonly struct Line
     }
     public CollisionPoints? IntersectShape(Rect r)
     {
+        //a test to see if 2 rays in opposite directions work
+        // var result1 = Ray.IntersectRayRect(Point, Direction, r.A, r.B, r.C, r.D);
+        // var result2 =  Ray.IntersectRayRect(Point, -Direction, r.A, r.B, r.C, r.D);
+        //
+        // if (result1.a.Valid || result1.b.Valid || result2.a.Valid || result2.b.Valid)
+        // {
+        //     var colPoints = new CollisionPoints();
+        //     if (result1.a.Valid)
+        //     {
+        //         colPoints.Add(result1.a);
+        //     }
+        //     if (result1.b.Valid)
+        //     {
+        //         colPoints.Add(result1.b);
+        //     }
+        //     if (result2.a.Valid)
+        //     {
+        //         colPoints.Add(result2.a);
+        //     }
+        //     if (result2.b.Valid)
+        //     {
+        //         colPoints.Add(result2.b);
+        //     }
+        //     return colPoints;
+        // }
+        //
+        // return null;
+       
         var result =  IntersectLineQuad(Point, Direction, r.A, r.B, r.C, r.D);
         if (result.a.Valid || result.b.Valid)
         {
@@ -1176,7 +1223,7 @@ public readonly struct Line
             }
             return colPoints;
         }
-
+        
         return null;
     }
     public CollisionPoints? IntersectShape(Polygon p, int maxCollisionPoints = -1) => IntersectLinePolygon(Point, Direction, p, maxCollisionPoints);
