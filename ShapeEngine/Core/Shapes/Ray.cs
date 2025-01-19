@@ -1460,7 +1460,7 @@ public readonly struct Ray
     }
     public static bool OverlapRayTriangle(Vector2 rayPoint, Vector2 rayDirection, Vector2 a, Vector2 b, Vector2 c)
     {
-        if (Triangle.ContainsPoint(a, b, c, rayPoint)) return true;
+        if (Triangle.ContainsTrianglePoint(a, b, c, rayPoint)) return true;
         
         var cp = IntersectRaySegment(rayPoint, rayDirection,  a, b);
         if (cp.Valid) return true;

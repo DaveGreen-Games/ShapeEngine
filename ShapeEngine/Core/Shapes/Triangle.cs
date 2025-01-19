@@ -703,7 +703,7 @@ public readonly struct Triangle : IEquatable<Triangle>
 
     #region Contains
 
-    public static bool ContainsPoint(Vector2 a, Vector2 b, Vector2 c, Vector2 point)
+    public static bool ContainsTrianglePoint(Vector2 a, Vector2 b, Vector2 c, Vector2 point)
     {
         var ab = b - a;
         var bc = c - b;
@@ -719,44 +719,84 @@ public readonly struct Triangle : IEquatable<Triangle>
 
         return c1 < 0f && c2 < 0f && c3 < 0f;
     }
-    public bool ContainsPoint(Vector2 p)
+    public static bool ContainsTrianglePoints(Vector2 a, Vector2 b, Vector2 c, Vector2 u, Vector2 v)
     {
-        var ab = B - A;
-        var bc = C - B;
-        var ca = A - C;
-
-        var ap = p - A;
-        var bp = p - B;
-        var cp = p - C;
-
-        float c1 = ab.Cross(ap);
-        float c2 = bc.Cross(bp);
-        float c3 = ca.Cross(cp);
-
-        return c1 < 0f && c2 < 0f && c3 < 0f;
+        return ContainsTrianglePoint(a,b,c, u) && 
+               ContainsTrianglePoint(a,b,c, v);
     }
-    // public static bool IsPointInside(Vector2 a, Vector2 b, Vector2 c, Vector2 p)
-    // {
-    //     var ab = b - a;
-    //     var bc = c - b;
-    //     var ca = a - c;
-    //
-    //     var ap = p - a;
-    //     var bp = p - b;
-    //     var cp = p - c;
-    //
-    //     float c1 = ShapeVec.Cross(ab, ap);
-    //     float c2 = ShapeVec.Cross(bc, bp);
-    //     float c3 = ShapeVec.Cross(ca, cp);
-    //
-    //     if (c1 < 0f && c2 < 0f && c3 < 0f)
-    //     {
-    //         return true;
-    //     }
-    //
-    //     return false;
-    // }
+    public static bool ContainsTrianglePoints(Vector2 a, Vector2 b, Vector2 c, Vector2 u, Vector2 v, Vector2 w)
+    {
+        return ContainsTrianglePoint(a, b, c, u) && 
+               ContainsTrianglePoint(a, b, c, v) && 
+               ContainsTrianglePoint(a, b, c, w);
+    }
+    public static bool ContainsTrianglePoints(Vector2 a, Vector2 b, Vector2 c, Vector2 u, Vector2 v, Vector2 w, Vector2 x)
+    {
+        return ContainsTrianglePoint(a, b, c, u) && 
+               ContainsTrianglePoint(a, b, c, v) && 
+               ContainsTrianglePoint(a, b, c, w) && 
+               ContainsTrianglePoint(a, b, c, x);
+    }
+    public static bool ContainsTrianglePoints(Vector2 a, Vector2 b, Vector2 c, List<Vector2> points)
+    {
+        if (points.Count <= 0) return false;
+        foreach (var point in points)
+        {
+            if (!ContainsTrianglePoint(a, b, c, point)) return false;
+        }
 
+        return true;
+    }
+  
+    
+    public static bool ContainsTriangleSegment(Vector2 a, Vector2 b, Vector2 c, Vector2 segmentStart, Vector2 segmentEnd)
+    {
+        if(!ContainsTrianglePoints(a, b, c, segmentStart, segmentEnd)) return false;
+        return true;
+    }
+    public static bool ContainsTriangleCircle(Vector2 a, Vector2 b, Vector2 c, Vector2 circleCenter, float circleRadius)
+    {
+        if (!ContainsTrianglePoint(a, b, c, circleCenter)) return false;
+        
+        var result = Segment.IntersectSegmentCircle(a, b, circleCenter, circleRadius);
+        if (result.a.Valid || result.b.Valid) return false;
+            
+        result = Segment.IntersectSegmentCircle(b, c, circleCenter, circleRadius);
+        if (result.a.Valid || result.b.Valid) return false;
+        
+        result = Segment.IntersectSegmentCircle(c, a, circleCenter, circleRadius);
+        if (result.a.Valid || result.b.Valid) return false;
+
+        return true;
+
+    }
+    public static bool ContainsTriangleTriangle(Vector2 a1, Vector2 b1, Vector2 c1, Vector2 a2, Vector2 b2, Vector2 c2)
+    {
+       return ContainsTrianglePoints(a1, b1, c1, a2, b2, c2);
+    }
+    public static bool ContainsTriangleQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 u, Vector2 v, Vector2 w, Vector2 x)
+    {
+        return ContainsTrianglePoints(a, b, c, u, v, w, x);
+    }
+    public static bool ContainsTriangleRect(Vector2 a, Vector2 b, Vector2 c, Vector2 u, Vector2 v, Vector2 w, Vector2 x)
+    {
+        return ContainsTrianglePoints(a, b, c, u, v, w, x);
+    }
+    public static bool ContainsTrianglePolyline(Vector2 a, Vector2 b, Vector2 c, List<Vector2> polyline)
+    {
+        return ContainsTrianglePoints(a, b, c, polyline);
+    }
+    public static bool ContainsTrianglePolygon(Vector2 a, Vector2 b, Vector2 c, List<Vector2> polygon)
+    {
+        return ContainsTrianglePoints(a, b, c, polygon);
+    }
+        
+    public bool ContainsPoint(Vector2 p) => ContainsTrianglePoint(A, B, C, p);
+    public bool ContainsPoints(Vector2 u, Vector2 v) => ContainsTrianglePoints(A, B, C, u, v);
+    public bool ContainsPoints(Vector2 u, Vector2 v, Vector2 w) => ContainsTrianglePoints(A, B, C, u, v, w);
+    public bool ContainsPoints(Vector2 u, Vector2 v, Vector2 w, Vector2 x) => ContainsTrianglePoints(A, B, C, u, v, w, x);
+    public bool ContainsPoints(List<Vector2> points) => ContainsTrianglePoints(A, B, C, points);
+   
     public bool ContainsCollisionObject(CollisionObject collisionObject)
     {
         if (!collisionObject.HasColliders) return false;
@@ -785,43 +825,35 @@ public readonly struct Triangle : IEquatable<Triangle>
 
     public bool ContainsShape(Segment segment)
     {
-        return ContainsPoint(segment.Start) && ContainsPoint(segment.End);
+        return ContainsTrianglePoints(A, B, C, segment.Start, segment.End);
     }
     public bool ContainsShape(Circle circle)
     {
-        return ContainsPoint(circle.Top) &&
-               ContainsPoint(circle.Left) &&
-               ContainsPoint(circle.Bottom) &&
-               ContainsPoint(circle.Right);
+        return ContainsTriangleCircle(A, B, C, circle.Center, circle.Radius);
     }
     public bool ContainsShape(Rect rect)
     {
-        return ContainsPoint(rect.TopLeft) &&
-            ContainsPoint(rect.BottomLeft) &&
-            ContainsPoint(rect.BottomRight) &&
-            ContainsPoint(rect.TopRight);
+        return ContainsTrianglePoints(A, B, C, rect.A, rect.B, rect.C, rect.D);
     }
     public bool ContainsShape(Triangle triangle)
     {
-        return ContainsPoint(triangle.A) &&
-            ContainsPoint(triangle.B) &&
-            ContainsPoint(triangle.C);
+        return ContainsTrianglePoints(A, B, C, triangle.A, triangle.B, triangle.C);
     }
     public bool ContainsShape(Quad quad)
     {
-        return ContainsPoint(quad.A) &&
-               ContainsPoint(quad.B) &&
-               ContainsPoint(quad.C) &&
-               ContainsPoint(quad.D);
+        return ContainsTrianglePoints(A, B, C, quad.A, quad.B, quad.C, quad.D);
+    }
+    public bool ContainsShape(Polyline polyline)
+    {
+        return ContainsTrianglePoints(A, B, C, polyline);
+    }
+    public bool ContainsShape(Polygon polygon)
+    {
+        return ContainsTrianglePoints(A, B, C, polygon);
     }
     public bool ContainsShape(Points points)
     {
-        if (points.Count <= 0) return false;
-        foreach (var p in points)
-        {
-            if (!ContainsPoint(p)) return false;
-        }
-        return true;
+        return ContainsTrianglePoints(A, B, C, points);
     }
 
 
@@ -1576,8 +1608,8 @@ public readonly struct Triangle : IEquatable<Triangle>
     }
     public static bool OverlapTriangleTriangle(Vector2 a1, Vector2 b1, Vector2 c1,  Vector2 a2, Vector2 b2, Vector2 c2)
     {
-        if (ContainsPoint(a1, b1, c1, a2)) return true;
-        if (ContainsPoint(a2, b2, c2, a1)) return true;
+        if (ContainsTrianglePoint(a1, b1, c1, a2)) return true;
+        if (ContainsTrianglePoint(a2, b2, c2, a1)) return true;
 
         if( Segment.OverlapSegmentSegment(a1, b1, a2, b2) ) return true;
         if( Segment.OverlapSegmentSegment(a1, b1, b2, c2) ) return true;
@@ -1596,7 +1628,7 @@ public readonly struct Triangle : IEquatable<Triangle>
     }
     public static bool OverlapTriangleQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 qa, Vector2 qb, Vector2 qc, Vector2 qd)
     {
-        if (ContainsPoint(a, b, c, qa)) return true;
+        if (ContainsTrianglePoint(a, b, c, qa)) return true;
         if (Quad.ContainsPoint(qa, qb, qc,qd,a)) return true;
 
         if(Segment.OverlapSegmentSegment(a, b, qa, qb) ) return true;
@@ -1623,7 +1655,7 @@ public readonly struct Triangle : IEquatable<Triangle>
     public static bool OverlapTrianglePolygon(Vector2 a, Vector2 b, Vector2 c, List<Vector2> points)
     {
         if (points.Count < 3) return false;
-        if (ContainsPoint(a, b, c, points[0])) return true;
+        if (ContainsTrianglePoint(a, b, c, points[0])) return true;
         
         var oddNodes = false;
         for (var i = 0; i < points.Count; i++)

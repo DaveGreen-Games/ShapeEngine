@@ -387,8 +387,77 @@ public readonly struct Circle : IEquatable<Circle>
     #endregion
 
     #region Contains
+    public static bool ContainsCirclePoint(Vector2 circleCenter, float circleRadius, Vector2 p)
+    {
+        return  (circleCenter - p).LengthSquared() <= circleRadius * circleRadius;
+    }
+    public static bool ContainsCirclePoints(Vector2 circleCenter, float circleRadius, Vector2 a, Vector2 b)
+    {
+        return ContainsCirclePoint(circleCenter, circleRadius, a) && 
+               ContainsCirclePoint(circleCenter, circleRadius, b);
+    }
+    public static bool ContainsCirclePoints(Vector2 circleCenter, float circleRadius, Vector2 a, Vector2 b, Vector2 c)
+    {
+        return ContainsCirclePoint(circleCenter, circleRadius, a) && 
+               ContainsCirclePoint(circleCenter, circleRadius, b) && 
+               ContainsCirclePoint(circleCenter, circleRadius, c);
+    }
+    public static bool ContainsCirclePoints(Vector2 circleCenter, float circleRadius, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+    {
+        return ContainsCirclePoint(circleCenter, circleRadius, a) && 
+               ContainsCirclePoint(circleCenter, circleRadius, b) && 
+               ContainsCirclePoint(circleCenter, circleRadius, c) && 
+               ContainsCirclePoint(circleCenter, circleRadius, d);
+    }
+    public static bool ContainsCirclePoints(Vector2 circleCenter, float circleRadius, List<Vector2> points)
+    {
+        if (points.Count <= 0) return false;
+        foreach (var point in points)
+        {
+            if (!ContainsCirclePoint(circleCenter, circleRadius, point)) return false;
+        }
 
-    public bool ContainsPoint(Vector2 p) => (Center - p).LengthSquared() <= Radius * Radius;
+        return true;
+    }
+    //clean up
+    public static bool ContainsCircleSegment(Vector2 circleCenter, float circleRadius, Vector2 segmentStart, Vector2 segmentEnd)
+    {
+        if(!ContainsCirclePoints(circleCenter, circleRadius, segmentStart, segmentEnd)) return false;
+        return true;
+    }
+    public static bool ContainsCircleCircle(Vector2 circle1Center, float circle1Radius, Vector2 circle2Center, float circle2Radius)
+    {
+        if (circle2Radius > circle1Radius) return false;
+        var dis = (circle2Center - circle1Center).Length() + circle2Radius;
+        return dis <= circle1Radius;
+    }
+    public static bool ContainsCircleTriangle(Vector2 circleCenter, float circleRadius, Vector2 a, Vector2 b, Vector2 c)
+    {
+       return ContainsCirclePoints(circleCenter, circleRadius, a, b, c);
+    }
+    public static bool ContainsCircleQuad(Vector2 circleCenter, float circleRadius, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+    {
+        return ContainsCirclePoints(circleCenter, circleRadius, a, b, c, d);
+    }
+    public static bool ContainsCircleRect(Vector2 circleCenter, float circleRadius, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+    {
+        return ContainsCirclePoints(circleCenter, circleRadius, a, b, c, d);
+    }
+    public static bool ContainsCirclePolyline(Vector2 circleCenter, float circleRadius, List<Vector2> polyline)
+    {
+        return ContainsCirclePoints(circleCenter, circleRadius, polyline);
+    }
+    public static bool ContainsCirclePolygon(Vector2 circleCenter, float circleRadius, List<Vector2> polygon)
+    {
+        return ContainsCirclePoints(circleCenter, circleRadius, polygon);
+    }
+        
+    public bool ContainsPoint(Vector2 p) => ContainsCirclePoint(Center, Radius, p);
+    public bool ContainsPoints(Vector2 a, Vector2 b) => ContainsCirclePoints(Center, Radius, a, b);
+    public bool ContainsPoints(Vector2 a, Vector2 b, Vector2 c) => ContainsCirclePoints(Center, Radius, a, b, c);
+    public bool ContainsPoints(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => ContainsCirclePoints(Center, Radius, a, b, c, d);
+    public bool ContainsPoints(List<Vector2> points) => ContainsCirclePoints(Center, Radius, points);
+    
     public bool ContainsPointSector(Vector2 p, float rotationRad, float sectorAngleRad)
     {
         if(sectorAngleRad <= 0f) return false;
@@ -436,44 +505,36 @@ public readonly struct Circle : IEquatable<Circle>
     }
     public bool ContainsShape(Segment segment)
     {
-        return ContainsPoint(segment.Start) && ContainsPoint(segment.End);
+        return ContainsCircleSegment(Center, Radius, segment.Start, segment.End);
     }
     public bool ContainsShape(Circle circle)
     {
-        float rDif = Radius - circle.Radius;
-        if(rDif <= 0) return false;
-
-        float disSquared = (Center - circle.Center).LengthSquared();
-        return disSquared < rDif * rDif;
+        return ContainsCircleCircle(Center, Radius, circle.Center, circle.Radius);
     }
     public bool ContainsShape(Rect rect)
     {
-        return ContainsPoint(rect.TopLeft) &&
-            ContainsPoint(rect.BottomLeft) &&
-            ContainsPoint(rect.BottomRight) &&
-            ContainsPoint(rect.TopRight);
+        return ContainsCircleRect(Center, Radius, rect.A, rect.B, rect.C, rect.D);
     }
     public bool ContainsShape(Triangle triangle)
     {
-        return ContainsPoint(triangle.A) &&
-            ContainsPoint(triangle.B) &&
-            ContainsPoint(triangle.C);
+        return ContainsCircleTriangle(Center, Radius, triangle.A, triangle.B, triangle.C);
     }
     public bool ContainsShape(Quad quad)
     {
-        return ContainsPoint(quad.A) &&
-               ContainsPoint(quad.B) &&
-               ContainsPoint(quad.C) &&
-               ContainsPoint(quad.D);
+        return ContainsCircleQuad(Center, Radius, quad.A, quad.B, quad.C, quad.D);
     }
+    public bool ContainsShape(Polyline polyline)
+    {
+        return ContainsCirclePolyline(Center, Radius, polyline);
+    }
+    public bool ContainsShape(Polygon polygon)
+    {
+        return ContainsCirclePolygon(Center, Radius, polygon);
+    }
+
     public bool ContainsShape(Points points)
     {
-        if (points.Count <= 0) return false;
-        foreach (var p in points)
-        {
-            if (!ContainsPoint(p)) return false;
-        }
-        return true;
+        return ContainsCirclePoints(Center, Radius, points);
     }
     #endregion
     
@@ -858,7 +919,7 @@ public readonly struct Circle : IEquatable<Circle>
         float rSum = aRadius + bRadius;
         return (aPos - bPos).LengthSquared() < rSum * rSum;
     }
-    public static bool ContainsCirclePoint(Vector2 cPos, float cRadius, Vector2 p) => (cPos - p).LengthSquared() <= cRadius * cRadius;
+    
     public static bool OverlapCircleSegment(Vector2 cPos, float cRadius, Vector2 segStart, Vector2 segEnd)
     {
         if (cRadius <= 0.0f) return Segment.IsPointOnSegment(cPos, segStart, segEnd);
@@ -898,7 +959,7 @@ public readonly struct Circle : IEquatable<Circle>
     
     public static bool OverlapCircleTriangle(Vector2 center, float radius, Vector2 a, Vector2 b, Vector2 c)
     {
-        if (Triangle.ContainsPoint(a, b, c, center)) return true;
+        if (Triangle.ContainsTrianglePoint(a, b, c, center)) return true;
         
         if( OverlapCircleSegment(center, radius,  a, b) ) return true;
         if( OverlapCircleSegment(center, radius,  b, c) ) return true;

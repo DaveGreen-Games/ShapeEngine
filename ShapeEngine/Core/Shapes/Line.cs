@@ -1587,7 +1587,7 @@ public readonly struct Line
     }
     public static bool OverlapLineTriangle(Vector2 linePoint, Vector2 lineDirection, Vector2 a, Vector2 b, Vector2 c)
     {
-        if (Triangle.ContainsPoint(a, b, c, linePoint)) return true;
+        if (Triangle.ContainsTrianglePoint(a, b, c, linePoint)) return true;
         
         var cp = IntersectLineSegment(linePoint, lineDirection,  a, b);
         if (cp.Valid) return true;

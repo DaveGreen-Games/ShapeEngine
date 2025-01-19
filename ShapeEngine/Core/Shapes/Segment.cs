@@ -922,7 +922,7 @@ public readonly struct Segment : IEquatable<Segment>
     
     public static bool OverlapSegmentTriangle(Vector2 segStart, Vector2 segEnd, Vector2 a, Vector2 b, Vector2 c)
     {
-        if (Triangle.ContainsPoint(a, b, c, segStart)) return true;
+        if (Triangle.ContainsTrianglePoint(a, b, c, segStart)) return true;
         
         if(OverlapSegmentSegment(segStart, segEnd,  a, b)) return true;
         
