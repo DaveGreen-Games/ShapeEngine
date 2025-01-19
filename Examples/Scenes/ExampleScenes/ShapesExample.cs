@@ -1009,7 +1009,6 @@ public class ShapesExample : ExampleScene
         }
         public override void Draw(ColorRgba color, bool movingShape = false)
         {
-            Polygon.DrawLines(LineThickness, color);
             if (!movingShape)
             {
                 var dt = ShapeEngine.Core.Game.CurrentGameInstance.Time.Delta;
@@ -1020,7 +1019,7 @@ public class ShapesExample : ExampleScene
                 Polygon.DrawStriped(StripedSpacing, stripedRotDeg, checkered);
             }
             
-            
+            Polygon.DrawLines(LineThickness, color);
         }
 
         public override ShapeType GetShapeType() => ShapeType.Poly;

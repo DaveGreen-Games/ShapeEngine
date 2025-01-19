@@ -4450,51 +4450,28 @@ public static class ShapeDrawing
     {
         if (spacing <= 0) return;
         var center = polygon.GetCentroid();
-        DrawCircle(center, 4f, ColorRgba.White, 8);
         
         polygon.GetFurthestVertex(center, out float disSquared, out int index);
         float maxDimension = MathF.Sqrt(disSquared) * 2;
         if (spacing > maxDimension) return;
         
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
-        var lineDir = dir.GetPerpendicularRight();
+        var rayDir = dir.GetPerpendicularRight();
         var start = center - dir * maxDimension * 0.5f;
-        DrawCircle(start, 4f, ColorRgba.White, 8);
         int steps = (int)(maxDimension / spacing);
         
         var cur = start + dir * spacing;
+        cur -= rayDir * maxDimension;//offsets the point to outside of the polygon in the opposite direction of the ray
         for (int i = 0; i < steps; i++)
         {
-            var segments = Polygon.IntersectPolygonWithLine(polygon, cur, lineDir);
-            if (segments.Count > 0)
+            var segments = polygon.CutRayWithPolygon(cur, rayDir);
+            if (segments != null && segments.Count > 0)
             {
-                foreach (var tuple in segments)
+                foreach (var segment in segments)
                 {
-                    var segment = new Segment(tuple.segmentStart, tuple.segmentEnd);
                     segment.Draw(checkered);
                 }
             }
-            // var intersection = Line.IntersectLinePolygon(cur, lineDir, polygon);
-            // if (intersection == null || intersection.Count <= 0)
-            // {
-            //     DrawCircle(cur, 4f, ColorRgba.White, 8);
-            //     cur += dir * spacing;
-            //     continue;
-            // }
-            //
-            // for (int j = 0; j < intersection.Count; j++)
-            // {
-            //     var p1 = intersection[j].Point;
-            //     var p2 = intersection[(j+1) % intersection.Count].Point;
-            //     if(!Polygon.ContainsPolygonSegment(polygon, p1, p2)) continue;
-            //     var segment = new Segment(p1, p2);
-            //     segment.Draw(checkered);
-            // }
-            // foreach (var p in intersection)
-            // {
-            //     DrawCircle(p.Point, 6f, ColorRgba.White, 8);
-            // }
-            // DrawCircle(cur, 4f, ColorRgba.White, 8);
             cur += dir * spacing;
         }
     }
@@ -4507,81 +4484,6 @@ public static class ShapeDrawing
         if (outline.Color.A > 0) DrawLines(polygon, outline);
     }
     
-    // /// <summary>
-    // /// Deprectated. Use DrawStriped instead.
-    // /// </summary>
-    // /// <param name="rect"></param>
-    // /// <param name="spacing"></param>
-    // /// <param name="angleDeg"></param>
-    // /// <param name="checkered"></param>
-    // /// <param name="outline"></param>
-    // /// <param name="bgColor"></param>
-    // public static void DrawCheckered(this Rect rect, float spacing, float angleDeg, LineDrawingInfo checkered, LineDrawingInfo outline, ColorRgba bgColor)
-    // {
-    //     var size = new Vector2(rect.Width, rect.Height);
-    //     var center = new Vector2(rect.X, rect.Y) + size / 2;
-    //     float maxDimension = MathF.Max(size.X, size.Y);
-    //     float rotRad = angleDeg * ShapeMath.DEGTORAD;
-    //
-    //     //var tl = new Vector2(rect.X, rect.Y);
-    //     //var tr = new Vector2(rect.X + rect.Width, rect.Y);
-    //     //var bl = new Vector2(rect.X, rect.Y + rect.Height);
-    //     //var br = new Vector2(rect.X + rect.Width, rect.Y + rect.Height);
-    //
-    //     if (bgColor.A > 0) rect.Draw(bgColor); 
-    //
-    //     Vector2 cur = new(-spacing / 2, 0f);
-    //
-    //     //safety for while loops
-    //     int whileMaxCount = (int)(maxDimension / spacing) * 2;
-    //     int whileCounter = 0;
-    //
-    //     //left half of rectangle
-    //     while (whileCounter < whileMaxCount)
-    //     {
-    //         var p = center + cur.Rotate(rotRad);
-    //         var up = new Vector2(0f, -maxDimension * 2);//make sure that lines are going outside of the rectangle
-    //         var down = new Vector2(0f, maxDimension * 2);
-    //         var start = p + up.Rotate(rotRad);
-    //         var end = p + down.Rotate(rotRad);
-    //         var seg = new Segment(start, end);
-    //         var collisionPoints = seg.IntersectShape(rect);
-    //
-    //         
-    //         
-    //         if (collisionPoints != null && collisionPoints.Count >= 2) 
-    //             DrawSegment(collisionPoints[0].Point, collisionPoints[1].Point, checkered);
-    //         else break;
-    //         
-    //         cur.X -= spacing;
-    //         whileCounter++;
-    //     }
-    //
-    //     cur = new(spacing / 2, 0f);
-    //     whileCounter = 0;
-    //     //right half of rectangle
-    //     while (whileCounter < whileMaxCount)
-    //     {
-    //         var p = center + ShapeVec.Rotate(cur, rotRad);
-    //         var up = new Vector2(0f, -maxDimension * 2);
-    //         var down = new Vector2(0f, maxDimension * 2);
-    //         var start = p + ShapeVec.Rotate(up, rotRad);
-    //         var end = p + ShapeVec.Rotate(down, rotRad);
-    //         var seg = new Segment(start, end);
-    //         var collisionPoints = seg.IntersectShape(rect); //SGeometry.IntersectionSegmentRect(center, start, end, tl, tr, br, bl).points;
-    //         
-    //         
-    //         if (collisionPoints != null && collisionPoints.Count >= 2 ) 
-    //             DrawSegment(collisionPoints[0].Point, collisionPoints[1].Point, checkered);
-    //         else break;
-    //         cur.X += spacing;
-    //         whileCounter++;
-    //     }
-    //
-    //     if (outline.Color.A > 0) DrawLines(rect, new Vector2(0.5f, 0.5f), 0f, outline);
-    // }
-
-
     #endregion
     
     #region UI

@@ -1977,11 +1977,7 @@ namespace ShapeEngine.Core.Shapes
         public bool ContainsShape(Quad quad) => ContainsPolygonQuad(this, quad.A, quad.B, quad.C, quad.D);
         public bool ContainsShape(Polyline polyline) => ContainsPolygonPolyline(this, polyline);
         public bool ContainsShape(Polygon polygon) => ContainsPolygonPolygon(this, polygon);
-       
-        public bool ContainsSegment(Vector2 segmentStart, Vector2 segmentEnd) => ContainsPolygonSegment(this, segmentStart, segmentEnd);
-        public bool ContainsTriangle(Vector2 a, Vector2 b, Vector2 c) => ContainsPolygonTriangle(this, a, b, c);
-        public bool ContainsQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => ContainsPolygonQuad(this, a, b, c, d);
-
+        
         public bool ContainsPoint(Vector2 p)
         {
             return ContainsPoint(this, p);
@@ -1998,6 +1994,10 @@ namespace ShapeEngine.Core.Shapes
             //
             // return oddNodes;
         }
+        public bool ContainsSegment(Vector2 segmentStart, Vector2 segmentEnd) => ContainsPolygonSegment(this, segmentStart, segmentEnd);
+        public bool ContainsTriangle(Vector2 a, Vector2 b, Vector2 c) => ContainsPolygonTriangle(this, a, b, c);
+        public bool ContainsQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => ContainsPolygonQuad(this, a, b, c, d);
+        
         public bool ContainsPoints(Vector2 a, Vector2 b)
         {
             return ContainsPoints(this, a, b);
@@ -2337,63 +2337,50 @@ namespace ShapeEngine.Core.Shapes
         #endregion
 
         #region Intersect
-        public static List<(Vector2 segmentStart, Vector2 segmentEnd)> IntersectPolygonWithLine(List<Vector2> polygon, Vector2 linePoint, Vector2 lineDirection)
+        public static CollisionPoints? IntersectPolygonRay(List<Vector2> polygon, Vector2 rayPoint, Vector2 rayDirection)
         {
-            var intersectionPoints = new List<Vector2>();
-
-            // Normalize the line direction
-            var lineDirectionNormalized = lineDirection.Normalize();
-
-            // Find intersection points between the line and the polygon edges
-            for (int i = 0; i < polygon.Count; i++)
+            if (polygon.Count < 3) return null;
+            CollisionPoints? points = null;
+            for (var i = 0; i < polygon.Count; i++)
             {
-                var polyStart = polygon[i];
-                var polyEnd = polygon[(i + 1) % polygon.Count];
-                if (LineSegmentIntersection(linePoint, lineDirectionNormalized, polyStart, polyEnd, out Vector2 intersection))
+                var result = Segment.IntersectSegmentRay(polygon[i], polygon[(i + 1) % polygon.Count], rayPoint, rayDirection);
+                if (result.Valid)
                 {
-                    intersectionPoints.Add(intersection);
+                    points ??= new();
+                    points.Add(result);
                 }
+                
             }
-
-            // Sort intersection points along the line
-            intersectionPoints = intersectionPoints.OrderBy(p => Vector2.Dot(p - linePoint, lineDirectionNormalized)).ToList();
-
-            // Generate segments between consecutive intersection points
-            List<(Vector2 segmentStart, Vector2 segmentEnd)> segments = new List<(Vector2 segmentStart, Vector2 segmentEnd)>();
-            for (int i = 0; i < intersectionPoints.Count - 1; i += 2)
-            {
-                segments.Add((intersectionPoints[i], intersectionPoints[i + 1]));
-            }
-
-            return segments;
-        }
-
-        private static bool LineSegmentIntersection(Vector2 linePoint, Vector2 lineDirection, Vector2 segmentStart, Vector2 segmentEnd, out Vector2 intersection)
-        {
-            intersection = Vector2.Zero;
-            Vector2 segmentDirection = segmentEnd - segmentStart;
-
-            float denominator = lineDirection.X * segmentDirection.Y - lineDirection.Y * segmentDirection.X;
-            if (Math.Abs(denominator) < 1e-10)
-            {
-                // Lines are parallel
-                return false;
-            }
-
-            Vector2 diff = segmentStart - linePoint;
-            float t1 = (diff.X * segmentDirection.Y - diff.Y * segmentDirection.X) / denominator;
-            float t2 = (diff.X * lineDirection.Y - diff.Y * lineDirection.X) / denominator;
-
-            // Check if the intersection is within the segment and on the correct side of the line
-            if (t1 >= 0 && t2 >= 0 && t2 <= 1)
-            {
-                intersection = linePoint + t1 * lineDirection;
-                return true;
-            }
-
-            return false;
+            return points;
         }
         
+        /// <summary>
+        /// This function intersects a ray with a polygon and returns all segments that lie inside the polygon.
+        /// </summary>
+        /// <param name="rayPoint"></param>
+        /// <param name="rayDirection"></param>
+        /// <returns></returns>
+        public List<Segment>? CutRayWithPolygon(Vector2 rayPoint, Vector2 rayDirection)
+        {
+            if(Count < 3) return null;
+            if(rayDirection.X == 0 && rayDirection.Y == 0) return null;
+            
+            rayDirection = rayDirection.Normalize();
+            var intersectionPoints = IntersectPolygonRay(this, rayPoint, rayDirection);
+            if(intersectionPoints == null || intersectionPoints.Count < 2) return null;
+
+            intersectionPoints.SortClosestFirst(rayPoint);
+
+            var segments = new List<Segment>();
+            for (int i = 0; i < intersectionPoints.Count - 1; i+=2)
+            {
+                var segmentStart = intersectionPoints[i].Point;
+                var segmentEnd = intersectionPoints[i + 1].Point;
+                var segment = new Segment(segmentStart, segmentEnd);
+                segments.Add(segment);
+            }
+            return segments;
+        }
         
         public CollisionPoints? Intersect(Collider collider)
         {
