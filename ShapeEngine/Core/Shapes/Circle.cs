@@ -969,7 +969,7 @@ public readonly struct Circle : IEquatable<Circle>
     }
     public static bool OverlapCircleQuad(Vector2 center, float radius, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
-        if (Quad.ContainsPoint(a, b, c, d,  center)) return true;
+        if (Quad.ContainsQuadPoint(a, b, c, d,  center)) return true;
         
         if( OverlapCircleSegment(center, radius,  a, b) ) return true;
         if( OverlapCircleSegment(center, radius,  b, c) ) return true;

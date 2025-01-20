@@ -1602,7 +1602,7 @@ public readonly struct Line
     }
     public static bool OverlapLineQuad(Vector2 linePoint, Vector2 lineDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
-        if (Quad.ContainsPoint(a, b, c, d,  linePoint)) return true;
+        if (Quad.ContainsQuadPoint(a, b, c, d,  linePoint)) return true;
         
         var cp = IntersectLineSegment(linePoint, lineDirection,  a, b);
         if (cp.Valid) return true;

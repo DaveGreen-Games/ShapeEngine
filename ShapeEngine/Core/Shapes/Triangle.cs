@@ -1627,7 +1627,7 @@ public readonly struct Triangle : IEquatable<Triangle>
     public static bool OverlapTriangleQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 qa, Vector2 qb, Vector2 qc, Vector2 qd)
     {
         if (ContainsTrianglePoint(a, b, c, qa)) return true;
-        if (Quad.ContainsPoint(qa, qb, qc,qd,a)) return true;
+        if (Quad.ContainsQuadPoint(qa, qb, qc,qd,a)) return true;
 
         if(Segment.OverlapSegmentSegment(a, b, qa, qb) ) return true;
         if(Segment.OverlapSegmentSegment(a, b, qb, qc) ) return true;

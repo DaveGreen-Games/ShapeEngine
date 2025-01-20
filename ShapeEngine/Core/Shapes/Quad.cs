@@ -705,6 +705,159 @@ public readonly struct Quad : IEquatable<Quad>
     #endregion
 
     #region Contains
+    
+    
+    public static bool ContainsQuadPoint(Vector2 qA, Vector2 qB, Vector2 qC, Vector2 qD, Vector2 point)
+   {
+       var oddNodes = false;
+
+       if (Polygon.ContainsPointCheck(qD, qA, point)) oddNodes = !oddNodes;
+       if (Polygon.ContainsPointCheck(qA, qB, point)) oddNodes = !oddNodes;
+       if (Polygon.ContainsPointCheck(qB, qC, point)) oddNodes = !oddNodes;
+       if (Polygon.ContainsPointCheck(qC, qD, point)) oddNodes = !oddNodes;
+        
+       return oddNodes;
+   }
+    public static bool ContainsQuadPoints(Vector2 qA, Vector2 qB, Vector2 qC, Vector2 qD, Vector2 u, Vector2 v)
+    {
+       return ContainsQuadPoint(qA, qB, qC, qD, u) && 
+              ContainsQuadPoint(qA, qB, qC, qD, v);
+    }
+    public static bool ContainsQuadPoints(Vector2 qA, Vector2 qB, Vector2 qC, Vector2 qD, Vector2 u, Vector2 v, Vector2 w)
+    {
+       return ContainsQuadPoint(qA, qB, qC, qD, u) && 
+              ContainsQuadPoint(qA, qB, qC, qD, v) && 
+              ContainsQuadPoint(qA, qB, qC, qD, w);
+    }
+    public static bool ContainsQuadPoints(Vector2 qA, Vector2 qB, Vector2 qC, Vector2 qD, Vector2 u, Vector2 v, Vector2 w, Vector2 x)
+    {
+       return ContainsQuadPoint(qA, qB, qC, qD, u) && 
+              ContainsQuadPoint(qA, qB, qC, qD, v) && 
+              ContainsQuadPoint(qA, qB, qC, qD, w) && 
+              ContainsQuadPoint(qA, qB, qC, qD, x);
+    }
+    public static bool ContainsQuadPoints(Vector2 qA, Vector2 qB, Vector2 qC, Vector2 qD, List<Vector2> points)
+    {
+       if (points.Count <= 0) return false;
+       
+       foreach (var point in points)
+       {
+           if(!ContainsQuadPoint(qA, qB, qC, qD, point)) return false;
+       }
+
+       return true;
+    }
+
+    public static bool ContainsQuadSegment(Vector2 qA, Vector2 qB, Vector2 qC, Vector2 qD, Vector2 segmentStart, Vector2 segmentEnd)
+    {
+        return ContainsQuadPoints(qA, qB, qC, qD, segmentStart, segmentEnd);
+    }
+    public static bool ContainsQuadCircle(Vector2 qA, Vector2 qB, Vector2 qC, Vector2 qD, Vector2 circleCenter, float circleRadius)
+    {
+       if (!ContainsQuadPoint(qA, qB, qC, qD, circleCenter)) return false;
+       
+       var result = Segment.IntersectSegmentCircle(qA, qB, circleCenter, circleRadius);
+       if (result.a.Valid || result.b.Valid) return false;
+           
+       result = Segment.IntersectSegmentCircle(qB, qC, circleCenter, circleRadius);
+       if (result.a.Valid || result.b.Valid) return false;
+       
+       result = Segment.IntersectSegmentCircle(qC, qD, circleCenter, circleRadius);
+       if (result.a.Valid || result.b.Valid) return false;
+
+       result = Segment.IntersectSegmentCircle(qD, qA, circleCenter, circleRadius);
+       if (result.a.Valid || result.b.Valid) return false;
+       return true;
+
+    }
+    public static bool ContainsQuadTriangle(Vector2 qA, Vector2 qB, Vector2 qC, Vector2 qD, Vector2 tA, Vector2 tB, Vector2 tc)
+    {
+      return ContainsQuadPoints(qA, qB, qC, qD, tA, tB, tc);
+    }
+    public static bool ContainsQuadQuad(Vector2 qA1, Vector2 qB1, Vector2 qC1, Vector2 qD1, Vector2 qA2, Vector2 qB2, Vector2 qC2, Vector2 qD2)
+    {
+       return ContainsQuadPoints(qA1, qB1, qC1, qD1, qA2, qB2, qC2, qD2);
+    }
+    public static bool ContainsQuadRect(Vector2 qA, Vector2 qB, Vector2 qC, Vector2 qD, Vector2 rA, Vector2 rB, Vector2 rC, Vector2 rD)
+    {
+        return ContainsQuadPoints(qA, qB, qC, qD, rA, rB, rC, rD);
+    }
+    public static bool ContainsQuadPolyline(Vector2 qA, Vector2 qB, Vector2 qC, Vector2 qD,  List<Vector2> polyline)
+    {
+       return ContainsQuadPoints(qA, qB, qC, qD, polyline);
+    }
+    public static bool ContainsQuadPolygon(Vector2 qA, Vector2 qB, Vector2 qC, Vector2 qD, List<Vector2> polygon)
+    {
+       return ContainsQuadPoints(qA, qB, qC, qD, polygon);
+    }
+       
+    public bool ContainsPoint(Vector2 p) => ContainsQuadPoint(A, B, C, D, p);
+    public bool ContainsPoints(Vector2 u, Vector2 v) => ContainsQuadPoints(A, B, C, D, u, v);
+    public bool ContainsPoints(Vector2 u, Vector2 v, Vector2 w) => ContainsQuadPoints(A, B, C, D, u, v, w);
+    public bool ContainsPoints(Vector2 u, Vector2 v, Vector2 w, Vector2 x) => ContainsQuadPoints(A, B, C, D, u, v, w, x);
+    public bool ContainsPoints(List<Vector2> points) => ContainsQuadPoints(A, B, C, D, points);
+
+    public bool ContainsCollisionObject(CollisionObject collisionObject)
+    {
+       if (!collisionObject.HasColliders) return false;
+       foreach (var collider in collisionObject.Colliders)
+       {
+           if (!ContainsCollider(collider)) return false;
+       }
+
+       return true;
+    }
+    public bool ContainsCollider(Collider collider)
+    {
+       switch (collider.GetShapeType())
+       {
+           case ShapeType.Circle: return ContainsShape(collider.GetCircleShape());
+           case ShapeType.Segment: return ContainsShape(collider.GetSegmentShape());
+           case ShapeType.Triangle: return ContainsShape(collider.GetTriangleShape());
+           case ShapeType.Rect: return ContainsShape(collider.GetRectShape());
+           case ShapeType.Quad: return ContainsShape(collider.GetQuadShape());
+           case ShapeType.Poly: return ContainsShape(collider.GetPolygonShape());
+           case ShapeType.PolyLine: return ContainsShape(collider.GetPolylineShape());
+       }
+
+       return false;
+    }
+
+    public bool ContainsShape(Segment segment)
+    {
+       return ContainsQuadPoints(A, B, C, D, segment.Start, segment.End);
+    }
+    public bool ContainsShape(Circle circle)
+    {
+       return ContainsQuadCircle(A, B, C, D, circle.Center, circle.Radius);
+    }
+    public bool ContainsShape(Rect rect)
+    {
+       return ContainsQuadPoints(A, B, C, D, rect.A, rect.B, rect.C, rect.D);
+    }
+    public bool ContainsShape(Triangle triangle)
+    {
+       return ContainsQuadPoints(A, B, C, D, triangle.A, triangle.B, triangle.C);
+    }
+    public bool ContainsShape(Quad quad)
+    {
+       return ContainsQuadPoints(A, B, C, D, quad.A, quad.B, quad.C, quad.D);
+    }
+    public bool ContainsShape(Polyline polyline)
+    {
+       return ContainsQuadPoints(A, B, C, D, polyline);
+    }
+    public bool ContainsShape(Polygon polygon)
+    {
+       return ContainsQuadPoints(A, B, C, D, polygon);
+    }
+    public bool ContainsShape(Points points)
+    {
+       return ContainsQuadPoints(A, B, C, D, points);
+    }
+
+    
+    /*
     public static  bool ContainsPoint(Vector2 a, Vector2 b, Vector2 c, Vector2 d, Vector2 p)
     {
         var oddNodes = false;
@@ -793,6 +946,7 @@ public readonly struct Quad : IEquatable<Quad>
         }
         return true;
     }
+    */
 
 
     #endregion
@@ -1778,8 +1932,8 @@ public readonly struct Quad : IEquatable<Quad>
     }
     public static bool OverlapQuadQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d,Vector2 qa, Vector2 qb, Vector2 qc, Vector2 qd)
     {
-        if (ContainsPoint(a, b, c, d, qa)) return true;
-        if (ContainsPoint(qa, qb, qc,qd,a)) return true;
+        if (ContainsQuadPoint(a, b, c, d, qa)) return true;
+        if (ContainsQuadPoint(qa, qb, qc,qd,a)) return true;
 
         if( Segment.OverlapSegmentSegment(a, b, qa, qb) ) return true;
         if( Segment.OverlapSegmentSegment(a, b, qb, qc) ) return true;

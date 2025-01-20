@@ -1475,7 +1475,7 @@ public readonly struct Ray
     }
     public static bool OverlapRayQuad(Vector2 rayPoint, Vector2 rayDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
-        if (Quad.ContainsPoint(a, b, c, d,  rayPoint)) return true;
+        if (Quad.ContainsQuadPoint(a, b, c, d,  rayPoint)) return true;
         
         var cp = IntersectRaySegment(rayPoint, rayDirection,  a, b);
         if (cp.Valid) return true;

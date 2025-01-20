@@ -934,7 +934,7 @@ public readonly struct Segment : IEquatable<Segment>
     }
     public static bool OverlapSegmentQuad(Vector2 segStart, Vector2 segEnd, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
-        if (Quad.ContainsPoint(a, b, c, d,  segStart)) return true;
+        if (Quad.ContainsQuadPoint(a, b, c, d,  segStart)) return true;
         
         if( OverlapSegmentSegment(segStart, segEnd,  a, b)) return true;
         if( OverlapSegmentSegment(segStart, segEnd,  b, c)) return true;
