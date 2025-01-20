@@ -4375,14 +4375,6 @@ public static class ShapeDrawing
             cur += dir * spacing;
         }
     }
-    // public static void DrawStriped(this Circle circle, float spacing, float angleDeg, LineDrawingInfo striped, LineDrawingInfo outline, ColorRgba bgColor, float sideLength = 8f)
-    // {
-    //     if (bgColor.A > 0) circle.Draw(bgColor); 
-    //     
-    //     DrawStriped(circle, spacing, angleDeg, striped);
-    //     
-    //     if (outline.Color.A > 0) DrawLines(circle, outline, 0f,  sideLength);
-    // }
 
     public static void DrawStriped(this Triangle triangle, float spacing, float angleDeg, LineDrawingInfo striped)
     {
@@ -4414,15 +4406,70 @@ public static class ShapeDrawing
             cur += dir * spacing;
         }
     }
-    // public static void DrawStriped(this Triangle triangle, float spacing, float angleDeg, LineDrawingInfo striped, LineDrawingInfo outline, ColorRgba bgColor)
-    // {
-    //     if (bgColor.A > 0) triangle.Draw(bgColor); 
-    //     
-    //     DrawStriped(triangle, spacing, angleDeg, striped);
-    //     
-    //     if (outline.Color.A > 0) DrawLines(triangle, outline);
-    // }
-    //
+    public static void DrawStriped(this Triangle triangle, float spacing, float angleDeg, LineDrawingInfo striped, LineDrawingInfo alternatingStriped)
+    {
+        if (spacing <= 0) return;
+        var center = triangle.GetCentroid();
+        var fv = triangle.GetFurthestVertex(center, out float disSquared, out int index);
+        float maxDimension = MathF.Sqrt(disSquared) * 2;
+
+        if (spacing > maxDimension) return;
+        
+        var dir = ShapeVec.VecFromAngleDeg(angleDeg);
+        var lineDir = dir.GetPerpendicularRight();
+        var start = center - dir * maxDimension * 0.5f;
+        int steps = (int)(maxDimension / spacing);
+        
+        var a = triangle.A;
+        var b = triangle.B;
+        var c = triangle.C;
+        
+        var cur = start + dir * spacing;
+        for (int i = 0; i < steps; i++)
+        {
+            var intersection = Line.IntersectLineTriangle(cur, lineDir, a, b, c);
+            if (intersection.a.Valid && intersection.b.Valid)
+            {
+                var segment = new Segment(intersection.a.Point, intersection.b.Point);
+                var info = i % 2 == 0 ? striped : alternatingStriped;
+                segment.Draw(info);
+            }
+            cur += dir * spacing;
+        }
+    }
+    public static void DrawStriped(this Triangle triangle, float spacing, float angleDeg, params LineDrawingInfo[] alternatingStriped)
+    {
+        if (spacing <= 0) return;
+        var center = triangle.GetCentroid();
+        var fv = triangle.GetFurthestVertex(center, out float disSquared, out int index);
+        float maxDimension = MathF.Sqrt(disSquared) * 2;
+
+        if (spacing > maxDimension) return;
+        
+        var dir = ShapeVec.VecFromAngleDeg(angleDeg);
+        var lineDir = dir.GetPerpendicularRight();
+        var start = center - dir * maxDimension * 0.5f;
+        int steps = (int)(maxDimension / spacing);
+        
+        var a = triangle.A;
+        var b = triangle.B;
+        var c = triangle.C;
+        
+        var cur = start + dir * spacing;
+        for (int i = 0; i < steps; i++)
+        {
+            var intersection = Line.IntersectLineTriangle(cur, lineDir, a, b, c);
+            if (intersection.a.Valid && intersection.b.Valid)
+            {
+                var segment = new Segment(intersection.a.Point, intersection.b.Point);
+                var infoIndex = i % alternatingStriped.Length;
+                var info = alternatingStriped[infoIndex];
+                segment.Draw(info);
+            }
+            cur += dir * spacing;
+        }
+    }
+    
     public static void DrawStriped(this Quad quad, float spacing, float angleDeg, LineDrawingInfo striped)
     {
         if (spacing <= 0) return;
@@ -4454,15 +4501,72 @@ public static class ShapeDrawing
             cur += dir * spacing;
         }
     }
-    // public static void DrawStriped(this Quad quad, float spacing, float angleDeg, LineDrawingInfo striped, LineDrawingInfo outline, ColorRgba bgColor)
-    // {
-    //     if (bgColor.A > 0) quad.Draw(bgColor); 
-    //     
-    //     DrawStriped(quad, spacing, angleDeg, striped);
-    //     
-    //     if (outline.Color.A > 0) DrawLines(quad, outline);
-    // }
-    //
+    public static void DrawStriped(this Quad quad, float spacing, float angleDeg, LineDrawingInfo striped, LineDrawingInfo alternatingStriped)
+    {
+        if (spacing <= 0) return;
+        var center = quad.Center;
+        var fv = quad.GetFurthestVertex(center, out float disSquared, out int index);
+        float maxDimension = MathF.Sqrt(disSquared) * 2;
+
+        if (spacing > maxDimension) return;
+        
+        var dir = ShapeVec.VecFromAngleDeg(angleDeg);
+        var lineDir = dir.GetPerpendicularRight();
+        var start = center - dir * maxDimension * 0.5f;
+        int steps = (int)(maxDimension / spacing);
+        
+        var a = quad.A;
+        var b = quad.B;
+        var c = quad.C;
+        var d = quad.D;
+        
+        var cur = start + dir * spacing;
+        for (int i = 0; i < steps; i++)
+        {
+            var intersection = Line.IntersectLineQuad(cur, lineDir, a, b, c, d);
+            if (intersection.a.Valid && intersection.b.Valid)
+            {
+                var segment = new Segment(intersection.a.Point, intersection.b.Point);
+                var info = i % 2 == 0 ? striped : alternatingStriped;
+                segment.Draw(info);
+            }
+            cur += dir * spacing;
+        }
+    }
+    public static void DrawStriped(this Quad quad, float spacing, float angleDeg, params LineDrawingInfo[] alternatingStriped)
+    {
+        if (spacing <= 0) return;
+        var center = quad.Center;
+        var fv = quad.GetFurthestVertex(center, out float disSquared, out int index);
+        float maxDimension = MathF.Sqrt(disSquared) * 2;
+
+        if (spacing > maxDimension) return;
+        
+        var dir = ShapeVec.VecFromAngleDeg(angleDeg);
+        var lineDir = dir.GetPerpendicularRight();
+        var start = center - dir * maxDimension * 0.5f;
+        int steps = (int)(maxDimension / spacing);
+        
+        var a = quad.A;
+        var b = quad.B;
+        var c = quad.C;
+        var d = quad.D;
+        
+        var cur = start + dir * spacing;
+        for (int i = 0; i < steps; i++)
+        {
+            var intersection = Line.IntersectLineQuad(cur, lineDir, a, b, c, d);
+            if (intersection.a.Valid && intersection.b.Valid)
+            {
+                var segment = new Segment(intersection.a.Point, intersection.b.Point);
+                var infoIndex = i % alternatingStriped.Length;
+                var info = alternatingStriped[infoIndex];
+                segment.Draw(info);
+            }
+            cur += dir * spacing;
+        }
+    }
+    
     public static void DrawStriped(this Rect rect, float spacing, float angleDeg, LineDrawingInfo striped)
     {
         if (spacing <= 0) return;
@@ -4493,15 +4597,70 @@ public static class ShapeDrawing
             cur += dir * spacing;
         }
     }
-    // public static void DrawStriped(this Rect rect, float spacing, float angleDeg, LineDrawingInfo striped, LineDrawingInfo outline, ColorRgba bgColor)
-    // {
-    //     if (bgColor.A > 0) rect.Draw(bgColor); 
-    //     
-    //     DrawStriped(rect, spacing, angleDeg, striped);
-    //     
-    //     if (outline.Color.A > 0) DrawLines(rect, outline);
-    // }
-    //
+    public static void DrawStriped(this Rect rect, float spacing, float angleDeg, LineDrawingInfo striped, LineDrawingInfo alternatingStriped)
+    {
+        if (spacing <= 0) return;
+        float maxDimension = (rect.TopLeft - rect.BottomRight).Length();
+
+        if (spacing > maxDimension) return;
+        
+        var center = rect.Center;
+        var dir = ShapeVec.VecFromAngleDeg(angleDeg);
+        var lineDir = dir.GetPerpendicularRight();
+        var start = center - dir * maxDimension * 0.5f;
+        int steps = (int)(maxDimension / spacing);
+        
+        var a = rect.A;
+        var b = rect.B;
+        var c = rect.C;
+        var d = rect.D;
+        
+        var cur = start + dir * spacing;
+        for (int i = 0; i < steps; i++)
+        {
+            var intersection = Line.IntersectLineRect(cur, lineDir, a, b, c, d);
+            if (intersection.a.Valid && intersection.b.Valid)
+            {
+                var segment = new Segment(intersection.a.Point, intersection.b.Point);
+                var info = i % 2 == 0 ? striped : alternatingStriped;
+                segment.Draw(info);
+            }
+            cur += dir * spacing;
+        }
+    }
+    public static void DrawStriped(this Rect rect, float spacing, float angleDeg, params LineDrawingInfo[] alternatingStriped)
+    {
+        if (spacing <= 0) return;
+        float maxDimension = (rect.TopLeft - rect.BottomRight).Length();
+
+        if (spacing > maxDimension) return;
+        
+        var center = rect.Center;
+        var dir = ShapeVec.VecFromAngleDeg(angleDeg);
+        var lineDir = dir.GetPerpendicularRight();
+        var start = center - dir * maxDimension * 0.5f;
+        int steps = (int)(maxDimension / spacing);
+        
+        var a = rect.A;
+        var b = rect.B;
+        var c = rect.C;
+        var d = rect.D;
+        
+        var cur = start + dir * spacing;
+        for (int i = 0; i < steps; i++)
+        {
+            var intersection = Line.IntersectLineRect(cur, lineDir, a, b, c, d);
+            if (intersection.a.Valid && intersection.b.Valid)
+            {
+                var segment = new Segment(intersection.a.Point, intersection.b.Point);
+                var infoIndex = i % alternatingStriped.Length;
+                var info = alternatingStriped[infoIndex];
+                segment.Draw(info);
+            }
+            cur += dir * spacing;
+        }
+    }
+   
     public static void DrawStriped(this Polygon polygon, float spacing, float angleDeg, LineDrawingInfo striped)
     {
         if (spacing <= 0) return;
@@ -4531,15 +4690,67 @@ public static class ShapeDrawing
             cur += dir * spacing;
         }
     }
-    // public static void DrawStriped(this Polygon polygon, float spacing, float angleDeg, LineDrawingInfo striped, LineDrawingInfo outline, ColorRgba bgColor)
-    // {
-    //     if (bgColor.A > 0) polygon.Draw(bgColor); 
-    //     
-    //     DrawStriped(polygon, spacing, angleDeg, striped);
-    //     
-    //     if (outline.Color.A > 0) DrawLines(polygon, outline);
-    // }
-    //
+    public static void DrawStriped(this Polygon polygon, float spacing, float angleDeg, LineDrawingInfo striped, LineDrawingInfo alternatingStriped)
+    {
+        if (spacing <= 0) return;
+        var center = polygon.GetCentroid();
+        
+        polygon.GetFurthestVertex(center, out float disSquared, out int index);
+        float maxDimension = MathF.Sqrt(disSquared) * 2;
+        if (spacing > maxDimension) return;
+        
+        var dir = ShapeVec.VecFromAngleDeg(angleDeg);
+        var rayDir = dir.GetPerpendicularRight();
+        var start = center - dir * maxDimension * 0.5f;
+        int steps = (int)(maxDimension / spacing);
+        
+        var cur = start + dir * spacing;
+        cur -= rayDir * maxDimension;//offsets the point to outside of the polygon in the opposite direction of the ray
+        for (int i = 0; i < steps; i++)
+        {
+            var segments = polygon.CutRayWithPolygon(cur, rayDir);
+            if (segments != null && segments.Count > 0)
+            {
+                var info = i % 2 == 0 ? striped : alternatingStriped;
+                foreach (var segment in segments)
+                {
+                    segment.Draw(info);
+                }
+            }
+            cur += dir * spacing;
+        }
+    }
+    public static void DrawStriped(this Polygon polygon, float spacing, float angleDeg, params LineDrawingInfo[] alternatingStriped)
+    {
+        if (spacing <= 0) return;
+        var center = polygon.GetCentroid();
+        
+        polygon.GetFurthestVertex(center, out float disSquared, out int index);
+        float maxDimension = MathF.Sqrt(disSquared) * 2;
+        if (spacing > maxDimension) return;
+        
+        var dir = ShapeVec.VecFromAngleDeg(angleDeg);
+        var rayDir = dir.GetPerpendicularRight();
+        var start = center - dir * maxDimension * 0.5f;
+        int steps = (int)(maxDimension / spacing);
+        
+        var cur = start + dir * spacing;
+        cur -= rayDir * maxDimension;//offsets the point to outside of the polygon in the opposite direction of the ray
+        for (int i = 0; i < steps; i++)
+        {
+            var segments = polygon.CutRayWithPolygon(cur, rayDir);
+            if (segments != null && segments.Count > 0)
+            {
+                var infoIndex = i % alternatingStriped.Length;
+                var info = alternatingStriped[infoIndex];
+                foreach (var segment in segments)
+                {
+                    segment.Draw(info);
+                }
+            }
+            cur += dir * spacing;
+        }
+    }
     #endregion
     
     #region UI
