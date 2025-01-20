@@ -564,14 +564,16 @@ public class ShapesExample : ExampleScene
             {
                 
                 var dt = ShapeEngine.Core.Game.CurrentGameInstance.Time.Delta;
-                
+
                 stripedRotDeg += StripedRotSpeedDeg * dt;
-                
-                LineDrawingInfo checkered = new(LineThickness / 2, color.ChangeBrightness(-0.75f), LineCapType.Capped, 6);
-                Circle.DrawStriped(stripedSpacing, stripedRotDeg, checkered);
+                stripedRotDeg = 0f;
+                LineDrawingInfo striped = new(stripedSpacing * 0.1f, color.ChangeBrightness(-0.75f), LineCapType.Capped, 6);
+                Circle.DrawStriped(stripedSpacing, stripedRotDeg, striped);
+                Circle.DrawStriped(stripedSpacing, stripedRotDeg + 90, striped);
             }
-            
-            Circle.DrawLines(LineThickness, color);
+
+            var c = Circle.ChangeRadius(LineThickness);
+            c.DrawLines(LineThickness, color);
         }
 
         public override ShapeType GetShapeType() => ShapeType.Circle;
@@ -707,10 +709,10 @@ public class ShapesExample : ExampleScene
             {
                 var dt = ShapeEngine.Core.Game.CurrentGameInstance.Time.Delta;
                 
-                stripedRotDeg += StripedRotSpeedDeg * dt;
+                stripedRotDeg -= StripedRotSpeedDeg * dt;
                 
-                LineDrawingInfo checkered = new(LineThickness / 2, color.ChangeBrightness(-0.75f), LineCapType.Capped, 6);
-                Triangle.DrawStriped(stripedSpacing, stripedRotDeg, checkered);
+                LineDrawingInfo striped = new(stripedSpacing * 0.1f, color.ChangeBrightness(-0.75f), LineCapType.Capped, 6);
+                Triangle.DrawStriped(stripedSpacing, stripedRotDeg, striped);
             }
             
             Triangle.DrawLines(LineThickness, color);
@@ -844,8 +846,9 @@ public class ShapesExample : ExampleScene
                 
                 stripedRotDeg += StripedRotSpeedDeg * dt;
                 
-                LineDrawingInfo checkered = new(LineThickness / 2, color.ChangeBrightness(-0.75f), LineCapType.Capped, 6);
-                Quad.DrawStriped(stripedSpacing, stripedRotDeg, checkered);
+                LineDrawingInfo striped = new(stripedSpacing * 0.1f, color.ChangeBrightness(-0.75f), LineCapType.Capped, 6);
+                Quad.DrawStriped(stripedSpacing, stripedRotDeg, striped);
+                Quad.DrawStriped(stripedSpacing, stripedRotDeg + 90, striped);
             }
             Quad.DrawLines(LineThickness, color);
         }
@@ -981,11 +984,14 @@ public class ShapesExample : ExampleScene
                 
                 stripedRotDeg += StripedRotSpeedDeg * dt;
                 
-                LineDrawingInfo checkered = new(LineThickness / 2, color.ChangeBrightness(-0.75f), LineCapType.Capped, 6);
-                Rect.DrawStriped(stripedSpacing, stripedRotDeg, checkered);
+                LineDrawingInfo striped1 = new(stripedSpacing * 0.1f, color.ChangeBrightness(-0.7f), LineCapType.Capped, 6);
+                LineDrawingInfo striped2 = new(stripedSpacing * 0.1f, color.ChangeBrightness(-0.8f), LineCapType.Capped, 6);
+                Rect.DrawStriped(stripedSpacing, stripedRotDeg, striped1, striped2);
+                // LineDrawingInfo striped = new(stripedSpacing * 0.1f, color.ChangeBrightness(-0.75f), LineCapType.Capped, 6);
+                // Rect.DrawStriped(stripedSpacing, stripedRotDeg, striped);
             }
             
-            Rect.DrawLines(LineThickness, color);
+            Rect.ScaleSize(1.01f, new AnchorPoint(0.5f, 0.5f)).DrawLines(LineThickness, color);
         }
 
         public override ShapeType GetShapeType() => ShapeType.Rect;
@@ -1121,8 +1127,15 @@ public class ShapesExample : ExampleScene
                 
                 stripedRotDeg += StripedRotSpeedDeg * dt;
                 
-                LineDrawingInfo checkered = new(LineThickness / 2, color.ChangeBrightness(-0.75f), LineCapType.Capped, 6);
-                Polygon.DrawStriped(stripedSpacing, stripedRotDeg, checkered);
+                LineDrawingInfo striped1 = new(stripedSpacing * 0.1f, color.ChangeBrightness(-0.75f), LineCapType.Capped, 6);
+                LineDrawingInfo striped2 = new(stripedSpacing * 0.15f, color.ChangeBrightness(-0.55f), LineCapType.Capped, 6);
+                LineDrawingInfo striped3 = new(stripedSpacing * 0.2f, color.ChangeBrightness(-0.35f), LineCapType.Capped, 6);
+                LineDrawingInfo striped4 = new(stripedSpacing * 0.15f, color.ChangeBrightness(-0.55f), LineCapType.Capped, 6);
+                LineDrawingInfo striped5 = new(stripedSpacing * 0.1f, color.ChangeBrightness(-0.75f), LineCapType.Capped, 6);
+                Polygon.DrawStriped(stripedSpacing, stripedRotDeg, striped1, striped2, striped3, striped4, striped5);
+                
+                // LineDrawingInfo striped = new(stripedSpacing * 0.1f, color.ChangeBrightness(-0.75f), LineCapType.Capped, 6);
+                // Polygon.DrawStriped(stripedSpacing, stripedRotDeg, striped);
             }
             
             Polygon.DrawLines(LineThickness, color);
@@ -1395,6 +1408,9 @@ public class ShapesExample : ExampleScene
     private bool crashTestSuccessfull = false;
     private bool continueTestingAfterCrashTest = false;
     private int crashTestCount = 0;
+    private float curStripedSpacing = 0f;
+    private const float DefaultStripedSpacing = 24f;
+    private const float SmallerStripedSpacing = 12f;
     public ShapesExample()
     {
         Title = "Shapes Example";
@@ -1558,18 +1574,19 @@ public class ShapesExample : ExampleScene
             if(projection != null) projection.DrawLines(4f, Colors.Special);
         }
 
-        float stripedSpacing = 24f;
         if (shapeMode == ShapeMode.Overlap)
         {
             bool overlap = projectionActive && projection != null ? staticShape.OverlapWith(projection) : staticShape.OverlapWith(movingShape);
             if (overlap)
             {
-                staticShape.Draw(Colors.Highlight, stripedSpacing / 2);
+                curStripedSpacing = ShapeMath.LerpFloat(curStripedSpacing, SmallerStripedSpacing, 0.25f);
+                staticShape.Draw(Colors.Highlight, curStripedSpacing);
                 movingShape.Draw(Colors.Warm, 0f);
             }
             else
             {
-                staticShape.Draw(Colors.Highlight.ChangeBrightness(-0.3f), stripedSpacing);
+                curStripedSpacing = ShapeMath.LerpFloat(curStripedSpacing, DefaultStripedSpacing, 0.25f);
+                staticShape.Draw(Colors.Highlight.ChangeBrightness(-0.3f), curStripedSpacing);
                 movingShape.Draw(Colors.Warm.ChangeBrightness(-0.3f), 0f);
             }
         }
@@ -1580,12 +1597,14 @@ public class ShapesExample : ExampleScene
 
             if (result == null || result.Count <= 0)
             {
-                staticShape.Draw(Colors.Highlight.ChangeBrightness(-0.3f), stripedSpacing);
+                curStripedSpacing = ShapeMath.LerpFloat(curStripedSpacing, DefaultStripedSpacing, 0.25f);
+                staticShape.Draw(Colors.Highlight.ChangeBrightness(-0.3f), curStripedSpacing);
                 movingShape.Draw(Colors.Warm.ChangeBrightness(-0.3f), 0f);
             }
             else
             {
-                staticShape.Draw(Colors.Highlight, stripedSpacing / 2);
+                curStripedSpacing = ShapeMath.LerpFloat(curStripedSpacing, SmallerStripedSpacing, 0.25f);
+                staticShape.Draw(Colors.Highlight, curStripedSpacing);
                 movingShape.Draw(Colors.Warm, 0f);
 
                 foreach (var cp in result)
@@ -1598,7 +1617,8 @@ public class ShapesExample : ExampleScene
         }
         else if(shapeMode == ShapeMode.ClosestDistance)
         {
-            staticShape.Draw(Colors.Highlight.ChangeBrightness(-0.3f), stripedSpacing);
+            curStripedSpacing = ShapeMath.LerpFloat(curStripedSpacing, DefaultStripedSpacing, 0.25f);
+            staticShape.Draw(Colors.Highlight.ChangeBrightness(-0.3f), curStripedSpacing);
             movingShape.Draw(Colors.Warm.ChangeBrightness(-0.3f), 0f);
             
             var closestPointResult = projectionActive && projection != null ? staticShape.GetClosestPointToPolygon(projection) : staticShape.GetClosestPointToShape(movingShape);
@@ -1626,12 +1646,14 @@ public class ShapesExample : ExampleScene
             bool contains = projectionActive && projection != null ? staticShape.Contains(projection) : staticShape.Contains(movingShape);
             if (contains)
             {
-                staticShape.Draw(Colors.Highlight, stripedSpacing / 2);
+                curStripedSpacing = ShapeMath.LerpFloat(curStripedSpacing, SmallerStripedSpacing, 0.25f);
+                staticShape.Draw(Colors.Highlight, curStripedSpacing);
                 movingShape.Draw(Colors.Warm, 0f);
             }
             else
             {
-                staticShape.Draw(Colors.Highlight.ChangeBrightness(-0.3f), stripedSpacing);
+                curStripedSpacing = ShapeMath.LerpFloat(curStripedSpacing, DefaultStripedSpacing, 0.25f);
+                staticShape.Draw(Colors.Highlight.ChangeBrightness(-0.3f), curStripedSpacing);
                 movingShape.Draw(Colors.Warm.ChangeBrightness(-0.3f), 0f);
             }
         }
