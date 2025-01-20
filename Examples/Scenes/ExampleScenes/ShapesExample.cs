@@ -24,27 +24,27 @@ public class ShapesExample : ExampleScene
     {
         Overlap = 0,
         Intersection = 1,
-        ClosestDistance = 2
+        ClosestDistance = 2,
+        Contains = 3
     }
     private abstract class Shape
     {
         protected const float StripedRotSpeedDeg = 5f;
-        protected const float StripedSpacing = 25f;
         protected float stripedRotDeg = Rng.Instance.RandAngleDeg();
         public abstract Vector2 GetPosition();
         public abstract void Rotate(float angleRad);
         public abstract void Move(Vector2 newPosition);
-        public abstract void Draw(ColorRgba color, bool movingShape = false);
+        public abstract void Draw(ColorRgba color, float stripedSpacing = 0f);
         public abstract ShapeType GetShapeType();
         
         public abstract ClosestPointResult GetClosestPointToShape(Shape shape);
         public abstract bool OverlapWith(Shape shape);
         public abstract CollisionPoints? IntersectWith(Shape shape);
-        
+        public abstract bool Contains(Shape shape);
         public abstract ClosestPointResult GetClosestPointToPolygon(Polygon polygon);
         public abstract bool OverlapWith(Polygon polygon);
         public abstract CollisionPoints? IntersectWith(Polygon polygon);
-        
+        public abstract bool Contains(Polygon polygon);
         public abstract Polygon? GetProjectionPoints(Vector2 projectionPosition);
         
         public abstract bool GetSegment(int index, out Segment segment);
@@ -89,7 +89,7 @@ public class ShapesExample : ExampleScene
         {
             // No rotation for point shape
         }
-        public override void Draw(ColorRgba color, bool movingShape = false)
+        public override void Draw(ColorRgba color, float stripedSpacing = 0f)
         {
             Position.Draw(Size, color, 16);
         }
@@ -171,7 +171,17 @@ public class ShapesExample : ExampleScene
             
             return null;
         }
-        
+
+        public override bool Contains(Shape shape)
+        {
+            return false;
+        }
+
+        public override bool Contains(Polygon polygon)
+        {
+            return false;
+        }
+
         public override ClosestPointResult GetClosestPointToPolygon(Polygon polygon)
         {
             var result = polygon.GetClosestPoint(Position, out float disSquared, out int index);
@@ -224,7 +234,7 @@ public class ShapesExample : ExampleScene
         {
             Segment = Segment.ChangeRotation(angleRad, 0.5f);
         }
-        public override void Draw(ColorRgba color, bool movingShape = false)
+        public override void Draw(ColorRgba color, float stripedSpacing = 0f)
         {
             Segment.Draw(LineThickness, color);
         }
@@ -282,7 +292,15 @@ public class ShapesExample : ExampleScene
             if (shape is PolylineShape polylineShape) return Segment.IntersectShape(polylineShape.Polyline);
             return null;
         }
+        public override bool Contains(Shape shape)
+        {
+            return false;
+        }
 
+        public override bool Contains(Polygon polygon)
+        {
+            return false;
+        }
         public override Vector2 GetPosition() => position;
 
         public override ClosestPointResult GetClosestPointToPolygon(Polygon polygon)
@@ -324,7 +342,7 @@ public class ShapesExample : ExampleScene
         {
             Ray = Ray.ChangeRotation(angleRad);
         }
-        public override void Draw(ColorRgba color, bool movingShape = false)
+        public override void Draw(ColorRgba color, float stripedSpacing = 0f)
         {
             Ray.Draw(Ray.MaxLength, LineThickness, color);
         }
@@ -382,7 +400,15 @@ public class ShapesExample : ExampleScene
             if (shape is PolylineShape polylineShape) return Ray.IntersectShape(polylineShape.Polyline);
             return null;
         }
-        
+        public override bool Contains(Shape shape)
+        {
+            return false;
+        }
+
+        public override bool Contains(Polygon polygon)
+        {
+            return false;
+        }
         public override Vector2 GetPosition() => Ray.Point;
 
         public override ClosestPointResult GetClosestPointToPolygon(Polygon polygon)
@@ -421,7 +447,7 @@ public class ShapesExample : ExampleScene
         {
             Line = Line.ChangeRotation(angleRad);
         }
-        public override void Draw(ColorRgba color, bool movingShape = false)
+        public override void Draw(ColorRgba color, float stripedSpacing = 0f)
         {
             Line.Draw(Line.MaxLength, LineThickness, color);
             Line.Point.Draw(LineThickness * 2, new ColorRgba(Color.White));
@@ -497,7 +523,15 @@ public class ShapesExample : ExampleScene
         {
             return Line.IntersectShape(polygon);
         }
-        
+        public override bool Contains(Shape shape)
+        {
+            return false;
+        }
+
+        public override bool Contains(Polygon polygon)
+        {
+            return false;
+        }
         public override Polygon? GetProjectionPoints(Vector2 projectionPosition)
         {
             return null;
@@ -524,9 +558,9 @@ public class ShapesExample : ExampleScene
         {
            //no rotation for circle
         }
-        public override void Draw(ColorRgba color, bool movingShape = false)
+        public override void Draw(ColorRgba color, float stripedSpacing = 0f)
         {
-            if (!movingShape)
+            if (stripedSpacing > 0f)
             {
                 
                 var dt = ShapeEngine.Core.Game.CurrentGameInstance.Time.Delta;
@@ -534,7 +568,7 @@ public class ShapesExample : ExampleScene
                 stripedRotDeg += StripedRotSpeedDeg * dt;
                 
                 LineDrawingInfo checkered = new(LineThickness / 2, color.ChangeBrightness(-0.75f), LineCapType.Capped, 6);
-                Circle.DrawStriped(StripedSpacing, stripedRotDeg, checkered);
+                Circle.DrawStriped(stripedSpacing, stripedRotDeg, checkered);
             }
             
             Circle.DrawLines(LineThickness, color);
@@ -610,7 +644,25 @@ public class ShapesExample : ExampleScene
         {
             return Circle.IntersectShape(polygon);
         }
-        
+        public override bool Contains(Shape shape)
+        {
+            if (shape is PointShape pointShape) return Circle.ContainsPoint(pointShape.Position);
+            if (shape is SegmentShape segmentShape) return Circle.ContainsShape(segmentShape.Segment);
+            if (shape is RayShape rayShape) return false;
+            if (shape is LineShape lineShape) return false;
+            if (shape is CircleShape circleShape) return Circle.ContainsShape(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Circle.ContainsShape(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Circle.ContainsShape(quadShape.Quad);
+            if (shape is RectShape rectShape) return Circle.ContainsShape(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Circle.ContainsShape(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Circle.ContainsShape(polylineShape.Polyline);
+            return false;
+        }
+
+        public override bool Contains(Polygon polygon)
+        {
+            return Circle.ContainsShape(polygon);
+        }
         public override Polygon? GetProjectionPoints(Vector2 projectionPosition)
         {
             var v = projectionPosition - Circle.Center;
@@ -649,16 +701,16 @@ public class ShapesExample : ExampleScene
         {
             Triangle = Triangle.ChangeRotation(angleRad);
         }
-        public override void Draw(ColorRgba color, bool movingShape = false)
+        public override void Draw(ColorRgba color, float stripedSpacing = 0f)
         {
-            if (!movingShape)
+            if (stripedSpacing > 0f)
             {
                 var dt = ShapeEngine.Core.Game.CurrentGameInstance.Time.Delta;
                 
                 stripedRotDeg += StripedRotSpeedDeg * dt;
                 
                 LineDrawingInfo checkered = new(LineThickness / 2, color.ChangeBrightness(-0.75f), LineCapType.Capped, 6);
-                Triangle.DrawStriped(StripedSpacing, stripedRotDeg, checkered);
+                Triangle.DrawStriped(stripedSpacing, stripedRotDeg, checkered);
             }
             
             Triangle.DrawLines(LineThickness, color);
@@ -719,7 +771,25 @@ public class ShapesExample : ExampleScene
             if (shape is PolylineShape polylineShape) return Triangle.IntersectShape(polylineShape.Polyline);
             return null;
         }
-        
+        public override bool Contains(Shape shape)
+        {
+            if (shape is PointShape pointShape) return Triangle.ContainsPoint(pointShape.Position);
+            if (shape is SegmentShape segmentShape) return Triangle.ContainsShape(segmentShape.Segment);
+            if (shape is RayShape rayShape) return false;
+            if (shape is LineShape lineShape) return false;
+            if (shape is CircleShape circleShape) return Triangle.ContainsShape(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Triangle.ContainsShape(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Triangle.ContainsShape(quadShape.Quad);
+            if (shape is RectShape rectShape) return Triangle.ContainsShape(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Triangle.ContainsShape(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Triangle.ContainsShape(polylineShape.Polyline);
+            return false;
+        }
+
+        public override bool Contains(Polygon polygon)
+        {
+            return Triangle.ContainsShape(polygon);
+        }
         
         public override Vector2 GetPosition() => position;
 
@@ -766,16 +836,16 @@ public class ShapesExample : ExampleScene
         {
             Quad = Quad.ChangeRotation(angleRad);
         }
-        public override void Draw(ColorRgba color, bool movingShape = false)
+        public override void Draw(ColorRgba color, float stripedSpacing = 0f)
         {
-            if (!movingShape)
+            if (stripedSpacing > 0f)
             {
                 var dt = ShapeEngine.Core.Game.CurrentGameInstance.Time.Delta;
                 
                 stripedRotDeg += StripedRotSpeedDeg * dt;
                 
                 LineDrawingInfo checkered = new(LineThickness / 2, color.ChangeBrightness(-0.75f), LineCapType.Capped, 6);
-                Quad.DrawStriped(StripedSpacing, stripedRotDeg, checkered);
+                Quad.DrawStriped(stripedSpacing, stripedRotDeg, checkered);
             }
             Quad.DrawLines(LineThickness, color);
         }
@@ -853,7 +923,25 @@ public class ShapesExample : ExampleScene
         {
             return Quad.IntersectShape(polygon);
         }
-        
+        public override bool Contains(Shape shape)
+        {
+            if (shape is PointShape pointShape) return Quad.ContainsPoint(pointShape.Position);
+            if (shape is SegmentShape segmentShape) return Quad.ContainsShape(segmentShape.Segment);
+            if (shape is RayShape rayShape) return false;
+            if (shape is LineShape lineShape) return false;
+            if (shape is CircleShape circleShape) return Quad.ContainsShape(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Quad.ContainsShape(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Quad.ContainsShape(quadShape.Quad);
+            if (shape is RectShape rectShape) return Quad.ContainsShape(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Quad.ContainsShape(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Quad.ContainsShape(polylineShape.Polyline);
+            return false;
+        }
+
+        public override bool Contains(Polygon polygon)
+        {
+            return Quad.ContainsShape(polygon);
+        }
         public override Polygon? GetProjectionPoints(Vector2 projectionPosition)
         {
             var v = projectionPosition - Quad.Center;
@@ -884,17 +972,17 @@ public class ShapesExample : ExampleScene
         {
             //no rotation for rectangles
         }
-        public override void Draw(ColorRgba color, bool movingShape = false)
+        public override void Draw(ColorRgba color, float stripedSpacing = 0f)
         {
 
-            if (!movingShape)
+            if (stripedSpacing > 0f)
             {
                 var dt = ShapeEngine.Core.Game.CurrentGameInstance.Time.Delta;
                 
                 stripedRotDeg += StripedRotSpeedDeg * dt;
                 
                 LineDrawingInfo checkered = new(LineThickness / 2, color.ChangeBrightness(-0.75f), LineCapType.Capped, 6);
-                Rect.DrawStriped(StripedSpacing, stripedRotDeg, checkered);
+                Rect.DrawStriped(stripedSpacing, stripedRotDeg, checkered);
             }
             
             Rect.DrawLines(LineThickness, color);
@@ -972,7 +1060,25 @@ public class ShapesExample : ExampleScene
         {
             return Rect.IntersectShape(polygon);
         }
-        
+        public override bool Contains(Shape shape)
+        {
+            if (shape is PointShape pointShape) return Rect.ContainsPoint(pointShape.Position);
+            if (shape is SegmentShape segmentShape) return Rect.ContainsShape(segmentShape.Segment);
+            if (shape is RayShape rayShape) return false;
+            if (shape is LineShape lineShape) return false;
+            if (shape is CircleShape circleShape) return Rect.ContainsShape(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Rect.ContainsShape(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Rect.ContainsShape(quadShape.Quad);
+            if (shape is RectShape rectShape) return Rect.ContainsShape(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Rect.ContainsShape(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Rect.ContainsShape(polylineShape.Polyline);
+            return false;
+        }
+
+        public override bool Contains(Polygon polygon)
+        {
+            return Rect.ContainsShape(polygon);
+        }
         public override Polygon? GetProjectionPoints(Vector2 projectionPosition)
         {
             var v = projectionPosition - Rect.Center;
@@ -994,7 +1100,7 @@ public class ShapesExample : ExampleScene
 
         public PolygonShape(Vector2 pos, float size)
         {
-            Polygon = Polygon.Generate(pos, Rng.Instance.RandI(8, 16), size / 10, size);
+            Polygon = Polygon.Generate(pos, Rng.Instance.RandI(8, 16), size / 4, size);
             position = pos;
         }
         public override void Move(Vector2 newPosition)
@@ -1007,16 +1113,16 @@ public class ShapesExample : ExampleScene
         {
             Polygon.ChangeRotation(angleRad, position);
         }
-        public override void Draw(ColorRgba color, bool movingShape = false)
+        public override void Draw(ColorRgba color, float stripedSpacing = 0f)
         {
-            if (!movingShape)
+            if (stripedSpacing > 0f)
             {
                 var dt = ShapeEngine.Core.Game.CurrentGameInstance.Time.Delta;
                 
                 stripedRotDeg += StripedRotSpeedDeg * dt;
                 
                 LineDrawingInfo checkered = new(LineThickness / 2, color.ChangeBrightness(-0.75f), LineCapType.Capped, 6);
-                Polygon.DrawStriped(StripedSpacing, stripedRotDeg, checkered);
+                Polygon.DrawStriped(stripedSpacing, stripedRotDeg, checkered);
             }
             
             Polygon.DrawLines(LineThickness, color);
@@ -1110,7 +1216,25 @@ public class ShapesExample : ExampleScene
         {
             return Polygon.IntersectShape(polygon);
         }
-        
+        public override bool Contains(Shape shape)
+        {
+            if (shape is PointShape pointShape) return Polygon.ContainsPoint(pointShape.Position);
+            if (shape is SegmentShape segmentShape) return Polygon.ContainsShape(segmentShape.Segment);
+            if (shape is RayShape rayShape) return false;
+            if (shape is LineShape lineShape) return false;
+            if (shape is CircleShape circleShape) return Polygon.ContainsShape(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Polygon.ContainsShape(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Polygon.ContainsShape(quadShape.Quad);
+            if (shape is RectShape rectShape) return Polygon.ContainsShape(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Polygon.ContainsShape(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Polygon.ContainsShape(polylineShape.Polyline);
+            return false;
+        }
+
+        public override bool Contains(Polygon polygon)
+        {
+            return Polygon.ContainsShape(polygon);
+        }
         public override Polygon? GetProjectionPoints(Vector2 projectionPosition)
         {
             var v = projectionPosition - position;
@@ -1151,7 +1275,7 @@ public class ShapesExample : ExampleScene
         {
             Polyline.ChangeRotation(angleRad, position);
         }
-        public override void Draw(ColorRgba color, bool movingShape = false)
+        public override void Draw(ColorRgba color, float stripedSpacing = 0f)
         {
             Polyline.Draw(LineThickness, color);
         }
@@ -1214,7 +1338,15 @@ public class ShapesExample : ExampleScene
         }
         
         public override Vector2 GetPosition() => position;
+        public override bool Contains(Shape shape)
+        {
+            return false;
+        }
 
+        public override bool Contains(Polygon polygon)
+        {
+            return false;
+        }
         public override ClosestPointResult GetClosestPointToPolygon(Polygon polygon)
         {
             var result = Polyline.GetClosestPoint(polygon);
@@ -1351,6 +1483,9 @@ public class ShapesExample : ExampleScene
                         shapeMode = ShapeMode.ClosestDistance;
                         break;
                     case ShapeMode.ClosestDistance:
+                        shapeMode = ShapeMode.Contains;
+                        break;
+                    case ShapeMode.Contains:
                         shapeMode = ShapeMode.Overlap;
                         break;
                 }
@@ -1423,18 +1558,19 @@ public class ShapesExample : ExampleScene
             if(projection != null) projection.DrawLines(4f, Colors.Special);
         }
 
+        float stripedSpacing = 24f;
         if (shapeMode == ShapeMode.Overlap)
         {
             bool overlap = projectionActive && projection != null ? staticShape.OverlapWith(projection) : staticShape.OverlapWith(movingShape);
             if (overlap)
             {
-                staticShape.Draw(Colors.Highlight, false);
-                movingShape.Draw(Colors.Warm, true);
+                staticShape.Draw(Colors.Highlight, stripedSpacing / 2);
+                movingShape.Draw(Colors.Warm, 0f);
             }
             else
             {
-                staticShape.Draw(Colors.Highlight.ChangeBrightness(-0.3f), false);
-                movingShape.Draw(Colors.Warm.ChangeBrightness(-0.3f), true);
+                staticShape.Draw(Colors.Highlight.ChangeBrightness(-0.3f), stripedSpacing);
+                movingShape.Draw(Colors.Warm.ChangeBrightness(-0.3f), 0f);
             }
         }
         else if (shapeMode == ShapeMode.Intersection)
@@ -1444,13 +1580,13 @@ public class ShapesExample : ExampleScene
 
             if (result == null || result.Count <= 0)
             {
-                staticShape.Draw(Colors.Highlight.ChangeBrightness(-0.3f), false);
-                movingShape.Draw(Colors.Warm.ChangeBrightness(-0.3f), true);
+                staticShape.Draw(Colors.Highlight.ChangeBrightness(-0.3f), stripedSpacing);
+                movingShape.Draw(Colors.Warm.ChangeBrightness(-0.3f), 0f);
             }
             else
             {
-                staticShape.Draw(Colors.Highlight, false);
-                movingShape.Draw(Colors.Warm, true);
+                staticShape.Draw(Colors.Highlight, stripedSpacing / 2);
+                movingShape.Draw(Colors.Warm, 0f);
 
                 foreach (var cp in result)
                 {
@@ -1460,10 +1596,10 @@ public class ShapesExample : ExampleScene
             }
             
         }
-        else
+        else if(shapeMode == ShapeMode.ClosestDistance)
         {
-            staticShape.Draw(Colors.Highlight.ChangeBrightness(-0.3f), false);
-            movingShape.Draw(Colors.Warm.ChangeBrightness(-0.3f), true);
+            staticShape.Draw(Colors.Highlight.ChangeBrightness(-0.3f), stripedSpacing);
+            movingShape.Draw(Colors.Warm.ChangeBrightness(-0.3f), 0f);
             
             var closestPointResult = projectionActive && projection != null ? staticShape.GetClosestPointToPolygon(projection) : staticShape.GetClosestPointToShape(movingShape);
             if (closestPointResult.DistanceSquared >= 0)
@@ -1483,6 +1619,20 @@ public class ShapesExample : ExampleScene
                 closestPointResult.Self.Point.Draw(12f, Colors.Highlight);
                 closestPointResult.Other.Point.Draw(12f, Colors.Warm);
             
+            }
+        }
+        else
+        {
+            bool contains = projectionActive && projection != null ? staticShape.Contains(projection) : staticShape.Contains(movingShape);
+            if (contains)
+            {
+                staticShape.Draw(Colors.Highlight, stripedSpacing / 2);
+                movingShape.Draw(Colors.Warm, 0f);
+            }
+            else
+            {
+                staticShape.Draw(Colors.Highlight.ChangeBrightness(-0.3f), stripedSpacing);
+                movingShape.Draw(Colors.Warm.ChangeBrightness(-0.3f), 0f);
             }
         }
     }
@@ -1543,7 +1693,8 @@ public class ShapesExample : ExampleScene
         var mode = 
             shapeMode == ShapeMode.Overlap ? "Overlap" :
             shapeMode == ShapeMode.Intersection ? "Intersection" : 
-            "Closest Distance";
+            shapeMode == ShapeMode.ClosestDistance ? "Closest Distance" :
+            "Contains";
         
         textFont.DrawTextWrapNone($"{changeModeText} Mode: {mode} | {toggleProjectionText} Projection {projectionActive}", topCenter, new(0.5f, 0.5f));
         
@@ -1638,13 +1789,13 @@ public class ShapesExample : ExampleScene
                 break;
             case ShapeType.Line: staticShape = CreateShape(new(), size, ShapeType.Circle);
                 break;
-            case ShapeType.Circle: staticShape = CreateShape(new(), size, ShapeType.Triangle);
+            case ShapeType.Circle: staticShape = CreateShape(new(), size * 1.5f, ShapeType.Triangle);
                 break;
             case ShapeType.Triangle: staticShape = CreateShape(new(), size, ShapeType.Quad);
                 break;
             case ShapeType.Quad: staticShape = CreateShape(new(), size, ShapeType.Rect);
                 break;
-            case ShapeType.Rect: staticShape = CreateShape(new(), size, ShapeType.Poly);
+            case ShapeType.Rect: staticShape = CreateShape(new(), size * 2f, ShapeType.Poly);
                 break;
             case ShapeType.Poly: staticShape = CreateShape(new(), size, ShapeType.PolyLine);
                 break;
