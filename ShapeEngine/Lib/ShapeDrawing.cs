@@ -4294,7 +4294,7 @@ public static class ShapeDrawing
 
     #region Striped
 
-    public static void DrawStriped(this Circle circle, float spacing, float angleDeg, LineDrawingInfo checkered, float sideLength = 8f)
+    public static void DrawStriped(this Circle circle, float spacing, float angleDeg, LineDrawingInfo striped, float sideLength = 8f)
     {
         if (spacing <= 0) return;
         float maxDimension = circle.Diameter;
@@ -4314,21 +4314,77 @@ public static class ShapeDrawing
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
-                segment.Draw(checkered);
+                segment.Draw(striped);
             }
             cur += dir * spacing;
         }
     }
-    public static void DrawStriped(this Circle circle, float spacing, float angleDeg, LineDrawingInfo checkered, LineDrawingInfo outline, ColorRgba bgColor, float sideLength = 8f)
+    public static void DrawStriped(this Circle circle, float spacing, float angleDeg, LineDrawingInfo striped, LineDrawingInfo alternatingStriped, float sideLength = 8f)
     {
-        if (bgColor.A > 0) circle.Draw(bgColor); 
-        
-        DrawStriped(circle, spacing, angleDeg, checkered);
-        
-        if (outline.Color.A > 0) DrawLines(circle, outline, 0f,  sideLength);
-    }
+        if (spacing <= 0) return;
+        float maxDimension = circle.Diameter;
 
-    public static void DrawStriped(this Triangle triangle, float spacing, float angleDeg, LineDrawingInfo checkered)
+        if (spacing > maxDimension) return;
+        
+        var center = circle.Center;
+        var dir = ShapeVec.VecFromAngleDeg(angleDeg);
+        var lineDir = dir.GetPerpendicularRight();
+        var start = center - dir * maxDimension * 0.5f;
+        int steps = (int)(maxDimension / spacing);
+        
+        var cur = start + dir * spacing;
+        for (int i = 0; i < steps; i++)
+        {
+            var intersection = Line.IntersectLineCircle(cur, lineDir, circle.Center, circle.Radius);
+            if (intersection.a.Valid && intersection.b.Valid)
+            {
+                var segment = new Segment(intersection.a.Point, intersection.b.Point);
+                var info = i % 2 == 0 ? striped : alternatingStriped;
+                segment.Draw(info);
+            }
+            cur += dir * spacing;
+        }
+    }
+    public static void DrawStriped(this Circle circle, float spacing, float angleDeg, float sideLength, params LineDrawingInfo[] alternatingStriped)
+    {
+        if (spacing <= 0) return;
+        if (alternatingStriped.Length <= 0) return;
+        if(alternatingStriped.Length == 1) DrawStriped(circle, spacing, angleDeg, alternatingStriped[0], sideLength);
+        
+        float maxDimension = circle.Diameter;
+
+        if (spacing > maxDimension) return;
+        
+        var center = circle.Center;
+        var dir = ShapeVec.VecFromAngleDeg(angleDeg);
+        var lineDir = dir.GetPerpendicularRight();
+        var start = center - dir * maxDimension * 0.5f;
+        int steps = (int)(maxDimension / spacing);
+        
+        var cur = start + dir * spacing;
+        for (int i = 0; i < steps; i++)
+        {
+            var intersection = Line.IntersectLineCircle(cur, lineDir, circle.Center, circle.Radius);
+            if (intersection.a.Valid && intersection.b.Valid)
+            {
+                var segment = new Segment(intersection.a.Point, intersection.b.Point);
+                var index = i % alternatingStriped.Length;
+                var info = alternatingStriped[index];
+                segment.Draw(info);
+            }
+            cur += dir * spacing;
+        }
+    }
+    // public static void DrawStriped(this Circle circle, float spacing, float angleDeg, LineDrawingInfo striped, LineDrawingInfo outline, ColorRgba bgColor, float sideLength = 8f)
+    // {
+    //     if (bgColor.A > 0) circle.Draw(bgColor); 
+    //     
+    //     DrawStriped(circle, spacing, angleDeg, striped);
+    //     
+    //     if (outline.Color.A > 0) DrawLines(circle, outline, 0f,  sideLength);
+    // }
+
+    public static void DrawStriped(this Triangle triangle, float spacing, float angleDeg, LineDrawingInfo striped)
     {
         if (spacing <= 0) return;
         var center = triangle.GetCentroid();
@@ -4353,21 +4409,21 @@ public static class ShapeDrawing
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
-                segment.Draw(checkered);
+                segment.Draw(striped);
             }
             cur += dir * spacing;
         }
     }
-    public static void DrawStriped(this Triangle triangle, float spacing, float angleDeg, LineDrawingInfo checkered, LineDrawingInfo outline, ColorRgba bgColor)
-    {
-        if (bgColor.A > 0) triangle.Draw(bgColor); 
-        
-        DrawStriped(triangle, spacing, angleDeg, checkered);
-        
-        if (outline.Color.A > 0) DrawLines(triangle, outline);
-    }
-    
-    public static void DrawStriped(this Quad quad, float spacing, float angleDeg, LineDrawingInfo checkered)
+    // public static void DrawStriped(this Triangle triangle, float spacing, float angleDeg, LineDrawingInfo striped, LineDrawingInfo outline, ColorRgba bgColor)
+    // {
+    //     if (bgColor.A > 0) triangle.Draw(bgColor); 
+    //     
+    //     DrawStriped(triangle, spacing, angleDeg, striped);
+    //     
+    //     if (outline.Color.A > 0) DrawLines(triangle, outline);
+    // }
+    //
+    public static void DrawStriped(this Quad quad, float spacing, float angleDeg, LineDrawingInfo striped)
     {
         if (spacing <= 0) return;
         var center = quad.Center;
@@ -4393,21 +4449,21 @@ public static class ShapeDrawing
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
-                segment.Draw(checkered);
+                segment.Draw(striped);
             }
             cur += dir * spacing;
         }
     }
-    public static void DrawStriped(this Quad quad, float spacing, float angleDeg, LineDrawingInfo checkered, LineDrawingInfo outline, ColorRgba bgColor)
-    {
-        if (bgColor.A > 0) quad.Draw(bgColor); 
-        
-        DrawStriped(quad, spacing, angleDeg, checkered);
-        
-        if (outline.Color.A > 0) DrawLines(quad, outline);
-    }
-    
-    public static void DrawStriped(this Rect rect, float spacing, float angleDeg, LineDrawingInfo checkered)
+    // public static void DrawStriped(this Quad quad, float spacing, float angleDeg, LineDrawingInfo striped, LineDrawingInfo outline, ColorRgba bgColor)
+    // {
+    //     if (bgColor.A > 0) quad.Draw(bgColor); 
+    //     
+    //     DrawStriped(quad, spacing, angleDeg, striped);
+    //     
+    //     if (outline.Color.A > 0) DrawLines(quad, outline);
+    // }
+    //
+    public static void DrawStriped(this Rect rect, float spacing, float angleDeg, LineDrawingInfo striped)
     {
         if (spacing <= 0) return;
         float maxDimension = (rect.TopLeft - rect.BottomRight).Length();
@@ -4432,21 +4488,21 @@ public static class ShapeDrawing
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
-                segment.Draw(checkered);
+                segment.Draw(striped);
             }
             cur += dir * spacing;
         }
     }
-    public static void DrawStriped(this Rect rect, float spacing, float angleDeg, LineDrawingInfo checkered, LineDrawingInfo outline, ColorRgba bgColor)
-    {
-        if (bgColor.A > 0) rect.Draw(bgColor); 
-        
-        DrawStriped(rect, spacing, angleDeg, checkered);
-        
-        if (outline.Color.A > 0) DrawLines(rect, outline);
-    }
-    
-    public static void DrawStriped(this Polygon polygon, float spacing, float angleDeg, LineDrawingInfo checkered)
+    // public static void DrawStriped(this Rect rect, float spacing, float angleDeg, LineDrawingInfo striped, LineDrawingInfo outline, ColorRgba bgColor)
+    // {
+    //     if (bgColor.A > 0) rect.Draw(bgColor); 
+    //     
+    //     DrawStriped(rect, spacing, angleDeg, striped);
+    //     
+    //     if (outline.Color.A > 0) DrawLines(rect, outline);
+    // }
+    //
+    public static void DrawStriped(this Polygon polygon, float spacing, float angleDeg, LineDrawingInfo striped)
     {
         if (spacing <= 0) return;
         var center = polygon.GetCentroid();
@@ -4469,21 +4525,21 @@ public static class ShapeDrawing
             {
                 foreach (var segment in segments)
                 {
-                    segment.Draw(checkered);
+                    segment.Draw(striped);
                 }
             }
             cur += dir * spacing;
         }
     }
-    public static void DrawStriped(this Polygon polygon, float spacing, float angleDeg, LineDrawingInfo checkered, LineDrawingInfo outline, ColorRgba bgColor)
-    {
-        if (bgColor.A > 0) polygon.Draw(bgColor); 
-        
-        DrawStriped(polygon, spacing, angleDeg, checkered);
-        
-        if (outline.Color.A > 0) DrawLines(polygon, outline);
-    }
-    
+    // public static void DrawStriped(this Polygon polygon, float spacing, float angleDeg, LineDrawingInfo striped, LineDrawingInfo outline, ColorRgba bgColor)
+    // {
+    //     if (bgColor.A > 0) polygon.Draw(bgColor); 
+    //     
+    //     DrawStriped(polygon, spacing, angleDeg, striped);
+    //     
+    //     if (outline.Color.A > 0) DrawLines(polygon, outline);
+    // }
+    //
     #endregion
     
     #region UI
