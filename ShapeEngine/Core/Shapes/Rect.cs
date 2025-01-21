@@ -1063,6 +1063,27 @@ public readonly struct Rect : IEquatable<Rect>
         
         return result;
     }
+
+    /// <summary>
+    /// Returns a new rect with margins applied based on f.
+    /// Standard progress bar from left to right: Left: 0, Right: 1, Top: 0, Bottom: 0
+    /// Progress bar from right to left: Left: 1, Right: 0, Top: 0, Bottom: 0
+    /// Progress bar bottom to top: Left: 0, Right: 0, Top: 1, Bottom: 0
+    /// Progress bar from center to left and right: Left: 0.5f, Right: 0.5f, Top: 0, Bottom: 0
+    /// </summary>
+    /// <param name="f">The progress between 0 and 1.</param>
+    /// <param name="left">How much bar movement comes from the left. (0 - 1)</param>
+    /// <param name="right">How much bar movement comes from the right. (0 - 1)</param>
+    /// <param name="top">How much bar movement comes from the top. (0 - 1)</param>
+    /// <param name="bottom">How much bar movement comes from the bottom. (0 - 1)</param>
+    /// <returns></returns>
+    public Rect GetProgressRect(float f, float left = 1f, float right = 0f, float top = 0f, float bottom = 0f)
+    {
+        f = ShapeMath.Clamp(f, 0f, 1f);
+        f = 1.0f - f;
+        Margins progressMargins = new(f * top, f * right, f * bottom, f * left);
+        return ApplyMargins(progressMargins);
+    }
     #endregion
     
     #region Static

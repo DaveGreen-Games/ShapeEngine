@@ -2834,11 +2834,20 @@ public class EndlessSpaceCollision : ExampleScene
         var multiDestructorRectBar = multiDestructorRect.ApplyMarginsAbsolute(thickness * 2);
         var singleDestructorF = singleDestructorCooldownTimer / singleDestructorCooldown;
         var multiDestructorF = multiDestructorCooldownTimer / multiDestructorCooldown;
+
+        var singleDestructorStripedBarRect = singleDestructorRectBar.GetProgressRect(singleDestructorF, 1f, 0f, 0f, 0f).ApplyMargins(0.01f, 0.01f, 0.04f, 0.04f);
+        var multiDestructorStripedBarRect = multiDestructorRectBar.GetProgressRect(multiDestructorF, 0f, 1f, 0f, 0f).ApplyMargins(0.01f, 0.01f, 0.04f, 0.04f);
+        LineDrawingInfo stripedBarInfo = new LineDrawingInfo(thickness, Colors.Warm, LineCapType.Capped, 4);
+        
         singleDestructorRect.DrawCorners(new LineDrawingInfo(thickness, Colors.Warm, LineCapType.Capped, 4), cornerLength);
-        singleDestructorRectBar.DrawBar(singleDestructorF, Colors.Warm, Colors.Medium, 0.5f, 0.5f, 0f, 0f);
+        singleDestructorRectBar.Draw(Colors.Medium);
+        singleDestructorStripedBarRect.DrawStriped(singleDestructorRectBar.Width * 0.015f, -15, stripedBarInfo);
+        // singleDestructorRectBar.DrawBar(singleDestructorF, Colors.Warm, Colors.Medium, 0.5f, 0.5f, 0f, 0f);
         
         multiDestructorRect.DrawCorners(new LineDrawingInfo(thickness, Colors.Warm, LineCapType.Capped, 4), cornerLength);
-        multiDestructorRectBar.DrawBar(multiDestructorF, Colors.Warm, Colors.Medium, 0.5f, 0.5f, 0f, 0f);
+        multiDestructorRectBar.Draw(Colors.Medium);
+        multiDestructorStripedBarRect.DrawStriped(multiDestructorRectBar.Width * 0.015f, 15, stripedBarInfo);
+        // multiDestructorRectBar.DrawBar(multiDestructorF, Colors.Warm, Colors.Medium, 0.5f, 0.5f, 0f, 0f);
 
         var strategemZone = bottomUiSplit.bottom.ApplyMargins(0f, 0f, 0.1f, 0f);//  GAMELOOP.UIRects.GetRect("bottom").ApplyMargins(0f, 0f, 0.25f, 0f); // topBottomRect.top.ApplyMargins(0f, 0f, 0f, 0.25f); // ui.Area.ApplyMargins(0.2f, 0.2f, 0.91f, 0.06f);
         var splitStrategem = strategemZone.SplitH(pdsList.Count);// strategemZone.SplitH(0.225f,0.033f,0.225f,0.033f,0.225f,0.033f);
