@@ -2727,7 +2727,8 @@ public static class ShapeDrawing
     
     
     public static void DrawRounded(this Rect rect, float roundness, int segments, ColorRgba color) => Raylib.DrawRectangleRounded(rect.Rectangle, roundness, segments, color.ToRayColor());
-    public static void DrawRoundedLines(this Rect rect, float roundness, float lineThickness, int segments, ColorRgba color) => Raylib.DrawRectangleRoundedLines(rect.Rectangle, roundness, segments, lineThickness * 2, color.ToRayColor());
+    public static void DrawRoundedLines(this Rect rect, float roundness, float lineThickness, int segments, ColorRgba color) 
+        => Raylib.DrawRectangleRoundedLinesEx(rect.Rectangle, roundness, segments, lineThickness * 2, color.ToRayColor());
     
     
     public static void DrawSlantedCorners(this Rect rect, ColorRgba color, float tlCorner, float trCorner, float brCorner, float blCorner)

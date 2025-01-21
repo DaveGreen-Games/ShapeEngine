@@ -109,8 +109,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Clipper2" Version="1.3.0" />
-    <PackageReference Include="Raylib-cs" Version="6.1.1" />
+    <PackageReference Include="Clipper2" Version="1.4.0" />
+    <PackageReference Include="Raylib-cs" Version="7.0.0" />
   </ItemGroup>
 
 	<ItemGroup>
