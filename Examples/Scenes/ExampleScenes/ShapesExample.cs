@@ -196,7 +196,7 @@ public class ShapesExample : ExampleScene
         public override CollisionPoints? IntersectWith(Polygon polygon)
         {
             var circle = new Circle(Position, Size);
-            return circle.IntersectShape(polygon);
+            return polygon.IntersectShape(circle);
         }
 
         public override Polygon? GetProjectionPoints(Vector2 projectionPosition)
@@ -315,7 +315,7 @@ public class ShapesExample : ExampleScene
         }
         public override CollisionPoints? IntersectWith(Polygon polygon)
         {
-            return Segment.IntersectShape(polygon);
+            return polygon.IntersectShape(Segment);
         }
         
         public override Polygon? GetProjectionPoints(Vector2 projectionPosition)
@@ -423,7 +423,7 @@ public class ShapesExample : ExampleScene
         }
         public override CollisionPoints? IntersectWith(Polygon polygon)
         {
-            return Ray.IntersectShape(polygon);
+            return polygon.IntersectShape(Ray);
         }
         public override Polygon? GetProjectionPoints(Vector2 projectionPosition)
         {
@@ -521,7 +521,7 @@ public class ShapesExample : ExampleScene
         }
         public override CollisionPoints? IntersectWith(Polygon polygon)
         {
-            return Line.IntersectShape(polygon);
+            return polygon.IntersectShape(Line);
         }
         public override bool Contains(Shape shape)
         {
@@ -644,7 +644,7 @@ public class ShapesExample : ExampleScene
         }
         public override CollisionPoints? IntersectWith(Polygon polygon)
         {
-            return Circle.IntersectShape(polygon);
+            return polygon.IntersectShape(Circle);
         }
         public override bool Contains(Shape shape)
         {
@@ -807,7 +807,7 @@ public class ShapesExample : ExampleScene
         }
         public override CollisionPoints? IntersectWith(Polygon polygon)
         {
-            return Triangle.IntersectShape(polygon);
+            return polygon.IntersectShape(Triangle);
         }
         
         public override Polygon? GetProjectionPoints(Vector2 projectionPosition)
@@ -924,7 +924,7 @@ public class ShapesExample : ExampleScene
         }
         public override CollisionPoints? IntersectWith(Polygon polygon)
         {
-            return Quad.IntersectShape(polygon);
+            return polygon.IntersectShape(Quad);
         }
         public override bool Contains(Shape shape)
         {
@@ -1064,7 +1064,7 @@ public class ShapesExample : ExampleScene
         }
         public override CollisionPoints? IntersectWith(Polygon polygon)
         {
-            return Rect.IntersectShape(polygon);
+            return polygon.IntersectShape(Rect);
         }
         public override bool Contains(Shape shape)
         {
@@ -1227,7 +1227,7 @@ public class ShapesExample : ExampleScene
         }
         public override CollisionPoints? IntersectWith(Polygon polygon)
         {
-            return Polygon.IntersectShape(polygon);
+            return polygon.IntersectShape(Polygon);
         }
         public override bool Contains(Shape shape)
         {
@@ -1372,7 +1372,7 @@ public class ShapesExample : ExampleScene
         }
         public override CollisionPoints? IntersectWith(Polygon polygon)
         {
-            return Polyline.IntersectShape(polygon);
+            return polygon.IntersectShape(Polyline);
         }
         
         public override Polygon? GetProjectionPoints(Vector2 projectionPosition)
