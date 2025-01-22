@@ -659,11 +659,16 @@ namespace Examples
 
         protected override void DrawUI(ScreenInfo ui)
         {
-            var fpsRect = UIRects.GetRect("top right top");//"top", "right", "top");
-            fpsLabel.Draw(fpsRect, new(1f, 0f), 1f);
+            if(mainScene == null || ! mainScene.Active) DrawFpsBox();
             
             paletteInfoBox.Draw(ui.Area.ApplyMargins(0.8f,0.025f,0.25f,0.65f));
             // UIRects.DebugDraw(new ColorRgba(Color.Azure), 1f);
+        }
+
+        public void DrawFpsBox()
+        {
+            var fpsRect = UIRects.GetRect("top right top");
+            fpsLabel.Draw(fpsRect, new(1f, 0f), 1f);
         }
 
         public int GetFontCount() { return fonts.Count; }

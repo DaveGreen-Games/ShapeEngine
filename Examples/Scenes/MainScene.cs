@@ -35,6 +35,8 @@ namespace Examples.Scenes
 
         private float tabChangeMouseWheelLockTimer = 0f;
         private readonly InputActionLabel quitLabel;
+
+        private readonly TextureSurface textureSurface;
         public MainScene()
         {
             examples.Add(new ShapeDrawingExample());
@@ -87,31 +89,12 @@ namespace Examples.Scenes
             var action = GAMELOOP.InputActionUICancel;
             quitLabel = new(action, "Quit", GAMELOOP.FontDefault, Colors.PcWarm);
             
-            
-            
-
-            // var path = ShapeSavegame.ApplicationDocumentsPath;
-            //
-            // var savegameFolder = ShapeSavegame.CombinePath(path, "savegames");
-            //
-            //
-            
-            // var loaded = ShapeSavegame.Load<TestSaveGame>(savegameFolder, "main.txt");
-            // if (loaded == null)
-            // {
-            //     Console.WriteLine("     > File could not be loaded! New Savegame will be created.");
-            //     
-            //     var savegame = new TestSaveGame(Rng.Instance.RandI(0, 1000), "Test savegame text");
-            //     Console.WriteLine($"    > New savegame created with ID: {savegame.ID}");
-            //     
-            //     ShapeSavegame.Save(savegame, savegameFolder, "main.txt");
-            //     Console.WriteLine($"    > Savegame saved to: {savegameFolder}");
-            // }
-            // else
-            // {
-            //     Console.WriteLine($"     > Savegame successfully loaded from {savegameFolder}");
-            //     Console.WriteLine($"    > Savegame ID: {loaded.ID} | Text: {loaded.Text}");
-            // }
+            textureSurface = new TextureSurface(2048, 2048);
+            textureSurface.SetTextureFilter(TextureFilter.Trilinear);
+            textureSurface.BeginDraw(ColorRgba.Clear);
+            LineDrawingInfo stripedInfo = new(2f, ColorRgba.White, LineCapType.Capped, 6);
+            textureSurface.Rect.DrawStriped(16f, 30f, stripedInfo);
+            textureSurface.EndDraw();
         }
         
         
@@ -225,6 +208,12 @@ namespace Examples.Scenes
         }
         protected override void OnDrawUI(ScreenInfo ui)
         {
+            var source = textureSurface.Rect.ScaleSize(new Vector2(1f, 0.22f), AnchorPoint.TopCenter);
+            var destination = ui.Area.ScaleSize(new Vector2(1f, 0.22f), AnchorPoint.TopCenter);
+            textureSurface.Draw(source, destination, Colors.Dark);
+            
+            GAMELOOP.DrawFpsBox();
+            
             var uiSize = ui.Area.Size.ToVector2();
             buttonContainer.Draw();
 
@@ -294,6 +283,8 @@ namespace Examples.Scenes
             {
                 example.Close();
             }
+            
+            textureSurface.Unload();
         }
         
         
@@ -301,7 +292,9 @@ namespace Examples.Scenes
         private void PrevPage() => buttonContainer.PrevPage(true);
         private void DrawInputInfoBox(Rect area)
         {
-            area.Draw(Colors.PcDark.ColorRgba);
+            area.Draw(Colors.Dark);
+            var sourceRect = new Rect(Vector2.Zero, area.Size * 2);
+            textureSurface.Draw(sourceRect, area,0, Colors.Highlight.ChangeBrightness(-0.75f));
             area.DrawLines(2f, Colors.PcMedium.ColorRgba);
 
             var margin = area.Size.Min() * 0.025f;
