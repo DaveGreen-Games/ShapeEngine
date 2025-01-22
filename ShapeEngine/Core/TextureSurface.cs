@@ -5,7 +5,7 @@ using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
 
-namespace ShapeEngine.UI;
+namespace ShapeEngine.Core;
 
 /// <summary>
 /// Allows you to create a render texture and draw to its surface.
