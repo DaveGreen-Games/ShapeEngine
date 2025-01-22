@@ -130,7 +130,7 @@ public class ControlNodeSlider : ControlNode
         {
             if (Pressed)
             {
-                float f = Horizontal ? Rect.GetWidthPointFactor(mousePos.X) : Rect.GetHeightPointFactor(mousePos.Y);
+                float f = Horizontal ? Rect.GetWidthFactor(mousePos.X) : Rect.GetHeightFactor(mousePos.Y);
                 if (MouseSnapF > 0)
                 {
                     var snap = (f % MouseSnapF);

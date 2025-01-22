@@ -322,13 +322,23 @@ public readonly struct Rect : IEquatable<Rect>
         return new(TopLeft, Size, alignement);
     }
     
+    public AnchorPoint GetAnchorPoint(Vector2 point)
+    {
+        var dif = point - TopLeft;
+        var f = dif / Size;
+        return new AnchorPoint(f);
+    }
+    public Vector2 GetAbsolutePoint(AnchorPoint anchor)
+    {
+        return Size.ToVector2() * anchor;
+    }
     /// <summary>
     /// Returns a value between 0 - 1 for x & y axis based on where the point is within the rect.
     /// topleft is considered (0,0) and bottomright is considered (1,1).
     /// </summary>
     /// <param name="p"></param>
     /// <returns></returns>
-    public Vector2 GetPointFactors(Vector2 p)
+    public Vector2 PointToRelative(Vector2 p)
     {
         var dif = p - TopLeft;
         var intensity = dif / Size;
@@ -337,13 +347,19 @@ public readonly struct Rect : IEquatable<Rect>
         float yFactor = intensity.Y < 0f ? 0f : intensity.Y > 1f ? 1f : intensity.Y;
         return new(xFactor, yFactor);
     }
+
+    public Vector2 PointToAbsolute(Vector2 relativePoint)
+    {
+        return relativePoint * Size;
+    }
+    
     /// <summary>
     /// Returns a value between 0 - 1 for x axis based on where the point is within the rect.
     /// topleft is considered (0,0) and bottomright is considered (1,1).
     /// </summary>
     /// <param name="x"></param>
     /// <returns></returns>
-    public float GetWidthPointFactor(float x)
+    public float GetWidthFactor(float x)
     {
         float dif = x - Left;
         float intensity = dif / Width;
@@ -355,12 +371,18 @@ public readonly struct Rect : IEquatable<Rect>
     /// </summary>
     /// <param name="y"></param>
     /// <returns></returns>
-    public float GetHeightPointFactor(float y)
+    public float GetHeightFactor(float y)
     {
         float dif = y - Top;
         float intensity = dif / Height;
         return intensity < 0f ? 0f : intensity > 1f ? 1f : intensity;
     }
+    
+    
+    
+    
+    
+    
     public Rect Enlarge(Vector2 p)
     {
         Vector2 tl = new

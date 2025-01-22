@@ -108,7 +108,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 if (GAMELOOP.InputActionUIAccept.State.Down || GAMELOOP.InputActionUIAcceptMouse.State.Down)
                 {
-                    float intensity = background.GetWidthPointFactor(mousePos.X);
+                    float intensity = background.GetWidthFactor(mousePos.X);
                     CurValue = intensity;
                     fill = background.SetSize(background.Size * new Vector2(intensity, 1f));
                 }
