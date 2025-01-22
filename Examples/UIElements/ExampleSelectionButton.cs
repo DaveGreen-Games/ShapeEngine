@@ -143,6 +143,18 @@ namespace Examples.UIElements
             var r = Rect;
             var text = Scene.Title;
 
+            if (MouseInside)
+            {
+                var amount = Rect.Size.Min() * 0.25f;
+                var outside = Rect.ChangeSize(amount, new AnchorPoint(0.5f, 0.5f));
+                // outside.DrawLines(2f, Colors.Medium);
+                
+                var lineThickness = outside.Size.Min() * 0.02f;
+                var spacing = lineThickness * 12f;
+                var info = new LineDrawingInfo(lineThickness, Colors.Dark, LineCapType.Capped, 6);
+                outside.DrawStriped(spacing, 35f, info);
+            }
+            
             if (Selected)
             {
                 textFont.ColorRgba = Colors.Highlight;
@@ -159,12 +171,7 @@ namespace Examples.UIElements
                 textFont.DrawTextWrapNone(text, r, new(0f));
             }
             
-            if (MouseInside)
-            {
-                var amount = Rect.Size.Min() * 0.25f;
-                var outside = Rect.ChangeSize(amount, new AnchorPoint(0.5f, 0.5f));
-                outside.DrawLines(2f, Colors.Medium);
-            }
+            
         }
         // protected override bool CheckMousePressed()
         // {

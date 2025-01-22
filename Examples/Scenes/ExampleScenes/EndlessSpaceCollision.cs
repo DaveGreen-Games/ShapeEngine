@@ -12,6 +12,8 @@ using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
 using Size = ShapeEngine.Core.Structs.Size;
 using ShapeEngine.Random;
+using ShapeEngine.UI;
+
 namespace Examples.Scenes.ExampleScenes;
 
 public class EndlessSpaceCollision : ExampleScene
@@ -2003,6 +2005,7 @@ public class EndlessSpaceCollision : ExampleScene
     private readonly float cellSize;
 
     private bool gameOverScreenActive = false;
+
     public EndlessSpaceCollision()
     {
         drawInputDeviceInfo = false;
@@ -2842,6 +2845,8 @@ public class EndlessSpaceCollision : ExampleScene
         singleDestructorRect.DrawCorners(new LineDrawingInfo(thickness, Colors.Warm, LineCapType.Capped, 4), cornerLength);
         singleDestructorRectBar.Draw(Colors.Medium);
         singleDestructorStripedBarRect.DrawStriped(singleDestructorRectBar.Width * 0.015f, -15, stripedBarInfo);
+
+        
         // singleDestructorRectBar.DrawBar(singleDestructorF, Colors.Warm, Colors.Medium, 0.5f, 0.5f, 0f, 0f);
         
         multiDestructorRect.DrawCorners(new LineDrawingInfo(thickness, Colors.Warm, LineCapType.Capped, 4), cornerLength);
