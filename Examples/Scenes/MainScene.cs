@@ -294,7 +294,7 @@ namespace Examples.Scenes
         {
             area.Draw(Colors.Dark);
             var sourceRect = new Rect(Vector2.Zero, area.Size * 2);
-            textureSurface.Draw(sourceRect, area,0, Colors.Highlight.ChangeBrightness(-0.75f));
+            textureSurface.Draw(sourceRect, area, Colors.Highlight.ChangeBrightness(-0.75f));
             area.DrawLines(2f, Colors.PcMedium.ColorRgba);
 
             var margin = area.Size.Min() * 0.025f;
