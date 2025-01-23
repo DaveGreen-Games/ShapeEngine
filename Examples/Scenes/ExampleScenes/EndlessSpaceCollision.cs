@@ -13,6 +13,7 @@ using ShapeEngine.Input;
 using Size = ShapeEngine.Core.Structs.Size;
 using ShapeEngine.Random;
 using ShapeEngine.UI;
+using Ray = ShapeEngine.Core.Shapes.Ray;
 
 namespace Examples.Scenes.ExampleScenes;
 
@@ -583,7 +584,8 @@ public class EndlessSpaceCollision : ExampleScene
         public int Health;
         public float HealthF => (float)Health / (float)MaxHp;
         public const int MaxHp = 3;
-        
+        private LaserBeam laserBeam;
+        public CollisionHandler? collisionHandler;
         private void SetupInput()
         {
             var moveHorKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
@@ -614,6 +616,7 @@ public class EndlessSpaceCollision : ExampleScene
             SetupInput();
 
             Health = MaxHp;
+            laserBeam = new(new ValueRange(4, 32), Colors.PcWarm, new BitFlag(AsteroidObstacle.CollisionLayer), 50);;
         }
 
         protected override void Collision(CollisionInformation info)
@@ -638,6 +641,7 @@ public class EndlessSpaceCollision : ExampleScene
                 Velocity = combined.Normal * 3500;
                 collisionStunTimer = CollisionStunTime;
                 collisionRotationDirection = Rng.Instance.RandDirF();
+                laserBeam.Cancel();
             }
         }
         
@@ -757,39 +761,54 @@ public class EndlessSpaceCollision : ExampleScene
             Vector2 dir = new(iaMoveHor.State.AxisRaw, iaMoveVer.State.AxisRaw);
 
             if (collisionStunTimer > 0f) dir = new(0f);
-            
-            float lsq = dir.LengthSquared();
-            if (lsq > 0f)
-            {
-                stopTimer = 0f;
 
-                float accelF = 1f;
-                if (accelTimer <= AccelTime)
-                {
-                    accelTimer += dt;
-                    accelF = accelTimer / AccelTime;
-                }
-                curSpeed = Speed * accelF * accelF;
-                Move(dt, dir.Normalize(), curSpeed);
-                
+            if (collisionHandler != null)
+            {
+                laserBeam.Update(GetBarrelPosition(), GetBarrelDirection(), time.Delta, collisionHandler);
+            }
+
+            if (laserBeam.IsActive)
+            {
+                movementDir = (game.MousePos - Transform.Position).Normalize();
+                angleRad = movementDir.AngleRad(); 
+                Transform = Transform.SetRotationRad(angleRad);
             }
             else
             {
-                accelTimer = 0f;
-                if (stopTimer <= StopTime)
+                float lsq = dir.LengthSquared();
+                if (lsq > 0f)
                 {
-                    stopTimer += dt;
-                    float stopF = 1f - (stopTimer / StopTime);
+                    stopTimer = 0f;
 
-                    curSpeed = Speed * stopF * stopF;
-                    Move(dt, movementDir, curSpeed);
+                    float accelF = 1f;
+                    if (accelTimer <= AccelTime)
+                    {
+                        accelTimer += dt;
+                        accelF = accelTimer / AccelTime;
+                    }
+                    curSpeed = Speed * accelF * accelF;
+                    Move(dt, dir.Normalize(), curSpeed);
+                
                 }
                 else
                 {
-                    movementDir = new();
-                    curSpeed = 0f;
+                    accelTimer = 0f;
+                    if (stopTimer <= StopTime)
+                    {
+                        stopTimer += dt;
+                        float stopF = 1f - (stopTimer / StopTime);
+
+                        curSpeed = Speed * stopF * stopF;
+                        Move(dt, movementDir, curSpeed);
+                    }
+                    else
+                    {
+                        movementDir = new();
+                        curSpeed = 0f;
+                    }
                 }
             }
+            
             
             // hull = collider.GetTriangleShape();
         }
@@ -810,6 +829,7 @@ public class EndlessSpaceCollision : ExampleScene
 
         public Vector2 GetCameraFollowPosition() => Transform.Position;
         public Vector2 GetBarrelPosition() => collider.GetTriangleShape().A;
+        // public Vector2 GetLaserBeamPosition() => collider.GetTriangleShape().A;
         public Vector2 GetBarrelDirection() => ShapeVec.VecFromAngleRad(angleRad);
         public float GetCurSpeed() => curSpeed;
         public Vector2 GetCurVelocityVector() => curSpeed * movementDir;
@@ -818,6 +838,7 @@ public class EndlessSpaceCollision : ExampleScene
         {
             if(IsDead)return;
             collider.GetTriangleShape().DrawLines(4f, hullColor.ColorRgba);
+            laserBeam.Draw();
         }
 
         public override void DrawGameUI(ScreenInfo gameUi)
@@ -846,6 +867,9 @@ public class EndlessSpaceCollision : ExampleScene
         public bool Big;
 
         private float perimeter = 0f;
+
+        private float markTimer = 0f;
+        private const float MarkDuration = 0.5f;
         // private float gapStartOffset = ShapeRandom.RandF();
         
 
@@ -954,12 +978,23 @@ public class EndlessSpaceCollision : ExampleScene
         protected override void WasKilled(string? killMessage = null, GameObject? killer = null)
         {
             target = null;
+            markTimer = 0f;
         }
 
         public override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi,  ScreenInfo ui)
         {
             if (IsDead) return;
             var prevPosition = Transform.Position;
+
+            if (markTimer > 0)
+            {
+                markTimer -= time.Delta;
+                if (markTimer <= 0)
+                {
+                    markTimer = 0f;
+                }
+            }
+            
             base.Update(time, game, gameUi, ui);
 
             if (target != null)
@@ -1020,6 +1055,13 @@ public class EndlessSpaceCollision : ExampleScene
             // }
         }
 
+        //marked by ship inactive laser
+        public void Mark()
+        {
+            if (IsDead) return;
+            markTimer = MarkDuration;
+        }
+        
         public override void DrawGame(ScreenInfo game)
         {
             if (IsDead) return;
@@ -1048,6 +1090,13 @@ public class EndlessSpaceCollision : ExampleScene
                     gappedOutlineInfo = gappedOutlineInfo.MoveStartOffset(GAMELOOP.Time.Delta * 0.25f);
                 }
 
+            }
+
+            if (markTimer > 0f)
+            {
+                float markTimerF = markTimer / MarkDuration;
+                var color = ColorRgba.Clear.Lerp(Colors.Highlight, markTimerF);
+                Transform.Position.Draw(24f, color);
             }
         }
         public override void DrawGameUI(ScreenInfo gameUi)
@@ -1909,7 +1958,164 @@ public class EndlessSpaceCollision : ExampleScene
             
         }
     }
-    
+
+
+    private class LaserBeam
+    {
+        public Ray Ray { get; private set; } = new Ray();
+        
+        private readonly ValueRange width;
+        private readonly PaletteColor paletteColor;
+        private float damage;
+        private float damageInterval;
+        private readonly BitFlag collisionMask;
+        private bool isCharging = false;
+        private bool isFiring = false;
+        private float damageTimer = 0f;
+        private float chargeTimer = 0f;
+        private float chargeDuration = 1f;
+        private CollisionPoint hitPoint = new();
+        public bool IsActive => isCharging || isFiring;
+
+        public LaserBeam(ValueRange width, PaletteColor color, BitFlag collisionMask, float damage, float damageInterval = 0.1f)
+        {
+            this.width = width;
+            this.paletteColor = color;
+            this.damage = damage;
+            this.damageInterval = damageInterval;
+            this.collisionMask = collisionMask;
+        }
+
+        public void Cancel()
+        {
+            isFiring = false;
+            isCharging = false;
+            damageTimer = 0f;
+            chargeTimer = 0f;
+            hitPoint = new();
+        }
+        
+        public void Update(Vector2 position, Vector2 direction, float dt, CollisionHandler collisionHandler)
+        {
+            if (!isCharging && !isFiring)
+            {
+                if (ShapeMouseButton.LEFT.GetInputState().Pressed)
+                {
+                    isCharging = true;
+                }
+            }
+            else if (isCharging)
+            {
+                if (ShapeMouseButton.LEFT.GetInputState().Released)
+                {
+                    isCharging = false;
+                    chargeTimer = 0f;
+                }
+            }
+            else if (isFiring)
+            {
+                if (ShapeMouseButton.LEFT.GetInputState().Released)
+                {
+                    isFiring = false;
+                    damageTimer = 0f;
+                    hitPoint = new();
+                }
+            }
+
+
+            Ray = new Ray(position, direction);
+
+            if (!isFiring)
+            {
+                var result = collisionHandler.IntersectSpace(Ray, Ray.Point, collisionMask);
+                if (result != null && result.Count > 0)
+                {
+                    foreach (var register in result)
+                    {
+                        if (register.OtherCollisionObject is AsteroidObstacle asteroid)
+                        {
+                            asteroid.Mark();
+                        }
+                    }
+                }
+
+                if (isCharging)
+                {
+                    chargeTimer += dt;
+                    if (chargeTimer >= chargeDuration)
+                    {
+                        isCharging = false;
+                        isFiring = true;
+                        damageTimer = 0f;
+                        chargeTimer = 0f;
+                    }
+                }
+            }
+            else
+            {
+                AsteroidObstacle? target = null;
+                hitPoint = new();
+                var result = collisionHandler.IntersectSpace(Ray, Ray.Point, collisionMask);
+                if (result != null && result.Count > 0)
+                {
+                    if (result.SortClosestFirst())
+                    {
+                        for (var i = 0; i < result.Count; i++)
+                        {
+                            var register = result[i];
+                            if (register.OtherCollisionObject is AsteroidObstacle asteroid)
+                            {
+                                var closestIntersection = register[0][0];
+                                target = asteroid;
+                                hitPoint = closestIntersection;
+                                break;
+                            }
+                        }
+                    
+                    }
+                }
+                
+                if (damageTimer >= damageInterval)
+                {
+                    if (target != null && hitPoint.Valid)
+                    {
+                        target.Damage(hitPoint.Point, damage, Ray.Direction * 500);
+                    }
+                    damageTimer = 0f;
+                }
+                else
+                {
+                    damageTimer += dt;
+                }
+            }
+            
+            
+        }
+
+        public void Draw()
+        {
+            var f = isFiring ? 1f : isCharging ?  chargeTimer / chargeDuration : 0f;
+            var color =  paletteColor.ColorRgba;
+            var w = width.Lerp(f);
+            var c = color.SetAlpha(200).Lerp(color, f);
+            Ray.Point.Draw(w, c);
+            
+            if (!isFiring || !hitPoint.Valid)
+            {
+                Ray.Draw(5000, w, c);
+                
+            }
+            else
+            {
+                var segment = new Segment(Ray.Point, hitPoint.Point);
+                var ray = new Ray(hitPoint.Point, Ray.Direction.Reflect(hitPoint.Normal));
+                segment.Draw(w, c);
+                ray.Draw(5000, w / 2, c);
+                hitPoint.Point.Draw(w, c);
+            }
+            
+        }
+    }
     
 
     private class ScreenTextureHandler : CustomScreenTextureHandler
@@ -2022,6 +2228,7 @@ public class EndlessSpaceCollision : ExampleScene
         follower = new(0, 300, 500);
         camera.Follower = follower;
         ship = new(new Vector2(0f), ShipSize);
+        ship.collisionHandler = CollisionHandler;
         ship.OnKilled += OnShipKilled;
         
         var minigunStats = new AutogunStats(250, 2, 20, 800, MathF.PI / 15, AutogunStats.TargetingType.Closest);
@@ -2408,8 +2615,8 @@ public class EndlessSpaceCollision : ExampleScene
 
         if (CollisionHandler != null)
         {
-            var singleDestructorPressed = singleDestructorBurstsRemaining <= 0 && singleDestructorCooldownTimer <= 0f && (ShapeKeyboardButton.Q.GetInputState().Pressed || ShapeMouseButton.LEFT.GetInputState().Pressed);
-            var multiDestructorPressed = multiDestructorCooldownTimer <= 0 && (ShapeKeyboardButton.E.GetInputState().Pressed || ShapeMouseButton.RIGHT.GetInputState().Pressed);
+            var singleDestructorPressed = singleDestructorBurstsRemaining <= 0 && singleDestructorCooldownTimer <= 0f && (ShapeKeyboardButton.Q.GetInputState().Pressed);
+            var multiDestructorPressed = multiDestructorCooldownTimer <= 0 && (ShapeKeyboardButton.E.GetInputState().Pressed);
         
             if (singleDestructorPressed)
             {
