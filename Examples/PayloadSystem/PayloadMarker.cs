@@ -1,5 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Core;
+using ShapeEngine.Lib;
 
 namespace Examples.PayloadSystem;
 
@@ -45,7 +46,7 @@ public abstract class PayloadMarker
     {
         if (travelTimer > 0f)
         {
-            Velocity = PhysicsObject.ApplyDragForce(Velocity, dragCoefficient, dt);
+            Velocity = ShapePhysics.ApplyDragForce(Velocity, dragCoefficient, dt);
             Location += Velocity * dt;
             travelTimer -= dt;
             if (travelTimer <= 0f)

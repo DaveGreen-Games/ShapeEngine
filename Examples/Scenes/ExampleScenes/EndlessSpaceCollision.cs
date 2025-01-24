@@ -616,7 +616,7 @@ public class EndlessSpaceCollision : ExampleScene
             SetupInput();
 
             Health = MaxHp;
-            laserBeam = new(new ValueRange(6, 18), Colors.PcWarm, new BitFlag(AsteroidObstacle.CollisionLayer), 50);;
+            laserBeam = new(new ValueRange(6, 18), Colors.PcWarm, new BitFlag(AsteroidObstacle.CollisionLayer), 10, 2000);
         }
 
         protected override void Collision(CollisionInformation info)
@@ -1009,7 +1009,7 @@ public class EndlessSpaceCollision : ExampleScene
             // Triangulation = shape.Triangulate();
             
 
-            damageForce = PhysicsObject.ApplyDragForce(damageForce, 1.5f, time.Delta);
+            damageForce = ShapePhysics.ApplyDragForce(damageForce, 1.5f, time.Delta);
             Transform = Transform.ChangePosition(damageForce * time.Delta);
 
             if (damageFlashTimer > 0f)
@@ -1140,7 +1140,7 @@ public class EndlessSpaceCollision : ExampleScene
             if (IsDead) return;
             LifetimeTimer -= dt;
 
-            Velocity = PhysicsObject.ApplyDragForce(Velocity, 2, dt);
+            Velocity = ShapePhysics.ApplyDragForce(Velocity, 2, dt);
             
             var f = LifetimeTimer / Lifetime;
 
@@ -2024,8 +2024,9 @@ public class EndlessSpaceCollision : ExampleScene
         
         private readonly ValueRange width;
         private readonly PaletteColor paletteColor;
-        private float damage;
-        private float damageInterval;
+        private readonly float damage;
+        private readonly float force;
+        private readonly float damageInterval;
         private readonly BitFlag collisionMask;
         private bool isCharging = false;
         private bool isFiring = false;
@@ -2038,7 +2039,7 @@ public class EndlessSpaceCollision : ExampleScene
         private float laserBeamWidthVariationFactorTimer = 0f;
         public bool IsActive => isCharging || isFiring;
 
-        public LaserBeam(ValueRange width, PaletteColor color, BitFlag collisionMask, float damage, float damageInterval = 0.1f)
+        public LaserBeam(ValueRange width, PaletteColor color, BitFlag collisionMask, float damage, float force, float damageInterval = 0.1f)
         {
             this.width = width;
             this.paletteColor = color;
@@ -2046,6 +2047,7 @@ public class EndlessSpaceCollision : ExampleScene
             this.damageInterval = damageInterval;
             this.collisionMask = collisionMask;
             laserBeamWidthVariationFactorTimer = Rng.Instance.RandF(0.1f, 0.25f);
+            this.force = force;
         }
 
         public void Cancel()
@@ -2158,7 +2160,7 @@ public class EndlessSpaceCollision : ExampleScene
                 {
                     if (target != null && hitPoint.Valid)
                     {
-                        target.Damage(hitPoint.Point, damage, Ray.Direction * 500);
+                        target.Damage(hitPoint.Point, damage, Ray.Direction * force);
 
                         var particleAmount = Rng.Instance.RandI(4, 12);
                         for (var i = 0; i < particleAmount; i++)
