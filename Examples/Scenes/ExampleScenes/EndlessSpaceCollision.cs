@@ -616,7 +616,7 @@ public class EndlessSpaceCollision : ExampleScene
             SetupInput();
 
             Health = MaxHp;
-            laserBeam = new(new ValueRange(4, 32), Colors.PcWarm, new BitFlag(AsteroidObstacle.CollisionLayer), 50);;
+            laserBeam = new(new ValueRange(6, 18), Colors.PcWarm, new BitFlag(AsteroidObstacle.CollisionLayer), 50);;
         }
 
         protected override void Collision(CollisionInformation info)
@@ -870,7 +870,7 @@ public class EndlessSpaceCollision : ExampleScene
 
         private float markTimer = 0f;
         private const float MarkDuration = 0.5f;
-        // private float gapStartOffset = ShapeRandom.RandF();
+
         
 
         public Ship? target = null;
@@ -1095,8 +1095,22 @@ public class EndlessSpaceCollision : ExampleScene
             if (markTimer > 0f)
             {
                 float markTimerF = markTimer / MarkDuration;
-                var color = ColorRgba.Clear.Lerp(Colors.Highlight, markTimerF);
-                Transform.Position.Draw(24f, color);
+                var clearColor = Colors.Warm.SetAlpha(0);
+                var color = clearColor.Lerp(Colors.Warm, markTimerF);
+                
+                if (markTimerF < 0.95f || !Big)
+                {
+                    Transform.Position.Draw(24f, color);
+                }
+                else
+                {
+                    var poly = collider.GetPolygonShape();
+                    poly.GetFurthestVertex(Transform.Position, out float disSquared, out int index);
+                    var c = new Circle(Transform.Position, MathF.Sqrt(disSquared));
+                    var info = new LineDrawingInfo(8f, color, LineCapType.None, 0);
+                    c.DrawStriped(112, 45, info);
+                }
+                
             }
         }
         public override void DrawGameUI(ScreenInfo gameUi)
@@ -1960,6 +1974,50 @@ public class EndlessSpaceCollision : ExampleScene
     }
 
 
+    private class LaserBeamParticle
+    {
+        private Vector2 position;
+        private Vector2 velocity;
+        private readonly PaletteColor paletteColor;
+        private float lifetime;
+        private float size;
+        private float lifetimeTimer;
+        private float lifetimeF;
+        
+        public LaserBeamParticle(Vector2 position, Vector2 velocity, float size, float lifetime, PaletteColor paletteColor)
+        {
+            this.position = position;
+            this.velocity = velocity;
+            this.paletteColor = paletteColor;
+            this.lifetime = lifetime;
+            this.size = size;
+            lifetimeTimer = lifetime;
+            lifetimeF = 0f;
+        }
+        
+        public bool IsDead => lifetimeTimer <= 0f;
+        
+        public void Update(float dt)
+        {
+            if (IsDead) return;
+            
+            lifetimeTimer -= dt;
+            if(lifetimeTimer <= 0f) lifetimeTimer = 0f;
+            
+            lifetimeF = 1f - (lifetimeTimer / lifetime);
+            
+            position += velocity * dt;
+            ShapeVec.ExpDecayLerp(velocity, Vector2.Zero, lifetimeF, dt);
+        }
+        
+        public void Draw()
+        {
+            var color = paletteColor.ColorRgba;
+            var s = ShapeMath.LerpFloat(size, size * 0.25f, lifetimeF);
+            var c = color.Lerp(color.ChangeAlpha(150), lifetimeF);
+            ShapeDrawing.DrawCircleFast(position, s, c);
+        }
+    }
     private class LaserBeam
     {
         public Ray Ray { get; private set; } = new Ray();
@@ -1975,6 +2033,9 @@ public class EndlessSpaceCollision : ExampleScene
         private float chargeTimer = 0f;
         private float chargeDuration = 1f;
         private CollisionPoint hitPoint = new();
+        private List<LaserBeamParticle> particles = new();
+        private float laserBeamWidthVariationFactor = 1f;
+        private float laserBeamWidthVariationFactorTimer = 0f;
         public bool IsActive => isCharging || isFiring;
 
         public LaserBeam(ValueRange width, PaletteColor color, BitFlag collisionMask, float damage, float damageInterval = 0.1f)
@@ -1984,6 +2045,7 @@ public class EndlessSpaceCollision : ExampleScene
             this.damage = damage;
             this.damageInterval = damageInterval;
             this.collisionMask = collisionMask;
+            laserBeamWidthVariationFactorTimer = Rng.Instance.RandF(0.1f, 0.25f);
         }
 
         public void Cancel()
@@ -1997,6 +2059,23 @@ public class EndlessSpaceCollision : ExampleScene
         
         public void Update(Vector2 position, Vector2 direction, float dt, CollisionHandler collisionHandler)
         {
+            laserBeamWidthVariationFactorTimer -= dt;
+            if (laserBeamWidthVariationFactorTimer <= 0f)
+            {
+                laserBeamWidthVariationFactorTimer = Rng.Instance.RandF(0.1f, 0.25f);
+                laserBeamWidthVariationFactor = Rng.Instance.RandF(0.8f, 1.2f);
+            }
+            
+            for (int i = particles.Count - 1; i >= 0; i--)
+            {
+                var particle = particles[i];
+                particle.Update(dt);
+                if (particle.IsDead)
+                {
+                    particles.RemoveAt(i);
+                }
+            }
+            
             if (!isCharging && !isFiring)
             {
                 if (ShapeMouseButton.LEFT.GetInputState().Pressed)
@@ -2080,6 +2159,17 @@ public class EndlessSpaceCollision : ExampleScene
                     if (target != null && hitPoint.Valid)
                     {
                         target.Damage(hitPoint.Point, damage, Ray.Direction * 500);
+
+                        var particleAmount = Rng.Instance.RandI(4, 12);
+                        for (var i = 0; i < particleAmount; i++)
+                        {
+                            var randSpeed = Rng.Instance.RandF(400, 500f);
+                            var randDirection = Rng.Instance.RandVec2() * randSpeed;
+                            var randSize = Rng.Instance.RandF(15f, 25f);
+                            var randLifetime = Rng.Instance.RandF(0.25f, 0.5f);
+                            var p = new LaserBeamParticle(hitPoint.Point, randDirection, randSize, randLifetime, paletteColor);
+                            particles.Add(p);
+                        }
                     }
                     damageTimer = 0f;
                 }
@@ -2094,23 +2184,30 @@ public class EndlessSpaceCollision : ExampleScene
 
         public void Draw()
         {
+            for (int i = particles.Count - 1; i >= 0; i--)
+            {
+                var particle = particles[i];
+                particle.Draw();
+            }
+            
             var f = isFiring ? 1f : isCharging ?  chargeTimer / chargeDuration : 0f;
             var color =  paletteColor.ColorRgba;
-            var w = width.Lerp(f);
+            var w = width.Lerp(f) * laserBeamWidthVariationFactor;
             var c = color.SetAlpha(200).Lerp(color, f);
             Ray.Point.Draw(w, c);
             
             if (!isFiring || !hitPoint.Valid)
             {
-                Ray.Draw(5000, w, c);
+                Ray.Draw(15000, w, c);
                 
             }
             else
             {
                 var segment = new Segment(Ray.Point, hitPoint.Point);
-                var ray = new Ray(hitPoint.Point, Ray.Direction.Reflect(hitPoint.Normal));
+                var dir = Ray.Direction.Reflect(hitPoint.Normal);
+                var ray1 = new Ray(hitPoint.Point, dir);
                 segment.Draw(w, c);
-                ray.Draw(5000, w / 2, c);
+                ray1.Draw(15000, w / 2, c);
                 hitPoint.Point.Draw(w, c);
             }
             
