@@ -4753,6 +4753,80 @@ public static class ShapeDrawing
         }
     }
     #endregion
+
+    #region Arrow
+    
+    public static void DrawArrow(Vector2 tailPoint, Vector2 headPoint, float headWidth, float headLength, LineDrawingInfo info, ColorRgba headFillColor)
+    {
+        if(headWidth <= 0 || headLength <= 0) return;
+        if(info.Color.A <= 0) return;
+        
+        var v = headPoint - tailPoint;
+        var l = v.Length();
+        if(l <= 0) return;
+
+        var dir = v / l;
+        var tailEnd = tailPoint;
+        if (headLength < l)
+        {
+            var tailLength = l - headLength;
+            tailEnd = tailPoint + dir * tailLength;
+            DrawSegment(tailPoint, tailEnd, info);
+        }
+
+        var pl = dir.GetPerpendicularLeft();
+        var pr = -pl;
+
+        var b = tailEnd + pl * headWidth * 0.5f;
+        var c = tailEnd + pr * headWidth * 0.5f;
+        if(headFillColor.A > 0) DrawTriangle(headPoint, b, c, headFillColor);
+        DrawTriangleLines(headPoint, b, c, info);
+    }
+    public static void DrawArrow2(Vector2 tailPoint, Vector2 headPoint, float headWidth, float headLengthFactor, LineDrawingInfo info, ColorRgba headFillColor)
+    {
+        if(headWidth <= 0 || headLengthFactor <= 0) return;
+        if(info.Color.A <= 0) return;
+        var v = headPoint - tailPoint;
+        var l = v.Length();
+        if(l <= 0) return;
+
+        var dir = v / l;
+        var tailLength = l * (1f - headLengthFactor);
+        var tailEnd = tailPoint + dir * tailLength;
+        DrawSegment(tailPoint, tailEnd, info);
+
+        var pl = dir.GetPerpendicularLeft();
+        var pr = -pl;
+
+        var b = tailEnd + pl * headWidth * 0.5f;
+        var c = tailEnd + pr * headWidth * 0.5f;
+        if(headFillColor.A > 0) DrawTriangle(headPoint, b, c, headFillColor);
+        DrawTriangleLines(headPoint, b, c, info);
+    }
+    public static void DrawArrow3(Vector2 tailPoint, Vector2 headPoint, float headWidthFactor, float headLengthFactor, LineDrawingInfo info, ColorRgba headFillColor)
+    {
+        if(headWidthFactor <= 0 || headLengthFactor <= 0) return;
+        if(info.Color.A <= 0) return;
+        
+        var v = headPoint - tailPoint;
+        var l = v.Length();
+        if(l <= 0) return;
+
+        var dir = v / l;
+        var tailLength = l * (1f - headLengthFactor);
+        var tailEnd = tailPoint + dir * tailLength;
+        DrawSegment(tailPoint, tailEnd, info);
+
+        var pl = dir.GetPerpendicularLeft();
+        var pr = -pl;
+
+        var headWidth = l * headWidthFactor;
+        var b = tailEnd + pl * headWidth * 0.5f;
+        var c = tailEnd + pr * headWidth * 0.5f;
+        if(headFillColor.A > 0) DrawTriangle(headPoint, b, c, headFillColor);
+        DrawTriangleLines(headPoint, b, c, info);
+    }
+    #endregion
     
     #region UI
     public static void DrawOutlineBar(this Rect rect, float thickness, float f, ColorRgba color)
