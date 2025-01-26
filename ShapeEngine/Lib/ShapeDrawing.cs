@@ -4755,6 +4755,68 @@ public static class ShapeDrawing
     #endregion
 
     #region Arrow
+    public static (Segment tail, Triangle head) CalculateArrowPoints(Vector2 tailPoint, Vector2 headPoint, float headWidth, float headLength)
+    {
+        if(headWidth <= 0 || headLength <= 0) return (new(), new());
+        
+        var v = headPoint - tailPoint;
+        var l = v.Length();
+        if(l <= 0) return (new(), new());
+
+        var dir = v / l;
+        var tailEnd = tailPoint;
+        if (headLength < l)
+        {
+            var tailLength = l - headLength;
+            tailEnd = tailPoint + dir * tailLength;
+        }
+
+        var pl = dir.GetPerpendicularLeft();
+        var pr = -pl;
+
+        var b = tailEnd + pl * headWidth * 0.5f;
+        var c = tailEnd + pr * headWidth * 0.5f;
+        return (new(tailPoint, tailEnd), new(headPoint, b, c));
+    }
+    public static (Segment tail, Triangle head) CalculateArrowPoints2(Vector2 tailPoint, Vector2 headPoint, float headWidth, float headLengthFactor)
+    {
+        if(headWidth <= 0 || headLengthFactor <= 0) return (new(), new());
+        
+        var v = headPoint - tailPoint;
+        var l = v.Length();
+        if(l <= 0) return (new(), new());
+
+        var dir = v / l;
+        var tailLength = l * (1f - headLengthFactor);
+        var tailEnd = tailPoint + dir * tailLength;
+
+        var pl = dir.GetPerpendicularLeft();
+        var pr = -pl;
+
+        var b = tailEnd + pl * headWidth * 0.5f;
+        var c = tailEnd + pr * headWidth * 0.5f;
+        return (new(tailPoint, tailEnd), new(headPoint, b, c));
+    }
+    public static (Segment tail, Triangle head) CalculateArrowPoints3(Vector2 tailPoint, Vector2 headPoint, float headWidthFactor, float headLengthFactor)
+    {
+        if(headWidthFactor <= 0 || headLengthFactor <= 0) return (new(), new());
+        
+        var v = headPoint - tailPoint;
+        var l = v.Length();
+        if(l <= 0) return (new(), new());
+
+        var dir = v / l;
+        var tailLength = l * (1f - headLengthFactor);
+        var tailEnd = tailPoint + dir * tailLength;
+
+        var pl = dir.GetPerpendicularLeft();
+        var pr = -pl;
+
+        var headWidth = l * headWidthFactor;
+        var b = tailEnd + pl * headWidth * 0.5f;
+        var c = tailEnd + pr * headWidth * 0.5f;
+        return (new(tailPoint, tailEnd), new(headPoint, b, c));
+    }
     
     public static void DrawArrow(Vector2 tailPoint, Vector2 headPoint, float headWidth, float headLength, LineDrawingInfo info, ColorRgba headFillColor)
     {
@@ -4826,6 +4888,7 @@ public static class ShapeDrawing
         if(headFillColor.A > 0) DrawTriangle(headPoint, b, c, headFillColor);
         DrawTriangleLines(headPoint, b, c, info);
     }
+    
     #endregion
     
     #region UI
