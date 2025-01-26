@@ -217,5 +217,6 @@ namespace Examples.Scenes.ExampleScenes
             textFont.ColorRgba = Colors.Light;
             textFont.DrawTextWrapNone(text, rect, new(0.5f));
         }
+        
     }
 }
