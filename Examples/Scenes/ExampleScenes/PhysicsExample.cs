@@ -16,9 +16,9 @@ public class PhysicsExample : ExampleScene
     private Rect universe;
     private readonly ShapeCamera camera;
     private readonly CameraFollowerSingle follower;
-    private const float UniverseSize = 15000;
-    private const int CollisionRows = 25;
-    private const int CollisionCols = 25;
+    private const float UniverseSize = 5000;
+    private const int CollisionRows = 10;
+    private const int CollisionCols = 10;
     
     private readonly float cellSize;
     
