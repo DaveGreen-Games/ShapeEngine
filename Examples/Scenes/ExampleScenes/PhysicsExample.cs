@@ -23,7 +23,8 @@ public class PhysicsExample : ExampleScene
     private readonly float cellSize;
     
     private List<TextureSurface> starSurfaces = new();
-    
+
+    private PhysicsExampleSource.Ship ship;
     public PhysicsExample()
     {
         Title = "Physics!";
@@ -43,10 +44,10 @@ public class PhysicsExample : ExampleScene
             var f = i / (float)(textureCount - 1);
             var t = new TextureSurface(2048, 2048);
             t.SetTextureFilter(TextureFilter.Bilinear);
-            var sizeMin = ShapeMath.LerpFloat(1, 1.5f, f);
-            var sizeMax = ShapeMath.LerpFloat(1.5f, 2, f);
+            var sizeMin = ShapeMath.LerpFloat(1f, 1.5f, f);
+            var sizeMax = ShapeMath.LerpFloat(1.5f, 3f, f);
             var sizeRange = new ValueRange(sizeMin, sizeMax);
-            var color = ColorRgba.Lerp(Colors.Dark, Colors.Medium, f);
+            var color = ColorRgba.Lerp(ColorRgba.White, ColorRgba.White.SetAlpha(220), f);
             t.BeginDraw(ColorRgba.Clear);
             for (int j = 0; j < starCount; j++)
             {
@@ -60,6 +61,8 @@ public class PhysicsExample : ExampleScene
             
             starSurfaces.Add(t);
         }
+
+        ship = new(50, Colors.PcWarm);
     }
     
     protected override void OnActivate(Scene oldScene)
@@ -68,7 +71,10 @@ public class PhysicsExample : ExampleScene
         
         GAMELOOP.Camera = camera;
         camera.SetZoom(1f);
-        // follower.SetTarget(ship);
+        ship.Spawn(universe.Center, Rng.Instance.RandAngleDeg());
+        follower.SetTarget(ship);
+        follower.Speed = 1000;
+        follower.BoundaryDis = new ValueRange(150, 300);
     }
     protected override void OnDeactivate()
     {
@@ -91,7 +97,7 @@ public class PhysicsExample : ExampleScene
     protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
         
-        
+        ship.Update(time, game, gameUi, ui);
     }
 
 
@@ -104,15 +110,30 @@ public class PhysicsExample : ExampleScene
 
     protected override void OnDrawGameExample(ScreenInfo game)
     {
-        foreach (var surface in starSurfaces)
+        var target = camera.BasePosition;
+        var count = starSurfaces.Count;
+        for (int i = 0; i < count; i++)
         {
-            surface.Draw(surface.Rect, new Rect(Vector2.Zero, surface.Rect.Size * 2f, AnchorPoint.Center), ColorRgba.White);
-        }
+            var surface = starSurfaces[i];
+            var f = i / (float)(count - 1);
+            var scaleFactor = i == 0 ? 0f : i == 1 ? 0.01f : 0.75f;
+            var pos = target * scaleFactor;
 
+            var sourceRect = new Rect(pos, surface.Rect.Size, AnchorPoint.Center);
+            var targetRect = new Rect(target, surface.Rect.Size, AnchorPoint.Center);
+            surface.Draw(sourceRect, targetRect, ColorRgba.White);
+        }
+        
+        ship.DrawGame(game);
     }
 
+    protected override void OnDrawGameUIExample(ScreenInfo gameUi)
+    {
+        ship.DrawGameUI(gameUi);
+    }
     protected override void OnDrawUIExample(ScreenInfo ui)
     {
+        
         // DrawInputDescription(GAMELOOP.UIRects.GetRect("bottom center"));
         //
         // var objectCountText = $"Object Count: {SpawnArea?.Count ?? 0}";
