@@ -9,6 +9,8 @@ public abstract class PhysicsObject : GameObject
     public Vector2 Velocity { get; set; }
     public float Mass { get; set; }
     public float Drag { get; set; }
+    public float Friction { get; set; } = 0f;
+    public Vector2 FrictionNormal { get; set; } = Vector2.Zero;
     public Vector2 ConstAcceleration { get; set; }
     public Vector2 AccumulatedForce { get; private set; } = new(0f);
     
@@ -50,7 +52,9 @@ public abstract class PhysicsObject : GameObject
     {
         var force = ConstAcceleration * dt;
         Velocity += force;
-        Velocity = ShapePhysics.ApplyDragForce(Velocity, Drag, dt);
+        Velocity = ShapePhysics.ApplyDragFactor(Velocity, Drag, dt);
+        //TODO: test first
+        Velocity = ShapePhysics.ApplyFrictionForce(Velocity, Mass, Friction, FrictionNormal);
     }
 
 
