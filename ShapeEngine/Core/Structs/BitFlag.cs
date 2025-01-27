@@ -9,7 +9,20 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     {
         Flag = value;
     }
-    
+    public BitFlag(params uint[] values)
+    {
+        foreach (var v in values)
+        {
+            Flag |= v;
+        }
+    }
+    // public BitFlag(params int[] values)
+    // {
+    //     foreach (var v in values)
+    //     {
+    //         Flag |= (uint)v;
+    //     }
+    // }
     #region Operations Uint
     public static BitFlag Clear() => Empty;
     public bool IsEmpty() => Flag == 0;
