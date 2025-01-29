@@ -263,6 +263,7 @@ namespace Examples
             fonts.Add(FontIDs.PromptThin, ContentLoader.LoadFont("Resources/Fonts/Prompt-Thin.ttf", 100));
             fonts.Add(FontIDs.TekoMedium, ContentLoader.LoadFont("Resources/Fonts/Teko-Medium.ttf", 100));
             fonts.Add(FontIDs.JetBrains, ContentLoader.LoadFont("Resources/Fonts/JetBrainsMono.ttf", 100));
+            fonts.Add(FontIDs.JetBrainsLarge, ContentLoader.LoadFont("Resources/Fonts/JetBrainsMono.ttf", 500));
             
             fontNames.Add("Gruppo Regular");
             fontNames.Add("Indie Flower Regular");
