@@ -2,12 +2,14 @@ using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
+using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
 using ShapeEngine.Lib;
 using ShapeEngine.Random;
 using ShapeEngine.Screen;
+using ShapeEngine.Text;
 
 namespace Examples.Scenes.ExampleScenes;
 
@@ -16,13 +18,15 @@ public class PhysicsExample : ExampleScene
     private Rect universe;
     private readonly ShapeCamera camera;
     private readonly CameraFollowerSingle follower;
-    private const float UniverseSize = 5000;
+    private const float UniverseSize = 15000;
     private const int CollisionRows = 10;
     private const int CollisionCols = 10;
     
     private readonly float cellSize;
     
     private List<TextureSurface> starSurfaces = new();
+    
+    private TextFont gameFont = new(GAMELOOP.GetFont(FontIDs.JetBrainsLarge), 15f, Colors.Warm);
 
     private PhysicsExampleSource.Ship ship;
     public PhysicsExample()
@@ -63,10 +67,14 @@ public class PhysicsExample : ExampleScene
         }
 
         ship = new(50, Colors.PcWarm);
+
+        var insideRect = universe.ApplyMargins(0.02f, 0.02f, 0.02f, 0.02f);
     }
     
     protected override void OnActivate(Scene oldScene)
     {
+        FontDimensions.FontSizeRange = new(10, 500);
+        
         Colors.OnColorPaletteChanged += OnColorPaletteChanged;
         
         GAMELOOP.Camera = camera;
@@ -78,6 +86,8 @@ public class PhysicsExample : ExampleScene
     }
     protected override void OnDeactivate()
     {
+        FontDimensions.FontSizeRange = FontDimensions.FontSizeRangeDefault;
+        
         Colors.OnColorPaletteChanged -= OnColorPaletteChanged;
         
         GAMELOOP.ResetCamera();
@@ -125,6 +135,63 @@ public class PhysicsExample : ExampleScene
         }
         
         ship.DrawGame(game);
+        
+        var universeLineInfo = new LineDrawingInfo(24f, Colors.Warm, LineCapType.Capped, 12);
+        var stripedLineInfo = new LineDrawingInfo(32f, Colors.Warm.SetAlpha(200));
+
+        var topRect = universe.ApplyMargins(0f, 0f, 0f, 0.98f);
+        var bottomRect = universe.ApplyMargins(0f, 0f, 0.98f, 0);
+        var leftRect = universe.ApplyMargins(0f, 0.98f, 0f, 0);
+        var rightRect = universe.ApplyMargins(0.98f, 0f, 0f, 0);
+        var topRectSplit = topRect.SplitH(9);
+        var bottomRectSplit = bottomRect.SplitH(9);
+        var leftRectSplit = leftRect.SplitV(9);
+        var rightRectSplit = rightRect.SplitV(9);
+
+        var rotationRect = topRectSplit[0];
+
+        topRect.DrawStriped(250f, 25f, stripedLineInfo );
+        topRect.BottomSegment.Draw(universeLineInfo);
+        
+        bottomRect.DrawStriped(250f, 25f, stripedLineInfo);
+        bottomRect.TopSegment.Draw(universeLineInfo);
+        
+        leftRect.DrawStriped(250f, 25f + 90f, stripedLineInfo);
+        leftRect.RightSegment.Draw(universeLineInfo);
+        
+        rightRect.DrawStriped(250f, 25f + 90f, stripedLineInfo);
+        rightRect.LeftSegment.Draw(universeLineInfo);
+        
+        for (int i = 1; i < topRectSplit.Count - 1; i++)
+        {
+            if(i % 2 == 0) continue;
+            var rect = topRectSplit[i];
+            gameFont.Draw("SECTOR END", rect, 0f, AnchorPoint.Center);
+        }
+        for (int i = 1; i < bottomRectSplit.Count - 1; i++)
+        {
+            if(i % 2 == 0) continue;
+            var rect = bottomRectSplit[i];
+            gameFont.Draw("SECTOR END", rect, 180f, AnchorPoint.Center);
+        }
+        
+        for (int i = 1; i < leftRectSplit.Count - 1; i++)
+        {
+            if(i % 2 == 0) continue;
+            var rect = leftRectSplit[i];
+            var movedRotationRect = rotationRect.SetPosition(rect.Center, AnchorPoint.Center);
+            gameFont.Draw("SECTOR END", movedRotationRect, -90, AnchorPoint.Center);
+        }
+        
+        for (int i = 1; i < rightRectSplit.Count - 1; i++)
+        {
+            if(i % 2 == 0) continue;
+            var rect = rightRectSplit[i];
+            var movedRotationRect = rotationRect.SetPosition(rect.Center, AnchorPoint.Center);
+            gameFont.Draw("SECTOR END", movedRotationRect, 90, AnchorPoint.Center);
+        }
+        
+        universe.DrawLines(universeLineInfo);
     }
 
     protected override void OnDrawGameUIExample(ScreenInfo gameUi)

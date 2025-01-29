@@ -7,4 +7,5 @@ public enum CollisionLayers
     BlackHole = 4,
     Repulsor = 8,
     FrictionZone = 16,
+    Sector = 32
 }
