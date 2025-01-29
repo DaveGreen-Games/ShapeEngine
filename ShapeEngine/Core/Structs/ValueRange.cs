@@ -2,7 +2,7 @@ using System.Numerics;
 using ShapeEngine.Lib;
 using ShapeEngine.Random;
 
-namespace ShapeEngine.Core;
+namespace ShapeEngine.Core.Structs;
 
 public readonly struct ValueRange
 {

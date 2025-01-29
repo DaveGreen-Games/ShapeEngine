@@ -2,6 +2,7 @@ using System.Numerics;
 using ShapeEngine.Core;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Shapes;
+using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
 
 namespace ShapeEngine.Screen;
