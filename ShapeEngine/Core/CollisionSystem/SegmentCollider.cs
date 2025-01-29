@@ -66,6 +66,14 @@ public class SegmentCollider : Collider
         this.originOffset = originOffset;
     }
 
+    public SegmentCollider(Segment segment, Vector2 parentPosition, float originOffset = 0f)
+    {
+        var offset = new Transform2D(segment.GetPoint(originOffset) - parentPosition);
+        Offset = offset;
+        dir = segment.Dir;
+        this.originOffset = originOffset;
+    }
+
     public override Rect GetBoundingBox() => GetSegmentShape().GetBoundingBox();
 
     // public override bool ContainsPoint(Vector2 p)
