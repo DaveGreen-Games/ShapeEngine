@@ -1,4 +1,5 @@
 using System.Numerics;
+using Examples.Scenes.ExampleScenes.PhysicsExampleSource;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
@@ -15,10 +16,11 @@ namespace Examples.Scenes.ExampleScenes;
 
 public class PhysicsExample : ExampleScene
 {
-    private Rect universe;
+    private Rect sectorRect;
+    private Rect insideSectorRect;
     private readonly ShapeCamera camera;
     private readonly CameraFollowerSingle follower;
-    private const float UniverseSize = 15000;
+    private const float SectorSize = 15000;
     private const int CollisionRows = 10;
     private const int CollisionCols = 10;
     
@@ -29,14 +31,16 @@ public class PhysicsExample : ExampleScene
     private TextFont gameFont = new(GAMELOOP.GetFont(FontIDs.JetBrainsLarge), 15f, Colors.Warm);
 
     private PhysicsExampleSource.Ship ship;
+    private Sector sector;
     public PhysicsExample()
     {
         Title = "Physics!";
 
-        universe = new(new Vector2(0f), new Size(UniverseSize, UniverseSize) , new AnchorPoint(0.5f));
+        sectorRect = new(new Vector2(0f), new Size(SectorSize, SectorSize) , new AnchorPoint(0.5f));
+        insideSectorRect= sectorRect.ApplyMargins(0.02f, 0.02f, 0.02f, 0.02f);
 
-        InitCollisionHandler(universe, CollisionRows, CollisionCols);
-        cellSize = UniverseSize / CollisionRows;
+        InitCollisionHandler(sectorRect, CollisionRows, CollisionCols);
+        cellSize = SectorSize / CollisionRows;
         camera = new();
         follower = new(0, 300, 500);
         camera.Follower = follower;
@@ -68,7 +72,13 @@ public class PhysicsExample : ExampleScene
 
         ship = new(50, Colors.PcWarm);
 
-        var insideRect = universe.ApplyMargins(0.02f, 0.02f, 0.02f, 0.02f);
+        
+        sector = new Sector(insideSectorRect);
+        if (CollisionHandler != null)
+        {
+            CollisionHandler.Add(sector);
+        }
+        
     }
     
     protected override void OnActivate(Scene oldScene)
@@ -78,8 +88,8 @@ public class PhysicsExample : ExampleScene
         Colors.OnColorPaletteChanged += OnColorPaletteChanged;
         
         GAMELOOP.Camera = camera;
-        camera.SetZoom(1f);
-        ship.Spawn(universe.Center, Rng.Instance.RandAngleDeg());
+        camera.SetZoom(0.65f);
+        ship.Spawn(sectorRect.Center, Rng.Instance.RandAngleDeg());
         follower.SetTarget(ship);
         follower.Speed = 1000;
         follower.BoundaryDis = new ValueRange(150, 300);
@@ -106,7 +116,7 @@ public class PhysicsExample : ExampleScene
     
     protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
-        
+        //TODO: make camera zoom dynamic based on ship speed (would also disable zoom from input!)
         ship.Update(time, game, gameUi, ui);
     }
 
@@ -130,50 +140,40 @@ public class PhysicsExample : ExampleScene
             var pos = target * scaleFactor;
 
             var sourceRect = new Rect(pos, surface.Rect.Size, AnchorPoint.Center);
-            var targetRect = new Rect(target, surface.Rect.Size, AnchorPoint.Center);
+            var targetRect = new Rect(target, surface.Rect.Size * 2, AnchorPoint.Center);
             surface.Draw(sourceRect, targetRect, ColorRgba.White);
         }
         
         ship.DrawGame(game);
         
-        var universeLineInfo = new LineDrawingInfo(24f, Colors.Warm, LineCapType.Capped, 12);
-        var stripedLineInfo = new LineDrawingInfo(32f, Colors.Warm.SetAlpha(200));
+        var universeLineInfo = new LineDrawingInfo(24f, Colors.Warm, LineCapType.Extended, 0);
+        var stripedLineInfo = new LineDrawingInfo(32f, Colors.Warm.SetAlpha(200), LineCapType.None, 0);
 
-        var topRect = universe.ApplyMargins(0f, 0f, 0f, 0.98f);
-        var bottomRect = universe.ApplyMargins(0f, 0f, 0.98f, 0);
-        var leftRect = universe.ApplyMargins(0f, 0.98f, 0f, 0);
-        var rightRect = universe.ApplyMargins(0.98f, 0f, 0f, 0);
-        var topRectSplit = topRect.SplitH(9);
-        var bottomRectSplit = bottomRect.SplitH(9);
-        var leftRectSplit = leftRect.SplitV(9);
-        var rightRectSplit = rightRect.SplitV(9);
+        var topRect = sectorRect.ApplyMargins(0f, 0f, 0f, 0.98f);
+        var bottomRect = sectorRect.ApplyMargins(0f, 0f, 0.98f, 0);
+        var leftRect = sectorRect.ApplyMargins(0f, 0.98f, 0.02f, 0.02f);
+        var rightRect = sectorRect.ApplyMargins(0.98f, 0f, 0.02f, 0.02f);
+        
+        int splits = (int)(sectorRect.Size.Max() / 2000);
+        if(splits % 2 == 0) splits--; //make sure splits are always odd
+        var topRectSplit = topRect.SplitH(splits);
+        var bottomRectSplit = bottomRect.SplitH(splits);
+        var leftRectSplit = leftRect.SplitV(splits);
+        var rightRectSplit = rightRect.SplitV(splits);
 
         var rotationRect = topRectSplit[0];
 
-        topRect.DrawStriped(250f, 25f, stripedLineInfo );
-        topRect.BottomSegment.Draw(universeLineInfo);
-        
-        bottomRect.DrawStriped(250f, 25f, stripedLineInfo);
-        bottomRect.TopSegment.Draw(universeLineInfo);
-        
         leftRect.DrawStriped(250f, 25f + 90f, stripedLineInfo);
         leftRect.RightSegment.Draw(universeLineInfo);
         
         rightRect.DrawStriped(250f, 25f + 90f, stripedLineInfo);
         rightRect.LeftSegment.Draw(universeLineInfo);
         
-        for (int i = 1; i < topRectSplit.Count - 1; i++)
-        {
-            if(i % 2 == 0) continue;
-            var rect = topRectSplit[i];
-            gameFont.Draw("SECTOR END", rect, 0f, AnchorPoint.Center);
-        }
-        for (int i = 1; i < bottomRectSplit.Count - 1; i++)
-        {
-            if(i % 2 == 0) continue;
-            var rect = bottomRectSplit[i];
-            gameFont.Draw("SECTOR END", rect, 180f, AnchorPoint.Center);
-        }
+        topRect.DrawStriped(250f, 25f, stripedLineInfo );
+        topRect.BottomSegment.Draw(universeLineInfo);
+        
+        bottomRect.DrawStriped(250f, 25f, stripedLineInfo);
+        bottomRect.TopSegment.Draw(universeLineInfo);
         
         for (int i = 1; i < leftRectSplit.Count - 1; i++)
         {
@@ -191,7 +191,21 @@ public class PhysicsExample : ExampleScene
             gameFont.Draw("SECTOR END", movedRotationRect, 90, AnchorPoint.Center);
         }
         
-        universe.DrawLines(universeLineInfo);
+        for (int i = 1; i < topRectSplit.Count - 1; i++)
+        {
+            if(i % 2 == 0) continue;
+            var rect = topRectSplit[i];
+            gameFont.Draw("SECTOR END", rect, 0f, AnchorPoint.Center);
+        }
+        for (int i = 1; i < bottomRectSplit.Count - 1; i++)
+        {
+            if(i % 2 == 0) continue;
+            var rect = bottomRectSplit[i];
+            gameFont.Draw("SECTOR END", rect, 180f, AnchorPoint.Center);
+        }
+        
+        sectorRect.DrawLines(universeLineInfo);
+        // insideSectorRect.DrawLines(universeLineInfo);
     }
 
     protected override void OnDrawGameUIExample(ScreenInfo gameUi)

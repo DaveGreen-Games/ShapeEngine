@@ -1,6 +1,7 @@
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Lib;
 
 namespace Examples.Scenes.ExampleScenes.PhysicsExampleSource;
 
@@ -37,12 +38,13 @@ public class Sector : CollisionObject
         bottomCollider.CollisionLayer = (uint)CollisionLayers.Sector;
         AddCollider(bottomCollider);
         
-        
-        
     }
     public override void DrawGame(ScreenInfo game)
     {
-        
+        foreach (var collider in Colliders)
+        {
+            collider.GetSegmentShape().Draw(12f, Colors.Special, LineCapType.Capped, 12);
+        }
     }
 
     public override void DrawGameUI(ScreenInfo gameUi)
