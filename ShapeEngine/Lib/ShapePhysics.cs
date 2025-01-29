@@ -15,7 +15,7 @@ public static class ShapePhysics
     /// </summary>
     public static float G = 1f;
    
-    // #region OLD
+    #region OLD
     // /// <summary>
     // /// Apply drag to the given value.
     // /// </summary>
@@ -41,12 +41,12 @@ public static class ShapePhysics
     /// <returns>Returns the new velocity.</returns>
     public static Vector2 ApplyDragForce(Vector2 vel, float dragCoefficient, float dt)
     {
-        return ApplyDragFactor(vel, dragCoefficient, dt);
+        // return ApplyDragFactor(vel, dragCoefficient, dt);
         
-        // if (dragCoefficient <= 0f) return vel;
-        // Vector2 dragForce = dragCoefficient * vel * dt;
-        // if (dragForce.LengthSquared() >= vel.LengthSquared()) return new Vector2(0f, 0f);
-        // return vel - dragForce;
+        if (dragCoefficient <= 0f) return vel;
+        Vector2 dragForce = dragCoefficient * vel * dt;
+        if (dragForce.LengthSquared() >= vel.LengthSquared()) return new Vector2(0f, 0f);
+        return vel - dragForce;
     }
     // public static float GetDragForce(float value, float dragCoefficient, float dt)
     // {
@@ -99,73 +99,75 @@ public static class ShapePhysics
     // // }
     // //
     //
-    // #endregion
-    
+     #endregion
+
     #region Tabnine
-    public static (Vector2 newVel1, Vector2 newVel2) ElasticCollision2D(Vector2 vel1, float mass1, Vector2 vel2, float mass2, float r)
-    {
-        float totalMass = mass1 + mass2;
-
-        var velCM = (mass1 * vel1 + mass2 * vel2) / totalMass;
-
-        var relVel = vel1 - vel2;
-        float relVelMag = relVel.Length();
-
-        var normal = relVel / relVelMag;
-        var tangent = new Vector2(-normal.Y, normal.X);
-
-        float velNormal1 = Vector2.Dot(vel1, normal);
-        float velTangent1 = Vector2.Dot(vel1, tangent);
-
-        float velNormal2 = Vector2.Dot(vel2, normal);
-        float velTangent2 = Vector2.Dot(vel2, tangent);
-
-        float newVelNormal1 = (velNormal1 * (mass1 - mass2) + 2f * mass2 * velNormal2) / totalMass;
-        float newVelNormal2 = (velNormal2 * (mass2 - mass1) + 2f * mass1 * velNormal1) / totalMass;
-
-        var newVel1 = (newVelNormal1 * normal + velTangent1 * tangent) * r + velCM;
-        var newVel2 = (newVelNormal2 * normal + velTangent2 * tangent) * r + velCM;
-
-        return (newVel1, newVel2);
-    }
-    public static (Vector2 newVel1, Vector2 newVel2) ElasticCollision2D(Vector2 pos1, Vector2 vel1, float mass1, Vector2 pos2, Vector2 vel2, float mass2, float r)
-    {
-        float totalMass = mass1 + mass2;
-
-        var velCM = (mass1 * vel1 + mass2 * vel2) / totalMass;
-
-        var relVel = vel1 - vel2;
-        // float relVelMag = relVel.Length();
-
-        var normal = (pos2 - pos1).Normalize(); // / (pos2 - pos1).Length();
-        var tangent = new Vector2(-normal.Y, normal.X);
-
-        float velNormal1 = Vector2.Dot(vel1, normal);
-        float velTangent1 = Vector2.Dot(vel1, tangent);
-
-        float velNormal2 = Vector2.Dot(vel2, normal);
-        float velTangent2 = Vector2.Dot(vel2, tangent);
-
-        float newVelNormal1 = (velNormal1 * (mass1 - mass2) + 2f * mass2 * velNormal2) / totalMass;
-        float newVelNormal2 = (velNormal2 * (mass2 - mass1) + 2f * mass1 * velNormal1) / totalMass;
-
-        var newVel1 = (newVelNormal1 * normal + velTangent1 * tangent) * r + velCM;
-        var newVel2 = (newVelNormal2 * normal + velTangent2 * tangent) * r + velCM;
-
-        return (newVel1, newVel2);
-    }
     
-    public static void ElasticCollision2D(this PhysicsObject obj1, PhysicsObject obj2, float r)
-    {
-        var result = ElasticCollision2D(obj1.Transform.Position, obj1.Velocity, obj1.Mass, obj2.Transform.Position, obj2.Velocity, obj2.Mass, r);
-        obj1.Velocity = result.newVel1;
-        obj2.Velocity = result.newVel2;
-    }
-    public static (Vector2 newVel1, Vector2 newVel2) ElasticCollision2D2(this PhysicsObject obj1, PhysicsObject obj2, float r)
-    {
-        var result = ElasticCollision2D(obj1.Transform.Position, obj1.Velocity, obj1.Mass, obj2.Transform.Position, obj2.Velocity, obj2.Mass, r);
-        return (result.newVel1, result.newVel2);
-    }
+    // public static (Vector2 newVel1, Vector2 newVel2) ElasticCollision2D(Vector2 vel1, float mass1, Vector2 vel2, float mass2, float r)
+    // {
+    //     float totalMass = mass1 + mass2;
+    //
+    //     var velCM = (mass1 * vel1 + mass2 * vel2) / totalMass;
+    //
+    //     var relVel = vel1 - vel2;
+    //     float relVelMag = relVel.Length();
+    //
+    //     var normal = relVel / relVelMag;
+    //     var tangent = new Vector2(-normal.Y, normal.X);
+    //
+    //     float velNormal1 = Vector2.Dot(vel1, normal);
+    //     float velTangent1 = Vector2.Dot(vel1, tangent);
+    //
+    //     float velNormal2 = Vector2.Dot(vel2, normal);
+    //     float velTangent2 = Vector2.Dot(vel2, tangent);
+    //
+    //     float newVelNormal1 = (velNormal1 * (mass1 - mass2) + 2f * mass2 * velNormal2) / totalMass;
+    //     float newVelNormal2 = (velNormal2 * (mass2 - mass1) + 2f * mass1 * velNormal1) / totalMass;
+    //
+    //     var newVel1 = (newVelNormal1 * normal + velTangent1 * tangent) * r + velCM;
+    //     var newVel2 = (newVelNormal2 * normal + velTangent2 * tangent) * r + velCM;
+    //
+    //     return (newVel1, newVel2);
+    // }
+    // public static (Vector2 newVel1, Vector2 newVel2) ElasticCollision2D(Vector2 pos1, Vector2 vel1, float mass1, Vector2 pos2, Vector2 vel2, float mass2, float r)
+    // {
+    //     float totalMass = mass1 + mass2;
+    //
+    //     var velCM = (mass1 * vel1 + mass2 * vel2) / totalMass;
+    //
+    //     var relVel = vel1 - vel2;
+    //     // float relVelMag = relVel.Length();
+    //
+    //     var normal = (pos2 - pos1).Normalize(); // / (pos2 - pos1).Length();
+    //     var tangent = new Vector2(-normal.Y, normal.X);
+    //
+    //     float velNormal1 = Vector2.Dot(vel1, normal);
+    //     float velTangent1 = Vector2.Dot(vel1, tangent);
+    //
+    //     float velNormal2 = Vector2.Dot(vel2, normal);
+    //     float velTangent2 = Vector2.Dot(vel2, tangent);
+    //
+    //     float newVelNormal1 = (velNormal1 * (mass1 - mass2) + 2f * mass2 * velNormal2) / totalMass;
+    //     float newVelNormal2 = (velNormal2 * (mass2 - mass1) + 2f * mass1 * velNormal1) / totalMass;
+    //
+    //     var newVel1 = (newVelNormal1 * normal + velTangent1 * tangent) * r + velCM;
+    //     var newVel2 = (newVelNormal2 * normal + velTangent2 * tangent) * r + velCM;
+    //
+    //     return (newVel1, newVel2);
+    // }
+    //
+    // public static void ElasticCollision2D(this PhysicsObject obj1, PhysicsObject obj2, float r)
+    // {
+    //     var result = ElasticCollision2D(obj1.Transform.Position, obj1.Velocity, obj1.Mass, obj2.Transform.Position, obj2.Velocity, obj2.Mass, r);
+    //     obj1.Velocity = result.newVel1;
+    //     obj2.Velocity = result.newVel2;
+    // }
+    // public static (Vector2 newVel1, Vector2 newVel2) ElasticCollision2D2(this PhysicsObject obj1, PhysicsObject obj2, float r)
+    // {
+    //     var result = ElasticCollision2D(obj1.Transform.Position, obj1.Velocity, obj1.Mass, obj2.Transform.Position, obj2.Velocity, obj2.Mass, r);
+    //     return (result.newVel1, result.newVel2);
+    // }
+    //
     #endregion
     
     #region Github Copilot
