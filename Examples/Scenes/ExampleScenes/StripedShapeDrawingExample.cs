@@ -123,7 +123,7 @@ public class StripedShapeDrawingExample : ExampleScene
     
     public StripedShapeDrawingExample()
     {
-        Title = "Striped Shape Drawing";
+        Title = "Shape Striped Drawing";
 
         var nextStaticShapeMb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
         var nextStaticShapeGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);

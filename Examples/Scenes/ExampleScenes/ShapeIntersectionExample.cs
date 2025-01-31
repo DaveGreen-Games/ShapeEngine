@@ -1413,7 +1413,7 @@ public class ShapeIntersectionExample : ExampleScene
     private const float SmallerStripedSpacing = 12f;
     public ShapeIntersectionExample()
     {
-        Title = "Shapes Intersection Example";
+        Title = "Shape Intersection ";
 
         var nextStaticShapeMb = new InputTypeMouseButton(ShapeMouseButton.LEFT);
         var nextStaticShapeGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);

@@ -123,7 +123,7 @@ public class OutlineDrawingExample : ExampleScene
     
     public OutlineDrawingExample()
     {
-        Title = "Outline Drawing Example";
+        Title = "Shape Outline Drawing";
 
         var nextStaticShapeMb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
         var nextStaticShapeGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
