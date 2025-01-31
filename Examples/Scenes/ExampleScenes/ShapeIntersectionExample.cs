@@ -16,7 +16,7 @@ namespace Examples.Scenes.ExampleScenes;
 
 
 
-public class ShapesExample : ExampleScene
+public class ShapeIntersectionExample : ExampleScene
 {
     private const float LineThickness = 4f;
 
@@ -1411,9 +1411,9 @@ public class ShapesExample : ExampleScene
     private float curStripedSpacing = 0f;
     private const float DefaultStripedSpacing = 24f;
     private const float SmallerStripedSpacing = 12f;
-    public ShapesExample()
+    public ShapeIntersectionExample()
     {
-        Title = "Shapes Example";
+        Title = "Shapes Intersection Example";
 
         var nextStaticShapeMb = new InputTypeMouseButton(ShapeMouseButton.LEFT);
         var nextStaticShapeGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);

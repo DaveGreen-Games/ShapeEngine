@@ -39,8 +39,10 @@ namespace Examples.Scenes
         private readonly TextureSurface textureSurface;
         public MainScene()
         {
-            examples.Add(new ShapeDrawingExample());
-            examples.Add(new ShapesExample());
+            examples.Add(new OutlineDrawingExample());
+            examples.Add(new StripedShapeDrawingExample());
+            examples.Add(new ShapeIntersectionExample());
+            examples.Add(new CurveDataExample());
             examples.Add(new PhysicsExample());
             examples.Add(new EndlessSpaceCollision());
             examples.Add(new PolylineInflationExample());

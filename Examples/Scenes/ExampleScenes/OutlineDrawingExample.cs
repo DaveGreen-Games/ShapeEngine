@@ -11,7 +11,7 @@ using ShapeEngine.Random;
 
 namespace Examples.Scenes.ExampleScenes;
 
-public class ShapeDrawingExample : ExampleScene
+public class OutlineDrawingExample : ExampleScene
 {
     private class ValueSlider : ControlNodeSlider
     {
@@ -121,9 +121,9 @@ public class ShapeDrawingExample : ExampleScene
     
     private readonly ValueSlider circleSideSlider;
     
-    public ShapeDrawingExample()
+    public OutlineDrawingExample()
     {
-        Title = "Shape Drawing Example";
+        Title = "Outline Drawing Example";
 
         var nextStaticShapeMb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
         var nextStaticShapeGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
