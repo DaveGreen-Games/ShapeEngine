@@ -1,4 +1,3 @@
-using System.Net.Sockets;
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Lib;
@@ -23,162 +22,45 @@ public abstract class Curve<T>(int capacity) : SortedList<float, T>(capacity)
         return added;
     }
     
+    
     public int GetIndex(float time)
     {
-        if (Count == 0) return -1; // Handle empty list
-        
-        if (time <= 0f) return 0; // Return the first key if time is smaller or equal to 0
-        if (time >= 1f) return Count - 1; // Return the last key if time is greater or equal to 1
-        
-        if (Count == 1)
-        {
-            return 0;
-        }
+        //Godot´s Curve::get_index function used as reference (https://github.com/godotengine/godot/blob/9ee1873ae1e09c217ac24a5800007f63cb895615/scene/resources/curve.cpp#L121)
+        time = ShapeMath.Clamp(time, 0f, 1f);
+        if (Count == 0) return -1;
+        int imin = 0;
+        int imax = Count - 1;
 
-        if (Count == 2)
-        {
-            if (Math.Abs(time - Keys[0]) < Math.Abs(time - Keys[1]))
-            {
-                return 0;
-            }
-            return 1;
-            
-        }
+        while (imax - imin > 1) {
+            int m = (imin + imax) / 2;
 
-        int left = 0;
-        int right = Count - 1;
+            float a = Keys[m];
+            float b = Keys[m + 1];
 
-        if (time <= Keys[left])
-        {
-            return left;
-        }
-        if (time >= Keys[right])
-        {
-            return right;
-        }
-        
-        while (left <= right)
-        {
-            int mid = (left + right) / 2;
-
-            if (Math.Abs(Keys[mid] - time) < 0.000000001f)
-            {
-                return mid;
-            }
-            
-            if (time < Keys[mid])
-            {
-                right = mid - 1;
-            }
-            else
-            {
-                left = mid + 1;
+            if (a < time && b < time) {
+                imin = m;
+            } else if (a > time) {
+                imax = m;
+            } else {
+                return m;
             }
         }
 
-        // After exiting the loop, left and right are the indices of the two closest elements
-        int closestIndex = (Math.Abs(Keys[left] - time) < Math.Abs(Keys[right] - time)) ? left : right;
-        return closestIndex;
-        
-        // while (left <= right)
-        // {
-        //     int mid = left + (right - left) / 2;
-        //
-        //     if (Math.Abs(Keys[mid] - time) < 0.00000001f)
-        //     {
-        //         return mid; // Exact match found
-        //     }
-        //     
-        //     if (Keys[mid] < time)
-        //     {
-        //         left = mid + 1;
-        //     }
-        //     else
-        //     {
-        //         right = mid - 1;
-        //     }
-        // }
-        //
-        // // If no exact match found, return the closest key
-        // if (Math.Abs(time - Keys[left]) < Math.Abs(time - Keys[right]))
-        // {
-        //     return left;
-        // }
-        // return right;
-        
+        // Will happen if the offset is out of bounds.
+        if (time > Keys[imax]) {
+            return imax;
+        }
+        return imin;
     }
     public bool GetValue(float time, out T value)
     {
-        value = GetDefaultValue();
-        if (Count == 0) return false; // Handle empty list
-
-        if (time <= 0f)
+        var index = GetIndex(time);
+        if (index < 0)
         {
-            value = Values[0];
-            return true;
-        }
-
-        if (time >= 1f)
-        {
-            value = Values[Count - 1];
-            return true;
-        }
-        
-        if (Count == 1)
-        {
-            value = Values[0];
+            value = GetDefaultValue();
             return false;
         }
-
-        if (Count == 2)
-        {
-            if (Math.Abs(time - Keys[0]) < Math.Abs(time - Keys[1]))
-            {
-                value = Values[0];
-                return true;
-            }
-            
-            value = Values[1];
-            return true;
-            
-        }
-
-        int left = 0;
-        int right = Count - 1;
-
-        if (time <= Keys[left])
-        {
-            value = Values[left];
-            return true;
-        }
-        if (time >= Keys[right])
-        {
-            value = Values[right];
-            return true;
-        }
-        
-        while (left <= right)
-        {
-            int mid = (left + right) / 2;
-
-            if (Math.Abs(Keys[mid] - time) < 0.000000001f)
-            {
-                value = Values[mid];
-                return true;
-            }
-            
-            if (time < Keys[mid])
-            {
-                right = mid - 1;
-            }
-            else
-            {
-                left = mid + 1;
-            }
-        }
-        
-        int closestIndex = (Math.Abs(Keys[left] - time) < Math.Abs(Keys[right] - time)) ? left : right;
-        value = Values[closestIndex];
+        value = Values[GetIndex(time)];
         return true;
     }
 
@@ -251,12 +133,6 @@ public abstract class Curve<T>(int capacity) : SortedList<float, T>(capacity)
             return true;
         }
 
-        if (Count == 2)
-        {
-            value = Interpolate(Values[0], Values[1], time);
-            return true;
-        }
-
         if (time == 0f)
         {
             value = Values[0];
@@ -268,23 +144,27 @@ public abstract class Curve<T>(int capacity) : SortedList<float, T>(capacity)
             value = Values[Count - 1];
             return true;
         }
-
+        
         var index1 = GetIndex(time);
-        var v1 = Values[index1];
+        if (index1 < 0) return false;
         if (index1 == Count - 1)
         {
-            value = Interpolate(v1, GetDefaultValue(), time);
+            value = Values[Count - 1];
             return true;
         }
         
+        
+        var v1 = Values[index1];
         var index2 = index1 + 1;
         var v2 = Values[index2];
-        value = Interpolate(v1, v2, time);
+        value = Interpolate(v1, v2, GetSampleTime(index1, index2, time));
+        // Console.WriteLine($"I1: {index1}, I2: {index2}, k1: {Keys[index1]}, k2: {Keys[index2]}, v1: {v1}, v2: {v2}, t: {time}, st: {time - Keys[index1]}, result: {value}");
         
         return true;
     }
+    private float GetSampleTime(int index1, int index2, float time) => ShapeMath.GetFactor(time, Keys[index1], Keys[index2]);
     
-    public List<T>? Sample(params float[] times)
+    public List<T>? SampleMany(params float[] times)
     {
         if(times.Length == 0) return null;
         var result = new List<T>(times.Length);
@@ -325,6 +205,7 @@ public class CurveFloat(int capacity) : Curve<float>(capacity)
 
 public class CurveVector2(int capacity) : Curve<Vector2>(capacity)
 {
+    
     protected override Vector2 Interpolate(Vector2 a, Vector2 b, float time)
     {
         return a.Lerp(b, time);

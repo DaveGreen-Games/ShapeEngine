@@ -32,6 +32,49 @@ public class PhysicsExample : ExampleScene
 
     private PhysicsExampleSource.Ship ship;
     private Sector sector;
+    
+    public CurveFloat testCurve = new(10)
+    {
+        (0f,     0),
+        (0.05f,  -300),
+        (0.15f,  0),
+        (0.3f,   150),
+        (0.49f,  50),
+        (0.51f,  -50),
+        (0.7f,   -250),
+        (0.85f,  50),
+        (0.95f,  100),
+        (1f,     0),
+    };
+    
+    public CurveVector2 testCurve2 = new(10)
+    {
+        (0f,     new Vector2(-1000, 0) ),
+        (0.05f,  new Vector2(-500, -250) ),
+        (0.15f,  new Vector2(-300, -150) ),
+        (0.3f,   new Vector2(-100, 50) ),
+        (0.49f,  new Vector2(50, 100) ),
+        (0.51f,  new Vector2(250, 200) ),
+        (0.7f,   new Vector2(500, 50) ),
+        (0.85f,  new Vector2(800, 150) ),
+        (0.95f,  new Vector2(900, 300) ),
+        (1f,     new Vector2(1000, 0) ),
+    };
+    
+    public CurveColor testCurve3 = new(10)
+    {
+        (0f,     Colors.Warm),
+        (0.05f,  Colors.Special),
+        (0.15f,  Colors.Light),
+        (0.3f,   Colors.Warm),
+        (0.49f,  Colors.Cold),
+        (0.51f,  Colors.Highlight),
+        (0.7f,   Colors.Special),
+        (0.85f,  Colors.Cold),
+        (0.95f,  Colors.Special2),
+        (1f,     Colors.Warm),
+    };
+    
     public PhysicsExample()
     {
         Title = "Physics!";
@@ -117,6 +160,7 @@ public class PhysicsExample : ExampleScene
     protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
         //TODO: make camera zoom dynamic based on ship speed (would also disable zoom from input!)
+        //TODO: make camera follow the ship faster the faster the ship gets ?
         ship.Update(time, game, gameUi, ui);
     }
 
@@ -206,6 +250,143 @@ public class PhysicsExample : ExampleScene
         
         sectorRect.DrawLines(universeLineInfo);
         // insideSectorRect.DrawLines(universeLineInfo);
+
+        
+        DrawCurveFloat(game, Colors.Warm);
+        DrawCurveVector2(game, Colors.Cold);
+        // DrawCurveColor(game);
+        
+    }
+
+    private void DrawCurveFloat(ScreenInfo game, ColorRgba curveColor)
+    {
+        var r = game.Area.ApplyMargins(0.3f, 0.3f, 0.25f, 0.7f);
+        
+        var mousePosX = game.MousePos.X + game.Area.Width * 0.5f;
+        float curveTime = mousePosX/ game.Area.Width;
+        curveTime = ShapeMath.Clamp(curveTime, 0f, 1f);
+        
+        var controlPoint = new Vector2(-1000 + curveTime * 2000, 0);
+        controlPoint.Draw(20, Colors.Warm, 32);
+        
+        if (testCurve.Sample(curveTime, out var value))
+        {
+            var p = new Vector2(-1000 + curveTime * 2000, value);
+            p.Draw(20, Colors.Light, 32);
+        }
+
+        var curIndex = testCurve.GetIndex(curveTime);
+        for (int i = 0; i < testCurve.Count; i++)
+        {
+            var k = testCurve.Keys[i];
+            var v = testCurve.Values[i];
+            var point = new Vector2(-1000 + k * 2000, v);
+            if (i < testCurve.Count - 1)
+            {
+                var nextK = testCurve.Keys[i + 1];
+                var nextV = testCurve.Values[i + 1];
+                var next = new Vector2(-1000 + nextK * 2000, nextV);
+                ShapeDrawing.DrawSegment(point, next, 4, curveColor, LineCapType.CappedExtended, 12);
+            }
+
+            if (i == curIndex)
+            {
+                point.Draw(30, curveColor, 32);
+            }
+            else
+            {
+                point.Draw(10, curveColor, 32);
+            }
+            
+        }
+    }
+    private void DrawCurveVector2(ScreenInfo game, ColorRgba curveColor)
+    {
+        var mousePosX = game.MousePos.X + game.Area.Width * 0.5f;
+        float curveTime = mousePosX/ game.Area.Width;
+        curveTime = ShapeMath.Clamp(curveTime, 0f, 1f);
+        
+        var controlPoint = new Vector2(-1000 + curveTime * 2000, 0);
+        controlPoint.Draw(20, Colors.Warm, 32);
+        
+        if (testCurve2.Sample(curveTime, out var value))
+        {
+            value.Draw(20, Colors.Light, 32);
+        }
+
+        var curIndex = testCurve2.GetIndex(curveTime);
+        for (int i = 0; i < testCurve2.Count; i++)
+        {
+            var v = testCurve2.Values[i];
+            if (i < testCurve2.Count - 1)
+            {
+                var nextV = testCurve2.Values[i + 1];
+                ShapeDrawing.DrawSegment(v, nextV, 4, curveColor, LineCapType.CappedExtended, 12);
+            }
+
+            if (i == curIndex)
+            {
+                v.Draw(30, curveColor, 32);
+            }
+            else
+            {
+                v.Draw(10, curveColor, 32);
+            }
+            
+        }
+    }
+    private void DrawCurveColor(ScreenInfo game)
+    {
+        var mousePosX = game.MousePos.X + game.Area.Width * 0.5f;
+        float curveTime = mousePosX/ game.Area.Width;
+        curveTime = ShapeMath.Clamp(curveTime, 0f, 1f);
+        
+        float rectHeight = 500;
+        float startX = -1000;
+        float totolWidth = 2000;
+        
+        var curIndex = testCurve3.GetIndex(curveTime);
+        for (int i = 0; i < testCurve3.Count; i++)
+        {
+            var k = testCurve3.Keys[i];
+            var v = testCurve3.Values[i];
+            var cur = i == curIndex;
+            if (i == testCurve3.Count - 1)
+            {
+                var w = totolWidth - k * totolWidth;
+                var x = startX + k * totolWidth;
+                var tl = new Vector2(x, -rectHeight / 2);
+                var br = new Vector2(x + w,  rectHeight / 2);
+                var r = new Rect(tl, br);
+                r.Draw(v);
+                if(cur)r.DrawLines(4f, Colors.Light);
+            }
+            else
+            {
+                var k2 = testCurve3.Keys[i + 1];
+                var curW = k2 * totolWidth - k * totolWidth;
+                var curX = startX + k * totolWidth;
+                var curTl = new Vector2(curX, -rectHeight / 2);
+                var curBr = new Vector2(curX + curW,  rectHeight / 2);
+                var curR = new Rect(curTl, curBr);
+                curR.Draw(v);
+                if(cur)curR.DrawLines(4f, Colors.Light);
+            }
+            
+            
+        }
+        
+        var mainRect = game.Area.ApplyMargins(0.3f, 0.3f, 0.25f, 0.7f);
+        
+        var controlPoint = new Vector2(-1000 + curveTime * 2000, 0);
+        controlPoint.Draw(20, Colors.Warm, 32);
+        
+        if (testCurve3.Sample(curveTime, out var value))
+        {
+            mainRect.Draw(value);
+        }
+
+        
     }
 
     protected override void OnDrawGameUIExample(ScreenInfo gameUi)
