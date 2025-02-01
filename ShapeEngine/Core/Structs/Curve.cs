@@ -147,9 +147,18 @@ public abstract class Curve<T>(int capacity) : SortedList<float, T>(capacity)
         
         var index1 = GetIndex(time);
         if (index1 < 0) return false;
-        if (index1 == Count - 1)
+        
+        //sample index is the last one, therefore we can not interpolate and just return the last value
+        if (index1 == Count - 1) 
         {
             value = Values[Count - 1];
+            return true;
+        }
+        
+        //sample index is the first one and the sample time is before the first key, therefore we can not interpolate and just return the first value
+        if (index1 == 0 && time < Keys[0]) 
+        {
+            value = Values[0];
             return true;
         }
         

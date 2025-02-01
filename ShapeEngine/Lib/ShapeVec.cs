@@ -8,6 +8,12 @@ namespace ShapeEngine.Lib
     public static class ShapeVec
     {
 
+        public static string ToString(this Vector2 v)
+        {
+            
+            return $"<{v.X:F2} / {v.Y:F2}>";
+        }
+
         public static PolarCoordinates ToPolarCoordinates(this Vector2 v) => new(v);
         
         public static bool IsNormalized(this Vector2 v) => Math.Abs(v.LengthSquared() - 1f) < 0.0000001f;
