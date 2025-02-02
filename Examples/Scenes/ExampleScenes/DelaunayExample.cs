@@ -92,6 +92,7 @@ namespace Examples.Scenes.ExampleScenes
             closeTriangleIndex = -1;
 
             var result = points.GetClosestPoint(mousePosGame, out float closestDistanceSquared, out int index);
+            
             if(closestDistanceSquared >= 0  && closestDistanceSquared  <= pointDistanceSquared)
             {
                 //rmb deletes point
@@ -100,14 +101,10 @@ namespace Examples.Scenes.ExampleScenes
             else
             {
                 //rmb subdivides triangle
-                var triangleResult = curTriangulation.GetClosestPoint(mousePosGame, out float disSquared, out int triangleIndex, out int segmentIndex);
-                if (triangleResult.Valid)
+                var triangleResult = curTriangulation.ContainsPoint(mousePosGame, out int triangleIndex);
+                if (triangleResult)//.Valid)
                 {
-                    var triangle = curTriangulation[triangleIndex];
-                    if(triangle.ContainsPoint(mousePosGame))
-                    {
-                        closeTriangleIndex = triangleIndex; //curTriangulation.IndexOf(triangle);
-                    }
+                    closeTriangleIndex = triangleIndex;
                 }
             }
 
