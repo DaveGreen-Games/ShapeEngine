@@ -4,6 +4,7 @@ using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Lib.Drawing;
 
 namespace ShapeEngine.Core
 {

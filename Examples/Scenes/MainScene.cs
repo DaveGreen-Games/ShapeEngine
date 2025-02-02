@@ -10,7 +10,7 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
 using ShapeEngine.Persistent;
-using ShapeEngine.Random;
+using ShapeEngine.Lib.Drawing;
 using ShapeEngine.Text;
 
 namespace Examples.Scenes

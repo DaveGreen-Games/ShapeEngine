@@ -7,6 +7,7 @@ using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
+using ShapeEngine.Lib.Drawing;
 using ShapeEngine.Text;
 
 

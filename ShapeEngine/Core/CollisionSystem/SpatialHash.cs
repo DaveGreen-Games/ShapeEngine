@@ -4,6 +4,7 @@ using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Lib;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Lib.Drawing;
 
 namespace ShapeEngine.Core.CollisionSystem
 {

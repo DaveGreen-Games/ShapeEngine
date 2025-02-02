@@ -3,6 +3,7 @@ using ShapeEngine.Color;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
+using ShapeEngine.Lib.Drawing;
 using ShapeEngine.Random;
 namespace ShapeEngine.Core.Shapes;
 

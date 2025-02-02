@@ -2,6 +2,7 @@ using System.Numerics;
 using Examples.PayloadSystem;
 using ShapeEngine.Color;
 using ShapeEngine.Lib;
+using ShapeEngine.Lib.Drawing;
 using ShapeEngine.Random;
 
 namespace Examples.Scenes.ExampleScenes.EndlessSpaceExampleSource;
@@ -27,6 +28,6 @@ internal class PayloadTargetingSystemBarrage : IPayloadTargetingSystem
 
     public void DrawTargetArea(float f, ColorRgba color)
     {
-        ShapeDrawing.DrawCircleLines(curPosition, radius * f, 6f, color);
+        CircleDrawing.DrawCircleLines(curPosition, radius * f, 6f, color);
     }
 }

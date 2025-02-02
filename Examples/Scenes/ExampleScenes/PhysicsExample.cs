@@ -3,14 +3,13 @@ using Examples.Scenes.ExampleScenes.PhysicsExampleSource;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
-using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Input;
 using ShapeEngine.Lib;
 using ShapeEngine.Random;
 using ShapeEngine.Screen;
 using ShapeEngine.Text;
+using ShapeEngine.Lib.Drawing;
 
 namespace Examples.Scenes.ExampleScenes;
 
@@ -65,7 +64,7 @@ public class PhysicsExample : ExampleScene
                 var y = Rng.Instance.RandF(0f, 2048);
                 var pos = new Vector2(x, y);
                 var size = sizeRange.Rand();
-                ShapeDrawing.DrawCircle(pos, size, color);
+                CircleDrawing.DrawCircle(pos, size, color);
             }
             t.EndDraw();
             

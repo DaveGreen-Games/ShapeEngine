@@ -3,6 +3,7 @@ using ShapeEngine.Color;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
+using ShapeEngine.Lib.Drawing;
 
 namespace ShapeEngine.Pathfinding;
 

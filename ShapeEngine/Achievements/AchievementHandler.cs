@@ -3,6 +3,7 @@ using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Lib;
 using ShapeEngine.Core.Shapes;
+using ShapeEngine.Lib.Drawing;
 using ShapeEngine.Text;
 
 namespace ShapeEngine.Achievements
@@ -122,7 +123,7 @@ namespace ShapeEngine.Achievements
             Rect leftTop = new(left.X, left.Y, left.Width, left.Height * 0.5f);
             Rect leftBottom = new(left.X, left.Y +left.Height * 0.5f, left.Width, left.Height * 0.5f);
             Rect right = new(rect.X + rect.Width * 0.28f, rect.Y, rect.Width * 0.72f, rect.Height);
-            ShapeDrawing.DrawBar(rect, GetGoalPercentage(), progressColorRgba, bgColorRgba);
+            rect.DrawBar(GetGoalPercentage(), progressColorRgba, bgColorRgba);
             if (achieved) rect.DrawLines(3f, achievedColorRgba);// SDrawing.DrawRect(rect, new(0f), 0f, 3f, achievedColor);
             int value = stat.value;
             int max = end;

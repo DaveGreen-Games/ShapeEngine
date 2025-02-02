@@ -1,13 +1,9 @@
-﻿using Raylib_cs;
-using ShapeEngine.Core;
-using ShapeEngine.Lib;
+﻿using ShapeEngine.Core;
 using System.Numerics;
-using ShapeEngine.Color;
-using ShapeEngine.Core.CollisionSystem;
-using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
+using ShapeEngine.Lib.Drawing;
 using ShapeEngine.Random;
 
 namespace Examples.Scenes.ExampleScenes
@@ -58,7 +54,7 @@ namespace Examples.Scenes.ExampleScenes
                 _ => Colors.Medium
             };
 
-            ShapeDrawing.DrawCircleFast(Transform.Position, Transform.ScaledSize.Width, color);
+            CircleDrawing.DrawCircleFast(Transform.Position, Transform.ScaledSize.Width, color);
         }
 
         public override void DrawGameUI(ScreenInfo gameUi)

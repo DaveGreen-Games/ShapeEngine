@@ -4,6 +4,7 @@ using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
+using ShapeEngine.Lib.Drawing;
 
 namespace Examples.Scenes.ExampleScenes.EndlessSpaceExampleSource;
 
@@ -59,7 +60,7 @@ internal class ExplosivePayload : IPayload
         var f = 1f - (SmokeTimer / Info.SmokeDuration);
         var color = Colors.Warm.Lerp(Colors.PcMedium.ColorRgba.SetAlpha(50), f);
         var size = ShapeMath.LerpFloat(Info.Radius * 0.5f, Info.Radius * 3f, f);
-        ShapeDrawing.DrawCircle(CurPosition, size, color, 24);
+        CircleDrawing.DrawCircle(CurPosition, size, color, 24);
     }
     
     public bool IsFinished() => finished;
@@ -95,8 +96,8 @@ internal class ExplosivePayload : IPayload
         if (travelTimer > 0f)
         {
             var f = TravelF;
-            ShapeDrawing.DrawCircle(TargetLocation, 12f, Colors.PcCold.ColorRgba, 24);
-            ShapeDrawing.DrawCircleLines(TargetLocation, Info.Radius * (1f - f), 6f, Colors.PcMedium.ColorRgba, 6);
+            CircleDrawing.DrawCircle(TargetLocation, 12f, Colors.PcCold.ColorRgba, 24);
+            CircleDrawing.DrawCircleLines(TargetLocation, Info.Radius * (1f - f), 6f, Colors.PcMedium.ColorRgba, 6);
             
             // var f = TravelF;
             // ShapeDrawing.DrawCircleLines(targetLocation, Size, 6f, Colors.Dark, 6);
@@ -109,7 +110,7 @@ internal class ExplosivePayload : IPayload
             var dir = w.Normalize();
             var lineStart = lineEnd - dir * 800f;
             
-            ShapeDrawing.DrawSegment(lineStart, lineEnd, 24f * f, Colors.PcCold.ColorRgba);
+            SegmentDrawing.DrawSegment(lineStart, lineEnd, 24f * f, Colors.PcCold.ColorRgba);
         }
         
         if (SmokeTimer > 0f)

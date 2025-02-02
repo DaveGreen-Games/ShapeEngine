@@ -5,6 +5,7 @@ using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
 using ShapeEngine.Random;
+using ShapeEngine.Lib.Drawing;
 
 namespace Examples.Scenes.ExampleScenes.EndlessSpaceExampleSource;
 
@@ -142,8 +143,8 @@ internal class Autogun
             var targetPos = curTarget.GetBoundingBox().Center;
             pos.Draw(5f, c);
             targetPos.Draw(5f, c);
-            ShapeDrawing.DrawSegment(pos, pos + ShapeVec.VecFromAngleRad(aimingRotRad) * 50, new LineDrawingInfo(8f, c));
-            ShapeDrawing.DrawSegment(pos, targetPos, new LineDrawingInfo(2f, c));
+            SegmentDrawing.DrawSegment(pos, pos + ShapeVec.VecFromAngleRad(aimingRotRad) * 50, new LineDrawingInfo(8f, c));
+            SegmentDrawing.DrawSegment(pos, targetPos, new LineDrawingInfo(2f, c));
             
         }
     }

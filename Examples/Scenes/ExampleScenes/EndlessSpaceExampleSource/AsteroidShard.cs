@@ -2,7 +2,7 @@ using System.Numerics;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Lib;
 using ShapeEngine.Random;
-
+using ShapeEngine.Lib.Drawing;
 namespace Examples.Scenes.ExampleScenes.EndlessSpaceExampleSource;
 
 internal class AsteroidShard
