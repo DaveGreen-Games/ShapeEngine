@@ -4,18 +4,18 @@ using ShapeEngine.Color;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 
-namespace ShapeEngine.Lib.Drawing;
+namespace ShapeEngine.StaticLib.Drawing;
 
-public static class TriangleDrawing
+public static class ShapeTriangleDrawing
 {
     public static void DrawTriangle(Vector2 a, Vector2 b, Vector2 c, ColorRgba color) => Raylib.DrawTriangle(a, b, c, color.ToRayColor());
 
     
     public static void DrawTriangleLines(Vector2 a, Vector2 b, Vector2 c, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
-        SegmentDrawing.DrawSegment(a, b, lineThickness, color, capType, capPoints);
-        SegmentDrawing.DrawSegment(b, c, lineThickness, color, capType, capPoints);
-        SegmentDrawing.DrawSegment(c, a, lineThickness, color, capType, capPoints);
+        ShapeSegmentDrawing.DrawSegment(a, b, lineThickness, color, capType, capPoints);
+        ShapeSegmentDrawing.DrawSegment(b, c, lineThickness, color, capType, capPoints);
+        ShapeSegmentDrawing.DrawSegment(c, a, lineThickness, color, capType, capPoints);
     }
     public static void DrawTriangleLines(Vector2 a, Vector2 b, Vector2 c, float lineThickness, ColorRgba color, float sideLengthFactor, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
@@ -28,15 +28,15 @@ public static class TriangleDrawing
         var side3 = a - c;
         var end3 = c + side3 * sideLengthFactor;
         
-        SegmentDrawing.DrawSegment(a, end1, lineThickness, color, capType, capPoints);
-        SegmentDrawing.DrawSegment(b, end2, lineThickness, color, capType, capPoints);
-        SegmentDrawing.DrawSegment(c, end3, lineThickness, color, capType, capPoints);
+        ShapeSegmentDrawing.DrawSegment(a, end1, lineThickness, color, capType, capPoints);
+        ShapeSegmentDrawing.DrawSegment(b, end2, lineThickness, color, capType, capPoints);
+        ShapeSegmentDrawing.DrawSegment(c, end3, lineThickness, color, capType, capPoints);
     }
     public static void DrawTriangleLines(Vector2 a, Vector2 b, Vector2 c, LineDrawingInfo lineInfo)
     {
-        SegmentDrawing.DrawSegment(a, b, lineInfo);
-        SegmentDrawing.DrawSegment(b, c, lineInfo);
-        SegmentDrawing.DrawSegment(c, a, lineInfo);
+        ShapeSegmentDrawing.DrawSegment(a, b, lineInfo);
+        ShapeSegmentDrawing.DrawSegment(b, c, lineInfo);
+        ShapeSegmentDrawing.DrawSegment(c, a, lineInfo);
         
     }
 
@@ -62,9 +62,9 @@ public static class TriangleDrawing
     
     public static void DrawVertices(this Triangle t, float vertexRadius, ColorRgba color, int circleSegments = 8)
     {
-        CircleDrawing.DrawCircle(t.A, vertexRadius, color, circleSegments);
-        CircleDrawing.DrawCircle(t.B, vertexRadius, color, circleSegments);
-        CircleDrawing.DrawCircle(t.C, vertexRadius, color, circleSegments);
+        ShapeCircleDrawing.DrawCircle(t.A, vertexRadius, color, circleSegments);
+        ShapeCircleDrawing.DrawCircle(t.B, vertexRadius, color, circleSegments);
+        ShapeCircleDrawing.DrawCircle(t.C, vertexRadius, color, circleSegments);
     }
     
     public static void Draw(this Triangulation triangles, ColorRgba color) { foreach (var t in triangles) t.Draw(color); }
@@ -229,9 +229,9 @@ public static class TriangleDrawing
         
         if(rotDeg != 0) t = t.ChangeRotation(rotDeg * ShapeMath.DEGTORAD, rotOrigin);
         
-        SegmentDrawing.DrawSegment(t.A, t.B, lineInfo, sideScaleFactor, sideScaleOrigin);
-        SegmentDrawing.DrawSegment(t.B, t.C, lineInfo, sideScaleFactor, sideScaleOrigin);
-        SegmentDrawing.DrawSegment(t.C, t.A, lineInfo, sideScaleFactor, sideScaleOrigin);
+        ShapeSegmentDrawing.DrawSegment(t.A, t.B, lineInfo, sideScaleFactor, sideScaleOrigin);
+        ShapeSegmentDrawing.DrawSegment(t.B, t.C, lineInfo, sideScaleFactor, sideScaleOrigin);
+        ShapeSegmentDrawing.DrawSegment(t.C, t.A, lineInfo, sideScaleFactor, sideScaleOrigin);
         
     }
     private static void DrawTriangleLinesPercentageHelper(Vector2 p1, Vector2 p2, Vector2 p3, float percentage, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
@@ -248,11 +248,11 @@ public static class TriangleDrawing
         {
             float p = perimeterToDraw / l1;
             nextP = curP.Lerp(nextP, p);
-            SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color);
+            ShapeSegmentDrawing.DrawSegment(curP, nextP, lineThickness, color);
             return;
         }
                 
-        SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+        ShapeSegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
         perimeterToDraw -= l1;
                 
         // Draw second segment
@@ -262,11 +262,11 @@ public static class TriangleDrawing
         {
             float p = perimeterToDraw / l2;
             nextP = curP.Lerp(nextP, p);
-            SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+            ShapeSegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
             return;
         }
                 
-        SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+        ShapeSegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
         perimeterToDraw -= l2;
                 
         // Draw third segment
@@ -278,7 +278,7 @@ public static class TriangleDrawing
             nextP = curP.Lerp(nextP, p);
         }
         
-        SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+        ShapeSegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
        
     }
 

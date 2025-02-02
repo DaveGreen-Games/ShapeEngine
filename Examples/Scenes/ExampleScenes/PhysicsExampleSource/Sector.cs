@@ -1,7 +1,7 @@
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Lib.Drawing;
+using ShapeEngine.StaticLib.Drawing;
 
 namespace Examples.Scenes.ExampleScenes.PhysicsExampleSource;
 

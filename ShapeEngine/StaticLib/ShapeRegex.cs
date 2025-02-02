@@ -1,7 +1,7 @@
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace ShapeEngine.Lib;
+namespace ShapeEngine.StaticLib;
 
 public static class ShapeRegex
 {

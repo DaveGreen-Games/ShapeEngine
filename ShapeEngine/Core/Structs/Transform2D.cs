@@ -3,7 +3,7 @@ using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Shapes;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Core.Structs;
 

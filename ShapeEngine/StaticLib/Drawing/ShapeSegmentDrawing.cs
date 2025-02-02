@@ -5,9 +5,9 @@ using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Random;
 
-namespace ShapeEngine.Lib.Drawing;
+namespace ShapeEngine.StaticLib.Drawing;
 
-public static class SegmentDrawing
+public static class ShapeSegmentDrawing
 {
     
     public static void DrawSegment(Vector2 start, Vector2 end, float thickness, ColorRgba color, float sideLengthFactor, LineCapType capType = LineCapType.None, int capPoints = 0)

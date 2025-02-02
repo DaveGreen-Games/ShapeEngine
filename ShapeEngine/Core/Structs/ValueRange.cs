@@ -1,5 +1,5 @@
 using System.Numerics;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 using ShapeEngine.Random;
 
 namespace ShapeEngine.Core.Structs;

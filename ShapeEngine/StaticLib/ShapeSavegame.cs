@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using ShapeEngine.Core;
 
-namespace ShapeEngine.Lib
+namespace ShapeEngine.StaticLib
 {
     public static class ShapeSavegame
     {

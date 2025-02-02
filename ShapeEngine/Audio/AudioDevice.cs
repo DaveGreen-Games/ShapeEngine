@@ -2,7 +2,7 @@
 using ShapeEngine.Screen;
 using System.Numerics;
 using ShapeEngine.Core;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 using ShapeEngine.Core.Shapes;
 
 namespace ShapeEngine.Audio;

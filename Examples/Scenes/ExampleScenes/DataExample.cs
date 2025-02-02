@@ -5,8 +5,8 @@ using ShapeEngine.Core;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
-using ShapeEngine.Lib;
-using ShapeEngine.Lib.Drawing;
+using ShapeEngine.StaticLib;
+using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Random;
 using ShapeEngine.Screen;
 using ShapeEngine.Text;
@@ -46,7 +46,7 @@ public class DataExample : ExampleScene
             var startC = Colors.Warm;
             var endC = Colors.Medium.SetAlpha(150);
             var c = startC.Lerp(endC, f);
-            CircleDrawing.DrawCircle(pos, ShapeMath.LerpFloat(size * 0.5f, size, f), c, 24);
+            ShapeCircleDrawing.DrawCircle(pos, ShapeMath.LerpFloat(size * 0.5f, size, f), c, 24);
         }
     }
     private class Planet
@@ -272,7 +272,7 @@ public class DataExample : ExampleScene
     protected override void OnDrawGameExample(ScreenInfo game)
     {
         
-        CircleDrawing.DrawCircleLines(planet.Shape.Center, AsteroidSpawnRadius, 12f, Colors.Highlight, 4f);
+        ShapeCircleDrawing.DrawCircleLines(planet.Shape.Center, AsteroidSpawnRadius, 12f, Colors.Highlight, 4f);
         
         planet.Draw();
         planet.DrawGameUI(textFont);

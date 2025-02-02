@@ -1,5 +1,5 @@
 using ShapeEngine.Core;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 using ShapeEngine.Screen;
 using System.Numerics;
 using Clipper2Lib;
@@ -9,7 +9,7 @@ using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
-using ShapeEngine.Lib.Drawing;
+using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Pathfinding;
 using Color = System.Drawing.Color;
 using Path = ShapeEngine.Pathfinding.Path;
@@ -445,7 +445,7 @@ public class PathfinderExample2 : ExampleScene
             if (!body.GetBoundingBox().OverlapShape(cameraRect)) return;
             // body. DrawLines(body.Radius * 0.25f, Colors.Special);
             var c = Predictor ? Colors.PcHighlight : Colors.PcSpecial;
-            CircleDrawing.DrawCircleFast(body.Center, body.Radius, c.ColorRgba);
+            ShapeCircleDrawing.DrawCircleFast(body.Center, body.Radius, c.ColorRgba);
 
 
             // if (Predictor)
@@ -1147,7 +1147,7 @@ public class PathfinderExample2 : ExampleScene
                 outerBoundary.DrawLines(thickness, outerColor);
             }
             
-            CircleDrawing.DrawCircleLines(ship.GetChasePosition(), MinPathRequestDistance, 8f, Colors.PcCold.ColorRgba);
+            ShapeCircleDrawing.DrawCircleLines(ship.GetChasePosition(), MinPathRequestDistance, 8f, Colors.PcCold.ColorRgba);
             // ShapeDrawing.DrawCircleLines(ship.GetChasePosition(), Chaser.MaxPathRequestDistance, 8f, new ColorRgba(Color.Aqua));
         }
 

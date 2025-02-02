@@ -1,6 +1,6 @@
 using Raylib_cs;
 using ShapeEngine.Core;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 using ShapeEngine.Screen;
 using System.Numerics;
 using ShapeEngine.Color;

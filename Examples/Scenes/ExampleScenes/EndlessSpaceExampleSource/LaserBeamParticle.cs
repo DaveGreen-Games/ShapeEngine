@@ -1,7 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Color;
-using ShapeEngine.Lib;
-using ShapeEngine.Lib.Drawing;
+using ShapeEngine.StaticLib;
+using ShapeEngine.StaticLib.Drawing;
 
 namespace Examples.Scenes.ExampleScenes.EndlessSpaceExampleSource;
 
@@ -46,6 +46,6 @@ internal class LaserBeamParticle
         var color = paletteColor.ColorRgba;
         var s = ShapeMath.LerpFloat(size, size * 0.25f, lifetimeF);
         var c = color.Lerp(color.ChangeAlpha(150), lifetimeF);
-        CircleDrawing.DrawCircleFast(position, s, c);
+        ShapeCircleDrawing.DrawCircleFast(position, s, c);
     }
 }

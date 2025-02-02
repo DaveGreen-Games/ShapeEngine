@@ -2,7 +2,7 @@
 
 using System.Numerics;
 using Raylib_cs;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 using ShapeEngine.Persistent;
 using ShapeEngine.Core;
 using Examples.Scenes;
@@ -12,7 +12,7 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Screen;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
-using ShapeEngine.Lib.Drawing;
+using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Random;
 using ShapeEngine.Text;
 using ShapeEngine.UI;
@@ -507,9 +507,9 @@ namespace Examples
             var circleCenter = tip + dir * size * 2;
             var left = circleCenter + new Vector2(-1, 0) * size;
             var top = circleCenter + new Vector2(0, -1) * size;
-            SegmentDrawing.DrawSegment(tip, left, 1f, colorRgba, LineCapType.CappedExtended, 3);
-            SegmentDrawing.DrawSegment(tip, top, 1f, colorRgba, LineCapType.CappedExtended, 3);
-            CircleDrawing.DrawCircleSectorLines(circleCenter, size, 180, 270, 1f, colorRgba, false, 4f);
+            ShapeSegmentDrawing.DrawSegment(tip, left, 1f, colorRgba, LineCapType.CappedExtended, 3);
+            ShapeSegmentDrawing.DrawSegment(tip, top, 1f, colorRgba, LineCapType.CappedExtended, 3);
+            ShapeCircleDrawing.DrawCircleSectorLines(circleCenter, size, 180, 270, 1f, colorRgba, false, 4f);
         }
 
         protected override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)

@@ -5,9 +5,9 @@ using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 
-namespace ShapeEngine.Lib.Drawing;
+namespace ShapeEngine.StaticLib.Drawing;
 
-public static class CustomDrawing
+public static class ShapeCustomDrawing
 {
     #region Pixel
     public static void DrawPixel(Vector2 pos, ColorRgba color) => Raylib.DrawPixelV(pos, color.ToRayColor()); 
@@ -21,8 +21,8 @@ public static class CustomDrawing
         
         foreach (var i in colPoints)
         {
-            CircleDrawing.DrawCircle(i.Point, lineThickness * 2f, intersectColorRgba, 12);
-            SegmentDrawing.DrawSegment(i.Point, i.Point + i.Normal * lineThickness * 10f, lineThickness, normalColorRgba);
+            ShapeCircleDrawing.DrawCircle(i.Point, lineThickness * 2f, intersectColorRgba, 12);
+            ShapeSegmentDrawing.DrawSegment(i.Point, i.Point + i.Normal * lineThickness * 10f, lineThickness, normalColorRgba);
             // Segment normal = new(i.Point, i.Point + i.Normal * lineThickness * 10f);
             // normal.Draw(lineThickness, normalColorRgba);
         }
@@ -108,7 +108,7 @@ public static class CustomDrawing
         {
             var tailLength = l - headLength;
             tailEnd = tailPoint + dir * tailLength;
-            SegmentDrawing.DrawSegment(tailPoint, tailEnd, info);
+            ShapeSegmentDrawing.DrawSegment(tailPoint, tailEnd, info);
         }
 
         var pl = dir.GetPerpendicularLeft();
@@ -116,8 +116,8 @@ public static class CustomDrawing
 
         var b = tailEnd + pl * headWidth * 0.5f;
         var c = tailEnd + pr * headWidth * 0.5f;
-        if(headFillColor.A > 0) TriangleDrawing.DrawTriangle(headPoint, b, c, headFillColor);
-        TriangleDrawing.DrawTriangleLines(headPoint, b, c, info);
+        if(headFillColor.A > 0) ShapeTriangleDrawing.DrawTriangle(headPoint, b, c, headFillColor);
+        ShapeTriangleDrawing.DrawTriangleLines(headPoint, b, c, info);
     }
     public static void DrawArrow2(Vector2 tailPoint, Vector2 headPoint, float headWidth, float headLengthFactor, LineDrawingInfo info, ColorRgba headFillColor)
     {
@@ -130,15 +130,15 @@ public static class CustomDrawing
         var dir = v / l;
         var tailLength = l * (1f - headLengthFactor);
         var tailEnd = tailPoint + dir * tailLength;
-        SegmentDrawing.DrawSegment(tailPoint, tailEnd, info);
+        ShapeSegmentDrawing.DrawSegment(tailPoint, tailEnd, info);
 
         var pl = dir.GetPerpendicularLeft();
         var pr = -pl;
 
         var b = tailEnd + pl * headWidth * 0.5f;
         var c = tailEnd + pr * headWidth * 0.5f;
-        if(headFillColor.A > 0) TriangleDrawing.DrawTriangle(headPoint, b, c, headFillColor);
-        TriangleDrawing.DrawTriangleLines(headPoint, b, c, info);
+        if(headFillColor.A > 0) ShapeTriangleDrawing.DrawTriangle(headPoint, b, c, headFillColor);
+        ShapeTriangleDrawing.DrawTriangleLines(headPoint, b, c, info);
     }
     public static void DrawArrow3(Vector2 tailPoint, Vector2 headPoint, float headWidthFactor, float headLengthFactor, LineDrawingInfo info, ColorRgba headFillColor)
     {
@@ -152,7 +152,7 @@ public static class CustomDrawing
         var dir = v / l;
         var tailLength = l * (1f - headLengthFactor);
         var tailEnd = tailPoint + dir * tailLength;
-        SegmentDrawing.DrawSegment(tailPoint, tailEnd, info);
+        ShapeSegmentDrawing.DrawSegment(tailPoint, tailEnd, info);
 
         var pl = dir.GetPerpendicularLeft();
         var pr = -pl;
@@ -160,8 +160,8 @@ public static class CustomDrawing
         var headWidth = l * headWidthFactor;
         var b = tailEnd + pl * headWidth * 0.5f;
         var c = tailEnd + pr * headWidth * 0.5f;
-        if(headFillColor.A > 0) TriangleDrawing.DrawTriangle(headPoint, b, c, headFillColor);
-        TriangleDrawing.DrawTriangleLines(headPoint, b, c, info);
+        if(headFillColor.A > 0) ShapeTriangleDrawing.DrawTriangle(headPoint, b, c, headFillColor);
+        ShapeTriangleDrawing.DrawTriangleLines(headPoint, b, c, info);
     }
     #endregion
 }

@@ -1,6 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Core;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 
 namespace Examples.PayloadSystem;
 

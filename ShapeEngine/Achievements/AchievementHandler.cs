@@ -1,9 +1,9 @@
 ﻿using ShapeEngine.Core;
 using Raylib_cs;
 using ShapeEngine.Color;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 using ShapeEngine.Core.Shapes;
-using ShapeEngine.Lib.Drawing;
+using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Text;
 
 namespace ShapeEngine.Achievements

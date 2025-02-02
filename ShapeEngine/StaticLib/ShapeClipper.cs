@@ -3,7 +3,7 @@ using ShapeEngine.Core;
 using ShapeEngine.Core.Shapes;
 using Clipper2Lib;
 
-namespace ShapeEngine.Lib
+namespace ShapeEngine.StaticLib
 {
     public class Polygons : List<Polygon>
     {

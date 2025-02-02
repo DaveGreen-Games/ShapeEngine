@@ -5,7 +5,7 @@ using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Shapes;
 
-namespace ShapeEngine.Lib
+namespace ShapeEngine.StaticLib
 {
     public enum TweenType
     {

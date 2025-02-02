@@ -2,7 +2,7 @@ using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Core.CollisionSystem;
 

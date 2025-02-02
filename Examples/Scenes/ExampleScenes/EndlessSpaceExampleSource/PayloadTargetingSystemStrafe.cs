@@ -2,8 +2,8 @@ using System.Numerics;
 using Examples.PayloadSystem;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Shapes;
-using ShapeEngine.Lib;
-using ShapeEngine.Lib.Drawing;
+using ShapeEngine.StaticLib;
+using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Random;
 
 namespace Examples.Scenes.ExampleScenes.EndlessSpaceExampleSource;

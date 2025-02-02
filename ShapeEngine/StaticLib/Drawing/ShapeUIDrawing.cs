@@ -2,9 +2,9 @@ using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Shapes;
 
-namespace ShapeEngine.Lib.Drawing;
+namespace ShapeEngine.StaticLib.Drawing;
 
-public static class UIDrawing
+public static class ShapeUIDrawing
 {
     public static void DrawOutlineBar(this Rect rect, float thickness, float f, ColorRgba color)
     {
@@ -47,7 +47,7 @@ public static class UIDrawing
 
             //last line
             if (i == lines - 1) end = ShapeVec.Lerp(start, end, newF);
-            SegmentDrawing.DrawSegment(start, end, thickness, color);
+            ShapeSegmentDrawing.DrawSegment(start, end, thickness, color);
             // DrawLineEx(start, end, thickness, color.ToRayColor());
         }
     }
@@ -96,13 +96,13 @@ public static class UIDrawing
 
             //last line
             if (i == lines - 1) end = ShapeVec.Lerp(start, end, newF);
-            SegmentDrawing.DrawSegment(start, end, thickness, color);
+            ShapeSegmentDrawing.DrawSegment(start, end, thickness, color);
             // Raylib.DrawLineEx(start, end, thickness, color.ToRayColor());
         }
     }
 
-    public static void DrawOutlineBar(this Circle c, float thickness, float f, ColorRgba color) => CircleDrawing.DrawCircleSectorLines(c.Center, c.Radius, 0, 360 * f, thickness, color, false);
-    public static void DrawOutlineBar(this Circle c, float startOffsetDeg, float thickness, float f, ColorRgba color) => CircleDrawing.DrawCircleSectorLines(c.Center, c.Radius, 0, 360 * f, startOffsetDeg, thickness, color, false);
+    public static void DrawOutlineBar(this Circle c, float thickness, float f, ColorRgba color) => ShapeCircleDrawing.DrawCircleSectorLines(c.Center, c.Radius, 0, 360 * f, thickness, color, false);
+    public static void DrawOutlineBar(this Circle c, float startOffsetDeg, float thickness, float f, ColorRgba color) => ShapeCircleDrawing.DrawCircleSectorLines(c.Center, c.Radius, 0, 360 * f, startOffsetDeg, thickness, color, false);
     public static void DrawBar(this Rect rect, float f, ColorRgba barColorRgba, ColorRgba bgColorRgba, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
     {
         f = 1.0f - f;

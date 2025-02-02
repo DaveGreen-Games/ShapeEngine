@@ -1,9 +1,9 @@
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 
-namespace ShapeEngine.Lib.Drawing;
+namespace ShapeEngine.StaticLib.Drawing;
 
-public static class StripedDrawing
+public static class ShapeStripedDrawing
 {
      public static void DrawStriped(this Circle circle, float spacing, float angleDeg, LineDrawingInfo striped, float sideLength = 8f)
     {

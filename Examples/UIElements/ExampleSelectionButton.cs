@@ -2,7 +2,7 @@
 using Examples.Scenes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.UI;
-using ShapeEngine.Lib.Drawing;
+using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Text;
 
 namespace Examples.UIElements

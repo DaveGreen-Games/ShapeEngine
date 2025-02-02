@@ -2,11 +2,11 @@ using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Shapes;
 
-namespace ShapeEngine.Lib.Drawing;
+namespace ShapeEngine.StaticLib.Drawing;
 
-public static class PointDrawing
+public static class ShapePointDrawing
 {
-    public static void Draw(this Vector2 p, float radius, ColorRgba color, int segments = 16) => CircleDrawing.DrawCircle(p, radius, color, segments);
+    public static void Draw(this Vector2 p, float radius, ColorRgba color, int segments = 16) => ShapeCircleDrawing.DrawCircle(p, radius, color, segments);
 
     public static void Draw(this Points points, float r, ColorRgba color, int segments = 16)
     {

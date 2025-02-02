@@ -2,7 +2,7 @@
 using ShapeEngine.Core;
 using ShapeEngine.UI;
 using System.Numerics;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 using Examples.Scenes.ExampleScenes;
 using Examples.UIElements;
 using ShapeEngine.Color;
@@ -10,7 +10,7 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
 using ShapeEngine.Persistent;
-using ShapeEngine.Lib.Drawing;
+using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Text;
 
 namespace Examples.Scenes

@@ -1,7 +1,7 @@
 using ShapeEngine.Color;
 using ShapeEngine.Core.Shapes;
-using ShapeEngine.Lib;
-using ShapeEngine.Lib.Drawing;
+using ShapeEngine.StaticLib;
+using ShapeEngine.StaticLib.Drawing;
 
 namespace ShapeEngine.Text;
 

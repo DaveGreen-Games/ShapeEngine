@@ -1,7 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Core;
 
-namespace ShapeEngine.Lib;
+namespace ShapeEngine.StaticLib;
 
 public static class ShapePhysics
 {

@@ -4,7 +4,7 @@ using System.Numerics;
 using Clipper2Lib;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 using ShapeEngine.Random;
 using Size = ShapeEngine.Core.Structs.Size;
 

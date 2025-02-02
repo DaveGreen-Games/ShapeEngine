@@ -5,11 +5,11 @@ using ShapeEngine.Color;
 using ShapeEngine.Core;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 using ShapeEngine.Random;
 using ShapeEngine.Screen;
 using ShapeEngine.Text;
-using ShapeEngine.Lib.Drawing;
+using ShapeEngine.StaticLib.Drawing;
 
 namespace Examples.Scenes.ExampleScenes;
 
@@ -64,7 +64,7 @@ public class PhysicsExample : ExampleScene
                 var y = Rng.Instance.RandF(0f, 2048);
                 var pos = new Vector2(x, y);
                 var size = sizeRange.Rand();
-                CircleDrawing.DrawCircle(pos, size, color);
+                ShapeCircleDrawing.DrawCircle(pos, size, color);
             }
             t.EndDraw();
             

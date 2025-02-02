@@ -2,9 +2,9 @@ using System.Numerics;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 
-namespace ShapeEngine.Lib.Drawing;
+namespace ShapeEngine.StaticLib.Drawing;
 
-public static  class GappedDrawing
+public static  class ShapeGappedDrawing
 {
     
     /// <summary>
@@ -21,7 +21,7 @@ public static  class GappedDrawing
     {
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
         {
-            SegmentDrawing.DrawSegment(start, end, lineInfo);
+            ShapeSegmentDrawing.DrawSegment(start, end, lineInfo);
             return length > 0f ? length : -1f;
         }
 
@@ -60,7 +60,7 @@ public static  class GappedDrawing
         int drawnLines = 0;
         while (drawnLines <= lines)
         {
-            SegmentDrawing.DrawSegment(curStart, curEnd, lineInfo);
+            ShapeSegmentDrawing.DrawSegment(curStart, curEnd, lineInfo);
 
             if (remainingLineLength > 0f)
             {
@@ -174,7 +174,7 @@ public static  class GappedDrawing
                     points.Add(p);
                     if (points.Count == 2)
                     {
-                        SegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
+                        ShapeSegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
                     }
                     else
                     {
@@ -182,7 +182,7 @@ public static  class GappedDrawing
                         {
                             var p1 = points[i];
                             var p2 = points[(i + 1) % points.Count];
-                            SegmentDrawing.DrawSegment(p1, p2, lineInfo);
+                            ShapeSegmentDrawing.DrawSegment(p1, p2, lineInfo);
                         }
                     }
                     
@@ -277,7 +277,7 @@ public static  class GappedDrawing
                     points.Add(p);
                     if (points.Count == 2)
                     {
-                        SegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
+                        ShapeSegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
                     }
                     else
                     {
@@ -285,7 +285,7 @@ public static  class GappedDrawing
                         {
                             var p1 = points[i];
                             var p2 = points[(i + 1) % points.Count];
-                            SegmentDrawing.DrawSegment(p1, p2, lineInfo);
+                            ShapeSegmentDrawing.DrawSegment(p1, p2, lineInfo);
                         }
                     }
                     
@@ -400,7 +400,7 @@ public static  class GappedDrawing
                     points.Add(p);
                     if (points.Count == 2)
                     {
-                        SegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
+                        ShapeSegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
                     }
                     else
                     {
@@ -408,7 +408,7 @@ public static  class GappedDrawing
                         {
                             var p1 = points[i];
                             var p2 = points[(i + 1) % points.Count];
-                            SegmentDrawing.DrawSegment(p1, p2, lineInfo);
+                            ShapeSegmentDrawing.DrawSegment(p1, p2, lineInfo);
                         }
                     }
                     
@@ -451,14 +451,14 @@ public static  class GappedDrawing
         if (innerRadius <= 0 && outerRadius <= 0) return;
         
         
-        int outerSides = CircleDrawing.GetCircleSideCount(outerRadius, sideLength);
+        int outerSides = ShapeCircleDrawing.GetCircleSideCount(outerRadius, sideLength);
         if (innerRadius <= 0)
         {
             DrawGappedOutline(new Circle(center, outerRadius), lineInfo, gapDrawingInfo, rotDeg, outerSides);
             return;
         }
 
-        int innerSides = CircleDrawing.GetCircleSideCount(innerRadius, sideLength);
+        int innerSides = ShapeCircleDrawing.GetCircleSideCount(innerRadius, sideLength);
         if (outerRadius <= 0)
         {
             DrawGappedOutline(new Circle(center, innerRadius), lineInfo, gapDrawingInfo, rotDeg, innerSides);
@@ -544,7 +544,7 @@ public static  class GappedDrawing
                     points.Add(p);
                     if (points.Count == 2)
                     {
-                        SegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
+                        ShapeSegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
                     }
                     else
                     {
@@ -552,7 +552,7 @@ public static  class GappedDrawing
                         {
                             var p1 = points[i];
                             var p2 = points[(i + 1) % points.Count];
-                            SegmentDrawing.DrawSegment(p1, p2, lineInfo);
+                            ShapeSegmentDrawing.DrawSegment(p1, p2, lineInfo);
                         }
                     }
                     
@@ -650,7 +650,7 @@ public static  class GappedDrawing
                     points.Add(p);
                     if (points.Count == 2)
                     {
-                        SegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
+                        ShapeSegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
                     }
                     else
                     {
@@ -658,7 +658,7 @@ public static  class GappedDrawing
                         {
                             var p1 = points[i];
                             var p2 = points[(i + 1) % points.Count];
-                            SegmentDrawing.DrawSegment(p1, p2, lineInfo);
+                            ShapeSegmentDrawing.DrawSegment(p1, p2, lineInfo);
                         }
                     }
                     
@@ -757,7 +757,7 @@ public static  class GappedDrawing
                     points.Add(p);
                     if (points.Count == 2)
                     {
-                        SegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
+                        ShapeSegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
                     }
                     else
                     {
@@ -765,7 +765,7 @@ public static  class GappedDrawing
                         {
                             var p1 = points[i];
                             var p2 = points[(i + 1) % points.Count];
-                            SegmentDrawing.DrawSegment(p1, p2, lineInfo);
+                            ShapeSegmentDrawing.DrawSegment(p1, p2, lineInfo);
                         }
                     }
                     
@@ -862,7 +862,7 @@ public static  class GappedDrawing
                     points.Add(p);
                     if (points.Count == 2)
                     {
-                        SegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
+                        ShapeSegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
                     }
                     else
                     {
@@ -870,7 +870,7 @@ public static  class GappedDrawing
                         {
                             var p1 = points[i];
                             var p2 = points[(i + 1) % points.Count];
-                            SegmentDrawing.DrawSegment(p1, p2, lineInfo);
+                            ShapeSegmentDrawing.DrawSegment(p1, p2, lineInfo);
                         }
                     }
                     
@@ -971,7 +971,7 @@ public static  class GappedDrawing
                     
                     if (points.Count == 2)
                     {
-                        SegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
+                        ShapeSegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
                     }
                     else
                     {
@@ -979,7 +979,7 @@ public static  class GappedDrawing
                         {
                             var p1 = points[i];
                             var p2 = points[(i + 1) % points.Count];
-                            SegmentDrawing.DrawSegment(p1, p2, lineInfo);
+                            ShapeSegmentDrawing.DrawSegment(p1, p2, lineInfo);
                         }
                     }
                     
@@ -1000,7 +1000,7 @@ public static  class GappedDrawing
                         points.Add(nextPoint);
                         if (points.Count == 2)
                         {
-                            SegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
+                            ShapeSegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
                         }
                         else
                         {
@@ -1008,7 +1008,7 @@ public static  class GappedDrawing
                             {
                                 var p1 = points[i];
                                 var p2 = points[(i + 1) % points.Count];
-                                SegmentDrawing.DrawSegment(p1, p2, lineInfo);
+                                ShapeSegmentDrawing.DrawSegment(p1, p2, lineInfo);
                             }
                         }
                         points.Clear();

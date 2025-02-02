@@ -3,9 +3,9 @@ using ShapeEngine.Color;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 
-namespace ShapeEngine.Lib.Drawing;
+namespace ShapeEngine.StaticLib.Drawing;
 
-public static class PolylineDrawing
+public static class ShapePolylineDrawing
 {
     
     public static void Draw(this Polyline polyline, float thickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
@@ -15,7 +15,7 @@ public static class PolylineDrawing
         {
             var start = polyline[i];
             var end = polyline[i + 1];
-            SegmentDrawing.DrawSegment(start, end, thickness, color, capType, capPoints);
+            ShapeSegmentDrawing.DrawSegment(start, end, thickness, color, capType, capPoints);
         }
     }
     //not a closed shape therefore it does not get sideLengthFactor overload -> might change in the future...
@@ -36,7 +36,7 @@ public static class PolylineDrawing
         {
             var start = polyline[i];
             var end = polyline[i + 1];
-            SegmentDrawing.DrawSegment(start, end, lineInfo);
+            ShapeSegmentDrawing.DrawSegment(start, end, lineInfo);
         }
     }
 
@@ -48,7 +48,7 @@ public static class PolylineDrawing
             var start = polyline[i];
             var end = polyline[i + 1];
             var c = colors[i % colors.Count];
-            SegmentDrawing.DrawSegment(start, end, thickness, c, capType, capPoints);
+            ShapeSegmentDrawing.DrawSegment(start, end, thickness, c, capType, capPoints);
         }
     }
     public static void Draw(this Polyline polyline, List<ColorRgba> colors, LineDrawingInfo lineInfo)
@@ -64,7 +64,7 @@ public static class PolylineDrawing
         {
             var start = pos + (relative[i] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
             var end = pos + (relative[(i + 1) % relative.Count] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
-            SegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
+            ShapeSegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
         }
     }
     public static void Draw(this Polyline relative, Transform2D transform, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
@@ -112,13 +112,13 @@ public static class PolylineDrawing
             if (l < perimeterToDraw)
             {
                 perimeterToDraw -= l;
-                SegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
+                ShapeSegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
             }
             else
             {
                 float f = perimeterToDraw / l;
                 end = start.Lerp(end, f);
-                SegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
+                ShapeSegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
                 return;
             }
             
@@ -192,7 +192,7 @@ public static class PolylineDrawing
         {
             var start = polyline[i];
             var end = polyline[(i + 1) % polyline.Count];
-            SegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
+            ShapeSegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
         }
         
     }
@@ -223,7 +223,7 @@ public static class PolylineDrawing
         {
             var start = pos + (relative[i] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
             var end = pos + (relative[(i + 1) % relative.Count] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
-            SegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
+            ShapeSegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
         }
         
     }
@@ -248,7 +248,7 @@ public static class PolylineDrawing
     {
         foreach (var p in polyline)
         {
-            CircleDrawing.DrawCircle(p, vertexRadius, color, circleSegments);
+            ShapeCircleDrawing.DrawCircle(p, vertexRadius, color, circleSegments);
         }
     }
     
@@ -261,7 +261,7 @@ public static class PolylineDrawing
         {
             var start = polyline[i];
             var end = polyline[i + 1];
-            SegmentDrawing.DrawSegmentGlow(start, end, width, endWidth, color, endColorRgba, steps, capType, capPoints);
+            ShapeSegmentDrawing.DrawSegmentGlow(start, end, width, endWidth, color, endColorRgba, steps, capType, capPoints);
         }
         // polyline.GetEdges().DrawGlow(width, endWidth, color, endColor, steps);
     }

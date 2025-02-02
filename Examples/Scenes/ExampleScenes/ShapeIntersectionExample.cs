@@ -7,8 +7,8 @@ using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
-using ShapeEngine.Lib;
-using ShapeEngine.Lib.Drawing;
+using ShapeEngine.StaticLib;
+using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Random;
 using Size = ShapeEngine.Core.Structs.Size;
 
@@ -1611,7 +1611,7 @@ public class ShapeIntersectionExample : ExampleScene
                 foreach (var cp in result)
                 {
                     cp.Point.Draw(12f, Colors.Cold, 16);
-                    SegmentDrawing.DrawSegment(cp.Point, cp.Point + cp.Normal * 75f, 2f, Colors.Cold, LineCapType.Capped, 4);
+                    ShapeSegmentDrawing.DrawSegment(cp.Point, cp.Point + cp.Normal * 75f, 2f, Colors.Cold, LineCapType.Capped, 4);
                 }
             }
             

@@ -1,4 +1,4 @@
-﻿using ShapeEngine.Lib;
+﻿using ShapeEngine.StaticLib;
 using ShapeEngine.Random;
 namespace ShapeEngine.Audio
 {

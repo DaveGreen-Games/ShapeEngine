@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 using ShapeEngine.Random;
 
 namespace ShapeEngine.Core.Shapes;

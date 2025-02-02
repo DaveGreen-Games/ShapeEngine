@@ -1,6 +1,6 @@
 using Examples.PayloadSystem;
-using ShapeEngine.Lib;
-using ShapeEngine.Lib.Drawing;
+using ShapeEngine.StaticLib;
+using ShapeEngine.StaticLib.Drawing;
 
 namespace Examples.Scenes.ExampleScenes.EndlessSpaceExampleSource;
 
@@ -19,13 +19,13 @@ internal class PayloadMarkerSimple : PayloadMarker
         {
             if (visible)
             {
-                CircleDrawing.DrawCircle(Location, 15, Colors.Cold, 24);
+                ShapeCircleDrawing.DrawCircle(Location, 15, Colors.Cold, 24);
             }  
-            CircleDrawing.DrawCircleSectorLines(Location, 25f, 0, 359 * TravelF, 4f, Colors.Cold, false, 4f);
+            ShapeCircleDrawing.DrawCircleSectorLines(Location, 25f, 0, 359 * TravelF, 4f, Colors.Cold, false, 4f);
         }
         else
         {
-            CircleDrawing.DrawCircle(Location, 15, Colors.Cold, 24);
+            ShapeCircleDrawing.DrawCircle(Location, 15, Colors.Cold, 24);
         }
         
         
