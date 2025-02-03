@@ -3454,4 +3454,44 @@ public readonly struct Quad : IEquatable<Quad>
    
     #endregion
         
+    #region Interpolated Edge Points
+
+    
+    public Points? GetInterpolatedEdgePoints(float t)
+    {
+        var a1 = A.Lerp(B, t);
+        var b1 = B.Lerp(C, t);
+        var c1 = C.Lerp(D, t);
+        var d1 = D.Lerp(A, t);
+        
+        return new Points(4){a1, b1, c1, d1};
+    }
+    public Points? GetInterpolatedEdgePoints(float t, int steps)
+    {
+        if(steps <= 1) return GetInterpolatedEdgePoints(t);
+        
+        var a1 = A.Lerp(B, t);
+        var b1 = B.Lerp(C, t);
+        var c1 = C.Lerp(D, t);
+        var d1 = D.Lerp(A, t);
+
+        //first step is already done
+        int remainingSteps = steps - 1;
+
+        while (remainingSteps > 0)
+        {
+            var a2 = a1.Lerp(b1, t);
+            var b2 = b1.Lerp(c1, t);
+            var c2 = c1.Lerp(d1, t);
+            var d2 = d1.Lerp(a1, t);
+            
+            (a1, b1, c1, d1) = (a2, b2, c2, d2);
+            
+            remainingSteps--;
+        }
+        
+        return new Points(4){a1, b1, c1, d1};
+    }
+    
+    #endregion
 }

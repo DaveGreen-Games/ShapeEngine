@@ -1794,6 +1794,64 @@ public class Polyline : Points, IEquatable<Polyline>
    
     #endregion
 
+     #region Interpolated Edge Points
+
+    /// <summary>
+    /// Interpolate the edge(segment) between each pair of points using t and return the new interpolated points.
+    /// </summary>
+    /// <param name="t">The value t for interpolation. Should be between 0 - 1.</param>
+    /// <returns></returns>
+    public new Points? InterpolatedEdgePoints(float t)
+    {
+        if (Count < 2) return null;
+
+        var result = new Points();
+        for (int i = 0; i < Count - 1; i++)
+        {
+            var cur = this[i];
+            var next = this[i + 1];
+            var interpolated = cur.Lerp(next, t);// Vector2.Lerp(cur, next, t);
+            result.Add(interpolated);
+        }
+        
+        return result;
+    }
+    /// <summary>
+    /// Interpolate the edge(segment) between each pair of points using t and return the new interpolated points.
+    /// </summary>
+    /// <param name="t">The value t for interpolation. Should be between 0 - 1.</param>
+    /// <param name="steps">Recursive steps. The amount of times the result of InterpolatedEdgesPoints will be run through InterpolateEdgePoints.</param>
+    /// <returns></returns>
+    public new Points? InterpolatedEdgePoints(float t, int steps)
+    {
+        if (Count < 2) return null;
+        if (steps <= 1) return InterpolatedEdgePoints(t);
+
+        int remainingSteps = steps;
+        var result = new Points();
+        var buffer = new Points();
+        while (remainingSteps > 0)
+        {
+            var target = result.Count <= 0 ? this : result;
+            for (int i = 0; i < target.Count; i++)
+            {
+                var cur = target[i];
+                var next = target[i + 1];
+                var interpolated = cur.Lerp(next, t);
+                buffer.Add(interpolated);
+            }
+
+            (result, buffer) = (buffer, result);//switch buffer and result
+            buffer.Clear();
+            remainingSteps--;
+        }
+
+        
+        return result;
+    }
+    #endregion
+    
+    
     #region Static
     public static Polyline GetShape(Points relative, Transform2D transform)
     {

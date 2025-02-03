@@ -2023,4 +2023,28 @@ public readonly struct Circle : IEquatable<Circle>
    
     
     #endregion
+    
+    #region Interpolated Edge Points
+
+    
+    public Points? GetInterpolatedEdgePoints(float t, int vertexCount)
+    {
+        if(vertexCount < 3) return null;
+        
+        var points = GetVertices(vertexCount);
+        if (points.Count <= 3) return null;
+        
+        return points.GetInterpolatedEdgePoints(t);
+    }
+    public Points? GetInterpolatedEdgePoints(float t, int steps, int vertexCount)
+    {
+        if(vertexCount < 3) return null;
+        
+        var points = GetVertices(vertexCount);
+        if (points.Count <= 3) return null;
+        
+        return points.GetInterpolatedEdgePoints(t, steps);
+    }
+    
+    #endregion
 }

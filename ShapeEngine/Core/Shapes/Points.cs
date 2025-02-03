@@ -778,4 +778,64 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
     
     
     #endregion
+    
+    #region Interpolated Edge Points
+
+    /// <summary>
+    /// Interpolate the edge(segment) between each pair of points using t and return the new interpolated points.
+    /// Interplates between last and first point as well (closed shape)
+    /// </summary>
+    /// <param name="t">The value t for interpolation. Should be between 0 - 1.</param>
+    /// <returns></returns>
+    public Points? GetInterpolatedEdgePoints(float t)
+    {
+        if (Count < 2) return null;
+
+        var result = new Points();
+        for (int i = 0; i < Count; i++)
+        {
+            var cur = this[i];
+            var next = this[(i + 1) % Count];
+            var interpolated = cur.Lerp(next, t);// Vector2.Lerp(cur, next, t);
+            result.Add(interpolated);
+        }
+        
+        return result;
+    }
+    /// <summary>
+    /// Interpolate the edge(segment) between each pair of points using t and return the new interpolated points.
+    /// Interplates between last and first point as well (closed shape)
+    /// </summary>
+    /// <param name="t">The value t for interpolation. Should be between 0 - 1.</param>
+    /// <param name="steps">Recursive steps. The amount of times the result of InterpolatedEdgesPoints will be run through InterpolateEdgePoints.</param>
+    /// <returns></returns>
+    public Points? GetInterpolatedEdgePoints(float t, int steps)
+    {
+        if (Count < 2) return null;
+        if (steps <= 1) return GetInterpolatedEdgePoints(t);
+
+        int remainingSteps = steps;
+        var result = new Points();
+        var buffer = new Points();
+        while (remainingSteps > 0)
+        {
+            var target = result.Count <= 0 ? this : result;
+            for (int i = 0; i < target.Count; i++)
+            {
+                var cur = target[i];
+                var next = target[(i + 1) % target.Count];
+                var interpolated = cur.Lerp(next, t);
+                buffer.Add(interpolated);
+            }
+
+            (result, buffer) = (buffer, result);//switch buffer and result
+            buffer.Clear();
+            remainingSteps--;
+        }
+
+        
+        return result;
+    }
+    #endregion
+    
 }
