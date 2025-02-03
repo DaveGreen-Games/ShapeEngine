@@ -32,7 +32,7 @@ public static class ShapeStripedDrawing
             cur += dir * spacing;
         }
     }
-    public static void DrawStriped(this Circle circle, float spacing, float angleDeg, LineDrawingInfo striped, LineDrawingInfo alternatingStriped, float sideLength = 8f, float spacingOffset = 0f)
+    public static void DrawStriped(this Circle circle, float spacing, float angleDeg, LineDrawingInfo striped, LineDrawingInfo alternatingStriped, float sideLength = 8f)
     {
         if (spacing <= 0) return;
         float maxDimension = circle.Diameter;
@@ -42,8 +42,7 @@ public static class ShapeStripedDrawing
         var center = circle.Center;
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var lineDir = dir.GetPerpendicularRight();
-        spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
+        var start = center - dir * maxDimension * 0.5f;
         int steps = (int)(maxDimension / spacing);
         
         var cur = start + dir * spacing;
@@ -59,7 +58,7 @@ public static class ShapeStripedDrawing
             cur += dir * spacing;
         }
     }
-    public static void DrawStriped(this Circle circle, float spacing, float angleDeg, float sideLength, float spacingOffset, params LineDrawingInfo[] alternatingStriped)
+    public static void DrawStriped(this Circle circle, float spacing, float angleDeg, float sideLength, params LineDrawingInfo[] alternatingStriped)
     {
         if (spacing <= 0) return;
         if (alternatingStriped.Length <= 0) return;
@@ -72,8 +71,7 @@ public static class ShapeStripedDrawing
         var center = circle.Center;
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var lineDir = dir.GetPerpendicularRight();
-        spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
+        var start = center - dir * maxDimension * 0.5f;
         int steps = (int)(maxDimension / spacing);
         
         var cur = start + dir * spacing;
@@ -125,7 +123,7 @@ public static class ShapeStripedDrawing
             cur += dir * spacing;
         }
     }
-    public static void DrawStriped(this Triangle triangle, float spacing, float angleDeg, LineDrawingInfo striped, LineDrawingInfo alternatingStriped, float spacingOffset = 0f)
+    public static void DrawStriped(this Triangle triangle, float spacing, float angleDeg, LineDrawingInfo striped, LineDrawingInfo alternatingStriped)
     {
         if (spacing <= 0) return;
         var center = triangle.GetCentroid();
@@ -136,8 +134,7 @@ public static class ShapeStripedDrawing
         
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var lineDir = dir.GetPerpendicularRight();
-        spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
+        var start = center - dir * maxDimension * 0.5f;
         int steps = (int)(maxDimension / spacing);
         
         var a = triangle.A;
@@ -157,7 +154,7 @@ public static class ShapeStripedDrawing
             cur += dir * spacing;
         }
     }
-    public static void DrawStriped(this Triangle triangle, float spacing, float angleDeg, float spacingOffset, params LineDrawingInfo[] alternatingStriped)
+    public static void DrawStriped(this Triangle triangle, float spacing, float angleDeg, params LineDrawingInfo[] alternatingStriped)
     {
         if (spacing <= 0) return;
         var center = triangle.GetCentroid();
@@ -168,8 +165,7 @@ public static class ShapeStripedDrawing
         
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var lineDir = dir.GetPerpendicularRight();
-        spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
+        var start = center - dir * maxDimension * 0.5f;
         int steps = (int)(maxDimension / spacing);
         
         var a = triangle.A;
@@ -227,7 +223,7 @@ public static class ShapeStripedDrawing
             cur += dir * spacing;
         }
     }
-    public static void DrawStriped(this Quad quad, float spacing, float angleDeg, LineDrawingInfo striped, LineDrawingInfo alternatingStriped, float spacingOffset = 0f)
+    public static void DrawStriped(this Quad quad, float spacing, float angleDeg, LineDrawingInfo striped, LineDrawingInfo alternatingStriped)
     {
         if (spacing <= 0) return;
         var center = quad.Center;
@@ -238,8 +234,7 @@ public static class ShapeStripedDrawing
         
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var lineDir = dir.GetPerpendicularRight();
-        spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
+        var start = center - dir * maxDimension * 0.5f;
         int steps = (int)(maxDimension / spacing);
         
         var a = quad.A;
@@ -260,7 +255,7 @@ public static class ShapeStripedDrawing
             cur += dir * spacing;
         }
     }
-    public static void DrawStriped(this Quad quad, float spacing, float angleDeg, float spacingOffset, params LineDrawingInfo[] alternatingStriped)
+    public static void DrawStriped(this Quad quad, float spacing, float angleDeg, params LineDrawingInfo[] alternatingStriped)
     {
         if (spacing <= 0) return;
         var center = quad.Center;
@@ -271,8 +266,7 @@ public static class ShapeStripedDrawing
         
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var lineDir = dir.GetPerpendicularRight();
-        spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
+        var start = center - dir * maxDimension * 0.5f;
         int steps = (int)(maxDimension / spacing);
         
         var a = quad.A;
@@ -329,7 +323,7 @@ public static class ShapeStripedDrawing
             cur += dir * spacing;
         }
     }
-    public static void DrawStriped(this Rect rect, float spacing, float angleDeg, LineDrawingInfo striped, LineDrawingInfo alternatingStriped, float spacingOffset = 0f)
+    public static void DrawStriped(this Rect rect, float spacing, float angleDeg, LineDrawingInfo striped, LineDrawingInfo alternatingStriped)
     {
         if (spacing <= 0) return;
         float maxDimension = (rect.TopLeft - rect.BottomRight).Length();
@@ -339,8 +333,7 @@ public static class ShapeStripedDrawing
         var center = rect.Center;
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var lineDir = dir.GetPerpendicularRight();
-        spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
+        var start = center - dir * maxDimension * 0.5f;
         int steps = (int)(maxDimension / spacing);
         
         var a = rect.A;
@@ -361,7 +354,7 @@ public static class ShapeStripedDrawing
             cur += dir * spacing;
         }
     }
-    public static void DrawStriped(this Rect rect, float spacing, float angleDeg, float spacingOffset, params LineDrawingInfo[] alternatingStriped)
+    public static void DrawStriped(this Rect rect, float spacing, float angleDeg, params LineDrawingInfo[] alternatingStriped)
     {
         if (spacing <= 0) return;
         float maxDimension = (rect.TopLeft - rect.BottomRight).Length();
@@ -371,8 +364,7 @@ public static class ShapeStripedDrawing
         var center = rect.Center;
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var lineDir = dir.GetPerpendicularRight();
-        spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
+        var start = center - dir * maxDimension * 0.5f;
         int steps = (int)(maxDimension / spacing);
         
         var a = rect.A;
@@ -429,7 +421,7 @@ public static class ShapeStripedDrawing
             cur += dir * spacing;
         }
     }
-    public static void DrawStriped(this Polygon polygon, float spacing, float angleDeg, LineDrawingInfo striped, LineDrawingInfo alternatingStriped, float spacingOffset = 0f)
+    public static void DrawStriped(this Polygon polygon, float spacing, float angleDeg, LineDrawingInfo striped, LineDrawingInfo alternatingStriped)
     {
         if (spacing <= 0) return;
         var center = polygon.GetCentroid();
@@ -440,8 +432,7 @@ public static class ShapeStripedDrawing
         
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
-        spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
+        var start = center - dir * maxDimension * 0.5f;
         int steps = (int)(maxDimension / spacing);
         
         var cur = start + dir * spacing;
@@ -460,7 +451,7 @@ public static class ShapeStripedDrawing
             cur += dir * spacing;
         }
     }
-    public static void DrawStriped(this Polygon polygon, float spacing, float angleDeg, float spacingOffset, params LineDrawingInfo[] alternatingStriped)
+    public static void DrawStriped(this Polygon polygon, float spacing, float angleDeg, params LineDrawingInfo[] alternatingStriped)
     {
         if (spacing <= 0) return;
         var center = polygon.GetCentroid();
@@ -471,8 +462,7 @@ public static class ShapeStripedDrawing
         
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
-        spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
+        var start = center - dir * maxDimension * 0.5f;
         int steps = (int)(maxDimension / spacing);
         
         var cur = start + dir * spacing;
