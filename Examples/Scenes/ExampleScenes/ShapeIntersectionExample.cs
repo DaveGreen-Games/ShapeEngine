@@ -565,10 +565,9 @@ public class ShapeIntersectionExample : ExampleScene
         {
             if (stripedSpacing > 0f)
             {
-                
-                var dt = ShapeEngine.Core.Game.CurrentGameInstance.Time.Delta;
-
+                // var dt = ShapeEngine.Core.Game.CurrentGameInstance.Time.Delta;
                 // stripedSpacingOffset +=  dt * 0.5f;
+                
                 LineDrawingInfo striped = new(stripedSpacing * 0.1f, color.ChangeBrightness(-0.75f), LineCapType.Capped, 6);
                 Circle.DrawStriped(stripedSpacing, stripedRotDeg, striped, 4f,  stripedSpacingOffset);
                 Circle.DrawStriped(stripedSpacing, stripedRotDeg + 90, striped, 4f, stripedSpacingOffset);

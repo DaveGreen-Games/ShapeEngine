@@ -6,6 +6,7 @@ namespace ShapeEngine.Core.Structs;
 
 public abstract class Curve<T>(int capacity) : SortedList<float, T>(capacity)
 {
+    public bool HasKeys => Count > 0;
     public new bool Add(float time, T key)
     {
         if (time is < 0 or > 1) return false;
