@@ -838,4 +838,43 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
     }
     #endregion
     
+    #region Sort
+    public bool SortClosestFirst(Vector2 referencePoint)
+    {
+        if(Count <= 0) return false;
+        if(Count == 1) return true;
+        this.Sort
+        (
+            comparison: (a, b) =>
+            {
+                float la = (referencePoint - a).LengthSquared();
+                float lb = (referencePoint - b).LengthSquared();
+
+                if (la > lb) return 1;
+                if (MathF.Abs(x: la - lb) < 0.01f) return 0;
+                return -1;
+            }
+        );
+        return true;
+    }
+    public bool SortFurthestFirst(Vector2 referencePoint)
+    {
+        if(Count <= 0) return false;
+        if(Count == 1) return true;
+        this.Sort
+        (
+            comparison: (a, b) =>
+            {
+                float la = (referencePoint - a).LengthSquared();
+                float lb = (referencePoint - b).LengthSquared();
+
+                if (la < lb) return 1;
+                if (MathF.Abs(x: la - lb) < 0.01f) return 0;
+                return -1;
+            }
+        );
+        return true;
+    }
+
+    #endregion
 }
