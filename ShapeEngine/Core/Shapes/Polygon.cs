@@ -15,6 +15,7 @@ namespace ShapeEngine.Core.Shapes
     /// </summary>
     public class Polygon : Points, IEquatable<Polygon>
     {
+        private static CollisionPoints collisionPointsReference = new CollisionPoints(4);
         public override Polygon Copy() => new(this);
 
         #region Constructors
@@ -2353,6 +2354,21 @@ namespace ShapeEngine.Core.Shapes
             }
             return points;
         }
+        public static int IntersectPolygonRay(List<Vector2> polygon, Vector2 rayPoint, Vector2 rayDirection, ref CollisionPoints result)
+        {
+            if (polygon.Count < 3) return 0;
+            int count = result.Count;
+            for (var i = 0; i < polygon.Count; i++)
+            {
+                var point = Segment.IntersectSegmentRay(polygon[i], polygon[(i + 1) % polygon.Count], rayPoint, rayDirection);
+                if (point.Valid)
+                {
+                    result.Add(point);
+                }
+                
+            }
+            return result.Count - count;
+        }
         
         /// <summary>
         /// This function intersects a ray with a polygon and returns all segments that lie inside the polygon.
@@ -2380,6 +2396,35 @@ namespace ShapeEngine.Core.Shapes
                 segments.Add(segment);
             }
             return segments;
+        }
+        /// <summary>
+        /// This function intersects a ray with a polygon and returns all segments that lie inside the polygon.
+        /// </summary>
+        /// <param name="rayPoint"></param>
+        /// <param name="rayDirection"></param>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        public int CutRayWithPolygon(Vector2 rayPoint, Vector2 rayDirection, ref List<Segment> result)
+        {
+            if(Count < 3) return 0;
+            if(rayDirection.X == 0 && rayDirection.Y == 0) return 0;
+            
+            rayDirection = rayDirection.Normalize();
+            var intersectionPoints = IntersectPolygonRay(this, rayPoint, rayDirection, ref collisionPointsReference);
+            if(intersectionPoints < 2) return 0;
+
+            int count = result.Count;
+            collisionPointsReference.SortClosestFirst(rayPoint);
+
+            for (int i = 0; i < collisionPointsReference.Count - 1; i+=2)
+            {
+                var segmentStart = collisionPointsReference[i].Point;
+                var segmentEnd = collisionPointsReference[i + 1].Point;
+                var segment = new Segment(segmentStart, segmentEnd);
+                result.Add(segment);
+            }
+            collisionPointsReference.Clear();
+            return result.Count - count;
         }
         
         public CollisionPoints? Intersect(Collider collider)

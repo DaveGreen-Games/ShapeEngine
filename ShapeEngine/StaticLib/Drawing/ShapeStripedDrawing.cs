@@ -9,6 +9,9 @@ namespace ShapeEngine.StaticLib.Drawing;
 
 public static class ShapeStripedDrawing
 {
+    private static CollisionPoints collisionPointsReference = new CollisionPoints(6);
+    private static List<Segment> segmentsReference = new(6);
+    
     #region Circle
     public static void DrawStriped(this Circle circle, float spacing, float angleDeg, LineDrawingInfo striped, float spacingOffset = 0f)
     {
@@ -644,8 +647,9 @@ public static class ShapeStripedDrawing
             var outsideShapePoints = Ray.IntersectRayCircle(cur, rayDir, outsideShape.Center, outsideShape.Radius);
             if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
             
-            var insideShapePoints = Ray.IntersectRayPolygon(cur, rayDir, insideShape);
-            if (insideShapePoints == null || insideShapePoints.Count < 2)
+            var count = Ray.IntersectRayPolygon(cur, rayDir, insideShape, ref collisionPointsReference, false);
+            
+            if(count < 2) //ray did not hit inside shape, just draw ray between edge of the outside shape
             {
                 var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
@@ -674,43 +678,58 @@ public static class ShapeStripedDrawing
                     outsideClosestPoint = outsideShapePoints.b.Point;
                 }
 
-                insideShapePoints.SortClosestFirst(cur);
-                float insideFurthestDis =  (insideShapePoints.Last.Point - cur).LengthSquared();
-                float insideClosestDis = (insideShapePoints.First.Point - cur).LengthSquared();
-                var insideFurthestPoint = insideShapePoints.Last.Point;
-                var insideClosestPoint = insideShapePoints.First.Point;
+                collisionPointsReference.SortClosestFirst(cur);
+                var insideFurthestPoint = collisionPointsReference.Last.Point;
+                var insideClosestPoint = collisionPointsReference.First.Point;
+                float insideFurthestDis =  (insideFurthestPoint - cur).LengthSquared();
+                float insideClosestDis = (insideClosestPoint - cur).LengthSquared();
                 
+                //inside shape is outside of the outside shape so just draw the ray from edge to edge of the outside shape
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
                     var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
                     segment.Draw(striped);
                 }
-                else if (insideFurthestDis > outsideFurthestDis)
-                {
-                    var segment = new Segment(outsideClosestPoint, insideClosestPoint);
-                    segment.Draw(striped);
-                }   
-                else if (insideClosestDis < outsideClosestDis)
-                {
-                    var segment = new Segment(insideFurthestPoint, outsideFurthestPoint);
-                    segment.Draw(striped);
-                }
                 else
                 {
-                    var segmentFirst = new Segment(outsideClosestPoint, insideClosestPoint);
-                    segmentFirst.Draw(striped);
-
-                    for (int j = 1; j < insideShapePoints.Count - 1; j+=2)
+                    //if the first segment is valid (completely inside) draw it
+                    if (insideClosestDis > outsideClosestDis && insideClosestDis < outsideFurthestDis)
                     {
-                        var p1 = insideShapePoints[j].Point;
-                        var p2 = insideShapePoints[j + 1].Point;
+                        var segment = new Segment(outsideClosestPoint, insideClosestPoint);
+                        segment.Draw(striped);
+                    }   
+                    
+                    //if the last segment is valid (completely inside) draw it
+                    if (insideFurthestDis < outsideFurthestDis && insideFurthestDis > outsideClosestDis)
+                    {
+                        var segment = new Segment(insideFurthestPoint, outsideFurthestPoint);
+                        segment.Draw(striped);
+                    }
+
+                    for (int j = 1; j < collisionPointsReference.Count - 1; j+=2)
+                    {
+                        var p1 = collisionPointsReference[j].Point;
+                        var p2 = collisionPointsReference[j + 1].Point;
+                        var p1Dis = (p1 - cur).LengthSquared();
+                        var p2Dis = (p2 - cur).LengthSquared();
+                        
+                        //if both points are outside on either side, don´t draw the segment
+                        if((p1Dis < outsideClosestDis || p1Dis > outsideFurthestDis) && (p2Dis < outsideClosestDis || p2Dis > outsideFurthestDis)) continue;
+                        
+                        //if 1 point is outside take the corresponding point on the outside shape
+                        if (p1Dis < outsideClosestDis) p1 = outsideClosestPoint;
+                        else if(p1Dis > outsideFurthestDis) p1 = outsideFurthestPoint;
+                        
+                        //if 1 point is outsude take the corresponding point on the outside shape
+                        if(p2Dis < outsideClosestDis) p2 = outsideClosestPoint;
+                        else if(p2Dis > outsideFurthestDis) p2 = outsideFurthestPoint;
+                        
                         var segment = new Segment(p1, p2);
                         segment.Draw(striped);
                     }
-                    
-                    var segmentLast = new Segment(insideFurthestPoint, outsideFurthestPoint);
-                    segmentLast.Draw(striped);
                 }
+                
+                collisionPointsReference.Clear();
             }
             
             cur += dir * spacing;
@@ -1363,13 +1382,14 @@ public static class ShapeStripedDrawing
         cur -= rayDir * maxDimension;//offsets the point to outside of the polygon in the opposite direction of the ray
         for (int i = 0; i < steps; i++)
         {
-            var segments = polygon.CutRayWithPolygon(cur, rayDir);
-            if (segments != null && segments.Count > 0)
+            var segmentCount = polygon.CutRayWithPolygon(cur, rayDir, ref segmentsReference);
+            if (segmentCount > 0)
             {
-                foreach (var segment in segments)
+                foreach (var segment in segmentsReference)
                 {
                     segment.Draw(striped);
                 }
+                segmentsReference.Clear();
             }
             cur += dir * spacing;
         }
@@ -1392,14 +1412,16 @@ public static class ShapeStripedDrawing
         cur -= rayDir * maxDimension;//offsets the point to outside of the polygon in the opposite direction of the ray
         for (int i = 0; i < steps; i++)
         {
-            var segments = polygon.CutRayWithPolygon(cur, rayDir);
-            if (segments != null && segments.Count > 0)
+            var segmentCount = polygon.CutRayWithPolygon(cur, rayDir, ref segmentsReference);
+            if (segmentCount > 0)
             {
                 var info = i % 2 == 0 ? striped : alternatingStriped;
-                foreach (var segment in segments)
+                foreach (var segment in segmentsReference)
                 {
                     segment.Draw(info);
                 }
+                
+                segmentsReference.Clear();
             }
             cur += dir * spacing;
         }
@@ -1422,15 +1444,17 @@ public static class ShapeStripedDrawing
         cur -= rayDir * maxDimension;//offsets the point to outside of the polygon in the opposite direction of the ray
         for (int i = 0; i < steps; i++)
         {
-            var segments = polygon.CutRayWithPolygon(cur, rayDir);
-            if (segments != null && segments.Count > 0)
+            var segmentCount = polygon.CutRayWithPolygon(cur, rayDir, ref segmentsReference);
+            if (segmentCount > 0)
             {
                 var infoIndex = i % alternatingStriped.Length;
                 var info = alternatingStriped[infoIndex];
-                foreach (var segment in segments)
+                foreach (var segment in segmentsReference)
                 {
                     segment.Draw(info);
                 }
+                
+                segmentsReference.Clear();
             }
             cur += dir * spacing;
         }
@@ -1456,13 +1480,15 @@ public static class ShapeStripedDrawing
         
         while (targetLength < maxDimension)
         {
-            var segments = polygon.CutRayWithPolygon(cur, rayDir);
-            if (segments != null && segments.Count > 0)
+            var segmentCount = polygon.CutRayWithPolygon(cur, rayDir, ref segmentsReference);
+            if (segmentCount > 0)
             {
-                foreach (var segment in segments)
+                foreach (var segment in segmentsReference)
                 {
                     segment.Draw(striped);
                 }
+                
+                segmentsReference.Clear();
             }
             
             var time = targetLength / maxDimension;
@@ -1493,14 +1519,15 @@ public static class ShapeStripedDrawing
         int i = 0;
         while (targetLength < maxDimension)
         {
-            var segments = polygon.CutRayWithPolygon(cur, rayDir);
-            if (segments != null && segments.Count > 0)
+            var segmentCount = polygon.CutRayWithPolygon(cur, rayDir, ref segmentsReference);
+            if (segmentCount > 0)
             {
                 var info = i % 2 == 0 ? striped : alternatingStriped;
-                foreach (var segment in segments)
+                foreach (var segment in segmentsReference)
                 {
                     segment.Draw(info);
                 }
+                segmentsReference.Clear();
             }
             
             var time = targetLength / maxDimension;
@@ -1533,15 +1560,16 @@ public static class ShapeStripedDrawing
         int i = 0;
         while (targetLength < maxDimension)
         {
-            var segments = polygon.CutRayWithPolygon(cur, rayDir);
-            if (segments != null && segments.Count > 0)
+            var segmentCount = polygon.CutRayWithPolygon(cur, rayDir, ref segmentsReference);
+            if (segmentCount > 0)
             {
                 var infoIndex = i % alternatingStriped.Length;
                 var info = alternatingStriped[infoIndex];
-                foreach (var segment in segments)
+                foreach (var segment in segmentsReference)
                 {
                     segment.Draw(info);
                 }
+                segmentsReference.Clear();
             }
             
             var time = targetLength / maxDimension;

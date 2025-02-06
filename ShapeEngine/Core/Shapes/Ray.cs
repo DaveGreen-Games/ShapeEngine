@@ -911,7 +911,22 @@ public readonly struct Ray
         }
         return result;
     }
-
+    public static int IntersectRayPolygon(Vector2 rayPoint, Vector2 rayDirection, List<Vector2> points, ref CollisionPoints result, bool returnAfterFirstValid = false)
+    {
+        if (points.Count < 3) return 0;
+        var count = 0;
+        for (var i = 0; i < points.Count; i++)
+        {
+            var cp = IntersectRaySegment(rayPoint, rayDirection, points[i], points[(i + 1) % points.Count]);
+            if (cp.Valid)
+            {
+                result.Add(cp);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+        }
+        return count;
+    }
     
     public CollisionPoint IntersectSegment(Vector2 segmentStart, Vector2 segmentEnd) => IntersectRaySegment(Point, Direction, segmentStart, segmentEnd);
     public CollisionPoint IntersectSegment(Segment segment) => IntersectRaySegment(Point, Direction, segment.Start, segment.End, segment.Normal);
