@@ -3377,8 +3377,13 @@ public static class ShapeStripedDrawing
         for (int i = 0; i < steps; i++)
         {
             var count = Ray.IntersectRayPolygon(cur, rayDir, polygon, ref collisionPointsReference);
-            if (count >= 2)
+            if (count >= 2)//minimum of 2 points for drawing needed
             {
+                if (count >= 4) //only if there is 4 or more points, sort the points for drawing
+                {
+                    collisionPointsReference.SortClosestFirst(cur);
+                }
+                
                 for (int j = 0; j < collisionPointsReference.Count - 1; j+=2)
                 {
                     var p1 = collisionPointsReference[j].Point;
@@ -3418,8 +3423,12 @@ public static class ShapeStripedDrawing
         for (int i = 0; i < steps; i++)
         {
             var count = Ray.IntersectRayPolygon(cur, rayDir, polygon, ref collisionPointsReference);
-            if (count >= 2)
+            if (count >= 2)//minimum of 2 points for drawing needed
             {
+                if (count >= 4) //only if there is 4 or more points, sort the points for drawing
+                {
+                    collisionPointsReference.SortClosestFirst(cur);
+                }
                 var info = i % 2 == 0 ? striped : alternatingStriped;
                 for (int j = 0; j < collisionPointsReference.Count - 1; j+=2)
                 {
@@ -3458,8 +3467,12 @@ public static class ShapeStripedDrawing
         for (int i = 0; i < steps; i++)
         {
             var count = Ray.IntersectRayPolygon(cur, rayDir, polygon, ref collisionPointsReference);
-            if (count >= 2)
+            if (count >= 2)//minimum of 2 points for drawing needed
             {
+                if (count >= 4) //only if there is 4 or more points, sort the points for drawing
+                {
+                    collisionPointsReference.SortClosestFirst(cur);
+                }
                 var infoIndex = i % alternatingStriped.Length;
                 var info = alternatingStriped[infoIndex];
                 for (int j = 0; j < collisionPointsReference.Count - 1; j+=2)
@@ -3502,8 +3515,12 @@ public static class ShapeStripedDrawing
         while (targetLength < maxDimension)
         {
             var count = Ray.IntersectRayPolygon(cur, rayDir, polygon, ref collisionPointsReference);
-            if (count >= 2)
+            if (count >= 2)//minimum of 2 points for drawing needed
             {
+                if (count >= 4) //only if there is 4 or more points, sort the points for drawing
+                {
+                    collisionPointsReference.SortClosestFirst(cur);
+                }
                 for (int j = 0; j < collisionPointsReference.Count - 1; j+=2)
                 {
                     var p1 = collisionPointsReference[j].Point;
@@ -3549,8 +3566,12 @@ public static class ShapeStripedDrawing
         while (targetLength < maxDimension)
         {
             var count = Ray.IntersectRayPolygon(cur, rayDir, polygon, ref collisionPointsReference);
-            if (count >= 2)
+            if (count >= 2)//minimum of 2 points for drawing needed
             {
+                if (count >= 4) //only if there is 4 or more points, sort the points for drawing
+                {
+                    collisionPointsReference.SortClosestFirst(cur);
+                }
                 var info = i % 2 == 0 ? striped : alternatingStriped;
                 for (int j = 0; j < collisionPointsReference.Count - 1; j+=2)
                 {
@@ -3599,8 +3620,12 @@ public static class ShapeStripedDrawing
         while (targetLength < maxDimension)
         {
             var count = Ray.IntersectRayPolygon(cur, rayDir, polygon, ref collisionPointsReference);
-            if (count >= 2)
+            if (count >= 2)//minimum of 2 points for drawing needed
             {
+                if (count >= 4) //only if there is 4 or more points, sort the points for drawing
+                {
+                    collisionPointsReference.SortClosestFirst(cur);
+                }
                 var infoIndex = i % alternatingStriped.Length;
                 var info = alternatingStriped[infoIndex];
                 for (int j = 0; j < collisionPointsReference.Count - 1; j+=2)

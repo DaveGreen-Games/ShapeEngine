@@ -216,7 +216,6 @@ public class StripedShapeDrawingExample : ExampleScene
     private void RegenerateOutsideShape()
     {
         float size = outsideShapeSize;
-        float radius = size / 2;
         var center = new Vector2();
         
         if (shapeIndex == 1)
@@ -225,7 +224,7 @@ public class StripedShapeDrawingExample : ExampleScene
         }
         else if (shapeIndex == 4)
         {
-            poly = Polygon.Generate(center, 16, radius / 2, radius);
+            poly = Polygon.Generate(center, 16, size / 4, size);
         }
     }
     private void RegenerateInsideShape()
