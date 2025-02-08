@@ -9,7 +9,6 @@ namespace ShapeEngine.StaticLib.Drawing;
 public static class ShapeStripedDrawing
 {
     private static CollisionPoints collisionPointsReference = new CollisionPoints(6);
-    private static List<Segment> segmentsReference = new(6);
     
     #region Circle
     /// <summary>
@@ -3377,15 +3376,18 @@ public static class ShapeStripedDrawing
         cur -= rayDir * maxDimension;//offsets the point to outside the polygon in the opposite direction of the ray
         for (int i = 0; i < steps; i++)
         {
-            var segmentCount = polygon.CutRayWithPolygon(cur, rayDir, ref segmentsReference);
-            if (segmentCount > 0)
+            var count = Ray.IntersectRayPolygon(cur, rayDir, polygon, ref collisionPointsReference);
+            if (count >= 2)
             {
-                foreach (var segment in segmentsReference)
+                for (int j = 0; j < collisionPointsReference.Count - 1; j+=2)
                 {
-                    segment.Draw(striped);
+                    var p1 = collisionPointsReference[j].Point;
+                    var p2 = collisionPointsReference[j + 1].Point;
+                    ShapeSegmentDrawing.DrawSegment(p1, p2, striped);
                 }
-                segmentsReference.Clear();
             }
+            collisionPointsReference.Clear();
+            
             cur += dir * spacing;
         }
     }
@@ -3415,17 +3417,18 @@ public static class ShapeStripedDrawing
         cur -= rayDir * maxDimension;//offsets the point to outside the polygon in the opposite direction of the ray
         for (int i = 0; i < steps; i++)
         {
-            var segmentCount = polygon.CutRayWithPolygon(cur, rayDir, ref segmentsReference);
-            if (segmentCount > 0)
+            var count = Ray.IntersectRayPolygon(cur, rayDir, polygon, ref collisionPointsReference);
+            if (count >= 2)
             {
                 var info = i % 2 == 0 ? striped : alternatingStriped;
-                foreach (var segment in segmentsReference)
+                for (int j = 0; j < collisionPointsReference.Count - 1; j+=2)
                 {
-                    segment.Draw(info);
+                    var p1 = collisionPointsReference[j].Point;
+                    var p2 = collisionPointsReference[j + 1].Point;
+                    ShapeSegmentDrawing.DrawSegment(p1, p2, info);
                 }
-                
-                segmentsReference.Clear();
             }
+            collisionPointsReference.Clear();
             cur += dir * spacing;
         }
     }
@@ -3454,18 +3457,19 @@ public static class ShapeStripedDrawing
         cur -= rayDir * maxDimension;//offsets the point to outside the polygon in the opposite direction of the ray
         for (int i = 0; i < steps; i++)
         {
-            var segmentCount = polygon.CutRayWithPolygon(cur, rayDir, ref segmentsReference);
-            if (segmentCount > 0)
+            var count = Ray.IntersectRayPolygon(cur, rayDir, polygon, ref collisionPointsReference);
+            if (count >= 2)
             {
                 var infoIndex = i % alternatingStriped.Length;
                 var info = alternatingStriped[infoIndex];
-                foreach (var segment in segmentsReference)
+                for (int j = 0; j < collisionPointsReference.Count - 1; j+=2)
                 {
-                    segment.Draw(info);
+                    var p1 = collisionPointsReference[j].Point;
+                    var p2 = collisionPointsReference[j + 1].Point;
+                    ShapeSegmentDrawing.DrawSegment(p1, p2, info);
                 }
-                
-                segmentsReference.Clear();
             }
+            collisionPointsReference.Clear();
             cur += dir * spacing;
         }
     }
@@ -3497,17 +3501,17 @@ public static class ShapeStripedDrawing
         
         while (targetLength < maxDimension)
         {
-            var segmentCount = polygon.CutRayWithPolygon(cur, rayDir, ref segmentsReference);
-            if (segmentCount > 0)
+            var count = Ray.IntersectRayPolygon(cur, rayDir, polygon, ref collisionPointsReference);
+            if (count >= 2)
             {
-                foreach (var segment in segmentsReference)
+                for (int j = 0; j < collisionPointsReference.Count - 1; j+=2)
                 {
-                    segment.Draw(striped);
+                    var p1 = collisionPointsReference[j].Point;
+                    var p2 = collisionPointsReference[j + 1].Point;
+                    ShapeSegmentDrawing.DrawSegment(p1, p2, striped);
                 }
-                
-                segmentsReference.Clear();
             }
-            
+            collisionPointsReference.Clear();
             var time = targetLength / maxDimension;
             if (!spacingCurve.Sample(time, out spacing)) return;
             if (spacing <= 0f) return;//prevents infinite loop
@@ -3544,16 +3548,18 @@ public static class ShapeStripedDrawing
         int i = 0;
         while (targetLength < maxDimension)
         {
-            var segmentCount = polygon.CutRayWithPolygon(cur, rayDir, ref segmentsReference);
-            if (segmentCount > 0)
+            var count = Ray.IntersectRayPolygon(cur, rayDir, polygon, ref collisionPointsReference);
+            if (count >= 2)
             {
                 var info = i % 2 == 0 ? striped : alternatingStriped;
-                foreach (var segment in segmentsReference)
+                for (int j = 0; j < collisionPointsReference.Count - 1; j+=2)
                 {
-                    segment.Draw(info);
+                    var p1 = collisionPointsReference[j].Point;
+                    var p2 = collisionPointsReference[j + 1].Point;
+                    ShapeSegmentDrawing.DrawSegment(p1, p2, info);
                 }
-                segmentsReference.Clear();
             }
+            collisionPointsReference.Clear();
             
             var time = targetLength / maxDimension;
             if (!spacingCurve.Sample(time, out spacing)) return;
@@ -3592,17 +3598,19 @@ public static class ShapeStripedDrawing
         int i = 0;
         while (targetLength < maxDimension)
         {
-            var segmentCount = polygon.CutRayWithPolygon(cur, rayDir, ref segmentsReference);
-            if (segmentCount > 0)
+            var count = Ray.IntersectRayPolygon(cur, rayDir, polygon, ref collisionPointsReference);
+            if (count >= 2)
             {
                 var infoIndex = i % alternatingStriped.Length;
                 var info = alternatingStriped[infoIndex];
-                foreach (var segment in segmentsReference)
+                for (int j = 0; j < collisionPointsReference.Count - 1; j+=2)
                 {
-                    segment.Draw(info);
+                    var p1 = collisionPointsReference[j].Point;
+                    var p2 = collisionPointsReference[j + 1].Point;
+                    ShapeSegmentDrawing.DrawSegment(p1, p2, info);
                 }
-                segmentsReference.Clear();
             }
+            collisionPointsReference.Clear();
             
             var time = targetLength / maxDimension;
             if (!spacingCurve.Sample(time, out spacing)) return;

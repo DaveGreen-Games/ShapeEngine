@@ -15,7 +15,7 @@ namespace ShapeEngine.Core.Shapes
     /// </summary>
     public class Polygon : Points, IEquatable<Polygon>
     {
-        private static CollisionPoints collisionPointsReference = new CollisionPoints(4);
+        private static CollisionPoints collisionPointsReference = new(4);
         public override Polygon Copy() => new(this);
 
         #region Constructors
