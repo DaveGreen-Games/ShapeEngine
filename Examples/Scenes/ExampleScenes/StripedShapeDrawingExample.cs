@@ -94,15 +94,22 @@ public class StripedShapeDrawingExample : ExampleScene
     private readonly InputAction toggleCrissCrossPattern;
     
     private bool insideShapeMode = false;
-    private int shapeIndex = 0;
+    private int outsideShapeIndex = 0;
+    private int insideShapeIndex = 0;
     private const int MaxShapes = 5;
     private const int outsideShapeSize = 450;
 
-    private Circle circle;
-    private Triangle triangle;
-    private Rect rect;
-    private Quad quad;
-    private Polygon poly;
+    private readonly Circle outsideCircle;
+    private Triangle outsideTriangle;
+    private readonly Rect outsideRect;
+    private readonly Quad outsideQuad;
+    private Polygon outsidePoly;
+    
+    private Circle insideCircle;
+    private Triangle insideTriangle;
+    private Rect insideRect;
+    private Quad insideQuad;
+    private Polygon insidePoly;
     
     private LineDrawingInfo lineStripedInfo;
     private LineDrawingInfo lineInfoOutline;
@@ -111,7 +118,9 @@ public class StripedShapeDrawingExample : ExampleScene
     
     private float curInsideShapeRotDeg = 0f;
     private float curInsideShapeSize = 150f;
+    private float curInsidePolygonSize;
     private Vector2 curInsideShapePos = Vector2.Zero;
+    
     private readonly ValueSlider insideShapeRotDegSlider; // 0 - 360
     private readonly ValueSlider insideShapeSizeSlider; // 100 - 350
     
@@ -167,11 +176,20 @@ public class StripedShapeDrawingExample : ExampleScene
         float radius = size / 2;
         var center = new Vector2();
 
-        circle = new(center, radius);
-        triangle = Triangle.Generate(center, size / 2, size);
-        rect = new Rect(center, new Size(size, size), new AnchorPoint(0.5f, 0.5f));
-        quad = new Quad(center, new Size(size, size), 45 * ShapeMath.DEGTORAD, new AnchorPoint(0.5f, 0.5f));
-        poly = Polygon.Generate(center, 16, size / 4, size);
+        outsideCircle = new(center, radius);
+        outsideTriangle = Triangle.Generate(center, size / 2, size);
+        outsideRect = new Rect(center, new Size(size, size), new AnchorPoint(0.5f, 0.5f));
+        outsideQuad = new Quad(center, new Size(size, size), 45 * ShapeMath.DEGTORAD, new AnchorPoint(0.5f, 0.5f));
+        outsidePoly = Polygon.Generate(center, 16, size / 4, size);
+
+        size = 100;
+        radius = size / 2;
+        insideCircle = new(center, radius);
+        insideTriangle = Triangle.Generate(center, size / 2, size);
+        insideRect = new Rect(center, new Size(size, size), new AnchorPoint(0.5f, 0.5f));
+        insideQuad = new Quad(center, new Size(size, size), 45 * ShapeMath.DEGTORAD, new AnchorPoint(0.5f, 0.5f));
+        insidePoly = Polygon.Generate(center, 16, size / 4, size);
+        curInsidePolygonSize = size;
 
         var font = GAMELOOP.GetFont(FontIDs.JetBrains);
         insideShapeRotDegSlider = new("Inside Rotation", 0, 0f, 360, true);
@@ -208,7 +226,7 @@ public class StripedShapeDrawingExample : ExampleScene
     }
     public override void Reset()
     {
-        shapeIndex = 0;
+        outsideShapeIndex = 0;
         insideShapeMode = false;
 
         curSpacingOffset = 0f;
@@ -237,13 +255,13 @@ public class StripedShapeDrawingExample : ExampleScene
         float size = outsideShapeSize;
         var center = new Vector2();
         
-        if (shapeIndex == 1)
+        if (outsideShapeIndex == 1)
         {
-            triangle = Triangle.Generate(center, size / 2, size);
+            outsideTriangle = Triangle.Generate(center, size / 2, size);
         }
-        else if (shapeIndex == 4)
+        else if (outsideShapeIndex == 4)
         {
-            poly = Polygon.Generate(center, 16, size / 4, size);
+            outsidePoly = Polygon.Generate(center, 16, size / 4, size);
         }
     }
     private void RegenerateInsideShape()
@@ -294,6 +312,46 @@ public class StripedShapeDrawingExample : ExampleScene
         rotationDegSlider.Update(time.Delta, ui.MousePos);
         
         ActualizeSliderValues();
+        
+        if (insideShapeMode)
+        {
+            curInsideShapePos = game.MousePos;
+            var size = curInsideShapeSize;
+            var pos = curInsideShapePos;
+            var rot = curInsideShapeRotDeg;
+            
+            if (insideShapeIndex == 0) // Circle
+            {
+               insideCircle = insideCircle.SetPosition(pos);
+               insideCircle.SetRadius(size / 2);
+            }
+            else if (insideShapeIndex == 1) // Triangle
+            {
+               insideTriangle = insideTriangle.SetPosition(pos);
+               insideTriangle = insideTriangle.SetSize(size, pos);
+               insideTriangle = insideTriangle.SetRotation(rot, pos);
+            }
+            else if (insideShapeIndex == 2) // Rect
+            {
+                insideRect = insideRect.SetPosition(pos, AnchorPoint.Center);
+                insideRect = insideRect.SetSize(new Size(size, size), AnchorPoint.Center);
+            }
+            else if (insideShapeIndex == 3) // Quad
+            {
+                insideQuad = insideQuad.SetPosition(pos, AnchorPoint.Center);
+                insideQuad = insideQuad.SetSize(size, AnchorPoint.Center);
+                insideQuad = insideQuad.SetRotation(rot, AnchorPoint.Center);
+            }
+            else if (insideShapeIndex == 4) // Polygon
+            {
+                insidePoly.SetPosition(pos);
+                var amount = size - curInsidePolygonSize;
+                insidePoly.ChangeSize(amount, pos);
+                curInsidePolygonSize = size;
+                insidePoly.SetRotation(rot, pos);
+            }
+                
+        }
     }
 
     protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
@@ -332,8 +390,17 @@ public class StripedShapeDrawingExample : ExampleScene
         
         if (nextShape.State.Pressed)
         {
-            shapeIndex++;
-            if (shapeIndex >= MaxShapes) shapeIndex = 0;
+            if (insideShapeMode)
+            {
+                insideShapeIndex++;
+                if(insideShapeIndex >= MaxShapes) insideShapeIndex = 0;
+            }
+            else
+            {
+                outsideShapeIndex++;
+                if (outsideShapeIndex >= MaxShapes) outsideShapeIndex = 0;
+            }
+            
         }
 
         if (changeDrawingMode.State.Pressed)
@@ -347,90 +414,305 @@ public class StripedShapeDrawingExample : ExampleScene
         lineStripedInfo = lineStripedInfo.ChangeColor(stripedColor.ColorRgba);
         lineInfoOutline = lineInfoOutline.ChangeColor(outlineColor.ColorRgba);
         
-        
+        if (outsideShapeIndex == 0) // Circle
+        {
+            if (insideShapeMode)
+            {
+                if (insideShapeIndex == 0) // Circle
+                {
+                    outsideCircle.DrawStriped(insideCircle, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    if (crissCrossPatternActive)
+                    {
+                        outsideCircle.DrawStriped(insideCircle, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    }
+                }
+                else if (insideShapeIndex == 1) // Triangle
+                {
+                    outsideCircle.DrawStriped(insideTriangle, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    if (crissCrossPatternActive)
+                    {
+                        outsideCircle.DrawStriped(insideTriangle, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    }
+                }
+                else if (insideShapeIndex == 2) // Rect
+                {
+                    outsideCircle.DrawStriped(insideRect, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    if (crissCrossPatternActive)
+                    {
+                        outsideCircle.DrawStriped(insideRect, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    }
+                }
+                else if (insideShapeIndex == 3) // Quad
+                {
+                    outsideCircle.DrawStriped(insideQuad, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    if (crissCrossPatternActive)
+                    {
+                        outsideCircle.DrawStriped(insideQuad, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    }
+                }
+                else if (insideShapeIndex == 4) // Polygon
+                {
+                    outsideCircle.DrawStriped(insidePoly, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    if (crissCrossPatternActive)
+                    {
+                        outsideCircle.DrawStriped(insidePoly, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    }
+                }
+            }
+            else
+            {
+                outsideCircle.DrawStriped(curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                if (crissCrossPatternActive)
+                {
+                    outsideCircle.DrawStriped(curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                }
+            }
+            outsideCircle.DrawLines(lineInfoOutline, curCircleSides);
+        }
+        else if (outsideShapeIndex == 1) // Triangle
+        {
+            if (insideShapeMode)
+            {
+                if (insideShapeIndex == 0) // Circle
+                {
+                    outsideTriangle.DrawStriped(insideCircle, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    if (crissCrossPatternActive)
+                    {
+                        outsideTriangle.DrawStriped(insideCircle, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    }
+                }
+                else if (insideShapeIndex == 1) // Triangle
+                {
+                    outsideTriangle.DrawStriped(insideTriangle, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    if (crissCrossPatternActive)
+                    {
+                        outsideTriangle.DrawStriped(insideTriangle, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    }
+                }
+                else if (insideShapeIndex == 2) // Rect
+                {
+                    outsideTriangle.DrawStriped(insideRect, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    if (crissCrossPatternActive)
+                    {
+                        outsideTriangle.DrawStriped(insideRect, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    }
+                }
+                else if (insideShapeIndex == 3) // Quad
+                {
+                    outsideTriangle.DrawStriped(insideQuad, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    if (crissCrossPatternActive)
+                    {
+                        outsideTriangle.DrawStriped(insideQuad, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    }
+                }
+                else if (insideShapeIndex == 4) // Polygon
+                {
+                    outsideTriangle.DrawStriped(insidePoly, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    if (crissCrossPatternActive)
+                    {
+                        outsideTriangle.DrawStriped(insidePoly, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    }
+                }
+            }
+            else
+            {
+                outsideTriangle.DrawStriped(curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                if (crissCrossPatternActive)
+                {
+                    outsideTriangle.DrawStriped(curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                }
+            }
+            outsideTriangle.DrawLines(lineInfoOutline);
+        }
+        else if (outsideShapeIndex == 2) // Rect
+        {
+            if (insideShapeMode)
+            {
+                if (insideShapeIndex == 0) // Circle
+                {
+                    outsideRect.DrawStriped(insideCircle, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    if (crissCrossPatternActive)
+                    {
+                        outsideRect.DrawStriped(insideCircle, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    }
+                }
+                else if (insideShapeIndex == 1) // Triangle
+                {
+                    outsideRect.DrawStriped(insideTriangle, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    if (crissCrossPatternActive)
+                    {
+                        outsideRect.DrawStriped(insideTriangle, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    }
+                }
+                else if (insideShapeIndex == 2) // Rect
+                {
+                    outsideRect.DrawStriped(insideRect, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    if (crissCrossPatternActive)
+                    {
+                        outsideRect.DrawStriped(insideRect, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    }
+                }
+                else if (insideShapeIndex == 3) // Quad
+                {
+                    outsideRect.DrawStriped(insideQuad, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    if (crissCrossPatternActive)
+                    {
+                        outsideRect.DrawStriped(insideQuad, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    }
+                }
+                else if (insideShapeIndex == 4) // Polygon
+                {
+                    outsideRect.DrawStriped(insidePoly, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    if (crissCrossPatternActive)
+                    {
+                        outsideRect.DrawStriped(insidePoly, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    }
+                }
+            }
+            else
+            {
+                outsideRect.DrawStriped(curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                if (crissCrossPatternActive)
+                {
+                    outsideRect.DrawStriped(curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                }
+            }
+            outsideRect.DrawLines(lineInfoOutline);
+        }
+        else if (outsideShapeIndex == 3) // Quad
+        {
+            if (insideShapeMode)
+            {
+                if (insideShapeIndex == 0) // Circle
+                {
+                    outsideQuad.DrawStriped(insideCircle, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    if (crissCrossPatternActive)
+                    {
+                        outsideQuad.DrawStriped(insideCircle, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    }
+                }
+                else if (insideShapeIndex == 1) // Triangle
+                {
+                    outsideQuad.DrawStriped(insideTriangle, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    if (crissCrossPatternActive)
+                    {
+                        outsideQuad.DrawStriped(insideTriangle, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    }
+                }
+                else if (insideShapeIndex == 2) // Rect
+                {
+                    outsideQuad.DrawStriped(insideRect, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    if (crissCrossPatternActive)
+                    {
+                        outsideQuad.DrawStriped(insideRect, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    }
+                }
+                else if (insideShapeIndex == 3) // Quad
+                {
+                    outsideQuad.DrawStriped(insideQuad, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    if (crissCrossPatternActive)
+                    {
+                        outsideQuad.DrawStriped(insideQuad, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    }
+                }
+                else if (insideShapeIndex == 4) // Polygon
+                {
+                    outsideQuad.DrawStriped(insidePoly, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    if (crissCrossPatternActive)
+                    {
+                        outsideQuad.DrawStriped(insidePoly, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    }
+                }
+            }
+            else
+            {
+                outsideQuad.DrawStriped(curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                if (crissCrossPatternActive)
+                {
+                    outsideQuad.DrawStriped(curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                }
+            }
+            outsideQuad.DrawLines(lineInfoOutline);
+        }
+        else if (outsideShapeIndex == 4) // Polygon
+        {
+            if (insideShapeMode)
+            {
+                if (insideShapeIndex == 0) // Circle
+                {
+                    outsidePoly.DrawStriped(insideCircle, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    if (crissCrossPatternActive)
+                    {
+                        outsidePoly.DrawStriped(insideCircle, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    }
+                }
+                else if (insideShapeIndex == 1) // Triangle
+                {
+                    outsidePoly.DrawStriped(insideTriangle, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    if (crissCrossPatternActive)
+                    {
+                        outsidePoly.DrawStriped(insideTriangle, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    }
+                }
+                else if (insideShapeIndex == 2) // Rect
+                {
+                    outsidePoly.DrawStriped(insideRect, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    if (crissCrossPatternActive)
+                    {
+                        outsidePoly.DrawStriped(insideRect, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    }
+                }
+                else if (insideShapeIndex == 3) // Quad
+                {
+                    outsidePoly.DrawStriped(insideQuad, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    if (crissCrossPatternActive)
+                    {
+                        outsidePoly.DrawStriped(insideQuad, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    }
+                }
+                else if (insideShapeIndex == 4) // Polygon
+                {
+                    outsidePoly.DrawStriped(insidePoly, curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                    if (crissCrossPatternActive)
+                    {
+                        outsidePoly.DrawStriped(insidePoly, curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                    }
+                }
+            }
+            else
+            {
+                outsidePoly.DrawStriped(curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                if (crissCrossPatternActive)
+                {
+                    outsidePoly.DrawStriped(curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                }
+            }
+            outsidePoly.DrawLines(lineInfoOutline);
+        }
 
-        
-        if (shapeIndex == 0) // Circle
+        if (insideShapeMode)
         {
-            if (insideShapeMode)
+            if (insideShapeIndex == 0) // Circle
             {
-                
+                insideCircle.DrawLines(lineInfoOutline, curCircleSides);
             }
-            else
+            else if (insideShapeIndex == 1) // Triangle
             {
-                circle.DrawStriped(curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
-                if (crissCrossPatternActive)
-                {
-                    circle.DrawStriped(curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
-                }
+                insideTriangle.DrawLines(lineInfoOutline);
             }
-            circle.DrawLines(lineInfoOutline, curCircleSides);
+            else if (insideShapeIndex == 2) // Rect
+            {
+                insideRect.DrawLines(lineInfoOutline);
+            }
+            else if (insideShapeIndex == 3) // Quad
+            {
+                insideQuad.DrawLines(lineInfoOutline);
+            }
+            else if (insideShapeIndex == 4) // Polygon
+            {
+                insidePoly.DrawLines(lineInfoOutline);
+            }
         }
-        else if (shapeIndex == 1) // Triangle
-        {
-            if (insideShapeMode)
-            {
-                
-            }
-            else
-            {
-                triangle.DrawStriped(curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
-                if (crissCrossPatternActive)
-                {
-                    triangle.DrawStriped(curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
-                }
-            }
-            triangle.DrawLines(lineInfoOutline);
-        }
-        else if (shapeIndex == 2) // Rect
-        {
-            if (insideShapeMode)
-            {
-                
-            }
-            else
-            {
-                rect.DrawStriped(curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
-                if (crissCrossPatternActive)
-                {
-                    rect.DrawStriped(curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
-                }
-            }
-            rect.DrawLines(lineInfoOutline);
-        }
-        else if (shapeIndex == 3) // Quad
-        {
-            if (insideShapeMode)
-            {
-                
-            }
-            else
-            {
-                quad.DrawStriped(curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
-                if (crissCrossPatternActive)
-                {
-                    quad.DrawStriped(curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
-                }
-            }
-            quad.DrawLines(lineInfoOutline);
-        }
-        else if (shapeIndex == 4) // Polygon
-        {
-            if (insideShapeMode)
-            {
-                
-            }
-            else
-            {
-                poly.DrawStriped(curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
-                if (crissCrossPatternActive)
-                {
-                    poly.DrawStriped(curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
-                }
-            }
-            poly.DrawLines(lineInfoOutline);
-        }
-        
         
     }
     
@@ -481,11 +763,11 @@ public class StripedShapeDrawingExample : ExampleScene
     }
     private string GetCurShapeName()
     {
-        if (shapeIndex == 0) return "Circle";
-        if (shapeIndex == 1) return "Triangle";
-        if (shapeIndex == 2) return "Rect";
-        if (shapeIndex == 3) return "Quad";
-        if (shapeIndex == 4) return "Polygon";
+        if (outsideShapeIndex == 0) return "Circle";
+        if (outsideShapeIndex == 1) return "Triangle";
+        if (outsideShapeIndex == 2) return "Rect";
+        if (outsideShapeIndex == 3) return "Quad";
+        if (outsideShapeIndex == 4) return "Polygon";
         return "Circle";
     }
 
