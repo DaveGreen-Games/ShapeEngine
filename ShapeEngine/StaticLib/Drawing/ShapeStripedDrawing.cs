@@ -30,8 +30,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var lineDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
         for (int i = 0; i < steps; i++)
@@ -266,8 +267,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
         cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
@@ -393,8 +395,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
         cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
@@ -505,8 +508,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
         cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
@@ -617,8 +621,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
         cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
@@ -729,8 +734,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
         cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
@@ -853,8 +859,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var lineDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var a = triangle.A;
         var b = triangle.B;
@@ -1104,8 +1111,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
         cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
@@ -1231,8 +1239,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
         cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
@@ -1344,8 +1353,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
         cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
@@ -1457,8 +1467,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
         cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
@@ -1570,8 +1581,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
         cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
@@ -1693,8 +1705,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var lineDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var a = quad.A;
         var b = quad.B;
@@ -1947,8 +1960,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
         cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
@@ -2074,8 +2088,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
         cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
@@ -2187,8 +2202,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
         cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
@@ -2300,8 +2316,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
         cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
@@ -2413,8 +2430,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
         cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
@@ -2535,8 +2553,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var lineDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var a = rect.A;
         var b = rect.B;
@@ -2783,8 +2802,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
         cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
@@ -2910,8 +2930,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
         cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
@@ -3022,8 +3043,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
         cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
@@ -3134,8 +3156,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
         cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
@@ -3246,8 +3269,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
         cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
@@ -3369,8 +3393,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
         cur -= rayDir * maxDimension;//offsets the point to outside the polygon in the opposite direction of the ray
@@ -3671,8 +3696,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
         cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
@@ -3750,8 +3776,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
         cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
@@ -3829,8 +3856,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
         cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
@@ -3908,8 +3936,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
         cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
@@ -3987,8 +4016,9 @@ public static class ShapeStripedDrawing
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
         var rayDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
-        var start = center - (dir * (maxDimension * 0.5f + spacing * spacingOffset));
-        int steps = (int)(maxDimension / spacing);
+        var totalSpacingOffset = spacing * spacingOffset;
+        var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
+        int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
         cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines

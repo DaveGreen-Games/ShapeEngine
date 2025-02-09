@@ -87,8 +87,12 @@ public class StripedShapeDrawingExample : ExampleScene
         }
     }
 
-    private InputAction nextShape;
-    private InputAction changeDrawingMode;
+    private readonly InputAction nextShape;
+    private readonly InputAction changeDrawingMode;
+    private readonly InputAction regenerateOutsideShape;
+    private readonly InputAction regenerateInsideShape;
+    private readonly InputAction toggleCrissCrossPattern;
+    
     private bool insideShapeMode = false;
     private int shapeIndex = 0;
     private const int MaxShapes = 5;
@@ -123,6 +127,8 @@ public class StripedShapeDrawingExample : ExampleScene
 
     private readonly PaletteColor outlineColor = Colors.PcLight;
     private readonly PaletteColor stripedColor = Colors.PcSpecial;
+
+    private bool crissCrossPatternActive = false;
     
     public StripedShapeDrawingExample()
     {
@@ -137,6 +143,19 @@ public class StripedShapeDrawingExample : ExampleScene
         var changeModeGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
         var changeModeKb = new InputTypeKeyboardButton(ShapeKeyboardButton.TAB);
         changeDrawingMode = new(changeModeMB, changeModeGp, changeModeKb);
+        
+        
+        // var regenOutsideShapeGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
+        var regenOutsideShapeKb = new InputTypeKeyboardButton(ShapeKeyboardButton.ONE);
+        regenerateOutsideShape = new(regenOutsideShapeKb);
+        
+        // var regenInsideShapeGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
+        var regenInsideShapeKb = new InputTypeKeyboardButton(ShapeKeyboardButton.TWO);
+        regenerateInsideShape = new(regenInsideShapeKb);
+        
+        // var toggleCrissCrossGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
+        var toggleCrissCrossKb = new InputTypeKeyboardButton(ShapeKeyboardButton.THREE);
+        toggleCrissCrossPattern = new(toggleCrissCrossKb);
         
         textFont.FontSpacing = 1f;
         textFont.ColorRgba = Colors.Light;
@@ -161,17 +180,17 @@ public class StripedShapeDrawingExample : ExampleScene
         insideShapeSizeSlider = new("Inside Size", 150, 100f, 350f, true);
         insideShapeSizeSlider.Percentage = false;
         
-        spacingOffsetSlider = new("Offset", 0.5f, 0f, 1f, true);
+        spacingOffsetSlider = new("Offset", 0f, -2f, 2f, true);
         
         rotationDegSlider = new("Rotation", 45, 0f, 360f, true);
         rotationDegSlider.Percentage = false;
         
-        lineThicknessSlider = new("Thickness", 2f, 1f, 32f, true);
+        lineThicknessSlider = new("Thickness", 2f, 1f, 20f, true);
         lineThicknessSlider.Percentage = false;
-        
-        spacingSlider = new("Spacing", 12, 4f, 128f, true);
+
+        var min = lineThicknessSlider.CurValue * 2 + 4;
+        spacingSlider = new("Spacing", min, min, 128f, true);
         spacingSlider.Percentage = false;
-        spacingSlider.MinValue = lineThicknessSlider.CurValue * 2 + 4;
 
     }
     private void ActualizeSliderValues()
@@ -182,7 +201,7 @@ public class StripedShapeDrawingExample : ExampleScene
     
         float t = lineThicknessSlider.CurValue;
         lineStripedInfo = lineStripedInfo.ChangeThickness(t);
-        lineInfoOutline = lineInfoOutline.ChangeThickness(t);
+        lineInfoOutline = lineInfoOutline.ChangeThickness(t * 1.25f);
         
         curInsideShapeRotDeg = insideShapeRotDegSlider.CurValue;
         curInsideShapeSize = insideShapeSizeSlider.CurValue;
@@ -195,7 +214,7 @@ public class StripedShapeDrawingExample : ExampleScene
         curSpacingOffset = 0f;
         spacingOffsetSlider.SetCurValue(curSpacingOffset);
 
-        curRotationDeg = 0f;
+        curRotationDeg = 45f;
         rotationDegSlider.SetCurValue(curRotationDeg);
         
         curLineThickness = 2f;
@@ -261,9 +280,12 @@ public class StripedShapeDrawingExample : ExampleScene
         lineThicknessSlider.SetRect(sliderRectsBottom[0].ApplyMargins(0f, 0.05f, 0f, 0f));
         lineThicknessSlider.Update(time.Delta, ui.MousePos);
         
-        spacingSlider.MinValue = lineThicknessSlider.CurValue * 2 + 4;
         spacingSlider.SetRect(sliderRectsBottom[1].ApplyMargins(0.025f, 0.025f, 0f, 0f));
         spacingSlider.Update(time.Delta, ui.MousePos);
+        var v = spacingSlider.CurValue;
+        spacingSlider.MinValue = lineThicknessSlider.CurValue * 2 + 4;
+        if(v < spacingSlider.MinValue) spacingSlider.SetCurValue(spacingSlider.MinValue);
+        else spacingSlider.SetCurValue(v);
 
         spacingOffsetSlider.SetRect(sliderRectsBottom[2].ApplyMargins(0.025f, 0.025f, 0f, 0f));
         spacingOffsetSlider.Update(time.Delta, ui.MousePos);
@@ -285,6 +307,28 @@ public class StripedShapeDrawingExample : ExampleScene
         changeDrawingMode.Gamepad = gamepad;
         changeDrawingMode.Update(dt);
         
+        regenerateOutsideShape.Gamepad = gamepad;
+        regenerateOutsideShape.Update(dt);
+        
+        regenerateInsideShape.Gamepad = gamepad;
+        regenerateInsideShape.Update(dt);
+        
+        toggleCrissCrossPattern.Gamepad = gamepad;
+        toggleCrissCrossPattern.Update(dt);
+        
+        
+        if (regenerateOutsideShape.State.Pressed)
+        {
+            RegenerateOutsideShape();
+        }
+        if (regenerateInsideShape.State.Pressed)
+        {
+            RegenerateInsideShape();
+        }
+        if (toggleCrissCrossPattern.State.Pressed)
+        {
+            crissCrossPatternActive = !crissCrossPatternActive;
+        }
         
         if (nextShape.State.Pressed)
         {
@@ -308,7 +352,6 @@ public class StripedShapeDrawingExample : ExampleScene
         
         if (shapeIndex == 0) // Circle
         {
-            
             if (insideShapeMode)
             {
                 
@@ -316,12 +359,15 @@ public class StripedShapeDrawingExample : ExampleScene
             else
             {
                 circle.DrawStriped(curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                if (crissCrossPatternActive)
+                {
+                    circle.DrawStriped(curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                }
             }
             circle.DrawLines(lineInfoOutline, curCircleSides);
         }
         else if (shapeIndex == 1) // Triangle
         {
-            
             if (insideShapeMode)
             {
                 
@@ -329,12 +375,15 @@ public class StripedShapeDrawingExample : ExampleScene
             else
             {
                 triangle.DrawStriped(curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                if (crissCrossPatternActive)
+                {
+                    triangle.DrawStriped(curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                }
             }
             triangle.DrawLines(lineInfoOutline);
         }
         else if (shapeIndex == 2) // Rect
         {
-            
             if (insideShapeMode)
             {
                 
@@ -342,12 +391,15 @@ public class StripedShapeDrawingExample : ExampleScene
             else
             {
                 rect.DrawStriped(curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                if (crissCrossPatternActive)
+                {
+                    rect.DrawStriped(curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                }
             }
             rect.DrawLines(lineInfoOutline);
         }
         else if (shapeIndex == 3) // Quad
         {
-            
             if (insideShapeMode)
             {
                 
@@ -355,12 +407,15 @@ public class StripedShapeDrawingExample : ExampleScene
             else
             {
                 quad.DrawStriped(curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                if (crissCrossPatternActive)
+                {
+                    quad.DrawStriped(curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                }
             }
             quad.DrawLines(lineInfoOutline);
         }
         else if (shapeIndex == 4) // Polygon
         {
-            
             if (insideShapeMode)
             {
                 
@@ -368,6 +423,10 @@ public class StripedShapeDrawingExample : ExampleScene
             else
             {
                 poly.DrawStriped(curSpacing, curRotationDeg, lineStripedInfo, curSpacingOffset);
+                if (crissCrossPatternActive)
+                {
+                    poly.DrawStriped(curSpacing, curRotationDeg + 90, lineStripedInfo, curSpacingOffset);
+                }
             }
             poly.DrawLines(lineInfoOutline);
         }
@@ -394,14 +453,21 @@ public class StripedShapeDrawingExample : ExampleScene
             lineThicknessSlider.Draw();
         }
         var curDevice = ShapeInput.CurrentInputDeviceType;
-        var nextShapeText = nextShape. GetInputTypeDescription( curDevice, true, 1, false); 
-        var changeDrawingModeText = changeDrawingMode. GetInputTypeDescription( curDevice, true, 1, false); 
+        var nextShapeText = nextShape.GetInputTypeDescription( curDevice, true, 1, false); 
+        var changeDrawingModeText = changeDrawingMode.GetInputTypeDescription( curDevice, true, 1, false); 
+        var regenOutsideShapeText = regenerateOutsideShape.GetInputTypeDescription(InputDeviceType.Keyboard, true, 1, false); 
+        var regenInsideShapeText = regenerateInsideShape.GetInputTypeDescription(InputDeviceType.Keyboard, true, 1, false); 
+        var toggleCrissCrossPatternText = toggleCrissCrossPattern.GetInputTypeDescription(InputDeviceType.Keyboard, true, 1, false); 
 
-        var topCenter = GAMELOOP.UIRects.GetRect("center").ApplyMargins(0,0,0.05f,0.9f);
+        var topCenter = GAMELOOP.UIRects.GetRect("center").ApplyMargins(0,0,0.01f,0.94f);
+        var topCenterSplit = topCenter.SplitH(4);
         textFont.ColorRgba = Colors.Light;
-        var mode = insideShapeMode ? "Outside & Inside Shape Mode" : "Outside Shape Only Mode";
-        
-        textFont.DrawTextWrapNone($"{changeDrawingModeText} Mode: {mode}", topCenter, new(0.5f, 0.5f));
+        var mode = insideShapeMode ? "Outside & Inside" : "Outside Only";
+        var anchorPoint = new AnchorPoint(0.5f, 0f);
+        textFont.DrawTextWrapNone($"{changeDrawingModeText} {mode}", topCenterSplit[0], anchorPoint);
+        textFont.DrawTextWrapNone($"{regenOutsideShapeText} Regen Outside", topCenterSplit[1], anchorPoint);
+        textFont.DrawTextWrapNone($"{regenInsideShapeText} Regen Inside", topCenterSplit[2], anchorPoint);
+        textFont.DrawTextWrapNone($"{toggleCrissCrossPatternText} Criss Cross", topCenterSplit[3], anchorPoint);
         
         var bottomCenter = GAMELOOP.UIRects.GetRect("bottom center").ApplyMargins(0.1f, 0.1f, 0.15f, 0.15f);
         var margin = bottomCenter.Height * 0.05f;
