@@ -292,10 +292,10 @@ public readonly struct Quad : IEquatable<Quad>
     public Quad ChangeRotation(float rad, AnchorPoint alignement)
     {
         var pivotPoint = GetPoint(alignement);
-        var a = (A - pivotPoint).Rotate(rad);
-        var b = (B - pivotPoint).Rotate(rad);
-        var c = (C - pivotPoint).Rotate(rad);
-        var d = (D - pivotPoint).Rotate(rad);
+        var a = pivotPoint + (A - pivotPoint).Rotate(rad);
+        var b = pivotPoint + (B - pivotPoint).Rotate(rad);
+        var c = pivotPoint + (C - pivotPoint).Rotate(rad);
+        var d = pivotPoint + (D - pivotPoint).Rotate(rad);
         return new(a,b,c,d);
     }
     public Quad SetRotation(float angleRad, AnchorPoint alignement)
