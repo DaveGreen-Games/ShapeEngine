@@ -348,8 +348,6 @@ public class StripedShapeDrawingExample : ExampleScene
             else if (insideShapeIndex == 4) // Polygon
             {
                 insidePoly.SetPosition(pos);
-                
-                //TODO: Size does not work correctly
                 var scale = size / curInsidePolygonSize;
                 insidePoly.ScaleSize(scale, pos);
                 
