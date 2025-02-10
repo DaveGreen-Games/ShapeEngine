@@ -1,3 +1,4 @@
+using System.Drawing;
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
@@ -9,6 +10,7 @@ using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Text;
 using ShapeEngine.UI;
 using ShapeEngine.Random;
+using Size = ShapeEngine.Core.Structs.Size;
 
 namespace Examples.Scenes.ExampleScenes;
 
@@ -175,7 +177,7 @@ public class StripedShapeDrawingExample : ExampleScene
         float size = outsideShapeSize;
         float radius = size / 2;
         var center = new Vector2();
-
+        center += new Vector2(0, -6);
         outsideCircle = new(center, radius);
         outsideTriangle = Triangle.Generate(center, size / 2, size);
         outsideRect = new Rect(center, new Size(size, size), new AnchorPoint(0.5f, 0.5f));
@@ -195,7 +197,7 @@ public class StripedShapeDrawingExample : ExampleScene
         insideShapeRotDegSlider = new("Inside Rotation", 0, 0f, 360, true);
         insideShapeRotDegSlider.Percentage = false;
         
-        insideShapeSizeSlider = new("Inside Size", 150, 100f, 350f, true);
+        insideShapeSizeSlider = new("Inside Size", 150, 100f, 350f * 2f, true);
         insideShapeSizeSlider.Percentage = false;
         
         spacingOffsetSlider = new("Offset", 0f, -2f, 2f, true);
@@ -295,20 +297,20 @@ public class StripedShapeDrawingExample : ExampleScene
             insideShapeRotDegSlider.Update(time.Delta, ui.MousePos);
         }
             
-        lineThicknessSlider.SetRect(sliderRectsBottom[0].ApplyMargins(0f, 0.05f, 0f, 0f));
+        lineThicknessSlider.SetRect(sliderRectsBottom[0].ApplyMargins(0f, 0.1f, 0f, 0f));
         lineThicknessSlider.Update(time.Delta, ui.MousePos);
         
-        spacingSlider.SetRect(sliderRectsBottom[1].ApplyMargins(0.025f, 0.025f, 0f, 0f));
+        spacingSlider.SetRect(sliderRectsBottom[1].ApplyMargins(0.05f, 0.05f, 0f, 0f));
         spacingSlider.Update(time.Delta, ui.MousePos);
         var v = spacingSlider.CurValue;
         spacingSlider.MinValue = lineThicknessSlider.CurValue * 2 + 4;
         if(v < spacingSlider.MinValue) spacingSlider.SetCurValue(spacingSlider.MinValue);
         else spacingSlider.SetCurValue(v);
 
-        spacingOffsetSlider.SetRect(sliderRectsBottom[2].ApplyMargins(0.025f, 0.025f, 0f, 0f));
+        spacingOffsetSlider.SetRect(sliderRectsBottom[2].ApplyMargins(0.05f, 0.05f, 0f, 0f));
         spacingOffsetSlider.Update(time.Delta, ui.MousePos);
             
-        rotationDegSlider.SetRect(sliderRectsBottom[3].ApplyMargins(0.05f, 0f, 0f, 0f));
+        rotationDegSlider.SetRect(sliderRectsBottom[3].ApplyMargins(0.1f, 0f, 0f, 0f));
         rotationDegSlider.Update(time.Delta, ui.MousePos);
         
         ActualizeSliderValues();
@@ -318,12 +320,12 @@ public class StripedShapeDrawingExample : ExampleScene
             curInsideShapePos = game.MousePos;
             var size = curInsideShapeSize;
             var pos = curInsideShapePos;
-            var rot = curInsideShapeRotDeg;
+            var rot = curInsideShapeRotDeg * ShapeMath.DEGTORAD;
             
             if (insideShapeIndex == 0) // Circle
             {
                insideCircle = insideCircle.SetPosition(pos);
-               insideCircle.SetRadius(size / 2);
+               insideCircle = insideCircle.SetRadius(size / 2);
             }
             else if (insideShapeIndex == 1) // Triangle
             {
@@ -333,6 +335,7 @@ public class StripedShapeDrawingExample : ExampleScene
             }
             else if (insideShapeIndex == 2) // Rect
             {
+                
                 insideRect = insideRect.SetPosition(pos, AnchorPoint.Center);
                 insideRect = insideRect.SetSize(new Size(size, size), AnchorPoint.Center);
             }
@@ -345,9 +348,13 @@ public class StripedShapeDrawingExample : ExampleScene
             else if (insideShapeIndex == 4) // Polygon
             {
                 insidePoly.SetPosition(pos);
-                var amount = size - curInsidePolygonSize;
-                insidePoly.ChangeSize(amount, pos);
+                
+                //TODO: Size does not work correctly
+                var scale = size / curInsidePolygonSize;
+                insidePoly.ScaleSize(scale, pos);
+                
                 curInsidePolygonSize = size;
+                
                 insidePoly.SetRotation(rot, pos);
             }
                 

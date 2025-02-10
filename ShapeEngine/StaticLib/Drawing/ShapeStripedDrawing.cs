@@ -280,7 +280,7 @@ public static class ShapeStripedDrawing
             if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
             
             var insideShapePoints = Ray.IntersectRayCircle(cur, rayDir, insideShape.Center, insideShape.Radius);
-            if (!insideShapePoints.a.Valid || !insideShapePoints.b.Valid) //draw the ray - circle intersection points
+            if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
             {
                 var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
@@ -309,8 +309,8 @@ public static class ShapeStripedDrawing
                     outsideClosestPoint = outsideShapePoints.b.Point;
                 }
                 
-                var insideDisA = (insideShapePoints.a.Point - cur).LengthSquared();
-                var insideDisB = (insideShapePoints.b.Point - cur).LengthSquared();
+                var insideDisA = insideShapePoints.a.Valid ? (insideShapePoints.a.Point - cur).LengthSquared() : 0f;
+                var insideDisB = insideShapePoints.b.Valid ? (insideShapePoints.b.Point - cur).LengthSquared() : 0f;
                 float insideFurthestDis;
                 float insideClosestDis;
                 Vector2 insideFurthestPoint;
@@ -331,6 +331,13 @@ public static class ShapeStripedDrawing
                     insideClosestPoint = insideShapePoints.b.Point;
                 }
 
+                //both outside shape points are inside the inside shape -> no drawing possible
+                if (insideFurthestDis > outsideFurthestDis && insideClosestDis < outsideClosestDis)
+                {
+                    cur += dir * spacing;
+                    continue;
+                }
+                
                 //draw outside shape segments because the inside shape points are outside the outside shape
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
@@ -408,7 +415,7 @@ public static class ShapeStripedDrawing
             if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
             
             var insideShapePoints = Ray.IntersectRayTriangle(cur, rayDir, insideShape.A, insideShape.B, insideShape.C);
-            if (!insideShapePoints.a.Valid || !insideShapePoints.b.Valid) //draw the ray - circle intersection points
+            if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
             {
                 var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
@@ -437,8 +444,8 @@ public static class ShapeStripedDrawing
                     outsideClosestPoint = outsideShapePoints.b.Point;
                 }
                 
-                var insideDisA = (insideShapePoints.a.Point - cur).LengthSquared();
-                var insideDisB = (insideShapePoints.b.Point - cur).LengthSquared();
+                var insideDisA = insideShapePoints.a.Valid ? (insideShapePoints.a.Point - cur).LengthSquared() : 0f;
+                var insideDisB = insideShapePoints.b.Valid ? (insideShapePoints.b.Point - cur).LengthSquared() : 0f;
                 float insideFurthestDis;
                 float insideClosestDis;
                 Vector2 insideFurthestPoint;
@@ -459,6 +466,13 @@ public static class ShapeStripedDrawing
                     insideClosestPoint = insideShapePoints.b.Point;
                 }
 
+                //both outside shape points are inside the inside shape -> no drawing possible
+                if (insideFurthestDis > outsideFurthestDis && insideClosestDis < outsideClosestDis)
+                {
+                    cur += dir * spacing;
+                    continue;
+                }
+                
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
                     var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
@@ -521,7 +535,7 @@ public static class ShapeStripedDrawing
             if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
             
             var insideShapePoints = Ray.IntersectRayQuad(cur, rayDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
-            if (!insideShapePoints.a.Valid || !insideShapePoints.b.Valid) //draw the ray - circle intersection points
+            if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
             {
                 var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
@@ -550,8 +564,8 @@ public static class ShapeStripedDrawing
                     outsideClosestPoint = outsideShapePoints.b.Point;
                 }
                 
-                var insideDisA = (insideShapePoints.a.Point - cur).LengthSquared();
-                var insideDisB = (insideShapePoints.b.Point - cur).LengthSquared();
+                var insideDisA = insideShapePoints.a.Valid ? (insideShapePoints.a.Point - cur).LengthSquared() : 0f;
+                var insideDisB = insideShapePoints.b.Valid ? (insideShapePoints.b.Point - cur).LengthSquared() : 0f;
                 float insideFurthestDis;
                 float insideClosestDis;
                 Vector2 insideFurthestPoint;
@@ -572,6 +586,13 @@ public static class ShapeStripedDrawing
                     insideClosestPoint = insideShapePoints.b.Point;
                 }
 
+                //both outside shape points are inside the inside shape -> no drawing possible
+                if (insideFurthestDis > outsideFurthestDis && insideClosestDis < outsideClosestDis)
+                {
+                    cur += dir * spacing;
+                    continue;
+                }
+                
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
                     var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
@@ -634,7 +655,7 @@ public static class ShapeStripedDrawing
             if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
             
             var insideShapePoints = Ray.IntersectRayRect(cur, rayDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
-            if (!insideShapePoints.a.Valid || !insideShapePoints.b.Valid) //draw the ray - circle intersection points
+            if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
             {
                 var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
@@ -663,8 +684,8 @@ public static class ShapeStripedDrawing
                     outsideClosestPoint = outsideShapePoints.b.Point;
                 }
                 
-                var insideDisA = (insideShapePoints.a.Point - cur).LengthSquared();
-                var insideDisB = (insideShapePoints.b.Point - cur).LengthSquared();
+                var insideDisA = insideShapePoints.a.Valid ? (insideShapePoints.a.Point - cur).LengthSquared() : 0f;
+                var insideDisB = insideShapePoints.b.Valid ? (insideShapePoints.b.Point - cur).LengthSquared() : 0f;
                 float insideFurthestDis;
                 float insideClosestDis;
                 Vector2 insideFurthestPoint;
@@ -685,6 +706,13 @@ public static class ShapeStripedDrawing
                     insideClosestPoint = insideShapePoints.b.Point;
                 }
 
+                //both outside shape points are inside the inside shape -> no drawing possible
+                if (insideFurthestDis > outsideFurthestDis && insideClosestDis < outsideClosestDis)
+                {
+                    cur += dir * spacing;
+                    continue;
+                }
+                
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
                     var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
@@ -1124,7 +1152,7 @@ public static class ShapeStripedDrawing
             if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
             
             var insideShapePoints = Ray.IntersectRayCircle(cur, rayDir, insideShape.Center, insideShape.Radius);
-            if (!insideShapePoints.a.Valid || !insideShapePoints.b.Valid) //draw the ray - circle intersection points
+            if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
             {
                 var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
@@ -1153,8 +1181,8 @@ public static class ShapeStripedDrawing
                     outsideClosestPoint = outsideShapePoints.b.Point;
                 }
                 
-                var insideDisA = (insideShapePoints.a.Point - cur).LengthSquared();
-                var insideDisB = (insideShapePoints.b.Point - cur).LengthSquared();
+                var insideDisA = insideShapePoints.a.Valid ? (insideShapePoints.a.Point - cur).LengthSquared() : 0f;
+                var insideDisB = insideShapePoints.b.Valid ? (insideShapePoints.b.Point - cur).LengthSquared() : 0f;
                 float insideFurthestDis;
                 float insideClosestDis;
                 Vector2 insideFurthestPoint;
@@ -1175,6 +1203,13 @@ public static class ShapeStripedDrawing
                     insideClosestPoint = insideShapePoints.b.Point;
                 }
 
+                //both outside shape points are inside the inside shape -> no drawing possible
+                if (insideFurthestDis > outsideFurthestDis && insideClosestDis < outsideClosestDis)
+                {
+                    cur += dir * spacing;
+                    continue;
+                }
+                
                 //draw outside shape segments because the inside shape points are outside the outside shape
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
@@ -1252,7 +1287,7 @@ public static class ShapeStripedDrawing
             if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
             
             var insideShapePoints = Ray.IntersectRayTriangle(cur, rayDir, insideShape.A, insideShape.B, insideShape.C);
-            if (!insideShapePoints.a.Valid || !insideShapePoints.b.Valid) //draw the ray - circle intersection points
+            if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
             {
                 var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
@@ -1281,8 +1316,8 @@ public static class ShapeStripedDrawing
                     outsideClosestPoint = outsideShapePoints.b.Point;
                 }
                 
-                var insideDisA = (insideShapePoints.a.Point - cur).LengthSquared();
-                var insideDisB = (insideShapePoints.b.Point - cur).LengthSquared();
+                var insideDisA = insideShapePoints.a.Valid ? (insideShapePoints.a.Point - cur).LengthSquared() : 0f;
+                var insideDisB = insideShapePoints.b.Valid ? (insideShapePoints.b.Point - cur).LengthSquared() : 0f;
                 float insideFurthestDis;
                 float insideClosestDis;
                 Vector2 insideFurthestPoint;
@@ -1303,6 +1338,13 @@ public static class ShapeStripedDrawing
                     insideClosestPoint = insideShapePoints.b.Point;
                 }
 
+                //both outside shape points are inside the inside shape -> no drawing possible
+                if (insideFurthestDis > outsideFurthestDis && insideClosestDis < outsideClosestDis)
+                {
+                    cur += dir * spacing;
+                    continue;
+                }
+                
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
                     var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
@@ -1366,7 +1408,7 @@ public static class ShapeStripedDrawing
             if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
             
             var insideShapePoints = Ray.IntersectRayQuad(cur, rayDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
-            if (!insideShapePoints.a.Valid || !insideShapePoints.b.Valid) //draw the ray - circle intersection points
+            if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
             {
                 var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
@@ -1395,8 +1437,8 @@ public static class ShapeStripedDrawing
                     outsideClosestPoint = outsideShapePoints.b.Point;
                 }
                 
-                var insideDisA = (insideShapePoints.a.Point - cur).LengthSquared();
-                var insideDisB = (insideShapePoints.b.Point - cur).LengthSquared();
+                var insideDisA = insideShapePoints.a.Valid ? (insideShapePoints.a.Point - cur).LengthSquared() : 0f;
+                var insideDisB = insideShapePoints.b.Valid ? (insideShapePoints.b.Point - cur).LengthSquared() : 0f;
                 float insideFurthestDis;
                 float insideClosestDis;
                 Vector2 insideFurthestPoint;
@@ -1417,6 +1459,13 @@ public static class ShapeStripedDrawing
                     insideClosestPoint = insideShapePoints.b.Point;
                 }
 
+                //both outside shape points are inside the inside shape -> no drawing possible
+                if (insideFurthestDis > outsideFurthestDis && insideClosestDis < outsideClosestDis)
+                {
+                    cur += dir * spacing;
+                    continue;
+                }
+                
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
                     var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
@@ -1480,7 +1529,7 @@ public static class ShapeStripedDrawing
             if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
             
             var insideShapePoints = Ray.IntersectRayRect(cur, rayDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
-            if (!insideShapePoints.a.Valid || !insideShapePoints.b.Valid) //draw the ray - circle intersection points
+            if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
             {
                 var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
@@ -1509,8 +1558,8 @@ public static class ShapeStripedDrawing
                     outsideClosestPoint = outsideShapePoints.b.Point;
                 }
                 
-                var insideDisA = (insideShapePoints.a.Point - cur).LengthSquared();
-                var insideDisB = (insideShapePoints.b.Point - cur).LengthSquared();
+                var insideDisA = insideShapePoints.a.Valid ? (insideShapePoints.a.Point - cur).LengthSquared() : 0f;
+                var insideDisB = insideShapePoints.b.Valid ? (insideShapePoints.b.Point - cur).LengthSquared() : 0f;
                 float insideFurthestDis;
                 float insideClosestDis;
                 Vector2 insideFurthestPoint;
@@ -1531,6 +1580,13 @@ public static class ShapeStripedDrawing
                     insideClosestPoint = insideShapePoints.b.Point;
                 }
 
+                //both outside shape points are inside the inside shape -> no drawing possible
+                if (insideFurthestDis > outsideFurthestDis && insideClosestDis < outsideClosestDis)
+                {
+                    cur += dir * spacing;
+                    continue;
+                }
+                
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
                     var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
@@ -1973,7 +2029,7 @@ public static class ShapeStripedDrawing
             if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
             
             var insideShapePoints = Ray.IntersectRayCircle(cur, rayDir, insideShape.Center, insideShape.Radius);
-            if (!insideShapePoints.a.Valid || !insideShapePoints.b.Valid) //draw the ray - circle intersection points
+            if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
             {
                 var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
@@ -2002,8 +2058,8 @@ public static class ShapeStripedDrawing
                     outsideClosestPoint = outsideShapePoints.b.Point;
                 }
                 
-                var insideDisA = (insideShapePoints.a.Point - cur).LengthSquared();
-                var insideDisB = (insideShapePoints.b.Point - cur).LengthSquared();
+                var insideDisA = insideShapePoints.a.Valid ? (insideShapePoints.a.Point - cur).LengthSquared() : 0f;
+                var insideDisB = insideShapePoints.b.Valid ? (insideShapePoints.b.Point - cur).LengthSquared() : 0f;
                 float insideFurthestDis;
                 float insideClosestDis;
                 Vector2 insideFurthestPoint;
@@ -2024,6 +2080,12 @@ public static class ShapeStripedDrawing
                     insideClosestPoint = insideShapePoints.b.Point;
                 }
 
+                //both outside shape points are inside the inside shape -> no drawing possible
+                if (insideFurthestDis > outsideFurthestDis && insideClosestDis < outsideClosestDis)
+                {
+                    cur += dir * spacing;
+                    continue;
+                }
                 //draw outside shape segments because the inside shape points are outside the outside shape
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
@@ -2101,7 +2163,7 @@ public static class ShapeStripedDrawing
             if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
             
             var insideShapePoints = Ray.IntersectRayTriangle(cur, rayDir, insideShape.A, insideShape.B, insideShape.C);
-            if (!insideShapePoints.a.Valid || !insideShapePoints.b.Valid) //draw the ray - circle intersection points
+            if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
             {
                 var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
@@ -2130,8 +2192,8 @@ public static class ShapeStripedDrawing
                     outsideClosestPoint = outsideShapePoints.b.Point;
                 }
                 
-                var insideDisA = (insideShapePoints.a.Point - cur).LengthSquared();
-                var insideDisB = (insideShapePoints.b.Point - cur).LengthSquared();
+                var insideDisA = insideShapePoints.a.Valid ? (insideShapePoints.a.Point - cur).LengthSquared() : 0f;
+                var insideDisB = insideShapePoints.b.Valid ? (insideShapePoints.b.Point - cur).LengthSquared() : 0f;
                 float insideFurthestDis;
                 float insideClosestDis;
                 Vector2 insideFurthestPoint;
@@ -2152,6 +2214,12 @@ public static class ShapeStripedDrawing
                     insideClosestPoint = insideShapePoints.b.Point;
                 }
 
+                //both outside shape points are inside the inside shape -> no drawing possible
+                if (insideFurthestDis > outsideFurthestDis && insideClosestDis < outsideClosestDis)
+                {
+                    cur += dir * spacing;
+                    continue;
+                }
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
                     var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
@@ -2215,7 +2283,7 @@ public static class ShapeStripedDrawing
             if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
             
             var insideShapePoints = Ray.IntersectRayQuad(cur, rayDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
-            if (!insideShapePoints.a.Valid || !insideShapePoints.b.Valid) //draw the ray - circle intersection points
+            if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
             {
                 var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
@@ -2244,8 +2312,8 @@ public static class ShapeStripedDrawing
                     outsideClosestPoint = outsideShapePoints.b.Point;
                 }
                 
-                var insideDisA = (insideShapePoints.a.Point - cur).LengthSquared();
-                var insideDisB = (insideShapePoints.b.Point - cur).LengthSquared();
+                var insideDisA = insideShapePoints.a.Valid ? (insideShapePoints.a.Point - cur).LengthSquared() : 0f;
+                var insideDisB = insideShapePoints.b.Valid ? (insideShapePoints.b.Point - cur).LengthSquared() : 0f;
                 float insideFurthestDis;
                 float insideClosestDis;
                 Vector2 insideFurthestPoint;
@@ -2266,6 +2334,12 @@ public static class ShapeStripedDrawing
                     insideClosestPoint = insideShapePoints.b.Point;
                 }
 
+                //both outside shape points are inside the inside shape -> no drawing possible
+                if (insideFurthestDis > outsideFurthestDis && insideClosestDis < outsideClosestDis)
+                {
+                    cur += dir * spacing;
+                    continue;
+                }
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
                     var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
@@ -2329,7 +2403,7 @@ public static class ShapeStripedDrawing
             if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
             
             var insideShapePoints = Ray.IntersectRayRect(cur, rayDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
-            if (!insideShapePoints.a.Valid || !insideShapePoints.b.Valid) //draw the ray - circle intersection points
+            if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
             {
                 var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
@@ -2358,8 +2432,8 @@ public static class ShapeStripedDrawing
                     outsideClosestPoint = outsideShapePoints.b.Point;
                 }
                 
-                var insideDisA = (insideShapePoints.a.Point - cur).LengthSquared();
-                var insideDisB = (insideShapePoints.b.Point - cur).LengthSquared();
+                var insideDisA = insideShapePoints.a.Valid ? (insideShapePoints.a.Point - cur).LengthSquared() : 0f;
+                var insideDisB = insideShapePoints.b.Valid ? (insideShapePoints.b.Point - cur).LengthSquared() : 0f;
                 float insideFurthestDis;
                 float insideClosestDis;
                 Vector2 insideFurthestPoint;
@@ -2380,6 +2454,12 @@ public static class ShapeStripedDrawing
                     insideClosestPoint = insideShapePoints.b.Point;
                 }
 
+                //both outside shape points are inside the inside shape -> no drawing possible
+                if (insideFurthestDis > outsideFurthestDis && insideClosestDis < outsideClosestDis)
+                {
+                    cur += dir * spacing;
+                    continue;
+                }
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
                     var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
@@ -2815,7 +2895,7 @@ public static class ShapeStripedDrawing
             if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
             
             var insideShapePoints = Ray.IntersectRayCircle(cur, rayDir, insideShape.Center, insideShape.Radius);
-            if (!insideShapePoints.a.Valid || !insideShapePoints.b.Valid) //draw the ray - circle intersection points
+            if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
             {
                 var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
@@ -2844,8 +2924,8 @@ public static class ShapeStripedDrawing
                     outsideClosestPoint = outsideShapePoints.b.Point;
                 }
                 
-                var insideDisA = (insideShapePoints.a.Point - cur).LengthSquared();
-                var insideDisB = (insideShapePoints.b.Point - cur).LengthSquared();
+                var insideDisA = insideShapePoints.a.Valid ? (insideShapePoints.a.Point - cur).LengthSquared() : 0f;
+                var insideDisB = insideShapePoints.b.Valid ? (insideShapePoints.b.Point - cur).LengthSquared() : 0f;
                 float insideFurthestDis;
                 float insideClosestDis;
                 Vector2 insideFurthestPoint;
@@ -2866,6 +2946,12 @@ public static class ShapeStripedDrawing
                     insideClosestPoint = insideShapePoints.b.Point;
                 }
 
+                //both outside shape points are inside the inside shape -> no drawing possible
+                if (insideFurthestDis > outsideFurthestDis && insideClosestDis < outsideClosestDis)
+                {
+                    cur += dir * spacing;
+                    continue;
+                }
                 //draw outside shape segments because the inside shape points are outside the outside shape
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
@@ -2943,7 +3029,7 @@ public static class ShapeStripedDrawing
             if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
             
             var insideShapePoints = Ray.IntersectRayTriangle(cur, rayDir, insideShape.A, insideShape.B, insideShape.C);
-            if (!insideShapePoints.a.Valid || !insideShapePoints.b.Valid) //draw the ray - circle intersection points
+            if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
             {
                 var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
@@ -2972,8 +3058,8 @@ public static class ShapeStripedDrawing
                     outsideClosestPoint = outsideShapePoints.b.Point;
                 }
                 
-                var insideDisA = (insideShapePoints.a.Point - cur).LengthSquared();
-                var insideDisB = (insideShapePoints.b.Point - cur).LengthSquared();
+                var insideDisA = insideShapePoints.a.Valid ? (insideShapePoints.a.Point - cur).LengthSquared() : 0f;
+                var insideDisB = insideShapePoints.b.Valid ? (insideShapePoints.b.Point - cur).LengthSquared() : 0f;
                 float insideFurthestDis;
                 float insideClosestDis;
                 Vector2 insideFurthestPoint;
@@ -2994,6 +3080,12 @@ public static class ShapeStripedDrawing
                     insideClosestPoint = insideShapePoints.b.Point;
                 }
 
+                //both outside shape points are inside the inside shape -> no drawing possible
+                if (insideFurthestDis > outsideFurthestDis && insideClosestDis < outsideClosestDis)
+                {
+                    cur += dir * spacing;
+                    continue;
+                }
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
                     var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
@@ -3056,7 +3148,7 @@ public static class ShapeStripedDrawing
             if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
             
             var insideShapePoints = Ray.IntersectRayQuad(cur, rayDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
-            if (!insideShapePoints.a.Valid || !insideShapePoints.b.Valid) //draw the ray - circle intersection points
+            if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
             {
                 var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
@@ -3085,8 +3177,8 @@ public static class ShapeStripedDrawing
                     outsideClosestPoint = outsideShapePoints.b.Point;
                 }
                 
-                var insideDisA = (insideShapePoints.a.Point - cur).LengthSquared();
-                var insideDisB = (insideShapePoints.b.Point - cur).LengthSquared();
+                var insideDisA = insideShapePoints.a.Valid ? (insideShapePoints.a.Point - cur).LengthSquared() : 0f;
+                var insideDisB = insideShapePoints.b.Valid ? (insideShapePoints.b.Point - cur).LengthSquared() : 0f;
                 float insideFurthestDis;
                 float insideClosestDis;
                 Vector2 insideFurthestPoint;
@@ -3107,6 +3199,12 @@ public static class ShapeStripedDrawing
                     insideClosestPoint = insideShapePoints.b.Point;
                 }
 
+                //both outside shape points are inside the inside shape -> no drawing possible
+                if (insideFurthestDis > outsideFurthestDis && insideClosestDis < outsideClosestDis)
+                {
+                    cur += dir * spacing;
+                    continue;
+                }
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
                     var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
@@ -3169,7 +3267,7 @@ public static class ShapeStripedDrawing
             if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
             
             var insideShapePoints = Ray.IntersectRayRect(cur, rayDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
-            if (!insideShapePoints.a.Valid || !insideShapePoints.b.Valid) //draw the ray - circle intersection points
+            if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
             {
                 var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
@@ -3198,8 +3296,8 @@ public static class ShapeStripedDrawing
                     outsideClosestPoint = outsideShapePoints.b.Point;
                 }
                 
-                var insideDisA = (insideShapePoints.a.Point - cur).LengthSquared();
-                var insideDisB = (insideShapePoints.b.Point - cur).LengthSquared();
+                var insideDisA = insideShapePoints.a.Valid ? (insideShapePoints.a.Point - cur).LengthSquared() : 0f;
+                var insideDisB = insideShapePoints.b.Valid ? (insideShapePoints.b.Point - cur).LengthSquared() : 0f;
                 float insideFurthestDis;
                 float insideClosestDis;
                 Vector2 insideFurthestPoint;
@@ -3220,6 +3318,12 @@ public static class ShapeStripedDrawing
                     insideClosestPoint = insideShapePoints.b.Point;
                 }
 
+                //both outside shape points are inside the inside shape -> no drawing possible
+                if (insideFurthestDis > outsideFurthestDis && insideClosestDis < outsideClosestDis)
+                {
+                    cur += dir * spacing;
+                    continue;
+                }
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
                     var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
