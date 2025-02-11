@@ -1026,7 +1026,22 @@ public readonly struct Line
         return result;
     }
 
-    
+    public static int IntersectLinePolygon(Vector2 linePoint, Vector2 lineDirection, List<Vector2> points, ref CollisionPoints result, bool returnAfterFirstValid = false)
+    {
+        if (points.Count < 3) return 0;
+        var count = 0;
+        for (var i = 0; i < points.Count; i++)
+        {
+            var cp = IntersectLineSegment(linePoint, lineDirection, points[i], points[(i + 1) % points.Count]);
+            if (cp.Valid)
+            {
+                result.Add(cp);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+        }
+        return count;
+    }
     public CollisionPoint IntersectSegment(Vector2 segmentStart, Vector2 segmentEnd) => IntersectLineSegment(Point, Direction, segmentStart, segmentEnd);
     public CollisionPoint IntersectSegment(Segment segment) => IntersectLineSegment(Point, Direction, segment.Start, segment.End, segment.Normal);
     public CollisionPoint IntersectLine(Vector2 otherPoint, Vector2 otherDirection) => IntersectLineLine(Point, Direction, otherPoint, otherDirection);

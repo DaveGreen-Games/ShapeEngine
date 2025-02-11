@@ -1,5 +1,6 @@
 
 using System.Numerics;
+using ShapeEngine.Color;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
@@ -277,7 +278,11 @@ public static class ShapeStripedDrawing
         for (int i = 0; i < steps; i++)
         {
             var outsideShapePoints = Ray.IntersectRayCircle(cur, rayDir, outsideShape.Center, outsideShape.Radius);
-            if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
+            if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
+            {
+                cur += dir * spacing;
+                continue;
+            }
             
             var insideShapePoints = Ray.IntersectRayCircle(cur, rayDir, insideShape.Center, insideShape.Radius);
             if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
@@ -412,7 +417,11 @@ public static class ShapeStripedDrawing
         for (int i = 0; i < steps; i++)
         {
             var outsideShapePoints = Ray.IntersectRayCircle(cur, rayDir, outsideShape.Center, outsideShape.Radius);
-            if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
+            if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
+            {
+                cur += dir * spacing;
+                continue;
+            }
             
             var insideShapePoints = Ray.IntersectRayTriangle(cur, rayDir, insideShape.A, insideShape.B, insideShape.C);
             if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
@@ -532,7 +541,11 @@ public static class ShapeStripedDrawing
         for (int i = 0; i < steps; i++)
         {
             var outsideShapePoints = Ray.IntersectRayCircle(cur, rayDir, outsideShape.Center, outsideShape.Radius);
-            if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
+            if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
+            {
+                cur += dir * spacing;
+                continue;
+            }
             
             var insideShapePoints = Ray.IntersectRayQuad(cur, rayDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
             if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
@@ -652,7 +665,11 @@ public static class ShapeStripedDrawing
         for (int i = 0; i < steps; i++)
         {
             var outsideShapePoints = Ray.IntersectRayCircle(cur, rayDir, outsideShape.Center, outsideShape.Radius);
-            if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
+            if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
+            {
+                cur += dir * spacing;
+                continue;
+            }
             
             var insideShapePoints = Ray.IntersectRayRect(cur, rayDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
             if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
@@ -1149,7 +1166,11 @@ public static class ShapeStripedDrawing
         for (int i = 0; i < steps; i++)
         {
             var outsideShapePoints = Ray.IntersectRayTriangle(cur, rayDir, outsideShape.A, outsideShape.B, outsideShape.C);
-            if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
+            if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
+            {
+                cur += dir * spacing;
+                continue;
+            }
             
             var insideShapePoints = Ray.IntersectRayCircle(cur, rayDir, insideShape.Center, insideShape.Radius);
             if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
@@ -1284,7 +1305,11 @@ public static class ShapeStripedDrawing
         for (int i = 0; i < steps; i++)
         {
             var outsideShapePoints = Ray.IntersectRayTriangle(cur, rayDir, outsideShape.A, outsideShape.B, outsideShape.C);
-            if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
+            if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
+            {
+                cur += dir * spacing;
+                continue;
+            }
             
             var insideShapePoints = Ray.IntersectRayTriangle(cur, rayDir, insideShape.A, insideShape.B, insideShape.C);
             if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
@@ -1405,7 +1430,11 @@ public static class ShapeStripedDrawing
         for (int i = 0; i < steps; i++)
         {
             var outsideShapePoints = Ray.IntersectRayTriangle(cur, rayDir, outsideShape.A, outsideShape.B, outsideShape.C);
-            if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
+            if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
+            {
+                cur += dir * spacing;
+                continue;
+            }
             
             var insideShapePoints = Ray.IntersectRayQuad(cur, rayDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
             if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
@@ -1526,7 +1555,11 @@ public static class ShapeStripedDrawing
         for (int i = 0; i < steps; i++)
         {
             var outsideShapePoints = Ray.IntersectRayTriangle(cur, rayDir, outsideShape.A, outsideShape.B, outsideShape.C);
-            if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
+            if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
+            {
+                cur += dir * spacing;
+                continue;
+            }
             
             var insideShapePoints = Ray.IntersectRayRect(cur, rayDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
             if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
@@ -1647,7 +1680,11 @@ public static class ShapeStripedDrawing
         for (int i = 0; i < steps; i++)
         {
             var outsideShapePoints = Ray.IntersectRayTriangle(cur, rayDir, outsideShape.A, outsideShape.B, outsideShape.C);
-            if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
+            if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
+            {
+                cur += dir * spacing;
+                continue;
+            }
             
             var count = Ray.IntersectRayPolygon(cur, rayDir, insideShape, ref collisionPointsReference);
             
@@ -2026,7 +2063,11 @@ public static class ShapeStripedDrawing
         for (int i = 0; i < steps; i++)
         {
             var outsideShapePoints = Ray.IntersectRayQuad(cur, rayDir, outsideShape.A, outsideShape.B, outsideShape.C, outsideShape.D);
-            if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
+            if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
+            {
+                cur += dir * spacing;
+                continue;
+            }
             
             var insideShapePoints = Ray.IntersectRayCircle(cur, rayDir, insideShape.Center, insideShape.Radius);
             if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
@@ -2160,7 +2201,11 @@ public static class ShapeStripedDrawing
         for (int i = 0; i < steps; i++)
         {
             var outsideShapePoints = Ray.IntersectRayQuad(cur, rayDir, outsideShape.A, outsideShape.B, outsideShape.C, outsideShape.D);
-            if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
+            if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
+            {
+                cur += dir * spacing;
+                continue;
+            }
             
             var insideShapePoints = Ray.IntersectRayTriangle(cur, rayDir, insideShape.A, insideShape.B, insideShape.C);
             if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
@@ -2280,7 +2325,11 @@ public static class ShapeStripedDrawing
         for (int i = 0; i < steps; i++)
         {
             var outsideShapePoints = Ray.IntersectRayQuad(cur, rayDir, outsideShape.A, outsideShape.B, outsideShape.C, outsideShape.D);
-            if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
+            if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
+            {
+                cur += dir * spacing;
+                continue;
+            }
             
             var insideShapePoints = Ray.IntersectRayQuad(cur, rayDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
             if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
@@ -2400,7 +2449,11 @@ public static class ShapeStripedDrawing
         for (int i = 0; i < steps; i++)
         {
             var outsideShapePoints = Ray.IntersectRayQuad(cur, rayDir, outsideShape.A, outsideShape.B, outsideShape.C, outsideShape.D);
-            if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
+            if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
+            {
+                cur += dir * spacing;
+                continue;
+            }
             
             var insideShapePoints = Ray.IntersectRayRect(cur, rayDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
             if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
@@ -2520,7 +2573,11 @@ public static class ShapeStripedDrawing
         for (int i = 0; i < steps; i++)
         {
             var outsideShapePoints = Ray.IntersectRayQuad(cur, rayDir, outsideShape.A, outsideShape.B, outsideShape.C, outsideShape.D);
-            if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
+            if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
+            {
+                cur += dir * spacing;
+                continue;
+            }
             
             var count = Ray.IntersectRayPolygon(cur, rayDir, insideShape, ref collisionPointsReference);
             
@@ -2892,7 +2949,11 @@ public static class ShapeStripedDrawing
         for (int i = 0; i < steps; i++)
         {
             var outsideShapePoints = Ray.IntersectRayRect(cur, rayDir, outsideShape.A, outsideShape.B, outsideShape.C, outsideShape.D);
-            if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
+            if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
+            {
+                cur += dir * spacing;
+                continue;
+            }
             
             var insideShapePoints = Ray.IntersectRayCircle(cur, rayDir, insideShape.Center, insideShape.Radius);
             if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
@@ -3026,7 +3087,11 @@ public static class ShapeStripedDrawing
         for (int i = 0; i < steps; i++)
         {
             var outsideShapePoints = Ray.IntersectRayRect(cur, rayDir, outsideShape.A, outsideShape.B, outsideShape.C, outsideShape.D);
-            if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
+            if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
+            {
+                cur += dir * spacing;
+                continue;
+            }
             
             var insideShapePoints = Ray.IntersectRayTriangle(cur, rayDir, insideShape.A, insideShape.B, insideShape.C);
             if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
@@ -3145,7 +3210,11 @@ public static class ShapeStripedDrawing
         for (int i = 0; i < steps; i++)
         {
             var outsideShapePoints = Ray.IntersectRayRect(cur, rayDir, outsideShape.A, outsideShape.B, outsideShape.C, outsideShape.D);
-            if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
+            if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
+            {
+                cur += dir * spacing;
+                continue;
+            }
             
             var insideShapePoints = Ray.IntersectRayQuad(cur, rayDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
             if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
@@ -3264,7 +3333,11 @@ public static class ShapeStripedDrawing
         for (int i = 0; i < steps; i++)
         {
             var outsideShapePoints = Ray.IntersectRayRect(cur, rayDir, outsideShape.A, outsideShape.B, outsideShape.C, outsideShape.D);
-            if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
+            if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
+            {
+                cur += dir * spacing;
+                continue;
+            }
             
             var insideShapePoints = Ray.IntersectRayRect(cur, rayDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
             if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
@@ -3383,7 +3456,11 @@ public static class ShapeStripedDrawing
         for (int i = 0; i < steps; i++)
         {
             var outsideShapePoints = Ray.IntersectRayRect(cur, rayDir, outsideShape.A, outsideShape.B, outsideShape.C, outsideShape.D);
-            if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
+            if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
+            {
+                cur += dir * spacing;
+                continue;
+            }
             
             var count = Ray.IntersectRayPolygon(cur, rayDir, insideShape, ref collisionPointsReference);
             

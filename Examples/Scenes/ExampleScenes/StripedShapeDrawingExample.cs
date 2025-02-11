@@ -268,18 +268,17 @@ public class StripedShapeDrawingExample : ExampleScene
     }
     private void RegenerateInsideShape()
     {
-        // float size = outsideShapeSize;
-        // float radius = size / 2;
-        // var center = new Vector2();
-        //
-        // if (shapeIndex == 1)
-        // {
-        //     triangle = Triangle.Generate(center, size / 2, size);
-        // }
-        // else if (shapeIndex == 4)
-        // {
-        //     poly = Polygon.Generate(center, 16, radius / 2, radius);
-        // }
+        float size = curInsideShapeSize;
+        var center = curInsideShapePos;
+        
+        if (insideShapeIndex == 1)
+        {
+            insideTriangle = Triangle.Generate(center, size / 2, size);
+        }
+        else if (insideShapeIndex == 4)
+        {
+            insidePoly = Polygon.Generate(center, 16, size / 2, size);
+        }
     }
     protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
