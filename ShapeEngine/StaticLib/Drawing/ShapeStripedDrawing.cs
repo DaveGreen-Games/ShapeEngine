@@ -1,5 +1,6 @@
 
 using System.Numerics;
+using System.Runtime.InteropServices;
 using ShapeEngine.Color;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Shapes;
@@ -771,106 +772,75 @@ public static class ShapeStripedDrawing
     public static void DrawStriped(this Circle outsideShape, Polygon insideShape, float spacing, float angleDeg, LineDrawingInfo striped, float spacingOffset = 0f)
     {
         if (spacing <= 0) return;
+        var center = outsideShape.Center;
         float maxDimension = outsideShape.Diameter;
-
+        
         if (spacing > maxDimension) return;
         
-        var center = outsideShape.Center;
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
-        var rayDir = dir.GetPerpendicularRight();
+        var lineDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
         var totalSpacingOffset = spacing * spacingOffset;
         var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
         int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
-        cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
+        cur -= lineDir * maxDimension;//offset the line point to the outside of the outside shape to make sorting possible
         
         for (int i = 0; i < steps; i++)
         {
-            var outsideShapePoints = Ray.IntersectRayCircle(cur, rayDir, outsideShape.Center, outsideShape.Radius);
-            if(!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid) continue;
+            var outsideShapePoints = Line.IntersectLineCircle(cur, lineDir, outsideShape.Center, outsideShape.Radius);
+            if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
+            {
+                cur += dir * spacing;
+                continue;
+            }
+
+            var count = Line.IntersectLinePolygon(cur, lineDir, insideShape, ref collisionPointsReference);
             
-            var count = Ray.IntersectRayPolygon(cur, rayDir, insideShape, ref collisionPointsReference);
-            
-            if(count < 2) //ray did not hit the inside shape, draw ray between edge of the outside shape
+            if(count <= 0) //ray did not hit the inside shape, draw ray between edge of the outside shape
             {
                 var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
             }
             else
             {
-                var outsideDisA = (outsideShapePoints.a.Point - cur).LengthSquared();
-                var outsideDisB = (outsideShapePoints.b.Point - cur).LengthSquared();
-                float outsideFurthestDis;
-                float outsideClosestDis;
-                Vector2 outsideFurthestPoint;
-                Vector2 outsideClosestPoint;
-                
-                if (outsideDisA < outsideDisB)
+                //remove all inside shape intersection points that are outside the outside shape
+                for (int j = collisionPointsReference.Count - 1; j >= 0; j--)
                 {
-                    outsideFurthestDis = outsideDisB;
-                    outsideClosestDis = outsideDisA;
-                    outsideFurthestPoint = outsideShapePoints.b.Point;
-                    outsideClosestPoint = outsideShapePoints.a.Point;
-                }
-                else
-                {
-                    outsideFurthestDis = outsideDisA;
-                    outsideClosestDis = outsideDisB;
-                    outsideFurthestPoint = outsideShapePoints.a.Point;
-                    outsideClosestPoint = outsideShapePoints.b.Point;
-                }
-
-                collisionPointsReference.SortClosestFirst(cur);
-                var insideFurthestPoint = collisionPointsReference.Last.Point;
-                var insideClosestPoint = collisionPointsReference.First.Point;
-                float insideFurthestDis =  (insideFurthestPoint - cur).LengthSquared();
-                float insideClosestDis = (insideClosestPoint - cur).LengthSquared();
-                
-                //the inside shape is outside the outside shape so draw the ray from edge to edge of the outside shape
-                if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
-                {
-                    var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
-                    segment.Draw(striped);
-                }
-                else
-                {
-                    //if the first segment is valid (completely inside), draw it
-                    if (insideClosestDis > outsideClosestDis && insideClosestDis < outsideFurthestDis)
-                    {
-                        var segment = new Segment(outsideClosestPoint, insideClosestPoint);
-                        segment.Draw(striped);
-                    }   
+                    var p = collisionPointsReference[j].Point;
                     
-                    //if the last segment is valid (completely inside), draw it
-                    if (insideFurthestDis < outsideFurthestDis && insideFurthestDis > outsideClosestDis)
-                    {
-                        var segment = new Segment(insideFurthestPoint, outsideFurthestPoint);
-                        segment.Draw(striped);
-                    }
-
-                    for (int j = 1; j < collisionPointsReference.Count - 1; j+=2)
-                    {
-                        var p1 = collisionPointsReference[j].Point;
-                        var p2 = collisionPointsReference[j + 1].Point;
-                        var p1Dis = (p1 - cur).LengthSquared();
-                        var p2Dis = (p2 - cur).LengthSquared();
-                        
-                        //if both points are outside on either side, don't draw the segment
-                        if((p1Dis < outsideClosestDis || p1Dis > outsideFurthestDis) && (p2Dis < outsideClosestDis || p2Dis > outsideFurthestDis)) continue;
-                        
-                        //if 1 point is outside, take the corresponding point on the outside shape
-                        if (p1Dis < outsideClosestDis) p1 = outsideClosestPoint;
-                        else if(p1Dis > outsideFurthestDis) p1 = outsideFurthestPoint;
-                        
-                        //if 1 point is outside, take the corresponding point on the outside shape
-                        if(p2Dis < outsideClosestDis) p2 = outsideClosestPoint;
-                        else if(p2Dis > outsideFurthestDis) p2 = outsideFurthestPoint;
-                        
-                        var segment = new Segment(p1, p2);
-                        segment.Draw(striped);
-                    }
+                    if(!outsideShape.ContainsPoint(p)) collisionPointsReference.RemoveAt(j);
+                }
+                
+                if(outsideShapePoints.a.Valid && !insideShape.ContainsPoint(outsideShapePoints.a.Point)) collisionPointsReference.Add(outsideShapePoints.a);
+                if(outsideShapePoints.b.Valid && !insideShape.ContainsPoint(outsideShapePoints.b.Point)) collisionPointsReference.Add(outsideShapePoints.b);
+                
+                //all points were remove so just draw the outside shape segment (even with only 1 point left, we continue)
+                if (collisionPointsReference.Count <= 1)
+                {
+                    cur += dir * spacing;
+                    collisionPointsReference.Clear();
+                    continue;
+                }
+                if (collisionPointsReference.Count == 2)//no sorting or loop needed for exactly 2 points
+                {
+                    var segment = new Segment(collisionPointsReference[0].Point, collisionPointsReference[1].Point);
+                    segment.Draw(striped);
+                    cur += dir * spacing;
+                    collisionPointsReference.Clear();
+                    continue;
+                }
+                
+                //now that only valid points remain, sort them by distance from the current point
+                collisionPointsReference.SortClosestFirst(cur);
+                
+                for (int j = 0; j < collisionPointsReference.Count - 1; j+=2)
+                {
+                    var p1 = collisionPointsReference[j].Point;
+                    var p2 = collisionPointsReference[j + 1].Point;
+                    var segment = new Segment(p1, p2);
+                    segment.Draw(striped);
                 }
                 
                 collisionPointsReference.Clear();
@@ -879,7 +849,6 @@ public static class ShapeStripedDrawing
             cur += dir * spacing;
         }
     }
-
     
     #endregion
     
@@ -1662,110 +1631,75 @@ public static class ShapeStripedDrawing
     {
         if (spacing <= 0) return;
         var center = outsideShape.GetCentroid();
-        outsideShape.GetFurthestVertex(center, out float disSquared, out int _);
-        float maxDimension = MathF.Sqrt(disSquared) * 2;
+        outsideShape.GetFurthestVertex(center, out float disSq, out int _);
+        float maxDimension = MathF.Sqrt(disSq) * 2;
         
         if (spacing > maxDimension) return;
         
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
-        var rayDir = dir.GetPerpendicularRight();
+        var lineDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
         var totalSpacingOffset = spacing * spacingOffset;
         var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
         int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
-        cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
+        cur -= lineDir * maxDimension;//offset the line point to the outside of the outside shape to make sorting possible
         
         for (int i = 0; i < steps; i++)
         {
-            var outsideShapePoints = Ray.IntersectRayTriangle(cur, rayDir, outsideShape.A, outsideShape.B, outsideShape.C);
+            var outsideShapePoints = Line.IntersectLineTriangle(cur, lineDir, outsideShape.A, outsideShape.B, outsideShape.C);
             if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
             {
                 cur += dir * spacing;
                 continue;
             }
+
+            var count = Line.IntersectLinePolygon(cur, lineDir, insideShape, ref collisionPointsReference);
             
-            var count = Ray.IntersectRayPolygon(cur, rayDir, insideShape, ref collisionPointsReference);
-            
-            if(count < 2) //ray did not hit the inside shape, draw ray between edge of the outside shape
+            if(count <= 0) //ray did not hit the inside shape, draw ray between edge of the outside shape
             {
                 var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
             }
             else
             {
-                var outsideDisA = (outsideShapePoints.a.Point - cur).LengthSquared();
-                var outsideDisB = (outsideShapePoints.b.Point - cur).LengthSquared();
-                float outsideFurthestDis;
-                float outsideClosestDis;
-                Vector2 outsideFurthestPoint;
-                Vector2 outsideClosestPoint;
-                
-                if (outsideDisA < outsideDisB)
+                //remove all inside shape intersection points that are outside the outside shape
+                for (int j = collisionPointsReference.Count - 1; j >= 0; j--)
                 {
-                    outsideFurthestDis = outsideDisB;
-                    outsideClosestDis = outsideDisA;
-                    outsideFurthestPoint = outsideShapePoints.b.Point;
-                    outsideClosestPoint = outsideShapePoints.a.Point;
-                }
-                else
-                {
-                    outsideFurthestDis = outsideDisA;
-                    outsideClosestDis = outsideDisB;
-                    outsideFurthestPoint = outsideShapePoints.a.Point;
-                    outsideClosestPoint = outsideShapePoints.b.Point;
-                }
-
-                collisionPointsReference.SortClosestFirst(cur);
-                var insideFurthestPoint = collisionPointsReference.Last.Point;
-                var insideClosestPoint = collisionPointsReference.First.Point;
-                float insideFurthestDis =  (insideFurthestPoint - cur).LengthSquared();
-                float insideClosestDis = (insideClosestPoint - cur).LengthSquared();
-                
-                //the inside shape is outside the outside shape so draw the ray from edge to edge of the outside shape
-                if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
-                {
-                    var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
-                    segment.Draw(striped);
-                }
-                else
-                {
-                    //if the first segment is valid (completely inside), draw it
-                    if (insideClosestDis > outsideClosestDis && insideClosestDis < outsideFurthestDis)
-                    {
-                        var segment = new Segment(outsideClosestPoint, insideClosestPoint);
-                        segment.Draw(striped);
-                    }   
+                    var p = collisionPointsReference[j].Point;
                     
-                    //if the last segment is valid (completely inside), draw it
-                    if (insideFurthestDis < outsideFurthestDis && insideFurthestDis > outsideClosestDis)
-                    {
-                        var segment = new Segment(insideFurthestPoint, outsideFurthestPoint);
-                        segment.Draw(striped);
-                    }
-
-                    for (int j = 1; j < collisionPointsReference.Count - 1; j+=2)
-                    {
-                        var p1 = collisionPointsReference[j].Point;
-                        var p2 = collisionPointsReference[j + 1].Point;
-                        var p1Dis = (p1 - cur).LengthSquared();
-                        var p2Dis = (p2 - cur).LengthSquared();
-                        
-                        //if both points are outside on either side, don't draw the segment
-                        if((p1Dis < outsideClosestDis || p1Dis > outsideFurthestDis) && (p2Dis < outsideClosestDis || p2Dis > outsideFurthestDis)) continue;
-                        
-                        //if 1 point is outside, take the corresponding point on the outside shape
-                        if (p1Dis < outsideClosestDis) p1 = outsideClosestPoint;
-                        else if(p1Dis > outsideFurthestDis) p1 = outsideFurthestPoint;
-                        
-                        //if 1 point is outside, take the corresponding point on the outside shape
-                        if(p2Dis < outsideClosestDis) p2 = outsideClosestPoint;
-                        else if(p2Dis > outsideFurthestDis) p2 = outsideFurthestPoint;
-                        
-                        var segment = new Segment(p1, p2);
-                        segment.Draw(striped);
-                    }
+                    if(!outsideShape.ContainsPoint(p)) collisionPointsReference.RemoveAt(j);
+                }
+                
+                if(outsideShapePoints.a.Valid && !insideShape.ContainsPoint(outsideShapePoints.a.Point)) collisionPointsReference.Add(outsideShapePoints.a);
+                if(outsideShapePoints.b.Valid && !insideShape.ContainsPoint(outsideShapePoints.b.Point)) collisionPointsReference.Add(outsideShapePoints.b);
+                
+                //all points were remove so just draw the outside shape segment (even with only 1 point left, we continue)
+                if (collisionPointsReference.Count <= 1)
+                {
+                    cur += dir * spacing;
+                    collisionPointsReference.Clear();
+                    continue;
+                }
+                if (collisionPointsReference.Count == 2)//no sorting or loop needed for exactly 2 points
+                {
+                    var segment = new Segment(collisionPointsReference[0].Point, collisionPointsReference[1].Point);
+                    segment.Draw(striped);
+                    cur += dir * spacing;
+                    collisionPointsReference.Clear();
+                    continue;
+                }
+                
+                //now that only valid points remain, sort them by distance from the current point
+                collisionPointsReference.SortClosestFirst(cur);
+                
+                for (int j = 0; j < collisionPointsReference.Count - 1; j+=2)
+                {
+                    var p1 = collisionPointsReference[j].Point;
+                    var p2 = collisionPointsReference[j + 1].Point;
+                    var segment = new Segment(p1, p2);
+                    segment.Draw(striped);
                 }
                 
                 collisionPointsReference.Clear();
@@ -1774,7 +1708,7 @@ public static class ShapeStripedDrawing
             cur += dir * spacing;
         }
     }
-
+    
     #endregion
     
     #region Quad
@@ -2555,110 +2489,75 @@ public static class ShapeStripedDrawing
     {
         if (spacing <= 0) return;
         var center = outsideShape.Center;
-        outsideShape.GetFurthestVertex(center, out float disSquared, out int _);
-        float maxDimension = MathF.Sqrt(disSquared) * 2;
+        outsideShape.GetFurthestVertex(center, out float disSq, out int _);
+        float maxDimension = MathF.Sqrt(disSq) * 2;
         
         if (spacing > maxDimension) return;
         
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
-        var rayDir = dir.GetPerpendicularRight();
+        var lineDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
         var totalSpacingOffset = spacing * spacingOffset;
         var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
         int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
-        cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
+        cur -= lineDir * maxDimension;//offset the line point to the outside of the outside shape to make sorting possible
         
         for (int i = 0; i < steps; i++)
         {
-            var outsideShapePoints = Ray.IntersectRayQuad(cur, rayDir, outsideShape.A, outsideShape.B, outsideShape.C, outsideShape.D);
+            var outsideShapePoints = Line.IntersectLineQuad(cur, lineDir, outsideShape.A, outsideShape.B, outsideShape.C, outsideShape.D);
             if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
             {
                 cur += dir * spacing;
                 continue;
             }
+
+            var count = Line.IntersectLinePolygon(cur, lineDir, insideShape, ref collisionPointsReference);
             
-            var count = Ray.IntersectRayPolygon(cur, rayDir, insideShape, ref collisionPointsReference);
-            
-            if(count < 2) //ray did not hit the inside shape, draw ray between edge of the outside shape
+            if(count <= 0) //ray did not hit the inside shape, draw ray between edge of the outside shape
             {
                 var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
             }
             else
             {
-                var outsideDisA = (outsideShapePoints.a.Point - cur).LengthSquared();
-                var outsideDisB = (outsideShapePoints.b.Point - cur).LengthSquared();
-                float outsideFurthestDis;
-                float outsideClosestDis;
-                Vector2 outsideFurthestPoint;
-                Vector2 outsideClosestPoint;
-                
-                if (outsideDisA < outsideDisB)
+                //remove all inside shape intersection points that are outside the outside shape
+                for (int j = collisionPointsReference.Count - 1; j >= 0; j--)
                 {
-                    outsideFurthestDis = outsideDisB;
-                    outsideClosestDis = outsideDisA;
-                    outsideFurthestPoint = outsideShapePoints.b.Point;
-                    outsideClosestPoint = outsideShapePoints.a.Point;
-                }
-                else
-                {
-                    outsideFurthestDis = outsideDisA;
-                    outsideClosestDis = outsideDisB;
-                    outsideFurthestPoint = outsideShapePoints.a.Point;
-                    outsideClosestPoint = outsideShapePoints.b.Point;
-                }
-
-                collisionPointsReference.SortClosestFirst(cur);
-                var insideFurthestPoint = collisionPointsReference.Last.Point;
-                var insideClosestPoint = collisionPointsReference.First.Point;
-                float insideFurthestDis =  (insideFurthestPoint - cur).LengthSquared();
-                float insideClosestDis = (insideClosestPoint - cur).LengthSquared();
-                
-                //the inside shape is outside the outside shape so draw the ray from edge to edge of the outside shape
-                if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
-                {
-                    var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
-                    segment.Draw(striped);
-                }
-                else
-                {
-                    //if the first segment is valid (completely inside), draw it
-                    if (insideClosestDis > outsideClosestDis && insideClosestDis < outsideFurthestDis)
-                    {
-                        var segment = new Segment(outsideClosestPoint, insideClosestPoint);
-                        segment.Draw(striped);
-                    }   
+                    var p = collisionPointsReference[j].Point;
                     
-                    //if the last segment is valid (completely inside), draw it
-                    if (insideFurthestDis < outsideFurthestDis && insideFurthestDis > outsideClosestDis)
-                    {
-                        var segment = new Segment(insideFurthestPoint, outsideFurthestPoint);
-                        segment.Draw(striped);
-                    }
-
-                    for (int j = 1; j < collisionPointsReference.Count - 1; j+=2)
-                    {
-                        var p1 = collisionPointsReference[j].Point;
-                        var p2 = collisionPointsReference[j + 1].Point;
-                        var p1Dis = (p1 - cur).LengthSquared();
-                        var p2Dis = (p2 - cur).LengthSquared();
-                        
-                        //if both points are outside on either side, don't draw the segment
-                        if((p1Dis < outsideClosestDis || p1Dis > outsideFurthestDis) && (p2Dis < outsideClosestDis || p2Dis > outsideFurthestDis)) continue;
-                        
-                        //if 1 point is outside, take the corresponding point on the outside shape
-                        if (p1Dis < outsideClosestDis) p1 = outsideClosestPoint;
-                        else if(p1Dis > outsideFurthestDis) p1 = outsideFurthestPoint;
-                        
-                        //if 1 point is outside, take the corresponding point on the outside shape
-                        if(p2Dis < outsideClosestDis) p2 = outsideClosestPoint;
-                        else if(p2Dis > outsideFurthestDis) p2 = outsideFurthestPoint;
-                        
-                        var segment = new Segment(p1, p2);
-                        segment.Draw(striped);
-                    }
+                    if(!outsideShape.ContainsPoint(p)) collisionPointsReference.RemoveAt(j);
+                }
+                
+                if(outsideShapePoints.a.Valid && !insideShape.ContainsPoint(outsideShapePoints.a.Point)) collisionPointsReference.Add(outsideShapePoints.a);
+                if(outsideShapePoints.b.Valid && !insideShape.ContainsPoint(outsideShapePoints.b.Point)) collisionPointsReference.Add(outsideShapePoints.b);
+                
+                //all points were remove so just draw the outside shape segment (even with only 1 point left, we continue)
+                if (collisionPointsReference.Count <= 1)
+                {
+                    cur += dir * spacing;
+                    collisionPointsReference.Clear();
+                    continue;
+                }
+                if (collisionPointsReference.Count == 2)//no sorting or loop needed for exactly 2 points
+                {
+                    var segment = new Segment(collisionPointsReference[0].Point, collisionPointsReference[1].Point);
+                    segment.Draw(striped);
+                    cur += dir * spacing;
+                    collisionPointsReference.Clear();
+                    continue;
+                }
+                
+                //now that only valid points remain, sort them by distance from the current point
+                collisionPointsReference.SortClosestFirst(cur);
+                
+                for (int j = 0; j < collisionPointsReference.Count - 1; j+=2)
+                {
+                    var p1 = collisionPointsReference[j].Point;
+                    var p2 = collisionPointsReference[j + 1].Point;
+                    var segment = new Segment(p1, p2);
+                    segment.Draw(striped);
                 }
                 
                 collisionPointsReference.Clear();
@@ -2667,7 +2566,7 @@ public static class ShapeStripedDrawing
             cur += dir * spacing;
         }
     }
-
+    
     #endregion
     
     #region Rect
@@ -3444,104 +3343,69 @@ public static class ShapeStripedDrawing
         
         var center = outsideShape.Center;
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
-        var rayDir = dir.GetPerpendicularRight();
+        var lineDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
         var totalSpacingOffset = spacing * spacingOffset;
         var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
         int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
-        cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
+        cur -= lineDir * maxDimension;//offset the line point to the outside of the outside shape to make sorting possible
         
         for (int i = 0; i < steps; i++)
         {
-            var outsideShapePoints = Ray.IntersectRayRect(cur, rayDir, outsideShape.A, outsideShape.B, outsideShape.C, outsideShape.D);
+            var outsideShapePoints = Line.IntersectLineRect(cur, lineDir, outsideShape.A, outsideShape.B, outsideShape.C, outsideShape.D);
             if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
             {
                 cur += dir * spacing;
                 continue;
             }
+
+            var count = Line.IntersectLinePolygon(cur, lineDir, insideShape, ref collisionPointsReference);
             
-            var count = Ray.IntersectRayPolygon(cur, rayDir, insideShape, ref collisionPointsReference);
-            
-            if(count < 2) //ray did not hit the inside shape, draw ray between edge of the outside shape
+            if(count <= 0) //ray did not hit the inside shape, draw ray between edge of the outside shape
             {
                 var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
             }
             else
             {
-                var outsideDisA = (outsideShapePoints.a.Point - cur).LengthSquared();
-                var outsideDisB = (outsideShapePoints.b.Point - cur).LengthSquared();
-                float outsideFurthestDis;
-                float outsideClosestDis;
-                Vector2 outsideFurthestPoint;
-                Vector2 outsideClosestPoint;
-                
-                if (outsideDisA < outsideDisB)
+                //remove all inside shape intersection points that are outside the outside shape
+                for (int j = collisionPointsReference.Count - 1; j >= 0; j--)
                 {
-                    outsideFurthestDis = outsideDisB;
-                    outsideClosestDis = outsideDisA;
-                    outsideFurthestPoint = outsideShapePoints.b.Point;
-                    outsideClosestPoint = outsideShapePoints.a.Point;
-                }
-                else
-                {
-                    outsideFurthestDis = outsideDisA;
-                    outsideClosestDis = outsideDisB;
-                    outsideFurthestPoint = outsideShapePoints.a.Point;
-                    outsideClosestPoint = outsideShapePoints.b.Point;
-                }
-
-                collisionPointsReference.SortClosestFirst(cur);
-                var insideFurthestPoint = collisionPointsReference.Last.Point;
-                var insideClosestPoint = collisionPointsReference.First.Point;
-                float insideFurthestDis =  (insideFurthestPoint - cur).LengthSquared();
-                float insideClosestDis = (insideClosestPoint - cur).LengthSquared();
-                
-                //the inside shape is outside the outside shape so draw the ray from edge to edge of the outside shape
-                if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
-                {
-                    var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
-                    segment.Draw(striped);
-                }
-                else
-                {
-                    //if the first segment is valid (completely inside), draw it
-                    if (insideClosestDis > outsideClosestDis && insideClosestDis < outsideFurthestDis)
-                    {
-                        var segment = new Segment(outsideClosestPoint, insideClosestPoint);
-                        segment.Draw(striped);
-                    }   
+                    var p = collisionPointsReference[j].Point;
                     
-                    //if the last segment is valid (completely inside), draw it
-                    if (insideFurthestDis < outsideFurthestDis && insideFurthestDis > outsideClosestDis)
-                    {
-                        var segment = new Segment(insideFurthestPoint, outsideFurthestPoint);
-                        segment.Draw(striped);
-                    }
-
-                    for (int j = 1; j < collisionPointsReference.Count - 1; j+=2)
-                    {
-                        var p1 = collisionPointsReference[j].Point;
-                        var p2 = collisionPointsReference[j + 1].Point;
-                        var p1Dis = (p1 - cur).LengthSquared();
-                        var p2Dis = (p2 - cur).LengthSquared();
-                        
-                        //if both points are outside on either side, don't draw the segment
-                        if((p1Dis < outsideClosestDis || p1Dis > outsideFurthestDis) && (p2Dis < outsideClosestDis || p2Dis > outsideFurthestDis)) continue;
-                        
-                        //if 1 point is outside, take the corresponding point on the outside shape
-                        if (p1Dis < outsideClosestDis) p1 = outsideClosestPoint;
-                        else if(p1Dis > outsideFurthestDis) p1 = outsideFurthestPoint;
-                        
-                        //if 1 point is outside, take the corresponding point on the outside shape
-                        if(p2Dis < outsideClosestDis) p2 = outsideClosestPoint;
-                        else if(p2Dis > outsideFurthestDis) p2 = outsideFurthestPoint;
-                        
-                        var segment = new Segment(p1, p2);
-                        segment.Draw(striped);
-                    }
+                    if(!outsideShape.ContainsPoint(p)) collisionPointsReference.RemoveAt(j);
+                }
+                
+                if(outsideShapePoints.a.Valid && !insideShape.ContainsPoint(outsideShapePoints.a.Point)) collisionPointsReference.Add(outsideShapePoints.a);
+                if(outsideShapePoints.b.Valid && !insideShape.ContainsPoint(outsideShapePoints.b.Point)) collisionPointsReference.Add(outsideShapePoints.b);
+                
+                //all points were remove so just draw the outside shape segment (even with only 1 point left, we continue)
+                if (collisionPointsReference.Count <= 1)
+                {
+                    cur += dir * spacing;
+                    collisionPointsReference.Clear();
+                    continue;
+                }
+                if (collisionPointsReference.Count == 2)//no sorting or loop needed for exactly 2 points
+                {
+                    var segment = new Segment(collisionPointsReference[0].Point, collisionPointsReference[1].Point);
+                    segment.Draw(striped);
+                    cur += dir * spacing;
+                    collisionPointsReference.Clear();
+                    continue;
+                }
+                
+                //now that only valid points remain, sort them by distance from the current point
+                collisionPointsReference.SortClosestFirst(cur);
+                
+                for (int j = 0; j < collisionPointsReference.Count - 1; j+=2)
+                {
+                    var p1 = collisionPointsReference[j].Point;
+                    var p2 = collisionPointsReference[j + 1].Point;
+                    var segment = new Segment(p1, p2);
+                    segment.Draw(striped);
                 }
                 
                 collisionPointsReference.Clear();
@@ -3550,7 +3414,7 @@ public static class ShapeStripedDrawing
             cur += dir * spacing;
         }
     }
-
+    
     #endregion
     
     #region Polygon
@@ -3875,25 +3739,25 @@ public static class ShapeStripedDrawing
         if (spacing > maxDimension) return;
         
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
-        var rayDir = dir.GetPerpendicularRight();
+        var lineDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
         var totalSpacingOffset = spacing * spacingOffset;
         var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
         int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
-        cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
+        cur -= lineDir * maxDimension;//offsets the point to the outside for using rays instead of lines
         
         for (int i = 0; i < steps; i++)
         {
-            var count = Ray.IntersectRayPolygon(cur, rayDir, outsideShape, ref collisionPointsReference);
+            var count = Line.IntersectLinePolygon(cur, lineDir, outsideShape, ref collisionPointsReference);
             if (count < 2)
             {
                 cur += dir * spacing;
                 continue;
             }
             
-            var insideShapePoints = Ray.IntersectRayCircle(cur, rayDir, insideShape.Center, insideShape.Radius);
+            var insideShapePoints = Line.IntersectLineCircle(cur, lineDir, insideShape.Center, insideShape.Radius);
             if (!insideShapePoints.a.Valid || !insideShapePoints.b.Valid) //draw the lines in the outside shape
             {
                 collisionPointsReference.SortClosestFirst(cur);
@@ -3955,25 +3819,25 @@ public static class ShapeStripedDrawing
         if (spacing > maxDimension) return;
         
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
-        var rayDir = dir.GetPerpendicularRight();
+        var lineDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
         var totalSpacingOffset = spacing * spacingOffset;
         var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
         int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
-        cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
+        cur -= lineDir * maxDimension;//offsets the point to the outside for using rays instead of lines
         
         for (int i = 0; i < steps; i++)
         {
-            var count = Ray.IntersectRayPolygon(cur, rayDir, outsideShape, ref collisionPointsReference);
+            var count = Line.IntersectLinePolygon(cur, lineDir, outsideShape, ref collisionPointsReference);
             if (count < 2)
             {
                 cur += dir * spacing;
                 continue;
             }
             
-            var insideShapePoints = Ray.IntersectRayTriangle(cur, rayDir, insideShape.A, insideShape.B, insideShape.C);
+            var insideShapePoints = Line.IntersectLineTriangle(cur, lineDir, insideShape.A, insideShape.B, insideShape.C);
             if (!insideShapePoints.a.Valid || !insideShapePoints.b.Valid) //draw the lines in the outside shape
             {
                 collisionPointsReference.SortClosestFirst(cur);
@@ -4035,25 +3899,25 @@ public static class ShapeStripedDrawing
         if (spacing > maxDimension) return;
         
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
-        var rayDir = dir.GetPerpendicularRight();
+        var lineDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
         var totalSpacingOffset = spacing * spacingOffset;
         var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
         int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
-        cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
+        cur -= lineDir * maxDimension;//offsets the point to the outside for using rays instead of lines
         
         for (int i = 0; i < steps; i++)
         {
-            var count = Ray.IntersectRayPolygon(cur, rayDir, outsideShape, ref collisionPointsReference);
+            var count = Line.IntersectLinePolygon(cur, lineDir, outsideShape, ref collisionPointsReference);
             if (count < 2)
             {
                 cur += dir * spacing;
                 continue;
             }
             
-            var insideShapePoints = Ray.IntersectRayQuad(cur, rayDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
+            var insideShapePoints = Line.IntersectLineQuad(cur, lineDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
             if (!insideShapePoints.a.Valid || !insideShapePoints.b.Valid) //draw the lines in the outside shape
             {
                 collisionPointsReference.SortClosestFirst(cur);
@@ -4115,25 +3979,25 @@ public static class ShapeStripedDrawing
         if (spacing > maxDimension) return;
         
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
-        var rayDir = dir.GetPerpendicularRight();
+        var lineDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
         var totalSpacingOffset = spacing * spacingOffset;
         var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
         int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
-        cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
+        cur -= lineDir * maxDimension;//offsets the point to the outside for using rays instead of lines
         
         for (int i = 0; i < steps; i++)
         {
-            var count = Ray.IntersectRayPolygon(cur, rayDir, outsideShape, ref collisionPointsReference);
+            var count = Line.IntersectLinePolygon(cur, lineDir, outsideShape, ref collisionPointsReference);
             if (count < 2)
             {
                 cur += dir * spacing;
                 continue;
             }
             
-            var insideShapePoints = Ray.IntersectRayRect(cur, rayDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
+            var insideShapePoints = Line.IntersectLineRect(cur, lineDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
             if (!insideShapePoints.a.Valid || !insideShapePoints.b.Valid) //draw the lines in the outside shape
             {
                 collisionPointsReference.SortClosestFirst(cur);
@@ -4195,25 +4059,25 @@ public static class ShapeStripedDrawing
         if (spacing > maxDimension) return;
         
         var dir = ShapeVec.VecFromAngleDeg(angleDeg);
-        var rayDir = dir.GetPerpendicularRight();
+        var lineDir = dir.GetPerpendicularRight();
         spacingOffset = ShapeMath.WrapF(spacingOffset, 0f, 1f);
         var totalSpacingOffset = spacing * spacingOffset;
         var start = center - dir * (maxDimension * 0.5f + totalSpacingOffset);
         int steps = (int)((maxDimension + totalSpacingOffset) / spacing);
         
         var cur = start + dir * spacing;
-        cur -= rayDir * maxDimension;//offsets the point to the outside for using rays instead of lines
+        cur -= lineDir * maxDimension;//offsets the point to the outside for using rays instead of lines
         
         for (int i = 0; i < steps; i++)
         {
-            var outsideCount = Ray.IntersectRayPolygon(cur, rayDir, outsideShape, ref collisionPointsReference);
+            var outsideCount = Line.IntersectLinePolygon(cur, lineDir, outsideShape, ref collisionPointsReference);
             if (outsideCount < 2)
             {
                 cur += dir * spacing;
                 continue;
             }
             
-            var insideCount = Ray.IntersectRayPolygon(cur, rayDir, insideShape, ref collisionPointsReference);
+            var insideCount = Line.IntersectLinePolygon(cur, lineDir, insideShape, ref collisionPointsReference);
             if (insideCount < 0) //draw the lines in the outside shape
             {
                 collisionPointsReference.SortClosestFirst(cur);
