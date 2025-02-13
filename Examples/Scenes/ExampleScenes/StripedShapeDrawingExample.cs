@@ -717,7 +717,6 @@ public class StripedShapeDrawingExample : ExampleScene
                 insidePoly.DrawLines(lineInfoOutline);
             }
         }
-        
     }
     
     protected override void OnDrawUIExample(ScreenInfo ui)
