@@ -13,7 +13,9 @@ public abstract class PhysicsObject : GameObject
     public Vector2 FrictionNormal { get; set; } = Vector2.Zero;
     public Vector2 ConstAcceleration { get; set; }
     public Vector2 AccumulatedForce { get; private set; } = new(0f);
-    
+
+    public Vector2 Momentum => Mass * ConstAcceleration;
+    public Vector2 KineticEnergy => Mass * Velocity;
     
     public void ClearAccumulatedForce() => AccumulatedForce = new(0f);
     public void AddForce(Vector2 force)
