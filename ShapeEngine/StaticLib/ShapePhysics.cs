@@ -527,5 +527,76 @@ public static class ShapePhysics
         return velocity - CalculateFrictionForce(velocity, mass, frictionCoefficient, frictionNormal);
         
     }
+
+
+    public static Vector2 CalculateReverseAttraction(Vector2 attractionOrigin, Vector2 objectPosition, float objectMass, Vector2 objectVelocity)
+    {
+        if(objectMass <= 0f) return Vector2.Zero;
+        
+        var objectSpeedSquared = objectVelocity.LengthSquared();
+        
+        if (objectSpeedSquared != 0f)
+        {
+            var displacement = objectPosition - attractionOrigin;
+            var distanceSquared = displacement.LengthSquared();
+            if (distanceSquared == 0f) return Vector2.Zero;
+            var distance = MathF.Sqrt(distanceSquared);
+            var dir = displacement / distance;
+            var objectSpeed = MathF.Sqrt(objectSpeedSquared);
+            var objectDir = objectVelocity / objectSpeed;
+            var dot = objectDir.Dot(dir);
+            dot = (dot + 1f) / 2f; //translate range from [-1, 1] to [0, 1]
+            return -dir * objectSpeed * objectMass * dot;
+        }
+        
+        return Vector2.Zero;
+        
+    }
+    public static Vector2 CalculateReverseAttraction(Vector2 attractionOrigin, float attractionRadius, Vector2 objectPosition, float objectMass, Vector2 objectVelocity)
+    {
+        if(objectMass <= 0f || attractionRadius <= 0f) return Vector2.Zero;
+        
+        var objectSpeedSquared = objectVelocity.LengthSquared();
+        if (objectSpeedSquared != 0f)
+        {
+            var displacement = objectPosition - attractionOrigin;
+            var distanceSquared = displacement.LengthSquared();
+            if(distanceSquared == 0f) return Vector2.Zero;
+            var distance = MathF.Sqrt(distanceSquared);
+            var dir = displacement / distance;
+            var objectSpeed = MathF.Sqrt(objectSpeedSquared);
+            var objectDir = objectVelocity / objectSpeed;
+            var dot = objectDir.Dot(dir);
+            dot = (dot + 1f) / 2f; //translate range from [-1, 1] to [0, 1]
+            var distanceFactor = distance >= attractionRadius ? 1f : (attractionRadius - distance) / attractionRadius;
+            return -dir * objectSpeed * objectMass * dot * distanceFactor;
+            
+        }
+        return Vector2.Zero;
+        
+    }
+    public static Vector2 CalculateReverseAttraction(Vector2 attractionOrigin, float attractionForce, float attractionRadius, Vector2 objectPosition, float objectMass, Vector2 objectVelocity)
+    {
+        if(objectMass <= 0f || attractionRadius <= 0f || attractionForce <= 0f) return Vector2.Zero;
+        
+        var objectSpeedSquared = objectVelocity.LengthSquared();
+        if (objectSpeedSquared != 0f)
+        {
+            var displacement = objectPosition - attractionOrigin;
+            var distanceSquared = displacement.LengthSquared();
+            if(distanceSquared == 0f) return Vector2.Zero;
+            var distance = MathF.Sqrt(distanceSquared);
+            var dir = displacement / distance;
+            var objectSpeed = MathF.Sqrt(objectSpeedSquared);
+            var objectDir = objectVelocity / objectSpeed;
+            var dot = objectDir.Dot(dir);
+            dot = (dot + 1f) / 2f; //translate range from [-1, 1] to [0, 1]
+            var distanceFactor = distance >= attractionRadius ? 1f : (attractionRadius - distance) / attractionRadius;
+            return -dir * attractionForce * objectMass * dot * distanceFactor;
+            
+        }
+        return Vector2.Zero;
+        
+    }
     #endregion
 }
