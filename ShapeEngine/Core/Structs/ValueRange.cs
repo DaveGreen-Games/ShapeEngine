@@ -69,6 +69,11 @@ public readonly struct ValueRange
     #endregion
 
     #region Public Functions
+    public float GetFactor(float value)
+    {
+        if(value < Min) return 0.0f;
+        return (value - Min) / (Max - Min);
+    }
     public ValueRangeInt ToValueRangeInt() => new ValueRangeInt(Min, Max);
     public Vector2 ToVector2() => new(Min, Max);
     public float Rand() { return Rng.Instance.RandF(Min, Max); }
