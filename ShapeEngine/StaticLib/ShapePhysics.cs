@@ -1,5 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Core;
+using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.StaticLib;
 
@@ -10,8 +11,8 @@ public static class ShapePhysics
     /// </summary>
     public static readonly float GReal = 0.0000000000667430f;
     /// <summary>
-    /// This is the gravitational constant used in all functions. The default value is 1f, basically disabling the constant to make the values that can be used much smaller.
-    /// If the real value is needed just set it to GReal.
+    /// This is the gravitational constant used in all functions. The default value is 1f, essentially making the values that can be used much smaller and therefore more convenient.
+    /// If the real value is needed, set it to GReal.
     /// </summary>
     public static float G = 1f;
    
@@ -214,7 +215,7 @@ public static class ShapePhysics
 
         return (newVelocity1, newVelocity2);
     }
-    public static void CalculateElasticCollision(this PhysicsObject obj1, PhysicsObject obj2, float r)
+    public static void ApplyElasticCollision(this PhysicsObject obj1, PhysicsObject obj2, float r)
     {
         var result = CalculateElasticCollision(obj1.Transform.Position, obj1.Velocity, obj1.Mass, obj2.Transform.Position, obj2.Velocity, obj2.Mass, r);
         obj1.Velocity = result.newVelocity1;
@@ -270,10 +271,12 @@ public static class ShapePhysics
         obj.Velocity = obj.Velocity  * dragFactor;
     }
     
+    
+    
     public static (Vector2 newVelocity1, Vector2 newVelocity2) CalculateAttraction(Vector2 position1, Vector2 velocity1, float mass1, Vector2 position2, Vector2 velocity2, float mass2, float deltaTime)
     {
         // Calculate the direction and distance between the two objects
-        Vector2 direction = position2 - position1;
+        var direction = position2 - position1;
         float distance = direction.Length();
 
         // Avoid division by zero
@@ -283,22 +286,22 @@ public static class ShapePhysics
         }
 
         // Normalize the direction vector
-        Vector2 normalizedDirection = direction / distance;
+        var normalizedDirection = direction / distance;
 
         // Calculate the force magnitude
         float forceMagnitude = G * (mass1 * mass2) / (distance * distance);
 
         // Calculate the accelerations
-        Vector2 acceleration1 = (forceMagnitude / mass1) * normalizedDirection;
-        Vector2 acceleration2 = (forceMagnitude / mass2) * -normalizedDirection;
+        var acceleration1 = (forceMagnitude / mass1) * normalizedDirection;
+        var acceleration2 = (forceMagnitude / mass2) * -normalizedDirection;
 
         // Update the velocities
-        Vector2 newVelocity1 = velocity1 + acceleration1 * deltaTime;
-        Vector2 newVelocity2 = velocity2 + acceleration2 * deltaTime;
+        var newVelocity1 = velocity1 + acceleration1 * deltaTime;
+        var newVelocity2 = velocity2 + acceleration2 * deltaTime;
 
         return (newVelocity1, newVelocity2);
     }
-    public static void CalculateAttraction(PhysicsObject obj1, PhysicsObject obj2, float deltaTime)
+    public static void ApplyAttraction(PhysicsObject obj1, PhysicsObject obj2, float deltaTime)
     {
         var result = CalculateAttraction(obj1.Transform.Position, obj1.Velocity, obj1.Mass, obj2.Transform.Position, obj2.Velocity, obj2.Mass, deltaTime);
         obj1.Velocity = result.newVelocity1;
@@ -308,7 +311,7 @@ public static class ShapePhysics
     public static Vector2 CalculateAttraction(Vector2 position1, Vector2 velocity1, float mass1, Vector2 attractionPoint, float attractionForce, float deltaTime)
     {
         // Calculate the direction and distance between the object and the attraction point
-        Vector2 direction = attractionPoint - position1;
+        var direction = attractionPoint - position1;
         float distance = direction.Length();
 
         // Avoid division by zero
@@ -318,16 +321,16 @@ public static class ShapePhysics
         }
 
         // Normalize the direction vector
-        Vector2 normalizedDirection = direction / distance;
+        var normalizedDirection = direction / distance;
 
         // Calculate the force magnitude
         float forceMagnitude = attractionForce / (distance * distance);
 
         // Calculate the acceleration
-        Vector2 acceleration = (forceMagnitude / mass1) * normalizedDirection;
+        var acceleration = (forceMagnitude / mass1) * normalizedDirection;
 
         // Update the velocity
-        Vector2 newVelocity1 = velocity1 + acceleration * deltaTime;
+        var newVelocity1 = velocity1 + acceleration * deltaTime;
 
         return newVelocity1;
     }
@@ -357,18 +360,18 @@ public static class ShapePhysics
         return ApplyDragFactor(newVelocity1, drag, deltaTime);
     }
     
-    public static void CalculateAttraction(this PhysicsObject obj, Vector2 attractionPoint, float attractionForce, float deltaTime)
+    public static void ApplyAttraction(this PhysicsObject obj, Vector2 attractionPoint, float attractionForce, float deltaTime)
     {
         var newVelocity1 = CalculateAttraction(obj.Transform.Position, obj.Velocity, obj.Mass, attractionPoint, attractionForce, deltaTime);
         obj.Velocity = newVelocity1;
     }
-    public static void CalculateAttraction(this PhysicsObject obj, Vector2 attractionPoint, float attractionForce, float drag, float deltaTime)
+    public static void ApplyAttraction(this PhysicsObject obj, Vector2 attractionPoint, float attractionForce, float drag, float deltaTime)
     {
         var newVelocity1 = CalculateAttraction(obj.Transform.Position, obj.Velocity, obj.Mass, attractionPoint, attractionForce, drag, deltaTime);
         obj.Velocity = newVelocity1;
     }
 
-    public static (Vector2 newVelocity1, Vector2 newVelocity2) CalculateRepulsion(Vector2 position1, Vector2 velocity1, float mass1, Vector2 position2, Vector2 velocity2, float mass2, float deltaTime)
+    public static (Vector2 newVelocity1, Vector2 newVelocity2) ApplyRepulsion(Vector2 position1, Vector2 velocity1, float mass1, Vector2 position2, Vector2 velocity2, float mass2, float deltaTime)
     {
         // Calculate the direction and distance between the two objects
         Vector2 direction = position2 - position1;
@@ -396,17 +399,17 @@ public static class ShapePhysics
 
         return (newVelocity1, newVelocity2);
     }
-    public static void CalculateRepulsion(PhysicsObject obj1, PhysicsObject obj2, float deltaTime)
+    public static void ApplyRepulsion(PhysicsObject obj1, PhysicsObject obj2, float deltaTime)
     {
-        var result = CalculateRepulsion(obj1.Transform.Position, obj1.Velocity, obj1.Mass, obj2.Transform.Position, obj2.Velocity, obj2.Mass, deltaTime);
+        var result = ApplyRepulsion(obj1.Transform.Position, obj1.Velocity, obj1.Mass, obj2.Transform.Position, obj2.Velocity, obj2.Mass, deltaTime);
         obj1.Velocity = result.newVelocity1;
         obj2.Velocity = result.newVelocity2;
     }
     
-    public static Vector2 CalculateRepulsion(Vector2 position1, Vector2 velocity1, float mass1, Vector2 repulsionPoint, float repulsionForce, float deltaTime)
+    public static Vector2 ApplyRepulsion(Vector2 position1, Vector2 velocity1, float mass1, Vector2 repulsionPoint, float repulsionForce, float deltaTime)
     {
         // Calculate the direction and distance between the object and the attraction point
-        Vector2 direction = position1 - repulsionPoint;
+        var direction = position1 - repulsionPoint;
         float distance = direction.Length();
 
         // Avoid division by zero
@@ -416,20 +419,20 @@ public static class ShapePhysics
         }
 
         // Normalize the direction vector
-        Vector2 normalizedDirection = direction / distance;
+        var normalizedDirection = direction / distance;
 
         // Calculate the force magnitude
         float forceMagnitude = repulsionForce / (distance * distance);
 
         // Calculate the acceleration
-        Vector2 acceleration = (forceMagnitude / mass1) * normalizedDirection;
+        var acceleration = (forceMagnitude / mass1) * normalizedDirection;
 
         // Update the velocity
-        Vector2 newVelocity1 = velocity1 + acceleration * deltaTime;
+        var newVelocity1 = velocity1 + acceleration * deltaTime;
 
         return newVelocity1;
     }
-    public static Vector2 CalculateRepulsion(Vector2 position1, Vector2 velocity1, float mass1, Vector2 repulsionPoint, float repulsionForce, float drag, float deltaTime)
+    public static Vector2 ApplyRepulsion(Vector2 position1, Vector2 velocity1, float mass1, Vector2 repulsionPoint, float repulsionForce, float drag, float deltaTime)
     {
         // Calculate the direction and distance between the object and the attraction point
         var direction = position1 - repulsionPoint;
@@ -455,16 +458,22 @@ public static class ShapePhysics
         return ApplyDragFactor(newVelocity1, drag, deltaTime);
     }
     
-    public static void CalculateRepulsion(this PhysicsObject obj, Vector2 repulsionPoint, float repulsionForce, float deltaTime)
+    public static void ApplyRepulsion(this PhysicsObject obj, Vector2 repulsionPoint, float repulsionForce, float deltaTime)
     {
-        var newVelocity1 = CalculateRepulsion(obj.Transform.Position, obj.Velocity, obj.Mass, repulsionPoint, repulsionForce, deltaTime);
+        var newVelocity1 = ApplyRepulsion(obj.Transform.Position, obj.Velocity, obj.Mass, repulsionPoint, repulsionForce, deltaTime);
         obj.Velocity = newVelocity1;
     }
-    public static void CalculateRepulsion(this PhysicsObject obj, Vector2 repulsionPoint, float repulsionForce, float drag, float deltaTime)
+    public static void ApplyRepulsion(this PhysicsObject obj, Vector2 repulsionPoint, float repulsionForce, float drag, float deltaTime)
     {
-        var newVelocity1 = CalculateRepulsion(obj.Transform.Position, obj.Velocity, obj.Mass, repulsionPoint, repulsionForce, drag, deltaTime);
+        var newVelocity1 = ApplyRepulsion(obj.Transform.Position, obj.Velocity, obj.Mass, repulsionPoint, repulsionForce, drag, deltaTime);
         obj.Velocity = newVelocity1;
     }
+   
+    
+    /// <summary>
+    /// Calculates a friction force considering the mass, friction coefficient, friction normal, and gravitational force.
+    /// </summary>
+    /// <returns>Returns the friction force.</returns>
     public static Vector2 CalculateFrictionForce(Vector2 velocity, float mass, float frictionCoefficient, Vector2 frictionNormal, Vector2 gravitationForce)
     {
         if (frictionNormal.X == 0 && frictionNormal.Y == 0) return Vector2.Zero;
@@ -491,6 +500,10 @@ public static class ShapePhysics
 
         return frictionForce;
     }
+    /// <summary>
+    /// Calculates a friction force considering the mass, friction coefficient, friction normal, and gravitational force.
+    /// </summary>
+    /// <returns>Returns the friction force.</returns>
     public static Vector2 CalculateFrictionForce(Vector2 velocity, float mass, float frictionCoefficient, Vector2 frictionNormal)
     {
         if (frictionNormal.X == 0 && frictionNormal.Y == 0) return Vector2.Zero;
@@ -510,6 +523,10 @@ public static class ShapePhysics
 
         return frictionForce;
     }
+    /// <summary>
+    /// Calculates and applies a friction force to the velocity considering the mass, friction coefficient, friction normal, and gravitational force.
+    /// </summary>
+    /// <returns>Returns the new velocity.</returns>
     public static Vector2 ApplyFrictionForce(Vector2 velocity, float mass, float frictionCoefficient, Vector2 frictionNormal, Vector2 gravitationForce)
     {
         if (frictionNormal.X == 0 && frictionNormal.Y == 0) return velocity;
@@ -519,6 +536,10 @@ public static class ShapePhysics
         return velocity - CalculateFrictionForce(velocity, mass, frictionCoefficient, frictionNormal, gravitationForce);
         
     }
+    /// <summary>
+    /// Calculates and applies a friction force to the velocity considering the mass, friction coefficient, friction normal, and gravitational force.
+    /// </summary>
+    /// <returns>Returns the new velocity.</returns>
     public static Vector2 ApplyFrictionForce(Vector2 velocity, float mass, float frictionCoefficient, Vector2 frictionNormal)
     {
         if (frictionNormal.X == 0 && frictionNormal.Y == 0) return velocity;
@@ -528,33 +549,93 @@ public static class ShapePhysics
         
     }
 
+    
+    
+    
+    /// <summary>
+    /// Calculates a gravitational force between two objects that scales based on distance squared.
+    /// The further away the objects are, the stronger the gravitational force will be. (reverse than in reality)
+    /// Each force is already divided by its corresponding mass.
+    /// </summary>
+    /// <param name="position1"></param>
+    /// <param name="mass1"></param>
+    /// <param name="position2"></param>
+    /// <param name="mass2"></param>
+    /// <returns>Returns the force (acceleration) that can be applied. Corresponding masses are already divided out. Use AddForceRaw in PhysicsObject!</returns>
+    public static (Vector2 force1, Vector2 force2) CalculateReverseAttractionForce(Vector2 position1, float mass1, Vector2 position2, float mass2)
+    {
+        // Calculate the direction and distance between the two objects
+        var direction = position2 - position1;
+        float distanceSquared = direction.LengthSquared();
 
-    public static Vector2 CalculateReverseAttraction(Vector2 attractionOrigin, Vector2 objectPosition, float objectMass, Vector2 objectVelocity)
-    {
-        if(objectMass <= 0f) return Vector2.Zero;
-        
-        var objectSpeedSquared = objectVelocity.LengthSquared();
-        
-        if (objectSpeedSquared != 0f)
+        // Avoid division by zero
+        if (distanceSquared == 0)
         {
-            var displacement = objectPosition - attractionOrigin;
-            var distanceSquared = displacement.LengthSquared();
-            if (distanceSquared == 0f) return Vector2.Zero;
-            var distance = MathF.Sqrt(distanceSquared);
-            var dir = displacement / distance;
-            var objectSpeed = MathF.Sqrt(objectSpeedSquared);
-            var objectDir = objectVelocity / objectSpeed;
-            var dot = objectDir.Dot(dir);
-            dot = (dot + 1f) / 2f; //translate range from [-1, 1] to [0, 1]
-            return -dir * objectSpeed * objectMass * dot;
+            return (Vector2.Zero, Vector2.Zero);
         }
-        
-        return Vector2.Zero;
-        
+
+        float distance = MathF.Sqrt(distanceSquared);
+        // Normalize the direction vector
+        var normalizedDirection = direction / distance;
+
+        // Calculate the force magnitude
+        float forceMagnitude = G * (mass1 * mass2) * distanceSquared;
+
+        // Calculate the accelerations
+        var acceleration1 = (forceMagnitude / mass1) * normalizedDirection;
+        var acceleration2 = (forceMagnitude / mass2) * -normalizedDirection;
+
+        return (acceleration1, acceleration2);
     }
-    public static Vector2 CalculateReverseAttraction(Vector2 attractionOrigin, float attractionRadius, Vector2 objectPosition, float objectMass, Vector2 objectVelocity)
+    /// <summary>
+    /// Calculates a gravitational force between two objects that scales based on distance squared.
+    /// The further away the objects are, the stronger the gravitational force will be. (reverse than in reality)
+    /// Applies the forces to the objects.
+    /// </summary>
+    /// <param name="obj1"></param>
+    /// <param name="obj2"></param>
+    /// <returns></returns>
+    public static void ApplyReverseAttractionForce(PhysicsObject obj1, PhysicsObject obj2)
     {
-        if(objectMass <= 0f || attractionRadius <= 0f) return Vector2.Zero;
+        // Calculate the direction and distance between the two objects
+        var direction = obj2.Transform.Position - obj1.Transform.Position;
+        float distanceSquared = direction.LengthSquared();
+
+        // Avoid division by zero
+        if (distanceSquared == 0)
+        {
+            return;
+        }
+
+        float distance = MathF.Sqrt(distanceSquared);
+        // Normalize the direction vector
+        var normalizedDirection = direction / distance;
+
+        var mass1 = obj1.Mass;
+        var mass2 = obj2.Mass;
+        // Calculate the force magnitude
+        float forceMagnitude = G * (mass1 * mass2) * distanceSquared;
+
+        obj1.AddForce(forceMagnitude * normalizedDirection);
+        obj2.AddForce(forceMagnitude * -normalizedDirection);
+    }
+    
+    
+    /// <summary>
+    /// Calculates a force that gets stronger with distance and direction.
+    /// The force scales with distance squared and the mass of the attraction object!
+    /// A velocity pointing away from the origin has the strongest force, pointing towards the origin has the weakest force.
+    /// If the velocity direction points towards the origin or the distance is 0, the force is 0.
+    /// </summary>
+    /// <param name="attractionOrigin">The origin of the attraction force.</param>
+    /// <param name="attractionMass">The mass of the attraction object.</param>
+    /// <param name="objectPosition">The position of the object.</param>
+    /// <param name="objectMass">The mass of the object. (Scales the returned force)</param>
+    /// <param name="objectVelocity">The velocity of the object.</param>
+    /// <returns>Returns the final force. Mass is already divided out. Use AddForceRaw in PhysicsObject.</returns>
+    public static Vector2 CalculateReverseAttractionForce(Vector2 attractionOrigin, float attractionMass, Vector2 objectPosition, float objectMass, Vector2 objectVelocity)
+    {
+        if(objectMass <= 0f || attractionMass <= 0f) return Vector2.Zero;
         
         var objectSpeedSquared = objectVelocity.LengthSquared();
         if (objectSpeedSquared != 0f)
@@ -568,14 +649,77 @@ public static class ShapePhysics
             var objectDir = objectVelocity / objectSpeed;
             var dot = objectDir.Dot(dir);
             dot = (dot + 1f) / 2f; //translate range from [-1, 1] to [0, 1]
-            var distanceFactor = distance >= attractionRadius ? 1f : (attractionRadius - distance) / attractionRadius;
-            return -dir * objectSpeed * objectMass * dot * distanceFactor;
+            
+            float forceMagnitude = G * attractionMass * distanceSquared * dot;
+            
+            return -dir * forceMagnitude;
             
         }
         return Vector2.Zero;
-        
     }
-    public static Vector2 CalculateReverseAttraction(Vector2 attractionOrigin, float attractionForce, float attractionRadius, Vector2 objectPosition, float objectMass, Vector2 objectVelocity)
+    /// <summary>
+    /// Calculates a force that gets stronger with distance and direction.
+    /// The force scales with distance squared and the mass of the attraction object!
+    /// A velocity pointing away from the origin has the strongest force, pointing towards the origin has the weakest force.
+    /// If the velocity direction points towards the origin or the distance is 0, the force is 0.
+    /// </summary>
+    /// <param name="attractionOrigin">The origin of the attraction force.</param>
+    /// <param name="attractionMass">The mass of the attraction object.</param>
+    /// <param name="objectPosition">The position of the object.</param>
+    /// <param name="objectMass">The mass of the object. (Scales the returned force)</param>
+    /// <param name="objectVelocity">The velocity of the object.</param>
+    /// <param name="dotRange">Set the multiplier range for pointing towards the center or away from the center.
+    /// [0 and 1] would make force 0 when pointing towards the center and max when pointing away.</param>
+    /// <returns>Returns the final force. Mass is already divided out. Use AddForceRaw in PhysicsObject.</returns>
+    public static Vector2 CalculateReverseAttractionForce(Vector2 attractionOrigin, float attractionMass, Vector2 objectPosition, float objectMass, Vector2 objectVelocity, ValueRange dotRange)
+    {
+        if(objectMass <= 0f || attractionMass <= 0f) return Vector2.Zero;
+        
+        var objectSpeedSquared = objectVelocity.LengthSquared();
+        if (objectSpeedSquared != 0f)
+        {
+            var displacement = objectPosition - attractionOrigin;
+            var distanceSquared = displacement.LengthSquared();
+            if(distanceSquared == 0f) return Vector2.Zero;
+            var distance = MathF.Sqrt(distanceSquared);
+            var dir = displacement / distance;
+            var objectSpeed = MathF.Sqrt(objectSpeedSquared);
+            var objectDir = objectVelocity / objectSpeed;
+            var dot = objectDir.Dot(dir);
+            dot = ShapeMath.RemapFloat(dot, -1f, 1f, dotRange.Min, dotRange.Max);
+            float forceMagnitude = G * attractionMass * distanceSquared * dot;
+            return -dir * forceMagnitude;
+            
+        }
+        return Vector2.Zero;
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    /// <summary>
+    /// Calculates a force that gets stronger with distance and direction.
+    /// At a distance equal to attractionRadius with a velocity directly in line with the direction from the origin to the object,
+    /// the force equals attractionForce.
+    /// If the velocity direction points towards the origin or the distance is 0, the force is 0.
+    /// </summary>
+    /// <param name="attractionOrigin">The origin of the attraction force.</param>
+    /// <param name="attractionForce">The fore to apply scaled by direction and distance factors.</param>
+    /// <param name="attractionRadius">The distance at which maximum force is calculated.</param>
+    /// <param name="objectPosition">The position of the object.</param>
+    /// <param name="objectMass">The mass of the object. (Scales the returned force)</param>
+    /// <param name="objectVelocity">The velocity of the object.</param>
+    /// <returns>Returns the final force.</returns>
+    public static Vector2 CalculateReverseAttractionForce(Vector2 attractionOrigin, float attractionForce, float attractionRadius, Vector2 objectPosition, float objectMass, Vector2 objectVelocity)
     {
         if(objectMass <= 0f || attractionRadius <= 0f || attractionForce <= 0f) return Vector2.Zero;
         
@@ -591,12 +735,88 @@ public static class ShapePhysics
             var objectDir = objectVelocity / objectSpeed;
             var dot = objectDir.Dot(dir);
             dot = (dot + 1f) / 2f; //translate range from [-1, 1] to [0, 1]
-            var distanceFactor = distance >= attractionRadius ? 1f : (attractionRadius - distance) / attractionRadius;
+            var distanceFactor = distance / attractionRadius;
             return -dir * attractionForce * objectMass * dot * distanceFactor;
             
         }
         return Vector2.Zero;
-        
     }
+ 
+    /// <summary>
+    /// Calculates a force that gets stronger with distance and direction.
+    /// At a distance equal to attractionRadius with a velocity directly in line with the direction from the origin to the object,
+    /// the force equals attractionForce.
+    /// If the velocity direction points towards the origin or the distance is 0, the force is 0.
+    /// </summary>
+    /// <param name="attractionOrigin">The origin of the attraction force.</param>
+    /// <param name="attractionForce">The fore to apply scaled by direction and distance factors.</param>
+    /// <param name="attractionRadius">The distance at which maximum force is calculated.</param>
+    /// <param name="obj">The object the force should apply to.</param>
+    /// <returns>Returns if a force was applied.</returns>
+    public static bool ApplyReverseAttractionForce(Vector2 attractionOrigin, float attractionForce, float attractionRadius, PhysicsObject obj)
+    {
+        if(obj.Mass <= 0f || attractionRadius <= 0f || attractionForce <= 0f) return false;
+        
+        var objectSpeedSquared = obj.Velocity.LengthSquared();
+        if (objectSpeedSquared != 0f)
+        {
+            var displacement = obj.Transform.Position - attractionOrigin;
+            var distanceSquared = displacement.LengthSquared();
+            if(distanceSquared == 0f) return false;
+            var distance = MathF.Sqrt(distanceSquared);
+            var dir = displacement / distance;
+            var objectSpeed = MathF.Sqrt(objectSpeedSquared);
+            var objectDir = obj.Velocity / objectSpeed;
+            var dot = objectDir.Dot(dir);
+            dot = (dot + 1f) / 2f; //translate range from [-1, 1] to [0, 1]
+            var distanceFactor = distance / attractionRadius;
+
+            var force = -dir * attractionForce * obj.Mass * dot * distanceFactor;
+            obj.AddForce(force);
+            
+            return true;
+        }
+        return false;
+    }
+    
+    
+    
+     /// <summary>
+    /// Calculates a force that gets stronger with distance and direction.
+    /// At a distance equal to attractionRadius with a velocity directly in line with the direction from the origin to the object,
+    /// the force equals attractionForce.
+    /// If the velocity direction points towards the origin or the distance is 0, the force is 0.
+    /// </summary>
+    /// <param name="attractionOrigin">The origin of the attraction force.</param>
+    /// <param name="attractionForce">The fore to apply scaled by direction and distance factors.</param>
+    /// <param name="attractionRadius">The distance at which maximum force is calculated.</param>
+    /// <param name="objectPosition">The position of the object.</param>
+    /// <param name="objectMass">The mass of the object. (Scales the returned force)</param>
+    /// <param name="objectVelocity">The velocity of the object.</param>
+    /// <returns>Returns the final force.</returns>
+    public static Vector2 CalculateReverseAttractionForce(Vector2 attractionOrigin, float attractionForce, float attractionRadius, Vector2 objectPosition, float objectMass, Vector2 objectVelocity, int pow)
+    {
+        if(objectMass <= 0f || attractionRadius <= 0f || attractionForce <= 0f) return Vector2.Zero;
+        
+        var objectSpeedSquared = objectVelocity.LengthSquared();
+        if (objectSpeedSquared != 0f)
+        {
+            var displacement = objectPosition - attractionOrigin;
+            var distanceSquared = displacement.LengthSquared();
+            if(distanceSquared == 0f) return Vector2.Zero;
+            var distance = MathF.Sqrt(distanceSquared);
+            var dir = displacement / distance;
+            var objectSpeed = MathF.Sqrt(objectSpeedSquared);
+            var objectDir = objectVelocity / objectSpeed;
+            var dot = objectDir.Dot(dir);
+            dot = (dot + 1f) / 2f; //translate range from [-1, 1] to [0, 1]
+            var distanceFactor = distance / attractionRadius;
+            distanceFactor = MathF.Pow(distanceFactor, pow);
+            return -dir * attractionForce * objectMass * dot * distanceFactor;
+            
+        }
+        return Vector2.Zero;
+    }
+ 
     #endregion
 }
