@@ -23,6 +23,14 @@ public abstract class PhysicsObject : GameObject
         if(Mass <= 0) AccumulatedForce += force;
         else AccumulatedForce += force / Mass;
     }
+    /// <summary>
+    /// Add a force without dividing by mass
+    /// </summary>
+    /// <param name="force"></param>
+    public void AddForceRaw(Vector2 force)
+    {
+        AccumulatedForce += force;
+    }
     public void AddImpulse(Vector2 force)
     {
         if (Mass <= 0.0f) Velocity += force;
