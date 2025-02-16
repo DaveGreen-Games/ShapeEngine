@@ -69,6 +69,16 @@ public readonly struct ValueRange
     #endregion
 
     #region Public Functions
+    /// <summary>
+    /// Returns true if min and max are not equal.
+    /// </summary>
+    /// <returns></returns>
+    public bool HasRange() => Math.Abs(Max - Min) > 0.00000001f;
+    /// <summary>
+    /// Returns if min and max are not equal and positive.
+    /// </summary>
+    /// <returns></returns>
+    public bool HasPositiveRange() => Min >= 0.0f && Max >= 0.0f && HasRange();
     public float GetFactor(float value)
     {
         if(value < Min) return 0.0f;

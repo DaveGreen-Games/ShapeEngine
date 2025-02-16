@@ -549,10 +549,6 @@ public static class ShapePhysics
         return velocity - CalculateFrictionForce(velocity, mass, frictionCoefficient, frictionNormal);
         
     }
-
-    
-    
-    
     
     #endregion
 
@@ -773,7 +769,9 @@ public static class ShapePhysics
     
     
     
-    
+    //TODO: overlaods with float value that determines how the dot value is applied
+    //
+     
     /// <summary>
     /// Calculates a force that gets stronger with distance and direction.
     /// At a distance equal to attractionRadius with a velocity directly in line with the direction from the origin to the object,
@@ -787,9 +785,9 @@ public static class ShapePhysics
     /// <param name="objectMass">The mass of the object. (Scales the returned force)</param>
     /// <param name="objectVelocity">The velocity of the object.</param>
     /// <returns>Returns the final force.</returns>
-    public static Vector2 CalculateReverseAttractionForceDirectional(Vector2 attractionOrigin, float attractionForce, float attractionRadius, Vector2 objectPosition, float objectMass, Vector2 objectVelocity)
+    public static Vector2 CalculateReverseAttractionForceDirectional(Vector2 attractionOrigin, float attractionForce, ValueRange attractionRadius, Vector2 objectPosition, float objectMass, Vector2 objectVelocity)
     {
-        if(objectMass <= 0f || attractionRadius <= 0f || attractionForce <= 0f) return Vector2.Zero;
+        if(objectMass <= 0f || !attractionRadius.HasPositiveRange() || attractionForce <= 0f) return Vector2.Zero;
         
         var objectSpeedSquared = objectVelocity.LengthSquared();
         if (objectSpeedSquared != 0f)
@@ -803,7 +801,7 @@ public static class ShapePhysics
             var objectDir = objectVelocity / objectSpeed;
             var dot = objectDir.Dot(dir);
             dot = (dot + 1f) / 2f; //translate range from [-1, 1] to [0, 1]
-            var distanceFactor = distance / attractionRadius;
+            var distanceFactor = attractionRadius.GetFactor(distance);
             return -dir * attractionForce * objectMass * dot * distanceFactor;
             
         }
@@ -821,9 +819,9 @@ public static class ShapePhysics
     /// <param name="attractionRadius">The distance at which maximum force is calculated.</param>
     /// <param name="obj">The object the force should apply to.</param>
     /// <returns>Returns if a force was applied.</returns>
-    public static bool ApplyReverseAttractionForceDirectional(Vector2 attractionOrigin, float attractionForce, float attractionRadius, PhysicsObject obj)
+    public static bool ApplyReverseAttractionForceDirectional(Vector2 attractionOrigin, float attractionForce, ValueRange attractionRadius, PhysicsObject obj)
     {
-        if(obj.Mass <= 0f || attractionRadius <= 0f || attractionForce <= 0f) return false;
+        if(obj.Mass <= 0f || !attractionRadius.HasPositiveRange() || attractionForce <= 0f) return false;
         
         var objectSpeedSquared = obj.Velocity.LengthSquared();
         if (objectSpeedSquared != 0f)
@@ -837,7 +835,7 @@ public static class ShapePhysics
             var objectDir = obj.Velocity / objectSpeed;
             var dot = objectDir.Dot(dir);
             dot = (dot + 1f) / 2f; //translate range from [-1, 1] to [0, 1]
-            var distanceFactor = distance / attractionRadius;
+            var distanceFactor = attractionRadius.GetFactor(distance);
 
             var force = -dir * attractionForce * obj.Mass * dot * distanceFactor;
             obj.AddForce(force);
@@ -862,9 +860,9 @@ public static class ShapePhysics
     /// <param name="dotRange">Set the multiplier range for pointing towards the center or away from the center.
     /// [0 and 1] would make force 0 when pointing towards the center and max when pointing away.</param>
     /// <returns>Returns the final force.</returns>
-    public static Vector2 CalculateReverseAttractionForceDirectional(Vector2 attractionOrigin, float attractionForce, float attractionRadius, Vector2 objectPosition, float objectMass, Vector2 objectVelocity, ValueRange dotRange)
+    public static Vector2 CalculateReverseAttractionForceDirectional(Vector2 attractionOrigin, float attractionForce, ValueRange attractionRadius, Vector2 objectPosition, float objectMass, Vector2 objectVelocity, ValueRange dotRange)
     {
-        if(objectMass <= 0f || attractionRadius <= 0f || attractionForce <= 0f) return Vector2.Zero;
+        if(objectMass <= 0f || !attractionRadius.HasPositiveRange() || attractionForce <= 0f) return Vector2.Zero;
         
         var objectSpeedSquared = objectVelocity.LengthSquared();
         if (objectSpeedSquared != 0f)
@@ -878,7 +876,7 @@ public static class ShapePhysics
             var objectDir = objectVelocity / objectSpeed;
             var dot = objectDir.Dot(dir);
             dot = ShapeMath.RemapFloat(dot, -1f, 1f, dotRange.Min, dotRange.Max);
-            var distanceFactor = distance / attractionRadius;
+            var distanceFactor = attractionRadius.GetFactor(distance);
             return -dir * attractionForce * objectMass * dot * distanceFactor;
             
         }
@@ -898,9 +896,9 @@ public static class ShapePhysics
     /// <param name="dotRange">Set the multiplier range for pointing towards the center or away from the center.
     /// [0 and 1] would make force 0 when pointing towards the center and max when pointing away.</param>
     /// <returns>Returns if a force was applied.</returns>
-    public static bool ApplyReverseAttractionForceDirectional(Vector2 attractionOrigin, float attractionForce, float attractionRadius, PhysicsObject obj, ValueRange dotRange)
+    public static bool ApplyReverseAttractionForceDirectional(Vector2 attractionOrigin, float attractionForce, ValueRange attractionRadius, PhysicsObject obj, ValueRange dotRange)
     {
-        if(attractionRadius <= 0f || attractionForce <= 0f) return false;
+        if(!attractionRadius.HasPositiveRange() || attractionForce <= 0f) return false;
         
         var objectSpeedSquared = obj.Velocity.LengthSquared();
         if (objectSpeedSquared != 0f)
@@ -914,7 +912,7 @@ public static class ShapePhysics
             var objectDir = obj.Velocity / objectSpeed;
             var dot = objectDir.Dot(dir);
             dot = ShapeMath.RemapFloat(dot, -1f, 1f, dotRange.Min, dotRange.Max);
-            var distanceFactor = distance / attractionRadius;
+            var distanceFactor = attractionRadius.GetFactor(distance);
 
             var force = -dir * attractionForce * dot * distanceFactor;
             obj.AddForceRaw(force);
@@ -939,9 +937,9 @@ public static class ShapePhysics
     /// <param name="distanceFactorAdjustor">Supply a method that takes a factor between 0 and 1 and returns a new factor as float.
     /// The new factor will be multiplied with the resulting force.</param>
     /// <returns>Returns the final force.</returns>
-    public static Vector2 CalculateReverseAttractionForceDirectional(Vector2 attractionOrigin, float attractionForce, float attractionRadius, Vector2 objectPosition, float objectMass, Vector2 objectVelocity, Func<float, float> distanceFactorAdjustor)
+    public static Vector2 CalculateReverseAttractionForceDirectional(Vector2 attractionOrigin, float attractionForce, ValueRange attractionRadius, Vector2 objectPosition, float objectMass, Vector2 objectVelocity, Func<float, float> distanceFactorAdjustor)
     {
-        if(objectMass <= 0f || attractionRadius <= 0f || attractionForce <= 0f) return Vector2.Zero;
+        if(objectMass <= 0f || !attractionRadius.HasPositiveRange() || attractionForce <= 0f) return Vector2.Zero;
         
         var objectSpeedSquared = objectVelocity.LengthSquared();
         if (objectSpeedSquared != 0f)
@@ -955,7 +953,7 @@ public static class ShapePhysics
             var objectDir = objectVelocity / objectSpeed;
             var dot = objectDir.Dot(dir);
             dot = (dot + 1f) / 2f; //translate range from [-1, 1] to [0, 1]
-            var distanceFactor = distance / attractionRadius;
+            var distanceFactor = attractionRadius.GetFactor(distance);
             distanceFactor = distanceFactorAdjustor(distanceFactor);
             return -dir * attractionForce * objectMass * dot * distanceFactor;
             
@@ -975,9 +973,9 @@ public static class ShapePhysics
     /// <param name="distanceFactorAdjustor">Supply a method that takes a factor between 0 and 1 and returns a new factor as float.
     /// The new factor will be multiplied with the resulting force.</param>
     /// <returns>Returns the final force.</returns>
-    public static bool CalculateReverseAttractionForce(Vector2 attractionOrigin, float attractionForce, float attractionRadius, PhysicsObject obj, Func<float, float> distanceFactorAdjustor)
+    public static bool CalculateReverseAttractionForce(Vector2 attractionOrigin, float attractionForce, ValueRange attractionRadius, PhysicsObject obj, Func<float, float> distanceFactorAdjustor)
     {
-        if (attractionRadius <= 0f || attractionForce <= 0f) return false;
+        if (!attractionRadius.HasPositiveRange() || attractionForce <= 0f) return false;
         
         var objectSpeedSquared = obj.Velocity.LengthSquared();
         if (objectSpeedSquared != 0f)
@@ -991,7 +989,7 @@ public static class ShapePhysics
             var objectDir = obj.Velocity / objectSpeed;
             var dot = objectDir.Dot(dir);
             dot = (dot + 1f) / 2f; //translate range from [-1, 1] to [0, 1]
-            var distanceFactor = distance / attractionRadius;
+            var distanceFactor = attractionRadius.GetFactor(distance);
             distanceFactor = distanceFactorAdjustor(distanceFactor);
             var force =  -dir * attractionForce * dot * distanceFactor;
             obj.AddForceRaw(force);
@@ -1019,7 +1017,7 @@ public static class ShapePhysics
     /// <returns>Returns the final force.</returns>
     public static Vector2 CalculateReverseAttractionForce(Vector2 attractionOrigin, float attractionForce, ValueRange attractionRadius, Vector2 objectPosition, float objectMass)
     {
-        if(objectMass <= 0f  || attractionForce <= 0f) return Vector2.Zero;
+        if(!attractionRadius.HasPositiveRange() || objectMass <= 0f  || attractionForce <= 0f) return Vector2.Zero;
         
         var displacement = objectPosition - attractionOrigin;
         var distanceSquared = displacement.LengthSquared();
@@ -1046,7 +1044,7 @@ public static class ShapePhysics
     /// <returns>Returns the final force.</returns>
     public static Vector2 CalculateReverseAttractionForce(Vector2 attractionOrigin, float attractionForce, ValueRange attractionRadius, Vector2 objectPosition, float objectMass, Func<float, float> distanceFactorAdjustor)
     {
-        if(objectMass <= 0f ||  attractionForce <= 0f) return Vector2.Zero;
+        if(!attractionRadius.HasPositiveRange() || objectMass <= 0f ||  attractionForce <= 0f) return Vector2.Zero;
         
         var displacement = objectPosition - attractionOrigin;
         var distanceSquared = displacement.LengthSquared();
@@ -1071,7 +1069,7 @@ public static class ShapePhysics
     /// <returns>Returns if a force was applied.</returns>
     public static bool ApplyReverseAttractionForce(Vector2 attractionOrigin, float attractionForce, ValueRange attractionRadius, PhysicsObject obj)
     {
-        if (attractionForce <= 0f) return false;
+        if (!attractionRadius.HasPositiveRange() || attractionForce <= 0f) return false;
         
         var displacement = obj.Transform.Position - attractionOrigin;
         var distanceSquared = displacement.LengthSquared();
@@ -1099,7 +1097,7 @@ public static class ShapePhysics
     /// <returns>Returns if a force was applied.</returns>
     public static bool ApplyReverseAttractionForce(Vector2 attractionOrigin, float attractionForce, ValueRange attractionRadius, PhysicsObject obj,  Func<float, float> distanceFactorAdjustor)
     {
-        if(attractionForce <= 0f) return false;
+        if(!attractionRadius.HasPositiveRange() || attractionForce <= 0f) return false;
         
         var displacement = obj.Transform.Position - attractionOrigin;
         var distanceSquared = displacement.LengthSquared();
