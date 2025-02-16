@@ -15,163 +15,10 @@ public static class ShapePhysics
     /// If the real value is needed, set it to GReal.
     /// </summary>
     public static float G = 1f;
-   
-    #region OLD
-    // /// <summary>
-    // /// Apply drag to the given value.
-    // /// </summary>
-    // /// <param name="value">The value that is affected by the drag.</param>
-    // /// <param name="dragCoefficient">The drag coefficient for calculating the drag force. Has to be positive.
-    // /// 1 / drag coefficient = seconds until stop. DC of 4 means object stops in 0.25s.</param>
-    // /// <param name="dt">The delta time of the current frame.</param>
-    // /// <returns></returns>
-    // public static float ApplyDragForce(float value, float dragCoefficient, float dt)
-    // {
-    //     if (dragCoefficient <= 0f) return value;
-    //     float dragForce = dragCoefficient * value * dt;
-    //
-    //     return value - MathF.Min(dragForce, value);
-    // }
-    /// <summary>
-    /// Apply drag to the given velocity.
-    /// </summary>
-    /// <param name="vel">The velocity that is affected by the drag.</param>
-    /// <param name="dragCoefficient">The drag coefficient for calculating the drag force. Has to be positive.
-    /// 1 / drag coefficient = seconds until stop. DC of 4 means object stops in 0.25s.</param>
-    /// <param name="dt">The delta time of the current frame.</param>
-    /// <returns>Returns the new velocity.</returns>
-    public static Vector2 ApplyDragForce(Vector2 vel, float dragCoefficient, float dt)
-    {
-        // return ApplyDragFactor(vel, dragCoefficient, dt);
-        
-        if (dragCoefficient <= 0f) return vel;
-        Vector2 dragForce = dragCoefficient * vel * dt;
-        if (dragForce.LengthSquared() >= vel.LengthSquared()) return new Vector2(0f, 0f);
-        return vel - dragForce;
-    }
-    // public static float GetDragForce(float value, float dragCoefficient, float dt)
-    // {
-    //     if (dragCoefficient <= 0f) return value;
-    //     float dragForce = dragCoefficient * value * dt;
-    //
-    //     return -MathF.Min(dragForce, value);
-    // }
-    // public static Vector2 GetDragForce(Vector2 vel, float dragCoefficient, float dt)
-    // {
-    //     if (dragCoefficient <= 0f) return vel;
-    //     Vector2 dragForce = dragCoefficient * vel * dt;
-    //     if (dragForce.LengthSquared() >= vel.LengthSquared()) return new Vector2(0f, 0f);
-    //     return -dragForce;
-    // }
-    //
-    // public static Vector2 Attraction(Vector2 center, Vector2 otherPos, Vector2 otherVel, float r, float strength, float friction)
-    // {
-    //     Vector2 w = center - otherPos;
-    //     float disSq = w.LengthSquared();
-    //     float f = 1.0f - disSq / (r * r);
-    //     Vector2 force = ShapeVec.Normalize(w) * strength;// * f;
-    //     Vector2 stop = -otherVel * friction * f;
-    //     return force + stop;
-    // }
-    // public static Vector2 ElasticCollision1D(Vector2 vel1, float mass1, Vector2 vel2, float mass2)
-    // {
-    //     float totalMass = mass1 + mass2;
-    //     return vel1 * ((mass1 - mass2) / totalMass) + vel2 * (2f * mass2 / totalMass);
-    // }
-    // // public static Vector2 ElasticCollision2D(Vector2 p1, Vector2 v1, float m1, Vector2 p2, Vector2 v2, float m2, float R)
-    // // {
-    // //     float totalMass = m1 + m2;
-    // //
-    // //     float mf = m2 / m1;
-    // //     Vector2 posDif = p2 - p1;
-    // //     Vector2 velDif = v2 - v1;
-    // //
-    // //     Vector2 velCM = (m1 * v1 + m2 * v2) / totalMass;
-    // //
-    // //     float a = posDif.Y / posDif.X;
-    // //     float dvx2 = -2f * (velDif.X + a * velDif.Y) / ((1 + a * a) * (1 + mf));
-    // //     //Vector2 newOtherVel = new(v2.X + dvx2, v2.Y + a * dvx2);
-    // //     Vector2 newSelfVel = new(v1.X - mf * dvx2, v1.Y - a * mf * dvx2);
-    // //
-    // //     newSelfVel = (newSelfVel - velCM) * R + velCM;
-    // //     //newOtherVel = (newOtherVel - velCM) * R + velCM;
-    // //
-    // //     return newSelfVel;
-    // // }
-    // //
-    //
-     #endregion
 
-    #region Tabnine
+    public static Vector2 GravitationDirection = new(0, 1);
     
-    // public static (Vector2 newVel1, Vector2 newVel2) ElasticCollision2D(Vector2 vel1, float mass1, Vector2 vel2, float mass2, float r)
-    // {
-    //     float totalMass = mass1 + mass2;
-    //
-    //     var velCM = (mass1 * vel1 + mass2 * vel2) / totalMass;
-    //
-    //     var relVel = vel1 - vel2;
-    //     float relVelMag = relVel.Length();
-    //
-    //     var normal = relVel / relVelMag;
-    //     var tangent = new Vector2(-normal.Y, normal.X);
-    //
-    //     float velNormal1 = Vector2.Dot(vel1, normal);
-    //     float velTangent1 = Vector2.Dot(vel1, tangent);
-    //
-    //     float velNormal2 = Vector2.Dot(vel2, normal);
-    //     float velTangent2 = Vector2.Dot(vel2, tangent);
-    //
-    //     float newVelNormal1 = (velNormal1 * (mass1 - mass2) + 2f * mass2 * velNormal2) / totalMass;
-    //     float newVelNormal2 = (velNormal2 * (mass2 - mass1) + 2f * mass1 * velNormal1) / totalMass;
-    //
-    //     var newVel1 = (newVelNormal1 * normal + velTangent1 * tangent) * r + velCM;
-    //     var newVel2 = (newVelNormal2 * normal + velTangent2 * tangent) * r + velCM;
-    //
-    //     return (newVel1, newVel2);
-    // }
-    // public static (Vector2 newVel1, Vector2 newVel2) ElasticCollision2D(Vector2 pos1, Vector2 vel1, float mass1, Vector2 pos2, Vector2 vel2, float mass2, float r)
-    // {
-    //     float totalMass = mass1 + mass2;
-    //
-    //     var velCM = (mass1 * vel1 + mass2 * vel2) / totalMass;
-    //
-    //     var relVel = vel1 - vel2;
-    //     // float relVelMag = relVel.Length();
-    //
-    //     var normal = (pos2 - pos1).Normalize(); // / (pos2 - pos1).Length();
-    //     var tangent = new Vector2(-normal.Y, normal.X);
-    //
-    //     float velNormal1 = Vector2.Dot(vel1, normal);
-    //     float velTangent1 = Vector2.Dot(vel1, tangent);
-    //
-    //     float velNormal2 = Vector2.Dot(vel2, normal);
-    //     float velTangent2 = Vector2.Dot(vel2, tangent);
-    //
-    //     float newVelNormal1 = (velNormal1 * (mass1 - mass2) + 2f * mass2 * velNormal2) / totalMass;
-    //     float newVelNormal2 = (velNormal2 * (mass2 - mass1) + 2f * mass1 * velNormal1) / totalMass;
-    //
-    //     var newVel1 = (newVelNormal1 * normal + velTangent1 * tangent) * r + velCM;
-    //     var newVel2 = (newVelNormal2 * normal + velTangent2 * tangent) * r + velCM;
-    //
-    //     return (newVel1, newVel2);
-    // }
-    //
-    // public static void ElasticCollision2D(this PhysicsObject obj1, PhysicsObject obj2, float r)
-    // {
-    //     var result = ElasticCollision2D(obj1.Transform.Position, obj1.Velocity, obj1.Mass, obj2.Transform.Position, obj2.Velocity, obj2.Mass, r);
-    //     obj1.Velocity = result.newVel1;
-    //     obj2.Velocity = result.newVel2;
-    // }
-    // public static (Vector2 newVel1, Vector2 newVel2) ElasticCollision2D2(this PhysicsObject obj1, PhysicsObject obj2, float r)
-    // {
-    //     var result = ElasticCollision2D(obj1.Transform.Position, obj1.Velocity, obj1.Mass, obj2.Transform.Position, obj2.Velocity, obj2.Mass, r);
-    //     return (result.newVel1, result.newVel2);
-    // }
-    //
-    #endregion
-    
-    #region Github Copilot
+    #region Elastic Collision
     public static (Vector2 newVelocity1, Vector2 newVelocity2) CalculateElasticCollision(Vector2 velocity1, float mass1, Vector2 velocity2, float mass2, float r)
     {
         // Ensure the elasticity parameter is between 0 and 1
@@ -226,7 +73,10 @@ public static class ShapePhysics
         var result = CalculateElasticCollision(obj1.Transform.Position, obj1.Velocity, obj1.Mass, obj2.Transform.Position, obj2.Velocity, obj2.Mass, r);
         return (result.newVelocity1, result.newVelocity2);
     }
-    
+    #endregion
+
+    #region Drag
+
     /// <summary>
     /// This function calculates a frame rate independent drag force.
     /// </summary>
@@ -268,13 +118,45 @@ public static class ShapePhysics
         
         var dragFactor = (float)Math.Pow(1.0 - drag, deltaTime);
 
-        obj.Velocity = obj.Velocity  * dragFactor;
+        obj.Velocity = obj.Velocity * dragFactor;
     }
+
+    /// <summary>
+    /// Calculates a realistic drag force.
+    /// Force = FluidDensity * Speed * Speed * DragCoefficient * ReferenceArea
+    /// </summary>
+    /// <param name="velocity">The velocity of the object.</param>
+    /// <param name="dragCoefficient">The drag coefficient to scale the resulting force.</param>
+    /// <param name="referenceArea">The surface area of the object resisting the fluid. </param>
+    /// <param name="fluidDensity">The density of the fluid the object is moving through. Air at sea level has a density value of 1.225f</param>
+    /// <returns></returns>
+    public static Vector2 CalculateDragForceRealistic(Vector2 velocity, float dragCoefficient, float referenceArea, float fluidDensity = 1.225f)
+    {
+        float speedSquared = velocity.LengthSquared();
+        if(speedSquared <= 0) return Vector2.Zero;
+        
+        // Calculate the magnitude of the velocity
+        float speed = MathF.Sqrt(speedSquared);
+        var velocityDirection = velocity / speed;
+        
+        // Calculate the drag force magnitude
+        float dragForceMagnitude = 0.5f * fluidDensity * speed * speed * dragCoefficient * referenceArea;
+
+        // Calculate the drag force vector (opposite to the direction of velocity)
+        var dragForce = -velocityDirection * dragForceMagnitude;
+
+        return dragForce;
+    }
+    #endregion
     
-    
-    //TODO: remove delta time and return either the force to apply or use PhysicsObject.ApplyForce function to apply forces.
-    // all calculate variantes should divide out the mass for the returned force (AddForceRaw has to be used when dealing with PhysicsObjects!)
-    public static (Vector2 newVelocity1, Vector2 newVelocity2) CalculateAttraction(Vector2 position1, Vector2 velocity1, float mass1, Vector2 position2, Vector2 velocity2, float mass2, float deltaTime)
+    #region Attraction
+    /// <summary>
+    /// Calculate the gravitational force between two objects.
+    /// Use AddForceRaw() when dealing with PhysicsObjects!
+    /// Force is already divided by mass for each object.
+    /// </summary>
+    /// <returns>Returns the resulting forces. </returns>
+    public static (Vector2 force1, Vector2 force2) CalculateAttraction(Vector2 position1, Vector2 velocity1, float mass1, Vector2 position2, Vector2 velocity2, float mass2)
     {
         // Calculate the direction and distance between the two objects
         var direction = position2 - position1;
@@ -296,20 +178,22 @@ public static class ShapePhysics
         var acceleration1 = (forceMagnitude / mass1) * normalizedDirection;
         var acceleration2 = (forceMagnitude / mass2) * -normalizedDirection;
 
-        // Update the velocities
-        var newVelocity1 = velocity1 + acceleration1 * deltaTime;
-        var newVelocity2 = velocity2 + acceleration2 * deltaTime;
-
-        return (newVelocity1, newVelocity2);
+        return (acceleration1, acceleration2);
     }
-    public static void ApplyAttraction(PhysicsObject obj1, PhysicsObject obj2, float deltaTime)
+    public static void ApplyAttraction(PhysicsObject obj1, PhysicsObject obj2)
     {
-        var result = CalculateAttraction(obj1.Transform.Position, obj1.Velocity, obj1.Mass, obj2.Transform.Position, obj2.Velocity, obj2.Mass, deltaTime);
-        obj1.Velocity = result.newVelocity1;
-        obj2.Velocity = result.newVelocity2;
+        var result = CalculateAttraction(obj1.Transform.Position, obj1.Velocity, obj1.Mass, obj2.Transform.Position, obj2.Velocity, obj2.Mass);
+        obj1.AddForceRaw(result.force1);
+        obj2.AddForceRaw(result.force2);
     }
     
-    public static Vector2 CalculateAttraction(Vector2 position1, Vector2 velocity1, float mass1, Vector2 attractionPoint, float attractionForce, float deltaTime)
+    /// <summary>
+    /// Calculate the force for 1 object based on attraction point and force.
+    /// Use AddForceRaw() when dealing with PhysicsObjects!
+    /// Force is already divided by mass for each object.
+    /// </summary>
+    /// <returns>Returns the resulting forces. </returns>
+    public static Vector2 CalculateAttraction(Vector2 position1, Vector2 velocity1, float mass1, Vector2 attractionPoint, float attractionForce)
     {
         // Calculate the direction and distance between the object and the attraction point
         var direction = attractionPoint - position1;
@@ -327,55 +211,28 @@ public static class ShapePhysics
         // Calculate the force magnitude
         float forceMagnitude = attractionForce / (distance * distance);
 
-        // Calculate the acceleration
-        var acceleration = (forceMagnitude / mass1) * normalizedDirection;
-
-        // Update the velocity
-        var newVelocity1 = velocity1 + acceleration * deltaTime;
-
-        return newVelocity1;
+        return (forceMagnitude / mass1) * normalizedDirection;
     }
-    public static Vector2 CalculateAttraction(Vector2 position1, Vector2 velocity1, float mass1, Vector2 attractionPoint, float attractionForce, float drag, float deltaTime)
+    public static void ApplyAttraction(this PhysicsObject obj, Vector2 attractionPoint, float attractionForce)
     {
-        // Calculate the direction and distance between the object and the attraction point
-        var direction = attractionPoint - position1;
-        float distance = direction.Length();
-
-        // Avoid division by zero
-        if (distance == 0)
-        {
-            return velocity1;
-        }
-
-        // Normalize the direction vector
-        var normalizedDirection = direction / distance;
-
-        // Calculate the force magnitude
-        float forceMagnitude = attractionForce / (distance * distance);
-
-        // Calculate the acceleration
-        var acceleration = (forceMagnitude / mass1) * normalizedDirection;
-
-        // Update the velocity
-        var newVelocity1 = velocity1 + acceleration * deltaTime;
-        return ApplyDragFactor(newVelocity1, drag, deltaTime);
+        var force = CalculateAttraction(obj.Transform.Position, obj.Velocity, obj.Mass, attractionPoint, attractionForce);
+        obj.AddForceRaw(force);
     }
     
-    public static void ApplyAttraction(this PhysicsObject obj, Vector2 attractionPoint, float attractionForce, float deltaTime)
-    {
-        var newVelocity1 = CalculateAttraction(obj.Transform.Position, obj.Velocity, obj.Mass, attractionPoint, attractionForce, deltaTime);
-        obj.Velocity = newVelocity1;
-    }
-    public static void ApplyAttraction(this PhysicsObject obj, Vector2 attractionPoint, float attractionForce, float drag, float deltaTime)
-    {
-        var newVelocity1 = CalculateAttraction(obj.Transform.Position, obj.Velocity, obj.Mass, attractionPoint, attractionForce, drag, deltaTime);
-        obj.Velocity = newVelocity1;
-    }
+    #endregion
+    
+    #region Repulsion
 
-    public static (Vector2 newVelocity1, Vector2 newVelocity2) ApplyRepulsion(Vector2 position1, Vector2 velocity1, float mass1, Vector2 position2, Vector2 velocity2, float mass2, float deltaTime)
+    /// <summary>
+    /// Calculate the repulsion force between two objects.
+    /// Use AddForceRaw() when dealing with PhysicsObjects!
+    /// Force is already divided by mass for each object.
+    /// </summary>
+    /// <returns>Returns the resulting forces. </returns>
+    public static (Vector2 force1, Vector2 force2) ApplyRepulsion(Vector2 position1, Vector2 velocity1, float mass1, Vector2 position2, Vector2 velocity2, float mass2)
     {
         // Calculate the direction and distance between the two objects
-        Vector2 direction = position2 - position1;
+        var direction = position2 - position1;
         float distance = direction.Length();
 
         // Avoid division by zero
@@ -385,171 +242,149 @@ public static class ShapePhysics
         }
 
         // Normalize the direction vector
-        Vector2 normalizedDirection = direction / distance;
+        var normalizedDirection = direction / distance;
 
         // Calculate the force magnitude
         float forceMagnitude = G * (mass1 * mass2) / (distance * distance);
 
         // Calculate the accelerations
-        Vector2 acceleration1 = (forceMagnitude / mass1) * -normalizedDirection;
-        Vector2 acceleration2 = (forceMagnitude / mass2) * normalizedDirection;
+        var acceleration1 = (forceMagnitude / mass1) * -normalizedDirection;
+        var acceleration2 = (forceMagnitude / mass2) * normalizedDirection;
 
-        // Update the velocities
-        Vector2 newVelocity1 = velocity1 + acceleration1 * deltaTime;
-        Vector2 newVelocity2 = velocity2 + acceleration2 * deltaTime;
-
-        return (newVelocity1, newVelocity2);
+        return (acceleration1, acceleration2);
     }
-    public static void ApplyRepulsion(PhysicsObject obj1, PhysicsObject obj2, float deltaTime)
+    public static void ApplyRepulsion(PhysicsObject obj1, PhysicsObject obj2)
     {
-        var result = ApplyRepulsion(obj1.Transform.Position, obj1.Velocity, obj1.Mass, obj2.Transform.Position, obj2.Velocity, obj2.Mass, deltaTime);
-        obj1.Velocity = result.newVelocity1;
-        obj2.Velocity = result.newVelocity2;
+        var result = ApplyRepulsion(obj1.Transform.Position, obj1.Velocity, obj1.Mass, obj2.Transform.Position, obj2.Velocity, obj2.Mass);
+        obj1.AddForceRaw(result.force1);
+        obj2.AddForceRaw(result.force2);
     }
-    
-    public static Vector2 ApplyRepulsion(Vector2 position1, Vector2 velocity1, float mass1, Vector2 repulsionPoint, float repulsionForce, float deltaTime)
-    {
-        // Calculate the direction and distance between the object and the attraction point
-        var direction = position1 - repulsionPoint;
-        float distance = direction.Length();
-
-        // Avoid division by zero
-        if (distance == 0)
-        {
-            return velocity1;
-        }
-
-        // Normalize the direction vector
-        var normalizedDirection = direction / distance;
-
-        // Calculate the force magnitude
-        float forceMagnitude = repulsionForce / (distance * distance);
-
-        // Calculate the acceleration
-        var acceleration = (forceMagnitude / mass1) * normalizedDirection;
-
-        // Update the velocity
-        var newVelocity1 = velocity1 + acceleration * deltaTime;
-
-        return newVelocity1;
-    }
-    public static Vector2 ApplyRepulsion(Vector2 position1, Vector2 velocity1, float mass1, Vector2 repulsionPoint, float repulsionForce, float drag, float deltaTime)
-    {
-        // Calculate the direction and distance between the object and the attraction point
-        var direction = position1 - repulsionPoint;
-        float distance = direction.Length();
-
-        // Avoid division by zero
-        if (distance == 0)
-        {
-            return velocity1;
-        }
-
-        // Normalize the direction vector
-        var normalizedDirection = direction / distance;
-
-        // Calculate the force magnitude
-        float forceMagnitude = repulsionForce / (distance * distance);
-
-        // Calculate the acceleration
-        var acceleration = (forceMagnitude / mass1) * normalizedDirection;
-
-        // Update the velocity
-        var newVelocity1 = velocity1 + acceleration * deltaTime;
-        return ApplyDragFactor(newVelocity1, drag, deltaTime);
-    }
-    
-    public static void ApplyRepulsion(this PhysicsObject obj, Vector2 repulsionPoint, float repulsionForce, float deltaTime)
-    {
-        var newVelocity1 = ApplyRepulsion(obj.Transform.Position, obj.Velocity, obj.Mass, repulsionPoint, repulsionForce, deltaTime);
-        obj.Velocity = newVelocity1;
-    }
-    public static void ApplyRepulsion(this PhysicsObject obj, Vector2 repulsionPoint, float repulsionForce, float drag, float deltaTime)
-    {
-        var newVelocity1 = ApplyRepulsion(obj.Transform.Position, obj.Velocity, obj.Mass, repulsionPoint, repulsionForce, drag, deltaTime);
-        obj.Velocity = newVelocity1;
-    }
-   
     
     /// <summary>
-    /// Calculates a friction force considering the mass, friction coefficient, friction normal, and gravitational force.
+    /// Calculate the repulsion force for 1 object based on repulsion point and force.
+    /// Use AddForceRaw() when dealing with PhysicsObjects!
+    /// Force is already divided by mass for each object.
     /// </summary>
-    /// <returns>Returns the friction force.</returns>
-    public static Vector2 CalculateFrictionForce(Vector2 velocity, float mass, float frictionCoefficient, Vector2 frictionNormal, Vector2 gravitationForce)
+    /// <returns>Returns the resulting forces.</returns>
+    public static Vector2 ApplyRepulsion(Vector2 position1, Vector2 velocity1, float mass1, Vector2 repulsionPoint, float repulsionForce)
     {
-        if (frictionNormal.X == 0 && frictionNormal.Y == 0) return Vector2.Zero;
-        if (frictionCoefficient <= 0) return Vector2.Zero;
-        if (gravitationForce.X == 0 && gravitationForce.Y == 0) return Vector2.Zero;
-        
-        // Normalize the frictionNormal vector
-        Vector2 normalizedFrictionNormal = frictionNormal.Normalize();
-        
-        // Calculate the normal force magnitude
-        float normalForceMagnitude = Vector2.Dot(gravitationForce, normalizedFrictionNormal);
+        // Calculate the direction and distance between the object and the attraction point
+        var direction = position1 - repulsionPoint;
+        float distance = direction.Length();
+
+        // Avoid division by zero
+        if (distance == 0)
+        {
+            return velocity1;
+        }
+
+        // Normalize the direction vector
+        var normalizedDirection = direction / distance;
+
+        // Calculate the force magnitude
+        float forceMagnitude = repulsionForce / (distance * distance);
+
+        // Calculate the acceleration
+        return (forceMagnitude / mass1) * normalizedDirection;
+    }
+    public static void ApplyRepulsion(this PhysicsObject obj, Vector2 repulsionPoint, float repulsionForce)
+    {
+        var force = ApplyRepulsion(obj.Transform.Position, obj.Velocity, obj.Mass, repulsionPoint, repulsionForce);
+        obj.AddForceRaw(force);
+    }
+    
+
+    #endregion
+    
+    #region Friction
+    public static float CalculateFrictionForceMagnitudeRealistic(Vector2 surfaceNormal, float frictionCoefficient, float mass)
+    {
+        // Normalize the surface normal vector
+        var normalizedSurfaceNormal = surfaceNormal.Normalize();
+
+        // Calculate the gravitational force vector
+        var gravitationalForce = GravitationDirection * mass * G;
+
+        // Calculate the normal force magnitude using the dot product of the gravitational force and the normalized surface normal
+        float normalForceMagnitude = Vector2.Dot(gravitationalForce, normalizedSurfaceNormal);
 
         // Ensure the normal force magnitude is positive
         normalForceMagnitude = Math.Abs(normalForceMagnitude);
 
-        // Calculate the effective normal force considering the mass
-        float effectiveNormalForce = normalForceMagnitude * mass;
+        // Calculate the friction force magnitude
+        float frictionForceMagnitude = frictionCoefficient * normalForceMagnitude;
+
+        return frictionForceMagnitude;
+    }
+    public static float CalculateFrictionForceMagnitudeRealistic(Vector2 surfaceNormal, Vector2 pressureForce, float frictionCoefficient)
+    {
+        // Normalize the surface normal vector
+        var normalizedSurfaceNormal = surfaceNormal.Normalize();
+
+        // Calculate the normal force magnitude using the dot product of the gravitational force and the normalized surface normal
+        float normalForceMagnitude = Vector2.Dot(pressureForce, normalizedSurfaceNormal);
+
+        // Ensure the normal force magnitude is positive
+        normalForceMagnitude = Math.Abs(normalForceMagnitude);
 
         // Calculate the friction force magnitude
-        float frictionForceMagnitude = frictionCoefficient * effectiveNormalForce;
+        float frictionForceMagnitude = frictionCoefficient * normalForceMagnitude;
 
-        // Calculate the friction force vector (opposite to the direction of velocity)
-        Vector2 frictionForce = -Vector2.Normalize(velocity) * frictionForceMagnitude;
-
-        return frictionForce;
+        return frictionForceMagnitude;
     }
-    /// <summary>
-    /// Calculates a friction force considering the mass, friction coefficient, friction normal, and gravitational force.
-    /// </summary>
-    /// <returns>Returns the friction force.</returns>
-    public static Vector2 CalculateFrictionForce(Vector2 velocity, float mass, float frictionCoefficient, Vector2 frictionNormal)
+    public static Vector2 CalculateFrictionForce(Vector2 velocity, Vector2 surfaceNormal, float frictionCoefficient, float mass)
     {
-        if (frictionNormal.X == 0 && frictionNormal.Y == 0) return Vector2.Zero;
-        if (frictionCoefficient <= 0) return Vector2.Zero;
-        
-        // Normalize the frictionNormal vector
-        Vector2 normalizedFrictionNormal = frictionNormal.Normalize();
-        
-        // Calculate the component of velocity perpendicular to the friction normal
-        float perpendicularComponent = Vector2.Dot(velocity, new Vector2(-normalizedFrictionNormal.Y, normalizedFrictionNormal.X));
-        
-        // Calculate the friction force magnitude based on the perpendicular component
-        float frictionForceMagnitude = frictionCoefficient * Math.Abs(perpendicularComponent) * mass;
-
-        // Calculate the friction force vector (opposite to the direction of velocity)
-        Vector2 frictionForce = -Vector2.Normalize(velocity) * frictionForceMagnitude;
-
-        return frictionForce;
+        var forceMag = CalculateFrictionForceMagnitudeRealistic(surfaceNormal, frictionCoefficient, mass);
+        return -velocity.Normalize() * forceMag;
     }
-    /// <summary>
-    /// Calculates and applies a friction force to the velocity considering the mass, friction coefficient, friction normal, and gravitational force.
-    /// </summary>
-    /// <returns>Returns the new velocity.</returns>
-    public static Vector2 ApplyFrictionForce(Vector2 velocity, float mass, float frictionCoefficient, Vector2 frictionNormal, Vector2 gravitationForce)
+    public static Vector2 CalculateFrictionForce(Vector2 velocity, Vector2 surfaceNormal, Vector2 pressureForce, float frictionCoefficient)
     {
-        if (frictionNormal.X == 0 && frictionNormal.Y == 0) return velocity;
-        if (frictionCoefficient <= 0) return velocity;
-        if (gravitationForce.X == 0 && gravitationForce.Y == 0) return velocity;
-        
-        return velocity - CalculateFrictionForce(velocity, mass, frictionCoefficient, frictionNormal, gravitationForce);
-        
+        var forceMag = CalculateFrictionForceMagnitudeRealistic(surfaceNormal, pressureForce, frictionCoefficient);
+        return -velocity.Normalize() * forceMag;
     }
-    /// <summary>
-    /// Calculates and applies a friction force to the velocity considering the mass, friction coefficient, friction normal, and gravitational force.
-    /// </summary>
-    /// <returns>Returns the new velocity.</returns>
-    public static Vector2 ApplyFrictionForce(Vector2 velocity, float mass, float frictionCoefficient, Vector2 frictionNormal)
+    public static void ApplyFrictionForceRealistic(PhysicsObject obj, Vector2 surfaceNormal, float frictionCoefficient)
     {
-        if (frictionNormal.X == 0 && frictionNormal.Y == 0) return velocity;
-        if (frictionCoefficient <= 0) return velocity;
-        
-        return velocity - CalculateFrictionForce(velocity, mass, frictionCoefficient, frictionNormal);
-        
+        var force = CalculateFrictionForce(obj.Velocity, surfaceNormal, frictionCoefficient, obj.Mass);
+        obj.AddForce(force);
     }
     
+    /// <summary>
+    /// Calculates a friction force based on the direction of the velocity and the friction normal.
+    /// The mass and friction coefficient are for scaling the resulting force.
+    /// </summary>
+    /// <param name="velocity"></param>
+    /// <param name="mass"></param>
+    /// <param name="frictionCoefficient"></param>
+    /// <param name="frictionNormal"></param>
+    /// <returns></returns>
+    public static Vector2 CalculateFrictionForce(Vector2 velocity, float mass, float frictionCoefficient, Vector2 frictionNormal)
+    {
+        var speedSquared = velocity.LengthSquared();
+        if(speedSquared <= 0f) return Vector2.Zero;
+        
+        var speed = MathF.Sqrt(speedSquared);
+        var velocityDirection = velocity / speed;
+        var frictionFactor = velocityDirection.Dot(frictionNormal) * -1;
+        frictionFactor = (frictionFactor + 1f) * 0.5f; //translate to 0-1 range
+
+        return -velocityDirection * frictionFactor * frictionCoefficient * mass;
+
+    }
+    public static void ApplyFrictionForce(PhysicsObject obj, float frictionCoefficient, Vector2 frictionNormal)
+    {
+        var speedSquared = obj.Velocity.LengthSquared();
+        if (speedSquared <= 0f) return;
+        
+        var speed = MathF.Sqrt(speedSquared);
+        var velocityDirection = obj.Velocity / speed;
+        var frictionFactor = velocityDirection.Dot(frictionNormal) * -1;
+        frictionFactor = (frictionFactor + 1f) * 0.5f; //translate to 0-1 range
+
+        var force = -velocityDirection * frictionFactor * frictionCoefficient * obj.Mass;
+        
+        //I dont know if mass has to be divided out again here, aka using AddForce()
+        obj.AddForceRaw(force);
+    }
     #endregion
 
     #region Reverse Attraction
@@ -1237,3 +1072,246 @@ public static class ShapePhysics
     }
     #endregion
 }
+
+
+/*
+ 
+   /// <summary>
+   /// Calculates a friction force considering the mass, friction coefficient, friction normal, and gravitational force.
+   /// </summary>
+   /// <returns>Returns the friction force.</returns>
+   public static Vector2 CalculateFrictionForce(Vector2 velocity, float mass, float frictionCoefficient, Vector2 frictionNormal, Vector2 gravitationForce)
+   {
+       if (frictionNormal.X == 0 && frictionNormal.Y == 0) return Vector2.Zero;
+       if (frictionCoefficient <= 0) return Vector2.Zero;
+       if (gravitationForce.X == 0 && gravitationForce.Y == 0) return Vector2.Zero;
+       
+       // Normalize the frictionNormal vector
+       var normalizedFrictionNormal = frictionNormal.Normalize();
+       
+       // Calculate the normal force magnitude
+       float normalForceMagnitude = Vector2.Dot(gravitationForce, normalizedFrictionNormal);
+
+       // Ensure the normal force magnitude is positive
+       normalForceMagnitude = Math.Abs(normalForceMagnitude);
+
+       // Calculate the effective normal force considering the mass
+       float effectiveNormalForce = normalForceMagnitude * mass;
+
+       // Calculate the friction force magnitude
+       float frictionForceMagnitude = frictionCoefficient * effectiveNormalForce;
+
+       // Calculate the friction force vector (opposite to the direction of velocity)
+       var frictionForce = -Vector2.Normalize(velocity) * frictionForceMagnitude;
+
+       return frictionForce;
+   }
+   /// <summary>
+   /// Calculates a friction force considering the mass, friction coefficient, friction normal, and gravitational force.
+   /// </summary>
+   /// <returns>Returns the friction force.</returns>
+   public static Vector2 CalculateFrictionForce(Vector2 velocity, float mass, float frictionCoefficient, Vector2 frictionNormal)
+   {
+       if (frictionNormal.X == 0 && frictionNormal.Y == 0) return Vector2.Zero;
+       if (frictionCoefficient <= 0) return Vector2.Zero;
+       
+       // Normalize the frictionNormal vector
+       Vector2 normalizedFrictionNormal = frictionNormal.Normalize();
+       
+       // Calculate the component of velocity perpendicular to the friction normal
+       float perpendicularComponent = Vector2.Dot(velocity, new Vector2(-normalizedFrictionNormal.Y, normalizedFrictionNormal.X));
+       
+       // Calculate the friction force magnitude based on the perpendicular component
+       float frictionForceMagnitude = frictionCoefficient * Math.Abs(perpendicularComponent) * mass;
+
+       // Calculate the friction force vector (opposite to the direction of velocity)
+       Vector2 frictionForce = -Vector2.Normalize(velocity) * frictionForceMagnitude;
+
+       return frictionForce;
+   }
+   /// <summary>
+   /// Calculates and applies a friction force to the velocity considering the mass, friction coefficient, friction normal, and gravitational force.
+   /// </summary>
+   /// <returns>Returns the new velocity.</returns>
+   public static Vector2 ApplyFrictionForce(Vector2 velocity, float mass, float frictionCoefficient, Vector2 frictionNormal, Vector2 gravitationForce)
+   {
+       if (frictionNormal.X == 0 && frictionNormal.Y == 0) return velocity;
+       if (frictionCoefficient <= 0) return velocity;
+       if (gravitationForce.X == 0 && gravitationForce.Y == 0) return velocity;
+       
+       return velocity - CalculateFrictionForce(velocity, mass, frictionCoefficient, frictionNormal, gravitationForce);
+       
+   }
+   /// <summary>
+   /// Calculates and applies a friction force to the velocity considering the mass, friction coefficient, friction normal, and gravitational force.
+   /// </summary>
+   /// <returns>Returns the new velocity.</returns>
+   public static Vector2 ApplyFrictionForce(Vector2 velocity, float mass, float frictionCoefficient, Vector2 frictionNormal)
+   {
+       if (frictionNormal.X == 0 && frictionNormal.Y == 0) return velocity;
+       if (frictionCoefficient <= 0) return velocity;
+       
+       return velocity - CalculateFrictionForce(velocity, mass, frictionCoefficient, frictionNormal);
+       
+   }
+   
+ 
+ 
+ 
+#region OLD
+   // /// <summary>
+   // /// Apply drag to the given value.
+   // /// </summary>
+   // /// <param name="value">The value that is affected by the drag.</param>
+   // /// <param name="dragCoefficient">The drag coefficient for calculating the drag force. Has to be positive.
+   // /// 1 / drag coefficient = seconds until stop. DC of 4 means object stops in 0.25s.</param>
+   // /// <param name="dt">The delta time of the current frame.</param>
+   // /// <returns></returns>
+   // public static float ApplyDragForce(float value, float dragCoefficient, float dt)
+   // {
+   //     if (dragCoefficient <= 0f) return value;
+   //     float dragForce = dragCoefficient * value * dt;
+   //
+   //     return value - MathF.Min(dragForce, value);
+   // }
+   /// <summary>
+   /// Apply drag to the given velocity.
+   /// </summary>
+   /// <param name="vel">The velocity that is affected by the drag.</param>
+   /// <param name="dragCoefficient">The drag coefficient for calculating the drag force. Has to be positive.
+   /// 1 / drag coefficient = seconds until stop. DC of 4 means object stops in 0.25s.</param>
+   /// <param name="dt">The delta time of the current frame.</param>
+   /// <returns>Returns the new velocity.</returns>
+   public static Vector2 ApplyDragForce(Vector2 vel, float dragCoefficient, float dt)
+   {
+       // return ApplyDragFactor(vel, dragCoefficient, dt);
+       
+       if (dragCoefficient <= 0f) return vel;
+       Vector2 dragForce = dragCoefficient * vel * dt;
+       if (dragForce.LengthSquared() >= vel.LengthSquared()) return new Vector2(0f, 0f);
+       return vel - dragForce;
+   }
+   // public static float GetDragForce(float value, float dragCoefficient, float dt)
+   // {
+   //     if (dragCoefficient <= 0f) return value;
+   //     float dragForce = dragCoefficient * value * dt;
+   //
+   //     return -MathF.Min(dragForce, value);
+   // }
+   // public static Vector2 GetDragForce(Vector2 vel, float dragCoefficient, float dt)
+   // {
+   //     if (dragCoefficient <= 0f) return vel;
+   //     Vector2 dragForce = dragCoefficient * vel * dt;
+   //     if (dragForce.LengthSquared() >= vel.LengthSquared()) return new Vector2(0f, 0f);
+   //     return -dragForce;
+   // }
+   //
+   // public static Vector2 Attraction(Vector2 center, Vector2 otherPos, Vector2 otherVel, float r, float strength, float friction)
+   // {
+   //     Vector2 w = center - otherPos;
+   //     float disSq = w.LengthSquared();
+   //     float f = 1.0f - disSq / (r * r);
+   //     Vector2 force = ShapeVec.Normalize(w) * strength;// * f;
+   //     Vector2 stop = -otherVel * friction * f;
+   //     return force + stop;
+   // }
+   // public static Vector2 ElasticCollision1D(Vector2 vel1, float mass1, Vector2 vel2, float mass2)
+   // {
+   //     float totalMass = mass1 + mass2;
+   //     return vel1 * ((mass1 - mass2) / totalMass) + vel2 * (2f * mass2 / totalMass);
+   // }
+   // // public static Vector2 ElasticCollision2D(Vector2 p1, Vector2 v1, float m1, Vector2 p2, Vector2 v2, float m2, float R)
+   // // {
+   // //     float totalMass = m1 + m2;
+   // //
+   // //     float mf = m2 / m1;
+   // //     Vector2 posDif = p2 - p1;
+   // //     Vector2 velDif = v2 - v1;
+   // //
+   // //     Vector2 velCM = (m1 * v1 + m2 * v2) / totalMass;
+   // //
+   // //     float a = posDif.Y / posDif.X;
+   // //     float dvx2 = -2f * (velDif.X + a * velDif.Y) / ((1 + a * a) * (1 + mf));
+   // //     //Vector2 newOtherVel = new(v2.X + dvx2, v2.Y + a * dvx2);
+   // //     Vector2 newSelfVel = new(v1.X - mf * dvx2, v1.Y - a * mf * dvx2);
+   // //
+   // //     newSelfVel = (newSelfVel - velCM) * R + velCM;
+   // //     //newOtherVel = (newOtherVel - velCM) * R + velCM;
+   // //
+   // //     return newSelfVel;
+   // // }
+   // //
+   //
+    #endregion
+
+   #region Tabnine
+   
+   // public static (Vector2 newVel1, Vector2 newVel2) ElasticCollision2D(Vector2 vel1, float mass1, Vector2 vel2, float mass2, float r)
+   // {
+   //     float totalMass = mass1 + mass2;
+   //
+   //     var velCM = (mass1 * vel1 + mass2 * vel2) / totalMass;
+   //
+   //     var relVel = vel1 - vel2;
+   //     float relVelMag = relVel.Length();
+   //
+   //     var normal = relVel / relVelMag;
+   //     var tangent = new Vector2(-normal.Y, normal.X);
+   //
+   //     float velNormal1 = Vector2.Dot(vel1, normal);
+   //     float velTangent1 = Vector2.Dot(vel1, tangent);
+   //
+   //     float velNormal2 = Vector2.Dot(vel2, normal);
+   //     float velTangent2 = Vector2.Dot(vel2, tangent);
+   //
+   //     float newVelNormal1 = (velNormal1 * (mass1 - mass2) + 2f * mass2 * velNormal2) / totalMass;
+   //     float newVelNormal2 = (velNormal2 * (mass2 - mass1) + 2f * mass1 * velNormal1) / totalMass;
+   //
+   //     var newVel1 = (newVelNormal1 * normal + velTangent1 * tangent) * r + velCM;
+   //     var newVel2 = (newVelNormal2 * normal + velTangent2 * tangent) * r + velCM;
+   //
+   //     return (newVel1, newVel2);
+   // }
+   // public static (Vector2 newVel1, Vector2 newVel2) ElasticCollision2D(Vector2 pos1, Vector2 vel1, float mass1, Vector2 pos2, Vector2 vel2, float mass2, float r)
+   // {
+   //     float totalMass = mass1 + mass2;
+   //
+   //     var velCM = (mass1 * vel1 + mass2 * vel2) / totalMass;
+   //
+   //     var relVel = vel1 - vel2;
+   //     // float relVelMag = relVel.Length();
+   //
+   //     var normal = (pos2 - pos1).Normalize(); // / (pos2 - pos1).Length();
+   //     var tangent = new Vector2(-normal.Y, normal.X);
+   //
+   //     float velNormal1 = Vector2.Dot(vel1, normal);
+   //     float velTangent1 = Vector2.Dot(vel1, tangent);
+   //
+   //     float velNormal2 = Vector2.Dot(vel2, normal);
+   //     float velTangent2 = Vector2.Dot(vel2, tangent);
+   //
+   //     float newVelNormal1 = (velNormal1 * (mass1 - mass2) + 2f * mass2 * velNormal2) / totalMass;
+   //     float newVelNormal2 = (velNormal2 * (mass2 - mass1) + 2f * mass1 * velNormal1) / totalMass;
+   //
+   //     var newVel1 = (newVelNormal1 * normal + velTangent1 * tangent) * r + velCM;
+   //     var newVel2 = (newVelNormal2 * normal + velTangent2 * tangent) * r + velCM;
+   //
+   //     return (newVel1, newVel2);
+   // }
+   //
+   // public static void ElasticCollision2D(this PhysicsObject obj1, PhysicsObject obj2, float r)
+   // {
+   //     var result = ElasticCollision2D(obj1.Transform.Position, obj1.Velocity, obj1.Mass, obj2.Transform.Position, obj2.Velocity, obj2.Mass, r);
+   //     obj1.Velocity = result.newVel1;
+   //     obj2.Velocity = result.newVel2;
+   // }
+   // public static (Vector2 newVel1, Vector2 newVel2) ElasticCollision2D2(this PhysicsObject obj1, PhysicsObject obj2, float r)
+   // {
+   //     var result = ElasticCollision2D(obj1.Transform.Position, obj1.Velocity, obj1.Mass, obj2.Transform.Position, obj2.Velocity, obj2.Mass, r);
+   //     return (result.newVel1, result.newVel2);
+   // }
+   //
+   #endregion
+   
+
+*/
