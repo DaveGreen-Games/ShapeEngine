@@ -768,9 +768,6 @@ public static class ShapePhysics
     }
     
     
-    
-    //TODO: overlaods with float value that determines how the dot value is applied
-    //
      
     /// <summary>
     /// Calculates a force that gets stronger with distance and direction.
@@ -780,7 +777,8 @@ public static class ShapePhysics
     /// </summary>
     /// <param name="attractionOrigin">The origin of the attraction force.</param>
     /// <param name="attractionForce">The fore to apply scaled by direction and distance factors.</param>
-    /// <param name="attractionRadius">The distance at which maximum force is calculated.</param>
+    /// <param name="attractionRadius">The distance range at which minimum and maximum force is calculated.
+    /// Distances below the attractionRadius.Min result in 0 force.</param>
     /// <param name="objectPosition">The position of the object.</param>
     /// <param name="objectMass">The mass of the object. (Scales the returned force)</param>
     /// <param name="objectVelocity">The velocity of the object.</param>
@@ -816,7 +814,8 @@ public static class ShapePhysics
     /// </summary>
     /// <param name="attractionOrigin">The origin of the attraction force.</param>
     /// <param name="attractionForce">The fore to apply scaled by direction and distance factors.</param>
-    /// <param name="attractionRadius">The distance at which maximum force is calculated.</param>
+    /// <param name="attractionRadius">The distance range at which minimum and maximum force is calculated.
+    /// Distances below the attractionRadius.Min result in 0 force.</param>
     /// <param name="obj">The object the force should apply to.</param>
     /// <returns>Returns if a force was applied.</returns>
     public static bool ApplyReverseAttractionForceDirectional(Vector2 attractionOrigin, float attractionForce, ValueRange attractionRadius, PhysicsObject obj)
@@ -853,7 +852,8 @@ public static class ShapePhysics
     /// </summary>
     /// <param name="attractionOrigin">The origin of the attraction force.</param>
     /// <param name="attractionForce">The fore to apply scaled by direction and distance factors.</param>
-    /// <param name="attractionRadius">The distance at which maximum force is calculated.</param>
+    /// <param name="attractionRadius">The distance range at which minimum and maximum force is calculated.
+    /// Distances below the attractionRadius.Min result in 0 force.</param>
     /// <param name="objectPosition">The position of the object.</param>
     /// <param name="objectMass">The mass of the object. (Scales the returned force)</param>
     /// <param name="objectVelocity">The velocity of the object.</param>
@@ -891,7 +891,8 @@ public static class ShapePhysics
     /// </summary>
     /// <param name="attractionOrigin">The origin of the attraction force.</param>
     /// <param name="attractionForce">The fore to apply scaled by direction and distance factors.</param>
-    /// <param name="attractionRadius">The distance at which maximum force is calculated.</param>
+    /// <param name="attractionRadius">The distance range at which minimum and maximum force is calculated.
+    /// Distances below the attractionRadius.Min result in 0 force.</param>
     /// <param name="obj">The object the force should apply to.</param>
     /// <param name="dotRange">Set the multiplier range for pointing towards the center or away from the center.
     /// [0 and 1] would make force 0 when pointing towards the center and max when pointing away.</param>
@@ -921,7 +922,6 @@ public static class ShapePhysics
         }
         return false;
     }
-    
     /// <summary>
     /// Calculates a force that gets stronger with distance and direction.
     /// At a distance equal to attractionRadius with a velocity directly in line with the direction from the origin to the object,
@@ -930,7 +930,8 @@ public static class ShapePhysics
     /// </summary>
     /// <param name="attractionOrigin">The origin of the attraction force.</param>
     /// <param name="attractionForce">The fore to apply scaled by direction and distance factors.</param>
-    /// <param name="attractionRadius">The distance at which maximum force is calculated.</param>
+    /// <param name="attractionRadius">The distance range at which minimum and maximum force is calculated.
+    /// Distances below the attractionRadius.Min result in 0 force.</param>
     /// <param name="objectPosition">The position of the object.</param>
     /// <param name="objectMass">The mass of the object. (Scales the returned force)</param>
     /// <param name="objectVelocity">The velocity of the object.</param>
@@ -968,7 +969,8 @@ public static class ShapePhysics
     /// </summary>
     /// <param name="attractionOrigin">The origin of the attraction force.</param>
     /// <param name="attractionForce">The fore to apply scaled by direction and distance factors.</param>
-    /// <param name="attractionRadius">The distance at which maximum force is calculated.</param>
+    /// <param name="attractionRadius">The distance range at which minimum and maximum force is calculated.
+    /// Distances below the attractionRadius.Min result in 0 force.</param>
     /// <param name="obj">The object the force should apply to.</param>
     /// <param name="distanceFactorAdjustor">Supply a method that takes a factor between 0 and 1 and returns a new factor as float.
     /// The new factor will be multiplied with the resulting force.</param>
@@ -998,9 +1000,88 @@ public static class ShapePhysics
 
         return false;
     }
- 
-
-    
+    /// <summary>
+    /// Calculates a force that gets stronger with distance and direction.
+    /// At a distance equal to attractionRadius with a velocity directly in line with the direction from the origin to the object,
+    /// the force equals attractionForce.
+    /// If the velocity direction points towards the origin or the distance is 0, the force is 0.
+    /// </summary>
+    /// <param name="attractionOrigin">The origin of the attraction force.</param>
+    /// <param name="attractionForce">The fore to apply scaled by direction and distance factors.</param>
+    /// <param name="attractionRadius">The distance range at which minimum and maximum force is calculated.
+    /// Distances below the attractionRadius.Min result in 0 force.</param>
+    /// <param name="objectPosition">The position of the object.</param>
+    /// <param name="objectMass">The mass of the object. (Scales the returned force)</param>
+    /// <param name="objectVelocity">The velocity of the object.</param>
+    /// <param name="dotRange">Set the multiplier range for pointing towards the center or away from the center.
+    /// [0 and 1] would make force 0 when pointing towards the center and max when pointing away.</param>
+    /// <param name="distanceFactorAdjustor">Supply a method that takes a factor between 0 and 1 and returns a new factor as float.
+    /// The new factor will be multiplied with the resulting force.</param>
+    /// <returns>Returns the final force.</returns>
+    public static Vector2 CalculateReverseAttractionForceDirectional(Vector2 attractionOrigin, float attractionForce, ValueRange attractionRadius, Vector2 objectPosition, float objectMass, Vector2 objectVelocity, ValueRange dotRange, Func<float, float> distanceFactorAdjustor)
+    {
+        if(objectMass <= 0f || !attractionRadius.HasPositiveRange() || attractionForce <= 0f) return Vector2.Zero;
+        
+        var objectSpeedSquared = objectVelocity.LengthSquared();
+        if (objectSpeedSquared != 0f)
+        {
+            var displacement = objectPosition - attractionOrigin;
+            var distanceSquared = displacement.LengthSquared();
+            if(distanceSquared == 0f) return Vector2.Zero;
+            var distance = MathF.Sqrt(distanceSquared);
+            var dir = displacement / distance;
+            var objectSpeed = MathF.Sqrt(objectSpeedSquared);
+            var objectDir = objectVelocity / objectSpeed;
+            var dot = objectDir.Dot(dir);
+            dot = ShapeMath.RemapFloat(dot, -1f, 1f, dotRange.Min, dotRange.Max);
+            var distanceFactor = attractionRadius.GetFactor(distance);
+            distanceFactor = distanceFactorAdjustor(distanceFactor);
+            return -dir * attractionForce * objectMass * dot * distanceFactor;
+            
+        }
+        return Vector2.Zero;
+    }
+    /// <summary>
+    /// Calculates a force that gets stronger with distance and direction.
+    /// At a distance equal to attractionRadius with a velocity directly in line with the direction from the origin to the object,
+    /// the force equals attractionForce.
+    /// If the velocity direction points towards the origin or the distance is 0, the force is 0.
+    /// </summary>
+    /// <param name="attractionOrigin">The origin of the attraction force.</param>
+    /// <param name="attractionForce">The fore to apply scaled by direction and distance factors.</param>
+    /// <param name="attractionRadius">The distance range at which minimum and maximum force is calculated.
+    /// Distances below the attractionRadius.Min result in 0 force.</param>
+    /// <param name="obj">The object the force should apply to.</param>
+    /// <param name="dotRange">Set the multiplier range for pointing towards the center or away from the center.
+    /// [0 and 1] would make force 0 when pointing towards the center and max when pointing away.</param>
+    /// <param name="distanceFactorAdjustor">Supply a method that takes a factor between 0 and 1 and returns a new factor as float.
+    /// The new factor will be multiplied with the resulting force.</param>
+    /// <returns>Returns if a force was applied.</returns>
+    public static bool ApplyReverseAttractionForceDirectional(Vector2 attractionOrigin, float attractionForce, ValueRange attractionRadius, PhysicsObject obj, ValueRange dotRange, Func<float, float> distanceFactorAdjustor)
+    {
+        if(!attractionRadius.HasPositiveRange() || attractionForce <= 0f) return false;
+        
+        var objectSpeedSquared = obj.Velocity.LengthSquared();
+        if (objectSpeedSquared != 0f)
+        {
+            var displacement = obj.Transform.Position - attractionOrigin;
+            var distanceSquared = displacement.LengthSquared();
+            if(distanceSquared == 0f) return false;
+            var distance = MathF.Sqrt(distanceSquared);
+            var dir = displacement / distance;
+            var objectSpeed = MathF.Sqrt(objectSpeedSquared);
+            var objectDir = obj.Velocity / objectSpeed;
+            var dot = objectDir.Dot(dir);
+            dot = ShapeMath.RemapFloat(dot, -1f, 1f, dotRange.Min, dotRange.Max);
+            var distanceFactor = attractionRadius.GetFactor(distance);
+            distanceFactor = distanceFactorAdjustor(distanceFactor);
+            var force = -dir * attractionForce * dot * distanceFactor;
+            obj.AddForceRaw(force);
+            
+            return true;
+        }
+        return false;
+    }
     
     
     
