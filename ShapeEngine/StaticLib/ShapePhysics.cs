@@ -4,6 +4,13 @@ using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.StaticLib;
 
+//TODO: 
+// the same for attraction, repulsion and reverse attraction functions
+
+//TODO: All Attraction, Repulsion and Reverse Attraction functions should return force that can be used with AddForce
+// instead of being used with AddForceRaw
+// Good Idea?
+//
 public static class ShapePhysics
 {
     /// <summary>
@@ -16,10 +23,7 @@ public static class ShapePhysics
     /// </summary>
     public static float G = 1f;
 
-    //TODO: All Attraction, Repulsion and Reverse Attraction functions should return force that can be used with AddForce
-    // instead of being used with AddForceRaw
-    // Good Idea?
-    //
+    
     
     #region Elastic Collision
     public static (Vector2 newVelocity1, Vector2 newVelocity2) CalculateElasticCollision(Vector2 velocity1, float mass1, Vector2 velocity2, float mass2, float r)
@@ -95,11 +99,36 @@ public static class ShapePhysics
 
         return dragFactor;
     }
-
     public static Vector2 CalculateDragForce(Vector2 velocity, float dragCoefficient, float deltaTime)
     {
+        if (dragCoefficient <= 0) return Vector2.Zero;
+        if (dragCoefficient >= 1) return -velocity;
         var factor = CalculateDragFactor(dragCoefficient, deltaTime);
         return -velocity * (1f - factor);
+    }
+    
+    /// <summary>
+    /// Calculates a frame rate independent drag force based on the supplied velocity and drag normal.
+    /// </summary>
+    /// <param name="velocity">The velocity of the object.</param>
+    /// <param name="dragCoefficient">A value between 0-1.</param>
+    /// <param name="dragNormal">Drag is applied against the drag normal.
+    /// A velocity pointing in the same direction as the dragNormal does not receive any drag.
+    /// A velocity pointing in the opposite direction as the dragNormal does receive max drag force.</param>
+    /// <param name="deltaTime"></param>
+    /// <returns></returns>
+    public static Vector2 CalculateDragForce(Vector2 velocity, float dragCoefficient, Vector2 dragNormal, float deltaTime)
+    {
+        if (dragCoefficient <= 0) return Vector2.Zero;
+        
+        var dot = velocity.Normalize().Dot(dragNormal.Normalize()) * -1; //reverse it
+        dot = (dot + 1f) * 0.5f; //put it in the range 0-1
+        if (dragCoefficient >= 1)
+        {
+            return -velocity * dot;
+        }
+        var factor = CalculateDragFactor(dragCoefficient, deltaTime);
+        return -velocity * (1f - factor) * dot;
     }
 
     /// <summary>
@@ -116,7 +145,28 @@ public static class ShapePhysics
         var factor = CalculateDragFactor(dragCoefficient, deltaTime);
         return velocity * factor;
     }
-    
+    /// <summary>
+    /// This function calculates a frame rate independent drag force and applies it to the supplied velocity.
+    /// </summary>
+    /// <param name="velocity">The affected velocity.</param>
+    /// <param name="dragCoefficient">Drag coefficient between 0 and 1. How much energy should the velocity loose each second.</param>
+    /// <param name="dragNormal">Drag is applied against the drag normal.
+    /// A velocity pointing in the same direction as the dragNormal does not receive any drag.
+    /// A velocity pointing in the opposite direction as the dragNormal does receive max drag force.</param>
+    /// <param name="deltaTime"></param>
+    /// <returns>Returns the new scaled velocity.</returns>
+    public static Vector2 ApplyDragForce(Vector2 velocity, float dragCoefficient, Vector2 dragNormal, float deltaTime)
+    {
+        if (dragCoefficient <= 0) return velocity;
+        var dot = velocity.Normalize().Dot(dragNormal.Normalize()) * -1; //reverse it
+        dot = (dot + 1f) * 0.5f; //put it in the range 0-1
+        if (dragCoefficient >= 1)
+        {
+            return velocity - velocity * dot;
+        }
+        var factor = CalculateDragFactor(dragCoefficient, deltaTime);
+        return velocity - velocity  * (1f - factor) * dot;
+    }
     
     /// <summary>
     /// Calculates a realistic drag force.
@@ -326,7 +376,6 @@ public static class ShapePhysics
         var dot = velocity.Dot(surfaceNormal);
         var tangent = velocity - dot * surfaceNormal;
         if(tangent.LengthSquared() <= 0f) return Vector2.Zero;
-        
         return -velocity.Normalize() * tangent.Length() * frictionForce;
     }
     
@@ -338,7 +387,7 @@ public static class ShapePhysics
     /// <param name="surfaceNormal"></param>
     /// <param name="frictionForce"></param>
     /// <returns></returns>
-    public static Vector2 CalculateFrictionForce2(Vector2 velocity, Vector2 surfaceNormal, float frictionForce)
+    public static Vector2 CalculateFrictionForceRealistic(Vector2 velocity, Vector2 surfaceNormal, float frictionForce)
     {
         var dot = velocity.Dot(surfaceNormal);
         var tangent = velocity - dot * surfaceNormal;
