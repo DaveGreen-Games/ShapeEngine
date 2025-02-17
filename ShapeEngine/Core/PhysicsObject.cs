@@ -46,7 +46,6 @@ public abstract class PhysicsObject : GameObject
     // public bool AppliesStaticFriction => !FrictionNormal.IsSimilar(0f, 0.00000001f) && StaticFrictionCoefficient > 0;
     public bool AppliesKineticFriction => !FrictionNormal.IsSimilar(0f, 0.00000001f) && KineticFrictionCoefficient > 0;
     public bool IsInMotion => Velocity.LengthSquared() > 0.00000001f;
-    public Vector2 CurFrictionForceDebug = new(0f, 0f);
     public void ClearAccumulatedForce() => AccumulatedForce = new(0f);
     public void ClearAccumulatedImpulses() => AccumulatedImpulses = new(0f);
     public void AddForce(Vector2 force)
@@ -93,7 +92,6 @@ public abstract class PhysicsObject : GameObject
     }
     private void ApplyAcceleration(float dt)
     {
-        CurFrictionForceDebug = new(0f, 0f);
         var force = ConstAcceleration + AccumulatedForce;
         ClearAccumulatedForce();
        
@@ -101,7 +99,6 @@ public abstract class PhysicsObject : GameObject
         if (AppliesKineticFriction)
         {
             var kineticFrictionForce = ShapePhysics.CalculateKineticFrictionForce(Velocity, FrictionNormal, KineticFrictionCoefficient);
-            CurFrictionForceDebug = kineticFrictionForce;
             Velocity += kineticFrictionForce * dt;
         }
         Velocity = ShapePhysics.ApplyDragFactor(Velocity, Drag, dt);
