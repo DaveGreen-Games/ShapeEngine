@@ -171,7 +171,7 @@ internal class AsteroidObstacle : CollisionObject
         // Triangulation = shape.Triangulate();
         
 
-        damageForce = ShapePhysics.ApplyDragForce(damageForce, 1.5f, time.Delta);
+        damageForce = ShapePhysics.ApplyDragFactor(damageForce, 0.95f, time.Delta);
         Transform = Transform.ChangePosition(damageForce * time.Delta);
 
         if (damageFlashTimer > 0f)

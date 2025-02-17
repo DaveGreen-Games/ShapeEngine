@@ -16,7 +16,7 @@ public static class ShapePhysics
     /// </summary>
     public static float G = 1f;
 
-    public static Vector2 GravitationDirection = new(0, 1);
+    // public static Vector2 GravitationDirection = new(0, 1);
     
     #region Elastic Collision
     public static (Vector2 newVelocity1, Vector2 newVelocity2) CalculateElasticCollision(Vector2 velocity1, float mass1, Vector2 velocity2, float mass2, float r)
@@ -87,7 +87,7 @@ public static class ShapePhysics
     {
         if (drag <= 0) return 1;
         if (drag >= 1) return 0;
-        
+        drag = ShapeMath.Clamp(drag, 0f, 1f);
         float dragFactor = (float)Math.Pow(1.0 - drag, deltaTime);
 
         return dragFactor;
@@ -103,8 +103,8 @@ public static class ShapePhysics
     {
         if (drag <= 0) return velocity;
         if (drag >= 1) return Vector2.Zero;
+        drag = ShapeMath.Clamp(drag, 0f, 1f);
         float dragFactor = (float)Math.Pow(1.0 - drag, deltaTime);
-
         return velocity * dragFactor;
     }
     public static void ApplyDragFactor(this PhysicsObject obj, float drag, float deltaTime)
@@ -115,7 +115,7 @@ public static class ShapePhysics
             obj.Velocity = Vector2.Zero;
             return;
         }
-        
+        drag = ShapeMath.Clamp(drag, 0f, 1f);
         var dragFactor = (float)Math.Pow(1.0 - drag, deltaTime);
 
         obj.Velocity = obj.Velocity * dragFactor;
@@ -297,94 +297,44 @@ public static class ShapePhysics
     #endregion
     
     #region Friction
-    public static float CalculateFrictionForceMagnitudeRealistic(Vector2 surfaceNormal, float frictionCoefficient, float mass)
+
+    // public static Vector2 CalculateFrictionForce(Vector2 velocity, Vector2 acceleration,  Vector2 surfaceNormal, float staticFrictionCoefficient, float kineticFrictionCoefficient)
+    // {
+    //     if(velocity.IsSimilar(0f, 0.000001f)) return CalculateStaticFrictionForce(acceleration, surfaceNormal, staticFrictionCoefficient);
+    //     return CalculateKineticFrictionForce(velocity, surfaceNormal, kineticFrictionCoefficient);
+    // }
+    //
+    public static Vector2 CalculateKineticFrictionForce(Vector2 velocity, Vector2 surfaceNormal, float kineticFrictionCoefficient)
     {
-        // Normalize the surface normal vector
-        var normalizedSurfaceNormal = surfaceNormal.Normalize();
-
-        // Calculate the gravitational force vector
-        var gravitationalForce = GravitationDirection * mass * G;
-
-        // Calculate the normal force magnitude using the dot product of the gravitational force and the normalized surface normal
-        float normalForceMagnitude = Vector2.Dot(gravitationalForce, normalizedSurfaceNormal);
-
-        // Ensure the normal force magnitude is positive
-        normalForceMagnitude = Math.Abs(normalForceMagnitude);
-
-        // Calculate the friction force magnitude
-        float frictionForceMagnitude = frictionCoefficient * normalForceMagnitude;
-
-        return frictionForceMagnitude;
-    }
-    public static float CalculateFrictionForceMagnitudeRealistic(Vector2 surfaceNormal, Vector2 pressureForce, float frictionCoefficient)
-    {
-        // Normalize the surface normal vector
-        var normalizedSurfaceNormal = surfaceNormal.Normalize();
-
-        // Calculate the normal force magnitude using the dot product of the gravitational force and the normalized surface normal
-        float normalForceMagnitude = Vector2.Dot(pressureForce, normalizedSurfaceNormal);
-
-        // Ensure the normal force magnitude is positive
-        normalForceMagnitude = Math.Abs(normalForceMagnitude);
-
-        // Calculate the friction force magnitude
-        float frictionForceMagnitude = frictionCoefficient * normalForceMagnitude;
-
-        return frictionForceMagnitude;
-    }
-    public static Vector2 CalculateFrictionForce(Vector2 velocity, Vector2 surfaceNormal, float frictionCoefficient, float mass)
-    {
-        var forceMag = CalculateFrictionForceMagnitudeRealistic(surfaceNormal, frictionCoefficient, mass);
-        return -velocity.Normalize() * forceMag;
-    }
-    public static Vector2 CalculateFrictionForce(Vector2 velocity, Vector2 surfaceNormal, Vector2 pressureForce, float frictionCoefficient)
-    {
-        var forceMag = CalculateFrictionForceMagnitudeRealistic(surfaceNormal, pressureForce, frictionCoefficient);
-        return -velocity.Normalize() * forceMag;
-    }
-    public static void ApplyFrictionForceRealistic(PhysicsObject obj, Vector2 surfaceNormal, float frictionCoefficient)
-    {
-        var force = CalculateFrictionForce(obj.Velocity, surfaceNormal, frictionCoefficient, obj.Mass);
-        obj.AddForce(force);
-    }
-    
-    /// <summary>
-    /// Calculates a friction force based on the direction of the velocity and the friction normal.
-    /// The mass and friction coefficient are for scaling the resulting force.
-    /// </summary>
-    /// <param name="velocity"></param>
-    /// <param name="mass"></param>
-    /// <param name="frictionCoefficient"></param>
-    /// <param name="frictionNormal"></param>
-    /// <returns></returns>
-    public static Vector2 CalculateFrictionForce(Vector2 velocity, float mass, float frictionCoefficient, Vector2 frictionNormal)
-    {
-        var speedSquared = velocity.LengthSquared();
-        if(speedSquared <= 0f) return Vector2.Zero;
+        var dot = velocity.Dot(surfaceNormal);
+        // if(dot < 0) return Vector2.Zero;
+        var tangent = velocity - dot * surfaceNormal;
+        if(tangent.IsSimilar(0f, 0.0000001f)) return Vector2.Zero;
         
-        var speed = MathF.Sqrt(speedSquared);
-        var velocityDirection = velocity / speed;
-        var frictionFactor = velocityDirection.Dot(frictionNormal) * -1;
-        frictionFactor = (frictionFactor + 1f) * 0.5f; //translate to 0-1 range
-
-        return -velocityDirection * frictionFactor * frictionCoefficient * mass;
-
+        return -tangent.Normalize() * kineticFrictionCoefficient;
+        
     }
-    public static void ApplyFrictionForce(PhysicsObject obj, float frictionCoefficient, Vector2 frictionNormal)
+    public static Vector2 CalculateKineticFrictionForceVelocityDependant(Vector2 velocity, Vector2 surfaceNormal, float kineticFrictionCoefficient)
     {
-        var speedSquared = obj.Velocity.LengthSquared();
-        if (speedSquared <= 0f) return;
+        var dot = velocity.Dot(surfaceNormal);
+        // if(dot < 0) return Vector2.Zero;
+        var tangent = velocity - dot * surfaceNormal;
+        if(tangent.IsSimilar(0f, 0.0000001f)) return Vector2.Zero;
         
-        var speed = MathF.Sqrt(speedSquared);
-        var velocityDirection = obj.Velocity / speed;
-        var frictionFactor = velocityDirection.Dot(frictionNormal) * -1;
-        frictionFactor = (frictionFactor + 1f) * 0.5f; //translate to 0-1 range
-
-        var force = -velocityDirection * frictionFactor * frictionCoefficient * obj.Mass;
+        return -tangent * kineticFrictionCoefficient;
         
-        //I dont know if mass has to be divided out again here, aka using AddForce()
-        obj.AddForceRaw(force);
     }
+    // public static Vector2 CalculateStaticFrictionForce(Vector2 acceleration, Vector2 surfaceNormal, float staticFrictionCoefficient)
+    // {
+    //     var dot = acceleration.Dot(surfaceNormal);
+    //     // if(dot < 0) return Vector2.Zero;
+    //     var tangent = acceleration - dot * surfaceNormal;
+    //     if(tangent.IsSimilar(0f, 0.0000001f)) return Vector2.Zero;
+    //
+    //     return -tangent.Normalize() * staticFrictionCoefficient;
+    //     
+    // }
+
     #endregion
 
     #region Reverse Attraction
@@ -1073,7 +1023,95 @@ public static class ShapePhysics
     #endregion
 }
 
+ /*public static float CalculateFrictionForceMagnitudeRealistic(Vector2 surfaceNormal, float frictionCoefficient, float mass)
+    {
+        // Normalize the surface normal vector
+        var normalizedSurfaceNormal = surfaceNormal.Normalize();
 
+        // Calculate the gravitational force vector
+        var gravitationalForce = GravitationDirection * mass * G;
+
+        // Calculate the normal force magnitude using the dot product of the gravitational force and the normalized surface normal
+        float normalForceMagnitude = Vector2.Dot(gravitationalForce, normalizedSurfaceNormal);
+
+        // Ensure the normal force magnitude is positive
+        normalForceMagnitude = Math.Abs(normalForceMagnitude);
+
+        // Calculate the friction force magnitude
+        float frictionForceMagnitude = frictionCoefficient * normalForceMagnitude;
+
+        return frictionForceMagnitude;
+    }
+    public static float CalculateFrictionForceMagnitudeRealistic(Vector2 surfaceNormal, Vector2 pressureForce, float frictionCoefficient)
+    {
+        // Normalize the surface normal vector
+        var normalizedSurfaceNormal = surfaceNormal.Normalize();
+
+        // Calculate the normal force magnitude using the dot product of the gravitational force and the normalized surface normal
+        float normalForceMagnitude = Vector2.Dot(pressureForce, normalizedSurfaceNormal);
+
+        // Ensure the normal force magnitude is positive
+        normalForceMagnitude = Math.Abs(normalForceMagnitude);
+
+        // Calculate the friction force magnitude
+        float frictionForceMagnitude = frictionCoefficient * normalForceMagnitude;
+
+        return frictionForceMagnitude;
+    }
+    public static Vector2 CalculateFrictionForce(Vector2 velocity, Vector2 surfaceNormal, float frictionCoefficient, float mass)
+    {
+        var forceMag = CalculateFrictionForceMagnitudeRealistic(surfaceNormal, frictionCoefficient, mass);
+        return -velocity.Normalize() * forceMag;
+    }
+    public static Vector2 CalculateFrictionForce(Vector2 velocity, Vector2 surfaceNormal, Vector2 pressureForce, float frictionCoefficient)
+    {
+        var forceMag = CalculateFrictionForceMagnitudeRealistic(surfaceNormal, pressureForce, frictionCoefficient);
+        return -velocity.Normalize() * forceMag;
+    }
+    public static void ApplyFrictionForceRealistic(PhysicsObject obj, Vector2 surfaceNormal, float frictionCoefficient)
+    {
+        var force = CalculateFrictionForce(obj.Velocity, surfaceNormal, frictionCoefficient, obj.Mass);
+        obj.AddForce(force);
+    }
+    
+    /// <summary>
+    /// Calculates a friction force based on the direction of the velocity and the friction normal.
+    /// The mass and friction coefficient are for scaling the resulting force.
+    /// </summary>
+    /// <param name="velocity"></param>
+    /// <param name="mass"></param>
+    /// <param name="frictionCoefficient"></param>
+    /// <param name="frictionNormal"></param>
+    /// <returns></returns>
+    public static Vector2 CalculateFrictionForce(Vector2 velocity, float mass, float frictionCoefficient, Vector2 frictionNormal)
+    {
+        var speedSquared = velocity.LengthSquared();
+        if(speedSquared <= 0f) return Vector2.Zero;
+        
+        var speed = MathF.Sqrt(speedSquared);
+        var velocityDirection = velocity / speed;
+        var frictionFactor = velocityDirection.Dot(frictionNormal) * -1;
+        frictionFactor = (frictionFactor + 1f) * 0.5f; //translate to 0-1 range
+
+        return -velocityDirection * frictionFactor * frictionCoefficient * mass;
+
+    }
+    public static void ApplyFrictionForce(PhysicsObject obj, float frictionCoefficient, Vector2 frictionNormal)
+    {
+        var speedSquared = obj.Velocity.LengthSquared();
+        if (speedSquared <= 0f) return;
+        
+        var speed = MathF.Sqrt(speedSquared);
+        var velocityDirection = obj.Velocity / speed;
+        var frictionFactor = velocityDirection.Dot(frictionNormal) * -1;
+        frictionFactor = (frictionFactor + 1f) * 0.5f; //translate to 0-1 range
+
+        var force = -velocityDirection * frictionFactor * frictionCoefficient * obj.Mass;
+        
+        //I dont know if mass has to be divided out again here, aka using AddForce()
+        obj.AddForceRaw(force);
+    }
+    */
 /*
  
    /// <summary>

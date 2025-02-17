@@ -443,7 +443,7 @@ public class EndlessSpaceCollision : ExampleScene
                 {
                     PayloadMarkerSimple marker = new();
                     var speed = Rng.Instance.RandF(3250, 3750);
-                    marker.Launch(ship.GetBarrelPosition(), ship.GetBarrelDirection(), speed, 1f, 1.8f);
+                    marker.Launch(ship.GetBarrelPosition(), ship.GetBarrelDirection(), speed, 1f);
                     pds.RequestPayload(marker);
                     launched = true;
                     break;

@@ -27,7 +27,7 @@ internal class AsteroidShard
         if (IsDead) return;
         LifetimeTimer -= dt;
 
-        Velocity = ShapePhysics.ApplyDragForce(Velocity, 2, dt);
+        Velocity = ShapePhysics.ApplyDragFactor(Velocity, 0.8f, dt);
         
         var f = LifetimeTimer / Lifetime;
 

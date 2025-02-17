@@ -25,6 +25,12 @@ namespace ShapeEngine.StaticLib
                 MathF.Abs(a.X - b.X) <= tolerance &&
                 MathF.Abs(a.Y - b.Y) <= tolerance;
         }
+        public static bool IsSimilar(this Vector2 a, float b, float tolerance = 0.001f)
+        {
+            return 
+                MathF.Abs(a.X - b) <= tolerance &&
+                MathF.Abs(a.Y - b) <= tolerance;
+        }
         public static Vector2 Flip(this Vector2 v) { return v * -1f; }
         public static bool IsFacingTheSameDirection(this Vector2 a,  Vector2 b) { return a.Dot(b) > 0; }
         public static bool IsFacingTheOppositeDirection(this Vector2 a, Vector2 b) { return a.Dot(b) < 0; }

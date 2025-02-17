@@ -17,28 +17,38 @@ public abstract class PhysicsObject : GameObject
     /// </summary>
     public float Drag { get; set; }
     
+    // /// <summary>
+    // /// Takes effect when an object is not in motion and works against acceleration.
+    // /// 0 or negative values mean no friction.
+    // /// The friction system is simplified and not realistic.
+    // /// It is similar to drag, but it does not scale with the magnitude of velocity.
+    // /// If the velocity is zero, no friction is applied.
+    // /// </summary>
+    // public float StaticFrictionCoefficient { get; set; } = 0f;
     /// <summary>
-    /// Scales the applied friction force.
     /// 0 or negative values mean no friction.
     /// The friction system is simplified and not realistic.
     /// It is similar to drag, but it does not scale with the magnitude of velocity.
     /// If the velocity is zero, no friction is applied.
     /// </summary>
-    public float FrictionCoefficient { get; set; } = 0f;
+    public float KineticFrictionCoefficient { get; set; } = 0f;
     /// <summary>
-    /// Determines if and how much friction force is applied.
-    /// A velocity opposite of the FrictionNormal results in maximum friction force, and a velocity in the direction of the frictionNormal results in no friction force.
-    /// If the velocity is zero, no friction is applied.
+    /// Determines the friction force applied to the object.
+    /// A FrictionNormal that is zero applies no friction.
     /// </summary>
-    
     public Vector2 FrictionNormal { get; set; } = Vector2.Zero;
     public Vector2 ConstAcceleration { get; set; }
     public Vector2 AccumulatedForce { get; private set; } = new(0f);
+    public Vector2 AccumulatedImpulses { get; private set; } = new(0f); 
 
     public Vector2 Momentum => Mass * ConstAcceleration;
     public Vector2 KineticEnergy => Mass * Velocity;
-    
+    // public bool AppliesStaticFriction => !FrictionNormal.IsSimilar(0f, 0.00000001f) && StaticFrictionCoefficient > 0;
+    public bool AppliesKineticFriction => !FrictionNormal.IsSimilar(0f, 0.00000001f) && KineticFrictionCoefficient > 0;
+    public bool IsInMotion => Velocity.LengthSquared() > 0.00000001f;
+    public Vector2 CurFrictionForceDebug = new(0f, 0f);
     public void ClearAccumulatedForce() => AccumulatedForce = new(0f);
+    public void ClearAccumulatedImpulses() => AccumulatedImpulses = new(0f);
     public void AddForce(Vector2 force)
     {
         if(Mass <= 0) AccumulatedForce += force;
@@ -54,8 +64,10 @@ public abstract class PhysicsObject : GameObject
     }
     public void AddImpulse(Vector2 force)
     {
-        if (Mass <= 0.0f) Velocity += force;
-        else Velocity += force / Mass;
+        // if (Mass <= 0.0f) Velocity += force;
+        // else Velocity += force / Mass;
+        if (Mass <= 0.0f) AccumulatedImpulses += force;
+        else AccumulatedImpulses += force / Mass;
     }
 
     public override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
@@ -69,28 +81,30 @@ public abstract class PhysicsObject : GameObject
 
     private void UpdatePhysicsState(float dt)
     {
-        ApplyAccumulatedForce(dt);
+        ApplyAccumulatedImpulses();
         ApplyAcceleration(dt); 
         Transform = Transform.ChangePosition(Velocity * dt);
         OnPhysicsStateUpdated(dt);
     }
-    private void ApplyAccumulatedForce(float dt)
+    private void ApplyAccumulatedImpulses()
     {
-        Velocity += AccumulatedForce * dt;
-        ClearAccumulatedForce();
+        Velocity += AccumulatedImpulses;
+        ClearAccumulatedImpulses();
     }
     private void ApplyAcceleration(float dt)
     {
-        var force = ConstAcceleration * dt;
-        Velocity += force;
-        Velocity = ShapePhysics.ApplyDragFactor(Velocity, Drag, dt);
-
-        if (FrictionCoefficient > 0 && FrictionNormal != Vector2.Zero)
+        CurFrictionForceDebug = new(0f, 0f);
+        var force = ConstAcceleration + AccumulatedForce;
+        ClearAccumulatedForce();
+       
+        Velocity += force * dt;
+        if (AppliesKineticFriction)
         {
-            //TODO: test first
-            var frictionForce = ShapePhysics.CalculateFrictionForce(Velocity, Mass, FrictionCoefficient, FrictionNormal);
-            Velocity += frictionForce * dt;
+            var kineticFrictionForce = ShapePhysics.CalculateKineticFrictionForce(Velocity, FrictionNormal, KineticFrictionCoefficient);
+            CurFrictionForceDebug = kineticFrictionForce;
+            Velocity += kineticFrictionForce * dt;
         }
+        Velocity = ShapePhysics.ApplyDragFactor(Velocity, Drag, dt);
     }
 
 
