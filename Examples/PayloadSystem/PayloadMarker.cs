@@ -44,7 +44,7 @@ public abstract class PayloadMarker
     {
         if (travelTimer > 0f)
         {
-            Velocity = ShapePhysics.ApplyDragFactor(Velocity, 0.8f, dt);
+            Velocity = ShapePhysics.ApplyDragForce(Velocity, 0.8f, dt);
             Location += Velocity * dt;
             travelTimer -= dt;
             if (travelTimer <= 0f)

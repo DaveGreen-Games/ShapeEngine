@@ -36,7 +36,7 @@ internal class Destructor : CollisionObject
         ConstAcceleration = direction * 6000f;
         lifetime = 2f;
         lifetimeTimer = lifetime;
-        Drag = 0f;
+        DragCoefficient = 0f;
         this.color = color;
     }
     public Destructor(Vector2 position, Vector2 direction, ColorRgba color)
@@ -62,7 +62,7 @@ internal class Destructor : CollisionObject
         this.color = color;
 
         rotSpeedDeg = 100f; // 450f / lifetime;
-        Drag = 0f;
+        DragCoefficient = 0f;
     }
 
     protected override void Collision(CollisionInformation info)

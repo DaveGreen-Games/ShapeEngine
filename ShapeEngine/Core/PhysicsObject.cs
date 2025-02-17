@@ -15,8 +15,77 @@ public abstract class PhysicsObject : GameObject
     /// Drag determines how much energy the velocity loses per second.
     /// Drag of 0.5f would mean the velocity loses half of its energy per second.
     /// </summary>
-    public float Drag { get; set; }
+    public float DragCoefficient { get; set; }
+    public Vector2 ConstAcceleration { get; set; }
+    public Vector2 AccumulatedForce { get; private set; } = new(0f);
+    public Vector2 AccumulatedImpulses { get; private set; } = new(0f); 
+
+    public Vector2 Momentum => Mass * ConstAcceleration;
+    public Vector2 KineticEnergy => Mass * Velocity;
     
+    public bool IsInMotion => Velocity.LengthSquared() > 0.00000001f;
+    public void ClearAccumulatedForce() => AccumulatedForce = new(0f);
+    public void ClearAccumulatedImpulses() => AccumulatedImpulses = new(0f);
+    public void AddForce(Vector2 force)
+    {
+        if(Mass <= 0) AccumulatedForce += force;
+        else AccumulatedForce += force / Mass;
+    }
+    /// <summary>
+    /// Add a force without dividing by mass
+    /// </summary>
+    /// <param name="force"></param>
+    public void AddForceRaw(Vector2 force)
+    {
+        AccumulatedForce += force;
+    }
+    public void AddImpulse(Vector2 force)
+    {
+        if (Mass <= 0.0f) AccumulatedImpulses += force;
+        else AccumulatedImpulses += force / Mass;
+    }
+
+    public override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+    {
+        UpdatePhysicsState(time.Delta);
+    }
+
+    protected virtual void OnPhysicsStateUpdated(float dt) { }
+    
+    #region Private
+
+    private void UpdatePhysicsState(float dt)
+    {
+        ApplyForces(dt); 
+        Transform = Transform.ChangePosition(Velocity * dt);
+        OnPhysicsStateUpdated(dt);
+    }
+    private void ApplyForces(float dt)
+    {
+        var force = ConstAcceleration + AccumulatedForce;
+        
+        Velocity += AccumulatedImpulses;
+        Velocity += force * dt;
+        var dragForce = ShapePhysics.CalculateDragForce(Velocity, DragCoefficient, dt);
+        Velocity += dragForce;
+        
+        ClearAccumulatedImpulses();
+        ClearAccumulatedForce();
+    }
+
+
+    #endregion
+    
+}
+
+/*
+    //  if (AppliesKineticFriction)
+    // {
+    //     var kineticFrictionForce = ShapePhysics.CalculateKineticFrictionForce(Velocity, FrictionNormal, KineticFrictionCoefficient);
+    //     Velocity += kineticFrictionForce * dt;
+    // }
+    // public bool AppliesStaticFriction => !FrictionNormal.IsSimilar(0f, 0.00000001f) && StaticFrictionCoefficient > 0;
+    // public bool AppliesKineticFriction => !FrictionNormal.IsSimilar(0f, 0.00000001f) && KineticFrictionCoefficient > 0;
     // /// <summary>
     // /// Takes effect when an object is not in motion and works against acceleration.
     // /// 0 or negative values mean no friction.
@@ -37,74 +106,4 @@ public abstract class PhysicsObject : GameObject
     /// A FrictionNormal that is zero applies no friction.
     /// </summary>
     public Vector2 FrictionNormal { get; set; } = Vector2.Zero;
-    public Vector2 ConstAcceleration { get; set; }
-    public Vector2 AccumulatedForce { get; private set; } = new(0f);
-    public Vector2 AccumulatedImpulses { get; private set; } = new(0f); 
-
-    public Vector2 Momentum => Mass * ConstAcceleration;
-    public Vector2 KineticEnergy => Mass * Velocity;
-    // public bool AppliesStaticFriction => !FrictionNormal.IsSimilar(0f, 0.00000001f) && StaticFrictionCoefficient > 0;
-    public bool AppliesKineticFriction => !FrictionNormal.IsSimilar(0f, 0.00000001f) && KineticFrictionCoefficient > 0;
-    public bool IsInMotion => Velocity.LengthSquared() > 0.00000001f;
-    public void ClearAccumulatedForce() => AccumulatedForce = new(0f);
-    public void ClearAccumulatedImpulses() => AccumulatedImpulses = new(0f);
-    public void AddForce(Vector2 force)
-    {
-        if(Mass <= 0) AccumulatedForce += force;
-        else AccumulatedForce += force / Mass;
-    }
-    /// <summary>
-    /// Add a force without dividing by mass
-    /// </summary>
-    /// <param name="force"></param>
-    public void AddForceRaw(Vector2 force)
-    {
-        AccumulatedForce += force;
-    }
-    public void AddImpulse(Vector2 force)
-    {
-        // if (Mass <= 0.0f) Velocity += force;
-        // else Velocity += force / Mass;
-        if (Mass <= 0.0f) AccumulatedImpulses += force;
-        else AccumulatedImpulses += force / Mass;
-    }
-
-    public override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
-    {
-        UpdatePhysicsState(time.Delta);
-    }
-
-    protected virtual void OnPhysicsStateUpdated(float dt) { }
-    
-    #region Private
-
-    private void UpdatePhysicsState(float dt)
-    {
-        ApplyAccumulatedImpulses();
-        ApplyAcceleration(dt); 
-        Transform = Transform.ChangePosition(Velocity * dt);
-        OnPhysicsStateUpdated(dt);
-    }
-    private void ApplyAccumulatedImpulses()
-    {
-        Velocity += AccumulatedImpulses;
-        ClearAccumulatedImpulses();
-    }
-    private void ApplyAcceleration(float dt)
-    {
-        var force = ConstAcceleration + AccumulatedForce;
-        ClearAccumulatedForce();
-       
-        Velocity += force * dt;
-        if (AppliesKineticFriction)
-        {
-            var kineticFrictionForce = ShapePhysics.CalculateKineticFrictionForce(Velocity, FrictionNormal, KineticFrictionCoefficient);
-            Velocity += kineticFrictionForce * dt;
-        }
-        Velocity = ShapePhysics.ApplyDragFactor(Velocity, Drag, dt);
-    }
-
-
-    #endregion
-    
-}
+    */

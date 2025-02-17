@@ -63,7 +63,7 @@ internal class Ship : CollisionObject, ICameraFollowTarget
     {
         this.shipSize = shipSize;
         Transform = new(pos, 0f, new Size(shipSize, 0f), 1f);
-        Drag = 5;
+        DragCoefficient = 5;
         var hull = CreateHull();
         collider = new(new(), hull.A, hull.B, hull.C);
         collider.ComputeCollision = true;
@@ -139,7 +139,7 @@ internal class Ship : CollisionObject, ICameraFollowTarget
         
         shipSize = size;
         Transform = new(pos, 0f, new Size(shipSize, 0f), 1f);
-        Drag = 5;
+        DragCoefficient = 5;
         var hull = CreateHull();
         collider = new(new(), hull.A, hull.B, hull.C);
         collider.ComputeCollision = true;

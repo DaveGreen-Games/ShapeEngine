@@ -52,7 +52,7 @@ public class Ship : CollisionObject, ICameraFollowTarget
         hull.CollisionMask = new BitFlag((uint)CollisionLayers.Asteroid, (uint)CollisionLayers.FrictionZone);
         AddCollider(hull);
 
-        Drag = dragRange.Min;
+        DragCoefficient = dragRange.Min;
         Mass = 1000;
     }
 
@@ -79,7 +79,7 @@ public class Ship : CollisionObject, ICameraFollowTarget
             }
             
 
-            Drag = dragRange.Min;
+            DragCoefficient = dragRange.Min;
             AddForce(curRotationDirection * thrustForce);
         }
         else if (ShapeKeyboardButton.S.GetInputState().Down)
@@ -90,7 +90,7 @@ public class Ship : CollisionObject, ICameraFollowTarget
                 if(breakTimer > breakDuration) breakTimer = breakDuration;
             }
             float f = breakTimer / breakDuration;
-            Drag = dragRange.Lerp(f);
+            DragCoefficient = dragRange.Lerp(f);
         }
         else
         {
@@ -100,7 +100,7 @@ public class Ship : CollisionObject, ICameraFollowTarget
                 if(breakTimer < 0f) breakTimer = 0f;
             }
 
-            Drag = dragRange.Min;
+            DragCoefficient = dragRange.Min;
             // float f = thrustForceTimer / thrustForceDuration;
             // Drag = dragRange.Lerp(f);
         }

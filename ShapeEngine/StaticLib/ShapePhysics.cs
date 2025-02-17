@@ -16,7 +16,10 @@ public static class ShapePhysics
     /// </summary>
     public static float G = 1f;
 
-    // public static Vector2 GravitationDirection = new(0, 1);
+    //TODO: All Attraction, Repulsion and Reverse Attraction functions should return force that can be used with AddForce
+    // instead of being used with AddForceRaw
+    // Good Idea?
+    //
     
     #region Elastic Collision
     public static (Vector2 newVelocity1, Vector2 newVelocity2) CalculateElasticCollision(Vector2 velocity1, float mass1, Vector2 velocity2, float mass2, float r)
@@ -80,47 +83,41 @@ public static class ShapePhysics
     /// <summary>
     /// This function calculates a frame rate independent drag force.
     /// </summary>
-    /// <param name="drag">Drag coefficient between 0 and 1. How much energy should the velocity loose each second.</param>
+    /// <param name="dragCoefficient">Drag coefficient between 0 and 1. How much energy should the velocity loose each second.</param>
     /// <param name="deltaTime"></param>
     /// <returns></returns>
-    public static float CalculateDragFactor(float drag, float deltaTime)
+    private static float CalculateDragFactor(float dragCoefficient, float deltaTime)
     {
-        if (drag <= 0) return 1;
-        if (drag >= 1) return 0;
-        drag = ShapeMath.Clamp(drag, 0f, 1f);
-        float dragFactor = (float)Math.Pow(1.0 - drag, deltaTime);
+        if (dragCoefficient <= 0) return 1;
+        if (dragCoefficient >= 1) return 0;
+        dragCoefficient = ShapeMath.Clamp(dragCoefficient, 0f, 1f);
+        float dragFactor = (float)Math.Pow(1.0 - dragCoefficient, deltaTime);
 
         return dragFactor;
     }
+
+    public static Vector2 CalculateDragForce(Vector2 velocity, float dragCoefficient, float deltaTime)
+    {
+        var factor = CalculateDragFactor(dragCoefficient, deltaTime);
+        return -velocity * (1f - factor);
+    }
+
     /// <summary>
     /// This function calculates a frame rate independent drag force and applies it to the supplied velocity.
     /// </summary>
     /// <param name="velocity">The affected velocity.</param>
-    /// <param name="drag">Drag coefficient between 0 and 1. How much energy should the velocity loose each second.</param>
+    /// <param name="dragCoefficient">Drag coefficient between 0 and 1. How much energy should the velocity loose each second.</param>
     /// <param name="deltaTime"></param>
     /// <returns>Returns the new scaled velocity.</returns>
-    public static Vector2 ApplyDragFactor(Vector2 velocity, float drag, float deltaTime)
+    public static Vector2 ApplyDragForce(Vector2 velocity, float dragCoefficient, float deltaTime)
     {
-        if (drag <= 0) return velocity;
-        if (drag >= 1) return Vector2.Zero;
-        drag = ShapeMath.Clamp(drag, 0f, 1f);
-        float dragFactor = (float)Math.Pow(1.0 - drag, deltaTime);
-        return velocity * dragFactor;
+        if (dragCoefficient <= 0) return velocity;
+        if (dragCoefficient >= 1) return Vector2.Zero;
+        var factor = CalculateDragFactor(dragCoefficient, deltaTime);
+        return velocity * factor;
     }
-    public static void ApplyDragFactor(this PhysicsObject obj, float drag, float deltaTime)
-    {
-        if (drag <= 0) return;
-        if (drag >= 1)
-        {
-            obj.Velocity = Vector2.Zero;
-            return;
-        }
-        drag = ShapeMath.Clamp(drag, 0f, 1f);
-        var dragFactor = (float)Math.Pow(1.0 - drag, deltaTime);
-
-        obj.Velocity = obj.Velocity * dragFactor;
-    }
-
+    
+    
     /// <summary>
     /// Calculates a realistic drag force.
     /// Force = FluidDensity * Speed * Speed * DragCoefficient * ReferenceArea
@@ -298,40 +295,83 @@ public static class ShapePhysics
     
     #region Friction
 
+    /// <summary>
+    /// Calculates the friction tangent vector.
+    /// The tangent is always perpendicular to the surface normal.
+    /// The tanget always points in the opposite direction of the velocity.
+    /// </summary>
+    /// <param name="velocity"></param>
+    /// <param name="surfaceNormal"></param>
+    /// <returns></returns>
+    public static Vector2 CalculateFrictionTangent(Vector2 velocity, Vector2 surfaceNormal)
+    {
+        var dot = velocity.Dot(surfaceNormal);
+        var tangent = velocity - dot * surfaceNormal;
+        return -tangent;
+    }
+    
+    /// <summary>
+    /// Calculates a friction force that always acts directly opposite to the velocity,
+    /// scaled by friction force.
+    /// </summary>
+    /// <param name="velocity"></param>
+    /// <param name="surfaceNormal"></param>
+    /// <param name="frictionForce"></param>
+    /// <returns></returns>
+    public static Vector2 CalculateFrictionForce(Vector2 velocity, Vector2 surfaceNormal, float frictionForce)
+    {
+        if(frictionForce <= 0f) return Vector2.Zero;
+        if(velocity.LengthSquared() <= 0f) return Vector2.Zero;
+        
+        var dot = velocity.Dot(surfaceNormal);
+        var tangent = velocity - dot * surfaceNormal;
+        if(tangent.LengthSquared() <= 0f) return Vector2.Zero;
+        
+        return -velocity.Normalize() * tangent.Length() * frictionForce;
+    }
+    
+    /// <summary>
+    /// Calculate the tangent based on the surface normal and velocity and returns a force
+    /// that acts in the opposite direction of the tangent scaled by the friction force.
+    /// </summary>
+    /// <param name="velocity"></param>
+    /// <param name="surfaceNormal"></param>
+    /// <param name="frictionForce"></param>
+    /// <returns></returns>
+    public static Vector2 CalculateFrictionForce2(Vector2 velocity, Vector2 surfaceNormal, float frictionForce)
+    {
+        var dot = velocity.Dot(surfaceNormal);
+        var tangent = velocity - dot * surfaceNormal;
+        if(tangent.IsSimilar(0f, 0.0000001f)) return Vector2.Zero;
+        
+        return -tangent * frictionForce;
+
+    }
+    
     // public static Vector2 CalculateFrictionForce(Vector2 velocity, Vector2 acceleration,  Vector2 surfaceNormal, float staticFrictionCoefficient, float kineticFrictionCoefficient)
     // {
     //     if(velocity.IsSimilar(0f, 0.000001f)) return CalculateStaticFrictionForce(acceleration, surfaceNormal, staticFrictionCoefficient);
     //     return CalculateKineticFrictionForce(velocity, surfaceNormal, kineticFrictionCoefficient);
     // }
     //
-    public static Vector2 CalculateKineticFrictionForce(Vector2 velocity, Vector2 surfaceNormal, float kineticFrictionCoefficient)
-    {
-        var dot = velocity.Dot(surfaceNormal);
-        // if(dot < 0) return Vector2.Zero;
-        var tangent = velocity - dot * surfaceNormal;
-        if(tangent.IsSimilar(0f, 0.0000001f)) return Vector2.Zero;
-        
-        return -tangent.Normalize() * kineticFrictionCoefficient;
-        
-    }
-    public static Vector2 CalculateKineticFrictionForceVelocityDependant(Vector2 velocity, Vector2 surfaceNormal, float kineticFrictionCoefficient)
-    {
-        var dot = velocity.Dot(surfaceNormal);
-        // if(dot < 0) return Vector2.Zero;
-        var tangent = velocity - dot * surfaceNormal;
-        if(tangent.IsSimilar(0f, 0.0000001f)) return Vector2.Zero;
-        
-        return -tangent * kineticFrictionCoefficient;
-        
-    }
-    // public static Vector2 CalculateStaticFrictionForce(Vector2 acceleration, Vector2 surfaceNormal, float staticFrictionCoefficient)
+    // public static Vector2 CalculateKineticFrictionForce(Vector2 velocity, Vector2 surfaceNormal, float frictionCoefficient)
     // {
-    //     var dot = acceleration.Dot(surfaceNormal);
+    //     var dot = velocity.Dot(surfaceNormal);
     //     // if(dot < 0) return Vector2.Zero;
-    //     var tangent = acceleration - dot * surfaceNormal;
+    //     var tangent = velocity - dot * surfaceNormal;
     //     if(tangent.IsSimilar(0f, 0.0000001f)) return Vector2.Zero;
-    //
-    //     return -tangent.Normalize() * staticFrictionCoefficient;
+    //     
+    //     return -tangent.Normalize() * frictionCoefficient;
+    //     
+    // }
+    // public static Vector2 CalculateKineticFrictionForceVelocityDependant(Vector2 velocity, Vector2 surfaceNormal, float frictionCoefficient)
+    // {
+    //     var dot = velocity.Dot(surfaceNormal);
+    //     // if(dot < 0) return Vector2.Zero;
+    //     var tangent = velocity - dot * surfaceNormal;
+    //     if(tangent.IsSimilar(0f, 0.0000001f)) return Vector2.Zero;
+    //     
+    //     return -tangent * frictionCoefficient;
     //     
     // }
 
@@ -1023,7 +1063,10 @@ public static class ShapePhysics
     #endregion
 }
 
- /*public static float CalculateFrictionForceMagnitudeRealistic(Vector2 surfaceNormal, float frictionCoefficient, float mass)
+
+
+
+/*public static float CalculateFrictionForceMagnitudeRealistic(Vector2 surfaceNormal, float frictionCoefficient, float mass)
     {
         // Normalize the surface normal vector
         var normalizedSurfaceNormal = surfaceNormal.Normalize();
