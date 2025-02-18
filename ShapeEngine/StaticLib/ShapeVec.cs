@@ -8,6 +8,69 @@ namespace ShapeEngine.StaticLib
     public static class ShapeVec
     {
 
+        /// <summary>
+        /// Calculate the dot product between two vectors and remap it to the range 0-1.
+        /// Both vectors pointing in the same direction will return 1,
+        /// while pointing in opposite directions will return 0.
+        /// The vectors have to be normalized to get correct results.
+        /// </summary>
+        /// <param name="v1">The first normalized vector.</param>
+        /// <param name="v2">The second normalized vector.</param>
+        /// <returns>Return the dot product as a factor between 0-1.</returns>
+        public static float CalculateDotFactor(this Vector2 v1, Vector2 v2)
+        {
+            var dot =  v1.X * v2.X + v1.Y * v2.Y;
+            return (dot + 1f) * 0.5f;
+        }
+        /// <summary>
+        /// Calculate the dot product between two vectors and remap it to the given range of min and max.
+        /// Both vectors pointing in the same direction will return max,
+        /// while pointing in opposite directions will return min.
+        /// The vectors have to be normalized to get correct results.
+        /// </summary>
+        /// <param name="v1">The first normalized vector.</param>
+        /// <param name="v2">The second normalized vector.</param>
+        /// <param name="min">The min value for the possible range.</param>
+        /// <param name="max">The max value for the possible range.</param>
+        /// <returns>Return the dot product as a factor between min and max.</returns>
+        public static float CalculateDotFactor(this Vector2 v1, Vector2 v2, float min, float max)
+        {
+            var dot =  v1.X * v2.X + v1.Y * v2.Y;
+            return ShapeMath.RemapFloat(dot, -1f, 1f, min, max);
+        }
+        /// <summary>
+        /// Calculate the dot product between two vectors and remap it to the range 0-1.
+        /// Both vectors pointing in the same direction will return 0,
+        /// while pointing in opposite directions will return 1.
+        /// The vectors have to be normalized to get correct results.
+        /// </summary>
+        /// <param name="v1">The first normalized vector.</param>
+        /// <param name="v2">The second normalized vector.</param>
+        /// <returns>Return the dot product as a factor between 0-1.</returns>
+        public static float CalculateDotFactorReverse(this Vector2 v1, Vector2 v2)
+        {
+            var dot =  v1.X * v2.X + v1.Y * v2.Y;
+            dot *= -1f;
+            return (dot + 1f) * 0.5f;
+        }
+        /// <summary>
+        /// Calculate the dot product between two vectors and remap it to the given range of min and max.
+        /// Both vectors pointing in the same direction will return min,
+        /// while pointing in opposite directions will return max.
+        /// The vectors have to be normalized to get correct results.
+        /// </summary>
+        /// <param name="v1">The first normalized vector.</param>
+        /// <param name="v2">The second normalized vector.</param>
+        /// <param name="min">The min value for the possible range.</param>
+        /// <param name="max">The max value for the possible range.</param>
+        /// <returns>Return the dot product as a factor between min and max.</returns>
+        public static float CalculateDotFactorReverse(this Vector2 v1, Vector2 v2, float min, float max)
+        {
+            var dot =  v1.X * v2.X + v1.Y * v2.Y;
+            dot *= -1f;
+            return ShapeMath.RemapFloat(dot, -1f, 1f, min, max);
+        }
+        
         public static string ToString(this Vector2 v)
         {
             
