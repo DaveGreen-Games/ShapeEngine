@@ -125,6 +125,24 @@ public class Game
     private readonly List<ShapeFlash> shapeFlashes = new();
     private readonly List<DeferredInfo> deferred = new();
 
+    /// <summary>
+    /// Add functions that draw something to the screen before the game texture is drawn to the screen.
+    /// Lower keys (layers) will be drawn first.
+    /// </summary>
+    public readonly SortedList<int, Action> DeferredDrawingBeforeGame = new();
+    /// <summary>
+    /// Add functions that draw something to the screen after the game texture was drawn to the screen
+    /// and before the UI texture is drawn to the screen.
+    /// Lower keys (layers) will be drawn first.
+    /// </summary>
+    public readonly SortedList<int, Action> DeferredDrawingAfterGame = new();
+    /// <summary>
+    /// Add functions that draw something to the screen after the UI texture was drawn to the screen.
+    /// Lower keys (layers) will be drawn first.
+    /// </summary>
+    public readonly SortedList<int, Action> DeferredDrawingAfterUI = new();
+    
+    
     private float physicsAccumulator = 0f;
 
     private List<ScreenTexture>? customScreenTextures = null;
@@ -356,6 +374,14 @@ public class Game
         Raylib.BeginDrawing();
         Raylib.ClearBackground(BackgroundColorRgba.ToRayColor());
 
+        if (DeferredDrawingBeforeGame.Count > 0)
+        {
+            foreach (var action in DeferredDrawingBeforeGame.Values)
+            {
+                action.Invoke();
+            }
+        }
+        
         //split custom screen textures into textures to draw to the screen before the game texture
         //and textures to draw to the screen after the game texture
         List<ScreenTexture>? drawBefore = null;
@@ -399,6 +425,14 @@ public class Game
         //draw game texture to screen
         gameTexture.DrawToScreen();
         
+        if (DeferredDrawingAfterGame.Count > 0)
+        {
+            foreach (var action in DeferredDrawingAfterGame.Values)
+            {
+                action.Invoke();
+            }
+        }
+        
         //draw screen textures to screen after the game texture
         if (drawAfter is { Count: > 0 })
         {
@@ -417,6 +451,15 @@ public class Game
         }
         
         ResolveDrawUI(UIScreenInfo);
+        
+        if (DeferredDrawingAfterUI.Count > 0)
+        {
+            foreach (var action in DeferredDrawingAfterUI.Values)
+            {
+                action.Invoke();
+            }
+        }
+        
         if (Window.MouseOnScreen) DrawCursorUi(UIScreenInfo);
         
         Raylib.EndDrawing();
