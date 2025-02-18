@@ -10,6 +10,7 @@ using ShapeEngine.Random;
 using ShapeEngine.Screen;
 using ShapeEngine.Text;
 using ShapeEngine.StaticLib.Drawing;
+using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes;
 
@@ -22,7 +23,7 @@ public class PhysicsExample : ExampleScene
     private const float SectorSize = 15000;
     private const int CollisionRows = 10;
     private const int CollisionCols = 10;
-    
+   
     private readonly float cellSize;
     
     private List<TextureSurface> starSurfaces = new();
@@ -32,7 +33,8 @@ public class PhysicsExample : ExampleScene
     private PhysicsExampleSource.Ship ship;
     private Sector sector;
     
-    
+    private Vector2 curAttractionForce = Vector2.Zero;
+
     public PhysicsExample()
     {
         Title = "Physics!";
@@ -119,7 +121,17 @@ public class PhysicsExample : ExampleScene
     {
         //TODO: make camera zoom dynamic based on ship speed (would also disable zoom from input!)
         //TODO: make camera follow the ship faster the faster the ship gets ?
+        
+        
         ship.Update(time, game, gameUi, ui);
+        curAttractionForce = ShapePhysics.CalculateReverseAttractionForce(
+            Vector2.Zero,
+            5000 * 1000,
+            new ValueRange(SectorSize * 0.4f, SectorSize * 0.5f),
+            ship.Transform.Position
+            );
+        ship.AddForce(curAttractionForce);
+        
     }
 
 
@@ -132,6 +144,9 @@ public class PhysicsExample : ExampleScene
 
     protected override void OnDrawGameExample(ScreenInfo game)
     {
+        ShapeCircleDrawing.DrawCircleLines(Vector2.Zero, SectorSize * 0.4f, 4f, new ColorRgba(Color.Aqua));
+        ShapeCircleDrawing.DrawCircleLines(Vector2.Zero, SectorSize * 0.5f, 4f, new ColorRgba(Color.Crimson));
+        
         var target = camera.BasePosition;
         var count = starSurfaces.Count;
         for (int i = 0; i < count; i++)
@@ -208,7 +223,7 @@ public class PhysicsExample : ExampleScene
         
         sectorRect.DrawLines(universeLineInfo);
         
-        
+        ShapeSegmentDrawing.DrawSegment(ship.Transform.Position, ship.Transform.Position + curAttractionForce, 6f,  ColorRgba.White);
     }
     protected override void OnDrawGameUIExample(ScreenInfo gameUi)
     {
