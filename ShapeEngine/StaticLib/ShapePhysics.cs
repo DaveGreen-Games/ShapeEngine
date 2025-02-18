@@ -4,10 +4,6 @@ using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.StaticLib;
 
-//TODO: All Attraction, Repulsion and Reverse Attraction functions should return force that can be used with AddForce
-// instead of being used with AddForceRaw
-// Good Idea?
-//
 public static class ShapePhysics
 {
     /// <summary>
