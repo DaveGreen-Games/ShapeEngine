@@ -17,6 +17,7 @@ When using Shape Engine everything from Raylib is available as well. ([Raylib Ex
 ![Gapped Drawing 1](media/gapped-drawing1.gif)
 ![Pathfinding](media/pathfinding.gif)
 ![UI](media/ui.gif)
+![Striped Fill](media/stripedDrawing.gif)
 ![Shape Projection](media/shape-projection.gif)
 ![Word Emphasis](media/word-emphasis.gif)
 ![Input](media/input.gif)
