@@ -34,8 +34,8 @@ public class Ship : CollisionObject, ICameraFollowTarget
     
     private Vector2 curRotationDirection = Vector2.Zero;
     private Vector2 curVelocityDirection = Vector2.Zero;
-    private float curSpeed = 0f;
-    private float maxSpeed = 1250f;
+    public float CurSpeed { get; private set; } = 0f;
+    public float MaxSpeed { get; private set; }= 1250f;
     public Ship(float size, PaletteColor color)
     {
         hullSize = new Size(size, size);
@@ -146,11 +146,11 @@ public class Ship : CollisionObject, ICameraFollowTarget
         if (Velocity.LengthSquared() > 0f)
         {
             curVelocityDirection = Velocity.Normalize();
-            curSpeed = Velocity.Length();
-            if (curSpeed > maxSpeed)
+            CurSpeed = Velocity.Length();
+            if (CurSpeed > MaxSpeed)
             {
-                curSpeed = maxSpeed;
-                Velocity = curVelocityDirection * maxSpeed;
+                CurSpeed = MaxSpeed;
+                Velocity = curVelocityDirection * MaxSpeed;
             }
         }
     }
@@ -167,7 +167,7 @@ public class Ship : CollisionObject, ICameraFollowTarget
         var circle = new Circle(center, radius );
         circle.DrawLines(thickness, c, 4f);
 
-        var speedF = curSpeed / maxSpeed;
+        var speedF = CurSpeed / MaxSpeed;
         var p = center + curVelocityDirection * radius * speedF;
         var s = ShapeMath.LerpFloat(thickness, thickness * 8, speedF);
         p.Draw(s, c, 16);

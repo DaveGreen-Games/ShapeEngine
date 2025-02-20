@@ -41,7 +41,7 @@ public static class ShapeStripedDrawing
         var angleSpacingRad = angleSpacingDeg * ShapeMath.DEGTORAD;
         float curAngleRad = angleSpacingRad * ShapeMath.WrapF(angleOffset, 0f, 1f);
         // float curAngleRad = angleOffset * 2f * ShapeMath.PI;
-        while (curAngleRad <= 2f * ShapeMath.PI)
+        while (curAngleRad <= 2f * ShapeMath.PI - angleSpacingRad)
         {
             var dir = new Vector2(1, 0).Rotate(curAngleRad);
             var p1 = center + dir * innerRadius;
@@ -78,7 +78,7 @@ public static class ShapeStripedDrawing
         var angleSpacingRad = angleSpacingDeg * ShapeMath.DEGTORAD;
         float curAngleRad = angleSpacingRad * ShapeMath.WrapF(angleOffset, 0f, 1f);
         int i = 0;
-        while (curAngleRad <= 2f * ShapeMath.PI)
+        while (curAngleRad <= 2f * ShapeMath.PI - angleSpacingRad)
         {
             var info = i % 2 == 0 ? striped : alternatingStriped;
             i++;
@@ -116,7 +116,7 @@ public static class ShapeStripedDrawing
         var angleSpacingRad = angleSpacingDeg * ShapeMath.DEGTORAD;
         float curAngleRad = angleSpacingRad * ShapeMath.WrapF(angleOffset, 0f, 1f);
         int i = 0;
-        while (curAngleRad <= 2f * ShapeMath.PI)
+        while (curAngleRad <= 2f * ShapeMath.PI - angleSpacingRad)
         {
             var index = i % alternatingStriped.Length;
             var info = alternatingStriped[index];

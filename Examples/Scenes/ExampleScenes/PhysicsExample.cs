@@ -16,11 +16,11 @@ namespace Examples.Scenes.ExampleScenes;
 
 public class PhysicsExample : ExampleScene
 {
-    private Rect sectorRect;
-    private Rect insideSectorRect;
+    private readonly Rect sectorRect;
     private readonly ShapeCamera camera;
     private readonly CameraFollowerSingle follower;
-    private const float SectorSize = 15000;
+    private const float SectorRadiusOutside = 9000;
+    private const float SectorRadiusInside = 8250;
     private const int CollisionRows = 10;
     private const int CollisionCols = 10;
    
@@ -31,19 +31,18 @@ public class PhysicsExample : ExampleScene
     private TextFont gameFont = new(GAMELOOP.GetFont(FontIDs.JetBrainsLarge), 15f, Colors.Warm);
 
     private PhysicsExampleSource.Ship ship;
-    private Sector sector;
     
-    private Vector2 curAttractionForce = Vector2.Zero;
 
     public PhysicsExample()
     {
         Title = "Physics!";
 
-        sectorRect = new(new Vector2(0f), new Size(SectorSize, SectorSize) , new AnchorPoint(0.5f));
-        insideSectorRect= sectorRect.ApplyMargins(0.02f, 0.02f, 0.02f, 0.02f);
+        var rectSize = SectorRadiusOutside * 2;
+        sectorRect = new(new Vector2(0f), new Size(rectSize, rectSize) , new AnchorPoint(0.5f));
 
         InitCollisionHandler(sectorRect, CollisionRows, CollisionCols);
-        cellSize = SectorSize / CollisionRows;
+        cellSize = rectSize / CollisionRows;
+        
         camera = new();
         follower = new(0, 300, 500);
         camera.Follower = follower;
@@ -76,11 +75,11 @@ public class PhysicsExample : ExampleScene
         ship = new(50, Colors.PcWarm);
 
         
-        sector = new Sector(insideSectorRect);
-        if (CollisionHandler != null)
-        {
-            CollisionHandler.Add(sector);
-        }
+        // sector = new Sector(insideSectorRect);
+        // if (CollisionHandler != null)
+        // {
+        //     CollisionHandler.Add(sector);
+        // }
         
     }
     
@@ -119,19 +118,20 @@ public class PhysicsExample : ExampleScene
     
     protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
-        //TODO: make camera zoom dynamic based on ship speed (would also disable zoom from input!)
-        //TODO: make camera follow the ship faster the faster the ship gets ?
-        
-        
         ship.Update(time, game, gameUi, ui);
-        curAttractionForce = ShapePhysics.CalculateReverseAttractionForce(
+        var force = ShapePhysics.CalculateReverseAttractionForce(
             Vector2.Zero,
             5000 * 1000,
-            new ValueRange(SectorSize * 0.4f, SectorSize * 0.5f),
+            new ValueRange(SectorRadiusInside, SectorRadiusOutside),
             ship.Transform.Position
             );
-        ship.AddForce(curAttractionForce);
+        ship.AddForce(force);
         
+        follower.Speed = ship.CurSpeed * 1.25f;
+        var speedF = ship.CurSpeed / ship.MaxSpeed;
+        var zoom = ShapeMath.LerpFloat(0.8f, 0.5f, speedF);
+        camera.SetZoom(zoom);
+
     }
 
 
@@ -144,8 +144,7 @@ public class PhysicsExample : ExampleScene
 
     protected override void OnDrawGameExample(ScreenInfo game)
     {
-        ShapeCircleDrawing.DrawCircleLines(Vector2.Zero, SectorSize * 0.4f, 4f, new ColorRgba(Color.Aqua));
-        ShapeCircleDrawing.DrawCircleLines(Vector2.Zero, SectorSize * 0.5f, 4f, new ColorRgba(Color.Crimson));
+        
         
         var target = camera.BasePosition;
         var count = starSurfaces.Count;
@@ -161,69 +160,11 @@ public class PhysicsExample : ExampleScene
             surface.Draw(sourceRect, targetRect, ColorRgba.White);
         }
         
+        DrawCircleSector();
+        
         ship.DrawGame(game);
         
-        var universeLineInfo = new LineDrawingInfo(24f, Colors.Warm, LineCapType.Extended, 0);
-        var stripedLineInfo = new LineDrawingInfo(32f, Colors.Warm.SetAlpha(200), LineCapType.None, 0);
-
-        var topRect = sectorRect.ApplyMargins(0f, 0f, 0f, 0.98f);
-        var bottomRect = sectorRect.ApplyMargins(0f, 0f, 0.98f, 0);
-        var leftRect = sectorRect.ApplyMargins(0f, 0.98f, 0.02f, 0.02f);
-        var rightRect = sectorRect.ApplyMargins(0.98f, 0f, 0.02f, 0.02f);
         
-        int splits = (int)(sectorRect.Size.Max() / 2000);
-        if(splits % 2 == 0) splits--; //make sure splits are always odd
-        var topRectSplit = topRect.SplitH(splits);
-        var bottomRectSplit = bottomRect.SplitH(splits);
-        var leftRectSplit = leftRect.SplitV(splits);
-        var rightRectSplit = rightRect.SplitV(splits);
-
-        var rotationRect = topRectSplit[0];
-
-        leftRect.DrawStriped(250f, 25f + 90f, stripedLineInfo);
-        leftRect.RightSegment.Draw(universeLineInfo);
-        
-        rightRect.DrawStriped(250f, 25f + 90f, stripedLineInfo);
-        rightRect.LeftSegment.Draw(universeLineInfo);
-        
-        topRect.DrawStriped(250f, 25f, stripedLineInfo );
-        topRect.BottomSegment.Draw(universeLineInfo);
-        
-        bottomRect.DrawStriped(250f, 25f, stripedLineInfo);
-        bottomRect.TopSegment.Draw(universeLineInfo);
-        
-        for (int i = 1; i < leftRectSplit.Count - 1; i++)
-        {
-            if(i % 2 == 0) continue;
-            var rect = leftRectSplit[i];
-            var movedRotationRect = rotationRect.SetPosition(rect.Center, AnchorPoint.Center);
-            gameFont.Draw("SECTOR END", movedRotationRect, -90, AnchorPoint.Center);
-        }
-        
-        for (int i = 1; i < rightRectSplit.Count - 1; i++)
-        {
-            if(i % 2 == 0) continue;
-            var rect = rightRectSplit[i];
-            var movedRotationRect = rotationRect.SetPosition(rect.Center, AnchorPoint.Center);
-            gameFont.Draw("SECTOR END", movedRotationRect, 90, AnchorPoint.Center);
-        }
-        
-        for (int i = 1; i < topRectSplit.Count - 1; i++)
-        {
-            if(i % 2 == 0) continue;
-            var rect = topRectSplit[i];
-            gameFont.Draw("SECTOR END", rect, 0f, AnchorPoint.Center);
-        }
-        for (int i = 1; i < bottomRectSplit.Count - 1; i++)
-        {
-            if(i % 2 == 0) continue;
-            var rect = bottomRectSplit[i];
-            gameFont.Draw("SECTOR END", rect, 180f, AnchorPoint.Center);
-        }
-        
-        sectorRect.DrawLines(universeLineInfo);
-        
-        ShapeSegmentDrawing.DrawSegment(ship.Transform.Position, ship.Transform.Position + curAttractionForce, 6f,  ColorRgba.White);
     }
     protected override void OnDrawGameUIExample(ScreenInfo gameUi)
     {
@@ -254,5 +195,93 @@ public class PhysicsExample : ExampleScene
         // textFont.ColorRgba = Colors.Light;
         // textFont.DrawTextWrapNone(text, rect, new(0.5f));
     }
+
+    private void DrawCircleSector()
+    {
+        var universeLineInfo = new LineDrawingInfo(14f, Colors.Warm, LineCapType.Extended, 0);
+        var stripedLineInfo = new LineDrawingInfo(14f, Colors.Warm.SetAlpha(200), LineCapType.None, 0);
+        // var stripedAltLineInfo = new LineDrawingInfo(32f, Colors.Warm.SetAlpha(200), LineCapType.None, 0);
         
+        ShapeStripedDrawing.DrawStripedRing(Vector2.Zero, SectorRadiusInside, SectorRadiusOutside, 1f, stripedLineInfo, 0f);
+        
+        // var insideCircle = new Circle(Vector2.Zero, SectorRadiusInside);
+        // var outsideCircle = new Circle(Vector2.Zero, SectorRadiusOutside);
+        // outsideCircle.DrawStriped(insideCircle, 48, 45, stripedLineInfo, 0f);
+        
+        ShapeCircleDrawing.DrawCircleLines(Vector2.Zero, SectorRadiusInside, universeLineInfo , 0f, 24f);
+        ShapeCircleDrawing.DrawCircleLines(Vector2.Zero, SectorRadiusOutside, universeLineInfo, 0f, 24f);
+
+        var textCount = 12;
+        var angleStepRad = (360f / textCount) * ShapeMath.DEGTORAD;
+        var textRect = new Rect(Vector2.Zero, new Size(SectorRadiusInside * 0.2f, SectorRadiusInside * 0.05f), AnchorPoint.Center);
+        for (int i = 0; i < textCount; i++)
+        {
+            var rotationRad = angleStepRad * i;
+            var center = new Vector2(0, -SectorRadiusInside * 1.02f).Rotate(rotationRad);
+            textRect = textRect.SetPosition(center, AnchorPoint.Center);
+            gameFont.Draw("SECTOR END", textRect, rotationRad * ShapeMath.RADTODEG, AnchorPoint.Center);
+        }
+    }
+    // private void DrawSectorRectangle()
+    // {
+    //     var universeLineInfo = new LineDrawingInfo(24f, Colors.Warm, LineCapType.Extended, 0);
+    //     var stripedLineInfo = new LineDrawingInfo(32f, Colors.Warm.SetAlpha(200), LineCapType.None, 0);
+    //
+    //     var topRect = sectorRect.ApplyMargins(0f, 0f, 0f, 0.98f);
+    //     var bottomRect = sectorRect.ApplyMargins(0f, 0f, 0.98f, 0);
+    //     var leftRect = sectorRect.ApplyMargins(0f, 0.98f, 0.02f, 0.02f);
+    //     var rightRect = sectorRect.ApplyMargins(0.98f, 0f, 0.02f, 0.02f);
+    //     
+    //     int splits = (int)(sectorRect.Size.Max() / 2000);
+    //     if(splits % 2 == 0) splits--; //make sure splits are always odd
+    //     var topRectSplit = topRect.SplitH(splits);
+    //     var bottomRectSplit = bottomRect.SplitH(splits);
+    //     var leftRectSplit = leftRect.SplitV(splits);
+    //     var rightRectSplit = rightRect.SplitV(splits);
+    //     
+    //     var rotationRect = topRectSplit[0];
+    //     
+    //     leftRect.DrawStriped(250f, 25f + 90f, stripedLineInfo);
+    //     leftRect.RightSegment.Draw(universeLineInfo);
+    //     
+    //     rightRect.DrawStriped(250f, 25f + 90f, stripedLineInfo);
+    //     rightRect.LeftSegment.Draw(universeLineInfo);
+    //     
+    //     topRect.DrawStriped(250f, 25f, stripedLineInfo );
+    //     topRect.BottomSegment.Draw(universeLineInfo);
+    //     
+    //     bottomRect.DrawStriped(250f, 25f, stripedLineInfo);
+    //     bottomRect.TopSegment.Draw(universeLineInfo);
+    //     
+    //     for (int i = 1; i < leftRectSplit.Count - 1; i++)
+    //     {
+    //         if(i % 2 == 0) continue;
+    //         var rect = leftRectSplit[i];
+    //         var movedRotationRect = rotationRect.SetPosition(rect.Center, AnchorPoint.Center);
+    //         gameFont.Draw("SECTOR END", movedRotationRect, -90, AnchorPoint.Center);
+    //     }
+    //     
+    //     for (int i = 1; i < rightRectSplit.Count - 1; i++)
+    //     {
+    //         if(i % 2 == 0) continue;
+    //         var rect = rightRectSplit[i];
+    //         var movedRotationRect = rotationRect.SetPosition(rect.Center, AnchorPoint.Center);
+    //         gameFont.Draw("SECTOR END", movedRotationRect, 90, AnchorPoint.Center);
+    //     }
+    //     
+    //     for (int i = 1; i < topRectSplit.Count - 1; i++)
+    //     {
+    //         if(i % 2 == 0) continue;
+    //         var rect = topRectSplit[i];
+    //         gameFont.Draw("SECTOR END", rect, 0f, AnchorPoint.Center);
+    //     }
+    //     for (int i = 1; i < bottomRectSplit.Count - 1; i++)
+    //     {
+    //         if(i % 2 == 0) continue;
+    //         var rect = bottomRectSplit[i];
+    //         gameFont.Draw("SECTOR END", rect, 180f, AnchorPoint.Center);
+    //     }
+    //     
+    //     sectorRect.DrawLines(universeLineInfo);
+    // }
 }
