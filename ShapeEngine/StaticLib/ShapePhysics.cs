@@ -18,59 +18,229 @@ public static class ShapePhysics
     
     
     #region Elastic Collision
-    public static (Vector2 newVelocity1, Vector2 newVelocity2) CalculateElasticCollision(Vector2 velocity1, float mass1, Vector2 velocity2, float mass2, float r)
+    
+    // public static (Vector2 newVelocity1, Vector2 newVelocity2) CalculateElasticCollision(Vector2 velocity1, float mass1, Vector2 velocity2, float mass2, float r)
+    // {
+    //     // Ensure the elasticity parameter is between 0 and 1
+    //     r = Math.Clamp(r, 0.0f, 1.0f);
+    //
+    //     // Calculate the new velocities using the elastic collision formula
+    //     var newVelocity1 = (velocity1 * (mass1 - r * mass2) + velocity2 * (1 + r) * mass2) / (mass1 + mass2);
+    //     var newVelocity2 = (velocity2 * (mass2 - r * mass1) + velocity1 * (1 + r) * mass1) / (mass1 + mass2);
+    //
+    //     return (newVelocity1, newVelocity2);
+    // }
+    // public static (Vector2 newVelocity1, Vector2 newVelocity2) CalculateElasticCollision(Vector2 position1, Vector2 velocity1, float mass1, Vector2 position2, Vector2 velocity2, float mass2, float r)
+    // {
+    //     // Ensure the elasticity parameter is between 0 and 1
+    //     r = Math.Clamp(r, 0.0f, 1.0f);
+    //
+    //     // Calculate the relative velocity
+    //     var relativeVelocity = velocity1 - velocity2;
+    //
+    //     // Calculate the normal vector
+    //     var normal = Vector2.Normalize(position1 - position2);
+    //
+    //     // Calculate the velocity along the normal
+    //     float velocityAlongNormal = Vector2.Dot(relativeVelocity, normal);
+    //
+    //     // If the objects are moving apart, do nothing
+    //     if (velocityAlongNormal > 0)
+    //     {
+    //         return (velocity1, velocity2);
+    //     }
+    //
+    //     // Calculate the impulse scalar
+    //     float impulseScalar = (-(1 + r) * velocityAlongNormal) / (1 / mass1 + 1 / mass2);
+    //
+    //     // Calculate the impulse
+    //     var impulse = impulseScalar * normal;
+    //
+    //     // Update velocities
+    //     var newVelocity1 = velocity1 + impulse / mass1;
+    //     var newVelocity2 = velocity2 - impulse / mass2;
+    //
+    //     return (newVelocity1, newVelocity2);
+    // }
+    // public static void ApplyElasticCollision(this PhysicsObject obj1, PhysicsObject obj2, float r)
+    // {
+    //     var result = CalculateElasticCollision(obj1.Transform.Position, obj1.Velocity, obj1.Mass, obj2.Transform.Position, obj2.Velocity, obj2.Mass, r);
+    //     obj1.Velocity = result.newVelocity1;
+    //     obj2.Velocity = result.newVelocity2;
+    // }
+    // public static void ApplyElasticCollisionSelf(this PhysicsObject obj1, PhysicsObject obj2, float r)
+    // {
+    //     // Ensure the elasticity parameter is between 0 and 1
+    //     r = Math.Clamp(r, 0.0f, 1.0f);
+    //
+    //     // Calculate the relative velocity
+    //     var relativeVelocity = obj1.Velocity - obj1.Velocity;
+    //
+    //     // Calculate the normal vector
+    //     var normal = Vector2.Normalize(obj1.Transform.Position - obj1.Transform.Position);
+    //
+    //     // Calculate the velocity along the normal
+    //     float velocityAlongNormal = Vector2.Dot(relativeVelocity, normal);
+    //
+    //     // If the objects are moving apart, do nothing
+    //     if (velocityAlongNormal > 0)
+    //     {
+    //         return;
+    //     }
+    //
+    //     // Calculate the impulse scalar
+    //     float impulseScalar = (-(1 + r) * velocityAlongNormal) / (1 / obj1.Mass + 1 / obj1.Mass);
+    //
+    //     // Calculate the impulse
+    //     var impulse = impulseScalar * normal;
+    //
+    //     // Update velocities
+    //     obj1.Velocity = obj1.Velocity + impulse / obj1.Mass;
+    //     
+    // }
+    // public static (Vector2 newVelocity1, Vector2 newVelocity2) CalculateElasticCollision2(this PhysicsObject obj1, PhysicsObject obj2, float r)
+    // {
+    //     var result = CalculateElasticCollision(obj1.Transform.Position, obj1.Velocity, obj1.Mass, obj2.Transform.Position, obj2.Velocity, obj2.Mass, r);
+    //     return (result.newVelocity1, result.newVelocity2);
+    // }
+    //
+
+    
+    /// <summary>
+    /// Calculate new velocities for an elastic collision between two circles.
+    /// </summary>
+    /// <param name="position1"></param>
+    /// <param name="velocity1"></param>
+    /// <param name="mass1"></param>
+    /// <param name="position2"></param>
+    /// <param name="velocity2"></param>
+    /// <param name="mass2"></param>
+    /// <param name="r">The elasticity of the collision. 0 means all energy is lost after collision, 1 means full energy is retained after collision.</param>
+    /// <returns></returns>
+    public static (Vector2 newVelocity1, Vector2 newVelocity2) CalculateElasticCollisionCircles(Vector2 position1, Vector2 velocity1, float mass1, Vector2 position2, Vector2 velocity2, float mass2, float r = 1f)
     {
-        // Ensure the elasticity parameter is between 0 and 1
-        r = Math.Clamp(r, 0.0f, 1.0f);
-
-        // Calculate the new velocities using the elastic collision formula
-        Vector2 newVelocity1 = (velocity1 * (mass1 - r * mass2) + velocity2 * (1 + r) * mass2) / (mass1 + mass2);
-        Vector2 newVelocity2 = (velocity2 * (mass2 - r * mass1) + velocity1 * (1 + r) * mass1) / (mass1 + mass2);
-
-        return (newVelocity1, newVelocity2);
+        //source => https://www.vobarian.com/collisions/2dcollisions2.pdf
+        
+        var impactVector = position2 - position1;
+        var collisionNormal = impactVector.Normalize();
+        var collisionTanget = new Vector2(-collisionNormal.Y, collisionNormal.X);
+        
+        var normalVelocity1 = Vector2.Dot(collisionNormal, velocity1);
+        var tangentialVelocity1 = Vector2.Dot(collisionTanget, velocity1);
+        
+        var normalVelocity2 = Vector2.Dot(collisionNormal, velocity2);
+        var tangentialVelocity2 = Vector2.Dot(collisionTanget, velocity2 );
+        
+        var massSum = mass1 + mass2;
+        var newNormalVelocity1 = normalVelocity1 * (mass1 - mass2) + 2 * mass2 * normalVelocity2;
+        newNormalVelocity1 /= massSum;
+        
+        var newNormalVelocity2 = normalVelocity2 * (mass2 - mass1) + 2 * mass1 * normalVelocity1;
+        newNormalVelocity2 /= massSum;
+        
+        var n1 = collisionNormal * newNormalVelocity1;
+        var t1 = collisionTanget* tangentialVelocity1;
+        
+        var n2 = collisionNormal * newNormalVelocity2;
+        var t2 = collisionTanget * tangentialVelocity2;
+        
+        return ((n1 + t1) * r, (n2 + t2) * r);
+        
     }
-    public static (Vector2 newVelocity1, Vector2 newVelocity2) CalculateElasticCollision(Vector2 position1, Vector2 velocity1, float mass1, Vector2 position2, Vector2 velocity2, float mass2, float r)
+    
+    /// <summary>
+    /// Calculate new velocities for an elastic collision determined by the given collision normal.
+    /// </summary>
+    /// <param name="collisionNormal"></param>
+    /// <param name="velocity1"></param>
+    /// <param name="mass1"></param>
+    /// <param name="velocity2"></param>
+    /// <param name="mass2"></param>
+    /// <param name="r">The elasticity of the collision. 0 means all energy is lost after collision, 1 means full energy is retained after collision.</param>
+    /// <returns></returns>
+    public static (Vector2 newVelocity1, Vector2 newVelocity2) CalculateElasticCollision(Vector2 collisionNormal, Vector2 velocity1, float mass1, Vector2 velocity2, float mass2, float r = 1f)
     {
-        // Ensure the elasticity parameter is between 0 and 1
-        r = Math.Clamp(r, 0.0f, 1.0f);
-
-        // Calculate the relative velocity
-        Vector2 relativeVelocity = velocity1 - velocity2;
-
-        // Calculate the normal vector
-        Vector2 normal = Vector2.Normalize(position1 - position2);
-
-        // Calculate the velocity along the normal
-        float velocityAlongNormal = Vector2.Dot(relativeVelocity, normal);
-
-        // If the objects are moving apart, do nothing
-        if (velocityAlongNormal > 0)
-        {
-            return (velocity1, velocity2);
-        }
-
-        // Calculate the impulse scalar
-        float impulseScalar = (-(1 + r) * velocityAlongNormal) / (1 / mass1 + 1 / mass2);
-
-        // Calculate the impulse
-        Vector2 impulse = impulseScalar * normal;
-
-        // Update velocities
-        Vector2 newVelocity1 = velocity1 + impulse / mass1;
-        Vector2 newVelocity2 = velocity2 - impulse / mass2;
-
-        return (newVelocity1, newVelocity2);
+        //source => https://www.vobarian.com/collisions/2dcollisions2.pdf
+        
+        var collisionTanget = new Vector2(-collisionNormal.Y, collisionNormal.X);
+        
+        var normalVelocity1 = Vector2.Dot(collisionNormal, velocity1);
+        var tangentialVelocity1 = Vector2.Dot(collisionTanget, velocity1);
+        
+        var normalVelocity2 = Vector2.Dot(collisionNormal, velocity2);
+        var tangentialVelocity2 = Vector2.Dot(collisionTanget, velocity2);
+        
+        var massSum = mass1 + mass2;
+        var newNormalVelocity1 = normalVelocity1 * (mass1 - mass2) + 2 * mass2 * normalVelocity2;
+        newNormalVelocity1 /= massSum;
+        
+        var newNormalVelocity2 = normalVelocity2 * (mass2 - mass1) + 2 * mass1 * normalVelocity1;
+        newNormalVelocity2 /= massSum;
+        
+        var n1 = collisionNormal * newNormalVelocity1;
+        var t1 = collisionTanget* tangentialVelocity1;
+        
+        var n2 = collisionNormal * newNormalVelocity2;
+        var t2 = collisionTanget * tangentialVelocity2;
+        
+        return ((n1 + t1) * r, (n2 + t2) * r);
+        
     }
-    public static void ApplyElasticCollision(this PhysicsObject obj1, PhysicsObject obj2, float r)
+    /// <summary>
+    /// Calculates new velocity for object1 based on the given collision normal.
+    /// </summary>
+    /// <param name="collisionNormal"></param>
+    /// <param name="velocity1"></param>
+    /// <param name="mass1"></param>
+    /// <param name="velocity2"></param>
+    /// <param name="mass2"></param>
+    /// <param name="r">The elasticity of the collision. 0 means all energy is lost after collision, 1 means full energy is retained after collision.</param>
+    /// <returns>Returns new velocity 1.</returns>
+    public static Vector2 CalculateElasticCollisionSelf(Vector2 collisionNormal, Vector2 velocity1, float mass1, Vector2 velocity2, float mass2, float r = 1f)
     {
-        var result = CalculateElasticCollision(obj1.Transform.Position, obj1.Velocity, obj1.Mass, obj2.Transform.Position, obj2.Velocity, obj2.Mass, r);
+        //source => https://www.vobarian.com/collisions/2dcollisions2.pdf
+        
+        var collisionTanget = new Vector2(-collisionNormal.Y, collisionNormal.X);
+        
+        var normalVelocity1 = Vector2.Dot(collisionNormal, velocity1);
+        var tangentialVelocity1 = Vector2.Dot(collisionTanget, velocity1);
+        
+        var normalVelocity2 = Vector2.Dot(collisionNormal, velocity2);
+        
+        var massSum = mass1 + mass2;
+        var newNormalVelocity1 = normalVelocity1 * (mass1 - mass2) + 2 * mass2 * normalVelocity2;
+        newNormalVelocity1 /= massSum;
+        
+        var n1 = collisionNormal * newNormalVelocity1;
+        var t1 = collisionTanget* tangentialVelocity1;
+
+        return (n1 + t1) * r;
+
+    }
+    /// <summary>
+    /// Calculates new velocities for both physics objects based on the given collision normal and sets the new velocities of both objects.
+    /// </summary>
+    /// <param name="obj1"></param>
+    /// <param name="obj2"></param>
+    /// <param name="collisionNormal"></param>
+    /// <param name="r">The elasticity of the collision. 0 means all energy is lost after collision, 1 means full energy is retained after collision.</param>
+    public static void ApplyElasticCollision(PhysicsObject obj1, PhysicsObject obj2, Vector2 collisionNormal, float r = 1f)
+    {
+        var result = CalculateElasticCollision(collisionNormal, obj1.Velocity, obj1.Mass, obj2.Velocity, obj2.Mass, r);
         obj1.Velocity = result.newVelocity1;
         obj2.Velocity = result.newVelocity2;
     }
-    public static (Vector2 newVelocity1, Vector2 newVelocity2) CalculateElasticCollision2(this PhysicsObject obj1, PhysicsObject obj2, float r)
+    /// <summary>
+    /// Calculates the new velocity for obj1 based on the given collision normal and sets the new velocity of obj1.
+    /// </summary>
+    /// <param name="obj1"></param>
+    /// <param name="obj2"></param>
+    /// <param name="collisionNormal"></param>
+    /// <param name="r">The elasticity of the collision. 0 means all energy is lost after collision, 1 means full energy is retained after collision.</param>
+    public static void ApplyElasticCollisionSelf(PhysicsObject obj1, PhysicsObject obj2, Vector2 collisionNormal, float r = 1f)
     {
-        var result = CalculateElasticCollision(obj1.Transform.Position, obj1.Velocity, obj1.Mass, obj2.Transform.Position, obj2.Velocity, obj2.Mass, r);
-        return (result.newVelocity1, result.newVelocity2);
+        var result = CalculateElasticCollisionSelf(collisionNormal, obj1.Velocity, obj1.Mass, obj2.Velocity, obj2.Mass, r);
+        obj1.Velocity = result;
     }
     #endregion
 

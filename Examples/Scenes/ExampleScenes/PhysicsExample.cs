@@ -26,11 +26,18 @@ public class PhysicsExample : ExampleScene
    
     private readonly float cellSize;
     
-    private List<TextureSurface> starSurfaces = new();
+    private readonly List<TextureSurface> starSurfaces = new();
     
-    private TextFont gameFont = new(GAMELOOP.GetFont(FontIDs.JetBrainsLarge), 15f, Colors.Warm);
+    private readonly TextFont gameFont = new(GAMELOOP.GetFont(FontIDs.JetBrainsLarge), 15f, Colors.Warm);
 
-    private PhysicsExampleSource.Ship ship;
+    private readonly PhysicsExampleSource.Ship ship;
+    
+    private readonly List<PhysicsExampleSource.Asteroid> asteroids = new();
+    
+    //TODO: Add asteroids that collide with the ship and with each other.
+    // they start with a random velocity and a random mass (based on the size)
+    // they repulse? each other
+    // they attract the ship
     
 
     public PhysicsExample()
@@ -75,11 +82,17 @@ public class PhysicsExample : ExampleScene
         ship = new(50, Colors.PcWarm);
 
         
-        // sector = new Sector(insideSectorRect);
-        // if (CollisionHandler != null)
-        // {
-        //     CollisionHandler.Add(sector);
-        // }
+        
+        if (CollisionHandler != null)
+        {
+            for (int i = 0; i < 100; i++)
+            {
+                var randPos = Rng.Instance.RandVec2(500, SectorRadiusInside - 250);
+                var asteroid = new PhysicsExampleSource.Asteroid(randPos, Rng.Instance.RandF(50, 200), Colors.PcCold);
+                asteroids.Add(asteroid);
+                CollisionHandler.Add(asteroid);
+            }
+        }
         
     }
     
@@ -121,17 +134,29 @@ public class PhysicsExample : ExampleScene
         ship.Update(time, game, gameUi, ui);
         var force = ShapePhysics.CalculateReverseAttractionForce(
             Vector2.Zero,
-            5000 * 1000,
+            5000 * ship.Mass,
             new ValueRange(SectorRadiusInside, SectorRadiusOutside),
             ship.Transform.Position
             );
         ship.AddForce(force);
         
         follower.Speed = ship.CurSpeed * 1.25f;
-        var speedF = ship.CurSpeed / ship.MaxSpeed;
-        var zoom = ShapeMath.LerpFloat(0.8f, 0.5f, speedF);
-        camera.SetZoom(zoom);
+        // var speedF = ship.CurSpeed / ship.MaxSpeed;
+        // var zoom = ShapeMath.LerpFloat(0.8f, 0.5f, speedF);
+        // camera.SetZoom(zoom);
 
+
+        foreach (var asteroid in asteroids)
+        {
+            asteroid.Update(time, game, gameUi, ui);
+            force = ShapePhysics.CalculateReverseAttractionForce(
+                Vector2.Zero,
+                5000 * asteroid.Mass,
+                new ValueRange(SectorRadiusInside, SectorRadiusOutside),
+                asteroid.Transform.Position
+            );
+            asteroid.AddForce(force);
+        }
     }
 
 
@@ -161,6 +186,11 @@ public class PhysicsExample : ExampleScene
         }
         
         DrawCircleSector();
+        
+        foreach (var asteroid in asteroids)
+        {
+            asteroid.DrawGame(game);
+        }
         
         ship.DrawGame(game);
         
