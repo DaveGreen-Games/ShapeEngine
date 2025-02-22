@@ -18,7 +18,10 @@ namespace Examples.Scenes.ExampleScenes.PhysicsExampleSource;
 // - ship should be controlled by phsics -> use velocity and add force etc.
 public class Ship : CollisionObject, ICameraFollowTarget
 {
-    private TriangleCollider hull;
+    // private TriangleCollider hull;
+    private Triangle hullRelative;
+    private Triangle hullAbsolute;
+    private CircleCollider hullCollider;
     private Size hullSize;
     private readonly PaletteColor paletteColor;
     
@@ -45,15 +48,19 @@ public class Ship : CollisionObject, ICameraFollowTarget
         var a = new Vector2(0.5f, 0f);
         var b = new Vector2(-0.5f, -0.5f);
         var c = new Vector2(-0.5f, 0.5f);
-        hull = new TriangleCollider(offset, a, b, c);
-        hull.ComputeCollision = true;
-        hull.ComputeIntersections = true;
-        hull.CollisionLayer = (uint)CollisionLayers.Ship;
-        hull.CollisionMask = new BitFlag((uint)CollisionLayers.Asteroid, (uint)CollisionLayers.FrictionZone);
-        AddCollider(hull);
+        hullRelative = new Triangle(a, b, c);
+        // hull = new TriangleCollider(offset, a, b, c);
+        hullCollider = new CircleCollider(offset);
+        hullCollider.ComputeCollision = true;
+        hullCollider.ComputeIntersections = true;
+        hullCollider.CollisionLayer = (uint)CollisionLayers.Ship;
+        hullCollider.CollisionMask = new BitFlag((uint)CollisionLayers.Asteroid, (uint)CollisionLayers.FrictionZone);
+        AddCollider(hullCollider);
 
         DragCoefficient = dragRange.Min;
         Mass = 1000;
+        
+        hullAbsolute = hullRelative.ApplyTransform(Transform);
     }
 
     public void Spawn(Vector2 position, float rotationDeg)
@@ -153,19 +160,29 @@ public class Ship : CollisionObject, ICameraFollowTarget
                 Velocity = curVelocityDirection * MaxSpeed;
             }
         }
+        
+        hullAbsolute = hullRelative.ApplyTransform(Transform);
     }
 
     public override void DrawGame(ScreenInfo game)
     {
-        var t = hull.GetTriangleShape();
+        // var t = hull.GetTriangleShape();
         var thickness = hullSize.Length * 0.025f;
         var c = paletteColor.ColorRgba;
-        t.DrawLines(thickness, c, LineCapType.Capped, 6);
+        
+        
+        var shield = hullCollider.GetCircleShape();
+        // shield.DrawStriped(shield.Diameter / 10, 45f, new LineDrawingInfo(2f, Colors.Special.SetAlpha(200), LineCapType.None, 0), 0f);
+        shield.DrawLines(thickness, Colors.Special, 4f);
+        
+        
+        hullAbsolute.DrawStriped(10f, Transform.RotationDeg + 90, new LineDrawingInfo(2f,c, LineCapType.None, 0), 0f);
+        hullAbsolute.DrawLines(thickness, c, LineCapType.Capped, 6);
 
         var radius = hullSize.Radius * 2;
         var center = Transform.Position;
-        var circle = new Circle(center, radius );
-        circle.DrawLines(thickness, c, 4f);
+        // var circle = new Circle(center, radius );
+        // circle.DrawLines(thickness, c, 4f);
 
         var speedF = CurSpeed / MaxSpeed;
         var p = center + curVelocityDirection * radius * speedF;
