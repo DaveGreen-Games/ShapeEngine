@@ -6,6 +6,7 @@ namespace ShapeEngine.Core;
 
 public abstract class PhysicsObject : GameObject
 {
+    public float CurVelocityMagnitudeSquared {get; private set; } = 0f;
     public float CurVelocityMagnitude { get; private set; } = 0f;
     public Vector2 Velocity { get; set; }
     public float Mass { get; set; }
@@ -22,7 +23,7 @@ public abstract class PhysicsObject : GameObject
     public Vector2 AccumulatedImpulses { get; private set; } = new(0f); 
 
     public float Momentum => Mass * CurVelocityMagnitude;
-    public float KineticEnergy => Mass * CurVelocityMagnitude * CurVelocityMagnitude * 0.5f;
+    public float KineticEnergy => Mass * CurVelocityMagnitudeSquared * 0.5f;
     
     public bool IsInMotion => Velocity.LengthSquared() > 0.00000001f;
     public void ClearAccumulatedForce() => AccumulatedForce = new(0f);
@@ -73,7 +74,8 @@ public abstract class PhysicsObject : GameObject
         ClearAccumulatedImpulses();
         ClearAccumulatedForce();
         
-        CurVelocityMagnitude = Velocity.Length();
+        CurVelocityMagnitudeSquared = Velocity.LengthSquared();
+        CurVelocityMagnitude = MathF.Sqrt(CurVelocityMagnitudeSquared);
     }
 
 

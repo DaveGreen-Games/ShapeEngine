@@ -14,10 +14,13 @@ public class Asteroid : CollisionObject
     private readonly PaletteColor paletteColor;
     private readonly CircleCollider collider;
     
-    public Asteroid(Vector2 position, float size, PaletteColor color)
+    public Asteroid(Vector2 position, PaletteColor color)
     {
-        radius = size;
-        Transform = new Transform2D(position, 0f, new Size(size), 1f);
+        var minSize = 50f;
+        var maxSize = 200f;
+        var randSize = Rng.Instance.RandF(minSize, maxSize);
+        radius = randSize;
+        Transform = new Transform2D(position, 0f, new Size(radius), 1f);
         paletteColor = color;
         
         collider = new CircleCollider(new());
@@ -28,22 +31,37 @@ public class Asteroid : CollisionObject
         AddCollider(collider);
 
         var randDir = Rng.Instance.RandVec2();
-        var randSpeed = Rng.Instance.RandF(100f, 300f);
+        var randSpeed = (maxSize + 10) - radius; // Rng.Instance.RandF(100f, 300f);
         Velocity = randDir * randSpeed;
-        Mass = Rng.Instance.RandF(45, 50) * size;
+        Mass = 50 * radius;
         DragCoefficient = 0f;
+
+        FilterCollisionPoints = true;
+        CollisionPointsFilterType = CollisionPointsFilterType.Closest;
 
     }
 
     protected override void Collision(CollisionInformation info)
     {
+        if (!info.FirstContact)
+        {
+            return;
+        }
+        
+        var cp = info.FilteredCollisionPoint;
+        if (!cp.Valid)
+        {
+            return;
+        }
+        
         if (info.Other is Ship ship)
         {
-            // this.ApplyElasticCollision(ship, 1f);
+            this.ApplyElasticCollisionSelf(ship, cp.Normal, 1f);
         }
         else if (info.Other is Asteroid asteroid)
         {
-            // this.ApplyElasticCollisionSelf(asteroid, 1f);
+            //use velocity stored in collision info!!
+            this.ApplyElasticCollisionCircleSelf(asteroid, 1f);
         }
     }
 
