@@ -33,13 +33,7 @@ public class PhysicsExample : ExampleScene
     private readonly PhysicsExampleSource.Ship ship;
     
     private readonly List<PhysicsExampleSource.Asteroid> asteroids = new();
-
-    // private float DebugTotalKineticEnergy = 0f;
     
-    //TODO: Add asteroids that collide with the ship and with each other.
-    // they start with a random velocity and a random mass (based on the size)
-    // they repulse? each other
-    // they attract the ship
     
 
     public PhysicsExample()
@@ -81,12 +75,13 @@ public class PhysicsExample : ExampleScene
             starSurfaces.Add(t);
         }
 
-        ship = new(50, Colors.PcWarm);
-
-        
         
         if (CollisionHandler != null)
         {
+            ship = new(65, Colors.PcWarm);
+            CollisionHandler.Add(ship);
+            
+            
             for (int i = 0; i < 100; i++)
             {
                 var randPos = Rng.Instance.RandVec2(500, SectorRadiusInside - 250);
@@ -109,7 +104,7 @@ public class PhysicsExample : ExampleScene
         ship.Spawn(sectorRect.Center, Rng.Instance.RandAngleDeg());
         follower.SetTarget(ship);
         follower.Speed = 1000;
-        follower.BoundaryDis = new ValueRange(150, 300);
+        follower.BoundaryDis = new ValueRange(100, 200);
     }
     protected override void OnDeactivate()
     {
@@ -142,27 +137,11 @@ public class PhysicsExample : ExampleScene
             );
         ship.AddForce(force);
         
-        follower.Speed = ship.CurSpeed * 1.25f;
-        // var speedF = ship.CurSpeed / ship.MaxSpeed;
-        // var zoom = ShapeMath.LerpFloat(0.8f, 0.5f, speedF);
-        // camera.SetZoom(zoom);
+        follower.Speed = ship.CurSpeed * 1.5f;
+        var speedF = ship.CurSpeed / ship.MaxSpeed;
+        var zoom = ShapeMath.LerpFloat(0.8f, 0.45f, speedF);
+        camera.SetZoom(zoom);
 
-        
-        
-        // var prevTotalKineticEnergy = DebugTotalKineticEnergy;
-        // DebugTotalKineticEnergy = 0f;
-        // foreach (var asteroid in asteroids)
-        // {
-        //     DebugTotalKineticEnergy += (asteroid.KineticEnergy / asteroid.Mass) / 10000;
-        // }
-        //
-        // if (Math.Abs(prevTotalKineticEnergy - DebugTotalKineticEnergy) > 10)
-        // {
-        //     Console.WriteLine($"--- Total Kinetic Energy changed from {prevTotalKineticEnergy} to {DebugTotalKineticEnergy}");
-        // }
-        //
-        //
-        //
         
         foreach (var asteroid in asteroids)
         {

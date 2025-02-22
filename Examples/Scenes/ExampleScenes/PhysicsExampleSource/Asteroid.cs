@@ -1,5 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Color;
+using ShapeEngine.Core;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Random;
@@ -57,7 +58,9 @@ public class Asteroid : CollisionObject
         
         if (info.Other is Ship ship)
         {
-            this.ApplyElasticCollisionSelf(ship, cp.Normal, 1f);
+            var result = ShapePhysics.CalculateElasticCollision(cp.Normal,  info.SelfVel, Mass, info.OtherVel, ship.Mass, 1f);
+            Velocity = result.newVelocity1;
+            ship.Velocity = result.newVelocity2;
         }
         else if (info.Other is Asteroid asteroid)
         {
