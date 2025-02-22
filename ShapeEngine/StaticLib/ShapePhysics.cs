@@ -405,7 +405,7 @@ public static class ShapePhysics
     /// Use AddForce() if force should be applied to PhysicsObjects!
     /// </summary>
     /// <returns>Returns the resulting forces. </returns>
-    public static (Vector2 force1, Vector2 force2) CalculateAttraction(Vector2 position1, Vector2 velocity1, float mass1, Vector2 position2, Vector2 velocity2, float mass2)
+    public static (Vector2 force1, Vector2 force2) CalculateAttraction(Vector2 position1, float mass1, Vector2 position2, float mass2)
     {
         // Calculate the direction and distance between the two objects
         var direction = position2 - position1;
@@ -414,7 +414,7 @@ public static class ShapePhysics
         // Avoid division by zero
         if (distance == 0)
         {
-            return (velocity1, velocity2);
+            return (Vector2.Zero, Vector2.Zero);
         }
 
         // Normalize the direction vector
@@ -429,10 +429,10 @@ public static class ShapePhysics
 
         return (acceleration1, acceleration2);
     }
-    public static void ApplyAttraction(PhysicsObject obj1, PhysicsObject obj2)
+    public static void ApplyAttraction(this PhysicsObject obj1, PhysicsObject obj2)
     {
-        var result = CalculateAttraction(obj1.Transform.Position, obj1.Velocity, obj1.Mass, obj2.Transform.Position, obj2.Velocity, obj2.Mass);
-        obj1.AddForce(result.force1);
+        var result = CalculateAttraction(obj1.Transform.Position, obj1.Mass, obj2.Transform.Position, obj2.Mass);
+        obj1.AddForce(result.force1); 
         obj2.AddForce(result.force2);
     }
     
@@ -441,7 +441,7 @@ public static class ShapePhysics
     /// Use AddForce() if force should be applied to PhysicsObjects!
     /// </summary>
     /// <returns>Returns the resulting forces. </returns>
-    public static Vector2 CalculateAttraction(Vector2 position, Vector2 velocity, Vector2 attractionPoint, float attractionForce)
+    public static Vector2 CalculateAttraction(Vector2 position, Vector2 attractionPoint, float attractionForce)
     {
         // Calculate the direction and distance between the object and the attraction point
         var direction = attractionPoint - position;
@@ -450,7 +450,7 @@ public static class ShapePhysics
         // Avoid division by zero
         if (distance == 0)
         {
-            return velocity;
+            return Vector2.Zero;
         }
 
         // Normalize the direction vector
@@ -463,7 +463,7 @@ public static class ShapePhysics
     }
     public static void ApplyAttraction(this PhysicsObject obj, Vector2 attractionPoint, float attractionForce)
     {
-        var force = CalculateAttraction(obj.Transform.Position, obj.Velocity, attractionPoint, attractionForce);
+        var force = CalculateAttraction(obj.Transform.Position, attractionPoint, attractionForce);
         obj.AddForce(force);
     }
     
@@ -472,13 +472,12 @@ public static class ShapePhysics
     /// Use AddForce() if force should be applied to PhysicsObjects!
     /// </summary>
     /// <param name="position"></param>
-    /// <param name="velocity"></param>
     /// <param name="attractionPoint"></param>
     /// <param name="attractionForce"></param>
     /// <param name="attractionNormal">Determines the direction from which the attraction force works.
     /// Pointing in the same direction of attractionNormal will result in max attraction force.</param>
     /// <returns></returns>
-    public static Vector2 CalculateAttraction(Vector2 position, Vector2 velocity, Vector2 attractionPoint, float attractionForce, Vector2 attractionNormal)
+    public static Vector2 CalculateAttraction(Vector2 position, Vector2 attractionPoint, float attractionForce, Vector2 attractionNormal)
     {
         // Calculate the direction and distance between the object and the attraction point
         var direction = attractionPoint - position;
@@ -487,7 +486,7 @@ public static class ShapePhysics
         // Avoid division by zero
         if (distance == 0)
         {
-            return velocity;
+            return Vector2.Zero;
         }
 
         // Normalize the direction vector
@@ -501,7 +500,7 @@ public static class ShapePhysics
     }
     public static void ApplyAttraction(this PhysicsObject obj, Vector2 attractionPoint, float attractionForce, Vector2 attractionNormal)
     {
-        var force = CalculateAttraction(obj.Transform.Position, obj.Velocity, attractionPoint, attractionForce, attractionNormal);
+        var force = CalculateAttraction(obj.Transform.Position, attractionPoint, attractionForce, attractionNormal);
         obj.AddForce(force);
     }
 
