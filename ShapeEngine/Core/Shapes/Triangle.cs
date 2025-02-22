@@ -557,6 +557,13 @@ public readonly struct Triangle : IEquatable<Triangle>
         return newTriangle.SetSize(transform.ScaledSize.Length, origin);
     }
 
+    public Triangle ApplyTransform(Transform2D transform)
+    {
+        var aAbsolute = transform.Position + (A * transform.ScaledSize.Length).Rotate(transform.RotationRad);
+        var bAbsolute = transform.Position + (B * transform.ScaledSize.Length).Rotate(transform.RotationRad);
+        var cAbsolute = transform.Position + (C * transform.ScaledSize.Length).Rotate(transform.RotationRad);
+        return new Triangle(aAbsolute, bAbsolute, cAbsolute);
+    }
     #endregion
     
     #region Operators
