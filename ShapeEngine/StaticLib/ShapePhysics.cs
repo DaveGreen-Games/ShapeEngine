@@ -147,7 +147,41 @@ public static class ShapePhysics
         return ((n1 + t1) * r, (n2 + t2) * r);
         
     }
-    
+    /// <summary>
+    /// Calculate new velocity for the first circle based on an elastic collision between two circles.
+    /// </summary>
+    /// <param name="position1"></param>
+    /// <param name="velocity1"></param>
+    /// <param name="mass1"></param>
+    /// <param name="position2"></param>
+    /// <param name="velocity2"></param>
+    /// <param name="mass2"></param>
+    /// <param name="r">The elasticity of the collision. 0 means all energy is lost after collision, 1 means full energy is retained after collision.</param>
+    /// <returns></returns>
+    public static Vector2 CalculateElasticCollisionCirclesSelf(Vector2 position1, Vector2 velocity1, float mass1, Vector2 position2, Vector2 velocity2, float mass2, float r = 1f)
+    {
+        //source => https://www.vobarian.com/collisions/2dcollisions2.pdf
+        
+        var impactVector = position2 - position1;
+        var collisionNormal = impactVector.Normalize();
+        var collisionTanget = new Vector2(-collisionNormal.Y, collisionNormal.X);
+        
+        var normalVelocity1 = Vector2.Dot(collisionNormal, velocity1);
+        var tangentialVelocity1 = Vector2.Dot(collisionTanget, velocity1);
+        
+        var normalVelocity2 = Vector2.Dot(collisionNormal, velocity2);
+        
+        var massSum = mass1 + mass2;
+        var newNormalVelocity1 = normalVelocity1 * (mass1 - mass2) + 2 * mass2 * normalVelocity2;
+        newNormalVelocity1 /= massSum;
+        
+        var n1 = collisionNormal * newNormalVelocity1;
+        var t1 = collisionTanget* tangentialVelocity1;
+        
+        return (n1 + t1) * r;
+        
+    }
+
     /// <summary>
     /// Calculate new velocities for an elastic collision determined by the given collision normal.
     /// </summary>
@@ -224,7 +258,7 @@ public static class ShapePhysics
     /// <param name="obj2"></param>
     /// <param name="collisionNormal"></param>
     /// <param name="r">The elasticity of the collision. 0 means all energy is lost after collision, 1 means full energy is retained after collision.</param>
-    public static void ApplyElasticCollision(PhysicsObject obj1, PhysicsObject obj2, Vector2 collisionNormal, float r = 1f)
+    public static void ApplyElasticCollision(this PhysicsObject obj1, PhysicsObject obj2, Vector2 collisionNormal, float r = 1f)
     {
         var result = CalculateElasticCollision(collisionNormal, obj1.Velocity, obj1.Mass, obj2.Velocity, obj2.Mass, r);
         obj1.Velocity = result.newVelocity1;
@@ -237,11 +271,18 @@ public static class ShapePhysics
     /// <param name="obj2"></param>
     /// <param name="collisionNormal"></param>
     /// <param name="r">The elasticity of the collision. 0 means all energy is lost after collision, 1 means full energy is retained after collision.</param>
-    public static void ApplyElasticCollisionSelf(PhysicsObject obj1, PhysicsObject obj2, Vector2 collisionNormal, float r = 1f)
+    public static void ApplyElasticCollisionSelf(this PhysicsObject obj1, PhysicsObject obj2, Vector2 collisionNormal, float r = 1f)
     {
         var result = CalculateElasticCollisionSelf(collisionNormal, obj1.Velocity, obj1.Mass, obj2.Velocity, obj2.Mass, r);
         obj1.Velocity = result;
     }
+    
+    public static void ApplyElasticCollisionCircleSelf(this PhysicsObject obj1, PhysicsObject obj2, float r = 1f)
+    {
+        var result = CalculateElasticCollisionCirclesSelf(obj1.Transform.Position, obj1.Velocity, obj1.Mass, obj2.Transform.Position, obj2.Velocity, obj2.Mass, r);
+        obj1.Velocity = result;
+    }
+
     #endregion
 
     #region Drag

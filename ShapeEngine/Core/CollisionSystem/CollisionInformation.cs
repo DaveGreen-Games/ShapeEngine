@@ -16,6 +16,8 @@ public class CollisionInformation : List<Collision>
     
     public readonly CollisionObject Self;
     public readonly CollisionObject Other;
+    public readonly Vector2 SelfVel;
+    public readonly Vector2 OtherVel;
     public readonly bool FirstContact;
     public int TotalCollisionPointCount { get; private set; } = 0;
     /// <summary>
@@ -29,7 +31,9 @@ public class CollisionInformation : List<Collision>
     public CollisionInformation(CollisionObject self, CollisionObject other, bool firstContact)
     {
         Self = self;
+        SelfVel = self.Velocity;
         Other = other;
+        OtherVel = other.Velocity;
         FirstContact = firstContact;
         FilteredCollisionPoint = new CollisionPoint();
         
@@ -37,7 +41,9 @@ public class CollisionInformation : List<Collision>
     public CollisionInformation(CollisionObject self, CollisionObject other, bool firstContact, List<Collision> collisions)
     {
         Self = self;
+        SelfVel = self.Velocity;
         Other = other;
+        OtherVel = other.Velocity;
         FirstContact = firstContact;
         AddRange(collisions);
         FilteredCollisionPoint = new CollisionPoint();

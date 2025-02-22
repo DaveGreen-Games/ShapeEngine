@@ -33,6 +33,8 @@ public class PhysicsExample : ExampleScene
     private readonly PhysicsExampleSource.Ship ship;
     
     private readonly List<PhysicsExampleSource.Asteroid> asteroids = new();
+
+    // private float DebugTotalKineticEnergy = 0f;
     
     //TODO: Add asteroids that collide with the ship and with each other.
     // they start with a random velocity and a random mass (based on the size)
@@ -88,7 +90,7 @@ public class PhysicsExample : ExampleScene
             for (int i = 0; i < 100; i++)
             {
                 var randPos = Rng.Instance.RandVec2(500, SectorRadiusInside - 250);
-                var asteroid = new PhysicsExampleSource.Asteroid(randPos, Rng.Instance.RandF(50, 200), Colors.PcCold);
+                var asteroid = new PhysicsExampleSource.Asteroid(randPos, Colors.PcCold);
                 asteroids.Add(asteroid);
                 CollisionHandler.Add(asteroid);
             }
@@ -145,7 +147,23 @@ public class PhysicsExample : ExampleScene
         // var zoom = ShapeMath.LerpFloat(0.8f, 0.5f, speedF);
         // camera.SetZoom(zoom);
 
-
+        
+        
+        // var prevTotalKineticEnergy = DebugTotalKineticEnergy;
+        // DebugTotalKineticEnergy = 0f;
+        // foreach (var asteroid in asteroids)
+        // {
+        //     DebugTotalKineticEnergy += (asteroid.KineticEnergy / asteroid.Mass) / 10000;
+        // }
+        //
+        // if (Math.Abs(prevTotalKineticEnergy - DebugTotalKineticEnergy) > 10)
+        // {
+        //     Console.WriteLine($"--- Total Kinetic Energy changed from {prevTotalKineticEnergy} to {DebugTotalKineticEnergy}");
+        // }
+        //
+        //
+        //
+        
         foreach (var asteroid in asteroids)
         {
             asteroid.Update(time, game, gameUi, ui);

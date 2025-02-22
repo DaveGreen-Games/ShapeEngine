@@ -32,12 +32,13 @@ public class Asteroid : CollisionObject
 
         var randDir = Rng.Instance.RandVec2();
         var randSpeed = (maxSize + 10) - radius; // Rng.Instance.RandF(100f, 300f);
+        randSpeed *= 1.25f;
         Velocity = randDir * randSpeed;
         Mass = 50 * radius;
         DragCoefficient = 0f;
 
         FilterCollisionPoints = true;
-        CollisionPointsFilterType = CollisionPointsFilterType.Closest;
+        CollisionPointsFilterType = CollisionPointsFilterType.Combined;
 
     }
 
@@ -61,7 +62,9 @@ public class Asteroid : CollisionObject
         else if (info.Other is Asteroid asteroid)
         {
             //use velocity stored in collision info!!
-            this.ApplyElasticCollisionCircleSelf(asteroid, 1f);
+            // var result = ShapePhysics.CalculateElasticCollisionCirclesSelf(Transform.Position, info.SelfVel, Mass, asteroid.Transform.Position, info.OtherVel, asteroid.Mass, 1f);
+            var result = ShapePhysics.CalculateElasticCollisionSelf(cp.Normal,  info.SelfVel, Mass, info.OtherVel, asteroid.Mass, 1f);
+            Velocity = result;
         }
     }
 
