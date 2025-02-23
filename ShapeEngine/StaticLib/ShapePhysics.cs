@@ -513,7 +513,7 @@ public static class ShapePhysics
     /// Use AddForce() if force should be applied to PhysicsObjects!
     /// </summary>
     /// <returns>Returns the resulting forces. </returns>
-    public static (Vector2 force1, Vector2 force2) ApplyRepulsion(Vector2 position1, Vector2 velocity1, float mass1, Vector2 position2, Vector2 velocity2, float mass2)
+    public static (Vector2 force1, Vector2 force2) ApplyRepulsion(Vector2 position1, float mass1, Vector2 position2, float mass2)
     {
         // Calculate the direction and distance between the two objects
         var direction = position2 - position1;
@@ -522,7 +522,7 @@ public static class ShapePhysics
         // Avoid division by zero
         if (distance == 0)
         {
-            return (velocity1, velocity2);
+            return (Vector2.Zero, Vector2.Zero);
         }
 
         // Normalize the direction vector
@@ -539,7 +539,7 @@ public static class ShapePhysics
     }
     public static void ApplyRepulsion(PhysicsObject obj1, PhysicsObject obj2)
     {
-        var result = ApplyRepulsion(obj1.Transform.Position, obj1.Velocity, obj1.Mass, obj2.Transform.Position, obj2.Velocity, obj2.Mass);
+        var result = ApplyRepulsion(obj1.Transform.Position, obj1.Mass, obj2.Transform.Position, obj2.Mass);
         obj1.AddForce(result.force1);
         obj2.AddForce(result.force2);
     }
@@ -549,7 +549,7 @@ public static class ShapePhysics
     /// Use AddForce() if force should be applied to PhysicsObjects!
     /// </summary>
     /// <returns>Returns the resulting forces.</returns>
-    public static Vector2 ApplyRepulsion(Vector2 position, Vector2 velocity, Vector2 repulsionPoint, float repulsionForce)
+    public static Vector2 ApplyRepulsion(Vector2 position, Vector2 repulsionPoint, float repulsionForce)
     {
         // Calculate the direction and distance between the object and the attraction point
         var direction = position - repulsionPoint;
@@ -558,7 +558,7 @@ public static class ShapePhysics
         // Avoid division by zero
         if (distance == 0)
         {
-            return velocity;
+            return Vector2.Zero;
         }
 
         // Normalize the direction vector
@@ -572,7 +572,7 @@ public static class ShapePhysics
     }
     public static void ApplyRepulsion(this PhysicsObject obj, Vector2 repulsionPoint, float repulsionForce)
     {
-        var force = ApplyRepulsion(obj.Transform.Position, obj.Velocity, repulsionPoint, repulsionForce);
+        var force = ApplyRepulsion(obj.Transform.Position, repulsionPoint, repulsionForce);
         obj.AddForce(force);
     }
 
@@ -587,7 +587,7 @@ public static class ShapePhysics
     /// <param name="repulsionPoint"></param>
     /// <param name="repulsionForce"></param>
     /// <returns>Returns the resulting forces.</returns>
-    public static Vector2 ApplyRepulsion(Vector2 position, Vector2 velocity, Vector2 repulsionPoint, float repulsionForce, Vector2 repulsionNormal)
+    public static Vector2 ApplyRepulsion(Vector2 position, Vector2 repulsionPoint, float repulsionForce, Vector2 repulsionNormal)
     {
         // Calculate the direction and distance between the object and the attraction point
         var direction = position - repulsionPoint;
@@ -596,7 +596,7 @@ public static class ShapePhysics
         // Avoid division by zero
         if (distance == 0)
         {
-            return velocity;
+            return Vector2.Zero;
         }
 
         // Normalize the direction vector
@@ -610,7 +610,7 @@ public static class ShapePhysics
     }
     public static void ApplyRepulsion(this PhysicsObject obj, Vector2 repulsionPoint, float repulsionForce, Vector2 repulsionNormal)
     {
-        var force = ApplyRepulsion(obj.Transform.Position, obj.Velocity, repulsionPoint, repulsionForce, repulsionNormal);
+        var force = ApplyRepulsion(obj.Transform.Position, repulsionPoint, repulsionForce, repulsionNormal);
         obj.AddForce(force);
     }
 
