@@ -33,8 +33,18 @@ public class PhysicsExample : ExampleScene
     private readonly PhysicsExampleSource.Ship ship;
     
     private readonly List<PhysicsExampleSource.Asteroid> asteroids = new();
+    private readonly List<PhysicsExampleSource.Asteroid> attractorAsteroids = new();
+    private readonly List<PhysicsExampleSource.Asteroid> repulsorAsteroids = new();
     
     
+    
+    //TODO: Some of the asteroids are repulsors, some are attractors, some are neutral
+    // asteroids only affect the ship ?
+    // or do they only affect stuff in the vicinity (checked with casting)?
+    // change asteroids to polygons
+    // attractors have circle scaling pulse outwards
+    // repulsors have circle scaling pulse inwards
+    // 
 
     public PhysicsExample()
     {
@@ -88,6 +98,8 @@ public class PhysicsExample : ExampleScene
                 var asteroid = new PhysicsExampleSource.Asteroid(randPos, Colors.PcCold);
                 asteroids.Add(asteroid);
                 CollisionHandler.Add(asteroid);
+                if(asteroid.AsteroidType == AsteroidType.Attractor) attractorAsteroids.Add(asteroid);
+                else if(asteroid.AsteroidType == AsteroidType.Repulsor) repulsorAsteroids.Add(asteroid);
             }
         }
         
@@ -128,6 +140,16 @@ public class PhysicsExample : ExampleScene
     
     protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
+        foreach (var attractor in attractorAsteroids)
+        {
+            ship.ApplyAttraction(attractor.Transform.Position, attractor.AttractionForce);
+        }
+        
+        foreach (var repulsor in repulsorAsteroids)
+        {
+            ship.ApplyRepulsion(repulsor.Transform.Position, repulsor.RepulsorForce);
+        }
+        
         ship.Update(time, game, gameUi, ui);
         var force = ShapePhysics.CalculateReverseAttractionForce(
             Vector2.Zero,
@@ -200,40 +222,14 @@ public class PhysicsExample : ExampleScene
     protected override void OnDrawUIExample(ScreenInfo ui)
     {
         
-        // DrawInputDescription(GAMELOOP.UIRects.GetRect("bottom center"));
-        //
-        // var objectCountText = $"Object Count: {SpawnArea?.Count ?? 0}";
-        //
-        // textFont.FontSpacing = 1f;
-        // textFont.ColorRgba = Colors.Warm;
-        // textFont.DrawTextWrapNone(objectCountText, GAMELOOP.UIRects.GetRect("bottom right"), new AnchorPoint(0.98f, 0.98f));
-    }
-
-    private void DrawInputDescription(Rect rect)
-    {
-        // var curInputDeviceAll = ShapeInput.CurrentInputDeviceType;
-        //
-        // string addText = iaAdd.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
-        // string toggleConvexHullText = iaToggleConvexHull.GetInputTypeDescription(curInputDeviceAll, true, 1, false, false);
-        //
-        // var text = $"Add {addText} | Convex Hull [{showConvexHull}] {toggleConvexHullText}";
-        //
-        // textFont.FontSpacing = 1f;
-        // textFont.ColorRgba = Colors.Light;
-        // textFont.DrawTextWrapNone(text, rect, new(0.5f));
     }
 
     private void DrawCircleSector()
     {
         var universeLineInfo = new LineDrawingInfo(14f, Colors.Warm, LineCapType.Extended, 0);
         var stripedLineInfo = new LineDrawingInfo(14f, Colors.Warm.SetAlpha(200), LineCapType.None, 0);
-        // var stripedAltLineInfo = new LineDrawingInfo(32f, Colors.Warm.SetAlpha(200), LineCapType.None, 0);
         
         ShapeStripedDrawing.DrawStripedRing(Vector2.Zero, SectorRadiusInside, SectorRadiusOutside, 1f, stripedLineInfo, 0f);
-        
-        // var insideCircle = new Circle(Vector2.Zero, SectorRadiusInside);
-        // var outsideCircle = new Circle(Vector2.Zero, SectorRadiusOutside);
-        // outsideCircle.DrawStriped(insideCircle, 48, 45, stripedLineInfo, 0f);
         
         ShapeCircleDrawing.DrawCircleLines(Vector2.Zero, SectorRadiusInside, universeLineInfo , 0f, 24f);
         ShapeCircleDrawing.DrawCircleLines(Vector2.Zero, SectorRadiusOutside, universeLineInfo, 0f, 24f);
@@ -249,66 +245,4 @@ public class PhysicsExample : ExampleScene
             gameFont.Draw("SECTOR END", textRect, rotationRad * ShapeMath.RADTODEG, AnchorPoint.Center);
         }
     }
-    // private void DrawSectorRectangle()
-    // {
-    //     var universeLineInfo = new LineDrawingInfo(24f, Colors.Warm, LineCapType.Extended, 0);
-    //     var stripedLineInfo = new LineDrawingInfo(32f, Colors.Warm.SetAlpha(200), LineCapType.None, 0);
-    //
-    //     var topRect = sectorRect.ApplyMargins(0f, 0f, 0f, 0.98f);
-    //     var bottomRect = sectorRect.ApplyMargins(0f, 0f, 0.98f, 0);
-    //     var leftRect = sectorRect.ApplyMargins(0f, 0.98f, 0.02f, 0.02f);
-    //     var rightRect = sectorRect.ApplyMargins(0.98f, 0f, 0.02f, 0.02f);
-    //     
-    //     int splits = (int)(sectorRect.Size.Max() / 2000);
-    //     if(splits % 2 == 0) splits--; //make sure splits are always odd
-    //     var topRectSplit = topRect.SplitH(splits);
-    //     var bottomRectSplit = bottomRect.SplitH(splits);
-    //     var leftRectSplit = leftRect.SplitV(splits);
-    //     var rightRectSplit = rightRect.SplitV(splits);
-    //     
-    //     var rotationRect = topRectSplit[0];
-    //     
-    //     leftRect.DrawStriped(250f, 25f + 90f, stripedLineInfo);
-    //     leftRect.RightSegment.Draw(universeLineInfo);
-    //     
-    //     rightRect.DrawStriped(250f, 25f + 90f, stripedLineInfo);
-    //     rightRect.LeftSegment.Draw(universeLineInfo);
-    //     
-    //     topRect.DrawStriped(250f, 25f, stripedLineInfo );
-    //     topRect.BottomSegment.Draw(universeLineInfo);
-    //     
-    //     bottomRect.DrawStriped(250f, 25f, stripedLineInfo);
-    //     bottomRect.TopSegment.Draw(universeLineInfo);
-    //     
-    //     for (int i = 1; i < leftRectSplit.Count - 1; i++)
-    //     {
-    //         if(i % 2 == 0) continue;
-    //         var rect = leftRectSplit[i];
-    //         var movedRotationRect = rotationRect.SetPosition(rect.Center, AnchorPoint.Center);
-    //         gameFont.Draw("SECTOR END", movedRotationRect, -90, AnchorPoint.Center);
-    //     }
-    //     
-    //     for (int i = 1; i < rightRectSplit.Count - 1; i++)
-    //     {
-    //         if(i % 2 == 0) continue;
-    //         var rect = rightRectSplit[i];
-    //         var movedRotationRect = rotationRect.SetPosition(rect.Center, AnchorPoint.Center);
-    //         gameFont.Draw("SECTOR END", movedRotationRect, 90, AnchorPoint.Center);
-    //     }
-    //     
-    //     for (int i = 1; i < topRectSplit.Count - 1; i++)
-    //     {
-    //         if(i % 2 == 0) continue;
-    //         var rect = topRectSplit[i];
-    //         gameFont.Draw("SECTOR END", rect, 0f, AnchorPoint.Center);
-    //     }
-    //     for (int i = 1; i < bottomRectSplit.Count - 1; i++)
-    //     {
-    //         if(i % 2 == 0) continue;
-    //         var rect = bottomRectSplit[i];
-    //         gameFont.Draw("SECTOR END", rect, 180f, AnchorPoint.Center);
-    //     }
-    //     
-    //     sectorRect.DrawLines(universeLineInfo);
-    // }
 }
