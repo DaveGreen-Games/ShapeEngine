@@ -105,14 +105,14 @@ public class Asteroid : CollisionObject
         var reversed = false;
         if (AsteroidType == AsteroidType.Attractor)
         {
-            AttractionForce = Mass * 1000000;
+            AttractionForce = Mass * 50000;
             RepulsorForce = 0f;
             forceParticleSpawnTimer = Rng.Instance.RandF(forceParticleSpawnInterval * 0.5f, forceParticleSpawnInterval);
             reversed = false;
         }
         else if (AsteroidType == AsteroidType.Repulsor)
         {
-            RepulsorForce = Mass * 1000000;
+            RepulsorForce = Mass * 50000;
             AttractionForce = 0f;
             forceParticleSpawnTimer = Rng.Instance.RandF(forceParticleSpawnInterval * 0.5f, forceParticleSpawnInterval);
             reversed = true;

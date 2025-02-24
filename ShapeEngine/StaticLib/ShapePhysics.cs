@@ -409,19 +409,20 @@ public static class ShapePhysics
     {
         // Calculate the direction and distance between the two objects
         var direction = position2 - position1;
-        float distance = direction.Length();
-
+        var distanceSquared = direction.LengthSquared();
         // Avoid division by zero
-        if (distance == 0)
+        if (distanceSquared <= 0f)
         {
             return (Vector2.Zero, Vector2.Zero);
         }
 
+        float distance = MathF.Sqrt(distanceSquared);
+        
         // Normalize the direction vector
         var normalizedDirection = direction / distance;
 
         // Calculate the force magnitude
-        float forceMagnitude = G * (mass1 * mass2) / (distance * distance);
+        float forceMagnitude = G * (mass1 * mass2) / distanceSquared;
 
         // Calculate the accelerations
         var acceleration1 = forceMagnitude * normalizedDirection;
@@ -445,19 +446,21 @@ public static class ShapePhysics
     {
         // Calculate the direction and distance between the object and the attraction point
         var direction = attractionPoint - position;
-        float distance = direction.Length();
+        var distanceSquared = direction.LengthSquared();
 
         // Avoid division by zero
-        if (distance == 0)
+        if (distanceSquared <= 0f)
         {
             return Vector2.Zero;
         }
-
+       
+        float distance = MathF.Sqrt(distanceSquared);
+        
         // Normalize the direction vector
         var normalizedDirection = direction / distance;
 
         // Calculate the force magnitude
-        float forceMagnitude = attractionForce / (distance * distance);
+        float forceMagnitude = attractionForce / distanceSquared;
 
         return forceMagnitude * normalizedDirection;
     }
@@ -481,20 +484,21 @@ public static class ShapePhysics
     {
         // Calculate the direction and distance between the object and the attraction point
         var direction = attractionPoint - position;
-        float distance = direction.Length();
+        var distanceSquared = direction.LengthSquared();
 
         // Avoid division by zero
-        if (distance == 0)
+        if (distanceSquared <= 0f)
         {
             return Vector2.Zero;
         }
 
+        float distance = MathF.Sqrt(distanceSquared);
         // Normalize the direction vector
         var normalizedDirection = direction / distance;
         var dotFactor = normalizedDirection.CalculateDotFactor(attractionNormal);
 
         // Calculate the force magnitude
-        float forceMagnitude = attractionForce / (distance * distance);
+        float forceMagnitude = attractionForce / distanceSquared;
 
         return forceMagnitude * normalizedDirection * dotFactor;
     }
@@ -503,6 +507,41 @@ public static class ShapePhysics
         var force = CalculateAttraction(obj.Transform.Position, attractionPoint, attractionForce, attractionNormal);
         obj.AddForce(force);
     }
+
+    //distance scale power parameter
+    /// <summary>
+    /// Calculate the force for 1 object based on attraction point and force.
+    /// Use AddForce() if force should be applied to PhysicsObjects!
+    /// </summary>
+    /// <returns>Returns the resulting forces. </returns>
+    public static Vector2 CalculateAttraction(Vector2 position, Vector2 attractionPoint, float attractionForce, float distanceScalePower)
+    {
+        // Calculate the direction and distance between the object and the attraction point
+        var direction = attractionPoint - position;
+        var distanceSquared = direction.LengthSquared();
+
+        // Avoid division by zero
+        if (distanceSquared <= 0f)
+        {
+            return Vector2.Zero;
+        }
+
+        float distance = MathF.Sqrt(distanceSquared);
+        
+        // Normalize the direction vector
+        var normalizedDirection = direction / distance;
+
+        // Calculate the force magnitude
+        float forceMagnitude = attractionForce / MathF.Pow(distance, distanceScalePower);
+
+        return forceMagnitude * normalizedDirection;
+    }
+    public static void ApplyAttraction(this PhysicsObject obj, Vector2 attractionPoint, float attractionForce, float distanceScalePower)
+    {
+        var force = CalculateAttraction(obj.Transform.Position, attractionPoint, attractionForce, distanceScalePower);
+        obj.AddForce(force);
+    }
+
 
     #endregion
     
@@ -517,19 +556,19 @@ public static class ShapePhysics
     {
         // Calculate the direction and distance between the two objects
         var direction = position2 - position1;
-        float distance = direction.Length();
+        var distanceSquared = direction.LengthSquared();
 
         // Avoid division by zero
-        if (distance == 0)
+        if (distanceSquared <= 0f)
         {
             return (Vector2.Zero, Vector2.Zero);
         }
-
+        float distance = MathF.Sqrt(distanceSquared);
         // Normalize the direction vector
         var normalizedDirection = direction / distance;
 
         // Calculate the force magnitude
-        float forceMagnitude = G * (mass1 * mass2) / (distance * distance);
+        float forceMagnitude = G * (mass1 * mass2) / distanceSquared;
 
         // Calculate the accelerations
         var acceleration1 = forceMagnitude * -normalizedDirection;
@@ -553,19 +592,20 @@ public static class ShapePhysics
     {
         // Calculate the direction and distance between the object and the attraction point
         var direction = position - repulsionPoint;
-        float distance = direction.Length();
+        var distanceSquared = direction.LengthSquared();
 
         // Avoid division by zero
-        if (distance == 0)
+        if (distanceSquared <= 0f)
         {
             return Vector2.Zero;
         }
 
+        float distance = MathF.Sqrt(distanceSquared);
         // Normalize the direction vector
         var normalizedDirection = direction / distance;
 
         // Calculate the force magnitude
-        float forceMagnitude = repulsionForce / (distance * distance);
+        float forceMagnitude = repulsionForce / distanceSquared;
 
         // Calculate the acceleration
         return forceMagnitude * normalizedDirection;
@@ -583,7 +623,6 @@ public static class ShapePhysics
     /// <param name="repulsionNormal">Determines the direction from which the attraction force works.
     /// Pointing in the same direction of attractionNormal will result in max attraction force.</param>
     /// <param name="position"></param>
-    /// <param name="velocity"></param>
     /// <param name="repulsionPoint"></param>
     /// <param name="repulsionForce"></param>
     /// <returns>Returns the resulting forces.</returns>
@@ -591,19 +630,20 @@ public static class ShapePhysics
     {
         // Calculate the direction and distance between the object and the attraction point
         var direction = position - repulsionPoint;
-        float distance = direction.Length();
+        var distanceSquared = direction.LengthSquared();
 
         // Avoid division by zero
-        if (distance == 0)
+        if (distanceSquared <= 0f)
         {
             return Vector2.Zero;
         }
 
+        float distance = MathF.Sqrt(distanceSquared);
         // Normalize the direction vector
         var normalizedDirection = direction / distance;
         var dotFactor = normalizedDirection.CalculateDotFactor(repulsionNormal);
         // Calculate the force magnitude
-        float forceMagnitude = repulsionForce / (distance * distance);
+        float forceMagnitude = repulsionForce / distanceSquared;
 
         // Calculate the acceleration
         return forceMagnitude * normalizedDirection * dotFactor;
@@ -611,6 +651,40 @@ public static class ShapePhysics
     public static void ApplyRepulsion(this PhysicsObject obj, Vector2 repulsionPoint, float repulsionForce, Vector2 repulsionNormal)
     {
         var force = ApplyRepulsion(obj.Transform.Position, repulsionPoint, repulsionForce, repulsionNormal);
+        obj.AddForce(force);
+    }
+
+    
+    /// <summary>
+    /// Calculate the repulsion force for 1 object based on repulsion point and force.
+    /// Use AddForce() if force should be applied to PhysicsObjects!
+    /// </summary>
+    /// <returns>Returns the resulting forces.</returns>
+    public static Vector2 ApplyRepulsion(Vector2 position, Vector2 repulsionPoint, float repulsionForce, float distanceScalePower)
+    {
+        // Calculate the direction and distance between the object and the attraction point
+        var direction = position - repulsionPoint;
+        var distanceSquared = direction.LengthSquared();
+
+        // Avoid division by zero
+        if (distanceSquared <= 0f)
+        {
+            return Vector2.Zero;
+        }
+
+        float distance = MathF.Sqrt(distanceSquared);
+        // Normalize the direction vector
+        var normalizedDirection = direction / distance;
+
+        // Calculate the force magnitude
+        float forceMagnitude = repulsionForce / MathF.Pow(distance, distanceScalePower);
+
+        // Calculate the acceleration
+        return forceMagnitude * normalizedDirection;
+    }
+    public static void ApplyRepulsion(this PhysicsObject obj, Vector2 repulsionPoint, float repulsionForce, float distanceScalePower)
+    {
+        var force = ApplyRepulsion(obj.Transform.Position, repulsionPoint, repulsionForce, distanceScalePower);
         obj.AddForce(force);
     }
 

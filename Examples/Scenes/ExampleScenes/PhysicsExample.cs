@@ -38,12 +38,9 @@ public class PhysicsExample : ExampleScene
     
     
     
-    //TODO: Some of the asteroids are repulsors, some are attractors, some are neutral
-    // asteroids only affect the ship ?
+    //TODO:
     // or do they only affect stuff in the vicinity (checked with casting)?
     // change asteroids to polygons
-    // attractors have circle scaling pulse outwards
-    // repulsors have circle scaling pulse inwards
     // 
 
     public PhysicsExample()
@@ -142,12 +139,12 @@ public class PhysicsExample : ExampleScene
     {
         foreach (var attractor in attractorAsteroids)
         {
-            ship.ApplyAttraction(attractor.Transform.Position, attractor.AttractionForce);
+            ship.ApplyAttraction(attractor.Transform.Position, attractor.AttractionForce, 1.25f);
         }
         
         foreach (var repulsor in repulsorAsteroids)
         {
-            ship.ApplyRepulsion(repulsor.Transform.Position, repulsor.RepulsorForce);
+            ship.ApplyRepulsion(repulsor.Transform.Position, repulsor.RepulsorForce, 1.25f);
         }
         
         ship.Update(time, game, gameUi, ui);
