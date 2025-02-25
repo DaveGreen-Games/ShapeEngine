@@ -37,11 +37,6 @@ public class PhysicsExample : ExampleScene
     private readonly List<PhysicsExampleSource.Asteroid> repulsorAsteroids = new();
     
     
-    
-    //TODO:
-    // or do they only affect stuff in the vicinity (checked with casting)?
-    // change asteroids to polygons
-    // 
 
     public PhysicsExample()
     {
@@ -137,6 +132,18 @@ public class PhysicsExample : ExampleScene
     
     protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
+        foreach (var asteroid in asteroids)
+        {
+            asteroid.Update(time, game, gameUi, ui);
+            var asteroidOutOfBoundsForce = ShapePhysics.CalculateReverseAttractionForce(
+                Vector2.Zero,
+                5000 * asteroid.Mass,
+                new ValueRange(SectorRadiusInside, SectorRadiusOutside),
+                asteroid.Transform.Position
+            );
+            asteroid.AddForce(asteroidOutOfBoundsForce);
+        }
+        
         foreach (var attractor in attractorAsteroids)
         {
             ship.ApplyAttraction(attractor.Transform.Position, attractor.AttractionForce, 1.25f);
@@ -148,31 +155,24 @@ public class PhysicsExample : ExampleScene
         }
         
         ship.Update(time, game, gameUi, ui);
-        var force = ShapePhysics.CalculateReverseAttractionForce(
+        var shipOutOfBoundsForce = ShapePhysics.CalculateReverseAttractionForce(
             Vector2.Zero,
             5000 * ship.Mass,
             new ValueRange(SectorRadiusInside, SectorRadiusOutside),
             ship.Transform.Position
             );
-        ship.AddForce(force);
+        ship.AddForce(shipOutOfBoundsForce);
         
         follower.Speed = ship.CurSpeed * 1.5f;
         var speedF = ship.CurSpeed / ship.MaxSpeed;
-        var zoom = ShapeMath.LerpFloat(0.8f, 0.45f, speedF);
-        camera.SetZoom(zoom);
+        var targetZoom = ShapeMath.LerpFloat(0.75f, 0.32f, speedF);
+        var curZoom = camera.BaseZoomLevel;
+        
+        var newZoom = ShapeMath.ExpDecayLerpFloat(curZoom, targetZoom, 0.5f, time.Delta);
+        camera.SetZoom(newZoom);
 
         
-        foreach (var asteroid in asteroids)
-        {
-            asteroid.Update(time, game, gameUi, ui);
-            force = ShapePhysics.CalculateReverseAttractionForce(
-                Vector2.Zero,
-                5000 * asteroid.Mass,
-                new ValueRange(SectorRadiusInside, SectorRadiusOutside),
-                asteroid.Transform.Position
-            );
-            asteroid.AddForce(force);
-        }
+        
     }
 
 
@@ -197,7 +197,7 @@ public class PhysicsExample : ExampleScene
             var pos = target * scaleFactor;
 
             var sourceRect = new Rect(pos, surface.Rect.Size, AnchorPoint.Center);
-            var targetRect = new Rect(target, surface.Rect.Size * 2, AnchorPoint.Center);
+            var targetRect = new Rect(target, surface.Rect.Size * 3, AnchorPoint.Center);
             surface.Draw(sourceRect, targetRect, ColorRgba.White);
         }
         
@@ -230,7 +230,7 @@ public class PhysicsExample : ExampleScene
         
         ShapeCircleDrawing.DrawCircleLines(Vector2.Zero, SectorRadiusInside, universeLineInfo , 0f, 24f);
         ShapeCircleDrawing.DrawCircleLines(Vector2.Zero, SectorRadiusOutside, universeLineInfo, 0f, 24f);
-
+        
         var textCount = 12;
         var angleStepRad = (360f / textCount) * ShapeMath.DEGTORAD;
         var textRect = new Rect(Vector2.Zero, new Size(SectorRadiusInside * 0.2f, SectorRadiusInside * 0.05f), AnchorPoint.Center);

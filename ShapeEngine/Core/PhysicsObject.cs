@@ -8,6 +8,7 @@ public abstract class PhysicsObject : GameObject
 {
     public float CurVelocityMagnitudeSquared {get; private set; } = 0f;
     public float CurVelocityMagnitude { get; private set; } = 0f;
+    public Vector2 CurVelocityDirection { get; private set; } = Vector2.Zero;
     public Vector2 Velocity { get; set; }
     public float Mass { get; set; }
   
@@ -76,6 +77,8 @@ public abstract class PhysicsObject : GameObject
         
         CurVelocityMagnitudeSquared = Velocity.LengthSquared();
         CurVelocityMagnitude = MathF.Sqrt(CurVelocityMagnitudeSquared);
+        if(CurVelocityMagnitudeSquared <= 0f) CurVelocityDirection = Vector2.Zero;
+        else CurVelocityDirection = Velocity / CurVelocityMagnitude;
     }
 
 

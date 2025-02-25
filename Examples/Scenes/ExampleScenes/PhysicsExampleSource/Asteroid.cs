@@ -3,6 +3,7 @@ using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
 using ShapeEngine.Core.CollisionSystem;
+using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Random;
 using ShapeEngine.StaticLib;
@@ -53,17 +54,17 @@ public class Asteroid : CollisionObject
 {
     private static readonly ChanceList<AsteroidType> asteroidTypeChanceList = new
     (
-        (70, AsteroidType.Normal    ),
-        (10, AsteroidType.Attractor ),
-        (20, AsteroidType.Repulsor  )
+        (85, AsteroidType.Normal    ),
+        (0, AsteroidType.Attractor ),
+        (0, AsteroidType.Repulsor  )
     );
     
-    
-    private float radius;
     private readonly PaletteColor paletteColor;
-    private readonly CircleCollider collider;
+    private readonly PolyCollider collider;
     public readonly AsteroidType AsteroidType;
-    public readonly float AttractionForce;
+    public float AttractionForce;
+    private float tempAttractionForce = 0f;
+    private float attractionDelayTimer = 0f;
     public readonly float RepulsorForce;
     
     private readonly Stack<AsteroidForceParticle> forceParticlesStack = new(10);
@@ -73,16 +74,19 @@ public class Asteroid : CollisionObject
     private float forceParticleSpawnTimer = 0f;
     private readonly float lineThickness = 4f;
     
+    private const float BaseSeparationForce = 10f;
+
+    
     public Asteroid(Vector2 position, PaletteColor color)
     {
         var minSize = 50f;
         var maxSize = 200f;
         var randSize = Rng.Instance.RandF(minSize, maxSize);
-        radius = randSize;
-        Transform = new Transform2D(position, 0f, new Size(radius), 1f);
-        paletteColor = color;
         
-        collider = new CircleCollider(new());
+        Transform = new Transform2D(position, 0f, new Size(randSize), 1f);
+        paletteColor = color;
+        var relativePoints = Polygon.GenerateRelative(15, 0.4f, 1f);
+        collider = new PolyCollider(new(), relativePoints);
         collider.ComputeCollision = true;
         collider.ComputeIntersections = true;
         collider.CollisionLayer = (uint)CollisionLayers.Asteroid;
@@ -90,10 +94,14 @@ public class Asteroid : CollisionObject
         AddCollider(collider);
 
         var randDir = Rng.Instance.RandVec2();
-        var randSpeed = (maxSize + 10) - radius; // Rng.Instance.RandF(100f, 300f);
-        randSpeed *= 1.25f;
+        var sizeF = ShapeMath.LerpInverseFloat(minSize, maxSize, randSize);
+        var randSpeed = ShapeMath.LerpFloat(100, 10, sizeF);
+        // var randSpeed = (maxSize + 10) - randSize;
+        // randSpeed *= 1.25f;
         Velocity = randDir * randSpeed;
-        Mass = 50 * radius;
+        
+        //surface area of circle radius * radius * pi
+        Mass = randSize * randSize * ShapeMath.PI * 0.5f;//because it is a polygon that is never bigger than radius, so it has less surface area than a circle
         DragCoefficient = 0f;
 
         FilterCollisionPoints = true;
@@ -101,18 +109,18 @@ public class Asteroid : CollisionObject
 
         AsteroidType = asteroidTypeChanceList.Next();
         
-        var sizeRange = new ValueRange(radius * 0.25f, radius * 1.5f);
+        var sizeRange = new ValueRange(randSize * 0.25f, randSize * 1.5f);
         var reversed = false;
         if (AsteroidType == AsteroidType.Attractor)
         {
-            AttractionForce = Mass * 50000;
+            AttractionForce = ShapeMath.LerpFloat(17, 20, sizeF) * 5000000;
             RepulsorForce = 0f;
             forceParticleSpawnTimer = Rng.Instance.RandF(forceParticleSpawnInterval * 0.5f, forceParticleSpawnInterval);
             reversed = false;
         }
         else if (AsteroidType == AsteroidType.Repulsor)
         {
-            RepulsorForce = Mass * 50000;
+            RepulsorForce = ShapeMath.LerpFloat(17, 20, sizeF) * 20000000;
             AttractionForce = 0f;
             forceParticleSpawnTimer = Rng.Instance.RandF(forceParticleSpawnInterval * 0.5f, forceParticleSpawnInterval);
             reversed = true;
@@ -135,6 +143,30 @@ public class Asteroid : CollisionObject
     {
         if (!info.FirstContact)
         {
+            if (info.Other is Asteroid otherAsteroid)
+            {
+                if (otherAsteroid.Mass >= Mass)
+                {
+                    var w = Transform.Position - otherAsteroid.Transform.Position;
+                    var dir = w.Normalize();
+                    AddForce(dir * BaseSeparationForce * 5 * Mass);
+                }
+            }
+            else if (info.Other is Ship otherShip)
+            {
+                var w = otherShip.Transform.Position - Transform.Position;
+                var dir = w.Normalize();
+                otherShip.AddForce(dir * BaseSeparationForce * Mass);
+                
+                //Disables attraction for 1 second if this was not the first contact (ship is pulled into the asteroid)
+                if (AsteroidType == AsteroidType.Attractor && attractionDelayTimer <= 0f)
+                {
+                    tempAttractionForce = AttractionForce;
+                    AttractionForce = 0f;
+                    attractionDelayTimer = 1f;
+                }
+            }
+            
             return;
         }
         
@@ -146,7 +178,7 @@ public class Asteroid : CollisionObject
         
         if (info.Other is Ship ship)
         {
-            var result = ShapePhysics.CalculateElasticCollision(cp.Normal,  info.SelfVel, Mass, info.OtherVel, ship.Mass, 1f);
+            var result = ShapePhysics.CalculateElasticCollision(cp.Normal,  info.SelfVel, Mass, info.OtherVel, ship.Mass, 0.5f);
             Velocity = result.newVelocity1;
             ship.Velocity = result.newVelocity2;
         }
@@ -154,13 +186,26 @@ public class Asteroid : CollisionObject
         {
             //use velocity stored in collision info!!
             // var result = ShapePhysics.CalculateElasticCollisionCirclesSelf(Transform.Position, info.SelfVel, Mass, asteroid.Transform.Position, info.OtherVel, asteroid.Mass, 1f);
-            var result = ShapePhysics.CalculateElasticCollisionSelf(cp.Normal,  info.SelfVel, Mass, info.OtherVel, asteroid.Mass, 1f);
+            var result = ShapePhysics.CalculateElasticCollisionSelf(cp.Normal,  info.SelfVel, Mass, info.OtherVel, asteroid.Mass, 0.9f);
             Velocity = result;
         }
     }
 
     public override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
+        base.Update(time, game, gameUi, ui);
+
+        if (attractionDelayTimer > 0f)
+        {
+            attractionDelayTimer -= time.Delta;
+            if (attractionDelayTimer <= 0f)
+            {
+                AttractionForce = tempAttractionForce;
+                tempAttractionForce = 0f;
+                attractionDelayTimer = 0f;
+            }
+        }
+        
         if (forceParticleSpawnTimer > 0f)
         {
             forceParticleSpawnTimer -= time.Delta;
@@ -198,8 +243,8 @@ public class Asteroid : CollisionObject
             p.Draw();
         }
         
-        var c = collider.GetCircleShape();
-        c.DrawLines(lineThickness, paletteColor.ColorRgba, 8f);
+        var poly = collider.GetPolygonShape();
+        poly.DrawLines(lineThickness, paletteColor.ColorRgba);
         
     }
 

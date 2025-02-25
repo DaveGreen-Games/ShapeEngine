@@ -25,7 +25,7 @@ public class Ship : CollisionObject, ICameraFollowTarget
     private Size hullSize;
     private readonly PaletteColor paletteColor;
     
-    private ValueRange dragRange = new (0.1f, 0.9f);
+    private ValueRange dragRange = new (0.1f, 0.95f);
     // private ValueRange thrustForceRange = new (150000f, 800000f);
     private float thrustForce = 400000;
     private float breakTimer = 0f;
@@ -39,6 +39,16 @@ public class Ship : CollisionObject, ICameraFollowTarget
     private Vector2 curVelocityDirection = Vector2.Zero;
     public float CurSpeed { get; private set; } = 0f;
     public float MaxSpeed { get; private set; }= 1250f;
+    public float CurSpeedF => CurSpeed / MaxSpeed;
+    private Vector2 curCameraOffset = Vector2.Zero;
+    private float curDelta = 0f;
+
+    private CurveFloat cameraPositionOffsetCurve = new(3)
+    {
+        (0, 0),
+        (0.75f, 500),
+        (1f, 1000)
+    };
     public Ship(float size, PaletteColor color)
     {
         hullSize = new Size(size, size);
@@ -73,9 +83,9 @@ public class Ship : CollisionObject, ICameraFollowTarget
     
     public override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
-        
-        
         var dt = time.Delta;
+        curDelta = dt;
+        
         curRotationDirection = ShapeVec.VecFromAngleRad(Transform.RotationRad);
         if (ShapeKeyboardButton.W.GetInputState().Down)
         {
@@ -206,5 +216,13 @@ public class Ship : CollisionObject, ICameraFollowTarget
         
     }
 
-    public Vector2 GetCameraFollowPosition() => Transform.Position;
+    public Vector2 GetCameraFollowPosition()
+    {
+        var targetCameraOffset = curVelocityDirection * cameraPositionOffsetCurve.Sample(CurSpeedF);
+
+        curCameraOffset = curCameraOffset.ExpDecayLerp(targetCameraOffset, 0.9f, curDelta);
+        // curCameraOffset = curCameraOffset.Lerp(targetCameraOffset, 0.05f);
+        
+        return Transform.Position + curCameraOffset; //  ShapeMath.LerpFloat(0, 1500, CurSpeedF);
+    }
 }

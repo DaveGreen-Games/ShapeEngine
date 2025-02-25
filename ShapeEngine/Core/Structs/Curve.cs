@@ -172,6 +172,12 @@ public abstract class Curve<T>(int capacity) : SortedList<float, T>(capacity)
         
         return true;
     }
+
+    public T Sample(float time)
+    {
+        Sample(time, out var value);
+        return value;
+    }
     private float GetSampleTime(int index1, int index2, float time) => ShapeMath.GetFactor(time, Keys[index1], Keys[index2]);
     
     public List<T>? SampleMany(params float[] times)
