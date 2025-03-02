@@ -2408,6 +2408,108 @@ public readonly struct Segment : IEquatable<Segment>
    
     #endregion
 
+    
+    #region Lightning
+
+    public Segments CreateLightningSegments(int segments = 10, float maxSway = 80f)
+    {
+        Segments result = new();
+        var w = End - Start;
+        var dir = w.Normalize();
+        var n = new Vector2(dir.Y, -dir.X);
+        float length = w.Length();
+
+        float prevDisplacement = 0;
+        var cur = Start;
+        //result.Add(start);
+
+        float segmentLength = length / segments;
+        float remainingLength = length;
+        List<Vector2> accumulator = new()
+        {
+            Start
+        };
+        while (remainingLength > 0f)
+        {
+            float randSegmentLength = Rng.Instance.RandF() * segmentLength;
+            remainingLength -= randSegmentLength;
+            if (remainingLength <= 0f)
+            {
+                if(accumulator.Count == 1)
+                {
+                    result.Add(new(accumulator[0], End));
+                }
+                else
+                {
+                    result.Add(new(result[result.Count - 1].End, End));
+                }
+                break;
+            }
+            float scale = randSegmentLength / segmentLength;
+            float displacement = Rng.Instance.RandF(-maxSway, maxSway);
+            displacement -= (displacement - prevDisplacement) * (1 - scale);
+            cur = cur + dir * randSegmentLength;
+            var p = cur + displacement * n;
+            accumulator.Add(p);
+            if(accumulator.Count == 2)
+            {
+                result.Add(new(accumulator[0], accumulator[1]));
+                accumulator.Clear();
+            }
+            prevDisplacement = displacement;
+        }
+        return result;
+    }
+    public Segments CreateLightningSegments(float segmentLength = 5f, float maxSway = 80f)
+    {
+        Segments result = new();
+        var w = End - Start;
+        var dir = w.Normalize();
+        var n = new Vector2(dir.Y, -dir.X);
+        float length = w.Length();
+
+        float prevDisplacement = 0;
+        var cur = Start;
+        List<Vector2> accumulator = new()
+        {
+            Start
+        };
+        float remainingLength = length;
+        while (remainingLength > 0f)
+        {
+            float randSegmentLength = Rng.Instance.RandF() * segmentLength;
+            remainingLength -= randSegmentLength;
+            if (remainingLength <= 0f)
+            {
+                if (accumulator.Count == 1)
+                {
+                    result.Add(new(accumulator[0], End));
+                }
+                else
+                {
+                    result.Add(new(result[result.Count - 1].End, End));
+                }
+                break;
+            }
+            float scale = randSegmentLength / segmentLength;
+            float displacement = Rng.Instance.RandF(-maxSway, maxSway);
+            displacement -= (displacement - prevDisplacement) * (1 - scale);
+            cur = cur + dir * randSegmentLength;
+            var p = cur + displacement * n;
+            accumulator.Add(p);
+            if (accumulator.Count == 2)
+            {
+                result.Add(new(accumulator[0], accumulator[1]));
+                accumulator.Clear();
+            }
+            prevDisplacement = displacement;
+        }
+        return result;
+    }
+    
+
+    #endregion
+    
     public void DrawNormal(float lineThickness, float length, ColorRgba colorRgba)
     {
         Segment n = new(Center, Center + Normal * length);
