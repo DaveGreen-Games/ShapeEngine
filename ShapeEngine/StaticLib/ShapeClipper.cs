@@ -91,9 +91,10 @@ namespace ShapeEngine.StaticLib
         public static PathsD Difference(this Polygon clip, Polygons subjects, FillRule fillRule = FillRule.NonZero, int precision = 2)
         {
             var result = new PathsD();
+            var clipPaths = clip.ToClipperPaths();
             foreach (var subject in subjects)
             {
-                result.AddRange(Clipper.Difference(subject.ToClipperPaths(), clip.ToClipperPaths(), fillRule, precision));
+                result.AddRange(Clipper.Difference(subject.ToClipperPaths(), clipPaths, fillRule, precision));
             }
             return result;
         }
@@ -107,6 +108,35 @@ namespace ShapeEngine.StaticLib
             return cur;
         }
         
+        public static PathsD Difference(this Polygon subject, Polyline polyline, FillRule fillRule = FillRule.NonZero, int precision = 2)
+        {
+            return Clipper.Difference(ToClipperPaths(subject), ToClipperPaths(polyline), fillRule, precision);
+        }
+        
+        public static PathsD DifferenceMany(this Polygon subject, Polylines polylines, FillRule fillRule = FillRule.NonZero, int precision = 2)
+        {
+            var cur = subject.ToClipperPaths();
+            foreach (var clip in polylines)
+            {
+                cur = Clipper.Difference(cur, clip.ToClipperPaths(), fillRule, precision);
+            }
+            return cur;
+        }
+        public static PathsD Difference(this Polygon subject, Segment segment, FillRule fillRule = FillRule.NonZero, int precision = 2)
+        {
+            
+            return Clipper.Difference(ToClipperPaths(subject), ToClipperPaths(segment), fillRule, precision);
+        }
+        
+        public static PathsD DifferenceMany(this Polygon subject, Segments segments, FillRule fillRule = FillRule.NonZero, int precision = 2)
+        {
+            var cur = subject.ToClipperPaths();
+            foreach (var clip in segments)
+            {
+                cur = Clipper.Difference(cur, clip.ToClipperPaths(), fillRule, precision);
+            }
+            return cur;
+        }
 
         
         public static bool IsHole(this PathD path) { return !Clipper.IsPositive(path); }
@@ -246,6 +276,14 @@ namespace ShapeEngine.StaticLib
             }
             return path;
         }
+        public static PathD ToClipperPath(this Segment segment)
+        {
+            var path = new PathD();
+            path.Add(segment.Start.ToClipperPoint());
+            path.Add(segment.End.ToClipperPoint());
+            return path;
+        }
+        public static PathsD ToClipperPaths(this Segment segment){ return new PathsD() { segment.ToClipperPath() }; }
         public static PathsD ToClipperPaths(this Polygon poly) { return new PathsD() { poly.ToClipperPath() }; }
         public static PathsD ToClipperPaths(params Polygon[] polygons) { return polygons.ToClipperPaths(); }
         public static PathsD ToClipperPaths(this IEnumerable<Polygon> polygons)
