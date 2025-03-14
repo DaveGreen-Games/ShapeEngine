@@ -73,8 +73,6 @@ public class Asteroid : CollisionObject
     private readonly float forceParticleLifetime = 2f;
     private float forceParticleSpawnTimer = 0f;
     private readonly float lineThickness = 4f;
-    
-    private const float BaseSeparationForce = 10f;
 
     
     public Asteroid(Vector2 position, PaletteColor color)
@@ -149,15 +147,15 @@ public class Asteroid : CollisionObject
                 {
                     var w = Transform.Position - otherAsteroid.Transform.Position;
                     var dir = w.Normalize();
-                    AddForce(dir * BaseSeparationForce * 5 * Mass);
+                    AddForce(dir * 50 * Mass);
                 }
             }
             else if (info.Other is Ship otherShip)
             {
                 var w = otherShip.Transform.Position - Transform.Position;
                 var dir = w.Normalize();
-                otherShip.AddForce(dir * BaseSeparationForce * Mass);
-                
+                otherShip.AddForce(dir * otherShip.ThrustForce * 1.25f);
+                // otherShip.AddForce(-otherShip.Velocity * otherShip.Mass);
                 //Disables attraction for 1 second if this was not the first contact (ship is pulled into the asteroid)
                 if (AsteroidType == AsteroidType.Attractor && attractionDelayTimer <= 0f)
                 {

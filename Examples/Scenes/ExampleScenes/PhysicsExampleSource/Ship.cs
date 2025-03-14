@@ -1,6 +1,5 @@
 using System.Numerics;
 using ShapeEngine.Color;
-using ShapeEngine.Core;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Shapes;
@@ -11,11 +10,13 @@ using ShapeEngine.StaticLib.Drawing;
 
 namespace Examples.Scenes.ExampleScenes.PhysicsExampleSource;
 
-//TODO: make physics controls
-// - thrust forward
-// - rotate left/right
-// - drag for thrusting and drag for no input
-// - ship should be controlled by phsics -> use velocity and add force etc.
+
+//TODO: add effects for collision
+// - Shield should flash and scale
+// - Energy Sparks particle effect at imact point
+// - Energy Blob should be created at impact point? 
+// - Start with polygon split function
+// - Polygon Crack function (could use create lightning function)
 public class Ship : CollisionObject, ICameraFollowTarget
 {
     // private TriangleCollider hull;
@@ -27,7 +28,7 @@ public class Ship : CollisionObject, ICameraFollowTarget
     
     private ValueRange dragRange = new (0.1f, 0.95f);
     // private ValueRange thrustForceRange = new (150000f, 800000f);
-    private float thrustForce = 400000;
+    public float ThrustForce { get; private set; } = 400000;
     private float breakTimer = 0f;
     private float breakDuration = 1f;
     
@@ -97,7 +98,7 @@ public class Ship : CollisionObject, ICameraFollowTarget
             
 
             DragCoefficient = dragRange.Min;
-            AddForce(curRotationDirection * thrustForce);
+            AddForce(curRotationDirection * ThrustForce);
         }
         else if (ShapeKeyboardButton.S.GetInputState().Down)
         {
