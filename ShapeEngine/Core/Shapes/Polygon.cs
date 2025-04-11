@@ -18,6 +18,12 @@ namespace ShapeEngine.Core.Shapes
         private static CollisionPoints collisionPointsReference = new(4);
         public override Polygon Copy() => new(this);
 
+        
+        public Vector2 Center => GetCentroid();
+        public float Area => GetArea();
+        public float Perimeter => GetPerimeter();
+        public float Diameter => GetDiameter();
+        
         #region Constructors
         public Polygon() { }
 
@@ -447,6 +453,29 @@ namespace ShapeEngine.Core.Shapes
             }
             return lengthSq;
         }
+        private float GetDiameterSquared()
+        {
+            if (Count <= 2) return 0;
+            var center = GetCentroid();
+            var maxDisSquared = -1f;
+            for (int i = 0; i < Count; i++)
+            {
+                var p = this[0];
+                var disSquared = (p - center).LengthSquared();
+                if (maxDisSquared < 0 || disSquared > maxDisSquared)
+                {
+                    maxDisSquared = disSquared;
+                }
+                    
+            }
+
+            return maxDisSquared;
+        }
+        private float GetDiameter()
+        {
+            if (Count <= 2) return 0;
+            return MathF.Sqrt(GetDiameterSquared());
+        }
         public float GetArea()
         {
             if (Count < 3) return 0f;
@@ -796,6 +825,72 @@ namespace ShapeEngine.Core.Shapes
             var cut = Generate(cutLine, minMagnitude, maxMagnitude, minSectionLength, maxSectionLength);
             return this.CutShape(cut);
         }
+        public Polygons? Split(Vector2 point, Vector2 direction)
+        {
+            var line = new Line(point, direction);
+            return Split(line);
+        }
+        public Polygons? Split(Line line)
+        {
+            var w = Center - line.Point;
+            var l = w.Length();
+            if (l < Diameter * 2f) l = Diameter * 2f;
+            else l *= 2f;
+            
+            var segment = line.ToSegment(l);
+            return Split(segment);
+        }
+        public Polygons? Split(Segment segment)
+        {
+            var result = this.Difference(segment, FillRule.NonZero, 2);
+            if (result.Count <= 0) return null;
+            return result.ToPolygons();
+        }
+        public Polygons? Split(Segments segments)
+        {
+            var result = this.DifferenceMany(segments, FillRule.NonZero, 2);
+            if (result.Count <= 0) return null;
+            return result.ToPolygons();
+        }
+
+        public Segments? GenerateFractureLine(Vector2 start, Vector2 end, int segmentPoints)
+        {
+            if (segmentPoints < 1) return null;
+            
+            var w = end - start;
+            var disSquared = w.LengthSquared();
+            if (disSquared <= 0f) return null;
+            
+            var p = w.GetPerpendicularLeft();
+            var l = MathF.Sqrt(disSquared);
+            var segmentLength = l / (segmentPoints + 1);
+            var dir = w / l;
+            var result = new Segments();
+
+            var curStart = start;
+            var curLinePoint = start;
+            for (int i = 0; i < segmentPoints; i++)
+            {
+                var point = curStart + dir * segmentLength;
+                curStart = point;
+                
+                var offset = p;
+                if (Rng.Instance.Chance(0.5f))
+                {
+                    offset = -p;
+                }
+
+                var nextLinePoint = point + offset;
+
+                var segment = new Segment(curLinePoint, nextLinePoint);
+                curLinePoint = nextLinePoint;
+                result.Add(segment);
+            }
+            result.Add(new Segment(curLinePoint, end));
+            
+            return result;
+        }
+        
         #endregion
         
         #region Random
