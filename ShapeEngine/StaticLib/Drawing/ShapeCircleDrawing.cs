@@ -8,7 +8,7 @@ namespace ShapeEngine.StaticLib.Drawing;
 
 public static class ShapeCircleDrawing
 {
-     public static void DrawCircle(Vector2 center, float radius, ColorRgba color, int segments = 16)
+    public static void DrawCircle(Vector2 center, float radius, ColorRgba color, int segments = 16)
     {
         if (segments < 3) segments = 3;
         Raylib.DrawCircleSector(center, radius, 0, 360, segments, color.ToRayColor());
