@@ -10,7 +10,7 @@
 	<Title>Shape Engine</Title>
 	<Authors>Dave Green</Authors>
 	<RepositoryUrl>https://github.com/DaveGreen-Games/ShapeEngine</RepositoryUrl>
-	<Version>3.1.0</Version>
+	<Version>4.0.0</Version>
 	<Description>My custom made 2d game engine based on the great Raylib Framework. Main focus is being performant and only using draw functions instead of textures. Custom input, audio, savegame, collision, shape, pathfinding, ui, camera, color palette, polygon fracturing, and text system are available with a few other nice things!</Description>
 	<PackageProjectUrl>https://davegreengames.itch.io/shape-engine</PackageProjectUrl>
 	<PackageIcon>shapeengine-nuget-icon-128px.png</PackageIcon>
@@ -18,81 +18,49 @@
 	<PackageTags>GameEngine Framework 2D raylib gamedev graphics shapes polygon rect line clipper2 polygonclipping</PackageTags>
 	<Company>Dave Green Games</Company>
 	<Product>Shape Engine</Product>
-	<AssemblyVersion>3.1.0</AssemblyVersion>
-	<FileVersion>3.1.0</FileVersion>
+	<AssemblyVersion>4.0.0</AssemblyVersion>
+	<FileVersion>4.0.0</FileVersion>
   	<PackageReadmeFile>readme-nuget.md</PackageReadmeFile>
   	<NeutralLanguage>en-US</NeutralLanguage>
-  	<Copyright>Copyright (c) David Grueneis 2024</Copyright>
+  	<Copyright>Copyright (c) David Grueneis 2025</Copyright>
   	<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   	<PackageReleaseNotes>
-		# 3.1 Release
-		This release addresses various fixes and improvements that were missed in the 3.0 release. 
-		Despite introducing some breaking changes, I decided to classify this as a minor release rather than version 4.0, as all the breaking changes pertain to the same systems as the 3.0 release.
 
-		## FirstContact / ContactEnded System Overhaul:
-		- Previously, the FirstContact was only reported for Colliders and not for CollisionObjects. The system has now been split into two separate systems: one for Collider pairs and one for CollisionObject pairs.
-		- CollisionObjects:
-		  + A FirstContact between two CollisionObjects is reported once any Collider of one contacts any Collider of the other CollisionObject.
-		  + The ContactEnded() function for the CollisionObject is called once all contacts between all of the Colliders have ended.
-		- Colliders:
-		  + A FirstContact between two Colliders is reported the first time they contact (no contact in the previous frame).
-		  + The ColliderContactEnded() function is called once the contact ends (contact in the previous frame but no contact in the current frame).
-
-		## Other Changes:
-		- Namespace Changes:
-		  + CollisionObject moved to the CollisionSystem namespace.
-		- Class Removals:
-		  + ContactEndedInformation class removed.
-		  + Contact class removed.
-		- Function Parameter Changes:
-		  + ContactEnded(CollisionObject other) function parameters changed.
-		  + ColliderContactEnded(Collider self, Collider other) function parameters changed.
-		- CollisionInformation Improvements:
-		  + CollisionInformation now includes a FirstContact member, reported only for the two involved CollisionObjects, separate from any FirstContact reporting between Colliders.
-		  + General improvements and cleanup of CollisionInformation, including new functions.
-		  + New functions for Exists, Find, and FindAll CollisionPoints.
-		  + New functions for finding Closest, Furthest, and Combined CollisionPoint.
-		- Collision Improvements:
-		  + Functions for Exists, Find, and FindAll CollisionPoints added.
-		- CollisionPoints:
-		  + GetClosest/Furthest/FacingTowards functions now skip invalid collision points
-		- Renaming:
-		  + GetAverageCollisionPoint() renamed to GetCombinedCollisionPoint() in multiple classes.
-		- ResolveCollision Update:
-		  + CollisionObject.ResolveCollision() is now called for each generated CollisionInformation instead of receiving a list of CollisionInformation.
+		This release took 4 months to complete. 
+		Originally, I just wanted to add the new Ray and Line shapes for drawing and collision detection, but it ended up being much more. 
+		I took a look at physics, added some new functions, and cleaned up the PhysicsObject class. DrawCheckered was renamed to DrawStriped, and I added a lot of new variations as well. 
+		There were many small changes, bug fixes, and improvements all over ShapeEngine. There are still things I wanted to add, but I decided to release 4.0 right now.
 		
-		# 3.0 Release
-		This release improves the way collision/overlap/query information is aggregated and handled.
-		Before information was collected on a per collider basis and events/functions would be called on the active involved collider. This meant the actual collision object and parent of the colliders would not get notified.
-		
-		Now all the information is grouped together per collision object. The collision/overlap between colliders with all the collision points is still collected together in one class. So each collision object gets notified of all the collisions/overlaps that happend with any of the child colliders at the end of each frame. A collision without collision points is an overlap!
-		
-		These changes should help in making it easier to use the collision information. The actual collision detection and data has not changed just how it is grouped together and presented to the involved collision objects/ colliders.
-
-		- Overlap and OverlapInformation classes added
-		- CollisionInformation class reworked
-		- Collision class improvements
-		- CollisionSystem overhaul:
-		- CollisionObjects now receive relevant CollisionInformation and can choose to pass it down to involved colliders
-		- Collision information is now collected / sorted based on the other involved collision object. This means a collision is now detected and reported for all involved colliders in a collision between 2 collision objects at once.
-		- Functions/ Events involved renamed and reworked to make the system clearer
-		- Collision Namespace changed to CollisionSystem
-		- RangeInt/ RangeFloat classes removed
-		- EffectObject, Effect, Particle classes removed
-		- Copy() Function added to CollisionInformation, OverlapInformation, Collision, Overlap, and Intersection classes
-		- Filter functions added to CollisionInformation and OverlapInformation
-		- Intersection class deleted (replaced by CollisionPoints class)
-		- CollisionPoint IsFacing*() functions added to check if normals are facing the correct way
-		- QuerySpace* functions in CollisionHandler renamed to IntersectSpace*
-		- IntersectSpace* functions now return IntersectSpaceResults that replaced the old QueryInfo system.
-		- CastSpace now uses CastSpaceResult/CastSpaceEntry classes
-		- Direction ToAlignement() Function fixed and ToInvertedAlignement() Function added
-		- Deprecated classes removed:
-			- Particle
-			- PhysicsParticle
-			- RangeFloat
-			- RangeInt
-			- SavegameFolder
+		Changelog:
+		- Line and Ray shapes added. Both are defined by a Point and a Direction.
+		- The Line is infinitely long in both directions from the point, and a Ray is infinitely long in one direction from the point.
+		- Intersect / Overlap / ClosestPoint functions added to Line and Ray.
+		- Intersect / Overlap / ClosestPoint functions overhauled and cleaned up for all remaining shapes (Segments, Points, Triangulation and Collider as well) to make everything consistent.
+		- Line and Ray added to Cast/Query Space functions in CollisionHandler.
+		- ShapesExample improved. Automated Testing and Projection added.
+		- ShapesExample renamed to ShapeIntersectionExample
+		- ShapeProjectionExample removed.
+		- DrawCheckered renamed to DrawStriped
+		- DrawStriped implemented for all closed shapes (Circle, Triangle, Rect, Quad, Polygon)
+		- DrawStriped code improved with new line intersection functions
+		- DrawStriped function with an outside and an inside shape. The striped lines will fill the outside shape and not the inside shape.
+		- DrawShapeOutline example added
+		- DrawShapeStriped example added
+		- Physics! Example added
+		- CurveDataExample added
+		- Curve generic class implemented. Allows adding key-value pairs. Each key is time between 0 - 1. Allow sampling for a value at a certain time point. The value will be an interpolation between the values at the key before and after the time point.
+		- CurveFloat, CurveInt, CurveVector2, CurveColor are implemented
+		- ContainsShape functions overhauled for all closed shapes (Circle, Triangle, Rect, Quad, Polygon)
+		- Polygon ContainsShape functions now properly check if the shape is contained. Previously, it would only check if all points are contained within the polygon, but would not check if the edges intersect the polygon.
+		- Circle and Polygon have special ContainsShape code that uses intersection tests as well (other shapes just check if all points from the other shape are inside)
+		- Raylib Cs bindings updated to 7.0.1
+		- Clipper2 updated to 1.5.3
+		- Static functions from PhysicsObject moved to the new static ShapePhysics class
+		- Friction, Drag, Elastic Collision, Attraction, and Repulsion functions added to the ShapePhysics class
+		- DrawArrow functions added to the ShapeDrawing class
+		- ShapeDrawing was split into multiple files for each shape type: ShapePointDrawing, ShapeSegmentDrawing, ShapeLineDrawing, ShapeRayDrawing, ShapeTriangleDrawing, ShapeCircleDrawing, ShapeRectDrawing, ShapeQuadDrawing, ShapePolygonDrawing, ShapePolylineDrawing, ShapeDrawing, ShapeCustomDrawing, ShapeRingDrawing, ShapeGappedDrawing, ShapeStripedDrawing, ShapeUIDrawing
+		- ShapeEngine.Lib namespace was renamed to ShapeEngine.StaticLib
+		- Deferred Drawing System added to the Game class
 		
 	</PackageReleaseNotes>
   	<PackageId>DaveGreen.ShapeEngine</PackageId>
