@@ -103,6 +103,7 @@ There are multiple ways to use Shape Engine:
 - [Polygon Fracturing](https://youtu.be/RaKz4q_zYrg)
 - [Delaunay Triangulation](https://youtu.be/eJqZB-e6m54)
 - [Text & Font System](https://youtu.be/D3xLx7f1YqQ)
+- [Word Emphasis System](https://youtu.be/wEz60lx8ef4)
 - [Pathfinding](https://youtu.be/giVIGSfIO4k?si=KWRiGJvG8Roj0Qh2)
 - UI System
 - [Collision System](https://youtu.be/mJJZcDa2pRE)
@@ -113,6 +114,8 @@ There are multiple ways to use Shape Engine:
 - [Camera System](https://youtu.be/BascnrqZn6Q)
 - Screen Texture System
 - [Gapped Drawing](https://youtu.be/_xBz9cArtBE)
+- [Striped Drawing](https://youtu.be/lYkotZkr1fQ)
+- [Shape Collision System 2.0](https://youtu.be/Ag8rDXmvHwk) with Segment, Line, Ray, Circle, Triangle, Quad, Rect, Polygon, Polyline
 
 ## Documentation & Getting Started
 
