@@ -1,5 +1,5 @@
 ﻿using ShapeEngine.Core.Shapes;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;

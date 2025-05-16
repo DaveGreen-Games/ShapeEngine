@@ -3,13 +3,14 @@
 using System.Diagnostics;
 using Raylib_cs;
 using ShapeEngine.Core;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 using System.Numerics;
 using System.Text;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
+using ShapeEngine.StaticLib.Drawing;
 using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes
@@ -91,23 +92,20 @@ namespace Examples.Scenes.ExampleScenes
             closePointIndex = -1;
             closeTriangleIndex = -1;
 
-            var result = points.GetClosestDistanceTo(mousePosGame);
-            if(result.Valid && result.DistanceSquared <= pointDistanceSquared)
+            var result = points.GetClosestPoint(mousePosGame, out float closestDistanceSquared, out int index);
+            
+            if(closestDistanceSquared >= 0  && closestDistanceSquared  <= pointDistanceSquared)
             {
                 //rmb deletes point
-                closePointIndex = points.IndexOf(result.A);
+                closePointIndex = index;
             }
             else
             {
                 //rmb subdivides triangle
-                var triangleResult = curTriangulation.GetClosest(mousePosGame);
-                if (triangleResult.Valid)
+                var triangleResult = curTriangulation.ContainsPoint(mousePosGame, out int triangleIndex);
+                if (triangleResult)//.Valid)
                 {
-                    var triangle = triangleResult.Item; 
-                    if(triangle.ContainsPoint(mousePosGame))
-                    {
-                        closeTriangleIndex = curTriangulation.IndexOf(triangle);
-                    }
+                    closeTriangleIndex = triangleIndex;
                 }
             }
 

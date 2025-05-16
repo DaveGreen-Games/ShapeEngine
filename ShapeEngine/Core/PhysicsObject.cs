@@ -1,28 +1,51 @@
 using System.Numerics;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Core;
 
 public abstract class PhysicsObject : GameObject
 {
+    public float CurVelocityMagnitudeSquared {get; private set; } = 0f;
+    public float CurVelocityMagnitude { get; private set; } = 0f;
+    public Vector2 CurVelocityDirection { get; private set; } = Vector2.Zero;
     public Vector2 Velocity { get; set; }
     public float Mass { get; set; }
-    public float Drag { get; set; }
+  
+    /// <summary>
+    /// The Value Range is  0-1.
+    /// 0 means no drag, 1 means full drag.
+    /// Drag determines how much energy the velocity loses per second.
+    /// Drag of 0.5f would mean the velocity loses half of its energy per second.
+    /// </summary>
+    public float DragCoefficient { get; set; }
     public Vector2 ConstAcceleration { get; set; }
     public Vector2 AccumulatedForce { get; private set; } = new(0f);
+    public Vector2 AccumulatedImpulses { get; private set; } = new(0f); 
+
+    public float Momentum => Mass * CurVelocityMagnitude;
+    public float KineticEnergy => Mass * CurVelocityMagnitudeSquared * 0.5f;
     
-    
+    public bool IsInMotion => Velocity.LengthSquared() > 0.00000001f;
     public void ClearAccumulatedForce() => AccumulatedForce = new(0f);
+    public void ClearAccumulatedImpulses() => AccumulatedImpulses = new(0f);
     public void AddForce(Vector2 force)
     {
         if(Mass <= 0) AccumulatedForce += force;
         else AccumulatedForce += force / Mass;
     }
+    /// <summary>
+    /// Add a force without dividing by mass
+    /// </summary>
+    /// <param name="force"></param>
+    public void AddForceRaw(Vector2 force)
+    {
+        AccumulatedForce += force;
+    }
     public void AddImpulse(Vector2 force)
     {
-        if (Mass <= 0.0f) Velocity += force;
-        else Velocity += force / Mass;
+        if (Mass <= 0.0f) AccumulatedImpulses += force;
+        else AccumulatedImpulses += force / Mass;
     }
 
     public override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
@@ -36,107 +59,59 @@ public abstract class PhysicsObject : GameObject
 
     private void UpdatePhysicsState(float dt)
     {
-        ApplyAccumulatedForce(dt);
-        ApplyAcceleration(dt); 
+        ApplyForces(dt); 
         Transform = Transform.ChangePosition(Velocity * dt);
         OnPhysicsStateUpdated(dt);
     }
-    private void ApplyAccumulatedForce(float dt)
+    private void ApplyForces(float dt)
     {
-        Velocity += AccumulatedForce * dt;
+        var force = ConstAcceleration + AccumulatedForce;
+        
+        Velocity += AccumulatedImpulses;
+        Velocity += force * dt;
+        var dragForce = ShapePhysics.CalculateDragForce(Velocity, DragCoefficient, dt);
+        Velocity += dragForce;
+        
+        ClearAccumulatedImpulses();
         ClearAccumulatedForce();
-    }
-    private void ApplyAcceleration(float dt)
-    {
-        var force = ConstAcceleration * dt;
-        Velocity += force;
-        Velocity = ApplyDragForce(Velocity, Drag, dt);
+        
+        CurVelocityMagnitudeSquared = Velocity.LengthSquared();
+        CurVelocityMagnitude = MathF.Sqrt(CurVelocityMagnitudeSquared);
+        if(CurVelocityMagnitudeSquared <= 0f) CurVelocityDirection = Vector2.Zero;
+        else CurVelocityDirection = Velocity / CurVelocityMagnitude;
     }
 
 
     #endregion
     
-    #region Static
-
-    /// <summary>
-    /// Apply drag to the given value.
-    /// </summary>
-    /// <param name="value">The value that is affected by the drag.</param>
-    /// <param name="dragCoefficient">The drag coefficient for calculating the drag force. Has to be positive.
-    /// 1 / drag coefficient = seconds until stop. DC of 4 means object stops in 0.25s.</param>
-    /// <param name="dt">The delta time of the current frame.</param>
-    /// <returns></returns>
-    public static float ApplyDragForce(float value, float dragCoefficient, float dt)
-    {
-        if (dragCoefficient <= 0f) return value;
-        float dragForce = dragCoefficient * value * dt;
-
-        return value - MathF.Min(dragForce, value);
-    }
-    /// <summary>
-    /// Apply drag to the given velocity.
-    /// </summary>
-    /// <param name="vel">The velocity that is affected by the drag.</param>
-    /// <param name="dragCoefficient">The drag coefficient for calculating the drag force. Has to be positive.
-    /// 1 / drag coefficient = seconds until stop. DC of 4 means object stops in 0.25s.</param>
-    /// <param name="dt">The delta time of the current frame.</param>
-    /// <returns>Returns the new velocity.</returns>
-    public static Vector2 ApplyDragForce(Vector2 vel, float dragCoefficient, float dt)
-    {
-        if (dragCoefficient <= 0f) return vel;
-        Vector2 dragForce = dragCoefficient * vel * dt;
-        if (dragForce.LengthSquared() >= vel.LengthSquared()) return new Vector2(0f, 0f);
-        return vel - dragForce;
-    }
-    public static float GetDragForce(float value, float dragCoefficient, float dt)
-    {
-        if (dragCoefficient <= 0f) return value;
-        float dragForce = dragCoefficient * value * dt;
-
-        return -MathF.Min(dragForce, value);
-    }
-    public static Vector2 GetDragForce(Vector2 vel, float dragCoefficient, float dt)
-    {
-        if (dragCoefficient <= 0f) return vel;
-        Vector2 dragForce = dragCoefficient * vel * dt;
-        if (dragForce.LengthSquared() >= vel.LengthSquared()) return new Vector2(0f, 0f);
-        return -dragForce;
-    }
-
-    public static Vector2 Attraction(Vector2 center, Vector2 otherPos, Vector2 otherVel, float r, float strength, float friction)
-    {
-        Vector2 w = center - otherPos;
-        float disSq = w.LengthSquared();
-        float f = 1.0f - disSq / (r * r);
-        Vector2 force = ShapeVec.Normalize(w) * strength;// * f;
-        Vector2 stop = -otherVel * friction * f;
-        return force + stop;
-    }
-    public static Vector2 ElasticCollision1D(Vector2 vel1, float mass1, Vector2 vel2, float mass2)
-    {
-        float totalMass = mass1 + mass2;
-        return vel1 * ((mass1 - mass2) / totalMass) + vel2 * (2f * mass2 / totalMass);
-    }
-    public static Vector2 ElasticCollision2D(Vector2 p1, Vector2 v1, float m1, Vector2 p2, Vector2 v2, float m2, float R)
-    {
-        float totalMass = m1 + m2;
-
-        float mf = m2 / m1;
-        Vector2 posDif = p2 - p1;
-        Vector2 velDif = v2 - v1;
-
-        Vector2 velCM = (m1 * v1 + m2 * v2) / totalMass;
-
-        float a = posDif.Y / posDif.X;
-        float dvx2 = -2f * (velDif.X + a * velDif.Y) / ((1 + a * a) * (1 + mf));
-        //Vector2 newOtherVel = new(v2.X + dvx2, v2.Y + a * dvx2);
-        Vector2 newSelfVel = new(v1.X - mf * dvx2, v1.Y - a * mf * dvx2);
-
-        newSelfVel = (newSelfVel - velCM) * R + velCM;
-        //newOtherVel = (newOtherVel - velCM) * R + velCM;
-
-        return newSelfVel;
-    }
-
-    #endregion
 }
+
+/*
+    //  if (AppliesKineticFriction)
+    // {
+    //     var kineticFrictionForce = ShapePhysics.CalculateKineticFrictionForce(Velocity, FrictionNormal, KineticFrictionCoefficient);
+    //     Velocity += kineticFrictionForce * dt;
+    // }
+    // public bool AppliesStaticFriction => !FrictionNormal.IsSimilar(0f, 0.00000001f) && StaticFrictionCoefficient > 0;
+    // public bool AppliesKineticFriction => !FrictionNormal.IsSimilar(0f, 0.00000001f) && KineticFrictionCoefficient > 0;
+    // /// <summary>
+    // /// Takes effect when an object is not in motion and works against acceleration.
+    // /// 0 or negative values mean no friction.
+    // /// The friction system is simplified and not realistic.
+    // /// It is similar to drag, but it does not scale with the magnitude of velocity.
+    // /// If the velocity is zero, no friction is applied.
+    // /// </summary>
+    // public float StaticFrictionCoefficient { get; set; } = 0f;
+    /// <summary>
+    /// 0 or negative values mean no friction.
+    /// The friction system is simplified and not realistic.
+    /// It is similar to drag, but it does not scale with the magnitude of velocity.
+    /// If the velocity is zero, no friction is applied.
+    /// </summary>
+    public float KineticFrictionCoefficient { get; set; } = 0f;
+    /// <summary>
+    /// Determines the friction force applied to the object.
+    /// A FrictionNormal that is zero applies no friction.
+    /// </summary>
+    public Vector2 FrictionNormal { get; set; } = Vector2.Zero;
+    */

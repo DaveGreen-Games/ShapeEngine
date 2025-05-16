@@ -3,7 +3,7 @@ using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Shapes;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Core.Structs;
 
@@ -236,33 +236,34 @@ public readonly struct Transform2D : IEquatable<Transform2D>
         return Position + (relative * ScaledSize.Length).Rotate(RotationRad);
     }
 
-    public readonly Transform2D ChangePosition(Vector2 amount) => new(Position + amount, RotationRad, BaseSize, Scale2d);
-    public readonly Transform2D ChangePositionX(float amount) => new(Position with { X = Position.X + amount }, RotationRad, BaseSize, Scale2d);
-    public readonly Transform2D ChangePositionY(float amount) => new(Position with { Y = Position.Y + amount }, RotationRad, BaseSize, Scale2d);
+    public Transform2D ChangePosition(Vector2 amount) => new(Position + amount, RotationRad, BaseSize, Scale2d);
+    public Transform2D ChangePositionX(float amount) => new(Position with { X = Position.X + amount }, RotationRad, BaseSize, Scale2d);
+    public Transform2D ChangePositionY(float amount) => new(Position with { Y = Position.Y + amount }, RotationRad, BaseSize, Scale2d);
     
-    public readonly Transform2D ChangeSize(Size amount) => new(Position, RotationRad, BaseSize + amount, Scale2d);
-    public readonly Transform2D ChangeSize(float amount) => new(Position, RotationRad, BaseSize + new Vector2(amount), Scale2d);
-    public readonly Transform2D ChangeSizeX(float amount) => new(Position, RotationRad, new Size(Position.X + amount, BaseSize.Height), Scale2d);
-    public readonly Transform2D ChangeSizeY(float amount) => new(Position, RotationRad, new Size(BaseSize.Width, Position.Y + amount), Scale2d);
+    public Transform2D ChangeSize(Size amount) => new(Position, RotationRad, BaseSize + amount, Scale2d);
+    public Transform2D ChangeSize(float amount) => new(Position, RotationRad, BaseSize + new Vector2(amount), Scale2d);
+    public Transform2D ChangeSizeX(float amount) => new(Position, RotationRad, new Size(Position.X + amount, BaseSize.Height), Scale2d);
+    public Transform2D ChangeSizeY(float amount) => new(Position, RotationRad, new Size(BaseSize.Width, Position.Y + amount), Scale2d);
     
-    public readonly Transform2D MultiplyScale(float factor) => new(Position, RotationRad, BaseSize, Scale2d * factor);
+    public Transform2D MultiplyScale(float factor) => new(Position, RotationRad, BaseSize, Scale2d * factor);
     
-    public readonly Transform2D ChangeScale(float amount) => new(Position, RotationRad, BaseSize, Scale2d.X + amount, Scale2d.Y + amount);
+    public Transform2D ChangeScale(float amount) => new(Position, RotationRad, BaseSize, Scale2d.X + amount, Scale2d.Y + amount);
     
-    public readonly Transform2D MultiplyScale2d(Vector2 factor) => new(Position, RotationRad, BaseSize, Scale2d * factor);
+    public Transform2D MultiplyScale2d(Vector2 factor) => new(Position, RotationRad, BaseSize, Scale2d * factor);
     
-    public readonly Transform2D ChangeScale2d(Vector2 amount) => new(Position, RotationRad, BaseSize, Scale2d + amount);
+    public Transform2D ChangeScale2d(Vector2 amount) => new(Position, RotationRad, BaseSize, Scale2d + amount);
     
-    public readonly Transform2D ChangeRotationRad(float amount) => new(Position, RotationRad + amount, BaseSize, Scale2d);
-    public readonly Transform2D ChangeRotationDeg(float amount) => new(Position, RotationRad + (amount * ShapeMath.DEGTORAD), BaseSize, Scale2d);
+    public Transform2D ChangeRotationRad(float amount) => new(Position, RotationRad + amount, BaseSize, Scale2d);
+    public Transform2D ChangeRotationDeg(float amount) => new(Position, RotationRad + (amount * ShapeMath.DEGTORAD), BaseSize, Scale2d);
     
-    public readonly Transform2D SetPosition(Vector2 newPosition) => new(newPosition, RotationRad, BaseSize, Scale2d);
-    public readonly Transform2D SetRotationRad(float newRotationRad) => new(Position, newRotationRad, BaseSize, Scale2d);
+    public Transform2D SetPosition(Vector2 newPosition) => new(newPosition, RotationRad, BaseSize, Scale2d);
+    public Transform2D SetRotationRad(float newRotationRad) => new(Position, newRotationRad, BaseSize, Scale2d);
+    public Transform2D SetRotationDeg(float newRotationDeg) => new(Position, newRotationDeg * ShapeMath.DEGTORAD, BaseSize, Scale2d);
     public Transform2D WrapRotationRad() => new(Position, ShapeMath.WrapAngleRad(RotationRad), BaseSize, Scale2d);
-    public readonly Transform2D SetSize(Size newSize) => new(Position, RotationRad, newSize, Scale2d);
-    public readonly Transform2D SetSize(float newSize) => new(Position, RotationRad, new(newSize), Scale2d);
+    public Transform2D SetSize(Size newSize) => new(Position, RotationRad, newSize, Scale2d);
+    public Transform2D SetSize(float newSize) => new(Position, RotationRad, new(newSize), Scale2d);
     
-    public readonly Transform2D SetScale(float newScale) => new(Position, RotationRad, BaseSize, newScale);
+    public Transform2D SetScale(float newScale) => new(Position, RotationRad, BaseSize, newScale);
     
     public Transform2D AddOffset(Transform2D offset)
     {

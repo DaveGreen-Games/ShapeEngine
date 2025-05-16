@@ -1,7 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Shapes;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Core.Structs;
 

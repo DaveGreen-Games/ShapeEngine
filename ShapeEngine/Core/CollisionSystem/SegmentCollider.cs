@@ -2,7 +2,7 @@ using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Core.CollisionSystem;
 
@@ -63,6 +63,14 @@ public class SegmentCollider : Collider
     public SegmentCollider(Transform2D offset, Vector2 dir, float originOffset = 0f) : base(offset)
     {
         this.dir = dir;
+        this.originOffset = originOffset;
+    }
+
+    public SegmentCollider(Segment segment, Vector2 parentPosition, float originOffset = 0f)
+    {
+        var offset = new Transform2D(segment.GetPoint(originOffset) - parentPosition);
+        Offset = offset;
+        dir = segment.Dir;
         this.originOffset = originOffset;
     }
 

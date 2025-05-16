@@ -2,7 +2,7 @@
 using ShapeEngine.Core;
 using ShapeEngine.UI;
 using System.Numerics;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 using Examples.Scenes.ExampleScenes;
 using Examples.UIElements;
 using ShapeEngine.Color;
@@ -10,7 +10,7 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
 using ShapeEngine.Persistent;
-using ShapeEngine.Random;
+using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Text;
 
 namespace Examples.Scenes
@@ -35,11 +35,15 @@ namespace Examples.Scenes
 
         private float tabChangeMouseWheelLockTimer = 0f;
         private readonly InputActionLabel quitLabel;
+
+        private readonly TextureSurface textureSurface;
         public MainScene()
         {
-            examples.Add(new ShapeDrawingExample());
-            examples.Add(new ShapesExample());
-            examples.Add(new ProjectedShapesExample());
+            examples.Add(new OutlineDrawingExample());
+            examples.Add(new StripedShapeDrawingExample());
+            examples.Add(new ShapeIntersectionExample());
+            examples.Add(new CurveDataExample());
+            examples.Add(new PhysicsExample());
             examples.Add(new EndlessSpaceCollision());
             examples.Add(new PolylineInflationExample());
             examples.Add(new AsteroidMiningExample());
@@ -88,31 +92,12 @@ namespace Examples.Scenes
             var action = GAMELOOP.InputActionUICancel;
             quitLabel = new(action, "Quit", GAMELOOP.FontDefault, Colors.PcWarm);
             
-            
-            
-
-            // var path = ShapeSavegame.ApplicationDocumentsPath;
-            //
-            // var savegameFolder = ShapeSavegame.CombinePath(path, "savegames");
-            //
-            //
-            
-            // var loaded = ShapeSavegame.Load<TestSaveGame>(savegameFolder, "main.txt");
-            // if (loaded == null)
-            // {
-            //     Console.WriteLine("     > File could not be loaded! New Savegame will be created.");
-            //     
-            //     var savegame = new TestSaveGame(Rng.Instance.RandI(0, 1000), "Test savegame text");
-            //     Console.WriteLine($"    > New savegame created with ID: {savegame.ID}");
-            //     
-            //     ShapeSavegame.Save(savegame, savegameFolder, "main.txt");
-            //     Console.WriteLine($"    > Savegame saved to: {savegameFolder}");
-            // }
-            // else
-            // {
-            //     Console.WriteLine($"     > Savegame successfully loaded from {savegameFolder}");
-            //     Console.WriteLine($"    > Savegame ID: {loaded.ID} | Text: {loaded.Text}");
-            // }
+            textureSurface = new TextureSurface(2048, 2048);
+            textureSurface.SetTextureFilter(TextureFilter.Trilinear);
+            textureSurface.BeginDraw(ColorRgba.Clear);
+            LineDrawingInfo stripedInfo = new(2f, ColorRgba.White, LineCapType.Capped, 6);
+            textureSurface.Rect.DrawStriped(16f, 30f, stripedInfo);
+            textureSurface.EndDraw();
         }
         
         
@@ -226,6 +211,12 @@ namespace Examples.Scenes
         }
         protected override void OnDrawUI(ScreenInfo ui)
         {
+            var source = textureSurface.Rect.ScaleSize(new Vector2(1f, 0.22f), AnchorPoint.TopCenter);
+            var destination = ui.Area.ScaleSize(new Vector2(1f, 0.22f), AnchorPoint.TopCenter);
+            textureSurface.Draw(source, destination, Colors.Dark);
+            
+            GAMELOOP.DrawFpsBox();
+            
             var uiSize = ui.Area.Size.ToVector2();
             buttonContainer.Draw();
 
@@ -274,6 +265,8 @@ namespace Examples.Scenes
             // var binaryDrawerRect = ui.Area.ApplyMargins(0.05f, 0.05f, 0.32f, 0.32f);
             // binaryDrawerRect.Draw(Colors.Medium);
             // BinaryDrawerTester.BinaryDrawer3x5Standard.Draw("8439567102", binaryDrawerRect.ApplyMargins(0.025f));
+            
+            // ShapeDrawing.DrawArrow3(ui.Area.Center, ui.MousePos, 0.25f, 0.25f, new LineDrawingInfo(4f, Colors.Warm, LineCapType.CappedExtended, 8), ColorRgba.Clear);
         }
 
 
@@ -295,6 +288,8 @@ namespace Examples.Scenes
             {
                 example.Close();
             }
+            
+            textureSurface.Unload();
         }
         
         
@@ -302,7 +297,9 @@ namespace Examples.Scenes
         private void PrevPage() => buttonContainer.PrevPage(true);
         private void DrawInputInfoBox(Rect area)
         {
-            area.Draw(Colors.PcDark.ColorRgba);
+            area.Draw(Colors.Dark);
+            var sourceRect = new Rect(Vector2.Zero, area.Size * 2);
+            textureSurface.Draw(sourceRect, area, Colors.Highlight.ChangeBrightness(-0.75f));
             area.DrawLines(2f, Colors.PcMedium.ColorRgba);
 
             var margin = area.Size.Min() * 0.025f;

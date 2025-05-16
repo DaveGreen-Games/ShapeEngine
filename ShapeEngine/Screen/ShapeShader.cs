@@ -1,7 +1,7 @@
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Screen;
 

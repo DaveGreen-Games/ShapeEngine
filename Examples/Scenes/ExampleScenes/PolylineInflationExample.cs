@@ -1,4 +1,4 @@
-﻿using ShapeEngine.Lib;
+﻿using ShapeEngine.StaticLib;
 using System.Numerics;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
@@ -6,6 +6,7 @@ using ShapeEngine.Input;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
+using ShapeEngine.StaticLib.Drawing;
 using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes
@@ -117,8 +118,7 @@ namespace Examples.Scenes.ExampleScenes
             int pickedVertex = -1;
 
             bool isMouseOnLine = false; // polyline.OverlapShape(new Circle(mousePos, vertexRadius * 2f));
-            var closest = polyline.GetClosestCollisionPoint(mousePos).Point;
-            int closestIndex = polyline.GetClosestIndexOnEdge(mousePos);
+            var closest = polyline.GetClosestPoint(mousePos, out float closestDistanceSquared, out int closestIndex);
             bool drawClosest = true;
 
             var createState = createPoint.State;
@@ -130,13 +130,13 @@ namespace Examples.Scenes.ExampleScenes
                 float disSq = (mousePos - p).LengthSquared();
                 if (pickedVertex == -1 && disSq < (vertexRadius * vertexRadius) * 2f)
                 {
-                    ShapeDrawing.DrawCircle(p, vertexRadius * 2f, Colors.Highlight);
+                    ShapeCircleDrawing.DrawCircle(p, vertexRadius * 2f, Colors.Highlight);
                     pickedVertex = i;
                 }
-                else ShapeDrawing.DrawCircle(p, vertexRadius, Colors.Medium);
+                else ShapeCircleDrawing.DrawCircle(p, vertexRadius, Colors.Medium);
                 if (drawClosest)
                 {
-                    disSq = (closest - p).LengthSquared();
+                    disSq = (closest.Point - p).LengthSquared();
                     if (disSq < (vertexRadius * vertexRadius) * 4f)
                     {
                         drawClosest = false;
@@ -147,10 +147,9 @@ namespace Examples.Scenes.ExampleScenes
 
             if (drawClosest)
             {
-                float disSq = (closest - mousePos).LengthSquared();
 
                 float tresholdSq = 30 * 30;
-                if (disSq > tresholdSq)
+                if (closestDistanceSquared > tresholdSq)
                 {
                     drawClosest = false;
                 }
@@ -213,7 +212,7 @@ namespace Examples.Scenes.ExampleScenes
                 }
             }
 
-            if (drawClosest) ShapeDrawing.DrawCircle(closest, vertexRadius, Colors.Warm);
+            if (drawClosest) ShapeCircleDrawing.DrawCircle(closest.Point, vertexRadius, Colors.Warm);
 
             Polygons? inflatedPolygons = null;
             if (lerpOffsetDelta > 10f)

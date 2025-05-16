@@ -3,7 +3,8 @@ using Raylib_cs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
+using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Text;
 using ShapeEngine.UI;
 

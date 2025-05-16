@@ -1,6 +1,6 @@
 using System.Reflection.Metadata;
 using System.Text;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Input;
 

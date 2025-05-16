@@ -2,7 +2,7 @@
 
 using System.Numerics;
 using Raylib_cs;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 using ShapeEngine.Persistent;
 using ShapeEngine.Core;
 using Examples.Scenes;
@@ -12,6 +12,7 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Screen;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
+using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Random;
 using ShapeEngine.Text;
 using ShapeEngine.UI;
@@ -263,6 +264,7 @@ namespace Examples
             fonts.Add(FontIDs.PromptThin, ContentLoader.LoadFont("Resources/Fonts/Prompt-Thin.ttf", 100));
             fonts.Add(FontIDs.TekoMedium, ContentLoader.LoadFont("Resources/Fonts/Teko-Medium.ttf", 100));
             fonts.Add(FontIDs.JetBrains, ContentLoader.LoadFont("Resources/Fonts/JetBrainsMono.ttf", 100));
+            fonts.Add(FontIDs.JetBrainsLarge, ContentLoader.LoadFont("Resources/Fonts/JetBrainsMono.ttf", 500));
             
             fontNames.Add("Gruppo Regular");
             fontNames.Add("Indie Flower Regular");
@@ -505,9 +507,9 @@ namespace Examples
             var circleCenter = tip + dir * size * 2;
             var left = circleCenter + new Vector2(-1, 0) * size;
             var top = circleCenter + new Vector2(0, -1) * size;
-            ShapeDrawing.DrawLine(tip, left, 1f, colorRgba, LineCapType.CappedExtended, 3);
-            ShapeDrawing.DrawLine(tip, top, 1f, colorRgba, LineCapType.CappedExtended, 3);
-            ShapeDrawing.DrawCircleSectorLines(circleCenter, size, 180, 270, 1f, colorRgba, false, 4f);
+            ShapeSegmentDrawing.DrawSegment(tip, left, 1f, colorRgba, LineCapType.CappedExtended, 3);
+            ShapeSegmentDrawing.DrawSegment(tip, top, 1f, colorRgba, LineCapType.CappedExtended, 3);
+            ShapeCircleDrawing.DrawCircleSectorLines(circleCenter, size, 180, 270, 1f, colorRgba, false, 4f);
         }
 
         protected override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
@@ -659,11 +661,16 @@ namespace Examples
 
         protected override void DrawUI(ScreenInfo ui)
         {
-            var fpsRect = UIRects.GetRect("top right top");//"top", "right", "top");
-            fpsLabel.Draw(fpsRect, new(1f, 0f), 1f);
+            if(mainScene == null || ! mainScene.Active) DrawFpsBox();
             
             paletteInfoBox.Draw(ui.Area.ApplyMargins(0.8f,0.025f,0.25f,0.65f));
             // UIRects.DebugDraw(new ColorRgba(Color.Azure), 1f);
+        }
+
+        public void DrawFpsBox()
+        {
+            var fpsRect = UIRects.GetRect("top right top");
+            fpsLabel.Draw(fpsRect, new(1f, 0f), 1f);
         }
 
         public int GetFontCount() { return fonts.Count; }

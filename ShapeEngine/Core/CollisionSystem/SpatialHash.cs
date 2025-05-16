@@ -1,9 +1,10 @@
 ﻿using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Interfaces;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.StaticLib.Drawing;
 
 namespace ShapeEngine.Core.CollisionSystem
 {
@@ -166,6 +167,20 @@ namespace ShapeEngine.Core.CollisionSystem
         {
             List<int> bucketIds = new();
             GetCellIDs(segment, ref bucketIds);
+            
+            FillCandidateBuckets(bucketIds, ref candidateBuckets);
+        }
+        public void GetCandidateBuckets(Line line, ref List<Bucket> candidateBuckets)
+        {
+            List<int> bucketIds = new();
+            GetCellIDs(line, ref bucketIds);
+            
+            FillCandidateBuckets(bucketIds, ref candidateBuckets);
+        }
+        public void GetCandidateBuckets(Ray ray, ref List<Bucket> candidateBuckets)
+        {
+            List<int> bucketIds = new();
+            GetCellIDs(ray, ref bucketIds);
             
             FillCandidateBuckets(bucketIds, ref candidateBuckets);
         }
@@ -447,6 +462,38 @@ namespace ShapeEngine.Core.CollisionSystem
                 }
             }
         }
+        private void GetCellIDs(Line line, ref List<int> idList)
+        {
+            var boundingRect = line.GetBoundingBox();
+            var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
+            var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
+
+            for (int j = topLeft.y; j <= bottomRight.y; j++)
+            {
+                for (int i = topLeft.x; i <= bottomRight.x; i++)
+                {
+                    int id = GetCellId(i, j);
+                    var cellRect = GetCellRectangle(id);
+                    if(cellRect.OverlapShape(line)) idList.Add(id);
+                }
+            }
+        }
+        private void GetCellIDs(Ray ray, ref List<int> idList)
+        {
+            var boundingRect = ray.GetBoundingBox();
+            var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
+            var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
+
+            for (int j = topLeft.y; j <= bottomRight.y; j++)
+            {
+                for (int i = topLeft.x; i <= bottomRight.x; i++)
+                {
+                    int id = GetCellId(i, j);
+                    var cellRect = GetCellRectangle(id);
+                    if(cellRect.OverlapShape(ray)) idList.Add(id);
+                }
+            }
+        }
         private void GetCellIDs(Triangle triangle, ref List<int> idList)
         {
             var boundingRect = triangle.GetBoundingBox();
@@ -552,6 +599,10 @@ namespace ShapeEngine.Core.CollisionSystem
                     break;
                 case ShapeType.Segment: GetCellIDs(collider.GetSegmentShape(), ref idList); 
                     break;
+                case ShapeType.Line: GetCellIDs(collider.GetLineShape(), ref idList); 
+                    break;
+                case ShapeType.Ray: GetCellIDs(collider.GetRayShape(), ref idList); 
+                    break;
                 case ShapeType.Triangle: GetCellIDs(collider.GetTriangleShape(), ref idList); 
                     break;
                 case ShapeType.Rect: GetCellIDs(collider.GetRectShape(), ref idList); 
@@ -564,17 +615,6 @@ namespace ShapeEngine.Core.CollisionSystem
                     break;
             }
         }
-
-        // private void GetCellIDs(CollisionBody collidable, ref List<int> idList)
-        // {
-        //     if (!collidable.HasColliders) return;
-        //
-        //     foreach (var collider in collidable.Colliders)
-        //     {
-        //         GetCellIDs(collider, ref idList);
-        //     }
-        // }
-        
         
         private void SetSpacing()
         {

@@ -1,4 +1,4 @@
-﻿using ShapeEngine.Lib;
+﻿using ShapeEngine.StaticLib;
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Shapes;
@@ -29,6 +29,10 @@ public class CollisionHandler : IBounds
                 if(register.Count <= 0) continue;
                 foreach (var info in register.Values)
                 {
+                    if (resolver.FilterCollisionPoints && info.TotalCollisionPointCount > 0)
+                    {
+                        info.GenerateFilteredCollisionPoint(resolver.CollisionPointsFilterType, resolver.Transform.Position);
+                    }
                     resolver.ResolveCollision(info);
                 }
             }
@@ -333,7 +337,7 @@ public class CollisionHandler : IBounds
                                         var refPoint = collider.PrevTransform.Position;// PrevPosition;
                                         if (!candidate.ContainsPoint(refPoint))
                                         {
-                                            var closest = candidate.GetClosestCollisionPoint(refPoint);
+                                            var closest = candidate.GetClosestPoint(refPoint, out float disSquared);
                                             collisionPoints ??= new();
                                             collisionPoints.Add(closest);
                                         }
@@ -411,7 +415,7 @@ public class CollisionHandler : IBounds
                                         var refPoint = collider.PrevTransform.Position;// PrevPosition;
                                         if (!candidate.ContainsPoint(refPoint))
                                         {
-                                            var closest = candidate.GetClosestCollisionPoint(refPoint);
+                                            var closest = candidate.GetClosestPoint(refPoint, out float disSquared);
                                             collisionPoints ??= new();
                                             collisionPoints.Add(closest);
                                         }
@@ -598,6 +602,96 @@ public class CollisionHandler : IBounds
                 if(parent == null) continue;
     
                 var collisionPoints = shape.Intersect(candidate);
+    
+                if (collisionPoints == null || !collisionPoints.Valid) continue;
+                
+                var entry = new IntersectSpaceEntry(candidate, collisionPoints);
+                if (intersectSpaceRegisters.TryGetValue(parent, out var register))
+                {
+                    register.Add(entry);
+                }
+                else
+                {
+                    var newRegister = new IntersectSpaceRegister(parent, 2);
+                    newRegister.Add(entry);
+                    intersectSpaceRegisters.Add(parent, newRegister);
+                }
+            }
+        }
+        
+        if(intersectSpaceRegisters.Count <= 0) return null;
+        
+        var result = new IntersectSpaceResult(origin, intersectSpaceRegisters.Count);
+        foreach (var register in intersectSpaceRegisters.Values)
+        {
+            result.Add(register);
+        }
+        intersectSpaceRegisters.Clear();
+        return result;
+    }
+    public IntersectSpaceResult? IntersectSpace(Line line, Vector2 origin, BitFlag collisionMask)
+    {
+        collisionCandidateBuckets.Clear();
+        collisionCandidateCheckRegister.Clear();
+        
+        spatialHash.GetCandidateBuckets(line, ref collisionCandidateBuckets);
+        if (collisionCandidateBuckets.Count <= 0) return null;
+        
+        foreach (var bucket in collisionCandidateBuckets)
+        {
+            foreach (var candidate in bucket)
+            {
+                if (!collisionMask.Has(candidate.CollisionLayer)) continue;
+                if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+                var parent = candidate.Parent;
+                if(parent == null) continue;
+    
+                var collisionPoints = line.Intersect(candidate);
+    
+                if (collisionPoints == null || !collisionPoints.Valid) continue;
+                
+                var entry = new IntersectSpaceEntry(candidate, collisionPoints);
+                if (intersectSpaceRegisters.TryGetValue(parent, out var register))
+                {
+                    register.Add(entry);
+                }
+                else
+                {
+                    var newRegister = new IntersectSpaceRegister(parent, 2);
+                    newRegister.Add(entry);
+                    intersectSpaceRegisters.Add(parent, newRegister);
+                }
+            }
+        }
+        
+        if(intersectSpaceRegisters.Count <= 0) return null;
+        
+        var result = new IntersectSpaceResult(origin, intersectSpaceRegisters.Count);
+        foreach (var register in intersectSpaceRegisters.Values)
+        {
+            result.Add(register);
+        }
+        intersectSpaceRegisters.Clear();
+        return result;
+    }
+    public IntersectSpaceResult? IntersectSpace(Ray ray, Vector2 origin, BitFlag collisionMask)
+    {
+        collisionCandidateBuckets.Clear();
+        collisionCandidateCheckRegister.Clear();
+        
+        spatialHash.GetCandidateBuckets(ray, ref collisionCandidateBuckets);
+        if (collisionCandidateBuckets.Count <= 0) return null;
+        
+        foreach (var bucket in collisionCandidateBuckets)
+        {
+            foreach (var candidate in bucket)
+            {
+                if (!collisionMask.Has(candidate.CollisionLayer)) continue;
+                if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+                var parent = candidate.Parent;
+                if(parent == null) continue;
+    
+                var collisionPoints = ray.Intersect(candidate);
     
                 if (collisionPoints == null || !collisionPoints.Valid) continue;
                 
@@ -1046,6 +1140,53 @@ public class CollisionHandler : IBounds
             }
         }
     }
+    public void CastSpace(Line line, BitFlag collisionMask, ref CastSpaceResult result)
+    {
+        if(result.Count > 0) result.Clear();
+        collisionCandidateBuckets.Clear();
+        collisionCandidateCheckRegister.Clear();
+        
+        spatialHash.GetCandidateBuckets(line, ref collisionCandidateBuckets);
+        if (collisionCandidateBuckets.Count <= 0) return;
+        foreach (var bucket in collisionCandidateBuckets)
+        {
+            foreach (var candidate in bucket)
+            {
+                if (candidate.Parent == null) continue;
+                if (!collisionMask.Has(candidate.CollisionLayer)) continue;
+                if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+                
+                if (candidate.Overlap(line))
+                {
+                    result.AddCollider(candidate);
+                }
+            }
+        }
+    }
+    public void CastSpace(Ray ray, BitFlag collisionMask, ref CastSpaceResult result)
+    {
+        if(result.Count > 0) result.Clear();
+        collisionCandidateBuckets.Clear();
+        collisionCandidateCheckRegister.Clear();
+        
+        spatialHash.GetCandidateBuckets(ray, ref collisionCandidateBuckets);
+        if (collisionCandidateBuckets.Count <= 0) return;
+        foreach (var bucket in collisionCandidateBuckets)
+        {
+            foreach (var candidate in bucket)
+            {
+                if (candidate.Parent == null) continue;
+                if (!collisionMask.Has(candidate.CollisionLayer)) continue;
+                if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+                
+                if (candidate.Overlap(ray))
+                {
+                    result.AddCollider(candidate);
+                }
+            }
+        }
+    }
+
     public void CastSpace(Triangle shape, BitFlag collisionMask, ref CastSpaceResult result)
     {
         if(result.Count > 0) result.Clear();
@@ -1246,6 +1387,57 @@ public class CollisionHandler : IBounds
 
         return count;
     }
+    public int CastSpace(Line line, BitFlag collisionMask)
+    {
+        collisionCandidateBuckets.Clear();
+        collisionCandidateCheckRegister.Clear();
+        
+        spatialHash.GetCandidateBuckets(line, ref collisionCandidateBuckets);
+        if (collisionCandidateBuckets.Count <= 0) return 0;
+
+        int count = 0;
+        foreach (var bucket in collisionCandidateBuckets)
+        {
+            foreach (var candidate in bucket)
+            {
+                if (!collisionMask.Has(candidate.CollisionLayer)) continue;
+                if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+                
+                if (candidate.Overlap(line))
+                {
+                    count++;
+                }
+            }
+        }
+
+        return count;
+    }
+    public int CastSpace(Ray ray, BitFlag collisionMask)
+    {
+        collisionCandidateBuckets.Clear();
+        collisionCandidateCheckRegister.Clear();
+        
+        spatialHash.GetCandidateBuckets(ray, ref collisionCandidateBuckets);
+        if (collisionCandidateBuckets.Count <= 0) return 0;
+
+        int count = 0;
+        foreach (var bucket in collisionCandidateBuckets)
+        {
+            foreach (var candidate in bucket)
+            {
+                if (!collisionMask.Has(candidate.CollisionLayer)) continue;
+                if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+                
+                if (candidate.Overlap(ray))
+                {
+                    count++;
+                }
+            }
+        }
+
+        return count;
+    }
+
     public int CastSpace(Triangle shape, BitFlag collisionMask)
     {
         collisionCandidateBuckets.Clear();

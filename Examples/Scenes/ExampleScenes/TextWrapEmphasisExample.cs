@@ -1,6 +1,6 @@
 ﻿
 using System.Drawing;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 using System.Numerics;
 using System.Text.RegularExpressions;
 using ShapeEngine.Core.Structs;

@@ -1,5 +1,5 @@
 using ShapeEngine.Core;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 using ShapeEngine.Screen;
 using System.Numerics;
 using Clipper2Lib;
@@ -9,6 +9,7 @@ using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
+using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Pathfinding;
 using Color = System.Drawing.Color;
 using Path = ShapeEngine.Pathfinding.Path;
@@ -444,7 +445,7 @@ public class PathfinderExample2 : ExampleScene
             if (!body.GetBoundingBox().OverlapShape(cameraRect)) return;
             // body. DrawLines(body.Radius * 0.25f, Colors.Special);
             var c = Predictor ? Colors.PcHighlight : Colors.PcSpecial;
-            ShapeDrawing.DrawCircleFast(body.Center, body.Radius, c.ColorRgba);
+            ShapeCircleDrawing.DrawCircleFast(body.Center, body.Radius, c.ColorRgba);
 
 
             // if (Predictor)
@@ -543,7 +544,7 @@ public class PathfinderExample2 : ExampleScene
                 if (path.Rects.Count > 0)
                 {
                     lastTargetPosition = request.End;
-                    nextPathPoint = path.Rects[0].GetClosestDistanceTo(request.End).A; // path.Rects[0].GetClosestPoint(request.End).Closest.Point;
+                    nextPathPoint = path.Rects[0].GetClosestPoint(request.End, out float disSquared).Point; // path.Rects[0].GetClosestPoint(request.End).Closest.Point;
                     currentPathIndex = 1;
                     return;
                 }
@@ -792,10 +793,10 @@ public class PathfinderExample2 : ExampleScene
                 }
                 else
                 {
-                    var cd = newShape.GetClosestDistanceTo(existingShape);
+                    var cd = newShape.GetClosestPoint(existingShape);
                     if (cd.DistanceSquared <= cellDisSq)
                     {
-                        var fillShape = Polygon.Generate(cd.A, 7, cellDistance, cellDistance * 2);
+                        var fillShape = Polygon.Generate(cd.Self.Point, 7, cellDistance, cellDistance * 2);
                         newShape.UnionShapeSelf(fillShape, FillRule.NonZero);
                         newShape.UnionShapeSelf(existingShape, FillRule.NonZero);
                         shapes.RemoveAt(j);
@@ -891,10 +892,10 @@ public class PathfinderExample2 : ExampleScene
             }
             else
             {
-                var cd = asteroidShape.GetClosestDistanceTo(otherShape);
+                var cd = asteroidShape.GetClosestPoint(otherShape);
                 if (cd.DistanceSquared < cellDisSq)
                 {
-                    fillShape = Polygon.Generate(cd.A, 7, cellDistance, cellDistance * 2);
+                    fillShape = Polygon.Generate(cd.Self.Point, 7, cellDistance, cellDistance * 2);
                     var unionResult = Clipper.Union(asteroidShape.ToClipperPaths(), fillShape.ToClipperPaths(), FillRule.NonZero);
                     if (unionResult.Count > 0)
                     {
@@ -1146,7 +1147,7 @@ public class PathfinderExample2 : ExampleScene
                 outerBoundary.DrawLines(thickness, outerColor);
             }
             
-            ShapeDrawing.DrawCircleLines(ship.GetChasePosition(), MinPathRequestDistance, 8f, Colors.PcCold.ColorRgba);
+            ShapeCircleDrawing.DrawCircleLines(ship.GetChasePosition(), MinPathRequestDistance, 8f, Colors.PcCold.ColorRgba);
             // ShapeDrawing.DrawCircleLines(ship.GetChasePosition(), Chaser.MaxPathRequestDistance, 8f, new ColorRgba(Color.Aqua));
         }
 

@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using Raylib_cs;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Color;
 

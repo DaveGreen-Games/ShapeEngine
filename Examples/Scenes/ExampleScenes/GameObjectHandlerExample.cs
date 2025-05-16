@@ -1,6 +1,6 @@
 ﻿using Raylib_cs;
 using ShapeEngine.Core;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 using System.Numerics;
 using System.Text;
 using ShapeEngine.Color;
@@ -8,6 +8,7 @@ using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
+using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Random;
 namespace Examples.Scenes.ExampleScenes
 {
@@ -217,38 +218,38 @@ namespace Examples.Scenes.ExampleScenes
             // circleCollider.OnIntersected += Overlap;
             
             Layer = SpawnAreaLayers.ObjectFlag;
+
+            FilterCollisionPoints = true;
+            CollisionPointsFilterType = CollisionPointsFilterType.Combined;
         }
 
         protected override void Collision(CollisionInformation info)
         {
-            CollisionPoint p = new();
-            if (info.Count > 0)
-            {
-                foreach (var collision in info)
-                {
-                    if(!collision.FirstContact) continue;
-                    if(collision.Points == null) continue;
-                    if (collision.Validate(out CollisionPoint combined))
-                    {
-                        if (combined.Valid) p = p.Average(combined);
-                    }
-                }
-            }
+            // CollisionPoint p = new();
+            // if (info.Count > 0)
+            // {
+            //     foreach (var collision in info)
+            //     {
+            //         if(!collision.FirstContact) continue;
+            //         if(collision.Points == null) continue;
+            //         if (collision.Validate(out CollisionPoint combined))
+            //         {
+            //             if (combined.Valid) p = p.Combine(combined);
+            //         }
+            //     }
+            // }
 
+            if(!info.FirstContact) return;
+            
+            var p = info.FilteredCollisionPoint;
             if (p.Valid)
             {
                 Velocity = Velocity.Reflect(p.Normal);
             }
         }
 
-        // private void Overlap(Collider col, CollisionInformation info)
-        // {
-        //     if (info.CollisionSurface.Valid)
-        //     {
-        //         // timer = 0.25f;
-        //         Velocity = Velocity.Reflect(info.CollisionSurface.Normal);
-        //     }
-        // }
+        
+
         public override void DrawGame(ScreenInfo game)
         {
             var c = circleCollider.GetCircleShape();
@@ -269,10 +270,7 @@ namespace Examples.Scenes.ExampleScenes
         public override void DrawGameUI(ScreenInfo gameUi)
         {
         }
-        public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
-        {
-            
-        }
+        
     }
    
     internal class Bullet : CollisionObject
@@ -493,7 +491,7 @@ namespace Examples.Scenes.ExampleScenes
                     if (collision.Validate(out var combined, out var closest))
                     {
                         // var cp = collision.Points.GetAverageCollisionPoint();
-                        if (combined.Valid) p = p.Average(combined);
+                        if (combined.Valid) p = p.Combine(combined);
                     }
                 }
             }
@@ -568,31 +566,36 @@ namespace Examples.Scenes.ExampleScenes
             // triangleCollider.OnIntersected += Overlap;
             
             Layer = SpawnAreaLayers.ObjectFlag;
+            FilterCollisionPoints = true;
+            CollisionPointsFilterType = CollisionPointsFilterType.Closest;
         }
 
         protected override void Collision(CollisionInformation info)
         {
-            CollisionPoint p = new();
-            if (info.Count > 0)
-            {
-                foreach (var collision in info)
-                {
-                    if(!collision.FirstContact) continue;
-                    if(collision.Points == null) continue;
-                    if (collision.Validate(out CollisionPoint combined))
-                    {
-                        // var cp = collision.Points.GetAverageCollisionPoint();
-                        if (combined.Valid) p = p.Average(combined);
-                    }
-                }
-            }
+            // CollisionPoint p = new();
+            // if (info.Count > 0)
+            // {
+            //     foreach (var collision in info)
+            //     {
+            //         if(!collision.FirstContact) continue;
+            //         if(collision.Points == null) continue;
+            //         if (collision.Validate(out CollisionPoint combined))
+            //         {
+            //             // var cp = collision.Points.GetAverageCollisionPoint();
+            //             if (combined.Valid) p = p.Combine(combined);
+            //         }
+            //     }
+            // }
 
+            if(!info.FirstContact) return;
+            var p = info.FilteredCollisionPoint;
             if (p.Valid)
             {
                 Velocity = Velocity.Reflect(p.Normal);
                 Transform = Transform.SetRotationRad(Velocity.AngleRad());
             }
         }
+        
 
         // private void Overlap(Collider col, CollisionInformation info)
         // {
@@ -989,7 +992,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             if (segmentStarted)
             {
-                ShapeDrawing.DrawCircle(startPoint, 15f, Colors.Highlight);
+                ShapeCircleDrawing.DrawCircle(startPoint, 15f, Colors.Highlight);
                 Segment s = new(startPoint, mousePos);
                 s.Draw(4, Colors.Highlight);
 

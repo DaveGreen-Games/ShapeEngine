@@ -42,7 +42,7 @@ public static class Colors
     public static readonly ColorScheme DefaultColorscheme = new
     (
         PcBackground.Clone(new ColorRgba(System.Drawing.Color.DarkSlateGray).ToHSL().ChangeLightness(-0.15f).ToRGB()),
-        PcDark.Clone(new ColorRgba(System.Drawing.Color.DimGray).ToHSL().ChangeLightness(-0.1f).ToRGB()),
+        PcDark.Clone(new ColorRgba(System.Drawing.Color.DarkSlateGray).ToHSL().ChangeLightness(-0.1f).ToRGB()),
         PcMedium.Clone(new ColorRgba(System.Drawing.Color.DarkGray)),
         PcLight.Clone(new ColorRgba(System.Drawing.Color.LightGray)),
         PcText.Clone(new ColorRgba(System.Drawing.Color.AntiqueWhite)),

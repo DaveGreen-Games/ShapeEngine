@@ -1,8 +1,8 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ShapeEngine.Lib;
-using ShapeVec = ShapeEngine.Lib.ShapeVec;
+using ShapeEngine.StaticLib;
+using ShapeVec = ShapeEngine.StaticLib.ShapeVec;
 
 
 //Source: https://github.com/godotengine/godot/blob/master/modules/mono/glue/GodotSharp/GodotSharp/Core/TransformMatrix2D.cs

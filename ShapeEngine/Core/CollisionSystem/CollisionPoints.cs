@@ -1,9 +1,30 @@
 using System.Numerics;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
+using ShapeEngine.Random;
 
 namespace ShapeEngine.Core.CollisionSystem;
+
+/// <summary>
+/// First - Selects the first collision point.
+/// Closest - Selects the collision point closest to the reference point.
+/// Furthest - Selects the collision point furthest from the reference point.
+/// Combined - Computes the average collision point.
+/// PointingTowards - Selects the collision point with a normal pointing the most towards the reference position.
+/// PointingAway - Selects the collision point with a normal pointing the most away from the reference position.
+/// Random - Selects a random collision point.
+/// </summary>
+public enum CollisionPointsFilterType
+{
+    First,
+    Closest,
+    Furthest,
+    Combined,
+    PointingTowards,
+    PointingAway,
+    Random
+}
 
 public class CollisionPoints : ShapeList<CollisionPoint>
 {
@@ -536,7 +557,140 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     #endregion
     
     #region CollisionPoint
+    /// <summary>
+    /// Filters the CollisionPoints list based on a given filter type and reference point.
+    /// PointingTowards and PointingAway calculate the direction from the collision point to the reference point.
+    /// PointingTowards uses the normal that is facing the same direction as the direction from the collision point to the reference point.
+    /// PointingAway uses the normal that is facing the opposite direction as the direction from the collision point to the reference point.
+    /// </summary>
+    /// <param name="filterType">The filter type for selecting a collision point.</param>
+    /// <param name="referencePoint">The reference point that is used for closest, furthest, pointing towards, and pointing away calculations.</param>
+    /// <returns></returns>
+    public CollisionPoint Filter(CollisionPointsFilterType filterType, Vector2 referencePoint = new())
+    {
+        if (this.Count <= 0) return new();
+        if (this.Count == 1) return this[0];
+        
+        switch (filterType)
+        {
+            case CollisionPointsFilterType.First: return this[0];
+            case CollisionPointsFilterType.Closest:
+                CollisionPoint closest = new();
+                float minDisSquared = -1f;
+                foreach (var point in this)
+                {
+                    var disSquared = (point.Point - referencePoint).LengthSquared();
+                    if (disSquared < minDisSquared || minDisSquared < 0)
+                    {
+                        minDisSquared = disSquared;
+                        closest = point;
+                    }
+                }
+                return closest;
+            case CollisionPointsFilterType.Furthest:
+                CollisionPoint furthest = new();
+                float maxDisSquared = -1f;
+                foreach (var point in this)
+                {
+                    var disSquared = (point.Point - referencePoint).LengthSquared();
+                    if (disSquared > maxDisSquared || maxDisSquared < 0)
+                    {
+                        maxDisSquared = disSquared;
+                        furthest = point;
+                    }
+                }
+                return furthest;
+            case CollisionPointsFilterType.Combined:
+                CollisionPoint combined = new();
+                foreach (var point in this)
+                {
+                    if(combined.Valid) combined = combined.Combine(point);
+                    else combined = point;
+                }
+                return combined;
+            case CollisionPointsFilterType.PointingTowards:
+                CollisionPoint pointingTowards = new();
+                float maxDot = -1f;
+                foreach (var point in this)
+                {
+                    var dir = (referencePoint - point.Point).Normalize();
+                    var dot = point.Normal.Dot(dir);
+                    if (dot > maxDot || maxDot < 0)
+                    {
+                        maxDot = dot;
+                        pointingTowards = point;
+                    }
+                }
+                return pointingTowards;
+            case CollisionPointsFilterType.PointingAway:
+                CollisionPoint pointingAway = new();
+                float minDot = -1f;
+                foreach (var point in this)
+                {
+                    var dir = (referencePoint - point.Point).Normalize();
+                    var dot = point.Normal.Dot(dir);
+                    if (dot < minDot || minDot < 0)
+                    {
+                        minDot = dot;
+                        pointingAway = point;
+                    }
+                }
+                return pointingAway;
+            case CollisionPointsFilterType.Random: return this[Rng.Instance.RandI(Count)];
+            default: return this[0];
+        }
+    }
+  
+    /// <summary>
+    /// Filters the CollisionPoints list based on a given filter type and reference point.
+    /// Closest and Furthest use the reference point.
+    /// PointingTowards and PointingAway use the reference direction.
+    /// PointingTowards uses the Normal that is facing the same direction as the referenceDirection.
+    /// PointingAway uses the Normal that is facing the opposite direction as the reference direction.
+    /// </summary>
+    /// <param name="filterType">The filter type for selecting a collision point.</param>
+    /// <param name="referencePoint">The reference point that is used for closest and furthest calculations.</param>
+    /// <param name="referenceDirection">The reference direction that is used for pointing towards and pointing away calculations.</param>
+    /// <returns></returns>
+    public CollisionPoint Filter(CollisionPointsFilterType filterType, Vector2 referencePoint, Vector2 referenceDirection)
+    {
+        if (this.Count <= 0) return new();
+        if (this.Count == 1) return this[0];
 
+        if (filterType == CollisionPointsFilterType.PointingTowards)
+        {
+            CollisionPoint pointingTowards = new();
+            float maxDot = -1f;
+            foreach (var point in this)
+            {
+                var dot = point.Normal.Dot(referenceDirection);
+                if (dot > maxDot || maxDot < 0)
+                {
+                    maxDot = dot;
+                    pointingTowards = point;
+                }
+            }
+            return pointingTowards;
+            
+        }
+        if (filterType == CollisionPointsFilterType.PointingAway)
+        {
+            CollisionPoint pointingAway = new();
+            float minDot = -1f;
+            foreach (var point in this)
+            {
+                var dot = point.Normal.Dot(referenceDirection);
+                if (dot < minDot || minDot < 0)
+                {
+                    minDot = dot;
+                    pointingAway = point;
+                }
+            }
+            return pointingAway;
+        }
+        return Filter(filterType, referencePoint);
+    }
+    
     public CollisionPoint GetCombinedCollisionPoint()
     {
         var avgPoint = new Vector2();
@@ -736,6 +890,79 @@ public class CollisionPoints : ShapeList<CollisionPoint>
         return true;
     }
     
+    public bool SortFirstLeft()
+    {
+        if(Count <= 0) return false;
+        if(Count == 1) return true;
+        this.Sort
+        (
+            comparison: (a, b) =>
+            {
+                float valueA = a.Point.X;
+                float valueB = b.Point.X;
+
+                if (valueA > valueB) return 1;
+                if (MathF.Abs(x: valueA - valueB) < 0.01f) return 0;
+                return -1;
+            }
+        );
+        return true;
+    }
+    public bool SortFirstRight()
+    {
+        if(Count <= 0) return false;
+        if(Count == 1) return true;
+        this.Sort
+        (
+            comparison: (a, b) =>
+            {
+                float valueA = a.Point.X;
+                float valueB = b.Point.X;
+
+                if (valueA < valueB) return 1;
+                if (MathF.Abs(x: valueA - valueB) < 0.01f) return 0;
+                return -1;
+            }
+        );
+        return true;
+    }
+    
+    public bool SortFirstTop()
+    {
+        if(Count <= 0) return false;
+        if(Count == 1) return true;
+        this.Sort
+        (
+            comparison: (a, b) =>
+            {
+                float valueA = a.Point.Y;
+                float valueB = b.Point.Y;
+
+                if (valueA > valueB) return 1;
+                if (MathF.Abs(x: valueA - valueB) < 0.01f) return 0;
+                return -1;
+            }
+        );
+        return true;
+    }
+    public bool SortFirstBottom()
+    {
+        if(Count <= 0) return false;
+        if(Count == 1) return true;
+        this.Sort
+        (
+            comparison: (a, b) =>
+            {
+                float valueA = a.Point.Y;
+                float valueB = b.Point.Y;
+
+                if (valueA < valueB) return 1;
+                if (MathF.Abs(x: valueA - valueB) < 0.01f) return 0;
+                return -1;
+            }
+        );
+        return true;
+    }
 
     public Points GetUniquePoints()
     {

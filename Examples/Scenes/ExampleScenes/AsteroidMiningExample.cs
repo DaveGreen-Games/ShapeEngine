@@ -1,5 +1,5 @@
 ﻿using ShapeEngine.Core;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 using System.Numerics;
 using System.Text;
 using ShapeEngine.Color;
@@ -7,43 +7,11 @@ using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
-using Color = System.Drawing.Color;
+using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Random;
 namespace Examples.Scenes.ExampleScenes
 {
-    // public abstract class SpaceObject : GameObject
-    // {
-    //     // protected bool dead = false;
-    //     // public int Layer { get; set; } = 0;
-    //     // public bool Kill()
-    //     // {
-    //         // if (dead) return false;
-    //         // dead = true;
-    //         // return true;
-    //     // }
-    //
-    //     // public abstract Vector2 GetPosition();
-    //     // public abstract Rect GetBoundingBox();
-    //
-    //     public virtual void Update(GameTime time, ScreenInfo game, ScreenInfo ui) { }
-    //     public virtual void DrawGame(ScreenInfo game) { }
-    //     public virtual void DrawGameUI(ScreenInfo ui) { }
-    //     // public virtual void Overlap(CollisionInformation info) { }
-    //     // public virtual void OverlapEnded(ICollidable other) { }
-    //     public virtual void AddedToHandler(GameObjectHandler gameObjectHandler) { }
-    //     public virtual void RemovedFromHandler(GameObjectHandler gameObjectHandler) { }
-    //     
-    //     
-    //     public bool IsDead() { return dead; }
-    //     public bool DrawToGame(Rect gameArea) { return true; }
-    //     public bool DrawToGameUI(Rect uiArea) { return false; }
-    //     public bool CheckHandlerBounds() { return false; }
-    //     public void LeftHandlerBounds(BoundsCollisionInfo info) { }
-    //
-    //     public virtual bool HasCollisionBody() => false;
-    //
-    //     public virtual CollisionBody? GetCollisionBody() => null;
-    // }
+    
     public class AsteroidShard : GameObject
     {
         // private Polygon shape;
@@ -262,8 +230,8 @@ namespace Examples.Scenes.ExampleScenes
 
 
             var shape = GetPolygon();
-            var seg = shape.GetClosestSegment(point);
-            damagedSegments.AddSegment(seg.Segment);
+            var seg = shape.GetClosestSegment(point, out float distanceSquared);
+            damagedSegments.AddSegment(seg.segment);
 
             curThreshold -= amount;
             if(curThreshold <= 0f)
@@ -492,7 +460,7 @@ namespace Examples.Scenes.ExampleScenes
             if (hybernate) return;
             var c = Colors.Cold;
             shape.DrawLines(4f, c);
-            ShapeDrawing.DrawCircle(tip, 8f, c);
+            ShapeCircleDrawing.DrawCircle(tip, 8f, c);
 
             if (laserEnabled && laserPoints.Count > 1)
             {
@@ -500,7 +468,7 @@ namespace Examples.Scenes.ExampleScenes
                 {
                     Segment laserSegment = new(laserPoints[i], laserPoints[i + 1]);
                     laserSegment.Draw(4f, c);
-                    ShapeDrawing.DrawCircle(laserPoints[i + 1], Rng.Instance.RandF(6f, 12f), c, 12);
+                    ShapeCircleDrawing.DrawCircle(laserPoints[i + 1], Rng.Instance.RandF(6f, 12f), c, 12);
                 }
                 
             }

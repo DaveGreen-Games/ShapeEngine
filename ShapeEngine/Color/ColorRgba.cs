@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using Raylib_cs;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Color;
 
@@ -103,6 +103,41 @@ public readonly struct ColorRgba : IEquatable<ColorRgba>
     #endregion
 
     #region Transformation
+    public static ColorRgba Lerp(ColorRgba from, ColorRgba to, float f)
+    {
+        return new ColorRgba(
+            (byte)ShapeMath.LerpInt(from.R, to.R, f),
+            (byte)ShapeMath.LerpInt(from.G, to.G, f),
+            (byte)ShapeMath.LerpInt(from.B, to.B, f),
+            (byte)ShapeMath.LerpInt(from.A, to.A, f));
+    }
+
+    public static ColorRgba ExpDecayLerp(ColorRgba from, ColorRgba to, float f, float dt)
+    {
+        return new ColorRgba(
+            (byte)ShapeMath.ExpDecayLerpInt(from.R, to.R, f, dt),
+            (byte)ShapeMath.ExpDecayLerpInt(from.G, to.G, f, dt),
+            (byte)ShapeMath.ExpDecayLerpInt(from.B, to.B, f, dt),
+            (byte)ShapeMath.ExpDecayLerpInt(from.A, to.A, f, dt));
+    }
+    public static ColorRgba PowLerp(ColorRgba from, ColorRgba to, float remainder, float dt)
+    {
+        return new ColorRgba(
+            (byte)ShapeMath.PowLerpInt(from.R, to.R, remainder, dt),
+            (byte)ShapeMath.PowLerpInt(from.G, to.G, remainder, dt),
+            (byte)ShapeMath.PowLerpInt(from.B, to.B, remainder, dt),
+            (byte)ShapeMath.PowLerpInt(from.A, to.A, remainder, dt));
+    }
+    public static ColorRgba ExpDecayLerpComplex(ColorRgba from, ColorRgba to, float decay, float dt)
+    {
+        return new ColorRgba(
+            (byte)ShapeMath.ExpDecayLerpIntComplex(from.R, to.R, decay, dt),
+            (byte)ShapeMath.ExpDecayLerpIntComplex(from.G, to.G, decay, dt),
+            (byte)ShapeMath.ExpDecayLerpIntComplex(from.B, to.B, decay, dt),
+            (byte)ShapeMath.ExpDecayLerpIntComplex(from.A, to.A, decay, dt));
+    }
+
+    
     public ColorRgba Lerp(ColorRgba to, float f)
     {
         return new ColorRgba(

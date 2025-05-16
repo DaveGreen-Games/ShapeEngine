@@ -1,5 +1,5 @@
 using ShapeEngine.Color;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Screen;
 

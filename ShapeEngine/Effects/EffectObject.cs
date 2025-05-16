@@ -1,5 +1,5 @@
 ﻿using ShapeEngine.Core;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 using ShapeEngine.Timing;
 using System.Numerics;
 using ShapeEngine.Color;

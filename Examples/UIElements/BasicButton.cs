@@ -1,5 +1,5 @@
 ﻿using ShapeEngine.UI;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 
 namespace Examples.UIElements
 {

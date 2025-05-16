@@ -1,10 +1,11 @@
 using System.ComponentModel;
 using System.Numerics;
-using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.Core.CollisionSystem;
+
+
 
 public abstract class CollisionObject : PhysicsObject
 {
@@ -47,6 +48,16 @@ public abstract class CollisionObject : PhysicsObject
 
     public bool ProjectShape = false;
 
+    /// <summary>
+    /// Determines if all generated collision points are filtered based on the CollisionPointsFilterType.
+    /// ComputeIntersections has to be enabled on colliders for this to work. Only colliders that have ComputeIntersections enabled will generate CollisionPoints that
+    /// are then filtered into a single CollisionPoint for each CollisionInformation.
+    /// </summary>
+    public bool FilterCollisionPoints = false;
+    public CollisionPointsFilterType CollisionPointsFilterType = CollisionPointsFilterType.Closest;
+
+    
+    
     /// <summary>
     /// If set to true:
     ///     - ColliderIntersected(), ColliderOverlapped(), and ColliderOverlapEnded() functions will be called on this CollisionObject

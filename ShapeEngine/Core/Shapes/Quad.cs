@@ -1,7 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Lib;
+using ShapeEngine.StaticLib;
 using ShapeEngine.Random;
 namespace ShapeEngine.Core.Shapes;
 
@@ -212,7 +212,15 @@ public readonly struct Quad : IEquatable<Quad>
     #endregion
 
     #region Points & Vertex
-
+    public Segment GetSegment(int index)
+    {
+        if (index < 0) return new Segment();
+        var i = index % 4;
+        if(i == 0) return new Segment(A, B);
+        if(i == 1) return new Segment(B, C);
+        if(i == 2) return new Segment(C, D);
+        return new Segment(D, A);
+    }
     public Vector2 GetPoint(AnchorPoint alignement) => GetPoint(alignement.X, alignement.Y);
     public Vector2 GetPoint(float alignementX, float alignementY)
     {
@@ -284,10 +292,10 @@ public readonly struct Quad : IEquatable<Quad>
     public Quad ChangeRotation(float rad, AnchorPoint alignement)
     {
         var pivotPoint = GetPoint(alignement);
-        var a = (A - pivotPoint).Rotate(rad);
-        var b = (B - pivotPoint).Rotate(rad);
-        var c = (C - pivotPoint).Rotate(rad);
-        var d = (D - pivotPoint).Rotate(rad);
+        var a = pivotPoint + (A - pivotPoint).Rotate(rad);
+        var b = pivotPoint + (B - pivotPoint).Rotate(rad);
+        var c = pivotPoint + (C - pivotPoint).Rotate(rad);
+        var d = pivotPoint + (D - pivotPoint).Rotate(rad);
         return new(a,b,c,d);
     }
     public Quad SetRotation(float angleRad, AnchorPoint alignement)
@@ -697,6 +705,170 @@ public readonly struct Quad : IEquatable<Quad>
     #endregion
 
     #region Contains
+    
+    
+    public static bool ContainsQuadPoint(Vector2 qA, Vector2 qB, Vector2 qC, Vector2 qD, Vector2 point)
+   {
+       var oddNodes = false;
+
+       if (Polygon.ContainsPointCheck(qD, qA, point)) oddNodes = !oddNodes;
+       if (Polygon.ContainsPointCheck(qA, qB, point)) oddNodes = !oddNodes;
+       if (Polygon.ContainsPointCheck(qB, qC, point)) oddNodes = !oddNodes;
+       if (Polygon.ContainsPointCheck(qC, qD, point)) oddNodes = !oddNodes;
+        
+       return oddNodes;
+   }
+    public static bool ContainsQuadPoints(Vector2 qA, Vector2 qB, Vector2 qC, Vector2 qD, Vector2 u, Vector2 v)
+    {
+       return ContainsQuadPoint(qA, qB, qC, qD, u) && 
+              ContainsQuadPoint(qA, qB, qC, qD, v);
+    }
+    public static bool ContainsQuadPoints(Vector2 qA, Vector2 qB, Vector2 qC, Vector2 qD, Vector2 u, Vector2 v, Vector2 w)
+    {
+       return ContainsQuadPoint(qA, qB, qC, qD, u) && 
+              ContainsQuadPoint(qA, qB, qC, qD, v) && 
+              ContainsQuadPoint(qA, qB, qC, qD, w);
+    }
+    public static bool ContainsQuadPoints(Vector2 qA, Vector2 qB, Vector2 qC, Vector2 qD, Vector2 u, Vector2 v, Vector2 w, Vector2 x)
+    {
+       return ContainsQuadPoint(qA, qB, qC, qD, u) && 
+              ContainsQuadPoint(qA, qB, qC, qD, v) && 
+              ContainsQuadPoint(qA, qB, qC, qD, w) && 
+              ContainsQuadPoint(qA, qB, qC, qD, x);
+    }
+    public static bool ContainsQuadPoints(Vector2 qA, Vector2 qB, Vector2 qC, Vector2 qD, List<Vector2> points)
+    {
+       if (points.Count <= 0) return false;
+       
+       foreach (var point in points)
+       {
+           if(!ContainsQuadPoint(qA, qB, qC, qD, point)) return false;
+       }
+
+       return true;
+    }
+
+    public static bool ContainsQuadSegment(Vector2 qA, Vector2 qB, Vector2 qC, Vector2 qD, Vector2 segmentStart, Vector2 segmentEnd)
+    {
+        return ContainsQuadPoints(qA, qB, qC, qD, segmentStart, segmentEnd);
+    }
+    public static bool ContainsQuadCircle(Vector2 qA, Vector2 qB, Vector2 qC, Vector2 qD, Vector2 circleCenter, float circleRadius)
+    {
+       if (!ContainsQuadPoint(qA, qB, qC, qD, circleCenter)) return false;
+       
+       var result = Segment.IntersectSegmentCircle(qA, qB, circleCenter, circleRadius);
+       if (result.a.Valid || result.b.Valid) return false;
+           
+       result = Segment.IntersectSegmentCircle(qB, qC, circleCenter, circleRadius);
+       if (result.a.Valid || result.b.Valid) return false;
+       
+       result = Segment.IntersectSegmentCircle(qC, qD, circleCenter, circleRadius);
+       if (result.a.Valid || result.b.Valid) return false;
+
+       result = Segment.IntersectSegmentCircle(qD, qA, circleCenter, circleRadius);
+       if (result.a.Valid || result.b.Valid) return false;
+       return true;
+
+    }
+    public static bool ContainsQuadTriangle(Vector2 qA, Vector2 qB, Vector2 qC, Vector2 qD, Vector2 tA, Vector2 tB, Vector2 tc)
+    {
+      return ContainsQuadPoints(qA, qB, qC, qD, tA, tB, tc);
+    }
+    public static bool ContainsQuadQuad(Vector2 qA1, Vector2 qB1, Vector2 qC1, Vector2 qD1, Vector2 qA2, Vector2 qB2, Vector2 qC2, Vector2 qD2)
+    {
+       return ContainsQuadPoints(qA1, qB1, qC1, qD1, qA2, qB2, qC2, qD2);
+    }
+    public static bool ContainsQuadRect(Vector2 qA, Vector2 qB, Vector2 qC, Vector2 qD, Vector2 rA, Vector2 rB, Vector2 rC, Vector2 rD)
+    {
+        return ContainsQuadPoints(qA, qB, qC, qD, rA, rB, rC, rD);
+    }
+    public static bool ContainsQuadPolyline(Vector2 qA, Vector2 qB, Vector2 qC, Vector2 qD,  List<Vector2> polyline)
+    {
+       return ContainsQuadPoints(qA, qB, qC, qD, polyline);
+    }
+    public static bool ContainsQuadPolygon(Vector2 qA, Vector2 qB, Vector2 qC, Vector2 qD, List<Vector2> polygon)
+    {
+       return ContainsQuadPoints(qA, qB, qC, qD, polygon);
+    }
+       
+    public bool ContainsPoint(Vector2 p) => ContainsQuadPoint(A, B, C, D, p);
+    public bool ContainsPoints(Vector2 u, Vector2 v) => ContainsQuadPoints(A, B, C, D, u, v);
+    public bool ContainsPoints(Vector2 u, Vector2 v, Vector2 w) => ContainsQuadPoints(A, B, C, D, u, v, w);
+    public bool ContainsPoints(Vector2 u, Vector2 v, Vector2 w, Vector2 x) => ContainsQuadPoints(A, B, C, D, u, v, w, x);
+    public bool ContainsPoints(List<Vector2> points) => ContainsQuadPoints(A, B, C, D, points);
+
+    public bool ContainsCollisionObject(CollisionObject collisionObject)
+    {
+       if (!collisionObject.HasColliders) return false;
+       foreach (var collider in collisionObject.Colliders)
+       {
+           if (!ContainsCollider(collider)) return false;
+       }
+
+       return true;
+    }
+    public bool ContainsCollider(Collider collider)
+    {
+       switch (collider.GetShapeType())
+       {
+           case ShapeType.Circle: return ContainsShape(collider.GetCircleShape());
+           case ShapeType.Segment: return ContainsShape(collider.GetSegmentShape());
+           case ShapeType.Triangle: return ContainsShape(collider.GetTriangleShape());
+           case ShapeType.Rect: return ContainsShape(collider.GetRectShape());
+           case ShapeType.Quad: return ContainsShape(collider.GetQuadShape());
+           case ShapeType.Poly: return ContainsShape(collider.GetPolygonShape());
+           case ShapeType.PolyLine: return ContainsShape(collider.GetPolylineShape());
+       }
+
+       return false;
+    }
+
+    public bool ContainsShape(Segment segment)
+    {
+       return ContainsQuadPoints(A, B, C, D, segment.Start, segment.End);
+    }
+    public bool ContainsShape(Circle circle)
+    {
+       return ContainsQuadCircle(A, B, C, D, circle.Center, circle.Radius);
+    }
+    public bool ContainsShape(Rect rect)
+    {
+       return ContainsQuadPoints(A, B, C, D, rect.A, rect.B, rect.C, rect.D);
+    }
+    public bool ContainsShape(Triangle triangle)
+    {
+       return ContainsQuadPoints(A, B, C, D, triangle.A, triangle.B, triangle.C);
+    }
+    public bool ContainsShape(Quad quad)
+    {
+       return ContainsQuadPoints(A, B, C, D, quad.A, quad.B, quad.C, quad.D);
+    }
+    public bool ContainsShape(Polyline polyline)
+    {
+       return ContainsQuadPoints(A, B, C, D, polyline);
+    }
+    public bool ContainsShape(Polygon polygon)
+    {
+       return ContainsQuadPoints(A, B, C, D, polygon);
+    }
+    public bool ContainsShape(Points points)
+    {
+       return ContainsQuadPoints(A, B, C, D, points);
+    }
+
+    
+    /*
+    public static  bool ContainsPoint(Vector2 a, Vector2 b, Vector2 c, Vector2 d, Vector2 p)
+    {
+        var oddNodes = false;
+
+        if (Polygon.ContainsPointCheck(d, a, p)) oddNodes = !oddNodes;
+        if (Polygon.ContainsPointCheck(a, b, p)) oddNodes = !oddNodes;
+        if (Polygon.ContainsPointCheck(b, c, p)) oddNodes = !oddNodes;
+        if (Polygon.ContainsPointCheck(c, d, p)) oddNodes = !oddNodes;
+        
+        return oddNodes;
+    }
     public bool ContainsPoint(Vector2 p)
     {
         var oddNodes = false;
@@ -774,541 +946,1078 @@ public readonly struct Quad : IEquatable<Quad>
         }
         return true;
     }
+    */
 
 
     #endregion
 
-    #region Closest
-    public static Vector2 GetClosestPoint(Vector2 a, Vector2 b, Vector2 c, Vector2 d, Vector2 p)
+    #region Closest Point
+    public static Vector2 GetClosestPointQuadPoint(Vector2 a, Vector2 b, Vector2 c, Vector2 d, Vector2 p, out float disSquared)
     {
-        var ab = Segment.GetClosestPoint(a, b, p);
-        var bc = Segment.GetClosestPoint(b, c, p);
-        var cd = Segment.GetClosestPoint(c, d, p);
-        var da = Segment.GetClosestPoint(d, a, p);
+        var min = Segment.GetClosestPointSegmentPoint(a, b, p, out float minDisSq);
 
-        var min = ab;
-        var minDisSq = (ab - p).LengthSquared();
-
-        var bcDisSq = (bc - p).LengthSquared();
-        if (bcDisSq < minDisSq)
+        var cp = Segment.GetClosestPointSegmentPoint(b, c, p, out float dis);
+        if (dis < minDisSq)
         {
-            min = bc;
-            minDisSq = bcDisSq;
+            min = cp;
+            minDisSq = dis;
         }
         
-        var cdDisSq = (cd - p).LengthSquared();
-        if (cdDisSq < minDisSq)
+        cp = Segment.GetClosestPointSegmentPoint(c, d, p, out dis);
+        if (dis < minDisSq)
         {
-            min = cd;
-            minDisSq = cdDisSq;
-        }
-            
-        return (da - p).LengthSquared() < minDisSq ? da : min;
-    }
-    public ClosestDistance GetClosestDistanceTo(Vector2 p)
-    {
-        var cp = GetClosestPoint(A, B, C, D, p);
-        return new ClosestDistance(cp, p);
-    }
-
-    public ClosestDistance GetClosestDistanceTo(Segment segment)
-    {
-        var next = GetClosestPoint(A, B, C, D,segment.Start);
-        var disSq = (next - segment.Start).LengthSquared();
-        var minDisSq = disSq;
-        var cpSelf = next;
-        var cpOther = segment.Start;
-
-        next = GetClosestPoint(A, B, C, D, segment.End);
-        disSq = (next - segment.End).LengthSquared();
-        if (disSq < minDisSq)
-        {
-            minDisSq = disSq;
-            cpSelf = next;
-            cpOther = segment.End;
+            min = cp;
+            minDisSq = dis;
         }
         
-        next = Segment.GetClosestPoint(segment.Start, segment.End, A);
-        disSq = (next - A).LengthSquared();
-        if (disSq < minDisSq)
+        cp = Segment.GetClosestPointSegmentPoint(d, a, p, out dis);
+        if (dis < minDisSq)
         {
-            minDisSq = disSq;
-            cpOther = next;
-            cpSelf = A;
+            disSquared = dis;
+            return cp;
         }
         
-        next = Segment.GetClosestPoint(segment.Start, segment.End, B);
-        disSq = (next - B).LengthSquared();
-        if (disSq < minDisSq)
-        {
-            minDisSq = disSq;
-            cpOther = next;
-            cpSelf = B;
-        }
-        
-        next = Segment.GetClosestPoint(segment.Start, segment.End, C);
-        disSq = (next - C).LengthSquared();
-        if (disSq < minDisSq)
-        {
-            minDisSq = disSq;
-            cpOther = next;
-            cpSelf = C;
-        }
-
-        next = Segment.GetClosestPoint(segment.Start, segment.End, D);
-        disSq = (next - D).LengthSquared();
-        if (disSq < minDisSq)
-        {
-            cpOther = next;
-            cpSelf = D;
-        }
-
-        return new(cpSelf, cpOther);
-    }
-    public ClosestDistance GetClosestDistanceTo(Circle circle)
-    {
-        var point = Segment.GetClosestPoint(A, B, circle.Center);
-        var disSq = (circle.Center - point).LengthSquared();
-        var minDisSq = disSq;
-        var closestPoint = point;
-        
-        point = Segment.GetClosestPoint(B, C, circle.Center);
-        disSq = (circle.Center - point).LengthSquared();
-        if (disSq < minDisSq)
-        {
-            minDisSq = disSq;
-            closestPoint = point;
-        }
-        
-        point = Segment.GetClosestPoint(C, D, circle.Center);
-        disSq = (circle.Center - point).LengthSquared();
-        if (disSq < minDisSq)
-        {
-            minDisSq = disSq;
-            closestPoint = point;
-        }
-
-        point = Segment.GetClosestPoint(D, A, circle.Center);
-        disSq = (circle.Center - point).LengthSquared();
-        if (disSq < minDisSq) closestPoint = point;
-
-        var dir = (closestPoint - circle.Center).Normalize();
-
-        return new(closestPoint, circle.Center + dir * circle.Radius);
-
-    }
-    public ClosestDistance GetClosestDistanceTo(Triangle triangle)
-    {
-        var next = GetClosestPoint(A, B, C, D, triangle.A);
-        var disSq = (next - triangle.A).LengthSquared();
-        var minDisSq = disSq;
-        var cpSelf = next;
-        var cpOther = triangle.A;
-
-        next = GetClosestPoint(A, B, C, D, triangle.B);
-        disSq = (next - triangle.B).LengthSquared();
-        if (disSq < minDisSq)
-        {
-            minDisSq = disSq;
-            cpSelf = next;
-            cpOther = triangle.B;
-        }
-        
-        next = GetClosestPoint(A, B, C, D, triangle.C);
-        disSq = (next - triangle.C).LengthSquared();
-        if (disSq < minDisSq)
-        {
-            minDisSq = disSq;
-            cpSelf = next;
-            cpOther = triangle.C;
-        }
-
-        next = Triangle.GetClosestPoint(triangle.A, triangle.B, triangle.C, A);
-        disSq = (next - A).LengthSquared();
-        if (disSq < minDisSq)
-        {
-            minDisSq = disSq;
-            cpSelf = A;
-            cpOther = next;
-        }
-        
-        next = Triangle.GetClosestPoint(triangle.A, triangle.B, triangle.C, B);
-        disSq = (next - B).LengthSquared();
-        if (disSq < minDisSq)
-        {
-            minDisSq = disSq;
-            cpSelf = B;
-            cpOther = next;
-        }
-        
-        next = Triangle.GetClosestPoint(triangle.A, triangle.B, triangle.C, C);
-        disSq = (next - C).LengthSquared();
-        if (disSq < minDisSq)
-        {
-            minDisSq = disSq;
-            cpSelf = C;
-            cpOther = next;
-        }
-        next = Triangle.GetClosestPoint(triangle.A, triangle.B, triangle.C, D);
-        disSq = (next - D).LengthSquared();
-        if (disSq < minDisSq)
-        {
-            cpSelf = D;
-            cpOther = next;
-        }
-        
-        return new(cpSelf, cpOther);
-    }
-    public ClosestDistance GetClosestDistanceTo(Quad quad)
-    {
-        var next = GetClosestPoint(A, B, C, D, quad.A);
-        var disSq = (next - quad.A).LengthSquared();
-        var minDisSq = disSq;
-        var cpSelf = next;
-        var cpOther = quad.A;
-
-        next = GetClosestPoint(A, B, C, D, quad.B);
-        disSq = (next - quad.B).LengthSquared();
-        if (disSq < minDisSq)
-        {
-            minDisSq = disSq;
-            cpSelf = next;
-            cpOther = quad.B;
-        }
-        
-        next = GetClosestPoint(A, B, C, D, quad.C);
-        disSq = (next - quad.C).LengthSquared();
-        if (disSq < minDisSq)
-        {
-            minDisSq = disSq;
-            cpSelf = next;
-            cpOther = quad.C;
-        }
-        
-        next = GetClosestPoint(A, B, C, D, quad.D);
-        disSq = (next - quad.D).LengthSquared();
-        if (disSq < minDisSq)
-        {
-            minDisSq = disSq;
-            cpSelf = next;
-            cpOther = quad.D;
-        }
-
-        next = Quad.GetClosestPoint(quad.A, quad.B, quad.C, quad.D, A);
-        disSq = (next - A).LengthSquared();
-        if (disSq < minDisSq)
-        {
-            minDisSq = disSq;
-            cpSelf = A;
-            cpOther = next;
-        }
-        
-        next = Quad.GetClosestPoint(quad.A, quad.B, quad.C, quad.D, B);
-        disSq = (next - B).LengthSquared();
-        if (disSq < minDisSq)
-        {
-            minDisSq = disSq;
-            cpSelf = B;
-            cpOther = next;
-        }
-        
-        next = Quad.GetClosestPoint(quad.A, quad.B, quad.C, quad.D, C);
-        disSq = (next - C).LengthSquared();
-        if (disSq < minDisSq)
-        {
-            minDisSq = disSq;
-            cpSelf = C;
-            cpOther = next;
-        }
-        
-        next = Quad.GetClosestPoint(quad.A, quad.B, quad.C, quad.D, D);
-        disSq = (next - D).LengthSquared();
-        if (disSq < minDisSq)
-        {
-            cpSelf = D;
-            cpOther = next;
-        }
-        
-        return new(cpSelf, cpOther);
-    }
-    public ClosestDistance GetClosestDistanceTo(Rect rect)
-    {
-        var next = GetClosestPoint(A, B, C, D, rect.A);
-        var disSq = (next - rect.TopLeft).LengthSquared();
-        var minDisSq = disSq;
-        var cpSelf = next;
-        var cpOther = rect.TopLeft;
-
-        next = GetClosestPoint(A, B, C, D, rect.B);
-        disSq = (next - rect.BottomLeft).LengthSquared();
-        if (disSq < minDisSq)
-        {
-            minDisSq = disSq;
-            cpSelf = next;
-            cpOther = rect.BottomLeft;
-        }
-        
-        next = GetClosestPoint(A, B, C, D, rect.C);
-        disSq = (next - rect.BottomRight).LengthSquared();
-        if (disSq < minDisSq)
-        {
-            minDisSq = disSq;
-            cpSelf = next;
-            cpOther = rect.BottomRight;
-        }
-        next = GetClosestPoint(A, B, C, D, rect.D);
-        disSq = (next - rect.TopRight).LengthSquared();
-        if (disSq < minDisSq)
-        {
-            minDisSq = disSq;
-            cpSelf = next;
-            cpOther = rect.TopRight;
-        }
-
-        next = Quad.GetClosestPoint(rect.A, rect.B, rect.C, rect.D, A);
-        disSq = (next - A).LengthSquared();
-        if (disSq < minDisSq)
-        {
-            minDisSq = disSq;
-            cpSelf = A;
-            cpOther = next;
-        }
-        
-        next = Quad.GetClosestPoint(rect.A, rect.B, rect.C, rect.D, B);
-        disSq = (next - B).LengthSquared();
-        if (disSq < minDisSq)
-        {
-            minDisSq = disSq;
-            cpSelf = B;
-            cpOther = next;
-        }
-        
-        next = Quad.GetClosestPoint(rect.A, rect.B, rect.C, rect.D, C);
-        disSq = (next - C).LengthSquared();
-        if (disSq < minDisSq)
-        {
-            minDisSq = disSq;
-            cpSelf = C;
-            cpOther = next;
-        }
-        
-        next = Quad.GetClosestPoint(rect.A, rect.B, rect.C, rect.D, D);
-        disSq = (next - D).LengthSquared();
-        if (disSq < minDisSq)
-        {
-            cpSelf = D;
-            cpOther = next;
-        }
-        
-        return new(cpSelf, cpOther);
-    }
-    public ClosestDistance GetClosestDistanceTo(Polygon polygon)
-    {
-        if (polygon.Count <= 0) return new();
-        if (polygon.Count == 1) return GetClosestDistanceTo(polygon[0]);
-        if (polygon.Count == 2) return GetClosestDistanceTo(new Segment(polygon[0], polygon[1]));
-        if (polygon.Count == 3) return GetClosestDistanceTo(new Triangle(polygon[0], polygon[1], polygon[2]));
-        if (polygon.Count == 4) return GetClosestDistanceTo(new Quad(polygon[0], polygon[1], polygon[2], polygon[3]));
-        
-        ClosestDistance closestDistance = new(new(), new(), float.PositiveInfinity);
-        
-        for (var i = 0; i < polygon.Count; i++)
-        {
-            var p1 = polygon[i];
-            var p2 = polygon[(i + 1) % polygon.Count];
-            
-            var next = GetClosestPoint(A, B, C, D, p1);
-            var cd = new ClosestDistance(next, p1);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-            
-            next = GetClosestPoint(A, B, C, D, p2);
-            cd = new ClosestDistance(next, p2);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-            
-            next = Segment.GetClosestPoint(p1, p2, A);
-            cd = new ClosestDistance(A, next);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-            
-            next = Segment.GetClosestPoint(p1, p2, B);
-            cd = new ClosestDistance(B, next);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-            
-            next = Segment.GetClosestPoint(p1, p2, C);
-            cd = new ClosestDistance(C, next);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-            
-            next = Segment.GetClosestPoint(p1, p2, D);
-            cd = new ClosestDistance(D, next);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-        }
-        return closestDistance;
-    }
-    public ClosestDistance GetClosestDistanceTo(Polyline polyline)
-    {
-        if (polyline.Count <= 0) return new();
-        if (polyline.Count == 1) return GetClosestDistanceTo(polyline[0]);
-        if (polyline.Count == 2) return GetClosestDistanceTo(new Segment(polyline[0], polyline[1]));
-        
-        ClosestDistance closestDistance = new(new(), new(), float.PositiveInfinity);
-        
-        for (var i = 0; i < polyline.Count - 1; i++)
-        {
-            var p1 = polyline[i];
-            var p2 = polyline[(i + 1) % polyline.Count];
-            
-            var next = GetClosestPoint(A, B, C,D, p1);
-            var cd = new ClosestDistance(next, p1);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-            
-            next = GetClosestPoint(A, B, C, D, p2);
-            cd = new ClosestDistance(next, p2);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-            
-            next = Segment.GetClosestPoint(p1, p2, A);
-            cd = new ClosestDistance(A, next);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-            
-            next = Segment.GetClosestPoint(p1, p2, B);
-            cd = new ClosestDistance(B, next);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-            
-            next = Segment.GetClosestPoint(p1, p2, C);
-            cd = new ClosestDistance(C, next);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-            
-            next = Segment.GetClosestPoint(p1, p2, D);
-            cd = new ClosestDistance(D, next);
-            if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
-        }
-        return closestDistance;
+        disSquared = minDisSq;
+        return min;
     }
     
-    
-    
-    public int GetClosestEdgePointByIndex(Vector2 p)
+    public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared)
     {
-        float minD = float.PositiveInfinity;
-        int closestIndex = -1;
+        var min = Segment.GetClosestPointSegmentPoint(A, B, p, out disSquared);
+        var normal = B - A;
 
-        var edge = SegmentAToB;
-        var closest = edge.GetClosestCollisionPoint(p).Point;
-        float d = (closest - p).LengthSquared();
-        if (d < minD)
+        var cp = Segment.GetClosestPointSegmentPoint(B, C, p, out float dis);
+        if (dis < disSquared)
         {
-            closestIndex = 0;
-            minD = d;
+            min = cp;
+            disSquared = dis;
+            normal = C - B;
         }
-        edge = SegmentBToC;
-        closest = edge.GetClosestCollisionPoint(p).Point;
-        d = (closest - p).LengthSquared();
-        if (d < minD)
+        
+        cp = Segment.GetClosestPointSegmentPoint(C, D, p, out dis);
+        if (dis < disSquared)
         {
-            closestIndex = 1;
-            minD = d;
+            min = cp;
+            disSquared = dis;
+            normal = D - C;
         }
-        edge = SegmentCToD;
-        closest = edge.GetClosestCollisionPoint(p).Point;
-        d = (closest - p).LengthSquared();
-        if (d < minD)
+        
+        cp = Segment.GetClosestPointSegmentPoint(D, A, p, out dis);
+        if (dis < disSquared)
         {
-            closestIndex = 2;
-            minD = d;
+            min = cp;
+            disSquared = dis;
+            normal = A - D;
         }
-        edge = SegmentDToA;
-        closest = edge.GetClosestCollisionPoint(p).Point;
-        d = (closest - p).LengthSquared();
-        if (d < minD) return 3;
-        return closestIndex;
+
+        return new(min, normal.GetPerpendicularRight().Normalize());
     }
-    // internal ClosestPoint GetClosestPoint(Vector2 p)
-    // {
-    //     var closest = GetClosestCollisionPoint(p);
-    //     return new(closest, (closest.Point - p).Length());
-    // }
-    //
-    public CollisionPoint GetClosestCollisionPoint(Vector2 p)
+    public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared, out int index)
     {
-        float minD = float.PositiveInfinity;
+        var min = Segment.GetClosestPointSegmentPoint(A, B, p, out disSquared);
+        index = 0;
+        var normal = B - A;
+        var cp = Segment.GetClosestPointSegmentPoint(B, C, p, out float dis);
+        if (dis < disSquared)
+        {
+            min = cp;
+            disSquared = dis;
+            index = 1;
+            normal = C - B;
+        }
+        
+        cp = Segment.GetClosestPointSegmentPoint(C, D, p, out dis);
+        if (dis < disSquared)
+        {
+            min = cp;
+            disSquared = dis;
+            index = 2;
+            normal = D - C;
+        }
+        
+        cp = Segment.GetClosestPointSegmentPoint(D, A, p, out dis);
+        if (dis < disSquared)
+        {
+            min = cp;
+            disSquared = dis;
+            index = 3;
+            normal = A - D;
+        }
+
+        return new(min, normal.GetPerpendicularRight().Normalize());
+    }
+
+    public ClosestPointResult GetClosestPoint(Line other)
+    {
+        var closestResult = Segment.GetClosestPointSegmentLine(A, B, other.Point, other.Direction, out float disSquared);
+        var curNormal = B - A;
+        var selfIndex = 0;
+        
+        var result = Segment.GetClosestPointSegmentLine(B, C, other.Point, other.Direction, out float dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 1;
+            closestResult = result;
+            disSquared = dis;
+            curNormal = C - B;
+        }
+        result = Segment.GetClosestPointSegmentLine(C, D, other.Point, other.Direction, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 2;
+            closestResult = result;
+            disSquared = dis;
+            curNormal = D - C;
+        }
+        
+        result = Segment.GetClosestPointSegmentLine(D, A, other.Point, other.Direction, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 3;
+            closestResult = result;
+            disSquared = dis;
+            curNormal = A - D;
+        }
+        
+        return new(
+            new(closestResult.self, curNormal.GetPerpendicularRight().Normalize()), 
+            new(closestResult.other, other.Normal),
+            disSquared,
+            selfIndex);
+    }
+    public ClosestPointResult GetClosestPoint(Ray other)
+    {
+        var closestResult = Segment.GetClosestPointSegmentRay(A, B, other.Point, other.Direction, out float disSquared);
+        var curNormal = B - A;
+        var selfIndex = 0;
+        var result = Segment.GetClosestPointSegmentRay(B, C, other.Point, other.Direction, out float dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 1;
+            closestResult = result;
+            disSquared = dis;
+            curNormal = C - B;
+        }
+        
+        result = Segment.GetClosestPointSegmentRay(C, D, other.Point, other.Direction, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 2;
+            closestResult = result;
+            disSquared = dis;
+            curNormal = D - C;
+        }
+        
+        result = Segment.GetClosestPointSegmentRay(D, A, other.Point, other.Direction, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 3;
+            closestResult = result;
+            disSquared = dis;
+            curNormal = A - D;
+        }
+        
+        return new(
+            new(closestResult.self, curNormal.GetPerpendicularRight().Normalize()), 
+            new(closestResult.other, other.Normal),
+            disSquared,
+            selfIndex);
+    }
+    public ClosestPointResult GetClosestPoint(Segment other)
+    {
+        var closestResult = Segment.GetClosestPointSegmentSegment(A, B, other.Start, other.End, out float disSquared);
+        var curNormal = B - A;
+        var selfIndex = 0;
+        
+        var result = Segment.GetClosestPointSegmentSegment(B, C, other.Start, other.End, out float dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 1;
+            closestResult = result;
+            disSquared = dis;
+            curNormal = C - B;
+        }
+        
+        result = Segment.GetClosestPointSegmentSegment(C, D, other.Start, other.End, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 2;
+            closestResult = result;
+            disSquared = dis;
+            curNormal = D - C;
+        }
+        
+        result = Segment.GetClosestPointSegmentSegment(D, A, other.Start, other.End, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 3;
+            closestResult = result;
+            disSquared = dis;
+            curNormal = A - D;
+        }
+        
+        return new(
+            new(closestResult.self, curNormal.GetPerpendicularRight().Normalize()), 
+            new(closestResult.other, other.Normal),
+            disSquared,
+            selfIndex);
+    }
+    public ClosestPointResult GetClosestPoint(Circle other)
+    {
+        var closestResult = Segment.GetClosestPointSegmentCircle(A, B, other.Center, other.Radius, out float disSquared);
+        var curNormal = B - A;
+        var selfIndex = 0;
+        
+        var result = Segment.GetClosestPointSegmentCircle(B, C, other.Center, other.Radius, out float dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 1;
+            closestResult = result;
+            disSquared = dis;
+            curNormal = C - B;
+        }
+        
+        result = Segment.GetClosestPointSegmentCircle(C, D, other.Center, other.Radius, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 2;
+            closestResult = result;
+            disSquared = dis;
+            curNormal = D - C;
+        }
+        
+        result = Segment.GetClosestPointSegmentCircle(D, A, other.Center, other.Radius, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 3;
+            closestResult = result;
+            disSquared = dis;
+            curNormal = A - D;
+        }
+        return new(
+            new(closestResult.self, curNormal.GetPerpendicularRight().Normalize()), 
+            new(closestResult.other, (closestResult.other - other.Center).Normalize()),
+            disSquared,
+            selfIndex);
+    }
+    public ClosestPointResult GetClosestPoint(Triangle other)
+    {
+        var closestResult = Segment.GetClosestPointSegmentSegment(A, B, other.A, other.B, out float disSquared);
+        var curSelfNormal = B - A;
+        var curOtherNormal = B - A;
+        var selfIndex = 0;
+        var otherIndex = 0;
+        
+        var result = Segment.GetClosestPointSegmentSegment(A, B, other.B, other.C, out float dis);
+        if (dis < disSquared)
+        {
+            otherIndex = 1;
+            closestResult = result;
+            disSquared = dis;
+            curOtherNormal = other.C - other.B;
+        }
+        result = Segment.GetClosestPointSegmentSegment(A, B, other.C, other.A, out dis);
+        if (dis < disSquared)
+        {
+            otherIndex = 2;
+            closestResult = result;
+            disSquared = dis;
+            curOtherNormal = other.A - other.C;
+        }
+        
+        result = Segment.GetClosestPointSegmentSegment(B, C, other.A, other.B, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 1;
+            otherIndex = 0;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = C - B;
+            curOtherNormal = other.B - other.A;
+        }
+        result = Segment.GetClosestPointSegmentSegment(B, C, other.B, other.C, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 1;
+            otherIndex = 1;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = C - B;
+            curOtherNormal = other.C - other.B;
+        }
+        result = Segment.GetClosestPointSegmentSegment(B, C, other.C, other.A, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 1;
+            otherIndex = 2;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = C - B;
+            curOtherNormal = other.A - other.C;
+        }
+        
+        result = Segment.GetClosestPointSegmentSegment(C, D, other.A, other.B, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 2;
+            otherIndex = 0;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = D - C;
+            curOtherNormal = other.B - other.A;
+        }
+        result = Segment.GetClosestPointSegmentSegment(C, D, other.B, other.C, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 2;
+            otherIndex = 1;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = D - C;
+            curOtherNormal = other.C - other.B;
+        }
+        result = Segment.GetClosestPointSegmentSegment(C, D, other.C, other.A, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 2;
+            otherIndex = 2;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = D - C;
+            curOtherNormal = other.A - other.C;
+        }
+        
+        result = Segment.GetClosestPointSegmentSegment(D, A, other.A, other.B, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 3;
+            otherIndex = 0;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = A - D;
+            curOtherNormal = other.B - other.A;
+        }
+        result = Segment.GetClosestPointSegmentSegment(D, A, other.B, other.C, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 3;
+            otherIndex = 1;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = A - D;
+            curOtherNormal = other.C - other.B;
+        }
+        result = Segment.GetClosestPointSegmentSegment(D, A, other.C, other.A, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 3;
+            otherIndex = 2;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = A - D;
+            curOtherNormal = other.A - other.C;
+        }
+        
+        return new(
+            new(closestResult.self, curSelfNormal.GetPerpendicularRight().Normalize()), 
+            new(closestResult.other, curOtherNormal.GetPerpendicularRight().Normalize()),
+            disSquared,
+            selfIndex,
+            otherIndex);
+    }
+    public ClosestPointResult GetClosestPoint(Quad other)
+    {
+        var closestResult = Segment.GetClosestPointSegmentSegment(A, B, other.A, other.B, out float disSquared);
+        var curSelfNormal = B - A;
+        var curOtherNormal = B - A;
+        var selfIndex = 0;
+        var otherIndex = 0;
+        
+        var result = Segment.GetClosestPointSegmentSegment(A, B, other.B, other.C, out float dis);
+        if (dis < disSquared)
+        {
+            otherIndex = 1;
+            closestResult = result;
+            disSquared = dis;
+            curOtherNormal = other.C - other.B;
+        }
+        result = Segment.GetClosestPointSegmentSegment(A, B, other.C, other.D, out dis);
+        if (dis < disSquared)
+        {
+            otherIndex = 2;
+            closestResult = result;
+            disSquared = dis;
+            curOtherNormal = other.D - other.C;
+        }
+        result = Segment.GetClosestPointSegmentSegment(A, B, other.D, other.A, out dis);
+        if (dis < disSquared)
+        {
+            otherIndex = 3;
+            closestResult = result;
+            disSquared = dis;
+            curOtherNormal = other.A - other.D;
+        }
+        
+        result = Segment.GetClosestPointSegmentSegment(B, C, other.A, other.B, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 1;
+            otherIndex = 0;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = C - B;
+            curOtherNormal = other.B - other.A;
+        }
+        result = Segment.GetClosestPointSegmentSegment(B, C, other.B, other.C, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 1;
+            otherIndex = 1;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = C - B;
+            curOtherNormal = other.C - other.B;
+        }
+        result = Segment.GetClosestPointSegmentSegment(B, C, other.C, other.D, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 1;
+            otherIndex = 2;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = C - B;
+            curOtherNormal = other.D - other.C;
+        }
+        result = Segment.GetClosestPointSegmentSegment(B, C, other.D, other.A, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 1;
+            otherIndex = 3;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = C - B;
+            curOtherNormal = other.A - other.D;
+        }
+        
+        result = Segment.GetClosestPointSegmentSegment(C, D, other.A, other.B, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 2;
+            otherIndex = 0;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = D - C;
+            curOtherNormal = other.B - other.A;
+        }
+        result = Segment.GetClosestPointSegmentSegment(C, D, other.B, other.C, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 2;
+            otherIndex = 1;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = D - C;
+            curOtherNormal = other.C - other.B;
+        }
+        result = Segment.GetClosestPointSegmentSegment(C, D, other.C, other.D, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 2;
+            otherIndex = 2;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = D - C;
+            curOtherNormal = other.D - other.C;
+        }
+        result = Segment.GetClosestPointSegmentSegment(C, D, other.D, other.A, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 2;
+            otherIndex = 3;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = D - C;
+            curOtherNormal = other.A - other.D;
+        }
+        
+        result = Segment.GetClosestPointSegmentSegment(D, A, other.A, other.B, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 3;
+            otherIndex = 0;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = A - D;
+            curOtherNormal = other.B - other.A;
+        }
+        result = Segment.GetClosestPointSegmentSegment(D, A, other.B, other.C, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 3;
+            otherIndex = 1;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = A - D;
+            curOtherNormal = other.C - other.B;
+        }
+        result = Segment.GetClosestPointSegmentSegment(D, A, other.C, other.D, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 3;
+            otherIndex = 2;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = A - D;
+            curOtherNormal = other.D - other.C;
+        }
+        result = Segment.GetClosestPointSegmentSegment(D, A, other.D, other.A, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 3;
+            otherIndex = 3;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = A - D;
+            curOtherNormal = other.A - other.D;
+        }
+        
+        return new(
+            new(closestResult.self, curSelfNormal.GetPerpendicularRight().Normalize()), 
+            new(closestResult.other, curOtherNormal.GetPerpendicularRight().Normalize()),
+            disSquared,
+            selfIndex,
+            otherIndex);
+    }
+    public ClosestPointResult GetClosestPoint(Rect other)
+    {
+        var closestResult = Segment.GetClosestPointSegmentSegment(A, B, other.A, other.B, out float disSquared);
+        var curSelfNormal = B - A;
+        var curOtherNormal = B - A;
+        var selfIndex = 0;
+        var otherIndex = 0;
+        
+        var result = Segment.GetClosestPointSegmentSegment(A, B, other.B, other.C, out float dis);
+        if (dis < disSquared)
+        {
+            otherIndex = 1;
+            closestResult = result;
+            disSquared = dis;
+            curOtherNormal = other.C - other.B;
+        }
+        result = Segment.GetClosestPointSegmentSegment(A, B, other.C, other.D, out dis);
+        if (dis < disSquared)
+        {
+            otherIndex = 2;
+            closestResult = result;
+            disSquared = dis;
+            curOtherNormal = other.D - other.C;
+        }
+        result = Segment.GetClosestPointSegmentSegment(A, B, other.D, other.A, out dis);
+        if (dis < disSquared)
+        {
+            otherIndex = 3;
+            closestResult = result;
+            disSquared = dis;
+            curOtherNormal = other.A - other.D;
+        }
+        
+        result = Segment.GetClosestPointSegmentSegment(B, C, other.A, other.B, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 1;
+            otherIndex = 0;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = C - B;
+            curOtherNormal = other.B - other.A;
+        }
+        result = Segment.GetClosestPointSegmentSegment(B, C, other.B, other.C, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 1;
+            otherIndex = 1;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = C - B;
+            curOtherNormal = other.C - other.B;
+        }
+        result = Segment.GetClosestPointSegmentSegment(B, C, other.C, other.D, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 1;
+            otherIndex = 2;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = C - B;
+            curOtherNormal = other.D - other.C;
+        }
+        result = Segment.GetClosestPointSegmentSegment(B, C, other.D, other.A, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 1;
+            otherIndex = 3;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = C - B;
+            curOtherNormal = other.A - other.D;
+        }
+        
+        result = Segment.GetClosestPointSegmentSegment(C, D, other.A, other.B, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 2;
+            otherIndex = 0;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = D - C;
+            curOtherNormal = other.B - other.A;
+        }
+        result = Segment.GetClosestPointSegmentSegment(C, D, other.B, other.C, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 2;
+            otherIndex = 1;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = D - C;
+            curOtherNormal = other.C - other.B;
+        }
+        result = Segment.GetClosestPointSegmentSegment(C, D, other.C, other.D, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 2;
+            otherIndex = 2;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = D - C;
+            curOtherNormal = other.D - other.C;
+        }
+        result = Segment.GetClosestPointSegmentSegment(C, D, other.D, other.A, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 2;
+            otherIndex = 3;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = D - C;
+            curOtherNormal = other.A - other.D;
+        }
+        
+        result = Segment.GetClosestPointSegmentSegment(D, A, other.A, other.B, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 3;
+            otherIndex = 0;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = A - D;
+            curOtherNormal = other.B - other.A;
+        }
+        result = Segment.GetClosestPointSegmentSegment(D, A, other.B, other.C, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 3;
+            otherIndex = 1;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = A - D;
+            curOtherNormal = other.C - other.B;
+        }
+        result = Segment.GetClosestPointSegmentSegment(D, A, other.C, other.D, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 3;
+            otherIndex = 2;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = A - D;
+            curOtherNormal = other.D - other.C;
+        }
+        result = Segment.GetClosestPointSegmentSegment(D, A, other.D, other.A, out dis);
+        if (dis < disSquared)
+        {
+            selfIndex = 3;
+            otherIndex = 3;
+            closestResult = result;
+            disSquared = dis;
+            curSelfNormal = A - D;
+            curOtherNormal = other.A - other.D;
+        }
+        
+        return new(
+            new(closestResult.self, curSelfNormal.GetPerpendicularRight().Normalize()), 
+            new(closestResult.other, curOtherNormal.GetPerpendicularRight().Normalize()),
+            disSquared,
+            selfIndex,
+            otherIndex);
+    }
+    public ClosestPointResult GetClosestPoint(Polygon other)
+    {
+        if (other.Count < 3) return new();
+        
+        (Vector2 self, Vector2 other) closestResult = (Vector2.Zero, Vector2.Zero);
+        var curSelfNormal = Vector2.Zero;
+        var curOtherNormal = Vector2.Zero;
+        float disSquared = -1;
+        var selfIndex = -1;
+        var otherIndex = -1;
+        for (var i = 0; i < other.Count; i++)
+        {
+            var p1 = other[i];
+            var p2 = other[(i + 1) % other.Count];
             
-        CollisionPoint closest = new();
-
-        var c = SegmentAToB.GetClosestCollisionPoint(p);
-        float d = (c.Point - p).LengthSquared();
-        if (d < minD)
-        {
-            closest = c;
-            minD = d;
+            var result = Segment.GetClosestPointSegmentSegment(A, B, p1, p2, out float dis);
+            if (dis < disSquared || disSquared < 0)
+            {
+                selfIndex = 0;
+                otherIndex = i;
+                disSquared = dis;
+                closestResult = result;
+                curOtherNormal = p2 - p1;
+                curSelfNormal = B - A;
+            }
+            
+            result = Segment.GetClosestPointSegmentSegment(B, C, p1, p2, out dis);
+            if (dis < disSquared || disSquared < 0)
+            {
+                selfIndex = 1;
+                otherIndex = i;
+                disSquared = dis;
+                closestResult = result;
+                curOtherNormal = p2 - p1;
+                curSelfNormal = C - B;
+            }
+            
+            result = Segment.GetClosestPointSegmentSegment(C, D, p1, p2, out dis);
+            if (dis < disSquared || disSquared < 0)
+            {
+                selfIndex = 2;
+                otherIndex = i;
+                disSquared = dis;
+                closestResult = result;
+                curOtherNormal = p2 - p1;
+                curSelfNormal = D - C;
+            }
+            
+            result = Segment.GetClosestPointSegmentSegment(A, D, p1, p2, out dis);
+            if (dis < disSquared || disSquared < 0)
+            {
+                selfIndex = 3;
+                otherIndex = i;
+                disSquared = dis;
+                closestResult = result;
+                curOtherNormal = p2 - p1;
+                curSelfNormal = A - D;
+            }
         }
         
-        c = SegmentBToC.GetClosestCollisionPoint(p);
-        d = (c.Point - p).LengthSquared();
-        if (d < minD)
+        
+        return new(
+            new(closestResult.self, curSelfNormal.GetPerpendicularRight().Normalize()), 
+            new(closestResult.other, curOtherNormal.GetPerpendicularRight().Normalize()),
+            disSquared,
+            selfIndex,
+            otherIndex);
+    }
+    public ClosestPointResult GetClosestPoint(Polyline other)
+    {
+        if (other.Count < 2) return new();
+        
+        (Vector2 self, Vector2 other) closestResult = (Vector2.Zero, Vector2.Zero);
+        var curSelfNormal = Vector2.Zero;
+        var curOtherNormal = Vector2.Zero;
+        var disSquared = -1f;
+        var selfIndex = -1;
+        var otherIndex = -1;
+        for (var i = 0; i < other.Count - 1; i++)
         {
-            closest = c;
-            minD = d;
+            var p1 = other[i];
+            var p2 = other[i + 1];
+            
+            var result = Segment.GetClosestPointSegmentSegment(A, B, p1, p2, out float dis);
+            if (dis < disSquared || disSquared < 0)
+            {
+                selfIndex = 0;
+                otherIndex = i;
+                disSquared = dis;
+                closestResult = result;
+                curOtherNormal = p2 - p1;
+                curSelfNormal = B - A;
+            }
+            
+            result = Segment.GetClosestPointSegmentSegment(B, C, p1, p2, out dis);
+            if (dis < disSquared || disSquared < 0)
+            {
+                selfIndex = 1;
+                otherIndex = i;
+                disSquared = dis;
+                closestResult = result;
+                curOtherNormal = p2 - p1;
+                curSelfNormal = C - B;
+            }
+            
+            result = Segment.GetClosestPointSegmentSegment(C, D, p1, p2, out dis);
+            if (dis < disSquared || disSquared < 0)
+            {
+                selfIndex = 2;
+                otherIndex = i;
+                disSquared = dis;
+                closestResult = result;
+                curOtherNormal = p2 - p1;
+                curSelfNormal = D - C;
+            }
+            
+            result = Segment.GetClosestPointSegmentSegment(A, D, p1, p2, out dis);
+            if (dis < disSquared || disSquared < 0)
+            {
+                selfIndex = 3;
+                otherIndex = i;
+                disSquared = dis;
+                closestResult = result;
+                curOtherNormal = p2 - p1;
+                curSelfNormal = A - D;
+            }
         }
         
-        c = SegmentCToD.GetClosestCollisionPoint(p);
-        d = (c.Point - p).LengthSquared();
-        if (d < minD)
+        return new(
+            new(closestResult.self, curSelfNormal.GetPerpendicularRight().Normalize()), 
+            new(closestResult.other, curOtherNormal.GetPerpendicularRight().Normalize()),
+            disSquared,
+            selfIndex,
+            otherIndex);
+    }
+    public ClosestPointResult GetClosestPoint(Segments other)
+    {
+        if (other.Count <= 0) return new();
+        
+        ClosestPointResult closestResult = new();
+        
+        for (var i = 0; i < other.Count; i++)
         {
-            closest = c;
-            minD = d;
+            var segment = other[i];
+            var result = GetClosestPoint(segment);
+            
+            if (!closestResult.Valid || result.IsCloser(closestResult))
+            {
+                closestResult = result;
+            }
         }
-        c = SegmentDToA.GetClosestCollisionPoint(p);
-        d = (c.Point - p).LengthSquared();
-        if (d < minD)
+        
+        return closestResult;
+    }
+
+    public (Segment segment, CollisionPoint segmentPoint) GetClosestSegment(Vector2 p, out float disSquared)
+    {
+        var closestSegment = SegmentAToB;
+        var closestResult = closestSegment.GetClosestPoint(p, out float minDisSquared);
+        
+        var currentSegment = SegmentBToC;
+        var result = currentSegment.GetClosestPoint(p, out float dis);
+        if (dis < minDisSquared)
         {
-            closest = c;
+            closestSegment = currentSegment;
+            minDisSquared = dis;
+            closestResult = result;
+        }
+        
+        currentSegment = SegmentCToD;
+        result = currentSegment.GetClosestPoint(p, out dis);
+        if (dis < minDisSquared)
+        {
+            closestSegment = currentSegment;
+            minDisSquared = dis;
+            closestResult = result;
+        }
+        
+        currentSegment = SegmentDToA;
+        result = currentSegment.GetClosestPoint(p, out dis);
+        if (dis < minDisSquared)
+        {
+            closestSegment = currentSegment;
+            minDisSquared = dis;
+            closestResult = result;
         }
 
+        disSquared = minDisSquared;
+        return (closestSegment, closestResult);
+    }
+    
+    public Vector2 GetClosestVertex(Vector2 p, out float disSquared, out int index)
+    {
+        var closest = A;
+        disSquared = (A - p).LengthSquared();
+        index = 0;
+    
+        float l = (B - p).LengthSquared();
+        if (l < disSquared)
+        {
+            closest = B;
+            disSquared = l;
+            index = 1;
+        }
+        l = (C - p).LengthSquared();
+        if (l < disSquared)
+        {
+            closest = C;
+            disSquared = l;
+            index = 2;
+        }
+    
+        l = (D - p).LengthSquared();
+        if (l < disSquared)
+        {
+            disSquared = l;
+            closest = D;
+            index = 3;
+        }
+    
         return closest;
     }
-
-    public ClosestSegment GetClosestSegment(Vector2 p)
+    public Vector2 GetFurthestVertex(Vector2 p, out float disSquared, out int index)
     {
-        float minD = float.PositiveInfinity;
-            
-        Segment closestSegment = new();
-        // CollisionPoint closestPoint = new();
-        var c = Segment.GetClosestPoint(A, B, p); // SegmentAToB.GetClosestPoint(p);
-        var disSq = (c - p).LengthSquared();
-        if (disSq < minD)
+        var furthest = A;
+        disSquared = (A - p).LengthSquared();
+        index = 0;
+    
+        float l = (B - p).LengthSquared();
+        if (l > disSquared)
         {
-            closestSegment = SegmentAToB;
-            minD = disSq;
+            furthest = B;
+            disSquared = l;
+            index = 1;
         }
-        
-        c =  Segment.GetClosestPoint(B, C, p);
-        disSq = (c - p).LengthSquared();
-        if (disSq < minD)
+        l = (C - p).LengthSquared();
+        if (l > disSquared)
         {
-            closestSegment = SegmentBToC;
-            minD = disSq;
+            furthest = C;
+            disSquared = l;
+            index = 2;
         }
-        
-        c =  Segment.GetClosestPoint(C, D, p);
-        disSq = (c - p).LengthSquared();
-        if (disSq < minD)
+    
+        l = (D - p).LengthSquared();
+        if (l > disSquared)
         {
-            closestSegment = SegmentCToD;
-            minD = disSq;
+            disSquared = l;
+            furthest = D;
+            index = 3;
         }
-        c =  Segment.GetClosestPoint(D, A, p);
-        disSq = (c - p).LengthSquared();
-        if (disSq < minD)
-        {
-            closestSegment = SegmentDToA;
-            minD = disSq;
-        }
-        
-        return new(closestSegment, c, p);
+    
+        return furthest;
     }
+
     
     #endregion
     
     #region Overlap
+    public static bool OverlapQuadSegment(Vector2 a, Vector2 b, Vector2 c, Vector2 d, Vector2 segmentStart, Vector2 segmentEnd)
+    {
+        return Segment.OverlapSegmentQuad(segmentStart, segmentEnd, a, b, c, d);
+    }
+    public static bool OverlapQuadLine(Vector2 a, Vector2 b, Vector2 c, Vector2 d,Vector2 linePoint, Vector2 lineDirection)
+    {
+        return Line.OverlapLineQuad(linePoint, lineDirection, a, b, c, d);
+    }
+    public static bool OverlapQuadRay(Vector2 a, Vector2 b, Vector2 c, Vector2 d,Vector2 rayPoint, Vector2 rayDirection)
+    {
+        return Ray.OverlapRayQuad(rayPoint, rayDirection, a, b, c, d);
+    }
+    public static bool OverlapQuadCircle(Vector2 a, Vector2 b, Vector2 c, Vector2 d,Vector2 circleCenter, float circleRadius)
+    {
+        return Circle.OverlapCircleQuad(circleCenter, circleRadius, a, b, c, d);
+    }
+    public static bool OverlapQuadTriangle(Vector2 a, Vector2 b, Vector2 c, Vector2 d, Vector2 ta, Vector2 tb, Vector2 tc)
+    {
+        return Triangle.OverlapTriangleQuad(ta, tb, tc, a, b, c, d);
 
+    }
+    public static bool OverlapQuadQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d,Vector2 qa, Vector2 qb, Vector2 qc, Vector2 qd)
+    {
+        if (ContainsQuadPoint(a, b, c, d, qa)) return true;
+        if (ContainsQuadPoint(qa, qb, qc,qd,a)) return true;
+
+        if( Segment.OverlapSegmentSegment(a, b, qa, qb) ) return true;
+        if( Segment.OverlapSegmentSegment(a, b, qb, qc) ) return true;
+        if( Segment.OverlapSegmentSegment(a, b, qc, qd) ) return true;
+        if( Segment.OverlapSegmentSegment(a, b, qd, qa) ) return true;
+        if( Segment.OverlapSegmentSegment(b, c, qa, qb) ) return true;
+        if( Segment.OverlapSegmentSegment(b, c, qb, qc) ) return true;
+        if( Segment.OverlapSegmentSegment(b, c, qc, qd) ) return true;
+        if( Segment.OverlapSegmentSegment(b, c, qd, qa) ) return true;
+        if( Segment.OverlapSegmentSegment(c, d, qa, qb) ) return true;
+        if( Segment.OverlapSegmentSegment(c, d, qb, qc) ) return true;
+        if( Segment.OverlapSegmentSegment(c, d, qc, qd) ) return true;
+        if( Segment.OverlapSegmentSegment(c, d, qd, qa) ) return true;
+        if( Segment.OverlapSegmentSegment(d, a, qa, qb) ) return true;
+        if( Segment.OverlapSegmentSegment(d, a, qb, qc) ) return true;
+        if( Segment.OverlapSegmentSegment(d, a, qc, qd) ) return true;
+        if( Segment.OverlapSegmentSegment(d, a, qd, qa) ) return true;
+
+        return false;
+    }
+    public static bool OverlapQuadRect(Vector2 a, Vector2 b, Vector2 c,  Vector2 d,Vector2 ra, Vector2 rb, Vector2 rc, Vector2 rd)
+    {
+        return OverlapQuadQuad(a, b, c, d, ra, rb, rc, rd);
+    }
+    public static bool OverlapQuadPolygon(Vector2 a, Vector2 b, Vector2 c, Vector2 d,List<Vector2> points)
+    {
+        if (points.Count < 3) return false;
+        // if (Polygon.ContainsPoints(points, a)) return true;
+        var oddNodes = false;
+        for (var i = 0; i < points.Count; i++)
+        {
+            var p1 = points[i];
+            var p2 = points[(i + 1) % points.Count];
+            if( Segment.OverlapSegmentSegment(a, b, p1, p2) ) return true;
+            if( Segment.OverlapSegmentSegment(b, c, p1, p2) ) return true;
+            if( Segment.OverlapSegmentSegment(c, d, p1, p2) ) return true;
+            if( Segment.OverlapSegmentSegment(d, a, p1, p2) ) return true;
+            if(Polygon.ContainsPointCheck(p1, p2, a)) oddNodes = !oddNodes;
+        }
+
+        return oddNodes;
+    }
+    public static bool OverlapQuadPolyline(Vector2 a, Vector2 b, Vector2 c,  Vector2 d,List<Vector2> points)
+    {
+        if (points.Count < 2) return false;
+        for (var i = 0; i < points.Count - 1; i++)
+        {
+            var p1 = points[i];
+            var p2 = points[i + 1];
+            if( Segment.OverlapSegmentSegment(a, b, p1, p2) ) return true;
+            if( Segment.OverlapSegmentSegment(b, c, p1, p2) ) return true;
+            if( Segment.OverlapSegmentSegment(c, d, p1, p2) ) return true;
+            if( Segment.OverlapSegmentSegment(d, a, p1, p2) ) return true;
+        }
+        return false;
+    }
+    public static bool OverlapQuadSegments(Vector2 a, Vector2 b, Vector2 c, Vector2 d,List<Segment> segments)
+    {
+        if (segments.Count < 3) return false;
+        for (var i = 0; i < segments.Count; i++)
+        {
+            var segment = segments[i];
+            if( Segment.OverlapSegmentSegment(a, b, segment.Start, segment.End) ) return true;
+            if( Segment.OverlapSegmentSegment(b, c, segment.Start, segment.End) ) return true;
+            if( Segment.OverlapSegmentSegment(c, d, segment.Start, segment.End) ) return true;
+            if( Segment.OverlapSegmentSegment(d, a, segment.Start, segment.End) ) return true;
+        }
+        return false;
+    }
+
+    public bool OverlapSegment(Vector2 segmentStart, Vector2 segmentEnd) => OverlapQuadSegment(A, B, C, D, segmentStart, segmentEnd);
+    public bool OverlapLine(Vector2 linePoint, Vector2 lineDirection) => OverlapQuadLine(A, B, C,D,linePoint, lineDirection);
+    public bool OverlapRay(Vector2 rayPoint, Vector2 rayDirection) => OverlapQuadRay(A, B, C,D,rayPoint, rayDirection);
+    public bool OverlapCircle(Vector2 circleCenter, float circleRadius) => OverlapQuadCircle(A, B, C,D,circleCenter, circleRadius);
+    public bool OverlapTriangle(Vector2 a, Vector2 b, Vector2 c) => OverlapQuadTriangle(A, B, C,D,a, b, c);
+    public bool OverlapQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => OverlapQuadQuad(A, B, C,D,a, b, c, d);
+    public bool OverlapRect(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => OverlapQuadQuad(A, B, C,D,a, b, c, d);
+    public bool OverlapPolygon(List<Vector2> points) => OverlapQuadPolygon(A, B, C,D,points);
+    public bool OverlapPolyline(List<Vector2> points) => OverlapQuadPolyline(A, B, C,D,points);
+    public bool OverlapSegments(List<Segment> segments) => OverlapQuadSegments(A, B, C,D,segments);
+    
+    public bool OverlapShape(Line line) => OverlapQuadLine(A, B, C, D,line.Point, line.Direction);
+    public bool OverlapShape(Ray ray) => OverlapQuadRay(A, B, C, D,ray.Point, ray.Direction);
+    
     public bool Overlap(Collider collider)
     {
         if (!collider.Enabled) return false;
@@ -1321,6 +2030,12 @@ public readonly struct Quad : IEquatable<Quad>
             case ShapeType.Segment:
                 var s = collider.GetSegmentShape();
                 return OverlapShape(s);
+            case ShapeType.Line:
+                var l = collider.GetLineShape();
+                return OverlapShape(l);
+            case ShapeType.Ray:
+                var rayShape = collider.GetRayShape();
+                return OverlapShape(rayShape);
             case ShapeType.Triangle:
                 var t = collider.GetTriangleShape();
                 return OverlapShape(t);
@@ -1458,531 +2173,1325 @@ public readonly struct Quad : IEquatable<Quad>
 
     #region Intersect
         
-        public CollisionPoints? Intersect(Collider collider)
+    public CollisionPoints? Intersect(Collider collider)
+    {
+        if (!collider.Enabled) return null;
+
+        switch (collider.GetShapeType())
         {
-            if (!collider.Enabled) return null;
-
-            switch (collider.GetShapeType())
-            {
-                case ShapeType.Circle:
-                    var c = collider.GetCircleShape();
-                    return IntersectShape(c);
-                case ShapeType.Segment:
-                    var s = collider.GetSegmentShape();
-                    return IntersectShape(s);
-                case ShapeType.Triangle:
-                    var t = collider.GetTriangleShape();
-                    return IntersectShape(t);
-                case ShapeType.Rect:
-                    var r = collider.GetRectShape();
-                    return IntersectShape(r);
-                case ShapeType.Quad:
-                    var q = collider.GetQuadShape();
-                    return IntersectShape(q);
-                case ShapeType.Poly:
-                    var p = collider.GetPolygonShape();
-                    return IntersectShape(p);
-                case ShapeType.PolyLine:
-                    var pl = collider.GetPolylineShape();
-                    return IntersectShape(pl);
-            }
-
-            return null;
+            case ShapeType.Circle:
+                var c = collider.GetCircleShape();
+                return IntersectShape(c);
+            case ShapeType.Ray:
+                var rayShape = collider.GetRayShape();
+                return IntersectShape(rayShape);
+            case ShapeType.Line:
+                var l = collider.GetLineShape();
+                return IntersectShape(l);
+            case ShapeType.Segment:
+                var s = collider.GetSegmentShape();
+                return IntersectShape(s);
+            case ShapeType.Triangle:
+                var t = collider.GetTriangleShape();
+                return IntersectShape(t);
+            case ShapeType.Rect:
+                var r = collider.GetRectShape();
+                return IntersectShape(r);
+            case ShapeType.Quad:
+                var q = collider.GetQuadShape();
+                return IntersectShape(q);
+            case ShapeType.Poly:
+                var p = collider.GetPolygonShape();
+                return IntersectShape(p);
+            case ShapeType.PolyLine:
+                var pl = collider.GetPolylineShape();
+                return IntersectShape(pl);
         }
 
-        public CollisionPoints? IntersectShape(Segments segments)
-        {
-            if (segments.Count <= 0) return null;
-            
-            CollisionPoints? points = null;
+        return null;
+    }
 
-            foreach (var seg in segments)
+    public CollisionPoints? IntersectShape(Segments segments)
+    {
+        if (segments.Count <= 0) return null;
+        
+        CollisionPoints? points = null;
+
+        foreach (var seg in segments)
+        {
+            var result = Segment.IntersectSegmentSegment(A, B, seg.Start, seg.End);
+            if (result.Valid)
             {
-                var result = Segment.IntersectSegmentSegment(A, B, seg.Start, seg.End);
-                if (result != null)
-                {
-                    points ??= new();
-                    points.AddRange((CollisionPoint)result);
-                }
-                
-                result = Segment.IntersectSegmentSegment(B, C, seg.Start, seg.End);
-                if (result != null)
-                {
-                    points ??= new();
-                    points.AddRange((CollisionPoint)result);
-                }
-                
-                result = Segment.IntersectSegmentSegment(C, D, seg.Start, seg.End);
-                if (result != null)
-                {
-                    points ??= new();
-                    points.AddRange((CollisionPoint)result);
-                }
-                
-                result = Segment.IntersectSegmentSegment(D, A, seg.Start, seg.End);
-                if (result != null)
-                {
-                    points ??= new();
-                    points.AddRange((CollisionPoint)result);
-                }
-                
+                points ??= new();
+                points.Add(result);
             }
-            return points;
+            
+            result = Segment.IntersectSegmentSegment(B, C, seg.Start, seg.End);
+            if (result.Valid)
+            {
+                points ??= new();
+                points.Add(result);
+            }
+            
+            result = Segment.IntersectSegmentSegment(C, D, seg.Start, seg.End);
+            if (result.Valid)
+            {
+                points ??= new();
+                points.Add(result);
+            }
+            
+            result = Segment.IntersectSegmentSegment(D, A, seg.Start, seg.End);
+            if (result.Valid)
+            {
+                points ??= new();
+                points.Add(result);
+            }
+            
         }
-        public CollisionPoints? IntersectShape(Segment s)
+        return points;
+    }
+    public CollisionPoints? IntersectShape(Ray r)
+    {
+        CollisionPoints? points = null;
+        var result = Segment.IntersectSegmentRay(A, B, r.Point, r.Direction, r.Normal);
+        if (result.Valid)
         {
-            CollisionPoints? points = null;
-            var result = Segment.IntersectSegmentSegment(A, B, s.Start, s.End);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-                
-            result = Segment.IntersectSegmentSegment(B, C, s.Start, s.End);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-                
-            result = Segment.IntersectSegmentSegment(C, D, s.Start, s.End);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            
-            result = Segment.IntersectSegmentSegment(D, A, s.Start, s.End);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            return points;
+            points ??= new();
+            points.Add(result);
         }
-        public  CollisionPoints? IntersectShape(Circle c)
+            
+        result = Segment.IntersectSegmentRay(B, C, r.Point, r.Direction, r.Normal);
+        if (result.Valid)
         {
-            CollisionPoints? points = null;
-            var result = Segment.IntersectSegmentCircle(A, B, c.Center, c.Radius);
-            if (result.a != null || result.b != null)
-            {
-                points ??= new();
-                if(result.a != null) points.Add((CollisionPoint)result.a);
-                if(result.b != null) points.Add((CollisionPoint)result.b);
-                return points;
-            }
-                
-            result = Segment.IntersectSegmentCircle(B, C, c.Center, c.Radius);
-            if (result.a != null || result.b != null)
-            {
-                points ??= new();
-                if(result.a != null) points.Add((CollisionPoint)result.a);
-                if(result.b != null) points.Add((CollisionPoint)result.b);
-                return points;
-            }
-            
-            result = Segment.IntersectSegmentCircle(C, D, c.Center, c.Radius);
-            if (result.a != null || result.b != null)
-            {
-                points ??= new();
-                if(result.a != null) points.Add((CollisionPoint)result.a);
-                if(result.b != null) points.Add((CollisionPoint)result.b);
-                return points;
-            }
-            
-            result = Segment.IntersectSegmentCircle(D, A, c.Center, c.Radius);
-            if (result.a != null || result.b != null)
-            {
-                points ??= new();
-                if(result.a != null) points.Add((CollisionPoint)result.a);
-                if(result.b != null) points.Add((CollisionPoint)result.b);
-                return points;
-            }
-            return points;
+            points ??= new();
+            points.Add(result);
         }
-        public CollisionPoints? IntersectShape(Triangle t)
+            
+        result = Segment.IntersectSegmentRay(C, D, r.Point, r.Direction, r.Normal);
+        if (result.Valid)
         {
-            CollisionPoints? points = null;
-            var result = Segment.IntersectSegmentSegment(A, B, t.A, t.B);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(A, B, t.B, t.C);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(A, B, t.C, t.A);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            
-                
-            result = Segment.IntersectSegmentSegment(B, C, t.A, t.B);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(B, C, t.B, t.C);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(B, C, t.C, t.A);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            
-            result = Segment.IntersectSegmentSegment(C, D, t.A, t.B);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(C, D, t.B, t.C);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(C, D, t.C, t.A);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            
-            result = Segment.IntersectSegmentSegment(D, A, t.A, t.B);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(D, A, t.B, t.C);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(D, A, t.C, t.A);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-
-            return points;
+            points ??= new();
+            points.Add(result);
         }
-        public CollisionPoints? IntersectShape(Rect r)
+        
+        result = Segment.IntersectSegmentRay(D, A, r.Point, r.Direction, r.Normal);
+        if (result.Valid)
         {
-            CollisionPoints? points = null;
-            var a = r.TopLeft;
-            var b = r.BottomLeft;
-            var result = Segment.IntersectSegmentSegment(A, B, a, b);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-
-            var c = r.BottomRight;
-            result = Segment.IntersectSegmentSegment(A, B, b, c);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-
-            var d = r.TopRight;
-            result = Segment.IntersectSegmentSegment(A, B, c, d);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            
-            result = Segment.IntersectSegmentSegment(A, B, d, a);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            
-            
-            
-            result = Segment.IntersectSegmentSegment(B, C, a, b);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(B, C, b, c);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(B, C, c, d);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(B, C, d, a);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-
-            
-            result = Segment.IntersectSegmentSegment(C, D, a, b);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(C, D, b, c);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(C, D, c, d);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(C, D, d, a);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            
-            
-            result = Segment.IntersectSegmentSegment(D, A, a, b);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(D, A, b, c);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(D, A, c, d);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(D, A, d, a);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            return points;
+            points ??= new();
+            points.Add(result);
         }
-        public CollisionPoints? IntersectShape(Quad q)
+        return points;
+    }
+    public CollisionPoints? IntersectShape(Line l)
+    {
+        CollisionPoints? points = null;
+        var result = Segment.IntersectSegmentLine(A, B, l.Point, l.Direction, l.Normal);
+        if (result.Valid)
         {
-            CollisionPoints? points = null;
-            var result = Segment.IntersectSegmentSegment(A, B, q.A, q.B);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(A, B, q.B, q.C);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(A, B, q.C, q.D);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(A, B, q.D, q.A);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            
-            
-            result = Segment.IntersectSegmentSegment(B, C, q.A, q.B);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(B, C, q.B, q.C);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(B, C, q.C, q.D);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(B, C, q.D, q.A);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-
-            
-            result = Segment.IntersectSegmentSegment(C, D, q.A, q.B);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(C, D, q.B, q.C);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(C, D, q.C, q.D);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(C, D, q.D, q.A);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            
-            result = Segment.IntersectSegmentSegment(D, A, q.A, q.B);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(D, A, q.B, q.C);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(D, A, q.C, q.D);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(D, A, q.D, q.A);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            return points;
+            points ??= new();
+            points.Add(result);
         }
-        public CollisionPoints? IntersectShape(Polygon p)
+            
+        result = Segment.IntersectSegmentLine(B, C, l.Point, l.Direction, l.Normal);
+        if (result.Valid)
         {
-            if (p.Count < 3) return null;
-
-            CollisionPoints? points = null;
-            CollisionPoint? colPoint = null;
-            for (var i = 0; i < p.Count; i++)
-            {
-                colPoint = Segment.IntersectSegmentSegment(A, B, p[i], p[(i + 1) % p.Count]);
-                if (colPoint != null)
-                {
-                    points ??= new();
-                    points.Add((CollisionPoint)colPoint);
-                }
-                
-                colPoint = Segment.IntersectSegmentSegment(B, C, p[i], p[(i + 1) % p.Count]);
-                if (colPoint != null)
-                {
-                    points ??= new();
-                    points.Add((CollisionPoint)colPoint);
-                }
-                
-                colPoint = Segment.IntersectSegmentSegment(C, D, p[i], p[(i + 1) % p.Count]);
-                if (colPoint != null)
-                {
-                    points ??= new();
-                    points.Add((CollisionPoint)colPoint);
-                }
-                
-                colPoint = Segment.IntersectSegmentSegment(D, A, p[i], p[(i + 1) % p.Count]);
-                if (colPoint != null)
-                {
-                    points ??= new();
-                    points.Add((CollisionPoint)colPoint);
-                }
-                
-            }
-            return points;
+            points ??= new();
+            points.Add(result);
         }
-        public CollisionPoints? IntersectShape(Polyline pl)
+            
+        result = Segment.IntersectSegmentLine(C, D, l.Point, l.Direction, l.Normal);
+        if (result.Valid)
         {
-            if (pl.Count < 2) return null;
+            points ??= new();
+            points.Add(result);
+        }
+        
+        result = Segment.IntersectSegmentLine(D, A, l.Point, l.Direction, l.Normal);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        return points;
+    }
+    public CollisionPoints? IntersectShape(Segment s)
+    {
+        CollisionPoints? points = null;
+        var result = Segment.IntersectSegmentSegment(A, B, s.Start, s.End);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+            
+        result = Segment.IntersectSegmentSegment(B, C, s.Start, s.End);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+            
+        result = Segment.IntersectSegmentSegment(C, D, s.Start, s.End);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        
+        result = Segment.IntersectSegmentSegment(D, A, s.Start, s.End);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        return points;
+    }
+    public  CollisionPoints? IntersectShape(Circle c)
+    {
+        CollisionPoints? points = null;
+        var result = Segment.IntersectSegmentCircle(A, B, c.Center, c.Radius);
+        if (result.a.Valid || result.b.Valid)
+        {
+            points ??= new();
+            if(result.a.Valid) points.Add(result.a);
+            if(result.b.Valid) points.Add(result.b);
+        }
+            
+        result = Segment.IntersectSegmentCircle(B, C, c.Center, c.Radius);
+        if (result.a.Valid || result.b.Valid)
+        {
+            points ??= new();
+            if(result.a.Valid) points.Add(result.a);
+            if(result.b.Valid) points.Add(result.b);
+        }
+        
+        result = Segment.IntersectSegmentCircle(C, D, c.Center, c.Radius);
+        if (result.a.Valid || result.b.Valid)
+        {
+            points ??= new();
+            if(result.a.Valid) points.Add(result.a);
+            if(result.b.Valid) points.Add(result.b);
+        }
+        
+        result = Segment.IntersectSegmentCircle(D, A, c.Center, c.Radius);
+        if (result.a.Valid || result.b.Valid)
+        {
+            points ??= new();
+            if(result.a.Valid) points.Add(result.a);
+            if(result.b.Valid) points.Add(result.b);
+        }
+        return points;
+    }
+    public CollisionPoints? IntersectShape(Triangle t)
+    {
+        CollisionPoints? points = null;
+        var result = Segment.IntersectSegmentSegment(A, B, t.A, t.B);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        result = Segment.IntersectSegmentSegment(A, B, t.B, t.C);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        result = Segment.IntersectSegmentSegment(A, B, t.C, t.A);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        
+            
+        result = Segment.IntersectSegmentSegment(B, C, t.A, t.B);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        result = Segment.IntersectSegmentSegment(B, C, t.B, t.C);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        result = Segment.IntersectSegmentSegment(B, C, t.C, t.A);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        
+        result = Segment.IntersectSegmentSegment(C, D, t.A, t.B);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        result = Segment.IntersectSegmentSegment(C, D, t.B, t.C);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        result = Segment.IntersectSegmentSegment(C, D, t.C, t.A);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        
+        result = Segment.IntersectSegmentSegment(D, A, t.A, t.B);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        result = Segment.IntersectSegmentSegment(D, A, t.B, t.C);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        result = Segment.IntersectSegmentSegment(D, A, t.C, t.A);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
 
-            CollisionPoints? points = null;
-            CollisionPoint? colPoint = null;
-            for (var i = 0; i < pl.Count - 1; i++)
-            {
-                colPoint = Segment.IntersectSegmentSegment(A, B, pl[i], pl[(i + 1) % pl.Count]);
-                if (colPoint != null)
-                {
-                    points ??= new();
-                    points.Add((CollisionPoint)colPoint);
-                }
-                
-                colPoint = Segment.IntersectSegmentSegment(B, C, pl[i], pl[(i + 1) % pl.Count]);
-                if (colPoint != null)
-                {
-                    points ??= new();
-                    points.Add((CollisionPoint)colPoint);
-                }
-                
-                colPoint = Segment.IntersectSegmentSegment(C, D, pl[i], pl[(i + 1) % pl.Count]);
-                if (colPoint != null)
-                {
-                    points ??= new();
-                    points.Add((CollisionPoint)colPoint);
-                }
-                
-                colPoint = Segment.IntersectSegmentSegment(D, A, pl[i], pl[(i + 1) % pl.Count]);
-                if (colPoint != null)
-                {
-                    points ??= new();
-                    points.Add((CollisionPoint)colPoint);
-                }
-            }
-            return points;
+        return points;
+    }
+    public CollisionPoints? IntersectShape(Rect r)
+    {
+        CollisionPoints? points = null;
+        var a = r.TopLeft;
+        var b = r.BottomLeft;
+        var result = Segment.IntersectSegmentSegment(A, B, a, b);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+
+        var c = r.BottomRight;
+        result = Segment.IntersectSegmentSegment(A, B, b, c);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+
+        var d = r.TopRight;
+        result = Segment.IntersectSegmentSegment(A, B, c, d);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        
+        result = Segment.IntersectSegmentSegment(A, B, d, a);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
         }
         
         
-        #endregion
         
+        result = Segment.IntersectSegmentSegment(B, C, a, b);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        result = Segment.IntersectSegmentSegment(B, C, b, c);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        result = Segment.IntersectSegmentSegment(B, C, c, d);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        result = Segment.IntersectSegmentSegment(B, C, d, a);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+
+        
+        result = Segment.IntersectSegmentSegment(C, D, a, b);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        result = Segment.IntersectSegmentSegment(C, D, b, c);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        result = Segment.IntersectSegmentSegment(C, D, c, d);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        result = Segment.IntersectSegmentSegment(C, D, d, a);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        
+        
+        result = Segment.IntersectSegmentSegment(D, A, a, b);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        result = Segment.IntersectSegmentSegment(D, A, b, c);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        result = Segment.IntersectSegmentSegment(D, A, c, d);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        result = Segment.IntersectSegmentSegment(D, A, d, a);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        return points;
+    }
+    public CollisionPoints? IntersectShape(Quad q)
+    {
+        CollisionPoints? points = null;
+        var result = Segment.IntersectSegmentSegment(A, B, q.A, q.B);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        result = Segment.IntersectSegmentSegment(A, B, q.B, q.C);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        result = Segment.IntersectSegmentSegment(A, B, q.C, q.D);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        result = Segment.IntersectSegmentSegment(A, B, q.D, q.A);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        
+        
+        result = Segment.IntersectSegmentSegment(B, C, q.A, q.B);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        result = Segment.IntersectSegmentSegment(B, C, q.B, q.C);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        result = Segment.IntersectSegmentSegment(B, C, q.C, q.D);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        result = Segment.IntersectSegmentSegment(B, C, q.D, q.A);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+
+        
+        result = Segment.IntersectSegmentSegment(C, D, q.A, q.B);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        result = Segment.IntersectSegmentSegment(C, D, q.B, q.C);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        result = Segment.IntersectSegmentSegment(C, D, q.C, q.D);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        result = Segment.IntersectSegmentSegment(C, D, q.D, q.A);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        
+        result = Segment.IntersectSegmentSegment(D, A, q.A, q.B);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        result = Segment.IntersectSegmentSegment(D, A, q.B, q.C);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        result = Segment.IntersectSegmentSegment(D, A, q.C, q.D);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        result = Segment.IntersectSegmentSegment(D, A, q.D, q.A);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+        return points;
+    }
+    public CollisionPoints? IntersectShape(Polygon p)
+    {
+        if (p.Count < 3) return null;
+
+        CollisionPoints? points = null;
+        for (var i = 0; i < p.Count; i++)
+        {
+            var result = Segment.IntersectSegmentSegment(A, B, p[i], p[(i + 1) % p.Count]);
+            if (result.Valid)
+            {
+                points ??= new();
+                points.Add(result);
+            }
+            
+            result = Segment.IntersectSegmentSegment(B, C, p[i], p[(i + 1) % p.Count]);
+            if (result.Valid)
+            {
+                points ??= new();
+                points.Add(result);
+            }
+            
+            result = Segment.IntersectSegmentSegment(C, D, p[i], p[(i + 1) % p.Count]);
+            if (result.Valid)
+            {
+                points ??= new();
+                points.Add(result);
+            }
+            
+            result = Segment.IntersectSegmentSegment(D, A, p[i], p[(i + 1) % p.Count]);
+            if (result.Valid)
+            {
+                points ??= new();
+                points.Add(result);
+            }
+            
+        }
+        return points;
+    }
+    public CollisionPoints? IntersectShape(Polyline pl)
+    {
+        if (pl.Count < 2) return null;
+
+        CollisionPoints? points = null;
+        for (var i = 0; i < pl.Count - 1; i++)
+        {
+            var result = Segment.IntersectSegmentSegment(A, B, pl[i], pl[(i + 1) % pl.Count]);
+            if (result.Valid)
+            {
+                points ??= new();
+                points.Add(result);
+            }
+            
+            result = Segment.IntersectSegmentSegment(B, C, pl[i], pl[(i + 1) % pl.Count]);
+            if (result.Valid)
+            {
+                points ??= new();
+                points.Add(result);
+            }
+            
+            result = Segment.IntersectSegmentSegment(C, D, pl[i], pl[(i + 1) % pl.Count]);
+            if (result.Valid)
+            {
+                points ??= new();
+                points.Add(result);
+            }
+            
+            result = Segment.IntersectSegmentSegment(D, A, pl[i], pl[(i + 1) % pl.Count]);
+            if (result.Valid)
+            {
+                points ??= new();
+                points.Add(result);
+            }
+        }
+        return points;
+    }
+    
+    public int Intersect(Collider collider, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        if (!collider.Enabled) return 0;
+
+        switch (collider.GetShapeType())
+        {
+            case ShapeType.Circle:
+                var c = collider.GetCircleShape();
+                return IntersectShape(c, ref points, returnAfterFirstValid);
+            case ShapeType.Ray:
+                var rayShape = collider.GetRayShape();
+                return IntersectShape(rayShape, ref points);
+            case ShapeType.Line:
+                var l = collider.GetLineShape();
+                return IntersectShape(l, ref points);
+            case ShapeType.Segment:
+                var s = collider.GetSegmentShape();
+                return IntersectShape(s, ref points);
+            case ShapeType.Triangle:
+                var t = collider.GetTriangleShape();
+                return IntersectShape(t, ref points, returnAfterFirstValid);
+            case ShapeType.Rect:
+                var r = collider.GetRectShape();
+                return IntersectShape(r, ref points, returnAfterFirstValid);
+            case ShapeType.Quad:
+                var q = collider.GetQuadShape();
+                return IntersectShape(q, ref points, returnAfterFirstValid);
+            case ShapeType.Poly:
+                var p = collider.GetPolygonShape();
+                return IntersectShape(p, ref points, returnAfterFirstValid);
+            case ShapeType.PolyLine:
+                var pl = collider.GetPolylineShape();
+                return IntersectShape(pl, ref points, returnAfterFirstValid);
+        }
+
+        return 0;
+    }
+    
+    public int IntersectShape(Ray r, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        var count = 0;
+        var result = Segment.IntersectSegmentRay(A, B, r.Point, r.Direction, r.Normal);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+            
+        result = Segment.IntersectSegmentRay(B, C, r.Point, r.Direction, r.Normal);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        if (count >= 2) return count;
+        
+        result = Segment.IntersectSegmentRay(C, D, r.Point, r.Direction, r.Normal);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        
+        if(count >= 2) return count;
+        
+        result = Segment.IntersectSegmentRay(D, A, r.Point, r.Direction, r.Normal);
+        if (result.Valid)
+        {
+            points.Add(result);
+            count++;
+        }
+        return count;
+    }
+    public int IntersectShape(Line l, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        var count = 0;
+        var result = Segment.IntersectSegmentLine(A, B, l.Point, l.Direction, l.Normal);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+            
+        result = Segment.IntersectSegmentLine(B, C, l.Point, l.Direction, l.Normal);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        if (count >= 2) return count;
+        
+        result = Segment.IntersectSegmentLine(C, D, l.Point, l.Direction, l.Normal);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        
+        if(count >= 2) return count;
+        
+        result = Segment.IntersectSegmentLine(D, A, l.Point, l.Direction, l.Normal);
+        if (result.Valid)
+        {
+            points.Add(result);
+            count++;
+        }
+        return count;
+    }
+
+    public int IntersectShape(Segment s, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        var count = 0;
+        var result = Segment.IntersectSegmentSegment(A, B, s.Start, s.End);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+            
+        result = Segment.IntersectSegmentSegment(B, C, s.Start, s.End);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        if (count >= 2) return count;
+        
+        result = Segment.IntersectSegmentSegment(C, D, s.Start, s.End);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        
+        if(count >= 2) return count;
+        
+        result = Segment.IntersectSegmentSegment(D, A, s.Start, s.End);
+        if (result.Valid)
+        {
+            points.Add(result);
+            count++;
+        }
+        return count;
+    }
+    
+    public int IntersectShape(Circle c, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        var count = 0;
+        var result = Segment.IntersectSegmentCircle(A, B, c.Center, c.Radius);
+        if (result.a.Valid)
+        {
+            points.Add(result.a);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        if (result.b.Valid)
+        {
+            points.Add(result.b);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+            
+        result = Segment.IntersectSegmentCircle(B, C, c.Center, c.Radius);
+        if (result.a.Valid)
+        {
+            points.Add(result.a);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        if (result.b.Valid)
+        {
+            points.Add(result.b);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        
+        result = Segment.IntersectSegmentCircle(C, D, c.Center, c.Radius);
+        if (result.a.Valid)
+        {
+            points.Add(result.a);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        if (result.b.Valid)
+        {
+            points.Add(result.b);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        
+        result = Segment.IntersectSegmentCircle(D, A, c.Center, c.Radius);
+        if (result.a.Valid)
+        {
+            points.Add(result.a);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        if (result.b.Valid)
+        {
+            points.Add(result.b);
+            count++;
+        }
+        return count;
+    }
+    public int IntersectShape(Triangle t, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        var count = 0;
+        var result = Segment.IntersectSegmentSegment(A, B, t.A, t.B);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(A, B, t.B, t.C);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(A, B, t.C, t.A);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        
+            
+        result = Segment.IntersectSegmentSegment(B, C, t.A, t.B);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(B, C, t.B, t.C);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(B, C, t.C, t.A);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        
+        result = Segment.IntersectSegmentSegment(C, D, t.A, t.B);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(C, D, t.B, t.C);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(C, D, t.C, t.A);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        
+        result = Segment.IntersectSegmentSegment(D, A, t.A, t.B);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(D, A, t.B, t.C);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(D, A, t.C, t.A);
+        if (result.Valid)
+        {
+            points.Add(result);
+            count++;
+        }
+
+        return count;
+    }
+    public int IntersectShape(Quad q, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        var count = 0;
+        var result = Segment.IntersectSegmentSegment(A, B, q.A, q.B);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(A, B, q.B, q.C);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(A, B, q.C, q.D);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(A, B, q.D, q.A);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        
+        
+        result = Segment.IntersectSegmentSegment(B, C, q.A, q.B);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(B, C, q.B, q.C);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(B, C, q.C, q.D);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(B, C, q.D, q.A);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        
+        result = Segment.IntersectSegmentSegment(C, D, q.A, q.B);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(C, D, q.B, q.C);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(C, D, q.C, q.D);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(C, D, q.D, q.A);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        
+        result = Segment.IntersectSegmentSegment(D, A, q.A, q.B);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(D, A, q.B, q.C);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(D, A, q.C, q.D);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(D, A, q.D, q.A);
+        if (result.Valid)
+        {
+            points.Add(result);
+            count++;
+        }
+        return count;
+    }
+    public int IntersectShape(Rect r, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        var count = 0;
+        var a = r.TopLeft;
+        var b = r.BottomLeft;
+        var result = Segment.IntersectSegmentSegment(A, B, a, b);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        var c = r.BottomRight;
+        result = Segment.IntersectSegmentSegment(A, B, b, c);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        var d = r.TopRight;
+        result = Segment.IntersectSegmentSegment(A, B, c, d);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        
+        result = Segment.IntersectSegmentSegment(A, B, d, a);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        
+        
+        
+        result = Segment.IntersectSegmentSegment(B, C, a, b);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(B, C, b, c);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(B, C, c, d);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(B, C, d, a);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        
+        result = Segment.IntersectSegmentSegment(C, D, a, b);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(C, D, b, c);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(C, D, c, d);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(C, D, d, a);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        
+        
+        result = Segment.IntersectSegmentSegment(D, A, a, b);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(D, A, b, c);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(D, A, c, d);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+        result = Segment.IntersectSegmentSegment(D, A, d, a);
+        if (result.Valid)
+        {
+            points.Add(result);
+            count++;
+        }
+        return count;
+    }
+    public int IntersectShape(Polygon p, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        if (p.Count < 3) return 0;
+
+        var count = 0;
+        for (var i = 0; i < p.Count; i++)
+        {
+            var result = Segment.IntersectSegmentSegment(A, B, p[i], p[(i + 1) % p.Count]);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            
+            result = Segment.IntersectSegmentSegment(B, C, p[i], p[(i + 1) % p.Count]);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            
+            result = Segment.IntersectSegmentSegment(C, D, p[i], p[(i + 1) % p.Count]);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            
+            result = Segment.IntersectSegmentSegment(D, A, p[i], p[(i + 1) % p.Count]);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            
+        }
+        return count;
+    }
+    public int IntersectShape(Polyline pl, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        if (pl.Count < 2) return 0;
+
+        var count = 0;
+        for (var i = 0; i < pl.Count - 1; i++)
+        {
+            var result = Segment.IntersectSegmentSegment(A, B, pl[i], pl[(i + 1) % pl.Count]);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            
+            result = Segment.IntersectSegmentSegment(B, C, pl[i], pl[(i + 1) % pl.Count]);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            
+            result = Segment.IntersectSegmentSegment(C, D, pl[i], pl[(i + 1) % pl.Count]);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            
+            result = Segment.IntersectSegmentSegment(D, A, pl[i], pl[(i + 1) % pl.Count]);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+        }
+        return count;
+    }
+    public int IntersectShape(Segments shape, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    {
+        if (shape.Count <= 0) return 0;
+        
+        var count = 0;
+
+        foreach (var seg in shape)
+        {
+            var result = Segment.IntersectSegmentSegment(A, B, seg.Start, seg.End);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            
+            result = Segment.IntersectSegmentSegment(B, C, seg.Start, seg.End);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            
+            result = Segment.IntersectSegmentSegment(C, D, seg.Start, seg.End);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            
+            result = Segment.IntersectSegmentSegment(D, A, seg.Start, seg.End);
+            if (result.Valid)
+            {
+                points.Add(result);
+                if (returnAfterFirstValid) return 1;
+                count++;
+            }
+            
+        }
+        return count;
+    }
+   
+    #endregion
+        
+    #region Interpolated Edge Points
+
+    
+    public Points? GetInterpolatedEdgePoints(float t)
+    {
+        var a1 = A.Lerp(B, t);
+        var b1 = B.Lerp(C, t);
+        var c1 = C.Lerp(D, t);
+        var d1 = D.Lerp(A, t);
+        
+        return new Points(4){a1, b1, c1, d1};
+    }
+    public Points? GetInterpolatedEdgePoints(float t, int steps)
+    {
+        if(steps <= 1) return GetInterpolatedEdgePoints(t);
+        
+        var a1 = A.Lerp(B, t);
+        var b1 = B.Lerp(C, t);
+        var c1 = C.Lerp(D, t);
+        var d1 = D.Lerp(A, t);
+
+        //first step is already done
+        int remainingSteps = steps - 1;
+
+        while (remainingSteps > 0)
+        {
+            var a2 = a1.Lerp(b1, t);
+            var b2 = b1.Lerp(c1, t);
+            var c2 = c1.Lerp(d1, t);
+            var d2 = d1.Lerp(a1, t);
+            
+            (a1, b1, c1, d1) = (a2, b2, c2, d2);
+            
+            remainingSteps--;
+        }
+        
+        return new Points(4){a1, b1, c1, d1};
+    }
+    
+    #endregion
 }

@@ -1,5 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Core;
+using ShapeEngine.StaticLib;
 
 namespace Examples.PayloadSystem;
 
@@ -13,12 +14,11 @@ public abstract class PayloadMarker
     public bool Launched { get; private set; } = false;
     public bool TargetReached => Launched && travelTimer <= 0f;
 
-    private float dragCoefficient = 2f;
     protected float travelTime {get; private set;}= 1f;
     protected float travelTimer{get; private set;}= 0f;
     public float TravelF => travelTime <= 0f ? 0f : travelTimer / travelTime;
 
-    public bool Launch(Vector2 start, Vector2 dir, float speed, float time = 1f, float drag = 2f)
+    public bool Launch(Vector2 start, Vector2 dir, float speed, float time = 1f)
     {
         if (Launched) return false;
 
@@ -28,7 +28,6 @@ public abstract class PayloadMarker
         Velocity = dir * speed;
         travelTimer = time;
         travelTime = time;
-        dragCoefficient = drag;
         
         WasLaunched();
         return true;
@@ -45,7 +44,7 @@ public abstract class PayloadMarker
     {
         if (travelTimer > 0f)
         {
-            Velocity = PhysicsObject.ApplyDragForce(Velocity, dragCoefficient, dt);
+            Velocity = ShapePhysics.ApplyDragForce(Velocity, 0.8f, dt);
             Location += Velocity * dt;
             travelTimer -= dt;
             if (travelTimer <= 0f)
