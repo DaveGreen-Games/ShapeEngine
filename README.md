@@ -1,4 +1,4 @@
-![ShapeEngine 30 Release Banner reddit (1920 x 384 px)](https://github.com/user-attachments/assets/28793f05-a3dc-4b3c-9e44-3f1830015659)
+![ShapeEngine 4 0 Release Banner reddit (1920 x 384 px)](https://github.com/user-attachments/assets/00bdcbb9-3f24-43a8-b665-9befdc16d593)
 
 My custom-made engine based on the great [Raylib Framework](https://www.raylib.com/examples.html). The Main focus is being performant and only using draw functions instead of textures.
 
