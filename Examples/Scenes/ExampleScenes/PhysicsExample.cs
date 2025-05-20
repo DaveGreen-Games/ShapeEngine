@@ -1,5 +1,6 @@
 using System.Numerics;
 using Examples.Scenes.ExampleScenes.PhysicsExampleSource;
+using nkast.Aether.Physics2D.Dynamics;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
@@ -14,15 +15,47 @@ using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes;
 
+
+/*
+ 
+private World _world;
+private Body _playerBody;
+private Body _groundBody;
+private float _playerBodyRadius = 1.5f / 2f; // player diameter is 1.5 meters
+private Vector2 _groundBodySize = new Vector2(8f, 1f); // ground is 8x1 meters
+
+//Create a world
+_world = new World();
+
+// Create the player
+Vector2 playerPosition = new Vector2(0, _playerBodyRadius);
+_playerBody = _world.CreateBody(playerPosition, 0, BodyType.Dynamic);
+Fixture pfixture = _playerBody.CreateCircle(_playerBodyRadius, 1f);
+// Give it some bounce and friction
+pfixture.Restitution = 0.3f;
+pfixture.Friction = 0.5f;
+
+// Create the ground
+Vector2 groundPosition = new Vector2(0, -(_groundBodySize.Y / 2f));
+_groundBody = _world.CreateBody(groundPosition, 0, BodyType.Static);
+Fixture gfixture = _groundBody.CreateRectangle(_groundBodySize.X, _groundBodySize.Y, 1f, Vector2.Zero);
+gfixture.Restitution = 0.3f;
+gfixture.Friction = 0.5f;
+
+// Update the world
+float dt = 1f/60f;
+_world.Step(dt);
+
+*/
+
 public class PhysicsExample : ExampleScene
 {
+    public static readonly World PhysicsWorld = new();
     private readonly Rect sectorRect;
     private readonly ShapeCamera camera;
     private readonly CameraFollowerSingle follower;
     private const float SectorRadiusOutside = 9000;
     private const float SectorRadiusInside = 8250;
-    private const int CollisionRows = 10;
-    private const int CollisionCols = 10;
    
     private readonly float cellSize;
     
@@ -44,9 +77,6 @@ public class PhysicsExample : ExampleScene
 
         var rectSize = SectorRadiusOutside * 2;
         sectorRect = new(new Vector2(0f), new Size(rectSize, rectSize) , new AnchorPoint(0.5f));
-
-        InitCollisionHandler(sectorRect, CollisionRows, CollisionCols);
-        cellSize = rectSize / CollisionRows;
         
         camera = new();
         follower = new(0, 300, 500);
@@ -77,23 +107,24 @@ public class PhysicsExample : ExampleScene
             starSurfaces.Add(t);
         }
 
+        ship = new PhysicsExampleSource.Ship(65, Colors.PcWarm, PhysicsWorld);
         
-        if (CollisionHandler != null)
-        {
-            ship = new(65, Colors.PcWarm);
-            CollisionHandler.Add(ship);
-            
-            
-            for (int i = 0; i < 100; i++)
-            {
-                var randPos = Rng.Instance.RandVec2(500, SectorRadiusInside - 250);
-                var asteroid = new PhysicsExampleSource.Asteroid(randPos, Colors.PcCold);
-                asteroids.Add(asteroid);
-                CollisionHandler.Add(asteroid);
-                if(asteroid.AsteroidType == AsteroidType.Attractor) attractorAsteroids.Add(asteroid);
-                else if(asteroid.AsteroidType == AsteroidType.Repulsor) repulsorAsteroids.Add(asteroid);
-            }
-        }
+        // if (CollisionHandler != null)
+        // {
+        //     ship = new(65, Colors.PcWarm);
+        //     CollisionHandler.Add(ship);
+        //     
+        //     
+        //     for (int i = 0; i < 100; i++)
+        //     {
+        //         var randPos = Rng.Instance.RandVec2(500, SectorRadiusInside - 250);
+        //         var asteroid = new PhysicsExampleSource.Asteroid(randPos, Colors.PcCold);
+        //         asteroids.Add(asteroid);
+        //         CollisionHandler.Add(asteroid);
+        //         if(asteroid.AsteroidType == AsteroidType.Attractor) attractorAsteroids.Add(asteroid);
+        //         else if(asteroid.AsteroidType == AsteroidType.Repulsor) repulsorAsteroids.Add(asteroid);
+        //     }
+        // }
         
     }
     
@@ -128,40 +159,45 @@ public class PhysicsExample : ExampleScene
         
     }
     
-
+    
     
     protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
-        foreach (var asteroid in asteroids)
-        {
-            asteroid.Update(time, game, gameUi, ui);
-            var asteroidOutOfBoundsForce = ShapePhysics.CalculateReverseAttractionForce(
-                Vector2.Zero,
-                5000 * asteroid.Mass,
-                new ValueRange(SectorRadiusInside, SectorRadiusOutside),
-                asteroid.Transform.Position
-            );
-            asteroid.AddForce(asteroidOutOfBoundsForce);
-        }
-        
-        foreach (var attractor in attractorAsteroids)
-        {
-            ship.ApplyAttraction(attractor.Transform.Position, attractor.AttractionForce, 1.25f);
-        }
-        
-        foreach (var repulsor in repulsorAsteroids)
-        {
-            ship.ApplyRepulsion(repulsor.Transform.Position, repulsor.RepulsorForce, 1.25f);
-        }
-        
         ship.Update(time, game, gameUi, ui);
-        var shipOutOfBoundsForce = ShapePhysics.CalculateReverseAttractionForce(
-            Vector2.Zero,
-            5000 * ship.Mass,
-            new ValueRange(SectorRadiusInside, SectorRadiusOutside),
-            ship.Transform.Position
-            );
-        ship.AddForce(shipOutOfBoundsForce);
+        // var shipOutOfBoundsForce = ShapePhysics.CalculateReverseAttractionForce(
+        //     Vector2.Zero,
+        //     5000 * ship.Mass,
+        //     new ValueRange(SectorRadiusInside, SectorRadiusOutside),
+        //     ship.Transform.Position
+        //     );
+        // ship.AddForce(shipOutOfBoundsForce);
+        
+        PhysicsWorld.Step(time.Delta);
+        
+        ship.UpdatePhysicsState();
+        // foreach (var asteroid in asteroids)
+        // {
+        //     asteroid.Update(time, game, gameUi, ui);
+        //     var asteroidOutOfBoundsForce = ShapePhysics.CalculateReverseAttractionForce(
+        //         Vector2.Zero,
+        //         5000 * asteroid.Mass,
+        //         new ValueRange(SectorRadiusInside, SectorRadiusOutside),
+        //         asteroid.Transform.Position
+        //     );
+        //     asteroid.AddForce(asteroidOutOfBoundsForce);
+        // }
+        
+        // foreach (var attractor in attractorAsteroids)
+        // {
+        //     ship.ApplyAttraction(attractor.Transform.Position, attractor.AttractionForce, 1.25f);
+        // }
+        //
+        // foreach (var repulsor in repulsorAsteroids)
+        // {
+        //     ship.ApplyRepulsion(repulsor.Transform.Position, repulsor.RepulsorForce, 1.25f);
+        // }
+        
+        
         
         follower.Speed = ship.CurSpeed * 1.5f;
         var speedF = ship.CurSpeed / ship.MaxSpeed;
@@ -241,5 +277,18 @@ public class PhysicsExample : ExampleScene
             textRect = textRect.SetPosition(center, AnchorPoint.Center);
             gameFont.Draw("SECTOR END", textRect, rotationRad * ShapeMath.RADTODEG, AnchorPoint.Center);
         }
+    }
+}
+
+public static class Vector2Extensions
+{
+    public static nkast.Aether.Physics2D.Common.Vector2 ToAetherVector2(this Vector2 v)
+    {
+        return new nkast.Aether.Physics2D.Common.Vector2(v.X, v.Y);
+    }
+
+    public static Vector2 FromAetherVector2(this nkast.Aether.Physics2D.Common.Vector2 v)
+    {
+        return new Vector2(v.X, v.Y);
     }
 }

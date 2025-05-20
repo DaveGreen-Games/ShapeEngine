@@ -50,7 +50,7 @@ public class AsteroidForceParticle(ValueRange radiusRange, float lifetime, float
 
 
 
-public class Asteroid : CollisionObject
+public class Asteroid : GameObject
 {
     private static readonly ChanceList<AsteroidType> asteroidTypeChanceList = new
     (
@@ -74,6 +74,8 @@ public class Asteroid : CollisionObject
     private float forceParticleSpawnTimer = 0f;
     private readonly float lineThickness = 4f;
 
+    private Vector2 prevPosition;
+    private Polygon shape;
     
     public Asteroid(Vector2 position, PaletteColor color)
     {
@@ -83,27 +85,30 @@ public class Asteroid : CollisionObject
         
         Transform = new Transform2D(position, 0f, new Size(randSize), 1f);
         paletteColor = color;
-        var relativePoints = Polygon.GenerateRelative(15, 0.4f, 1f);
-        collider = new PolyCollider(new(), relativePoints);
-        collider.ComputeCollision = true;
-        collider.ComputeIntersections = true;
-        collider.CollisionLayer = (uint)CollisionLayers.Asteroid;
-        collider.CollisionMask = new BitFlag((uint)CollisionLayers.Asteroid, (uint)CollisionLayers.Ship);
-        AddCollider(collider);
-
-        var randDir = Rng.Instance.RandVec2();
+        var relativePoints = Polygon.Generate(position, 15, 0.4f, 1f);
+        shape = new Polygon(relativePoints);
+        prevPosition = position;
+        // var relativePoints = Polygon.GenerateRelative(15, 0.4f, 1f);
+        // collider = new PolyCollider(new(), relativePoints);
+        // collider.ComputeCollision = true;
+        // collider.ComputeIntersections = true;
+        // collider.CollisionLayer = (uint)CollisionLayers.Asteroid;
+        // collider.CollisionMask = new BitFlag((uint)CollisionLayers.Asteroid, (uint)CollisionLayers.Ship);
+        // AddCollider(collider);
+        //
+        // var randDir = Rng.Instance.RandVec2();
         var sizeF = ShapeMath.LerpInverseFloat(minSize, maxSize, randSize);
-        var randSpeed = ShapeMath.LerpFloat(100, 10, sizeF);
-        // var randSpeed = (maxSize + 10) - randSize;
-        // randSpeed *= 1.25f;
-        Velocity = randDir * randSpeed;
-        
-        //surface area of circle radius * radius * pi
-        Mass = randSize * randSize * ShapeMath.PI * 0.5f;//because it is a polygon that is never bigger than radius, so it has less surface area than a circle
-        DragCoefficient = 0f;
-
-        FilterCollisionPoints = true;
-        CollisionPointsFilterType = CollisionPointsFilterType.Combined;
+        // var randSpeed = ShapeMath.LerpFloat(100, 10, sizeF);
+        // // var randSpeed = (maxSize + 10) - randSize;
+        // // randSpeed *= 1.25f;
+        // Velocity = randDir * randSpeed;
+        //
+        // //surface area of circle radius * radius * pi
+        // Mass = randSize * randSize * ShapeMath.PI * 0.5f;//because it is a polygon that is never bigger than radius, so it has less surface area than a circle
+        // DragCoefficient = 0f;
+        //
+        // FilterCollisionPoints = true;
+        // CollisionPointsFilterType = CollisionPointsFilterType.Combined;
 
         AsteroidType = asteroidTypeChanceList.Next();
         
@@ -137,62 +142,65 @@ public class Asteroid : CollisionObject
 
     }
 
-    protected override void Collision(CollisionInformation info)
+    // protected override void Collision(CollisionInformation info)
+    // {
+    //     if (!info.FirstContact)
+    //     {
+    //         if (info.Other is Asteroid otherAsteroid)
+    //         {
+    //             if (otherAsteroid.Mass >= Mass)
+    //             {
+    //                 var w = Transform.Position - otherAsteroid.Transform.Position;
+    //                 var dir = w.Normalize();
+    //                 AddForce(dir * 50 * Mass);
+    //             }
+    //         }
+    //         else if (info.Other is Ship otherShip)
+    //         {
+    //             var w = otherShip.Transform.Position - Transform.Position;
+    //             var dir = w.Normalize();
+    //             otherShip.AddForce(dir * otherShip.ThrustForce * 1.25f);
+    //             // otherShip.AddForce(-otherShip.Velocity * otherShip.Mass);
+    //             //Disables attraction for 1 second if this was not the first contact (ship is pulled into the asteroid)
+    //             if (AsteroidType == AsteroidType.Attractor && attractionDelayTimer <= 0f)
+    //             {
+    //                 tempAttractionForce = AttractionForce;
+    //                 AttractionForce = 0f;
+    //                 attractionDelayTimer = 1f;
+    //             }
+    //         }
+    //         
+    //         return;
+    //     }
+    //     
+    //     var cp = info.FilteredCollisionPoint;
+    //     if (!cp.Valid)
+    //     {
+    //         return;
+    //     }
+    //     
+    //     if (info.Other is Ship ship)
+    //     {
+    //         var result = ShapePhysics.CalculateElasticCollision(cp.Normal,  info.SelfVel, Mass, info.OtherVel, ship.Mass, 0.5f);
+    //         Velocity = result.newVelocity1;
+    //         ship.Velocity = result.newVelocity2;
+    //     }
+    //     else if (info.Other is Asteroid asteroid)
+    //     {
+    //         //use velocity stored in collision info!!
+    //         // var result = ShapePhysics.CalculateElasticCollisionCirclesSelf(Transform.Position, info.SelfVel, Mass, asteroid.Transform.Position, info.OtherVel, asteroid.Mass, 1f);
+    //         var result = ShapePhysics.CalculateElasticCollisionSelf(cp.Normal,  info.SelfVel, Mass, info.OtherVel, asteroid.Mass, 0.9f);
+    //         Velocity = result;
+    //     }
+    // }
+
+    public override Rect GetBoundingBox()
     {
-        if (!info.FirstContact)
-        {
-            if (info.Other is Asteroid otherAsteroid)
-            {
-                if (otherAsteroid.Mass >= Mass)
-                {
-                    var w = Transform.Position - otherAsteroid.Transform.Position;
-                    var dir = w.Normalize();
-                    AddForce(dir * 50 * Mass);
-                }
-            }
-            else if (info.Other is Ship otherShip)
-            {
-                var w = otherShip.Transform.Position - Transform.Position;
-                var dir = w.Normalize();
-                otherShip.AddForce(dir * otherShip.ThrustForce * 1.25f);
-                // otherShip.AddForce(-otherShip.Velocity * otherShip.Mass);
-                //Disables attraction for 1 second if this was not the first contact (ship is pulled into the asteroid)
-                if (AsteroidType == AsteroidType.Attractor && attractionDelayTimer <= 0f)
-                {
-                    tempAttractionForce = AttractionForce;
-                    AttractionForce = 0f;
-                    attractionDelayTimer = 1f;
-                }
-            }
-            
-            return;
-        }
-        
-        var cp = info.FilteredCollisionPoint;
-        if (!cp.Valid)
-        {
-            return;
-        }
-        
-        if (info.Other is Ship ship)
-        {
-            var result = ShapePhysics.CalculateElasticCollision(cp.Normal,  info.SelfVel, Mass, info.OtherVel, ship.Mass, 0.5f);
-            Velocity = result.newVelocity1;
-            ship.Velocity = result.newVelocity2;
-        }
-        else if (info.Other is Asteroid asteroid)
-        {
-            //use velocity stored in collision info!!
-            // var result = ShapePhysics.CalculateElasticCollisionCirclesSelf(Transform.Position, info.SelfVel, Mass, asteroid.Transform.Position, info.OtherVel, asteroid.Mass, 1f);
-            var result = ShapePhysics.CalculateElasticCollisionSelf(cp.Normal,  info.SelfVel, Mass, info.OtherVel, asteroid.Mass, 0.9f);
-            Velocity = result;
-        }
+        return shape.GetBoundingBox();
     }
 
     public override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
-        base.Update(time, game, gameUi, ui);
-
         if (attractionDelayTimer > 0f)
         {
             attractionDelayTimer -= time.Delta;
@@ -232,6 +240,9 @@ public class Asteroid : CollisionObject
                 }
             }
         }
+
+        shape.SetTransform(Transform, prevPosition);
+        prevPosition = Transform.Position;
     }
 
     public override void DrawGame(ScreenInfo game)
@@ -241,8 +252,9 @@ public class Asteroid : CollisionObject
             p.Draw();
         }
         
-        var poly = collider.GetPolygonShape();
-        poly.DrawLines(lineThickness, paletteColor.ColorRgba);
+        shape.DrawLines(lineThickness, paletteColor.ColorRgba);
+        // var poly = collider.GetPolygonShape();
+        // poly.DrawLines(lineThickness, paletteColor.ColorRgba);
         
     }
 
