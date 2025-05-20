@@ -162,7 +162,14 @@ public class PhysicsExample : ExampleScene
         }
 
         ship = new PhysicsExampleSource.Ship(65, Colors.PcWarm, PhysicsWorld);
-        
+        for (int i = 0; i < 100; i++)
+        {
+            var randPos = Rng.Instance.RandVec2(500, SectorRadiusInside - 250);
+            var asteroid = new PhysicsExampleSource.Asteroid(randPos, Colors.PcCold, PhysicsWorld);
+            asteroids.Add(asteroid);
+            if(asteroid.AsteroidType == AsteroidType.Attractor) attractorAsteroids.Add(asteroid);
+            else if(asteroid.AsteroidType == AsteroidType.Repulsor) repulsorAsteroids.Add(asteroid);
+        }
         // if (CollisionHandler != null)
         // {
         //     ship = new(65, Colors.PcWarm);
@@ -228,6 +235,18 @@ public class PhysicsExample : ExampleScene
             );
         ship.AddForce(shipOutOfBoundsForce);
         
+        foreach (var asteroid in asteroids)
+        {
+            asteroid.Update(time, game, gameUi, ui);
+            var asteroidOutOfBoundsForce = ShapePhysics.CalculateReverseAttractionForce(
+                Vector2.Zero,
+                asteroid.Mass,
+                new ValueRange(SectorRadiusInside, SectorRadiusOutside),
+                asteroid.Transform.Position
+            );
+            asteroid.AddForce(asteroidOutOfBoundsForce);
+        }
+        
         foreach (var attractor in attractorAsteroids)
         {
             var w = attractor.Transform.Position - ship.Transform.Position;
@@ -256,6 +275,10 @@ public class PhysicsExample : ExampleScene
         
         ship.UpdatePhysicsState();
         
+        foreach (var asteroid in asteroids)
+        {
+            asteroid.UpdatePhysicsState();
+        }
         // foreach (var asteroid in asteroids)
         // {
         //     asteroid.Update(time, game, gameUi, ui);

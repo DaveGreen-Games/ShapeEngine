@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Numerics;
+using nkast.Aether.Physics2D.Dynamics;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
 using ShapeEngine.Core.CollisionSystem;
@@ -75,9 +76,11 @@ public class Asteroid : GameObject
     private readonly float lineThickness = 4f;
 
     private Vector2 prevPosition;
-    private Polygon shape;
-    
-    public Asteroid(Vector2 position, PaletteColor color)
+    private readonly Polygon shape;
+    private readonly Body body;
+    private readonly Fixture fixture;
+    public float Mass => body.Mass;
+    public Asteroid(Vector2 position, PaletteColor color, World world)
     {
         var minSize = 50f;
         var maxSize = 200f;
@@ -88,6 +91,20 @@ public class Asteroid : GameObject
         var relativePoints = Polygon.Generate(position, 15, 0.4f, 1f);
         shape = new Polygon(relativePoints);
         prevPosition = position;
+
+        body = world.CreateBody(position.ScalePositionToAetherVector2(), 0f, BodyType.Dynamic);
+        body.Mass = randSize * 25;
+        body.LinearDamping = 0f;
+        body.AngularDamping = 0f;
+        fixture = body.CreateCircle(randSize, 1f);
+        fixture.Restitution = 0.5f;
+        fixture.Friction = 0.3f;
+        
+        var sizeF = ShapeMath.LerpInverseFloat(minSize, maxSize, randSize);
+        var randSpeed = ShapeMath.LerpFloat(3f, 0.15f, sizeF);
+        var randDir = Rng.Instance.RandVec2().ToAetherVector2();
+        body.LinearVelocity = randDir * randSpeed;
+        
         // var relativePoints = Polygon.GenerateRelative(15, 0.4f, 1f);
         // collider = new PolyCollider(new(), relativePoints);
         // collider.ComputeCollision = true;
@@ -97,7 +114,7 @@ public class Asteroid : GameObject
         // AddCollider(collider);
         //
         // var randDir = Rng.Instance.RandVec2();
-        var sizeF = ShapeMath.LerpInverseFloat(minSize, maxSize, randSize);
+        
         // var randSpeed = ShapeMath.LerpFloat(100, 10, sizeF);
         // // var randSpeed = (maxSize + 10) - randSize;
         // // randSpeed *= 1.25f;
@@ -193,12 +210,23 @@ public class Asteroid : GameObject
     //         Velocity = result;
     //     }
     // }
-
+    public void AddForce(Vector2 force)
+    {
+        body.ApplyForce(force.ToAetherVector2());
+    }
     public override Rect GetBoundingBox()
     {
         return shape.GetBoundingBox();
     }
 
+    public void UpdatePhysicsState()
+    {
+        Transform = Transform.SetPosition(body.Position.ScalePositionToSystemVector2());
+        Transform = Transform.SetRotationRad(body.Rotation);
+        shape.SetTransform(Transform, prevPosition);
+        prevPosition = Transform.Position;
+
+    }
     public override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
         if (attractionDelayTimer > 0f)
@@ -240,9 +268,6 @@ public class Asteroid : GameObject
                 }
             }
         }
-
-        shape.SetTransform(Transform, prevPosition);
-        prevPosition = Transform.Position;
     }
 
     public override void DrawGame(ScreenInfo game)
