@@ -60,7 +60,7 @@ public class Asteroid : GameObject
     );
     
     private readonly PaletteColor paletteColor;
-    private readonly PolyCollider collider;
+    // private readonly PolyCollider collider;
     public readonly AsteroidType AsteroidType;
     public float AttractionForce;
     private float tempAttractionForce = 0f;

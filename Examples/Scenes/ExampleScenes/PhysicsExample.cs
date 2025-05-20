@@ -1,11 +1,15 @@
+using System.Diagnostics;
 using System.Numerics;
 using Examples.Scenes.ExampleScenes.PhysicsExampleSource;
+using nkast.Aether.Physics2D;
+using nkast.Aether.Physics2D.Controllers;
 using nkast.Aether.Physics2D.Dynamics;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Input;
 using ShapeEngine.StaticLib;
 using ShapeEngine.Random;
 using ShapeEngine.Screen;
@@ -48,9 +52,55 @@ _world.Step(dt);
 
 */
 
+
+public class InterstellarObject
+{
+    private readonly Body body;
+    private readonly World world;
+    private readonly Fixture fixture;
+
+    public InterstellarObject(World world, Vector2 position, float rotationRadians, float radius)
+    {
+        this.world = world;
+        body = world.CreateBody(position.ToAetherVector2(), rotationRadians, BodyType.Dynamic);
+        body.Mass = 1000;
+        body.LinearDamping = 0f;
+        body.AngularDamping = 0f;
+        fixture = body.CreateCircle(radius, 1f);
+        fixture.Restitution = 0.3f;
+        fixture.Friction = 0.5f;
+        // var randForce = Rng.Instance.RandVec2(10000, 1000000000);
+        // body.ApplyForce(randForce.ToAetherVector2());
+        body.LinearVelocity = Rng.Instance.RandVec2(0, 1000000000).ToAetherVector2();
+    }
+    
+
+    public void Draw()
+    {
+        var radius = fixture.Shape.Radius;
+        var center = body.Position.ToSystemVector2();
+        var circle = new Circle(center, radius);
+        circle.DrawLines(2f, Colors.Special2, 4f);
+
+
+        var vel = body.LinearVelocity;
+        if (vel.LengthSquared() > 0f)
+        {
+            var dir = body.LinearVelocity.ToSystemVector2().Normalize();
+            var headingPoint = center + dir * radius;
+            var headingCircle = new Circle(headingPoint, radius * 0.1f);
+            headingCircle.Draw(Colors.Special2);
+        }
+        
+        Console.WriteLine($"InterstellarObject velocity: {body.LinearVelocity.Length():F2} m/s");
+    }
+    
+}
+
+
 public class PhysicsExample : ExampleScene
 {
-    public static readonly World PhysicsWorld = new();
+    public static readonly World PhysicsWorld = new(new nkast.Aether.Physics2D.Common.Vector2(0, 0));
     private readonly Rect sectorRect;
     private readonly ShapeCamera camera;
     private readonly CameraFollowerSingle follower;
@@ -70,11 +120,15 @@ public class PhysicsExample : ExampleScene
     private readonly List<PhysicsExampleSource.Asteroid> repulsorAsteroids = new();
     
     
-
+    private readonly List<InterstellarObject> interstellarObjects = new();
+    
+    
     public PhysicsExample()
     {
+        // var limiter = new VelocityLimitController(0f, 0f);
+        // PhysicsWorld.Add(limiter);
+        
         Title = "Physics!";
-
         var rectSize = SectorRadiusOutside * 2;
         sectorRect = new(new Vector2(0f), new Size(rectSize, rectSize) , new AnchorPoint(0.5f));
         
@@ -164,17 +218,44 @@ public class PhysicsExample : ExampleScene
     protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
         ship.Update(time, game, gameUi, ui);
-        // var shipOutOfBoundsForce = ShapePhysics.CalculateReverseAttractionForce(
-        //     Vector2.Zero,
-        //     5000 * ship.Mass,
-        //     new ValueRange(SectorRadiusInside, SectorRadiusOutside),
-        //     ship.Transform.Position
-        //     );
-        // ship.AddForce(shipOutOfBoundsForce);
+        
+        var shipOutOfBoundsForce = ShapePhysics.CalculateReverseAttractionForce(
+            Vector2.Zero,
+            ship.ThrustForce * 2.5f,
+            // 12 * ship.Mass,
+            new ValueRange(SectorRadiusInside, SectorRadiusOutside),
+            ship.Transform.Position
+            );
+        ship.AddForce(shipOutOfBoundsForce);
+        
+        foreach (var attractor in attractorAsteroids)
+        {
+            var w = attractor.Transform.Position - ship.Transform.Position;
+            var lsq = w.LengthSquared();
+            if(lsq <= 0f) continue;
+            
+            var l = (float)Math.Sqrt(lsq);
+            var dir = w / l;
+            ship.AddForce(attractor.AttractionForce * dir / l);
+            // ship.ApplyAttraction(attractor.Transform.Position, attractor.AttractionForce, 1.25f);
+        }
+        
+        foreach (var repulsor in repulsorAsteroids)
+        {
+            var w = repulsor.Transform.Position - ship.Transform.Position;
+            var lsq = w.LengthSquared();
+            if(lsq <= 0f) continue;
+            
+            var l = (float)Math.Sqrt(lsq);
+            var dir = w / l;
+            ship.AddForce(repulsor.RepulsorForce * dir / l);
+            // ship.ApplyRepulsion(repulsor.Transform.Position, repulsor.RepulsorForce, 1.25f);
+        }
         
         PhysicsWorld.Step(time.Delta);
         
         ship.UpdatePhysicsState();
+        
         // foreach (var asteroid in asteroids)
         // {
         //     asteroid.Update(time, game, gameUi, ui);
@@ -187,28 +268,29 @@ public class PhysicsExample : ExampleScene
         //     asteroid.AddForce(asteroidOutOfBoundsForce);
         // }
         
-        // foreach (var attractor in attractorAsteroids)
-        // {
-        //     ship.ApplyAttraction(attractor.Transform.Position, attractor.AttractionForce, 1.25f);
-        // }
-        //
-        // foreach (var repulsor in repulsorAsteroids)
-        // {
-        //     ship.ApplyRepulsion(repulsor.Transform.Position, repulsor.RepulsorForce, 1.25f);
-        // }
         
         
         
-        follower.Speed = ship.CurSpeed * 1.5f;
+        
+        follower.Speed = ship.CurSpeed * 1.5f * Vector2Extensions.PositionScaleFactor;
         var speedF = ship.CurSpeed / ship.MaxSpeed;
-        var targetZoom = ShapeMath.LerpFloat(0.75f, 0.32f, speedF);
+        var targetZoom = ShapeMath.LerpFloat(0.75f, 0.4f, speedF);
         var curZoom = camera.BaseZoomLevel;
         
         var newZoom = ShapeMath.ExpDecayLerpFloat(curZoom, targetZoom, 0.5f, time.Delta);
         camera.SetZoom(newZoom);
 
-        
-        
+
+        if (ShapeMouseButton.LEFT.GetInputState().Pressed)
+        {
+            var mousePos = game.MousePos;
+            for (int i = 0; i < 10; i++)
+            {
+                var randPos = mousePos + Rng.Instance.RandVec2(-100, 100);
+                var io = new InterstellarObject(PhysicsWorld, randPos, Rng.Instance.RandAngleRad(), Rng.Instance.RandF(5, 15));
+                interstellarObjects.Add(io);
+            }
+        }
     }
 
 
@@ -245,7 +327,12 @@ public class PhysicsExample : ExampleScene
         }
         
         ship.DrawGame(game);
-        
+
+
+        foreach (var interstellarObject in interstellarObjects)
+        {
+            interstellarObject.Draw();
+        }
         
     }
     protected override void OnDrawGameUIExample(ScreenInfo gameUi)
@@ -282,13 +369,25 @@ public class PhysicsExample : ExampleScene
 
 public static class Vector2Extensions
 {
+    public static float PositionScaleFactor = 100;
+    
     public static nkast.Aether.Physics2D.Common.Vector2 ToAetherVector2(this Vector2 v)
     {
         return new nkast.Aether.Physics2D.Common.Vector2(v.X, v.Y);
     }
 
-    public static Vector2 FromAetherVector2(this nkast.Aether.Physics2D.Common.Vector2 v)
+    public static Vector2 ToSystemVector2(this nkast.Aether.Physics2D.Common.Vector2 v)
     {
         return new Vector2(v.X, v.Y);
+    }
+
+    public static nkast.Aether.Physics2D.Common.Vector2 ScalePositionToAetherVector2(this Vector2 v)
+    {
+        return v.ToAetherVector2() / PositionScaleFactor;
+    }
+
+    public static Vector2 ScalePositionToSystemVector2(this nkast.Aether.Physics2D.Common.Vector2 v)
+    {
+        return v.ToSystemVector2() * PositionScaleFactor;
     }
 }

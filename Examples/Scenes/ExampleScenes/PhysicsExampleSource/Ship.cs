@@ -29,11 +29,13 @@ public class Ship : GameObject, ICameraFollowTarget
     private readonly Size hullSize;
     private readonly PaletteColor paletteColor;
     
-    private readonly ValueRange linearDampingRange = new (0.01f, 5f);
-    private readonly ValueRange angularDampingRange = new (1f, 1f);
+    //TODO: Remove ranges for damping and set constant value for damping
+    //use ranges for thrust and steer forces! way better
+    private readonly ValueRange linearDampingRange = new (0.5f, 2.5f);
+    private readonly ValueRange angularDampingRange = new (1f, 5f);
     // private ValueRange thrustForceRange = new (150000f, 800000f);
-    public float ThrustForce { get; private set; } = 8000000;
-    public float SteerForce { get; private set; } = 2000000;
+    public float ThrustForce { get; private set; } = 40000;
+    public float SteerForce { get; private set; } = 8000000;
     private float breakTimer = 0f;
     private readonly float breakDuration = 1f;
     
@@ -44,7 +46,7 @@ public class Ship : GameObject, ICameraFollowTarget
     private Vector2 curRotationDirection = Vector2.Zero;
     private Vector2 curVelocityDirection = Vector2.Zero;
     public float CurSpeed { get; private set; } = 0f;
-    public float MaxSpeed { get; private set; }= 1250f;
+    public float MaxSpeed { get; private set; }= 6f;
     public float CurSpeedF => CurSpeed / MaxSpeed;
     private Vector2 curCameraOffset = Vector2.Zero;
     private float curDelta = 0f;
@@ -56,6 +58,8 @@ public class Ship : GameObject, ICameraFollowTarget
         (0.75f, 500),
         (1f, 1000)
     };
+    
+    public float Mass => body.Mass;
     public Ship(float size, PaletteColor color, World world)
     {
         hullSize = new Size(size, size);
@@ -72,17 +76,16 @@ public class Ship : GameObject, ICameraFollowTarget
         var fixture = body.CreateCircle(hullSize.Radius, 1f);
         fixture.Restitution = 0.3f;
         fixture.Friction = 0.5f;
-        
         hullAbsolute = hullRelative.ApplyTransform(Transform);
     }
 
     public void Spawn(Vector2 position, float rotationDeg)
     {
-        body.SetTransform(position.ToAetherVector2(), rotationDeg * ShapeMath.DEGTORAD);
+        body.SetTransform(position.ScalePositionToAetherVector2(), rotationDeg * ShapeMath.DEGTORAD);
         Transform = Transform.SetPosition(position);
         Transform = Transform.SetRotationRad(rotationDeg);
         curRotationDirection = ShapeVec.VecFromAngleRad(rotationDeg);
-        curVelocityDirection = body.LinearVelocity.FromAetherVector2().Normalize();
+        curVelocityDirection = body.LinearVelocity.ToSystemVector2().Normalize();
     }
 
     public override Rect GetBoundingBox()
@@ -92,12 +95,12 @@ public class Ship : GameObject, ICameraFollowTarget
 
     public void UpdatePhysicsState()
     {
-        Transform = Transform.SetPosition(body.Position.FromAetherVector2());
+        Transform = Transform.SetPosition(body.Position.ScalePositionToSystemVector2());
         Transform = Transform.SetRotationRad(body.Rotation);
         
         curRotationDirection = ShapeVec.VecFromAngleRad(Transform.RotationRad);
         hullAbsolute = hullRelative.ApplyTransform(Transform);
-        var curVelocity = body.LinearVelocity.FromAetherVector2();
+        var curVelocity = body.LinearVelocity.ToSystemVector2();
         curVelocityDirection = curVelocity.Normalize();
         CurSpeed = curVelocity.Length();
 
@@ -111,6 +114,11 @@ public class Ship : GameObject, ICameraFollowTarget
         //         Velocity = curVelocityDirection * MaxSpeed;
         //     }
         // }
+    }
+
+    public void AddForce(Vector2 force)
+    {
+        body.ApplyForce(force.ToAetherVector2());
     }
     public override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
@@ -126,7 +134,7 @@ public class Ship : GameObject, ICameraFollowTarget
             }
 
             body.LinearDamping = linearDampingRange.Min;
-            body.ApplyForce(curRotationDirection.ToAetherVector2() * ThrustForce);
+            AddForce(curRotationDirection * ThrustForce);
         }
         else if (ShapeKeyboardButton.S.GetInputState().Down)
         {
@@ -209,9 +217,6 @@ public class Ship : GameObject, ICameraFollowTarget
         var s = ShapeMath.LerpFloat(thickness, thickness * 8, speedF);
         p.Draw(s, c, 16);
         
-        var bodyPosition = body.Position.FromAetherVector2();
-        bodyPosition.Draw(25, Colors.Special2, 32);
-        
     }
 
     public override void DrawGameUI(ScreenInfo gameUi)
@@ -231,12 +236,12 @@ public class Ship : GameObject, ICameraFollowTarget
 
     public Vector2 GetCameraFollowPosition()
     {
-        return body.Position.FromAetherVector2();
-        // var targetCameraOffset = curVelocityDirection * cameraPositionOffsetCurve.Sample(CurSpeedF);
-        //
-        // curCameraOffset = curCameraOffset.ExpDecayLerp(targetCameraOffset, 0.9f, curDelta);
-        // // curCameraOffset = curCameraOffset.Lerp(targetCameraOffset, 0.05f);
-        //
-        // return Transform.Position + curCameraOffset; //  ShapeMath.LerpFloat(0, 1500, CurSpeedF);
+        // return body.Position.ToSystemVector2();
+        var targetCameraOffset = curVelocityDirection * cameraPositionOffsetCurve.Sample(CurSpeedF);
+        
+        curCameraOffset = curCameraOffset.ExpDecayLerp(targetCameraOffset, 0.9f, curDelta);
+        // curCameraOffset = curCameraOffset.Lerp(targetCameraOffset, 0.05f);
+        
+        return Transform.Position + curCameraOffset; //  ShapeMath.LerpFloat(0, 1500, CurSpeedF);
     }
 }
