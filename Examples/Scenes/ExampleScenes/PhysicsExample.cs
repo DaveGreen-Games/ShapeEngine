@@ -107,7 +107,7 @@ public class PhysicsExample : ExampleScene
     private const float SectorRadiusOutside = 9000;
     private const float SectorRadiusInside = 8250;
    
-    private readonly float cellSize;
+    // private readonly float cellSize;
     
     private readonly List<TextureSurface> starSurfaces = new();
     
@@ -161,7 +161,7 @@ public class PhysicsExample : ExampleScene
             starSurfaces.Add(t);
         }
 
-        ship = new PhysicsExampleSource.Ship(65, Colors.PcWarm, PhysicsWorld);
+        ship = new PhysicsExampleSource.Ship(65f, Colors.PcWarm, PhysicsWorld);
         for (int i = 0; i < 100; i++)
         {
             var randPos = Rng.Instance.RandVec2(500, SectorRadiusInside - 250);
@@ -295,7 +295,7 @@ public class PhysicsExample : ExampleScene
         
         
         
-        follower.Speed = ship.CurSpeed * 1.5f * Vector2Extensions.PositionScaleFactor;
+        follower.Speed = ship.CurSpeed * 1.5f;
         var speedF = ship.CurSpeed / ship.MaxSpeed;
         var targetZoom = ShapeMath.LerpFloat(0.75f, 0.4f, speedF);
         var curZoom = camera.BaseZoomLevel;
@@ -392,7 +392,7 @@ public class PhysicsExample : ExampleScene
 
 public static class Vector2Extensions
 {
-    public static float PositionScaleFactor = 100;
+    // public static float PositionScaleFactor = 100;
     
     public static nkast.Aether.Physics2D.Common.Vector2 ToAetherVector2(this Vector2 v)
     {
@@ -404,13 +404,13 @@ public static class Vector2Extensions
         return new Vector2(v.X, v.Y);
     }
 
-    public static nkast.Aether.Physics2D.Common.Vector2 ScalePositionToAetherVector2(this Vector2 v)
-    {
-        return v.ToAetherVector2() / PositionScaleFactor;
-    }
-
-    public static Vector2 ScalePositionToSystemVector2(this nkast.Aether.Physics2D.Common.Vector2 v)
-    {
-        return v.ToSystemVector2() * PositionScaleFactor;
-    }
+    // public static nkast.Aether.Physics2D.Common.Vector2 ScalePositionToAetherVector2(this Vector2 v)
+    // {
+    //     return v.ToAetherVector2() / PositionScaleFactor;
+    // }
+    //
+    // public static Vector2 ScalePositionToSystemVector2(this nkast.Aether.Physics2D.Common.Vector2 v)
+    // {
+    //     return v.ToSystemVector2() * PositionScaleFactor;
+    // }
 }

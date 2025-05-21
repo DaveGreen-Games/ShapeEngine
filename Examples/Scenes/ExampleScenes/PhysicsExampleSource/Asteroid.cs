@@ -88,11 +88,11 @@ public class Asteroid : GameObject
         
         Transform = new Transform2D(position, 0f, new Size(randSize), 1f);
         paletteColor = color;
-        var relativePoints = Polygon.Generate(position, 15, 0.4f, 1f);
+        var relativePoints = Polygon.Generate(position, 15, randSize * 0.5f, randSize * 1f);
         shape = new Polygon(relativePoints);
         prevPosition = position;
 
-        body = world.CreateBody(position.ScalePositionToAetherVector2(), 0f, BodyType.Dynamic);
+        body = world.CreateBody(position.ToAetherVector2(), 0f, BodyType.Dynamic);
         body.Mass = randSize * 25;
         body.LinearDamping = 0f;
         body.AngularDamping = 0f;
@@ -101,7 +101,7 @@ public class Asteroid : GameObject
         fixture.Friction = 0.3f;
         
         var sizeF = ShapeMath.LerpInverseFloat(minSize, maxSize, randSize);
-        var randSpeed = ShapeMath.LerpFloat(3f, 0.15f, sizeF);
+        var randSpeed = ShapeMath.LerpFloat(100f, 25f, sizeF);
         var randDir = Rng.Instance.RandVec2().ToAetherVector2();
         body.LinearVelocity = randDir * randSpeed;
         
@@ -221,9 +221,15 @@ public class Asteroid : GameObject
 
     public void UpdatePhysicsState()
     {
-        Transform = Transform.SetPosition(body.Position.ScalePositionToSystemVector2());
+        Transform = Transform.SetPosition(body.Position.ToSystemVector2());
         Transform = Transform.SetRotationRad(body.Rotation);
-        shape.SetTransform(Transform, prevPosition);
+        
+        //TODO: fix that -> set transform makes every asteroid a circle
+        // shape.SetTransform(Transform, prevPosition);
+        
+        shape.SetPosition(Transform.Position);
+        shape.SetRotation(Transform.RotationRad);
+        
         prevPosition = Transform.Position;
 
     }
@@ -278,9 +284,13 @@ public class Asteroid : GameObject
         }
         
         shape.DrawLines(lineThickness, paletteColor.ColorRgba);
+
+        var r = fixture.Shape.Radius;
+        var circleCollider = new Circle(Transform.Position, r);
+        circleCollider.DrawLines(5f, paletteColor.ColorRgba, 8f);
         // var poly = collider.GetPolygonShape();
         // poly.DrawLines(lineThickness, paletteColor.ColorRgba);
-        
+
     }
 
     public override void DrawGameUI(ScreenInfo gameUi)

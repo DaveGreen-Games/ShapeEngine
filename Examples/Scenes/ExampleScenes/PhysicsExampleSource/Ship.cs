@@ -31,10 +31,10 @@ public class Ship : GameObject, ICameraFollowTarget
     
     //TODO: Remove ranges for damping and set constant value for damping
     //use ranges for thrust and steer forces! way better
-    private readonly ValueRange linearDampingRange = new (0.5f, 2.5f);
+    private readonly ValueRange linearDampingRange = new (0.1f, 0.5f);
     private readonly ValueRange angularDampingRange = new (1f, 5f);
     // private ValueRange thrustForceRange = new (150000f, 800000f);
-    public float ThrustForce { get; private set; } = 40000;
+    public float ThrustForce { get; private set; } = 400000;
     public float SteerForce { get; private set; } = 8000000;
     private float breakTimer = 0f;
     private readonly float breakDuration = 1f;
@@ -46,7 +46,7 @@ public class Ship : GameObject, ICameraFollowTarget
     private Vector2 curRotationDirection = Vector2.Zero;
     private Vector2 curVelocityDirection = Vector2.Zero;
     public float CurSpeed { get; private set; } = 0f;
-    public float MaxSpeed { get; private set; }= 6f;
+    public float MaxSpeed { get; private set; }= 1200f;
     public float CurSpeedF => CurSpeed / MaxSpeed;
     private Vector2 curCameraOffset = Vector2.Zero;
     private float curDelta = 0f;
@@ -81,7 +81,7 @@ public class Ship : GameObject, ICameraFollowTarget
 
     public void Spawn(Vector2 position, float rotationDeg)
     {
-        body.SetTransform(position.ScalePositionToAetherVector2(), rotationDeg * ShapeMath.DEGTORAD);
+        body.SetTransform(position.ToAetherVector2(), rotationDeg * ShapeMath.DEGTORAD);
         Transform = Transform.SetPosition(position);
         Transform = Transform.SetRotationRad(rotationDeg);
         curRotationDirection = ShapeVec.VecFromAngleRad(rotationDeg);
@@ -95,7 +95,7 @@ public class Ship : GameObject, ICameraFollowTarget
 
     public void UpdatePhysicsState()
     {
-        Transform = Transform.SetPosition(body.Position.ScalePositionToSystemVector2());
+        Transform = Transform.SetPosition(body.Position.ToSystemVector2());
         Transform = Transform.SetRotationRad(body.Rotation);
         
         curRotationDirection = ShapeVec.VecFromAngleRad(Transform.RotationRad);
@@ -103,7 +103,7 @@ public class Ship : GameObject, ICameraFollowTarget
         var curVelocity = body.LinearVelocity.ToSystemVector2();
         curVelocityDirection = curVelocity.Normalize();
         CurSpeed = curVelocity.Length();
-
+        
         // if (Velocity.LengthSquared() > 0f)
         // {
         //     curVelocityDirection = Velocity.Normalize();
