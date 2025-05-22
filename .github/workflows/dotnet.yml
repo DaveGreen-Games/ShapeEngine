@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  Test:
+  Build:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
@@ -21,5 +21,12 @@ jobs:
         dotnet-version: 8.0.x
     - name: Restore dependencies
       run: dotnet restore
-    - name: Test
-      run: dotnet test --no-build --no-restore --verbosity normal -c Release
+    - name: Build ShapeEngine and Examples
+      run: dotnet build --no-restore -c Release ./ShapeEngine.sln
+    - name: Test ShapeEngine
+      run: dotnet test --no-build --no-restore -c Release ./ShapeEngine/ShapeEngine.csproj
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v4.5.0
+      with:
+        name: ${{ matrix.os }}-Examples
+        path: ./Examples/bin/Release/
