@@ -291,7 +291,33 @@ namespace ShapeEngine.StaticLib
         public static Vector2 Max(this Vector2 v1, Vector2 v2) { return Vector2.Max(v1, v2); }
         public static Vector2 Clamp(this Vector2 v, Vector2 min, Vector2 max) { return Vector2.Clamp(v, min, max); }
         public static Vector2 Clamp(this Vector2 v, float min, float max) { return Vector2.Clamp(v, new(min), new(max)); }
-        
+
+        public static Vector2 ClampLength(this Vector2 v, float maxLength)
+        {
+            var lSq = v.LengthSquared();
+            var maxLengthSq = maxLength * maxLength;
+            if (lSq > maxLengthSq)
+            {
+                return v.Normalize() * maxLength;
+            }
+            return v;
+        }
+        public static Vector2 ClampLength(this Vector2 v, float minLength, float maxLength)
+        {
+            var lSq = v.LengthSquared();
+            var maxLengthSq = maxLength * maxLength;
+            var minLengthSq = minLength * minLength;
+            if (lSq > maxLengthSq)
+            {
+                return v.Normalize() * maxLength;
+            }
+            
+            if (lSq < minLengthSq)
+            {
+                return v.Normalize() * minLength;
+            }
+            return v;
+        }
         /// <summary>
         /// Returns v if the squared length of the vector is one.
         /// Returns a zero vector if the squared length is zero.
