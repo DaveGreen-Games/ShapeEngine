@@ -1,0 +1,32 @@
+name: .NET
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  Build:
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build ShapeEngine and Examples
+      run: dotnet build --no-restore -c Release ./ShapeEngine.sln
+    - name: Test ShapeEngine
+      run: dotnet test --no-build --no-restore -c Release ./ShapeEngine/ShapeEngine.csproj
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v4.5.0
+      with:
+        name: ${{ matrix.os }}-Examples
+        path: ./Examples/bin/Release/
