@@ -88,13 +88,14 @@ public static class ShapeMath
     {
         return (int)MathF.Abs(value);
     }
+    public static bool IsSignEqual(int a, int b) => a < 0 && b < 0 || a > 0 && b > 0 || a == 0 && b == 0;
     #endregion
 
     #region Float
 
     public static bool EqualsF(float a, float b, float tolerance = 0.0001f) => MathF.Abs(a - b) < tolerance;
     public static bool EqualsD(double a, double b, double tolerance = 0.0000001) => Math.Abs(a - b) < tolerance;
-    
+    public static bool IsSignEqual(float a, float b) => a < 0 && b < 0 || a > 0 && b > 0 || a == 0 && b == 0;
 
     #endregion
     
