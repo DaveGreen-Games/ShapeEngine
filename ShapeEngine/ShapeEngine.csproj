@@ -10,7 +10,7 @@
 	<Title>Shape Engine</Title>
 	<Authors>Dave Green</Authors>
 	<RepositoryUrl>https://github.com/DaveGreen-Games/ShapeEngine</RepositoryUrl>
-	<Version>4.0.1</Version>
+	<Version>4.0.2</Version>
 	<Description>My custom made 2d game engine based on the great Raylib Framework. Main focus is being performant and only using draw functions instead of textures. Custom input, audio, savegame, collision, shape, pathfinding, ui, camera, color palette, polygon fracturing, and text system are available with a few other nice things!</Description>
 	<PackageProjectUrl>https://davegreengames.itch.io/shape-engine</PackageProjectUrl>
 	<PackageIcon>shapeengine-nuget-icon-128px.png</PackageIcon>
@@ -18,16 +18,20 @@
 	<PackageTags>GameEngine Framework 2D raylib gamedev graphics shapes polygon rect line clipper2 polygonclipping</PackageTags>
 	<Company>Dave Green Games</Company>
 	<Product>Shape Engine</Product>
-	<AssemblyVersion>4.0.1</AssemblyVersion>
-	<FileVersion>4.0.1</FileVersion>
+	<AssemblyVersion>4.0.2</AssemblyVersion>
+	<FileVersion>4.0.2</FileVersion>
   	<PackageReadmeFile>readme-nuget.md</PackageReadmeFile>
   	<NeutralLanguage>en-US</NeutralLanguage>
   	<Copyright>Copyright (c) David Grueneis 2025</Copyright>
   	<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   	<PackageReleaseNotes>
-		#4.0.1 Release
-		Added missing XML documentation file to the nuget package.
+		#4.0.2 Release
+		- ShapePhysics CalculateDragFactor functions is now public.
+		- ShapeVec added ClampLength(v, max) ClampLength(v, min, max) functions.
+		- ShapeMath added IsSignEqual() (int and float) functions.
 		
+		#4.0.1 Release
+		- Added missing XML documentation file to the nuget package.
 		
 		#4.0.0 Release
 		
