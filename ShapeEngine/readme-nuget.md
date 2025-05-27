@@ -26,6 +26,9 @@ The Main Branch contains the current development stage. You can follow the devel
 There are multiple ways to use Shape Engine:
 
 1. **Create a new solution & project and download Shape Engine from the Nuget manager.** (Recommended)
+```sh
+dotnet add package DaveGreen.ShapeEngine
+```
 2. Clone or fork the repository and add new projects to the solution. You then can reference the Shape Engine project and start working on your game. The advantages are that you can easily change things in Shape Engine and everything updates automatically in your own project.
 3. Create a new solution & project in a .net IDE. (Visual Studio / JetBrains Rider for example). Download or fork ShapeEngine and either create a local nuget package or build the solution to create all necessary dll files.
 1. \[Using a local Nuget Package\] Create a folder on your machine called something like “Local Nuget Packages” and copy the ShapeEngine Nuget package that you created to this folder. (You can also add the Shape Engine Nuget package directly to your Project). Now you need to create a new Package source in the Nuget Manager that points to your “Local Nuget Packages” Folder. This source can be used in your Nuget Manager to find and install the Shape Engine Nuget Package.
@@ -40,7 +43,7 @@ using System.Drawing;
 using ShapeEngine.Color; 
 using ShapeEngine.Core; 
 using ShapeEngine.Core.Structs; 
-using ShapeEngine.Lib;  
+using ShapeEngine.StaticLib.Drawing;
 
 namespace ShapeEngineProject;   
 
