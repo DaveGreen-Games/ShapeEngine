@@ -1,4 +1,4 @@
-name: .NET
+name: .NET Publish Examples
 
 on:
   push:
@@ -8,25 +8,33 @@ on:
 
 jobs:
   Build:
+    env:
+      dotnet-version: "8.0"
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os:
+          - runs-on: windows-latest
+            runtime: win-x64
+          - runs-on: ubuntu-latest
+            runtime: linux-x64
+          - runs-on: macos-latest
+            runtime: osx-arm64
+          - runs-on: macos-13
+            runtime: osx-x64
     
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os.runs-on }}
     steps:
     - uses: actions/checkout@v4
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: ${{ env.dotnet-version }}.x
     - name: Restore dependencies
       run: dotnet restore
-    - name: Build ShapeEngine and Examples
-      run: dotnet build --no-restore -c Release ./ShapeEngine.sln
-    - name: Test ShapeEngine
-      run: dotnet test --no-build --no-restore -c Release ./ShapeEngine/ShapeEngine.csproj
+    - name: Publish Examples
+      run: dotnet publish --sc -r ${{ matrix.os.runtime }} ./ShapeEngine.sln
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v4.5.0
       with:
         name: ${{ matrix.os }}-Examples
-        path: ./Examples/bin/Release/
+        path: ./Examples/bin/Release/net${{ env.dotnet-version }}/${{ matrix.os.runtime }}/publish
