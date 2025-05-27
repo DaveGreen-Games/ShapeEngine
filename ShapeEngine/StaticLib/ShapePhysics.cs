@@ -288,12 +288,12 @@ public static class ShapePhysics
     #region Drag
 
     /// <summary>
-    /// This function calculates a frame rate independent drag force.
+    /// This function calculates a frame rate independent factor for applying drag.
     /// </summary>
     /// <param name="dragCoefficient">Drag coefficient between 0 and 1. How much energy should the velocity loose each second.</param>
     /// <param name="deltaTime"></param>
     /// <returns></returns>
-    private static float CalculateDragFactor(float dragCoefficient, float deltaTime)
+    public static float CalculateDragFactor(float dragCoefficient, float deltaTime)
     {
         if (dragCoefficient <= 0) return 1;
         if (dragCoefficient >= 1) return 0;
@@ -347,6 +347,20 @@ public static class ShapePhysics
         if (dragCoefficient >= 1) return Vector2.Zero;
         var factor = CalculateDragFactor(dragCoefficient, deltaTime);
         return velocity * factor;
+    }
+    /// <summary>
+    /// This function calculates a frame rate independent drag force and applies it to the supplied speed.
+    /// </summary>
+    /// <param name="speed">The affected speed.</param>
+    /// <param name="dragCoefficient">Drag coefficient between 0 and 1. How much energy should the velocity loose each second.</param>
+    /// <param name="deltaTime"></param>
+    /// <returns>Returns the new scaled velocity.</returns>
+    public static float ApplyDragForce(float speed, float dragCoefficient, float deltaTime)
+    {
+        if (dragCoefficient <= 0) return speed;
+        if (dragCoefficient >= 1) return 0f;
+        var factor = CalculateDragFactor(dragCoefficient, deltaTime);
+        return speed * factor;
     }
     /// <summary>
     /// This function calculates a frame rate independent drag force and applies it to the supplied velocity.
