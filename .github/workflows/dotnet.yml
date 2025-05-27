@@ -36,5 +36,5 @@ jobs:
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v4.5.0
       with:
-        name: ${{ matrix.os }}-Examples
+        name: ${{ matrix.os.runtime }}-Examples
         path: ./Examples/bin/Release/net${{ env.dotnet-version }}/${{ matrix.os.runtime }}/publish
