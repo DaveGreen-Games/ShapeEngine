@@ -1,4 +1,6 @@
 name: .NET Publish Examples
+permissions:
+  contents: read
 
 on:
   push:
