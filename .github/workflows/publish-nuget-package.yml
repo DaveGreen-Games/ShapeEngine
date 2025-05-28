@@ -1,0 +1,68 @@
+name: Build and Publish ShapeEngine NuGet Package
+
+permissions:
+   contents: read
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-pack-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Install dependencies for version check
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libxml2-utils jq
+
+    - name: Check if ShapeEngine version is new
+      id: check_version
+      run: |
+        csproj_version=$(xmllint --xpath "string(//Version)" ShapeEngine/ShapeEngine.csproj)
+        echo "ShapeEngine.csproj version: $csproj_version"
+        echo "csproj_version=$csproj_version" >> $GITHUB_OUTPUT
+
+        nuget_versions=$(curl -s https://api.nuget.org/v3-flatcontainer/shapeengine/index.json | jq -r '.versions')
+        if [ "$nuget_versions" = "null" ]; then
+          echo "No versions found on NuGet. Proceeding with publish."
+          echo "should_publish=true" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+        latest_nuget_version=$(echo "$nuget_versions" | jq -r '.[-1]')
+        echo "Latest NuGet version: $latest_nuget_version"
+        echo "nuget_version=$latest_nuget_version" >> $GITHUB_OUTPUT
+
+        if [ "$csproj_version" = "$latest_nuget_version" ]; then
+          echo "Version $csproj_version is already published. Skipping publish."
+          echo "should_publish=false" >> $GITHUB_OUTPUT
+        else
+          echo "Version is new. Proceeding with publish."
+          echo "should_publish=true" >> $GITHUB_OUTPUT
+
+    - name: Restore dependencies
+      if: steps.check_version.outputs.should_publish == 'true'
+      run: dotnet restore ShapeEngine/ShapeEngine.csproj
+
+    - name: Build ShapeEngine
+      if: steps.check_version.outputs.should_publish == 'true'
+      run: dotnet build ShapeEngine/ShapeEngine.csproj --configuration Release --no-restore
+
+    - name: Pack ShapeEngine NuGet Package
+      if: steps.check_version.outputs.should_publish == 'true'
+      run: dotnet pack ShapeEngine/ShapeEngine.csproj --configuration Release --no-build --output ./nupkgs
+
+    - name: Publish ShapeEngine NuGet Package
+      if: steps.check_version.outputs.should_publish == 'true'
+      env:
+        NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+      run: |
+        dotnet nuget push ./nupkgs/ShapeEngine.*.nupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json
