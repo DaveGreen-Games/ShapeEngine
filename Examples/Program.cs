@@ -1,4 +1,5 @@
 ﻿global using static Examples.Program;
+using ShapeEngine.Core;
 
 namespace Examples
 {
@@ -8,6 +9,13 @@ namespace Examples
         public static GameloopExamples GAMELOOP = new();
         public static void Main(string[] args)
         {
+            if (Game.IsOSX())
+            {
+                var exePath = System.Reflection.Assembly.GetEntryAssembly()?.Location;
+                var exeDir = Path.GetDirectoryName(exePath);
+                if (exeDir != null) Directory.SetCurrentDirectory(exeDir);
+            }
+            
             
             // GAMELOOP = new();
             GAMELOOP.Run(args);
