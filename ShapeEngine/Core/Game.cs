@@ -240,14 +240,18 @@ public class Game
         ShapeInput.OnInputDeviceChanged += OnInputDeviceChanged;
         ShapeInput.GamepadDeviceManager.OnGamepadConnectionChanged += OnGamepadConnectionChanged;
         
-        //this will set the current directory for the executable correctly,
-        //so it can be opened with a double click on the exe file.
+        //This sets the current directory to the executable's folder, enabling double-click launches.
         //without this, the executable has to be launched from the command line
         if (IsOSX())
         {
-            string? exePath = System.Reflection.Assembly.GetEntryAssembly()?.Location;
-            string? exeDir = Path.GetDirectoryName(exePath);
-            if (exeDir != null) Directory.SetCurrentDirectory(exeDir);
+            //old version
+            // string? exePath = System.Reflection.Assembly.GetEntryAssembly()?.Location;
+            // string? exeDir = Path.GetDirectoryName(exePath);
+            // if (exeDir != null) Directory.SetCurrentDirectory(exeDir);
+            
+            //updated version
+            string exeDir = AppContext.BaseDirectory;
+            if (!string.IsNullOrEmpty(exeDir)) Directory.SetCurrentDirectory(exeDir);
         }
     }
     

@@ -13,9 +13,13 @@ namespace Examples
             //this fix was implemented into shape engine directly, therefore it is not needed here anymore
             // if (Game.IsOSX())
             // {
+            //var 1
             //     var exePath = System.Reflection.Assembly.GetEntryAssembly()?.Location;
             //     var exeDir = Path.GetDirectoryName(exePath);
             //     if (exeDir != null) Directory.SetCurrentDirectory(exeDir);
+            //var 2
+            //     string exeDir = AppContext.BaseDirectory;
+            //     if (!string.IsNullOrEmpty(exeDir)) Directory.SetCurrentDirectory(exeDir);
             // }
             
             
