@@ -14,29 +14,29 @@ jobs:
       dotnet-version: "8.0"
     strategy:
       matrix:
-        os:
-          - runs-on: windows-latest
+        include:
+          - os: windows-latest
             runtime: win-x64
-          - runs-on: ubuntu-latest
+          - os: ubuntu-latest
             runtime: linux-x64
-          - runs-on: macos-latest
+          - os: macos-latest
             runtime: osx-arm64
-          - runs-on: macos-13
+          - os: macos-13
             runtime: osx-x64
-    
-    runs-on: ${{ matrix.os.runs-on }}
+
+    runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v4
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: ${{ env.dotnet-version }}.x
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Publish Examples
-      run: dotnet publish --sc -r ${{ matrix.os.runtime }} ./ShapeEngine.sln
-    - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v4.5.0
-      with:
-        name: ${{ matrix.os.runtime }}-Examples
-        path: ./Examples/bin/Release/net${{ env.dotnet-version }}/${{ matrix.os.runtime }}/publish
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.dotnet-version }}.x
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Publish Examples
+        run: dotnet publish --sc -r ${{ matrix.runtime }} ./ShapeEngine.sln
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v4.5.0
+        with:
+          name: ${{ matrix.runtime }}-Examples
+          path: ./Examples/bin/Release/net${{ env.dotnet-version }}/${{ matrix.runtime }}/publish
