@@ -9,6 +9,18 @@ When using Shape Engine everything from Raylib is available as well. ([Raylib Ex
 
 ### *[Release Trailer](https://youtu.be/fmx9zICSe3Q)*
 
+## Getting Started & Documentation
+
+This repository includes an **Examples Project** to showcase the capabilities of ShapeEngine and help you get started quickly. Explore the examples to see what’s possible and how to implement different features.
+
+- **Documentation:**  
+  Documentation is available [here](https://davegreen-games.github.io/ShapeEngineDocs/).
+
+- **Documentation Source:**  
+  You can find the documentation repository [here](https://github.com/DaveGreen-Games/ShapeEngineDocs).
+
+> For any issues, suggestions, or questions about the docs, please open an issue in the ShapeEngineDocs repository.
+
 ## Development Process
 
 The Main Branch contains the current development stage. You can follow the development process here:
@@ -99,17 +111,6 @@ public class MyGameClass : Game
 - [Gapped Drawing](https://youtu.be/_xBz9cArtBE)
 - [Striped Drawing](https://youtu.be/lYkotZkr1fQ)
 - [Shape Collision System 2.0](https://youtu.be/Ag8rDXmvHwk) with Segment, Line, Ray, Circle, Triangle, Quad, Rect, Polygon, Polyline
-
-## Documentation & Getting Started
-
-Right now there is not much information about how to use Shape Engine. The repository contains an Examples Project. It shows you a lot of what is possible and how it is done and should help you until there is some proper documentation.
-
-Currently I don't have the time or the resources to create proper documentation for Shape Engine. If enough people are interested in it this might change. Any help in this direction would be greatly appreciated!
-
-
-## Roadmap
-
-You will always find the roadmaps on ShapeEngine´s GitHub Discussion page [here](https://github.com/DaveGreen-Games/ShapeEngine/discussions/4).
 
 
 ## Dependencies
