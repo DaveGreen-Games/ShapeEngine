@@ -1,4 +1,5 @@
 ﻿global using static Examples.Program;
+using ShapeEngine.Core;
 
 namespace Examples
 {
@@ -8,6 +9,19 @@ namespace Examples
         public static GameloopExamples GAMELOOP = new();
         public static void Main(string[] args)
         {
+            //this is a fix to be able to run the examples executable on macOS with a double click...
+            //this fix was implemented into shape engine directly, therefore it is not needed here anymore
+            // if (Game.IsOSX())
+            // {
+            //var 1
+            //     var exePath = System.Reflection.Assembly.GetEntryAssembly()?.Location;
+            //     var exeDir = Path.GetDirectoryName(exePath);
+            //     if (exeDir != null) Directory.SetCurrentDirectory(exeDir);
+            //var 2
+            //     string exeDir = AppContext.BaseDirectory;
+            //     if (!string.IsNullOrEmpty(exeDir)) Directory.SetCurrentDirectory(exeDir);
+            // }
+            
             
             // GAMELOOP = new();
             GAMELOOP.Run(args);
