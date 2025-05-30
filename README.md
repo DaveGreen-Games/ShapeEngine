@@ -10,6 +10,7 @@ When using Shape Engine everything from Raylib is available as well. ([Raylib Ex
 
 > You are free to use Shape Engine or any part of Shape Engine for your own projects, but keep in mind that Shape Engine was designed to help me with my specific game dev needs. Nevertheless I am looking forward to creations that Shape Engine made possible :)
 
+
 [Release Trailer](https://youtu.be/fmx9zICSe3Q)
 
 ## Showcase
@@ -25,6 +26,7 @@ When using Shape Engine everything from Raylib is available as well. ([Raylib Ex
 ![Gapped Drawing 2](media/gapped-drawing2.gif)
 ![Screem Texture 2.0](media/screen-texture-2.0.gif)
 
+
 ## Installation / How to Use
 
 There are multiple ways to use Shape Engine:
@@ -38,6 +40,7 @@ dotnet add package DaveGreen.ShapeEngine
 	1. [Using a local Nuget Package] Create a folder on your machine called something like “Local Nuget Packages” and copy the ShapeEngine Nuget package that you created to this folder. (You can also add the Shape Engine Nuget package directly to your Project). Now you need to create a new Package source in the Nuget Manager that points to your “Local Nuget Packages” Folder. This source can be used in your Nuget Manager to find and install the Shape Engine Nuget Package.
 	2. You manually copy all needed DLL files to your project. You need the following DLLs: Clipper2Lib, Raylib-Cs, Microsoft.Toolkit.HighPerformance, Shape Engine Core, Raylib. All DLL files except Raylib can be anywhere in your projects folder hierarchy. The Raylib DLL must be on the root level of your project. You need to select the right Raylib DLL for your operating system. Now just add a reference for all DLLs except the Raylib DLL and you are done. On MacOS you need to do the same step except using the .dylib file instead of the raylib DLL. You need to set the property “Copy if Newer” to true on the .dylib file. Then everything should work.
 4. Create a new solution & project and just add the Shape Engine Core DLL to your project and reference it. Now you need to download the right version of the Raylib_CsLo & Clipper2 Nuget packages. The releases on GitHub will state which versions were used.
+
 
 ## Minimal Project Setup
 
@@ -73,6 +76,18 @@ public class MyGameClass : Game
 }
 
 ```
+
+## Getting Started & Documentation
+
+This repository includes an **Examples Project** to showcase the capabilities of ShapeEngine and help you get started quickly. Explore the examples to see what’s possible and how to implement different features.
+
+- **Documentation:**  
+  Documentation is available [here](https://davegreen-games.github.io/ShapeEngineDocs/).
+
+- **Documentation Source:**  
+  You can find the documentation repository [here](https://github.com/DaveGreen-Games/ShapeEngineDocs).  
+
+> For any issues, suggestions, or questions about the docs, please open an issue in the ShapeEngineDocs repository.
 
 
 ## Development Process
@@ -117,16 +132,6 @@ The Main Branch contains the current development stage. You can follow the devel
 - [Gapped Drawing](https://youtu.be/_xBz9cArtBE)
 - [Striped Drawing](https://youtu.be/lYkotZkr1fQ)
 - [Shape Collision System 2.0](https://youtu.be/Ag8rDXmvHwk) with Segment, Line, Ray, Circle, Triangle, Quad, Rect, Polygon, Polyline
-
-## Documentation & Getting Started
-
-Right now there is not much information about how to use Shape Engine. The repository contains an Examples Project. It shows you a lot of what is possible and how it is done and should help you until there is some proper documentation.
-
-Currently I don't have the time or the resources to create proper documentation for Shape Engine. If enough people are interested in it this might change. Any help in this direction would be greatly appreciated!
-
-
-## Roadmap
-You can find the roadmap and current milestone of ShapeEngine [here](https://github.com/DaveGreen-Games/ShapeEngine/discussions/categories/roadmap).
 
 
 ## Dependencies
