@@ -9,6 +9,7 @@ PUBLISH_ROOT="bin/${CONFIG}/${FRAMEWORK}/${TARGET_RID}/publish"
 BUNDLE_DIR="${PUBLISH_ROOT}/${APP_NAME}.app"
 MACOS_DIR="${BUNDLE_DIR}/Contents/MacOS"
 RESOURCES_DIR="${BUNDLE_DIR}/Contents/Resources"
+ICNS_NAME="examples.icns"
 
 echo "Creating .app bundle structure in: $BUNDLE_DIR"
 mkdir -p "$MACOS_DIR"
@@ -29,6 +30,14 @@ cp "${PUBLISH_ROOT}/"*.pdb "$MACOS_DIR/" 2>/dev/null || true
 echo "Copying resources..."
 if [ -d "${PUBLISH_ROOT}/Resources" ]; then
   cp -R "${PUBLISH_ROOT}/Resources" "$RESOURCES_DIR/"
+fi
+
+# Copy the .icns file from the output directory to the Resources directory in the bundle
+if [ -f "${PUBLISH_ROOT}/${ICNS_NAME}" ]; then
+  echo "Copying ${ICNS_NAME} icon file from output directory..."
+  cp "${PUBLISH_ROOT}/${ICNS_NAME}" "$RESOURCES_DIR/"
+else
+  echo "WARNING: ${ICNS_NAME} not found in output directory, skipping icon copy."
 fi
 
 echo "Copying Info.plist..."
