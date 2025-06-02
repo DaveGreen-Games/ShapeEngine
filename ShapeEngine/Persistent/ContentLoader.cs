@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Raylib_cs;
+using ShapeEngine.Core;
 
 
 namespace ShapeEngine.Persistent
@@ -11,50 +12,91 @@ namespace ShapeEngine.Persistent
     {
         public static int GLYPH_COUNT = 0;
 
+        private static string GetMacOsAppBundleResourcePath(string relativePath)
+        {
+            if (!Game.OSXIsRunningInAppBundle()) return relativePath;
+            
+            // macOS .app bundle: executable is in Contents/MacOS/
+            // Resources are in Contents/Resources/
+            string exeDir = AppContext.BaseDirectory; // This is Contents/MacOS/
+            string resourcesDir = Path.Combine(exeDir, "..", "Resources");//".." goes up one level to Contents
+            string fullPath = Path.GetFullPath(Path.Combine(resourcesDir, relativePath));
+            Console.WriteLine("--- MacOS app bundle loading resource from path: {fullPath}");
+            return fullPath;
+        }
+        
         public static Font LoadFont(string filePath, int fontSize = 100, TextureFilter textureFilter = TextureFilter.Trilinear)
         {
+            if (Game.IsOSX())
+            {
+                filePath = GetMacOsAppBundleResourcePath(filePath);
+            }
             var f = Raylib.LoadFontEx(filePath, fontSize, Array.Empty<int>(), GLYPH_COUNT);
             Raylib.SetTextureFilter(f.Texture, textureFilter);
             return f;
-
-            // unsafe
-            // {
-            //     Font f = Raylib.LoadFontEx(filePath, fontSize, (int*)0, GLYPH_COUNT);
-            //     Raylib.SetTextureFilter(f.texture, TextureFilter.TEXTURE_FILTER_BILINEAR);
-            //     return f;
-            // }
         }
         public static Shader LoadFragmentShader(string filePath)
         {
+            if (Game.IsOSX())
+            {
+                filePath = GetMacOsAppBundleResourcePath(filePath);
+            }
             return Raylib.LoadShader(null, filePath);;
         }
         public static Shader LoadVertexShader(string filePath)
         {
+            if (Game.IsOSX())
+            {
+                filePath = GetMacOsAppBundleResourcePath(filePath);
+            }
             return Raylib.LoadShader(filePath, "");
         }
         public static Texture2D LoadTexture(string filePath)
         {
+            if (Game.IsOSX())
+            {
+                filePath = GetMacOsAppBundleResourcePath(filePath);
+            }
             return Raylib.LoadTexture(filePath);
-            // return Raylib.LoadTextureFromImage(LoadImage(filePath));
         }
         public static Image LoadImage(string filePath)
         {
+            if (Game.IsOSX())
+            {
+                filePath = GetMacOsAppBundleResourcePath(filePath);
+            }
             return Raylib.LoadImage(filePath);
         }
         public static Wave LoadWave(string filePath)
         {
+            if (Game.IsOSX())
+            {
+                filePath = GetMacOsAppBundleResourcePath(filePath);
+            }
             return Raylib.LoadWave(filePath);
         }
         public static Sound LoadSound(string filePath)
         {
+            if (Game.IsOSX())
+            {
+                filePath = GetMacOsAppBundleResourcePath(filePath);
+            }
             return Raylib.LoadSound(filePath);
         }
         public static Music LoadMusicStream(string filePath)
         {
+            if (Game.IsOSX())
+            {
+                filePath = GetMacOsAppBundleResourcePath(filePath);
+            }
             return Raylib.LoadMusicStream(filePath);
         }
         public static string LoadJson(string filePath)
         {
+            if (Game.IsOSX())
+            {
+                filePath = GetMacOsAppBundleResourcePath(filePath);
+            }
             return File.ReadAllText(filePath);
         }
 
