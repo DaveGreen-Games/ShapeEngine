@@ -26,6 +26,14 @@
     <Content Include="../NOTICE.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <None Update="Info.plist">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    
   </ItemGroup>
+
+  <Target Name="BundleAppPostPublish" AfterTargets="Publish" Condition="'$(RuntimeIdentifier)' == 'osx-arm64' Or '$(RuntimeIdentifier)' == 'osx-x64'">
+    <Exec Command="bash ./bundle-macos-app.sh" />
+  </Target>
 
 </Project>

@@ -31,6 +31,19 @@ public class Game
     public static bool IsLinux() => OS_PLATFORM == OSPlatform.Linux;
     public static bool IsOSX() => OS_PLATFORM == OSPlatform.OSX;
     
+    public static bool OSXIsRunningInAppBundle()
+    {
+        if(!IsOSX()) return false;
+        
+        // string exePath = System.Reflection.Assembly.GetEntryAssembly()?.Location ?? AppContext.BaseDirectory;
+        // // Normalize to avoid case issues and different slashes
+        // exePath = exePath.Replace('\\', '/');
+        // return exePath.Contains(".app/Contents/MacOS/");
+        
+        string exeDir = AppContext.BaseDirectory.Replace('\\', '/');
+        return exeDir.Contains(".app/Contents/MacOS/");
+    }
+    
     public static bool IsEqual<T>(List<T>? a, List<T>? b) where T : IEquatable<T>
     {
         if (a == null || b == null) return false;
@@ -251,7 +264,11 @@ public class Game
             
             //updated version
             string exeDir = AppContext.BaseDirectory;
-            if (!string.IsNullOrEmpty(exeDir)) Directory.SetCurrentDirectory(exeDir);
+            if (!string.IsNullOrEmpty(exeDir))
+            {
+                Directory.SetCurrentDirectory(exeDir);
+            }
+            else Console.WriteLine("Failed to set current directory to executable's folder in macos.");
         }
     }
     
@@ -302,6 +319,7 @@ public class Game
     #region  Gameloop
     private void StartGameloop()
     {
+        Console.WriteLine(" --- Starting game...");
         ShapeInput.KeyboardDevice.OnButtonPressed += OnKeyboardButtonPressed;
         ShapeInput.KeyboardDevice.OnButtonReleased += OnKeyboardButtonReleased;
         ShapeInput.MouseDevice.OnButtonPressed += OnMouseButtonPressed;
