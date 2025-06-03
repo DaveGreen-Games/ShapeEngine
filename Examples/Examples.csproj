@@ -35,8 +35,16 @@
     </Content>
   </ItemGroup>
 
-  <Target Name="BundleAppPostPublish" AfterTargets="Publish" Condition="'$(RuntimeIdentifier)' == 'osx-arm64' Or '$(RuntimeIdentifier)' == 'osx-x64'">
+  <!--Target Name="BundleAppPostPublish" AfterTargets="Publish" Condition="'$(RuntimeIdentifier)' == 'osx-arm64' Or '$(RuntimeIdentifier)' == 'osx-x64'">
+    <Exec Command="bash ./macos-app-bundling/bundle-macos-app.sh '$(PublishDir)'" />
+  </Target-->
+  
+  <Target Name="BundleAppPostPublish"
+          AfterTargets="Publish"
+          Condition="( ('$(RuntimeIdentifier)' == 'osx-arm64' Or '$(RuntimeIdentifier)' == 'osx-x64' ) 
+                     And '$(SelfContained)' == 'true' 
+                     And '$(Configuration)' == 'Release' )">
     <Exec Command="bash ./macos-app-bundling/bundle-macos-app.sh '$(PublishDir)'" />
   </Target>
-
+  
 </Project>
