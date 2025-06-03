@@ -2,15 +2,25 @@
 set -e
 
 APP_NAME="Examples"
-TARGET_RID="osx-arm64"
-FRAMEWORK="net8.0"
-CONFIG="Release"
-PUBLISH_ROOT="bin/${CONFIG}/${FRAMEWORK}/${TARGET_RID}/publish"
+#TARGET_RID="osx-arm64"
+#FRAMEWORK="net8.0"
+#CONFIG="Release"
+ICNS_NAME="examples.icns"
+
+# Require PUBLISH_ROOT as the first argument
+if [ -z "$1" ]; then
+  echo "Error: You must provide the publish root as the first argument."
+  echo "Usage: $0 <publish-root-path>"
+  exit 1
+fi
+
+PUBLISH_ROOT="$1"
+
 BUNDLE_DIR="${PUBLISH_ROOT}/${APP_NAME}.app"
 MACOS_DIR="${BUNDLE_DIR}/Contents/MacOS"
 RESOURCES_DIR="${BUNDLE_DIR}/Contents/Resources"
-ICNS_NAME="examples.icns"
 
+echo "Using publish root: $PUBLISH_ROOT"
 echo "Creating .app bundle structure in: $BUNDLE_DIR"
 mkdir -p "$MACOS_DIR"
 mkdir -p "$RESOURCES_DIR"
