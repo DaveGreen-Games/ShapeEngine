@@ -151,17 +151,92 @@ public class Game
     #endregion
 
     #region Public Members
+    /// <summary>
+    /// Gets or sets the command-line arguments passed to the application at launch.
+    /// </summary>
+    /// <remarks>
+    /// This property stores any parameters provided when starting the application.
+    /// It can be used to configure the game behavior based on launch arguments.
+    /// </remarks>
     public string[] LaunchParams { get; protected set; } = Array.Empty<string>();
 
+    /// <summary>
+    /// Gets whether the fixed physics update system is enabled.
+    /// </summary>
+    /// <remarks>
+    /// When true, the fixed update functions will be called at the FixedPhysicsFramerate.
+    /// </remarks>
     public bool FixedPhysicsEnabled { get; private set; }
+
+    /// <summary>
+    /// Gets the target framerate for fixed physics updates.
+    /// </summary>
+    /// <remarks>
+    /// This value determines how many physics updates will be performed per second.
+    /// Higher values provide more accurate physics but require more processing power.
+    /// </remarks>
     public int FixedPhysicsFramerate { get; private set; }
+
+    /// <summary>
+    /// Gets the time interval in seconds between fixed physics updates.
+    /// </summary>
+    /// <remarks>
+    /// This value is calculated as 1.0 / FixedPhysicsFramerate and represents
+    /// the duration of each physics step in seconds.
+    /// </remarks>
     public float FixedPhysicsTimestep { get; private set; }
+
+    /// <summary>
+    /// Gets the game time information for the variable update loop.
+    /// </summary>
+    /// <remarks>
+    /// Contains timing data such as elapsed time, delta time, and frame count
+    /// for the main game loop that runs at variable framerates.
+    /// </remarks>
     public GameTime Time { get; private set; } = new GameTime();
+
+    /// <summary>
+    /// Gets the game time information for the fixed update loop.
+    /// </summary>
+    /// <remarks>
+    /// Contains timing data for the physics update loop that runs at a fixed timestep.
+    /// Only relevant when FixedPhysicsEnabled is true.
+    /// </remarks>
     public GameTime FixedTime { get; private set; } = new GameTime();
+
+    /// <summary>
+    /// Gets or sets the background color of the game window.
+    /// </summary>
+    /// <remarks>
+    /// This color is used to clear the screen before rendering each frame.
+    /// </remarks>
     public ColorRgba BackgroundColorRgba = ColorRgba.Black;
+
+    /// <summary>
+    /// Gets or sets the intensity of screen effects like flashes.
+    /// </summary>
+    /// <remarks>
+    /// Values range from 0.0 (no effect) to 1.0 (full effect).
+    /// This can be used to reduce the intensity of visual effects.
+    /// </remarks>
     public float ScreenEffectIntensity = 1.0f;
 
+    /// <summary>
+    /// Gets the shader container for the game's screen effects.
+    /// </summary>
+    /// <remarks>
+    /// Provides access to the shaders that can be applied to the game's render texture.
+    /// May be null if the game texture doesn't support shaders.
+    /// </remarks>
     public ShaderContainer? ScreenShaders => gameTexture.Shaders;
+
+    /// <summary>
+    /// Gets or sets the active camera used for rendering the game.
+    /// </summary>
+    /// <remarks>
+    /// When setting a new camera, the current camera is deactivated,
+    /// the new camera is set as active, and its size is adjusted to match the current window.
+    /// </remarks>
     public ShapeCamera Camera
     {
         get => curCamera;
@@ -176,13 +251,41 @@ public class Game
         }
     }
 
-    
-
+    /// <summary>
+    /// Gets information about the game's rendering area.
+    /// </summary>
+    /// <remarks>
+    /// Contains details about the game's viewport, dimensions, and mouse position
+    /// in game coordinates.
+    /// </remarks>
     public ScreenInfo GameScreenInfo { get; private set; } = new();
+
+    /// <summary>
+    /// Gets information about the game's UI rendering area.
+    /// </summary>
+    /// <remarks>
+    /// Contains details about the game UI's viewport, dimensions, and mouse position
+    /// in game UI coordinates.
+    /// </remarks>
     public ScreenInfo GameUiScreenInfo { get; private set; } = new();
+
+    /// <summary>
+    /// Gets information about the window's UI rendering area.
+    /// </summary>
+    /// <remarks>
+    /// Contains details about the window UI's viewport, dimensions, and mouse position
+    /// in window coordinates.
+    /// </remarks>
     public ScreenInfo UIScreenInfo { get; private set; } = new();
-    
+
     private bool paused = false;
+    /// <summary>
+    /// Gets or sets whether the game is currently paused.
+    /// </summary>
+    /// <remarks>
+    /// When set to true, time-dependent game updates may be suspended.
+    /// Setting this property triggers the OnPausedChanged event.
+    /// </remarks>
     public bool Paused
     {
         get => paused;
@@ -193,14 +296,43 @@ public class Game
                 paused = value;
                 ResolveOnPausedChanged(paused);
             }
-            
         }
     }
-    
+
+    /// <summary>
+    /// Gets the game window that contains the rendering surface.
+    /// </summary>
+    /// <remarks>
+    /// Provides access to window-related functionality such as size, position,
+    /// fullscreen state, and input handling.
+    /// </remarks>
     public GameWindow Window { get; private set; }
+
+    /// <summary>
+    /// Gets the audio device used for sound playback.
+    /// </summary>
+    /// <remarks>
+    /// Provides access to audio functionality such as playing sounds and music,
+    /// adjusting volume, and managing audio resources.
+    /// </remarks>
     public readonly AudioDevice AudioDevice;
+
+    /// <summary>
+    /// Gets the currently active scene.
+    /// </summary>
+    /// <remarks>
+    /// The current scene handles game-specific logic, rendering, and input.
+    /// Use GoToScene method to change the active scene.
+    /// </remarks>
     public Scene CurScene { get; private set; } = new SceneEmpty();
-    
+
+    /// <summary>
+    /// Gets the main render texture used for the game.
+    /// </summary>
+    /// <remarks>
+    /// This texture is where the game world is rendered before being drawn to the screen.
+    /// It may apply scaling, filtering, or other effects to the final output.
+    /// </remarks>
     public ScreenTexture GameTexture => gameTexture;
     #endregion
     
@@ -240,7 +372,6 @@ public class Game
 
     
     #endregion
-
     
     /// <summary>
     /// Initializes a new instance of the Game class with the specified game settings and window settings.
