@@ -21,7 +21,7 @@ namespace ShapeEngine.Persistent
             string exeDir = AppContext.BaseDirectory; // This is Contents/MacOS/
             string resourcesDir = Path.Combine(exeDir, "..", "Resources");//".." goes up one level to Contents
             string fullPath = Path.GetFullPath(Path.Combine(resourcesDir, relativePath));
-            Console.WriteLine("--- MacOS app bundle loading resource from path: {fullPath}");
+            Console.WriteLine($"--- MacOS app bundle loading resource from path: {fullPath}");
             return fullPath;
         }
         
