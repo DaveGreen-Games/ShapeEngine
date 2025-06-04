@@ -1,5 +1,8 @@
 namespace ShapeEngine.Screen;
 
+/// <summary>
+/// An enum representing the shader support type for the game engine.
+/// </summary>
 public enum ShaderSupportType
 {
     /// <summary>

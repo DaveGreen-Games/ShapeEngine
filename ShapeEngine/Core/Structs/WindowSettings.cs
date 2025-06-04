@@ -1,8 +1,34 @@
 namespace ShapeEngine.Core.Structs;
 
 
+/// <summary>
+/// Represents configuration settings for a game window in Shape Engine.
+/// </summary>
 public struct WindowSettings
 {
+    /// <summary>
+    /// Gets the default window settings configuration.
+    /// </summary>
+    /// <returns>A WindowSettings instance with predefined default values.</returns>
+    ///<remarks>
+    /// Title = "Shape Engine Window",
+    /// FullscreenAutoRestoring = true,
+    /// Topmost = false,
+    /// WindowBorder = WindowBorder.Resizabled,
+    /// WindowMinSize = new(480, 270),
+    /// WindowSize = new(960, 540),
+    /// Monitor = 0,
+    /// Vsync = false,
+    /// FrameRateLimit = 60,
+    /// MinFramerate = 30,
+    /// MaxFramerate = 240,
+    /// WindowOpacity = 1f,
+    /// MouseEnabled = true,
+    /// MouseVisible = true,
+    /// Msaa4x = true,
+    /// HighDPI = false,
+    /// FramebufferTransparent = false
+    ///</remarks>
     public static WindowSettings Default => new()
     {
         Title = "Shape Engine Window",
@@ -30,11 +56,24 @@ public struct WindowSettings
         // WindowLocation = new(0, 0),
     };
     
-    
+    /// <summary>
+    /// The dimensions of the window in pixels.
+    /// </summary>
     public Dimensions WindowSize;
+    
+    /// <summary>
+    /// The minimum allowed dimensions of the window in pixels.
+    /// </summary>
     public Dimensions WindowMinSize;
     
+    /// <summary>
+    /// The title displayed in the window's title bar.
+    /// </summary>
     public string Title;
+    
+    /// <summary>
+    /// Determines whether the window should stay on top of other windows.
+    /// </summary>
     public bool Topmost;
     
     /// <summary>
@@ -43,23 +82,63 @@ public struct WindowSettings
     /// </summary>
     public bool FullscreenAutoRestoring;
     
+    /// <summary>
+    /// The border style of the window.
+    /// </summary>
     public WindowBorder WindowBorder;
     
+    /// <summary>
+    /// Determines whether vertical synchronization is enabled.
+    /// </summary>
     public bool Vsync;
-    public int FrameRateLimit;
-    public int MinFramerate;
-    public int MaxFramerate;
-    public float WindowOpacity; //0-1
     
+    /// <summary>
+    /// The target frame rate limit for the application.
+    /// </summary>
+    public int FrameRateLimit;
+    
+    /// <summary>
+    /// The minimum acceptable frame rate for the application.
+    /// </summary>
+    public int MinFramerate;
+    
+    /// <summary>
+    /// The maximum allowed frame rate for the application.
+    /// </summary>
+    public int MaxFramerate;
+    
+    /// <summary>
+    /// The opacity of the window, ranging from 0.0 (completely transparent) to 1.0 (completely opaque).
+    /// </summary>
+    public float WindowOpacity;
+    
+    /// <summary>
+    /// The index of the monitor on which to display the window.
+    /// </summary>
     public int Monitor;
+    
+    /// <summary>
+    /// Determines whether the mouse cursor is visible within the window.
+    /// </summary>
     public bool MouseVisible;
+    
+    /// <summary>
+    /// Determines whether mouse input is enabled for the window.
+    /// </summary>
     public bool MouseEnabled;
+    
+    /// <summary>
+    /// Determines whether 4x Multi-Sample Anti-Aliasing is enabled.
+    /// </summary>
     public bool Msaa4x;
     
     /// <summary>
     /// Currently High DPI mode does not work correctly in raylib and until it is fixed it should be set to false!
     /// </summary>
     public bool HighDPI;
-    public bool FramebufferTransparent;
     
+    /// <summary>
+    /// Determines whether the framebuffer supports transparency.
+    /// </summary>
+    public bool FramebufferTransparent;
 }
