@@ -35,11 +35,6 @@ public class Game
     {
         if(!IsOSX()) return false;
         
-        // string exePath = System.Reflection.Assembly.GetEntryAssembly()?.Location ?? AppContext.BaseDirectory;
-        // // Normalize to avoid case issues and different slashes
-        // exePath = exePath.Replace('\\', '/');
-        // return exePath.Contains(".app/Contents/MacOS/");
-        
         string exeDir = AppContext.BaseDirectory.Replace('\\', '/');
         return exeDir.Contains(".app/Contents/MacOS/");
     }
@@ -235,20 +230,15 @@ public class Game
         {
             gameTexture = new(gameSettings.PixelationFactor, gameSettings.ShaderSupportType, gameSettings.TextureFilter);
         }
-
-        // gameTexture.AutoClearBackground = gameSettings.AutoClearBackground;
         
         gameTexture.OnTextureResized += GameTextureOnTextureResized;
         gameTexture.Initialize(Window.CurScreenSize, mousePosUI, curCamera);
         gameTexture.OnDrawGame += GameTextureOnDrawGame;
         gameTexture.OnDrawUI += GameTextureOnDrawUI;
-        // gameTexture.OnClearBackground += GameTextureOnOnClearBackground;
         
         GameScreenInfo = gameTexture.GameScreenInfo;
         GameUiScreenInfo = gameTexture.GameUiScreenInfo;
         UIScreenInfo = new(Window.ScreenArea, mousePosUI);
-        // gameTexture.Load(Window.CurScreenSize);
-        // if (gameSettings.MultiShaderSupport) screenShaderBuffer.Load(Window.CurScreenSize);
 
         ShapeInput.OnInputDeviceChanged += OnInputDeviceChanged;
         ShapeInput.GamepadDeviceManager.OnGamepadConnectionChanged += OnGamepadConnectionChanged;
@@ -257,12 +247,6 @@ public class Game
         //without this, the executable has to be launched from the command line
         if (IsOSX())
         {
-            //old version
-            // string? exePath = System.Reflection.Assembly.GetEntryAssembly()?.Location;
-            // string? exeDir = Path.GetDirectoryName(exePath);
-            // if (exeDir != null) Directory.SetCurrentDirectory(exeDir);
-            
-            //updated version
             string exeDir = AppContext.BaseDirectory;
             if (!string.IsNullOrEmpty(exeDir))
             {
@@ -319,7 +303,6 @@ public class Game
     #region  Gameloop
     private void StartGameloop()
     {
-        Console.WriteLine(" --- Starting game...");
         ShapeInput.KeyboardDevice.OnButtonPressed += OnKeyboardButtonPressed;
         ShapeInput.KeyboardDevice.OnButtonReleased += OnKeyboardButtonReleased;
         ShapeInput.MouseDevice.OnButtonPressed += OnMouseButtonPressed;
