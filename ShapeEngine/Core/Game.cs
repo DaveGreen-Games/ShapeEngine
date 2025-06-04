@@ -31,6 +31,14 @@ public class Game
     public static bool IsLinux() => OS_PLATFORM == OSPlatform.Linux;
     public static bool IsOSX() => OS_PLATFORM == OSPlatform.OSX;
     
+    public static bool OSXIsRunningInAppBundle()
+    {
+        if(!IsOSX()) return false;
+        
+        string exeDir = AppContext.BaseDirectory.Replace('\\', '/');
+        return exeDir.Contains(".app/Contents/MacOS/");
+    }
+    
     public static bool IsEqual<T>(List<T>? a, List<T>? b) where T : IEquatable<T>
     {
         if (a == null || b == null) return false;
@@ -222,20 +230,15 @@ public class Game
         {
             gameTexture = new(gameSettings.PixelationFactor, gameSettings.ShaderSupportType, gameSettings.TextureFilter);
         }
-
-        // gameTexture.AutoClearBackground = gameSettings.AutoClearBackground;
         
         gameTexture.OnTextureResized += GameTextureOnTextureResized;
         gameTexture.Initialize(Window.CurScreenSize, mousePosUI, curCamera);
         gameTexture.OnDrawGame += GameTextureOnDrawGame;
         gameTexture.OnDrawUI += GameTextureOnDrawUI;
-        // gameTexture.OnClearBackground += GameTextureOnOnClearBackground;
         
         GameScreenInfo = gameTexture.GameScreenInfo;
         GameUiScreenInfo = gameTexture.GameUiScreenInfo;
         UIScreenInfo = new(Window.ScreenArea, mousePosUI);
-        // gameTexture.Load(Window.CurScreenSize);
-        // if (gameSettings.MultiShaderSupport) screenShaderBuffer.Load(Window.CurScreenSize);
 
         ShapeInput.OnInputDeviceChanged += OnInputDeviceChanged;
         ShapeInput.GamepadDeviceManager.OnGamepadConnectionChanged += OnGamepadConnectionChanged;
@@ -244,14 +247,12 @@ public class Game
         //without this, the executable has to be launched from the command line
         if (IsOSX())
         {
-            //old version
-            // string? exePath = System.Reflection.Assembly.GetEntryAssembly()?.Location;
-            // string? exeDir = Path.GetDirectoryName(exePath);
-            // if (exeDir != null) Directory.SetCurrentDirectory(exeDir);
-            
-            //updated version
             string exeDir = AppContext.BaseDirectory;
-            if (!string.IsNullOrEmpty(exeDir)) Directory.SetCurrentDirectory(exeDir);
+            if (!string.IsNullOrEmpty(exeDir))
+            {
+                Directory.SetCurrentDirectory(exeDir);
+            }
+            else Console.WriteLine("Failed to set current directory to executable's folder in macos.");
         }
     }
     
