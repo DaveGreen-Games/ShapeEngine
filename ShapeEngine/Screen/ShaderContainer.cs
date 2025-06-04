@@ -1,9 +1,16 @@
 namespace ShapeEngine.Screen;
 
+/// <summary>
+/// Container for managing a collection of ShapeShader objects.
+/// </summary>
 public class ShaderContainer
 {
-    private Dictionary<uint, ShapeShader> shaders = new();
+    private readonly Dictionary<uint, ShapeShader> shaders = new();
 
+    /// <summary>
+    /// Determines if there are any enabled shaders in the container.
+    /// </summary>
+    /// <returns>True if at least one shader is enabled; otherwise, false.</returns>
     public bool HasActiveShaders()
     {
         if (shaders.Count <= 0) return false;
@@ -15,6 +22,12 @@ public class ShaderContainer
 
         return false;
     }
+
+    /// <summary>
+    /// Adds a shader to the container or updates an existing one with the same ID.
+    /// </summary>
+    /// <param name="shader">The shader to add or update.</param>
+    /// <returns>The ID of the added or updated shader.</returns>
     public uint Add(ShapeShader shader)
     {
         if (shaders.ContainsKey(shader.ID)) shaders[shader.ID] = shader;
@@ -22,33 +35,72 @@ public class ShaderContainer
         return shader.ID;
     }
 
+    /// <summary>
+    /// Retrieves a shader by its ID.
+    /// </summary>
+    /// <param name="id">The ID of the shader to retrieve.</param>
+    /// <returns>The shader with the specified ID if found; otherwise, null.</returns>
     public ShapeShader? Get(uint id) => HasShader(id) ? shaders[id] : null;
-    public bool Remove(uint id) => shaders.Remove(id);
-    public bool Remove(ShapeShader shader) => shaders.Remove(shader.ID);
-    public bool HasShaders() => shaders.Count > 0;
-    public bool HasShader(uint id) => shaders.ContainsKey(id);
-    public bool HasShader(ShapeShader shader) => shaders.ContainsKey(shader.ID);
 
-    // public void Close()
-    // {
-    //     foreach (var shader in shaders.Values)
-    //     {
-    //         shader.Unload();
-    //     }
-    // }
+    /// <summary>
+    /// Removes a shader from the container by its ID.
+    /// </summary>
+    /// <param name="id">The ID of the shader to remove.</param>
+    /// <returns>True if the shader was successfully removed; otherwise, false.</returns>
+    public bool Remove(uint id) => shaders.Remove(id);
+
+    /// <summary>
+    /// Removes a shader from the container.
+    /// </summary>
+    /// <param name="shader">The shader to remove.</param>
+    /// <returns>True if the shader was successfully removed; otherwise, false.</returns>
+    public bool Remove(ShapeShader shader) => shaders.Remove(shader.ID);
+
+    /// <summary>
+    /// Determines if the container has any shaders.
+    /// </summary>
+    /// <returns>True if the container has at least one shader; otherwise, false.</returns>
+    public bool HasShaders() => shaders.Count > 0;
+
+    /// <summary>
+    /// Determines if the container has a shader with the specified ID.
+    /// </summary>
+    /// <param name="id">The ID to check.</param>
+    /// <returns>True if a shader with the specified ID exists; otherwise, false.</returns>
+    public bool HasShader(uint id) => shaders.ContainsKey(id);
+
+    /// <summary>
+    /// Determines if the container has the specified shader.
+    /// </summary>
+    /// <param name="shader">The shader to check.</param>
+    /// <returns>True if the shader exists in the container; otherwise, false.</returns>
+    public bool HasShader(ShapeShader shader) => shaders.ContainsKey(shader.ID);
     
+    /// <summary>
+    /// Gets all enabled shaders sorted in ascending (lowest first) order by their Order property.
+    /// </summary>
+    /// <returns>A sorted list of all enabled shaders.</returns>
     public List<ShapeShader> GetActiveShaders()
     {
         var shadersToApply = shaders.Values.ToList().FindAll(s => s.Enabled);
         shadersToApply.Sort(delegate (ShapeShader a, ShapeShader b)
         {
             if (a.Order < b.Order) return -1;
-            else if (a.Order > b.Order) return 1;
-            else return 0;
+            if (a.Order > b.Order) return 1;
+            return 0;
         });
         return shadersToApply;
     }
 
+    /// <summary>
+    /// Gets all shaders in the container.
+    /// </summary>
+    /// <returns>A list of all shaders.</returns>
     public List<ShapeShader> GetAllShaders() => shaders.Values.ToList();
+
+    /// <summary>
+    /// Gets all shader IDs in the container.
+    /// </summary>
+    /// <returns>A list of all shader IDs.</returns>
     public List<uint> GetAllIDs() => shaders.Keys.ToList();
 }
