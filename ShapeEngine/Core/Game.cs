@@ -1,4 +1,5 @@
 
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using Raylib_cs;
@@ -158,7 +159,7 @@ public class Game
     /// This property stores any parameters provided when starting the application.
     /// It can be used to configure the game behavior based on launch arguments.
     /// </remarks>
-    public string[] LaunchParams { get; protected set; } = Array.Empty<string>();
+    public string[] LaunchParams { get; protected set; } = [];
 
     /// <summary>
     /// Gets whether the fixed physics update system is enabled.
@@ -334,6 +335,34 @@ public class Game
     /// It may apply scaling, filtering, or other effects to the final output.
     /// </remarks>
     public ScreenTexture GameTexture => gameTexture;
+    
+    /// <summary>
+    /// Collection of drawing actions to be executed before the game texture is drawn to the screen.
+    /// </summary>
+    /// <remarks>
+    /// Actions are executed in order of their integer keys (layers), with lower values drawn first.
+    /// Use this for background elements or effects that should appear behind the main game content.
+    /// </remarks>
+    public readonly SortedList<int, Action> DeferredDrawingBeforeGame = new();
+    
+    /// <summary>
+    /// Collection of drawing actions to be executed after the game texture but before the UI texture.
+    /// </summary>
+    /// <remarks>
+    /// Actions are executed in order of their integer keys (layers), with lower values drawn first.
+    /// Use this for elements that should appear on top of the game world but beneath the user interface.
+    /// </remarks>
+    public readonly SortedList<int, Action> DeferredDrawingAfterGame = new();
+    
+    /// <summary>
+    /// Collection of drawing actions to be executed after the UI texture is drawn to the screen.
+    /// </summary>
+    /// <remarks>
+    /// Actions are executed in order of their integer keys (layers), with lower values drawn first.
+    /// Use this for overlays, debug information, or any elements that should appear on top of everything else.
+    /// </remarks>
+    public readonly SortedList<int, Action> DeferredDrawingAfterUI = new();
+
     #endregion
     
     #region Private Members
@@ -348,36 +377,21 @@ public class Game
     private readonly List<ShapeFlash> shapeFlashes = new();
     private readonly List<DeferredInfo> deferred = new();
 
-    /// <summary>
-    /// Add functions that draw something to the screen before the game texture is drawn to the screen.
-    /// Lower keys (layers) will be drawn first.
-    /// </summary>
-    public readonly SortedList<int, Action> DeferredDrawingBeforeGame = new();
-    /// <summary>
-    /// Add functions that draw something to the screen after the game texture was drawn to the screen
-    /// and before the UI texture is drawn to the screen.
-    /// Lower keys (layers) will be drawn first.
-    /// </summary>
-    public readonly SortedList<int, Action> DeferredDrawingAfterGame = new();
-    /// <summary>
-    /// Add functions that draw something to the screen after the UI texture was drawn to the screen.
-    /// Lower keys (layers) will be drawn first.
-    /// </summary>
-    public readonly SortedList<int, Action> DeferredDrawingAfterUI = new();
-    
-    
     private float physicsAccumulator = 0f;
 
     private List<ScreenTexture>? customScreenTextures = null;
-
     
     #endregion
     
     /// <summary>
     /// Initializes a new instance of the Game class with the specified game settings and window settings.
     /// </summary>
-    /// <param name="gameSettings">The settings for the game.</param>
-    /// <param name="windowSettings">The settings for the window.</param>
+    /// <remarks>
+    /// Creating a new instance of the game class will set <see cref="CurrentGameInstance"/> to the newly created class!
+    /// You should never create more than one instance of the game class per application!
+    /// </remarks>
+    /// <param name="gameSettings">The settings for the game, including fixed framerate, screen texture mode, and rendering options.</param>
+    /// <param name="windowSettings">The settings for the window, including size, position, and display properties.</param>
     public Game(GameSettings gameSettings, WindowSettings windowSettings)
     {
         CurrentGameInstance = this;
@@ -471,7 +485,11 @@ public class Game
         }
     }
     
-
+    /// <summary>
+    /// Starts the game loop and runs the game until it is terminated.
+    /// </summary>
+    /// <param name="launchParameters">Command-line arguments or parameters to configure the game at launch.</param>
+    /// <returns>An ExitCode object indicating whether the game should restart.</returns>
     public ExitCode Run(params string[] launchParameters)
     {
         this.LaunchParams = launchParameters;
@@ -488,12 +506,16 @@ public class Game
         return new ExitCode(restart);
     }
     
+    /// <summary>
+    /// Gets the current game texture used for rendering.
+    /// </summary>
+    /// <returns>The current ScreenTexture instance used by the game.</returns>
     public ScreenTexture GetGameTexture() => gameTexture;
 
     /// <summary>
-    /// Change the game texture.
+    /// Changes the game's rendering texture to a new one.
     /// </summary>
-    /// <param name="newScreenTexture"> The new screen texture to use.</param>
+    /// <param name="newScreenTexture">The new screen texture to use for game rendering.</param>
     /// <returns>Returns the old game texture or null if the newScreenTexture is the same as the game texture.
     /// The old ScreenTexture should be unloaded and disposed of if no longer needed!</returns>
     public ScreenTexture? ChangeGameTexture(ScreenTexture newScreenTexture)
@@ -715,10 +737,7 @@ public class Game
     {
         ResolveOnGameTextureResized(w, h);
     }
-    // private void GameTextureOnOnClearBackground()
-    // {
-    //     ResolveOnGameTextureClearBackground();
-    // }
+    
     private void AdvanceFixedUpdate(float dt)
     {
         const float maxFrameTime = 1f / 30f;
@@ -744,6 +763,14 @@ public class Game
 
     #region Custom Screen Textures
 
+    /// <summary>
+    /// Adds a custom screen texture to the game's rendering pipeline.
+    /// </summary>
+    /// <param name="texture">The screen texture to add to the game's collection of custom textures.</param>
+    /// <returns>
+    /// Returns true if the texture was successfully added to the collection.
+    /// Returns false if the texture was already present in the collection.
+    /// </returns>
     public bool AddScreenTexture(ScreenTexture texture)
     {
         if (customScreenTextures == null)
@@ -758,12 +785,38 @@ public class Game
         return true;
 
     }
+    
+    /// <summary>
+    /// Checks if a specific screen texture is already in the game's custom texture collection.
+    /// </summary>
+    /// <param name="texture">The screen texture to check for.</param>
+    /// <returns>
+    /// Returns true if the texture is present in the collection.
+    /// Returns false if the texture is not in the collection or if the collection is null.
+    /// </returns>
     public bool HasScreenTexture(ScreenTexture texture) => customScreenTextures?.Contains(texture) ?? false;
+   
+    /// <summary>
+    /// Removes a specific screen texture from the game's custom texture collection.
+    /// </summary>
+    /// <param name="texture">The screen texture to remove.</param>
+    /// <returns>
+    /// Returns true if the texture was successfully removed from the collection.
+    /// Returns false if the texture was not found in the collection or if the collection is null.
+    /// </returns>
     public bool RemoveScreenTexture(ScreenTexture texture)
     {
         if (customScreenTextures == null) return false;
         return customScreenTextures.Remove(texture);
     }
+    
+    /// <summary>
+    /// Removes all screen textures from the game's custom texture collection.
+    /// </summary>
+    /// <returns>
+    /// Returns the number of screen textures that were removed from the collection.
+    /// Returns 0 if the collection was already empty or null.
+    /// </returns>
     public int ClearScreenTextures()
     {
         if (customScreenTextures == null) return 0;
