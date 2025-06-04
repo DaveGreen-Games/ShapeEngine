@@ -1,5 +1,6 @@
 namespace ShapeEngine.Core.Structs;
 
+
 public struct WindowSettings
 {
     public static WindowSettings Default => new()
@@ -61,10 +62,4 @@ public struct WindowSettings
     public bool HighDPI;
     public bool FramebufferTransparent;
     
-    
-    
-    // public bool Focused;
-    // public bool AutoIconify; //(minimizes window automatically if focus changes in fullscreen mode)
-    // public WindowDisplayState WindowDisplayState;
-    // public Dimensions WindowLocation;
 }
