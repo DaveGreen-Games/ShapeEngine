@@ -10,15 +10,44 @@ namespace ShapeEngine.Screen;
 
 public sealed class ShapeCamera
 {
+    /// <summary>
+    /// Minimum zoom level for the camera.
+    /// </summary>
     public static float MinZoomLevel = 0.05f;
+    
+    /// <summary>
+    /// Maximum zoom level for the camera.
+    /// </summary>
     public static float MaxZoomLevel = 20f;
     
+    /// <summary>
+    /// Intensity of the camera shake effect.
+    /// A value of 0 means no shake, while higher values increase the intensity.
+    /// </summary>
     public float Intensity = 1.0f;
-
+    
+    /// <summary>
+    /// Index for the X-axis shake component in the shake array.
+    /// </summary>
     private const int ShakeX = 0;
+    /// <summary>
+    /// Index for the Y-axis shake component in the shake array.
+    /// </summary>
     private const int ShakeY = 1;
+    
+    /// <summary>
+    /// Index for the zoom shake component in the shake array.
+    /// </summary>
     private const int ShakeZoom = 2;
+    
+    /// <summary>
+    /// Index for the rotation shake component in the shake array.
+    /// </summary>
     private const int ShakeRot = 3;
+    
+    /// <summary>
+    /// Shake effect handler for the camera, supporting multiple shake components.
+    /// </summary>
     private Shake shake = new(4);
     
     private Sequencer<ICameraTween> cameraTweens = new();
@@ -274,7 +303,7 @@ public sealed class ShapeCamera
     {
         var returnValue = Raylib.GetScreenToWorld2D(pos, Camera);
         if (returnValue.IsNan()) return pos;
-        else return returnValue;
+         return returnValue;
     }
 
     public Vector2 WorldToScreen(Vector2 pos)
