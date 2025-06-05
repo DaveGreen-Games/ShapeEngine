@@ -7,7 +7,11 @@ using ShapeEngine.Timing;
 using ShapeEngine.Core.Shapes;
 
 namespace ShapeEngine.Screen;
-
+/// <summary>
+/// Represents a 2D camera for handling view transformations, zoom, rotation, shake effects,
+/// and following targets within a scene. Provides methods for coordinate conversion,
+/// camera tweening, and area management.
+/// </summary>
 public sealed class ShapeCamera
 {
     /// <summary>
@@ -50,12 +54,37 @@ public sealed class ShapeCamera
     /// </summary>
     private Shake shake = new(4);
     
-    private Sequencer<ICameraTween> cameraTweens = new();
-    private float cameraTweenTotalRotationDeg = 0f;
-    private float cameraTweenTotalZoomFactor = 1f;
-    private Size cameraTweenTotalOffset = new();
+   /// <summary>
+   /// Handles camera tween sequences for smooth transitions (e.g., movement, zoom, rotation).
+   /// </summary>
+   private Sequencer<ICameraTween> cameraTweens = new();
+   
+   /// <summary>
+   /// Accumulates the total rotation (in degrees) applied by active camera tweens during the current update.
+   /// </summary>
+   private float cameraTweenTotalRotationDeg = 0f;
+   
+   /// <summary>
+   /// Accumulates the total zoom factor applied by active camera tweens during the current update.
+   /// </summary>
+   private float cameraTweenTotalZoomFactor = 1f;
+   
+   /// <summary>
+   /// Accumulates the total positional offset applied by active camera tweens during the current update.
+   /// </summary>
+   private Size cameraTweenTotalOffset = new();
 
-    private ICameraFollower? follower = null;
+    
+    /// <summary>
+    /// The current camera follower, which can update the camera's position and area based on a target.
+    /// When set, the previous follower is detached and the new one is attached.
+    /// </summary>
+    private ICameraFollower? follower;
+    
+    /// <summary>
+    /// Gets or sets the camera follower. Setting a new follower will detach the previous one (if any)
+    /// and attach the new follower.
+    /// </summary>
     public ICameraFollower? Follower
     {
         get => follower;
@@ -200,13 +229,6 @@ public sealed class ShapeCamera
 
         if (follower != null)
         {
-            // var area = new Rect
-            // (
-            //     Position.X - Offset.X, 
-            //     Position.Y - Offset.Y, 
-            //     Size.X,
-            //     Size.Y
-            // );
             var rect = follower.Update(dt, Area);
             SetCameraRect(rect);
         }
@@ -223,38 +245,6 @@ public sealed class ShapeCamera
         }
         else zoomAdjustment = 1f;
     }
-    // internal void SetSize(Dimensions curScreenSize, Dimensions targetDimensions)
-    // {
-    //     BaseTransform = BaseTransform.SetSize(curScreenSize.ToSize());
-    //
-    //     //VARIANT 2
-    //     // float xDif = curScreenSize.Width - targetDimensions.Width;
-    //     // float yDif = curScreenSize.Height - targetDimensions.Width;
-    //     // if (xDif > yDif)
-    //     // {
-    //     //     zoomAdjustment = (float)curScreenSize.Width / (float)targetDimensions.Width;
-    //     // }
-    //     // else
-    //     // {
-    //     //     zoomAdjustment = (float)curScreenSize.Height / (float)targetDimensions.Height;
-    //     // }
-    //
-    //     //VARIANT 1
-    //     float curArea = curScreenSize.Area;
-    //     float targetArea = targetDimensions.Area;
-    //     zoomAdjustment = MathF.Sqrt( curArea / targetArea );
-    //     
-    //     //VARIANT 3
-    //     // var size = Size;
-    //     // var targetSize = targetDimensions.ToVector2();
-    //     // var fX = targetSize.X / size.X;
-    //     // var fY = targetSize.Y / size.Y;
-    //     // zoomAdjustment = fX > fY ? fX : fY;
-    //     
-    //     
-    //     // zoomAdjustment = 1f;
-    // }
-
     private float CalculateZoomLevel(Size targetSize)
     {
         var size = BaseTransform.BaseSize / zoomAdjustment;
@@ -301,16 +291,14 @@ public sealed class ShapeCamera
 
     public Vector2 ScreenToWorld(Vector2 pos)
     {
-        var returnValue = Raylib.GetScreenToWorld2D(pos, Camera);
-        if (returnValue.IsNan()) return pos;
-         return returnValue;
+        var result = Raylib.GetScreenToWorld2D(pos, Camera);
+        return result.IsNan() ? pos : result;
     }
 
     public Vector2 WorldToScreen(Vector2 pos)
     {
-        var returnValue = Raylib.GetWorldToScreen2D(pos, Camera);
-        if (returnValue.IsNan()) return pos;
-        else return returnValue;
+        var result = Raylib.GetWorldToScreen2D(pos, Camera);
+        return result.IsNan() ? pos : result;
     }
 
     public Rect ScreenToWorld(Rect r)
@@ -351,5 +339,8 @@ public sealed class ShapeCamera
         cameraTweenTotalZoomFactor = MathF.Max(cameraTweenTotalZoomFactor, 0.05f); //cant be zero!!!
     }
     private static float Wrap(float value, float min, float max) => value - (max - min) * MathF.Floor((float) (( value -  min) / ( max -  min)));
+    
+    
+    
     
 }
