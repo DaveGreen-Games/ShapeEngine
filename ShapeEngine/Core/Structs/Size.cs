@@ -5,9 +5,12 @@ namespace ShapeEngine.Core.Structs;
 
 public readonly struct Size : IEquatable<Size>
 {
+    #region Members
     public readonly float Width;
     public readonly float Height;
-    
+    #endregion
+
+    #region Getters
     /// <summary>
     /// Returns Width!
     /// </summary>
@@ -16,8 +19,12 @@ public readonly struct Size : IEquatable<Size>
     /// Returns Width!
     /// </summary>
     public float Length => Width;
-    
     public bool Positive => Width >= 0 && Height >= 0;
+    public float Area => Width < 0 || Height < 0 ? 0 : Width * Height;
+    public bool IsSquare => Width > 0 && Height > 0 && Math.Abs(Width - Height) < 0.0001f;
+    #endregion
+    
+    #region Constructors
     public Size()
     {
         Width = 0f;
@@ -34,10 +41,13 @@ public readonly struct Size : IEquatable<Size>
         Width = w;
         Height = h;
     }
+    #endregion
 
-    public float Area => Width < 0 || Height < 0 ? 0 : Width * Height;
-    public bool IsSquare => Width > 0 && Height > 0 && Math.Abs(Width - Height) < 0.0001f;
+    #region Static
     public static Size Zero => new(0, 0);
+    #endregion
+    
+    #region Public Functions
     public float Max() => MathF.Max(Width, Height);
     public float Min() => MathF.Min(Width, Height);
     public Size Max(Size other)
@@ -161,14 +171,7 @@ public readonly struct Size : IEquatable<Size>
             ShapeMath.RoundToDecimals(Height, decimals)
         );
     }
-
-    public override string ToString()
-    {
-        return $"(w: {Width}, h: {Height})";
-    }
-
-    public Vector2 ToVector2() => new(Width, Height);
-
+    
     /// <summary>
     /// Changes width only!
     /// </summary>
@@ -186,7 +189,19 @@ public readonly struct Size : IEquatable<Size>
     /// </summary>
     public Size ChangeLength(float amount) => new(Width + amount, Height);
     
+    public Vector2 ToVector2() => new(Width, Height);
+    public override string ToString()
+    {
+        return $"(w: {Width}, h: {Height})";
+    }
+    public bool Equals(Size other) => Width.Equals(other.Width) && Height.Equals(other.Height);
+    public override bool Equals(object? obj) => obj is Size other && Equals(other);
+    public override int GetHashCode() => HashCode.Combine(Width, Height);
+    
+    #endregion
 
+    #region Operators
+    
     public static bool operator ==(Size left, Size right)
     {
         return left.Equals(right);
@@ -385,9 +400,5 @@ public readonly struct Size : IEquatable<Size>
     public static Size operator *(Size left, AnchorPoint right) => new(left.Width * right.X, left.Height * right.Y);
     public static Size operator /(Size left, AnchorPoint right) => new(left.Width / (right.X == 0f ? 1f : right.X), left.Height / (right.Y == 0f ? 1f : right.Y));
     
-    public bool Equals(Size other) => Width.Equals(other.Width) && Height.Equals(other.Height);
-
-    public override bool Equals(object? obj) => obj is Size other && Equals(other);
-
-    public override int GetHashCode() => HashCode.Combine(Width, Height);
+    #endregion
 }
