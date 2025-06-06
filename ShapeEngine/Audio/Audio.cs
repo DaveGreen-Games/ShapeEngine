@@ -1,190 +1,92 @@
-﻿namespace ShapeEngine.Audio
+﻿namespace ShapeEngine.Audio;
+
+/// <summary>
+/// Abstract base class for all audio types (SFX, SFXLoop, Song).
+/// Provides common properties and methods for audio playback and control.
+/// </summary>
+internal abstract class Audio
 {
+    /// <summary>
+    /// The base volume for this audio instance.
+    /// </summary>
+    public float BaseVolume { get; protected set; } = 0.5f;
 
-    internal abstract class Audio
+    /// <summary>
+    /// The current volume multiplier for this audio instance.
+    /// </summary>
+    public float Volume { get; set; } = 1f;
+
+    /// <summary>
+    /// The base pitch for this audio instance.
+    /// </summary>
+    public float BasePitch { get; protected set; } = 1.0f;
+
+    /// <summary>
+    /// The current pitch multiplier for this audio instance.
+    /// </summary>
+    public float Pitch { get; set; } = 1f;
+
+    /// <summary>
+    /// The unique ID of this audio instance.
+    /// </summary>
+    public uint ID { get; protected set; }
+
+    /// <summary>
+    /// Indicates whether this audio instance is paused.
+    /// </summary>
+    public bool Paused { get; protected set; }
+
+    /// <summary>
+    /// The buses this audio instance is routed through.
+    /// </summary>
+    protected Bus[] buses = new Bus[0];
+
+    /// <summary>
+    /// Returns whether the audio is currently playing.
+    /// </summary>
+    public virtual bool IsPlaying() { return false; }
+
+    /// <summary>
+    /// Plays the audio with the specified volume and pitch.
+    /// </summary>
+    public virtual void Play(float volume = 1f, float pitch = 1f) { }
+
+    /// <summary>
+    /// Stops the audio playback.
+    /// </summary>
+    public virtual void Stop() { }
+
+    /// <summary>
+    /// Pauses the audio playback.
+    /// </summary>
+    public virtual void Pause() { }
+
+    /// <summary>
+    /// Resumes the audio playback if paused.
+    /// </summary>
+    public virtual void Resume() { }
+
+    /// <summary>
+    /// Unloads the audio resource from memory.
+    /// </summary>
+    public virtual void Unload() { }
+
+    /// <summary>
+    /// Updates the audio's volume based on the bus volume.
+    /// </summary>
+    protected virtual void UpdateBusVolume(float newBusVolume) { }
+
+    /// <summary>
+    /// Gets the combined volume from all buses this audio is routed through.
+    /// </summary>
+    protected float GetCombinedBusVolume()
     {
-        public float BaseVolume { get; protected set; } = 0.5f;
-        public float Volume { get; set; } = 1f;
-        public float BasePitch { get; protected set; } = 1.0f;
-        public float Pitch { get; set; } = 1f;
-        public uint ID { get; protected set; }
-        public bool Paused { get; protected set; } = false;
-        protected Bus[] buses = new Bus[0];
-        public virtual bool IsPlaying() { return false; }
-        public virtual void Play(float volume = 1f, float pitch = 1f) { }
-        public virtual void Stop() { }
-        public virtual void Pause() { }
-        public virtual void Resume() { }
-        public virtual void Unload() { }
-        protected virtual void UpdateBusVolume(float newBusVolume) { }
-        protected float GetCombinedBusVolume()
+        float v = 1f;
+        foreach (var bus in buses)
         {
-            float v = 1f;
-            foreach (var bus in buses)
-            {
-                if (bus.Volume <= 0f) return 0f;
-                v *= bus.Volume;
-            }
-            return v;
+            if (bus.Volume <= 0f) return 0f;
+            v *= bus.Volume;
         }
+        return v;
     }
-
-    /*
-    public class Audio
-    {
-        protected float volume = 0.5f;
-        protected float pitch = 1.0f;
-        protected int id = -1;
-        protected int bus = 0;
-        protected float combinedVolume = 1.0f;
-        protected bool paused = false;
-
-        public float GetVolume() { return volume; }
-        public float GetPitch() { return pitch; }
-        public virtual void SetPitch(float pitch) { }
-
-        public void AdjustVolume(float factor) { volume *= factor; }
-        public void SetVolume(float volume)
-        {
-            this.volume = volume;
-            UpdateVolume(combinedVolume);
-        }
-        public void ChangeCombinedVolume(float newVolume)
-        {
-            combinedVolume = newVolume;
-            UpdateVolume(combinedVolume);
-        }
-        protected virtual void UpdateVolume(float volume) { }
-        public int GetBusID() { return bus; }
-        public int GetID() { return id; }
-        public virtual bool IsPlaying() { return false; }
-        public bool IsPaused() { return paused; }
-        public virtual void Stop() { }
-        public virtual void Pause() { }
-        public virtual void Resume() { }
-        public virtual void Unload() { }
-    }
-    public class SFX : Audio
-    {
-        private Sound sound;
-
-        public SFX(int id, Sound sound, float volume = 0.5f, int bus = AudioHandler.BUS_MASTER, float pitch = 1.0f)
-        {
-            this.id = id;
-            this.sound = sound;
-            this.bus = bus;
-            this.pitch = pitch;
-            this.volume = volume;
-            //combinedVolume = AudioHandler.CalculateBusVolume(this.bus);
-            //SetVolume(volume);
-        }
-
-        public override void SetPitch(float pitch)
-        {
-            this.pitch = pitch;
-            SetSoundPitch(sound, pitch);
-        }
-        public override bool IsPlaying() { return IsSoundPlaying(sound); }
-        public Sound GetSound() { return sound; }
-        public override void Stop()
-        {
-            if (!IsPlaying()) return;
-            StopSound(sound);
-            paused = false;
-        }
-        public override void Pause()
-        {
-            if (!IsPlaying()) return;
-            PauseSound(sound);
-            paused = true;
-        }
-        public override void Resume()
-        {
-            if (!paused) return;
-            ResumeSound(sound);
-            paused = false;
-        }
-
-        public override void Unload()
-        {
-            UnloadSound(sound);
-        }
-
-        protected override void UpdateVolume(float volume)
-        {
-            SetSoundVolume(sound, volume * this.volume);
-        }
-    }
-    public class Song : Audio
-    {
-        private Music song;
-        private string displayName = "";
-        public Song(int id, string displayName, Music song, float volume = 0.5f, int bus = AudioHandler.BUS_MASTER, float pitch = 1.0f)
-        {
-            this.id = id;
-            this.displayName = displayName;
-            this.song = song;
-            this.bus = bus;
-            this.pitch = pitch;
-            this.volume = volume;
-            //combinedVolume = AudioHandler.CalculateBusVolume(this.bus);
-            //SetVolume(volume);
-        }
-
-        public string DisplayName { get { return displayName; } }
-        public override void SetPitch(float pitch)
-        {
-            this.pitch = pitch;
-            SetMusicPitch(song, pitch);
-        }
-        public override bool IsPlaying() { return IsMusicStreamPlaying(song); }
-        public Music GetSong() { return song; }
-        public override void Stop()
-        {
-            if (!IsPlaying()) return;
-            StopMusicStream(song);
-            paused = false;
-        }
-        public override void Pause()
-        {
-            if (!IsPlaying()) return;
-            PauseMusicStream(song);
-            paused = true;
-        }
-        public override void Resume()
-        {
-            if (!paused) return;
-            ResumeMusicStream(song);
-            paused = false;
-        }
-
-        public override void Unload()
-        {
-            UnloadMusicStream(song);
-        }
-        protected override void UpdateVolume(float volume)
-        {
-            SetMusicVolume(song, volume * this.volume);
-        }
-
-        public float GetPercentage()
-        {
-            float length = GetMusicTimeLength(song);
-            float played = GetMusicTimePlayed(song);
-            if (length <= 0.0f) return 0.0f;
-            return played / length;
-        }
-        public bool Update(float dt)
-        {
-            if (!IsPlaying()) return false;
-            if (IsPaused()) return false;
-            UpdateMusicStream(song);
-            float f = GetPercentage();
-            return f > 0.95f;
-            //float length = GetMusicTimeLength(song);
-            //float played = GetMusicTimePlayed(song);
-            //return played >= length;
-        }
-    }
-    */
 }
