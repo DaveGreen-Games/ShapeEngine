@@ -1,8 +1,11 @@
-using System.Numerics;
 using System.Text;
 
 namespace ShapeEngine.Input;
 
+/// <summary>
+/// Represents an input type for a mouse button axis (negative and positive buttons),
+/// supporting deadzone and modifier keys.
+/// </summary>
 public class InputTypeMouseButtonAxis : IInputType
 {
     private readonly ShapeMouseButton neg;
@@ -10,6 +13,14 @@ public class InputTypeMouseButtonAxis : IInputType
     private float deadzone;
     private readonly IModifierKey[] modifierKeys;
     private readonly ModifierKeyOperator modifierOperator;
+    /// <summary>
+    /// Initializes a new instance of <see cref="InputTypeMouseButtonAxis"/> with specified negative and positive buttons and deadzone.
+    /// </summary>
+    /// <param name="neg">The negative mouse button.</param>
+    /// <param name="pos">The positive mouse button.</param>
+    /// <param name="deadzone">
+    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value. MouseButtons ignore deadzone (deadzone works only with axis input types).
+    /// </param>
     public InputTypeMouseButtonAxis(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = 0f)
     {
         this.neg = neg;
@@ -18,6 +29,17 @@ public class InputTypeMouseButtonAxis : IInputType
         this.modifierKeys = Array.Empty<IModifierKey>();
         this.modifierOperator = ModifierKeyOperator.And;
     }
+
+    /// <summary>
+    /// Initializes a new instance of <see cref="InputTypeMouseButtonAxis"/> with buttons, deadzone, modifier operator, and modifier keys.
+    /// </summary>
+    /// <param name="neg">The negative mouse button.</param>
+    /// <param name="pos">The positive mouse button.</param>
+    /// <param name="deadzone">
+    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value. MouseButtons ignore deadzone (deadzone works only with axis input types).
+    /// </param>
+    /// <param name="modifierOperator">The modifier key operator.</param>
+    /// <param name="modifierKeys">The modifier keys.</param>
     public InputTypeMouseButtonAxis(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         this.neg = neg;
@@ -26,6 +48,17 @@ public class InputTypeMouseButtonAxis : IInputType
         this.modifierOperator = modifierOperator;
         this.modifierKeys = modifierKeys;
     }
+
+    /// <summary>
+    /// Initializes a new instance of <see cref="InputTypeMouseButtonAxis"/> with buttons, deadzone, modifier operator, and a single modifier key.
+    /// </summary>
+    /// <param name="neg">The negative mouse button.</param>
+    /// <param name="pos">The positive mouse button.</param>
+    /// <param name="deadzone">
+    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value. MouseButtons ignore deadzone (deadzone works only with axis input types).
+    /// </param>
+    /// <param name="modifierOperator">The modifier key operator.</param>
+    /// <param name="modifierKey">The modifier key.</param>
     public InputTypeMouseButtonAxis(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone, ModifierKeyOperator modifierOperator, IModifierKey modifierKey)
     {
         this.neg = neg;
@@ -34,10 +67,14 @@ public class InputTypeMouseButtonAxis : IInputType
         this.modifierOperator = modifierOperator;
         this.modifierKeys = new[]{ modifierKey };
     }
+
+    /// <inheritdoc/>
     public float GetDeadzone() => deadzone;
 
+    /// <inheritdoc/>
     public void SetDeadzone(float value) => deadzone = value;
 
+    /// <inheritdoc/>
     public virtual string GetName(bool shorthand = true)
     {
         StringBuilder sb = new();
@@ -51,20 +88,23 @@ public class InputTypeMouseButtonAxis : IInputType
         
         
     }
+
+    /// <inheritdoc/>
     public InputState GetState(ShapeGamepadDevice? gamepad = null)
     {
-        // if (gamepad != null) return new();
         return ShapeInput.MouseDevice.CreateInputState(neg, pos, deadzone, modifierOperator, modifierKeys);
     }
 
+    /// <inheritdoc/>
     public InputState GetState(InputState prev, ShapeGamepadDevice? gamepad = null)
     {
-        // if (gamepad != null) return new();
         return ShapeInput.MouseDevice.CreateInputState(neg, pos, prev, deadzone, modifierOperator, modifierKeys);
     }
-    public InputDeviceType GetInputDevice() => InputDeviceType.Mouse;
-    public IInputType Copy() => new InputTypeMouseButtonAxis(neg, pos);
 
-    
+    /// <inheritdoc/>
+    public InputDeviceType GetInputDevice() => InputDeviceType.Mouse;
+
+    /// <inheritdoc/>
+    public IInputType Copy() => new InputTypeMouseButtonAxis(neg, pos);
 
 }
