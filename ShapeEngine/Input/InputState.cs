@@ -2,22 +2,6 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Input;
 
-
-public enum MultiTapState
-{
-    None = 0,
-    InProgress = 1,
-    Completed = 2,
-    Failed = 3
-}
-
-public enum PressedType
-{
-    None = 0,
-    Hold = 1,
-    MultiTap = 2,
-    SingleTap = 3
-}
 public readonly struct InputState
 {
     public readonly bool Down;
