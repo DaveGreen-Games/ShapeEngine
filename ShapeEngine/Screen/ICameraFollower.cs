@@ -5,6 +5,7 @@ namespace ShapeEngine.Screen;
 
 /// <summary>
 /// Defines methods for objects that follow or interact with a camera in the scene.
+/// Can update the camera's position and area based on a target.
 /// </summary>
 public interface ICameraFollower
 {
