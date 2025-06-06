@@ -1,194 +1,63 @@
-﻿using ShapeEngine.Screen;
-using System.Numerics;
-using ShapeEngine.Core;
+﻿using System.Numerics;
 using ShapeEngine.Core.Structs;
 
-namespace ShapeEngine.Effects
+namespace ShapeEngine.Effects;
+
+/// <summary>
+/// Represents a basic effect object with position, size, and rotation.
+/// </summary>
+public class Effect : EffectObject
 {
-    
-    public class Effect : EffectObject
+    /// <summary>
+    /// Gets or sets the rotation in radians.
+    /// </summary>
+    public float RotRad { get; set; }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Effect"/> class.
+    /// </summary>
+    /// <param name="pos">The position of the effect.</param>
+    /// <param name="size">The size of the effect.</param>
+    /// <param name="rotRad">The rotation in radians.</param>
+    public Effect(Vector2 pos, Size size, float rotRad) : base(pos, size) { RotRad = rotRad; }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Effect"/> class with a specified lifetime.
+    /// </summary>
+    /// <param name="pos">The position of the effect.</param>
+    /// <param name="size">The size of the effect.</param>
+    /// <param name="rotRad">The rotation in radians.</param>
+    /// <param name="lifeTime">The lifetime of the effect in seconds.</param>
+    public Effect(Vector2 pos, Size size, float rotRad, float lifeTime) : base(pos, size, lifeTime) { RotRad = rotRad; }
+
+    /// <summary>
+    /// Performs fixed update logic for the effect.
+    /// </summary>
+    /// <param name="fixedTime">The fixed game time.</param>
+    /// <param name="game">The game screen info.</param>
+    /// <param name="gameUi">The game UI screen info.</param>
+    /// <param name="ui">The UI screen info.</param>
+    public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
-        //public delegate void DrawEffect(Effect e);
-        //
-        //public DrawEffect? DrawEffectFunc = null;
-
-        //add rotation?
-        public float RotRad { get; set; } = 0f;
-
-        public Effect(Vector2 pos, Size size, float rotRad) : base(pos, size) { RotRad = rotRad; }
-        public Effect(Vector2 pos, Size size, float rotRad, float lifeTime) : base(pos, size, lifeTime) { RotRad = rotRad; }
-
-        public override void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
-        {
-            
-        }
-        
-        public override void DrawGame(ScreenInfo game)
-        {
-            
-        }
-
-        public override void DrawGameUI(ScreenInfo gameUi)
-        {
-            
-        }
-    }
-}
-/*
-    public class ShapeEffect : Effect
-    {
-        protected float rotRad = 0f;//radians
-        protected float rotSpeed = 0f;
-        
-        public Color Color { get; set; } = WHITE;
-        public ShapeEffect(Vector2 pos, Vector2 size, float duration, float rotSpeed = 0f) : base(pos, size, duration)
-        {
-            rotRad = SRNG.randF(2f * PI);
-            this.rotSpeed = rotSpeed * SRNG.randF() < 0.5f ? 1f : -1f;
-        }
-        public ShapeEffect(Vector2 pos, Vector2 size, float duration, float rot = 0f, float rotSpeed = 0f) : base(pos, size, duration)
-        {
-            rotRad = rot;
-            this.rotSpeed = rotSpeed * SRNG.randF() < 0.5f ? 1f : -1f;
-        }
-        public override void Update(float dt)
-        {
-            if (IsDead()) return;
-            base.Update(dt);
-            rotRad += rotSpeed * dt;
-        }
-         // return STween. return Size.Lerp(new(0f), 1f - lifetimeTimer.F); }// SUtils.LerpFloat(Size, 0f, 1.0f - lifetimeTimer.F); }
         
     }
     
-    public class SquareEffect : ShapeEffect
+    /// <summary>
+    /// Draws the effect on the game screen.
+    /// </summary>
+    /// <param name="game">The game screen info.</param>
+    public override void DrawGame(ScreenInfo game)
     {
-        public SquareEffect(Vector2 pos, Vector2 size, float duration, Color color, float rotSpeed = 0f) : base(pos, duration, size, color, rotSpeed) { }
-        public void Draw()
-        {
-            if (IsDead()) return;
-            var curSize = GetCurSize();
-            Rect r = GetBoundingBox();
-            DrawRectanglePro(r.Rectangle, curSize, rotRad * RAD2DEG, Color);
-        }
-    }
-    public class CircleEffect : ShapeEffect
-    {
-        public CircleEffect(Vector2 pos, float duration, float radius, Color color) : base(pos, duration, radius, color, 0f) { }
-        public override void Draw()
-        {
-            if (IsDead()) return;
-            DrawCircleV(Pos, GetCurSize(), Color);
-        }
-    }
-    public class LineEffect : ShapeEffect
-    {
-        float lineThickness = 4f;
-        public LineEffect(Vector2 pos, float duration, float size, float thickness, Color color, float rot = 0f, float rotSpeed = 0f) : base(pos, duration, size, color, rot, rotSpeed)
-        {
-            lineThickness = thickness;
-        }
-        public LineEffect(Vector2 pos, float duration, float size, float thickness, Color color, float rotSpeed = 0f) : base(pos, duration, size, color, rotSpeed)
-        {
-            lineThickness = thickness;
-        }
-        public LineEffect(Vector2 pos, float duration, float size, float thickness, Color color) : base(pos, duration, size, color, 0f)
-        {
-            lineThickness = thickness;
-        }
-        public override void Draw()
-        {
-            if (IsDead()) return;
-            DrawLineEx(Pos, Pos + SVec.Rotate(SVec.Right(), rotRad) * GetCurSize(), lineThickness, Color);
-        }
-        public override Rectangle GetBoundingBox()
-        {
-            Vector2 end = Pos + SVec.Rotate(SVec.Right() * size, rotRad);
-            return new(Pos.X, Pos.Y, end.X - Pos.X, end.Y - Pos.Y);
-        }
-    }
-    */
-
-/*
-public class SquareEffect : Effect
-    {
-        float size = 0f;
-        float curSize = 0f;
-        float rotation = 0f;
-        bool second = false;
-        float duration = 0f;
-        Color color = WHITE;
-        public SquareEffect(Vector2 pos, float duration, float size, Color color) : base(pos, duration * 0.8f)
-        {
-            this.duration = duration;
-            this.size = size;
-            this.curSize = size;
-            this.color = color;
-            this.rotation = RNG.randF(360f);
-        }
-        public override void Update(float dt)
-        {
-            base.Update(dt);
-
-            if (lifetimeTimer.IsFinished() && !second)
-            {
-                lifetimeTimer.Start(duration * 0.2f);
-                second = true;
-            }
-            if (second) curSize = Utils.LerpFloat(size, 0, 1.0f - lifetimeTimer.GetF());
-        }
-
-        public override void Draw()
-        {
-            Rectangle rect = new(pos.X, pos.Y, curSize * 2f, curSize * 2f);
-            DrawRectanglePro(rect, new(curSize, curSize), rotation, color);
-        }
-        public override bool IsDead() { return second && lifetimeTimer.IsFinished(); }
-    }
-*/
-
-/*
-class AsteroidDeathEffect : GameObject
-{
-    private Color color = WHITE;
-    private BasicTimer timer = new();
-    private float duration = 0f;
-    private Vector2 pos = new();
-    private float size = 0f;
-    private float curSize = 0f;
-    private float rotation = 0f;
-    private bool second = false;
-    public AsteroidDeathEffect(Vector2 pos, float duration, float size, Color color)
-    {
-        drawOrder = 30;
-        timer.Start(duration * 0.8f);
-        this.duration = duration;
-        this.size = size;
-        this.curSize = size;
-        this.pos = pos;
-        this.color = color;
-        this.rotation = RNG.randF(360f);
+        
     }
 
-    public override void Update(float dt)
+    /// <summary>
+    /// Draws the effect on the game UI screen.
+    /// </summary>
+    /// <param name="gameUi">The game UI screen info.</param>
+    public override void DrawGameUI(ScreenInfo gameUi)
     {
-        timer.Update(dt);
-
-        if (timer.IsFinished() && !second)
-        {
-            timer.Start(duration * 0.2f);
-            second = true;
-        }
-        if (second) curSize = Utils.LerpFloat(size, 0, 1.0f - timer.GetF());
-        //else rotation += dt * 450;
+        
     }
-
-    public override void Draw()
-    {
-        Rectangle rect = new(pos.X, pos.Y, curSize * 2f, curSize * 2f);
-        //DrawRectangleRec(rect, color);
-        DrawRectanglePro(rect, new(curSize, curSize), rotation, color);
-    }
-    public override bool IsDead() { return second && timer.IsFinished(); }
 }
-*/
+
