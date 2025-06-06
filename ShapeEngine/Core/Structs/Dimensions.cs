@@ -7,15 +7,23 @@ namespace ShapeEngine.Core.Structs;
 
 public readonly struct Dimensions : IEquatable<Dimensions>, IFormattable
 {
+    
+    #region Members
     public readonly int Width;
     public readonly int Height;
-
+    #endregion
+    
+    #region Constructors
     public Dimensions() { this.Width = 0; this.Height = 0; }
     public Dimensions(int value) { this.Width = value; this.Height = value; }
     public Dimensions(int width, int height) { this.Width = width; this.Height = height; }
     public Dimensions(float value) { this.Width = (int)value; this.Height = (int)value; }
     public Dimensions(float width, float height) { this.Width = (int)width; this.Height = (int)height; }
     public Dimensions(Vector2 v) { this.Width = (int)v.X; this.Height = (int)v.Y; }
+    #endregion
+
+    #region MyRegion
+
     public static Dimensions GetInvalidDimension() => new(-1, -1);
     public bool IsValid() { return Width >= 0 && Height >= 0; }
     public float Area => Width * Height;
@@ -26,7 +34,10 @@ public readonly struct Dimensions : IEquatable<Dimensions>, IFormattable
     public float RatioW => Width / (float)Height;
     public float RatioH => Height / (float)Width;
     
-    
+    #endregion
+
+    #region Public Functions
+
     public Dimensions MatchAspectRatio(Dimensions targetDimensions)
     {
         if (Width == targetDimensions.Width && Height == targetDimensions.Height) return targetDimensions;
@@ -43,10 +54,6 @@ public readonly struct Dimensions : IEquatable<Dimensions>, IFormattable
         Dimensions adjustedDimensions = new(newWidth, newHeight);
         return adjustedDimensions;
     }
-    
-    
-    
-    
     public Vector2 ScaleFactor(Dimensions to) => to.ToVector2().DivideSafe(ToVector2());
     public float ScaleFactorArea(Dimensions to)
     {
@@ -60,7 +67,7 @@ public readonly struct Dimensions : IEquatable<Dimensions>, IFormattable
 
     public Vector2 ToVector2() { return new Vector2(Width, Height); }
     public Size ToSize() => new(Width, Height);
-        
+    
     public bool Equals(Dimensions other)
     {
         return Width == other.Width && Height == other.Height;
@@ -73,15 +80,15 @@ public readonly struct Dimensions : IEquatable<Dimensions>, IFormattable
         }
         return false;
     }
-    public readonly override string ToString()
+    public override string ToString()
     {
         return ToString("G", CultureInfo.CurrentCulture);
     }
-    public readonly string ToString(string? format)
+    public string ToString(string? format)
     {
         return ToString(format, CultureInfo.CurrentCulture);
     }
-    public readonly string ToString(string? format, IFormatProvider? formatProvider)
+    public string ToString(string? format, IFormatProvider? formatProvider)
     {
         StringBuilder sb = new StringBuilder();
         string separator = NumberFormatInfo.GetInstance(formatProvider).NumberGroupSeparator;
@@ -93,6 +100,15 @@ public readonly struct Dimensions : IEquatable<Dimensions>, IFormattable
         sb.Append('>');
         return sb.ToString();
     }
+    
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Width, Height);
+    }
+
+    #endregion
+
+    #region Operators
 
     public static Dimensions operator +(Dimensions left, Dimensions right)
     {
@@ -181,7 +197,9 @@ public readonly struct Dimensions : IEquatable<Dimensions>, IFormattable
             left.Height - right
         );
     }
-
+    #endregion
+    
+    #region Static
 
     public static Dimensions Abs(Dimensions value)
     {
@@ -212,11 +230,7 @@ public readonly struct Dimensions : IEquatable<Dimensions>, IFormattable
             (value1.Height < value2.Height) ? value1.Height : value2.Height
         );
     }
-
-    public readonly override int GetHashCode()
-    {
-        return HashCode.Combine(Width, Height);
-    }
-
+    #endregion
+    
 
 }
