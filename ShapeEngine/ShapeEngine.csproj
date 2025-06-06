@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -93,7 +93,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Clipper2" Version="1.5.3" />
+    <PackageReference Include="Clipper2" Version="1.5.4" />
     <PackageReference Include="Raylib-cs" Version="7.0.1" />
   </ItemGroup>
 
