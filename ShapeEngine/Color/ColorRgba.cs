@@ -367,10 +367,10 @@ public readonly struct ColorRgba : IEquatable<ColorRgba>
     {
         return new
         (
-            Clamp((int)left.R + (int)right.R),
-            Clamp((int)left.G + (int)right.G),
-            Clamp((int)left.B + (int)right.B),
-            Clamp((int)left.A + (int)right.A)
+            Clamp(left.R + right.R),
+            Clamp(left.G + right.G),
+            Clamp(left.B + right.B),
+            Clamp(left.A + right.A)
         );
     }
 
@@ -384,10 +384,10 @@ public readonly struct ColorRgba : IEquatable<ColorRgba>
     {
         return new
         (
-            Clamp((int)left.R - (int)right.R),
-            Clamp((int)left.G - (int)right.G),
-            Clamp((int)left.B - (int)right.B),
-            Clamp((int)left.A - (int)right.A)
+            Clamp(left.R - right.R),
+            Clamp(left.G - right.G),
+            Clamp(left.B - right.B),
+            Clamp(left.A - right.A)
         );
     }
 
@@ -401,10 +401,10 @@ public readonly struct ColorRgba : IEquatable<ColorRgba>
     {
         return new
         (
-            Clamp((int)left.R * (int)right.R),
-            Clamp((int)left.G * (int)right.G),
-            Clamp((int)left.B * (int)right.B),
-            Clamp((int)left.A * (int)right.A)
+            Clamp(left.R * right.R),
+            Clamp(left.G * right.G),
+            Clamp(left.B * right.B),
+            Clamp(left.A * right.A)
         );
     }
 
@@ -431,7 +431,7 @@ public readonly struct ColorRgba : IEquatable<ColorRgba>
     /// </summary>
     /// <param name="amount">The amount to adjust the alpha value by. The result is clamped to the range [0, 255].</param>
     /// <returns>A new color with the adjusted alpha value and the same RGB components as this color.</returns>
-    public ColorRgba ChangeAlpha(int amount) => new(R, G, B, Clamp((int)A + amount));
+    public ColorRgba ChangeAlpha(int amount) => new(R, G, B, Clamp(A + amount));
 
     /// <summary>
     /// Creates a new color with the specified red value while preserving the other components.
@@ -445,7 +445,7 @@ public readonly struct ColorRgba : IEquatable<ColorRgba>
     /// </summary>
     /// <param name="amount">The amount to adjust the red value by. The result is clamped to the range [0, 255].</param>
     /// <returns>A new color with the adjusted red value and the same green, blue, and alpha components as this color.</returns>
-    public ColorRgba ChangeRed(int amount) => new(Clamp((int)R + amount), G, B, A);
+    public ColorRgba ChangeRed(int amount) => new(Clamp(R + amount), G, B, A);
 
     /// <summary>
     /// Creates a new color with the specified green value while preserving the other components.
@@ -459,7 +459,7 @@ public readonly struct ColorRgba : IEquatable<ColorRgba>
     /// </summary>
     /// <param name="amount">The amount to adjust the green value by. The result is clamped to the range [0, 255].</param>
     /// <returns>A new color with the adjusted green value and the same red, blue, and alpha components as this color.</returns>
-    public ColorRgba ChangeGreen(int amount) => new(R, Clamp((int)G + amount), B, A);
+    public ColorRgba ChangeGreen(int amount) => new(R, Clamp(G + amount), B, A);
 
     /// <summary>
     /// Creates a new color with the specified blue value while preserving the other components.
@@ -473,7 +473,7 @@ public readonly struct ColorRgba : IEquatable<ColorRgba>
     /// </summary>
     /// <param name="amount">The amount to adjust the blue value by. The result is clamped to the range [0, 255].</param>
     /// <returns>A new color with the adjusted blue value and the same red, green, and alpha components as this color.</returns>
-    public ColorRgba ChangeBlue(int amount) => new(R, G, Clamp((int)B + amount), A);
+    public ColorRgba ChangeBlue(int amount) => new(R, G, Clamp(B + amount), A);
     #endregion
 
     #region Conversion
@@ -537,12 +537,11 @@ public readonly struct ColorRgba : IEquatable<ColorRgba>
      
         float h = 0; // default to black
         float s = 0;
-        float l = 0;
         v = Math.Max(r,g);
         v = Math.Max(v,b);
         m = Math.Min(r,g);
         m = Math.Min(m,b);
-        l = (m + v) / 2.0f;
+        float l = (m + v) / 2.0f;
         if (l <= 0.0)
         {
             return new ColorHsl(h,s,l);
