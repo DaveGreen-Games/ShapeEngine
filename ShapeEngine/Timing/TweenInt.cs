@@ -1,3 +1,4 @@
+using ShapeEngine.Core;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Timing;

@@ -1,3 +1,4 @@
+using ShapeEngine.Core;
 using ShapeEngine.StaticLib;
 using ShapeEngine.Timing;
 
