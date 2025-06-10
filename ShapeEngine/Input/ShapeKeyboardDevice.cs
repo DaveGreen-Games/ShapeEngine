@@ -3,24 +3,47 @@ using Raylib_cs;
 
 namespace ShapeEngine.Input;
 
-
+/// <summary>
+/// Represents a keyboard input device, providing access to keyboard buttons, state tracking,
+/// character input, and utility methods for keyboard input.
+/// </summary>
 public sealed class ShapeKeyboardDevice : ShapeInputDevice
 {
+    /// <summary>
+    /// All available Raylib keyboard keys.
+    /// </summary>
     public static readonly KeyboardKey[] AllKeyboardKeys = Enum.GetValues<KeyboardKey>();
+    /// <summary>
+    /// All available Shape keyboard buttons.
+    /// </summary>
     public static readonly ShapeKeyboardButton[] AllShapeKeyboardButtons = Enum.GetValues<ShapeKeyboardButton>();
 
-    private bool wasUsed = false;
-    private bool isLocked = false;
+    private bool wasUsed;
+    private bool isLocked;
 
-    public readonly List<char> UsedCharacters = new();
-    public readonly List<ShapeKeyboardButton> UsedButtons = new();
+    /// <summary>
+    /// List of characters entered since the last update.
+    /// </summary>
+    public readonly List<char> UsedCharacters = [];
+    /// <summary>
+    /// List of keyboard buttons pressed since the last update.
+    /// </summary>
+    public readonly List<ShapeKeyboardButton> UsedButtons = [];
     
     private readonly Dictionary<ShapeKeyboardButton, InputState> buttonStates = new(AllShapeKeyboardButtons.Length);
 
+    /// <summary>
+    /// Event triggered when a keyboard button is pressed.
+    /// </summary>
     public event Action<ShapeKeyboardButton>? OnButtonPressed;
+    /// <summary>
+    /// Event triggered when a keyboard button is released.
+    /// </summary>
     public event Action<ShapeKeyboardButton>? OnButtonReleased;
     
-    
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ShapeKeyboardDevice"/> class.
+    /// </summary>
     internal ShapeKeyboardDevice()
     {
         foreach (var button in AllShapeKeyboardButtons)
@@ -29,20 +52,35 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
         }
     }
     
+    /// <summary>
+    /// Returns whether the keyboard device is currently locked.
+    /// </summary>
     public bool IsLocked() => isLocked;
 
+    /// <summary>
+    /// Locks the keyboard device, preventing input from being registered.
+    /// </summary>
     public void Lock()
     {
         isLocked = true;
     }
 
+    /// <summary>
+    /// Unlocks the keyboard device, allowing input to be registered.
+    /// </summary>
     public void Unlock()
     {
         isLocked = false;
     }
     
+    /// <summary>
+    /// Returns whether the keyboard was used in the last update.
+    /// </summary>
     public bool WasUsed() => wasUsed;
     
+    /// <summary>
+    /// Updates the keyboard device state, including button states and character input.
+    /// </summary>
     public void Update()
     {
         UpdateButtonStates();
@@ -64,61 +102,55 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
         }
         
         wasUsed = WasKeyboardUsed();
-        // foreach (var buttonStatePair in buttonStates)
-        // {
-        //     var previous = buttonStatePair.Value;
-        //     var current = GetCurrentButtonState(buttonStatePair.Key);
-        //     buttonStates[buttonStatePair.Key] = new InputState(previous, current);
-        // }
     }
     
+    /// <summary>
+    /// Calibrates the keyboard device. (Currently not implemented.)
+    /// </summary>
     public void Calibrate(){}
     
+    /// <summary>
+    /// Gets the current input state for the specified keyboard button.
+    /// </summary>
     public InputState GetButtonState(ShapeKeyboardButton button) => buttonStates[button];
     
+    /// <summary>
+    /// Gets the list of characters entered since the last update.
+    /// </summary>
+    /// <returns>List of entered characters.</returns>
     public List<char> GetStreamChar()
     {
         if (isLocked) return new List<char>();
         return UsedCharacters.ToList();
-        // int unicode = Raylib.GetCharPressed();
-        // List<char> chars = new();
-        // while (unicode != 0)
-        // {
-        //     var c = (char)unicode;
-        //     chars.Add(c);
-        //
-        //     unicode = Raylib.GetCharPressed();
-        // }
-        // return chars;
     }
+    /// <summary>
+    /// Gets the string of characters entered since the last update.
+    /// </summary>
+    /// <returns>String of entered characters.</returns>
     public string GetStream()
     {
         if (isLocked) return string.Empty;
         return new string(UsedCharacters.ToArray());
-        // int unicode = Raylib.GetCharPressed();
-        // List<char> chars = new();
-        // while (unicode != 0)
-        // {
-        //     var c = (char)unicode;
-        //     chars.Add(c);
-        //
-        //     unicode = Raylib.GetCharPressed();
-        // }
-        // return new string(chars.ToArray());
     }
+    /// <summary>
+    /// Appends the entered characters to the current text.
+    /// </summary>
+    /// <param name="curText">Current text.</param>
+    /// <returns>Updated text with entered characters appended.</returns>
     public string GetStream(string curText)
     {
-        if (isLocked) return curText;;
+        if (isLocked) return curText;
         var b = new StringBuilder(UsedCharacters.Count + curText.Length);
         b.Append(curText);
         b.Append( new string(UsedCharacters.ToArray()) );
         return b.ToString();
-        // var chars = GetStreamChar();
-        // var b = new StringBuilder(chars.Count + curText.Length);
-        // b.Append(curText);
-        // b.Append( new string(chars.ToArray()) );
-        // return b.ToString();
     }
+    /// <summary>
+    /// Inserts entered characters into the current text at the specified caret index.
+    /// </summary>
+    /// <param name="curText">Current text.</param>
+    /// <param name="caretIndex">Caret index for insertion.</param>
+    /// <returns>Tuple of updated text and new caret index.</returns>
     public (string text, int caretIndex) GetStream(string curText, int caretIndex)
     {
         if (isLocked) return (curText, caretIndex);
@@ -135,28 +167,16 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
             caretIndex++;
         }
         return (new string(characters.ToArray()), caretIndex);
-        
-        
-        // var characters = curText.ToList();
-        // int unicode = Raylib.GetCharPressed();
-        // while (unicode != 0)
-        // {
-        //     var c = (char)unicode;
-        //     if (caretIndex < 0 || caretIndex >= characters.Count) characters.Add(c);
-        //     else
-        //     {
-        //         characters.Insert(caretIndex, c);
-        //
-        //     }
-        //     caretIndex++;
-        //     unicode = Raylib.GetCharPressed();
-        // }
-        //
-        // return (new string(characters.ToArray()), caretIndex);
     }
 
-    private bool WasKeyboardUsed() => !isLocked && UsedButtons.Count > 0;// Raylib.GetKeyPressed() > 0;
+    /// <summary>
+    /// Determines if the keyboard was used based on button presses.
+    /// </summary>
+    private bool WasKeyboardUsed() => !isLocked && UsedButtons.Count > 0;
 
+    /// <summary>
+    /// Updates the states of all keyboard buttons.
+    /// </summary>
     private void UpdateButtonStates()
     {
         foreach (var state in buttonStates)
@@ -173,10 +193,14 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
         }
     }
 
-
-    
     #region Button
 
+    /// <summary>
+    /// Gets the display name for a keyboard button.
+    /// </summary>
+    /// <param name="button">The keyboard button.</param>
+    /// <param name="shortHand">Whether to use shorthand notation.</param>
+    /// <returns>The button name.</returns>
     public static string GetButtonName(ShapeKeyboardButton button, bool shortHand = true)
     {
         switch (button)
@@ -294,62 +318,70 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
             default: return "No Key";
         }
     }
+    /// <summary>
+    /// Checks if a modifier keyboard button is active, optionally reversing the logic.
+    /// </summary>
     public bool IsModifierActive(ShapeKeyboardButton modifierKey, bool reverseModifier)
     {
         return IsDown(modifierKey) != reverseModifier;
     }
+    /// <summary>
+    /// Determines if the specified keyboard button is "down" with modifier keys.
+    /// </summary>
     public bool IsDown(ShapeKeyboardButton button, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         return GetValue(button, modifierOperator, modifierKeys) != 0f;
     }
+    /// <summary>
+    /// Determines if the specified keyboard button is "down".
+    /// </summary>
     public bool IsDown(ShapeKeyboardButton button)
     {
         return GetValue(button) != 0f;
     }
-    
+    /// <summary>
+    /// Gets the value of the specified keyboard button, considering modifier keys.
+    /// </summary>
     public float GetValue(ShapeKeyboardButton button, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         if (isLocked) return 0f;
         bool modifierActive = IModifierKey.IsActive(modifierOperator, modifierKeys, null);
         return (modifierActive && Raylib.IsKeyDown((KeyboardKey)button)) ? 1f : 0f;
     }
+    /// <summary>
+    /// Gets the value of the specified keyboard button.
+    /// </summary>
     public float GetValue(ShapeKeyboardButton button)
     {
         if (isLocked) return 0f;
         return Raylib.IsKeyDown((KeyboardKey)button) ? 1f : 0f;
     }
-
-    
-    // /// <summary>
-    // /// This function takes the button state from last frame into account.
-    // /// </summary>
-    // /// <param name="button"></param>
-    // /// <returns> Returns the current button state for the specified keyboard button. </returns>
-    // public InputState GetCurrentButtonState(ShapeKeyboardButton button)
-    // {
-    //     if (!buttonStates.ContainsKey(button))
-    //     {
-    //         buttonStates.Add(button, GetState(button));
-    //         return new();
-    //     }
-    //
-    //     return buttonStates[button];
-    // }
-    //
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified keyboard button.
+    /// </summary>
     public InputState CreateInputState(ShapeKeyboardButton button)
     {
         bool down = IsDown(button);
         return new(down, !down, down ? 1f : 0f, -1, InputDeviceType.Keyboard);
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified keyboard button with modifier keys.
+    /// </summary>
     public InputState CreateInputState(ShapeKeyboardButton button, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         bool down = IsDown(button, modifierOperator, modifierKeys);
         return new(down, !down, down ? 1f : 0f, -1, InputDeviceType.Keyboard);
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified keyboard button, using a previous state and modifier keys.
+    /// </summary>
     public InputState CreateInputState(ShapeKeyboardButton button, InputState previousState, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         return new(previousState, CreateInputState(button, modifierOperator, modifierKeys));
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified keyboard button, using a previous state.
+    /// </summary>
     public InputState CreateInputState(ShapeKeyboardButton button, InputState previousState)
     {
         return new(previousState, CreateInputState(button));
@@ -359,6 +391,16 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
     
     #region Button Axis
 
+    /// <summary>
+    /// Gets the display name for a button axis (negative and positive button pair).
+    /// </summary>
+    /// <remarks>
+    /// Format: "NegButtonName|PosButtonName" (e\.g\., "A|D" or "Left|Right"\)
+    /// </remarks>
+    /// <param name="neg">Negative direction button.</param>
+    /// <param name="pos">Positive direction button.</param>
+    /// <param name="shorthand">Whether to use shorthand notation.</param>
+    /// <returns>The button axis name.</returns>
     public static string GetButtonAxisName(ShapeKeyboardButton neg, ShapeKeyboardButton pos, bool shorthand = true)
     {
         StringBuilder sb = new();
@@ -370,16 +412,24 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
         sb.Append(posName);
         return sb.ToString();
     }
-    
+    /// <summary>
+    /// Determines if the button axis (negative/positive) is "down" with modifier keys.
+    /// </summary>
     public bool IsDown(ShapeKeyboardButton neg, ShapeKeyboardButton pos, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         return GetValue(neg, pos, modifierOperator, modifierKeys) != 0f;
     }
+    /// <summary>
+    /// Determines if the button axis (negative/positive) is "down".
+    /// </summary>
     public bool IsDown(ShapeKeyboardButton neg, ShapeKeyboardButton pos)
     {
         return GetValue(neg, pos) != 0f;
     }
 
+    /// <summary>
+    /// Gets the value of the button axis (negative/positive), considering modifier keys.
+    /// </summary>
     public float GetValue(ShapeKeyboardButton neg, ShapeKeyboardButton pos, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         if (isLocked) return 0f;
@@ -387,6 +437,9 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
         
         return GetValue(neg, pos);
     }
+    /// <summary>
+    /// Gets the value of the button axis (negative/positive).
+    /// </summary>
     public float GetValue(ShapeKeyboardButton neg, ShapeKeyboardButton pos)
     {
         if (isLocked) return 0f;
@@ -395,23 +448,35 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
         return vPositive - vNegative;
     }
     
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the button axis (negative/positive) with modifier keys.
+    /// </summary>
     public InputState CreateInputState(ShapeKeyboardButton neg, ShapeKeyboardButton pos, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         float axis = GetValue(neg, pos, modifierOperator, modifierKeys);
         bool down = axis != 0f;
         return new(down, !down, axis, -1, InputDeviceType.Keyboard);
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the button axis (negative/positive), using a previous state and modifier keys.
+    /// </summary>
     public InputState CreateInputState(ShapeKeyboardButton neg, ShapeKeyboardButton pos,
         InputState previousState, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         return new(previousState, CreateInputState(neg, pos, modifierOperator, modifierKeys));
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the button axis (negative/positive).
+    /// </summary>
     public InputState CreateInputState(ShapeKeyboardButton neg, ShapeKeyboardButton pos)
     {
         float axis = GetValue(neg, pos);
         bool down = axis != 0f;
         return new(down, !down, axis, -1, InputDeviceType.Keyboard);
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the button axis (negative/positive), using a previous state.
+    /// </summary>
     public InputState CreateInputState(ShapeKeyboardButton neg, ShapeKeyboardButton pos, InputState previousState)
     {
         return new(previousState, CreateInputState(neg, pos));

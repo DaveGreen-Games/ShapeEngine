@@ -3,20 +3,43 @@ using Raylib_cs;
 
 namespace ShapeEngine.Input;
 
+/// <summary>
+/// Represents a gamepad input device, providing access to gamepad buttons and axes,
+/// state tracking, calibration, and utility methods for gamepad input.
+/// </summary>
 public sealed class ShapeGamepadDevice : ShapeInputDevice
 {
+    /// <summary>
+    /// Represents the minimum and maximum values for a gamepad axis, used for calibration.
+    /// </summary>
     private readonly struct AxisRange
     {
+        /// <summary>
+        /// The minimum value recorded for the axis.
+        /// </summary>
         public readonly float Minimum;
+        /// <summary>
+        /// The maximum value recorded for the axis.
+        /// </summary>
         public readonly float Maximum;
 
+        /// <summary>
+        /// The total range between minimum and maximum.
+        /// </summary>
         public float TotalRange => MathF.Abs(Maximum - Minimum);
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AxisRange"/> struct.
+        /// </summary>
         public AxisRange(float minimum, float maximum)
         {
             Minimum = minimum;
             Maximum = maximum;
         }
 
+        /// <summary>
+        /// Updates the axis range with a new value.
+        /// </summary>
         public AxisRange UpdateRange(float newValue)
         {
             if (newValue < Minimum) return new(newValue, Maximum);
@@ -25,42 +48,87 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
         }
     }
     
-    
+    /// <summary>
+    /// All available Raylib gamepad buttons.
+    /// </summary>
     public static readonly GamepadButton[] AllGamepadButtons = Enum.GetValues<GamepadButton>();
+    /// <summary>
+    /// All available Raylib gamepad axes.
+    /// </summary>
     public static readonly GamepadAxis[] AllGamepadAxis = Enum.GetValues<GamepadAxis>();
-    
+    /// <summary>
+    /// All available Shape gamepad buttons.
+    /// </summary>
     public static readonly ShapeGamepadButton[] AllShapeGamepadButtons = Enum.GetValues<ShapeGamepadButton>();
+    /// <summary>
+    /// All available Shape gamepad axes.
+    /// </summary>
     public static readonly ShapeGamepadAxis[] AllShapeGamepadAxis = Enum.GetValues<ShapeGamepadAxis>();
-    
     
     private readonly Dictionary<ShapeGamepadButton, InputState> buttonStates = new (AllShapeGamepadButtons.Length);
     private readonly Dictionary<ShapeGamepadAxis, InputState> axisStates = new (AllShapeGamepadAxis.Length);
-    
+
+    /// <summary>
+    /// Event triggered when a gamepad button is pressed.
+    /// </summary>
     public event Action<ShapeGamepadDevice, ShapeGamepadButton>? OnButtonPressed;
+    /// <summary>
+    /// Event triggered when a gamepad button is released.
+    /// </summary>
     public event Action<ShapeGamepadDevice, ShapeGamepadButton>? OnButtonReleased;
 
+    /// <summary>
+    /// The index of this gamepad device.
+    /// </summary>
     public readonly int Index;
     
+    /// <summary>
+    /// Gets whether this gamepad is available for use.
+    /// </summary>
     public bool Available { get; private set; } = true;
+    /// <summary>
+    /// Gets whether this gamepad is currently connected.
+    /// </summary>
     public bool Connected { get; private set; }
 
+    /// <summary>
+    /// The name of the gamepad device.
+    /// </summary>
     public string Name { get; private set; } = "No Device";
-    public int AxisCount { get; private set; } = 0;
+    /// <summary>
+    /// The number of axes supported by this gamepad.
+    /// </summary>
+    public int AxisCount { get; private set; }
 
-    private bool isLocked = false;
-    private bool wasUsed  = false;
+    private bool isLocked;
+    private bool wasUsed;
     
+    /// <summary>
+    /// List of gamepad buttons used since the last update.
+    /// </summary>
     public readonly List<ShapeGamepadButton> UsedButtons = new();
+    /// <summary>
+    /// List of gamepad axes used since the last update.
+    /// </summary>
     public readonly List<ShapeGamepadAxis> UsedAxis = new();
     
+    /// <summary>
+    /// Event triggered when the connection state changes.
+    /// </summary>
     public event Action? OnConnectionChanged;
+    /// <summary>
+    /// Event triggered when the availability state changes.
+    /// </summary>
     public event Action? OnAvailabilityChanged;
 
-    // private bool triggerFix = false;
     private readonly Dictionary<ShapeGamepadAxis, float> axisZeroCalibration = new();
-    // public Func<float, float>? AxisValueCalibrator = null; 
     private Dictionary<ShapeGamepadAxis, AxisRange> axisRanges = new();
     
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ShapeGamepadDevice"/> class.
+    /// </summary>
+    /// <param name="index">The gamepad index.</param>
+    /// <param name="connected">Whether the gamepad is initially connected.</param>
     public ShapeGamepadDevice(int index, bool connected)
     {
         Index = index;
@@ -89,21 +157,43 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
         
     }
 
+    /// <summary>
+    /// Gets the current input state for the specified gamepad button.
+    /// </summary>
     public InputState GetButtonState(ShapeGamepadButton button) => buttonStates[button];
+    /// <summary>
+    /// Gets the current input state for the specified gamepad axis.
+    /// </summary>
     public InputState GetAxisState(ShapeGamepadAxis axis) => axisStates[axis];
     
+    /// <summary>
+    /// Returns whether the gamepad was used in the last update.
+    /// </summary>
     public bool WasUsed() => wasUsed;
+    /// <summary>
+    /// Returns whether the gamepad device is currently locked.
+    /// </summary>
     public bool IsLocked() => isLocked;
 
+    /// <summary>
+    /// Locks the gamepad device, preventing input from being registered.
+    /// </summary>
     public void Lock()
     {
         isLocked = true;
     }
 
+    /// <summary>
+    /// Unlocks the gamepad device, allowing input to be registered.
+    /// </summary>
     public void Unlock()
     {
         isLocked = false;
     }
+
+    /// <summary>
+    /// Updates the gamepad device state, including button and axis states.
+    /// </summary>
     public void Update()
     {
         UpdateButtonStates();
@@ -122,6 +212,9 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
         if(usedAxis.Count > 0) UsedAxis.AddRange(usedAxis);
     }
     
+    /// <summary>
+    /// Marks the gamepad as connected and calibrates its axes.
+    /// </summary>
     public void Connect()
     {
         if (Connected) return;
@@ -138,12 +231,19 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
         
         Calibrate();
     }
+    /// <summary>
+    /// Marks the gamepad as disconnected.
+    /// </summary>
     public void Disconnect()
     {
         if (!Connected) return;
         Connected = false;
         OnConnectionChanged?.Invoke();
     }
+    /// <summary>
+    /// Claims the gamepad for use, marking it as unavailable.
+    /// </summary>
+    /// <returns>True if successfully claimed, otherwise false.</returns>
     public bool Claim()
     {
         if (!Connected || !Available) return false;
@@ -151,6 +251,10 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
         OnAvailabilityChanged?.Invoke();
         return true;
     }
+    /// <summary>
+    /// Frees the gamepad, marking it as available.
+    /// </summary>
+    /// <returns>True if successfully freed, otherwise false.</returns>
     public bool Free()
     {
         if (Available) return false;
@@ -159,6 +263,9 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
         return true;
     }
 
+    /// <summary>
+    /// Calibrates the gamepad axes by recording their current zero positions.
+    /// </summary>
     public void Calibrate()
     {
         float leftX = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.LeftX);
@@ -181,6 +288,9 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
 
     }
     
+    /// <summary>
+    /// Updates the states of all gamepad buttons.
+    /// </summary>
     private void UpdateButtonStates()
     {
         foreach (var state in buttonStates)
@@ -197,6 +307,9 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
         }
     }
 
+    /// <summary>
+    /// Updates the states of all gamepad axes.
+    /// </summary>
     private void UpdateAxisStates()
     {
         foreach (var state in axisStates)
@@ -211,25 +324,40 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
 
     #region Button
 
+    /// <summary>
+    /// Checks if a modifier gamepad button is active, optionally reversing the logic.
+    /// </summary>
     public bool IsModifierActive(ShapeGamepadButton modifierKey, bool reverseModifier)
     {
         return IsDown(modifierKey) != reverseModifier;
     }
+    /// <summary>
+    /// Determines if the specified gamepad button is "down" with deadzone and modifier keys.
+    /// </summary>
     public bool IsDown(ShapeGamepadButton button, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         return GetValue(button, deadzone, modifierOperator, modifierKeys) != 0f;
     }
+    /// <summary>
+    /// Determines if the specified gamepad button is "down".
+    /// </summary>
     public bool IsDown(ShapeGamepadButton button, float deadzone = 0.1f)
     {
         return GetValue(button, deadzone) != 0f;
     }
 
+    /// <summary>
+    /// Gets the value of the specified gamepad button, considering deadzone and modifier keys.
+    /// </summary>
     public float GetValue(ShapeGamepadButton button, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         if (Index < 0 || isLocked || !Connected) return 0f;
         if (!IModifierKey.IsActive(modifierOperator, modifierKeys, this)) return 0f;
         return GetValue(button, deadzone);
     }
+    /// <summary>
+    /// Gets the value of the specified gamepad button, considering deadzone.
+    /// </summary>
     public float GetValue(ShapeGamepadButton button, float deadzone = 0.1f)
     {
         if (Index < 0 || isLocked || !Connected) return 0f;
@@ -254,24 +382,42 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
         return Raylib.IsGamepadButtonDown(Index, (GamepadButton)id) ? 1f : 0f;
     }
     
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified gamepad button.
+    /// </summary>
     public InputState CreateInputState(ShapeGamepadButton button, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         bool down = IsDown(button, deadzone, modifierOperator, modifierKeys);
         return new(down, !down, down ? 1f : 0f, Index, InputDeviceType.Gamepad);
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified gamepad button, using a previous state.
+    /// </summary>
     public InputState CreateInputState(ShapeGamepadButton button, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         return new(previousState, CreateInputState(button, deadzone, modifierOperator, modifierKeys));
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified gamepad button.
+    /// </summary>
     public InputState CreateInputState(ShapeGamepadButton button, float deadzone = 0.1f)
     {
         bool down = IsDown(button, deadzone);
         return new(down, !down, down ? 1f : 0f, Index, InputDeviceType.Gamepad);
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified gamepad button, using a previous state.
+    /// </summary>
     public InputState CreateInputState(ShapeGamepadButton button, InputState previousState, float deadzone = 0.1f)
     {
         return new(previousState, CreateInputState(button, deadzone));
     }
+    /// <summary>
+    /// Gets the display name for a gamepad button.
+    /// </summary>
+    /// <param name="button">The gamepad button.</param>
+    /// <param name="shortHand">Whether to use shorthand notation.</param>
+    /// <returns>The button name.</returns>
     public static string GetButtonName(ShapeGamepadButton button, bool shortHand = true)
     {
         switch (button)
@@ -310,15 +456,25 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
     #endregion
     
     #region Axis
+
+    /// <summary>
+    /// Determines if the specified gamepad axis is "down" with deadzone and modifier keys.
+    /// </summary>
     public bool IsDown(ShapeGamepadAxis axis, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         return GetValue(axis, deadzone, modifierOperator, modifierKeys) != 0f;
     }
+    /// <summary>
+    /// Determines if the specified gamepad axis is "down".
+    /// </summary>
     public bool IsDown(ShapeGamepadAxis axis, float deadzone)
     {
         return GetValue(axis, deadzone) != 0f;
     }
 
+    /// <summary>
+    /// Gets the value of the specified gamepad axis, considering deadzone and modifier keys.
+    /// </summary>
     public float GetValue(ShapeGamepadAxis axis, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         if (Index < 0 || isLocked || !Connected) return 0f;
@@ -326,42 +482,35 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
 
         return GetValue(axis, deadzone);
     }
+    /// <summary>
+    /// Gets the value of the specified gamepad axis, considering deadzone.
+    /// </summary>
     public float GetValue(ShapeGamepadAxis axis, float deadzone)
     {
-        // if (Index < 0 || isLocked || !Connected) return 0f;
-        // float value = GetGamepadAxisMovement(Index, (int)axis);
-        // if (axis is ShapeGamepadAxis.LEFT_TRIGGER or ShapeGamepadAxis.RIGHT_TRIGGER)
-        // {
-        //     value = (value + 1f) / 2f;
-        // }
-        // return MathF.Abs(value) < deadzone ? 0f : value;
         
         if (!Connected || Index < 0 || isLocked) return 0f;
         var value = GetValue(axis);
         return MathF.Abs(value) < deadzone ? 0f : value;
     }
+    /// <summary>
+    /// Gets the value of the specified gamepad axis.
+    /// </summary>
     public float GetValue(ShapeGamepadAxis axis)
     {
         if (!Connected || Index < 0 || isLocked) return 0f;
         
         float value = Raylib.GetGamepadAxisMovement(Index, (GamepadAxis)axis);
-        // if(axis == ShapeGamepadAxis.RIGHT_TRIGGER) Console.WriteLine($"Axis Movement {value} | Calibration Value: {axisCalibrationValues[axis]} | Final value: {value - axisCalibrationValues[axis]}");
-
+        
         var calibrationValue = axisZeroCalibration[axis];
         value -= calibrationValue;
         value = CalibrateAxis(value, axis);
         
-        // if (calibrationValue != 0f)
-        // {
-        //     value -= axisZeroCalibration[axis];
-        //     if (axis == ShapeGamepadAxis.LEFT_TRIGGER || axis == ShapeGamepadAxis.RIGHT_TRIGGER) value /= 2f;
-        // }
-        
         return value;
-        
-        
     }
 
+    /// <summary>
+    /// Calibrates and normalizes the axis value based on its range.
+    /// </summary>
     private float CalibrateAxis(float value, ShapeGamepadAxis axis)
     {
         if (axisRanges.TryGetValue(axis, out var range))
@@ -385,26 +534,44 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
         
         return value;
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified gamepad axis.
+    /// </summary>
     public InputState CreateInputState(ShapeGamepadAxis axis, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         float axisValue = GetValue(axis, deadzone, modifierOperator, modifierKeys);
         bool down = axisValue != 0f;
         return new(down, !down, axisValue, Index, InputDeviceType.Gamepad);
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified gamepad axis, using a previous state.
+    /// </summary>
     public InputState CreateInputState(ShapeGamepadAxis axis, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         return new(previousState, CreateInputState(axis, deadzone, modifierOperator, modifierKeys));
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified gamepad axis.
+    /// </summary>
     public InputState CreateInputState(ShapeGamepadAxis axis, float deadzone = 0.1f)
     {
         float axisValue = GetValue(axis, deadzone);
         bool down = axisValue != 0f;
         return new(down, !down, axisValue, Index, InputDeviceType.Gamepad);
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified gamepad axis, using a previous state.
+    /// </summary>
     public InputState CreateInputState(ShapeGamepadAxis axis, InputState previousState, float deadzone = 0.1f)
     {
         return new(previousState, CreateInputState(axis, deadzone));
     }
+    /// <summary>
+    /// Gets the display name for a gamepad axis.
+    /// </summary>
+    /// <param name="axis">The gamepad axis.</param>
+    /// <param name="shortHand">Whether to use shorthand notation.</param>
+    /// <returns>The axis name.</returns>
     public static string GetAxisName(ShapeGamepadAxis axis, bool shortHand = true)
     {
         switch (axis)
@@ -423,6 +590,17 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
     #endregion
 
     #region Button Axis
+
+    /// <summary>
+    /// Gets the display name for a button axis (negative and positive button pair).
+    /// </summary>
+    /// /// <remarks>
+    /// Format: "NegButtonName|PosButtonName" (e\.g\., "A|D" or "Left|Right"\)
+    /// </remarks>
+    /// <param name="neg">Negative direction button.</param>
+    /// <param name="pos">Positive direction button.</param>
+    /// <param name="shorthand">Whether to use shorthand notation.</param>
+    /// <returns>The button axis name.</returns>
     public static string GetButtonAxisName(ShapeGamepadButton neg, ShapeGamepadButton pos, bool shorthand = true)
     {
         StringBuilder sb = new();
@@ -435,21 +613,33 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
         return sb.ToString();
     }
     
+    /// <summary>
+    /// Determines if the button axis (negative/positive) is "down" with deadzone and modifier keys.
+    /// </summary>
     public bool IsDown(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         return GetValue(neg, pos, deadzone, modifierOperator, modifierKeys) != 0f;
     }
+    /// <summary>
+    /// Determines if the button axis (negative/positive) is "down".
+    /// </summary>
     public bool IsDown(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = 0.1f)
     {
         return GetValue(neg, pos, deadzone) != 0f;
     }
 
+    /// <summary>
+    /// Gets the value of the button axis (negative/positive), considering deadzone and modifier keys.
+    /// </summary>
     public float GetValue(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         if (Index < 0 || isLocked || !Connected) return 0f;
         if (!IModifierKey.IsActive(modifierOperator, modifierKeys, this)) return 0f;
         return GetValue(neg, pos, deadzone);
     }
+    /// <summary>
+    /// Gets the value of the button axis (negative/positive), considering deadzone.
+    /// </summary>
     public float GetValue(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = 0.1f)
     {
         if (Index < 0 || isLocked || !Connected) return 0f;
@@ -458,22 +648,34 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
         return vPositive - vNegative;
     }
     
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the button axis (negative/positive).
+    /// </summary>
     public InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         float axis = GetValue(neg, pos, deadzone, modifierOperator, modifierKeys);
         bool down = axis != 0f;
         return new(down, !down, axis, Index, InputDeviceType.Gamepad);
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the button axis (negative/positive), using a previous state.
+    /// </summary>
     public InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         return new(previousState, CreateInputState(neg, pos, deadzone, modifierOperator, modifierKeys));
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the button axis (negative/positive).
+    /// </summary>
     public InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = 0.1f)
     {
         float axis = GetValue(neg, pos, deadzone);
         bool down = axis != 0f;
         return new(down, !down, axis, Index, InputDeviceType.Gamepad);
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the button axis (negative/positive), using a previous state.
+    /// </summary>
     public InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, InputState previousState, float deadzone = 0.2f)
     {
         return new(previousState, CreateInputState(neg, pos, deadzone));
@@ -483,11 +685,6 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
 
     #region Used
 
-    // public bool WasGamepadUsed(float deadzone = 0f)
-    // {
-    //     if (!Connected || Index < 0) return false;
-    //     return WasGamepadButtonUsed() || WasGamepadAxisUsed(deadzone);
-    // }
     private bool WasGamepadButtonUsed()
     {
         if (!Connected || Index < 0 || isLocked) return false;
