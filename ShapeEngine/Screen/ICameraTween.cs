@@ -6,6 +6,9 @@ namespace ShapeEngine.Screen
     /// <summary>
     /// Represents a tween operation for a camera, providing offset, rotation, and zoom factor values.
     /// </summary>
+    /// <remarks>
+    /// Implement this interface to define custom camera tweening behaviors for smooth transitions and effects.
+    /// </remarks>
     public interface ICameraTween : ISequenceable
     {
         /// <summary>

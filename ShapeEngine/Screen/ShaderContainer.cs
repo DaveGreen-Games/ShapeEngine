@@ -1,8 +1,11 @@
 namespace ShapeEngine.Screen;
 
 /// <summary>
-/// Container for managing a collection of ShapeShader objects.
+/// Container for managing a collection of <see cref="ShapeShader"/> objects.
 /// </summary>
+/// <remarks>
+/// Provides methods to add, remove, retrieve, and query shaders, as well as to get all active shaders in sorted order.
+/// </remarks>
 public class ShaderContainer
 {
     private readonly Dictionary<uint, ShapeShader> shaders = new();
@@ -30,8 +33,7 @@ public class ShaderContainer
     /// <returns>The ID of the added or updated shader.</returns>
     public uint Add(ShapeShader shader)
     {
-        if (shaders.ContainsKey(shader.ID)) shaders[shader.ID] = shader;
-        else shaders.Add(shader.ID, shader);
+        shaders[shader.ID] = shader;
         return shader.ID;
     }
 
@@ -77,7 +79,7 @@ public class ShaderContainer
     public bool HasShader(ShapeShader shader) => shaders.ContainsKey(shader.ID);
     
     /// <summary>
-    /// Gets all enabled shaders sorted in ascending (lowest first) order by their Order property.
+    /// Gets all enabled shaders sorted in ascending (lowest first) order by their <see cref="ShapeShader.Order"/> property.
     /// </summary>
     /// <returns>A sorted list of all enabled shaders.</returns>
     public List<ShapeShader> GetActiveShaders()

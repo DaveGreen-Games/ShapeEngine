@@ -59,7 +59,7 @@ public sealed class ShapeCamera
     /// <summary>
     /// Total rotation (degrees) from tweens this update.
     /// </summary>
-    private float cameraTweenTotalRotationDeg = 0f;
+    private float cameraTweenTotalRotationDeg;
     /// <summary>
     /// Total zoom factor from tweens this update.
     /// </summary>
@@ -156,7 +156,7 @@ public sealed class ShapeCamera
     /// <summary>
     /// Current camera rotation in degrees.
     /// </summary>
-    public float RotationDeg { get; private set; } = 0f;
+    public float RotationDeg { get; private set; }
 
     /// <summary>
     /// Base zoom level before shake/tween.

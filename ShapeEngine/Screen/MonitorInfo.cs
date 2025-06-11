@@ -6,6 +6,9 @@ namespace ShapeEngine.Screen;
 /// <summary>
 /// Represents information about a monitor, including its name, dimensions, refresh rate, index, and position.
 /// </summary>
+/// <remarks>
+/// This struct is used to encapsulate all relevant information about a display monitor, such as its availability, name, size, refresh rate, index, and position in screen coordinates.
+/// </remarks>
 public struct MonitorInfo
 {
     /// <summary>
@@ -24,12 +27,12 @@ public struct MonitorInfo
     public Dimensions Dimensions = new();
 
     /// <summary>
-    /// The refresh rate of the monitor.
+    /// The refresh rate of the monitor in Hz.
     /// </summary>
     public int Refreshrate = -1;
 
     /// <summary>
-    /// The index of the monitor.
+    /// The index of the monitor in the system's monitor list.
     /// </summary>
     public int Index = -1;
 
@@ -39,12 +42,12 @@ public struct MonitorInfo
     public Vector2 Position = new();
 
     /// <summary>
-    /// Gets the width of the monitor.
+    /// Gets the width of the monitor in pixels.
     /// </summary>
     public int Width { get { return Dimensions.Width; } }
 
     /// <summary>
-    /// Gets the height of the monitor.
+    /// Gets the height of the monitor in pixels.
     /// </summary>
     public int Height { get { return Dimensions.Height; } }
 
@@ -65,11 +68,11 @@ public struct MonitorInfo
     /// Initializes a new instance of the <see cref="MonitorInfo"/> struct with the specified values.
     /// </summary>
     /// <param name="name">The name of the monitor.</param>
-    /// <param name="w">The width of the monitor.</param>
-    /// <param name="h">The height of the monitor.</param>
-    /// <param name="pos">The position of the monitor.</param>
-    /// <param name="refreshrate">The refresh rate of the monitor.</param>
-    /// <param name="index">The index of the monitor.</param>
+    /// <param name="w">The width of the monitor in pixels.</param>
+    /// <param name="h">The height of the monitor in pixels.</param>
+    /// <param name="pos">The position of the monitor in screen coordinates.</param>
+    /// <param name="refreshrate">The refresh rate of the monitor in Hz.</param>
+    /// <param name="index">The index of the monitor in the system's monitor list.</param>
     public MonitorInfo(string name, int w, int h, Vector2 pos, int refreshrate, int index)
     {
         this.Available = true;
@@ -83,6 +86,9 @@ public struct MonitorInfo
     /// <summary>
     /// Writes debug information about the monitor to the console.
     /// </summary>
+    /// <remarks>
+    /// This method outputs the monitor's name, dimensions, index, and refresh rate to the console for debugging purposes.
+    /// </remarks>
     public void WriteDebugInfo()
     {
         Console.WriteLine("---Monitor Info---");

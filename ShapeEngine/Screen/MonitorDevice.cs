@@ -38,17 +38,17 @@ public sealed class MonitorDevice
     /// <summary>
     /// List of all detected monitors.
     /// </summary>
-    private List<MonitorInfo> monitors = new();
+    private List<MonitorInfo> monitors = [];
     
     /// <summary>
     /// Index of the current active monitor.
     /// </summary>
-    private int curIndex = 0;
+    private int curIndex;
     
     /// <summary>
     /// Total number of detected monitors.
     /// </summary>
-    private int monitorCount = 0;
+    private int monitorCount;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MonitorDevice"/> class and populates initial monitor information.
@@ -152,7 +152,7 @@ public sealed class MonitorDevice
                 GenerateInfo();
                 OnMonitorSetupChanged?.Invoke(monitors);
 
-                var monitor = monitors.Find((MonitorInfo mi) => mi.Name == oldMonitor.Name);
+                var monitor = monitors.Find(mi => mi.Name == oldMonitor.Name);
                 if (!monitor.Available) //current monitor was removed
                 {
                     var newMonitor = Get();
