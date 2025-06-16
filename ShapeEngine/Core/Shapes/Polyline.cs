@@ -501,7 +501,7 @@ public class Polyline : Points, IEquatable<Polyline>
             }
             return new(closest, normal.GetPerpendicularRight().Normalize());
         }
-        public new Vector2 GetClosestVertex(Vector2 p, out float disSquared, out int index)
+        public Vector2 GetClosestVertex(Vector2 p, out float disSquared, out int index)
         {
             disSquared = -1;
             index = -1;
@@ -524,7 +524,7 @@ public class Polyline : Points, IEquatable<Polyline>
             }
             return closest;
         }
-        public new Vector2 GetFurthestVertex(Vector2 p, out float disSquared, out int index)
+        public Vector2 GetFurthestVertex(Vector2 p, out float disSquared, out int index)
         {
             disSquared = -1;
             index = -1;
@@ -1794,14 +1794,14 @@ public class Polyline : Points, IEquatable<Polyline>
    
     #endregion
 
-     #region Interpolated Edge Points
+    #region Interpolated Edge Points
 
     /// <summary>
     /// Interpolate the edge(segment) between each pair of points using t and return the new interpolated points.
     /// </summary>
     /// <param name="t">The value t for interpolation. Should be between 0 - 1.</param>
     /// <returns></returns>
-    public new Points? InterpolatedEdgePoints(float t)
+    public Points? InterpolatedEdgePoints(float t)
     {
         if (Count < 2) return null;
 
@@ -1822,7 +1822,7 @@ public class Polyline : Points, IEquatable<Polyline>
     /// <param name="t">The value t for interpolation. Should be between 0 - 1.</param>
     /// <param name="steps">Recursive steps. The amount of times the result of InterpolatedEdgesPoints will be run through InterpolateEdgePoints.</param>
     /// <returns></returns>
-    public new Points? InterpolatedEdgePoints(float t, int steps)
+    public Points? InterpolatedEdgePoints(float t, int steps)
     {
         if (Count < 2) return null;
         if (steps <= 1) return InterpolatedEdgePoints(t);

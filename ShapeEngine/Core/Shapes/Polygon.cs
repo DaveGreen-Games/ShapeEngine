@@ -1,5 +1,4 @@
 ﻿
-using System.Drawing;
 using System.Numerics;
 using Clipper2Lib;
 using ShapeEngine.Core.CollisionSystem;
@@ -766,8 +765,8 @@ namespace ShapeEngine.Core.Shapes
             if (result.Valid && result.DistanceSquared < distanceThreshold * distanceThreshold)
             {
                 var fillShape = Polygon.Generate(result.Self.Point, 7, distanceThreshold, distanceThreshold * 2);
-                UnionShapeSelf(fillShape, FillRule.NonZero);
-                UnionShapeSelf(other, FillRule.NonZero);
+                UnionShapeSelf(fillShape);
+                UnionShapeSelf(other);
             }
 
             return false;
@@ -778,10 +777,10 @@ namespace ShapeEngine.Core.Shapes
             if (result.Valid && result.DistanceSquared < distanceThreshold * distanceThreshold)
             {
                 var fillShape = Polygon.Generate(result.Self.Point, 7, distanceThreshold, distanceThreshold * 2);
-                var clip = ShapeClipper.Union(this, fillShape, FillRule.NonZero);
+                var clip = ShapeClipper.Union(this, fillShape);
                 if (clip.Count > 0)
                 {
-                    clip = ShapeClipper.Union(clip[0].ToPolygon(), other, FillRule.NonZero);
+                    clip = ShapeClipper.Union(clip[0].ToPolygon(), other);
                     if (clip.Count > 0) return clip[0].ToPolygon();
                 }
             }
@@ -843,13 +842,13 @@ namespace ShapeEngine.Core.Shapes
         }
         public Polygons? Split(Segment segment)
         {
-            var result = this.Difference(segment, FillRule.NonZero, 2);
+            var result = this.Difference(segment);
             if (result.Count <= 0) return null;
             return result.ToPolygons();
         }
         public Polygons? Split(Segments segments)
         {
-            var result = this.DifferenceMany(segments, FillRule.NonZero, 2);
+            var result = this.DifferenceMany(segments);
             if (result.Count <= 0) return null;
             return result.ToPolygons();
         }
@@ -1337,7 +1336,7 @@ namespace ShapeEngine.Core.Shapes
             }
             return new(closest, normal.GetPerpendicularRight().Normalize());
         }
-        public new Vector2 GetClosestVertex(Vector2 p, out float disSquared, out int index)
+        public Vector2 GetClosestVertex(Vector2 p, out float disSquared, out int index)
         {
             disSquared = -1;
             index = -1;
@@ -1360,7 +1359,7 @@ namespace ShapeEngine.Core.Shapes
             }
             return closest;
         }
-        public new Vector2 GetFurthestVertex(Vector2 p, out float disSquared, out int index)
+        public Vector2 GetFurthestVertex(Vector2 p, out float disSquared, out int index)
         {
             disSquared = -1;
             index = -1;
@@ -2097,14 +2096,18 @@ namespace ShapeEngine.Core.Shapes
             switch (collider.GetShapeType())
             {
                 case ShapeType.Circle: return ContainsShape(collider.GetCircleShape());
-                case ShapeType.Line: return false;
-                case ShapeType.Ray: return false;
                 case ShapeType.Segment: return ContainsShape(collider.GetSegmentShape());
                 case ShapeType.Triangle: return ContainsShape(collider.GetTriangleShape());
                 case ShapeType.Quad: return ContainsShape(collider.GetQuadShape());
                 case ShapeType.Rect: return ContainsShape(collider.GetRectShape());
                 case ShapeType.Poly: return ContainsShape(collider.GetPolygonShape());
                 case ShapeType.PolyLine: return ContainsShape(collider.GetPolylineShape());
+                
+                case ShapeType.Line:
+                case ShapeType.Ray:
+                case ShapeType.None:
+                default:
+                    break;
             }
 
             return false;
@@ -2120,18 +2123,6 @@ namespace ShapeEngine.Core.Shapes
         public bool ContainsPoint(Vector2 p)
         {
             return ContainsPoint(this, p);
-            // var oddNodes = false;
-            // int num = Count;
-            // int j = num - 1;
-            // for (int i = 0; i < num; i++)
-            // {
-            //     var vi = this[i];
-            //     var vj = this[j];
-            //     if (ContainsPointCheck(vi, vj, p)) oddNodes = !oddNodes;
-            //     j = i;
-            // }
-            //
-            // return oddNodes;
         }
         public bool ContainsSegment(Vector2 segmentStart, Vector2 segmentEnd) => ContainsPolygonSegment(this, segmentStart, segmentEnd);
         public bool ContainsTriangle(Vector2 a, Vector2 b, Vector2 c) => ContainsPolygonTriangle(this, a, b, c);
@@ -2140,75 +2131,18 @@ namespace ShapeEngine.Core.Shapes
         public bool ContainsPoints(Vector2 a, Vector2 b)
         {
             return ContainsPoints(this, a, b);
-            // var oddNodesA = false;
-            // var oddNodesB = false;
-            // int num = Count;
-            // int j = num - 1;
-            // for (var i = 0; i < num; i++)
-            // {
-            //     var vi = this[i];
-            //     var vj = this[j];
-            //     if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
-            //     if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
-            //     
-            //     j = i;
-            // }
-            //
-            // return oddNodesA && oddNodesB;
         }
         public bool ContainsPoints(Vector2 a, Vector2 b, Vector2 c)
         {
             return ContainsPoints(this, a, b, c);
-            // var oddNodesA = false;
-            // var oddNodesB = false;
-            // var oddNodesC = false;
-            // int num = Count;
-            // int j = num - 1;
-            // for (int i = 0; i < num; i++)
-            // {
-            //     var vi = this[i];
-            //     var vj = this[j];
-            //     if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
-            //     if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
-            //     if(ContainsPointCheck(vi, vj, c)) oddNodesC = !oddNodesC;
-            //     
-            //     j = i;
-            // }
-            //
-            // return oddNodesA && oddNodesB && oddNodesC;
         }
         public bool ContainsPoints(Vector2 a, Vector2 b, Vector2 c, Vector2 d)
         {
             return ContainsPoints(this, a, b, c, d);
-            // var oddNodesA = false;
-            // var oddNodesB = false;
-            // var oddNodesC = false;
-            // var oddNodesD = false;
-            // int num = Count;
-            // int j = num - 1;
-            // for (int i = 0; i < num; i++)
-            // {
-            //     var vi = this[i];
-            //     var vj = this[j];
-            //     if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
-            //     if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
-            //     if(ContainsPointCheck(vi, vj, c)) oddNodesC = !oddNodesC;
-            //     if(ContainsPointCheck(vi, vj, d)) oddNodesD = !oddNodesD;
-            //     
-            //     j = i;
-            // }
-            //
-            // return oddNodesA && oddNodesB && oddNodesC && oddNodesD;
         }
         public bool ContainsPoints(Points points)
         {
             return ContainsPoints(this, points);
-            // if (points.Count <= 0) return false;
-            // foreach (var p in points)
-            // {
-            //     if (!ContainsPoint(p)) return false;
-            // }
-            // return true;
         }
         
         #endregion
