@@ -2,6 +2,9 @@ using ShapeEngine.Core.CollisionSystem;
 
 namespace ShapeEngine.Pathfinding;
 
+/// <summary>
+/// Represents an obstacle in the pathfinding system. Inherits from <see cref="IShape"/>.
+/// </summary>
 public interface IPathfinderObstacle : IShape
 {
     /// <summary>
