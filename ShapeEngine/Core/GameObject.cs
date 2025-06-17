@@ -9,8 +9,6 @@ public abstract class GameObject : IUpdateable, IDrawable
 {
     public event Action<GameObject, string?, GameObject?>? OnKilled;
     public event Action<GameObject, string?, GameObject?>? OnRevived;
-    // public event Action<GameObject, SpawnArea>? OnSpawned;
-    // public event Action<GameObject, SpawnArea>? OnDespawned;
     
     
     public Transform2D Transform { get; set; }
@@ -20,7 +18,6 @@ public abstract class GameObject : IUpdateable, IDrawable
     public abstract Rect GetBoundingBox();
 
     public abstract void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui);
-    // public virtual void HandleInput(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
     public virtual void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
     public virtual void InterpolateFixedUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui, float f) { }
 
@@ -56,18 +53,6 @@ public abstract class GameObject : IUpdateable, IDrawable
     /// Is called by the area once a game object is dead.
     /// </summary>
     public virtual void OnDespawned(SpawnArea spawnArea){}
-
-    // /// <summary>
-    // /// Should this object be checked for leaving the bounds of the area?
-    // /// </summary>
-    // /// <returns></returns>
-    // public virtual bool IsCheckingHandlerBounds() => false;
-    // /// <summary>
-    // /// Will be called if the object left the bounds of the area. The BoundingCircle is used for this check.
-    // /// </summary>
-    // /// <param name="info">The info about where the object left the bounds.</param>
-    // public virtual void OnLeftHandlerBounds(BoundsCollisionInfo info){}
-
     
     /// <summary>
     /// Get the bounds of the spawn area this object is in and return if this object should be removed from the spawn area.

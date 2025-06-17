@@ -85,33 +85,3 @@ public abstract class PhysicsObject : GameObject
     #endregion
     
 }
-
-/*
-    //  if (AppliesKineticFriction)
-    // {
-    //     var kineticFrictionForce = ShapePhysics.CalculateKineticFrictionForce(Velocity, FrictionNormal, KineticFrictionCoefficient);
-    //     Velocity += kineticFrictionForce * dt;
-    // }
-    // public bool AppliesStaticFriction => !FrictionNormal.IsSimilar(0f, 0.00000001f) && StaticFrictionCoefficient > 0;
-    // public bool AppliesKineticFriction => !FrictionNormal.IsSimilar(0f, 0.00000001f) && KineticFrictionCoefficient > 0;
-    // /// <summary>
-    // /// Takes effect when an object is not in motion and works against acceleration.
-    // /// 0 or negative values mean no friction.
-    // /// The friction system is simplified and not realistic.
-    // /// It is similar to drag, but it does not scale with the magnitude of velocity.
-    // /// If the velocity is zero, no friction is applied.
-    // /// </summary>
-    // public float StaticFrictionCoefficient { get; set; } = 0f;
-    /// <summary>
-    /// 0 or negative values mean no friction.
-    /// The friction system is simplified and not realistic.
-    /// It is similar to drag, but it does not scale with the magnitude of velocity.
-    /// If the velocity is zero, no friction is applied.
-    /// </summary>
-    public float KineticFrictionCoefficient { get; set; } = 0f;
-    /// <summary>
-    /// Determines the friction force applied to the object.
-    /// A FrictionNormal that is zero applies no friction.
-    /// </summary>
-    public Vector2 FrictionNormal { get; set; } = Vector2.Zero;
-    */

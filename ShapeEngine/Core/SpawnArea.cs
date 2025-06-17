@@ -1,5 +1,4 @@
-﻿using ShapeEngine.StaticLib;
-using ShapeEngine.Core.Shapes;
+﻿using ShapeEngine.Core.Shapes;
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Interfaces;

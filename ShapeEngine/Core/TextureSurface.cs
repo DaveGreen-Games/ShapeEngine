@@ -94,25 +94,3 @@ public class TextureSurface(int width, int height)
     
     #endregion
 }
-
-//
-// public void Draw(Vector2 position,  float rotation, float scale, ColorRgba tint)
-// {
-//     Raylib.DrawTextureEx(renderTexture.Texture, position, rotation, scale, tint.ToRayColor());
-// }
-// public void Draw(Vector2 position, AnchorPoint anchorPoint, float rotationDeg, float scale, ColorRgba tint)
-// {
-//     var targetRect = new Rect(position, Rect.Size * scale, anchorPoint);
-//     Raylib.DrawTextureEx(renderTexture.Texture, targetRect.TopLeft, rotationDeg, scale, tint.ToRayColor());
-// }
-//
-//
-// public void Draw(Rect destination, float rotationDeg, ColorRgba tint)
-// {
-//     Raylib.DrawTexturePro(renderTexture.Texture, Rect.Rectangle, destination.Rectangle, Vector2.Zero, rotationDeg, tint.ToRayColor());
-// }
-//
-// public void Draw(Rect source, Rect destination, float rotationDeg, ColorRgba tint)
-// {
-//     Raylib.DrawTexturePro(renderTexture.Texture, source.Rectangle, destination.Rectangle, Vector2.Zero, rotationDeg, tint.ToRayColor());
-// }
