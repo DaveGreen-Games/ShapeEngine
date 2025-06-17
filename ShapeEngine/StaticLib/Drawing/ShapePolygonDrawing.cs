@@ -716,4 +716,9 @@ public static class ShapePolygonDrawing
 
     }
 
+    
+    //TODO: Add Function for glowing outline drawing like in SHapePolyline drawing
+    
+    
+    
 }
