@@ -1,7 +1,6 @@
-using System.Numerics;
+
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Core.CollisionSystem;
 
@@ -63,56 +62,6 @@ public class PolyCollider : Collider
     public override Rect GetBoundingBox() => GetPolygonShape().GetBoundingBox();
     
     public override ShapeType GetShapeType() => ShapeType.Poly;
-    public override Polygon GetPolygonShape() => shape;// GeneratePolygonShape();
-
-    // private Polygon GeneratePolygonShape() 
-    // {
-    //     if(Dirty) UpdateShape();
-    //     if(shape.Count != RelativeShape.Count) UpdateShape();
-    //     
-    //     return shape;
-    // }
-    
-    // /// <summary>
-    // /// Is triggered automatically. Should be used manually if relative shape was changed.
-    // /// </summary>
-    // public void UpdateShape()
-    // {
-    //     Dirty = false;
-    //
-    //     for (int i = 0; i < RelativeShape.Count; i++)
-    //     {
-    //         var p = CurTransform.ApplyTransformTo(RelativeShape[i]);
-    //         if (shape.Count <= i)
-    //         {
-    //             shape.Add(p);
-    //         }
-    //         else
-    //         {
-    //             shape[i] = p;
-    //         }
-    //     }
-    //     
-    //     
-    //     // var dif = CurTransform.Difference(PrevTransform);
-    //     //
-    //     // for (int i = 0; i < curShape.Count; i++)
-    //     // {
-    //     //     var newPos = curShape[i] + dif.Position;//translation
-    //     //     var w = (newPos - CurTransform.Position).Rotate(dif.RotationRad) * dif.Scale;
-    //     //     curShape[i] = CurTransform.Position + w;
-    //     // }
-    //     
-    //     //Variant 2
-    //     // for (var i = 0; i < curShape.Count; i++)
-    //     // {
-    //     //     var p = curShape[i];
-    //     //     var originalPos = prev.Revert(p);
-    //     //     var w = originalPos - prev.Position;
-    //     //
-    //     //     curShape[i] = Position + w.Rotate(RotationRad) * Scale;
-    //     // }
-    // }
-    //
+    public override Polygon GetPolygonShape() => shape;
 }
 

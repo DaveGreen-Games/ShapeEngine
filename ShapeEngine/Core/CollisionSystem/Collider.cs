@@ -1,6 +1,5 @@
 ﻿
 using System.Numerics;
-using System.Security.Cryptography;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 
