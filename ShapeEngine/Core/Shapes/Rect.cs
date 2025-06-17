@@ -469,23 +469,24 @@ public readonly struct Rect : IEquatable<Rect>
         var tr = TopRight;
         var br = BottomRight;
         var bl = BottomLeft;
+        //TODO: should return nullable polygon? If all corner values are not valid than a new polygon is still created and returned...
         Polygon points = new();
-        if (tlCorner > 0f && tlCorner < 1f)
+        if (tlCorner > 0f)// && tlCorner < 1f) should not be here?!
         {
             points.Add(tl + new Vector2(MathF.Min(tlCorner, Width), 0f));
             points.Add(tl + new Vector2(0f, MathF.Min(tlCorner, Height)));
         }
-        if (blCorner > 0f && blCorner < 1f)
+        if (blCorner > 0f)// && blCorner < 1f) should not be here?!
         {
             points.Add(bl - new Vector2(0f, MathF.Min(tlCorner, Height)));
             points.Add(bl + new Vector2(MathF.Min(tlCorner, Width), 0f));
         }
-        if (brCorner > 0f && brCorner < 1f)
+        if (brCorner > 0f) // && brCorner < 1f)should not be here?!
         {
             points.Add(br - new Vector2(MathF.Min(tlCorner, Width), 0f));
             points.Add(br - new Vector2(0f, MathF.Min(tlCorner, Height)));
         }
-        if (trCorner > 0f && trCorner < 1f)
+        if (trCorner > 0f) // && trCorner < 1f)should not be here?!
         {
             points.Add(tr + new Vector2(0f, MathF.Min(tlCorner, Height)));
             points.Add(tr - new Vector2(MathF.Min(tlCorner, Width), 0f));
@@ -506,6 +507,7 @@ public readonly struct Rect : IEquatable<Rect>
         var tr = TopRight;
         var br = BottomRight;
         var bl = BottomLeft;
+        //TODO: should return nullable polygon? If all corner values are not valid than a new polygon is still created and returned...
         Polygon points = new();
         if (tlCorner > 0f && tlCorner < 1f)
         {
