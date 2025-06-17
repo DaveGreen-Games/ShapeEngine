@@ -21,7 +21,7 @@ public static class ShapeSegmentDrawing
     /// <param name="end">The ending point of the segment.</param>
     /// <param name="thickness">The thickness of the segment.</param>
     /// <param name="color">The color of the segment.</param>
-    /// <param name="sideLengthFactor">The factor by which to scale the segment's length (0 = no length, 1 = full length).</param>
+    /// <param name="sideLengthFactor">The factor by which to scale the segment's length <c>(0 = no length, 1 = full length)</c>.</param>
     /// <param name="capType">The type of line cap to use at the ends of the segment.</param>
     /// <param name="capPoints">The number of points used to draw the cap (for rounded or custom caps).</param>
     public static void DrawSegment(Vector2 start, Vector2 end, float thickness, ColorRgba color, float sideLengthFactor, LineCapType capType = LineCapType.None, int capPoints = 0)
@@ -180,8 +180,8 @@ public static class ShapeSegmentDrawing
     /// <param name="start">The starting point of the segment.</param>
     /// <param name="end">The ending point of the segment.</param>
     /// <param name="info">The line drawing information (thickness, color, cap type, cap points).</param>
-    /// <param name="scaleFactor">The factor by which to scale the segment's length (0 = no length, 1 = full length).</param>
-    /// <param name="scaleOrigin">The point along the segment (0 = start, 1 = end) to scale from.</param>
+    /// <param name="scaleFactor">The factor by which to scale the segment's length <c>(0 = no length, 1 = full length)</c>.</param>
+    /// <param name="scaleOrigin">The point along the segment <c>(0 = start, 1 = end)</c> to scale from.</param>
     public static void DrawSegment(Vector2 start, Vector2 end, LineDrawingInfo info, float scaleFactor, float scaleOrigin = 0.5f)
     {
         var p = start.Lerp(end, scaleOrigin);
@@ -403,9 +403,9 @@ public static class ShapeSegmentDrawing
     /// Draws a segment scaled towards a specified origin along the segment.
     /// </summary>
     /// <param name="s">The segment to draw.</param>
-    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, cap points).</param>
-    /// <param name="sideScaleFactor">The scale factor for each side (0 = no triangle, 1 = normal length, 0.5 = half length).</param>
-    /// <param name="sideScaleOrigin">The point along the segment (0 = start, 1 = end) to scale from.</param>
+    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, capPoints).</param>
+    /// <param name="sideScaleFactor">The scale factor for each side <c>(0 = No segment, 1 = Full Segment)</c></param>
+    /// <param name="sideScaleOrigin">The point along the segment <c>(0 = Start, 1 = End) to scale from.</c></param>
     /// <remarks>
     /// Useful for creating dynamic or animated segment effects.
     /// </remarks>
