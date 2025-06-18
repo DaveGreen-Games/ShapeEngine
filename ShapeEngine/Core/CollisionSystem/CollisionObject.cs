@@ -424,34 +424,3 @@ public abstract class CollisionObject : PhysicsObject
     #endregion
 
 }
-
-
-
-    
-    
-/*
-/// <summary>
-/// This functions is always called when the collider had at least one collision with another collider this frame
-/// </summary>
-public event Action<Collider, CollisionInformation>? OnCollision;
-
-/// <summary>
-/// This function will always be called when a previous collision with another collider has ended this frame
-/// </summary>
-public event Action<Collider, Collider>? OnCollisionEnded;
-
-/// <summary>
-/// This event will only be invoked when AdvancedCollisionNotifications is enabled and
-/// ComputeIntersection is disabled
-/// If AdvancedCollisionNotification is enabled and ComputeIntersection is enabled OnColliderIntersected will be invoked instead
-/// </summary>
-public event Action<Collider, Collider, bool>? OnColliderOverlapped;
-
-/// <summary>
-/// This event will only be invoked when AdvancedCollisionNotifications is enabled and
-/// ComputeIntersection is enabled
-/// If AdvancedCollisionNotification is enabled and ComputeIntersection is disabled OnColliderOverlapped will be invoked instead
-/// </summary>
-public event Action<Collision>? OnColliderIntersected;
-*/
-
