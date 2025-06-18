@@ -6,26 +6,6 @@ using ShapeEngine.Random;
 
 namespace ShapeEngine.Core.CollisionSystem;
 
-/// <summary>
-/// First - Selects the first collision point.
-/// Closest - Selects the collision point closest to the reference point.
-/// Furthest - Selects the collision point furthest from the reference point.
-/// Combined - Computes the average collision point.
-/// PointingTowards - Selects the collision point with a normal pointing the most towards the reference position.
-/// PointingAway - Selects the collision point with a normal pointing the most away from the reference position.
-/// Random - Selects a random collision point.
-/// </summary>
-public enum CollisionPointsFilterType
-{
-    First,
-    Closest,
-    Furthest,
-    Combined,
-    PointingTowards,
-    PointingAway,
-    Random
-}
-
 public class CollisionPoints : ShapeList<CollisionPoint>
 {
     #region Constructors

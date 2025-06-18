@@ -1,8 +1,5 @@
 using System.Numerics;
-using ShapeEngine.Core.Interfaces;
-using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.UI;
 
 namespace ShapeEngine.Core.CollisionSystem;
 
@@ -187,30 +184,4 @@ public class Collision
     
     #endregion
 }
-
-
-/*public CollisionPoint GetClosestCollisionPoint(Vector2 referencePoint)
-{
-    if (Intersection == null) return new();
-    return Intersection.GetClosestCollisionPoint(referencePoint);
-}
-/// <summary>
-/// Finds the collision point with the normal facing most towards the reference direction.
-/// </summary>
-/// <returns></returns>
-public CollisionPoint GetCollisionPointFacingTowardsDir(Vector2 referenceDir)
-{
-    if (Intersection == null) return new();
-    return Intersection.GetCollisionPointFacingTowardsDir(referenceDir);
-}
-/// <summary>
-/// Finds the collision point with the normal facing most towards the reference point.
-/// The direction used is from each collision point towards the reference point.
-/// </summary>
-/// <returns></returns>
-public CollisionPoint GetCollisionPointFacingTowardsPoint(Vector2 referencePoint)
-{
-    if (Intersection == null) return new();
-    return Intersection.GetCollisionPointFacingTowardsPoint(referencePoint);
-}*/
 
