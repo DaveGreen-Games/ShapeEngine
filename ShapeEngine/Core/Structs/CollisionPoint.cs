@@ -1,40 +1,84 @@
 using System.Numerics;
-using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.StaticLib;
 
+//TODO: Move to CollisionSystem namespace!
 namespace ShapeEngine.Core.Structs;
 
+/// <summary>
+/// Represents a single collision point, including its position and normal vector.
+/// </summary>
+/// <remarks>
+/// Provides utility methods for combining, comparing, and manipulating collision points and their normals.
+/// </remarks>
 public readonly struct CollisionPoint : IEquatable<CollisionPoint>
 {
     #region Members
-    
+    /// <summary>
+    /// Gets whether this collision point is valid (normal is not zero).
+    /// </summary>
     public bool Valid => Normal.X != 0f || Normal.Y != 0f;
+    /// <summary>
+    /// The position of the collision point.
+    /// </summary>
     public readonly Vector2 Point;
+    /// <summary>
+    /// The normal vector at the collision point.
+    /// </summary>
     public readonly Vector2 Normal;
 
     #endregion
     
     #region Constructors
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CollisionPoint"/> struct with default values (zero point and zero normal).
+    /// </summary>
     public CollisionPoint() 
     { 
         Point = new(); 
         Normal = new();
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CollisionPoint"/> struct with the specified point and normal.
+    /// </summary>
+    /// <param name="p">The position of the collision point.</param>
+    /// <param name="n">The normal vector at the collision point.</param>
     public CollisionPoint(Vector2 p, Vector2 n)
     {
         Point = p; 
         Normal = n;
     }
-    
+
     #endregion
     
     #region Public Functions
+    /// <summary>
+    /// Gets a segment representing the normal at this collision point.
+    /// </summary>
+    /// <param name="length">The length of the segment.</param>
+    /// <returns>A segment from the collision point in the direction of the normal.</returns>
     public Segment GetNormalSegment(float length) => new Segment(Point, Point + Normal * length);
+    /// <summary>
+    /// Gets a ray representing the normal at this collision point.
+    /// </summary>
+    /// <returns>A ray from the collision point in the direction of the normal.</returns>
     public Ray GetNormalRay() => new Ray(Point, Normal);
+    /// <summary>
+    /// Gets a line representing the normal at this collision point.
+    /// </summary>
+    /// <returns>A line from the collision point in the direction of the normal.</returns>
     public Line GetNormalLine() => new Line(Point, Normal);
     
+    /// <summary>
+    /// Determines if this collision point is closer to the reference point than the current minimum distance squared.
+    /// </summary>
+    /// <param name="p">The collision point to check.</param>
+    /// <param name="referencePoint">The reference point.</param>
+    /// <param name="curMinDisSquared">The current minimum distance squared.</param>
+    /// <param name="newMinDisSquared">The new minimum distance squared, if this point is closer.</param>
+    /// <returns>True if this point is closer, false otherwise.</returns>
     public static bool IsCloser(CollisionPoint p, Vector2 referencePoint, float curMinDisSquared, out float newMinDisSquared)
     {
         var disSquared = (p.Point - referencePoint).LengthSquared();
@@ -47,6 +91,14 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
         newMinDisSquared = curMinDisSquared;
         return false;
     }
+    /// <summary>
+    /// Determines if this collision point is further from the reference point than the current maximum distance squared.
+    /// </summary>
+    /// <param name="p">The collision point to check.</param>
+    /// <param name="referencePoint">The reference point.</param>
+    /// <param name="curMaxDisSquared">The current maximum distance squared.</param>
+    /// <param name="newMaxDisSquared">The new maximum distance squared, if this point is further.</param>
+    /// <returns>True if this point is further away, false otherwise.</returns>
     public static bool IsFurther(CollisionPoint p, Vector2 referencePoint, float curMaxDisSquared, out float newMaxDisSquared)
     {
         var disSquared = (p.Point - referencePoint).LengthSquared();
@@ -100,10 +152,26 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
         newDot = curDot;
         return false;
     }
+    /// <summary>
+    /// Combines this collision point with another by averaging their positions and normals.
+    /// </summary>
+    /// <param name="other">The other collision point to combine with.</param>
+    /// <returns>A new collision point representing the combination of this point and the other.</returns>
     public CollisionPoint Combine(CollisionPoint other) => new((Point + other.Point) / 2, (Normal + other.Normal).Normalize());
     
+    /// <summary>
+    /// Static method to combine two collision points by averaging their positions and normals.
+    /// </summary>
+    /// <param name="a">The first collision point.</param>
+    /// <param name="b">The second collision point.</param>
+    /// <returns>A new collision point representing the combination of the two points.</returns>
     public static CollisionPoint Combine(CollisionPoint a, CollisionPoint b) => new((a.Point + b.Point) / 2, (a.Normal + b.Normal).Normalize());
 
+    /// <summary>
+    /// Static method to combine multiple collision points by averaging their positions and normals.
+    /// </summary>
+    /// <param name="points">The array of collision points to combine.</param>
+    /// <returns>A new collision point representing the combination of all provided points.</returns>
     public static CollisionPoint Combine(params CollisionPoint[] points)
     {
         if(points.Length == 0) return new();
@@ -117,19 +185,37 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
         return new(avgPoint / points.Length, avgNormal.Normalize());
     }
     
+    /// <summary>
+    /// Checks for equality with another collision point.
+    /// </summary>
+    /// <param name="other">The other collision point to compare with.</param>
+    /// <returns>True if the points and normals are equal, false otherwise.</returns>
     public bool Equals(CollisionPoint other)
     {
         return other.Point == Point && other.Normal == Normal;
     }
+    /// <summary>
+    /// Gets the hash code for this collision point.
+    /// </summary>
+    /// <returns>A hash code representing this collision point.</returns>
     public override int GetHashCode()
     {
         return HashCode.Combine(Point, Normal);
     }
 
+    /// <summary>
+    /// Flips the normal of the collision point, keeping the position the same.
+    /// </summary>
+    /// <returns>A new collision point with the normal flipped.</returns>
     public CollisionPoint FlipNormal()
     {
         return new(Point, Normal.Flip());
     }
+    /// <summary>
+    /// Flips the normal of the collision point if the direction to the reference point is facing the opposite way of the normal.
+    /// </summary>
+    /// <param name="referencePoint">The reference point to check the direction against.</param>
+    /// <returns>This collision point if the normal is not facing the opposite direction of the reference point, otherwise a new collision point with the normal flipped.</returns>
     public CollisionPoint FlipNormal(Vector2 referencePoint)
     {
         Vector2 dir = referencePoint - Point;
@@ -138,19 +224,49 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
         return this;
     }
     
+    /// <summary>
+    /// Checks if the normal is facing the same direction as the reference direction.
+    /// </summary>
+    /// <param name="referenceDir">The reference direction to check.</param>
+    /// <returns>True if the normal is facing the same direction, false otherwise.</returns>
     public bool IsNormalFacing(Vector2 referenceDir) => Normal.IsFacingTheSameDirection(referenceDir);
+    /// <summary>
+    /// Checks if the normal is facing towards the reference point.
+    /// </summary>
+    /// <param name="referencePoint">The reference point to check.</param>
+    /// <returns>True if the normal is facing the reference point, false otherwise.</returns>
     public bool IsNormalFacingPoint(Vector2 referencePoint) => IsNormalFacing(referencePoint - Point);
     
     #endregion
     
     #region Math
 
+    /// <summary>
+    /// Rotates the normal of the collision point by the given angle in radians.
+    /// </summary>
+    /// <param name="angleRad">The angle in radians to rotate the normal.</param>
+    /// <returns>A new collision point with the normal rotated by the given angle.</returns>
     public CollisionPoint RotateNormal(float angleRad) => !Valid ? this : new(Point, Normal.Rotate(angleRad));
 
+    /// <summary>
+    /// Rotates the normal of the collision point by the given angle in degrees.
+    /// </summary>
+    /// <param name="angleDeg">The angle in degrees to rotate the normal.</param>
+    /// <returns>A new collision point with the normal rotated by the given angle.</returns>
     public CollisionPoint RotateNormalDeg(float angleDeg) => !Valid ? this : new(Point, Normal.Rotate(angleDeg * ShapeMath.DEGTORAD));
 
+    /// <summary>
+    /// Sets a new point for the collision point, keeping the normal the same.
+    /// </summary>
+    /// <param name="newPoint">The new position for the collision point.</param>
+    /// <returns>A new collision point with the updated position.</returns>
     public CollisionPoint SetPoint(Vector2 newPoint) => new(newPoint, Normal);
 
+    /// <summary>
+    /// Sets a new normal for the collision point.
+    /// </summary>
+    /// <param name="newNormal">The new normal vector for the collision point.</param>
+    /// <returns>A new collision point with the updated normal.</returns>
     public CollisionPoint SetNormal(Vector2 newNormal) => new(Point, newNormal.Normalize());
 
     #endregion
@@ -158,7 +274,7 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
     #region Operators
     
     /// <summary>
-    /// Add point a to point b, and add normal a to normal b and normailze it.
+    /// Add point a to point b, and add normal a to normal b and normalize it.
     /// </summary>
     /// <param name="a"></param>
     /// <param name="b"></param>
@@ -169,7 +285,7 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
     }
 
     /// <summary>
-    /// Subtract point b from point a, and subtract normal b from normal a and normailze it.
+    /// Subtract point b from point a, and subtract normal b from normal a and normalize it.
     /// </summary>
     /// <param name="a"></param>
     /// <param name="b"></param>
