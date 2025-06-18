@@ -1,5 +1,7 @@
 namespace ShapeEngine.Core.Structs;
 
+//TODO: Move to CollisionSystem namespace!
+
 /// <summary>
 /// Represents the result of validating collision points, containing various relevant points.
 /// </summary>
