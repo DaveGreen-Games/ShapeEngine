@@ -1,9 +1,8 @@
-using System.Numerics;
-using ShapeEngine.Color;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Core.Structs;
 
+//TODO: Move to core namespace! Definetely not in struct namespace!
 public abstract class Curve<T>(int capacity) : SortedList<float, T>(capacity)
 {
     public bool HasKeys => Count > 0;
@@ -196,46 +195,4 @@ public abstract class Curve<T>(int capacity) : SortedList<float, T>(capacity)
     
     protected abstract T Interpolate( T a, T b, float time);
     protected abstract T GetDefaultValue();
-}
-
-
-public class CurveInt(int capacity) : Curve<int>(capacity)
-{
-    protected override int Interpolate(int a, int b, float time)
-    {
-        return ShapeMath.LerpInt(a, b, time);
-    }
-
-    protected override int GetDefaultValue() => 0;
-}
-
-public class CurveFloat(int capacity) : Curve<float>(capacity)
-{
-    protected override float Interpolate(float a, float b, float time)
-    {
-        return ShapeMath.LerpFloat(a, b, time);
-    }
-
-    protected override float GetDefaultValue() => 0f;
-}
-
-public class CurveVector2(int capacity) : Curve<Vector2>(capacity)
-{
-    
-    protected override Vector2 Interpolate(Vector2 a, Vector2 b, float time)
-    {
-        return a.Lerp(b, time);
-    }
-
-    protected override Vector2 GetDefaultValue() => Vector2.Zero;
-}
-
-public class CurveColor(int capacity) : Curve<ColorRgba>(capacity)
-{
-    protected override ColorRgba Interpolate(ColorRgba a, ColorRgba b, float time)
-    {
-        return a.Lerp(b, time);
-    }
-
-    protected override ColorRgba GetDefaultValue() => ColorRgba.Clear;
 }
