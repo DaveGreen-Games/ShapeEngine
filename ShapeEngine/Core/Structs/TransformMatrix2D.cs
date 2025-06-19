@@ -10,7 +10,11 @@ using ShapeVec = ShapeEngine.StaticLib.ShapeVec;
 
 namespace ShapeEngine.Core.Structs;
 
-
+/// <summary>
+/// Represents a 2D transformation matrix with basis vectors and origin,
+/// supporting translation, rotation, scaling, and skew operations.
+/// Implements <see cref="IEquatable{TransformMatrix2D}"/> for value equality.
+/// </summary>
 public struct TransformMatrix2D : IEquatable<TransformMatrix2D>
 {
     /// <summary>
