@@ -78,9 +78,9 @@ public class SpatialHash : IBounds
     #region Private Members
     private Bucket[] buckets;
     private readonly Dictionary<Collider, List<int>> register = new();
-    private readonly HashSet<Collider> registerKeys = new();
-    private bool boundsResizeQueued = false;
-    private Rect newBounds = new();
+    private readonly HashSet<Collider> registerKeys = [];
+    private bool boundsResizeQueued;
+    private Rect newBounds;
     #endregion
     
     #region Constructors

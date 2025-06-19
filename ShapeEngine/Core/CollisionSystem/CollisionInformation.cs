@@ -38,7 +38,7 @@ public class CollisionInformation : List<Collision>
     /// <summary>
     /// The total number of collision points across all collisions in this information.
     /// </summary>
-    public int TotalCollisionPointCount { get; private set; } = 0;
+    public int TotalCollisionPointCount { get; private set; }
     /// <summary>
     /// The filtered collision point.
     /// Only valid when the collision object has <see cref="CollisionObject.FilterCollisionPoints"/> enabled and

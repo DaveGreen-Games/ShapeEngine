@@ -404,7 +404,7 @@ public class CollisionHandler : IBounds
                                 
                                 if (computeIntersections)
                                 {
-                                    CollisionPoints? collisionPoints = null;
+                                    CollisionPoints? collisionPoints;
                                     if (passivChecking)
                                     {
                                         collisionPoints = candidate.Intersect(projected);
@@ -421,7 +421,7 @@ public class CollisionHandler : IBounds
                                         var refPoint = collider.PrevTransform.Position;// PrevPosition;
                                         if (!candidate.ContainsPoint(refPoint))
                                         {
-                                            var closest = candidate.GetClosestPoint(refPoint, out float disSquared);
+                                            var closest = candidate.GetClosestPoint(refPoint, out float _);
                                             collisionPoints ??= new();
                                             collisionPoints.Add(closest);
                                         }
@@ -482,7 +482,7 @@ public class CollisionHandler : IBounds
                                 
                                 if (computeIntersections)
                                 {                                                         
-                                    CollisionPoints? collisionPoints = null;
+                                    CollisionPoints? collisionPoints;
                                     if (passivChecking)
                                     {
                                         collisionPoints = candidate.Intersect(collider);
@@ -499,8 +499,8 @@ public class CollisionHandler : IBounds
                                         var refPoint = collider.PrevTransform.Position;// PrevPosition;
                                         if (!candidate.ContainsPoint(refPoint))
                                         {
-                                            var closest = candidate.GetClosestPoint(refPoint, out float disSquared);
-                                            collisionPoints ??= new();
+                                            var closest = candidate.GetClosestPoint(refPoint, out float _);
+                                            collisionPoints ??= [];
                                             collisionPoints.Add(closest);
                                         }
                                     }
