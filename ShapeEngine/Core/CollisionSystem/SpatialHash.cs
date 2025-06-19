@@ -224,6 +224,7 @@ public class SpatialHash : IBounds
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
     public void GetCandidateBuckets(Collider collider, ref List<Bucket> candidateBuckets)
     {
+        //TODO: Does not check if collider is enabled!
         if (register.TryGetValue(collider, out var bucketIds))
         {
             if (bucketIds.Count <= 0) return;
@@ -236,7 +237,7 @@ public class SpatialHash : IBounds
             return;
         }
         List<int> ids = new();
-        GetCellIDs(collider, ref ids);
+        GetCellIDs(collider, ref ids); //TODO: Does check if collider is enabled
         FillCandidateBuckets(ids, ref candidateBuckets);
     }
 
