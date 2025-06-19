@@ -101,7 +101,7 @@ public sealed class SlowMotion
         /// </summary>
         public float Factor { get; private set; }
 
-        private float timer = 0f;
+        private float timer;
 
         /// <summary>
         /// Creates a new slow motion item.
@@ -271,7 +271,8 @@ public sealed class SlowMotion
     /// <param name="tag">The tag of the effect to remove.</param>
     public void Remove(uint id, uint tag)
     {
-        if (!slowItemContainers.ContainsKey(tag)) return;
+        if (!slowItemContainers.TryGetValue(tag, out var container)) return;
+        container.RemoveID(id);
     }
     /// <summary>
     /// Removes a slow motion effect by its unique ID, searching all tags.

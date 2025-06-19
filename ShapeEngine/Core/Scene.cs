@@ -25,11 +25,11 @@ public abstract class Scene
     /// If "Game.CurScene" equals this scene, active will be true, otherwise active will be false.
     /// Use "Game.GoToScene()" method to switch scenes.
     /// </summary>
-    public bool Active { get; private set; } = false;
+    public bool Active { get; private set; }
     /// <summary>
     /// If the scene is Active Game will be set.
     /// </summary>
-    public Game? Game { get; private set; } = null;
+    public Game? Game { get; private set; }
     
     /// <summary>
     /// The current SpawnArea of this scene.
@@ -37,21 +37,21 @@ public abstract class Scene
     /// SpawnArea is null per default.
     /// Call "InitSpawnArea()" to set SpawnArea.
     /// </summary>
-    public SpawnArea? SpawnArea { get; private set; } = null;
+    public SpawnArea? SpawnArea { get; private set; }
     /// <summary>
     /// The current CollisionHandler of this scene.
     /// CollisionHandler handles collision objects and reports overlaps/intersections..
     /// CollisionHandler is null per default.
     /// Call "InitCollisionHandler()" to set CollisionHandler.
     /// </summary>
-    public CollisionHandler? CollisionHandler { get; private set; } = null;
+    public CollisionHandler? CollisionHandler { get; private set; }
     /// <summary>
     /// The current Pathfinder of this scene.
     /// Pathfinder handles pathfinding on a 2d grid.
     /// Pathfinder is null per default.
     /// Call "InitPathfinder()" to set Pathfinder.
     /// </summary>
-    public Pathfinder? Pathfinder { get; private set; } = null;
+    public Pathfinder? Pathfinder { get; private set; }
 
     #endregion
 

@@ -428,7 +428,7 @@ public sealed class GameWindow
             // IsMouseOnScreen = value;
         }
     }
-    private bool mouseOnScreen = false;
+    private bool mouseOnScreen;
     /// <summary>
     /// Gets the area of the screen as a rectangle.
     /// </summary>
@@ -448,18 +448,18 @@ public sealed class GameWindow
     private int maxFramerate;
     private Dimensions windowSize = new();
 
-    private bool? wasMouseEnabled = null;
-    private bool? wasMouseVisible = null;
+    private bool? wasMouseEnabled;
+    private bool? wasMouseVisible;
 
     private CursorState cursorState;
     private WindowConfigFlags windowConfigFlags;
-    private bool wasMaximized = false;
+    private bool wasMaximized;
 
     private Dimensions prevDisplayStateWindowDimensions = new(128, 128);
     private Vector2 prevDisplayStateWindowPosition = new(128, 128);
 
     private Size prevFullscreenResolution = new(-1, -1);
-    private bool wasFullscreen = false;
+    private bool wasFullscreen;
 
     #endregion
 

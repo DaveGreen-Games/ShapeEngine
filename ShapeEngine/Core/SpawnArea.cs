@@ -41,7 +41,7 @@ namespace ShapeEngine.Core
         /// <summary>
         /// Gets the total number of game objects in the area.
         /// </summary>
-        public int Count { get; private set; } = 0;
+        public int Count { get; private set; }
         /// <summary>
         /// Gets or sets the bounds of the spawn area.
         /// </summary>
@@ -52,12 +52,12 @@ namespace ShapeEngine.Core
         public Vector2 ParallaxePosition { get; set; } = new(0f);
         
         private readonly SortedList<uint, List<GameObject>> allObjects = new();
-        private readonly List<GameObject> drawToGameTextureObjects = new();
-        private readonly List<GameObject> drawToGameUiTextureObjects = new();
+        private readonly List<GameObject> drawToGameTextureObjects = [];
+        private readonly List<GameObject> drawToGameUiTextureObjects = [];
 
-        private Rect clearArea = new();
-        private bool clearAreaActive = false;
-        private BitFlag clearAreaMask = new();
+        private Rect clearArea;
+        private bool clearAreaActive;
+        private BitFlag clearAreaMask;
 
         private List<GameObject> removalList = new(1024);
         /// <summary>
@@ -468,7 +468,7 @@ namespace ShapeEngine.Core
                 {
                     var obj = objs[i];
 
-                    if (clearAreaActive && (clearAreaMask.IsEmpty() || clearAreaMask.Has((uint)layer.Key)))
+                    if (clearAreaActive && (clearAreaMask.IsEmpty() || clearAreaMask.Has(layer.Key)))
                     {
                         if (clearArea.OverlapShape(obj.GetBoundingBox()))
                         {
@@ -523,7 +523,7 @@ namespace ShapeEngine.Core
                 {
                     var obj = objs[i];
                     
-                    if (clearAreaActive && (clearAreaMask.IsEmpty() || clearAreaMask.Has((uint)layer.Key)))
+                    if (clearAreaActive && (clearAreaMask.IsEmpty() || clearAreaMask.Has(layer.Key)))
                     {
                         if (clearArea.OverlapShape(obj.GetBoundingBox()))
                         {
