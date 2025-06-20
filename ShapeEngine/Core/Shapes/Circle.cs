@@ -1026,6 +1026,15 @@ public readonly struct Circle : IEquatable<Circle>
     #endregion
     
     #region Closest Point
+
+    /// <summary>
+    /// Gets the closest point on the circle to a given point.
+    /// </summary>
+    /// <param name="center">The center of the circle.</param>
+    /// <param name="radius">The radius of the circle.</param>
+    /// <param name="p">The point to check.</param>
+    /// <param name="disSquared">The squared distance between the circle and the point.</param>
+    /// <returns>The closest point on the circle.</returns>
     public static Vector2 GetClosestPointCirclePoint(Vector2 center, float radius, Vector2 p, out float disSquared)
     {
         var dir = (p - center).Normalize();
@@ -1034,6 +1043,15 @@ public readonly struct Circle : IEquatable<Circle>
         disSquared = ShapeMath.ClampToZero(disSquared);
         return closestPoint;
     }
+    /// <summary>
+    /// Gets the closest points between the circle and a segment.
+    /// </summary>
+    /// <param name="circleCenter">The center of the circle.</param>
+    /// <param name="circleRadius">The radius of the circle.</param>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <param name="disSquared">The squared distance between the circle and the segment.</param>
+    /// <returns>A tuple containing the closest points on the circle and the segment.</returns>
     public static (Vector2 self, Vector2 other) GetClosestPointCircleSegment(Vector2 circleCenter, float circleRadius, Vector2 segmentStart, Vector2 segmentEnd, out float disSquared)
     {
         var d1 = segmentEnd - segmentStart;
@@ -1049,6 +1067,15 @@ public readonly struct Circle : IEquatable<Circle>
         disSquared = ShapeMath.ClampToZero(disSquared);
         return (closestPointOnCircle, closestPointOnSegment);
     }
+    /// <summary>
+    /// Gets the closest points between the circle and a line.
+    /// </summary>
+    /// <param name="circleCenter">The center of the circle.</param>
+    /// <param name="circleRadius">The radius of the circle.</param>
+    /// <param name="linePoint">A point on the line.</param>
+    /// <param name="lineDirection">The direction of the line.</param>
+    /// <param name="disSquared">The squared distance between the circle and the line.</param>
+    /// <returns>A tuple containing the closest points on the circle and the line.</returns>
     public static (Vector2 self, Vector2 other) GetClosestPointCircleLine(Vector2 circleCenter, float circleRadius, Vector2 linePoint, Vector2 lineDirection, out float disSquared)
     {
         var d1 = lineDirection.Normalize();
@@ -1063,6 +1090,15 @@ public readonly struct Circle : IEquatable<Circle>
         disSquared = ShapeMath.ClampToZero(disSquared);
         return (closestPointOnCircle, closestPointOnLine);
     }
+    /// <summary>
+    /// Gets the closest points between the circle and a ray.
+    /// </summary>
+    /// <param name="circleCenter">The center of the circle.</param>
+    /// <param name="circleRadius">The radius of the circle.</param>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction of the ray.</param>
+    /// <param name="disSquared">The squared distance between the circle and the ray.</param>
+    /// <returns>A tuple containing the closest points on the circle and the ray.</returns>
     public static (Vector2 self, Vector2 other) GetClosestPointCircleRay(Vector2 circleCenter, float circleRadius, Vector2 rayPoint, Vector2 rayDirection, out float disSquared)
     {
         var d1 = rayDirection.Normalize();
@@ -1077,6 +1113,15 @@ public readonly struct Circle : IEquatable<Circle>
         disSquared = ShapeMath.ClampToZero(disSquared);
         return (closestPointOnCircle, closestPointOnRay);
     }
+    /// <summary>
+    /// Gets the closest points between two circles.
+    /// </summary>
+    /// <param name="circle1Center">The center of the first circle.</param>
+    /// <param name="circle1Radius">The radius of the first circle.</param>
+    /// <param name="circle2Center">The center of the second circle.</param>
+    /// <param name="circle2Radius">The radius of the second circle.</param>
+    /// <param name="disSquared">The squared distance between the two circles.</param>
+    /// <returns>A tuple containing the closest points on both circles.</returns>
     public static (Vector2 self, Vector2 other) GetClosestPointCircleCircle(Vector2 circle1Center, float circle1Radius, Vector2 circle2Center, float circle2Radius, out float disSquared)
     {
         var w = circle1Center - circle2Center;
@@ -1087,7 +1132,12 @@ public readonly struct Circle : IEquatable<Circle>
         disSquared = ShapeMath.ClampToZero(disSquared);
         return (a, b);
     }
-   
+    /// <summary>
+    /// Gets the closest point on the circle to a given point.
+    /// </summary>
+    /// <param name="p">The point to check.</param>
+    /// <param name="disSquared">The squared distance between the circle and the point.</param>
+    /// <returns>A <see cref="CollisionPoint"/> representing the closest point.</returns>
     public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared)
     {
         var dir = (p - Center).Normalize();
@@ -1097,6 +1147,11 @@ public readonly struct Circle : IEquatable<Circle>
         disSquared = ShapeMath.ClampToZero(disSquared);
         return new(closestPoint, normal);
     }
+    /// <summary>
+    /// Gets the closest point between the circle and a line.
+    /// </summary>
+    /// <param name="other">The line to check.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> representing the closest point.</returns>
     public ClosestPointResult GetClosestPoint(Line other)
     {
         var d1 = other.Direction;
@@ -1116,6 +1171,11 @@ public readonly struct Circle : IEquatable<Circle>
             new(closestPointOnLine, other.Normal),
             disSquared);
     }
+    /// <summary>
+    /// Gets the closest point between the circle and a ray.
+    /// </summary>
+    /// <param name="other">The ray to check.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> representing the closest point.</returns>
     public ClosestPointResult GetClosestPoint(Ray other)
     {
         var d1 = other.Direction;
@@ -1134,6 +1194,11 @@ public readonly struct Circle : IEquatable<Circle>
             new(closestPointOnRay, other.Normal),
             disSquared);
     }
+    /// <summary>
+    /// Gets the closest point between the circle and a segment.
+    /// </summary>
+    /// <param name="other">The segment to check.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> representing the closest point.</returns>
     public ClosestPointResult GetClosestPoint(Segment other)
     {
         var d1 = other.End - other.Start;
@@ -1153,6 +1218,11 @@ public readonly struct Circle : IEquatable<Circle>
             new(closestPointOnSegment, other.Normal),
             disSquared);
     }
+    /// <summary>
+    /// Gets the closest point between two circles.
+    /// </summary>
+    /// <param name="other">The other circle to check.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> representing the closest point.</returns>
     public ClosestPointResult GetClosestPoint(Circle other)
     {
         var w = Center - other.Center;
@@ -1168,6 +1238,11 @@ public readonly struct Circle : IEquatable<Circle>
             new(b, bNormal),
             disSquared);
     }
+    /// <summary>
+    /// Gets the closest point between the circle and a triangle.
+    /// </summary>
+    /// <param name="other">The triangle to check.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> representing the closest point.</returns>
     public ClosestPointResult GetClosestPoint(Triangle other)
     {
         var closestResult = GetClosestPointCircleSegment(Center, Radius, other.A, other.B, out float minDisSquared);
@@ -1204,6 +1279,11 @@ public readonly struct Circle : IEquatable<Circle>
             -1,
             otherIndex);
     }
+    /// <summary>
+    /// Gets the closest point between the circle and a quad.
+    /// </summary>
+    /// <param name="other">The quad to check.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> representing the closest point.</returns>
     public ClosestPointResult GetClosestPoint(Quad other)
     {
         var closestResult = GetClosestPointCircleSegment(Center, Radius, other.A, other.B, out float minDisSquared);
@@ -1249,6 +1329,11 @@ public readonly struct Circle : IEquatable<Circle>
             -1,
             otherIndex);
     }
+    /// <summary>
+    /// Gets the closest point between the circle and a rectangle.
+    /// </summary>
+    /// <param name="other">The rectangle to check.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> representing the closest point.</returns>
     public ClosestPointResult GetClosestPoint(Rect other)
     {
         var closestResult = GetClosestPointCircleSegment(Center, Radius, other.A, other.B, out float minDisSquared);
@@ -1293,6 +1378,11 @@ public readonly struct Circle : IEquatable<Circle>
             -1,
             otherIndex);
     }
+    /// <summary>
+    /// Gets the closest point between the circle and a polygon.
+    /// </summary>
+    /// <param name="other">The polygon to check.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> representing the closest point.</returns>
     public ClosestPointResult GetClosestPoint(Polygon other)
     {
         if (other.Count < 3) return new();
@@ -1323,6 +1413,11 @@ public readonly struct Circle : IEquatable<Circle>
             -1,
             otherIndex);
     }
+    /// <summary>
+    /// Gets the closest point between the circle and a polyline.
+    /// </summary>
+    /// <param name="other">The polyline to check.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> representing the closest point.</returns>
     public ClosestPointResult GetClosestPoint(Polyline other)
     {
         if (other.Count < 2) return new();
@@ -1353,6 +1448,11 @@ public readonly struct Circle : IEquatable<Circle>
             -1,
             otherIndex);
     }
+    /// <summary>
+    /// Gets the closest point between the circle and a collection of segments.
+    /// </summary>
+    /// <param name="segments">The segments to check.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> representing the closest point.</returns>
     public ClosestPointResult GetClosestPoint(Segments segments)
     {
         if (segments.Count <= 0) return new();
@@ -1373,7 +1473,12 @@ public readonly struct Circle : IEquatable<Circle>
         }
         return closestResult.SetOtherSegmentIndex(otherIndex);
     }
-
+    /// <summary>
+    /// Gets the closest vertex on the circle to a given point.
+    /// </summary>
+    /// <param name="p">The point to check.</param>
+    /// <param name="disSquared">The squared distance between the circle and the vertex.</param>
+    /// <returns>The closest vertex on the circle.</returns>
     public Vector2 GetClosestVertex(Vector2 p, out float disSquared)
     {
         var vertex = Center + (p - Center).Normalize() * Radius;
@@ -1423,6 +1528,7 @@ public readonly struct Circle : IEquatable<Circle>
             p.LengthSquared() <= d.LengthSquared() &&
             Vector2.Dot(p, d) >= 0.0f;
     }
+    
     public static bool OverlapCircleLine(Vector2 cPos, float cRadius, Vector2 linePos, Vector2 lineDir)
     {
         var lc = cPos - linePos;
@@ -1430,6 +1536,7 @@ public readonly struct Circle : IEquatable<Circle>
         var nearest = linePos + p;
         return ContainsCirclePoint(cPos, cRadius, nearest);
     }
+    
     public static bool OverlapCircleRay(Vector2 cPos, float cRadius, Vector2 rayPos, Vector2 rayDir)
     {
         var w = cPos - rayPos;
@@ -1454,6 +1561,7 @@ public readonly struct Circle : IEquatable<Circle>
 
         return false;
     }
+    
     public static bool OverlapCircleQuad(Vector2 center, float radius, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
         if (Quad.ContainsQuadPoint(a, b, c, d,  center)) return true;
@@ -1465,10 +1573,12 @@ public readonly struct Circle : IEquatable<Circle>
         
         return false;
     }
+    
     public static bool OverlapCircleRect(Vector2 center, float radius, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
         return OverlapCircleQuad(center, radius, a, b, c, d);
     }
+    
     public static bool OverlapCirclePolygon(Vector2 center, float radius, List<Vector2> points)
     {
         if (points.Count < 3) return false;
@@ -1484,6 +1594,7 @@ public readonly struct Circle : IEquatable<Circle>
         }
         return oddNodes;
     }
+    
     public static bool OverlapCirclePolyline(Vector2 center, float radius, List<Vector2> points)
     {
         if (points.Count < 3) return false;
@@ -1493,6 +1604,7 @@ public readonly struct Circle : IEquatable<Circle>
         }
         return false;
     }
+    
     public static bool OverlapCircleSegments(Vector2 center, float radius, List<Segment> segments)
     {
         if (segments.Count <= 0) return false;
@@ -1503,10 +1615,9 @@ public readonly struct Circle : IEquatable<Circle>
         }
         return false;
     }
-
-    
     
     public static (CollisionPoint a, CollisionPoint b) IntersectCircleCircle(Vector2 aPos, float aRadius, Vector2 bPos, float bRadius) { return IntersectCircleCircle(aPos.X, aPos.Y, aRadius, bPos.X, bPos.Y, bRadius); }
+    
     public static (CollisionPoint a, CollisionPoint b) IntersectCircleCircle(float cx0, float cy0, float radius0, float cx1, float cy1, float radius1)
     {
         // Find the distance between the centers.
@@ -1563,6 +1674,7 @@ public readonly struct Circle : IEquatable<Circle>
         return (cp1, cp2);
 
     }
+    
     public static (CollisionPoint a, CollisionPoint b) IntersectCircleSegment(Vector2 circlePos, float circleRadius, Vector2 start, Vector2 end) 
     {
         return IntersectCircleSegment(
@@ -1570,6 +1682,7 @@ public readonly struct Circle : IEquatable<Circle>
             start.X, start.Y,
             end.X, end.Y); 
     }
+    
     public static (CollisionPoint a, CollisionPoint b) IntersectCircleRay(Vector2 circleCenter, float circleRadius, Vector2 rayPoint, Vector2 rayDirection, Vector2 rayNormal) 
     {
         var toCircle = circleCenter - rayPoint;
@@ -1609,6 +1722,7 @@ public readonly struct Circle : IEquatable<Circle>
         
         return (new(), new());
     }
+    
     public static (CollisionPoint a, CollisionPoint b) IntersectCircleLine(Vector2 circleCenter, float circleRadius, Vector2 linePoint, Vector2 lineDirection, Vector2 lineNormal)
     {
         // Normalize the direction vector
@@ -1650,6 +1764,7 @@ public readonly struct Circle : IEquatable<Circle>
 
         return (new(), new());
     }
+    
     public static (CollisionPoint a, CollisionPoint b) IntersectCircleSegment(float circleX, float circleY, float circleRadius, float segStartX, float segStartY, float segEndX, float segEndY)
     {
         float difX = segEndX - segStartX;
