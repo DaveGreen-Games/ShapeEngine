@@ -6,50 +6,217 @@ using ShapeEngine.StaticLib;
 using ShapeEngine.Random;
 
 namespace ShapeEngine.Core.Shapes;
-
+/// <summary>
+/// Represents a 2D circle defined by a center point and a radius.
+/// </summary>
+/// <remarks>
+/// Provides geometric, collision, and transformation operations for circles in 2D space.
+/// </remarks>
 public readonly struct Circle : IEquatable<Circle>
 {
     #region Members
+    /// <summary>
+    /// The center position of the circle in 2D space.
+    /// </summary>
     public readonly Vector2 Center;
+    
+    /// <summary>
+    /// The radius of the circle.
+    /// </summary> 
     public readonly float Radius;
     #endregion
 
     #region Getter Setter
+    /// <summary>
+    /// Gets the diameter of the circle.
+    /// </summary>
+    /// <remarks>
+    /// The diameter is calculated as twice the radius.
+    /// </remarks>
     public float Diameter => Radius * 2f;
+    
+    /// <summary>
+    /// Gets the top point of the circle.
+    /// </summary>
+    /// <remarks>
+    /// The top point is located directly above the center at a distance equal to the radius.
+    /// </remarks>
     public Vector2 Top => Center + new Vector2(0, -Radius);
+    
+    /// <summary>
+    /// Gets the right point of the circle.
+    /// </summary>
+    /// <remarks>
+    /// The right point is located directly to the right of the center at a distance equal to the radius.
+    /// </remarks>
     public Vector2 Right => Center + new Vector2(Radius, 0);
+    
+    /// <summary>
+    /// Gets the bottom point of the circle.
+    /// </summary>
+    /// <remarks>
+    /// The bottom point is located directly below the center at a distance equal to the radius.
+    /// </remarks>
     public Vector2 Bottom => Center + new Vector2(0, Radius);
+    
+    /// <summary>
+    /// Gets the left point of the circle.
+    /// </summary>
+    /// <remarks>
+    /// The left point is located directly to the left of the center at a distance equal to the radius.
+    /// </remarks>
     public Vector2 Left => Center + new Vector2(-Radius, 0);
+    
+    /// <summary>
+    /// Gets the top-left corner of the bounding box of the circle.
+    /// </summary>
+    /// <remarks>
+    /// The top-left corner is located diagonally above and to the left of the center at a distance equal to the radius.
+    /// </remarks>
     public Vector2 TopLeft => Center + new Vector2(-Radius, -Radius);
+    
+    /// <summary>
+    /// Gets the bottom-left corner of the bounding box of the circle.
+    /// </summary>
+    /// <remarks>
+    /// The bottom-left corner is located diagonally below and to the left of the center at a distance equal to the radius.
+    /// </remarks>
     public Vector2 BottomLeft => Center + new Vector2(-Radius, Radius);
+    
+    /// <summary>
+    /// Gets the bottom-right corner of the bounding box of the circle.
+    /// </summary>
+    /// <remarks>
+    /// The bottom-right corner is located diagonally below and to the right of the center at a distance equal to the radius.
+    /// </remarks>
     public Vector2 BottomRight => Center + new Vector2(Radius, Radius);
+    
+    /// <summary>
+    /// Gets the top-right corner of the bounding box of the circle.
+    /// </summary>
+    /// <remarks>
+    /// The top-right corner is located diagonally above and to the right of the center at a distance equal to the radius.
+    /// </remarks>
     public Vector2 TopRight => Center + new Vector2(Radius, -Radius);
     #endregion
     
     #region Constructors
-    public Circle(Vector2 center, float radius) { this.Center = center; this.Radius = radius; }
-    public Circle(float x, float y, float radius) { this.Center = new(x, y); this.Radius = radius; }
-    public Circle(Circle c, float radius) { Center = c.Center; Radius = radius;}
-    public Circle(Circle c, Vector2 center) { Center = center; Radius = c.Radius; }
-    public Circle(Rect r) { Center = r.Center; Radius = MathF.Max(r.Width, r.Height); }
-    public Circle(Transform2D transform) { Center = transform.Position; Radius = transform.ScaledSize.Radius; }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Circle"/> struct with the specified center and radius.
+    /// </summary>
+    /// <param name="center">The center position of the circle.</param>
+    /// <param name="radius">The radius of the circle.</param>
+    public Circle(Vector2 center, float radius) 
+    { 
+        this.Center = center; 
+        this.Radius = radius; 
+    }
+    
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Circle"/> struct with the specified center coordinates and radius.
+    /// </summary>
+    /// <param name="x">The x-coordinate of the circle's center.</param>
+    /// <param name="y">The y-coordinate of the circle's center.</param>
+    /// <param name="radius">The radius of the circle.</param>
+    public Circle(float x, float y, float radius) 
+    { 
+        this.Center = new(x, y); 
+        this.Radius = radius; 
+    }
+    
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Circle"/> struct by copying the center from another circle and setting a new radius.
+    /// </summary>
+    /// <param name="c">The circle to copy the center from.</param>
+    /// <param name="radius">The radius of the new circle.</param>
+    public Circle(Circle c, float radius) 
+    { 
+        Center = c.Center; 
+        Radius = radius;
+    }
+    
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Circle"/> struct by copying the radius from another circle and setting a new center.
+    /// </summary>
+    /// <param name="c">The circle to copy the radius from.</param>
+    /// <param name="center">The center position of the new circle.</param>
+    public Circle(Circle c, Vector2 center) 
+    { 
+        Center = center; 
+        Radius = c.Radius; 
+    }
+    
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Circle"/> struct from a rectangle.
+    /// </summary>
+    /// <param name="r">The rectangle to derive the circle from.</param>
+    /// <remarks>
+    /// The circle's center is set to the rectangle's center, and its radius is the maximum of the rectangle's width and height.
+    /// </remarks>
+    public Circle(Rect r) 
+    { 
+        Center = r.Center; 
+        Radius = MathF.Max(r.Width, r.Height); 
+    }
+    
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Circle"/> struct from a transform.
+    /// </summary>
+    /// <param name="transform">The transform containing the <c>Position</c> and <c>ScaledSize.Radius</c>.</param>
+    /// <remarks>
+    /// The circle's center is set to the transform's position, and its radius is derived from the transform's scaled size.
+    /// </remarks>
+    public Circle(Transform2D transform) 
+    { 
+        Center = transform.Position; 
+        Radius = transform.ScaledSize.Radius; 
+    }
     #endregion
 
     #region Equality & Hashcode
+    /// <summary>
+    /// Determines whether the specified <see cref="Circle"/> is equal to the current circle.
+    /// </summary>
+    /// <param name="other">The circle to compare with the current circle.</param>
+    /// <returns><c>true</c> if the specified circle is equal to the current circle; otherwise, <c>false</c>.</returns>
     public bool Equals(Circle other)
     {
-        return Center == other.Center && ShapeMath.EqualsF(Radius, other.Radius);// Radius == other.Radius;
+        return Center == other.Center && ShapeMath.EqualsF(Radius, other.Radius);
     }
+    
+    /// <summary>
+    /// Returns the hash code for the current circle.
+    /// </summary>
+    /// <returns>A hash code for the current circle.</returns>
     public readonly override int GetHashCode() => HashCode.Combine(Center, Radius);
-
+    
+    /// <summary>
+    /// Determines whether two circles are equal.
+    /// </summary>
+    /// <param name="left">The first circle to compare.</param>
+    /// <param name="right">The second circle to compare.</param>
+    /// <returns><c>true</c> if the circles are equal; otherwise, <c>false</c>.</returns>
     public static bool operator ==(Circle left, Circle right)
     {
         return left.Equals(right);
     }
+    
+    /// <summary>
+    /// Determines whether two circles are not equal.
+    /// </summary>
+    /// <param name="left">The first circle to compare.</param>
+    /// <param name="right">The second circle to compare.</param>
+    /// <returns><c>true</c> if the circles are not equal; otherwise, <c>false</c>.</returns>
     public static bool operator !=(Circle left, Circle right)
     {
         return !(left == right);
     }
+    
+    /// <summary>
+    /// Determines whether the specified object is equal to the current circle.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current circle.</param>
+    /// <returns><c>true</c> if the specified object is equal to the current circle; otherwise, <c>false</c>.</returns>
     public override bool Equals(object? obj)
     {
         if (obj is Circle c) return Equals(c);
@@ -58,7 +225,13 @@ public readonly struct Circle : IEquatable<Circle>
     #endregion
 
     #region Math
-
+    /// <summary>
+    /// Projects the circle's shape points along a given vector.
+    /// </summary>
+    /// <param name="v">The vector to project the shape points along.</param>
+    /// <param name="pointCount">The number of points to generate for the projection. Default is 8.</param>
+    /// <returns>A <see cref="Points"/> collection representing the projected shape points,
+    /// or null if invalid parameters are provided.</returns>
     public Points? GetProjectedShapePoints(Vector2 v, int pointCount = 8)
     {
         if (pointCount < 4 || v.LengthSquared() <= 0f) return null;
@@ -72,7 +245,13 @@ public readonly struct Circle : IEquatable<Circle>
         }
         return points;
     }
-
+    /// <summary>
+    /// Projects the circle's shape into a polygon along a given vector.
+    /// </summary>
+    /// <param name="v">The vector to project the shape along.</param>
+    /// <param name="pointCount">The number of points to generate for the polygon. Default is 8.</param>
+    /// <returns>A <see cref="Polygon"/> representing the projected shape,
+    /// or null if invalid parameters are provided.</returns>
     public Polygon? ProjectShape(Vector2 v, int pointCount = 8)
     {
         if (pointCount < 4 || v.LengthSquared() <= 0f) return null;
@@ -87,32 +266,90 @@ public readonly struct Circle : IEquatable<Circle>
         return Polygon.FindConvexHull(points);
     }
     
+    /// <summary>
+    /// Floors the circle's center and radius values to the nearest lower integer.
+    /// </summary>
+    /// <returns>A new <see cref="Circle"/> with floored values.</returns>
     public Circle Floor() { return new(Center.Floor(), MathF.Floor(Radius)); }
-    public Circle Ceiling() { return new(Center.Ceiling(), MathF.Ceiling(Radius)); }
-    public Circle Round() { return new(Center.Round(), MathF.Round(Radius)); }
-    public Circle Truncate() { return new(Center.Truncate(), MathF.Truncate(Radius)); }
-    
-    public float GetArea() { return MathF.PI * Radius * Radius; }
-    public float GetCircumference() { return MathF.PI * Radius * 2f; }
-    public static float GetCircumference(float radius) { return MathF.PI * radius * 2f; }
-    public float GetCircumferenceSquared() { return GetCircumference() * GetCircumference(); }
 
+    /// <summary>
+    /// Ceils the circle's center and radius values to the nearest higher integer.
+    /// </summary>
+    /// <returns>A new <see cref="Circle"/> with ceiled values.</returns>
+    public Circle Ceiling() { return new(Center.Ceiling(), MathF.Ceiling(Radius)); }
+
+    /// <summary>
+    /// Rounds the circle's center and radius values to the nearest integer.
+    /// </summary>
+    /// <returns>A new <see cref="Circle"/> with rounded values.</returns>
+    public Circle Round() { return new(Center.Round(), MathF.Round(Radius)); }
+
+    /// <summary>
+    /// Truncates the circle's center and radius values to their integer parts.
+    /// </summary>
+    /// <returns>A new <see cref="Circle"/> with truncated values.</returns>
+    public Circle Truncate() { return new(Center.Truncate(), MathF.Truncate(Radius)); }
+
+    /// <summary>
+    /// Calculates the area of the circle.
+    /// </summary>
+    /// <returns>The area of the circle.</returns>
+    public float GetArea() { return MathF.PI * Radius * Radius; }
+
+    /// <summary>
+    /// Calculates the circumference of the circle.
+    /// </summary>
+    /// <returns>The circumference of the circle.</returns>
+    public float GetCircumference() { return MathF.PI * Radius * 2f; }
+
+    /// <summary>
+    /// Calculates the circumference of a circle given its radius.
+    /// </summary>
+    /// <param name="radius">The radius of the circle.</param>
+    /// <returns>The circumference of the circle.</returns>
+    public static float GetCircumference(float radius) { return MathF.PI * radius * 2f; }
+
+    /// <summary>
+    /// Calculates the square of the circle's circumference.
+    /// </summary>
+    /// <returns>The square of the circle's circumference.</returns>
+    public float GetCircumferenceSquared() { return GetCircumference() * GetCircumference(); }
     #endregion
 
     #region Points & Vertext
-
+    /// <summary>
+    /// Gets a vertex of the circle at a specified angle and index.
+    /// </summary>
+    /// <param name="angleRad">The angle in radians.</param>
+    /// <param name="angleStepRad">The step size in radians between vertices.</param>
+    /// <param name="index">The index of the vertex.</param>
+    /// <returns>The vertex position as a <see cref="Vector2"/>.</returns>
     public Vector2 GetVertex(float angleRad, float angleStepRad, int index)
     {
         return Center + new Vector2(Radius, 0f).Rotate(angleRad + angleStepRad * index);
     }
-    
+    /// <summary>
+    /// Gets a point on the circle at a specified angle and scale factor.
+    /// </summary>
+    /// <param name="angleRad">The angle in radians.</param>
+    /// <param name="f">The scale factor for the radius.(<c>0</c> - <c>1</c>)</param>
+    /// <returns>The point position as a <see cref="Vector2"/>.</returns>
     public Vector2 GetPoint(float angleRad, float f) { return Center + new Vector2(Radius * f, 0f).Rotate(angleRad); }
+    /// <summary>
+    /// Gets a random point inside the circle.
+    /// </summary>
+    /// <returns>A random point as a <see cref="Vector2"/>.</returns>
     public Vector2 GetRandomPoint()
     {
         float randAngle = Rng.Instance.RandAngleRad();
         var randDir = ShapeVec.VecFromAngleRad(randAngle);
         return Center + randDir * Rng.Instance.RandF(0, Radius);
     }
+    /// <summary>
+    /// Gets a collection of random points inside the circle.
+    /// </summary>
+    /// <param name="amount">The number of random points to generate.</param>
+    /// <returns>A <see cref="Points"/> collection containing the random points.</returns>
     public Points GetRandomPoints(int amount)
     {
         var points = new Points();
@@ -122,9 +359,28 @@ public readonly struct Circle : IEquatable<Circle>
         }
         return points;
     }
+    /// <summary>
+    /// Gets a random vertex on the circle's edge.
+    /// </summary>
+    /// <returns>A random vertex as a <see cref="Vector2"/>.</returns>
     public Vector2 GetRandomVertex() { return Rng.Instance.RandCollection(GetVertices(), false); }
+
+    /// <summary>
+    /// Gets a random edge segment of the circle.
+    /// </summary>
+    /// <returns>A random edge as a <see cref="Segment"/>.</returns>
     public Segment GetRandomEdge() { return Rng.Instance.RandCollection(GetEdges(), false); }
+
+    /// <summary>
+    /// Gets a random point on the circle's edge.
+    /// </summary>
+    /// <returns>A random point on the edge as a <see cref="Vector2"/>.</returns>
     public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
+    /// <summary>
+    /// Gets a collection of random points on the circle's edge.
+    /// </summary>
+    /// <param name="amount">The number of random points to generate.</param>
+    /// <returns>A <see cref="Points"/> collection containing the random edge points.</returns>
     public Points GetRandomPointsOnEdge(int amount)
     {
         var points = new Points();
@@ -134,12 +390,14 @@ public readonly struct Circle : IEquatable<Circle>
         }
         return points;
     }
-
-
     #endregion
 
     #region Shapes
-
+    /// <summary>
+    /// Gets the edges of the circle as a collection of segments.
+    /// </summary>
+    /// <param name="pointCount">The number of points to use for generating the edges. Default is 16.</param>
+    /// <returns>A <see cref="Segments"/> collection representing the edges of the circle.</returns>
     public Segments GetEdges(int pointCount = 16)
     {
         float angleStep = (MathF.PI * 2f) / pointCount;
@@ -153,6 +411,11 @@ public readonly struct Circle : IEquatable<Circle>
         }
         return segments;
     }
+    /// <summary>
+    /// Gets the vertices of the circle as a collection of points.
+    /// </summary>
+    /// <param name="count">The number of vertices to generate. Default is 16.</param>
+    /// <returns>A <see cref="Points"/> collection containing the vertices of the circle.</returns>
     public Points GetVertices(int count = 16)
     {
         float angleStep = (MathF.PI * 2f) / count;
@@ -164,6 +427,11 @@ public readonly struct Circle : IEquatable<Circle>
         }
         return points;
     }
+    /// <summary>
+    /// Converts the circle into a polygon representation.
+    /// </summary>
+    /// <param name="pointCount">The number of points to use for the polygon. Default is 16.</param>
+    /// <returns>A <see cref="Polygon"/> representing the circle.</returns>
     public Polygon ToPolygon(int pointCount = 16)
     {
         float angleStep = (MathF.PI * 2f) / pointCount;
@@ -175,6 +443,11 @@ public readonly struct Circle : IEquatable<Circle>
         }
         return poly;
     }
+    /// <summary>
+    /// Converts the circle into a polyline representation.
+    /// </summary>
+    /// <param name="pointCount">The number of points to use for the polyline. Default is 16.</param>
+    /// <returns>A <see cref="Polyline"/> representing the circle.</returns>
     public Polyline ToPolyline(int pointCount = 16)
     {
         float angleStep = (MathF.PI * 2f) / pointCount;
@@ -186,9 +459,25 @@ public readonly struct Circle : IEquatable<Circle>
         }
         return polyLine;
     }
+    /// <summary>
+    /// Triangulates the circle into a set of triangles.
+    /// </summary>
+    /// <returns>A <see cref="Triangulation"/> representing the triangulated circle.</returns>
     public Triangulation Triangulate() { return ToPolygon().Triangulate(); }
+    /// <summary>
+    /// Gets the bounding box of the circle.
+    /// </summary>
+    /// <returns>A <see cref="Rect"/> representing the bounding box of the circle.</returns>
     public Rect GetBoundingBox() { return new Rect(Center, new Size(Radius, Radius) * 2f, new(0.5f)); }
-
+    /// <summary>
+    /// Combines the current circle with another circle.
+    /// </summary>
+    /// <param name="other">The other circle to combine with.</param>
+    /// <returns>A new <see cref="Circle"/> representing the combined result.</returns>
+    /// <remarks>
+    /// Adds <see cref="Radius"/> to other <see cref="Radius"/>.
+    /// Takes the average of <see cref="Center"/> and other <see cref="Center"/>.
+    /// </remarks>
     public Circle Combine(Circle other)
     {
         return new
@@ -197,11 +486,13 @@ public readonly struct Circle : IEquatable<Circle>
             Radius + other.Radius
         );
     }
-    
     #endregion
     
     #region Corners
-    
+    /// <summary>
+    /// Gets the top, right, bottom, and left points of the circle.
+    /// </summary>
+    /// <returns>A tuple containing the top, right, bottom, and left points as <see cref="Vector2"/>.</returns>
     public (Vector2 top, Vector2 right, Vector2 bottom, Vector2 left) GetCorners()
     {
         var top = Center + new Vector2(0, -Radius);
@@ -210,6 +501,10 @@ public readonly struct Circle : IEquatable<Circle>
         var left = Center + new Vector2(-Radius, 0);
         return (top, right, bottom, left);
     }
+    /// <summary>
+    /// Gets the top, right, bottom, and left points of the circle as a list.
+    /// </summary>
+    /// <returns>A <see cref="List{Vector2}"/> containing the top, right, bottom, and left points.</returns>
     public List<Vector2> GetCornersList()
     {
         var top = Center + new Vector2(0, -Radius);
@@ -218,6 +513,12 @@ public readonly struct Circle : IEquatable<Circle>
         var left = Center + new Vector2(-Radius, 0);
         return new() { top, right, bottom, left };
     }
+    /// <summary>
+    /// Gets the top-left, top-right, bottom-right,
+    /// and bottom-left corners of the circle's bounding box.
+    /// </summary>
+    /// <returns>A tuple containing the top-left, top-right, bottom-right,
+    /// and bottom-left corners as <see cref="Vector2"/>.</returns>
     public (Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl) GetRectCorners()
     {
         var tl = Center + new Vector2(-Radius, -Radius);
@@ -226,6 +527,12 @@ public readonly struct Circle : IEquatable<Circle>
         var bl = Center + new Vector2(-Radius, Radius);
         return (tl, tr, br, bl);
     }
+    /// <summary>
+    /// Gets the top-left, top-right, bottom-right,
+    /// and bottom-left corners of the circle's bounding box as a list.
+    /// </summary>
+    /// <returns>A <see cref="List{Vector2}"/> containing the top-left,
+    /// top-right, bottom-right, and bottom-left corners.</returns>
     public List<Vector2> GetRectCornersList()
     {
         var tl = Center + new Vector2(-Radius, -Radius);
@@ -237,34 +544,63 @@ public readonly struct Circle : IEquatable<Circle>
     #endregion
 
     #region Transform
-
+    /// <summary>
+    /// Scales the radius of the circle by a given factor.
+    /// </summary>
+    /// <param name="scale">The scale factor to apply to the radius.</param>
+    /// <returns>A new <see cref="Circle"/> with the scaled radius.</returns>
     public Circle ScaleRadius(float scale) => new(Center, Radius * scale);
+    /// <summary>
+    /// Changes the radius of the circle by a given amount.
+    /// </summary>
+    /// <param name="amount">The amount to add to the radius.</param>
+    /// <returns>A new <see cref="Circle"/> with the modified radius.</returns>
     public Circle ChangeRadius(float amount) => new(Center, Radius + amount);
+    /// <summary>
+    /// Sets the radius of the circle to a specific value.
+    /// </summary>
+    /// <param name="radius">The new radius value.</param>
+    /// <returns>A new <see cref="Circle"/> with the updated radius.</returns>
     public Circle SetRadius(float radius) => new(Center, radius);
-
-
+    /// <summary>
+    /// Rotates the circle's center around a given pivot point by a specified angle (in radians).
+    /// The radius remains unchanged.
+    /// </summary>
+    /// <param name="rotationRad">The rotation angle in radians.</param>
+    /// <param name="pivot">The pivot point to rotate around.</param>
+    /// <returns>A new <see cref="Circle"/> with the rotated center.</returns>
     public Circle ChangeRotation(float rotationRad, Vector2 pivot)
     {
         var w = Center - pivot;
         var rotated = w.Rotate(rotationRad);
         return new(pivot + rotated, Radius);
     }
-    
-    
+    /// <summary>
+    /// Changes the position of the circle by a given offset.
+    /// </summary>
+    /// <param name="offset">The offset to apply to the circle's position.</param>
+    /// <returns>A new <see cref="Circle"/> with the updated position.</returns>
     public Circle ChangePosition(Vector2 offset) => this + offset;
+    /// <summary>
+    /// Changes the position of the circle by specific x and y offsets.
+    /// </summary>
+    /// <param name="x">The x-coordinate offset.</param>
+    /// <param name="y">The y-coordinate offset.</param>
+    /// <returns>A new <see cref="Circle"/> with the updated position.</returns>
     public Circle ChangePosition(float x, float y) => this + new Vector2(x, y);
+    /// <summary>
+    /// Sets the position of the circle to a specific value.
+    /// </summary>
+    /// <param name="position">The new position of the circle.</param>
+    /// <returns>A new <see cref="Circle"/> with the updated position.</returns>
     public Circle SetPosition(Vector2 position) => new Circle(position, Radius);
     
-    
-    
-    // public Transform2D GetOffset() => new Transform2D(Center, 0f, new Size(Radius, Radius), new Vector2(1f, 1f));
-    
     /// <summary>
-    /// Moves the circle by offset.Position
-    /// Changes the radius of the moved circle by transform.ScaledSize.Radius!
+    /// Moves the circle by the offset's <c>Position</c>
+    /// and changes its radius by the offset's <c>ScaledSize.Radius</c>.
     /// </summary>
-    /// <param name="offset"></param>
-    /// <returns></returns>
+    /// <param name="offset">The transform offset to apply.</param>
+    /// <returns>A new <see cref="Circle"/> with the applied offset.</returns>
     public Circle ApplyOffset(Transform2D offset)
     {
         var newCircle = ChangePosition(offset.Position);
@@ -272,11 +608,11 @@ public readonly struct Circle : IEquatable<Circle>
     }
 
     /// <summary>
-    /// Moves the circle to transform.Position
-    /// Set the radius of the moved circle to ScaledSize.Radius.
+    /// Moves the circle to the transform's <c>Position</c>
+    /// and sets its radius to the transform's <c>ScaledSize.Radius</c>.
     /// </summary>
-    /// <param name="transform"></param>
-    /// <returns></returns>
+    /// <param name="transform">The transform to apply.</param>
+    /// <returns>A new <see cref="Circle"/> with the applied transform.</returns>
     public Circle SetTransform(Transform2D transform)
     {
         var newCircle = SetPosition(transform.Position);
@@ -287,7 +623,12 @@ public readonly struct Circle : IEquatable<Circle>
     #endregion
     
     #region Operators
-
+    /// <summary>
+    /// Adds two circles by combining their centers and radii.
+    /// </summary>
+    /// <param name="left">The first circle.</param>
+    /// <param name="right">The second circle.</param>
+    /// <returns>A new <see cref="Circle"/> representing the combined result.</returns>
     public static Circle operator +(Circle left, Circle right)
     {
         return new
@@ -296,6 +637,12 @@ public readonly struct Circle : IEquatable<Circle>
                 left.Radius + right.Radius
             );
     }
+    /// <summary>
+    /// Subtracts the center and radius of one circle from another.
+    /// </summary>
+    /// <param name="left">The first circle.</param>
+    /// <param name="right">The second circle.</param>
+    /// <returns>A new <see cref="Circle"/> with the resulting radius.</returns>
     public static Circle operator -(Circle left, Circle right)
     {
         return new
@@ -304,6 +651,12 @@ public readonly struct Circle : IEquatable<Circle>
             left.Radius - right.Radius
         );
     }
+    /// <summary>
+    /// Multiplies the center and radii of two circles.
+    /// </summary>
+    /// <param name="left">The first circle.</param>
+    /// <param name="right">The second circle.</param>
+    /// <returns>A new <see cref="Circle"/> with the resulting radius.</returns>
     public static Circle operator *(Circle left, Circle right)
     {
         return new
@@ -312,6 +665,12 @@ public readonly struct Circle : IEquatable<Circle>
             left.Radius * right.Radius
         );
     }
+    /// <summary>
+    /// Divides the center and  radius of one circle by another.
+    /// </summary>
+    /// <param name="left">The first circle.</param>
+    /// <param name="right">The second circle.</param>
+    /// <returns>A new <see cref="Circle"/> with the resulting radius.</returns>
     public static Circle operator /(Circle left, Circle right)
     {
         return new
@@ -320,6 +679,12 @@ public readonly struct Circle : IEquatable<Circle>
             left.Radius / right.Radius
         );
     }
+    /// <summary>
+    /// Adds a vector offset to the circle's center.
+    /// </summary>
+    /// <param name="left">The circle.</param>
+    /// <param name="right">The vector offset.</param>
+    /// <returns>A new <see cref="Circle"/> with the updated center.</returns>
     public static Circle operator +(Circle left, Vector2 right)
     {
         return new
@@ -328,6 +693,12 @@ public readonly struct Circle : IEquatable<Circle>
             left.Radius
         );
     }
+    /// <summary>
+    /// Subtracts a vector offset from the circle's center.
+    /// </summary>
+    /// <param name="left">The circle.</param>
+    /// <param name="right">The vector offset.</param>
+    /// <returns>A new <see cref="Circle"/> with the updated center.</returns>
     public static Circle operator -(Circle left, Vector2 right)
     {
         return new
@@ -336,6 +707,12 @@ public readonly struct Circle : IEquatable<Circle>
             left.Radius
         );
     }
+    /// <summary>
+    /// Multiplies the circle center by a vector.
+    /// </summary>
+    /// <param name="left">The circle.</param>
+    /// <param name="right">The vector.</param>
+    /// <returns>A new <see cref="Circle"/> with the scaled radius.</returns>
     public static Circle operator *(Circle left, Vector2 right)
     {
         return new
@@ -344,6 +721,12 @@ public readonly struct Circle : IEquatable<Circle>
             left.Radius
         );
     }
+    /// <summary>
+    /// Divides the circle center by a vector.
+    /// </summary>
+    /// <param name="left">The circle.</param>
+    /// <param name="right">The vector.</param>
+    /// <returns>A new <see cref="Circle"/> with the scaled radius.</returns>
     public static Circle operator /(Circle left, Vector2 right)
     {
         return new
@@ -352,6 +735,12 @@ public readonly struct Circle : IEquatable<Circle>
             left.Radius
         );
     }
+    /// <summary>
+    /// Adds a scalar value to the circle's radius.
+    /// </summary>
+    /// <param name="left">The circle.</param>
+    /// <param name="right">The scalar value.</param>
+    /// <returns>A new <see cref="Circle"/> with the updated radius.</returns>
     public static Circle operator +(Circle left, float right)
     {
         return new
@@ -360,6 +749,12 @@ public readonly struct Circle : IEquatable<Circle>
             left.Radius + right
         );
     }
+    /// <summary>
+    /// Subtracts a scalar value from the circle's radius.
+    /// </summary>
+    /// <param name="left">The circle.</param>
+    /// <param name="right">The scalar value.</param>
+    /// <returns>A new <see cref="Circle"/> with the updated radius.</returns>
     public static Circle operator -(Circle left, float right)
     {
         return new
@@ -368,6 +763,12 @@ public readonly struct Circle : IEquatable<Circle>
             left.Radius - right
         );
     }
+    /// <summary>
+    /// Multiplies the circle's radius by a scalar value.
+    /// </summary>
+    /// <param name="left">The circle.</param>
+    /// <param name="right">The scalar value.</param>
+    /// <returns>A new <see cref="Circle"/> with the scaled radius.</returns>
     public static Circle operator *(Circle left, float right)
     {
         return new
@@ -376,6 +777,12 @@ public readonly struct Circle : IEquatable<Circle>
             left.Radius * right
         );
     }
+    /// <summary>
+    /// Divides the circle's radius by a scalar value.
+    /// </summary>
+    /// <param name="left">The circle.</param>
+    /// <param name="right">The scalar value.</param>
+    /// <returns>A new <see cref="Circle"/> with the scaled radius.</returns>
     public static Circle operator /(Circle left, float right)
     {
         return new
@@ -419,7 +826,6 @@ public readonly struct Circle : IEquatable<Circle>
 
         return true;
     }
-    //clean up
     public static bool ContainsCircleSegment(Vector2 circleCenter, float circleRadius, Vector2 segmentStart, Vector2 segmentEnd)
     {
         if(!ContainsCirclePoints(circleCenter, circleRadius, segmentStart, segmentEnd)) return false;
@@ -452,10 +858,41 @@ public readonly struct Circle : IEquatable<Circle>
         return ContainsCirclePoints(circleCenter, circleRadius, polygon);
     }
         
+    /// <summary>
+    /// Determines whether the circle contains a given point.
+    /// </summary>
+    /// <param name="p">The point to check.</param>
+    /// <returns><c>true</c> if the point is inside the circle; otherwise, <c>false</c>.</returns>
     public bool ContainsPoint(Vector2 p) => ContainsCirclePoint(Center, Radius, p);
+    /// <summary>
+    /// Determines whether the circle contains two given points.
+    /// </summary>
+    /// <param name="a">The first point.</param>
+    /// <param name="b">The second point.</param>
+    /// <returns><c>true</c> if both points are inside the circle; otherwise, <c>false</c>.</returns>
     public bool ContainsPoints(Vector2 a, Vector2 b) => ContainsCirclePoints(Center, Radius, a, b);
+    /// <summary>
+    /// Determines whether the circle contains three given points.
+    /// </summary>
+    /// <param name="a">The first point.</param>
+    /// <param name="b">The second point.</param>
+    /// <param name="c">The third point.</param>
+    /// <returns><c>true</c> if all points are inside the circle; otherwise, <c>false</c>.</returns>
     public bool ContainsPoints(Vector2 a, Vector2 b, Vector2 c) => ContainsCirclePoints(Center, Radius, a, b, c);
+    /// <summary>
+    /// Determines whether the circle contains four given points.
+    /// </summary>
+    /// <param name="a">The first point.</param>
+    /// <param name="b">The second point.</param>
+    /// <param name="c">The third point.</param>
+    /// <param name="d">The fourth point.</param>
+    /// <returns><c>true</c> if all points are inside the circle; otherwise, <c>false</c>.</returns>
     public bool ContainsPoints(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => ContainsCirclePoints(Center, Radius, a, b, c, d);
+    /// <summary>
+    /// Determines whether the circle contains a list of points.
+    /// </summary>
+    /// <param name="points">The list of points to check.</param>
+    /// <returns><c>true</c> if all points are inside the circle; otherwise, <c>false</c>.</returns>
     public bool ContainsPoints(List<Vector2> points) => ContainsCirclePoints(Center, Radius, points);
     
     public bool ContainsPointSector(Vector2 p, float rotationRad, float sectorAngleRad)
@@ -467,6 +904,7 @@ public readonly struct Circle : IEquatable<Circle>
         var a = dir.AngleRad(p - Center);
         return MathF.Abs(a) < sectorAngleRad * 0.5f;
     }
+    
     public bool ContainsPointSector(Vector2 p, Vector2 dir, float sectorAngleRad)
     {
         if(sectorAngleRad <= 0f) return false;
@@ -477,7 +915,12 @@ public readonly struct Circle : IEquatable<Circle>
         return MathF.Abs(a) < sectorAngleRad * 0.5f;
     }
 
-    
+    /// <summary>
+    /// Determines whether the circle contains a collision object.
+    /// </summary>
+    /// <param name="collisionObject">The collision object to check.</param>
+    /// <returns><c>true</c> if the collision object is inside the circle;
+    /// otherwise, <c>false</c>.</returns>
     public bool ContainsCollisionObject(CollisionObject collisionObject)
     {
         if (!collisionObject.HasColliders) return false;
@@ -488,6 +931,11 @@ public readonly struct Circle : IEquatable<Circle>
 
         return true;
     }
+    /// <summary>
+    /// Determines whether the circle contains a collider.
+    /// </summary>
+    /// <param name="collider">The collider to check.</param>
+    /// <returns><c>true</c> if the collider is inside the circle; otherwise, <c>false</c>.</returns>
     public bool ContainsCollider(Collider collider)
     {
         switch (collider.GetShapeType())
@@ -503,35 +951,74 @@ public readonly struct Circle : IEquatable<Circle>
 
         return false;
     }
+    /// <summary>
+    /// Determines whether the circle contains a shape.
+    /// </summary>
+    /// <param name="segment">The segment to check.</param>
+    /// <returns><c>true</c> if the segment is inside the circle; otherwise, <c>false</c>.</returns>
     public bool ContainsShape(Segment segment)
     {
         return ContainsCircleSegment(Center, Radius, segment.Start, segment.End);
     }
+    /// <summary>
+    /// Determines whether the circle contains another circle.
+    /// </summary>
+    /// <param name="circle">The circle to check.</param>
+    /// <returns><c>true</c> if the other circle is inside the current circle; otherwise, <c>false</c>.</returns>
     public bool ContainsShape(Circle circle)
     {
         return ContainsCircleCircle(Center, Radius, circle.Center, circle.Radius);
     }
+    /// <summary>
+    /// Determines whether the circle contains a rectangle.
+    /// </summary>
+    /// <param name="rect">The rectangle to check.</param>
+    /// <returns><c>true</c> if the rectangle is inside the circle; otherwise, <c>false</c>.</returns>
     public bool ContainsShape(Rect rect)
     {
         return ContainsCircleRect(Center, Radius, rect.A, rect.B, rect.C, rect.D);
     }
+    /// <summary>
+    /// Determines whether the circle contains a triangle.
+    /// </summary>
+    /// <param name="triangle">The triangle to check.</param>
+    /// <returns><c>true</c> if the triangle is inside the circle; otherwise, <c>false</c>.</returns>
     public bool ContainsShape(Triangle triangle)
     {
         return ContainsCircleTriangle(Center, Radius, triangle.A, triangle.B, triangle.C);
     }
+    /// <summary>
+    /// Determines whether the circle contains a quad.
+    /// </summary>
+    /// <param name="quad">The quad to check.</param>
+    /// <returns><c>true</c> if the quad is inside the circle; otherwise, <c>false</c>.</returns>
     public bool ContainsShape(Quad quad)
     {
         return ContainsCircleQuad(Center, Radius, quad.A, quad.B, quad.C, quad.D);
     }
+    /// <summary>
+    /// Determines whether the circle contains a polyline.
+    /// </summary>
+    /// <param name="polyline">The polyline to check.</param>
+    /// <returns><c>true</c> if the polyline is inside the circle; otherwise, <c>false</c>.</returns>
     public bool ContainsShape(Polyline polyline)
     {
         return ContainsCirclePolyline(Center, Radius, polyline);
     }
+    /// <summary>
+    /// Determines whether the circle contains a polygon.
+    /// </summary>
+    /// <param name="polygon">The polygon to check.</param>
+    /// <returns><c>true</c> if the polygon is inside the circle; otherwise, <c>false</c>.</returns>
     public bool ContainsShape(Polygon polygon)
     {
         return ContainsCirclePolygon(Center, Radius, polygon);
     }
-
+    /// <summary>
+    /// Determines whether the circle contains a set of points.
+    /// </summary>
+    /// <param name="points">The points to check.</param>
+    /// <returns><c>true</c> if all points are inside the circle; otherwise, <c>false</c>.</returns>
     public bool ContainsShape(Points points)
     {
         return ContainsCirclePoints(Center, Radius, points);
