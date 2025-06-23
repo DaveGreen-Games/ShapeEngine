@@ -4,10 +4,14 @@ using ShapeEngine.Random;
 namespace ShapeEngine.Core.Structs;
 
 /// <summary>
-/// Used for ui anchor points and rect alignments. 0, 0 is top left, 1, 1 is bottom right.
+/// Used for ui anchor points and rect alignments.
+/// <list type="bullet">
+/// <item><c>{0, 0}</c> is top left</item>
+/// <item><c>{1, 1}</c> is bottom right.</item>
+/// </list>
 /// </summary>
-/// <param name="x">Range 0-1. 0 is left, 0.5 is center, 1 is right.</param>
-/// <param name="y">Range 0-1. 0 is top, 0.5 is center, 1 is bottom.</param>
+/// <param name="x">Range <c>0-1</c>. 0 is left, 0.5 is center, 1 is right.</param>
+/// <param name="y">Range <c>0-1</c>. 0 is top, 0.5 is center, 1 is bottom.</param>
 public readonly struct AnchorPoint(float x, float y) : IEquatable<AnchorPoint>
 {
    /// <summary>
