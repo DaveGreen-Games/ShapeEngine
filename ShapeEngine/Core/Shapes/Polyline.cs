@@ -1851,7 +1851,6 @@ public class Polyline : Points, IEquatable<Polyline>
     }
     #endregion
     
-    
     #region Static
     public static Polyline GetShape(Points relative, Transform2D transform)
     {
@@ -1864,22 +1863,6 @@ public class Polyline : Points, IEquatable<Polyline>
         }
         return shape;
     }
-
-    // public static Polyline Center(Polyline p, Vector2 newCenter)
-    // {
-    //     var centroid = p.GetCentroidMean();
-    //     var delta = newCenter - centroid;
-    //     return Move(p, delta);
-    // }
-    // public static Polyline Move(Polyline p, Vector2 translation)
-    // {
-    //     var result = new Polyline();
-    //     for (int i = 0; i < p.Count; i++)
-    //     {
-    //         result.Add(p[i] + translation);
-    //     }
-    //     return result;
-    // }
     #endregion
 }
 
