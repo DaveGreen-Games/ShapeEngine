@@ -794,21 +794,55 @@ public readonly struct Circle : IEquatable<Circle>
     #endregion
 
     #region Contains
+    /// <summary>
+    /// Determines whether a given point lies inside or on the boundary of a circle.
+    /// </summary>
+    /// <param name="circleCenter">The center of the circle.</param>
+    /// <param name="circleRadius">The radius of the circle.</param>
+    /// <param name="p">The point to check.</param>
+    /// <returns><c>true</c> if the point is inside or on the circle; otherwise, <c>false</c>.</returns>
     public static bool ContainsCirclePoint(Vector2 circleCenter, float circleRadius, Vector2 p)
     {
         return  (circleCenter - p).LengthSquared() <= circleRadius * circleRadius;
     }
+    /// <summary>
+    /// Determines whether both specified points lie inside or on the boundary of a circle.
+    /// </summary>
+    /// <param name="circleCenter">The center of the circle.</param>
+    /// <param name="circleRadius">The radius of the circle.</param>
+    /// <param name="a">The first point to check.</param>
+    /// <param name="b">The second point to check.</param>
+    /// <returns><c>true</c> if both points are inside or on the circle; otherwise, <c>false</c>.</returns>
     public static bool ContainsCirclePoints(Vector2 circleCenter, float circleRadius, Vector2 a, Vector2 b)
     {
         return ContainsCirclePoint(circleCenter, circleRadius, a) && 
                ContainsCirclePoint(circleCenter, circleRadius, b);
     }
+    /// <summary>
+    /// Determines whether the specified three points all lie inside or on the boundary of a circle.
+    /// </summary>
+    /// <param name="circleCenter">The center of the circle.</param>
+    /// <param name="circleRadius">The radius of the circle.</param>
+    /// <param name="a">The first point to check.</param>
+    /// <param name="b">The second point to check.</param>
+    /// <param name="c">The third point to check.</param>
+    /// <returns><c>true</c> if all three points are inside or on the circle; otherwise, <c>false</c>.</returns>
     public static bool ContainsCirclePoints(Vector2 circleCenter, float circleRadius, Vector2 a, Vector2 b, Vector2 c)
     {
         return ContainsCirclePoint(circleCenter, circleRadius, a) && 
                ContainsCirclePoint(circleCenter, circleRadius, b) && 
                ContainsCirclePoint(circleCenter, circleRadius, c);
     }
+    /// <summary>
+    /// Determines whether the specified four points all lie inside or on the boundary of a circle.
+    /// </summary>
+    /// <param name="circleCenter">The center of the circle.</param>
+    /// <param name="circleRadius">The radius of the circle.</param>
+    /// <param name="a">The first point to check.</param>
+    /// <param name="b">The second point to check.</param>
+    /// <param name="c">The third point to check.</param>
+    /// <param name="d">The fourth point to check.</param>
+    /// <returns><c>true</c> if all four points are inside or on the circle; otherwise, <c>false</c>.</returns>
     public static bool ContainsCirclePoints(Vector2 circleCenter, float circleRadius, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
         return ContainsCirclePoint(circleCenter, circleRadius, a) && 
@@ -816,6 +850,13 @@ public readonly struct Circle : IEquatable<Circle>
                ContainsCirclePoint(circleCenter, circleRadius, c) && 
                ContainsCirclePoint(circleCenter, circleRadius, d);
     }
+    /// <summary>
+    /// Determines whether all points in the provided list lie inside or on the boundary of a circle.
+    /// </summary>
+    /// <param name="circleCenter">The center of the circle.</param>
+    /// <param name="circleRadius">The radius of the circle.</param>
+    /// <param name="points">The list of points to check.</param>
+    /// <returns><c>true</c> if all points are inside or on the circle; otherwise, <c>false</c>.</returns>
     public static bool ContainsCirclePoints(Vector2 circleCenter, float circleRadius, List<Vector2> points)
     {
         if (points.Count <= 0) return false;
@@ -826,38 +867,100 @@ public readonly struct Circle : IEquatable<Circle>
 
         return true;
     }
+    /// <summary>
+    /// Determines whether a line segment,
+    /// defined by its start and end points, lies entirely inside or on the boundary of a circle.
+    /// </summary>
+    /// <param name="circleCenter">The center of the circle.</param>
+    /// <param name="circleRadius">The radius of the circle.</param>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <returns><c>true</c> if both segment endpoints are inside or on the circle; otherwise, <c>false</c>.</returns>
     public static bool ContainsCircleSegment(Vector2 circleCenter, float circleRadius, Vector2 segmentStart, Vector2 segmentEnd)
     {
         if(!ContainsCirclePoints(circleCenter, circleRadius, segmentStart, segmentEnd)) return false;
         return true;
     }
+    /// <summary>
+    /// Determines whether one circle completely contains another circle.
+    /// </summary>
+    /// <param name="circle1Center">The center of the containing circle.</param>
+    /// <param name="circle1Radius">The radius of the containing circle.</param>
+    /// <param name="circle2Center">The center of the circle to check for containment.</param>
+    /// <param name="circle2Radius">The radius of the circle to check for containment.</param>
+    /// <returns><c>true</c> if the second circle is entirely within the first; otherwise, <c>false</c>.</returns>
     public static bool ContainsCircleCircle(Vector2 circle1Center, float circle1Radius, Vector2 circle2Center, float circle2Radius)
     {
         if (circle2Radius > circle1Radius) return false;
         var dis = (circle2Center - circle1Center).Length() + circle2Radius;
         return dis <= circle1Radius;
     }
+    /// <summary>
+    /// Determines whether the specified triangle (defined by points a, b, and c)
+    /// lies entirely inside or on the boundary of a circle.
+    /// </summary>
+    /// <param name="circleCenter">The center of the circle.</param>
+    /// <param name="circleRadius">The radius of the circle.</param>
+    /// <param name="a">The first vertex of the triangle.</param>
+    /// <param name="b">The second vertex of the triangle.</param>
+    /// <param name="c">The third vertex of the triangle.</param>
+    /// <returns><c>true</c> if all triangle vertices are inside or on the circle; otherwise, <c>false</c>.</returns>
     public static bool ContainsCircleTriangle(Vector2 circleCenter, float circleRadius, Vector2 a, Vector2 b, Vector2 c)
     {
        return ContainsCirclePoints(circleCenter, circleRadius, a, b, c);
     }
+    /// <summary>
+    /// Determines whether the specified quadrilateral (defined by points a, b, c, and d)
+    /// lies entirely inside or on the boundary of a circle.
+    /// </summary>
+    /// <param name="circleCenter">The center of the circle.</param>
+    /// <param name="circleRadius">The radius of the circle.</param>
+    /// <param name="a">The first vertex of the quadrilateral.</param>
+    /// <param name="b">The second vertex of the quadrilateral.</param>
+    /// <param name="c">The third vertex of the quadrilateral.</param>
+    /// <param name="d">The fourth vertex of the quadrilateral.</param>
+    /// <returns><c>true</c> if all quadrilateral vertices are inside or on the circle; otherwise, <c>false</c>.</returns>
     public static bool ContainsCircleQuad(Vector2 circleCenter, float circleRadius, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
         return ContainsCirclePoints(circleCenter, circleRadius, a, b, c, d);
     }
+    /// <summary>
+    /// Determines whether all four specified points (representing the corners of a rectangle)
+    /// lie inside or on the boundary of a circle.
+    /// </summary>
+    /// <param name="circleCenter">The center of the circle.</param>
+    /// <param name="circleRadius">The radius of the circle.</param>
+    /// <param name="a">The first corner of the rectangle.</param>
+    /// <param name="b">The second corner of the rectangle.</param>
+    /// <param name="c">The third corner of the rectangle.</param>
+    /// <param name="d">The fourth corner of the rectangle.</param>
+    /// <returns><c>true</c> if all four points are inside or on the circle; otherwise, <c>false</c>.</returns>
     public static bool ContainsCircleRect(Vector2 circleCenter, float circleRadius, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
         return ContainsCirclePoints(circleCenter, circleRadius, a, b, c, d);
     }
+    /// <summary>
+    /// Determines whether all points in the provided polyline lie inside or on the boundary of a circle.
+    /// </summary>
+    /// <param name="circleCenter">The center of the circle.</param>
+    /// <param name="circleRadius">The radius of the circle.</param>
+    /// <param name="polyline">The list of points representing the polyline to check.</param>
+    /// <returns><c>true</c> if all points are inside or on the circle; otherwise, <c>false</c>.</returns>
     public static bool ContainsCirclePolyline(Vector2 circleCenter, float circleRadius, List<Vector2> polyline)
     {
         return ContainsCirclePoints(circleCenter, circleRadius, polyline);
     }
+    /// <summary>
+    /// Determines whether all points in the provided polygon lie inside or on the boundary of a circle.
+    /// </summary>
+    /// <param name="circleCenter">The center of the circle.</param>
+    /// <param name="circleRadius">The radius of the circle.</param>
+    /// <param name="polygon">The list of points representing the polygon to check.</param>
+    /// <returns><c>true</c> if all points are inside or on the circle; otherwise, <c>false</c>.</returns>
     public static bool ContainsCirclePolygon(Vector2 circleCenter, float circleRadius, List<Vector2> polygon)
     {
         return ContainsCirclePoints(circleCenter, circleRadius, polygon);
     }
-        
     /// <summary>
     /// Determines whether the circle contains a given point.
     /// </summary>
@@ -894,7 +997,22 @@ public readonly struct Circle : IEquatable<Circle>
     /// <param name="points">The list of points to check.</param>
     /// <returns><c>true</c> if all points are inside the circle; otherwise, <c>false</c>.</returns>
     public bool ContainsPoints(List<Vector2> points) => ContainsCirclePoints(Center, Radius, points);
-    
+    /// <summary>
+    /// Determines whether a point [<paramref name="p"/>] is within a sector of the circle,
+    /// defined by a center angle [<paramref name="rotationRad"/>] and a sector angle [<paramref name="sectorAngleRad"/>] (in radians).
+    /// The sector is centered at <paramref name="rotationRad"/> and spans <paramref name="sectorAngleRad"/>.
+    /// </summary>
+    /// <param name="p">The point to check.</param>
+    /// <param name="rotationRad">The center angle of the sector in radians.</param>
+    /// <param name="sectorAngleRad">The angle of the sector in radians.</param>
+    /// <returns><c>true</c> if the point is within the sector; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// <paramref name="rotationRad"/> is used to calculate the direction of the sector.
+    /// <paramref name="sectorAngleRad"/> defines the sector centered around the calculated direction.
+    /// If the angle between the sector direction and the direction from the circle <see cref="Center"/> to <paramref name="p"/> has a smaller
+    /// absolute angle than <paramref name="sectorAngleRad"/>,
+    /// the function returns true, otherwise false.
+    /// </remarks>
     public bool ContainsPointSector(Vector2 p, float rotationRad, float sectorAngleRad)
     {
         if(sectorAngleRad <= 0f) return false;
@@ -904,7 +1022,21 @@ public readonly struct Circle : IEquatable<Circle>
         var a = dir.AngleRad(p - Center);
         return MathF.Abs(a) < sectorAngleRad * 0.5f;
     }
-    
+    /// <summary>
+    /// Determines whether a point [<paramref name="p"/>] is within a sector of the circle,
+    /// defined by a direction vector [<paramref name="dir"/>] and a sector angle [<paramref name="sectorAngleRad"/>] (in radians).
+    /// The sector is centered along <paramref name="dir"/> and spans <paramref name="sectorAngleRad"/>.
+    /// </summary>
+    /// <param name="p">The point to check.</param>
+    /// <param name="dir">The direction vector representing the center of the sector.</param>
+    /// <param name="sectorAngleRad">The angle of the sector in radians.</param>
+    /// <returns><c>true</c> if the point is within the sector; otherwise, <c>false</c>.</returns>
+    /// /// <remarks>
+    /// <paramref name="sectorAngleRad"/> defines the sector centered around the <paramref name="dir"/>.
+    /// If the angle between <paramref name="dir"/> and the direction from the circle <see cref="Center"/> to <paramref name="p"/> has a smaller
+    /// absolute angle than <paramref name="sectorAngleRad"/>,
+    /// the function returns true, otherwise false.
+    /// </remarks>
     public bool ContainsPointSector(Vector2 p, Vector2 dir, float sectorAngleRad)
     {
         if(sectorAngleRad <= 0f) return false;
@@ -914,7 +1046,6 @@ public readonly struct Circle : IEquatable<Circle>
         var a = dir.AngleRad(p - Center);
         return MathF.Abs(a) < sectorAngleRad * 0.5f;
     }
-
     /// <summary>
     /// Determines whether the circle contains a collision object.
     /// </summary>
@@ -1488,6 +1619,15 @@ public readonly struct Circle : IEquatable<Circle>
     #endregion
     
     #region Static
+    /// <summary>
+    /// Combines multiple circles into a single circle.
+    /// </summary>
+    /// <param name="circles">The array of circles to combine.</param>
+    /// <returns>A new <see cref="Circle"/> representing the combined result.</returns>
+    /// <remarks>
+    /// The combined circle's center is the average of all input centers.
+    /// The combined circle's radius is the sum of all input radii.
+    /// </remarks>
     public static Circle Combine(params Circle[] circles)
     {
         if (circles.Length <= 0) return new();
@@ -1502,6 +1642,14 @@ public readonly struct Circle : IEquatable<Circle>
         return new(combinedCenter / circles.Length, totalRadius);
     }
 
+    /// <summary>
+    /// Determines whether two circles overlap.
+    /// </summary>
+    /// <param name="aPos">The center of the first circle.</param>
+    /// <param name="aRadius">The radius of the first circle.</param>
+    /// <param name="bPos">The center of the second circle.</param>
+    /// <param name="bRadius">The radius of the second circle.</param>
+    /// <returns><c>true</c> if the circles overlap; otherwise, <c>false</c>.</returns>
     public static bool OverlapCircleCircle(Vector2 aPos, float aRadius, Vector2 bPos, float bRadius)
     {
         if (aRadius <= 0.0f && bRadius > 0.0f) return ContainsCirclePoint(bPos, bRadius, aPos);
@@ -1511,7 +1659,14 @@ public readonly struct Circle : IEquatable<Circle>
         float rSum = aRadius + bRadius;
         return (aPos - bPos).LengthSquared() < rSum * rSum;
     }
-    
+    /// <summary>
+    /// Determines whether a circle overlaps with a segment.
+    /// </summary>
+    /// <param name="cPos">The center of the circle.</param>
+    /// <param name="cRadius">The radius of the circle.</param>
+    /// <param name="segStart">The start point of the segment.</param>
+    /// <param name="segEnd">The end point of the segment.</param>
+    /// <returns><c>true</c> if the circle overlaps with the segment; otherwise, <c>false</c>.</returns>
     public static bool OverlapCircleSegment(Vector2 cPos, float cRadius, Vector2 segStart, Vector2 segEnd)
     {
         if (cRadius <= 0.0f) return Segment.IsPointOnSegment(cPos, segStart, segEnd);
@@ -1528,7 +1683,14 @@ public readonly struct Circle : IEquatable<Circle>
             p.LengthSquared() <= d.LengthSquared() &&
             Vector2.Dot(p, d) >= 0.0f;
     }
-    
+    /// <summary>
+    /// Determines whether a circle overlaps with a line.
+    /// </summary>
+    /// <param name="cPos">The center of the circle.</param>
+    /// <param name="cRadius">The radius of the circle.</param>
+    /// <param name="linePos">A point on the line.</param>
+    /// <param name="lineDir">The direction of the line.</param>
+    /// <returns><c>true</c> if the circle overlaps with the line; otherwise, <c>false</c>.</returns>
     public static bool OverlapCircleLine(Vector2 cPos, float cRadius, Vector2 linePos, Vector2 lineDir)
     {
         var lc = cPos - linePos;
@@ -1536,7 +1698,14 @@ public readonly struct Circle : IEquatable<Circle>
         var nearest = linePos + p;
         return ContainsCirclePoint(cPos, cRadius, nearest);
     }
-    
+    /// <summary>
+    /// Determines whether a circle overlaps with a ray.
+    /// </summary>
+    /// <param name="cPos">The center of the circle.</param>
+    /// <param name="cRadius">The radius of the circle.</param>
+    /// <param name="rayPos">The origin point of the ray.</param>
+    /// <param name="rayDir">The direction of the ray.</param>
+    /// <returns><c>true</c> if the circle overlaps with the ray; otherwise, <c>false</c>.</returns>
     public static bool OverlapCircleRay(Vector2 cPos, float cRadius, Vector2 rayPos, Vector2 rayDir)
     {
         var w = cPos - rayPos;
@@ -1550,7 +1719,15 @@ public readonly struct Circle : IEquatable<Circle>
         }
         return true;
     }
-    
+    /// <summary>
+    /// Determines whether a circle overlaps with a triangle.
+    /// </summary>
+    /// <param name="center">The center of the circle.</param>
+    /// <param name="radius">The radius of the circle.</param>
+    /// <param name="a">The first vertex of the triangle.</param>
+    /// <param name="b">The second vertex of the triangle.</param>
+    /// <param name="c">The third vertex of the triangle.</param>
+    /// <returns><c>true</c> if the circle overlaps with the triangle; otherwise, <c>false</c>.</returns>
     public static bool OverlapCircleTriangle(Vector2 center, float radius, Vector2 a, Vector2 b, Vector2 c)
     {
         if (Triangle.ContainsTrianglePoint(a, b, c, center)) return true;
@@ -1561,7 +1738,16 @@ public readonly struct Circle : IEquatable<Circle>
 
         return false;
     }
-    
+    /// <summary>
+    /// Determines whether a circle overlaps with a quad.
+    /// </summary>
+    /// <param name="center">The center of the circle.</param>
+    /// <param name="radius">The radius of the circle.</param>
+    /// <param name="a">The first vertex of the quad.</param>
+    /// <param name="b">The second vertex of the quad.</param>
+    /// <param name="c">The third vertex of the quad.</param>
+    /// <param name="d">The fourth vertex of the quad.</param>
+    /// <returns><c>true</c> if the circle overlaps with the quad; otherwise, <c>false</c>.</returns>
     public static bool OverlapCircleQuad(Vector2 center, float radius, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
         if (Quad.ContainsQuadPoint(a, b, c, d,  center)) return true;
@@ -1573,12 +1759,27 @@ public readonly struct Circle : IEquatable<Circle>
         
         return false;
     }
-    
+    /// <summary>
+    /// Determines whether a circle overlaps with a rectangle.
+    /// </summary>
+    /// <param name="center">The center of the circle.</param>
+    /// <param name="radius">The radius of the circle.</param>
+    /// <param name="a">The top-left corner of the rectangle.</param>
+    /// <param name="b">The top-right corner of the rectangle.</param>
+    /// <param name="c">The bottom-right corner of the rectangle.</param>
+    /// <param name="d">The bottom-left corner of the rectangle.</param>
+    /// <returns><c>true</c> if the circle overlaps with the rectangle; otherwise, <c>false</c>.</returns>
     public static bool OverlapCircleRect(Vector2 center, float radius, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
         return OverlapCircleQuad(center, radius, a, b, c, d);
     }
-    
+    /// <summary>
+    /// Determines whether a circle overlaps with a polygon.
+    /// </summary>
+    /// <param name="center">The center of the circle.</param>
+    /// <param name="radius">The radius of the circle.</param>
+    /// <param name="points">The vertices of the polygon.</param>
+    /// <returns><c>true</c> if the circle overlaps with the polygon; otherwise, <c>false</c>.</returns>
     public static bool OverlapCirclePolygon(Vector2 center, float radius, List<Vector2> points)
     {
         if (points.Count < 3) return false;
@@ -1594,7 +1795,13 @@ public readonly struct Circle : IEquatable<Circle>
         }
         return oddNodes;
     }
-    
+    /// <summary>
+    /// Determines whether a circle overlaps with a polyline.
+    /// </summary>
+    /// <param name="center">The center of the circle.</param>
+    /// <param name="radius">The radius of the circle.</param>
+    /// <param name="points">The vertices of the polyline.</param>
+    /// <returns><c>true</c> if the circle overlaps with the polyline; otherwise, <c>false</c>.</returns>
     public static bool OverlapCirclePolyline(Vector2 center, float radius, List<Vector2> points)
     {
         if (points.Count < 3) return false;
@@ -1604,7 +1811,13 @@ public readonly struct Circle : IEquatable<Circle>
         }
         return false;
     }
-    
+    /// <summary>
+    /// Determines whether a circle overlaps with a collection of segments.
+    /// </summary>
+    /// <param name="center">The center of the circle.</param>
+    /// <param name="radius">The radius of the circle.</param>
+    /// <param name="segments">The collection of segments.</param>
+    /// <returns><c>true</c> if the circle overlaps with the segments; otherwise, <c>false</c>.</returns>
     public static bool OverlapCircleSegments(Vector2 center, float radius, List<Segment> segments)
     {
         if (segments.Count <= 0) return false;
@@ -1615,9 +1828,25 @@ public readonly struct Circle : IEquatable<Circle>
         }
         return false;
     }
-    
+    /// <summary>
+    /// Calculates the intersection points between two circles.
+    /// </summary>
+    /// <param name="aPos">The center of the first circle.</param>
+    /// <param name="aRadius">The radius of the first circle.</param>
+    /// <param name="bPos">The center of the second circle.</param>
+    /// <param name="bRadius">The radius of the second circle.</param>
+    /// <returns>A tuple containing the intersection points as <see cref="CollisionPoint"/>.</returns>
     public static (CollisionPoint a, CollisionPoint b) IntersectCircleCircle(Vector2 aPos, float aRadius, Vector2 bPos, float bRadius) { return IntersectCircleCircle(aPos.X, aPos.Y, aRadius, bPos.X, bPos.Y, bRadius); }
-    
+    /// <summary>
+    /// Calculates the intersection points between two circles using scalar values.
+    /// </summary>
+    /// <param name="cx0">The x-coordinate of the first circle's center.</param>
+    /// <param name="cy0">The y-coordinate of the first circle's center.</param>
+    /// <param name="radius0">The radius of the first circle.</param>
+    /// <param name="cx1">The x-coordinate of the second circle's center.</param>
+    /// <param name="cy1">The y-coordinate of the second circle's center.</param>
+    /// <param name="radius1">The radius of the second circle.</param>
+    /// <returns>A tuple containing the intersection points as <see cref="CollisionPoint"/>.</returns>
     public static (CollisionPoint a, CollisionPoint b) IntersectCircleCircle(float cx0, float cy0, float radius0, float cx1, float cy1, float radius1)
     {
         // Find the distance between the centers.
@@ -1674,7 +1903,14 @@ public readonly struct Circle : IEquatable<Circle>
         return (cp1, cp2);
 
     }
-    
+    /// <summary>
+    /// Calculates the intersection points between a circle and a segment.
+    /// </summary>
+    /// <param name="circlePos">The center of the circle.</param>
+    /// <param name="circleRadius">The radius of the circle.</param>
+    /// <param name="start">The start point of the segment.</param>
+    /// <param name="end">The end point of the segment.</param>
+    /// <returns>A tuple containing the intersection points as <see cref="CollisionPoint"/>.</returns>
     public static (CollisionPoint a, CollisionPoint b) IntersectCircleSegment(Vector2 circlePos, float circleRadius, Vector2 start, Vector2 end) 
     {
         return IntersectCircleSegment(
@@ -1682,7 +1918,15 @@ public readonly struct Circle : IEquatable<Circle>
             start.X, start.Y,
             end.X, end.Y); 
     }
-    
+    /// <summary>
+    /// Calculates the intersection points between a circle and a ray.
+    /// </summary>
+    /// <param name="circleCenter">The center of the circle.</param>
+    /// <param name="circleRadius">The radius of the circle.</param>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="rayNormal">The normal vector of the ray.</param>
+    /// <returns>A tuple containing the intersection points as <see cref="CollisionPoint"/>.</returns>
     public static (CollisionPoint a, CollisionPoint b) IntersectCircleRay(Vector2 circleCenter, float circleRadius, Vector2 rayPoint, Vector2 rayDirection, Vector2 rayNormal) 
     {
         var toCircle = circleCenter - rayPoint;
@@ -1722,7 +1966,15 @@ public readonly struct Circle : IEquatable<Circle>
         
         return (new(), new());
     }
-    
+    /// <summary>
+    /// Calculates the intersection points between a circle and a line.
+    /// </summary>
+    /// <param name="circleCenter">The center of the circle.</param>
+    /// <param name="circleRadius">The radius of the circle.</param>
+    /// <param name="linePoint">A point on the line.</param>
+    /// <param name="lineDirection">The direction vector of the line.</param>
+    /// <param name="lineNormal">The normal vector of the line.</param>
+    /// <returns>A tuple containing the intersection points as <see cref="CollisionPoint"/>.</returns>
     public static (CollisionPoint a, CollisionPoint b) IntersectCircleLine(Vector2 circleCenter, float circleRadius, Vector2 linePoint, Vector2 lineDirection, Vector2 lineNormal)
     {
         // Normalize the direction vector
@@ -1764,7 +2016,17 @@ public readonly struct Circle : IEquatable<Circle>
 
         return (new(), new());
     }
-    
+    /// <summary>
+    /// Calculates the intersection points between a circle and a segment using scalar values.
+    /// </summary>
+    /// <param name="circleX">The x-coordinate of the circle's center.</param>
+    /// <param name="circleY">The y-coordinate of the circle's center.</param>
+    /// <param name="circleRadius">The radius of the circle.</param>
+    /// <param name="segStartX">The x-coordinate of the segment's start point.</param>
+    /// <param name="segStartY">The y-coordinate of the segment's start point.</param>
+    /// <param name="segEndX">The x-coordinate of the segment's end point.</param>
+    /// <param name="segEndY">The y-coordinate of the segment's end point.</param>
+    /// <returns>A tuple containing the intersection points as <see cref="CollisionPoint"/>.</returns>
     public static (CollisionPoint a, CollisionPoint b) IntersectCircleSegment(float circleX, float circleY, float circleRadius, float segStartX, float segStartY, float segEndX, float segEndY)
     {
         float difX = segEndX - segStartX;
