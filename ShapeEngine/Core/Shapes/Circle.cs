@@ -1,5 +1,4 @@
-﻿
-using System.Numerics;
+﻿using System.Numerics;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.StaticLib;
@@ -363,13 +362,13 @@ public readonly struct Circle : IEquatable<Circle>
     /// Gets a random vertex on the circle's edge.
     /// </summary>
     /// <returns>A random vertex as a <see cref="Vector2"/>.</returns>
-    public Vector2 GetRandomVertex() { return Rng.Instance.RandCollection(GetVertices(), false); }
+    public Vector2 GetRandomVertex() { return Rng.Instance.RandCollection(GetVertices()); }
 
     /// <summary>
     /// Gets a random edge segment of the circle.
     /// </summary>
     /// <returns>A random edge as a <see cref="Segment"/>.</returns>
-    public Segment GetRandomEdge() { return Rng.Instance.RandCollection(GetEdges(), false); }
+    public Segment GetRandomEdge() { return Rng.Instance.RandCollection(GetEdges()); }
 
     /// <summary>
     /// Gets a random point on the circle's edge.
@@ -2106,6 +2105,17 @@ public readonly struct Circle : IEquatable<Circle>
     #endregion
 
     #region Overlap
+    /// <summary>
+    /// Determines whether this circle overlaps with the specified collider.
+    /// </summary>
+    /// <param name="collider">The collider to test for overlap with this circle.
+    /// The collider can represent various shapes such as circles, segments, rays, lines, triangles, rectangles, quads, polygons, or polylines.</param>
+    /// <returns><c>true</c> if this circle overlaps with the specified collider; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// The overlap test is performed based on the shape type of the collider.
+    /// If the collider is not enabled, the function returns <c>false</c> immediately.
+    /// The appropriate shape-specific overlap method is called depending on the collider's shape type.
+    /// </remarks>
     public bool Overlap(Collider collider)
     {
         if (!collider.Enabled) return false;
@@ -2144,6 +2154,15 @@ public readonly struct Circle : IEquatable<Circle>
         return false;
     }
 
+    /// <summary>
+    /// Determines whether this circle overlaps with any of the provided segments.
+    /// </summary>
+    /// <param name="segments">A collection of segments to test for overlap with this circle. Each segment is defined by its start and end points.</param>
+    /// <returns><c>true</c> if this circle overlaps with any of the segments; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// The function iterates through each segment in the collection and checks for overlap with the circle using the OverlapCircleSegment method.
+    /// The check returns <c>true</c> as soon as an overlap is found; otherwise, it returns <c>false</c> after all segments are checked.
+    /// </remarks>
     public bool OverlapShape(Segments segments)
     {
         foreach (var seg in segments)
@@ -2153,10 +2172,35 @@ public readonly struct Circle : IEquatable<Circle>
         }
         return false;
     }
+    /// <summary>
+    /// Determines whether this circle overlaps with a segment.
+    /// </summary>
+    /// <param name="s">The segment to check for overlap.</param>
+    /// <returns><c>true</c> if the circle overlaps with the segment; otherwise, <c>false</c>.</returns>
     public bool OverlapShape(Segment s) => OverlapCircleSegment(Center, Radius, s.Start, s.End);
+    /// <summary>
+    /// Determines whether this circle overlaps with a line.
+    /// </summary>
+    /// <param name="l">The line to check for overlap.</param>
+    /// <returns><c>true</c> if the circle overlaps with the line; otherwise, <c>false</c>.</returns>
     public bool OverlapShape(Line l) => Line.OverlapLineCircle(l.Point, l.Direction, Center, Radius);
+    /// <summary>
+    /// Determines whether this circle overlaps with a ray.
+    /// </summary>
+    /// <param name="r">The ray to check for overlap.</param>
+    /// <returns><c>true</c> if the circle overlaps with the ray; otherwise, <c>false</c>.</returns>
     public bool OverlapShape(Ray r) => Ray.OverlapRayCircle(r.Point, r.Direction, Center, Radius);
+    /// <summary>
+    /// Determines whether this circle overlaps with another circle.
+    /// </summary>
+    /// <param name="b">The other circle to check for overlap.</param>
+    /// <returns><c>true</c> if the circles overlap; otherwise, <c>false</c>.</returns>
     public bool OverlapShape(Circle b) => OverlapCircleCircle(Center, Radius, b.Center, b.Radius);
+    /// <summary>
+    /// Determines whether this circle overlaps with a triangle.
+    /// </summary>
+    /// <param name="t">The triangle to check for overlap.</param>
+    /// <returns><c>true</c> if the circle overlaps with the triangle; otherwise, <c>false</c>.</returns>
     public bool OverlapShape(Triangle t)
     {
         if (ContainsPoint(t.A)) return true;
@@ -2166,6 +2210,11 @@ public readonly struct Circle : IEquatable<Circle>
         if (Segment.OverlapSegmentCircle(t.B, t.C, Center, Radius)) return true;
         return Segment.OverlapSegmentCircle(t.C, t.A, Center, Radius);
     }
+    /// <summary>
+    /// Determines whether this circle overlaps with a quadrilateral.
+    /// </summary>
+    /// <param name="q">The quad to check for overlap.</param>
+    /// <returns><c>true</c> if the circle overlaps with the quad; otherwise, <c>false</c>.</returns>
     public bool OverlapShape(Quad q)
     {
         if (ContainsPoint(q.A)) return true;
@@ -2176,11 +2225,21 @@ public readonly struct Circle : IEquatable<Circle>
         if (Segment.OverlapSegmentCircle(q.C, q.D, Center, Radius)) return true;
         return Segment.OverlapSegmentCircle(q.D, q.A, Center, Radius);
     }
+    /// <summary>
+    /// Determines whether this circle overlaps with a rectangle.
+    /// </summary>
+    /// <param name="r">The rectangle to check for overlap.</param>
+    /// <returns><c>true</c> if the circle overlaps with the rectangle; otherwise, <c>false</c>.</returns>
     public bool OverlapShape(Rect r)
     {
         if (Radius <= 0.0f) return r.ContainsPoint(Center);
         return ContainsPoint(r.ClampOnRect(Center));
     }
+    /// <summary>
+    /// Determines whether this circle overlaps with a polygon.
+    /// </summary>
+    /// <param name="poly">The polygon to check for overlap.</param>
+    /// <returns><c>true</c> if the circle overlaps with the polygon; otherwise, <c>false</c>.</returns>
     public bool OverlapShape(Polygon poly)
     {
         if (poly.Count < 3) return false;
@@ -2196,6 +2255,11 @@ public readonly struct Circle : IEquatable<Circle>
         }
         return oddNodes;
     }
+    /// <summary>
+    /// Determines whether this circle overlaps with a polyline.
+    /// </summary>
+    /// <param name="pl">The polyline to check for overlap.</param>
+    /// <returns><c>true</c> if the circle overlaps with the polyline; otherwise, <c>false</c>.</returns>
     public bool OverlapShape(Polyline pl)
     {
         if (pl.Count <= 0) return false;
@@ -2212,20 +2276,94 @@ public readonly struct Circle : IEquatable<Circle>
 
         return false;
     }
-
+    /// <summary>
+    /// Determines whether this circle overlaps with a segment defined by two points.
+    /// </summary>
+    /// <param name="start">The start point of the segment.</param>
+    /// <param name="end">The end point of the segment.</param>
+    /// <returns><c>true</c> if the circle overlaps with the segment; otherwise, <c>false</c>.</returns>
     public bool OverlapSegment(Vector2 start, Vector2 end) => OverlapCircleSegment(Center, Radius, start, end);
+    /// <summary>
+    /// Determines whether this circle overlaps with a line defined by a point and direction.
+    /// </summary>
+    /// <param name="linePos">A point on the line.</param>
+    /// <param name="lineDir">The direction of the line.</param>
+    /// <returns><c>true</c> if the circle overlaps with the line; otherwise, <c>false</c>.</returns>
     public bool OverlapLine(Vector2 linePos, Vector2 lineDir) => OverlapCircleLine(Center, Radius, linePos, lineDir);
+    /// <summary>
+    /// Determines whether this circle overlaps with a ray defined by a point and direction.
+    /// </summary>
+    /// <param name="rayPos">The origin point of the ray.</param>
+    /// <param name="rayDir">The direction of the ray.</param>
+    /// <returns><c>true</c> if the circle overlaps with the ray; otherwise, <c>false</c>.</returns>
     public bool OverlapRay(Vector2 rayPos, Vector2 rayDir) => OverlapCircleRay(Center, Radius, rayPos, rayDir);
+    /// <summary>
+    /// Determines whether this circle overlaps with another circle defined by center and radius.
+    /// </summary>
+    /// <param name="center">The center of the other circle.</param>
+    /// <param name="radius">The radius of the other circle.</param>
+    /// <returns><c>true</c> if the circles overlap; otherwise, <c>false</c>.</returns>
     public bool OverlapCircle(Vector2 center, float radius) => OverlapCircleCircle(Center, Radius, center, radius);
+    /// <summary>
+    /// Determines whether this circle overlaps with a triangle defined by three points.
+    /// </summary>
+    /// <param name="a">The first vertex of the triangle.</param>
+    /// <param name="b">The second vertex of the triangle.</param>
+    /// <param name="c">The third vertex of the triangle.</param>
+    /// <returns><c>true</c> if the circle overlaps with the triangle; otherwise, <c>false</c>.</returns>
     public bool OverlapTriangle(Vector2 a, Vector2 b, Vector2 c) => OverlapCircleTriangle(Center, Radius, a, b, c);
+    /// <summary>
+    /// Determines whether this circle overlaps with a quadrilateral defined by four points.
+    /// </summary>
+    /// <param name="a">The first vertex of the quad.</param>
+    /// <param name="b">The second vertex of the quad.</param>
+    /// <param name="c">The third vertex of the quad.</param>
+    /// <param name="d">The fourth vertex of the quad.</param>
+    /// <returns><c>true</c> if the circle overlaps with the quad; otherwise, <c>false</c>.</returns>
     public bool OverlapQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => OverlapCircleQuad(Center, Radius, a, b, c, d);
+    /// <summary>
+    /// Determines whether this circle overlaps with a rectangle defined by four points.
+    /// </summary>
+    /// <param name="a">The top-left corner of the rectangle.</param>
+    /// <param name="b">The top-right corner of the rectangle.</param>
+    /// <param name="c">The bottom-right corner of the rectangle.</param>
+    /// <param name="d">The bottom-left corner of the rectangle.</param>
+    /// <returns><c>true</c> if the circle overlaps with the rectangle; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// This method is an alias for <see cref="OverlapQuad"/>.
+    /// </remarks>
     public bool OverlapRect(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => OverlapCircleQuad(Center, Radius, a, b, c, d);
+    /// <summary>
+    /// Determines whether this circle overlaps with a polygon defined by a list of points.
+    /// </summary>
+    /// <param name="points">The vertices of the polygon.</param>
+    /// <returns><c>true</c> if the circle overlaps with the polygon; otherwise, <c>false</c>.</returns>
     public bool OverlapPolygon(List<Vector2> points) => OverlapCirclePolygon(Center, Radius, points);
+    /// <summary>
+    /// Determines whether this circle overlaps with a polyline defined by a list of points.
+    /// </summary>
+    /// <param name="points">The vertices of the polyline.</param>
+    /// <returns><c>true</c> if the circle overlaps with the polyline; otherwise, <c>false</c>.</returns>
     public bool OverlapPolyline(List<Vector2> points) => OverlapCirclePolyline(Center, Radius, points);
+    /// <summary>
+    /// Determines whether this circle overlaps with a collection of segments.
+    /// </summary>
+    /// <param name="segments">The list of segments to check for overlap.</param>
+    /// <returns><c>true</c> if the circle overlaps with any of the segments; otherwise, <c>false</c>.</returns>
     public bool OverlapSegments(List<Segment> segments) => OverlapCircleSegments(Center, Radius, segments);
     #endregion
 
     #region Intersect
+    /// <summary>
+    /// Calculates the intersection points between this circle and a collider.
+    /// </summary>
+    /// <param name="collider">The collider to test for intersection. Can represent various shapes.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
+    /// </returns>
+    /// <remarks>
+    /// The method dispatches to the appropriate shape-specific intersection logic based on the collider's type.
+    /// </remarks>
     public  CollisionPoints? Intersect(Collider collider)
     {
         if (!collider.Enabled) return null;
@@ -2263,6 +2401,13 @@ public readonly struct Circle : IEquatable<Circle>
 
         return null;
     }
+    /// <summary>
+    /// Calculates the intersection points between this circle and another circle.
+    /// </summary>
+    /// <param name="c">The other circle to test for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
+    /// </returns>
     public  CollisionPoints? IntersectShape(Circle c)
     {
         var result = IntersectCircleCircle(Center, Radius, c.Center, c.Radius);
@@ -2277,6 +2422,13 @@ public readonly struct Circle : IEquatable<Circle>
         return null;
 
     }
+    /// <summary>
+    /// Calculates the intersection points between this circle and a ray.
+    /// </summary>
+    /// <param name="r">The ray to test for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
+    /// </returns>
     public  CollisionPoints? IntersectShape(Ray r)
     {
         var result = IntersectCircleRay(Center, Radius, r.Point, r.Direction, r.Normal);
@@ -2290,6 +2442,13 @@ public readonly struct Circle : IEquatable<Circle>
 
         return null;
     }
+    /// <summary>
+    /// Calculates the intersection points between this circle and a line.
+    /// </summary>
+    /// <param name="l">The line to test for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
+    /// </returns>
     public  CollisionPoints? IntersectShape(Line l)
     {
         var result = IntersectCircleLine(Center, Radius, l.Point, l.Direction, l.Normal);
@@ -2304,6 +2463,13 @@ public readonly struct Circle : IEquatable<Circle>
 
         return null;
     }
+    /// <summary>
+    /// Calculates the intersection points between this circle and a segment.
+    /// </summary>
+    /// <param name="s">The segment to test for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
+    /// </returns>
     public  CollisionPoints? IntersectShape(Segment s)
     {
         var result = IntersectCircleSegment(Center, Radius, s.Start, s.End);
@@ -2317,6 +2483,13 @@ public readonly struct Circle : IEquatable<Circle>
 
         return null;
     }
+    /// <summary>
+    /// Calculates the intersection points between this circle and a triangle.
+    /// </summary>
+    /// <param name="t">The triangle to test for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
+    /// </returns>
     public  CollisionPoints? IntersectShape(Triangle t)
     {
         CollisionPoints? points = null;
@@ -2346,6 +2519,13 @@ public readonly struct Circle : IEquatable<Circle>
 
         return points;
     }
+    /// <summary>
+    /// Calculates the intersection points between this circle and a rectangle.
+    /// </summary>
+    /// <param name="r">The rectangle to test for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
+    /// </returns>
     public  CollisionPoints? IntersectShape(Rect r)
     {
         CollisionPoints? points = null;
@@ -2387,6 +2567,13 @@ public readonly struct Circle : IEquatable<Circle>
         }
         return points;
     }
+    /// <summary>
+    /// Calculates the intersection points between this circle and a quadrilateral.
+    /// </summary>
+    /// <param name="q">The quad to test for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
+    /// </returns>
     public  CollisionPoints? IntersectShape(Quad q)
     {
         CollisionPoints? points = null;
@@ -2424,6 +2611,13 @@ public readonly struct Circle : IEquatable<Circle>
         }
         return points;
     }
+    /// <summary>
+    /// Calculates the intersection points between this circle and a polygon.
+    /// </summary>
+    /// <param name="p">The polygon to test for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
+    /// </returns>
     public  CollisionPoints? IntersectShape(Polygon p)
     {
         if (p.Count < 3) return null;
@@ -2443,6 +2637,13 @@ public readonly struct Circle : IEquatable<Circle>
         }
         return points;
     }
+    /// <summary>
+    /// Calculates the intersection points between this circle and a polyline.
+    /// </summary>
+    /// <param name="pl">The polyline to test for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
+    /// </returns>
     public  CollisionPoints? IntersectShape(Polyline pl)
     {
         if (pl.Count < 2) return null;
@@ -2462,7 +2663,13 @@ public readonly struct Circle : IEquatable<Circle>
         }
         return points;
     }
-
+    /// <summary>
+    /// Calculates the intersection points between this circle and a collection of segments.
+    /// </summary>
+    /// <param name="shape">The collection of segments to test for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
+    /// </returns>
     public CollisionPoints? IntersectShape(Segments shape)
     {
         CollisionPoints? points = null;
@@ -2477,9 +2684,16 @@ public readonly struct Circle : IEquatable<Circle>
             }
         }
         return points;
-    }
-    
-    
+    } 
+    /// <summary>
+    /// Calculates and adds intersection points between this circle and a collider to the provided <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="collider">The collider to test for intersection.</param>
+    /// <param name="points">The collection to which valid intersection points will be added.</param>
+    /// <param name="returnAfterFirstValid">
+    /// If <c>true</c>, the method returns after the first valid intersection is found.
+    /// </param>
+    /// <returns>The number of intersection points found and added.</returns> 
     public int Intersect(Collider collider, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (!collider.Enabled) return 0;
@@ -2517,6 +2731,15 @@ public readonly struct Circle : IEquatable<Circle>
 
         return 0;
     }
+    /// <summary>
+    /// Calculates and adds intersection points between this circle and a ray to the provided <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="r">The ray to test for intersection.</param>
+    /// <param name="points">The collection to which valid intersection points will be added.</param>
+    /// <param name="returnAfterFirstValid">
+    /// If <c>true</c>, the method returns after the first valid intersection is found.
+    /// </param>
+    /// <returns>The number of intersection points found and added.</returns>
     public int IntersectShape(Ray r, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         var result = IntersectCircleRay(Center, Radius, r.Point, r.Direction, r.Normal);
@@ -2536,7 +2759,7 @@ public readonly struct Circle : IEquatable<Circle>
             points.Add(result.a);
             return 1;
         }
-        
+
         if (result.b.Valid)
         {
             points.Add(result.b);
@@ -2545,6 +2768,15 @@ public readonly struct Circle : IEquatable<Circle>
 
         return 0;
     }
+    /// <summary>
+    /// Calculates and adds intersection points between this circle and a line to the provided <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="l">The line to test for intersection.</param>
+    /// <param name="points">The collection to which valid intersection points will be added.</param>
+    /// <param name="returnAfterFirstValid">
+    /// If <c>true</c>, the method returns after the first valid intersection is found.
+    /// </param>
+    /// <returns>The number of intersection points found and added.</returns>
     public int IntersectShape(Line l, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         var result = IntersectCircleLine(Center, Radius, l.Point, l.Direction, l.Normal);
@@ -2564,7 +2796,7 @@ public readonly struct Circle : IEquatable<Circle>
             points.Add(result.a);
             return 1;
         }
-        
+
         if (result.b.Valid)
         {
             points.Add(result.b);
@@ -2573,6 +2805,15 @@ public readonly struct Circle : IEquatable<Circle>
 
         return 0;
     }
+    /// <summary>
+    /// Calculates and adds intersection points between this circle and a segment to the provided <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="s">The segment to test for intersection.</param>
+    /// <param name="points">The collection to which valid intersection points will be added.</param>
+    /// <param name="returnAfterFirstValid">
+    /// If <c>true</c>, the method returns after the first valid intersection is found.
+    /// </param>
+    /// <returns>The number of intersection points found and added.</returns>
     public int IntersectShape(Segment s, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         var result = IntersectCircleSegment(Center, Radius, s.Start, s.End);
@@ -2592,7 +2833,7 @@ public readonly struct Circle : IEquatable<Circle>
             points.Add(result.a);
             return 1;
         }
-        
+
         if (result.b.Valid)
         {
             points.Add(result.b);
@@ -2601,6 +2842,15 @@ public readonly struct Circle : IEquatable<Circle>
 
         return 0;
     }
+    /// <summary>
+    /// Calculates and adds intersection points between this circle and another circle to the provided <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="c">The other circle to test for intersection.</param>
+    /// <param name="points">The collection to which valid intersection points will be added.</param>
+    /// <param name="returnAfterFirstValid">
+    /// If <c>true</c>, the method returns after the first valid intersection is found.
+    /// </param>
+    /// <returns>The number of intersection points found and added.</returns>
     public int IntersectShape(Circle c, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         var result = IntersectCircleCircle(Center, Radius, c.Center, c.Radius);
@@ -2620,7 +2870,7 @@ public readonly struct Circle : IEquatable<Circle>
             points.Add(result.a);
             return 1;
         }
-        
+
         if (result.b.Valid)
         {
             points.Add(result.b);
@@ -2629,6 +2879,15 @@ public readonly struct Circle : IEquatable<Circle>
 
         return 0;
     }
+    /// <summary>
+    /// Calculates and adds intersection points between this circle and a triangle to the provided <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="t">The triangle to test for intersection.</param>
+    /// <param name="points">The collection to which valid intersection points will be added.</param>
+    /// <param name="returnAfterFirstValid">
+    /// If <c>true</c>, the method returns after the first valid intersection is found.
+    /// </param>
+    /// <returns>The number of intersection points found and added.</returns>
     public int IntersectShape(Triangle t, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         var result = IntersectCircleSegment(Center, Radius, t.A, t.B);
@@ -2646,7 +2905,7 @@ public readonly struct Circle : IEquatable<Circle>
             if (returnAfterFirstValid) return 1;
             count++;
         }
-        
+
         result = IntersectCircleSegment(Center, Radius, t.B, t.C);
         if (result.a.Valid)
         {
@@ -2678,10 +2937,19 @@ public readonly struct Circle : IEquatable<Circle>
 
         return count;
     }
+    /// <summary>
+    /// Calculates and adds intersection points between this circle and a quadrilateral to the provided <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="q">The quad to test for intersection.</param>
+    /// <param name="points">The collection to which valid intersection points will be added.</param>
+    /// <param name="returnAfterFirstValid">
+    /// If <c>true</c>, the method returns after the first valid intersection is found.
+    /// </param>
+    /// <returns>The number of intersection points found and added.</returns>
     public int IntersectShape(Quad q, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
-        
+
         var result = IntersectCircleSegment(Center, Radius, q.A, q.B);
         if (result.a.Valid)
         {
@@ -2696,7 +2964,7 @@ public readonly struct Circle : IEquatable<Circle>
             if (returnAfterFirstValid) return 1;
             count++;
         }
-        
+
         result = IntersectCircleSegment(Center, Radius, q.B, q.C);
         if (result.a.Valid)
         {
@@ -2711,7 +2979,7 @@ public readonly struct Circle : IEquatable<Circle>
             if (returnAfterFirstValid) return 1;
             count++;
         }
-        
+
         result = IntersectCircleSegment(Center, Radius, q.C, q.D);
         if (result.a.Valid)
         {
@@ -2742,12 +3010,21 @@ public readonly struct Circle : IEquatable<Circle>
         }
         return count;
     }
+    /// <summary>
+    /// Calculates and adds intersection points between this circle and a rectangle to the provided <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="r">The rectangle to test for intersection.</param>
+    /// <param name="points">The collection to which valid intersection points will be added.</param>
+    /// <param name="returnAfterFirstValid">
+    /// If <c>true</c>, the method returns after the first valid intersection is found.
+    /// </param>
+    /// <returns>The number of intersection points found and added.</returns>
     public int IntersectShape(Rect r, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
         var a = r.TopLeft;
         var b = r.BottomLeft;
-        
+
         var result = IntersectCircleSegment(Center, Radius, a, b);
         if (result.a.Valid)
         {
@@ -2762,7 +3039,7 @@ public readonly struct Circle : IEquatable<Circle>
             if (returnAfterFirstValid) return 1;
             count++;
         }
-        
+
         var c = r.BottomRight;
         result = IntersectCircleSegment(Center, Radius, b, c);
         if (result.a.Valid)
@@ -2778,7 +3055,7 @@ public readonly struct Circle : IEquatable<Circle>
             if (returnAfterFirstValid) return 1;
             count++;
         }
-        
+
         var d = r.TopRight;
         result = IntersectCircleSegment(Center, Radius, c, d);
         if (result.a.Valid)
@@ -2810,6 +3087,15 @@ public readonly struct Circle : IEquatable<Circle>
         }
         return count;
     }
+    /// <summary>
+    /// Calculates and adds intersection points between this circle and a polygon to the provided <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="p">The polygon to test for intersection.</param>
+    /// <param name="points">The collection to which valid intersection points will be added.</param>
+    /// <param name="returnAfterFirstValid">
+    /// If <c>true</c>, the method returns after the first valid intersection is found.
+    /// </param>
+    /// <returns>The number of intersection points found and added.</returns>
     public int IntersectShape(Polygon p, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (p.Count < 3) return 0;
@@ -2832,10 +3118,19 @@ public readonly struct Circle : IEquatable<Circle>
                 if (returnAfterFirstValid) return 1;
                 count++;
             }
-            
+
         }
         return count;
     }
+    /// <summary>
+    /// Calculates and adds intersection points between this circle and a polyline to the provided <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="pl">The polyline to test for intersection.</param>
+    /// <param name="points">The collection to which valid intersection points will be added.</param>
+    /// <param name="returnAfterFirstValid">
+    /// If <c>true</c>, the method returns after the first valid intersection is found.
+    /// </param>
+    /// <returns>The number of intersection points found and added.</returns>
     public int IntersectShape(Polyline pl, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (pl.Count < 2) return 0;
@@ -2858,10 +3153,19 @@ public readonly struct Circle : IEquatable<Circle>
                 if (returnAfterFirstValid) return 1;
                 count++;
             }
-            
+
         }
         return count;
     }
+    /// <summary>
+    /// Calculates and adds intersection points between this circle and a collection of segments to the provided <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="shape">The collection of segments to test for intersection.</param>
+    /// <param name="points">The collection to which valid intersection points will be added.</param>
+    /// <param name="returnAfterFirstValid">
+    /// If <c>true</c>, the method returns after the first valid intersection is found.
+    /// </param>
+    /// <returns>The number of intersection points found and added.</returns>
     public int IntersectShape(Segments shape, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
@@ -2884,13 +3188,21 @@ public readonly struct Circle : IEquatable<Circle>
         }
         return count;
     }
-   
-    
     #endregion
     
     #region Interpolated Edge Points
-
-    
+    /// <summary>
+    /// Returns a set of interpolated edge points on the circle's circumference.
+    /// </summary>
+    /// <param name="t">
+    /// The interpolation parameter, typically in the range [0, 1], used to offset the starting angle of the points.
+    /// </param>
+    /// <param name="vertexCount">
+    /// The number of edge points to generate along the circle's circumference.
+    /// </param>
+    /// <returns>
+    /// A <see cref="Points"/> collection containing the interpolated edge points, or <c>null</c> if the input is invalid.
+    /// </returns>
     public Points? GetInterpolatedEdgePoints(float t, int vertexCount)
     {
         if(vertexCount < 3) return null;
@@ -2900,6 +3212,24 @@ public readonly struct Circle : IEquatable<Circle>
         
         return points.GetInterpolatedEdgePoints(t);
     }
+    /// <summary>
+    /// Returns a set of interpolated edge points on the circle's circumference,
+    /// using a specified number of interpolation steps and vertices.
+    /// </summary>
+    /// <param name="t">
+    /// The interpolation parameter, in the range <c>[0, 1]</c>,
+    /// used to offset the starting angle of the points.
+    /// </param>
+    /// <param name="steps">
+    /// The number of interpolation steps to use between vertices.
+    /// </param>
+    /// <param name="vertexCount">
+    /// The number of edge points (vertices) to generate along the circle's circumference.
+    /// </param>
+    /// <returns>
+    /// A <see cref="Points"/> collection containing the interpolated edge points,
+    /// or <c>null</c> if the input is invalid.
+    /// </returns>
     public Points? GetInterpolatedEdgePoints(float t, int steps, int vertexCount)
     {
         if(vertexCount < 3) return null;
@@ -2912,3 +3242,4 @@ public readonly struct Circle : IEquatable<Circle>
     
     #endregion
 }
+
