@@ -38,7 +38,7 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
     /// <param name="other">The <see cref="Points"/> instance to compare with the current instance.</param>
     /// <returns>True if the specified <see cref="Points"/> is equal to the current instance; otherwise, false.</returns>
     /// <remarks>
-    /// Two <see cref="Points"/> instances are considered equal if they have the same number of points and all corresponding points are similar.
+    /// Two <see cref="Points"/> instances are considered equal if they have the same number of points and all corresponding points are the same.
     /// </remarks>
     public bool Equals(Points? other)
     {
@@ -47,7 +47,6 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
         for (var i = 0; i < Count; i++)
         {
             if (!this[i].IsSimilar(other[i])) return false;
-            //if (this[i] != other[i]) return false;
         }
         return true;
     }
