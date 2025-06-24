@@ -10,7 +10,7 @@
 	<Title>Shape Engine</Title>
 	<Authors>Dave Green</Authors>
 	<RepositoryUrl>https://github.com/DaveGreen-Games/ShapeEngine</RepositoryUrl>
-	<Version>4.0.4</Version>
+	<Version>4.0.5</Version>
 	<Description>My custom made 2d game engine based on the great Raylib Framework. Main focus is being performant and only using draw functions instead of textures. Custom input, audio, savegame, collision, shape, pathfinding, ui, camera, color palette, polygon fracturing, and text system are available with a few other nice things!</Description>
 	<PackageProjectUrl>https://davegreengames.itch.io/shape-engine</PackageProjectUrl>
 	<PackageIcon>shapeengine-nuget-icon-128px.png</PackageIcon>
@@ -18,13 +18,17 @@
 	<PackageTags>GameEngine Framework 2D raylib gamedev graphics shapes polygon rect line clipper2 polygonclipping</PackageTags>
 	<Company>Dave Green Games</Company>
 	<Product>Shape Engine</Product>
-	<AssemblyVersion>4.0.4</AssemblyVersion>
-	<FileVersion>4.0.4</FileVersion>
+	<AssemblyVersion>4.0.5</AssemblyVersion>
+	<FileVersion>4.0.5</FileVersion>
   	<PackageReadmeFile>readme-nuget.md</PackageReadmeFile>
   	<NeutralLanguage>en-US</NeutralLanguage>
   	<Copyright>Copyright (c) David Grueneis 2025</Copyright>
   	<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   	<PackageReleaseNotes>
+		#4.0.5 Release
+		- XML summaries added to most classes, structs, functions, members, and events.
+		- Some big files are still missing summaries like most shape classes (Rect, Ray, Polygon, etc.)
+
 		#4.0.4 Release
 		- Docs are now available (they are not complete and still a work in progress)
 		- Link: https://davegreen-games.github.io/ShapeEngineDocs/
