@@ -7,20 +7,44 @@ using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.Random;
 
+/// <summary>
+/// Provides random number generation utilities, including weighted selection, random values, and seeded randomness.
+/// </summary>
 public class Rng
 {
+    /// <summary>
+    /// Singleton instance of the <see cref="Rng"/> class.
+    /// </summary>
     public static readonly Rng Instance = new Rng();
-
+    
+    /// <summary>
+    /// Gets the underlying <see cref="System.Random"/> instance.
+    /// </summary>
     public System.Random Rand { get; private set; }
+    
+    /// <summary>
+    /// Gets the seed used for random number generation.
+    /// </summary>
     public int Seed { get; private set; }
-
+    
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Rng"/> class with a time-based seed.
+    /// </summary>
+    /// <remarks>
+    /// Seed is generated according to the following formula:
+    /// <code>
+    /// Seed = DateTime.Now.Millisecond * Environment.TickCount;
+    /// </code>
+    /// </remarks>
     public Rng()
     {
         Seed = DateTime.Now.Millisecond * Environment.TickCount;
         Rand = new System.Random(Seed);
     }
-
-    /// <summary>Initializes a new instance of the Random class, using the specified seed value.</summary>
+    
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Rng"/> class using the specified seed value.
+    /// </summary>
     /// <param name="seed">
     /// A number used to calculate a starting value for the pseudo-random number sequence. If a negative number
     /// is specified, the absolute value of the number is used.
@@ -31,6 +55,10 @@ public class Rng
         Seed = seed;
     }
 
+    /// <summary>
+    /// Sets the random number generator to use the specified seed.
+    /// </summary>
+    /// <param name="seed">The seed for the random number generator.</param>
     public void SetSeed(int seed)
     {
         Rand = new(seed);
@@ -38,6 +66,12 @@ public class Rng
     }
 
     #region Weighted
+    /// <summary>
+    /// Picks a random item from the given weighted items.
+    /// </summary>
+    /// <typeparam name="T">The type of the items.</typeparam>
+    /// <param name="items">An array of weighted items.</param>
+    /// <returns>A randomly selected item, or default if none.</returns>
     public T? PickRandomItem<T>(params WeightedItem<T>[] items)
     {
         int totalWeight = 0;
@@ -57,6 +91,12 @@ public class Rng
 
         return default(T);
     }
+    /// <summary>
+    /// Picks a random item from the given items and weights.
+    /// </summary>
+    /// <typeparam name="T">The type of the items.</typeparam>
+    /// <param name="items">An array of tuples containing items and their weights.</param>
+    /// <returns>A randomly selected item, or default if none.</returns>
     public T? PickRandomItem<T>(params (T item, int weight)[] items)
     {
         int totalWeight = 0;
@@ -76,6 +116,11 @@ public class Rng
 
         return default(T);
     }
+    /// <summary>
+    /// Picks a random string from the given string-weight pairs.
+    /// </summary>
+    /// <param name="items">An array of tuples containing string IDs and their weights.</param>
+    /// <returns>A randomly selected string, or empty string if none.</returns>
     public string PickRandomItem(params (string id, int weight)[] items)
     {
         int totalWeight = 0;
@@ -95,7 +140,13 @@ public class Rng
 
         return "";
     }
-    
+    /// <summary>
+    /// Picks multiple random items from the given weighted items.
+    /// </summary>
+    /// <typeparam name="T">The type of the items.</typeparam>
+    /// <param name="amount">The number of items to pick.</param>
+    /// <param name="items">An array of weighted items.</param>
+    /// <returns>A list of randomly selected items.</returns>
     public List<T> PickRandomItems<T>(int amount, params WeightedItem<T>[] items)
     {
         List<T> chosen = new();
@@ -122,6 +173,13 @@ public class Rng
         }
         return chosen;
     }
+    /// <summary>
+    /// Picks multiple random items from the given items and weights.
+    /// </summary>
+    /// <typeparam name="T">The type of the items.</typeparam>
+    /// <param name="amount">The number of items to pick.</param>
+    /// <param name="items">An array of tuples containing items and their weights.</param>
+    /// <returns>A list of randomly selected items.</returns>
     public List<T> PickRandomItems<T>(int amount, params (T item, int weight)[] items)
     {
         List<T> chosen = new();
@@ -150,6 +208,12 @@ public class Rng
 
         return chosen;
     }
+    /// <summary>
+    /// Picks multiple random strings from the given string-weight pairs.
+    /// </summary>
+    /// <param name="amount">The number of strings to pick.</param>
+    /// <param name="items">An array of tuples containing string IDs and their weights.</param>
+    /// <returns>A list of randomly selected strings.</returns>
     public List<string> PickRandomItems(int amount, params (string id, int weight)[] items)
     {
         List<string> chosen = new();
@@ -181,21 +245,45 @@ public class Rng
     #endregion
 
     #region Chance
+    /// <summary>
+    /// Returns true with the given probability (chance).
+    /// </summary>
+    /// <param name="value">A float between 0 and 1 representing the chance.</param>
+    /// <returns>True with the given probability, otherwise false.</returns>
     public bool Chance(float value) { return RandF() < value; }
     #endregion
 
     #region Angle
+    /// <summary>
+    /// Returns a random angle in radians between 0 and 2π.
+    /// </summary>
     public float RandAngleRad() { return RandF(0f, 2f * ShapeMath.PI); }
+    /// <summary>
+    /// Returns a random angle in degrees between 0 and 359.
+    /// </summary>
     public float RandAngleDeg() { return RandF(0f, 359f); }
     #endregion
 
     #region Direction
+    /// <summary>
+    /// Returns a random float direction, either -1.0 or 1.0.
+    /// </summary>
     public float RandDirF() { return RandF() < 0.5f ? -1.0f : 1.0f; }
+    /// <summary>
+    /// Returns a random integer direction, either -1 or 1.
+    /// </summary>
     public int RandDirI() { return RandF() < 0.5f ? -1 : 1; }
     #endregion
 
     #region Float
+    /// <summary>
+    /// Returns a random float between 0.0 and 1.0.
+    /// </summary>
     public float RandF() { return Rand.NextSingle(); }
+    /// <summary>
+    /// Returns a random float between 0.0 and max (or max and 0.0 if max is negative).
+    /// </summary>
+    /// <param name="max">The maximum value.</param>
     public float RandF(float max)
     {
         if (max < 0.0f)
@@ -208,6 +296,11 @@ public class Rng
         }
         else return 0.0f;
     }
+    /// <summary>
+    /// Returns a random float between min and max.
+    /// </summary>
+    /// <param name="min">The minimum value.</param>
+    /// <param name="max">The maximum value.</param>
     public float RandF(float min, float max)
     {
         if (Math.Abs(max - min) < 0.0001f) return max;
@@ -220,7 +313,14 @@ public class Rng
     #endregion
 
     #region Int
+    /// <summary>
+    /// Returns a non-negative random integer.
+    /// </summary>
     public int RandI() { return Rand.Next(); }
+    /// <summary>
+    /// Returns a random integer between 0 and max (or max and 0 if max is negative).
+    /// </summary>
+    /// <param name="max">The maximum value.</param>
     public int RandI(int max)
     {
         if (max < 0)
@@ -233,6 +333,11 @@ public class Rng
         }
         else return 0;
     }
+    /// <summary>
+    /// Returns a random integer between min and max.
+    /// </summary>
+    /// <param name="min">The minimum value.</param>
+    /// <param name="max">The maximum value.</param>
     public int RandI(int min, int max)
     {
         if (max == min) return max;
@@ -245,48 +350,144 @@ public class Rng
     #endregion
 
     #region Vector2
+    /// <summary>
+    /// Returns a random unit vector.
+    /// </summary>
     public Vector2 RandVec2()
     {
         float a = RandF() * 2.0f * MathF.PI;
         return new Vector2(MathF.Cos(a), MathF.Sin(a));
     }
+    /// <summary>
+    /// Returns a random vector with length between 0 and max.
+    /// </summary>
+    /// <param name="max">The maximum length. Should be positive!</param>
     public Vector2 RandVec2(float max) { return RandVec2(0, max); }
+    /// <summary>
+    /// Returns a random vector with length between min and max.
+    /// </summary>
+    /// <param name="min">The minimum length. Should be positive! Should be smaller than max! </param>
+    /// <param name="max">The maximum length. Should be positive! Should be bigger than min!</param>
     public Vector2 RandVec2(float min, float max) { return RandVec2() * RandF(min, max); }
-    //public Vector2 randVec2(Rectangle rect)
-    //{
-    //    return new(randF(rect.x, rect.x + rect.width), randF(rect.y, rect.y + rect.height));
-    //}
     #endregion
 
     #region Size
-
+    /// <summary>
+    /// Returns a random size with width and height between 0.0 and 1.0.
+    /// </summary>
     public Size RandSize() => new(RandF(), RandF());
+    /// <summary>
+    /// Returns a random size with width and height between 0.0 and max.
+    /// </summary>
+    /// <param name="max">The maximum value for width and height.</param>
     public Size RandSize(float max) => new(RandF(max), RandF(max));
+    /// <summary>
+    /// Returns a random size with width and height between min and max.
+    /// </summary>
+    /// <param name="min">The minimum value for width and height.</param>
+    /// <param name="max">The maximum value for width and height.</param>
     public Size RandSize(float min, float max) => new(RandF(min, max), RandF(min, max));
+    /// <summary>
+    /// Returns a random size with width and height between 0.0 and the specified max size.
+    /// </summary>
+    /// <param name="max">The maximum size.</param>
     public Size RandSize(Size max) => new(RandF(max.Width), RandF(max.Height));
+    /// <summary>
+    /// Returns a random size with width and height between the specified min and max sizes.
+    /// </summary>
+    /// <param name="min">The minimum size.</param>
+    /// <param name="max">The maximum size.</param>
     public Size RandSize(Size min, Size max) => new(RandF(min.Width, max.Width), RandF(min.Height, max.Height));
     #endregion
     
     #region Color
-
+    /// <summary>
+    /// Returns a color with a random red channel.
+    /// </summary>
+    /// <param name="colorRgba">The base color.</param>
     public ColorRgba RandColorRed(ColorRgba colorRgba) => colorRgba.SetRed((byte)RandI(0, 255));
+    /// <summary>
+    /// Returns a color with a random red channel up to the specified max.
+    /// </summary>
+    /// <param name="colorRgba">The base color.</param>
+    /// <param name="max">The maximum red value.</param>
     public ColorRgba RandColorRed(ColorRgba colorRgba, int max) => colorRgba.SetRed((byte)RandI(0, max));
+    /// <summary>
+    /// Returns a color with a random red channel between min and max.
+    /// </summary>
+    /// <param name="colorRgba">The base color.</param>
+    /// <param name="min">The minimum red value.</param>
+    /// <param name="max">The maximum red value.</param>
     public ColorRgba RandColorRed(ColorRgba colorRgba, int min, int max) => colorRgba.SetRed((byte)RandI(min, max));
-    
+    /// <summary>
+    /// Returns a color with a random green channel.
+    /// </summary>
+    /// <param name="colorRgba">The base color.</param>
     public ColorRgba RandColorGreen(ColorRgba colorRgba) => colorRgba.SetGreen((byte)RandI(0, 255));
+    /// <summary>
+    /// Returns a color with a random green channel up to the specified max.
+    /// </summary>
+    /// <param name="colorRgba">The base color.</param>
+    /// <param name="max">The maximum green value.</param>
     public ColorRgba RandColorGreen(ColorRgba colorRgba, int max) => colorRgba.SetGreen((byte)RandI(0, max));
+    /// <summary>
+    /// Returns a color with a random green channel between min and max.
+    /// </summary>
+    /// <param name="colorRgba">The base color.</param>
+    /// <param name="min">The minimum green value.</param>
+    /// <param name="max">The maximum green value.</param>
     public ColorRgba RandColorGreen(ColorRgba colorRgba, int min, int max) => colorRgba.SetGreen((byte)RandI(min, max));
-    
+    /// <summary>
+    /// Returns a color with a random blue channel.
+    /// </summary>
+    /// <param name="colorRgba">The base color.</param>
     public ColorRgba RandColorBlue(ColorRgba colorRgba) => colorRgba.SetBlue((byte)RandI(0, 255));
+    /// <summary>
+    /// Returns a color with a random blue channel up to the specified max.
+    /// </summary>
+    /// <param name="colorRgba">The base color.</param>
+    /// <param name="max">The maximum blue value.</param>
     public ColorRgba RandColorBlue(ColorRgba colorRgba, int max) => colorRgba.SetBlue((byte)RandI(0, max));
+    /// <summary>
+    /// Returns a color with a random blue channel between min and max.
+    /// </summary>
+    /// <param name="colorRgba">The base color.</param>
+    /// <param name="min">The minimum blue value.</param>
+    /// <param name="max">The maximum blue value.</param>
     public ColorRgba RandColorBlue(ColorRgba colorRgba, int min, int max) => colorRgba.SetBlue((byte)RandI(min, max));
-    
+    /// <summary>
+    /// Returns a color with a random alpha channel.
+    /// </summary>
+    /// <param name="colorRgba">The base color.</param>
     public ColorRgba RandColorAlpha(ColorRgba colorRgba)  => colorRgba.SetAlpha((byte)RandI(0, 255));
+    /// <summary>
+    /// Returns a color with a random alpha channel up to the specified max.
+    /// </summary>
+    /// <param name="colorRgba">The base color.</param>
+    /// <param name="max">The maximum alpha value.</param>
     public ColorRgba RandColorAlpha(ColorRgba colorRgba, int max) => colorRgba.SetAlpha((byte)RandI(0, max));
+    /// <summary>
+    /// Returns a color with a random alpha channel between min and max.
+    /// </summary>
+    /// <param name="colorRgba">The base color.</param>
+    /// <param name="min">The minimum alpha value.</param>
+    /// <param name="max">The maximum alpha value.</param>
     public ColorRgba RandColorAlpha(ColorRgba colorRgba, int min, int max) => colorRgba.SetAlpha((byte)RandI(min, max));
-    
+    /// <summary>
+    /// Returns a random color with all channels between 0 and 255.
+    /// </summary>
     public ColorRgba RandColor() => RandColor(0, 255);
+    /// <summary>
+    /// Returns a random color with all channels between 0 and 255 and the specified alpha.
+    /// </summary>
+    /// <param name="alpha">The alpha value.</param>
     public ColorRgba RandColor(int alpha) => RandColor(0, 255, alpha); 
+    /// <summary>
+    /// Returns a random color with all channels between min and max, and optionally a specified alpha.
+    /// </summary>
+    /// <param name="min">The minimum value for each channel.</param>
+    /// <param name="max">The maximum value for each channel.</param>
+    /// <param name="alpha">The alpha value, or -1 for random alpha.</param>
     public ColorRgba RandColor(int min, int max, int alpha = -1)
     {
         if (alpha < 0)
@@ -298,18 +499,38 @@ public class Rng
     #endregion
 
     #region Point
+    /// <summary>
+    /// Returns a random point between two vectors.
+    /// </summary>
+    /// <param name="start">The start vector.</param>
+    /// <param name="end">The end vector.</param>
     public Vector2 RandPoint(Vector2 start, Vector2 end)
     {
         return ShapeVec.Lerp(start, end, RandF());
     }
+    /// <summary>
+    /// Returns a random point offset from the origin by a random unit vector.
+    /// </summary>
+    /// <param name="origin">The origin vector.</param>
     public Vector2 RandPoint(Vector2 origin)
     {
         return origin + RandVec2();
     }
+    /// <summary>
+    /// Returns a random point offset from the origin by a random vector with length up to max.
+    /// </summary>
+    /// <param name="origin">The origin vector.</param>
+    /// <param name="max">The maximum offset length.</param>
     public Vector2 RandPoint(Vector2 origin, float max)
     {
         return origin + RandVec2(max);
     }
+    /// <summary>
+    /// Returns a random point offset from the origin by a random vector with length between min and max.
+    /// </summary>
+    /// <param name="origin">The origin vector.</param>
+    /// <param name="min">The minimum offset length.</param>
+    /// <param name="max">The maximum offset length.</param>
     public Vector2 RandPoint(Vector2 origin, float min, float max)
     {
         return origin + RandVec2(min, max);
@@ -317,24 +538,50 @@ public class Rng
     #endregion
 
     #region Rect
+    /// <summary>
+    /// Returns a random rectangle with random position and size, aligned by the specified anchor point.
+    /// </summary>
+    /// <param name="alignement">The anchor point for alignment.</param>
     public Rect RandRect(AnchorPoint alignement)
     {
         var pos = RandVec2();
         var size = RandSize();
         return new(pos, size, alignement);
     }
+    /// <summary>
+    /// Returns a random rectangle at the given origin with random position and size, aligned by the specified anchor point.
+    /// </summary>
+    /// <param name="origin">The origin vector.</param>
+    /// <param name="alignement">The anchor point for alignment.</param>
     public Rect RandRect(Vector2 origin, AnchorPoint alignement)
     {
         var pos = RandVec2();
         var size = RandSize();
         return new(origin + pos, size, alignement);
     }
+    /// <summary>
+    /// Returns a random rectangle with position and size in the specified ranges, aligned by the specified anchor point.
+    /// </summary>
+    /// <param name="posMin">Minimum position value.</param>
+    /// <param name="posMax">Maximum position value.</param>
+    /// <param name="sizeMin">Minimum size value.</param>
+    /// <param name="sizeMax">Maximum size value.</param>
+    /// <param name="alignement">The anchor point for alignment.</param>
     public Rect RandRect(float posMin, float posMax, float sizeMin, float sizeMax, AnchorPoint alignement)
     {
         var pos = RandVec2(posMin, posMax);
         var size = RandSize(sizeMin, sizeMax);
         return new(pos, size, alignement);
     }
+    /// <summary>
+    /// Returns a random rectangle at the given origin with position and size in the specified ranges, aligned by the specified anchor point.
+    /// </summary>
+    /// <param name="origin">The origin vector.</param>
+    /// <param name="posMin">Minimum position value.</param>
+    /// <param name="posMax">Maximum position value.</param>
+    /// <param name="sizeMin">Minimum size value.</param>
+    /// <param name="sizeMax">Maximum size value.</param>
+    /// <param name="alignement">The anchor point for alignment.</param>
     public Rect RandRect(Vector2 origin, float posMin, float posMax, float sizeMin, float sizeMax, AnchorPoint alignement)
     {
         var pos = RandVec2(posMin, posMax);
@@ -344,7 +591,13 @@ public class Rng
     #endregion
 
     #region Collections
-    
+    /// <summary>
+    /// Returns a random element from the list, optionally removing it.
+    /// </summary>
+    /// <typeparam name="T">The type of the elements.</typeparam>
+    /// <param name="list">The list to pick from.</param>
+    /// <param name="pop">Whether to remove the element from the list.</param>
+    /// <returns>A randomly selected element, or default if the list is empty.</returns>
     public T? RandCollection<T>(List<T> list, bool pop = false)
     {
         if (list.Count <= 0) return default;
@@ -353,6 +606,14 @@ public class Rng
         if (pop) list.RemoveAt(index);
         return t;
     }
+    /// <summary>
+    /// Returns a list of random elements from the source list, optionally removing them.
+    /// </summary>
+    /// <typeparam name="T">The type of the elements.</typeparam>
+    /// <param name="source">The source list.</param>
+    /// <param name="amount">The number of elements to pick.</param>
+    /// <param name="pop">Whether to remove the elements from the source list.</param>
+    /// <returns>A list of randomly selected elements.</returns>
     public List<T> RandCollection<T>(List<T> source, int amount, bool pop = false)
     {
         if (source.Count <= 0 || amount <= 0) return [];
@@ -368,6 +629,12 @@ public class Rng
         return list;
 
     }
+    /// <summary>
+    /// Returns a random element from the array.
+    /// </summary>
+    /// <typeparam name="T">The type of the elements.</typeparam>
+    /// <param name="array">The array to pick from.</param>
+    /// <returns>A randomly selected element, or default if the array is empty.</returns>
     public T? RandCollection<T>(T[] array)
     {
         if (array.Length <= 0) return default;
@@ -375,127 +642,3 @@ public class Rng
     }
     #endregion
 }
-
-
-/* Implementing custom rng
-using System;
-   
-   namespace ConsoleApplication1
-   {
-       public class ConsistantRandom: Random
-       {
-           private const int MBIG = Int32.MaxValue;
-           private const int MSEED = 161803398;
-           private const int MZ = 0;
-   
-           private int inext;
-           private int inextp;
-           private int[] SeedArray = new int[56];
-   
-           public ConsistantRandom()
-               : this(Environment.TickCount)
-           {
-           }
-   
-           public ConsistantRandom(int seed)
-           {
-               int ii;
-               int mj, mk;
-   
-               int subtraction = (seed == Int32.MinValue) ? Int32.MaxValue : Math.Abs(seed);
-               mj = MSEED - subtraction;
-               SeedArray[55] = mj;
-               mk = 1;
-               for (int i = 1; i < 55; i++)
-               {
-                   ii = (21 * i) % 55;
-                   SeedArray[ii] = mk;
-                   mk = mj - mk;
-                   if (mk < 0) mk += MBIG;
-                   mj = SeedArray[ii];
-               }
-               for (int k = 1; k < 5; k++)
-               {
-                   for (int i = 1; i < 56; i++)
-                   {
-                       SeedArray[i] -= SeedArray[1 + (i + 30) % 55];
-                       if (SeedArray[i] < 0) SeedArray[i] += MBIG;
-                   }
-               }
-               inext = 0;
-               inextp = 21;
-           }
-           protected override double Sample()
-           {
-               return (InternalSample() * (1.0 / MBIG));
-           }
-   
-           private int InternalSample()
-           {
-               int retVal;
-               int locINext = inext;
-               int locINextp = inextp;
-   
-               if (++locINext >= 56) locINext = 1;
-               if (++locINextp >= 56) locINextp = 1;
-   
-               retVal = SeedArray[locINext] - SeedArray[locINextp];
-   
-               if (retVal == MBIG) retVal--;
-               if (retVal < 0) retVal += MBIG;
-   
-               SeedArray[locINext] = retVal;
-   
-               inext = locINext;
-               inextp = locINextp;
-   
-               return retVal;
-           }
-   
-           public override int Next()
-           {
-               return InternalSample();
-           }
-   
-           private double GetSampleForLargeRange()
-           {
-               int result = InternalSample();
-               bool negative = (InternalSample() % 2 == 0) ? true : false;
-               if (negative)
-               {
-                   result = -result;
-               }
-               double d = result;
-               d += (Int32.MaxValue - 1);
-               d /= 2 * (uint)Int32.MaxValue - 1;
-               return d;
-           }
-   
-   
-           public override int Next(int minValue, int maxValue)
-           {
-               if (minValue > maxValue)
-               {
-                   throw new ArgumentOutOfRangeException("minValue");
-               }
-   
-               long range = (long)maxValue - minValue;
-               if (range <= (long)Int32.MaxValue)
-               {
-                   return ((int)(Sample() * range) + minValue);
-               }
-               else
-               {
-                   return (int)((long)(GetSampleForLargeRange() * range) + minValue);
-               }
-           }
-           public override void NextBytes(byte[] buffer)
-           {
-               if (buffer == null) throw new ArgumentNullException("buffer");
-               for (int i = 0; i < buffer.Length; i++)
-               {
-                   buffer[i] = (byte)(InternalSample() % (Byte.MaxValue + 1));
-               }
-           }
-       }
- */

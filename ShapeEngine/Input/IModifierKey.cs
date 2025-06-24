@@ -2,11 +2,38 @@ using System.Text;
 
 namespace ShapeEngine.Input;
 
+/// <summary>
+/// Represents a modifier key (such as Shift, Ctrl, Alt) for input handling.
+/// </summary>
 public interface IModifierKey
 {
+    /// <summary>
+    /// Determines if the modifier key is currently active.
+    /// </summary>
+    /// <param name="gamepad">Optional gamepad device to check against.</param>
+    /// <returns>True if the modifier key is active; otherwise, false.</returns>
     public bool IsActive(ShapeGamepadDevice? gamepad = null);
+
+    /// <summary>
+    /// Gets the display name of the modifier key.
+    /// </summary>
+    /// <param name="shorthand">If true, returns a shorthand name; otherwise, a full name.</param>
+    /// <returns>The name of the modifier key.</returns>
     public string GetName(bool shorthand = true);
+
+    /// <summary>
+    /// Gets the input device type associated with this modifier key.
+    /// </summary>
+    /// <returns>The input device type.</returns>
     public InputDeviceType GetInputDevice();
+
+    /// <summary>
+    /// Gets a combined string of modifier key names using the specified operator.
+    /// </summary>
+    /// <param name="modifierKeys">Array of modifier keys.</param>
+    /// <param name="modifierOperator">Operator (And/Or) to combine names.</param>
+    /// <param name="shorthand">If true, uses shorthand names.</param>
+    /// <returns>A combined string of modifier key names.</returns>
     public static string GetModifierKeyNames(IModifierKey[] modifierKeys, ModifierKeyOperator modifierOperator, bool shorthand = true)
     {
         if (modifierKeys.Length <= 0) return string.Empty;
@@ -31,6 +58,14 @@ public interface IModifierKey
         return sb.ToString();
 
     }
+
+    /// <summary>
+    /// Appends combined modifier key names to the provided StringBuilder.
+    /// </summary>
+    /// <param name="sb">The StringBuilder to append to.</param>
+    /// <param name="modifierKeys">Array of modifier keys.</param>
+    /// <param name="modifierOperator">Operator (And/Or) to combine names.</param>
+    /// <param name="shorthand">If true, uses shorthand names.</param>
     public static void GetModifierKeyNames(StringBuilder sb, IModifierKey[] modifierKeys, ModifierKeyOperator modifierOperator, bool shorthand = true)
     {
         if (modifierKeys.Length <= 0) return;
@@ -66,6 +101,14 @@ public interface IModifierKey
         
         
     }
+
+    /// <summary>
+    /// Determines if the specified modifier keys are active based on the operator.
+    /// </summary>
+    /// <param name="modifierOperator">Operator (And/Or) to evaluate.</param>
+    /// <param name="modifierKeys">Array of modifier keys.</param>
+    /// <param name="gamepad">Optional gamepad device to check against.</param>
+    /// <returns>True if the modifier keys are active according to the operator; otherwise, false.</returns>
     public static bool IsActive(ModifierKeyOperator modifierOperator, IModifierKey[] modifierKeys, ShapeGamepadDevice? gamepad = null)
     {
         if (modifierKeys.Length <= 0) return true;

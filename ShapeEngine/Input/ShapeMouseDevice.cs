@@ -1,30 +1,52 @@
-using System.Numerics;
 using System.Text;
 using Raylib_cs;
 using ShapeEngine.Core;
 
 namespace ShapeEngine.Input;
 
+/// <summary>
+/// Represents a mouse input device, providing access to mouse buttons, axes, and wheel axes,
+/// as well as state tracking and utility methods for mouse input.
+/// </summary>
 public sealed class ShapeMouseDevice : ShapeInputDevice
 { 
+    /// <summary>
+    /// All available Raylib mouse buttons.
+    /// </summary>
     public static readonly MouseButton[] AllMouseButtons = Enum.GetValues<MouseButton>();
+    /// <summary>
+    /// All available Shape mouse buttons.
+    /// </summary>
     public static readonly ShapeMouseButton[] AllShapeMouseButtons = Enum.GetValues<ShapeMouseButton>();
 
+    /// <summary>
+    /// The minimum movement threshold to consider the mouse as "used".
+    /// </summary>
     public float MoveThreshold = 0.5f;
+    /// <summary>
+    /// The minimum mouse wheel movement threshold to consider the mouse as "used".
+    /// </summary>
     public float MouseWheelThreshold = 0.25f;
 
-    private bool wasUsed = false;
-    private bool isLocked = false;
+    private bool wasUsed;
+    private bool isLocked;
 
     private readonly Dictionary<ShapeMouseButton, InputState> buttonStates = new(AllShapeMouseButtons.Length);
     private readonly Dictionary<ShapeMouseAxis, InputState> axisStates = new(2);
     private readonly Dictionary<ShapeMouseWheelAxis, InputState> wheelAxisStates = new(2);
 
-    
+    /// <summary>
+    /// Event triggered when a mouse button is pressed.
+    /// </summary>
     public event Action<ShapeMouseButton>? OnButtonPressed;
+    /// <summary>
+    /// Event triggered when a mouse button is released.
+    /// </summary>
     public event Action<ShapeMouseButton>? OnButtonReleased;
     
-    
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ShapeMouseDevice"/> class.
+    /// </summary>
     internal ShapeMouseDevice()
     {
         foreach (var button in AllShapeMouseButtons)
@@ -39,30 +61,65 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         wheelAxisStates.Add(ShapeMouseWheelAxis.VERTICAL, new());
     }
     
+    /// <summary>
+    /// Gets the current input state for the specified mouse button.
+    /// </summary>
     public InputState GetButtonState(ShapeMouseButton button) => buttonStates[button];
+    /// <summary>
+    /// Gets the current input state for the specified mouse axis.
+    /// </summary>
     public InputState GetAxisState(ShapeMouseAxis axis) => axisStates[axis];
+    /// <summary>
+    /// Gets the current input state for the specified mouse wheel axis.
+    /// </summary>
     public InputState GetWheelAxisState(ShapeMouseWheelAxis axis) => wheelAxisStates[axis];
     
+    /// <summary>
+    /// Returns whether the mouse was used in the last update.
+    /// </summary>
     public bool WasUsed() => wasUsed;
+    /// <summary>
+    /// Returns whether the mouse device is currently locked.
+    /// </summary>
     public bool IsLocked() => isLocked;
 
+    /// <summary>
+    /// Locks the mouse device, preventing input from being registered.
+    /// </summary>
     public void Lock()
     {
         isLocked = true;
     }
 
+    /// <summary>
+    /// Unlocks the mouse device, allowing input to be registered.
+    /// </summary>
     public void Unlock()
     {
         isLocked = false;
     }
 
+    /// <summary>
+    /// Updates the mouse device state, including button, axis, and wheel axis states.
+    /// </summary>
     public void Update()
     {
         UpdateStates();
         
         wasUsed = WasMouseUsed(MoveThreshold, MouseWheelThreshold);
     }
+
+    /// <summary>
+    /// Calibrates the mouse device. (Currently not implemented.)
+    /// </summary>
     public void Calibrate(){ }
+
+    /// <summary>
+    /// Determines if the mouse was used based on movement or button/wheel activity.
+    /// </summary>
+    /// <param name="moveThreshold">Movement threshold.</param>
+    /// <param name="mouseWheelThreshold">Wheel movement threshold.</param>
+    /// <returns>True if the mouse was used, otherwise false.</returns>
     private bool WasMouseUsed(float moveThreshold = 0.5f, float mouseWheelThreshold = 0.25f)
     {
         if (isLocked) return false;
@@ -83,6 +140,9 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         return false;
     }
 
+    /// <summary>
+    /// Updates the states of all mouse buttons, axes, and wheel axes.
+    /// </summary>
     private void UpdateStates()
     {
         foreach (var state in buttonStates)
@@ -113,6 +173,12 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
     }
    
     #region Axis
+    /// <summary>
+    /// Gets the display name for a mouse axis.
+    /// </summary>
+    /// <param name="axis">The axis.</param>
+    /// <param name="shortHand">Whether to use shorthand notation.</param>
+    /// <returns>The axis name.</returns>
     public static string GetAxisName(ShapeMouseAxis axis, bool shortHand = true)
     {
         switch (axis)
@@ -123,17 +189,26 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         }
     }
 
+    /// <summary>
+    /// Determines if the specified mouse axis is considered "down" (moved past deadzone).
+    /// </summary>
     public bool IsDown(ShapeMouseAxis axis, float deadzone = 0.5f)
     {
         return GetValue(axis, deadzone) != 0f;
     }
 
+    /// <summary>
+    /// Determines if the specified mouse axis is "down" with modifier keys.
+    /// </summary>
     public bool IsDown(ShapeMouseAxis axis, float deadzone, ModifierKeyOperator modifierOperator,
         params IModifierKey[] modifierKeys)
     {
         return GetValue(axis, deadzone, modifierOperator, modifierKeys) != 0;
     }
     
+    /// <summary>
+    /// Gets the value of the specified mouse axis, considering deadzone and modifier keys.
+    /// </summary>
     public float GetValue(ShapeMouseAxis axis, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         if (isLocked) return 0f;
@@ -141,6 +216,9 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         if (!IModifierKey.IsActive(modifierOperator, modifierKeys, null)) return 0f;
         return GetValue(axis, deadzone);
     }
+    /// <summary>
+    /// Gets the value of the specified mouse axis, considering deadzone.
+    /// </summary>
     public float GetValue(ShapeMouseAxis axis, float deadzone = 0.5f)
     {
         if (isLocked) return 0f;
@@ -151,22 +229,34 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         if (MathF.Abs(returnValue) < deadzone) return 0f;
         return returnValue;
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified mouse axis.
+    /// </summary>
     public InputState CreateInputState(ShapeMouseAxis axis, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         float axisValue = GetValue(axis, deadzone, modifierOperator, modifierKeys);
         bool down = axisValue != 0f;
         return new(down, !down, axisValue, -1, InputDeviceType.Mouse);
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified mouse axis, using a previous state.
+    /// </summary>
     public InputState CreateInputState(ShapeMouseAxis axis, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         return new(previousState, CreateInputState(axis, deadzone, modifierOperator, modifierKeys));
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified mouse axis.
+    /// </summary>
     public InputState CreateInputState(ShapeMouseAxis axis, float deadzone = 0.5f)
     {
         float axisValue = GetValue(axis, deadzone);
         bool down = axisValue != 0f;
         return new(down, !down, axisValue, -1, InputDeviceType.Mouse);
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified mouse axis, using a previous state.
+    /// </summary>
     public InputState CreateInputState(ShapeMouseAxis axis, InputState previousState, float deadzone = 0.5f)
     {
         return new(previousState, CreateInputState(axis, deadzone));
@@ -175,14 +265,23 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
 
     #region Wheel Axis
 
+    /// <summary>
+    /// Determines if the specified mouse wheel axis is "down" with modifier keys.
+    /// </summary>
     public bool IsDown(ShapeMouseWheelAxis axis, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         return GetValue(axis, deadzone, modifierOperator, modifierKeys) != 0f;
     }
+    /// <summary>
+    /// Determines if the specified mouse wheel axis is "down".
+    /// </summary>
     public bool IsDown(ShapeMouseWheelAxis axis, float deadzone = 0.2f)
     {
         return GetValue(axis, deadzone) != 0f;
     }
+    /// <summary>
+    /// Gets the value of the specified mouse wheel axis, considering deadzone and modifier keys.
+    /// </summary>
     public float GetValue(ShapeMouseWheelAxis axis, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         if (isLocked) return 0f;
@@ -190,6 +289,9 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         if (!IModifierKey.IsActive(modifierOperator, modifierKeys, null)) return 0f;
         return GetValue(axis, deadzone);
     }
+    /// <summary>
+    /// Gets the value of the specified mouse wheel axis, considering deadzone.
+    /// </summary>
     public float GetValue(ShapeMouseWheelAxis axis, float deadzone = 0.2f)
     {
         if (isLocked) return 0f;
@@ -200,6 +302,9 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         if (MathF.Abs(returnValue) < deadzone) return 0f;
         return returnValue;
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified mouse wheel axis.
+    /// </summary>
     public InputState CreateInputState(ShapeMouseWheelAxis axis, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         
@@ -207,10 +312,16 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         bool down = axisValue != 0f;
         return new(down, !down, axisValue, -1, InputDeviceType.Mouse);
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified mouse wheel axis, using a previous state.
+    /// </summary>
     public InputState CreateInputState(ShapeMouseWheelAxis axis, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         return new(previousState, CreateInputState(axis, deadzone, modifierOperator, modifierKeys));
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified mouse wheel axis.
+    /// </summary>
     public InputState CreateInputState(ShapeMouseWheelAxis axis, float deadzone = 0.2f)
     {
         
@@ -218,11 +329,20 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         bool down = axisValue != 0f;
         return new(down, !down, axisValue, -1, InputDeviceType.Mouse);
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified mouse wheel axis, using a previous state.
+    /// </summary>
     public InputState CreateInputState(ShapeMouseWheelAxis axis, InputState previousState, float deadzone = 0.2f)
     {
         return new(previousState, CreateInputState(axis, deadzone));
     }
     
+    /// <summary>
+    /// Gets the display name for a mouse wheel axis.
+    /// </summary>
+    /// <param name="axis">The wheel axis.</param>
+    /// <param name="shortHand">Whether to use shorthand notation.</param>
+    /// <returns>The wheel axis name.</returns>
     public static string GetWheelAxisName(ShapeMouseWheelAxis axis, bool shortHand = true)
     {
         switch (axis)
@@ -233,11 +353,15 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         }
     }
 
-    
-
     #endregion
     
     #region Button
+    /// <summary>
+    /// Gets the display name for a mouse button.
+    /// </summary>
+    /// <param name="button">The mouse button.</param>
+    /// <param name="shortHand">Whether to use shorthand notation.</param>
+    /// <returns>The button name.</returns>
     public static string GetButtonName(ShapeMouseButton button, bool shortHand = true)
     {
         switch (button)
@@ -260,20 +384,32 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
             default: return "No Key";
         }
     }
+    /// <summary>
+    /// Checks if a modifier mouse button is active, optionally reversing the logic.
+    /// </summary>
     public bool IsModifierActive(ShapeMouseButton modifierKey, bool reverseModifier)
     {
         return IsDown(modifierKey) != reverseModifier;
     }
+    /// <summary>
+    /// Determines if the specified mouse button is "down".
+    /// </summary>
     public bool IsDown(ShapeMouseButton button, float deadzone = 0f)
     {
         return GetValue(button, deadzone) != 0;
     }
 
+    /// <summary>
+    /// Determines if the specified mouse button is "down" with modifier keys.
+    /// </summary>
     public bool IsDown(ShapeMouseButton button, float deadzone, ModifierKeyOperator modifierOperator,
         params IModifierKey[] modifierKeys)
     {
         return GetValue(button, deadzone, modifierOperator, modifierKeys) != 0f;
     }
+    /// <summary>
+    /// Gets the value of the specified mouse button, considering deadzone and modifier keys.
+    /// </summary>
     public float GetValue(ShapeMouseButton button, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         if (isLocked) return 0f;
@@ -281,6 +417,9 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         if (!IModifierKey.IsActive(modifierOperator, modifierKeys, null)) return 0f;
         return GetValue(button, deadzone);
     }
+    /// <summary>
+    /// Gets the value of the specified mouse button, considering deadzone.
+    /// </summary>
     public float GetValue(ShapeMouseButton button, float deadzone = 0f)
     {
         if (isLocked) return 0f;
@@ -307,22 +446,34 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         }
         return Raylib.IsMouseButtonDown((MouseButton)id) ? 1f : 0f;
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified mouse button.
+    /// </summary>
     public InputState CreateInputState(ShapeMouseButton button, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         var value = GetValue(button, deadzone, modifierOperator, modifierKeys);
         bool down = value != 0f;
         return new(down, !down, down ? 1f : 0f, -1, InputDeviceType.Mouse);
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified mouse button, using a previous state.
+    /// </summary>
     public InputState CreateInputState(ShapeMouseButton button, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         return new(previousState, CreateInputState(button, deadzone, modifierOperator, modifierKeys));
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified mouse button.
+    /// </summary>
     public InputState CreateInputState(ShapeMouseButton button, float deadzone = 0f)
     {
         var value = GetValue(button, deadzone);
         bool down = value != 0f;
         return new(down, !down, down ? 1f : 0f, -1, InputDeviceType.Mouse);
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified mouse button, using a previous state.
+    /// </summary>
     public InputState CreateInputState(ShapeMouseButton button, InputState previousState, float deadzone = 0f)
     {
         return new(previousState, CreateInputState(button, deadzone));
@@ -331,6 +482,13 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
 
     #region ButtonAxis
 
+    /// <summary>
+    /// Gets the display name for a button axis (negative and positive button pair).
+    /// </summary>
+    /// <param name="neg">Negative direction button.</param>
+    /// <param name="pos">Positive direction button.</param>
+    /// <param name="shorthand">Whether to use shorthand notation.</param>
+    /// <returns>The button axis name.</returns>
     public static string GetButtonAxisName(ShapeMouseButton neg, ShapeMouseButton pos, bool shorthand = true)
     {
         StringBuilder sb = new();
@@ -343,21 +501,33 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         return sb.ToString();
     }
 
+    /// <summary>
+    /// Determines if the button axis (negative/positive) is "down" with modifier keys.
+    /// </summary>
     public bool IsDown(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         return GetValue(neg, pos, deadzone, modifierOperator, modifierKeys) != 0f;
     }
 
+    /// <summary>
+    /// Determines if the button axis (negative/positive) is "down".
+    /// </summary>
     public bool IsDown(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = 0f)
     {
         return GetValue(neg, pos, deadzone) != 0f;
     }
+    /// <summary>
+    /// Gets the value of the button axis (negative/positive), considering deadzone and modifier keys.
+    /// </summary>
     public float GetValue(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         if (isLocked) return 0f;
         if (!IModifierKey.IsActive(modifierOperator, modifierKeys, null)) return 0f;
         return GetValue(neg, pos, deadzone);
     }
+    /// <summary>
+    /// Gets the value of the button axis (negative/positive), considering deadzone.
+    /// </summary>
     public float GetValue(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = 0f)
     {
         if (isLocked) return 0f;
@@ -365,22 +535,34 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         float vPositive = GetValue(pos, deadzone);
         return vPositive - vNegative;
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the button axis (negative/positive).
+    /// </summary>
     public InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         float axis = GetValue(neg, pos, deadzone, modifierOperator, modifierKeys);
         bool down = axis != 0f;
         return new(down, !down, axis, -1, InputDeviceType.Mouse);
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the button axis (negative/positive), using a previous state.
+    /// </summary>
     public InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         return new(previousState, CreateInputState(neg, pos, deadzone, modifierOperator, modifierKeys));
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the button axis (negative/positive).
+    /// </summary>
     public InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = 0f)
     {
         float axis = GetValue(neg, pos, deadzone);
         bool down = axis != 0f;
         return new(down, !down, axis, -1, InputDeviceType.Mouse);
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the button axis (negative/positive), using a previous state.
+    /// </summary>
     public InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, InputState previousState, float deadzone = 0f)
     {
         return new(previousState, CreateInputState(neg, pos, deadzone));

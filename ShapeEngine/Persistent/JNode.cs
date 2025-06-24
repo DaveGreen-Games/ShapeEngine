@@ -1,303 +1,260 @@
 ﻿using System.Text.Json.Nodes;
 using System.Text.Json;
-using ShapeEngine.StaticLib;
-using ShapeEngine.Random;
 
-namespace ShapeEngine.Persistent
+namespace ShapeEngine.Persistent;
+
+/// <summary>
+/// Provides a wrapper for working with JSON data, allowing easy access to JSON properties and arrays.
+/// </summary>
+public sealed class JNode
 {
-    //public abstract class JDataObject : IDataObject
-    //{
-    //    public abstract string GetName();
-    //}
+    private readonly JsonObject node;
 
-    //public class JArray : List<JNode>
-    //{
-    //    
-    //}
+    /// <summary>
+    /// Gets a value indicating whether this node contains valid JSON data.
+    /// </summary>
+    public bool Valid { get; private set; }
+
+    /// <summary>
+    /// Initializes a new empty instance of the JNode class.
+    /// </summary>
+    public JNode() { this.node = new JsonObject(); }
+
+    /// <summary>
+    /// Initializes a new instance of the JNode class from a JSON string.
+    /// </summary>
+    /// <param name="json">The JSON string to parse.</param>
+    public JNode(string json)
+    {
+        var obj = JsonNode.Parse(json)?.AsObject();
+        if(obj != null)
+        {
+            Valid = true;
+            node = obj;
+        }
+        else node = new JsonObject();
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the JNode class from a JsonNode.
+    /// </summary>
+    /// <param name="node">The JsonNode to wrap.</param>
+    internal JNode(JsonNode? node)
+    {
+        var obj = node?.AsObject();
+        if (obj != null)
+        {
+            Valid = true;
+            this.node = obj;
+        }
+        else this.node = new JsonObject();
+    }
+
+    /// <summary>
+    /// Gets the JSON representation of this node as a string.
+    /// </summary>
+    /// <returns>A JSON string representing this node.</returns>
+    public string GetJsonString() { return node.ToJsonString(); }
+
+    /// <summary>
+    /// Determines whether the JSON object contains the specified key.
+    /// </summary>
+    /// <param name="key">The key to check for.</param>
+    /// <returns>true if the node is valid and contains the specified key; otherwise, false.</returns>
+    public bool ContainsKey(string key) { return Valid && node.ContainsKey(key); }
+
+    /// <summary>
+    /// Gets a nested JSON node by key.
+    /// </summary>
+    /// <param name="key">The key of the nested node to retrieve.</param>
+    /// <returns>A JNode containing the nested JSON object if found; otherwise, an empty JNode.</returns>
+    public JNode GetNode(string key)
+    {
+        if (node.ContainsKey(key))
+        {
+            var n = node[key];
+            if(n != null) return new JNode(n);
+        }
+        return new JNode();
+    }
+
+    /// <summary>
+    /// Gets an array of JSON nodes from an array property in the JSON object.
+    /// </summary>
+    /// <param name="arrayKey">The key of the array property to retrieve.</param>
+    /// <returns>An array of JNode objects representing the elements in the JSON array,
+    /// or an empty array if the property doesn't exist or isn't a valid array.</returns>
+    public JNode[] GetArray(string arrayKey)
+    {
+        if (!Valid) return Array.Empty<JNode>();   
+        if(node.ContainsKey(arrayKey))
+        {
+            var arr = node[arrayKey]?.AsArray();
+            if(arr != null)
+            {
+                List<JNode> result = new();
+                foreach (var item in arr)
+                {
+                    var jn = new JNode(item);
+                    if (jn.Valid) result.Add(jn);
+                }
+                return result.ToArray();
+            }
+        }
+        return Array.Empty<JNode>();
+    }
     
-    public interface IDataObject
+    /// <summary>
+    /// Parses a JSON array into a list of objects of type T using a custom parser function.
+    /// </summary>
+    /// <typeparam name="T">The type of objects to create, must implement IDataContainer.</typeparam>
+    /// <param name="arrayKey">The key of the array to parse.</param>
+    /// <param name="parser">A function that converts a JNode to an object of type T.</param>
+    /// <returns>A list of objects of type T created from the JSON array.</returns>
+    public List<T> ParseToList<T>(string arrayKey, Func<JNode, T> parser) where T : IDataContainer
     {
-        public string GetName();
-    }
-    public interface IDataContainer
-    {
-        public string GetName();
-        public List<IDataObject> GetData();
-        public List<T> GetData<T>() { return GetData().Cast<T>().ToList(); }
-        public IDataObject? GetRandomEntry();
-        public T? GetRandomEntry<T>();
-        public IDataObject? GetEntry(string name);
-        public T? GetEntry<T>(string name);
-    }
-    public class JDataContainer : IDataContainer
-    {
-        public string Name { get; set; } = "";
-        //public List<JDataObject> data { get; protected set; } = new();
-        //public virtual List<T> GetData<T>() { return data.Cast<T>().ToList(); }
-        protected Dictionary<string, IDataObject> data = new();
-
-        public JDataContainer() { }
-        public JDataContainer(params IDataObject[] data)
+        List<T> result = new();
+        var arr = GetArray(arrayKey);
+        foreach (var item in arr)
         {
-            foreach (var entry in data)
-            {
-                if (this.data.ContainsKey(entry.GetName())) continue;
-                this.data.Add(entry.GetName(), entry);
-            }
+            result.Add(parser(item));
         }
-        public JDataContainer(List<IDataObject> data)
-        {
-            foreach (var entry in data)
-            {
-                if (this.data.ContainsKey(entry.GetName())) continue;
-                this.data.Add(entry.GetName(), entry);
-            }
-        }
-        public string GetName() { return Name; }
-        
-        public IDataObject? GetRandomEntry()
-        {
-            if (data.Count <= 0) return null;
-            int randIndex = Rng.Instance.RandI(data.Count);
-            return data.ElementAt(randIndex).Value;
-        }
-        public T? GetRandomEntry<T>()
-        {
-            if (data.Count <= 0) return default(T);
-            int randIndex = Rng.Instance.RandI(data.Count);
-            if (data.ElementAt(randIndex).Value is T t) return t;
-            return default(T);
-        }
-
-        public IDataObject? GetEntry(string name)
-        {
-            if (data.ContainsKey(name)) return data[name];
-            else return null;
-        }
-        public T? GetEntry<T>(string name)
-        {
-            if (data.ContainsKey(name))
-            {
-                if (data[name] is T t) return t;
-            }
-            return default(T);
-        }
-
-        public List<IDataObject> GetData() { return data.Values.ToList(); }
-        public List<T> GetData<T>() { return data.Values.Cast<T>().ToList(); }
-        
-        //public IDataObject? GetRandomEntry()
-        //{
-        //    var data = GetData();
-        //    if (data.Count <= 0) return null;
-        //    int randIndex = SRNG.randI(data.Count);
-        //    return data[randIndex];
-        //}
-        //public T? GetRandomEntry<T>()
-        //{
-        //    var data = GetData();
-        //    if (data.Count <= 0) return default(T);
-        //    int randIndex = SRNG.randI(data.Count);
-        //    if (data[randIndex] is T t) return t;
-        //    return default(T);
-        //}
+        return result;
     }
 
-    public sealed class JNode
+    /// <summary>
+    /// Parses a JSON array into a dictionary of objects of type T using a custom parser function.
+    /// The dictionary is keyed by the name of each data container.
+    /// </summary>
+    /// <typeparam name="T">The type of objects to create, must implement IDataContainer.</typeparam>
+    /// <param name="arrayKey">The key of the array to parse.</param>
+    /// <param name="parser">A function that converts a JNode to an object of type T.</param>
+    /// <returns>A dictionary mapping names to objects of type T created from the JSON array.</returns>
+    public Dictionary<string, T> ParseToDict<T>(string arrayKey, Func<JNode, T> parser) where T : IDataContainer
     {
-        private JsonObject node;
-        public bool Valid { get; private set; } = false;
-
-        public JNode() { this.node = new JsonObject(); }
-        public JNode(string json)
+        Dictionary<string, T> result = new();
+        var arr = GetArray(arrayKey);
+        foreach (var item in arr)
         {
-            var obj = JsonNode.Parse(json)?.AsObject();
-            if(obj != null)
-            {
-                Valid = true;
-                node = obj;
-            }
-            else node = new JsonObject();
+            var c = parser(item);
+            result.Add(c.GetName(), c);
         }
-        internal JNode(JsonNode? node)
-        {
-            var obj = node?.AsObject();
-            if (obj != null)
-            {
-                Valid = true;
-                this.node = obj;
-            }
-            else this.node = new JsonObject();
-        }
-
-        public string GetJsonString() { return node.ToJsonString(); }
-        public bool ContainsKey(string key) { return Valid && node.ContainsKey(key); }
-
-        public JNode GetNode(string key)
-        {
-            if (node.ContainsKey(key))
-            {
-                var n = node[key];
-                if(n != null) return new JNode(n);
-            }
-            return new JNode();
-        }
-        public JNode[] GetArray(string arrayKey)
-        {
-            if (!Valid) return Array.Empty<JNode>();   
-            if(node.ContainsKey(arrayKey))
-            {
-                var arr = node[arrayKey]?.AsArray();
-                if(arr != null)
-                {
-                    List<JNode> result = new();
-                    foreach (var item in arr)
-                    {
-                        var jn = new JNode(item);
-                        if (jn.Valid) result.Add(jn);
-                    }
-                    return result.ToArray();
-                }
-            }
-            return Array.Empty<JNode>();
-        }
-        
-        public List<T> ParseToList<T>(string arrayKey, Func<JNode, T> parser) where T : IDataContainer
-        {
-            List<T> result = new();
-            var arr = GetArray(arrayKey);
-            foreach (var item in arr)
-            {
-                result.Add(parser(item));
-            }
-            return result;
-        }
-        public Dictionary<string, T> ParseToDict<T>(string arrayKey, Func<JNode, T> parser) where T : IDataContainer
-        {
-            Dictionary<string, T> result = new();
-            var arr = GetArray(arrayKey);
-            foreach (var item in arr)
-            {
-                var c = parser(item);
-                result.Add(c.GetName(), c);
-            }
-            return result;
-        }
-
-        public static List<T> SerializeArrayToList<T>(JNode[] nodes)
-        {
-            List<T> result = new List<T>();
-            foreach (var node in nodes)
-            {
-                var r = node.Deserialize<T>();
-                if(r != null) result.Add(r);
-            }
-            return result;
-        }
-        public static Dictionary<string, T> SerializeArrayToDict<T>(JNode[] nodes) where T : IDataObject
-        {
-            Dictionary<string, T> result = new();
-            foreach (var node in nodes)
-            {
-                var r = node.Deserialize<T>();
-                if (r != null)
-                {
-                    result.Add(r.GetName(), r);
-                }
-            }
-            return result;
-        }
-        
-        public List<T> SerializeArrayToList<T>(string arrayKey)
-        {
-            List<T> result = new();
-
-            if (node.ContainsKey(arrayKey))
-            {
-                var arr = node[arrayKey]?.AsArray();
-                if (arr != null)
-                {
-                    foreach (var item in arr)
-                    {
-                        if (item == null) continue;
-
-                        var obj = item.AsObject();
-                        if (obj != null)
-                        {
-                            var t = obj.Deserialize<T>();
-                            if (t != null) result.Add(t);
-                        }
-                    }
-                }
-            }
-            return result;
-        }
-        public Dictionary<string, T> SerializeArrayToDict<T>(string arrayKey) where T : IDataObject
-        {
-            Dictionary<string, T> result = new();
-
-            if (node.ContainsKey(arrayKey))
-            {
-                var arr = node[arrayKey]?.AsArray();
-                if (arr != null)
-                {
-                    foreach (var item in arr)
-                    {
-                        if (item == null) continue;
-
-                        var obj = item.AsObject();
-                        if (obj != null)
-                        {
-                            var t = obj.Deserialize<T>();
-                            if(t != null)result.Add(t.GetName(), t);
-                        }
-                    }
-                }
-            }
-            return result;
-        }
-
-        public T? Deserialize<T>() { return node.Deserialize<T>(); }
-        public T? GetProperty<T>(string key)
-        {
-            if (node.ContainsKey(key))
-            {
-                var n = node[key];
-                return n.Deserialize<T>();
-            }
-            return default(T);
-        }
-
-
-
-        //public Dictionary<string, T> GetSheet<T>(string key, string idPropertyName)
-        //{
-        //    Dictionary<string, T> result = new();
-        //
-        //    if (node.ContainsKey(key))
-        //    {
-        //        var arr = node[key]?.AsArray();
-        //        if(arr != null)
-        //        {
-        //            foreach (var item in arr)
-        //            {
-        //                if(item == null) continue;
-        //                
-        //                var obj = item.AsObject();
-        //                if(obj != null)
-        //                {
-        //                    if (obj.ContainsKey(idPropertyName))
-        //                    {
-        //                        var id = obj[idPropertyName]?.ToString();
-        //                        var t = obj.Deserialize<T>();
-        //                        if(id != null && t != null) result.Add(id, t);
-        //                    }
-        //                }
-        //            }
-        //        }
-        //    }
-        //    return result;
-        //}
+        return result;
     }
-   
+
+    /// <summary>
+    /// Converts an array of JNode objects to a list of objects of type T using JSON deserialization.
+    /// </summary>
+    /// <typeparam name="T">The type to deserialize the nodes to.</typeparam>
+    /// <param name="nodes">The array of JNode objects to deserialize.</param>
+    /// <returns>A list of objects of type T deserialized from the nodes.</returns>
+    public static List<T> SerializeArrayToList<T>(JNode[] nodes)
+    {
+        List<T> result = new List<T>();
+        foreach (var node in nodes)
+        {
+            var r = node.Deserialize<T>();
+            if(r != null) result.Add(r);
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Converts an array of JNode objects to a dictionary of objects of type T using JSON deserialization.
+    /// The dictionary is keyed by the name of each data object.
+    /// </summary>
+    /// <typeparam name="T">The type to deserialize the nodes to, must implement IDataObject.</typeparam>
+    /// <param name="nodes">The array of JNode objects to deserialize.</param>
+    /// <returns>A dictionary mapping names to objects of type T deserialized from the nodes.</returns>
+    public static Dictionary<string, T> SerializeArrayToDict<T>(JNode[] nodes) where T : IDataObject
+    {
+        Dictionary<string, T> result = new();
+        foreach (var node in nodes)
+        {
+            var r = node.Deserialize<T>();
+            if (r != null)
+            {
+                result.Add(r.GetName(), r);
+            }
+        }
+        return result;
+    }
+    
+    /// <summary>
+    /// Deserializes a JSON array property into a list of objects of type T.
+    /// </summary>
+    /// <typeparam name="T">The type to deserialize the array elements to.</typeparam>
+    /// <param name="arrayKey">The key of the array property to deserialize.</param>
+    /// <returns>A list of objects of type T deserialized from the JSON array.</returns>
+    public List<T> SerializeArrayToList<T>(string arrayKey)
+    {
+        List<T> result = [];
+
+        if (!node.ContainsKey(arrayKey)) return result;
+        
+        var arr = node[arrayKey]?.AsArray();
+        if (arr == null) return result;
+        
+        foreach (var item in arr)
+        {
+            var obj = item?.AsObject();
+            if (obj == null) continue;
+            var t = obj.Deserialize<T>();
+            if (t != null) result.Add(t);
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Deserializes a JSON array property into a dictionary of objects of type T.
+    /// The dictionary is keyed by the name of each data object.
+    /// </summary>
+    /// <typeparam name="T">The type to deserialize the array elements to, must implement IDataObject.</typeparam>
+    /// <param name="arrayKey">The key of the array property to deserialize.</param>
+    /// <returns>A dictionary mapping names to objects of type T deserialized from the JSON array.</returns>
+    public Dictionary<string, T> SerializeArrayToDict<T>(string arrayKey) where T : IDataObject
+    {
+        Dictionary<string, T> result = new();
+
+        if (!node.ContainsKey(arrayKey)) return result;
+        var arr = node[arrayKey]?.AsArray();
+        
+        if (arr == null) return result;
+        
+        foreach (var item in arr)
+        {
+            var obj = item?.AsObject();
+            if (obj == null) continue;
+            var t = obj.Deserialize<T>();
+            if(t != null)result.Add(t.GetName(), t);
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Deserializes the JSON node to an object of type T.
+    /// </summary>
+    /// <typeparam name="T">The type to deserialize to.</typeparam>
+    /// <returns>An object of type T deserialized from the JSON node, or null if deserialization fails.</returns>
+    public T? Deserialize<T>() { return node.Deserialize<T>(); }
+
+    /// <summary>
+    /// Gets a property from the JSON node and deserializes it to an object of type T.
+    /// </summary>
+    /// <typeparam name="T">The type to deserialize the property to.</typeparam>
+    /// <param name="key">The key of the property to retrieve.</param>
+    /// <returns>An object of type T deserialized from the property,
+    /// or default(T) if the property doesn't exist or deserialization fails.</returns>
+    public T? GetProperty<T>(string key)
+    {
+        if (node.ContainsKey(key))
+        {
+            var n = node[key];
+            return n.Deserialize<T>();
+        }
+        return default(T);
+    }
+    
 }
+   
+

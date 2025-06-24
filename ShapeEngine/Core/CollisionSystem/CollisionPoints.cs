@@ -7,50 +7,61 @@ using ShapeEngine.Random;
 namespace ShapeEngine.Core.CollisionSystem;
 
 /// <summary>
-/// First - Selects the first collision point.
-/// Closest - Selects the collision point closest to the reference point.
-/// Furthest - Selects the collision point furthest from the reference point.
-/// Combined - Computes the average collision point.
-/// PointingTowards - Selects the collision point with a normal pointing the most towards the reference position.
-/// PointingAway - Selects the collision point with a normal pointing the most away from the reference position.
-/// Random - Selects a random collision point.
+/// Represents a list of <see cref="CollisionPoint"/>s, providing validation, filtering, and sorting utilities for collision detection.
 /// </summary>
-public enum CollisionPointsFilterType
-{
-    First,
-    Closest,
-    Furthest,
-    Combined,
-    PointingTowards,
-    PointingAway,
-    Random
-}
-
+/// <remarks>
+/// Used to aggregate, validate, and process multiple collision points resulting from shape intersections.
+/// </remarks>
 public class CollisionPoints : ShapeList<CollisionPoint>
 {
     #region Constructors
-
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CollisionPoints"/> class with an optional capacity.
+    /// </summary>
+    /// <param name="capacity">The initial capacity of the list.</param>
     public CollisionPoints(int capacity = 0) : base(capacity)
     {
         
     }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CollisionPoints"/> class with the specified points.
+    /// </summary>
+    /// <param name="points">The collision points to add.</param>
     public CollisionPoints(params CollisionPoint[] points) : base(points.Length) { AddRange(points); }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CollisionPoints"/> class from an enumerable and count.
+    /// </summary>
+    /// <param name="points">The collision points to add.</param>
+    /// <param name="count">The number of points to add.</param>
     public CollisionPoints(IEnumerable<CollisionPoint> points, int count) : base(count)  { AddRange(points); }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CollisionPoints"/> class from a list of points.
+    /// </summary>
+    /// <param name="points">The collision points to add.</param>
     public CollisionPoints(List<CollisionPoint> points) : base(points.Count)  { AddRange(points); }
-
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CollisionPoints"/> class by copying another <see cref="CollisionPoints"/>.
+    /// </summary>
+    /// <param name="other">The <see cref="CollisionPoints"/> to copy.</param>
     public CollisionPoints(CollisionPoints other) : base(other.Count)
     {
         AddRange(other);
     }
-    
     #endregion
 
     #region Members
-
+    /// <summary>
+    /// Gets the first collision point in the list, or an empty <see cref="CollisionPoint"/> if the list is empty.
+    /// </summary>
     public CollisionPoint First => Count > 0 ? this[0] : new CollisionPoint();
+    /// <summary>
+    /// Gets the last collision point in the list, or an empty <see cref="CollisionPoint"/> if the list is empty.
+    /// </summary>
     public CollisionPoint Last => Count > 0 ? this[Count - 1] : new CollisionPoint();
+    /// <summary>
+    /// Gets whether the list contains any valid collision points.
+    /// </summary>
     public bool Valid => Count > 0;
-   
     #endregion
     
     #region Validation
@@ -358,8 +369,7 @@ public class CollisionPoints : ShapeList<CollisionPoint>
         return true;
     }
     /// <summary>
-    /// Removes:
-    /// - invalid CollisionPoints
+    /// Removes all invalid <see cref="CollisionPoint"/> instances from the list.
     /// </summary>
     /// <param name="referencePoint">The direction from the reference point towards to CollisionPoint  to check CollisionPoint Normals against.</param>
     /// <param name="combined">An averaged CollisionPoint of all remaining CollisionPoints.</param>
@@ -420,8 +430,7 @@ public class CollisionPoints : ShapeList<CollisionPoint>
         return true;
     }
     /// <summary>
-    /// Removes:
-    /// - invalid CollisionPoints
+    /// Removes all invalid <see cref="CollisionPoint"/> instances from the list.
     /// </summary>
     /// <param name="referencePoint">The direction from the reference point towards to CollisionPoint  to check CollisionPoint Normals against.</param>
     /// <param name="validationResult">The result of the combined CollisionPoint, and the  closest/furthest collision point from the reference point, and the CollisionPoint with normal facing towards the referencePoint.</param>
@@ -511,6 +520,10 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     #endregion
     
     #region Flip Normals
+
+    /// <summary>
+    /// Flips the normal of every <see cref="CollisionPoint"/> in the list.
+    /// </summary>
     public void FlipAllNormals()
     {
         for (var i = 0; i < Count; i++)
@@ -518,6 +531,11 @@ public class CollisionPoints : ShapeList<CollisionPoint>
             this[i] = this[i].FlipNormal();
         }
     }
+
+    /// <summary>
+    /// Flips the normal of each <see cref="CollisionPoint"/> so that it faces towards the specified reference point.
+    /// </summary>
+    /// <param name="referencePoint">The point towards which normals should be flipped.</param>
     public void FlipNormalsTowardsPoint(Vector2 referencePoint)
     {
         for (var i = 0; i < Count; i++)
@@ -528,6 +546,11 @@ public class CollisionPoints : ShapeList<CollisionPoint>
                 this[i] = p.FlipNormal();
         }
     }
+
+    /// <summary>
+    /// Flips the normal of each <see cref="CollisionPoint"/> so that it faces towards the specified reference direction.
+    /// </summary>
+    /// <param name="referenceDirection">The direction towards which normals should be flipped.</param>
     public void FlipNormalsTowardsDirection(Vector2 referenceDirection)
     {
         for (var i = 0; i < Count; i++)
@@ -540,8 +563,18 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     #endregion
 
     #region Equality
-
+    
+    /// <summary>
+    /// Returns a hash code for the current <see cref="CollisionPoints"/> instance.
+    /// </summary>
+    /// <returns>A hash code for the current object.</returns>
     public override int GetHashCode() { return Game.GetHashCode(this); }
+    
+    /// <summary>
+    /// Determines whether the specified <see cref="CollisionPoints"/> is equal to the current <see cref="CollisionPoints"/>.
+    /// </summary>
+    /// <param name="other">The <see cref="CollisionPoints"/> to compare with the current instance.</param>
+    /// <returns><c>true</c> if the specified <see cref="CollisionPoints"/> is equal to the current instance; otherwise, <c>false</c>.</returns>
     public bool Equals(CollisionPoints? other)
     {
         if (other == null) return false;
@@ -552,8 +585,7 @@ public class CollisionPoints : ShapeList<CollisionPoint>
         }
         return true;
     }
-
-
+    
     #endregion
     
     #region CollisionPoint
@@ -691,6 +723,10 @@ public class CollisionPoints : ShapeList<CollisionPoint>
         return Filter(filterType, referencePoint);
     }
     
+    /// <summary>
+    /// Gets the combined collision point, averaging the position and normal of all valid collision points.
+    /// </summary>
+    /// <returns>The combined CollisionPoint.</returns>
     public CollisionPoint GetCombinedCollisionPoint()
     {
         var avgPoint = new Vector2();
@@ -706,6 +742,11 @@ public class CollisionPoints : ShapeList<CollisionPoint>
         
         return new(avgPoint / count, avgNormal.Normalize());
     }
+    /// <summary>
+    /// Gets the closest collision point to the specified reference point.
+    /// </summary>
+    /// <param name="referencePoint">The reference point to measure distance against.</param>
+    /// <returns>The closest CollisionPoint.</returns>
     public CollisionPoint GetClosestCollisionPoint(Vector2 referencePoint)
     {
         if (!Valid) return new();
@@ -727,6 +768,11 @@ public class CollisionPoints : ShapeList<CollisionPoint>
         
         return closest;
     }
+    /// <summary>
+    /// Gets the furthest collision point from the specified reference point.
+    /// </summary>
+    /// <param name="referencePoint">The reference point to measure distance against.</param>
+    /// <returns>The furthest CollisionPoint.</returns>
     public CollisionPoint GetFurthestCollisionPoint(Vector2 referencePoint)
     {
         if (!Valid) return new();
@@ -748,6 +794,12 @@ public class CollisionPoints : ShapeList<CollisionPoint>
         
         return furthest;
     }
+    /// <summary>
+    /// Gets the closest collision point to the specified reference point, and outputs the distance squared to that point.
+    /// </summary>
+    /// <param name="referencePoint">The reference point to measure distance against.</param>
+    /// <param name="closestDistanceSquared">The distance squared to the closest CollisionPoint.</param>
+    /// <returns>The closest CollisionPoint.</returns>
     public CollisionPoint GetClosestCollisionPoint(Vector2 referencePoint, out float closestDistanceSquared)
     {
         closestDistanceSquared = -1;
@@ -770,6 +822,12 @@ public class CollisionPoints : ShapeList<CollisionPoint>
         
         return closest;
     }
+    /// <summary>
+    /// Gets the furthest collision point from the specified reference point, and outputs the distance squared to that point.
+    /// </summary>
+    /// <param name="referencePoint">The reference point to measure distance against.</param>
+    /// <param name="furthestDistanceSquared">The distance squared to the furthest CollisionPoint.</param>
+    /// <returns>The furthest CollisionPoint.</returns>
     public CollisionPoint GetFurthestCollisionPoint(Vector2 referencePoint, out float furthestDistanceSquared)
     {
         furthestDistanceSquared = -1;
@@ -793,18 +851,18 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     }
 
     /// <summary>
-    /// Finds the collision point with the normal facing most in the direction as the reference point.
-    /// Each collision point normal is checked against the direction from the collision point towards the reference point.
+    /// Finds the <see cref="CollisionPoint"/> whose normal most closely faces the direction from the collision point to the specified reference point.
+    /// Calculates the dot product between each normal and the direction vector to the reference point, returning the point with the highest value.
     /// </summary>
-    /// <returns></returns>
+    /// <param name="referencePoint">The point to which normals should be compared.</param>
+    /// <returns>The <see cref="CollisionPoint"/> with the most aligned normal, or an empty point if none are valid.</returns>
     public CollisionPoint GetCollisionPointFacingTowardsPoint(Vector2 referencePoint)
     {
         if (!Valid) return new();
         if(Count == 1) return this[0];
 
         var best = new CollisionPoint();
-        // var dir = (referencePoint - best.Point).Normalize();
-        var maxDot = -10f; //dir.Dot(best.Normal);
+        var maxDot = -10f;
         
         for (var i = 0; i < Count; i++)
         {
@@ -823,16 +881,17 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     }
    
     /// <summary>
-    /// Finds the collision point with the normal facing most in the direction as the reference direction.
+    /// Finds the <see cref="CollisionPoint"/> whose normal most closely aligns with the specified reference direction.
     /// </summary>
-    /// <returns></returns>
+    /// <param name="referenceDir">The direction to compare against each collision point's normal.</param>
+    /// <returns>The <see cref="CollisionPoint"/> with the most aligned normal, or an empty point if none are valid.</returns>
     public CollisionPoint GetCollisionPointFacingTowardsDir(Vector2 referenceDir)
     {
         if (!Valid) return new();
         if(Count == 1) return this[0];
 
         var best = new CollisionPoint();
-        var maxDot = -10f; // referenceDir.Dot(best.Normal);
+        var maxDot = -10f;
         
         for (var i = 0; i < Count; i++)
         {
@@ -852,7 +911,17 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     #endregion
     
     #region Public
+    /// <summary>
+    /// Creates a copy of the current <see cref="CollisionPoints"/> instance.
+    /// </summary>
+    /// <returns>A new <see cref="CollisionPoints"/> instance with the same elements.</returns>
     public new CollisionPoints Copy() => new(this);
+
+    /// <summary>
+    /// Sorts the collision points so that the closest point to the specified reference point comes first.
+    /// </summary>
+    /// <param name="referencePoint">The point to measure distance from.</param>
+    /// <returns>True if sorting was performed; otherwise, false.</returns>
     public bool SortClosestFirst(Vector2 referencePoint)
     {
         if(Count <= 0) return false;
@@ -871,6 +940,12 @@ public class CollisionPoints : ShapeList<CollisionPoint>
         );
         return true;
     }
+
+    /// <summary>
+    /// Sorts the collision points so that the furthest point from the specified reference point comes first.
+    /// </summary>
+    /// <param name="referencePoint">The point to measure distance from.</param>
+    /// <returns>True if sorting was performed; otherwise, false.</returns>
     public bool SortFurthestFirst(Vector2 referencePoint)
     {
         if(Count <= 0) return false;
@@ -889,7 +964,11 @@ public class CollisionPoints : ShapeList<CollisionPoint>
         );
         return true;
     }
-    
+
+    /// <summary>
+    /// Sorts the collision points so that the leftmost point (smallest X value) comes first.
+    /// </summary>
+    /// <returns>True if sorting was performed; otherwise, false.</returns>
     public bool SortFirstLeft()
     {
         if(Count <= 0) return false;
@@ -908,6 +987,11 @@ public class CollisionPoints : ShapeList<CollisionPoint>
         );
         return true;
     }
+
+    /// <summary>
+    /// Sorts the collision points so that the rightmost point (largest X value) comes first.
+    /// </summary>
+    /// <returns>True if sorting was performed; otherwise, false.</returns>
     public bool SortFirstRight()
     {
         if(Count <= 0) return false;
@@ -926,7 +1010,11 @@ public class CollisionPoints : ShapeList<CollisionPoint>
         );
         return true;
     }
-    
+
+    /// <summary>
+    /// Sorts the collision points so that the topmost point (smallest Y value) comes first.
+    /// </summary>
+    /// <returns>True if sorting was performed; otherwise, false.</returns>
     public bool SortFirstTop()
     {
         if(Count <= 0) return false;
@@ -945,6 +1033,11 @@ public class CollisionPoints : ShapeList<CollisionPoint>
         );
         return true;
     }
+
+    /// <summary>
+    /// Sorts the collision points so that the bottommost point (largest Y value) comes first.
+    /// </summary>
+    /// <returns>True if sorting was performed; otherwise, false.</returns>
     public bool SortFirstBottom()
     {
         if(Count <= 0) return false;
@@ -963,7 +1056,10 @@ public class CollisionPoints : ShapeList<CollisionPoint>
         );
         return true;
     }
-
+    /// <summary>
+    /// Returns a set of unique points from the collision points list.
+    /// </summary>
+    /// <returns>A <see cref="Points"/> collection containing unique points.</returns>
     public Points GetUniquePoints()
     {
         var uniqueVertices = new HashSet<Vector2>();
@@ -973,6 +1069,10 @@ public class CollisionPoints : ShapeList<CollisionPoint>
         }
         return new(uniqueVertices);
     }
+    /// <summary>
+    /// Returns a new <see cref="CollisionPoints"/> instance containing unique collision points.
+    /// </summary>
+    /// <returns>A <see cref="CollisionPoints"/> collection with unique collision points.</returns>
     public CollisionPoints GetUniqueCollisionPoints()
     {
         var unique = new HashSet<CollisionPoint>();

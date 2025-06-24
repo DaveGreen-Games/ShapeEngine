@@ -4,14 +4,38 @@ using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.UI;
 
+/// <summary>
+/// Provides navigation and selection logic for a set of <see cref="ControlNode"/> instances, supporting keyboard/gamepad navigation and selection events.
+/// </summary>
+/// <remarks>
+/// ControlNodeNavigator manages a set of control nodes, tracks the currently selected node, and handles navigation events and selection changes.
+/// </remarks>
 public class ControlNodeNavigator
 {
     #region Events
+    /// <summary>
+    /// Occurs when navigation starts.
+    /// </summary>
     public event Action<ControlNodeNavigator>? OnNavigationStarted;
+    /// <summary>
+    /// Occurs when navigation ends.
+    /// </summary>
     public event Action<ControlNodeNavigator>? OnNavigationEnded;
+    /// <summary>
+    /// Occurs when a control node is added to the navigator.
+    /// </summary>
     public event Action<ControlNodeNavigator, ControlNode>? OnControlNodeAdded;
+    /// <summary>
+    /// Occurs when a control node is removed from the navigator.
+    /// </summary>
     public event Action<ControlNodeNavigator, ControlNode>? OnControlNodeRemoved;
+    /// <summary>
+    /// Occurs when the selected control node changes.
+    /// </summary>
     public event Action<ControlNodeNavigator, ControlNode?, ControlNode?>? OnSelectedControlNodeChanged;
+    /// <summary>
+    /// Occurs when navigation happens in a direction.
+    /// </summary>
     public event Action<ControlNodeNavigator, Direction>? OnNavigated;
     #endregion
 
@@ -19,29 +43,42 @@ public class ControlNodeNavigator
 
     private readonly HashSet<ControlNode> nodes = new();
     private readonly List<ControlNode> navigableNodes = new();
-    private bool dirty = false;
-    private ControlNode? selectedNode = null;
+    private bool dirty;
+    private ControlNode? selectedNode;
 
     #endregion
 
     #region Getter & Setter
 
+    /// <summary>
+    /// Gets the currently selected control node.
+    /// </summary>
     public ControlNode? SelectedNode => selectedNode;
 
+    /// <summary>
+    /// Sets the selected control node and triggers selection change events.
+    /// </summary>
+    /// <param name="newNode">The new node to select.</param>
     private void SetSelectedNode(ControlNode? newNode)
     {
         if (newNode == null && selectedNode == null) return;
         if (selectedNode == newNode) return;
-            
         var prev = selectedNode;
         selectedNode = newNode;
         ResolveOnSelectedControlNodeChanged(prev, selectedNode);
     }
+
+    /// <summary>
+    /// Gets whether navigation is currently active.
+    /// </summary>
     public bool IsNavigating { get; private set; } = false;
 
     #endregion
 
     #region Public
+    /// <summary>
+    /// Starts navigation mode, enabling selection and navigation of control nodes.
+    /// </summary>
     public void StartNavigation()
     {
         if (IsNavigating) return;
@@ -49,6 +86,9 @@ public class ControlNodeNavigator
         selectedNode?.NavigationSelect();
         ResolveOnNavigationStarted();
     }
+    /// <summary>
+    /// Ends navigation mode, disabling selection and navigation of control nodes.
+    /// </summary>
     public void EndNavigation()
     {
         if (!IsNavigating) return;
@@ -57,6 +97,9 @@ public class ControlNodeNavigator
         ResolveOnNavigationEnded();
     }
 
+    /// <summary>
+    /// Removes all control nodes from the navigator.
+    /// </summary>
     public void Clear()
     {
         var nodesToRemove = nodes.ToList();
@@ -65,6 +108,11 @@ public class ControlNodeNavigator
             RemoveNode(node);
         }
     }
+    /// <summary>
+    /// Adds a control node to the navigator.
+    /// </summary>
+    /// <param name="node">The control node to add.</param>
+    /// <returns>True if the node was added; otherwise, false.</returns>
     public bool AddNode(ControlNode node)
     {
         if (!nodes.Add(node)) return false;
@@ -72,6 +120,11 @@ public class ControlNodeNavigator
         HandleNodeAddition(node);
         return true;
     }
+    /// <summary>
+    /// Removes a control node from the navigator.
+    /// </summary>
+    /// <param name="node">The control node to remove.</param>
+    /// <returns>True if the node was removed; otherwise, false.</returns>
     public bool RemoveNode(ControlNode node)
     {
         if (!nodes.Remove(node)) return false;
@@ -80,10 +133,14 @@ public class ControlNodeNavigator
         return true;
     }
 
-    private bool navigationPending = false;
+    private bool navigationPending;
     private Direction prevDir = new();
-    private ControlNode? nextNodeToSelect = null;
+    private ControlNode? nextNodeToSelect;
 
+    /// <summary>
+    /// Selects the next control node in the navigation order, using the provided grid.
+    /// </summary>
+    /// <param name="grid">The grid describing navigation layout and direction.</param>
     public void SelectNext(Grid grid)
     {
         if (!IsNavigating || selectedNode == null || !grid.IsValid) return;
@@ -99,10 +156,13 @@ public class ControlNodeNavigator
         prevDir = dir;
     }
 
+    /// <summary>
+    /// Selects the previous control node in the navigation order, using the provided grid.
+    /// </summary>
+    /// <param name="grid">The grid describing navigation layout and direction.</param>
     public void SelectPrevious(Grid grid)
     {
         if (!IsNavigating || selectedNode == null || !grid.IsValid) return;
-        
         var dir = grid.GetPreviousDirection();
         if (grid.IsGrid)
         {
@@ -114,6 +174,10 @@ public class ControlNodeNavigator
         navigationPending = true;
         prevDir = dir;
     }
+
+    /// <summary>
+    /// Updates the navigation state, handling pending navigation and selection changes.
+    /// </summary>
     public void Update()
     {
         if (!IsNavigating) return;
@@ -123,7 +187,6 @@ public class ControlNodeNavigator
             if (navigable.Count > 0)
             {
                 SetSelectedNode(navigable[0]);
-                // SelectedNode = navigable[0];
                 if (selectedNode == null || !selectedNode.NavigationSelect())
                 {
                     throw new WarningException(
@@ -132,12 +195,10 @@ public class ControlNodeNavigator
             }
             else return;
         }
-
         if (navigationPending)
         {
             navigationPending = false;
             var dir = prevDir;
-            
             var nextNode = nextNodeToSelect ?? GetNextNode(dir);
             nextNodeToSelect = null;
             if (nextNode != null && CheckNextNode(nextNode, dir))
@@ -156,11 +217,8 @@ public class ControlNodeNavigator
                 selectedNode.NavigatedTo(dir);
                 navigationPending = true;
                 prevDir = dir;
-
             }
         }
-        
-        
     }
     #endregion
 
@@ -356,12 +414,68 @@ public class ControlNodeNavigator
     
     #region Virtual
 
+    /// <summary>
+    /// Determines whether the next node can be navigated to in the given direction.
+    /// </summary>
+    /// <remarks>
+    /// Override this method to implement custom logic.
+    /// </remarks>
+    /// <param name="nextNode">The next <see cref="ControlNode"/> to navigate to.</param>
+    /// <param name="dir">The navigation <see cref="Direction"/>.</param>
+    /// <returns>True if navigation is allowed; otherwise, false.</returns>
     protected virtual bool CheckNextNode(ControlNode nextNode, Direction dir) => true;
+
+    /// <summary>
+    /// Called after navigation occurs in a given direction.
+    /// </summary>
+    /// <remarks>
+    /// Override this method to implement custom logic.
+    /// </remarks>
+    /// <param name="dir">The navigation <see cref="Direction"/>.</param>
     protected virtual void WasNavigated(Direction dir) { }
+
+    /// <summary>
+    /// Called when navigation mode is started.
+    /// </summary>
+    /// <remarks>
+    /// Override this method to implement custom logic.
+    /// </remarks>
     protected virtual void NavigationWasStarted() { }
+
+    /// <summary>
+    /// Called when navigation mode is ended.
+    /// </summary>
+    /// <remarks>
+    /// Override this method to implement custom logic.
+    /// </remarks>
     protected virtual void NavigationWasEnded() { }
+
+    /// <summary>
+    /// Called when a control node is added to the navigator.
+    /// </summary>
+    /// <remarks>
+    /// Override this method to implement custom logic.
+    /// </remarks>
+    /// <param name="node">The <see cref="ControlNode"/> that was added.</param>
     protected virtual void ControlNodeWasAdded(ControlNode node) { }
+
+    /// <summary>
+    /// Called when a control node is removed from the navigator.
+    /// </summary>
+    /// <remarks>
+    /// Override this method to implement custom logic.
+    /// </remarks>
+    /// <param name="node">The <see cref="ControlNode"/> that was removed.</param>
     protected virtual void ControlNodeWasRemoved(ControlNode node) { }
+
+    /// <summary>
+    /// Called when the selected control node changes.
+    /// </summary>
+    /// <remarks>
+    /// Override this method to implement custom logic.
+    /// </remarks>
+    /// <param name="prev">The previously selected <see cref="ControlNode"/>.</param>
+    /// <param name="cur">The currently selected <see cref="ControlNode"/>.</param>
     protected virtual void SelectedControlNodeWasChanged(ControlNode? prev, ControlNode? cur) { }
     #endregion
     

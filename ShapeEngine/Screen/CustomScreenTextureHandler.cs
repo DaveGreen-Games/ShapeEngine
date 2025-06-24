@@ -5,6 +5,10 @@ using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.Screen;
 
+/// <summary>
+/// Abstract base class for handling custom screen texture operations, such as determining destination/source rectangles,
+/// origin, rotation, mouse scaling, and background color for rendering a screen texture.
+/// </summary>
 public abstract class CustomScreenTextureHandler
 {
     /// <summary>
@@ -62,5 +66,11 @@ public abstract class CustomScreenTextureHandler
     /// <param name="newScreenDimensions"></param>
     /// <returns></returns>
     public virtual Dimensions OnScreenDimensionsChanged(Dimensions newScreenDimensions) => Dimensions.GetInvalidDimension();
+    /// <summary>
+    /// Returns the background color and a flag indicating whether the background should be cleared before rendering the screen texture.
+    /// </summary>
+    /// <returns>
+    /// A tuple containing the background <see cref="ColorRgba"/> and a <see cref="bool"/> indicating if the background should be cleared.
+    /// </returns>
     public virtual (ColorRgba color, bool clear) GetBackgroundClearColor() => (ColorRgba.Clear, true);
 }

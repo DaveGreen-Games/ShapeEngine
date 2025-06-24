@@ -4,19 +4,35 @@ using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.StaticLib.Drawing;
 
-public static  class ShapeGappedDrawing
+/// <summary>
+/// Provides static methods for drawing shapes and outlines with configurable gaps (dashed or segmented effects).
+/// These methods allow for drawing lines, outlines, and various shapes with gaps, based on the specified parameters.
+/// </summary>
+/// <remarks>
+/// All methods in this class are static and intended for rendering shapes with customizable gaps.
+/// Useful for visual effects such as dashed lines, segmented outlines, or highlighting.
+/// </remarks>
+public static class ShapeGappedDrawing
 {
-    
     /// <summary>
-    /// Draws a line that is interrupted by gaps specified by the parameters.
-    /// 1 gap with 0.5 gap percentage would result in half of the line visible and the other not visible.
+    /// Draws a line segment with gaps, creating a dashed or segmented effect.
     /// </summary>
-    /// <param name="start">The start of the line.</param>
-    /// <param name="end">The end of the line.</param>
-    /// <param name="length">The length of the line. If zero or negative the function will calculate the length and return it. </param>
-    /// <param name="lineInfo">The parameters for how to draw the line.</param>
-    /// <param name="gapDrawingInfo">Info for how to draw the gaps.</param>
-    /// <returns>Returns the length of the line if positive otherwise -1. </returns>
+    /// <param name="start">The starting point of the line segment.</param>
+    /// <param name="end">The ending point of the line segment.</param>
+    /// <param name="length">
+    /// The length of the line.
+    /// If zero or negative, the method calculates it automatically.
+    /// Providing a known length avoids redundant calculations and improves performance, especially for static segments.</param>
+    /// <param name="lineInfo">Parameters describing how to draw the line (e.g., color, thickness).</param>
+    /// <param name="gapDrawingInfo">Parameters describing the gap configuration (number of gaps, gap percentage, etc.).</param>
+    /// <returns>
+    /// The length of the line if positive; otherwise, -1.
+    /// If the shape does not change, the valid length can be reused in subsequent frames to avoid recalculating.
+    /// </returns>
+    /// <remarks>
+    /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the line is drawn solid.
+    /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no line is drawn.
+    /// </remarks>
     public static float DrawGappedSegment(Vector2 start, Vector2 end, float length, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
     {
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
@@ -107,13 +123,24 @@ public static  class ShapeGappedDrawing
     }
 
     /// <summary>
-    /// Draws an outline that is interrupted by gaps specified by the parameters.
-    /// 1 gap with 0.5 gap percentage would result in half of the outline visible and the other not visible.
+    /// Draws an outline (closed polyline) with gaps, creating a dashed or segmented effect.
     /// </summary>
-    /// <param name="shapePoints">The points for the outline.</param>
-    /// <param name="lineInfo">The parameters for how to draw the line.</param>
-    /// <param name="perimeter">The total length of the perimeter. If less than 0 the functions calculates this (more expensive).</param>
-    /// <param name="gapDrawingInfo">Info for how to draw the gaps.</param>
+    /// <param name="shapePoints">The list of points defining the outline.</param>
+    /// <param name="perimeter">
+    /// The total length of the outline.
+    /// If zero or negative, the method calculates it automatically.
+    /// Providing a known length avoids redundant calculations and improves performance, especially for static segments.
+    /// </param>
+    /// <param name="lineInfo">Parameters describing how to draw the outline.</param>
+    /// <param name="gapDrawingInfo">Parameters describing the gap configuration.</param>
+    /// <returns>
+    /// The perimeter of the outline if positive; otherwise, -1.
+    /// If the shape does not change, the valid length can be reused in subsequent frames to avoid recalculating.
+    /// </returns>
+    /// <remarks>
+    /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the outline is drawn solid.
+    /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no outline is drawn.
+    /// </remarks>
     public static float DrawGappedOutline(this List<Vector2> shapePoints, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
     {
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
@@ -208,15 +235,26 @@ public static  class ShapeGappedDrawing
 
         return perimeter;
     }
-   
+
     /// <summary>
-    /// Draws an outline that is interrupted by gaps specified by the parameters.
-    /// 1 gap with 0.5 gap percentage would result in half of the outline visible and the other not visible.
+    /// Draws an outline (closed polyline) with gaps for a <see cref="Points"/> collection.
     /// </summary>
-    /// <param name="shapePoints">The points for the outline.</param>
-    /// <param name="lineInfo">The parameters for how to draw the line.</param>
-    /// <param name="perimeter">The total length of the perimeter. If less than 0 the functions calculates this (more expensive).</param>
-    /// <param name="gapDrawingInfo">Info for how to draw the gaps.</param>
+    /// <param name="shapePoints">The points defining the outline.</param>
+    /// <param name="perimeter">
+    /// The total length of the outline.
+    /// If zero or negative, the method calculates it automatically.
+    /// Providing a known length avoids redundant calculations and improves performance, especially for static segments.
+    /// </param>
+    /// <param name="lineInfo">Parameters describing how to draw the outline.</param>
+    /// <param name="gapDrawingInfo">Parameters describing the gap configuration.</param>
+    /// <returns>
+    /// The perimeter of the outline if positive; otherwise, -1.
+    /// If the shape does not change, the valid length can be reused in subsequent frames to avoid recalculating.
+    /// </returns>
+    /// <remarks>
+    /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the outline is drawn solid.
+    /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no outline is drawn.
+    /// </remarks>
     public static float DrawGappedOutline(this Points shapePoints, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
     {
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
@@ -314,30 +352,41 @@ public static  class ShapeGappedDrawing
    
     
     /// <summary>
-    /// Draws a segment that is interrupted by gaps specified by the parameters.
-    /// 1 gap with 0.5 gap percentage would result in half of the segment visible and the other not visible.
+    /// Draws a segment with gaps, creating a dashed or segmented effect.
     /// </summary>
     /// <param name="s">The segment to draw.</param>
-    /// <param name="length">The length of the segment. If zero or negative the function will calculate the length and return it. </param>
-    /// <param name="lineInfo">The parameters for how to draw the segment.</param>
-    /// <param name="gapDrawingInfo">Info for how to draw the gaps.</param>
-    /// <returns>Returns the length of the segment if positive otherwise -1. </returns>
+    /// <param name="length">
+    /// The length of the segment.
+    /// If zero or negative, the method calculates it automatically.
+    /// Providing a known length avoids redundant calculations and improves performance, especially for static segments.
+    /// </param>
+    /// <param name="lineInfo">Parameters describing how to draw the segment.</param>
+    /// <param name="gapDrawingInfo">Parameters describing the gap configuration.</param>
+    /// <returns>
+    /// Returns the segment length if positive; otherwise, returns -1.
+    /// If the shape does not change, the valid length can be reused in subsequent frames to avoid recalculating.
+    /// </returns>
+    /// <remarks>
+    /// This is a convenience wrapper for <see cref="DrawGappedSegment"/>.
+    /// </remarks>
     public static float DrawGapped(this Segment s, float length, LineDrawingInfo lineInfo,
         GappedOutlineDrawingInfo gapDrawingInfo) => DrawGappedSegment(s.Start, s.End, length, lineInfo, gapDrawingInfo);
-    
-    
+
     /// <summary>
-    /// Draws an outline that is interrupted by gaps specified by the parameters.
-    /// 1 gap with 0.5 gap percentage would result in half of the outline visible and the other not visible.
+    /// Draws a gapped outline for a circle, creating a dashed or segmented circular outline.
     /// </summary>
-    /// <param name="circle">The circle to use for drawing.</param>
-    /// <param name="lineInfo">The parameters for how to draw the line.</param>
-    /// <param name="gapDrawingInfo">Info for how to draw the gaps.</param>
-    /// <param name="rotDeg">The rotation of the circle.</param>
-    /// <param name="sides">With how many sides should the circle be drawn.</param>
+    /// <param name="circle">The circle to draw.</param>
+    /// <param name="lineInfo">Parameters describing how to draw the outline.</param>
+    /// <param name="gapDrawingInfo">Parameters describing the gap configuration.</param>
+    /// <param name="rotDeg">The rotation of the circle in degrees.</param>
+    /// <param name="sides">The number of sides to approximate the circle (minimum 3).</param>
+    /// <remarks>
+    /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the outline is drawn solid.
+    /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no outline is drawn.
+    /// - The <paramref name="sides"/> parameter controls the smoothness of the circle.
+    /// </remarks>
     public static void DrawGappedOutline(this Circle circle, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo, float rotDeg, int sides = 18)
     {
-        //const float sideLength = 4f;
         if (sides < 3) return;
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
         {
@@ -369,11 +418,9 @@ public static  class ShapeGappedDrawing
         var curDistance = 0f;
         var nextDistance = startDistance;
         
-        //int sides = GetCircleSideCount(circle.Radius, sideLength);
-        
         var curIndex = 0;
-        var curPoint = circlePoints[0]; //GetCirclePoint(circle, angleRad, angleStep, 0);
-        var nextPoint= circlePoints[1]; //GetCirclePoint(circle, angleRad, angleStep, 1);;
+        var curPoint = circlePoints[0];
+        var nextPoint= circlePoints[1];
         var curW = nextPoint - curPoint;
         var curDis = curW.Length();
         
@@ -424,28 +471,29 @@ public static  class ShapeGappedDrawing
                 
                 curDistance += curDis;
                 curIndex = (curIndex + 1) % sides;
-                curPoint = circlePoints[curIndex]; //GetCirclePoint(circle, angleRad, angleStep, curIndex);
-                nextPoint = circlePoints[(curIndex + 1) % sides]; //GetCirclePoint(circle, angleRad, angleStep, (curIndex + 1) % sides);
+                curPoint = circlePoints[curIndex];
+                nextPoint = circlePoints[(curIndex + 1) % sides];
                 curW = nextPoint - curPoint;
                 curDis = curW.Length();
             }
             
         }
-
-        return;
     }
    
     /// <summary>
-    /// Draws an outline that is interrupted by gaps specified by the parameters.
-    /// 1 gap with 0.5 gap percentage would result in half of the outline visible and the other not visible.
+    /// Draws a gapped outline for a ring (annulus), creating dashed or segmented outlines for both inner and outer circles.
     /// </summary>
     /// <param name="center">The center of the ring.</param>
-    /// <param name="innerRadius">The radius of the inner ring.</param>
-    /// <param name="outerRadius">The radius of the outer ring.</param>
-    /// <param name="lineInfo">The parameters for how to draw the line.</param>
-    /// <param name="gapDrawingInfo">Info for how to draw the gaps.</param>
-    /// <param name="rotDeg">The rotation of the circle.</param>
-    /// <param name="sideLength">The side lengths of the circle.</param>
+    /// <param name="innerRadius">The radius of the inner circle. If zero or negative, only the outer circle is drawn.</param>
+    /// <param name="outerRadius">The radius of the outer circle. If zero or negative, only the inner circle is drawn.</param>
+    /// <param name="lineInfo">Parameters describing how to draw the outlines.</param>
+    /// <param name="gapDrawingInfo">Parameters describing the gap configuration.</param>
+    /// <param name="rotDeg">The rotation of the ring in degrees.</param>
+    /// <param name="sideLength">The approximate length of each side used to approximate the circles.</param>
+    /// <remarks>
+    /// - If both radii are zero or negative, nothing is drawn.
+    /// - The number of sides for each circle is determined by the radius and <paramref name="sideLength"/>.
+    /// </remarks>
     public static void DrawGappedRing(Vector2 center, float innerRadius, float outerRadius, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo, float rotDeg, float sideLength = 8f)
     {
         if (innerRadius <= 0 && outerRadius <= 0) return;
@@ -471,13 +519,24 @@ public static  class ShapeGappedDrawing
    
     
     /// <summary>
-    /// Draws an outline that is interrupted by gaps specified by the parameters.
-    /// 1 gap with 0.5 gap percentage would result in half of the outline visible and the other not visible.
+    /// Draws a gapped outline for a triangle, creating a dashed or segmented effect along the triangle's perimeter.
     /// </summary>
-    /// <param name="triangle">The triangle for drawing the outline.</param>
-    /// <param name="lineInfo">The parameters for how to draw the line.</param>
-    /// <param name="perimeter">The total length of the perimeter. If less than 0 the functions calculates this (more expensive).</param>
-    /// <param name="gapDrawingInfo">Info for how to draw the gaps.</param>
+    /// <param name="triangle">The triangle to draw.</param>
+    /// <param name="perimeter">
+    /// The total length of the triangle's perimeter.
+    /// If zero or negative, the method calculates it automatically.
+    /// Providing a known length avoids redundant calculations and improves performance, especially for static segments.
+    /// </param>
+    /// <param name="lineInfo">Parameters describing how to draw the outline.</param>
+    /// <param name="gapDrawingInfo">Parameters describing the gap configuration.</param>
+    /// <returns>
+    /// The perimeter of the triangle if positive; otherwise, -1.
+    /// If the shape does not change, the valid length can be reused in subsequent frames to avoid recalculating.
+    /// </returns>
+    /// <remarks>
+    /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the outline is drawn solid.
+    /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no outline is drawn.
+    /// </remarks>
     public static float DrawGappedOutline(this Triangle triangle, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
     {
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
@@ -513,11 +572,9 @@ public static  class ShapeGappedDrawing
         var curDistance = 0f;
         var nextDistance = startDistance;
         
-        //int sides = GetCircleSideCount(circle.Radius, sideLength);
-        
         var curIndex = 0;
-        var curPoint = shapePoints[0]; //GetCirclePoint(circle, angleRad, angleStep, 0);
-        var nextPoint= shapePoints[1]; //GetCirclePoint(circle, angleRad, angleStep, 1);;
+        var curPoint = shapePoints[0];
+        var nextPoint= shapePoints[1];
         var curW = nextPoint - curPoint;
         var curDis = curW.Length();
         
@@ -580,13 +637,24 @@ public static  class ShapeGappedDrawing
     }
    
     /// <summary>
-    /// Draws an outline that is interrupted by gaps specified by the parameters.
-    /// 1 gap with 0.5 gap percentage would result in half of the outline visible and the other not visible.
+    /// Draws a gapped outline for a rectangle, creating a dashed or segmented effect along the rectangle's perimeter.
     /// </summary>
-    /// <param name="rect">The rect for drawing the outline.</param>
-    /// <param name="lineInfo">The parameters for how to draw the line.</param>
-    /// <param name="perimeter">The total length of the perimeter. If less than 0 the functions calculates this (more expensive).</param>
-    /// <param name="gapDrawingInfo">Info for how to draw the gaps.</param>
+    /// <param name="rect">The rectangle to draw.</param>
+    /// <param name="perimeter">
+    /// The total length of the rectangle's perimeter.
+    /// If zero or negative, the method calculates it automatically.
+    /// Providing a known length avoids redundant calculations and improves performance, especially for static segments.
+    /// </param>
+    /// <param name="lineInfo">Parameters describing how to draw the outline.</param>
+    /// <param name="gapDrawingInfo">Parameters describing the gap configuration.</param>
+    /// <returns>
+    /// The perimeter of the rectangle if positive; otherwise, -1.
+    /// If the shape does not change, the valid length can be reused in subsequent frames to avoid recalculating.
+    /// </returns>
+    /// <remarks>
+    /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the outline is drawn solid.
+    /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no outline is drawn.
+    /// </remarks>
     public static float DrawGappedOutline(this Rect rect, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
     {
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
@@ -686,13 +754,24 @@ public static  class ShapeGappedDrawing
     }
    
     /// <summary>
-    /// Draws an outline that is interrupted by gaps specified by the parameters.
-    /// 1 gap with 0.5 gap percentage would result in half of the outline visible and the other not visible.
+    /// Draws a gapped outline for a quadrilateral, creating a dashed or segmented effect along the quad's perimeter.
     /// </summary>
-    /// <param name="quad">The quad for drawing the outline.</param>
-    /// <param name="lineInfo">The parameters for how to draw the line.</param>
-    /// <param name="perimeter">The total length of the perimeter. If less than 0 the functions calculates this (more expensive).</param>
-    /// <param name="gapDrawingInfo">Info for how to draw the gaps.</param>
+    /// <param name="quad">The quadrilateral to draw.</param>
+    /// <param name="perimeter">
+    /// The total length of the quad's perimeter.
+    /// If zero or negative, the method calculates it automatically.
+    /// Providing a known length avoids redundant calculations and improves performance, especially for static segments.
+    /// </param>
+    /// <param name="lineInfo">Parameters describing how to draw the outline.</param>
+    /// <param name="gapDrawingInfo">Parameters describing the gap configuration.</param>
+    /// <returns>
+    /// The perimeter of the quad if positive; otherwise, -1.
+    /// If the shape does not change, the valid length can be reused in subsequent frames to avoid recalculating.
+    /// </returns>
+    /// <remarks>
+    /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the outline is drawn solid.
+    /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no outline is drawn.
+    /// </remarks>
     public static float DrawGappedOutline(this Quad quad, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
     {
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
@@ -792,16 +871,25 @@ public static  class ShapeGappedDrawing
         return perimeter;
     }
    
-    
-    
     /// <summary>
-    /// Draws an outline that is interrupted by gaps specified by the parameters.
-    /// 1 gap with 0.5 gap percentage would result in half of the outline visible and the other not visible.
+    /// Draws a gapped outline for a polygon, creating a dashed or segmented effect along the polygon's perimeter.
     /// </summary>
-    /// <param name="poly">The polygon outline.</param>
-    /// <param name="lineInfo">The parameters for how to draw the line.</param>
-    /// <param name="perimeter">The total length of the perimeter. If less than 0 the functions calculates this (more expensive).</param>
-    /// <param name="gapDrawingInfo">Info for how to draw the gaps.</param>
+    /// <param name="poly">The polygon to draw.</param>
+    /// <param name="perimeter">
+    /// The total length of the polygon's perimeter.
+    /// If zero or negative, the method calculates it automatically.
+    /// Providing a known length avoids redundant calculations and improves performance, especially for static segments.
+    /// </param>
+    /// <param name="lineInfo">Parameters describing how to draw the outline.</param>
+    /// <param name="gapDrawingInfo">Parameters describing the gap configuration.</param>
+    /// <returns>
+    /// The perimeter of the polygon if positive; otherwise, -1.
+    /// If the shape does not change, the valid length can be reused in subsequent frames to avoid recalculating.
+    /// </returns>
+    /// <remarks>
+    /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the outline is drawn solid.
+    /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no outline is drawn.
+    /// </remarks>
     public static float DrawGappedOutline(this Polygon poly, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
     {
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
@@ -898,13 +986,24 @@ public static  class ShapeGappedDrawing
     }
    
     /// <summary>
-    /// Draws an outline that is interrupted by gaps specified by the parameters.
-    /// 1 gap with 0.5 gap percentage would result in half of the outline visible and the other not visible.
+    /// Draws a gapped outline for a polyline (open or closed), creating a dashed or segmented effect along the polyline's length.
     /// </summary>
-    /// <param name="polyline">The polyline for drawing the outline.</param>
-    /// <param name="lineInfo">The parameters for how to draw the line.</param>
-    /// <param name="perimeter">The total length of the perimeter. If less than 0 the functions calculates this (more expensive).</param>
-    /// <param name="gapDrawingInfo">Info for how to draw the gaps.</param>
+    /// <param name="polyline">The polyline to draw.</param>
+    /// <param name="perimeter">
+    /// The total length of the polyline.
+    /// If zero or negative, the method calculates it automatically.
+    /// Providing a known length avoids redundant calculations and improves performance, especially for static segments.
+    /// </param>
+    /// <param name="lineInfo">Parameters describing how to draw the polyline.</param>
+    /// <param name="gapDrawingInfo">Parameters describing the gap configuration.</param>
+    /// <returns>
+    /// The perimeter of the polyline if positive; otherwise, -1.
+    /// If the shape does not change, the valid length can be reused in subsequent frames to avoid recalculating.
+    /// </returns>
+    /// <remarks>
+    /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the polyline is drawn solid.
+    /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no polyline is drawn.
+    /// </remarks>
     public static float DrawGappedOutline(this Polyline polyline, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
     {
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
@@ -939,11 +1038,6 @@ public static  class ShapeGappedDrawing
         var points = new List<Vector2>(3);
 
         int whileCounter = gapDrawingInfo.Gaps;
-        // Console.WriteLine($"    > Gaps: {gapDrawingInfo.Gaps} | Start Offset: {(int)(gapDrawingInfo.StartOffset * 100)}% | Start Distance {startDistance}");
-        // Console.WriteLine($"    > Gap percentage: {(int)(gapDrawingInfo.GapPerimeterPercentage * 100)}%");
-        // Console.WriteLine($"    > Gap Range: {(int)(gapPercentageRange * 100)}% | Line Range: {(int)(nonGapPercentageRange * 100)}%");
-        // Console.WriteLine($"    > Gap size: {gapPercentageRange * perimeter} | Line Size: {nonGapPercentageRange * perimeter}");
-        // Console.WriteLine($"    > Perimeter {perimeter} | Cur Dis: {curDis} | Next Dis: {nextDistance}");
         
         while (whileCounter > 0)
         {
@@ -957,8 +1051,6 @@ public static  class ShapeGappedDrawing
                     var prevDistance = nextDistance;
                     nextDistance += nonGapPercentageRange * perimeter;
                     points.Add(p);
-                    // Console.WriteLine($"        > First Point added | Point Count: {points.Count}");
-                    // Console.WriteLine($"            > Next Distance changed from {prevDistance} to {nextDistance}");
 
                 }
                 else
@@ -966,8 +1058,6 @@ public static  class ShapeGappedDrawing
                     var prevDistance = nextDistance;
                     nextDistance += gapPercentageRange * perimeter;
                     points.Add(p);
-                    // Console.WriteLine($"        > Point added | Point Count: {points.Count}");
-                    // Console.WriteLine($"            > Next Distance changed from {prevDistance} to {nextDistance}");
                     
                     if (points.Count == 2)
                     {
@@ -982,8 +1072,6 @@ public static  class ShapeGappedDrawing
                             ShapeSegmentDrawing.DrawSegment(p1, p2, lineInfo);
                         }
                     }
-                    
-                    // Console.WriteLine($"        > While Counter reduced by one from {whileCounter} to {whileCounter - 1}");
                     points.Clear();
                     whileCounter--;
                 }
@@ -991,8 +1079,6 @@ public static  class ShapeGappedDrawing
             }
             else
             {
-                // Console.WriteLine($"        > Cur Index: {curIndex} | Polyline Count: {polyline.Count} | Remaining: {whileCounter}");
-                // Console.WriteLine($"        > Cur Distance: {curDistance} | Next Distance: {nextDistance} | Segment Length: {curDis}");
                 if (curIndex >= polyline.Count - 2) //last point
                 {
                     if (points.Count > 0)
@@ -1021,10 +1107,6 @@ public static  class ShapeGappedDrawing
                     nextPoint = polyline[(curIndex + 1) % polyline.Count];
                     curW = nextPoint - curPoint;
                     curDis = curW.Length();
-                    
-                    // Console.WriteLine("             > End Point Reached");
-                    // Console.WriteLine($"                > New Index: {curIndex} | Next Index: {(curIndex + 1) % polyline.Count}");
-                    // Console.WriteLine($"                > Cur Distance: {curDistance} | Next Distance: {nextDistance} | Segment Length: {curDis}");
                 }
                 else
                 {
@@ -1036,10 +1118,6 @@ public static  class ShapeGappedDrawing
                     nextPoint = polyline[(curIndex + 1) % polyline.Count];
                     curW = nextPoint - curPoint;
                     curDis = curW.Length();
-                    
-                    // Console.WriteLine("             > Mid Point Reached");
-                    // Console.WriteLine($"                > New Index: {curIndex} | Next Index: {(curIndex + 1) % polyline.Count}");
-                    // Console.WriteLine($"                > Cur Distance: {curDistance} | Next Distance: {nextDistance} | Segment Length: {curDis}");
                 }
             }
             

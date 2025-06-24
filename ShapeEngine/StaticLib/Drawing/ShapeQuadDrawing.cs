@@ -6,14 +6,39 @@ using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.StaticLib.Drawing;
 
+/// <summary>
+/// Provides static methods for drawing quads (quadrilaterals) and their outlines, including partial outlines and vertex markers.
+/// </summary>
+/// <remarks>
+/// This class contains utility methods for rendering quads with various options such as line thickness, color, partial outlines, and scaling.
+/// </remarks>
 public static class ShapeQuadDrawing
 {
-     public static void DrawQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d, ColorRgba color)
+    /// <summary>
+    /// Draws a filled quadrilateral using four vertices.
+    /// </summary>
+    /// <param name="a">The first vertex of the quad.</param>
+    /// <param name="b">The second vertex of the quad.</param>
+    /// <param name="c">The third vertex of the quad.</param>
+    /// <param name="d">The fourth vertex of the quad.</param>
+    /// <param name="color">The color to fill the quad.</param>
+    public static void DrawQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d, ColorRgba color)
     {
         Raylib.DrawTriangle(a, b, c, color.ToRayColor());
         Raylib.DrawTriangle(a, c, d, color.ToRayColor());
     }
 
+    /// <summary>
+    /// Draws the outline of a quadrilateral with specified line thickness and style.
+    /// </summary>
+    /// <param name="a">The first vertex of the quad.</param>
+    /// <param name="b">The second vertex of the quad.</param>
+    /// <param name="c">The third vertex of the quad.</param>
+    /// <param name="d">The fourth vertex of the quad.</param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="color">The color of the outline.</param>
+    /// <param name="capType">The style of the line caps.</param>
+    /// <param name="capPoints">The number of points used for the cap style.</param>
     public static void DrawQuadLines(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         ShapeSegmentDrawing.DrawSegment(a, b, lineThickness, color, capType, capPoints);
@@ -21,6 +46,22 @@ public static class ShapeQuadDrawing
         ShapeSegmentDrawing.DrawSegment(c, d, lineThickness, color, capType, capPoints);
         ShapeSegmentDrawing.DrawSegment(d, a, lineThickness, color, capType, capPoints);
     }
+
+    /// <summary>
+    /// Draws the outline of a quadrilateral, scaling each side by a specified factor.
+    /// </summary>
+    /// <param name="a">The first vertex of the quad.</param>
+    /// <param name="b">The second vertex of the quad.</param>
+    /// <param name="c">The third vertex of the quad.</param>
+    /// <param name="d">The fourth vertex of the quad.</param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="color">The color of the outline.</param>
+    /// <param name="sideLengthFactor">The factor by which to scale each side (0 = no line, 1 = full length).</param>
+    /// <param name="capType">The style of the line caps.</param>
+    /// <param name="capPoints">The number of points used for the cap style.</param>
+    /// <remarks>
+    /// Each side is drawn from its starting vertex towards its ending vertex, scaled by <paramref name="sideLengthFactor"/>.
+    /// </remarks>
     public static void DrawQuadLines(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float lineThickness, ColorRgba color, float sideLengthFactor, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         var side1 = b - a;
@@ -42,20 +83,29 @@ public static class ShapeQuadDrawing
     }
     
     /// <summary>
-    /// Draws a certain percentage of an outline.
+    /// Draws a specified percentage of the outline of a quadrilateral.
     /// </summary>
-    /// <param name="a"></param>
-    /// <param name="b"></param>
-    /// <param name="c"></param>
-    /// <param name="d"></param>
-    /// <param name="f">The percentage of the outline to draw. Negative value reverses the direction (cw).
-    /// Integer part can be used to change starting corner.
-    /// 0.35 would start at corner a go in ccw direction and draw 35% of the outline.
-    /// -2.7 would start at b (the third corner in cw direction) and draw in cw direction 70% of the outline.</param>
-    /// <param name="lineThickness"></param>
-    /// <param name="color"></param>
-    /// <param name="capType"></param>
-    /// <param name="capPoints"></param>
+    /// <param name="a">The first vertex of the quad.</param>
+    /// <param name="b">The second vertex of the quad.</param>
+    /// <param name="c">The third vertex of the quad.</param>
+    /// <param name="d">The fourth vertex of the quad.</param>
+    /// <param name="f">
+    /// The percentage of the outline to draw. 
+    /// <list type="bullet">
+    /// <item><description>Negative value reverses the direction (clockwise).</description></item>
+    /// <item><description>Integer part changes the starting corner (0 = a, 1 = b, etc.).</description></item>
+    /// <item><description>Fractional part is the percentage of the outline to draw.</description></item>
+    /// <item><description>Example: 0.35 starts at corner a, goes counter-clockwise, and draws 35% of the outline.</description></item>
+    /// <item><description>Example: -2.7 starts at b (third corner in cw direction), draws 70% of the outline in cw direction.</description></item>
+    /// </list>
+    /// </param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="color">The color of the outline.</param>
+    /// <param name="capType">The style of the line caps.</param>
+    /// <param name="capPoints">The number of points used for the cap style.</param>
+    /// <remarks>
+    /// Useful for animating outlines or highlighting portions of a quad.
+    /// </remarks>
     public static void DrawQuadLinesPercentage(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         if (f == 0) return;
@@ -119,59 +169,125 @@ public static class ShapeQuadDrawing
         }
     }
     
+    /// <summary>
+    /// Draws the outline of a quadrilateral using a <see cref="LineDrawingInfo"/> structure.
+    /// </summary>
+    /// <param name="a">The first vertex of the quad.</param>
+    /// <param name="b">The second vertex of the quad.</param>
+    /// <param name="c">The third vertex of the quad.</param>
+    /// <param name="d">The fourth vertex of the quad.</param>
+    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
     public static void DrawQuadLines(Vector2 a, Vector2 b, Vector2 c, Vector2 d, LineDrawingInfo lineInfo)
     {
         ShapeSegmentDrawing.DrawSegment(a, b, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
         ShapeSegmentDrawing.DrawSegment(b, c, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
         ShapeSegmentDrawing.DrawSegment(c, d, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
         ShapeSegmentDrawing.DrawSegment(d, a, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-        
-        // new Triangle(a, b, c).GetEdges().Draw(lineThickness, color);
     }
+
+    /// <summary>
+    /// Draws a filled quadrilateral using the vertices of a <see cref="Quad"/>.
+    /// </summary>
+    /// <param name="q">The quad to draw.</param>
+    /// <param name="color">The color to fill the quad.</param>
     public static void Draw(this Quad q, ColorRgba color) => DrawQuad(q.A, q.B, q.C, q.D, color);
 
+    /// <summary>
+    /// Draws the outline of a <see cref="Quad"/> with specified line thickness and style.
+    /// </summary>
+    /// <param name="q">The quad to outline.</param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="color">The color of the outline.</param>
+    /// <param name="capType">The style of the line caps.</param>
+    /// <param name="capPoints">The number of points used for the cap style.</param>
     public static void DrawLines(this Quad q, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         DrawQuadLines(q.A, q.B, q.C, q.D, lineThickness, color, capType, capPoints);
     }
+
+    /// <summary>
+    /// Draws the outline of a <see cref="Quad"/>, scaling each side by a specified factor.
+    /// </summary>
+    /// <param name="q">The quad to outline.</param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="color">The color of the outline.</param>
+    /// <param name="sideLengthFactor">The factor by which to scale each side (0 = no line, 1 = full length).</param>
+    /// <param name="capType">The style of the line caps.</param>
+    /// <param name="capPoints">The number of points used for the cap style.</param>
+    /// <remarks>
+    /// Each side is drawn from its starting vertex towards its ending vertex, scaled by <paramref name="sideLengthFactor"/>.
+    /// </remarks>
     public static void DrawLines(this Quad q, float lineThickness, ColorRgba color, float sideLengthFactor, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         DrawQuadLines(q.A, q.B, q.C, q.D, lineThickness, color, sideLengthFactor, capType, capPoints);
     }
+
+    /// <summary>
+    /// Draws the outline of a <see cref="Quad"/> using a <see cref="LineDrawingInfo"/> structure.
+    /// </summary>
+    /// <param name="q">The quad to outline.</param>
+    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
     public static void DrawLines(this Quad q, LineDrawingInfo lineInfo) => DrawQuadLines(q.A, q.B, q.C, q.D, lineInfo);
 
     /// <summary>
-    /// Draws a certain percentage of an outline.
+    /// Draws a specified percentage of the outline of a <see cref="Quad"/>.
     /// </summary>
-    /// <param name="q"></param>
-    /// <param name="f">The percentage of the outline to draw. Negative value reverses the direction (cw).
-    /// Integer part can be used to change starting corner.
-    /// 0.35 would start at corner a go in ccw direction and draw 35% of the outline.
-    /// -2.7 would start at b (the third corner in cw direction) and draw in cw direction 70% of the outline.</param>
-    /// <param name="lineThickness"></param>
-    /// <param name="color"></param>
-    /// <param name="capType"></param>
-    /// <param name="capPoints"></param>
+    /// <param name="q">The quad to outline.</param>
+    /// <param name="f">
+    /// The percentage of the outline to draw. 
+    /// <list type="bullet">
+    /// <item><description>Negative value reverses the direction (clockwise).</description></item>
+    /// <item><description>Integer part changes the starting corner (0 = a, 1 = b, etc.).</description></item>
+    /// <item><description>Fractional part is the percentage of the outline to draw.</description></item>
+    /// <item><description>Example: 0.35 starts at corner a, goes counter-clockwise, and draws 35% of the outline.</description></item>
+    /// <item><description>Example: -2.7 starts at b (third corner in cw direction), draws 70% of the outline in cw direction.</description></item>
+    /// </list>
+    /// </param>
+    /// <param name="lineThickness">The thickness of the outline.</param>
+    /// <param name="color">The color of the outline.</param>
+    /// <param name="capType">The style of the line caps.</param>
+    /// <param name="capPoints">The number of points used for the cap style.</param>
+    /// <remarks>
+    /// Useful for animating outlines or highlighting portions of a quad.
+    /// </remarks>
     public static void DrawLinesPercentage(this Quad q, float f, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         DrawQuadLinesPercentage(q.A, q.B, q.C, q.D, f, lineThickness, color, capType, capPoints);
     }
 
     /// <summary>
-    /// Draws a certain percentage of an outline.
+    /// Draws a specified percentage of the outline of a <see cref="Quad"/> using a <see cref="LineDrawingInfo"/> structure.
     /// </summary>
-    /// <param name="q"></param>
-    /// <param name="f">The percentage of the outline to draw. Negative value reverses the direction (cw).
-    /// Integer part can be used to change starting corner.
-    /// 0.35 would start at corner a go in ccw direction and draw 35% of the outline.
-    /// -2.7 would start at b (the third corner in cw direction) and draw in cw direction 70% of the outline.</param>
-    /// <param name="lineInfo"></param>
+    /// <param name="q">The quad to outline.</param>
+    /// <param name="f">
+    /// The percentage of the outline to draw. 
+    /// <list type="bullet">
+    /// <item><description>Negative value reverses the direction (clockwise).</description></item>
+    /// <item><description>Integer part changes the starting corner (0 = a, 1 = b, etc.).</description></item>
+    /// <item><description>Fractional part is the percentage of the outline to draw.</description></item>
+    /// <item><description>Example: 0.35 starts at corner a, goes counter-clockwise, and draws 35% of the outline.</description></item>
+    /// <item><description>Example: -2.7 starts at b (third corner in cw direction), draws 70% of the outline in cw direction.</description></item>
+    /// </list>
+    /// </param>
+    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
+    /// <remarks>
+    /// Useful for animating outlines or highlighting portions of a quad.
+    /// </remarks>
     public static void DrawLinesPercentage(this Quad q, float f, LineDrawingInfo lineInfo)
     {
         DrawQuadLinesPercentage(q.A, q.B, q.C, q.D, f, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
     }
 
-    
+    /// <summary>
+    /// Draws circles at each vertex of a <see cref="Quad"/>.
+    /// </summary>
+    /// <param name="q">The quad whose vertices to draw.</param>
+    /// <param name="vertexRadius">The radius of each vertex circle.</param>
+    /// <param name="color">The color of the vertex circles.</param>
+    /// <param name="circleSegments">The number of segments to use for each circle (default is 8).</param>
+    /// <remarks>
+    /// Useful for visualizing or highlighting the corners of a quad.
+    /// </remarks>
     public static void DrawVertices(this Quad q, float vertexRadius, ColorRgba color, int circleSegments = 8)
     {
         ShapeCircleDrawing.DrawCircle(q.A, vertexRadius, color, circleSegments);
@@ -181,15 +297,31 @@ public static class ShapeQuadDrawing
     }
 
     /// <summary>
-    /// Draws a rect where each side can be scaled towards the origin of the side.
+    /// Draws the outline of a <see cref="Quad"/> where each side can be scaled towards the origin of the side.
     /// </summary>
-    /// <param name="q">The quad to draw.</param>
-    /// <param name="lineInfo">How to draw the lines.</param>
-    /// <param name="rotDeg">The rotation of the quad.</param>
-    /// <param name="alignement">Alignement to rotate the quad.</param>
-    /// <param name="sideScaleFactor">The scale factor for each side. 0f means no quad is drawn, 1f means normal quad is drawn,
-    /// 0.5 means each side is half as long.</param>
-    /// <param name="sideScaleOrigin">The point along the line to scale from in both directions.</param>
+    /// <param name="q">The quad to outline.</param>
+    /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
+    /// <param name="rotDeg">The rotation of the quad in degrees.</param>
+    /// <param name="alignement">The anchor point for rotation alignment.</param>
+    /// <param name="sideScaleFactor">
+    /// <para>The scale factor for each side.</para>
+    /// <list type="bullet">
+    /// <item><description>0: No quad is drawn.</description></item>
+    /// <item><description>1: The normal quad is drawn.</description></item>
+    /// <item><description>0.5: Each side is half as long.</description></item>
+    /// </list>
+    /// </param>
+    /// <param name="sideScaleOrigin">
+    /// The point along the line to scale from, in both directions (0 to 1).
+    /// <list type="bullet">
+    /// <item><description>0: Start of Segment</description></item>
+    /// <item><description>0.5: Center of Segment</description></item>
+    /// <item><description>1: End of Segment</description></item>
+    /// </list>
+    /// </param>
+    /// <remarks>
+    /// Allows for dynamic scaling and rotation of quad outlines, useful for effects and animations.
+    /// </remarks>
     public static void DrawLinesScaled(this Quad q, LineDrawingInfo lineInfo, float rotDeg, AnchorPoint alignement, float sideScaleFactor, float sideScaleOrigin = 0.5f)
     {
         if (sideScaleFactor <= 0) return;

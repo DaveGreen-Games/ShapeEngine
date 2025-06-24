@@ -1,253 +1,165 @@
-﻿using ShapeEngine.Core;
-using Raylib_cs;
-using ShapeEngine.Color;
-using ShapeEngine.StaticLib;
+﻿using ShapeEngine.Color;
 using ShapeEngine.Core.Shapes;
-using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Text;
 
-namespace ShapeEngine.Achievements
+namespace ShapeEngine.Achievements;
+
+/// <summary>
+/// Handles the management, updating, and display of achievements and their stats.
+/// </summary>
+public class AchievementHandler
 {
-    public class AchievementStat
+    /// <summary>
+    /// Dictionary of achievement stats, keyed by API name.
+    /// </summary>
+    private Dictionary<string,AchievementStat> stats = new();
+    /// <summary>
+    /// List of all achievements managed by this handler.
+    /// </summary>
+    private List<Achievement> achievements = new();
+
+    /// <summary>
+    /// Stack of achievements to be drawn as notifications.
+    /// </summary>
+    private List<AchievmentDrawStack> achievementDrawStack = new();
+    /// <summary>
+    /// The font used for achievement text rendering.
+    /// </summary>
+    private TextFont textFont;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AchievementHandler"/> class.
+    /// </summary>
+    /// <param name="textFont">The font used for achievement text rendering.</param>
+    public AchievementHandler(TextFont textFont)
     {
-        public string apiName = "";
-        public string displayName = "";
-
-        public int value = 0;
-        public int defaultValue = 0;
-        public int maxValue = int.MaxValue;
-        public int minValue = int.MinValue;
-
-
-        public event Action<int, int>? OnValueChanged;
-
-        public AchievementStat(string apiName, string displayName, int defaultValue, int maxValue = int.MaxValue, int minValue = int.MinValue)
-        {
-            this.apiName = apiName;
-            this.displayName = displayName;
-            this.maxValue = maxValue;
-            this.minValue = minValue;
-            this.defaultValue = defaultValue;
-            if (this.defaultValue < minValue) this.defaultValue = minValue;
-            else if (this.defaultValue > maxValue) this.defaultValue = maxValue;
-            this.value = this.defaultValue;
-        }
-
-        public void Reset() { SetStat(defaultValue); }
-        public void ChangeStat(int change)
-        {
-            if (change == 0) return;
-
-            int oldValue = value;
-            value += change;
-            if (value < minValue) value = minValue;
-            else if (value > maxValue) value = maxValue;
-
-            if (oldValue != value) OnValueChanged?.Invoke(oldValue, value);
-        }
-
-        public void SetStat(int newValue) { ChangeStat(newValue - value); }
-
+        this.textFont = textFont;
     }
-    
-    public class Achievement
+
+    /// <summary>
+    /// Duration (in seconds) to display achieved notifications.
+    /// </summary>
+    public float achievedDisplayDuration = 5f;
+    /// <summary>
+    /// Duration (in seconds) to display increment notifications.
+    /// </summary>
+    public float notificationDuration = 3f;
+
+    /// <summary>
+    /// Updates the achievement notification stack.
+    /// </summary>
+    /// <param name="dt">Delta time in seconds.</param>
+    public void Update(float dt)
     {
-        public event Action<Achievement>? Achieved;
-        public event Action<Achievement>? IncrementNotification;
-
-        public string apiName = "";
-        public string displayName = "";
-
-        protected bool achieved = false;
-        protected bool hidden = false; //doesnt show description and display name
-
-        protected AchievementStat stat;
-        protected int start;
-        protected int end;
-        protected int notificationIncrement = 1;
-
-        public Achievement(string apiName, string displayName, bool hidden, AchievementStat stat, int start, int end, int notificationIncrement = 1)
+        if(achievementDrawStack.Count > 0)
         {
-            this.apiName = apiName;
-            this.displayName = displayName;
-            this.hidden = hidden;
-
-            this.stat = stat;
-            this.start = start;
-            this.end = end;
-            this.notificationIncrement = notificationIncrement;
-
-            if(IsGoalFinished())
+            achievementDrawStack[0].Update(dt);
+            if (achievementDrawStack[0].IsFinished())
             {
-                achieved = true;
+                achievementDrawStack.RemoveAt(0);
             }
-            else
-            {
-                this.stat.OnValueChanged += OnStatValueChanged;
-            }
+
         }
-
-
-
-        protected void OnStatValueChanged(int oldValue, int newValue)
+    }
+    /// <summary>
+    /// Draws the current achievement notification, if any.
+    /// </summary>
+    /// <param name="achievementRect">The rectangle area for drawing.</param>
+    /// <param name="background">Background color.</param>
+    /// <param name="text">Text color.</param>
+    /// <param name="progress">Progress color.</param>
+    /// <param name="achieved">Achieved color.</param>
+    public void Draw(Rect achievementRect, ColorRgba background, ColorRgba text, ColorRgba progress, ColorRgba achieved) 
+    {
+        if (achievementDrawStack.Count > 0)
+        {
+            achievementDrawStack[0].achievement.Draw(textFont, achievementRect, background, text, progress, achieved);
+        }
+    }
+    /// <summary>
+    /// Clears all stats, achievements, and notification stacks.
+    /// </summary>
+    public void Close()
+    {
+        stats.Clear();
+        achievements.Clear();
+        achievementDrawStack.Clear();
+    }
+    /// <summary>
+    /// Adds a new achievement stat if it does not already exist.
+    /// </summary>
+    /// <param name="stat">The achievement stat to add.</param>
+    public  void AddStat(AchievementStat stat)
+    {
+        if(stats.ContainsKey(stat.apiName)) return;
+        stats.Add(stat.apiName, stat);
+    }
+    /// <summary>
+    /// Gets the value of a specified stat.
+    /// </summary>
+    /// <param name="stat">The API name of the stat.</param>
+    /// <returns>The stat value, or -1 if not found.</returns>
+    public  int GetStatValue(string stat)
+    {
+        if(!stats.TryGetValue(stat, out var stat1)) return -1;
+        return stat1.value;
+    }
+    /// <summary>
+    /// Updates the value of a specified stat by a given change.
+    /// </summary>
+    /// <param name="stat">The API name of the stat.</param>
+    /// <param name="change">The value to add to the stat.</param>
+    public  void UpdateStatValue(string stat, int change)
+    {
+        if (!stats.ContainsKey(stat)) return;
+        stats[stat].ChangeStat(change);
+    }
+    /// <summary>
+    /// Adds an achievement to the handler if not already present.
+    /// Subscribes to achievement events if not achieved.
+    /// </summary>
+    /// <param name="achievement">The achievement to add.</param>
+    public  void AddAchievement(Achievement achievement)
+    {
+        if(achievements.Contains(achievement)) return;
+        achievements.Add(achievement);
+        if(!achievement.IsAchieved()) 
         { 
-            if(newValue >= end)
-            {
-                this.stat.OnValueChanged-= OnStatValueChanged;
-                Achieve();
-            }
-            else
-            {
-                if(newValue >= start && notificationIncrement > 0 && newValue != oldValue && newValue % notificationIncrement == 0)
-                {
-                    IncrementNotification?.Invoke(this);
-                }
-            }
-        }
-
-
-        public bool IsGoalActive() { return stat.value >= start; }
-        public bool IsGoalFinished() { return stat.value >= end; }
-        public float GetGoalPercentage() { return ShapeMath.Clamp( (float)(stat.value - start) / (float)(end - start), 0f, 1f); }
-
-        public bool IsHidden() { return hidden; }
-        public bool IsAchieved() { return achieved; }
-        public void Achieve() 
-        {
-            if (!achieved) Achieved?.Invoke(this);
-            achieved = true; 
-        }
-        public virtual void Draw(TextFont textFont, Rect rect, ColorRgba bgColorRgba, ColorRgba textColorRgba, ColorRgba progressColorRgba, ColorRgba achievedColorRgba)
-        {
-            Rect left = new(rect.X, rect.Y, rect.Width * 0.25f, rect.Height);
-            Rect leftTop = new(left.X, left.Y, left.Width, left.Height * 0.5f);
-            Rect leftBottom = new(left.X, left.Y +left.Height * 0.5f, left.Width, left.Height * 0.5f);
-            Rect right = new(rect.X + rect.Width * 0.28f, rect.Y, rect.Width * 0.72f, rect.Height);
-            rect.DrawBar(GetGoalPercentage(), progressColorRgba, bgColorRgba);
-            if (achieved) rect.DrawLines(3f, achievedColorRgba);// SDrawing.DrawRect(rect, new(0f), 0f, 3f, achievedColor);
-            int value = stat.value;
-            int max = end;
-
-            textFont.ColorRgba = textColorRgba;
-            textFont.DrawTextWrapNone($"{value}", leftTop, new(0.5f));
-            textFont.DrawTextWrapNone($"{max}", leftBottom, new(0.5f));
-            // ShapeText.DrawText(font, String.Format("{0}", value), leftTop, 1f, new(0.5f) ,textColor);
-            // ShapeText.DrawText(font, String.Format("{0}", max), leftBottom, 1f, new(0.5f),textColor);
-            if (hidden)
-            {
-                
-                if(achieved) textFont.DrawTextWrapNone(displayName, right, new(0.5f), achieved ? achievedColorRgba : textColorRgba); // ShapeText.DrawText(font, displayName, right, 1f, new(0.5f), achieved ? achievedColor : textColor);
-                else textFont.DrawTextWrapNone("???", right, new(0.5f), textColorRgba); //ShapeText.DrawText(font, "???", right, 1f, new(0.5f), textColor);
-            }
-            else
-            {
-                textFont.ColorRgba = achieved ? achievedColorRgba : textColorRgba;
-                textFont.DrawTextWrapNone(displayName, leftBottom, new(0.5f));
-            }
+            achievement.Achieved += OnAchievementAchieved;
+            achievement.IncrementNotification += OnAchievementIncrementNotification;
         }
     }
-
-    internal class AchievmentDrawStack
-    {
-        public float duration;
-        public Achievement achievement;
-        public AchievmentDrawStack(float duration, Achievement achievement)
-        {
-            this.duration = duration;
-            this.achievement = achievement;
-        }
-        
-        public void Update(float dt)
-        {
-            if (duration <= 0f) return;
-
-            duration -= dt;
-        }
-        public bool IsFinished() { return duration <= 0f; }
+    /// <summary>
+    /// Removes an achievement from the handler and unsubscribes from its events.
+    /// </summary>
+    /// <param name="achievement">The achievement to remove.</param>
+    public  void RemoveAchievment(Achievement achievement) 
+    { 
+        achievements.Remove(achievement);
+        achievement.Achieved -= OnAchievementAchieved;
+        achievement.IncrementNotification -= OnAchievementIncrementNotification;
     }
+    /// <summary>
+    /// Clears all achievements from the handler.
+    /// </summary>
+    public  void ClearAchievements() { achievements.Clear(); }
 
-    public class AchievementHandler
+    /// <summary>
+    /// Handles the event when an achievement is achieved, adding it to the notification stack.
+    /// </summary>
+    /// <param name="achievement">The achieved achievement.</param>
+    private void OnAchievementAchieved(Achievement achievement)
     {
-        private Dictionary<string,AchievementStat> stats = new();
-        private List<Achievement> achievements = new();
-
-        private List<AchievmentDrawStack> achievementDrawStack = new();
-        private TextFont textFont;
-
-        public AchievementHandler(TextFont textFont)
-        {
-            this.textFont = textFont;
-        }
-
-        public float achievedDisplayDuration = 5f;
-        public float notificationDuration = 3f;
-
-        public void Update(float dt)
-        {
-            if(achievementDrawStack.Count > 0)
-            {
-                achievementDrawStack[0].Update(dt);
-                if (achievementDrawStack[0].IsFinished())
-                {
-                    achievementDrawStack.RemoveAt(0);
-                }
-
-            }
-        }
-        public void Draw(Rect achievementRect, ColorRgba background, ColorRgba text, ColorRgba progress, ColorRgba achieved) 
-        {
-            if (achievementDrawStack.Count > 0)
-            {
-                achievementDrawStack[0].achievement.Draw(textFont, achievementRect, background, text, progress, achieved);
-            }
-        }
-        public void Close()
-        {
-            stats.Clear();
-            achievements.Clear();
-            achievementDrawStack.Clear();
-        }
-        public  void AddStat(AchievementStat stat)
-        {
-            if(stats.ContainsKey(stat.apiName)) return;
-            stats.Add(stat.apiName, stat);
-        }
-        public  int GetStatValue(string stat)
-        {
-            if(!stats.ContainsKey(stat)) return -1;
-            else return stats[stat].value;
-        }
-        public  void UpdateStatValue(string stat, int change)
-        {
-            if (!stats.ContainsKey(stat)) return;
-            stats[stat].ChangeStat(change);
-        }
-        public  void AddAchievement(Achievement achievement)
-        {
-            if(achievements.Contains(achievement)) return;
-            achievements.Add(achievement);
-            if(!achievement.IsAchieved()) 
-            { 
-                achievement.Achieved += OnAchievementAchieved;
-                achievement.IncrementNotification += OnAchievementIncrementNotification;
-            }
-        }
-        public  void RemoveAchievment(Achievement achievement) 
-        { 
-            achievements.Remove(achievement);
-            achievement.Achieved -= OnAchievementAchieved;
-            achievement.IncrementNotification -= OnAchievementIncrementNotification;
-        }
-        public  void ClearAchievements() { achievements.Clear(); }
-        private void OnAchievementAchieved(Achievement achievement)
-        {
-            achievementDrawStack.Add(new(achievedDisplayDuration, achievement));
-            achievement.Achieved -= OnAchievementAchieved;
-            achievement.IncrementNotification -= OnAchievementIncrementNotification;
-        }
-        private void OnAchievementIncrementNotification(Achievement achievement)
-        {
-            achievementDrawStack.Add(new(notificationDuration, achievement));
-        }
+        achievementDrawStack.Add(new(achievedDisplayDuration, achievement));
+        achievement.Achieved -= OnAchievementAchieved;
+        achievement.IncrementNotification -= OnAchievementIncrementNotification;
+    }
+    /// <summary>
+    /// Handles the event when an achievement increment notification is triggered.
+    /// </summary>
+    /// <param name="achievement">The achievement with increment notification.</param>
+    private void OnAchievementIncrementNotification(Achievement achievement)
+    {
+        achievementDrawStack.Add(new(notificationDuration, achievement));
     }
 }

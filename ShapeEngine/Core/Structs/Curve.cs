@@ -1,18 +1,38 @@
-using System.Numerics;
-using ShapeEngine.Color;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Core.Structs;
-
+/// <summary>
+/// Abstract base class for a curve of values of type <typeparamref name="T"/>, allowing interpolation and sampling over a normalized time range [0, 1].
+/// </summary>
+/// <remarks>
+/// Inherits from <see cref="SortedList{TKey, TValue}"/> with <c>float</c> keys (time, normalized 0-1) and <typeparamref name="T"/> values.
+/// Provides methods for adding, removing, and sampling values along the curve.
+/// </remarks>
 public abstract class Curve<T>(int capacity) : SortedList<float, T>(capacity)
 {
+    /// <summary>
+    /// Gets whether the curve contains any keys.
+    /// </summary>
     public bool HasKeys => Count > 0;
+
+    /// <summary>
+    /// Adds a value to the curve at the specified normalized time.
+    /// </summary>
+    /// <param name="time">The normalized time (0 to 1).</param>
+    /// <param name="key">The value to add.</param>
+    /// <returns><c>true</c> if the value was added; otherwise, <c>false</c> (if time is out of range).</returns>
     public new bool Add(float time, T key)
     {
         if (time is < 0 or > 1) return false;
         base.Add(time, key);
         return true;
     }
+
+    /// <summary>
+    /// Adds multiple values to the curve.
+    /// </summary>
+    /// <param name="keys">Array of (time, value) pairs to add.</param>
+    /// <returns>The number of values successfully added.</returns>
     public int Add(params (float time, T key)[] keys)
     {
         int added = 0;
@@ -22,8 +42,12 @@ public abstract class Curve<T>(int capacity) : SortedList<float, T>(capacity)
         }
         return added;
     }
-    
-    
+
+    /// <summary>
+    /// Gets the index of the value at or before the specified time.
+    /// </summary>
+    /// <param name="time">The normalized time (0 to 1).</param>
+    /// <returns>The index of the value, or -1 if the curve is empty.</returns>
     public int GetIndex(float time)
     {
         //Godot´s Curve::get_index function used as reference (https://github.com/godotengine/godot/blob/9ee1873ae1e09c217ac24a5800007f63cb895615/scene/resources/curve.cpp#L121)
@@ -53,6 +77,13 @@ public abstract class Curve<T>(int capacity) : SortedList<float, T>(capacity)
         }
         return imin;
     }
+
+    /// <summary>
+    /// Gets the value at the specified time, or the default value if not found.
+    /// </summary>
+    /// <param name="time">The normalized time (0 to 1).</param>
+    /// <param name="value">The value at the specified time, or the default value if not found.</param>
+    /// <returns><c>true</c> if a value was found; otherwise, <c>false</c>.</returns>
     public bool GetValue(float time, out T value)
     {
         var index = GetIndex(time);
@@ -65,6 +96,12 @@ public abstract class Curve<T>(int capacity) : SortedList<float, T>(capacity)
         return true;
     }
 
+    /// <summary>
+    /// Removes all values in the specified time range.
+    /// </summary>
+    /// <param name="timeStart">Start of the time range (inclusive).</param>
+    /// <param name="timeEnd">End of the time range (inclusive).</param>
+    /// <returns>The number of values removed.</returns>
     public int RemoveTimeRange(float timeStart, float timeEnd)
     {
         if(timeStart >= timeEnd || Math.Abs(timeStart - timeEnd) < 0.00000001f) return 0;
@@ -89,6 +126,13 @@ public abstract class Curve<T>(int capacity) : SortedList<float, T>(capacity)
         }
         return removed;
     }
+
+    /// <summary>
+    /// Removes values at or near the specified time, within a given tolerance.
+    /// </summary>
+    /// <param name="time">The normalized time (0 to 1).</param>
+    /// <param name="tolerance">The tolerance range for removal.</param>
+    /// <returns>The number of values removed.</returns>
     public int Remove(float time, float tolerance)
     {
         if(time <= 0f || time > 1f) return 0;
@@ -107,6 +151,11 @@ public abstract class Curve<T>(int capacity) : SortedList<float, T>(capacity)
         return RemoveTimeRange(time - tolerance, time + tolerance);
     }
 
+    /// <summary>
+    /// Removes the first occurrence of the specified value from the curve.
+    /// </summary>
+    /// <param name="value">The value to remove.</param>
+    /// <returns><c>true</c> if the value was removed; otherwise, <c>false</c>.</returns>
     public bool Remove(T value)
     {
         var index = IndexOfValue(value);
@@ -114,6 +163,12 @@ public abstract class Curve<T>(int capacity) : SortedList<float, T>(capacity)
         RemoveAt(index);
         return true;
     }
+
+    /// <summary>
+    /// Removes all specified values from the curve.
+    /// </summary>
+    /// <param name="values">The values to remove.</param>
+    /// <returns>The number of values removed.</returns>
     public int Remove(params T[] values)
     {
         int removed = 0;
@@ -124,6 +179,19 @@ public abstract class Curve<T>(int capacity) : SortedList<float, T>(capacity)
         return removed;
     }
 
+    /// <summary>
+    /// Samples the curve at the specified time, interpolating between values as needed.
+    /// </summary>
+    /// <param name="time">The normalized time (0 to 1).</param>
+    /// <param name="value">The sampled value at the specified time.</param>
+    /// <returns><c>true</c> if a value was sampled; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// <list type="bullet">
+    /// <item><description>If the curve is empty, returns the default value.</description></item>
+    /// <item><description>If only one value exists, returns that value.</description></item>
+    /// <item><description>If the time is before the first or after the last key, returns the boundary value.</description></item>
+    /// </list>
+    /// </remarks>
     public bool Sample(float time, out T value)
     {
         value = GetDefaultValue();
@@ -173,13 +241,22 @@ public abstract class Curve<T>(int capacity) : SortedList<float, T>(capacity)
         return true;
     }
 
+    /// <summary>
+    /// Samples the curve at the specified time.
+    /// </summary>
+    /// <param name="time">The normalized time (0 to 1).</param>
+    /// <returns>The sampled value at the specified time.</returns>
     public T Sample(float time)
     {
         Sample(time, out var value);
         return value;
     }
-    private float GetSampleTime(int index1, int index2, float time) => ShapeMath.GetFactor(time, Keys[index1], Keys[index2]);
-    
+
+    /// <summary>
+    /// Samples the curve at multiple times.
+    /// </summary>
+    /// <param name="times">Array of normalized times to sample.</param>
+    /// <returns>A list of sampled values, or <c>null</c> if no times are provided.</returns>
     public List<T>? SampleMany(params float[] times)
     {
         if(times.Length == 0) return null;
@@ -193,49 +270,21 @@ public abstract class Curve<T>(int capacity) : SortedList<float, T>(capacity)
         
         return result;
     }
-    
+
+    /// <summary>
+    /// Interpolates between two values of type <typeparamref name="T"/>.
+    /// </summary>
+    /// <param name="a">The start value.</param>
+    /// <param name="b">The end value.</param>
+    /// <param name="time">The interpolation factor between 0 and 1.</param>
+    /// <returns>The interpolated value.</returns>
     protected abstract T Interpolate( T a, T b, float time);
+
+    /// <summary>
+    /// Gets the default value for the curve.
+    /// </summary>
+    /// <returns>The default value of type <typeparamref name="T"/>.</returns>
     protected abstract T GetDefaultValue();
-}
-
-
-public class CurveInt(int capacity) : Curve<int>(capacity)
-{
-    protected override int Interpolate(int a, int b, float time)
-    {
-        return ShapeMath.LerpInt(a, b, time);
-    }
-
-    protected override int GetDefaultValue() => 0;
-}
-
-public class CurveFloat(int capacity) : Curve<float>(capacity)
-{
-    protected override float Interpolate(float a, float b, float time)
-    {
-        return ShapeMath.LerpFloat(a, b, time);
-    }
-
-    protected override float GetDefaultValue() => 0f;
-}
-
-public class CurveVector2(int capacity) : Curve<Vector2>(capacity)
-{
     
-    protected override Vector2 Interpolate(Vector2 a, Vector2 b, float time)
-    {
-        return a.Lerp(b, time);
-    }
-
-    protected override Vector2 GetDefaultValue() => Vector2.Zero;
-}
-
-public class CurveColor(int capacity) : Curve<ColorRgba>(capacity)
-{
-    protected override ColorRgba Interpolate(ColorRgba a, ColorRgba b, float time)
-    {
-        return a.Lerp(b, time);
-    }
-
-    protected override ColorRgba GetDefaultValue() => ColorRgba.Clear;
+    private float GetSampleTime(int index1, int index2, float time) => ShapeMath.GetFactor(time, Keys[index1], Keys[index2]);
 }

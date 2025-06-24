@@ -10,7 +10,11 @@ using ShapeVec = ShapeEngine.StaticLib.ShapeVec;
 
 namespace ShapeEngine.Core.Structs;
 
-
+/// <summary>
+/// Represents a 2D transformation matrix with basis vectors and origin,
+/// supporting translation, rotation, scaling, and skew operations.
+/// Implements <see cref="IEquatable{TransformMatrix2D}"/> for value equality.
+/// </summary>
 public struct TransformMatrix2D : IEquatable<TransformMatrix2D>
 {
     /// <summary>
@@ -222,7 +226,7 @@ public struct TransformMatrix2D : IEquatable<TransformMatrix2D>
 
     /// <summary>
     /// Returns <see langword="true"/> if this transform is finite, by calling
-    /// <see cref="Mathf.IsFinite(real_t)"/> on each component.
+    /// <see cref="ShapeVec.IsFinite"/> on each component.
     /// </summary>
     /// <returns>Whether this vector is finite or not.</returns>
     public readonly bool IsFinite() => X.IsFinite() && Y.IsFinite() && Origin.IsFinite();
@@ -560,7 +564,7 @@ public struct TransformMatrix2D : IEquatable<TransformMatrix2D>
     /// </summary>
     /// <param name="left">The left transform.</param>
     /// <param name="right">The right transform.</param>
-    /// <returns>Whether or not the transforms are exactly equal.</returns>
+    /// <returns>Whether the transforms are exactly equal.</returns>
     public static bool operator ==(TransformMatrix2D left, TransformMatrix2D right)
     {
         return left.Equals(right);
@@ -573,7 +577,7 @@ public struct TransformMatrix2D : IEquatable<TransformMatrix2D>
     /// </summary>
     /// <param name="left">The left transform.</param>
     /// <param name="right">The right transform.</param>
-    /// <returns>Whether or not the transforms are not equal.</returns>
+    /// <returns>Whether the transforms are not equal.</returns>
     public static bool operator !=(TransformMatrix2D left, TransformMatrix2D right)
     {
         return !left.Equals(right);
@@ -586,7 +590,7 @@ public struct TransformMatrix2D : IEquatable<TransformMatrix2D>
     /// <see cref="IsEqualApprox"/> instead, which is more reliable.
     /// </summary>
     /// <param name="obj">The object to compare with.</param>
-    /// <returns>Whether or not the transform and the object are exactly equal.</returns>
+    /// <returns>Whether the transform and the object are exactly equal.</returns>
     public override readonly bool Equals([NotNullWhen(true)] object? obj)
     {
         return obj is TransformMatrix2D other && Equals(other);
@@ -598,18 +602,18 @@ public struct TransformMatrix2D : IEquatable<TransformMatrix2D>
     /// <see cref="IsEqualApprox"/> instead, which is more reliable.
     /// </summary>
     /// <param name="other">The other transform to compare.</param>
-    /// <returns>Whether or not the matrices are exactly equal.</returns>
+    /// <returns>Whether the matrices are exactly equal.</returns>
     public readonly bool Equals(TransformMatrix2D other)
     {
         return X.Equals(other.X) && Y.Equals(other.Y) && Origin.Equals(other.Origin);
     }
 
     /// <summary>
-    /// Returns <see langword="true"/> if this transform and <paramref name="other"/> are approximately equal,
-    /// by running <see cref="Vector2.IsEqualApprox(Vector2)"/> on each component.
+    /// Returns <see langword="true"/> If this transform and <paramref name="other"/> are approximately equal,
+    /// by using <see cref="ShapeVec.IsSimilar(Vector2, Vector2, float)"/> on each component.
     /// </summary>
     /// <param name="other">The other transform to compare.</param>
-    /// <returns>Whether or not the matrices are approximately equal.</returns>
+    /// <returns>Whether the matrices are approximately equal.</returns>
     public readonly bool IsEqualApprox(TransformMatrix2D other)
     {
         return X.IsSimilar(other.X) && Y.IsSimilar(other.Y) && Origin.IsSimilar(other.Origin);

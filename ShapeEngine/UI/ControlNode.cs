@@ -1,88 +1,134 @@
 using System.Numerics;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.UI;
 
+/// <summary>
+/// Represents an abstract base class for UI control nodes, providing core functionality for hierarchy, state, events, and input handling.
+/// </summary>
 public abstract class ControlNode
 {
     #region Events
 
-    public event Action<ControlNode, Direction>? OnNavigated; 
     /// <summary>
+    /// Occurs when navigation happens to this node.
+    /// Parameters: Invoker, Direction
+    /// </summary>
+    public event Action<ControlNode, Direction>? OnNavigated; 
+
+    /// <summary>
+    /// Occurs when the parent of this node changes.
     /// Parameters: Invoker, Old Parent, New Parent
     /// </summary>
     public event Action<ControlNode, ControlNode?, ControlNode?>? OnParentChanged;
+
     /// <summary>
+    /// Occurs when a child is added to this node.
     /// Parameters: Invoker, New Child
     /// </summary>
     public event Action<ControlNode, ControlNode>? OnChildAdded;
+
     /// <summary>
+    /// Occurs when a child is removed from this node.
     /// Parameters: Invoker, Old Child
     /// </summary>
     public event Action<ControlNode, ControlNode>? OnChildRemoved;
 
-    public event Action<ControlNode, bool>? OnDisplayedChanged;
-    public event Action<ControlNode, bool>? OnActiveInHierarchyChanged;
-    public event Action<ControlNode, bool>? OnVisibleInHierarchyChanged;
     /// <summary>
+    /// Occurs when the displayed state of this node changes.
+    /// Parameters: Invoker, Value
+    /// </summary>
+    public event Action<ControlNode, bool>? OnDisplayedChanged;
+
+    /// <summary>
+    /// Occurs when the active-in-hierarchy state changes.
+    /// Parameters: Invoker, Value
+    /// </summary>
+    public event Action<ControlNode, bool>? OnActiveInHierarchyChanged;
+
+    /// <summary>
+    /// Occurs when the visible-in-hierarchy state changes.
+    /// Parameters: Invoker, Value
+    /// </summary>
+    public event Action<ControlNode, bool>? OnVisibleInHierarchyChanged;
+
+    /// <summary>
+    /// Occurs when the visible state changes.
     /// Parameters: Invoker, Value
     /// </summary>
     public event Action<ControlNode,bool>? OnVisibleChanged;
+
     /// <summary>
+    /// Occurs when the active state changes.
     /// Parameters: Invoker, Value
     /// </summary>
     public event Action<ControlNode,bool>? OnActiveChanged;
+
     /// <summary>
+    /// Occurs when the parent active state changes.
     /// Parameters: Invoker, Value
     /// </summary>
     public event Action<ControlNode,bool>? OnParentActiveChanged;
+
     /// <summary>
+    /// Occurs when the parent visible state changes.
     /// Parameters: Invoker, Value
     /// </summary>
     public event Action<ControlNode,bool>? OnParentVisibleChanged;
-    
-    //changed in hierarchy events
-    
+
     /// <summary>
-    /// Parameters: Invoker, Mouse Pos
+    /// Occurs when the mouse enters this node.
+    /// Parameters: Invoker, Mouse Position
     /// </summary>
     public event Action<ControlNode,Vector2>? OnMouseEntered;
+
     /// <summary>
-    /// Parameters: Invoker, Last Mouse Pos Inside
+    /// Occurs when the mouse exits this node.
+    /// Parameters: Invoker, Last Mouse Position Inside
     /// </summary>
     public event Action<ControlNode,Vector2>? OnMouseExited;
+
     /// <summary>
+    /// Occurs when the selected state changes.
     /// Parameters: Invoker, Value
     /// </summary>
     public event Action<ControlNode, bool>? OnSelectedChanged;
+
     /// <summary>
+    /// Occurs when the pressed state changes.
     /// Parameters: Invoker, Value
     /// </summary>
     public event Action<ControlNode, bool>? OnPressedChanged;
+
     /// <summary>
+    /// Occurs when the navigable state changes.
     /// Parameters: Invoker, Value
     /// </summary>
     public event Action<ControlNode, bool>? OnNavigableChanged;
-    
+
     /// <summary>
+    /// Occurs when the mouse filter changes.
     /// Parameters: Invoker, Old Filter, New Filter
     /// </summary>
     public event Action<ControlNode, MouseFilter, MouseFilter>? OnMouseFilterChanged;
+
     /// <summary>
+    /// Occurs when the selection filter changes.
     /// Parameters: Invoker, Old Filter, New Filter
     /// </summary>
     public event Action<ControlNode, SelectFilter, SelectFilter>? OnSelectionFilterChanged;
+
     /// <summary>
+    /// Occurs when the input filter changes.
     /// Parameters: Invoker, Old Filter, New Filter
     /// </summary>
     public event Action<ControlNode, InputFilter, InputFilter>? OnInputFilterChanged;
-    
+
     #endregion
 
     #region Private Members
-    private ControlNode? parent = null;
+    private ControlNode? parent;
     private readonly List<ControlNode> children = new();
     private SelectFilter selectionFilter = SelectFilter.None;
     private MouseFilter mouseFilter = MouseFilter.Ignore;
@@ -91,16 +137,15 @@ public abstract class ControlNode
     private bool visible = true;
     private bool parentActive = true;
     private bool parentVisible = true;
-    private bool selected = false;
+    private bool selected;
     
     private bool displayed = true;
 
-    // public void SetDisplayed(ControlNode changer, bool value)
-    // {
-    //     if (changer is not ControlNodeContainer) return;
-    //     displayed = value;
-    // }
-
+    /// <summary>
+    /// Gets or sets whether this node and its children are displayed.
+    /// Changing this value will recursively update all children.
+    /// Triggers <see cref="OnDisplayedChanged"/> and updates navigable and visible-in-hierarchy states.
+    /// </summary>
     public bool Displayed
     {
         get => displayed;
@@ -119,29 +164,48 @@ public abstract class ControlNode
     }
     
     
-    private bool navigationSelected = false;
-
-    private bool prevNavigable = false;
-    private bool prevIsVisibleInHierarchy = false;
-    private bool prevIsActiveInHierarchy = false;
-    // private bool focused = false;
+    private bool navigationSelected;
+    private bool prevNavigable;
+    private bool prevIsVisibleInHierarchy;
+    private bool prevIsActiveInHierarchy;
     #endregion
 
     #region Public Members
-    
+
+    /// <summary>
+    /// The anchor point used to position this node within its parent.
+    /// </summary>
     public AnchorPoint Anchor = new(0f);
+
     /// <summary>
     /// Stretch determines the size of the rect based on the parent rect size. Values are relative and in range 0 - 1.
-    /// If Stretch values are 0 than the size of the rect can be set manually without it being changed by the parent rect size.
+    /// If Stretch values are 0 then the size of the rect can be set manually without it being changed by the parent rect size.
     /// </summary>
     public Vector2 Stretch = new(1, 1);
 
+    /// <summary>
+    /// The stretch factor for the container, affecting how much space this node occupies relative to its siblings.
+    /// </summary>
     public float ContainerStretch = 1f;
-    
+
+    /// <summary>
+    /// The minimum size constraint for this node.
+    /// </summary>
     public Size MinSize = new(0f);
+
+    /// <summary>
+    /// The maximum size constraint for this node.
+    /// </summary>
     public Size MaxSize = new(0f);
+
+    /// <summary>
+    /// Margins applied to this node's rectangle.
+    /// </summary>
     public Rect.Margins Margins = new();
-    
+
+    /// <summary>
+    /// Gets or sets the selection filter for this node, determining how it can be selected.
+    /// </summary>
     public SelectFilter SelectionFilter
     {
         get => selectionFilter;
@@ -154,6 +218,10 @@ public abstract class ControlNode
             ResolveOnSelectionFilterChanged(prev, selectionFilter);
         }
     }
+
+    /// <summary>
+    /// Gets or sets the mouse filter for this node, determining how it handles mouse input.
+    /// </summary>
     public MouseFilter MouseFilter
     {
         get => mouseFilter;
@@ -165,6 +233,10 @@ public abstract class ControlNode
             ResolveOnMouseFilterChanged(prev, mouseFilter);
         }
     }
+
+    /// <summary>
+    /// Gets or sets the input filter for this node, determining how it handles input events.
+    /// </summary>
     public InputFilter InputFilter
     {
         get => inputFilter;
@@ -179,10 +251,34 @@ public abstract class ControlNode
         }
     }
 
+    /// <summary>
+    /// Optional list of children that are currently displayed. If null, all children are considered displayed.
+    /// </summary>
     protected List<ControlNode>? DisplayedChildren = null;
     #endregion
 
     #region Getters & Setters
+    
+    /// <summary>
+    /// Gets or sets whether this node is active.
+    /// Changing this value triggers <see cref="ResolveActiveChanged"/> and may update children.
+    /// </summary>
+    /// <remarks>
+    /// <list type="bullet">
+    ///   <item>
+    ///     <description>parent active and change to active -> yes</description>
+    ///   </item>
+    ///   <item>
+    ///     <description>parent active and change to inactive -> no</description>
+    ///   </item>
+    ///   <item>
+    ///     <description>parent inactive and change to active -> yes</description>
+    ///   </item>
+    ///   <item>
+    ///     <description>parent inactive and  change to inactive -> no</description>
+    ///   </item>
+    /// </list>
+    /// </remarks>
     public bool Active
     {
         get => active;
@@ -196,10 +292,13 @@ public abstract class ControlNode
             if(parent == null || parentActive)
                 ChangeChildrenActive(active);
         }
-        //parent        active      inactive    active      inactive
-        //change to     active      inactive    inactive    active
-        //              yes         no          yes         no
+        
     }
+    
+    /// <summary>
+    /// Gets or sets whether this node is visible.
+    /// Changing this value triggers <see cref="ResolveVisibleChanged"/> and may update children.
+    /// </summary>
     public bool Visible
     {
         get => visible;
@@ -215,25 +314,48 @@ public abstract class ControlNode
             
         } 
     }
-
-    public bool ParentVisible => parentVisible;
-    public bool ParentActive => parentActive;
+    
     /// <summary>
-    /// Is this instance visible and are its parents visible to the root node?
+    /// Gets whether the parent node is visible.
+    /// </summary>
+    public bool ParentVisible => parentVisible;
+    
+    /// <summary>
+    /// Gets whether the parent node is active.
+    /// </summary>
+    public bool ParentActive => parentActive;
+    
+    /// <summary>
+    /// Gets whether this node and all its parents are visible and displayed.
     /// </summary>
     public bool IsVisibleInHierarchy => visible && parentVisible && displayed;
+    
     /// <summary>
-    /// Is this instance active and are its parents active to the root node?
+    /// Gets whether this node and all its parents are active.
     /// </summary>
     public bool IsActiveInHierarchy => active && parentActive;
-
+    
     /// <summary>
-    /// Set the rect only on root nodes.
-    /// Otherwise it will have no effect except of changing the size if Stretch values are 0.
+    /// Gets the rectangle representing this node's bounds.
+    /// Only settable on root nodes.
+    /// Can be used if <see cref="Stretch"/> is set to zero.
     /// </summary>
-    public Rect Rect { get; private set; } = new();
-    public bool MouseInside { get; private set; } = false;
+    public Rect Rect { get; private set; }
+    
+    /// <summary>
+    /// Gets whether the mouse is currently inside this node.
+    /// </summary>
+    public bool MouseInside { get; private set; }
+    
+    /// <summary>
+    /// Gets the last mouse position inside this node.
+    /// </summary>
     public Vector2 MouseInsidePosition { get; private set; }
+    
+    /// <summary>
+    /// Gets whether this node is selected.
+    /// Can only be set internally.
+    /// </summary>
     public bool Selected
     {
         get => selected;
@@ -244,17 +366,16 @@ public abstract class ControlNode
             ResolveSelectedChanged();
         } 
     }
-    // public bool Focused
-    // {
-    //     get => focused;
-    //     private set
-    //     {
-    //         if (focused == value) return;
-    //         focused = value;
-    //         ResolveFocusChanged();
-    //     } 
-    // }
-    public bool Pressed { get; private set; } = false;
+    
+    /// <summary>
+    /// Gets whether this node is currently pressed.
+    /// </summary>
+    public bool Pressed { get; private set; }
+    
+    /// <summary>
+    /// Gets the parent node, or null if this is a root node.
+    /// Can only be set internally.
+    /// </summary>
     public ControlNode? Parent
     {
         get => parent;
@@ -267,24 +388,60 @@ public abstract class ControlNode
         }
         
     }
+    
+    /// <summary>
+    /// Gets the number of child nodes.
+    /// </summary>
     public int ChildCount => children.Count;
+    
+    /// <summary>
+    /// Gets whether this node has a parent.
+    /// </summary>
     public bool HasParent => parent != null;
+    
+    /// <summary>
+    /// Gets whether this node has any children.
+    /// </summary>
     public bool HasChildren => children.Count > 0;
+    
+    /// <summary>
+    /// Gets the number of displayed children.
+    /// </summary>
     public int DisplayedChildrenCount => DisplayedChildren?.Count ?? 0;
+    
+    /// <summary>
+    /// Gets whether this node has any displayed children.
+    /// </summary>
     public bool HasDisplayedChildren => DisplayedChildrenCount > 0;
+    
+    /// <summary>
+    /// Gets an enumerable of all child nodes.
+    /// </summary>
     public IEnumerable<ControlNode> GetChildrenEnumerable => children;
+    
     // public List<ControlNode> GetChildren(Predicate<ControlNode> match) => children.FindAll(match);
+    
+    /// <summary>
+    /// Gets whether this node is navigable (active, visible, and has appropriate filters).
+    /// </summary>
     public bool Navigable => 
         IsActiveInHierarchy && IsVisibleInHierarchy &&
         SelectionFilter is SelectFilter.All or SelectFilter.Navigation && 
         InputFilter is InputFilter.All or InputFilter.MouseNever;
-
+    
     #endregion
 
     #region Children
 
+    /// <summary>
+    /// Returns the index of the specified child in the children list.
+    /// </summary>
     public int GetChildIndex(ControlNode child) => children.IndexOf(child);
-   
+
+    /// <summary>
+    /// Gets the previous child of the specified child in the children list, wrapping around if at the start.
+    /// Returns null if the child is not found or the list is empty.
+    /// </summary>
     public ControlNode? GetPreviousChild(ControlNode child)
     {
         if (children.Count <= 0) return null;
@@ -296,6 +453,11 @@ public abstract class ControlNode
         }
         return children[index - 1];
     }
+
+    /// <summary>
+    /// Gets the next child of the specified child in the children list, wrapping around if at the end.
+    /// Returns null if the child is not found or the list is empty.
+    /// </summary>
     public ControlNode? GetNextChild(ControlNode child)
     {
         if (children.Count <= 0) return null;
@@ -307,8 +469,11 @@ public abstract class ControlNode
         }
         return children[index + 1];
     }
-    
-    
+
+    /// <summary>
+    /// Adds a child node to this node. Handles parent reassignment and updates hierarchy state.
+    /// Returns true if the child was added, false if already present.
+    /// </summary>
     public bool AddChild(ControlNode child)
     {
         if (child.Parent != null)
@@ -321,7 +486,6 @@ public abstract class ControlNode
         ResolveChildAdded(child);
         child.Parent = this;
 
-        
         //a child can only be added if it has no parent -> if it has a parent, RemoveChild is called first
         //therefore a child that is added always has:
             //parentActive & parentVisible set to true (because it has no parent)
@@ -351,6 +515,11 @@ public abstract class ControlNode
         
         return true;
     }
+
+    /// <summary>
+    /// Removes the specified child node from this node. Updates hierarchy state accordingly.
+    /// Returns true if the child was removed, false otherwise.
+    /// </summary>
     public bool RemoveChild(ControlNode child)
     {
         if (child.Parent == null || child.Parent != this) return false;
@@ -382,6 +551,10 @@ public abstract class ControlNode
         return true;
 
     }
+
+    /// <summary>
+    /// Removes the child node at the specified index from this node.
+    /// </summary>
     private void RemoveChild(int index)
     {
         var child = children[index];
@@ -391,7 +564,10 @@ public abstract class ControlNode
         child.parentActive = true; //default value if parent is null
         child.parentVisible = true; //default value if parent is null
     }
-    
+
+    /// <summary>
+    /// Removes all child nodes from this node.
+    /// </summary>
     public void ClearChildren()
     {
         for (int i = children.Count - 1; i >= 0; i--)
@@ -400,9 +576,25 @@ public abstract class ControlNode
         }
     }
 
+    /// <summary>
+    /// Gets the child node at the specified index, or null if out of range.
+    /// </summary>
     public ControlNode? GetChild(int index) => children.Count <= index ? null : children[index];
-    public List<ControlNode>? GetChildrenCopy() => children.ToList();
-    public List<ControlNode>? GetChildren(Predicate<ControlNode> match) => children.FindAll(match);
+
+    /// <summary>
+    /// Returns a copy of the children list.
+    /// </summary>
+    public List<ControlNode>? GetChildrenCopy() => children.Count <= 0 ? null :  children.ToList();
+
+    /// <summary>
+    /// Returns a list of children matching the given predicate.
+    /// </summary>
+    public List<ControlNode>? GetChildren(Predicate<ControlNode> match) => children.Count <= 0 ? null : children.FindAll(match);
+
+    /// <summary>
+    /// Recursively adds all children (and their descendants) to the provided result set.
+    /// Returns the number of nodes added.
+    /// </summary>
     public int GetAllChildren(ref HashSet<ControlNode> result)
     {
         if (children.Count <= 0) return 0;
@@ -416,6 +608,11 @@ public abstract class ControlNode
 
         return result.Count - count;
     }
+
+    /// <summary>
+    /// Recursively adds all children (and their descendants) matching the predicate to the result set.
+    /// Returns the number of nodes added.
+    /// </summary>
     public int GetAllChildren(Predicate<ControlNode> match, ref HashSet<ControlNode> result)
     {
         if (children.Count <= 0) return 0;
@@ -430,6 +627,11 @@ public abstract class ControlNode
 
         return result.Count - count;
     }
+
+    /// <summary>
+    /// Recursively adds all navigable children (and their descendants) to the provided set.
+    /// Returns the number of nodes added.
+    /// </summary>
     public int GetAllNavigableChildren(ref HashSet<ControlNode> navigable)
     {
         if (children.Count <= 0) return 0;
@@ -443,6 +645,11 @@ public abstract class ControlNode
         }
         return navigable.Count - count;
     }
+
+    /// <summary>
+    /// Recursively adds all children (and their descendants) that are visible in the hierarchy to the provided set.
+    /// Returns the number of nodes added.
+    /// </summary>
     public int GetAllVisibleInHierarchyChildren(ref HashSet<ControlNode> visibleChildren)
     {
         if (children.Count <= 0) return 0;
@@ -456,6 +663,11 @@ public abstract class ControlNode
         }
         return visibleChildren.Count - count;
     }
+
+    /// <summary>
+    /// Recursively adds all children (and their descendants) that are active in the hierarchy to the provided set.
+    /// Returns the number of nodes added.
+    /// </summary>
     public int GetAllActiveInHierarchyChildren(ref HashSet<ControlNode> activeChildren)
     {
         if (children.Count <= 0) return 0;
@@ -469,8 +681,10 @@ public abstract class ControlNode
         }
         return activeChildren.Count - count;
     }
-    
-    
+
+    /// <summary>
+    /// Recursively updates the parentVisible state for all children and triggers visibility change resolution.
+    /// </summary>
     private void ChangeChildrenVisible(bool value)
     {
         foreach (var child in children)
@@ -483,6 +697,10 @@ public abstract class ControlNode
             if(child.visible) child.ChangeChildrenVisible(value);
         }
     }
+
+    /// <summary>
+    /// Recursively updates the parentActive state for all children and triggers active state change resolution.
+    /// </summary>
     private void ChangeChildrenActive(bool value)
     {
         foreach (var child in children)
@@ -499,18 +717,26 @@ public abstract class ControlNode
         //child     active      inactive    inactive    active
         //          yes         no          no          yes
     }
-    
+
     #endregion
 
     #region Select & Deselect
-
+    
+    /// <summary>
+    /// Selects this node if the selection filter allows it.
+    /// Returns true if selection was successful.
+    /// </summary>
     public bool Select()
     {
         if (SelectionFilter == SelectFilter.None) return false;
         Selected = true;
         return true;
     }
-
+    
+    /// <summary>
+    /// Deselects this node if the selection filter allows it.
+    /// Returns true if deselection was successful.
+    /// </summary>
     public bool Deselect()
     {
         if (SelectionFilter == SelectFilter.None) return false;
@@ -519,6 +745,10 @@ public abstract class ControlNode
         return true;
     }
     
+    /// <summary>
+    /// Selects this node via navigation if allowed by selection and input filters.
+    /// Returns true if navigation selection was successful.
+    /// </summary>
     public bool NavigationSelect()
     {
         if (SelectionFilter is SelectFilter.Mouse or SelectFilter.None) return false;
@@ -527,7 +757,11 @@ public abstract class ControlNode
         navigationSelected = true;
         return true;
     }
-
+    
+    /// <summary>
+    /// Deselects this node via navigation if allowed by selection and input filters.
+    /// Returns true if navigation deselection was successful.
+    /// </summary>
     public bool NavigationDeselect()
     {
         if (SelectionFilter is SelectFilter.Mouse or SelectFilter.None) return false;
@@ -537,30 +771,42 @@ public abstract class ControlNode
         return true;
     }
     
+    /// <summary>
+    /// Selects this node via mouse if allowed by the selection filter.
+    /// </summary>
     private void MouseSelect()
     {
         if (SelectionFilter is SelectFilter.Navigation or SelectFilter.None) return;
         Selected = true;
     }
-
+    
+    /// <summary>
+    /// Deselects this node via mouse if allowed by the selection filter and not navigation selected.
+    /// </summary>
     private void MouseDeselect()
     {
         if (SelectionFilter is SelectFilter.Navigation or SelectFilter.None) return;
         if (navigationSelected) return;
         Selected = false;
     }
-
     
-    
-
     #endregion
     
     #region Update & Draw
 
+    /// <summary>
+    /// Sets the rectangle for this node, applying margins.
+    /// </summary>
+    /// <param name="newRect">The new rectangle to set.</param>
     public void SetRect(Rect newRect)
     {
         Rect = newRect.ApplyMargins(Margins);
     }
+
+    /// <summary>
+    /// Updates the rectangle for this node based on a source rectangle, anchor, stretch, min/max size, and margins.
+    /// </summary>
+    /// <param name="sourceRect">The source rectangle to base the update on.</param>
     public void UpdateRect(Rect sourceRect)
     {
         var p = sourceRect.GetPoint(Anchor);
@@ -575,23 +821,43 @@ public abstract class ControlNode
         {
             size = size.Min(MaxSize);
         }
-        
-        //size = size.Clamp(MinSize, MaxSize);
-        
         Rect = new Rect(p, size, Anchor).ApplyMargins(Margins);
     }
+
+    /// <summary>
+    /// Updates this node and its children if this is a root node.
+    /// </summary>
+    /// <param name="dt">Delta time since last update.</param>
+    /// <param name="mousePos">Current mouse position.</param>
     public void Update(float dt, Vector2 mousePos)
     {
         if (parent != null) return;
         InternalUpdate(dt, mousePos, true);
     }
+
+    /// <summary>
+    /// Draws this node and its children if this is a root node.
+    /// </summary>
     public void Draw()
     {
         if (parent != null) return;
         InternalDraw();
     }
 
+    /// <summary>
+    /// Sets the rectangle for a child node. Can be overridden for custom layout logic.
+    /// </summary>
+    /// <param name="child">The child node.</param>
+    /// <param name="inputRect">The input rectangle.</param>
+    /// <returns>The rectangle to assign to the child.</returns>
     protected virtual Rect SetChildRect(ControlNode child, Rect inputRect) => inputRect;
+
+    /// <summary>
+    /// Updates all displayed children of this node.
+    /// </summary>
+    /// <param name="dt">Delta time since last update.</param>
+    /// <param name="mousePos">Current mouse position.</param>
+    /// <param name="mousePosValid">Whether the mouse position is valid for input.</param>
     private void UpdateChildren(float dt, Vector2 mousePos, bool mousePosValid)
     {
         var iterator = DisplayedChildren ?? children;
@@ -604,6 +870,9 @@ public abstract class ControlNode
         }
     }
 
+    /// <summary>
+    /// Draws all displayed children of this node.
+    /// </summary>
     private void DrawChildren()
     {
         var iterator = DisplayedChildren ?? children;
@@ -615,6 +884,12 @@ public abstract class ControlNode
         }
     }
 
+    /// <summary>
+    /// Internal update logic for this node, including mouse and input handling, and updating children.
+    /// </summary>
+    /// <param name="dt">Delta time since last update.</param>
+    /// <param name="mousePos">Current mouse position.</param>
+    /// <param name="mousePosValid">Whether the mouse position is valid for input.</param>
     private void InternalUpdate(float dt, Vector2 mousePos, bool mousePosValid)
     {
         //if it is not visible it should also not be updated!
@@ -681,6 +956,9 @@ public abstract class ControlNode
         UpdateChildren(dt, mousePos, mousePosValid);
     }
 
+    /// <summary>
+    /// Internal draw logic for this node and its children.
+    /// </summary>
     private void InternalDraw()
     {
         if (!IsVisibleInHierarchy) return;
@@ -692,26 +970,42 @@ public abstract class ControlNode
 
     #region Input
     /// <summary>
-    /// Return if the key for the pressed state is down
+    /// Return if the key for the pressed state is down.
+    /// Override this method to handle custom input logic.
     /// </summary>
+    /// <returns>Returns false per default.</returns>
     protected virtual bool GetPressedState() => false;
     
     /// <summary>
-    /// Return if the mouse button for the pressed state is down (only is called when mouse is inside)
+    /// Return if the mouse button for the pressed state is down (only is called when mouse is inside).
+    /// Override this method to handle custom input logic.
     /// </summary>
+    /// <returns>Returns false per default.</returns>   
     protected virtual bool GetMousePressedState() => false;
 
     /// <summary>
     /// Return the direction to move to another element.
+    /// Override this method to handle custom navigation direction.
     /// </summary>
+    /// <returns>Returns empty direction per default. (0,0)</returns>
     public virtual Direction GetNavigationDirection() => new();
 
+    /// <summary>
+    /// Called when this node is navigated to in a given direction.
+    /// Invokes the <see cref="OnNavigated"/> event after handling navigation logic.
+    /// </summary>
+    /// <param name="dir">The direction from which navigation occurred.</param>
     public void NavigatedTo(Direction dir)
     {
         HasNavigated(dir);
         OnNavigated?.Invoke(this, dir);
     }
-
+    
+    /// <summary>
+    /// Handles custom logic when this node is navigated to.
+    /// Can be overridden in derived classes.
+    /// </summary>
+    /// <param name="dir">The direction from which navigation occurred.</param>
     protected virtual void HasNavigated(Direction dir)
     {
         
@@ -720,48 +1014,184 @@ public abstract class ControlNode
 
     #region Public
 
+    /// <summary>
+    /// Calculates the Euclidean distance from this node to another node.
+    /// Returns -1 if the other node is the same as this node.
+    /// </summary>
+    /// <code>return (other.Rect.TopLeft - Rect.TopLeft).Length();</code>
+    /// <param name="other">The other <see cref="ControlNode"/> to measure distance to.</param>
+    /// <returns>The distance as a float, or -1 if the nodes are the same.</returns>
     public float GetDistanceTo(ControlNode other)
     {
         if (other == this) return -1f;
         return (other.Rect.TopLeft - Rect.TopLeft).Length();
     }
+
+    /// <summary>
+    /// Calculates the squared Euclidean distance from this node to another node.
+    /// Returns -1 if the other node is the same as this node.
+    /// </summary>
+    /// <code>return (other.Rect.TopLeft - Rect.TopLeft).LengthSquared();</code>
+    /// <param name="other">The other <see cref="ControlNode"/> to measure distance to.</param>
+    /// <returns>The squared distance as a float, or -1 if the nodes are the same.</returns>
     public float GetDistanceSquaredTo(ControlNode other)
     {
         if (other == this) return -1f;
         return (other.Rect.TopLeft - Rect.TopLeft).LengthSquared();
     }
 
+    /// <summary>
+    /// Gets the navigation origin point for this node based on the given direction.
+    /// </summary>
+    /// <param name="dir">The navigation <see cref="Direction"/>.</param>
+    /// <returns>The origin <see cref="Vector2"/> for navigation.</returns>
     public Vector2 GetNavigationOrigin(Direction dir) => Rect.GetPoint(dir.Invert().ToAlignement());
 
     #endregion
     
     #region Virtual
 
-    // protected virtual IEnumerable<ControlNode>? GetChildrenIterator => null;
-    
+    /// <summary>
+    /// Called during the update cycle of this node.
+    /// Override to implement custom update logic.
+    /// </summary>
+    /// <param name="dt">Delta time since last update.</param>
+    /// <param name="mousePos">Current mouse position.</param>
+    /// <param name="mousePosValid">Whether the mouse position is valid for input.</param>
     protected virtual void OnUpdate(float dt, Vector2 mousePos, bool mousePosValid) { }
+
+    /// <summary>
+    /// Called after a child node has been updated.
+    /// Override to implement custom logic after a child update.
+    /// </summary>
+    /// <param name="child">The child node that was updated.</param>
     protected virtual void OnChildUpdated(ControlNode child) { }
+
+    /// <summary>
+    /// Called during the draw cycle of this node.
+    /// Override to implement custom drawing logic.
+    /// </summary>
     protected virtual void OnDraw() { } 
+
+    /// <summary>
+    /// Called after a child node has been drawn.
+    /// Override to implement custom logic after a child draw.
+    /// </summary>
+    /// <param name="child">The child node that was drawn.</param>
     protected virtual void OnChildDrawn(ControlNode child) { }
+
+    /// <summary>
+    /// Called when the active state of this node changes.
+    /// </summary>
+    /// <param name="value">The new active state.</param>
     protected virtual void ActiveWasChanged(bool value) { }
+
+    /// <summary>
+    /// Called when the visible state of this node changes.
+    /// </summary>
+    /// <param name="value">The new visible state.</param>
     protected virtual void VisibleWasChanged(bool value) { }
+
+    /// <summary>
+    /// Called when the parent active state changes.
+    /// </summary>
+    /// <param name="value">The new parent active state.</param>
     protected virtual void ParentActiveWasChanged(bool value) { }
+
+    /// <summary>
+    /// Called when the parent visible state changes.
+    /// </summary>
+    /// <param name="value">The new parent visible state.</param>
     protected virtual void ParentVisibleWasChanged(bool value) { }
+
+    /// <summary>
+    /// Called when the parent of this node changes.
+    /// </summary>
+    /// <param name="oldParent">The previous parent node.</param>
+    /// <param name="newParent">The new parent node.</param>
     protected virtual void ParentWasChanged(ControlNode? oldParent, ControlNode? newParent) { }
+
+    /// <summary>
+    /// Called when a child node is added.
+    /// </summary>
+    /// <param name="newChild">The child node that was added.</param>
     protected virtual void ChildWasAdded(ControlNode newChild) { }
+
+    /// <summary>
+    /// Called when a child node is removed.
+    /// </summary>
+    /// <param name="oldChild">The child node that was removed.</param>
     protected virtual void ChildWasRemoved(ControlNode oldChild) { }
+
+    /// <summary>
+    /// Called when the mouse enters this node.
+    /// </summary>
+    /// <param name="mousePos">The mouse position at entry.</param>
     protected virtual void MouseHasEntered(Vector2 mousePos) { }
+
+    /// <summary>
+    /// Called when the mouse exits this node.
+    /// </summary>
+    /// <param name="mousePos">The last mouse position inside the node.</param>
     protected virtual void MouseHasExited(Vector2 mousePos) { }
+
+    /// <summary>
+    /// Called when the selected state changes.
+    /// </summary>
+    /// <param name="value">The new selected state.</param>
     protected virtual void SelectedWasChanged(bool value) { }
+
+    /// <summary>
+    /// Called when the pressed state changes.
+    /// </summary>
+    /// <param name="value">The new pressed state.</param>
     protected virtual void PressedWasChanged(bool value) { }
-    // protected virtual void FocusWasChanged(bool value) { }
+
+    /// <summary>
+    /// Called when the mouse filter changes.
+    /// </summary>
+    /// <param name="old">The previous mouse filter.</param>
+    /// <param name="cur">The current mouse filter.</param>
     protected virtual void MouseFilterWasChanged(MouseFilter old, MouseFilter cur) { }
+
+    /// <summary>
+    /// Called when the selection filter changes.
+    /// </summary>
+    /// <param name="old">The previous selection filter.</param>
+    /// <param name="cur">The current selection filter.</param>
     protected virtual void SelectionFilterWasChanged(SelectFilter old, SelectFilter cur) { }
+
+    /// <summary>
+    /// Called when the input filter changes.
+    /// </summary>
+    /// <param name="old">The previous input filter.</param>
+    /// <param name="cur">The current input filter.</param>
     protected virtual void InputFilterWasChanged(InputFilter old, InputFilter cur) { }
+
+    /// <summary>
+    /// Called when the navigable state changes.
+    /// </summary>
+    /// <param name="value">The new navigable state.</param>
     protected virtual void NavigableWasChanged(bool value) { }
+
+    /// <summary>
+    /// Called when the displayed state changes.
+    /// </summary>
+    /// <param name="value">The new displayed state.</param>
     protected virtual void DisplayedWasChanged(bool value) { }
+
+    /// <summary>
+    /// Called when the active-in-hierarchy state changes.
+    /// </summary>
+    /// <param name="value">The new active-in-hierarchy state.</param>
     protected virtual void ActiveInHierarchyChanged(bool value) { }
+
+    /// <summary>
+    /// Called when the visible-in-hierarchy state changes.
+    /// </summary>
+    /// <param name="value">The new visible-in-hierarchy state.</param>
     protected virtual void VisibleInHierarchyChanged(bool value) { }
+
     #endregion
 
     #region Private
@@ -850,12 +1280,6 @@ public abstract class ControlNode
         PressedWasChanged(Pressed);
         OnPressedChanged?.Invoke(this, Pressed);
     }
-    // private void ResolveFocusChanged()
-    // {
-    //     FocusWasChanged(focused);
-    //     OnFocusChanged?.Invoke(this, focused);
-    // }
-
     private void ResolveOnMouseFilterChanged(MouseFilter old, MouseFilter cur)
     {
         MouseFilterWasChanged(old, cur);

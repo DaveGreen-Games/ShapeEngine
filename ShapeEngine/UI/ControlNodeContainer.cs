@@ -5,23 +5,44 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.UI;
 
+/// <summary>
+/// Represents a container for <see cref="ControlNode"/> elements, managing their layout, navigation, and display logic.
+/// </summary>
+/// <remarks>
+/// Supports grid and linear layouts, navigation, and paging. Handles child visibility and selection events.
+/// </remarks>
 public class ControlNodeContainer : ControlNode
 {
-    // public enum ContainerType
-    // {
-    //     None = 0,
-    //     Horizontal = 1,
-    //     Vertical = 2,
-    //     Grid = 3
-    // }
-
+    /// <summary>
+    /// Occurs when the first node in the container is selected.
+    /// <list type="bullet">
+    /// <item><description><c>ControlNode</c>: The container instance.</description></item>
+    /// <item><description><c>ControlNode</c>: The selected node.</description></item>
+    /// </list>
+    /// </summary>
     public event Action<ControlNode, ControlNode>? OnFirstNodeSelected;
+    /// <summary>
+    /// Occurs when the last node in the container is selected.
+    /// <list type="bullet">
+    /// <item><description><c>ControlNode</c>: The container instance.</description></item>
+    /// <item><description><c>ControlNode</c>: The selected node.</description></item>
+    /// </list>
+    /// </summary>
     public event Action<ControlNode, ControlNode>? OnLastNodeSelected;
+    /// <summary>
+    /// Occurs when any node in the container is selected.
+    /// <list type="bullet">
+    /// <item><description><c>ControlNode</c>: The container instance.</description></item>
+    /// <item><description><c>ControlNode</c>: The selected node.</description></item>
+    /// </list>
+    /// </summary>
     public event Action<ControlNode, ControlNode>? OnNodeSelected;
-
 
     private Grid grid = new();
 
+    /// <summary>
+    /// Gets or sets the <see cref="Grid"/> layout for the container.
+    /// </summary>
     public Grid Grid
     {
         get => grid;
@@ -37,14 +58,18 @@ public class ControlNodeContainer : ControlNode
         }
     }
 
-    
-    
     /// <summary>
-    /// If true the display index of the container is clamped to childCount - displayCount. If false the display index
-    /// is incremented/decremented by displayCount as long as 0 or childCount is not reached.
+    /// If true, the display index of the container is clamped to <c>childCount - displayCount</c>.
+    /// If false, the display index is incremented/decremented by displayCount as long as 0 or childCount is not reached.
     /// </summary>
     public bool AlwaysKeepFilled = true;
+    /// <summary>
+    /// Gets the number of elements to display based on the grid configuration.
+    /// </summary>
     private int DisplayCount => grid.Count;
+    /// <summary>
+    /// Gets or sets the index of the first displayed child node.
+    /// </summary>
     public int DisplayIndex
     {
         get => displayIndex;
@@ -76,6 +101,9 @@ public class ControlNodeContainer : ControlNode
     }
 
     private int navigationStep = 1;
+    /// <summary>
+    /// Gets or sets the navigation step size for moving between nodes.
+    /// </summary>
     public int NavigationStep
     {
         get => navigationStep;
@@ -86,21 +114,10 @@ public class ControlNodeContainer : ControlNode
             navigationStep = value;
         }
     }
-    
-    // private ContainerType type = ContainerType.None;
-    // public ContainerType Type
-    // {
-    //     get => type;
-    //     set
-    //     {
-    //         if (value == type) return;
-    //         dirty = true;
-    //         type = value;
-    //     } 
-    // }
+    /// <summary>
+    /// Gets or sets the gap between elements in the container as a <see cref="Vector2"/>.
+    /// </summary>
     public Vector2 Gap { get; set; } = new();
-
-    
 
     #region Private Members
     private int displayIndex = 0;
@@ -117,6 +134,12 @@ public class ControlNodeContainer : ControlNode
     
     #region Override
 
+    /// <summary>
+    /// Updates the container and recalculates layout if necessary.
+    /// </summary>
+    /// <param name="dt">Delta time since last update.</param>
+    /// <param name="mousePos">Current mouse position.</param>
+    /// <param name="mousePosValid">Indicates if the mouse position is valid.</param>
     protected override void OnUpdate(float dt, Vector2 mousePos, bool mousePosValid)
     {
         if (!Grid.IsValid) return;
@@ -153,83 +176,19 @@ public class ControlNodeContainer : ControlNode
         float elementHeight = (totalHeight - vGaps * vGapSize) / verticalDivider;
 
         gapSize = new(hGapSize, vGapSize);
-        // gapSize = new(hGapSize + elementWidth, vGapSize + elementHeight);
         elementSize = new(elementWidth, elementHeight);
         direction = Grid.Placement.ToVector2();
-        // direction = new
-        //     (
-        //         Grid.IsGrid || Grid.IsHorizontal ? Grid.Placement.Horizontal : 0f,
-        //         Grid.IsGrid || Grid.IsVertical ? Grid.Placement.Vertical : 0f
-        //     );
         alignement = Grid.Placement.Invert().ToAlignement();
         curOffset = new(0f, 0f);
 
-        // if (Grid.IsVertical)
-        // {
-        //     startPos = Rect.TopLeft;
-        //     float stretchFactorTotal = 0f;
-        //     int count = DisplayCount <= 0 ? DisplayedChildrenCount : DisplayCount;
-        //     for (int i = 0; i < count; i++)
-        //     {
-        //         if (i < DisplayedChildrenCount)
-        //         {
-        //             stretchFactorTotal += DisplayedChildren[i].ContainerStretch;
-        //         }
-        //         else stretchFactorTotal += 1;
-        //     }
-        //     int gaps = count - 1;
-        //
-        //     float totalHeight = Rect.Height;
-        //     gapSize = new(0f, totalHeight * Gap.Y);
-        //     float elementHeight = (totalHeight - gaps * gapSize.Y) / stretchFactorTotal;
-        //     elementSize = new(0f, elementHeight);
-        //     curOffset = new(0f, 0f);
-        // }
-        //
-        // if (Grid.IsHorizontal)
-        // {
-        //     startPos = Rect.TopLeft;
-        //     var stretchFactorTotal = 0f;
-        //     int count = DisplayCount <= 0 ? DisplayedChildrenCount : DisplayCount;
-        //     for (var i = 0; i < count; i++)
-        //     {
-        //         if (i < DisplayedChildrenCount)
-        //         {
-        //             stretchFactorTotal += DisplayedChildren[i].ContainerStretch;
-        //         }
-        //         else stretchFactorTotal += 1;
-        //     }
-        //     int gaps = count - 1;
-        //
-        //     float totalWidth = Rect.Width;
-        //     gapSize = new(totalWidth * Gap.X, 0f);
-        //     float elementWidth = (totalWidth - gaps * gapSize.X) / stretchFactorTotal;
-        //     elementSize = new(elementWidth, 0f);
-        //     curOffset = new(0f, 0f);
-        // }
-        //
-        // if (Grid.IsGrid)
-        // {
-        //     startPos = Rect.GetPoint(Grid.Placement.Invert().ToAlignement()); // Rect.TopLeft;
-        //
-        //     int hGaps = Grid.Cols - 1;
-        //     float totalWidth = Rect.Width;
-        //     float hGapSize = totalWidth * Gap.X;
-        //     float elementWidth = (totalWidth - hGaps * hGapSize) / Grid.Cols;
-        //
-        //     int vGaps = Grid.Rows - 1;
-        //     float totalHeight = Rect.Height;
-        //     float vGapSize = totalHeight * Gap.Y;
-        //     float elementHeight = (totalHeight - vGaps * vGapSize) / Grid.Rows;
-        //
-        //     gapSize = new(hGapSize + elementWidth, vGapSize + elementHeight);
-        //     elementSize = new(elementWidth, elementHeight);
-        //     
-        //     
-        // }
-
 
     }
+    /// <summary>
+    /// Sets the rectangle for a child node based on the current layout.
+    /// </summary>
+    /// <param name="node">The child node.</param>
+    /// <param name="inputRect">The input rectangle.</param>
+    /// <returns>The calculated rectangle for the child node.</returns>
     protected override Rect SetChildRect(ControlNode node, Rect inputRect)
     {
         if (!Grid.IsValid) return inputRect;
@@ -242,7 +201,7 @@ public class ControlNodeContainer : ControlNode
             var coords = Grid.IndexToCoordinates(i);
             var r = new Rect
             (
-                startPos + ((gapSize + elementSize) * coords.ToVector2() * direction), //  new Vector2(gapSize.X * coords.Col, 0f) + new Vector2(0f, gapSize.Y * coords.Row), 
+                startPos + ((gapSize + elementSize) * coords.ToVector2() * direction),
                 elementSize,
                 alignement
             );
@@ -263,7 +222,7 @@ public class ControlNodeContainer : ControlNode
             );
             var r = new Rect
             (
-                startPos + curOffset, // gapSize * coords.ToVector2() * direction, //  new Vector2(gapSize.X * coords.Col, 0f) + new Vector2(0f, gapSize.Y * coords.Row), 
+                startPos + curOffset, 
                 clampedSize,
                 alignement
             );
@@ -271,71 +230,28 @@ public class ControlNodeContainer : ControlNode
             curOffset += (gapSize + size) * direction;
             return r;
         }
-        
-        
-        
-        // if (Grid.IsVertical)
-        // {
-        //     float height = elementSize.Y * node.ContainerStretch;
-        //     var size = new Vector2(Rect.Width, height);
-        //     var maxSize = node.MaxSize;
-        //     if (maxSize.X > 0f) size.X = MathF.Min(size.X, maxSize.X);
-        //     if (maxSize.Y > 0f) size.Y = MathF.Min(size.Y, maxSize.Y);
-        //     var r = new Rect(startPos + curOffset, size, new(0f));
-        //     curOffset += new Vector2(0f, gapSize.Y + height);
-        //     return r;
-        // }
-        //
-        // if (Grid.IsHorizontal)
-        // {
-        //     float width = elementSize.X * node.ContainerStretch;
-        //     Vector2 size = new(width, Rect.Height);
-        //     var maxSize = node.MaxSize;
-        //     if (maxSize.X > 0f) size.X = MathF.Min(size.X, maxSize.X);
-        //     if (maxSize.Y > 0f) size.Y = MathF.Min(size.Y, maxSize.Y);
-        //     var r = new Rect(startPos + curOffset, size, new(0f));
-        //     curOffset += new Vector2(gapSize.X + width, 0f);
-        //     return r;
-        // }
-        //
-        // if (Grid.IsGrid)
-        // {
-        //     // int count = GridColumns * GridRows;
-        //     // if (displayedNodes.Count < count) count = displayedNodes.Count;
-        //     if (DisplayedChildren == null) return inputRect;
-        //     if (!Grid.IsValid) return inputRect;
-        //     int i = DisplayedChildren.IndexOf(node);
-        //     if (i < 0) return inputRect;
-        //     var coords = Grid.IndexToCoordinates(i); // ShapeMath.TransformIndexToCoordinates(i, GridRows, GridColumns, true);
-        //     var r = new Rect
-        //     (
-        //         startPos + new Vector2(gapSize.X * coords.Col, 0f) + new Vector2(0f, gapSize.Y * coords.Row), 
-        //         elementSize,
-        //         new(0f)
-        //     );
-        //     return r;
-        // }
-        //
-        // return inputRect;
     }
+    /// <summary>
+    /// Handles logic when a child node is added to the container.
+    /// </summary>
+    /// <param name="newChild">The newly added child node.</param>
     protected override void ChildWasAdded(ControlNode newChild)
     {
         dirty = true;
         newChild.OnSelectedChanged += OnChildSelectionChanged;
         newChild.OnVisibleInHierarchyChanged += OnChildVisibleInHierarchyChanged;
         newChild.OnNavigated += OnChildNavigated;
-        // newChild.OnVisibleChanged += OnChildVisibleChanged;
-        // newChild.OnParentVisibleChanged += OnChildParentVisibleChanged;
     }
+    /// <summary>
+    /// Handles logic when a child node is removed from the container.
+    /// </summary>
+    /// <param name="oldChild">The removed child node.</param>
     protected override void ChildWasRemoved(ControlNode oldChild)
     {
         dirty = true;
         oldChild.OnSelectedChanged -= OnChildSelectionChanged;
         oldChild.OnVisibleInHierarchyChanged -= OnChildVisibleInHierarchyChanged;
         oldChild.OnNavigated -= OnChildNavigated;
-        // oldChild.OnVisibleChanged -= OnChildVisibleChanged;
-        // oldChild.OnParentVisibleChanged -= OnChildParentVisibleChanged;
-        // oldChild.SetDisplayed(this, true);
         oldChild.Displayed = true;
 
     }
@@ -343,6 +259,11 @@ public class ControlNodeContainer : ControlNode
     #endregion
     
     #region Virtual
+    /// <summary>
+    /// Handles navigation input for a child node.
+    /// </summary>
+    /// <param name="child">The child node that was navigated from.</param>
+    /// <param name="dir">The direction of navigation.</param>
     protected virtual void OnChildNavigated(ControlNode child, Direction dir)
     {
         if (NavigationStep == 0) return;
@@ -350,7 +271,6 @@ public class ControlNodeContainer : ControlNode
         if (!Grid.IsValid) return;
 
         var signedPlacement = grid.Placement.Signed;
-        // var factor = grid.IsVertical ? signedPlacement.Vertical : signedPlacement.Horizontal;
         dir *= signedPlacement;
         
         if (Grid.IsGrid)
@@ -407,9 +327,26 @@ public class ControlNodeContainer : ControlNode
         }
     }
 
+    /// <summary>
+    /// Called when the first node is selected. Override to provide custom logic.
+    /// </summary>
+    /// <param name="node">The selected node.</param>
     protected virtual void FirstNodeWasSelected(ControlNode node) { }
+    /// <summary>
+    /// Called when the last node is selected. Override to provide custom logic.
+    /// </summary>
+    /// <param name="node">The selected node.</param>
     protected virtual void LastNodeWasSelected(ControlNode node) { }
+    /// <summary>
+    /// Called when any node is selected. Override to provide custom logic.
+    /// </summary>
+    /// <param name="node">The selected node.</param>
     protected virtual void NodeWasSelected(ControlNode node) { }
+    /// <summary>
+    /// Determines if the specified node is the first displayed node.
+    /// </summary>
+    /// <param name="node">The node to check.</param>
+    /// <returns>True if the node is the first displayed; otherwise, false.</returns>
     protected virtual bool IsFirstDisplayed(ControlNode node)
     {
         if (DisplayedChildren == null || DisplayedChildren.Count <= 0) return false;
@@ -423,6 +360,11 @@ public class ControlNodeContainer : ControlNode
 
         return false;
     }
+    /// <summary>
+    /// Determines if the specified node is the last displayed node.
+    /// </summary>
+    /// <param name="node">The node to check.</param>
+    /// <returns>True if the node is the last displayed; otherwise, false.</returns>
     protected virtual bool IsLastDisplayed(ControlNode node)
     {
         if (DisplayedChildren == null || DisplayedChildren.Count <= 0) return false;
@@ -439,11 +381,27 @@ public class ControlNodeContainer : ControlNode
     #endregion
 
     #region Public
+    /// <summary>
+    /// Moves to the next item in the container.
+    /// </summary>
     public void NextItem() => DisplayIndex += 1;
+    /// <summary>
+    /// Moves to the previous item in the container.
+    /// </summary>
     public void PreviousItem() => DisplayIndex -= 1;
 
+    /// <summary>
+    /// Gets the maximum number of pages based on the display count and child count.
+    /// </summary>
     public int MaxPages => DisplayCount <= 0 ? 1 : (int)MathF.Ceiling((float)ChildCount / (float)DisplayCount);
+    /// <summary>
+    /// Gets the current page number.
+    /// </summary>
     public int CurPage => DisplayCount <= 0 ? 1 : ((DisplayIndex + DisplayCount - 1) / DisplayCount) + 1;
+    /// <summary>
+    /// Moves to the next page.
+    /// </summary>
+    /// <param name="wrapAround">If true, wraps to the first page when the end is reached.</param>
     public void NextPage(bool wrapAround = false)
     {
         if (DisplayCount <= 0) return;
@@ -452,6 +410,10 @@ public class ControlNodeContainer : ControlNode
         
         else DisplayIndex += DisplayCount;
     }
+    /// <summary>
+    /// Moves to the previous page.
+    /// </summary>
+    /// <param name="wrapAround">If true, wraps to the last page when the beginning is reached.</param>
     public void PrevPage(bool wrapAround = false)
     {
         if (DisplayCount <= 0) return;
@@ -459,6 +421,10 @@ public class ControlNodeContainer : ControlNode
         if(wrapAround && CurPage <= 1) LastPage();
         else DisplayIndex -= DisplayCount;
     }
+    /// <summary>
+    /// Moves the display by a specified number of pages.
+    /// </summary>
+    /// <param name="pages">The number of pages to move. Positive for forward, negative for backward.</param>
     public void MovePage(int pages)
     {
         if (pages == 0) return;
@@ -466,12 +432,21 @@ public class ControlNodeContainer : ControlNode
         DisplayIndex += DisplayCount * pages;
     }
 
+    /// <summary>
+    /// Moves to the first page.
+    /// </summary>
     public void FirstPage() => DisplayIndex = 0;
+    /// <summary>
+    /// Moves to the last page.
+    /// </summary>
     public void LastPage() => DisplayIndex = ChildCount - DisplayCount;
 
     #endregion
     
     #region Private
+    /// <summary>
+    /// Compiles the list of currently displayed child nodes based on visibility and display index.
+    /// </summary>
     private void CompileDisplayedNodes()
     {
         dirty = false;
@@ -481,15 +456,6 @@ public class ControlNodeContainer : ControlNode
         var visibleChildren = GetChildren((node => node.Visible && node.ParentVisible));
 
         if (visibleChildren == null) return;
-        
-        //I think this is not necessary anymore?!
-        // if (DisplayCount > 0)
-        // {
-        //     if (displayIndex + DisplayCount > visibleChildren.Count)
-        //     {
-        //         displayIndex = visibleChildren.Count - DisplayCount;
-        //     }
-        // }
         
         for (var i = 0; i < visibleChildren.Count; i++)
         {
@@ -513,44 +479,47 @@ public class ControlNodeContainer : ControlNode
             }
         }
     }
-    // private void OnChildVisibleChanged(ControlNode child, bool visible)
-    // {
-    //     dirty = true;
-    // }
-    // private void OnChildParentVisibleChanged(ControlNode child, bool parentVisible)
-    // {
-    //     dirty = true;
-    // }
 
+    /// <summary>
+    /// Handles changes in a child's visibility within the hierarchy.
+    /// </summary>
+    /// <param name="node">The child node.</param>
+    /// <param name="value">The new visibility value.</param>
     private void OnChildVisibleInHierarchyChanged(ControlNode node, bool value)
     {
         dirty = true;
     }
+    /// <summary>
+    /// Handles changes in a child's selection state.
+    /// </summary>
+    /// <param name="child">The child node.</param>
+    /// <param name="selected">Whether the child is selected.</param>
     private void OnChildSelectionChanged(ControlNode child, bool selected)
     {
         if(selected) ResolveOnNodeSelected(child);
     }
+    /// <summary>
+    /// Resolves the event when the first node is selected.
+    /// </summary>
+    /// <param name="node">The selected node.</param>
     private void ResolveOnFirstNodeSelected(ControlNode node)
     {
         FirstNodeWasSelected(node);
         OnFirstNodeSelected?.Invoke(this, node);
-
-        
-        // if (displayCount >= 0 && type is ContainerType.Horizontal or ContainerType.Vertical)
-        // {
-        //     DisplayIndex -= 1;
-        // }
     }
+    /// <summary>
+    /// Resolves the event when the last node is selected.
+    /// </summary>
+    /// <param name="node">The selected node.</param>
     private void ResolveOnLastNodeSelected(ControlNode node)
     {
         LastNodeWasSelected(node);
         OnLastNodeSelected?.Invoke(this, node);
-
-        // if (displayCount >= 0 && type is ContainerType.Horizontal or ContainerType.Vertical)
-        // {
-        //     DisplayIndex += 1;
-        // }
     }
+    /// <summary>
+    /// Resolves the event when any node is selected.
+    /// </summary>
+    /// <param name="node">The selected node.</param>
     private void ResolveOnNodeSelected(ControlNode node)
     {
         if(IsFirstDisplayed(node)) ResolveOnFirstNodeSelected(node);

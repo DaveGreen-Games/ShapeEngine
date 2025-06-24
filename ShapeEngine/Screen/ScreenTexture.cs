@@ -4,30 +4,52 @@ using ShapeEngine.Color;
 using ShapeEngine.Core;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Screen;
 
+/// <summary>
+/// Manages a renderable screen texture with support for multiple modes (stretch, anchor, pixelation, fixed, nearest fixed, custom),
+/// camera integration, shader application, and events for drawing and resizing. Handles mouse position scaling, texture reloading,
+/// and provides utility functions for screen-to-texture and texture-to-screen conversions.
+/// </summary>
+/// <remarks>
+/// Use this class to encapsulate all logic for drawing to an off-screen texture, applying shaders, and rendering the result to the screen.
+/// Supports integration with <see cref="ShapeCamera"/> for world/screen coordinate conversion and custom drawing logic via events.
+/// </remarks>
 public sealed class ScreenTexture
 {
-    
+
     #region Events
+    
+    /// <summary>
+    /// Delegate for drawing to the render texture.
+    /// </summary>
+    /// <param name="screenInfo">Information about the screen area and mouse position.</param>
+    /// <param name="texture">The screen texture instance.</param>
     public delegate void DrawToRenderTexture(ScreenInfo screenInfo, ScreenTexture texture);
+    
+    /// <summary>
+    /// Delegate for handling texture resize events.
+    /// </summary>
+    /// <param name="w">The new width of the texture.</param>
+    /// <param name="h">The new height of the texture.</param>
     public delegate void TextureResized(int w, int h);
     
     /// <summary>
-    /// Draw to the render texture.
-    /// Is called before shaders are applied.
+    /// Event triggered to draw to the render texture before shaders are applied.
     /// </summary>
     public event DrawToRenderTexture? OnDrawGame;
     
     /// <summary>
-    /// Draw to the render texture
-    /// Is called after shaders are applied
+    /// Event triggered to draw to the render texture after shaders are applied.
     /// </summary>
     public event DrawToRenderTexture? OnDrawUI;
-
+    
+    /// <summary>
+    /// Event triggered when the texture is resized.
+    /// </summary>
     public event TextureResized? OnTextureResized;
+    
     #endregion
 
     #region Members
@@ -46,57 +68,105 @@ public sealed class ScreenTexture
             customClearBackgroundFunction = value;
         } 
     }
-    private Func<(ColorRgba color, bool clear)>? customClearBackgroundFunction = null;
+    private Func<(ColorRgba color, bool clear)>? customClearBackgroundFunction;
     
+    /// <summary>
+    /// The background color used when clearing the render texture.
+    /// </summary>
     public ColorRgba BackgroundColor = ColorRgba.Clear;
-    public ScreenInfo GameScreenInfo { get; private set; } = new();
-    public ScreenInfo GameUiScreenInfo { get; private set; } = new();
-    
+    /// <summary>
+    /// Information about the game area and mouse position in world coordinates.
+    /// </summary>
+    public ScreenInfo GameScreenInfo { get; private set; }
+    /// <summary>
+    /// Information about the UI area and mouse position in texture coordinates.
+    /// </summary>
+    public ScreenInfo GameUiScreenInfo { get; private set; }
     /// <summary>
     /// The order in which screen textures are drawn to the screen each frame. Lower numbers will be draw first.
     /// Negative draw orders will be drawn to screen before the game texture.
     /// Positive draw orders will be drawn to screen after the game texture (this includes 0).
     /// If the draw order is the same the order in which the screen textures were added is taken into account.
     /// </summary>
-    public int DrawToScreenOrder { get; set; } = 0;
-    
+    public int DrawToScreenOrder { get; set; }
     /// <summary>
-    /// Disable/Enable draw to texture. If disable OnDrawGame & OnDrawGameUi event will not fire.
+    /// Enables or disables drawing to the texture. If disabled, OnDrawGame and OnDrawUI events will not fire.
     /// </summary>
     public bool DrawToTextureEnabled { get; set; } = true;
-    public bool Loaded { get; private set; } = false;
-    public int Width { get; private set; } = 0;
-    public int Height { get; private set; } = 0;
-    public ShapeCamera? Camera = null;
+    /// <summary>
+    /// Indicates whether the texture is currently loaded.
+    /// </summary>
+    public bool Loaded { get; private set; }
+    /// <summary>
+    /// The width of the render texture in pixels.
+    /// </summary>
+    public int Width { get; private set; }
+    /// <summary>
+    /// The height of the render texture in pixels.
+    /// </summary>
+    public int Height { get; private set; }
+    /// <summary>
+    /// The camera used for world-to-screen and screen-to-world conversions. Optional.
+    /// </summary>
+    public ShapeCamera? Camera;
+    /// <summary>
+    /// The tint color applied when drawing the texture to the screen.
+    /// </summary>
     public ColorRgba Tint = new ColorRgba(255, 255, 255, 255);
-    
+    /// <summary>
+    /// The mode in which this screen texture operates (stretch, anchor, pixelation, fixed, nearest fixed, custom).
+    /// </summary>
     public readonly ScreenTextureMode Mode;
+    /// <summary>
+    /// The fixed dimensions for the texture, if in fixed mode.
+    /// </summary>
     public readonly Dimensions FixedDimensions;
+    /// <summary>
+    /// The pixelation factor for pixelation mode (0-1).
+    /// </summary>
     public float PixelationFactor { get; private set; }
+    /// <summary>
+    /// The stretch factors for anchor mode (0-1).
+    /// </summary>
     public Vector2 AnchorStretch { get; private set; }
+    /// <summary>
+    /// The anchor position for anchor mode (0-1).
+    /// </summary>
     public Vector2 AnchorPosition { get; private set; }
     
+    /// <summary>
+    /// The texture filter used for the render texture.
+    /// </summary>
     public readonly TextureFilter TextureFilter;
+    /// <summary>
+    /// The type of shader support (none, single, multiple).
+    /// </summary>
     public readonly ShaderSupportType ShaderSupport;
-    public readonly ShaderContainer? Shaders = null;
-    public bool Initialized { get; private set; } = false;
+    /// <summary>
+    /// The container for shaders applied to this texture, if shader support is enabled.
+    /// </summary>
+    public readonly ShaderContainer? Shaders;
+    /// <summary>
+    /// Indicates whether the texture has been initialized.
+    /// </summary>
+    public bool Initialized { get; private set; }
     #endregion
     
     #region Private
-    private RenderTexture2D renderTexture = new();
-    private RenderTexture2D shaderBuffer = new();
-    private Rect textureRect = new();
+    private RenderTexture2D renderTexture;
+    private RenderTexture2D shaderBuffer;
+    private Rect textureRect;
     private Dimensions screenDimensions = new();
     private float nearestFixedFactor = 1f;
-    private bool textureReloadRequired = false;
-    private CustomScreenTextureHandler? customScreenTextureHandler = null;
+    private bool textureReloadRequired;
+    private CustomScreenTextureHandler? customScreenTextureHandler;
     private float macOSHighDpiScaleFactor = 1f;
     #endregion
     
     #endregion
 
     #region Constructors
-    
+
     /// <summary>
     /// Create a screen texture in stretch mode.
     /// </summary>
@@ -143,8 +213,8 @@ public sealed class ScreenTexture
             anchorPosition.X < 0f || anchorPosition.Y < 0f || anchorPosition.X > 1f || anchorPosition.Y > 1f)
         {
             Mode = ScreenTextureMode.Stretch;
-            anchorPosition = new(-1, -1);
-            anchorStretch = new(-1, -1);
+            AnchorPosition = new(-1, -1);
+            AnchorStretch = new(-1, -1);
         }
         else
         {
@@ -284,6 +354,13 @@ public sealed class ScreenTexture
     #endregion
 
     #region Public Functions
+    /// <summary>
+    /// Initializes the screen texture with the given screen size, mouse position, and optional camera.
+    /// Calculates scaled mouse positions and sets up camera and texture rectangles.
+    /// </summary>
+    /// <param name="screenSize">The dimensions of the screen.</param>
+    /// <param name="mousePosition">The mouse position in screen coordinates.</param>
+    /// <param name="camera">The camera to use for world-to-screen conversion (optional).</param>
     public void Initialize(Dimensions screenSize, Vector2 mousePosition, ShapeCamera? camera = null)
     {
         if (Initialized) return;
@@ -359,6 +436,13 @@ public sealed class ScreenTexture
     }
 
     
+    /// <summary>
+    /// Updates the screen texture state, including camera and mouse position, and reloads the texture if needed.
+    /// </summary>
+    /// <param name="dt">Delta time in seconds.</param>
+    /// <param name="screenSize">The dimensions of the screen.</param>
+    /// <param name="mousePosition">The mouse position in screen coordinates.</param>
+    /// <param name="paused">Whether the update is paused.</param>
     public void Update(float dt, Dimensions screenSize, Vector2 mousePosition, bool paused)
     {
         SetMacOsScalingFactor();
@@ -438,7 +522,7 @@ public sealed class ScreenTexture
     }
     
     /// <summary>
-    /// Will invoke events to draw to the texture via OnDrawGame & OnDrawGameUi.
+    /// Invokes events to draw to the texture via OnDrawGame and OnDrawUI. Applies shaders if enabled.
     /// </summary>
     public void DrawOnTexture()
     {
@@ -507,12 +591,15 @@ public sealed class ScreenTexture
         }
     }
     /// <summary>
-    /// Is called by the game class to draw the texture to the screen. Should not be used otherwise.
+    /// Draws the texture to the screen. Should only be called by the game class.
     /// </summary>
     public void DrawToScreen()
     {
         DrawTextureToScreen(renderTexture.Texture);
     }
+    /// <summary>
+    /// Unloads the render texture and associated resources.
+    /// </summary>
     public void Unload()
     {
         if (!Loaded) return;
@@ -520,6 +607,10 @@ public sealed class ScreenTexture
         Raylib.UnloadRenderTexture(renderTexture);
         if(ShaderSupport != ShaderSupportType.None) Raylib.UnloadRenderTexture(shaderBuffer);
     }
+    /// <summary>
+    /// Gets the destination rectangle for drawing the texture to the screen, based on the current mode and screen size.
+    /// </summary>
+    /// <returns>The destination rectangle.</returns>
     public Rect GetDestinationRect()
     {
         if( Mode == ScreenTextureMode.Stretch ) return new(0, 0, screenDimensions.Width, screenDimensions.Height);
@@ -556,8 +647,17 @@ public sealed class ScreenTexture
 
         return destRec;
     }
+    /// <summary>
+    /// Gets the rectangle representing the texture area.
+    /// </summary>
+    /// <returns>The texture rectangle.</returns>
     public Rect GetTextureRect() => new(0, 0, Width, Height);
 
+    /// <summary>
+    /// Changes the anchor position for anchor mode. Only valid in anchor mode.
+    /// </summary>
+    /// <param name="newAnchorPosition">The new anchor position (0-1).</param>
+    /// <returns>True if changed successfully; otherwise, false.</returns>
     public bool ChangeAnchorPosition(Vector2 newAnchorPosition)
     {
         if(Mode != ScreenTextureMode.Anchor) return false;
@@ -804,61 +904,3 @@ public sealed class ScreenTexture
     #endregion
     
 }
-
-/*
-  /// <summary>
-      /// Used to draw to custom screen textures. Should only be used once or once a frame. Will apply shaders if shader mode is enabled
-      /// and screen shaders are active. Will only run on custom screen textures.
-      /// </summary>
-      /// <param name="backgroundColor"></param>
-      /// <param name="clearBackground"></param>
-      /// <param name="drawGameFunction"></param>
-      /// <param name="drawGameUiFunction"></param>
-      public void DrawOnCustomTexture(ColorRgba backgroundColor, bool clearBackground, Action<ScreenInfo> drawGameFunction, Action<ScreenInfo> drawGameUiFunction)
-      {
-          if (Mode != ScreenTextureMode.Custom) return;
-          
-          bool shaderMode = ShaderSupport != ShaderSupportType.None && Shaders != null && Shaders.HasActiveShaders();
-
-          if (shaderMode)
-          {
-              Raylib.BeginTextureMode(renderTexture);
-              if(clearBackground) Raylib.ClearBackground(backgroundColor.ToRayColor());
-
-              if (Camera != null)
-              {
-                  Raylib.BeginMode2D(Camera.Camera);
-                  drawGameFunction(GameScreenInfo);
-                  Raylib.EndMode2D();
-              }
-              else drawGameFunction(GameScreenInfo);
-              
-              Raylib.EndTextureMode();
-              
-              ApplyShaders(); // we know that we have shaders active
-              
-              Raylib.BeginTextureMode(renderTexture);
-              drawGameUiFunction(GameUiScreenInfo);
-              Raylib.EndTextureMode();
-              
-          }
-          else
-          {
-              Raylib.BeginTextureMode(renderTexture);
-              if(clearBackground) Raylib.ClearBackground(backgroundColor.ToRayColor());
-
-              if (Camera != null)
-              {
-                  Raylib.BeginMode2D(Camera.Camera);
-                  drawGameFunction(GameScreenInfo);
-                  Raylib.EndMode2D();
-              }
-              else drawGameFunction(GameScreenInfo);
-              
-              drawGameUiFunction(GameUiScreenInfo);
-              
-              Raylib.EndTextureMode();
-          }
-      }
-      
- */

@@ -1,15 +1,26 @@
 namespace ShapeEngine.Input;
 
+/// <summary>
+/// Handles input events and manages listeners for keyboard, mouse, and gamepad input events.
+/// </summary>
 public class InputEventHandler
 {
     /// <summary>
-    /// Callback for receiving input events. Should return if input event should propagate further down.
+    /// Callback for receiving input events.
     /// </summary>
+    /// <param name="inputEvent">The input event received.</param>
+    /// <returns>True if the event should propagate; otherwise, false.</returns>
     public delegate bool InputEventCallback(InputEvent inputEvent);
     
     private readonly Dictionary<InputEventCallback, uint> listeners = new();
     private readonly List<InputEventCallback> sortedListeners = new();
     
+    /// <summary>
+    /// Initializes a new instance of <see cref="InputEventHandler"/> and subscribes to device events.
+    /// </summary>
+    /// <param name="keyboard">The keyboard device.</param>
+    /// <param name="mouse">The mouse device.</param>
+    /// <param name="gamepadManager">The gamepad device manager.</param>
     public InputEventHandler(ShapeKeyboardDevice keyboard, ShapeMouseDevice mouse, ShapeGamepadDeviceManager gamepadManager)
     {
         keyboard.OnButtonPressed += OnKeyboardButtonPressed;
@@ -25,7 +36,7 @@ public class InputEventHandler
     /// </summary>
     /// <param name="callback">The callback for input events.</param>
     /// <param name="order">Lower order comes first.</param>
-    /// <returns>Returns if adding was successfull.</returns>
+    /// <returns>Returns if adding was successful.</returns>
     public bool AddListener(InputEventCallback callback, uint order)
     {
         if (!listeners.TryAdd(callback, order)) return false;
@@ -36,8 +47,8 @@ public class InputEventHandler
     /// <summary>
     /// Remove the specified callback listener.
     /// </summary>
-    /// <param name="callback">The callback to removed.</param>
-    /// <returns>Returns if removal was successfull.</returns>
+    /// <param name="callback">The callback to remove.</param>
+    /// <returns>Returns if removal was successful.</returns>
     public bool RemoveListener(InputEventCallback callback)
     {
         var removed = listeners.Remove(callback);
@@ -45,6 +56,10 @@ public class InputEventHandler
         return removed;
     }
 
+    /// <summary>
+    /// Invokes all registered listeners for the given input event in order.
+    /// </summary>
+    /// <param name="inputEvent">The input event to propagate.</param>
     private void OnInputEventTriggered(InputEvent inputEvent)
     {
         foreach (var listener in sortedListeners)
@@ -54,6 +69,9 @@ public class InputEventHandler
         }
     }
 
+    /// <summary>
+    /// Sorts listeners by their order value.
+    /// </summary>
     private void SortListeners()
     {
         sortedListeners.Clear();

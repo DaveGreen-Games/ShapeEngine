@@ -1,232 +1,231 @@
 ﻿using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Interfaces;
-using ShapeEngine.StaticLib;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.StaticLib.Drawing;
 
-namespace ShapeEngine.Core.CollisionSystem
+namespace ShapeEngine.Core.CollisionSystem;
+
+/// <summary>
+/// Implements a spatial hash grid for efficient broad-phase collision detection and spatial queries.
+/// </summary>
+/// <remarks>
+/// The spatial hash divides a 2D space into a grid of buckets, each containing colliders that overlap its region.
+/// Provides fast lookup for collision candidates and supports dynamic resizing and grid changes.
+/// </remarks>
+public class SpatialHash : IBounds
 {
-    
-    public class SpatialHash : IBounds
+    /// <summary>
+    /// Represents a collection of colliders within a single spatial hash bucket.
+    /// </summary>
+    public class Bucket : HashSet<Collider>
     {
-        public class Bucket : HashSet<Collider>
-        {
-            public Bucket? FilterObjects(BitFlag mask)
-            {
-                if (Count <= 0 || mask.IsEmpty()) return null;
-                
-                Bucket? objects = null;
-                foreach (var collidable in this)
-                {
-                    if (mask.Has(collidable.CollisionLayer))
-                    {
-                        objects ??= new();
-                        objects.Add(collidable);
-                    }
-                }
-                return objects;
-            }
-            public Bucket? Copy() => Count <= 0 ? null : (Bucket)this.ToHashSet();
-        }
-
-        #region Public Members
-        public Rect Bounds { get; private set; }
-        public float SpacingX { get; private set; }
-        public float SpacingY { get; private set; }
-        public int BucketCount { get; private set; }
-        public int Rows { get; private set; }
-        public int Cols { get; private set; }
-        #endregion
-
-        #region Private Members
-        private Bucket[] buckets;
-        private readonly Dictionary<Collider, List<int>> register = new();
-        private readonly HashSet<Collider> registerKeys = new();
-        private bool boundsResizeQueued = false;
-        private Rect newBounds = new();
-        #endregion
-        
-        #region Constructors
-        public SpatialHash(float x, float y, float w, float h, int rows, int cols)
-        {
-            this.Bounds = new(x, y, w, h);
-            this.Rows = rows;
-            this.Cols = cols;
-            this.SetSpacing();
-            this.BucketCount = rows * cols;
-            this.buckets = new Bucket[this.BucketCount];
-            for (int i = 0; i < BucketCount; i++)
-            {
-                this.buckets[i] = new();
-            }
-        }
-        public SpatialHash(Rect bounds, int rows, int cols)
-        {
-            this.Bounds = bounds;
-            this.Rows = rows;
-            this.Cols = cols;
-            this.SetSpacing();
-            this.BucketCount = rows * cols;
-            this.buckets = new Bucket[this.BucketCount];
-            for (int i = 0; i < BucketCount; i++)
-            {
-                this.buckets[i] = new();
-            }
-        }
-        #endregion
-        
-        #region Public
-        public void Fill(IEnumerable<CollisionObject> collisionBodies)
-        {
-            Clear();
-
-            foreach (var body in collisionBodies)
-            {
-                if (body.Enabled && body.HasColliders)
-                {
-                    Add(body);
-                }
-            }
-
-            /*foreach (var collider in colliders)
-            {
-                Add(collider);
-            }*/
-            
-            CleanRegister();
-        }
-        public void Close()
-        {
-            Clear();
-            register.Clear();
-            buckets = Array.Empty<Bucket>();  //new HashSet<ICollidable>[0];
-        }
-        public void ResizeBounds(Rect targetBounds) 
-        {
-            newBounds = targetBounds;
-            boundsResizeQueued = true;
-        }
-        
         /// <summary>
-        /// Change the cols and rows of the grid. Clears the spatial hash!
+        /// Returns a new <see cref="Bucket"/> containing only colliders matching the given collision mask.
         /// </summary>
-        /// <param name="cols"></param>
-        /// <param name="rows"></param>
-        public void ChangeGrid(int rows, int cols)
+        /// <param name="mask">The collision mask to filter colliders by.</param>
+        /// <returns>A filtered <see cref="Bucket"/> or null if no colliders match.</returns>
+        public Bucket? FilterObjects(BitFlag mask)
         {
-            Rows = rows;
-            Cols = cols;
-            SetSpacing();
-            BucketCount = rows * cols;
-            buckets = new Bucket[BucketCount];
-            for (int i = 0; i < BucketCount; i++)
+            if (Count <= 0 || mask.IsEmpty()) return null;
+            
+            Bucket? objects = null;
+            foreach (var collidable in this)
             {
-                buckets[i] = new();
+                if (mask.Has(collidable.CollisionLayer))
+                {
+                    objects ??= new();
+                    objects.Add(collidable);
+                }
+            }
+            return objects;
+        }
+        /// <summary>
+        /// Creates a shallow copy of this <see cref="Bucket"/>.
+        /// </summary>
+        /// <returns>A new <see cref="Bucket"/> with the same colliders, or null if empty.</returns>
+        public Bucket? Copy() => Count <= 0 ? null : (Bucket)this.ToHashSet();
+    }
+
+    #region Public Members
+    /// <summary>
+    /// Gets the bounds of the spatial hash grid.
+    /// </summary>
+    public Rect Bounds { get; private set; }
+    /// <summary>
+    /// Gets the width of each grid cell.
+    /// </summary>
+    public float SpacingX { get; private set; }
+    /// <summary>
+    /// Gets the height of each grid cell.
+    /// </summary>
+    public float SpacingY { get; private set; }
+    /// <summary>
+    /// Gets the total number of buckets in the grid.
+    /// </summary>
+    public int BucketCount { get; private set; }
+    /// <summary>
+    /// Gets the number of rows in the grid.
+    /// </summary>
+    public int Rows { get; private set; }
+    /// <summary>
+    /// Gets the number of columns in the grid.
+    /// </summary>
+    public int Cols { get; private set; }
+    #endregion
+
+    #region Private Members
+    private Bucket[] buckets;
+    private readonly Dictionary<Collider, List<int>> register = new();
+    private readonly HashSet<Collider> registerKeys = [];
+    private bool boundsResizeQueued;
+    private Rect newBounds;
+    #endregion
+    
+    #region Constructors
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SpatialHash"/> class with explicit bounds and grid size.
+    /// </summary>
+    /// <param name="x">The X coordinate of the grid's top-left corner.</param>
+    /// <param name="y">The Y coordinate of the grid's top-left corner.</param>
+    /// <param name="w">The width of the grid.</param>
+    /// <param name="h">The height of the grid.</param>
+    /// <param name="rows">The number of rows in the grid.</param>
+    /// <param name="cols">The number of columns in the grid.</param>
+    public SpatialHash(float x, float y, float w, float h, int rows, int cols)
+    {
+        this.Bounds = new(x, y, w, h);
+        this.Rows = rows;
+        this.Cols = cols;
+        this.SetSpacing();
+        this.BucketCount = rows * cols;
+        this.buckets = new Bucket[this.BucketCount];
+        for (int i = 0; i < BucketCount; i++)
+        {
+            this.buckets[i] = new();
+        }
+    }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SpatialHash"/> class with a bounding rectangle and grid size.
+    /// </summary>
+    /// <param name="bounds">The bounding rectangle for the grid.</param>
+    /// <param name="rows">The number of rows in the grid.</param>
+    /// <param name="cols">The number of columns in the grid.</param>
+    public SpatialHash(Rect bounds, int rows, int cols)
+    {
+        this.Bounds = bounds;
+        this.Rows = rows;
+        this.Cols = cols;
+        this.SetSpacing();
+        this.BucketCount = rows * cols;
+        this.buckets = new Bucket[this.BucketCount];
+        for (int i = 0; i < BucketCount; i++)
+        {
+            this.buckets[i] = new();
+        }
+    }
+    #endregion
+    
+    #region Public
+    /// <summary>
+    /// Fills the spatial hash with all colliders from the provided collision objects.
+    /// </summary>
+    /// <param name="collisionBodies">The collection of collision objects to add.</param>
+    public void Fill(IEnumerable<CollisionObject> collisionBodies)
+    {
+        Clear();
+
+        foreach (var body in collisionBodies)
+        {
+            if (body.Enabled && body.HasColliders)
+            {
+                Add(body);
             }
         }
 
-        public void GetRegisteredCollisionCandidateBuckets(Collider collider, ref List<Bucket> candidateBuckets)
+        /*foreach (var collider in colliders)
         {
-            if (!register.TryGetValue(collider, out var bucketIds)) return;
-            if (bucketIds.Count <= 0) return;
-            foreach (var id in bucketIds)
-            {
-                var bucket = buckets[id];
-                if(bucket.Count > 0) candidateBuckets.Add(buckets[id]);
-            }
-        }
+            Add(collider);
+        }*/
         
-        public void GetCandidateBuckets(CollisionObject collidable, ref List<Bucket> candidateBuckets)
+        CleanRegister();
+    }
+    /// <summary>
+    /// Clears all buckets and internal registers, releasing resources.
+    /// </summary>
+    public void Close()
+    {
+        Clear();
+        register.Clear();
+        buckets = Array.Empty<Bucket>();  //new HashSet<ICollidable>[0];
+    }
+    /// <summary>
+    /// Queues a resize of the spatial hash bounds to the specified rectangle. The resize is applied on the next clear.
+    /// </summary>
+    /// <param name="targetBounds">The new bounds for the grid.</param>
+    public void ResizeBounds(Rect targetBounds) 
+    {
+        newBounds = targetBounds;
+        boundsResizeQueued = true;
+    }
+    
+    /// <summary>
+    /// Changes the number of rows and columns in the grid. This operation clears all buckets.
+    /// </summary>
+    /// <param name="rows">The new number of rows.</param>
+    /// <param name="cols">The new number of columns.</param>
+    /// <remarks>
+    /// Recalculates spacing, clears and removes all old buckets, and then creates new buckets according to <c>rows*cols</c>.
+    /// </remarks>
+    public void ChangeGrid(int rows, int cols)
+    {
+        Rows = rows;
+        Cols = cols;
+        SetSpacing();
+        BucketCount = rows * cols;
+        buckets = new Bucket[BucketCount];
+        for (int i = 0; i < BucketCount; i++)
         {
-            foreach (var collider in collidable.Colliders)
-            {
-                GetCandidateBuckets(collider, ref candidateBuckets);
-            }
+            buckets[i] = new();
         }
-        public void GetCandidateBuckets(Collider collider, ref List<Bucket> candidateBuckets)
+    }
+    /// <summary>
+    /// Gets the buckets containing the specified collider, if registered.
+    /// </summary>
+    /// <param name="collider">The collider to look up.</param>
+    /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
+    public void GetRegisteredCollisionCandidateBuckets(Collider collider, ref List<Bucket> candidateBuckets)
+    {
+        if (!register.TryGetValue(collider, out var bucketIds)) return;
+        if (bucketIds.Count <= 0) return;
+        foreach (var id in bucketIds)
         {
-            if (register.TryGetValue(collider, out var bucketIds))
-            {
-                if (bucketIds.Count <= 0) return;
-                foreach (var id in bucketIds)
-                {
-                    var bucket = buckets[id];
-                    if(bucket.Count > 0) candidateBuckets.Add(buckets[id]);
-                }
-
-                return;
-            }
-            List<int> ids = new();
-            GetCellIDs(collider, ref ids);
-            FillCandidateBuckets(ids, ref candidateBuckets);
+            var bucket = buckets[id];
+            if(bucket.Count > 0) candidateBuckets.Add(buckets[id]);
         }
-
-        public void GetCandidateBuckets(Segment segment, ref List<Bucket> candidateBuckets)
+    }
+    /// <summary>
+    /// Gets all buckets that may contain colliders overlapping the given collision object.
+    /// </summary>
+    /// <param name="collidable">The collision object to query.</param>
+    /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
+    public void GetCandidateBuckets(CollisionObject collidable, ref List<Bucket> candidateBuckets)
+    {
+        foreach (var collider in collidable.Colliders)
         {
-            List<int> bucketIds = new();
-            GetCellIDs(segment, ref bucketIds);
-            
-            FillCandidateBuckets(bucketIds, ref candidateBuckets);
+            GetCandidateBuckets(collider, ref candidateBuckets);
         }
-        public void GetCandidateBuckets(Line line, ref List<Bucket> candidateBuckets)
-        {
-            List<int> bucketIds = new();
-            GetCellIDs(line, ref bucketIds);
-            
-            FillCandidateBuckets(bucketIds, ref candidateBuckets);
-        }
-        public void GetCandidateBuckets(Ray ray, ref List<Bucket> candidateBuckets)
-        {
-            List<int> bucketIds = new();
-            GetCellIDs(ray, ref bucketIds);
-            
-            FillCandidateBuckets(bucketIds, ref candidateBuckets);
-        }
-        public void GetCandidateBuckets(Circle circle, ref List<Bucket> candidateBuckets)
-        {
-            List<int> bucketIds = new();
-            GetCellIDs(circle, ref bucketIds);
-            
-            FillCandidateBuckets(bucketIds, ref candidateBuckets);
-        }
-        public void GetCandidateBuckets(Triangle triangle, ref List<Bucket> candidateBuckets)
-        {
-            List<int> bucketIds = new();
-            GetCellIDs(triangle, ref bucketIds);
-            
-            FillCandidateBuckets(bucketIds, ref candidateBuckets);
-        }
-        public void GetCandidateBuckets(Rect rect, ref List<Bucket> candidateBuckets)
-        {
-            List<int> bucketIds = new();
-            GetCellIDs(rect, ref bucketIds);
-            
-            FillCandidateBuckets(bucketIds, ref candidateBuckets);
-        }
-        public void GetCandidateBuckets(Quad quad, ref List<Bucket> candidateBuckets)
-        {
-            List<int> bucketIds = new();
-            GetCellIDs(quad, ref bucketIds);
-            
-            FillCandidateBuckets(bucketIds, ref candidateBuckets);
-        }
-        public void GetCandidateBuckets(Polygon poly, ref List<Bucket> candidateBuckets)
-        {
-            List<int> bucketIds = new();
-            GetCellIDs(poly, ref bucketIds);
-            
-            FillCandidateBuckets(bucketIds, ref candidateBuckets);
-        }
-        public void GetCandidateBuckets(Polyline polyLine, ref List<Bucket> candidateBuckets)
-        {
-            List<int> bucketIds = new();
-            GetCellIDs(polyLine, ref bucketIds);
-            
-            FillCandidateBuckets(bucketIds, ref candidateBuckets);
-        }
-        private void FillCandidateBuckets(List<int> bucketIds, ref List<Bucket> candidateBuckets)
+    }
+    /// <summary>
+    /// Gets all buckets that may contain colliders overlapping the given collider.
+    /// </summary>
+    /// <param name="collider">The collider to query.</param>
+    /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
+    public void GetCandidateBuckets(Collider collider, ref List<Bucket> candidateBuckets)
+    {
+        //TODO: Does not check if collider is enabled!
+        if (register.TryGetValue(collider, out var bucketIds))
         {
             if (bucketIds.Count <= 0) return;
             foreach (var id in bucketIds)
@@ -234,85 +233,143 @@ namespace ShapeEngine.Core.CollisionSystem
                 var bucket = buckets[id];
                 if(bucket.Count > 0) candidateBuckets.Add(buckets[id]);
             }
-        }
 
-        public void GetUniqueCandidates(CollisionObject collisionBody, ref HashSet<Collider> candidates)
-        {
-            if (!collisionBody.HasColliders) return;
-            foreach (var collider in collisionBody.Colliders)
-            {
-                GetUniqueCandidates(collider, ref candidates);
-            }
+            return;
         }
-        public void GetUniqueCandidates(Collider collider, ref HashSet<Collider> candidates)
-        {
-            if (register.TryGetValue(collider, out var bucketIds))
-            {
-                if (bucketIds.Count <= 0) return;
-                foreach (var id in bucketIds)
-                {
-                    var bucket = buckets[id];
-                    if(bucket.Count > 0) candidates.UnionWith(bucket);
-                }
+        List<int> ids = new();
+        GetCellIDs(collider, ref ids); //TODO: Does check if collider is enabled
+        FillCandidateBuckets(ids, ref candidateBuckets);
+    }
 
-                return;
-            }
-            
-            List<int> ids = new();
-            GetCellIDs(collider, ref ids);
-            AccumulateUniqueCandidates(ids, ref candidates);
-        }
-        public void GetUniqueCandidates(Segment segment, ref HashSet<Collider> candidates)
+    /// <summary>
+    /// Gets all buckets that may contain colliders overlapping the given segment.
+    /// </summary>
+    /// <param name="segment">The segment to query.</param>
+    /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
+    public void GetCandidateBuckets(Segment segment, ref List<Bucket> candidateBuckets)
+    {
+        List<int> bucketIds = new();
+        GetCellIDs(segment, ref bucketIds);
+        
+        FillCandidateBuckets(bucketIds, ref candidateBuckets);
+    }
+    /// <summary>
+    /// Gets all buckets that may contain colliders overlapping the given line.
+    /// </summary>
+    /// <param name="line">The line to query.</param>
+    /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
+    public void GetCandidateBuckets(Line line, ref List<Bucket> candidateBuckets)
+    {
+        List<int> bucketIds = new();
+        GetCellIDs(line, ref bucketIds);
+        
+        FillCandidateBuckets(bucketIds, ref candidateBuckets);
+    }
+    /// <summary>
+    /// Gets all buckets that may contain colliders overlapping the given ray.
+    /// </summary>
+    /// <param name="ray">The ray to query.</param>
+    /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
+    public void GetCandidateBuckets(Ray ray, ref List<Bucket> candidateBuckets)
+    {
+        List<int> bucketIds = new();
+        GetCellIDs(ray, ref bucketIds);
+        
+        FillCandidateBuckets(bucketIds, ref candidateBuckets);
+    }
+    /// <summary>
+    /// Gets all buckets that may contain colliders overlapping the given circle.
+    /// </summary>
+    /// <param name="circle">The circle to query.</param>
+    /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
+    public void GetCandidateBuckets(Circle circle, ref List<Bucket> candidateBuckets)
+    {
+        List<int> bucketIds = new();
+        GetCellIDs(circle, ref bucketIds);
+        
+        FillCandidateBuckets(bucketIds, ref candidateBuckets);
+    }
+    /// <summary>
+    /// Gets all buckets that may contain colliders overlapping the given triangle.
+    /// </summary>
+    /// <param name="triangle">The triangle to query.</param>
+    /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
+    public void GetCandidateBuckets(Triangle triangle, ref List<Bucket> candidateBuckets)
+    {
+        List<int> bucketIds = new();
+        GetCellIDs(triangle, ref bucketIds);
+        
+        FillCandidateBuckets(bucketIds, ref candidateBuckets);
+    }
+    /// <summary>
+    /// Gets all buckets that may contain colliders overlapping the given rectangle.
+    /// </summary>
+    /// <param name="rect">The rectangle to query.</param>
+    /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
+    public void GetCandidateBuckets(Rect rect, ref List<Bucket> candidateBuckets)
+    {
+        List<int> bucketIds = new();
+        GetCellIDs(rect, ref bucketIds);
+        
+        FillCandidateBuckets(bucketIds, ref candidateBuckets);
+    }
+    /// <summary>
+    /// Gets all buckets that may contain colliders overlapping the given quad.
+    /// </summary>
+    /// <param name="quad">The quad to query.</param>
+    /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
+    public void GetCandidateBuckets(Quad quad, ref List<Bucket> candidateBuckets)
+    {
+        List<int> bucketIds = new();
+        GetCellIDs(quad, ref bucketIds);
+        
+        FillCandidateBuckets(bucketIds, ref candidateBuckets);
+    }
+    /// <summary>
+    /// Gets all buckets that may contain colliders overlapping the given polygon.
+    /// </summary>
+    /// <param name="poly">The polygon to query.</param>
+    /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
+    public void GetCandidateBuckets(Polygon poly, ref List<Bucket> candidateBuckets)
+    {
+        List<int> bucketIds = new();
+        GetCellIDs(poly, ref bucketIds);
+        
+        FillCandidateBuckets(bucketIds, ref candidateBuckets);
+    }
+    /// <summary>
+    /// Gets all buckets that may contain colliders overlapping the given polyline.
+    /// </summary>
+    /// <param name="polyLine">The polyline to query.</param>
+    /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
+    public void GetCandidateBuckets(Polyline polyLine, ref List<Bucket> candidateBuckets)
+    {
+        List<int> bucketIds = new();
+        GetCellIDs(polyLine, ref bucketIds);
+        
+        FillCandidateBuckets(bucketIds, ref candidateBuckets);
+    }
+    /// <summary>
+    /// Gets all unique colliders that may overlap the given collision object.
+    /// </summary>
+    /// <param name="collisionBody">The collision object to query.</param>
+    /// <param name="candidates">A set to populate with unique colliders.</param>
+    public void GetUniqueCandidates(CollisionObject collisionBody, ref HashSet<Collider> candidates)
+    {
+        if (!collisionBody.HasColliders) return;
+        foreach (var collider in collisionBody.Colliders)
         {
-            List<int> bucketIds = new();
-            GetCellIDs(segment, ref bucketIds);
-            
-            AccumulateUniqueCandidates(bucketIds, ref candidates);
+            GetUniqueCandidates(collider, ref candidates);
         }
-        public void GetUniqueCandidates(Circle circle, ref HashSet<Collider> candidates)
-        {
-            List<int> bucketIds = new();
-            GetCellIDs(circle, ref bucketIds);
-            
-            AccumulateUniqueCandidates(bucketIds, ref candidates);
-        }
-        public void GetUniqueCandidates(Triangle triangle, ref HashSet<Collider> candidates)
-        {
-            List<int> bucketIds = new();
-            GetCellIDs(triangle, ref bucketIds);
-            
-            AccumulateUniqueCandidates(bucketIds, ref candidates);
-        }
-        public void GetUniqueCandidates(Rect rect, ref HashSet<Collider> candidates)
-        {
-            List<int> bucketIds = new();
-            GetCellIDs(rect, ref bucketIds);
-            
-            AccumulateUniqueCandidates(bucketIds, ref candidates);
-        }
-        public void GetUniqueCandidates(Quad quad, ref HashSet<Collider> candidates)
-        {
-            List<int> bucketIds = new();
-            GetCellIDs(quad, ref bucketIds);
-            
-            AccumulateUniqueCandidates(bucketIds, ref candidates);
-        }
-
-        public void GetUniqueCandidates(Polygon poly, ref HashSet<Collider> candidates)
-        {
-            List<int> bucketIds = new();
-            GetCellIDs(poly, ref bucketIds);
-            
-            AccumulateUniqueCandidates(bucketIds, ref candidates);
-        }
-        public void GetUniqueCandidates(Polyline polyLine, ref HashSet<Collider> candidates)
-        {
-            List<int> bucketIds = new();
-            GetCellIDs(polyLine, ref bucketIds);
-            
-            AccumulateUniqueCandidates(bucketIds, ref candidates);
-        }
-        private void AccumulateUniqueCandidates(List<int> bucketIds, ref HashSet<Collider> candidates)
+    }
+    /// <summary>
+    /// Gets all unique colliders that may overlap the given collider.
+    /// </summary>
+    /// <param name="collider">The collider to query.</param>
+    /// <param name="candidates">A set to populate with unique colliders.</param>
+    public void GetUniqueCandidates(Collider collider, ref HashSet<Collider> candidates)
+    {
+        if (register.TryGetValue(collider, out var bucketIds))
         {
             if (bucketIds.Count <= 0) return;
             foreach (var id in bucketIds)
@@ -320,307 +377,539 @@ namespace ShapeEngine.Core.CollisionSystem
                 var bucket = buckets[id];
                 if(bucket.Count > 0) candidates.UnionWith(bucket);
             }
-        }
 
-       
-        public void DebugDraw(ColorRgba border, ColorRgba fill)
-        {
-            for (int i = 0; i < BucketCount; i++)
-            {
-                var coords = GetCoordinatesGrid(i);
-                var rect = new Rect(Bounds.X + coords.x * SpacingX, Bounds.Y + coords.y * SpacingY, SpacingX, SpacingY);
-                rect.DrawLines(2f, border);
-                int id = GetCellId(coords.x, coords.y);
-                if (buckets[id].Count > 0)
-                {
-                    rect.Draw(fill);
-                }
-                
-                
-                // var rect = new Rectangle(Bounds.X + coords.x * SpacingX, Bounds.Y + coords.y * SpacingY, SpacingX, SpacingY);
-
-                // Raylib.DrawRectangleLinesEx(rect, 1, border.ToRayColor());
-                // int id = GetCellID(coords.x, coords.y);
-                // if (buckets[id].Count > 0)
-                // {
-                //     Raylib.DrawRectangleRec(rect, fill.ToRayColor());
-                // }
-
-            }
-        }
-        #endregion
-
-        #region Private
-        private (int x, int y) GetCoordinatesGrid(int index)
-        {
-            return (index % Cols, index / Cols);
-            //return new Tuple<int x, int y>(index % cols, index / cols);
-        }
-
-        private Vector2 GetCoordinatesWorld(int index)
-        {
-            var coord = GetCoordinatesGrid(index);
-            return new Vector2(coord.x * SpacingX, coord.y * SpacingY);
-        }
-        private Rect GetCellRectangle(int x, int y)
-        {
-            return new Rect(Bounds.X + x * SpacingX, Bounds.Y + y * SpacingY, SpacingX, SpacingY);
-        }
-        private Rect GetCellRectangle(int index)
-        {
-            return GetCellRectangle(index % Cols, index / Cols);
-        }
-        private int GetCellId(int x, int y)
-        {
-            return x + y * Cols;
-        }
-
-        private int GetCellId(float x, float y)
-        {
-            int xi = Math.Clamp((int)Math.Floor((x - Bounds.X) / SpacingX), 0, Cols - 1);
-            int yi = Math.Clamp((int)Math.Floor((y - Bounds.Y) / SpacingY), 0, Rows - 1);
-            return GetCellId(xi, yi);
-        }
-        private (int x, int y) GetCellCoordinate(float x, float y)
-        {
-            int xi = Math.Clamp((int)Math.Floor((x - Bounds.X) / SpacingX), 0, Cols - 1);
-            int yi = Math.Clamp((int)Math.Floor((y - Bounds.Y) / SpacingY), 0, Rows - 1);
-            return (xi, yi);
-        }
-        private void Add(CollisionObject collisionBody)
-        {
-            foreach (var collider in collisionBody.Colliders)
-            {
-                Add(collider);
-            }
-        }
-       
-        private void Add(Collider collider)
-        {
-            if (!collider.Enabled) return;
-                
-            List<int> ids;
-            if (register.TryGetValue(collider, out var value))
-            {
-                ids = value;
-                ids.Clear();
-            }
-            else
-            {
-                ids = new List<int>();
-                register.Add(collider, ids);
-                
-            }
-            GetCellIDs(collider, ref ids);
-            if (ids.Count <= 0) return;
-            registerKeys.Remove(collider);
-            foreach (int hash in ids)
-            {
-                buckets[hash].Add(collider);
-            }
-        }
-
-        private void CleanRegister()
-        {
-            foreach (var collider in registerKeys)
-            {
-                register.Remove(collider);
-            }
-
-            registerKeys.Clear();
-            registerKeys.UnionWith(register.Keys);
-            // registerKeys = register.Keys.ToHashSet();
-        }
-        private void Clear()
-        {
-            for (var i = 0; i < BucketCount; i++)
-            {
-                buckets[i].Clear();
-            }
-
-            if (boundsResizeQueued)
-            {
-                boundsResizeQueued = false;
-                Bounds = newBounds;
-                SetSpacing();
-            }
+            return;
         }
         
-        private void GetCellIDs(Segment segment, ref List<int> idList)
-        {
-            var boundingRect = segment.GetBoundingBox();
-            var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
-            var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
-
-            for (int j = topLeft.y; j <= bottomRight.y; j++)
-            {
-                for (int i = topLeft.x; i <= bottomRight.x; i++)
-                {
-                    int id = GetCellId(i, j);
-                    var cellRect = GetCellRectangle(id);
-                    if(cellRect.OverlapShape(segment)) idList.Add(id);
-                }
-            }
-        }
-        private void GetCellIDs(Line line, ref List<int> idList)
-        {
-            var boundingRect = line.GetBoundingBox();
-            var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
-            var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
-
-            for (int j = topLeft.y; j <= bottomRight.y; j++)
-            {
-                for (int i = topLeft.x; i <= bottomRight.x; i++)
-                {
-                    int id = GetCellId(i, j);
-                    var cellRect = GetCellRectangle(id);
-                    if(cellRect.OverlapShape(line)) idList.Add(id);
-                }
-            }
-        }
-        private void GetCellIDs(Ray ray, ref List<int> idList)
-        {
-            var boundingRect = ray.GetBoundingBox();
-            var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
-            var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
-
-            for (int j = topLeft.y; j <= bottomRight.y; j++)
-            {
-                for (int i = topLeft.x; i <= bottomRight.x; i++)
-                {
-                    int id = GetCellId(i, j);
-                    var cellRect = GetCellRectangle(id);
-                    if(cellRect.OverlapShape(ray)) idList.Add(id);
-                }
-            }
-        }
-        private void GetCellIDs(Triangle triangle, ref List<int> idList)
-        {
-            var boundingRect = triangle.GetBoundingBox();
-            var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
-            var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
-
-            for (int j = topLeft.y; j <= bottomRight.y; j++)
-            {
-                for (int i = topLeft.x; i <= bottomRight.x; i++)
-                {
-                    int id = GetCellId(i, j);
-                    var cellRect = GetCellRectangle(id);
-                    if(cellRect.OverlapShape(triangle)) idList.Add(id);
-                }
-            }
-        }
-        private void GetCellIDs(Quad quad, ref List<int> idList)
-        {
-            var boundingRect = quad.GetBoundingBox();
-            var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
-            var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
-
-            for (int j = topLeft.y; j <= bottomRight.y; j++)
-            {
-                for (int i = topLeft.x; i <= bottomRight.x; i++)
-                {
-                    int id = GetCellId(i, j);
-                    var cellRect = GetCellRectangle(id);
-                    if(cellRect.OverlapShape(quad)) idList.Add(id);
-                }
-            }
-        }
-        private void GetCellIDs(Circle circle, ref List<int> idList)
-        {
-            var boundingRect = circle.GetBoundingBox();
-            var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
-            var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
-
-            for (int j = topLeft.y; j <= bottomRight.y; j++)
-            {
-                for (int i = topLeft.x; i <= bottomRight.x; i++)
-                {
-                    int id = GetCellId(i, j);
-                    var cellRect = GetCellRectangle(id);
-                    if(cellRect.OverlapShape(circle)) idList.Add(id);
-                }
-            }
-        }
-        private void GetCellIDs(Rect rect, ref List<int> idList)
-        {
-            var topLeft = GetCellCoordinate(rect.X, rect.Y);
-            var bottomRight = GetCellCoordinate(rect.X + rect.Width, rect.Y + rect.Height);
-
-            for (int j = topLeft.y; j <= bottomRight.y; j++)
-            {
-                for (int i = topLeft.x; i <= bottomRight.x; i++)
-                {
-                    int id = GetCellId(i, j);
-                    var cellRect = GetCellRectangle(id);
-                    if(cellRect.OverlapShape(rect)) idList.Add(id);
-                }
-            }
-        }
-        private void GetCellIDs(Polygon poly, ref List<int> idList)
-        {
-            var boundingRect = poly.GetBoundingBox();
-            var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
-            var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
-
-            for (int j = topLeft.y; j <= bottomRight.y; j++)
-            {
-                for (int i = topLeft.x; i <= bottomRight.x; i++)
-                {
-                    int id = GetCellId(i, j);
-                    var cellRect = GetCellRectangle(id);
-                    if(cellRect.OverlapShape(poly)) idList.Add(id);
-                }
-            }
-        }
-        private void GetCellIDs(Polyline polyLine, ref List<int> idList)
-        {
-            var boundingRect = polyLine.GetBoundingBox();
-            var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
-            var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
-
-            for (int j = topLeft.y; j <= bottomRight.y; j++)
-            {
-                for (int i = topLeft.x; i <= bottomRight.x; i++)
-                {
-                    int id = GetCellId(i, j);
-                    var cellRect = GetCellRectangle(id);
-                    if(cellRect.OverlapShape(polyLine)) idList.Add(id);
-                }
-            }
-        }
-        private void GetCellIDs(Collider collider, ref List<int> idList)
-        {
-            if (!collider.Enabled) return;
-            
-            switch (collider.GetShapeType())
-            {
-                case ShapeType.Circle: GetCellIDs(collider.GetCircleShape(), ref idList); 
-                    break;
-                case ShapeType.Segment: GetCellIDs(collider.GetSegmentShape(), ref idList); 
-                    break;
-                case ShapeType.Line: GetCellIDs(collider.GetLineShape(), ref idList); 
-                    break;
-                case ShapeType.Ray: GetCellIDs(collider.GetRayShape(), ref idList); 
-                    break;
-                case ShapeType.Triangle: GetCellIDs(collider.GetTriangleShape(), ref idList); 
-                    break;
-                case ShapeType.Rect: GetCellIDs(collider.GetRectShape(), ref idList); 
-                    break;
-                case ShapeType.Quad: GetCellIDs(collider.GetQuadShape(), ref idList); 
-                    break;
-                case ShapeType.Poly: GetCellIDs(collider.GetPolygonShape(), ref idList); 
-                    break;
-                case ShapeType.PolyLine: GetCellIDs(collider.GetPolylineShape(), ref idList); 
-                    break;
-            }
-        }
-        
-        private void SetSpacing()
-        {
-            SpacingX = Bounds.Width / Cols;
-            SpacingY = Bounds.Height / Rows;
-        }
-        #endregion
+        List<int> ids = new();
+        GetCellIDs(collider, ref ids);
+        AccumulateUniqueCandidates(ids, ref candidates);
     }
+    /// <summary>
+    /// Gets all unique colliders that may overlap the given segment.
+    /// </summary>
+    /// <param name="segment">The segment to query.</param>
+    /// <param name="candidates">A set to populate with unique colliders.</param>
+    public void GetUniqueCandidates(Segment segment, ref HashSet<Collider> candidates)
+    {
+        List<int> bucketIds = new();
+        GetCellIDs(segment, ref bucketIds);
+        
+        AccumulateUniqueCandidates(bucketIds, ref candidates);
+    }
+    /// <summary>
+    /// Gets all unique colliders that may overlap the given circle.
+    /// </summary>
+    /// <param name="circle">The circle to query.</param>
+    /// <param name="candidates">A set to populate with unique colliders.</param>
+    public void GetUniqueCandidates(Circle circle, ref HashSet<Collider> candidates)
+    {
+        List<int> bucketIds = new();
+        GetCellIDs(circle, ref bucketIds);
+        
+        AccumulateUniqueCandidates(bucketIds, ref candidates);
+    }
+    /// <summary>
+    /// Gets all unique colliders that may overlap the given triangle.
+    /// </summary>
+    /// <param name="triangle">The triangle to query.</param>
+    /// <param name="candidates">A set to populate with unique colliders.</param>
+    public void GetUniqueCandidates(Triangle triangle, ref HashSet<Collider> candidates)
+    {
+        List<int> bucketIds = new();
+        GetCellIDs(triangle, ref bucketIds);
+        
+        AccumulateUniqueCandidates(bucketIds, ref candidates);
+    }
+    /// <summary>
+    /// Gets all unique colliders that may overlap the given rectangle.
+    /// </summary>
+    /// <param name="rect">The rectangle to query.</param>
+    /// <param name="candidates">A set to populate with unique colliders.</param>
+    public void GetUniqueCandidates(Rect rect, ref HashSet<Collider> candidates)
+    {
+        List<int> bucketIds = new();
+        GetCellIDs(rect, ref bucketIds);
+        
+        AccumulateUniqueCandidates(bucketIds, ref candidates);
+    }
+    /// <summary>
+    /// Gets all unique colliders that may overlap the given quad.
+    /// </summary>
+    /// <param name="quad">The quad to query.</param>
+    /// <param name="candidates">A set to populate with unique colliders.</param>
+    public void GetUniqueCandidates(Quad quad, ref HashSet<Collider> candidates)
+    {
+        List<int> bucketIds = new();
+        GetCellIDs(quad, ref bucketIds);
+        
+        AccumulateUniqueCandidates(bucketIds, ref candidates);
+    }
+    /// <summary>
+    /// Gets all unique colliders that may overlap the given polygon.
+    /// </summary>
+    /// <param name="poly">The polygon to query.</param>
+    /// <param name="candidates">A set to populate with unique colliders.</param>
+    public void GetUniqueCandidates(Polygon poly, ref HashSet<Collider> candidates)
+    {
+        List<int> bucketIds = new();
+        GetCellIDs(poly, ref bucketIds);
+        
+        AccumulateUniqueCandidates(bucketIds, ref candidates);
+    }
+    /// <summary>
+    /// Gets all unique colliders that may overlap the given polyline.
+    /// </summary>
+    /// <param name="polyLine">The polyline to query.</param>
+    /// <param name="candidates">A set to populate with unique colliders.</param>
+    public void GetUniqueCandidates(Polyline polyLine, ref HashSet<Collider> candidates)
+    {
+        List<int> bucketIds = new();
+        GetCellIDs(polyLine, ref bucketIds);
+        
+        AccumulateUniqueCandidates(bucketIds, ref candidates);
+    }
+    /// <summary>
+    /// Draws the spatial hash grid and filled cells for debugging purposes.
+    /// </summary>
+    /// <param name="border">The color for the grid lines.</param>
+    /// <param name="fill">The color to fill non-empty cells.</param>
+    public void DebugDraw(ColorRgba border, ColorRgba fill)
+    {
+        for (int i = 0; i < BucketCount; i++)
+        {
+            var coords = GetCoordinatesGrid(i);
+            var rect = new Rect(Bounds.X + coords.x * SpacingX, Bounds.Y + coords.y * SpacingY, SpacingX, SpacingY);
+            rect.DrawLines(2f, border);
+            int id = GetCellId(coords.x, coords.y);
+            if (buckets[id].Count > 0)
+            {
+                rect.Draw(fill);
+            }
+            
+            
+            // var rect = new Rectangle(Bounds.X + coords.x * SpacingX, Bounds.Y + coords.y * SpacingY, SpacingX, SpacingY);
+
+            // Raylib.DrawRectangleLinesEx(rect, 1, border.ToRayColor());
+            // int id = GetCellID(coords.x, coords.y);
+            // if (buckets[id].Count > 0)
+            // {
+            //     Raylib.DrawRectangleRec(rect, fill.ToRayColor());
+            // }
+
+        }
+    }
+    
+    #endregion
+
+    #region Private
+   
+    /// <summary>
+    /// Adds all unique colliders from the specified bucket IDs to the candidates set.
+    /// </summary>
+    /// <param name="bucketIds">List of bucket indices to check.</param>
+    /// <param name="candidates">Reference to the set of unique colliders to populate.</param>
+    private void AccumulateUniqueCandidates(List<int> bucketIds, ref HashSet<Collider> candidates)
+    {
+        if (bucketIds.Count <= 0) return;
+        foreach (var id in bucketIds)
+        {
+            var bucket = buckets[id];
+            if(bucket.Count > 0) candidates.UnionWith(bucket);
+        }
+    }
+    /// <summary>
+    /// Adds all non-empty buckets from the specified bucket IDs to the candidateBuckets list.
+    /// </summary>
+    /// <param name="bucketIds">List of bucket indices to check.</param>
+    /// <param name="candidateBuckets">Reference to the list of candidate buckets to populate.</param>
+    private void FillCandidateBuckets(List<int> bucketIds, ref List<Bucket> candidateBuckets)
+    {
+        if (bucketIds.Count <= 0) return;
+        foreach (var id in bucketIds)
+        {
+            var bucket = buckets[id];
+            if(bucket.Count > 0) candidateBuckets.Add(buckets[id]);
+        }
+    }
+
+    
+    /// <summary>
+    /// Returns the (x, y) grid coordinates for a given bucket index.
+    /// </summary>
+    /// <param name="index">The bucket index.</param>
+    /// <returns>Tuple of (x, y) grid coordinates.</returns>
+    private (int x, int y) GetCoordinatesGrid(int index)
+    {
+        return (index % Cols, index / Cols);
+        //return new Tuple<int x, int y>(index % cols, index / cols);
+    }
+
+    /// <summary>
+    /// Returns the world-space coordinates of the top-left corner of a cell by index.
+    /// </summary>
+    /// <param name="index">The bucket index.</param>
+    /// <returns>World-space coordinates as a Vector2.</returns>
+    private Vector2 GetCoordinatesWorld(int index)
+    {
+        var coord = GetCoordinatesGrid(index);
+        return new Vector2(coord.x * SpacingX, coord.y * SpacingY);
+    }
+    /// <summary>
+    /// Gets the rectangle representing a cell at the given grid coordinates.
+    /// </summary>
+    /// <param name="x">Grid x coordinate.</param>
+    /// <param name="y">Grid y coordinate.</param>
+    /// <returns>Rectangle of the cell in world space.</returns>
+    private Rect GetCellRectangle(int x, int y)
+    {
+        return new Rect(Bounds.X + x * SpacingX, Bounds.Y + y * SpacingY, SpacingX, SpacingY);
+    }
+    /// <summary>
+    /// Gets the rectangle representing a cell by its index.
+    /// </summary>
+    /// <param name="index">The bucket index.</param>
+    /// <returns>Rectangle of the cell in world space.</returns>
+    private Rect GetCellRectangle(int index)
+    {
+        return GetCellRectangle(index % Cols, index / Cols);
+    }
+    /// <summary>
+    /// Gets the cell id (bucket index) for the given grid coordinates.
+    /// </summary>
+    /// <param name="x">Grid x coordinate.</param>
+    /// <param name="y">Grid y coordinate.</param>
+    /// <returns>Bucket index.</returns>
+    private int GetCellId(int x, int y)
+    {
+        return x + y * Cols;
+    }
+
+    /// <summary>
+    /// Gets the cell id (bucket index) for the given world-space coordinates.
+    /// </summary>
+    /// <param name="x">World x coordinate.</param>
+    /// <param name="y">World y coordinate.</param>
+    /// <returns>Bucket index.</returns>
+    private int GetCellId(float x, float y)
+    {
+        int xi = Math.Clamp((int)Math.Floor((x - Bounds.X) / SpacingX), 0, Cols - 1);
+        int yi = Math.Clamp((int)Math.Floor((y - Bounds.Y) / SpacingY), 0, Rows - 1);
+        return GetCellId(xi, yi);
+    }
+    /// <summary>
+    /// Gets the grid cell coordinates for the given world-space coordinates.
+    /// </summary>
+    /// <param name="x">World x coordinate.</param>
+    /// <param name="y">World y coordinate.</param>
+    /// <returns>Tuple of (x, y) grid coordinates.</returns>
+    private (int x, int y) GetCellCoordinate(float x, float y)
+    {
+        int xi = Math.Clamp((int)Math.Floor((x - Bounds.X) / SpacingX), 0, Cols - 1);
+        int yi = Math.Clamp((int)Math.Floor((y - Bounds.Y) / SpacingY), 0, Rows - 1);
+        return (xi, yi);
+    }
+    /// <summary>
+    /// Adds all colliders from a collision object to the spatial hash.
+    /// </summary>
+    /// <param name="collisionBody">The collision object to add.</param>
+    private void Add(CollisionObject collisionBody)
+    {
+        foreach (var collider in collisionBody.Colliders)
+        {
+            Add(collider);
+        }
+    }
+   
+    /// <summary>
+    /// Adds a collider to the spatial hash, updating the register and buckets.
+    /// </summary>
+    /// <param name="collider">The collider to add.</param>
+    private void Add(Collider collider)
+    {
+        if (!collider.Enabled) return;
+            
+        List<int> ids;
+        if (register.TryGetValue(collider, out var value))
+        {
+            ids = value;
+            ids.Clear();
+        }
+        else
+        {
+            ids = new List<int>();
+            register.Add(collider, ids);
+            
+        }
+        GetCellIDs(collider, ref ids);
+        if (ids.Count <= 0) return;
+        registerKeys.Remove(collider);
+        foreach (int hash in ids)
+        {
+            buckets[hash].Add(collider);
+        }
+    }
+
+    /// <summary>
+    /// Cleans the register by removing unreferenced colliders and updating the register keys set.
+    /// </summary>
+    private void CleanRegister()
+    {
+        foreach (var collider in registerKeys)
+        {
+            register.Remove(collider);
+        }
+
+        registerKeys.Clear();
+        registerKeys.UnionWith(register.Keys);
+        // registerKeys = register.Keys.ToHashSet();
+    }
+    /// <summary>
+    /// Clears all buckets and applies any queued bounds resize.
+    /// </summary>
+    private void Clear()
+    {
+        for (var i = 0; i < BucketCount; i++)
+        {
+            buckets[i].Clear();
+        }
+
+        if (boundsResizeQueued)
+        {
+            boundsResizeQueued = false;
+            Bounds = newBounds;
+            SetSpacing();
+        }
+    }
+    
+    /// <summary>
+    /// Populates a list with the cell IDs (bucket indices) that a segment overlaps.
+    /// </summary>
+    /// <param name="segment">The segment to check.</param>
+    /// <param name="idList">The list to populate with cell IDs.</param>
+    private void GetCellIDs(Segment segment, ref List<int> idList)
+    {
+        var boundingRect = segment.GetBoundingBox();
+        var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
+        var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
+
+        for (int j = topLeft.y; j <= bottomRight.y; j++)
+        {
+            for (int i = topLeft.x; i <= bottomRight.x; i++)
+            {
+                int id = GetCellId(i, j);
+                var cellRect = GetCellRectangle(id);
+                if(cellRect.OverlapShape(segment)) idList.Add(id);
+            }
+        }
+    }
+    /// <summary>
+    /// Populates a list with the cell IDs (bucket indices) that a line overlaps.
+    /// </summary>
+    /// <param name="line">The line to check.</param>
+    /// <param name="idList">The list to populate with cell IDs.</param>
+    private void GetCellIDs(Line line, ref List<int> idList)
+    {
+        var boundingRect = line.GetBoundingBox();
+        var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
+        var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
+
+        for (int j = topLeft.y; j <= bottomRight.y; j++)
+        {
+            for (int i = topLeft.x; i <= bottomRight.x; i++)
+            {
+                int id = GetCellId(i, j);
+                var cellRect = GetCellRectangle(id);
+                if(cellRect.OverlapShape(line)) idList.Add(id);
+            }
+        }
+    }
+    /// <summary>
+    /// Populates a list with the cell IDs (bucket indices) that a ray overlaps.
+    /// </summary>
+    /// <param name="ray">The ray to check.</param>
+    /// <param name="idList">The list to populate with cell IDs.</param>
+    private void GetCellIDs(Ray ray, ref List<int> idList)
+    {
+        var boundingRect = ray.GetBoundingBox();
+        var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
+        var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
+
+        for (int j = topLeft.y; j <= bottomRight.y; j++)
+        {
+            for (int i = topLeft.x; i <= bottomRight.x; i++)
+            {
+                int id = GetCellId(i, j);
+                var cellRect = GetCellRectangle(id);
+                if(cellRect.OverlapShape(ray)) idList.Add(id);
+            }
+        }
+    }
+    /// <summary>
+    /// Populates a list with the cell IDs (bucket indices) that a triangle overlaps.
+    /// </summary>
+    /// <param name="triangle">The triangle to check.</param>
+    /// <param name="idList">The list to populate with cell IDs.</param>
+    private void GetCellIDs(Triangle triangle, ref List<int> idList)
+    {
+        var boundingRect = triangle.GetBoundingBox();
+        var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
+        var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
+
+        for (int j = topLeft.y; j <= bottomRight.y; j++)
+        {
+            for (int i = topLeft.x; i <= bottomRight.x; i++)
+            {
+                int id = GetCellId(i, j);
+                var cellRect = GetCellRectangle(id);
+                if(cellRect.OverlapShape(triangle)) idList.Add(id);
+            }
+        }
+    }
+    /// <summary>
+    /// Populates a list with the cell IDs (bucket indices) that a quad overlaps.
+    /// </summary>
+    /// <param name="quad">The quad to check.</param>
+    /// <param name="idList">The list to populate with cell IDs.</param>
+    private void GetCellIDs(Quad quad, ref List<int> idList)
+    {
+        var boundingRect = quad.GetBoundingBox();
+        var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
+        var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
+
+        for (int j = topLeft.y; j <= bottomRight.y; j++)
+        {
+            for (int i = topLeft.x; i <= bottomRight.x; i++)
+            {
+                int id = GetCellId(i, j);
+                var cellRect = GetCellRectangle(id);
+                if(cellRect.OverlapShape(quad)) idList.Add(id);
+            }
+        }
+    }
+    /// <summary>
+    /// Populates a list with the cell IDs (bucket indices) that a circle overlaps.
+    /// </summary>
+    /// <param name="circle">The circle to check.</param>
+    /// <param name="idList">The list to populate with cell IDs.</param>
+    private void GetCellIDs(Circle circle, ref List<int> idList)
+    {
+        var boundingRect = circle.GetBoundingBox();
+        var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
+        var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
+
+        for (int j = topLeft.y; j <= bottomRight.y; j++)
+        {
+            for (int i = topLeft.x; i <= bottomRight.x; i++)
+            {
+                int id = GetCellId(i, j);
+                var cellRect = GetCellRectangle(id);
+                if(cellRect.OverlapShape(circle)) idList.Add(id);
+            }
+        }
+    }
+    /// <summary>
+    /// Populates a list with the cell IDs (bucket indices) that a rect overlaps.
+    /// </summary>
+    /// <param name="rect">The rect to check.</param>
+    /// <param name="idList">The list to populate with cell IDs.</param>
+    private void GetCellIDs(Rect rect, ref List<int> idList)
+    {
+        var topLeft = GetCellCoordinate(rect.X, rect.Y);
+        var bottomRight = GetCellCoordinate(rect.X + rect.Width, rect.Y + rect.Height);
+
+        for (int j = topLeft.y; j <= bottomRight.y; j++)
+        {
+            for (int i = topLeft.x; i <= bottomRight.x; i++)
+            {
+                int id = GetCellId(i, j);
+                var cellRect = GetCellRectangle(id);
+                if(cellRect.OverlapShape(rect)) idList.Add(id);
+            }
+        }
+    }
+    /// <summary>
+    /// Populates a list with the cell IDs (bucket indices) that a poly overlaps.
+    /// </summary>
+    /// <param name="poly">The poly to check.</param>
+    /// <param name="idList">The list to populate with cell IDs.</param>
+    private void GetCellIDs(Polygon poly, ref List<int> idList)
+    {
+        var boundingRect = poly.GetBoundingBox();
+        var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
+        var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
+
+        for (int j = topLeft.y; j <= bottomRight.y; j++)
+        {
+            for (int i = topLeft.x; i <= bottomRight.x; i++)
+            {
+                int id = GetCellId(i, j);
+                var cellRect = GetCellRectangle(id);
+                if(cellRect.OverlapShape(poly)) idList.Add(id);
+            }
+        }
+    }
+    /// <summary>
+    /// Populates a list with the cell IDs (bucket indices) that a polyline overlaps.
+    /// </summary>
+    /// <param name="polyLine">The polyline to check.</param>
+    /// <param name="idList">The list to populate with cell IDs.</param>
+    private void GetCellIDs(Polyline polyLine, ref List<int> idList)
+    {
+        var boundingRect = polyLine.GetBoundingBox();
+        var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
+        var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
+
+        for (int j = topLeft.y; j <= bottomRight.y; j++)
+        {
+            for (int i = topLeft.x; i <= bottomRight.x; i++)
+            {
+                int id = GetCellId(i, j);
+                var cellRect = GetCellRectangle(id);
+                if(cellRect.OverlapShape(polyLine)) idList.Add(id);
+            }
+        }
+    }
+    /// <summary>
+    /// Populates a list with the cell IDs (bucket indices) that a collider overlaps.
+    /// </summary>
+    /// <param name="collider">The collider to check.</param>
+    /// <param name="idList">The list to populate with cell IDs.</param>
+    private void GetCellIDs(Collider collider, ref List<int> idList)
+    {
+        if (!collider.Enabled) return;
+        
+        switch (collider.GetShapeType())
+        {
+            case ShapeType.Circle: GetCellIDs(collider.GetCircleShape(), ref idList); 
+                break;
+            case ShapeType.Segment: GetCellIDs(collider.GetSegmentShape(), ref idList); 
+                break;
+            case ShapeType.Line: GetCellIDs(collider.GetLineShape(), ref idList); 
+                break;
+            case ShapeType.Ray: GetCellIDs(collider.GetRayShape(), ref idList); 
+                break;
+            case ShapeType.Triangle: GetCellIDs(collider.GetTriangleShape(), ref idList); 
+                break;
+            case ShapeType.Rect: GetCellIDs(collider.GetRectShape(), ref idList); 
+                break;
+            case ShapeType.Quad: GetCellIDs(collider.GetQuadShape(), ref idList); 
+                break;
+            case ShapeType.Poly: GetCellIDs(collider.GetPolygonShape(), ref idList); 
+                break;
+            case ShapeType.PolyLine: GetCellIDs(collider.GetPolylineShape(), ref idList); 
+                break;
+        }
+    }
+    
+    /// <summary>
+    /// Calculates and sets the spacing for each grid cell in the X and Y directions
+    /// based on the current bounds and number of columns and rows.
+    /// </summary>
+    private void SetSpacing()
+    {
+        SpacingX = Bounds.Width / Cols;
+        SpacingY = Bounds.Height / Rows;
+    }
+    #endregion
 }

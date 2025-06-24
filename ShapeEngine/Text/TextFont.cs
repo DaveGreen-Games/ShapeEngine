@@ -6,100 +6,144 @@ using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.Text;
 
+/// <summary>
+/// Provides font and color settings,
+/// as well as text rendering and measurement utilities for drawing text in the ShapeEngine.
+/// </summary>
+/// <remarks>
+/// Supports drawing text, words, and characters with various alignments, emphasis, caret, and wrapping options. Also provides font scaling and measurement utilities.
+/// </remarks>
 public class TextFont
 {
     #region Static Members
 
+    /// <summary>
+    /// Margins to apply to emphasis rectangles when drawing emphasized words.
+    /// </summary>
     public static Rect.Margins EmphasisRectMargins = new();
-    // public static RangeFloat FontSizeRange = new(10, 150);
+    
     private static float fontSizeModifier = 1f;
+    
+    /// <summary>
+    /// Gets or sets the global font size modifier for scaling text rendering.
+    /// </summary>
+    /// <remarks>Minimum value is 0.1.</remarks>
     public static float FontSizeModifier
     {
         get => fontSizeModifier;
         set => fontSizeModifier = MathF.Max(value, 0.1f);
     }
 
-
     #endregion
 
     #region Members
-    public FontDimensions FontDimensions;
-    public ColorRgba ColorRgba;
-
     /// <summary>
-    /// Is used on Wrap Char/Word draw functions. Is used to determine what happens with words that are entered by the mouse pointer.
+    /// The font, size, spacing, and line spacing settings for this text font.
     /// </summary>
-    public IMouseDetection? MouseDetection = null;
+    public FontDimensions FontDimensions;
+    /// <summary>
+    /// The color used for rendering text.
+    /// </summary>
+    public ColorRgba ColorRgba;
+    /// <summary>
+    /// Used in wrap char/word draw functions to determine mouse-based emphasis.
+    /// </summary>
+    public IMouseDetection? MouseDetection;
     #endregion
 
     #region Constructors
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TextFont"/> class with the specified font dimensions and default color (black).
+    /// </summary>
+    /// <param name="fontDimensions">The font, size, spacing, and line spacing settings.</param>
     public TextFont(FontDimensions fontDimensions)
     {
         FontDimensions = fontDimensions;
         ColorRgba = new ColorRgba(System.Drawing.Color.Black);
     }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TextFont"/> class with the specified font dimensions and color.
+    /// </summary>
+    /// <param name="fontDimensions">The font, size, spacing, and line spacing settings.</param>
+    /// <param name="colorRgba">The color to use for text rendering.</param>
     public TextFont(FontDimensions fontDimensions, ColorRgba colorRgba)
     {
         FontDimensions = fontDimensions;
         ColorRgba = colorRgba;
     }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TextFont"/> class with the specified font dimensions, color, and mouse detection handler.
+    /// </summary>
+    /// <param name="fontDimensions">The font, size, spacing, and line spacing settings.</param>
+    /// <param name="colorRgba">The color to use for text rendering.</param>
+    /// <param name="mouseDetection">The mouse detection handler for emphasis interaction.</param>
     public TextFont(FontDimensions fontDimensions, ColorRgba colorRgba, IMouseDetection mouseDetection)
     {
         FontDimensions = fontDimensions;
         ColorRgba = colorRgba;
         MouseDetection = mouseDetection;
     }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TextFont"/> class from a Raylib font, spacing, and color.
+    /// </summary>
+    /// <param name="font">The Raylib font.</param>
+    /// <param name="fontSpacing">The spacing between characters.</param>
+    /// <param name="colorRgba">The color to use for text rendering.</param>
     public TextFont(Font font, float fontSpacing, ColorRgba colorRgba)
     {
         FontDimensions = new(font, font.BaseSize, fontSpacing, 0f);
         ColorRgba = colorRgba;
     }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TextFont"/> class from a Raylib font, size, spacing, line spacing, and color.
+    /// </summary>
+    /// <param name="font">The Raylib font.</param>
+    /// <param name="fontSize">The font size.</param>
+    /// <param name="fontSpacing">The spacing between characters.</param>
+    /// <param name="lineSpacing">The spacing between lines.</param>
+    /// <param name="colorRgba">The color to use for text rendering.</param>
     public TextFont(Font font, float fontSize, float fontSpacing, float lineSpacing, ColorRgba colorRgba)
     {
         FontDimensions = new(font, fontSize, fontSpacing, lineSpacing);
         ColorRgba = colorRgba;
     }
 
-    // public TextFont(Font font)
-    // {
-    //     FontDimensions = new(font, font.BaseSize, 0f, 0f);
-    //     ColorRgba = new(System.Drawing.Color.White);
-    // }
-    // public TextFont(Font font, ColorRgba colorRgba)
-    // {
-    //     FontDimensions = new(font, font.BaseSize, 0f, 0f);
-    //     ColorRgba = colorRgba;
-    // }
-    // public TextFont(Font font, float fontSpacing, float lineSpacing, ColorRgba colorRgba)
-    // {
-    //     FontDimensions = new(font, font.BaseSize, fontSpacing, lineSpacing);
-    //     ColorRgba = colorRgba;
-    // }
-    //
-   
-    
-
     #endregion
 
     #region Getters & Setters
 
+    /// <summary>
+    /// Gets or sets the Raylib font.
+    /// </summary>
     public Font Font
     {
         get => FontDimensions.Font;
         set => FontDimensions = FontDimensions.SetFont(value);
     }
+    /// <summary>
+    /// Gets the base font size (unscaled).
+    /// </summary>
     public float BaseSize => FontDimensions.BaseSize;
+    /// <summary>
+    /// Gets or sets the font size.
+    /// </summary>
     public float FontSize
     {
         get => FontDimensions.Size;
         set => FontDimensions = FontDimensions.SetFontSize(value);
     }
+    /// <summary>
+    /// Gets or sets the spacing between characters.
+    /// </summary>
     public float FontSpacing
     {
         get => FontDimensions.Spacing;
         set => FontDimensions = FontDimensions.SetSpacing(value);
     }
+    /// <summary>
+    /// Gets or sets the spacing between lines.
+    /// </summary>
     public float LineSpacing
     {
         get => FontDimensions.LineSpacing;
@@ -110,6 +154,12 @@ public class TextFont
     
     #region Draw
 
+    /// <summary>
+    /// Draws a single character at the specified rectangle and alignment.
+    /// </summary>
+    /// <param name="c">The character to draw.</param>
+    /// <param name="rect">The rectangle defining the position and size.</param>
+    /// <param name="alignement">The alignment of the character within the rectangle.</param>
     public void Draw(char c, Rect rect, AnchorPoint alignement)
     {
         if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
@@ -122,6 +172,16 @@ public class TextFont
         
         Raylib.DrawTextCodepoint(Font, c, charRect.TopLeft, fontSize, ColorRgba.ToRayColor());
     }
+    /// <summary>
+    /// Draws a string of text within a rectangle, rotating and aligning as specified.
+    /// </summary>
+    /// <remarks>
+    /// The text is scaled and position according to the specified rect first and then rotated.
+    /// </remarks>
+    /// <param name="text">The text to draw.</param>
+    /// <param name="rect">The rectangle defining the position and size.</param>
+    /// <param name="rotDeg">The rotation angle in degrees.</param>
+    /// <param name="alignement">The alignment of the text within the rectangle.</param>
     public void Draw(string text, Rect rect, float rotDeg, AnchorPoint alignement)
     {
         if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
@@ -131,14 +191,38 @@ public class TextFont
         var originOffset = (alignement * textSize).ToVector2();
         Raylib.DrawTextPro(scaledFont.Font, text, r.TopLeft + originOffset, originOffset, rotDeg, scaledFont.Size, scaledFont.Spacing, ColorRgba.ToRayColor());
     }
+    /// <summary>
+    /// Draws a word at the specified top-left position.
+    /// </summary>
+    /// <param name="word">The word to draw.</param>
+    /// <param name="topLeft">The top-left position for the word.</param>
     public void DrawWord(string word, Vector2 topLeft) => Raylib.DrawTextEx(Font, word, topLeft, FontSize, FontSpacing, ColorRgba.ToRayColor());
+    /// <summary>
+    /// Draws a word with specified font dimensions at the given top-left position.
+    /// </summary>
+    /// <param name="word">The word to draw.</param>
+    /// <param name="topLeft">The top-left position for the word.</param>
+    /// <param name="fontDimensions">The font dimensions to use.</param>
     public void DrawWord(string word, Vector2 topLeft, FontDimensions fontDimensions) => Raylib.DrawTextEx(fontDimensions.Font, word, topLeft, fontDimensions.Size, fontDimensions.Spacing, ColorRgba.ToRayColor());
+    /// <summary>
+    /// Draws a word, aligning it within the specified rectangle.
+    /// </summary>
+    /// <param name="word">The word to draw.</param>
+    /// <param name="topLeft">The top-left position for the word.</param>
+    /// <param name="alignement">The alignment of the word within the rectangle.</param>
     public void DrawWord(string word, Vector2 topLeft, AnchorPoint alignement)
     {
         var size = FontDimensions.GetTextSize(word);
         Rect r = new(topLeft, size, alignement);
         Raylib.DrawTextEx(Font, word, r.TopLeft, FontSize, FontSpacing, ColorRgba.ToRayColor());
     }
+    /// <summary>
+    /// Draws a word with a caret, aligning it within the specified rectangle.
+    /// </summary>
+    /// <param name="word">The word to draw.</param>
+    /// <param name="topLeft">The top-left position for the word.</param>
+    /// <param name="alignement">The alignment of the word within the rectangle.</param>
+    /// <param name="caret">The caret indicating the text cursor position.</param>
     public void DrawWord(string word, Vector2 topLeft, AnchorPoint alignement, Caret caret)
     {
         DrawWord(word, topLeft, alignement);
@@ -153,6 +237,12 @@ public class TextFont
             caret.Draw(caretTop, FontSize);
         }
     }
+    /// <summary>
+    /// Draws a word, aligning it within the specified rectangle.
+    /// </summary>
+    /// <param name="word">The word to draw.</param>
+    /// <param name="rect">The rectangle defining the position and size.</param>
+    /// <param name="alignement">The alignment of the word within the rectangle.</param>
     public void DrawWord(string word, Rect rect, AnchorPoint alignement)
     {
         if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
@@ -161,6 +251,13 @@ public class TextFont
         Rect r = new(rect.GetPoint(alignement), textSize, alignement);
         DrawWord(word, r.TopLeft, scaledFont);
     }
+    /// <summary>
+    /// Draws a word with emphasis, aligning it within the specified rectangle.
+    /// </summary>
+    /// <param name="word">The word to draw.</param>
+    /// <param name="rect">The rectangle defining the position and size.</param>
+    /// <param name="alignement">The alignment of the word within the rectangle.</param>
+    /// <param name="emphasis">The emphasis settings for the word.</param>
     public void DrawWord(string word, Rect rect, AnchorPoint alignement, Emphasis emphasis)
     {
         if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
@@ -176,6 +273,12 @@ public class TextFont
         
     }
 
+    /// <summary>
+    /// Draws text without wrapping.
+    /// </summary>
+    /// <param name="text">The text to draw.</param>
+    /// <param name="rect">The rectangle defining the position and size.</param>
+    /// <param name="alignement">The alignment of the text within the rectangle.</param>
     public void DrawTextWrapNone(string text, Rect rect, AnchorPoint alignement)
     {
         var scaledFont = FontDimensions.ScaleDynamic(text, rect.Size);
@@ -183,6 +286,13 @@ public class TextFont
         Rect r = new(rect.GetPoint(alignement), textSize, alignement);
         DrawWord(text, r.TopLeft, scaledFont);
     }
+    /// <summary>
+    /// Draws text without wrapping, using the specified color.
+    /// </summary>
+    /// <param name="text">The text to draw.</param>
+    /// <param name="rect">The rectangle defining the position and size.</param>
+    /// <param name="alignement">The alignment of the text within the rectangle.</param>
+    /// <param name="colorRgba">The color to use for text rendering.</param>
     public void DrawTextWrapNone(string text, Rect rect, AnchorPoint alignement, ColorRgba colorRgba)
     {
         var scaledFont = FontDimensions.ScaleDynamic(text, rect.Size);
@@ -191,6 +301,13 @@ public class TextFont
         DrawWord(text, r.TopLeft, colorRgba, scaledFont);
     }
 
+    /// <summary>
+    /// Draws text without wrapping, and shows the caret if valid.
+    /// </summary>
+    /// <param name="text">The text to draw.</param>
+    /// <param name="rect">The rectangle defining the position and size.</param>
+    /// <param name="alignement">The alignment of the text within the rectangle.</param>
+    /// <param name="caret">The caret indicating the text cursor position.</param>
     public void DrawTextWrapNone(string text, Rect rect, AnchorPoint alignement, Caret caret)
     {
         var scaledFont = FontDimensions.ScaleDynamic(text, rect.Size);
@@ -207,6 +324,14 @@ public class TextFont
             caret.Draw(caretTop, scaledFont.Size);
         }
     }
+    /// <summary>
+    /// Draws text without wrapping, applying specified emphases, and shows the caret if valid.
+    /// </summary>
+    /// <param name="text">The text to draw.</param>
+    /// <param name="rect">The rectangle defining the position and size.</param>
+    /// <param name="alignement">The alignment of the text within the rectangle.</param>
+    /// <param name="caret">The caret indicating the text cursor position.</param>
+    /// <param name="emphases">The list of emphases to apply to the text.</param>
     public void DrawTextWrapNone(string text, Rect rect, AnchorPoint alignement, Caret caret, List<TextEmphasis>? emphases)
     {
         if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
@@ -272,14 +397,35 @@ public class TextFont
     }
     
     
+    /// <summary>
+    /// Draws text with character wrapping within the specified rectangle.
+    /// </summary>
+    /// <param name="text">The text to draw.</param>
+    /// <param name="rect">The rectangle defining the position and size.</param>
+    /// <param name="alignement">The alignment of the text within the rectangle.</param>
     public void DrawTextWrapChar(string text, Rect rect, AnchorPoint alignement)
     {
         DrawTextWrapChar(text, rect, alignement, new(), null);
     }
+    /// <summary>
+    /// Draws text with character wrapping and a caret, within the specified rectangle.
+    /// </summary>
+    /// <param name="text">The text to draw.</param>
+    /// <param name="rect">The rectangle defining the position and size.</param>
+    /// <param name="alignement">The alignment of the text within the rectangle.</param>
+    /// <param name="caret">The caret indicating the text cursor position.</param>
     public void DrawTextWrapChar(string text, Rect rect, AnchorPoint alignement, Caret caret)
     {
         DrawTextWrapChar(text, rect, alignement, caret, null);
     }
+    /// <summary>
+    /// Draws text with character wrapping, a caret, and specified emphases, within the rectangle.
+    /// </summary>
+    /// <param name="text">The text to draw.</param>
+    /// <param name="rect">The rectangle defining the position and size.</param>
+    /// <param name="alignement">The alignment of the text within the rectangle.</param>
+    /// <param name="caret">The caret indicating the text cursor position.</param>
+    /// <param name="emphases">The list of emphases to apply to the text.</param>
     public void DrawTextWrapChar(string text, Rect rect, AnchorPoint alignement, Caret caret, List<TextEmphasis>? emphases)
     {
         if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
@@ -294,19 +440,6 @@ public class TextFont
         else
         {
             var scaledFont = FontDimensions.ScaleDynamicWrapMode(text, rect.Size, 1.25f);
-            // var fontSpacing = FontSpacing;
-            // var lineSpacing = LineSpacing;
-            // var lines = (int)MathF.Ceiling((textSize.X * 1.25f) / rect.Size.X);
-            // var textHeight = lines * textFont.BaseSize;
-            // var lineSpacingHeight = lines <= 0 ? 0 : (lines - 1) * lineSpacing;
-            // var height = textHeight + lineSpacingHeight;
-            //
-            // var textArea = rect.Size.X * height;
-            // var sizeF = MathF.Sqrt(rect.Size.GetArea() / textArea);
-            // float fontSize = FontSizeRange.Clamp(textFont.BaseSize * sizeF);
-            // sizeF = fontSize / textFont.BaseSize;
-            // lineSpacing *= sizeF;
-            // fontSpacing *= sizeF;
             var sizeF = scaledFont.Size / BaseSize;
             var pos = rect.TopLeft;
             var curWord = string.Empty;
@@ -338,7 +471,7 @@ public class TextFont
                     if (c == ' ') 
                     {
                         var emphasis = GetEmphasis(curWord, emphases);
-    
+
                         if (MouseDetection != null)
                         {
                             var mouseRect = new Rect(pos, new Size(curWordWidth, scaledFont.Size));
@@ -570,14 +703,35 @@ public class TextFont
         }
     }
     
+    /// <summary>
+    /// Draws text with word wrapping within the specified rectangle.
+    /// </summary>
+    /// <param name="text">The text to draw.</param>
+    /// <param name="rect">The rectangle defining the position and size.</param>
+    /// <param name="alignement">The alignment of the text within the rectangle.</param>
     public void DrawTextWrapWord(string text, Rect rect, AnchorPoint alignement)
     {
         DrawTextWrapWord(text, rect, alignement, new(), null);
     }
+    /// <summary>
+    /// Draws text with word wrapping, and a caret within the specified rectangle.
+    /// </summary>
+    /// <param name="text">The text to draw.</param>
+    /// <param name="rect">The rectangle defining the position and size.</param>
+    /// <param name="alignement">The alignment of the text within the rectangle.</param>
+    /// <param name="caret">The caret indicating the text cursor position.</param>
     public void DrawTextWrapWord(string text, Rect rect, AnchorPoint alignement, Caret caret)
     {
         DrawTextWrapWord(text, rect, alignement, new(), null);
     }
+    /// <summary>
+    /// Draws text with word wrapping, a caret, and specified emphases within the rectangle.
+    /// </summary>
+    /// <param name="text">The text to draw.</param>
+    /// <param name="rect">The rectangle defining the position and size.</param>
+    /// <param name="alignement">The alignment of the text within the rectangle.</param>
+    /// <param name="caret">The caret indicating the text cursor position.</param>
+    /// <param name="emphases">The list of emphases to apply to the text.</param>
     public void DrawTextWrapWord(string text, Rect rect, AnchorPoint alignement, Caret caret, List<TextEmphasis>? emphases)
     {
         if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
@@ -729,19 +883,14 @@ public class TextFont
         }
     }
     
-    // protected void DrawWord(string word, Vector2 topLeft, ColorRgba colorRgba) => Raylib.DrawTextEx(Font, word, topLeft, FontSize, FontSpacing, colorRgba.ToRayColor());
-    // protected void DrawWord(string word, Vector2 topLeft, float width, Emphasis emphasis)
-    // {
-    //     Rect r = new(topLeft, new Size(width, FontSize), new());
-    //
-    //     var emphasisRect = r.ApplyMargins(EmphasisRectMargins);
-    //     
-    //     emphasis.DrawBackground(emphasisRect);
-    //     DrawWord(word, topLeft, emphasis.TextColorRgba);
-    //     emphasis.DrawForeground(emphasisRect);
-    //     
-    // }
-    //
+    /// <summary>
+    /// Draws a word with emphasis, using the specified width, emphasis settings, and font dimensions.
+    /// </summary>
+    /// <param name="word">The word to draw.</param>
+    /// <param name="topLeft">The top-left position for the word.</param>
+    /// <param name="width">The width to use for the word's bounding rectangle.</param>
+    /// <param name="emphasis">The emphasis settings to apply (background, foreground, color).</param>
+    /// <param name="fontDimensions">The font dimensions to use for rendering.</param>
     protected void DrawWord(string word, Vector2 topLeft, float width, Emphasis emphasis, FontDimensions fontDimensions)
     {
         Rect r = new(topLeft, new Size(width, fontDimensions.Size), new());
@@ -753,17 +902,39 @@ public class TextFont
         emphasis.DrawForeground(emphasisRect);
         
     }
-    protected void DrawWord(string word, Vector2 topLeft, ColorRgba colorRgba, FontDimensions fontDimensions) => Raylib.DrawTextEx(fontDimensions.Font, word, topLeft, fontDimensions.Size, fontDimensions.Spacing, colorRgba.ToRayColor());
 
+    /// <summary>
+    /// Draws a word at the specified position, using the given color and font dimensions.
+    /// </summary>
+    /// <param name="word">The word to draw.</param>
+    /// <param name="topLeft">The top-left position for the word.</param>
+    /// <param name="colorRgba">The color to use for text rendering.</param>
+    /// <param name="fontDimensions">The font dimensions to use for rendering.</param>
+    protected void DrawWord(string word, Vector2 topLeft, ColorRgba colorRgba, FontDimensions fontDimensions) => Raylib.DrawTextEx(fontDimensions.Font, word, topLeft, fontDimensions.Size, fontDimensions.Spacing, colorRgba.ToRayColor());
+       
     #endregion
 
     #region Public
 
+    /// <summary>
+    /// Creates a clone of the current <see cref="TextFont"/> instance.
+    /// </summary>
+    /// <returns>A new <see cref="TextFont"/> instance with the same settings.</returns>
     public TextFont Clone() => new(FontDimensions, ColorRgba);
+    /// <summary>
+    /// Sets the texture filter for the font's texture.
+    /// </summary>
+    /// <param name="textureFilter">The texture filter to apply.</param>
     public void SetFilter(TextureFilter textureFilter = TextureFilter.Bilinear)
     {
         Raylib.SetTextureFilter(FontDimensions.Font.Texture, textureFilter);
     }
+    /// <summary>
+    /// Gets the emphasis settings for a word from the list of emphases.
+    /// </summary>
+    /// <param name="word">The word to check for emphasis.</param>
+    /// <param name="emphases">The list of emphases to search.</param>
+    /// <returns>The emphasis settings if found, otherwise null.</returns>
     public static Emphasis? GetEmphasis(string word, List<TextEmphasis>? emphases)
     {
         if (emphases == null || emphases.Count <= 0) return null;
@@ -778,755 +949,3 @@ public class TextFont
     #endregion
     
 }
-
-
-// public class TextFontWrapping : TextFont
-// {
-//     public TextFontWrapping(FontDimensions fontDimensions) : base(fontDimensions) { }
-//
-//     public TextFontWrapping(FontDimensions fontDimensions, ColorRgba colorRgba) : base(fontDimensions, colorRgba) { }
-//
-//     public TextFontWrapping(FontDimensions fontDimensions, ColorRgba colorRgba, IMouseDetection mouseDetection) : base(fontDimensions, colorRgba)
-//     {
-//         MouseDetection = mouseDetection;
-//     }
-//
-//     
-//     #region Members
-//     /// <summary>
-//     /// Is used on Wrap Char/Word draw functions. Is used to determine what happens with words that are entered by the mouse pointer.
-//     /// </summary>
-//     public IMouseDetection? MouseDetection = null;
-//     // public Vector2 MousePos = new();
-//     // public Emphasis? MouseEmphasis = null;
-//     #endregion
-//     
-//     #region Draw
-//     
-//     public void DrawTextWrapChar(string text, Rect rect, Vector2 alignement)
-//     {
-//         DrawTextWrapChar(text, rect, alignement, new(), null);
-//     }
-//     public void DrawTextWrapChar(string text, Rect rect, Vector2 alignement, Caret caret)
-//     {
-//         DrawTextWrapChar(text, rect, alignement, caret, null);
-//     }
-//     public void DrawTextWrapChar(string text, Rect rect, Vector2 alignement, Caret caret, List<TextEmphasis>? emphases)
-//     {
-//         if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
-//         // var rectSize = rect.Size;
-//         
-//         var textSize = FontDimensions.GetTextBaseSize(text);
-//
-//         if (textSize.Width < rect.Size.Width)//no wrapping needed
-//         {
-//             DrawTextWrapNone(text, rect, alignement, caret, emphases);
-//         }
-//         else
-//         {
-//             var scaledFont = FontDimensions.ScaleDynamicWrapMode(text, rect.Size, 1.25f);
-//             // var fontSpacing = FontSpacing;
-//             // var lineSpacing = LineSpacing;
-//             // var lines = (int)MathF.Ceiling((textSize.X * 1.25f) / rect.Size.X);
-//             // var textHeight = lines * textFont.BaseSize;
-//             // var lineSpacingHeight = lines <= 0 ? 0 : (lines - 1) * lineSpacing;
-//             // var height = textHeight + lineSpacingHeight;
-//             //
-//             // var textArea = rect.Size.X * height;
-//             // var sizeF = MathF.Sqrt(rect.Size.GetArea() / textArea);
-//             // float fontSize = FontSizeRange.Clamp(textFont.BaseSize * sizeF);
-//             // sizeF = fontSize / textFont.BaseSize;
-//             // lineSpacing *= sizeF;
-//             // fontSpacing *= sizeF;
-//             var sizeF = scaledFont.Size / BaseSize;
-//             var pos = rect.TopLeft;
-//             var curWord = string.Empty;
-//             var lineBreakInProcess = false;
-//             Emphasis? lineBreakEmphasis = null;
-//             var curWordWidth = 0f;
-//             var curLineWidth = 0f;
-//
-//             var caretTop = new Vector2();
-//             var caretFound = false;
-//             string completeWord = string.Empty;
-//             
-//             for (int i = 0; i < text.Length; i++)
-//             {
-//                 if (!caretFound && caret.IsValid && i == caret.Index)
-//                 {
-//                     caretFound = true;
-//                     caretTop = pos + new Vector2(curWordWidth + scaledFont.Spacing / 2, 0f);
-//                 }
-//                 
-//                 var c = text[i];
-//                 if (c == '\n') continue;
-//             
-//                 var charBaseSize = scaledFont.GetCharBaseSize(c);
-//                 float glyphWidth = charBaseSize.Width * sizeF;
-//             
-//                 if (curLineWidth + curWordWidth + glyphWidth >= rect.Size.Width && curLineWidth > 0)//break line
-//                 {
-//                     if (c == ' ') 
-//                     {
-//                         var emphasis = GetEmphasis(curWord, emphases);
-//
-//                         if (MouseDetection != null)
-//                         {
-//                             var mouseRect = new Rect(pos, new Size(curWordWidth, scaledFont.Size));
-//                             if (mouseRect.ContainsPoint(MouseDetection.GetMousePosition()))
-//                             {
-//                                 var mouseEmphasis = MouseDetection.OnMouseEntered(curWord, curWord, rect);
-//                                 if(mouseEmphasis != null) DrawWord(curWord, pos, curWordWidth, mouseEmphasis, scaledFont);
-//                                 else
-//                                 {
-//                                     if (emphasis != null) DrawWord(curWord, pos, curWordWidth, emphasis, scaledFont);
-//                                     else DrawWord(curWord, pos, scaledFont);
-//                                 }
-//                             }
-//                             else
-//                             {
-//                                 if (emphasis != null) DrawWord(curWord, pos, curWordWidth, emphasis, scaledFont);
-//                                 else DrawWord(curWord, pos, scaledFont);
-//                             }
-//                         }
-//                         else
-//                         {
-//                             if (emphasis != null) DrawWord(curWord, pos, curWordWidth, emphasis, scaledFont);
-//                             else DrawWord(curWord, pos, scaledFont);
-//                         }
-//                     }
-//                     else
-//                     {
-//                         if (!lineBreakInProcess)
-//                         {
-//                             lineBreakInProcess = true;
-//                             completeWord = curWord;
-//                             for (int j = i; j < text.Length; j++)
-//                             {
-//                                 var nextChar = text[j];
-//                                 if (j >= text.Length - 1)
-//                                 {
-//                                     if (nextChar != ' ') completeWord += nextChar;
-//                                     lineBreakEmphasis = GetEmphasis(completeWord, emphases);
-//                                 }
-//                                 else
-//                                 {
-//                                     if (nextChar == ' ')
-//                                     {
-//                                         lineBreakEmphasis = GetEmphasis(completeWord, emphases);
-//                                         break;
-//                                     }
-//                                     
-//                                     completeWord += nextChar;
-//                                 }
-//                                 
-//                             }
-//                         }
-//
-//                         if (MouseDetection != null)
-//                         {
-//                             var mouseRect = new Rect(pos, new Size(curWordWidth, scaledFont.Size));
-//                             if (mouseRect.ContainsPoint(MouseDetection.GetMousePosition()))
-//                             {
-//                                 var mouseEmphasis = MouseDetection.OnMouseEntered(curWord, completeWord, rect);
-//                                 if(mouseEmphasis != null) DrawWord(curWord, pos, curWordWidth, mouseEmphasis, scaledFont);
-//                                 else
-//                                 {
-//                                     if (lineBreakEmphasis != null) DrawWord(curWord, pos, curWordWidth, lineBreakEmphasis, scaledFont);
-//                                     else DrawWord(curWord, pos, scaledFont);
-//                                 }
-//                             }
-//                             else
-//                             {
-//                                 if (lineBreakEmphasis != null) DrawWord(curWord, pos, curWordWidth, lineBreakEmphasis, scaledFont);
-//                                 else DrawWord(curWord, pos, scaledFont);
-//                             }
-//                         }
-//                         else
-//                         {
-//                             if (lineBreakEmphasis != null) DrawWord(curWord, pos, curWordWidth, lineBreakEmphasis, scaledFont);
-//                             else DrawWord(curWord, pos, scaledFont);
-//                         }
-//                     } 
-//                     
-//                     
-//                     curWord = string.Empty;
-//                     if(c != ' ') curWord += c;
-//                     pos.Y += scaledFont.Size + scaledFont.LineSpacing;
-//                     pos.X = rect.TopLeft.X;
-//                     curLineWidth = 0f;
-//                     curWordWidth = glyphWidth;// 0f;
-//                     
-//                     continue;
-//                 }
-//             
-//                 curWordWidth += glyphWidth + scaledFont.Spacing;
-//                 if (c == ' ')
-//                 {
-//                     if (lineBreakInProcess)
-//                     {
-//                         lineBreakInProcess = false;
-//                         if (MouseDetection != null)
-//                         {
-//                             var mouseRect = new Rect(pos, new Size(curWordWidth - glyphWidth, scaledFont.Size));
-//                             if (mouseRect.ContainsPoint(MouseDetection.GetMousePosition()))
-//                             {
-//                                 var mouseEmphasis = MouseDetection.OnMouseEntered(curWord, completeWord, rect);
-//                                 if(mouseEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, mouseEmphasis, scaledFont);
-//                                 else
-//                                 {
-//                                     if (lineBreakEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, lineBreakEmphasis, scaledFont);
-//                                     else DrawWord(curWord, pos, scaledFont);
-//                                 }
-//                             }
-//                             else
-//                             {
-//                                 if (lineBreakEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, lineBreakEmphasis, scaledFont);
-//                                 else DrawWord(curWord, pos, scaledFont);
-//                             }
-//                         }
-//                         else
-//                         {
-//                             if (lineBreakEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, lineBreakEmphasis, scaledFont);
-//                             else DrawWord(curWord, pos, scaledFont);
-//                         }
-//                     }
-//                     else
-//                     {
-//                         var wordEmphasis = GetEmphasis(curWord, emphases);
-//                         
-//                         if (MouseDetection != null)
-//                         {
-//                             var mouseRect = new Rect(pos, new Size(curWordWidth - glyphWidth, scaledFont.Size));
-//                             if (mouseRect.ContainsPoint(MouseDetection.GetMousePosition()))
-//                             {
-//                                 var mouseEmphasis = MouseDetection.OnMouseEntered(curWord, curWord, rect);
-//                                 if(mouseEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, mouseEmphasis, scaledFont);
-//                                 else
-//                                 {
-//                                     if (wordEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, wordEmphasis, scaledFont);
-//                                     else DrawWord(curWord, pos, scaledFont);
-//                                 }
-//                             }
-//                             else
-//                             {
-//                                 if (wordEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, wordEmphasis, scaledFont);
-//                                 else DrawWord(curWord, pos, scaledFont);
-//                             }
-//                         }
-//                         else
-//                         {
-//                             if (wordEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, wordEmphasis, scaledFont);
-//                             else DrawWord(curWord, pos, scaledFont);
-//                         }
-//                     }
-//             
-//                     curWord = string.Empty;
-//                     curLineWidth += curWordWidth;
-//                     pos.X = rect.TopLeft.X + curLineWidth;
-//                     curWordWidth = 0f;
-//                 }
-//                 else curWord += c;
-//             }
-//             
-//             if (lineBreakInProcess)
-//             {
-//                 if (MouseDetection != null)
-//                 {
-//                     var mouseRect = new Rect(pos, new Size(curWordWidth, scaledFont.Size));
-//                     if (mouseRect.ContainsPoint(MouseDetection.GetMousePosition()))
-//                     {
-//                         var mouseEmphasis = MouseDetection.OnMouseEntered(curWord, completeWord, rect);
-//                         if(mouseEmphasis != null) DrawWord(curWord, pos, curWordWidth, mouseEmphasis, scaledFont);
-//                         else
-//                         {
-//                             if (lineBreakEmphasis != null) DrawWord(curWord, pos, curWordWidth, lineBreakEmphasis, scaledFont);
-//                             else DrawWord(curWord, pos, scaledFont);
-//                         }
-//                     }
-//                     else
-//                     {
-//                         if (lineBreakEmphasis != null) DrawWord(curWord, pos, curWordWidth, lineBreakEmphasis, scaledFont);
-//                         else DrawWord(curWord, pos, scaledFont);
-//                     }
-//                 }
-//                 else
-//                 {
-//                     if (lineBreakEmphasis != null) DrawWord(curWord, pos, curWordWidth, lineBreakEmphasis, scaledFont);
-//                     else DrawWord(curWord, pos, scaledFont);
-//                 }
-//             }
-//             else
-//             {
-//                 var wordEmphasis = GetEmphasis(curWord, emphases);
-//                 if (MouseDetection != null)
-//                 {
-//                     var mouseRect = new Rect(pos, new Size(curWordWidth, scaledFont.Size));
-//                     if (mouseRect.ContainsPoint(MouseDetection.GetMousePosition()))
-//                     {
-//                         var mouseEmphasis = MouseDetection.OnMouseEntered(curWord, curWord, rect);
-//                         if(mouseEmphasis != null) DrawWord(curWord, pos, curWordWidth, mouseEmphasis, scaledFont);
-//                         else
-//                         {
-//                             if (wordEmphasis != null) DrawWord(curWord, pos, curWordWidth, wordEmphasis, scaledFont);
-//                             else DrawWord(curWord, pos, scaledFont);
-//                         }
-//                     }
-//                     else
-//                     {
-//                         if (wordEmphasis != null) DrawWord(curWord, pos, curWordWidth, wordEmphasis, scaledFont);
-//                         else DrawWord(curWord, pos, scaledFont);
-//                     }
-//                 }
-//                 else
-//                 {
-//                     if (wordEmphasis != null) DrawWord(curWord, pos, curWordWidth, wordEmphasis, scaledFont);
-//                     else DrawWord(curWord, pos, scaledFont);
-//                 }
-//             }
-//             
-//             
-//             if (caretFound)
-//             {
-//                 caret.Draw(caretTop, scaledFont.Size);
-//             }
-//             else
-//             {
-//                 if (caret.IsValid)
-//                 {
-//                     var topLeft = pos + new Vector2(curWordWidth + scaledFont.Spacing / 2, 0f);
-//                     caret.Draw(topLeft, scaledFont.Size);
-//                 }
-//             }
-//         }
-//     }
-//     
-//     public void DrawTextWrapWord(string text, Rect rect, Vector2 alignement)
-//     {
-//         DrawTextWrapWord(text, rect, alignement, new(), null);
-//     }
-//     public void DrawTextWrapWord(string text, Rect rect, Vector2 alignement, Caret caret)
-//     {
-//         DrawTextWrapWord(text, rect, alignement, new(), null);
-//     }
-//     public void DrawTextWrapWord(string text, Rect rect, Vector2 alignement, Caret caret, List<TextEmphasis>? emphases)
-//     {
-//         if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
-//         // var rectSize = rect.Size;
-//         var textSize = FontDimensions.GetTextBaseSize(text);
-//
-//         if (textSize.Width < rect.Size.Width)
-//         {
-//             DrawTextWrapNone(text, rect, alignement, caret, emphases);
-//         }
-//         else
-//         {
-//             // var fontSpacing = textFont.FontSpacing;
-//             // var lineSpacing = textFont.LineSpacing;
-//             // var lines = (int)MathF.Ceiling((textSize.X * 1.5f) / rect.Size.X);
-//             // var textHeight = lines * textFont.BaseSize;
-//             // var lineSpacingHeight = lines <= 0 ? 0 : (lines - 1) * lineSpacing;
-//             // var height = textHeight + lineSpacingHeight;
-//             //
-//             // var textArea = rect.Size.X * height;
-//             // var sizeF = MathF.Sqrt(rect.Size.GetArea() / textArea);
-//             // float fontSize = FontSizeRange.Clamp(textFont.BaseSize * sizeF);
-//             // sizeF = fontSize / textFont.BaseSize;
-//             // lineSpacing *= sizeF;
-//             // fontSpacing *= sizeF;
-//             var scaledFont = FontDimensions.ScaleDynamicWrapMode(text, rect.Size, 1.5f);
-//             var sizeF = scaledFont.Size / BaseSize;
-//             var pos = rect.TopLeft;
-//         
-//             var curWord = string.Empty;
-//             var curWordWidth = 0f;
-//             var curLineWidth = 0f;
-//             
-//             var caretTop = new Vector2();
-//             var caretFound = false;
-//             var caretWordOffset = -1f;
-//             
-//             for (int i = 0; i < text.Length; i++)
-//             {
-//                 var c = text[i];
-//                 if (c == '\n') continue;
-//             
-//                 var charBaseSize = scaledFont.GetCharBaseSize(c);
-//                 float glyphWidth = charBaseSize.Width * sizeF;
-//                 
-//                 if (curLineWidth + curWordWidth + glyphWidth >= rect.Width && curLineWidth > 0)//break line
-//                 {
-//                     // if (curLineWidth <= 0) return;
-//                     pos.Y += scaledFont.Size + scaledFont.LineSpacing;
-//                     pos.X = rect.TopLeft.X;
-//                     curLineWidth = 0f;
-//                 }
-//             
-//                 curWordWidth += glyphWidth + scaledFont.Spacing;
-//                 
-//                 if (i == caret.Index - 1 && caret.IsValid)
-//                 {
-//                     caretWordOffset = curWordWidth;
-//                 }
-//                 if (c == ' ')
-//                 {
-//                     var wordEmphasis = GetEmphasis(curWord, emphases);
-//
-//                     if (MouseDetection != null)
-//                     {
-//                         var mouseRect = new Rect(pos, new Size(curWordWidth - glyphWidth, scaledFont.Size));
-//                         if (mouseRect.ContainsPoint(MouseDetection.GetMousePosition()))
-//                         {
-//                             var mouseEmphasis = MouseDetection.OnMouseEntered(curWord, curWord, rect);
-//                             if(mouseEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, mouseEmphasis, scaledFont);
-//                             else
-//                             {
-//                                 if (wordEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, wordEmphasis, scaledFont);
-//                                 else DrawWord(curWord, pos, scaledFont);
-//                             }
-//                         }
-//                         else
-//                         {
-//                             if (wordEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, wordEmphasis, scaledFont);
-//                             else DrawWord(curWord, pos, scaledFont);
-//                         }
-//                     }
-//                     else
-//                     {
-//                         if (wordEmphasis != null) DrawWord(curWord, pos, curWordWidth - glyphWidth, wordEmphasis, scaledFont);
-//                         else DrawWord(curWord, pos, scaledFont);
-//                     }
-//             
-//                     if (caretWordOffset >= 0)
-//                     {
-//                         caretFound = true;
-//                         caretTop = pos + new Vector2(caretWordOffset + scaledFont.Spacing / 2, 0f);
-//                         caretWordOffset = -1;
-//                     }
-//                     
-//                     curWord = string.Empty;
-//                     curLineWidth += curWordWidth;
-//                     pos.X = rect.TopLeft.X + curLineWidth; // curWordWidth;
-//                     curWordWidth = 0f;
-//                 }
-//                 else  curWord += c;
-//             }
-//             
-//             //draw last word
-//             var lastWordEmphasis = GetEmphasis(curWord, emphases);
-//
-//             if (MouseDetection != null)
-//             {
-//                 var mouseRect = new Rect(pos, new Size(curWordWidth, scaledFont.Size));
-//                 if (mouseRect.ContainsPoint(MouseDetection.GetMousePosition()))
-//                 {
-//                     var mouseEmphasis = MouseDetection.OnMouseEntered(curWord, curWord, rect);
-//                     if(mouseEmphasis != null) DrawWord(curWord, pos, curWordWidth, mouseEmphasis, scaledFont);
-//                     else
-//                     {
-//                         if (lastWordEmphasis != null) DrawWord(curWord, pos, curWordWidth, lastWordEmphasis, scaledFont);
-//                         else DrawWord(curWord, pos, scaledFont);
-//                     }
-//                 }
-//                 else
-//                 {
-//                     if (lastWordEmphasis != null) DrawWord(curWord, pos, curWordWidth, lastWordEmphasis, scaledFont);
-//                     else DrawWord(curWord, pos, scaledFont);
-//                 }
-//             }
-//             else
-//             {
-//                 if (lastWordEmphasis != null) DrawWord(curWord, pos, curWordWidth, lastWordEmphasis, scaledFont);
-//                 else DrawWord(curWord, pos, scaledFont);
-//             }
-//             
-//             
-//             if (caretFound)
-//             {
-//                 caret.Draw(caretTop, scaledFont.Size);
-//             }
-//             else if (caretWordOffset >= 0)
-//             {
-//                 caretTop = pos + new Vector2(caretWordOffset + scaledFont.Spacing / 2, 0f);
-//                 caret.Draw(caretTop, scaledFont.Size);
-//             }
-//             else
-//             {
-//                 if (caret.IsValid)
-//                 {
-//                     caret.Draw(rect.TopLeft, scaledFont.Size);
-//                 }
-//             }
-//         }
-//     }
-//     #endregion
-//
-//     #region Public
-//
-//     public new TextFontWrapping Clone() => MouseDetection != null ? new(FontDimensions, ColorRgba, MouseDetection) : new(FontDimensions, ColorRgba);
-//
-//     #endregion
-//
-// }
-
-/*
-    #region Size
-
-    // public TextFont ScaleDynamic(string text)
-    // {
-    //     var size = MeasureTextEx(Font, text, FontSize, FontSpacing);
-    //     return ScaleDynamic(text, size);
-    // }
-    public TextFont ScaleDynamic(string text, Size rectSize)
-    {
-        var fontDimensions = GetTextBaseSize(text);// MeasureTextEx(Font, text, BaseSize, FontSpacing);
-        float fX = rectSize.Width / fontDimensions.Width;
-        float fY = rectSize.Height / fontDimensions.Height;
-        float f = MathF.Min(fX, fY);
-
-        float scaledFontSize = FontSizeRange.Clamp(BaseSize * f);
-        f = scaledFontSize / BaseSize;
-
-        var newTextFont = new TextFont(Font, scaledFontSize, FontSpacing * f, LineSpacing * f, ColorRgba);
-
-        return newTextFont;
-    }
-    public TextFont ScaleDynamicWrapMode(string text, Size rectSize, float widthFactor = 1.3f)
-    {
-        var fontSpacing = FontSpacing;
-        var lineSpacing = LineSpacing;
-        var textSize = GetTextBaseSize(text);
-        var lines = (int)MathF.Ceiling((textSize.Width * widthFactor) / rectSize.Width);
-        var textHeight = lines * BaseSize;
-        var lineSpacingHeight = lines <= 0 ? 0 : (lines - 1) * lineSpacing;
-        var height = textHeight + lineSpacingHeight;
-
-        var textArea = rectSize.Width * height;
-        var sizeF = MathF.Sqrt(rectSize.Area / textArea);
-        float fontSize = FontSizeRange.Clamp(BaseSize * sizeF);
-        sizeF = fontSize / BaseSize;
-        lineSpacing *= sizeF;
-        fontSpacing *= sizeF;
-
-        return new(Font, fontSize, fontSpacing, lineSpacing, ColorRgba);
-    }
-    
-    public Size GetTextBaseSize(string text) => GetTextSize(text, BaseSize);
-    
-    
-    public Size GetTextSize(string text) => GetTextSize(text, FontSize);
-    public Size GetTextSize(string text, float fontSize)
-    {
-        float totalWidth = 0f;
-
-        for (int i = 0; i < text.Length; i++)
-        {
-            var c = text[i];
-            if (c == '\n') continue;
-            float w = GetCharSize(c, fontSize).Width;
-            totalWidth += w;
-        }
-        float fontSpacingWidth = (text.Length - 1) * FontSpacing;
-        totalWidth += fontSpacingWidth;
-        return new Size(totalWidth, fontSize);
-    }
-
-    
-    public Size GetTextSizeLineBreak(string text) => GetTextSizeLineBreak(text, FontSize);
-    public Size GetTextSizeLineBreak(string text, float fontSize)
-    {
-        float curWidth = 0f;
-        float totalWidth = 0f;
-        float totalHeight = fontSize;
-        
-        for (int i = 0; i < text.Length; i++)
-        {
-            var c = text[i];
-            if (c == '\n')
-            {
-                if (curWidth > totalWidth) totalWidth = curWidth;
-                curWidth = 0f;
-                totalHeight += fontSize + LineSpacing;
-                continue;
-            }
-            float w = GetCharSize(c, fontSize).Width;
-            totalWidth += w;
-        }
-        float fontSpacingWidth = (text.Length - 1) * FontSpacing;
-        totalWidth += fontSpacingWidth;
-        return new Size(totalWidth, totalHeight);
-    }
-    
-    public Size GetCharSize(char c)
-    {
-        var baseSize = GetCharBaseSize(c);
-        float f = FontSize / (float)BaseSize;
-        return baseSize * f;
-    }
-    public Size GetCharSize(char c, float fontSize)
-    {
-        var baseSize = GetCharBaseSize(c);
-        float f = fontSize / (float)BaseSize;
-        return baseSize * f;
-    }
-    public Size GetCharBaseSize(char c)
-    {
-        unsafe
-        {
-            int index = Raylib.GetGlyphIndex(Font, c);
-            float glyphWidth = (Font.Glyphs[index].AdvanceX == 0) ? Font.Recs[index].Width : Font.Glyphs[index].AdvanceX;
-            return new Size(glyphWidth, Font.BaseSize);
-        }
-    }
-
-
-    #endregion
-    */
-
-/*
-public class FontHandler
-       {
-           private Dictionary<uint, Font> fonts = new();
-           private Font defaultFont = GetFontDefault();
-           /*
-           //private Dictionary<string, float> fontSizes = new();
-   
-           public void AddFontSize(string name, float size)
-           {
-               if (fontSizes.ContainsKey(name)) fontSizes[name] = size;
-               else fontSizes.Add(name, size);
-           }
-           public void RemoveFontSize(string name)
-           {
-               fontSizes.Remove(name);
-           }
-           public float GetFontSize(string name)
-           {
-               if (!fontSizes.ContainsKey(name)) return -1;
-               else return fontSizes[name];
-           }
-           * /
-           public void SetFontFilter(uint id, TextureFilter textureFilter = TextureFilter.TEXTURE_FILTER_BILINEAR)
-           {
-               Font font = GetFont(id);
-               SetTextureFilter(font.texture, textureFilter);
-           }
-           //public void AddFont(uint id, string fileName, int fontSize = 100, TextureFilter textureFilter = TextureFilter.TEXTURE_FILTER_BILINEAR)
-           //{
-           //    if (fileName == "" || fonts.ContainsKey(id)) return;
-           //    Font font = ResourceManager.LoadFontFromRaylib(fileName, fontSize);
-           //
-           //    SetTextureFilter(font.texture, textureFilter);
-           //    fonts.Add(id, font);
-           //}
-           public void AddFont(uint id, Font font, TextureFilter textureFilter = TextureFilter.TEXTURE_FILTER_BILINEAR)
-           {
-               if (fonts.ContainsKey(id)) return;
-               SetTextureFilter(font.texture, textureFilter);
-               fonts.Add(id, font);
-           }
-           public Font GetFont(uint id)
-           {
-               if (!fonts.ContainsKey(id)) return defaultFont;
-               return fonts[id];
-           }
-           public void SetDefaultFont(uint id)
-           {
-               if (!fonts.ContainsKey(id)) return;
-               defaultFont = fonts[id];
-           }
-           public void Close()
-           {
-               foreach (Font font in fonts.Values)
-               {
-                   UnloadFont(font);
-               }
-               fonts.Clear();
-           }
-           
-           /*
-           public (float fontSize, float fontSpacing) GetDynamicFontInfo(uint fontID, string text, Vector2 size, float fontSpacing)
-           {
-               return GetDynamicFontInfo(GetFont(fontID), text, size, fontSpacing);
-           }
-           public Vector2 GetTextSize(string text, float fontSize, float fontSpacing, uint fontID)
-           {
-               return MeasureTextEx(GetFont(fontID), text, fontSize, fontSpacing);
-           }
-           * /
-           /*
-           public float CalculateDynamicFontSize(string text, Vector2 size, uint fontID, float fontSpacing = 1f)
-           {
-               float baseSize = GetFont(fontID).baseSize;
-               return GetFontScalingFactor(text, size, fontID, fontSpacing) * baseSize;
-           }
-           public float GetFontScalingFactor(string text, Vector2 size, uint fontID, float fontSpacing = 1)
-           {
-               float baseSize = GetFont(fontID).baseSize;
-               float scalingFactor = size.Y / baseSize;
-               Vector2 textSize = MeasureTextEx(GetFont(fontID), text, baseSize * scalingFactor, fontSpacing);
-               float correctionFactor = MathF.Min(size.X / textSize.X, 1f);
-               return scalingFactor * correctionFactor;
-           }
-           public static float CalculateDynamicFontSize(string text, Vector2 size, Font font, float fontSpacing = 1f)
-           {
-               float baseSize = font.baseSize;
-   
-               return GetFontScalingFactor(text, size, font, fontSpacing) * baseSize;
-           }
-           public static float GetFontScalingFactor(string text, Vector2 size, Font font, float fontSpacing = 1)
-           {
-               float baseSize = font.baseSize;
-               float scalingFactor = size.Y / baseSize;
-               Vector2 textSize = MeasureTextEx(font, text, baseSize * scalingFactor, fontSpacing);
-               float correctionFactor = MathF.Min(size.X / textSize.X, 1f);
-               return scalingFactor * correctionFactor;
-           }
-           * /
-           /*
-           public float CalculateDynamicFontSize(float height, uint fontID)
-           {
-               return CalculateDynamicFontSize(height, GetFont(fontID));
-           }
-           public float CalculateDynamicFontSize(string text, float width, uint fontID, float fontSpacing = 1f)
-           {
-               return CalculateDynamicFontSize(text, width, GetFont(fontID), fontSpacing);
-           }
-           public float GetFontScalingFactor(float height, uint fontID) { return GetFontScalingFactor(height, GetFont(fontID)); }
-           public float GetFontScalingFactor(string text, float width, uint fontID, float fontSpacing = 1)
-           {
-               float baseSize = GetFont(fontID).baseSize;
-               Vector2 textSize = MeasureTextEx(GetFont(fontID), text, baseSize, fontSpacing);
-               float scalingFactor = width / textSize.X;
-               return scalingFactor;
-           }
-   
-           public static float CalculateDynamicFontSize(float height, Font font)
-           {
-               float baseSize = font.baseSize;
-   
-               return GetFontScalingFactor(height, font) * baseSize;
-           }
-           public static float CalculateDynamicFontSize(string text, float width, Font font, float fontSpacing = 1f)
-           {
-               float baseSize = font.baseSize;
-   
-               return GetFontScalingFactor(text, width, font, fontSpacing) * baseSize;
-           }
-           public static float GetFontScalingFactor(float height, Font font)
-           {
-               float baseSize = font.baseSize;
-               return height / baseSize;
-           }
-           public static float GetFontScalingFactor(string text, float width, Font font, float fontSpacing = 1)
-           {
-               float baseSize = font.baseSize;
-               Vector2 textSize = MeasureTextEx(font, text, baseSize, fontSpacing);
-               float scalingFactor = width / textSize.X;
-               return scalingFactor;
-           }
-           * /
-       }
-   
-   }
-*/
