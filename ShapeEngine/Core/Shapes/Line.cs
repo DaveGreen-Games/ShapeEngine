@@ -932,7 +932,16 @@ public readonly struct Line
     #endregion
     
     #region Intersections
-    
+    /// <summary>
+    /// Determines whether a given point lies on a specified infinite line.
+    /// </summary>
+    /// <param name="point">The point to test for collinearity with the line.</param>
+    /// <param name="linePoint">A point through which the line passes.</param>
+    /// <param name="lineDirection">The direction vector of the line.</param>
+    /// <returns>True if the point lies on the line; otherwise, false.</returns>
+    /// <remarks>
+    /// Uses the cross product to check if the point is collinear with the line.
+    /// </remarks>
     public static bool IsPointOnLine(Vector2 point, Vector2 linePoint, Vector2 lineDirection)
     {
         // Calculate the vector from the line point to the given point
@@ -944,7 +953,20 @@ public readonly struct Line
         // If the cross product is close to zero, the point is on the line
         return Math.Abs(crossProduct) < 1e-10;
     }
-    
+    /// <summary>
+    /// Computes the intersection point between an infinite line and a finite segment, if it exists.
+    /// </summary>
+    /// <param name="linePoint">A point through which the infinite line passes.</param>
+    /// <param name="lineDirection">The direction vector of the infinite line.</param>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <returns>
+    /// A tuple containing the <see cref="CollisionPoint"/> at the intersection and the parameter t along the line.
+    /// If no intersection exists, returns an invalid <see cref="CollisionPoint"/> and t = -1.
+    /// </returns>
+    /// <remarks>
+    /// The intersection is only valid if it lies within the segment bounds.
+    /// </remarks>
     public static (CollisionPoint p, float t) IntersectLineSegmentInfo(Vector2 linePoint, Vector2 lineDirection, Vector2 segmentStart, Vector2 segmentEnd)
     {
         // Line AB (infinite line) represented by linePoint and lineDirection
@@ -981,7 +1003,21 @@ public readonly struct Line
 
         return (new(), -1f);
     }
-    
+    /// <summary>
+    /// Computes the intersection point between an infinite line and a finite segment, using an explicit segment normal.
+    /// </summary>
+    /// <param name="linePoint">A point through which the infinite line passes.</param>
+    /// <param name="lineDirection">The direction vector of the infinite line.</param>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <param name="segmentNormal">The normal vector of the segment, used for the resulting <see cref="CollisionPoint"/>.</param>
+    /// <returns>
+    /// A tuple containing the <see cref="CollisionPoint"/> at the intersection (with the provided normal) and the parameter t along the line.
+    /// If no intersection exists, returns an invalid <see cref="CollisionPoint"/> and t = -1.
+    /// </returns>
+    /// <remarks>
+    /// Use this overload when the segment's normal is already known.
+    /// </remarks>
     public static (CollisionPoint p, float t) IntersectLineSegmentInfo(Vector2 linePoint, Vector2 lineDirection, Vector2 segmentStart, Vector2 segmentEnd, Vector2 segmentNormal)
     {
         var result = IntersectLineSegmentInfo(linePoint, lineDirection, segmentStart, segmentEnd);
@@ -992,7 +1028,20 @@ public readonly struct Line
 
         return (new(), -1f);
     }
-    
+    /// <summary>
+    /// Computes the intersection point between two infinite lines, if it exists.
+    /// </summary>
+    /// <param name="line1Point">A point through which the first line passes.</param>
+    /// <param name="line1Direction">The direction vector of the first line.</param>
+    /// <param name="line2Point">A point through which the second line passes.</param>
+    /// <param name="line2Direction">The direction vector of the second line.</param>
+    /// <returns>
+    /// A tuple containing the <see cref="CollisionPoint"/> at the intersection and the parameter t along the first line.
+    /// If the lines are parallel, returns an invalid <see cref="CollisionPoint"/> and t = -1.
+    /// </returns>
+    /// <remarks>
+    /// The intersection is valid only if the lines are not parallel.
+    /// </remarks>
     public static (CollisionPoint p, float t) IntersectLineLineInfo(Vector2 line1Point, Vector2 line1Direction, Vector2 line2Point, Vector2 line2Direction)
     {
         // Calculate the denominator of the intersection formula
@@ -1016,7 +1065,21 @@ public readonly struct Line
 
         return (new(intersection, normal), t);
     }
-    
+    /// <summary>
+    /// Computes the intersection point between two infinite lines, using an explicit normal for the second line.
+    /// </summary>
+    /// <param name="line1Point">A point through which the first line passes.</param>
+    /// <param name="line1Direction">The direction vector of the first line.</param>
+    /// <param name="line2Point">A point through which the second line passes.</param>
+    /// <param name="line2Direction">The direction vector of the second line.</param>
+    /// <param name="line2Normal">The normal vector of the second line, used for the resulting <see cref="CollisionPoint"/>.</param>
+    /// <returns>
+    /// A tuple containing the <see cref="CollisionPoint"/> at the intersection (with the provided normal) and the parameter t along the first line.
+    /// If the lines are parallel, returns an invalid <see cref="CollisionPoint"/> and t = -1.
+    /// </returns>
+    /// <remarks>
+    /// Use this overload when the second line's normal is already known.
+    /// </remarks>
     public static (CollisionPoint p, float t) IntersectLineLineInfo(Vector2 line1Point, Vector2 line1Direction, Vector2 line2Point, Vector2 line2Direction, Vector2 line2Normal)
     {
         var result = IntersectLineLineInfo(line1Point, line1Direction, line2Point, line2Direction);
@@ -1027,7 +1090,20 @@ public readonly struct Line
 
         return (new(), -1f);
     }
-    
+    /// <summary>
+    /// Computes the intersection point between an infinite line and a ray, if it exists.
+    /// </summary>
+    /// <param name="linePoint">A point through which the infinite line passes.</param>
+    /// <param name="lineDirection">The direction vector of the infinite line.</param>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <returns>
+    /// A tuple containing the <see cref="CollisionPoint"/> at the intersection and the parameter t along the line.
+    /// If the intersection does not lie in the direction of the ray, returns an invalid <see cref="CollisionPoint"/> and t = -1.
+    /// </returns>
+    /// <remarks>
+    /// The intersection is valid only if it lies in the positive direction of the ray.
+    /// </remarks>
     public static (CollisionPoint p, float t) IntersectLineRayInfo(Vector2 linePoint, Vector2 lineDirection, Vector2 rayPoint, Vector2 rayDirection)
     {
         // Calculate the denominator of the intersection formula
@@ -1060,7 +1136,21 @@ public readonly struct Line
         
         return (new(), -1f);
     }
-    
+    /// <summary>
+    /// Computes the intersection point between an infinite line and a ray, using an explicit normal for the ray.
+    /// </summary>
+    /// <param name="linePoint">A point through which the infinite line passes.</param>
+    /// <param name="lineDirection">The direction vector of the infinite line.</param>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="rayNormal">The normal vector of the ray, used for the resulting <see cref="CollisionPoint"/>.</param>
+    /// <returns>
+    /// A tuple containing the <see cref="CollisionPoint"/> at the intersection (with the provided normal) and the parameter t along the line.
+    /// If the intersection does not lie in the direction of the ray, returns an invalid <see cref="CollisionPoint"/> and t = -1.
+    /// </returns>
+    /// <remarks>
+    /// Use this overload when the ray's normal is already known.
+    /// </remarks>
     public static (CollisionPoint p, float t) IntersectLineRayInfo(Vector2 linePoint, Vector2 lineDirection, Vector2 rayPoint, Vector2 rayDirection, Vector2 rayNormal)
     {
         var result = IntersectLineRayInfo(linePoint, lineDirection, rayPoint, rayDirection);
@@ -1071,8 +1161,19 @@ public readonly struct Line
 
         return (new(), -1f);
     }
-    
-    
+    /// <summary>
+    /// Computes the intersection point between an infinite line and a finite segment, if it exists.
+    /// </summary>
+    /// <param name="linePoint">A point through which the infinite line passes.</param>
+    /// <param name="lineDirection">The direction vector of the infinite line.</param>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoint"/> at the intersection, or an invalid <see cref="CollisionPoint"/> if no intersection exists.
+    /// </returns>
+    /// <remarks>
+    /// The intersection is valid only if it lies within the segment bounds.
+    /// </remarks>
     public static CollisionPoint IntersectLineSegment(Vector2 linePoint, Vector2 lineDirection, Vector2 segmentStart, Vector2 segmentEnd)
     {
         
@@ -1119,6 +1220,20 @@ public readonly struct Line
         //
         // return new();
     }
+    /// <summary>
+    /// Computes the intersection point between an infinite line and a finite segment, using an explicit segment normal.
+    /// </summary>
+    /// <param name="linePoint">A point through which the infinite line passes.</param>
+    /// <param name="lineDirection">The direction vector of the infinite line.</param>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <param name="segmentNormal">The normal vector of the segment, used for the resulting <see cref="CollisionPoint"/>.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoint"/> at the intersection (with the provided normal), or an invalid <see cref="CollisionPoint"/> if no intersection exists.
+    /// </returns>
+    /// <remarks>
+    /// Use this overload when the segment's normal is already known.
+    /// </remarks>
     public static CollisionPoint IntersectLineSegment(Vector2 linePoint, Vector2 lineDirection, Vector2 segmentStart, Vector2 segmentEnd, Vector2 segmentNormal)
     {
         var result = IntersectLineSegment(linePoint, lineDirection, segmentStart, segmentEnd);
@@ -1129,6 +1244,19 @@ public readonly struct Line
 
         return new();
     }
+    /// <summary>
+    /// Computes the intersection point between two infinite lines, if it exists.
+    /// </summary>
+    /// <param name="line1Point">A point through which the first line passes.</param>
+    /// <param name="line1Direction">The direction vector of the first line.</param>
+    /// <param name="line2Point">A point through which the second line passes.</param>
+    /// <param name="line2Direction">The direction vector of the second line.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoint"/> at the intersection, or an invalid <see cref="CollisionPoint"/> if the lines are parallel.
+    /// </returns>
+    /// <remarks>
+    /// The intersection is valid only if the lines are not parallel.
+    /// </remarks>
     public static CollisionPoint IntersectLineLine(Vector2 line1Point, Vector2 line1Direction, Vector2 line2Point, Vector2 line2Direction)
     {
         // Calculate the denominator of the intersection formula
@@ -1152,6 +1280,17 @@ public readonly struct Line
 
         return new(intersection, normal);
     }
+    /// <summary>
+    /// Computes the intersection point between two infinite lines, using an explicit normal for the second line.
+    /// </summary>
+    /// <param name="line1Point">A point through which the first line passes.</param>
+    /// <param name="line1Direction">The direction vector of the first line.</param>
+    /// <param name="line2Point">A point through which the second line passes.</param>
+    /// <param name="line2Direction">The direction vector of the second line.</param>
+    /// <param name="line2Normal">The normal vector of the second line, used for the resulting <see cref="CollisionPoint"/>.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoint"/> at the intersection (with the provided normal), or an invalid <see cref="CollisionPoint"/> if the lines are parallel.
+    /// </returns>
     public static CollisionPoint IntersectLineLine(Vector2 line1Point, Vector2 line1Direction, Vector2 line2Point, Vector2 line2Direction, Vector2 line2Normal)
     {
         var result = IntersectLineLine(line1Point, line1Direction, line2Point, line2Direction);
@@ -1162,6 +1301,19 @@ public readonly struct Line
 
         return new();
     }
+    /// <summary>
+    /// Computes the intersection point between an infinite line and a ray, if it exists.
+    /// </summary>
+    /// <param name="linePoint">A point through which the infinite line passes.</param>
+    /// <param name="lineDirection">The direction vector of the infinite line.</param>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoint"/> at the intersection, or an invalid <see cref="CollisionPoint"/> if the intersection does not lie in the direction of the ray.
+    /// </returns>
+    /// <remarks>
+    /// The intersection is valid only if it lies in the positive direction of the ray.
+    /// </remarks>
     public static CollisionPoint IntersectLineRay(Vector2 linePoint, Vector2 lineDirection, Vector2 rayPoint, Vector2 rayDirection)
     {
         // Calculate the denominator of the intersection formula
@@ -1194,6 +1346,20 @@ public readonly struct Line
         
         return new();
     }
+    /// <summary>
+    /// Computes the intersection point between an infinite line and a ray, using an explicit normal for the ray.
+    /// </summary>
+    /// <param name="linePoint">A point through which the infinite line passes.</param>
+    /// <param name="lineDirection">The direction vector of the infinite line.</param>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="rayNormal">The normal vector of the ray, used for the resulting <see cref="CollisionPoint"/>.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoint"/> at the intersection (with the provided normal), or an invalid <see cref="CollisionPoint"/> if the intersection does not lie in the direction of the ray.
+    /// </returns>
+    /// <remarks>
+    /// Use this overload when the ray's normal is already known.
+    /// </remarks>
     public static CollisionPoint IntersectLineRay(Vector2 linePoint, Vector2 lineDirection, Vector2 rayPoint, Vector2 rayDirection, Vector2 rayNormal)
     {
         var result = IntersectLineRay(linePoint, lineDirection, rayPoint, rayDirection);
@@ -1205,7 +1371,20 @@ public readonly struct Line
         return new();
     }
     
-    
+    /// <summary>
+    /// Computes the intersection points between an infinite line and a circle, if they exist.
+    /// </summary>
+    /// <param name="linePoint">A point through which the infinite line passes.</param>
+    /// <param name="lineDirection">The direction vector of the infinite line.</param>
+    /// <param name="circleCenter">The center of the circle.</param>
+    /// <param name="circleRadius">The radius of the circle.</param>
+    /// <returns>
+    /// A tuple containing two <see cref="CollisionPoint"/> objects representing the intersection points.
+    /// If no intersection exists, both points are invalid.
+    /// </returns>
+    /// <remarks>
+    /// The function calculates the closest approach of the line to the circle and determines if the line intersects the circle.
+    /// </remarks>
     public static (CollisionPoint a, CollisionPoint b) IntersectLineCircle(Vector2 linePoint, Vector2 lineDirection, Vector2 circleCenter, float circleRadius)
     {
         // Normalize the direction vector
@@ -1250,6 +1429,21 @@ public readonly struct Line
 
         return (new(), new());
     }
+    /// <summary>
+    /// Computes the intersection points between an infinite line and a triangle, if they exist.
+    /// </summary>
+    /// <param name="linePoint">A point through which the infinite line passes.</param>
+    /// <param name="lineDirection">The direction vector of the infinite line.</param>
+    /// <param name="a">The first vertex of the triangle.</param>
+    /// <param name="b">The second vertex of the triangle.</param>
+    /// <param name="c">The third vertex of the triangle.</param>
+    /// <returns>
+    /// A tuple containing up to two <see cref="CollisionPoint"/> objects representing the intersection points.
+    /// If no intersection exists, both points are invalid.
+    /// </returns>
+    /// <remarks>
+    /// The function checks each edge of the triangle for intersections with the line.
+    /// </remarks>
     public static (CollisionPoint a, CollisionPoint b) IntersectLineTriangle(Vector2 linePoint, Vector2 lineDirection, Vector2 a, Vector2 b, Vector2 c)
     {
         CollisionPoint resultA = new();
@@ -1276,6 +1470,22 @@ public readonly struct Line
         
         return (resultA, resultB);
     }
+    /// <summary>
+    /// Computes the intersection points between an infinite line and a quadrilateral, if they exist.
+    /// </summary>
+    /// <param name="linePoint">A point through which the infinite line passes.</param>
+    /// <param name="lineDirection">The direction vector of the infinite line.</param>
+    /// <param name="a">The first vertex of the quadrilateral.</param>
+    /// <param name="b">The second vertex of the quadrilateral.</param>
+    /// <param name="c">The third vertex of the quadrilateral.</param>
+    /// <param name="d">The fourth vertex of the quadrilateral.</param>
+    /// <returns>
+    /// A tuple containing up to two <see cref="CollisionPoint"/> objects representing the intersection points.
+    /// If no intersection exists, both points are invalid.
+    /// </returns>
+    /// <remarks>
+    /// The function checks each edge of the quadrilateral for intersections with the line.
+    /// </remarks>
     public static (CollisionPoint a, CollisionPoint b) IntersectLineQuad(Vector2 linePoint, Vector2 lineDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
         CollisionPoint resultA = new();
@@ -1319,11 +1529,39 @@ public readonly struct Line
         }
         return (resultA, resultB);
     }
-    
+    /// <summary>
+    /// Computes the intersection points between an infinite line and a rectangle, if they exist.
+    /// </summary>
+    /// <param name="linePoint">A point through which the infinite line passes.</param>
+    /// <param name="lineDirection">The direction vector of the infinite line.</param>
+    /// <param name="a">The first vertex of the rectangle.</param>
+    /// <param name="b">The second vertex of the rectangle.</param>
+    /// <param name="c">The third vertex of the rectangle.</param>
+    /// <param name="d">The fourth vertex of the rectangle.</param>
+    /// <returns>
+    /// A tuple containing up to two <see cref="CollisionPoint"/> objects representing the intersection points.
+    /// If no intersection exists, both points are invalid.
+    /// </returns>
+    /// <remarks>
+    /// This function is a specialized version of <see cref="IntersectLineQuad"/> for rectangles.
+    /// </remarks>
     public static (CollisionPoint a, CollisionPoint b) IntersectLineRect(Vector2 linePoint, Vector2 lineDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
         return IntersectLineQuad(linePoint, lineDirection, a, b, c, d);
     }
+    /// <summary>
+    /// Computes the intersection points between an infinite line and a polygon, if they exist.
+    /// </summary>
+    /// <param name="linePoint">A point through which the infinite line passes.</param>
+    /// <param name="lineDirection">The direction vector of the infinite line.</param>
+    /// <param name="points">A list of vertices defining the polygon.</param>
+    /// <param name="maxCollisionPoints">The maximum number of collision points to return. Use -1 for no limit.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection points, or null if no intersections exist.
+    /// </returns>
+    /// <remarks>
+    /// The function iterates through all edges of the polygon to find intersections with the line.
+    /// </remarks>
     public static CollisionPoints? IntersectLinePolygon(Vector2 linePoint, Vector2 lineDirection, List<Vector2> points, int maxCollisionPoints = -1)
     {
         if (points.Count < 3) return null;
@@ -1341,6 +1579,19 @@ public readonly struct Line
         }
         return result;
     }
+    /// <summary>
+    /// Computes the intersection points between an infinite line and a polyline, if they exist.
+    /// </summary>
+    /// <param name="linePoint">A point through which the infinite line passes.</param>
+    /// <param name="lineDirection">The direction vector of the infinite line.</param>
+    /// <param name="points">A list of vertices defining the polyline.</param>
+    /// <param name="maxCollisionPoints">The maximum number of collision points to return. Use -1 for no limit.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection points, or null if no intersections exist.
+    /// </returns>
+    /// <remarks>
+    /// The function iterates through all segments of the polyline to find intersections with the line.
+    /// </remarks>
     public static CollisionPoints? IntersectLinePolyline(Vector2 linePoint, Vector2 lineDirection, List<Vector2> points, int maxCollisionPoints = -1)
     {
         if (points.Count < 3) return null;
@@ -1358,6 +1609,19 @@ public readonly struct Line
         }
         return result;
     }
+    /// <summary>
+    /// Computes the intersection points between an infinite line and a collection of segments.
+    /// </summary>
+    /// <param name="linePoint">A point through which the infinite line passes.</param>
+    /// <param name="lineDirection">The direction vector of the infinite line.</param>
+    /// <param name="segments">A list of segments to check for intersections.</param>
+    /// <param name="maxCollisionPoints">The maximum number of collision points to return. Use -1 for no limit.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection points, or null if no intersections exist.
+    /// </returns>
+    /// <remarks>
+    /// The function iterates through all segments in the collection to find intersections with the line.
+    /// </remarks>
     public static CollisionPoints? IntersectLineSegments(Vector2 linePoint, Vector2 lineDirection, List<Segment> segments, int maxCollisionPoints = -1)
     {
         if (segments.Count <= 0) return null;
@@ -1376,7 +1640,20 @@ public readonly struct Line
         }
         return result;
     }
-
+    /// <summary>
+    /// Computes the intersection points between an infinite line and a polygon, if they exist.
+    /// </summary>
+    /// <param name="linePoint">A point through which the infinite line passes.</param>
+    /// <param name="lineDirection">The direction vector of the infinite line.</param>
+    /// <param name="points">A list of vertices defining the polygon. The polygon is assumed to be closed and non-self-intersecting.</param>
+    /// <param name="result">A reference to a <see cref="CollisionPoints"/> object that will be populated with intersection points, if any.</param>
+    /// <param name="returnAfterFirstValid">
+    /// If true, the function returns after finding the first valid intersection point. If false, all intersection points are found.
+    /// </param>
+    /// <returns>The number of intersection points found between the line and the polygon.</returns>
+    /// <remarks>
+    /// The function iterates through all edges of the polygon and checks for intersections with the line.
+    /// </remarks>
     public static int IntersectLinePolygon(Vector2 linePoint, Vector2 lineDirection, List<Vector2> points, ref CollisionPoints result, bool returnAfterFirstValid = false)
     {
         if (points.Count < 3) return 0;
@@ -1393,28 +1670,224 @@ public readonly struct Line
         }
         return count;
     }
+    /// <summary>
+    /// Computes the intersection point between this line and a segment.
+    /// </summary>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoint"/> at the intersection, or an invalid <see cref="CollisionPoint"/> if no intersection exists.
+    /// </returns>
+    /// <remarks>
+    /// This is a convenience method that uses the line's point and direction.
+    /// </remarks>
     public CollisionPoint IntersectSegment(Vector2 segmentStart, Vector2 segmentEnd) => IntersectLineSegment(Point, Direction, segmentStart, segmentEnd);
+    /// <summary>
+    /// Computes the intersection point between this line and a segment.
+    /// </summary>
+    /// <param name="segment">The <see cref="Segment"/> to check for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoint"/> at the intersection, or an invalid <see cref="CollisionPoint"/> if no intersection exists.
+    /// </returns>
+    /// <remarks>
+    /// This is a convenience method that uses the line's point and direction.
+    /// </remarks>
     public CollisionPoint IntersectSegment(Segment segment) => IntersectLineSegment(Point, Direction, segment.Start, segment.End, segment.Normal);
+    /// <summary>
+    /// Computes the intersection point between this line and another infinite line.
+    /// </summary>
+    /// <param name="otherPoint">A point through which the other line passes.</param>
+    /// <param name="otherDirection">The direction vector of the other line.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoint"/> at the intersection, or an invalid <see cref="CollisionPoint"/> if the lines are parallel.
+    /// </returns>
     public CollisionPoint IntersectLine(Vector2 otherPoint, Vector2 otherDirection) => IntersectLineLine(Point, Direction, otherPoint, otherDirection);
+    /// <summary>
+    /// Computes the intersection point between this line and another infinite line.
+    /// </summary>
+    /// <param name="otherLine">The <see cref="Line"/> to check for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoint"/> at the intersection, or an invalid <see cref="CollisionPoint"/> if the lines are parallel.
+    /// </returns>
     public CollisionPoint IntersectLine(Line otherLine) => IntersectLineLine(Point, Direction, otherLine.Point, otherLine.Direction, otherLine.Normal);
+    /// <summary>
+    /// Computes the intersection point between this line and a ray.
+    /// </summary>
+    /// <param name="otherPoint">The origin point of the ray.</param>
+    /// <param name="otherDirection">The direction vector of the ray.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoint"/> at the intersection, or an invalid <see cref="CollisionPoint"/> if the intersection does not lie in the direction of the ray.
+    /// </returns>
     public CollisionPoint IntersectRay(Vector2 otherPoint, Vector2 otherDirection) => IntersectLineRay(Point, Direction, otherPoint, otherDirection);
+    /// <summary>
+    /// Computes the intersection point between this line and a ray.
+    /// </summary>
+    /// <param name="otherRay">The <see cref="Ray"/> to check for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoint"/> at the intersection, or an invalid <see cref="CollisionPoint"/> if the intersection does not lie in the direction of the ray.
+    /// </returns>
     public CollisionPoint IntersectRay(Ray otherRay) => IntersectLineRay(Point, Direction, otherRay.Point, otherRay.Direction, otherRay.Normal);
+    /// <summary>
+    /// Computes the intersection points between this infinite line and a circle.
+    /// </summary>
+    /// <param name="otherCircle">The <see cref="Circle"/> to check for intersection.</param>
+    /// <returns>
+    /// A tuple containing up to two <see cref="CollisionPoint"/> objects representing the intersection points.
+    /// If no intersection exists, both points are invalid.
+    /// </returns>
     public (CollisionPoint a, CollisionPoint b) IntersectCircle(Circle otherCircle) => IntersectLineCircle(Point, Direction, otherCircle.Center, otherCircle.Radius);
+    /// <summary>
+    /// Computes the intersection points between this infinite line and a circle.
+    /// </summary>
+    /// <param name="circleCenter">The center of the circle.</param>
+    /// <param name="circleRadius">The radius of the circle.</param>
+    /// <returns>
+    /// A tuple containing up to two <see cref="CollisionPoint"/> objects representing the intersection points.
+    /// If no intersection exists, both points are invalid.
+    /// </returns>
     public (CollisionPoint a, CollisionPoint b) IntersectCircle(Vector2 circleCenter, float circleRadius) => IntersectLineCircle(Point, Direction, circleCenter, circleRadius);
+    /// <summary>
+    /// Computes the intersection points between this infinite line and a triangle defined by three vertices.
+    /// </summary>
+    /// <param name="a">The first vertex of the triangle.</param>
+    /// <param name="b">The second vertex of the triangle.</param>
+    /// <param name="c">The third vertex of the triangle.</param>
+    /// <returns>
+    /// A tuple containing up to two <see cref="CollisionPoint"/> objects representing the intersection points.
+    /// If no intersection exists, both points are invalid.
+    /// </returns>
     public (CollisionPoint a, CollisionPoint b) IntersectTriangle(Vector2 a, Vector2 b, Vector2 c) => IntersectLineTriangle(Point, Direction, a, b, c);
+    /// <summary>
+    /// Computes the intersection points between this infinite line and a triangle.
+    /// </summary>
+    /// <param name="triangle">The <see cref="Triangle"/> to check for intersection.</param>
+    /// <returns>
+    /// A tuple containing up to two <see cref="CollisionPoint"/> objects representing the intersection points.
+    /// If no intersection exists, both points are invalid.
+    /// </returns>
     public (CollisionPoint a, CollisionPoint b) IntersectTriangle(Triangle triangle) => IntersectLineTriangle(Point, Direction, triangle.A, triangle.B, triangle.C);
+    /// <summary>
+    /// Computes the intersection points between this infinite line and a quadrilateral defined by four vertices.
+    /// </summary>
+    /// <param name="a">The first vertex of the quadrilateral.</param>
+    /// <param name="b">The second vertex of the quadrilateral.</param>
+    /// <param name="c">The third vertex of the quadrilateral.</param>
+    /// <param name="d">The fourth vertex of the quadrilateral.</param>
+    /// <returns>
+    /// A tuple containing up to two <see cref="CollisionPoint"/> objects representing the intersection points.
+    /// If no intersection exists, both points are invalid.
+    /// </returns>
     public (CollisionPoint a, CollisionPoint b) IntersectQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => IntersectLineQuad(Point, Direction, a, b, c, d);
+    /// <summary>
+    /// Computes the intersection points between this infinite line and a quadrilateral.
+    /// </summary>
+    /// <param name="quad">The <see cref="Quad"/> to check for intersection.</param>
+    /// <returns>
+    /// A tuple containing up to two <see cref="CollisionPoint"/> objects representing the intersection points.
+    /// If no intersection exists, both points are invalid.
+    /// </returns>
     public (CollisionPoint a, CollisionPoint b) IntersectQuad(Quad quad) => IntersectLineQuad(Point, Direction, quad.A, quad.B, quad.C, quad.D);
+    /// <summary>
+    /// Computes the intersection points between this infinite line and a rectangle defined by four vertices.
+    /// </summary>
+    /// <param name="a">The first vertex of the rectangle.</param>
+    /// <param name="b">The second vertex of the rectangle.</param>
+    /// <param name="c">The third vertex of the rectangle.</param>
+    /// <param name="d">The fourth vertex of the rectangle.</param>
+    /// <returns>
+    /// A tuple containing up to two <see cref="CollisionPoint"/> objects representing the intersection points.
+    /// If no intersection exists, both points are invalid.
+    /// </returns>
     public (CollisionPoint a, CollisionPoint b) IntersectRect(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => IntersectLineQuad(Point, Direction, a, b, c, d);
+    /// <summary>
+    /// Computes the intersection points between this infinite line and a rectangle.
+    /// </summary>
+    /// <param name="rect">The <see cref="Rect"/> to check for intersection.</param>
+    /// <returns>
+    /// A tuple containing up to two <see cref="CollisionPoint"/> objects representing the intersection points.
+    /// If no intersection exists, both points are invalid.
+    /// </returns>
     public (CollisionPoint a, CollisionPoint b) IntersectRect(Rect rect) => IntersectLineQuad(Point, Direction, rect.A, rect.B, rect.C, rect.D);
-    
+    /// <summary>
+    /// Computes the intersection points between this infinite line and a polygon defined by a list of vertices.
+    /// </summary>
+    /// <param name="points">A list of vertices defining the polygon.</param>
+    /// <param name="maxCollisionPoints">
+    /// The maximum number of collision points to return. Use -1 for no limit.
+    /// </param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection points, or null if no intersections exist.
+    /// </returns>
     public CollisionPoints? IntersectPolygon(List<Vector2> points, int maxCollisionPoints = -1) => IntersectLinePolygon(Point, Direction, points, maxCollisionPoints);
+    /// <summary>
+    /// Computes the intersection points between this infinite line and a polygon.
+    /// </summary>
+    /// <param name="polygon">The <see cref="Polygon"/> to check for intersection.</param>
+    /// <param name="maxCollisionPoints">
+    /// The maximum number of collision points to return. Use -1 for no limit.
+    /// </param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection points, or null if no intersections exist.
+    /// </returns>
     public CollisionPoints? IntersectPolygon(Polygon polygon, int maxCollisionPoints = -1) => IntersectLinePolygon(Point, Direction, polygon, maxCollisionPoints);
+    /// <summary>
+    /// Computes the intersection points between this infinite line and a polyline defined by a list of vertices.
+    /// </summary>
+    /// <param name="points">A list of vertices defining the polyline.</param>
+    /// <param name="maxCollisionPoints">
+    /// The maximum number of collision points to return. Use -1 for no limit.
+    /// </param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection points, or null if no intersections exist.
+    /// </returns>
     public CollisionPoints? IntersectPolyline(List<Vector2> points, int maxCollisionPoints = -1) => IntersectLinePolyline(Point, Direction, points, maxCollisionPoints);
+    /// <summary>
+    /// Computes the intersection points between this infinite line and a polyline.
+    /// </summary>
+    /// <param name="polyline">The <see cref="Polyline"/> to check for intersection.</param>
+    /// <param name="maxCollisionPoints">
+    /// The maximum number of collision points to return. Use -1 for no limit.
+    /// </param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection points, or null if no intersections exist.
+    /// </returns>
     public CollisionPoints? IntersectPolyline(Polyline polyline, int maxCollisionPoints = -1) => IntersectLinePolyline(Point, Direction, polyline, maxCollisionPoints);
-    public CollisionPoints? IntersectSegments(List<Segment> segments, int maxCollisionPoints = -1) => IntersectLineSegments(Point, Direction, segments, maxCollisionPoints);
-    public CollisionPoints? IntersectSegments(Segments segments, int maxCollisionPoints = -1) => IntersectLineSegments(Point, Direction, segments, maxCollisionPoints);
     
+    /// <summary>
+    /// Computes the intersection points between this line and a collection of segments.
+    /// </summary>
+    /// <param name="segments">A list of <see cref="Segment"/> objects to check for intersections.</param>
+    /// <param name="maxCollisionPoints">The maximum number of collision points to return. Use -1 for no limit.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection points, or null if no intersections exist.
+    /// </returns>
+    /// <remarks>
+    /// This is a convenience method that uses the line's point and direction.
+    /// </remarks>
+    public CollisionPoints? IntersectSegments(List<Segment> segments, int maxCollisionPoints = -1) => IntersectLineSegments(Point, Direction, segments, maxCollisionPoints);
+    
+    /// <summary>
+    /// Computes the intersection points between this line and a collection of segments.
+    /// </summary>
+    /// <param name="segments">A <see cref="Segments"/> collection to check for intersections.</param>
+    /// <param name="maxCollisionPoints">The maximum number of collision points to return. Use -1 for no limit.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection points, or null if no intersections exist.
+    /// </returns>
+    /// <remarks>
+    /// This is a convenience method that uses the line's point and direction.
+    /// </remarks>
+    public CollisionPoints? IntersectSegments(Segments segments, int maxCollisionPoints = -1) => IntersectLineSegments(Point, Direction, segments, maxCollisionPoints);
+    /// <summary>
+    /// Computes the intersection points between this line and a collider shape, if any.
+    /// </summary>
+    /// <param name="collider">The <see cref="Collider"/> whose shape will be checked for intersection with this line.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection points, or null if no intersections exist or the collider is disabled.
+    /// </returns>
+    /// <remarks>
+    /// The function dispatches to the appropriate intersection method based on the collider's shape type.
+    /// </remarks>
     public CollisionPoints? Intersect(Collider collider)
     {
         if (!collider.Enabled) return null;
@@ -1452,6 +1925,16 @@ public readonly struct Line
 
         return null;
     }
+    /// <summary>
+    /// Computes the intersection points between this line and a <see cref="Segment"/> shape.
+    /// </summary>
+    /// <param name="segment">The <see cref="Segment"/> to check for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection point, or null if no intersection exists.
+    /// </returns>
+    /// <remarks>
+    /// This is a convenience method that uses the line's point and direction.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Segment segment)
     {
         var result = IntersectLineSegment(Point, Direction, segment.Start, segment.End, segment.Normal);
@@ -1464,6 +1947,16 @@ public readonly struct Line
 
         return null;
     }
+    /// <summary>
+    /// Computes the intersection points between this line and another <see cref="Line"/> shape.
+    /// </summary>
+    /// <param name="line">The <see cref="Line"/> to check for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection point, or null if no intersection exists.
+    /// </returns>
+    /// <remarks>
+    /// This is a convenience method that uses the line's point and direction.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Line line)
     {
         var result = IntersectLineLine(Point, Direction, line.Point, line.Direction, line.Normal);
@@ -1476,6 +1969,16 @@ public readonly struct Line
 
         return null;
     }
+    /// <summary>
+    /// Computes the intersection points between this line and a <see cref="Ray"/> shape.
+    /// </summary>
+    /// <param name="ray">The <see cref="Ray"/> to check for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection point, or null if no intersection exists.
+    /// </returns>
+    /// <remarks>
+    /// This is a convenience method that uses the line's point and direction.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Ray ray)
     {
         var result = IntersectLineRay(Point, Direction, ray.Point, ray.Direction, ray.Normal);
@@ -1488,6 +1991,16 @@ public readonly struct Line
 
         return null;
     }
+    /// <summary>
+    /// Computes the intersection points between this line and a <see cref="Circle"/> shape.
+    /// </summary>
+    /// <param name="circle">The <see cref="Circle"/> to check for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection points, or null if no intersection exists.
+    /// </returns>
+    /// <remarks>
+    /// This is a convenience method that uses the line's point and direction.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Circle circle)
     {
         var result = IntersectLineCircle(Point, Direction, circle.Center, circle.Radius);
@@ -1507,6 +2020,16 @@ public readonly struct Line
 
         return null;
     }
+    /// <summary>
+    /// Computes the intersection points between this line and a <see cref="Triangle"/> shape.
+    /// </summary>
+    /// <param name="t">The <see cref="Triangle"/> to check for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection points, or null if no intersection exists.
+    /// </returns>
+    /// <remarks>
+    /// This is a convenience method that uses the line's point and direction.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Triangle t)
     {
         var result = IntersectLineTriangle(Point, Direction, t.A, t.B, t.C);
@@ -1526,6 +2049,16 @@ public readonly struct Line
 
         return null;
     }
+    /// <summary>
+    /// Computes the intersection points between this line and a <see cref="Quad"/> shape.
+    /// </summary>
+    /// <param name="q">The <see cref="Quad"/> to check for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection points, or null if no intersection exists.
+    /// </returns>
+    /// <remarks>
+    /// This is a convenience method that uses the line's point and direction.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Quad q)
     {
         var result = IntersectLineQuad(Point, Direction, q.A, q.B, q.C, q.D);
@@ -1545,6 +2078,16 @@ public readonly struct Line
 
         return null;
     }
+    /// <summary>
+    /// Computes the intersection points between this line and a <see cref="Rect"/> shape.
+    /// </summary>
+    /// <param name="r">The <see cref="Rect"/> to check for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection points, or null if no intersection exists.
+    /// </returns>
+    /// <remarks>
+    /// This is a convenience method that uses the line's point and direction.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Rect r)
     {
         //a test to see if 2 rays in opposite directions work
@@ -1592,11 +2135,61 @@ public readonly struct Line
         
         return null;
     }
+    /// <summary>
+    /// Computes the intersection points between this line and a <see cref="Polygon"/> shape.
+    /// </summary>
+    /// <param name="p">The <see cref="Polygon"/> to check for intersection.</param>
+    /// <param name="maxCollisionPoints">
+    /// The maximum number of collision points to return. Use -1 for no limit.
+    /// </param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection points, or null if no intersections exist.
+    /// </returns>
+    /// <remarks>
+    /// This method iterates through all edges of the polygon and checks for intersections with the line.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Polygon p, int maxCollisionPoints = -1) => IntersectLinePolygon(Point, Direction, p, maxCollisionPoints);
+    /// <summary>
+    /// Computes the intersection points between this line and a <see cref="Polyline"/> shape.
+    /// </summary>
+    /// <param name="pl">The <see cref="Polyline"/> to check for intersection.</param>
+    /// <param name="maxCollisionPoints">
+    /// The maximum number of collision points to return. Use -1 for no limit.
+    /// </param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection points, or null if no intersections exist.
+    /// </returns>
+    /// <remarks>
+    /// This method iterates through all segments of the polyline and checks for intersections with the line.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Polyline pl, int maxCollisionPoints = -1) => IntersectLinePolyline(Point, Direction, pl, maxCollisionPoints);
+    /// <summary>
+    /// Computes the intersection points between this line and a <see cref="Segments"/> collection.
+    /// </summary>
+    /// <param name="segments">The <see cref="Segments"/> collection to check for intersections.</param>
+    /// <param name="maxCollisionPoints">
+    /// The maximum number of collision points to return. Use -1 for no limit.
+    /// </param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing the intersection points, or null if no intersections exist.
+    /// </returns>
+    /// <remarks>
+    /// This method iterates through all segments in the collection and checks for intersections with the line.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Segments segments, int maxCollisionPoints = -1) => IntersectLineSegments(Point, Direction, segments, maxCollisionPoints);
-    
-     public int Intersect(Collider collider, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    /// <summary>
+    /// Computes the intersection points between this line and a collider shape, populating a <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="collider">The <see cref="Collider"/> whose shape will be checked for intersection with this line.</param>
+    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to be populated with intersection points.</param>
+    /// <param name="returnAfterFirstValid">
+    /// If true, the function returns after finding the first valid intersection point. If false, all intersection points are found.
+    /// </param>
+    /// <returns>The number of intersection points found between the line and the collider's shape.</returns>
+    /// <remarks>
+    /// The function dispatches to the appropriate intersection method based on the collider's shape type.
+    /// </remarks>
+    public int Intersect(Collider collider, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (!collider.Enabled) return 0;
 
@@ -1633,6 +2226,15 @@ public readonly struct Line
 
         return 0;
     }
+    /// <summary>
+    /// Computes the intersection points between this line and a <see cref="Ray"/> shape.
+    /// </summary>
+    /// <param name="r">The <see cref="Ray"/> to check for intersection.</param>
+    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to be populated with intersection points.</param>
+    /// <returns>The number of intersection points found between the line and the ray.</returns>
+    /// <remarks>
+    /// This method uses the line's point and direction to compute intersections with the given ray.
+    /// </remarks>
     public int IntersectShape(Ray r, ref CollisionPoints points)
     {
         var cp = IntersectLineRay(Point, Direction, r.Point, r.Direction, r.Normal);
@@ -1644,6 +2246,13 @@ public readonly struct Line
 
         return 0;
     }
+    /// <summary>
+    /// Computes the intersection point between this line and another <see cref="Line"/> shape,
+    /// populating a <see cref="CollisionPoints"/> collection if an intersection exists.
+    /// </summary>
+    /// <param name="l">The <see cref="Line"/> to check for intersection.</param>
+    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to be populated with intersection points.</param>
+    /// <returns>The number of intersection points found between the two lines (0 or 1).</returns>
     public int IntersectShape(Line l, ref CollisionPoints points)
     {
         var cp = IntersectLineLine(Point, Direction, l.Point, l.Direction, l.Normal);
@@ -1655,6 +2264,15 @@ public readonly struct Line
 
         return 0;
     }
+    /// <summary>
+    /// Computes the intersection points between this line and a <see cref="Segment"/> shape, populating a <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="s">The <see cref="Segment"/> to check for intersection.</param>
+    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to be populated with intersection points.</param>
+    /// <returns>The number of intersection points found between the line and the segment.</returns>
+    /// <remarks>
+    /// This method checks if the line intersects the segment and, if so, adds the intersection point to the collection.
+    /// </remarks>
     public int IntersectShape(Segment s, ref CollisionPoints points)
     {
         var cp = IntersectLineSegment(Point, Direction, s.Start, s.End);
@@ -1666,6 +2284,19 @@ public readonly struct Line
 
         return 0;
     }
+    /// <summary>
+    /// Computes the intersection points between this line and a <see cref="Circle"/> shape,
+    /// populating a <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="c">The <see cref="Circle"/> to check for intersection.</param>
+    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to be populated with intersection points.</param>
+    /// <param name="returnAfterFirstValid">
+    /// If true, the function returns after finding the first valid intersection point. If false, all intersection points are found.
+    /// </param>
+    /// <returns>The number of intersection points found between the line and the circle.</returns>
+    /// <remarks>
+    /// This method uses the line's point and direction to compute intersections with the given circle.
+    /// </remarks>
     public int IntersectShape(Circle c, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         var result = IntersectLineCircle(Point, Direction, c.Center, c.Radius);
@@ -1695,6 +2326,19 @@ public readonly struct Line
 
         return 0;
     }
+    /// <summary>
+    /// Computes the intersection points between this line and a <see cref="Triangle"/> shape,
+    /// populating a <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="t">The <see cref="Triangle"/> to check for intersection.</param>
+    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to be populated with intersection points.</param>
+    /// <param name="returnAfterFirstValid">
+    /// If true, the function returns after finding the first valid intersection point. If false, all intersection points are found.
+    /// </param>
+    /// <returns>The number of intersection points found between the line and the triangle.</returns>
+    /// <remarks>
+    /// This method uses the line's point and direction to compute intersections with the given triangle.
+    /// </remarks>
     public int IntersectShape(Triangle t, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         var cp = IntersectLineSegment(Point, Direction, t.A, t.B);
@@ -1726,6 +2370,19 @@ public readonly struct Line
 
         return count;
     }
+    /// <summary>
+    /// Computes the intersection points between this line and a <see cref="Quad"/> shape,
+    /// populating a <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="q">The <see cref="Quad"/> to check for intersection.</param>
+    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to be populated with intersection points.</param>
+    /// <param name="returnAfterFirstValid">
+    /// If true, the function returns after finding the first valid intersection point. If false, all intersection points are found.
+    /// </param>
+    /// <returns>The number of intersection points found between the line and the quad.</returns>
+    /// <remarks>
+    /// This method uses the line's point and direction to compute intersections with the given quad.
+    /// </remarks>
     public int IntersectShape(Quad q, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         var cp = IntersectLineSegment(Point, Direction, q.A, q.B);
@@ -1767,6 +2424,19 @@ public readonly struct Line
         }
         return count;
     }
+    /// <summary>
+    /// Computes the intersection points between this line and a <see cref="Rect"/> shape,
+    /// populating a <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="r">The <see cref="Rect"/> to check for intersection.</param>
+    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to be populated with intersection points.</param>
+    /// <param name="returnAfterFirstValid">
+    /// If true, the function returns after finding the first valid intersection point. If false, all intersection points are found.
+    /// </param>
+    /// <returns>The number of intersection points found between the line and the rectangle.</returns>
+    /// <remarks>
+    /// This method uses the line's point and direction to compute intersections with the given rectangle.
+    /// </remarks>
     public int IntersectShape(Rect r, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         var a = r.TopLeft;
@@ -1813,6 +2483,18 @@ public readonly struct Line
         }
         return count;
     }
+    /// <summary>
+    /// Computes the intersection points between this line and a <see cref="Polygon"/> shape, populating a <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="p">The <see cref="Polygon"/> to check for intersection.</param>
+    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to be populated with intersection points.</param>
+    /// <param name="returnAfterFirstValid">
+    /// If true, the function returns after finding the first valid intersection point. If false, all intersection points are found.
+    /// </param>
+    /// <returns>The number of intersection points found between the line and the polygon.</returns>
+    /// <remarks>
+    /// This method iterates through all edges of the polygon and checks for intersections with the line.
+    /// </remarks>
     public int IntersectShape(Polygon p, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (p.Count < 3) return 0;
@@ -1829,6 +2511,18 @@ public readonly struct Line
         }
         return count;
     }
+    /// <summary>
+    /// Computes the intersection points between this line and a <see cref="Polyline"/> shape, populating a <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="pl">The <see cref="Polyline"/> to check for intersection.</param>
+    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to be populated with intersection points.</param>
+    /// <param name="returnAfterFirstValid">
+    /// If true, the function returns after finding the first valid intersection point. If false, all intersection points are found.
+    /// </param>
+    /// <returns>The number of intersection points found between the line and the polyline.</returns>
+    /// <remarks>
+    /// This method iterates through all segments of the polyline and checks for intersections with the line.
+    /// </remarks>
     public int IntersectShape(Polyline pl, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (pl.Count < 2) return 0;
@@ -1845,6 +2539,19 @@ public readonly struct Line
         }
         return count;
     }
+    /// <summary>
+    /// Computes the intersection points between this line and a <see cref="Segments"/> collection,
+    /// populating a <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="shape">The <see cref="Segments"/> collection to check for intersections.</param>
+    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to be populated with intersection points.</param>
+    /// <param name="returnAfterFirstValid">
+    /// If true, the function returns after finding the first valid intersection point. If false, all intersection points are found.
+    /// </param>
+    /// <returns>The number of intersection points found between the line and the segments.</returns>
+    /// <remarks>
+    /// This method iterates through all segments in the collection and checks for intersections with the line.
+    /// </remarks>
     public int IntersectShape(Segments shape, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (shape.Count <= 0) return 0;
@@ -1866,7 +2573,17 @@ public readonly struct Line
     #endregion
 
     #region Overlap
-
+    /// <summary>
+    /// Determines whether an infinite line and a finite segment overlap (i.e., intersect at any point).
+    /// </summary>
+    /// <param name="linePoint">A point through which the infinite line passes.</param>
+    /// <param name="lineDirection">The direction vector of the infinite line (does not need to be normalized).</param>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <returns>True if the line and segment overlap (intersect); otherwise, false.</returns>
+    /// <remarks>
+    /// This method checks if the infinite line crosses the segment at any point, including at the endpoints.
+    /// </remarks>
     public static bool OverlapLineSegment(Vector2 linePoint, Vector2 lineDirection, Vector2 segmentStart, Vector2 segmentEnd)
     {
         // Line AB (infinite line) represented by linePoint and lineDirection
@@ -1893,6 +2610,17 @@ public readonly struct Line
         
         return Segment.IsPointOnSegment(intersection, segmentStart, segmentEnd);
     }
+    /// <summary>
+    /// Determines whether two infinite lines overlap (i.e., are collinear).
+    /// </summary>
+    /// <param name="line1Point">A point on the first line.</param>
+    /// <param name="line1Direction">The direction vector of the first line.</param>
+    /// <param name="line2Point">A point on the second line.</param>
+    /// <param name="line2Direction">The direction vector of the second line.</param>
+    /// <returns>True if the lines overlap; otherwise, false.</returns>
+    /// <remarks>
+    /// This function checks for collinearity by comparing the cross product of the direction vectors.
+    /// </remarks>
     public static bool OverlapLineLine(Vector2 line1Point, Vector2 line1Direction, Vector2 line2Point, Vector2 line2Direction)
     {
         // Calculate the denominator of the intersection formula
@@ -1909,6 +2637,17 @@ public readonly struct Line
 
         return true;
     }
+    /// <summary>
+    /// Determines whether an infinite line and a ray overlap (i.e., are collinear and extend in the same direction).
+    /// </summary>
+    /// <param name="linePoint">A point on the infinite line.</param>
+    /// <param name="lineDirection">The direction vector of the infinite line.</param>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <returns>True if the line and ray overlap; otherwise, false.</returns>
+    /// <remarks>
+    /// The function checks for collinearity and ensures the ray extends in the same direction as the line.
+    /// </remarks>
     public static bool OverlapLineRay(Vector2 linePoint, Vector2 lineDirection, Vector2 rayPoint, Vector2 rayDirection)
     {
         // Calculate the denominator of the intersection formula
@@ -1925,6 +2664,14 @@ public readonly struct Line
 
         return u >= 0;
     }
+    /// <summary>
+    /// Determines whether an infinite line and a circle overlap (i.e., the line passes through or touches the circle).
+    /// </summary>
+    /// <param name="linePoint">A point on the infinite line.</param>
+    /// <param name="lineDirection">The direction vector of the infinite line.</param>
+    /// <param name="circleCenter">The center of the circle.</param>
+    /// <param name="circleRadius">The radius of the circle.</param>
+    /// <returns>True if the line and circle overlap; otherwise, false.</returns>
     public static bool OverlapLineCircle(Vector2 linePoint, Vector2 lineDirection, Vector2 circleCenter, float circleRadius)
     {
         // Normalize the direction vector
@@ -1951,6 +2698,15 @@ public readonly struct Line
 
         return false;
     }
+    /// <summary>
+    /// Determines whether an infinite line and a triangle overlap (i.e., the line passes through or touches the triangle).
+    /// </summary>
+    /// <param name="linePoint">A point on the infinite line.</param>
+    /// <param name="lineDirection">The direction vector of the infinite line.</param>
+    /// <param name="a">The first vertex of the triangle.</param>
+    /// <param name="b">The second vertex of the triangle.</param>
+    /// <param name="c">The third vertex of the triangle.</param>
+    /// <returns>True if the line and triangle overlap; otherwise, false.</returns>
     public static bool OverlapLineTriangle(Vector2 linePoint, Vector2 lineDirection, Vector2 a, Vector2 b, Vector2 c)
     {
         if (Triangle.ContainsTrianglePoint(a, b, c, linePoint)) return true;
@@ -1966,6 +2722,16 @@ public readonly struct Line
 
         return false;
     }
+    /// <summary>
+    /// Determines whether an infinite line and a quadrilateral overlap (i.e., the line passes through or touches the quadrilateral).
+    /// </summary>
+    /// <param name="linePoint">A point on the infinite line.</param>
+    /// <param name="lineDirection">The direction vector of the infinite line.</param>
+    /// <param name="a">The first vertex of the quadrilateral.</param>
+    /// <param name="b">The second vertex of the quadrilateral.</param>
+    /// <param name="c">The third vertex of the quadrilateral.</param>
+    /// <param name="d">The fourth vertex of the quadrilateral.</param>
+    /// <returns>True if the line and quadrilateral overlap; otherwise, false.</returns>
     public static bool OverlapLineQuad(Vector2 linePoint, Vector2 lineDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
         if (Quad.ContainsQuadPoint(a, b, c, d,  linePoint)) return true;
@@ -1984,11 +2750,27 @@ public readonly struct Line
         
         return false;
     }
-    
+    /// <summary>
+    /// Determines whether an infinite line and a rectangle overlap (i.e., the line passes through or touches the rectangle).
+    /// </summary>
+    /// <param name="linePoint">A point on the infinite line.</param>
+    /// <param name="lineDirection">The direction vector of the infinite line.</param>
+    /// <param name="a">The first vertex of the rectangle.</param>
+    /// <param name="b">The second vertex of the rectangle.</param>
+    /// <param name="c">The third vertex of the rectangle.</param>
+    /// <param name="d">The fourth vertex of the rectangle.</param>
+    /// <returns>True if the line and rectangle overlap; otherwise, false.</returns>
     public static bool OverlapLineRect(Vector2 linePoint, Vector2 lineDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
         return OverlapLineQuad(linePoint, lineDirection, a, b, c, d);
     }
+    /// <summary>
+    /// Determines whether an infinite line and a polygon overlap (i.e., the line passes through or touches the polygon).
+    /// </summary>
+    /// <param name="linePoint">A point on the infinite line.</param>
+    /// <param name="lineDirection">The direction vector of the infinite line.</param>
+    /// <param name="points">A list of vertices defining the polygon. The polygon is assumed to be closed and non-self-intersecting.</param>
+    /// <returns>True if the line and polygon overlap; otherwise, false.</returns>
     public static bool OverlapLinePolygon(Vector2 linePoint, Vector2 lineDirection, List<Vector2> points)
     {
         if (points.Count < 3) return false;
@@ -2000,6 +2782,13 @@ public readonly struct Line
         }
         return false;
     }
+    /// <summary>
+    /// Determines whether an infinite line and a polyline overlap (i.e., the line passes through or touches any segment of the polyline).
+    /// </summary>
+    /// <param name="linePoint">A point on the infinite line.</param>
+    /// <param name="lineDirection">The direction vector of the infinite line.</param>
+    /// <param name="points">A list of vertices defining the polyline. The polyline is assumed to be open and non-self-intersecting.</param>
+    /// <returns>True if the line and polyline overlap; otherwise, false.</returns>
     public static bool OverlapLinePolyline(Vector2 linePoint, Vector2 lineDirection, List<Vector2> points)
     {
         if (points.Count < 3) return false;
@@ -2010,6 +2799,13 @@ public readonly struct Line
         }
         return false;
     }
+    /// <summary>
+    /// Determines whether an infinite line overlaps (intersects) with any segment in a list of segments.
+    /// </summary>
+    /// <param name="linePoint">A point on the infinite line.</param>
+    /// <param name="lineDirection">The direction vector of the infinite line.</param>
+    /// <param name="segments">A list of <see cref="Segment"/> objects to check for overlap with the line.</param>
+    /// <returns>True if the line overlaps with any segment in the list; otherwise, false.</returns>
     public static bool OverlapLineSegments(Vector2 linePoint, Vector2 lineDirection, List<Segment> segments)
     {
         if (segments.Count <= 0) return false;
@@ -2021,20 +2817,89 @@ public readonly struct Line
         }
         return false;
     }
-
+    /// <summary>
+    /// Determines whether the specified point lies on this infinite line.
+    /// </summary>
+    /// <param name="p">The point to check.</param>
+    /// <returns>True if the point lies on the line; otherwise, false.</returns>
     public bool OverlapPoint(Vector2 p) => IsPointOnLine(Point, Direction, p);
+    /// <summary>
+    /// Determines whether this infinite line and a finite segment overlap (i.e., intersect at any point).
+    /// </summary>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <returns>True if the line and segment overlap (intersect); otherwise, false.</returns>
     public bool OverlapSegment(Vector2 segmentStart, Vector2 segmentEnd) => OverlapLineSegment(Point, Direction, segmentStart, segmentEnd);
+    /// <summary>
+    /// Determines whether this infinite line and another infinite line overlap (i.e., are collinear).
+    /// </summary>
+    /// <param name="linePoint">A point on the other line.</param>
+    /// <param name="lineDirection">The direction vector of the other line.</param>
+    /// <returns>True if the lines overlap; otherwise, false.</returns>
     public bool OverlapLine(Vector2 linePoint, Vector2 lineDirection) => OverlapLineLine(Point, Direction, linePoint, lineDirection);
+    /// <summary>
+    /// Determines whether this infinite line and a ray overlap (i.e., are collinear and extend in the same direction).
+    /// </summary>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <returns>True if the line and ray overlap; otherwise, false.</returns>
     public bool OverlapRay(Vector2 rayPoint, Vector2 rayDirection) => OverlapLineRay(Point, Direction, rayPoint, rayDirection);
+    /// <summary>
+    /// Determines whether this infinite line and a circle overlap (i.e., the line passes through or touches the circle).
+    /// </summary>
+    /// <param name="circleCenter">The center of the circle.</param>
+    /// <param name="circleRadius">The radius of the circle.</param>
+    /// <returns>True if the line and circle overlap; otherwise, false.</returns>
     public bool OverlapCircle(Vector2 circleCenter, float circleRadius) => OverlapLineCircle(Point, Direction, circleCenter, circleRadius);
+    /// <summary>
+    /// Determines whether this infinite line and a triangle defined by three vertices overlap (i.e., the line passes through or touches the triangle).
+    /// </summary>
+    /// <param name="a">The first vertex of the triangle.</param>
+    /// <param name="b">The second vertex of the triangle.</param>
+    /// <param name="c">The third vertex of the triangle.</param>
+    /// <returns>True if the line and triangle overlap; otherwise, false.</returns>
     public bool OverlapTriangle(Vector2 a, Vector2 b, Vector2 c) => OverlapLineTriangle(Point, Direction, a, b, c);
+    /// <summary>
+    /// Determines whether this infinite line and a quadrilateral defined by four vertices overlap (i.e., the line passes through or touches the quadrilateral).
+    /// </summary>
+    /// <param name="a">The first vertex of the quadrilateral.</param>
+    /// <param name="b">The second vertex of the quadrilateral.</param>
+    /// <param name="c">The third vertex of the quadrilateral.</param>
+    /// <param name="d">The fourth vertex of the quadrilateral.</param>
+    /// <returns>True if the line and quadrilateral overlap; otherwise, false.</returns>
     public bool OverlapQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => OverlapLineQuad(Point, Direction, a, b, c, d);
+    /// <summary>
+    /// Determines whether this infinite line and a rectangle defined by four vertices overlap (i.e., the line passes through or touches the rectangle).
+    /// </summary>
+    /// <param name="a">The first vertex of the rectangle.</param>
+    /// <param name="b">The second vertex of the rectangle.</param>
+    /// <param name="c">The third vertex of the rectangle.</param>
+    /// <param name="d">The fourth vertex of the rectangle.</param>
+    /// <returns>True if the line and rectangle overlap; otherwise, false.</returns>
     public bool OverlapRect(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => OverlapLineQuad(Point, Direction, a, b, c, d);
+    /// <summary>
+    /// Determines whether this infinite line and a polygon overlap (i.e., the line passes through or touches the polygon).
+    /// </summary>
+    /// <param name="points">A list of vertices defining the polygon. The polygon is assumed to be closed and non-self-intersecting.</param>
+    /// <returns>True if the line and polygon overlap; otherwise, false.</returns>
     public bool OverlapPolygon(List<Vector2> points) => OverlapLinePolygon(Point, Direction, points);
+    /// <summary>
+    /// Determines whether this infinite line and a polyline overlap (i.e., the line passes through or touches any segment of the polyline).
+    /// </summary>
+    /// <param name="points">A list of vertices defining the polyline. The polyline is assumed to be open and non-self-intersecting.</param>
+    /// <returns>True if the line and polyline overlap; otherwise, false.</returns>
     public bool OverlapPolyline(List<Vector2> points) => OverlapLinePolyline(Point, Direction, points);
+    /// <summary>
+    /// Determines whether this infinite line and any segment in the provided list overlap (i.e., intersect at any point).
+    /// </summary>
+    /// <param name="segments">A list of <see cref="Segment"/> objects to check for overlap with the line.</param>
+    /// <returns>True if the line overlaps with any segment in the list; otherwise, false.</returns>
     public bool OverlapSegments(List<Segment> segments) => OverlapLineSegments(Point, Direction, segments);
-    
-    
+    /// <summary>
+    /// Determines whether this infinite line overlaps (intersects) with the shape of the specified <see cref="Collider"/>.
+    /// </summary>
+    /// <param name="collider">The <see cref="Collider"/> whose shape will be checked for overlap with this line.</param>
+    /// <returns>True if the line overlaps with the collider's shape; otherwise, false.</returns>
     public bool Overlap(Collider collider)
     {
         if (!collider.Enabled) return false;
@@ -2072,15 +2937,65 @@ public readonly struct Line
 
         return false;
     }
+    /// <summary>
+    /// Determines whether this infinite line and another <see cref="Line"/> overlap (i.e., are collinear).
+    /// </summary>
+    /// <param name="line">The <see cref="Line"/> to check for overlap.</param>
+    /// <returns>True if the lines overlap; otherwise, false.</returns>
     public bool OverlapShape(Line line) => OverlapLineLine(Point, Direction, line.Point, line.Direction);
+    /// <summary>
+    /// Determines whether this infinite line and a <see cref="Ray"/> overlap (i.e., are collinear and extend in the same direction).
+    /// </summary>
+    /// <param name="ray">The <see cref="Ray"/> to check for overlap.</param>
+    /// <returns>True if the line and ray overlap; otherwise, false.</returns>
     public bool OverlapShape(Ray ray) => OverlapLineRay(Point, Direction, ray.Point, ray.Direction);
+    /// <summary>
+    /// Determines whether this infinite line and the specified <see cref="Segment"/> overlap (i.e., intersect at any point).
+    /// </summary>
+    /// <param name="segment">The <see cref="Segment"/> to check for overlap with this line.</param>
+    /// <returns>True if the line and segment overlap (intersect); otherwise, false.</returns>
     public bool OverlapShape(Segment segment) => OverlapLineSegment(Point, Direction, segment.Start, segment.End);
+    /// <summary>
+    /// Determines whether this infinite line and the specified <see cref="Circle"/> overlap (i.e., the line passes through or touches the circle).
+    /// </summary>
+    /// <param name="circle">The <see cref="Circle"/> to check for overlap with this line.</param>
+    /// <returns>True if the line and circle overlap; otherwise, false.</returns>
     public bool OverlapShape(Circle circle) => OverlapLineCircle(Point, Direction, circle.Center, circle.Radius);
+    /// <summary>
+    /// Determines whether this infinite line and the specified <see cref="Triangle"/> overlap (i.e., the line passes through or touches the triangle).
+    /// </summary>
+    /// <param name="t">The <see cref="Triangle"/> to check for overlap with this line.</param>
+    /// <returns>True if the line and triangle overlap; otherwise, false.</returns>
     public bool OverlapShape(Triangle t) => OverlapLineTriangle(Point, Direction, t.A, t.B, t.C);
+    /// <summary>
+    /// Determines whether this infinite line and the specified <see cref="Quad"/> overlap (i.e., the line passes through or touches the quadrilateral).
+    /// </summary>
+    /// <param name="q">The <see cref="Quad"/> to check for overlap with this line.</param>
+    /// <returns>True if the line and quad overlap; otherwise, false.</returns>
     public bool OverlapShape(Quad q) => OverlapLineQuad(Point, Direction, q.A, q.B, q.C, q.D);
+    /// <summary>
+    /// Determines whether this infinite line and the specified <see cref="Rect"/> overlap (i.e., the line passes through or touches the rectangle).
+    /// </summary>
+    /// <param name="r">The <see cref="Rect"/> to check for overlap with this line.</param>
+    /// <returns>True if the line and rectangle overlap; otherwise, false.</returns>
     public bool OverlapShape(Rect r) => OverlapLineQuad(Point, Direction, r.A, r.B, r.C, r.D);
+    /// <summary>
+    /// Determines whether this infinite line and the specified <see cref="Polygon"/> overlap (i.e., the line passes through or touches the polygon).
+    /// </summary>
+    /// <param name="p">The <see cref="Polygon"/> to check for overlap with this line.</param>
+    /// <returns>True if the line and polygon overlap; otherwise, false.</returns>
     public bool OverlapShape(Polygon p) => OverlapLinePolygon(Point, Direction, p);
+    /// <summary>
+    /// Determines whether this infinite line and the specified <see cref="Polyline"/> overlap (i.e., the line passes through or touches any segment of the polyline).
+    /// </summary>
+    /// <param name="pl">The <see cref="Polyline"/> to check for overlap with this line.</param>
+    /// <returns>True if the line and polyline overlap; otherwise, false.</returns>
     public bool OverlapShape(Polyline pl) => OverlapLinePolyline(Point, Direction, pl);
+    /// <summary>
+    /// Determines whether this infinite line overlaps (intersects) with any segment in the provided <see cref="Segments"/> collection.
+    /// </summary>
+    /// <param name="segments">A <see cref="Segments"/> collection to check for overlap with this line.</param>
+    /// <returns>True if the line overlaps with any segment in the collection; otherwise, false.</returns>
     public bool OverlapShape(Segments segments) => OverlapLineSegments(Point, Direction, segments);
 
     #endregion
