@@ -2,7 +2,6 @@
 using ShapeEngine.Core;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.Line;
 using ShapeEngine.Geometry.Segment;
 using ShapeEngine.Random;
 using ShapeEngine.StaticLib;
@@ -1034,7 +1033,7 @@ public class Polyline : Points, IEquatable<Polyline>
     }
     public static bool OverlapPolylineLine(List<Vector2> points, Vector2 linePoint, Vector2 lineDirection)
     {
-        return LineOverlap.OverlapLinePolyline(linePoint, lineDirection, points);
+        return Line.Line.OverlapLinePolyline(linePoint, lineDirection, points);
     }
     public static bool OverlapPolylineRay(List<Vector2> points, Vector2 rayPoint, Vector2 rayDirection)
     {

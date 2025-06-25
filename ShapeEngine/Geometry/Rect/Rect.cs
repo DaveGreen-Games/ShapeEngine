@@ -2,7 +2,6 @@
 using Raylib_cs;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.Line;
 using ShapeEngine.Geometry.Segment;
 using ShapeEngine.Random;
 using ShapeEngine.StaticLib;
@@ -2643,7 +2642,7 @@ public readonly struct Rect : IEquatable<Rect>
     }
     public static bool OverlapRectLine(Vector2 a, Vector2 b, Vector2 c, Vector2 d,Vector2 linePoint, Vector2 lineDirection)
     {
-        return LineOverlap.OverlapLineQuad(linePoint, lineDirection, a, b, c, d);
+        return Line.Line.OverlapLineQuad(linePoint, lineDirection, a, b, c, d);
     }
     public static bool OverlapRectRay(Vector2 a, Vector2 b, Vector2 c, Vector2 d,Vector2 rayPoint, Vector2 rayDirection)
     {
