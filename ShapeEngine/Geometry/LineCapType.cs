@@ -1,4 +1,4 @@
-namespace ShapeEngine.Core.Structs;
+namespace ShapeEngine.Geometry;
 
 /// <summary>
 /// Determines how the end of a line is drawn.

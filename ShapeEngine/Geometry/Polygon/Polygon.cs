@@ -3,7 +3,6 @@ using Clipper2Lib;
 using ShapeEngine.Core;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.Segment;
 using ShapeEngine.Random;
 using ShapeEngine.StaticLib;
 using Size = ShapeEngine.Core.Structs.Size;

@@ -9,6 +9,7 @@ using Examples.Scenes;
 using Examples.UIElements;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.Circle;
 using ShapeEngine.Screen;
 using ShapeEngine.Geometry.Rect;

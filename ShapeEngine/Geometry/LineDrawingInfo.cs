@@ -1,7 +1,7 @@
 using ShapeEngine.Color;
 using ShapeEngine.StaticLib;
 
-namespace ShapeEngine.Core.Structs;
+namespace ShapeEngine.Geometry;
 
 /// <summary>
 /// Used for defining how a line is drawn.
