@@ -1,7 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Core.CollisionSystem;
-using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.Circle;
 using ShapeEngine.StaticLib;
 using ShapeEngine.StaticLib.Drawing;
 

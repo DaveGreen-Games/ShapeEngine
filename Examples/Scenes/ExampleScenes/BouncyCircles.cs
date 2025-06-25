@@ -1,7 +1,8 @@
 ﻿using ShapeEngine.Core;
 using System.Numerics;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Core.Shapes;
+using ShapeEngine.Geometry.Polygon;
+using ShapeEngine.Geometry.Rect;
 using ShapeEngine.Input;
 using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Random;

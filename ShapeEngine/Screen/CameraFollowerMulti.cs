@@ -1,6 +1,6 @@
-using ShapeEngine.Core.Interfaces;
-using ShapeEngine.Core.Shapes;
+using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.Rect;
 using ShapeEngine.StaticLib;
 using ShapeEngine.StaticLib.Drawing;
 

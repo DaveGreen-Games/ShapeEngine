@@ -1,6 +1,9 @@
 ﻿using System.Numerics;
-using ShapeEngine.Core.Shapes;
 using Clipper2Lib;
+using ShapeEngine.Geometry.Polygon;
+using ShapeEngine.Geometry.Polyline;
+using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.Segment;
 
 namespace ShapeEngine.StaticLib;
 

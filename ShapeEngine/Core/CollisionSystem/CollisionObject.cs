@@ -1,7 +1,12 @@
 using System.ComponentModel;
 using System.Numerics;
-using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.Polygon;
+using ShapeEngine.Geometry.Polyline;
+using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.Segment;
+using ShapeEngine.Geometry.Triangle;
 
 namespace ShapeEngine.Core.CollisionSystem;
 
@@ -156,15 +161,14 @@ public abstract class CollisionObject : PhysicsObject
     /// </list>
     /// </para>
     /// </summary>
-    public bool AvancedCollisionNotification = false;
-    //TODO: Fix spelling! -> Advanced
+    public bool AdvancedCollisionNotification = false;
     
     internal void ResolveCollision(CollisionInformation information)
     {
         Collision(information);
         OnCollision?.Invoke(information);
 
-        if(AvancedCollisionNotification == false) return;
+        if(AdvancedCollisionNotification == false) return;
 
         foreach (var collision in information)
         {
@@ -191,7 +195,7 @@ public abstract class CollisionObject : PhysicsObject
     }
     internal void ResolveColliderContactEnded(Collider self, Collider other)
     {
-        if(AvancedCollisionNotification == false) return;
+        if(AdvancedCollisionNotification == false) return;
         ColliderContactEnded(self, other);
         OnColliderContactEnded?.Invoke(self, other);
     }

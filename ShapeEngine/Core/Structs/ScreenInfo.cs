@@ -1,5 +1,6 @@
 using System.Numerics;
-using ShapeEngine.Core.Shapes;
+using ShapeEngine.Geometry.Rect;
+
 namespace ShapeEngine.Core.Structs;
 
 /// <summary>

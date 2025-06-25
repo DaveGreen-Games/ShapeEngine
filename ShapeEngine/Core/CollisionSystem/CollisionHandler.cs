@@ -1,9 +1,16 @@
 ﻿using ShapeEngine.StaticLib;
 using System.Numerics;
 using ShapeEngine.Color;
-using ShapeEngine.Core.Shapes;
-using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.Line;
+using ShapeEngine.Geometry.Polygon;
+using ShapeEngine.Geometry.Polyline;
+using ShapeEngine.Geometry.Quad;
+using ShapeEngine.Geometry.Ray;
+using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.Segment;
+using ShapeEngine.Geometry.Triangle;
 
 namespace ShapeEngine.Core.CollisionSystem;
 

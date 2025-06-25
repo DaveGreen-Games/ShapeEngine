@@ -1,5 +1,5 @@
 using System.Numerics;
-using ShapeEngine.Core.Shapes;
+using ShapeEngine.Geometry.Rect;
 
 namespace ShapeEngine.Text;
 

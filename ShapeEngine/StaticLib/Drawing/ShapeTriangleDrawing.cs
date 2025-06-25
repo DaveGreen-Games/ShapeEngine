@@ -1,8 +1,9 @@
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
-using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry;
+using ShapeEngine.Geometry.Triangle;
 
 namespace ShapeEngine.StaticLib.Drawing;
 

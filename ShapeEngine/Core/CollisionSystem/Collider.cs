@@ -1,6 +1,15 @@
 ﻿using System.Numerics;
-using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry;
+using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.Line;
+using ShapeEngine.Geometry.Polygon;
+using ShapeEngine.Geometry.Polyline;
+using ShapeEngine.Geometry.Quad;
+using ShapeEngine.Geometry.Ray;
+using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.Segment;
+using ShapeEngine.Geometry.Triangle;
 
 
 namespace ShapeEngine.Core.CollisionSystem;
@@ -157,21 +166,21 @@ public abstract class Collider : Shape
     
     /// <summary>
     /// Called by the parent when a valid intersection occurs with this collider.
-    /// Requires <see cref="CollisionObject.AvancedCollisionNotification"/> to be enabled on the parent.
+    /// Requires <see cref="CollisionObject.AdvancedCollisionNotification"/> to be enabled on the parent.
     /// </summary>
     /// <param name="info">Information about the collision intersection.</param>
     protected virtual void Intersected(Collision info) { }
 
     /// <summary>
     /// Called by the parent when an overlap (without valid intersection) occurs with this collider.
-    /// Requires <see cref="CollisionObject.AvancedCollisionNotification"/> to be enabled on the parent.
+    /// Requires <see cref="CollisionObject.AdvancedCollisionNotification"/> to be enabled on the parent.
     /// </summary>
     /// <param name="contact">Information about the overlap.</param>
     protected virtual void Overlapped(Overlap contact) { }
 
     /// <summary>
     /// Called by the parent when a collision (intersection or overlap) with this collider ends.
-    /// Requires <see cref="CollisionObject.AvancedCollisionNotification"/> to be enabled on the parent.
+    /// Requires <see cref="CollisionObject.AdvancedCollisionNotification"/> to be enabled on the parent.
     /// </summary>
     /// <param name="other">The collider with which contact ended.</param>
     protected virtual void ContactEnded(Collider other) { }

@@ -1,9 +1,9 @@
-﻿using ShapeEngine.Core.Shapes;
-using ShapeEngine.StaticLib;
+﻿using ShapeEngine.StaticLib;
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.Rect;
 
 namespace ShapeEngine.Random;
 

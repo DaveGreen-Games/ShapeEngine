@@ -1,6 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Color;
-using ShapeEngine.Core.Shapes;
+using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.Rect;
 
 namespace ShapeEngine.StaticLib.Drawing;
 

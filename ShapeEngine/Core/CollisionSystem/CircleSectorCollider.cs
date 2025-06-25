@@ -1,6 +1,7 @@
 using System.Numerics;
-using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.Polygon;
+using ShapeEngine.Geometry.Rect;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Core.CollisionSystem;

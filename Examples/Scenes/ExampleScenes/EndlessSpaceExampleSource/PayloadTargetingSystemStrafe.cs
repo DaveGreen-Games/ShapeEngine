@@ -1,7 +1,7 @@
 using System.Numerics;
 using Examples.PayloadSystem;
 using ShapeEngine.Color;
-using ShapeEngine.Core.Shapes;
+using ShapeEngine.Geometry.Segment;
 using ShapeEngine.StaticLib;
 using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Random;

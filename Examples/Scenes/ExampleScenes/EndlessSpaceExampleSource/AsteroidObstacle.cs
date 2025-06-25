@@ -1,8 +1,11 @@
 using System.Numerics;
 using ShapeEngine.Core;
 using ShapeEngine.Core.CollisionSystem;
-using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry;
+using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.Polygon;
+using ShapeEngine.Geometry.Rect;
 using ShapeEngine.StaticLib;
 using ShapeEngine.Random;
 using ShapeEngine.StaticLib.Drawing;

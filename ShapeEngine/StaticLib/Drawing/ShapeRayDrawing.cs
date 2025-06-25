@@ -1,6 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Color;
-using ShapeEngine.Core.Shapes;
+using ShapeEngine.Geometry.Ray;
 
 namespace ShapeEngine.StaticLib.Drawing;
 

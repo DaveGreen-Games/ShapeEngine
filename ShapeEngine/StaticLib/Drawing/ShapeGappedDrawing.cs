@@ -1,6 +1,13 @@
 using System.Numerics;
-using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry;
+using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.Polygon;
+using ShapeEngine.Geometry.Polyline;
+using ShapeEngine.Geometry.Quad;
+using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.Segment;
+using ShapeEngine.Geometry.Triangle;
 
 namespace ShapeEngine.StaticLib.Drawing;
 

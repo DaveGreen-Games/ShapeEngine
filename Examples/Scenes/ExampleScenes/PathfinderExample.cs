@@ -2,8 +2,10 @@
 
 using System.Numerics;
 using ShapeEngine.Color;
-using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.Segment;
 using ShapeEngine.Input;
 using ShapeEngine.StaticLib;
 using ShapeEngine.StaticLib.Drawing;

@@ -5,7 +5,7 @@ using ShapeEngine.Screen;
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Core.Shapes;
+using ShapeEngine.Geometry.Rect;
 using ShapeEngine.Input;
 using ShapeEngine.Random;
 namespace Examples.Scenes.ExampleScenes

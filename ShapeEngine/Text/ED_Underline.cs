@@ -1,6 +1,7 @@
 using ShapeEngine.Color;
-using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.Segment;
 using ShapeEngine.StaticLib;
 using ShapeEngine.StaticLib.Drawing;
 

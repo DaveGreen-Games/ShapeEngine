@@ -1,5 +1,5 @@
 using System.Numerics;
-using ShapeEngine.Core.Shapes;
+using ShapeEngine.Geometry.Triangle;
 using ShapeEngine.StaticLib;
 using ShapeEngine.Random;
 using ShapeEngine.StaticLib.Drawing;

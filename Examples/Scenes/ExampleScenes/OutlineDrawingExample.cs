@@ -1,8 +1,14 @@
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
-using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.Polygon;
+using ShapeEngine.Geometry.Polyline;
+using ShapeEngine.Geometry.Quad;
+using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.Segment;
+using ShapeEngine.Geometry.Triangle;
 using ShapeEngine.Input;
 using ShapeEngine.StaticLib;
 using ShapeEngine.StaticLib.Drawing;

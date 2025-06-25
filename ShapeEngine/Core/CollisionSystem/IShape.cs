@@ -1,4 +1,12 @@
-using ShapeEngine.Core.Shapes;
+using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.Line;
+using ShapeEngine.Geometry.Polygon;
+using ShapeEngine.Geometry.Polyline;
+using ShapeEngine.Geometry.Quad;
+using ShapeEngine.Geometry.Ray;
+using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.Segment;
+using ShapeEngine.Geometry.Triangle;
 
 namespace ShapeEngine.Core.CollisionSystem;
 

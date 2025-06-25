@@ -1,5 +1,5 @@
 using ShapeEngine.Color;
-using ShapeEngine.Core.Shapes;
+using ShapeEngine.Geometry.Rect;
 using ShapeEngine.StaticLib;
 using ShapeEngine.StaticLib.Drawing;
 

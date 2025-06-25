@@ -1,11 +1,13 @@
 ﻿using ShapeEngine.StaticLib;
 using System.Numerics;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
+using ShapeEngine.Geometry.Polyline;
+using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.Segment;
 using ShapeEngine.StaticLib.Drawing;
 using Color = System.Drawing.Color;
 

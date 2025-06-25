@@ -4,7 +4,7 @@ using ShapeEngine.Timing;
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Core.Shapes;
+using ShapeEngine.Geometry.Rect;
 
 namespace ShapeEngine.Effects;
 

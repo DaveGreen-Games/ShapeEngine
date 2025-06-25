@@ -1,5 +1,8 @@
-using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry;
+using ShapeEngine.Geometry.Polygon;
+using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.Segment;
 
 namespace ShapeEngine.Core.CollisionSystem;
 

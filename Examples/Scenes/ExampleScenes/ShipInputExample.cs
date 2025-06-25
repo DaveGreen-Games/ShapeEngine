@@ -4,11 +4,11 @@ using ShapeEngine.Random;
 using ShapeEngine.Screen;
 using System.Numerics;
 using ShapeEngine.Color;
-using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
 using Raylib_cs;
+using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.Rect;
 using ShapeEngine.StaticLib.Drawing;
 using Color = System.Drawing.Color;
 

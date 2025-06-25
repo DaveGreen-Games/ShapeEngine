@@ -10,7 +10,7 @@ using Examples.UIElements;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Screen;
-using ShapeEngine.Core.Shapes;
+using ShapeEngine.Geometry.Rect;
 using ShapeEngine.Input;
 using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Random;
