@@ -1,6 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.Line;
 using ShapeEngine.Geometry.Segment;
 using ShapeEngine.Random;
 using ShapeEngine.StaticLib;
@@ -152,7 +153,7 @@ public readonly struct Ray
             return (intersection.Point, intersection.Point);
         }
         
-        var cp = Line.Line.GetClosestPointLinePoint(linePoint, lineDirection, rayPoint, out disSquared);
+        var cp = LineClosestPoint.GetClosestPointLinePoint(linePoint, lineDirection, rayPoint, out disSquared);
         return (rayPoint, cp);
     }
     public static (Vector2 self, Vector2 other) GetClosestPointRayRay(Vector2 ray1Point, Vector2 ray1Direction, Vector2 ray2Point, Vector2 ray2Direction, out float disSquared)
@@ -554,7 +555,7 @@ public readonly struct Ray
         float dotProduct = Vector2.Dot(toPoint, rayDirection);
 
         // Check if the point is in the same direction as the ray and on the line
-        return dotProduct >= 0 && Line.Line.IsPointOnLine(point, rayPoint, rayDirection);
+        return dotProduct >= 0 && LineIntersection.IsPointOnLine(point, rayPoint, rayDirection);
     }
     
     

@@ -368,7 +368,7 @@ public static class ShapeStripedDrawing
         var cur = start + dir * spacing;
         for (int i = 0; i < steps; i++)
         {
-            var intersection = Line.IntersectLineCircle(cur, lineDir, circle.Center, circle.Radius);
+            var intersection = LineIntersection.IntersectLineCircle(cur, lineDir, circle.Center, circle.Radius);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -401,7 +401,7 @@ public static class ShapeStripedDrawing
         var cur = start + dir * spacing;
         for (int i = 0; i < steps; i++)
         {
-            var intersection = Line.IntersectLineCircle(cur, lineDir, circle.Center, circle.Radius);
+            var intersection = LineIntersection.IntersectLineCircle(cur, lineDir, circle.Center, circle.Radius);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -437,7 +437,7 @@ public static class ShapeStripedDrawing
         var cur = start + dir * spacing;
         for (int i = 0; i < steps; i++)
         {
-            var intersection = Line.IntersectLineCircle(cur, lineDir, circle.Center, circle.Radius);
+            var intersection = LineIntersection.IntersectLineCircle(cur, lineDir, circle.Center, circle.Radius);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -474,7 +474,7 @@ public static class ShapeStripedDrawing
         
         while (targetLength < maxDimension)
         {
-            var intersection = Line.IntersectLineCircle(cur, lineDir, circle.Center, circle.Radius);
+            var intersection = LineIntersection.IntersectLineCircle(cur, lineDir, circle.Center, circle.Radius);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -515,7 +515,7 @@ public static class ShapeStripedDrawing
         int i = 0;
         while (targetLength < maxDimension)
         {
-            var intersection = Line.IntersectLineCircle(cur, lineDir, circle.Center, circle.Radius);
+            var intersection = LineIntersection.IntersectLineCircle(cur, lineDir, circle.Center, circle.Radius);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -558,7 +558,7 @@ public static class ShapeStripedDrawing
         int i = 0;
         while (targetLength < maxDimension)
         {
-            var intersection = Line.IntersectLineCircle(cur, lineDir, circle.Center, circle.Radius);
+            var intersection = LineIntersection.IntersectLineCircle(cur, lineDir, circle.Center, circle.Radius);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -1118,14 +1118,14 @@ public static class ShapeStripedDrawing
         
         for (int i = 0; i < steps; i++)
         {
-            var outsideShapePoints = Line.IntersectLineCircle(cur, lineDir, outsideShape.Center, outsideShape.Radius);
+            var outsideShapePoints = LineIntersection.IntersectLineCircle(cur, lineDir, outsideShape.Center, outsideShape.Radius);
             if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
             {
                 cur += dir * spacing;
                 continue;
             }
 
-            var count = Line.IntersectLinePolygon(cur, lineDir, insideShape, ref collisionPointsReference);
+            var count = LineIntersection.IntersectLinePolygon(cur, lineDir, insideShape, ref collisionPointsReference);
             
             if(count <= 0) //ray did not hit the inside shape, draw ray between edge of the outside shape
             {
@@ -1213,7 +1213,7 @@ public static class ShapeStripedDrawing
         var cur = start + dir * spacing;
         for (int i = 0; i < steps; i++)
         {
-            var intersection = Line.IntersectLineTriangle(cur, lineDir, a, b, c);
+            var intersection = LineIntersection.IntersectLineTriangle(cur, lineDir, a, b, c);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -1251,7 +1251,7 @@ public static class ShapeStripedDrawing
         var cur = start + dir * spacing;
         for (int i = 0; i < steps; i++)
         {
-            var intersection = Line.IntersectLineTriangle(cur, lineDir, a, b, c);
+            var intersection = LineIntersection.IntersectLineTriangle(cur, lineDir, a, b, c);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -1289,7 +1289,7 @@ public static class ShapeStripedDrawing
         var cur = start + dir * spacing;
         for (int i = 0; i < steps; i++)
         {
-            var intersection = Line.IntersectLineTriangle(cur, lineDir, a, b, c);
+            var intersection = LineIntersection.IntersectLineTriangle(cur, lineDir, a, b, c);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -1327,7 +1327,7 @@ public static class ShapeStripedDrawing
         
         while (targetLength < maxDimension)
         {
-            var intersection = Line.IntersectLineTriangle(cur, lineDir, triangle.A, triangle.B, triangle.C);
+            var intersection = LineIntersection.IntersectLineTriangle(cur, lineDir, triangle.A, triangle.B, triangle.C);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -1369,7 +1369,7 @@ public static class ShapeStripedDrawing
         int i = 0;
         while (targetLength < maxDimension)
         {
-            var intersection = Line.IntersectLineTriangle(cur, lineDir, triangle.A, triangle.B, triangle.C);
+            var intersection = LineIntersection.IntersectLineTriangle(cur, lineDir, triangle.A, triangle.B, triangle.C);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -1413,7 +1413,7 @@ public static class ShapeStripedDrawing
         int i = 0;
         while (targetLength < maxDimension)
         {
-            var intersection = Line.IntersectLineTriangle(cur, lineDir, triangle.A, triangle.B, triangle.C);
+            var intersection = LineIntersection.IntersectLineTriangle(cur, lineDir, triangle.A, triangle.B, triangle.C);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -1977,14 +1977,14 @@ public static class ShapeStripedDrawing
         
         for (int i = 0; i < steps; i++)
         {
-            var outsideShapePoints = Line.IntersectLineTriangle(cur, lineDir, outsideShape.A, outsideShape.B, outsideShape.C);
+            var outsideShapePoints = LineIntersection.IntersectLineTriangle(cur, lineDir, outsideShape.A, outsideShape.B, outsideShape.C);
             if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
             {
                 cur += dir * spacing;
                 continue;
             }
 
-            var count = Line.IntersectLinePolygon(cur, lineDir, insideShape, ref collisionPointsReference);
+            var count = LineIntersection.IntersectLinePolygon(cur, lineDir, insideShape, ref collisionPointsReference);
             
             if(count <= 0) //ray did not hit the inside shape, draw ray between edge of the outside shape
             {
@@ -2073,7 +2073,7 @@ public static class ShapeStripedDrawing
         var cur = start + dir * spacing;
         for (int i = 0; i < steps; i++)
         {
-            var intersection = Line.IntersectLineQuad(cur, lineDir, a, b, c, d);
+            var intersection = LineIntersection.IntersectLineQuad(cur, lineDir, a, b, c, d);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -2112,7 +2112,7 @@ public static class ShapeStripedDrawing
         var cur = start + dir * spacing;
         for (int i = 0; i < steps; i++)
         {
-            var intersection = Line.IntersectLineQuad(cur, lineDir, a, b, c, d);
+            var intersection = LineIntersection.IntersectLineQuad(cur, lineDir, a, b, c, d);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -2151,7 +2151,7 @@ public static class ShapeStripedDrawing
         var cur = start + dir * spacing;
         for (int i = 0; i < steps; i++)
         {
-            var intersection = Line.IntersectLineQuad(cur, lineDir, a, b, c, d);
+            var intersection = LineIntersection.IntersectLineQuad(cur, lineDir, a, b, c, d);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -2189,7 +2189,7 @@ public static class ShapeStripedDrawing
         
         while (targetLength < maxDimension)
         {
-            var intersection = Line.IntersectLineQuad(cur, lineDir, quad.A, quad.B, quad.C, quad.D);
+            var intersection = LineIntersection.IntersectLineQuad(cur, lineDir, quad.A, quad.B, quad.C, quad.D);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -2231,7 +2231,7 @@ public static class ShapeStripedDrawing
         int i = 0;
         while (targetLength < maxDimension)
         {
-            var intersection = Line.IntersectLineQuad(cur, lineDir, quad.A, quad.B, quad.C, quad.D);
+            var intersection = LineIntersection.IntersectLineQuad(cur, lineDir, quad.A, quad.B, quad.C, quad.D);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -2275,7 +2275,7 @@ public static class ShapeStripedDrawing
         int i = 0;
         while (targetLength < maxDimension)
         {
-            var intersection = Line.IntersectLineQuad(cur, lineDir, quad.A, quad.B, quad.C, quad.D);
+            var intersection = LineIntersection.IntersectLineQuad(cur, lineDir, quad.A, quad.B, quad.C, quad.D);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -2835,14 +2835,14 @@ public static class ShapeStripedDrawing
         
         for (int i = 0; i < steps; i++)
         {
-            var outsideShapePoints = Line.IntersectLineQuad(cur, lineDir, outsideShape.A, outsideShape.B, outsideShape.C, outsideShape.D);
+            var outsideShapePoints = LineIntersection.IntersectLineQuad(cur, lineDir, outsideShape.A, outsideShape.B, outsideShape.C, outsideShape.D);
             if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
             {
                 cur += dir * spacing;
                 continue;
             }
 
-            var count = Line.IntersectLinePolygon(cur, lineDir, insideShape, ref collisionPointsReference);
+            var count = LineIntersection.IntersectLinePolygon(cur, lineDir, insideShape, ref collisionPointsReference);
             
             if(count <= 0) //ray did not hit the inside shape, draw ray between edge of the outside shape
             {
@@ -2930,7 +2930,7 @@ public static class ShapeStripedDrawing
         var cur = start + dir * spacing;
         for (int i = 0; i < steps; i++)
         {
-            var intersection = Line.IntersectLineRect(cur, lineDir, a, b, c, d);
+            var intersection = LineIntersection.IntersectLineRect(cur, lineDir, a, b, c, d);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -2968,7 +2968,7 @@ public static class ShapeStripedDrawing
         var cur = start + dir * spacing;
         for (int i = 0; i < steps; i++)
         {
-            var intersection = Line.IntersectLineRect(cur, lineDir, a, b, c, d);
+            var intersection = LineIntersection.IntersectLineRect(cur, lineDir, a, b, c, d);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -3006,7 +3006,7 @@ public static class ShapeStripedDrawing
         var cur = start + dir * spacing;
         for (int i = 0; i < steps; i++)
         {
-            var intersection = Line.IntersectLineRect(cur, lineDir, a, b, c, d);
+            var intersection = LineIntersection.IntersectLineRect(cur, lineDir, a, b, c, d);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -3043,7 +3043,7 @@ public static class ShapeStripedDrawing
         
         while (targetLength < maxDimension)
         {
-            var intersection = Line.IntersectLineRect(cur, lineDir, rect.A, rect.B, rect.C, rect.D);
+            var intersection = LineIntersection.IntersectLineRect(cur, lineDir, rect.A, rect.B, rect.C, rect.D);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -3084,7 +3084,7 @@ public static class ShapeStripedDrawing
         int i = 0;
         while (targetLength < maxDimension)
         {
-            var intersection = Line.IntersectLineRect(cur, lineDir, rect.A, rect.B, rect.C, rect.D);
+            var intersection = LineIntersection.IntersectLineRect(cur, lineDir, rect.A, rect.B, rect.C, rect.D);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -3127,7 +3127,7 @@ public static class ShapeStripedDrawing
         int i = 0;
         while (targetLength < maxDimension)
         {
-            var intersection = Line.IntersectLineRect(cur, lineDir, rect.A, rect.B, rect.C, rect.D);
+            var intersection = LineIntersection.IntersectLineRect(cur, lineDir, rect.A, rect.B, rect.C, rect.D);
             if (intersection.a.Valid && intersection.b.Valid)
             {
                 var segment = new Segment(intersection.a.Point, intersection.b.Point);
@@ -3683,14 +3683,14 @@ public static class ShapeStripedDrawing
         
         for (int i = 0; i < steps; i++)
         {
-            var outsideShapePoints = Line.IntersectLineRect(cur, lineDir, outsideShape.A, outsideShape.B, outsideShape.C, outsideShape.D);
+            var outsideShapePoints = LineIntersection.IntersectLineRect(cur, lineDir, outsideShape.A, outsideShape.B, outsideShape.C, outsideShape.D);
             if (!outsideShapePoints.a.Valid || !outsideShapePoints.b.Valid)
             {
                 cur += dir * spacing;
                 continue;
             }
 
-            var count = Line.IntersectLinePolygon(cur, lineDir, insideShape, ref collisionPointsReference);
+            var count = LineIntersection.IntersectLinePolygon(cur, lineDir, insideShape, ref collisionPointsReference);
             
             if(count <= 0) //ray did not hit the inside shape, draw ray between edge of the outside shape
             {
@@ -4079,14 +4079,14 @@ public static class ShapeStripedDrawing
         
         for (int i = 0; i < steps; i++)
         {
-            var count = Line.IntersectLinePolygon(cur, lineDir, outsideShape, ref collisionPointsReference);
+            var count = LineIntersection.IntersectLinePolygon(cur, lineDir, outsideShape, ref collisionPointsReference);
             if (count < 2)
             {
                 cur += dir * spacing;
                 continue;
             }
             
-            var insideShapePoints = Line.IntersectLineCircle(cur, lineDir, insideShape.Center, insideShape.Radius);
+            var insideShapePoints = LineIntersection.IntersectLineCircle(cur, lineDir, insideShape.Center, insideShape.Radius);
             if (!insideShapePoints.a.Valid || !insideShapePoints.b.Valid) //draw the lines in the outside shape
             {
                 collisionPointsReference.SortClosestFirst(cur);
@@ -4159,14 +4159,14 @@ public static class ShapeStripedDrawing
         
         for (int i = 0; i < steps; i++)
         {
-            var count = Line.IntersectLinePolygon(cur, lineDir, outsideShape, ref collisionPointsReference);
+            var count = LineIntersection.IntersectLinePolygon(cur, lineDir, outsideShape, ref collisionPointsReference);
             if (count < 2)
             {
                 cur += dir * spacing;
                 continue;
             }
             
-            var insideShapePoints = Line.IntersectLineTriangle(cur, lineDir, insideShape.A, insideShape.B, insideShape.C);
+            var insideShapePoints = LineIntersection.IntersectLineTriangle(cur, lineDir, insideShape.A, insideShape.B, insideShape.C);
             if (!insideShapePoints.a.Valid || !insideShapePoints.b.Valid) //draw the lines in the outside shape
             {
                 collisionPointsReference.SortClosestFirst(cur);
@@ -4239,14 +4239,14 @@ public static class ShapeStripedDrawing
         
         for (int i = 0; i < steps; i++)
         {
-            var count = Line.IntersectLinePolygon(cur, lineDir, outsideShape, ref collisionPointsReference);
+            var count = LineIntersection.IntersectLinePolygon(cur, lineDir, outsideShape, ref collisionPointsReference);
             if (count < 2)
             {
                 cur += dir * spacing;
                 continue;
             }
             
-            var insideShapePoints = Line.IntersectLineQuad(cur, lineDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
+            var insideShapePoints = LineIntersection.IntersectLineQuad(cur, lineDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
             if (!insideShapePoints.a.Valid || !insideShapePoints.b.Valid) //draw the lines in the outside shape
             {
                 collisionPointsReference.SortClosestFirst(cur);
@@ -4319,14 +4319,14 @@ public static class ShapeStripedDrawing
         
         for (int i = 0; i < steps; i++)
         {
-            var count = Line.IntersectLinePolygon(cur, lineDir, outsideShape, ref collisionPointsReference);
+            var count = LineIntersection.IntersectLinePolygon(cur, lineDir, outsideShape, ref collisionPointsReference);
             if (count < 2)
             {
                 cur += dir * spacing;
                 continue;
             }
             
-            var insideShapePoints = Line.IntersectLineRect(cur, lineDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
+            var insideShapePoints = LineIntersection.IntersectLineRect(cur, lineDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
             if (!insideShapePoints.a.Valid || !insideShapePoints.b.Valid) //draw the lines in the outside shape
             {
                 collisionPointsReference.SortClosestFirst(cur);
@@ -4399,14 +4399,14 @@ public static class ShapeStripedDrawing
         
         for (int i = 0; i < steps; i++)
         {
-            var outsideCount = Line.IntersectLinePolygon(cur, lineDir, outsideShape, ref collisionPointsReference);
+            var outsideCount = LineIntersection.IntersectLinePolygon(cur, lineDir, outsideShape, ref collisionPointsReference);
             if (outsideCount < 2)
             {
                 cur += dir * spacing;
                 continue;
             }
             
-            var insideCount = Line.IntersectLinePolygon(cur, lineDir, insideShape, ref collisionPointsReference);
+            var insideCount = LineIntersection.IntersectLinePolygon(cur, lineDir, insideShape, ref collisionPointsReference);
             if (insideCount < 0) //draw the lines in the outside shape
             {
                 collisionPointsReference.SortClosestFirst(cur);

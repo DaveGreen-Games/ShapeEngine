@@ -371,14 +371,14 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
     {
         if (Count <= 0) return new();
         var closest = this[0];
-        var pointOnOther = Line.Line.GetClosestPointLinePoint(other.Point, other.Direction, closest, out float disSquared);
+        var pointOnOther = LineClosestPoint.GetClosestPointLinePoint(other.Point, other.Direction, closest, out float disSquared);
         var selfIndex = 0;
         
         for (var i = 1; i < Count; i++)
         {
             var next = this[i];
             
-            var result = Line.Line.GetClosestPointLinePoint(other.Point, other.Direction, next, out float dis);
+            var result = LineClosestPoint.GetClosestPointLinePoint(other.Point, other.Direction, next, out float dis);
             if (dis < disSquared)
             {
                 selfIndex = i;

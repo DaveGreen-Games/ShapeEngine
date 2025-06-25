@@ -3,6 +3,7 @@ using Clipper2Lib;
 using ShapeEngine.Core;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.Line;
 using ShapeEngine.Geometry.Segment;
 using ShapeEngine.Random;
 using ShapeEngine.StaticLib;
@@ -2153,7 +2154,7 @@ public class Polygon : Points, IEquatable<Polygon>
     }
     public static bool OverlapPolygonLine(List<Vector2> points, Vector2 linePoint, Vector2 lineDirection)
     {
-        return Line.Line.OverlapLinePolygon(linePoint, lineDirection, points);
+        return LineOverlap.OverlapLinePolygon(linePoint, lineDirection, points);
     }
     public static bool OverlapPolygonRay(List<Vector2> points, Vector2 rayPoint, Vector2 rayDirection)
     {

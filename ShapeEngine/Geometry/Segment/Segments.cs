@@ -2,6 +2,7 @@ using System.Numerics;
 using ShapeEngine.Core;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.Line;
 using ShapeEngine.Random;
 using ShapeEngine.StaticLib;
 
@@ -897,7 +898,7 @@ public class Segments : ShapeList<Segment>
     }
     public static bool OverlapSegmentsLine(List<Segment> segments, Vector2 linePoint, Vector2 lineDirection)
     {
-        return Line.Line.OverlapLineSegments(linePoint, lineDirection, segments);
+        return LineOverlap.OverlapLineSegments(linePoint, lineDirection, segments);
     }
     public static bool OverlapSegmentsRay(List<Segment> segments, Vector2 rayPoint, Vector2 rayDirection)
     {

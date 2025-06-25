@@ -1,6 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.Line;
 using ShapeEngine.Geometry.Segment;
 using ShapeEngine.Random;
 using ShapeEngine.StaticLib;
@@ -1917,7 +1918,7 @@ public readonly struct Quad : IEquatable<Quad>
     }
     public static bool OverlapQuadLine(Vector2 a, Vector2 b, Vector2 c, Vector2 d,Vector2 linePoint, Vector2 lineDirection)
     {
-        return Line.Line.OverlapLineQuad(linePoint, lineDirection, a, b, c, d);
+        return LineOverlap.OverlapLineQuad(linePoint, lineDirection, a, b, c, d);
     }
     public static bool OverlapQuadRay(Vector2 a, Vector2 b, Vector2 c, Vector2 d,Vector2 rayPoint, Vector2 rayDirection)
     {

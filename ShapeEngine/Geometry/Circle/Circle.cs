@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.Line;
 using ShapeEngine.Geometry.Polygon;
 using ShapeEngine.Geometry.Polyline;
 using ShapeEngine.Geometry.Rect;
@@ -2187,7 +2188,7 @@ public readonly struct Circle : IEquatable<Circle>
     /// </summary>
     /// <param name="l">The line to check for overlap.</param>
     /// <returns><c>true</c> if the circle overlaps with the line; otherwise, <c>false</c>.</returns>
-    public bool OverlapShape(Line.Line l) => Line.Line.OverlapLineCircle(l.Point, l.Direction, Center, Radius);
+    public bool OverlapShape(Line.Line l) => LineOverlap.OverlapLineCircle(l.Point, l.Direction, Center, Radius);
     /// <summary>
     /// Determines whether this circle overlaps with a ray.
     /// </summary>
