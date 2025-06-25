@@ -319,7 +319,7 @@ public readonly partial struct Ray
             otherIndex);
     }
 
-    public ClosestPointResult GetClosestPoint(Segments segments)
+    public ClosestPointResult GetClosestPoint(Segments.Segments segments)
     {
         if (segments.Count <= 0) return new();
 

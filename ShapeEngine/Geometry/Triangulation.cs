@@ -403,7 +403,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
 
         return closestResult;
     }
-    public ClosestPointResult GetClosestPoint(Segments other, out int triangleIndex)
+    public ClosestPointResult GetClosestPoint(Segments.Segments other, out int triangleIndex)
     {
         triangleIndex = -1;
         if (Count <= 0) return new();
@@ -640,7 +640,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// </summary>
     /// <param name="segments"></param>
     /// <returns>Returns true after the first overlap is found. If no overlap is found, returns false.</returns>
-    public  bool OverlapShape(Segments segments)
+    public  bool OverlapShape(Segments.Segments segments)
     {
         for (int i = 0; i < Count; i++)
         {
@@ -847,7 +847,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// <param name="segments">The segments to check against.</param>
     /// <param name="triangleIndices">All triangle indices that overlap the specified segments.</param>
     /// <returns>Return true if at least 1 overlap was found, otherwise return false. Does not return early. All triangle have to be checked.</returns>
-    public bool OverlapShape(Segments segments, out List<int>? triangleIndices)
+    public bool OverlapShape(Segments.Segments segments, out List<int>? triangleIndices)
     {
         triangleIndices = null;
         for (int i = 0; i < Count; i++)
@@ -1081,7 +1081,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// </summary>
     /// <param name="shape">The shape to check the triangles against.</param>
     /// <returns>Returns a dictionary where the key represents the index of the triangle and the value represents the found collision points.</returns>
-    public  Dictionary<int, CollisionPoints>? IntersectShape(Segments shape)
+    public  Dictionary<int, CollisionPoints>? IntersectShape(Segments.Segments shape)
     {
         Dictionary<int, CollisionPoints>? result = null;
         for (int i = 0; i < Count; i++)
@@ -1115,7 +1115,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
 
         return new(uniqueVertices);
     }
-    public Segments GetUniqueSegments()
+    public Segments.Segments GetUniqueSegments()
     {
         var unique = new HashSet<Segment.Segment>();
         for (var i = 0; i < Count; i++)

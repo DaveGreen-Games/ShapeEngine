@@ -42,7 +42,7 @@ public readonly partial struct Segment
     public CollisionPoints? IntersectPolyline(Polyline.Polyline polyline, int maxCollisionPoints = -1) =>
         IntersectSegmentPolyline(Start, End, polyline, maxCollisionPoints);
 
-    public CollisionPoints? IntersectSegments(Segments segments, int maxCollisionPoints = -1) =>
+    public CollisionPoints? IntersectSegments(Segments.Segments segments, int maxCollisionPoints = -1) =>
         IntersectSegmentSegments(Start, End, segments, maxCollisionPoints);
 
 }

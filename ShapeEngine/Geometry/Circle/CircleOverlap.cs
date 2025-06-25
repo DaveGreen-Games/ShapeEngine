@@ -66,7 +66,7 @@ public readonly partial struct Circle
     /// The function iterates through each segment in the collection and checks for overlap with the circle using the OverlapCircleSegment method.
     /// The check returns <c>true</c> as soon as an overlap is found; otherwise, it returns <c>false</c> after all segments are checked.
     /// </remarks>
-    public bool OverlapShape(Segments segments)
+    public bool OverlapShape(Segments.Segments segments)
     {
         foreach (var seg in segments)
         {

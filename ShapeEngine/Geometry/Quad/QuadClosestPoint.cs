@@ -882,7 +882,7 @@ public readonly partial struct Quad
             otherIndex);
     }
 
-    public ClosestPointResult GetClosestPoint(Segments other)
+    public ClosestPointResult GetClosestPoint(Segments.Segments other)
     {
         if (other.Count <= 0) return new();
 

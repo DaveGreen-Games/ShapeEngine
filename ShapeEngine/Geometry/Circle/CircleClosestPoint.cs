@@ -343,7 +343,7 @@ public readonly partial struct Circle
     /// </summary>
     /// <param name="segments">The segments to check.</param>
     /// <returns>A <see cref="ClosestPointResult"/> representing the closest point.</returns>
-    public ClosestPointResult GetClosestPoint(Segments segments)
+    public ClosestPointResult GetClosestPoint(Segments.Segments segments)
     {
         if (segments.Count <= 0) return new();
 

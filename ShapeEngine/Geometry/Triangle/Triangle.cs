@@ -97,7 +97,7 @@ public readonly partial struct Triangle : IEquatable<Triangle>
     public Points ToPoints() => new() {A, B, C};
     public Polygon.Polygon ToPolygon() => new() {A, B, C};
     public Polyline.Polyline ToPolyline() => new() { A, B, C };
-    public Segments GetEdges() => new() { SegmentAToB, SegmentBToC, SegmentCToA };
+    public Segments.Segments GetEdges() => new() { SegmentAToB, SegmentBToC, SegmentCToA };
     
     /// <summary>
     /// Construct an adjacent triangle on the closest side to the point p. If p is inside the triangle, the triangle is returned.

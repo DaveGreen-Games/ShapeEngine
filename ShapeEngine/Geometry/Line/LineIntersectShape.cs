@@ -6,6 +6,7 @@ using ShapeEngine.Geometry.Quad;
 using ShapeEngine.Geometry.Ray;
 using ShapeEngine.Geometry.Rect;
 using ShapeEngine.Geometry.Segment;
+using ShapeEngine.Geometry.Segments;
 using ShapeEngine.Geometry.Triangle;
 
 namespace ShapeEngine.Geometry.Line;
@@ -281,7 +282,7 @@ public readonly partial struct Line
     /// <remarks>
     /// This method iterates through all segments in the collection and checks for intersections with the line.
     /// </remarks>
-    public CollisionPoints? IntersectShape(Segments segments, int maxCollisionPoints = -1) =>
+    public CollisionPoints? IntersectShape(Segments.Segments segments, int maxCollisionPoints = -1) =>
         IntersectLineSegments(Point, Direction, segments, maxCollisionPoints);
 
     /// <summary>
@@ -675,7 +676,7 @@ public readonly partial struct Line
     /// <remarks>
     /// This method iterates through all segments in the collection and checks for intersections with the line.
     /// </remarks>
-    public int IntersectShape(Segments shape, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Segments.Segments shape, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (shape.Count <= 0) return 0;
         var count = 0;

@@ -59,7 +59,7 @@ public readonly partial struct Rect
         return false;
     }
 
-    public bool OverlapShape(Segments segments)
+    public bool OverlapShape(Segments.Segments segments)
     {
         foreach (var seg in segments)
         {

@@ -365,7 +365,7 @@ public readonly partial struct Segment
             otherIndex);
     }
 
-    public ClosestPointResult GetClosestPoint(Segments segments)
+    public ClosestPointResult GetClosestPoint(Segments.Segments segments)
     {
         if (segments.Count <= 0) return new();
 

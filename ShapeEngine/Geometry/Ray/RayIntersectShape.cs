@@ -174,7 +174,7 @@ public readonly partial struct Ray
     public CollisionPoints? IntersectShape(Polygon.Polygon p, int maxCollisionPoints = -1) => IntersectRayPolygon(Point, Direction, p, maxCollisionPoints);
     public CollisionPoints? IntersectShape(Polyline.Polyline pl, int maxCollisionPoints = -1) => IntersectRayPolyline(Point, Direction, pl, maxCollisionPoints);
 
-    public CollisionPoints? IntersectShape(Segments segments, int maxCollisionPoints = -1) =>
+    public CollisionPoints? IntersectShape(Segments.Segments segments, int maxCollisionPoints = -1) =>
         IntersectRaySegments(Point, Direction, segments, maxCollisionPoints);
 
     public int Intersect(Collider collider, ref CollisionPoints points, bool returnAfterFirstValid = false)
@@ -442,7 +442,7 @@ public readonly partial struct Ray
         return count;
     }
 
-    public int IntersectShape(Segments shape, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Segments.Segments shape, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (shape.Count <= 0) return 0;
         var count = 0;

@@ -170,7 +170,7 @@ public readonly partial struct Rect : IEquatable<Rect>
     public Points ToPoints() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
     public Polygon.Polygon ToPolygon() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
     public Polyline.Polyline ToPolyline() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
-    public Segments GetEdges() 
+    public Segments.Segments GetEdges() 
     {
         var A = TopLeft;
         var B = BottomLeft;
@@ -488,9 +488,9 @@ public readonly partial struct Rect : IEquatable<Rect>
     /// <param name="br"></param>
     /// <param name="tr"></param>
     /// <returns></returns>
-    public static Segments GetEdges(Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr)
+    public static Segments.Segments GetEdges(Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr)
     {
-        Segments segments = new()
+        Segments.Segments segments = new()
         {
             new(tl, bl), new(bl, br), new(br, tr), new(tr, tl)
         };

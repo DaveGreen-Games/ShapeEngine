@@ -43,7 +43,7 @@ public readonly partial struct Rect
         return null;
     }
 
-    public CollisionPoints? IntersectShape(Segments segments)
+    public CollisionPoints? IntersectShape(Segments.Segments segments)
     {
         if (segments.Count <= 0) return null;
 

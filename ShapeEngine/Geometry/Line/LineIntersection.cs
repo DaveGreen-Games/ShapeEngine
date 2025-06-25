@@ -7,6 +7,7 @@ using ShapeEngine.Geometry.Quad;
 using ShapeEngine.Geometry.Ray;
 using ShapeEngine.Geometry.Rect;
 using ShapeEngine.Geometry.Segment;
+using ShapeEngine.Geometry.Segments;
 using ShapeEngine.Geometry.Triangle;
 
 namespace ShapeEngine.Geometry.Line;
@@ -245,7 +246,7 @@ public readonly partial struct Line
     /// <remarks>
     /// This is a convenience method that uses the line's point and direction.
     /// </remarks>
-    public CollisionPoints? IntersectSegments(Segments segments, int maxCollisionPoints = -1) =>
+    public CollisionPoints? IntersectSegments(Segments.Segments segments, int maxCollisionPoints = -1) =>
         IntersectLineSegments(Point, Direction, segments, maxCollisionPoints);
 
     /// <summary>

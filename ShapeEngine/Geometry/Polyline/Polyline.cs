@@ -185,12 +185,12 @@ public class Polyline : Points, IEquatable<Polyline>
     /// If InsideNormals = true the normals face to the left of the direction of the segments.
     /// </summary>
     /// <returns></returns>
-    public Segments GetEdges()
+    public Segments.Segments GetEdges()
     {
         if (Count <= 1) return new();
         if (Count == 2) return new() { new(this[0], this[1]) };
 
-        Segments segments = new();
+        Segments.Segments segments = new();
         for (int i = 0; i < Count - 1; i++)
         {
             segments.Add(new(this[i], this[(i + 1) % Count]));
@@ -954,7 +954,7 @@ public class Polyline : Points, IEquatable<Polyline>
                 selfIndex,
                 otherIndex);
         }
-        public new ClosestPointResult GetClosestPoint(Segments other)
+        public new ClosestPointResult GetClosestPoint(Segments.Segments other)
         {
             if (Count < 2) return new();
             
@@ -1158,7 +1158,7 @@ public class Polyline : Points, IEquatable<Polyline>
 
         return false;
     }
-    public bool OverlapShape(Segments segments)
+    public bool OverlapShape(Segments.Segments segments)
     {
         if (Count < 2 || segments.Count <= 0) return false;
         
@@ -1471,7 +1471,7 @@ public class Polyline : Points, IEquatable<Polyline>
         
         return points;
     }
-    public CollisionPoints? IntersectShape(Segments segments)
+    public CollisionPoints? IntersectShape(Segments.Segments segments)
     {
         if (Count < 2 || segments.Count <= 0) return null;
         CollisionPoints? points = null;
@@ -1773,7 +1773,7 @@ public class Polyline : Points, IEquatable<Polyline>
         
         return count;
     }
-    public int IntersectShape(Segments shape, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Segments.Segments shape, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count < 2 || shape.Count <= 0) return 0;
         var count = 0;

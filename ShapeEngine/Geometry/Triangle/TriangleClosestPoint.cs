@@ -678,7 +678,7 @@ public readonly partial struct Triangle
             otherIndex);
     }
 
-    public ClosestPointResult GetClosestPoint(Segments other)
+    public ClosestPointResult GetClosestPoint(Segments.Segments other)
     {
         if (other.Count <= 0) return new();
 

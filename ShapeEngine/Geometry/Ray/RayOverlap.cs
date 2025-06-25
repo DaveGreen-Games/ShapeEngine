@@ -65,6 +65,6 @@ public readonly partial struct Ray
     public bool OverlapShape(Rect.Rect r) => OverlapRayQuad(Point, Direction, r.A, r.B, r.C, r.D);
     public bool OverlapShape(Polygon.Polygon p) => OverlapRayPolygon(Point, Direction, p);
     public bool OverlapShape(Polyline.Polyline pl) => OverlapRayPolyline(Point, Direction, pl);
-    public bool OverlapShape(Segments segments) => OverlapRaySegments(Point, Direction, segments);
+    public bool OverlapShape(Segments.Segments segments) => OverlapRaySegments(Point, Direction, segments);
 
 }

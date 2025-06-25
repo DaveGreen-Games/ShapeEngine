@@ -7,6 +7,7 @@ using ShapeEngine.Geometry.Quad;
 using ShapeEngine.Geometry.Ray;
 using ShapeEngine.Geometry.Rect;
 using ShapeEngine.Geometry.Segment;
+using ShapeEngine.Geometry.Segments;
 using ShapeEngine.Geometry.Triangle;
 using ShapeEngine.StaticLib;
 
@@ -439,7 +440,7 @@ public readonly partial struct Line
     /// <remarks>
     /// The closest point is determined by evaluating all segments in the collection.
     /// </remarks>
-    public ClosestPointResult GetClosestPoint(Segments segments)
+    public ClosestPointResult GetClosestPoint(Segments.Segments segments)
     {
         if (segments.Count <= 0) return new();
 

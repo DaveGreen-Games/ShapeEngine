@@ -59,7 +59,7 @@ public readonly partial struct Segment : IEquatable<Segment>
     public Rect.Rect GetBoundingBox() { return new(Start, End); }
 
     public Polyline.Polyline ToPolyline() { return new Polyline.Polyline() {Start, End}; }
-    public Segments GetEdges() { return new Segments(){this}; }
+    public Segments.Segments GetEdges() { return new Segments.Segments(){this}; }
     public Points Inflate(float thickness, float alignement = 0.5f)
     {
         var dir = Dir;
@@ -73,11 +73,11 @@ public readonly partial struct Segment : IEquatable<Segment>
         return new() { a, b, c, d };
     }
 
-    public Segments Split(float f)
+    public Segments.Segments Split(float f)
     {
         return Split(this.GetPoint(f));
     }
-    public Segments Split(Vector2 splitPoint)
+    public Segments.Segments Split(Vector2 splitPoint)
     {
         var a = new Segment(Start, splitPoint);
         var b = new Segment(splitPoint, End);
@@ -234,9 +234,9 @@ public readonly partial struct Segment : IEquatable<Segment>
 
     #region Lightning
 
-    public Segments CreateLightningSegments(int segments = 10, float maxSway = 80f)
+    public Segments.Segments CreateLightningSegments(int segments = 10, float maxSway = 80f)
     {
-        Segments result = new();
+        Segments.Segments result = new();
         var w = End - Start;
         var dir = w.Normalize();
         var n = new Vector2(dir.Y, -dir.X);
@@ -283,9 +283,9 @@ public readonly partial struct Segment : IEquatable<Segment>
         }
         return result;
     }
-    public Segments CreateLightningSegments(float segmentLength = 5f, float maxSway = 80f)
+    public Segments.Segments CreateLightningSegments(float segmentLength = 5f, float maxSway = 80f)
     {
-        Segments result = new();
+        Segments.Segments result = new();
         var w = End - Start;
         var dir = w.Normalize();
         var n = new Vector2(dir.Y, -dir.X);

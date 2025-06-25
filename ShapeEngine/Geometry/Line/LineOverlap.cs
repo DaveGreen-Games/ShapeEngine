@@ -7,6 +7,7 @@ using ShapeEngine.Geometry.Quad;
 using ShapeEngine.Geometry.Ray;
 using ShapeEngine.Geometry.Rect;
 using ShapeEngine.Geometry.Segment;
+using ShapeEngine.Geometry.Segments;
 using ShapeEngine.Geometry.Triangle;
 using ShapeEngine.StaticLib;
 
@@ -214,5 +215,5 @@ public readonly partial struct Line
     /// </summary>
     /// <param name="segments">A <see cref="Segments"/> collection to check for overlap with this line.</param>
     /// <returns>True if the line overlaps with any segment in the collection; otherwise, false.</returns>
-    public bool OverlapShape(Segments segments) => OverlapLineSegments(Point, Direction, segments);
+    public bool OverlapShape(Segments.Segments segments) => OverlapLineSegments(Point, Direction, segments);
 }

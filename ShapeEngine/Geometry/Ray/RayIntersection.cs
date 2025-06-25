@@ -42,7 +42,7 @@ public readonly partial struct Ray
     public CollisionPoints? IntersectSegments(List<Segment.Segment> segments, int maxCollisionPoints = -1) =>
         IntersectRaySegments(Point, Direction, segments, maxCollisionPoints);
 
-    public CollisionPoints? IntersectSegments(Segments segments, int maxCollisionPoints = -1) =>
+    public CollisionPoints? IntersectSegments(Segments.Segments segments, int maxCollisionPoints = -1) =>
         IntersectRaySegments(Point, Direction, segments, maxCollisionPoints);
 
 }

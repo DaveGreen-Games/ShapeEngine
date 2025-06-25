@@ -57,7 +57,7 @@ public readonly partial struct Quad
         return false;
     }
 
-    public bool OverlapShape(Segments segments)
+    public bool OverlapShape(Segments.Segments segments)
     {
         if (segments.Count <= 0) return false;
         if (ContainsPoint(segments[0].Start)) return true;

@@ -4,6 +4,7 @@ using ShapeEngine.Geometry.Polygon;
 using ShapeEngine.Geometry.Polyline;
 using ShapeEngine.Geometry.Rect;
 using ShapeEngine.Geometry.Segment;
+using ShapeEngine.Geometry.Segments;
 
 namespace ShapeEngine.StaticLib;
 

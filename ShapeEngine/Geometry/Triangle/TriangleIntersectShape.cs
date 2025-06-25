@@ -43,7 +43,7 @@ public readonly partial struct Triangle
         return null;
     }
 
-    public CollisionPoints? IntersectShape(Segments segments)
+    public CollisionPoints? IntersectShape(Segments.Segments segments)
     {
         if (segments.Count <= 0) return null;
 
@@ -1048,7 +1048,7 @@ public readonly partial struct Triangle
         return count;
     }
 
-    public int IntersectShape(Segments shape, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Segments.Segments shape, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (shape.Count <= 0) return 0;
 

@@ -883,7 +883,7 @@ public readonly partial struct Rect
             otherIndex);
     }
 
-    public ClosestPointResult GetClosestPoint(Segments other)
+    public ClosestPointResult GetClosestPoint(Segments.Segments other)
     {
         if (other.Count <= 0) return new();
 

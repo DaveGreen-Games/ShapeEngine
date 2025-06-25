@@ -4,6 +4,7 @@ using ShapeEngine.Geometry.Polygon;
 using ShapeEngine.Geometry.Polyline;
 using ShapeEngine.Geometry.Rect;
 using ShapeEngine.Geometry.Segment;
+using ShapeEngine.Geometry.Segments;
 using ShapeEngine.Random;
 using ShapeEngine.StaticLib;
 
@@ -308,10 +309,10 @@ public readonly partial struct Circle : IEquatable<Circle>
     /// </summary>
     /// <param name="pointCount">The number of points to use for generating the edges. Default is 16.</param>
     /// <returns>A <see cref="Segments"/> collection representing the edges of the circle.</returns>
-    public Segments GetEdges(int pointCount = 16)
+    public Segments.Segments GetEdges(int pointCount = 16)
     {
         float angleStep = (MathF.PI * 2f) / pointCount;
-        Segments segments = new();
+        Segments.Segments segments = new();
         for (int i = 0; i < pointCount; i++)
         {
             var start = Center + new Vector2(Radius, 0f).Rotate(-angleStep * i);

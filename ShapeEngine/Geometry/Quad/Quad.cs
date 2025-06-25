@@ -116,7 +116,7 @@ public readonly partial struct Quad : IEquatable<Quad>
         return SegmentDToA;
     }
 
-    public Segments GetEdges() => new() { SegmentAToB, SegmentBToC, SegmentCToD, SegmentDToA };
+    public Segments.Segments GetEdges() => new() { SegmentAToB, SegmentBToC, SegmentCToD, SegmentDToA };
 
     public Polygon.Polygon ToPolygon() => new() { A, B, C, D };
     public Points ToPoints() => new() { A, B, C, D };

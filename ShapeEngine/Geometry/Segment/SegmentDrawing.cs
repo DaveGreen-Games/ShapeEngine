@@ -2,6 +2,7 @@ using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.Segments;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.Segment;
@@ -274,7 +275,7 @@ public static class SegmentDrawing
     /// </summary>
     /// <param name="segments">The collection of segments to draw.</param>
     /// <param name="lineInfo">The line drawing information (thickness, color, cap type, cap points).</param>
-    public static void Draw(this Segments segments, LineDrawingInfo lineInfo)
+    public static void Draw(this Segments.Segments segments, LineDrawingInfo lineInfo)
     {
         if (segments.Count <= 0) return;
         foreach (var seg in segments)
@@ -292,7 +293,7 @@ public static class SegmentDrawing
     /// Colors are cycled if there are more segments than colors.</param>
     /// <param name="capType">The type of line cap to use at the ends of the segments.</param>
     /// <param name="capPoints">The number of points used to draw the cap (for rounded or custom caps).</param>
-    public static void Draw(this Segments segments, float thickness, List<ColorRgba> colors, LineCapType capType = LineCapType.None, int capPoints = 0)
+    public static void Draw(this Segments.Segments segments, float thickness, List<ColorRgba> colors, LineCapType capType = LineCapType.None, int capPoints = 0)
     {
         if (segments.Count <= 0 || colors.Count <= 0) return;
         // LineDrawingInfo info = new(thickness, ColorRgba.White, capType, capPoints);
@@ -391,7 +392,7 @@ public static class SegmentDrawing
     /// <remarks>
     /// Creates a gradient glow effect along each segment.
     /// </remarks>
-    public static void DrawGlow(this Segments segments, float width, float endWidth, ColorRgba color, ColorRgba endColorRgba, int steps, LineCapType capType = LineCapType.None, int capPoints = 0)
+    public static void DrawGlow(this Segments.Segments segments, float width, float endWidth, ColorRgba color, ColorRgba endColorRgba, int steps, LineCapType capType = LineCapType.None, int capPoints = 0)
     {
         foreach (var seg in segments)
         {

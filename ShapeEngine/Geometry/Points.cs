@@ -10,6 +10,7 @@ using ShapeEngine.Geometry.Quad;
 using ShapeEngine.Geometry.Ray;
 using ShapeEngine.Geometry.Rect;
 using ShapeEngine.Geometry.Segment;
+using ShapeEngine.Geometry.Segments;
 using ShapeEngine.Geometry.Triangle;
 using ShapeEngine.StaticLib;
 
@@ -728,7 +729,7 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
     /// <remarks>
     /// If the collection is empty, returns a default <see cref="ClosestPointResult"/>.
     /// </remarks>
-    public ClosestPointResult GetClosestPoint(Segments other)
+    public ClosestPointResult GetClosestPoint(Segments.Segments other)
     {
         if (Count <= 0) return new();
 

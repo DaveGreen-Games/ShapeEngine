@@ -2,6 +2,7 @@ using System.Numerics;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.Polygon;
 using ShapeEngine.Geometry.Segment;
+using ShapeEngine.Geometry.Segments;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.Circle;
@@ -156,7 +157,7 @@ public class CircleSector
     /// Generates a set of segments representing the sector's edges.
     /// </summary>
     /// <returns>A <see cref="Segments"/> collection representing the sector, or null if parameters are invalid.</returns>
-    public Segments? GenerateSegments() => GenerateSegments(Center, Radius, RotationRad, AngleSectorRad, ArcPoints);
+    public Segments.Segments? GenerateSegments() => GenerateSegments(Center, Radius, RotationRad, AngleSectorRad, ArcPoints);
 
     #endregion
 
@@ -223,10 +224,10 @@ public class CircleSector
     /// <param name="angleSectorRad">The angle of the sector in radians.</param>
     /// <param name="accuracy">The number of points used to approximate the arc. Default is 3.</param>
     /// <returns>A <see cref="Segments"/> collection representing the sector, or null if parameters are invalid.</returns>
-    public static Segments? GenerateSegments(Vector2 center, float radius, float rotationRad, float angleSectorRad, int accuracy = 3)
+    public static Segments.Segments? GenerateSegments(Vector2 center, float radius, float rotationRad, float angleSectorRad, int accuracy = 3)
     {
         if (angleSectorRad <= 0 || radius <= 0) return null;
-        var result = new Segments(3 + accuracy);
+        var result = new Segments.Segments(3 + accuracy);
             
         //ccw order
         var prevPoint = center;

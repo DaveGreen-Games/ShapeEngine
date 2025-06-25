@@ -319,11 +319,11 @@ public class Polygon : Points, IEquatable<Polygon>
     /// and face inside otherwise.
     /// </summary>
     /// <returns></returns>
-    public Segments GetEdges()
+    public Segments.Segments GetEdges()
     {
         if (Count <= 1) return new();
         if (Count == 2) return new() { new(this[0], this[1]) };
-        Segments segments = new(Count);
+        Segments.Segments segments = new(Count);
         for (int i = 0; i < Count; i++)
         {
             segments.Add(new(this[i], this[(i + 1) % Count]));
@@ -845,7 +845,7 @@ public class Polygon : Points, IEquatable<Polygon>
         if (result.Count <= 0) return null;
         return result.ToPolygons();
     }
-    public Polygons? Split(Segments segments)
+    public Polygons? Split(Segments.Segments segments)
     {
         var result = this.DifferenceMany(segments);
         if (result.Count <= 0) return null;
@@ -891,7 +891,7 @@ public class Polygon : Points, IEquatable<Polygon>
     /// Relative to the segment length.</param>
     /// <param name="linePoints">How many points should be generated. Final segment count = segmentPoints + 1.</param>
     /// <returns></returns>
-    public Segments? GenerateFractureLine(Vector2 start, Vector2 end, float maxOffsetPercentage, int linePoints)
+    public Segments.Segments? GenerateFractureLine(Vector2 start, Vector2 end, float maxOffsetPercentage, int linePoints)
     {
         if (linePoints < 1) return null;
         if (maxOffsetPercentage < 0f) return [new Segment.Segment(start, end)];
@@ -904,7 +904,7 @@ public class Polygon : Points, IEquatable<Polygon>
         var segmentLength = l / (linePoints + 1);
         var dir = w / l;
         var p = dir.GetPerpendicularLeft();
-        var result = new Segments();
+        var result = new Segments.Segments();
 
         var curStart = start;
         var curLinePoint = start;
@@ -1049,10 +1049,10 @@ public class Polygon : Points, IEquatable<Polygon>
                 }
             }
 
-            Segments allEdges = new();
+            Segments.Segments allEdges = new();
             foreach (var badTriangle in badTriangles) { allEdges.AddRange(badTriangle.GetEdges()); }
 
-            Segments uniqueEdges = GetUniqueSegmentsDelaunay(allEdges);
+            Segments.Segments uniqueEdges = GetUniqueSegmentsDelaunay(allEdges);
             //Create new triangles
             for (int i = 0; i < uniqueEdges.Count; i++)
             {
@@ -1071,9 +1071,9 @@ public class Polygon : Points, IEquatable<Polygon>
 
         return triangles;
     }
-    private static Segments GetUniqueSegmentsDelaunay(Segments segments)
+    private static Segments.Segments GetUniqueSegmentsDelaunay(Segments.Segments segments)
     {
-        Segments uniqueEdges = new();
+        Segments.Segments uniqueEdges = new();
         for (int i = segments.Count - 1; i >= 0; i--)
         {
             var edge = segments[i];
@@ -1084,7 +1084,7 @@ public class Polygon : Points, IEquatable<Polygon>
         }
         return uniqueEdges;
     }
-    private static bool IsSimilar(Segments segments, Segment.Segment seg)
+    private static bool IsSimilar(Segments.Segments segments, Segment.Segment seg)
     {
         var counter = 0;
         foreach (var segment in segments)
@@ -1165,7 +1165,7 @@ public class Polygon : Points, IEquatable<Polygon>
         }
         return axis;
     }
-    public static List<Vector2> GetSegmentAxis(Segments edges, bool normalized = false)
+    public static List<Vector2> GetSegmentAxis(Segments.Segments edges, bool normalized = false)
     {
         List<Vector2> axis = new();
         foreach (var seg in edges)
@@ -1787,7 +1787,7 @@ public class Polygon : Points, IEquatable<Polygon>
             selfIndex,
             otherIndex);
     }
-    public new ClosestPointResult GetClosestPoint(Segments other)
+    public new ClosestPointResult GetClosestPoint(Segments.Segments other)
     {
         if (Count <= 2) return new();
         
@@ -2381,7 +2381,7 @@ public class Polygon : Points, IEquatable<Polygon>
 
         return oddNodes;
     }
-    public bool OverlapShape(Segments segments)
+    public bool OverlapShape(Segments.Segments segments)
     {
         if (Count < 3 || segments.Count <= 0) return false;
         
@@ -2752,7 +2752,7 @@ public class Polygon : Points, IEquatable<Polygon>
         }
         return points;
     }
-    public CollisionPoints? IntersectShape(Segments segments)
+    public CollisionPoints? IntersectShape(Segments.Segments segments)
     {
         if (Count < 3 || segments.Count <= 0) return null;
         CollisionPoints? points = null;
@@ -3046,7 +3046,7 @@ public class Polygon : Points, IEquatable<Polygon>
         }
         return count;
     }
-    public int IntersectShape(Segments shape, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Segments.Segments shape, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count < 3 || shape.Count <= 0) return 0;
         var count = 0;

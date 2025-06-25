@@ -745,7 +745,7 @@ public readonly partial struct Rect
         return count;
     }
 
-    public int IntersectShape(Segments shape, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Segments.Segments shape, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (shape.Count <= 0) return 0;
 
