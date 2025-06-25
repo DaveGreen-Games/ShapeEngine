@@ -1,8 +1,8 @@
 using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.Rect;
 using ShapeEngine.StaticLib;
-using ShapeEngine.StaticLib.Drawing;
 
 namespace ShapeEngine.Screen;
 

@@ -11,7 +11,6 @@ using ShapeEngine.Geometry.Polygon;
 using ShapeEngine.Geometry.Rect;
 using ShapeEngine.Geometry.Triangle;
 using ShapeEngine.Input;
-using ShapeEngine.StaticLib.Drawing;
 using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes;

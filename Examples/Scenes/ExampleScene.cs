@@ -5,8 +5,8 @@ using System.Numerics;
 using Examples.UIElements;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.Segment;
 using ShapeEngine.Input;
-using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Text;
 
 

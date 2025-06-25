@@ -2,9 +2,13 @@ using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.Polygon;
+using ShapeEngine.Geometry.Quad;
+using ShapeEngine.Geometry.Segment;
+using ShapeEngine.StaticLib;
 
-namespace ShapeEngine.StaticLib.Drawing;
+namespace ShapeEngine.Geometry.Rect;
 
 /// <summary>
 /// Provides static extension methods for drawing rectangles and grids, including advanced features such as nine-patch, rounded corners, slanted corners, partial outlines, and more.
@@ -13,7 +17,7 @@ namespace ShapeEngine.StaticLib.Drawing;
 /// All methods are designed for use with Raylib and ShapeEngine types.
 /// Methods are implemented as extensions for convenient usage.
 /// </remarks>
-public static class ShapeRectDrawing
+public static class RectDrawing
 {
     /// <summary>
     /// Draws a <see cref="NinePatchRect"/> using a single color for all patches.
@@ -90,12 +94,12 @@ public static class ShapeRectDrawing
         Vector2 rowSpacing = new(0f, bounds.Height / grid.Rows);
         for (int row = 0; row < grid.Rows + 1; row++)
         {
-            ShapeSegmentDrawing.DrawSegment(bounds.TopLeft + rowSpacing * row, bounds.TopRight + rowSpacing * row, lineThickness, color);
+            SegmentDrawing.DrawSegment(bounds.TopLeft + rowSpacing * row, bounds.TopRight + rowSpacing * row, lineThickness, color);
         }
         Vector2 colSpacing = new(bounds.Width / grid.Cols, 0f);
         for (int col = 0; col < grid.Cols + 1; col++)
         {
-            ShapeSegmentDrawing.DrawSegment(bounds.TopLeft + colSpacing * col, bounds.BottomLeft + colSpacing * col, lineThickness, color);
+            SegmentDrawing.DrawSegment(bounds.TopLeft + colSpacing * col, bounds.BottomLeft + colSpacing * col, lineThickness, color);
         }
     }
 
@@ -116,8 +120,8 @@ public static class ShapeRectDrawing
 
         for (var i = 0; i < lines; i++)
         {
-            ShapeSegmentDrawing.DrawSegment(tl + xOffset * i, bl + xOffset * i, lineInfo);
-            ShapeSegmentDrawing.DrawSegment(tl + yOffset * i, tr + yOffset * i, lineInfo);
+            SegmentDrawing.DrawSegment(tl + xOffset * i, bl + xOffset * i, lineInfo);
+            SegmentDrawing.DrawSegment(tl + yOffset * i, tr + yOffset * i, lineInfo);
         }
     }
 
@@ -146,7 +150,7 @@ public static class ShapeRectDrawing
         var b = pivot + (new Vector2(topLeft.X, bottomRight.Y) - pivot).RotateDeg(rotDeg);
         var c = pivot + (bottomRight - pivot).RotateDeg(rotDeg);
         var d = pivot + (new Vector2(bottomRight.X, topLeft.Y) - pivot).RotateDeg(rotDeg);
-        ShapeQuadDrawing.DrawQuad(a, b, c, d, color);
+        QuadDrawing.DrawQuad(a, b, c, d, color);
     }
 
     /// <summary>
@@ -192,10 +196,10 @@ public static class ShapeRectDrawing
         var side4 = a - d;
         var end4 = d + side4 * sideLengthFactor;
 
-        ShapeSegmentDrawing.DrawSegment(a, end1, lineThickness, color, capType, capPoints);
-        ShapeSegmentDrawing.DrawSegment(b, end2, lineThickness, color, capType, capPoints);
-        ShapeSegmentDrawing.DrawSegment(c, end3, lineThickness, color, capType, capPoints);
-        ShapeSegmentDrawing.DrawSegment(d, end4, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(a, end1, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(b, end2, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(c, end3, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(d, end4, lineThickness, color, capType, capPoints);
     }
 
     /// <summary>
@@ -211,10 +215,10 @@ public static class ShapeRectDrawing
         var c = bottomRight;
         var d = new Vector2(bottomRight.X, topLeft.Y);
 
-        ShapeSegmentDrawing.DrawSegment(a, b, lineInfo);
-        ShapeSegmentDrawing.DrawSegment(b, c, lineInfo);
-        ShapeSegmentDrawing.DrawSegment(c, d, lineInfo);
-        ShapeSegmentDrawing.DrawSegment(d, a, lineInfo);
+        SegmentDrawing.DrawSegment(a, b, lineInfo);
+        SegmentDrawing.DrawSegment(b, c, lineInfo);
+        SegmentDrawing.DrawSegment(c, d, lineInfo);
+        SegmentDrawing.DrawSegment(d, a, lineInfo);
     }
 
     /// <summary>
@@ -235,7 +239,7 @@ public static class ShapeRectDrawing
         var b = pivot + (new Vector2(topLeft.X, bottomRight.Y) - pivot).RotateDeg(rotDeg);
         var c = pivot + (bottomRight - pivot).RotateDeg(rotDeg);
         var d = pivot + (new Vector2(bottomRight.X, topLeft.Y) - pivot).RotateDeg(rotDeg);
-        ShapeQuadDrawing.DrawQuadLines(a, b, c, d, lineThickness, color, capType, capPoints);
+        QuadDrawing.DrawQuadLines(a, b, c, d, lineThickness, color, capType, capPoints);
     }
 
     /// <summary>
@@ -280,10 +284,10 @@ public static class ShapeRectDrawing
     /// <param name="lineInfo">The line drawing information (thickness, color, etc.).</param>
     public static void DrawLines(this Rect rect, LineDrawingInfo lineInfo)
     {
-        ShapeSegmentDrawing.DrawSegment(rect.TopLeft, rect.BottomLeft, lineInfo);
-        ShapeSegmentDrawing.DrawSegment(rect.BottomLeft, rect.BottomRight, lineInfo);
-        ShapeSegmentDrawing.DrawSegment(rect.BottomRight, rect.TopRight, lineInfo);
-        ShapeSegmentDrawing.DrawSegment(rect.TopRight, rect.TopLeft, lineInfo);
+        SegmentDrawing.DrawSegment(rect.TopLeft, rect.BottomLeft, lineInfo);
+        SegmentDrawing.DrawSegment(rect.BottomLeft, rect.BottomRight, lineInfo);
+        SegmentDrawing.DrawSegment(rect.BottomRight, rect.TopRight, lineInfo);
+        SegmentDrawing.DrawSegment(rect.TopRight, rect.TopLeft, lineInfo);
     }
 
     /// <summary>
@@ -447,7 +451,7 @@ public static class ShapeRectDrawing
         var c = pivot + (bottomRight - pivot).RotateDeg(rotDeg);
         var d = pivot + (new Vector2(bottomRight.X, topLeft.Y) - pivot).RotateDeg(rotDeg);
 
-        ShapeQuadDrawing.DrawQuadLinesPercentage(a, b, c, d, f, lineThickness, color, capType, capPoints);
+        QuadDrawing.DrawQuadLinesPercentage(a, b, c, d, f, lineThickness, color, capType, capPoints);
     }
 
     /// <summary>
@@ -527,18 +531,18 @@ public static class ShapeRectDrawing
         }
         if (rotDeg == 0f)
         {
-            ShapeSegmentDrawing.DrawSegment(r.TopLeft, r.BottomLeft, lineInfo, sideScaleFactor, sideScaleOrigin);
-            ShapeSegmentDrawing.DrawSegment(r.BottomLeft, r.BottomRight, lineInfo, sideScaleFactor, sideScaleOrigin);
-            ShapeSegmentDrawing.DrawSegment(r.BottomRight, r.TopRight, lineInfo, sideScaleFactor, sideScaleOrigin);
-            ShapeSegmentDrawing.DrawSegment(r.TopRight, r.TopLeft, lineInfo, sideScaleFactor, sideScaleOrigin);
+            SegmentDrawing.DrawSegment(r.TopLeft, r.BottomLeft, lineInfo, sideScaleFactor, sideScaleOrigin);
+            SegmentDrawing.DrawSegment(r.BottomLeft, r.BottomRight, lineInfo, sideScaleFactor, sideScaleOrigin);
+            SegmentDrawing.DrawSegment(r.BottomRight, r.TopRight, lineInfo, sideScaleFactor, sideScaleOrigin);
+            SegmentDrawing.DrawSegment(r.TopRight, r.TopLeft, lineInfo, sideScaleFactor, sideScaleOrigin);
         }
         else
         {
             var corners = r.RotateCorners(pivot, rotDeg);
-            ShapeSegmentDrawing.DrawSegment(corners.tl, corners.bl, lineInfo, sideScaleFactor, sideScaleOrigin);
-            ShapeSegmentDrawing.DrawSegment(corners.bl, corners.br, lineInfo, sideScaleFactor, sideScaleOrigin);
-            ShapeSegmentDrawing.DrawSegment(corners.br, corners.tr, lineInfo, sideScaleFactor, sideScaleOrigin);
-            ShapeSegmentDrawing.DrawSegment(corners.tr, corners.tl, lineInfo, sideScaleFactor, sideScaleOrigin);
+            SegmentDrawing.DrawSegment(corners.tl, corners.bl, lineInfo, sideScaleFactor, sideScaleOrigin);
+            SegmentDrawing.DrawSegment(corners.bl, corners.br, lineInfo, sideScaleFactor, sideScaleOrigin);
+            SegmentDrawing.DrawSegment(corners.br, corners.tr, lineInfo, sideScaleFactor, sideScaleOrigin);
+            SegmentDrawing.DrawSegment(corners.tr, corners.tl, lineInfo, sideScaleFactor, sideScaleOrigin);
         }
     }
 
@@ -551,10 +555,10 @@ public static class ShapeRectDrawing
     /// <param name="circleSegments">The number of segments for each circle (default: 8).</param>
     public static void DrawVertices(this Rect rect, float vertexRadius, ColorRgba color, int circleSegments = 8)
     {
-        ShapeCircleDrawing.DrawCircle(rect.TopLeft, vertexRadius, color, circleSegments);
-        ShapeCircleDrawing.DrawCircle(rect.TopRight, vertexRadius, color, circleSegments);
-        ShapeCircleDrawing.DrawCircle(rect.BottomLeft, vertexRadius, color, circleSegments);
-        ShapeCircleDrawing.DrawCircle(rect.BottomRight, vertexRadius, color, circleSegments);
+        CircleDrawing.DrawCircle(rect.TopLeft, vertexRadius, color, circleSegments);
+        CircleDrawing.DrawCircle(rect.TopRight, vertexRadius, color, circleSegments);
+        CircleDrawing.DrawCircle(rect.BottomLeft, vertexRadius, color, circleSegments);
+        CircleDrawing.DrawCircle(rect.BottomRight, vertexRadius, color, circleSegments);
     }
 
     /// <summary>
@@ -681,23 +685,23 @@ public static class ShapeRectDrawing
 
         if (tlCorner > 0f)
         {
-            ShapeSegmentDrawing.DrawSegment(tl, tl + new Vector2(MathF.Min(tlCorner, rect.Width), 0f), lineInfo);
-            ShapeSegmentDrawing.DrawSegment(tl, tl + new Vector2(0f, MathF.Min(tlCorner, rect.Height)), lineInfo);
+            SegmentDrawing.DrawSegment(tl, tl + new Vector2(MathF.Min(tlCorner, rect.Width), 0f), lineInfo);
+            SegmentDrawing.DrawSegment(tl, tl + new Vector2(0f, MathF.Min(tlCorner, rect.Height)), lineInfo);
         }
         if (trCorner > 0f)
         {
-            ShapeSegmentDrawing.DrawSegment(tr, tr - new Vector2(MathF.Min(trCorner, rect.Width), 0f), lineInfo);
-            ShapeSegmentDrawing.DrawSegment(tr, tr + new Vector2(0f, MathF.Min(trCorner, rect.Height)), lineInfo);
+            SegmentDrawing.DrawSegment(tr, tr - new Vector2(MathF.Min(trCorner, rect.Width), 0f), lineInfo);
+            SegmentDrawing.DrawSegment(tr, tr + new Vector2(0f, MathF.Min(trCorner, rect.Height)), lineInfo);
         }
         if (brCorner > 0f)
         {
-            ShapeSegmentDrawing.DrawSegment(br, br - new Vector2(MathF.Min(brCorner, rect.Width), 0f), lineInfo);
-            ShapeSegmentDrawing.DrawSegment(br, br - new Vector2(0f, MathF.Min(brCorner, rect.Height)), lineInfo);
+            SegmentDrawing.DrawSegment(br, br - new Vector2(MathF.Min(brCorner, rect.Width), 0f), lineInfo);
+            SegmentDrawing.DrawSegment(br, br - new Vector2(0f, MathF.Min(brCorner, rect.Height)), lineInfo);
         }
         if (blCorner > 0f)
         {
-            ShapeSegmentDrawing.DrawSegment(bl, bl + new Vector2(MathF.Min(blCorner, rect.Width), 0f), lineInfo);
-            ShapeSegmentDrawing.DrawSegment(bl, bl - new Vector2(0f, MathF.Min(blCorner, rect.Height)), lineInfo);
+            SegmentDrawing.DrawSegment(bl, bl + new Vector2(MathF.Min(blCorner, rect.Width), 0f), lineInfo);
+            SegmentDrawing.DrawSegment(bl, bl - new Vector2(0f, MathF.Min(blCorner, rect.Height)), lineInfo);
         }
     }
 
@@ -732,23 +736,23 @@ public static class ShapeRectDrawing
 
         if (tlCorner > 0f && tlCorner < 1f)
         {
-            ShapeSegmentDrawing.DrawSegment(tl, tl + new Vector2(tlCorner * rect.Width, 0f), lineInfo);
-            ShapeSegmentDrawing.DrawSegment(tl, tl + new Vector2(0f, tlCorner * rect.Height), lineInfo);
+            SegmentDrawing.DrawSegment(tl, tl + new Vector2(tlCorner * rect.Width, 0f), lineInfo);
+            SegmentDrawing.DrawSegment(tl, tl + new Vector2(0f, tlCorner * rect.Height), lineInfo);
         }
         if (trCorner > 0f && trCorner < 1f)
         {
-            ShapeSegmentDrawing.DrawSegment(tr, tr - new Vector2(tlCorner * rect.Width, 0f), lineInfo);
-            ShapeSegmentDrawing.DrawSegment(tr, tr + new Vector2(0f, tlCorner * rect.Height), lineInfo);
+            SegmentDrawing.DrawSegment(tr, tr - new Vector2(tlCorner * rect.Width, 0f), lineInfo);
+            SegmentDrawing.DrawSegment(tr, tr + new Vector2(0f, tlCorner * rect.Height), lineInfo);
         }
         if (brCorner > 0f && brCorner < 1f)
         {
-            ShapeSegmentDrawing.DrawSegment(br, br - new Vector2(tlCorner * rect.Width, 0f), lineInfo);
-            ShapeSegmentDrawing.DrawSegment(br, br - new Vector2(0f, tlCorner * rect.Height), lineInfo);
+            SegmentDrawing.DrawSegment(br, br - new Vector2(tlCorner * rect.Width, 0f), lineInfo);
+            SegmentDrawing.DrawSegment(br, br - new Vector2(0f, tlCorner * rect.Height), lineInfo);
         }
         if (blCorner > 0f && blCorner < 1f)
         {
-            ShapeSegmentDrawing.DrawSegment(bl, bl + new Vector2(tlCorner * rect.Width, 0f), lineInfo);
-            ShapeSegmentDrawing.DrawSegment(bl, bl - new Vector2(0f, tlCorner * rect.Height), lineInfo);
+            SegmentDrawing.DrawSegment(bl, bl + new Vector2(tlCorner * rect.Width, 0f), lineInfo);
+            SegmentDrawing.DrawSegment(bl, bl - new Vector2(0f, tlCorner * rect.Height), lineInfo);
         }
     }
 
@@ -770,11 +774,11 @@ public static class ShapeRectDrawing
         {
             float p = perimeterToDraw / size1;
             nextP = curP.Lerp(nextP, p);
-            ShapeSegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
             return;
         }
 
-        ShapeSegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
         perimeterToDraw -= size1;
 
         // Draw second segment
@@ -784,11 +788,11 @@ public static class ShapeRectDrawing
         {
             float p = perimeterToDraw / size2;
             nextP = curP.Lerp(nextP, p);
-            ShapeSegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
             return;
         }
 
-        ShapeSegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
         perimeterToDraw -= size2;
 
         // Draw third segment
@@ -798,11 +802,11 @@ public static class ShapeRectDrawing
         {
             float p = perimeterToDraw / size1;
             nextP = curP.Lerp(nextP, p);
-            ShapeSegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
             return;
         }
 
-        ShapeSegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
         perimeterToDraw -= size1;
 
         // Draw fourth segment
@@ -813,7 +817,7 @@ public static class ShapeRectDrawing
             float p = perimeterToDraw / size2;
             nextP = curP.Lerp(nextP, p);
         }
-        ShapeSegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
     }
 
 }

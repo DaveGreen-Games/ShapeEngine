@@ -3,11 +3,11 @@ using ShapeEngine.Color;
 using ShapeEngine.Core;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.Ray;
 using ShapeEngine.Geometry.Segment;
 using ShapeEngine.Input;
 using ShapeEngine.StaticLib;
-using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Random;
 
 namespace Examples.Scenes.ExampleScenes.EndlessSpaceExampleSource;

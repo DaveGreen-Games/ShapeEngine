@@ -5,10 +5,12 @@ using ShapeEngine.Input;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
+using ShapeEngine.Geometry;
+using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.Polygon;
 using ShapeEngine.Geometry.Polyline;
 using ShapeEngine.Geometry.Rect;
 using ShapeEngine.Geometry.Segment;
-using ShapeEngine.StaticLib.Drawing;
 using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes
@@ -132,10 +134,10 @@ namespace Examples.Scenes.ExampleScenes
                 float disSq = (mousePos - p).LengthSquared();
                 if (pickedVertex == -1 && disSq < (vertexRadius * vertexRadius) * 2f)
                 {
-                    ShapeCircleDrawing.DrawCircle(p, vertexRadius * 2f, Colors.Highlight);
+                    CircleDrawing.DrawCircle(p, vertexRadius * 2f, Colors.Highlight);
                     pickedVertex = i;
                 }
-                else ShapeCircleDrawing.DrawCircle(p, vertexRadius, Colors.Medium);
+                else CircleDrawing.DrawCircle(p, vertexRadius, Colors.Medium);
                 if (drawClosest)
                 {
                     disSq = (closest.Point - p).LengthSquared();
@@ -214,7 +216,7 @@ namespace Examples.Scenes.ExampleScenes
                 }
             }
 
-            if (drawClosest) ShapeCircleDrawing.DrawCircle(closest.Point, vertexRadius, Colors.Warm);
+            if (drawClosest) CircleDrawing.DrawCircle(closest.Point, vertexRadius, Colors.Warm);
 
             Polygons? inflatedPolygons = null;
             if (lerpOffsetDelta > 10f)

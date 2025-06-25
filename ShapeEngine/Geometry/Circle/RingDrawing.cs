@@ -2,8 +2,10 @@ using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.Segment;
+using ShapeEngine.StaticLib;
 
-namespace ShapeEngine.StaticLib.Drawing;
+namespace ShapeEngine.Geometry.Circle;
 
 /// <summary>
 /// Provides static methods for drawing ring shapes and ring outlines with various customization options.
@@ -11,7 +13,7 @@ namespace ShapeEngine.StaticLib.Drawing;
 /// <remarks>
 /// This class contains utility methods for drawing rings, sector rings, and their outlines with support for line thickness, color, rotation, scaling, and side count.
 /// </remarks>
-public static class ShapeRingDrawing
+public static class RingDrawing
 {
     /// <summary>
     /// Draws the outlines of a ring by drawing the inner and outer circles as lines.
@@ -27,8 +29,8 @@ public static class ShapeRingDrawing
     /// </remarks>
     public static void DrawRingLines(Vector2 center, float innerRadius, float outerRadius, float lineThickness, ColorRgba color, float sideLength = 8f)
     {
-        ShapeCircleDrawing.DrawCircleLines(center, innerRadius, lineThickness, color, sideLength);
-        ShapeCircleDrawing.DrawCircleLines(center, outerRadius, lineThickness, color, sideLength);
+        CircleDrawing.DrawCircleLines(center, innerRadius, lineThickness, color, sideLength);
+        CircleDrawing.DrawCircleLines(center, outerRadius, lineThickness, color, sideLength);
     }
 
     /// <summary>
@@ -41,8 +43,8 @@ public static class ShapeRingDrawing
     /// <param name="sideLength">The length of each side segment. Default is 8.</param>
     public static void DrawRingLines(Vector2 center, float innerRadius, float outerRadius, LineDrawingInfo lineInfo, float sideLength = 8f)
     {
-        ShapeCircleDrawing.DrawCircleLines(center, innerRadius, lineInfo, 0f, sideLength);
-        ShapeCircleDrawing.DrawCircleLines(center, outerRadius, lineInfo, 0f, sideLength);
+        CircleDrawing.DrawCircleLines(center, innerRadius, lineInfo, 0f, sideLength);
+        CircleDrawing.DrawCircleLines(center, outerRadius, lineInfo, 0f, sideLength);
     }
 
     /// <summary>
@@ -57,8 +59,8 @@ public static class ShapeRingDrawing
     /// <param name="sideLength">The length of each side segment. Default is 8.</param>
     public static void DrawRingLines(Vector2 center, float innerRadius, float outerRadius, float innerRotDeg, float outerRotDeg, LineDrawingInfo lineInfo, float sideLength = 8f)
     {
-        ShapeCircleDrawing.DrawCircleLines(center, innerRadius, lineInfo, innerRotDeg, sideLength);
-        ShapeCircleDrawing.DrawCircleLines(center, outerRadius, lineInfo, outerRotDeg, sideLength);
+        CircleDrawing.DrawCircleLines(center, innerRadius, lineInfo, innerRotDeg, sideLength);
+        CircleDrawing.DrawCircleLines(center, outerRadius, lineInfo, outerRotDeg, sideLength);
     }
 
     /// <summary>
@@ -74,8 +76,8 @@ public static class ShapeRingDrawing
     /// <param name="sideLength">The length of each side segment. Default is 8.</param>
     public static void DrawRingLinesPercentage(Vector2 center, float innerRadius, float outerRadius, float f, float innerRotDeg, float outerRotDeg, LineDrawingInfo lineInfo, float sideLength = 8f)
     {
-        ShapeCircleDrawing.DrawCircleLinesPercentage(center, innerRadius, f, lineInfo, innerRotDeg, sideLength);
-        ShapeCircleDrawing.DrawCircleLinesPercentage(center, outerRadius, f, lineInfo, outerRotDeg, sideLength);
+        CircleDrawing.DrawCircleLinesPercentage(center, innerRadius, f, lineInfo, innerRotDeg, sideLength);
+        CircleDrawing.DrawCircleLinesPercentage(center, outerRadius, f, lineInfo, outerRotDeg, sideLength);
     }
 
     /// <summary>
@@ -91,8 +93,8 @@ public static class ShapeRingDrawing
     /// <param name="lineInfo">The line drawing style information.</param>
     public static void DrawRingLines(Vector2 center, float innerRadius, float outerRadius, float innerRotDeg, float outerRotDeg, float innerSideLength, float outerSideLength, LineDrawingInfo lineInfo)
     {
-        ShapeCircleDrawing.DrawCircleLines(center, innerRadius, lineInfo, innerRotDeg, innerSideLength);
-        ShapeCircleDrawing.DrawCircleLines(center, outerRadius, lineInfo, outerRotDeg, outerSideLength);
+        CircleDrawing.DrawCircleLines(center, innerRadius, lineInfo, innerRotDeg, innerSideLength);
+        CircleDrawing.DrawCircleLines(center, outerRadius, lineInfo, outerRotDeg, outerSideLength);
     }
 
     /// <summary>
@@ -109,8 +111,8 @@ public static class ShapeRingDrawing
     /// <param name="outerLineInfo">Line drawing info for the outer circle.</param>
     public static void DrawRingLines(Vector2 center, float innerRadius, float outerRadius, float innerRotDeg, float outerRotDeg, float innerSideLength, float outerSideLength, LineDrawingInfo innerLineInfo, LineDrawingInfo outerLineInfo)
     {
-        ShapeCircleDrawing.DrawCircleLines(center, innerRadius, innerLineInfo, innerRotDeg, innerSideLength);
-        ShapeCircleDrawing.DrawCircleLines(center, outerRadius, outerLineInfo, outerRotDeg, outerSideLength);
+        CircleDrawing.DrawCircleLines(center, innerRadius, innerLineInfo, innerRotDeg, innerSideLength);
+        CircleDrawing.DrawCircleLines(center, outerRadius, outerLineInfo, outerRotDeg, outerSideLength);
     }
 
     /// <summary>
@@ -127,8 +129,8 @@ public static class ShapeRingDrawing
     /// <param name="lineInfo">The line drawing style information.</param>
     public static void DrawRingLinesPercentage(Vector2 center, float innerRadius, float outerRadius, float f, float innerRotDeg, float outerRotDeg, float innerSideLength, float outerSideLength, LineDrawingInfo lineInfo)
     {
-        ShapeCircleDrawing.DrawCircleLinesPercentage(center, innerRadius, f, lineInfo, innerRotDeg, innerSideLength);
-        ShapeCircleDrawing.DrawCircleLinesPercentage(center, outerRadius, f, lineInfo, outerRotDeg, outerSideLength);
+        CircleDrawing.DrawCircleLinesPercentage(center, innerRadius, f, lineInfo, innerRotDeg, innerSideLength);
+        CircleDrawing.DrawCircleLinesPercentage(center, outerRadius, f, lineInfo, outerRotDeg, outerSideLength);
     }
 
     /// <summary>
@@ -146,8 +148,8 @@ public static class ShapeRingDrawing
     /// <param name="outerLineInfo">Line drawing info for the outer circle.</param>
     public static void DrawRingLines(Vector2 center, float innerRadius, float outerRadius, float f, float innerRotDeg, float outerRotDeg, float innerSideLength, float outerSideLength, LineDrawingInfo innerLineInfo, LineDrawingInfo outerLineInfo)
     {
-        ShapeCircleDrawing.DrawCircleLinesPercentage(center, outerRadius, f, outerLineInfo, outerRotDeg, outerSideLength);
-        ShapeCircleDrawing.DrawCircleLinesPercentage(center, innerRadius, f, innerLineInfo, innerRotDeg, innerSideLength);
+        CircleDrawing.DrawCircleLinesPercentage(center, outerRadius, f, outerLineInfo, outerRotDeg, outerSideLength);
+        CircleDrawing.DrawCircleLinesPercentage(center, innerRadius, f, innerLineInfo, innerRotDeg, innerSideLength);
     }
 
     /// <summary>
@@ -162,8 +164,8 @@ public static class ShapeRingDrawing
     /// <param name="lineInfo">The line drawing style information.</param>
     public static void DrawRingLines(Vector2 center, float innerRadius, float outerRadius, float innerRotDeg, float outerRotDeg, int sides, LineDrawingInfo lineInfo)
     {
-        ShapeCircleDrawing.DrawCircleLines(center, innerRadius, lineInfo, innerRotDeg, sides);
-        ShapeCircleDrawing.DrawCircleLines(center, outerRadius, lineInfo, outerRotDeg, sides);
+        CircleDrawing.DrawCircleLines(center, innerRadius, lineInfo, innerRotDeg, sides);
+        CircleDrawing.DrawCircleLines(center, outerRadius, lineInfo, outerRotDeg, sides);
     }
 
     /// <summary>
@@ -179,8 +181,8 @@ public static class ShapeRingDrawing
     /// <param name="lineInfo">The line drawing style information.</param>
     public static void DrawRingLines(Vector2 center, float innerRadius, float outerRadius, float innerRotDeg, float outerRotDeg, int innerSides, int outerSides, LineDrawingInfo lineInfo)
     {
-        ShapeCircleDrawing.DrawCircleLines(center, innerRadius, lineInfo, innerRotDeg, innerSides);
-        ShapeCircleDrawing.DrawCircleLines(center, outerRadius, lineInfo, outerRotDeg, outerSides);
+        CircleDrawing.DrawCircleLines(center, innerRadius, lineInfo, innerRotDeg, innerSides);
+        CircleDrawing.DrawCircleLines(center, outerRadius, lineInfo, outerRotDeg, outerSides);
     }
 
     /// <summary>
@@ -197,8 +199,8 @@ public static class ShapeRingDrawing
     /// <param name="outerLineInfo">Line drawing info for the outer circle.</param>
     public static void DrawRingLines(Vector2 center, float innerRadius, float outerRadius, float innerRotDeg, float outerRotDeg, int innerSides, int outerSides, LineDrawingInfo innerLineInfo, LineDrawingInfo outerLineInfo)
     {
-        ShapeCircleDrawing.DrawCircleLines(center, innerRadius, innerLineInfo, innerRotDeg, innerSides);
-        ShapeCircleDrawing.DrawCircleLines(center, outerRadius, outerLineInfo, outerRotDeg, outerSides);
+        CircleDrawing.DrawCircleLines(center, innerRadius, innerLineInfo, innerRotDeg, innerSides);
+        CircleDrawing.DrawCircleLines(center, outerRadius, outerLineInfo, outerRotDeg, outerSides);
     }
 
     /// <summary>
@@ -215,8 +217,8 @@ public static class ShapeRingDrawing
     /// <param name="lineInfo">The line drawing style information.</param>
     public static void DrawRingLinesPercentage(Vector2 center, float innerRadius, float outerRadius, float f, float innerRotDeg, float outerRotDeg, int innerSides, int outerSides, LineDrawingInfo lineInfo)
     {
-        ShapeCircleDrawing.DrawCircleLinesPercentage(center, innerRadius, f, lineInfo, innerRotDeg, innerSides);
-        ShapeCircleDrawing.DrawCircleLinesPercentage(center, outerRadius, f, lineInfo, outerRotDeg, outerSides);
+        CircleDrawing.DrawCircleLinesPercentage(center, innerRadius, f, lineInfo, innerRotDeg, innerSides);
+        CircleDrawing.DrawCircleLinesPercentage(center, outerRadius, f, lineInfo, outerRotDeg, outerSides);
     }
 
     /// <summary>
@@ -234,8 +236,8 @@ public static class ShapeRingDrawing
     /// <param name="outerLineInfo">Line drawing info for the outer circle.</param>
     public static void DrawRingLinesPercentage(Vector2 center, float innerRadius, float outerRadius, float f, float innerRotDeg, float outerRotDeg, int innerSides, int outerSides, LineDrawingInfo innerLineInfo, LineDrawingInfo outerLineInfo)
     {
-        ShapeCircleDrawing.DrawCircleLinesPercentage(center, innerRadius, f, innerLineInfo, innerRotDeg, innerSides);
-        ShapeCircleDrawing.DrawCircleLinesPercentage(center, outerRadius, f, outerLineInfo, outerRotDeg, outerSides);
+        CircleDrawing.DrawCircleLinesPercentage(center, innerRadius, f, innerLineInfo, innerRotDeg, innerSides);
+        CircleDrawing.DrawCircleLinesPercentage(center, outerRadius, f, outerLineInfo, outerRotDeg, outerSides);
     }
 
     /// <summary>
@@ -248,8 +250,8 @@ public static class ShapeRingDrawing
     /// <param name="lineInfo">The line drawing style information.</param>
     public static void DrawRingLines(Vector2 center, float innerRadius, float outerRadius, int sides, LineDrawingInfo lineInfo)
     {
-        ShapeCircleDrawing.DrawCircleLines(center, innerRadius, lineInfo, sides);
-        ShapeCircleDrawing.DrawCircleLines(center, outerRadius, lineInfo, sides);
+        CircleDrawing.DrawCircleLines(center, innerRadius, lineInfo, sides);
+        CircleDrawing.DrawCircleLines(center, outerRadius, lineInfo, sides);
     }
 
     /// <summary>
@@ -263,8 +265,8 @@ public static class ShapeRingDrawing
     /// <param name="lineInfo">The line drawing style information.</param>
     public static void DrawRingLines(Vector2 center, float innerRadius, float outerRadius, int innerSides, int outerSides, LineDrawingInfo lineInfo)
     {
-        ShapeCircleDrawing.DrawCircleLines(center, innerRadius, lineInfo, innerSides);
-        ShapeCircleDrawing.DrawCircleLines(center, outerRadius, lineInfo, outerSides);
+        CircleDrawing.DrawCircleLines(center, innerRadius, lineInfo, innerSides);
+        CircleDrawing.DrawCircleLines(center, outerRadius, lineInfo, outerSides);
     }
 
     /// <summary>
@@ -279,8 +281,8 @@ public static class ShapeRingDrawing
     /// <param name="lineInfo">The line drawing style information.</param>
     public static void DrawRingLinesPercentage(Vector2 center, float innerRadius, float outerRadius, float f, int innerSides, int outerSides, LineDrawingInfo lineInfo)
     {
-        ShapeCircleDrawing.DrawCircleLinesPercentage(center, innerRadius, f, lineInfo, innerSides);
-        ShapeCircleDrawing.DrawCircleLinesPercentage(center, outerRadius, f, lineInfo, outerSides);
+        CircleDrawing.DrawCircleLinesPercentage(center, innerRadius, f, lineInfo, innerSides);
+        CircleDrawing.DrawCircleLinesPercentage(center, outerRadius, f, lineInfo, outerSides);
     }
 
     /// <summary>
@@ -295,8 +297,8 @@ public static class ShapeRingDrawing
     /// <param name="outerLineInfo">Line drawing info for the outer circle.</param>
     public static void DrawRingLines(Vector2 center, float innerRadius, float outerRadius, int innerSides, int outerSides, LineDrawingInfo innerLineInfo, LineDrawingInfo outerLineInfo)
     {
-        ShapeCircleDrawing.DrawCircleLines(center, innerRadius, innerLineInfo, innerSides);
-        ShapeCircleDrawing.DrawCircleLines(center, outerRadius, outerLineInfo, outerSides);
+        CircleDrawing.DrawCircleLines(center, innerRadius, innerLineInfo, innerSides);
+        CircleDrawing.DrawCircleLines(center, outerRadius, outerLineInfo, outerSides);
     }
 
     /// <summary>
@@ -365,8 +367,8 @@ public static class ShapeRingDrawing
         if (sideScaleFactor <= 0f) return;
         if (sideScaleFactor >= 1f)
         {
-            ShapeCircleDrawing.DrawCircleLines(center, innerRadius, lineInfo, innerRotDeg, sides);
-            ShapeCircleDrawing.DrawCircleLines(center, outerRadius, lineInfo, outerRotDeg, sides);
+            CircleDrawing.DrawCircleLines(center, innerRadius, lineInfo, innerRotDeg, sides);
+            CircleDrawing.DrawCircleLines(center, outerRadius, lineInfo, outerRotDeg, sides);
             return;
         }
         
@@ -380,13 +382,13 @@ public static class ShapeRingDrawing
             var startInner = center + new Vector2(innerRadius, 0f).Rotate(rotRadInner + angleStep * i);
             var endInner = center + new Vector2(innerRadius, 0f).Rotate(rotRadInner + angleStep * nextIndexInner);
             
-            ShapeSegmentDrawing.DrawSegment(startInner, endInner, lineInfo, sideScaleFactor, sideScaleOrigin);
+            SegmentDrawing.DrawSegment(startInner, endInner, lineInfo, sideScaleFactor, sideScaleOrigin);
             
             var nextIndexOuter = (i + 1) % sides;
             var startOuter = center + new Vector2(outerRadius, 0f).Rotate(rotRadOuter + angleStep * i);
             var endOuter = center + new Vector2(outerRadius, 0f).Rotate(rotRadOuter + angleStep * nextIndexOuter);
             
-            ShapeSegmentDrawing.DrawSegment(startOuter, endOuter, lineInfo, sideScaleFactor, sideScaleOrigin);
+            SegmentDrawing.DrawSegment(startOuter, endOuter, lineInfo, sideScaleFactor, sideScaleOrigin);
             
         }
     }
@@ -426,8 +428,8 @@ public static class ShapeRingDrawing
         if (sideScaleFactor <= 0f) return;
         if (sideScaleFactor >= 1f)
         {
-            ShapeCircleDrawing.DrawCircleLines(center, innerRadius, lineInfo, innerRotDeg, innerSides);
-            ShapeCircleDrawing.DrawCircleLines(center, outerRadius, lineInfo, outerRotDeg, outerSides);
+            CircleDrawing.DrawCircleLines(center, innerRadius, lineInfo, innerRotDeg, innerSides);
+            CircleDrawing.DrawCircleLines(center, outerRadius, lineInfo, outerRotDeg, outerSides);
             return;
         }
         
@@ -445,7 +447,7 @@ public static class ShapeRingDrawing
                 var nextIndexInner = (i + 1) % innerSides;
                 var startInner = center + new Vector2(innerRadius, 0f).Rotate(innerRotRad + innerAngleStep * i);
                 var endInner = center + new Vector2(innerRadius, 0f).Rotate(innerRotRad + innerAngleStep * nextIndexInner);
-                ShapeSegmentDrawing.DrawSegment(startInner, endInner, lineInfo, sideScaleFactor, sideScaleOrigin);
+                SegmentDrawing.DrawSegment(startInner, endInner, lineInfo, sideScaleFactor, sideScaleOrigin);
             }
             
             if (i < outerSides)
@@ -453,7 +455,7 @@ public static class ShapeRingDrawing
                 var nextIndexOuter = (i + 1) % outerSides;
                 var startOuter = center + new Vector2(outerRadius, 0f).Rotate(outerRotRad + outerAngleStep * i);
                 var endOuter = center + new Vector2(outerRadius, 0f).Rotate(outerRotRad + outerAngleStep * nextIndexOuter);
-                ShapeSegmentDrawing.DrawSegment(startOuter, endOuter, lineInfo, sideScaleFactor, sideScaleOrigin);
+                SegmentDrawing.DrawSegment(startOuter, endOuter, lineInfo, sideScaleFactor, sideScaleOrigin);
             }
             
         }
@@ -495,8 +497,8 @@ public static class ShapeRingDrawing
         if (sideScaleFactor <= 0f) return;
         if (sideScaleFactor >= 1f)
         {
-            ShapeCircleDrawing.DrawCircleLines(center, innerRadius, innerLineInfo, innerRotDeg, innerSides);
-            ShapeCircleDrawing.DrawCircleLines(center, outerRadius, outerLineInfo, outerRotDeg, outerSides);
+            CircleDrawing.DrawCircleLines(center, innerRadius, innerLineInfo, innerRotDeg, innerSides);
+            CircleDrawing.DrawCircleLines(center, outerRadius, outerLineInfo, outerRotDeg, outerSides);
             return;
         }
         
@@ -514,7 +516,7 @@ public static class ShapeRingDrawing
                 var nextIndexInner = (i + 1) % innerSides;
                 var startInner = center + new Vector2(innerRadius, 0f).Rotate(innerRotRad + innerAngleStep * i);
                 var endInner = center + new Vector2(innerRadius, 0f).Rotate(innerRotRad + innerAngleStep * nextIndexInner);
-                ShapeSegmentDrawing.DrawSegment(startInner, endInner, innerLineInfo, sideScaleFactor, sideScaleOrigin);
+                SegmentDrawing.DrawSegment(startInner, endInner, innerLineInfo, sideScaleFactor, sideScaleOrigin);
             }
             
             if (i < outerSides)
@@ -522,7 +524,7 @@ public static class ShapeRingDrawing
                 var nextIndexOuter = (i + 1) % outerSides;
                 var startOuter = center + new Vector2(outerRadius, 0f).Rotate(outerRotRad + outerAngleStep * i);
                 var endOuter = center + new Vector2(outerRadius, 0f).Rotate(outerRotRad + outerAngleStep * nextIndexOuter);
-                ShapeSegmentDrawing.DrawSegment(startOuter, endOuter, outerLineInfo, sideScaleFactor, sideScaleOrigin);
+                SegmentDrawing.DrawSegment(startOuter, endOuter, outerLineInfo, sideScaleFactor, sideScaleOrigin);
             }
             
         }
@@ -583,12 +585,12 @@ public static class ShapeRingDrawing
         if (innerSideScaleFactor >= 1f)
         {
             drawInner = false;
-            ShapeCircleDrawing.DrawCircleLines(center, innerRadius, innerLineInfo, innerRotDeg, innerSides);
+            CircleDrawing.DrawCircleLines(center, innerRadius, innerLineInfo, innerRotDeg, innerSides);
         }
         if (outerSideScaleFactor >= 1f)
         {
             drawOuter = false;
-            ShapeCircleDrawing.DrawCircleLines(center, outerRadius, outerLineInfo, outerRotDeg, outerSides);
+            CircleDrawing.DrawCircleLines(center, outerRadius, outerLineInfo, outerRotDeg, outerSides);
         }
 
         if (!drawInner && !drawOuter) return;
@@ -610,7 +612,7 @@ public static class ShapeRingDrawing
                 var nextIndexInner = (i + 1) % innerSides;
                 var startInner = center + new Vector2(innerRadius, 0f).Rotate(innerRotRad + innerAngleStep * i);
                 var endInner = center + new Vector2(innerRadius, 0f).Rotate(innerRotRad + innerAngleStep * nextIndexInner);
-                ShapeSegmentDrawing.DrawSegment(startInner, endInner, innerLineInfo, innerSideScaleFactor, innerSideScaleOrigin);
+                SegmentDrawing.DrawSegment(startInner, endInner, innerLineInfo, innerSideScaleFactor, innerSideScaleOrigin);
             }
             
             if (drawOuter && i < outerSides)
@@ -618,7 +620,7 @@ public static class ShapeRingDrawing
                 var nextIndexOuter = (i + 1) % outerSides;
                 var startOuter = center + new Vector2(outerRadius, 0f).Rotate(outerRotRad + outerAngleStep * i);
                 var endOuter = center + new Vector2(outerRadius, 0f).Rotate(outerRotRad + outerAngleStep * nextIndexOuter);
-                ShapeSegmentDrawing.DrawSegment(startOuter, endOuter, outerLineInfo, outerSideScaleFactor, outerSideScaleOrigin);
+                SegmentDrawing.DrawSegment(startOuter, endOuter, outerLineInfo, outerSideScaleFactor, outerSideScaleOrigin);
             }
             
         }
@@ -640,18 +642,18 @@ public static class ShapeRingDrawing
     /// </remarks>
     public static void DrawSectorRingLines(Vector2 center, float innerRadius, float outerRadius, float startAngleDeg, float endAngleDeg, float lineThickness, ColorRgba color, float sideLength = 8f)
     {
-        ShapeCircleDrawing.DrawCircleSectorLines(center, innerRadius, startAngleDeg, endAngleDeg, lineThickness, color, false, sideLength);
-        ShapeCircleDrawing.DrawCircleSectorLines(center, outerRadius, startAngleDeg, endAngleDeg, lineThickness, color, false, sideLength);
+        CircleDrawing.DrawCircleSectorLines(center, innerRadius, startAngleDeg, endAngleDeg, lineThickness, color, false, sideLength);
+        CircleDrawing.DrawCircleSectorLines(center, outerRadius, startAngleDeg, endAngleDeg, lineThickness, color, false, sideLength);
 
         float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
         float endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
         var innerStart = center + (ShapeVec.Right() * innerRadius).Rotate(startAngleRad);
         var outerStart = center + (ShapeVec.Right() * outerRadius).Rotate(startAngleRad);
-        ShapeSegmentDrawing.DrawSegment(innerStart, outerStart, lineThickness, color, LineCapType.CappedExtended, 4);
+        SegmentDrawing.DrawSegment(innerStart, outerStart, lineThickness, color, LineCapType.CappedExtended, 4);
 
         var innerEnd = center + (ShapeVec.Right() * innerRadius).Rotate(endAngleRad);
         var outerEnd = center + (ShapeVec.Right() * outerRadius).Rotate(endAngleRad);
-        ShapeSegmentDrawing.DrawSegment(innerEnd, outerEnd, lineThickness, color, LineCapType.CappedExtended, 4);
+        SegmentDrawing.DrawSegment(innerEnd, outerEnd, lineThickness, color, LineCapType.CappedExtended, 4);
     }
 
     /// <summary>
@@ -683,18 +685,18 @@ public static class ShapeRingDrawing
     /// <param name="sideLength">The length of each side segment. Default is 8.</param>
     public static void DrawSectorRingLines(Vector2 center, float innerRadius, float outerRadius, float startAngleDeg, float endAngleDeg, LineDrawingInfo lineInfo, float sideLength = 8f)
     {
-        ShapeCircleDrawing.DrawCircleSectorLines(center, innerRadius, startAngleDeg, endAngleDeg, lineInfo, false, sideLength);
-        ShapeCircleDrawing.DrawCircleSectorLines(center, outerRadius, startAngleDeg, endAngleDeg, lineInfo, false, sideLength);
+        CircleDrawing.DrawCircleSectorLines(center, innerRadius, startAngleDeg, endAngleDeg, lineInfo, false, sideLength);
+        CircleDrawing.DrawCircleSectorLines(center, outerRadius, startAngleDeg, endAngleDeg, lineInfo, false, sideLength);
 
         float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
         float endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
         var innerStart = center + (ShapeVec.Right() * innerRadius - new Vector2(lineInfo.Thickness / 2, 0)).Rotate(startAngleRad);
         var outerStart = center + (ShapeVec.Right() * outerRadius + new Vector2(lineInfo.Thickness / 2, 0)).Rotate(startAngleRad);
-        ShapeSegmentDrawing.DrawSegment(innerStart, outerStart, lineInfo);
+        SegmentDrawing.DrawSegment(innerStart, outerStart, lineInfo);
 
         var innerEnd = center + (ShapeVec.Right() * innerRadius - new Vector2(lineInfo.Thickness / 2, 0)).Rotate(endAngleRad);
         var outerEnd = center + (ShapeVec.Right() * outerRadius + new Vector2(lineInfo.Thickness / 2, 0)).Rotate(endAngleRad);
-        ShapeSegmentDrawing.DrawSegment(innerEnd, outerEnd, lineInfo);
+        SegmentDrawing.DrawSegment(innerEnd, outerEnd, lineInfo);
     }
 
     /// <summary>
@@ -726,7 +728,7 @@ public static class ShapeRingDrawing
     public static void DrawSectorRing(Vector2 center, float innerRadius, float outerRadius, float startAngleDeg, float endAngleDeg, ColorRgba color, float sideLength = 10f)
     {
         float anglePiece = endAngleDeg - startAngleDeg;
-        int sides = ShapeCircleDrawing.GetCircleArcSideCount(outerRadius, MathF.Abs(anglePiece), sideLength);
+        int sides = CircleDrawing.GetCircleArcSideCount(outerRadius, MathF.Abs(anglePiece), sideLength);
         Raylib.DrawRing(center, innerRadius, outerRadius, startAngleDeg, endAngleDeg, sides, color.ToRayColor());
     }
 

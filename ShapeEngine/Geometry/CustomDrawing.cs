@@ -3,10 +3,12 @@ using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.Circle;
 using ShapeEngine.Geometry.Segment;
 using ShapeEngine.Geometry.Triangle;
+using ShapeEngine.StaticLib;
 
-namespace ShapeEngine.StaticLib.Drawing;
+namespace ShapeEngine.Geometry;
 
 /// <summary>
 /// Provides custom drawing utilities for shapes, arrows, and collision points.
@@ -14,7 +16,7 @@ namespace ShapeEngine.StaticLib.Drawing;
 /// <remarks>
 /// This static class contains helper methods for drawing pixels, arrows, and visualizing collision points using Raylib.
 /// </remarks>
-public static class ShapeCustomDrawing
+public static class CustomDrawing
 {
     #region Pixel
 
@@ -52,8 +54,8 @@ public static class ShapeCustomDrawing
         
         foreach (var i in colPoints)
         {
-            ShapeCircleDrawing.DrawCircle(i.Point, lineThickness * 2f, intersectColorRgba, 12);
-            ShapeSegmentDrawing.DrawSegment(i.Point, i.Point + i.Normal * lineThickness * 10f, lineThickness, normalColorRgba);
+            CircleDrawing.DrawCircle(i.Point, lineThickness * 2f, intersectColorRgba, 12);
+            SegmentDrawing.DrawSegment(i.Point, i.Point + i.Normal * lineThickness * 10f, lineThickness, normalColorRgba);
         }
     }
     #endregion
@@ -77,7 +79,7 @@ public static class ShapeCustomDrawing
     /// <remarks>
     /// Returns empty shapes if parameters are invalid.
     /// </remarks>
-    public static (Segment tail, Triangle head) CalculateArrowPoints(Vector2 tailPoint, Vector2 headPoint, float headWidth, float headLength)
+    public static (Segment.Segment tail, Triangle.Triangle head) CalculateArrowPoints(Vector2 tailPoint, Vector2 headPoint, float headWidth, float headLength)
     {
         if(headWidth <= 0 || headLength <= 0) return (new(), new());
         
@@ -118,7 +120,7 @@ public static class ShapeCustomDrawing
     /// <remarks>
     /// Returns empty shapes if parameters are invalid.
     /// </remarks>
-    public static (Segment tail, Triangle head) CalculateArrowPoints2(Vector2 tailPoint, Vector2 headPoint, float headWidth, float headLengthFactor)
+    public static (Segment.Segment tail, Triangle.Triangle head) CalculateArrowPoints2(Vector2 tailPoint, Vector2 headPoint, float headWidth, float headLengthFactor)
     {
         if(headWidth <= 0 || headLengthFactor <= 0) return (new(), new());
         
@@ -155,7 +157,7 @@ public static class ShapeCustomDrawing
     /// <remarks>
     /// Returns empty shapes if parameters are invalid.
     /// </remarks>
-    public static (Segment tail, Triangle head) CalculateArrowPoints3(Vector2 tailPoint, Vector2 headPoint, float headWidthFactor, float headLengthFactor)
+    public static (Segment.Segment tail, Triangle.Triangle head) CalculateArrowPoints3(Vector2 tailPoint, Vector2 headPoint, float headWidthFactor, float headLengthFactor)
     {
         if(headWidthFactor <= 0 || headLengthFactor <= 0) return (new(), new());
         
@@ -203,7 +205,7 @@ public static class ShapeCustomDrawing
         {
             var tailLength = l - headLength;
             tailEnd = tailPoint + dir * tailLength;
-            ShapeSegmentDrawing.DrawSegment(tailPoint, tailEnd, info);
+            SegmentDrawing.DrawSegment(tailPoint, tailEnd, info);
         }
 
         var pl = dir.GetPerpendicularLeft();
@@ -211,8 +213,8 @@ public static class ShapeCustomDrawing
 
         var b = tailEnd + pl * headWidth * 0.5f;
         var c = tailEnd + pr * headWidth * 0.5f;
-        if(headFillColor.A > 0) ShapeTriangleDrawing.DrawTriangle(headPoint, b, c, headFillColor);
-        ShapeTriangleDrawing.DrawTriangleLines(headPoint, b, c, info);
+        if(headFillColor.A > 0) TriangleDrawing.DrawTriangle(headPoint, b, c, headFillColor);
+        TriangleDrawing.DrawTriangleLines(headPoint, b, c, info);
     }
 
     /// <summary>
@@ -238,15 +240,15 @@ public static class ShapeCustomDrawing
         var dir = v / l;
         var tailLength = l * (1f - headLengthFactor);
         var tailEnd = tailPoint + dir * tailLength;
-        ShapeSegmentDrawing.DrawSegment(tailPoint, tailEnd, info);
+        SegmentDrawing.DrawSegment(tailPoint, tailEnd, info);
 
         var pl = dir.GetPerpendicularLeft();
         var pr = -pl;
 
         var b = tailEnd + pl * headWidth * 0.5f;
         var c = tailEnd + pr * headWidth * 0.5f;
-        if(headFillColor.A > 0) ShapeTriangleDrawing.DrawTriangle(headPoint, b, c, headFillColor);
-        ShapeTriangleDrawing.DrawTriangleLines(headPoint, b, c, info);
+        if(headFillColor.A > 0) TriangleDrawing.DrawTriangle(headPoint, b, c, headFillColor);
+        TriangleDrawing.DrawTriangleLines(headPoint, b, c, info);
     }
 
     /// <summary>
@@ -273,7 +275,7 @@ public static class ShapeCustomDrawing
         var dir = v / l;
         var tailLength = l * (1f - headLengthFactor);
         var tailEnd = tailPoint + dir * tailLength;
-        ShapeSegmentDrawing.DrawSegment(tailPoint, tailEnd, info);
+        SegmentDrawing.DrawSegment(tailPoint, tailEnd, info);
 
         var pl = dir.GetPerpendicularLeft();
         var pr = -pl;
@@ -281,8 +283,8 @@ public static class ShapeCustomDrawing
         var headWidth = l * headWidthFactor;
         var b = tailEnd + pl * headWidth * 0.5f;
         var c = tailEnd + pr * headWidth * 0.5f;
-        if(headFillColor.A > 0) ShapeTriangleDrawing.DrawTriangle(headPoint, b, c, headFillColor);
-        ShapeTriangleDrawing.DrawTriangleLines(headPoint, b, c, info);
+        if(headFillColor.A > 0) TriangleDrawing.DrawTriangle(headPoint, b, c, headFillColor);
+        TriangleDrawing.DrawTriangleLines(headPoint, b, c, info);
     }
     #endregion
 }

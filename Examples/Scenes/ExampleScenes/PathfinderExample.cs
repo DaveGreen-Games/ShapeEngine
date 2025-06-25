@@ -3,12 +3,12 @@
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.Circle;
 using ShapeEngine.Geometry.Rect;
 using ShapeEngine.Geometry.Segment;
 using ShapeEngine.Input;
 using ShapeEngine.StaticLib;
-using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Pathfinding;
 using Path = ShapeEngine.Pathfinding.Path;
 
@@ -68,7 +68,7 @@ internal class PathfinderFlag
         // else circle.Draw(color);
         circle.Draw(color.ChangeBrightness(-0.05f));
         // circle.DrawLines(circle.Radius * 0.25f, Colors.PcMedium.ColorRgba);
-        ShapeCircleDrawing.DrawCircleLines(circle.Center, circle.Radius * 1.5f, circle.Radius * 0.15f, Colors.PcText.ColorRgba, 4f);
+        CircleDrawing.DrawCircleLines(circle.Center, circle.Radius * 1.5f, circle.Radius * 0.15f, Colors.PcText.ColorRgba, 4f);
         // circle.DrawLines(6f, color.ChangeBrightness(-0.5f));
     }
 }

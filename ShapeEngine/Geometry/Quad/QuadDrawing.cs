@@ -2,9 +2,11 @@ using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.Quad;
+using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.Segment;
+using ShapeEngine.StaticLib;
 
-namespace ShapeEngine.StaticLib.Drawing;
+namespace ShapeEngine.Geometry.Quad;
 
 /// <summary>
 /// Provides static methods for drawing quads (quadrilaterals) and their outlines, including partial outlines and vertex markers.
@@ -12,7 +14,7 @@ namespace ShapeEngine.StaticLib.Drawing;
 /// <remarks>
 /// This class contains utility methods for rendering quads with various options such as line thickness, color, partial outlines, and scaling.
 /// </remarks>
-public static class ShapeQuadDrawing
+public static class QuadDrawing
 {
     /// <summary>
     /// Draws a filled quadrilateral using four vertices.
@@ -41,10 +43,10 @@ public static class ShapeQuadDrawing
     /// <param name="capPoints">The number of points used for the cap style.</param>
     public static void DrawQuadLines(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
-        ShapeSegmentDrawing.DrawSegment(a, b, lineThickness, color, capType, capPoints);
-        ShapeSegmentDrawing.DrawSegment(b, c, lineThickness, color, capType, capPoints);
-        ShapeSegmentDrawing.DrawSegment(c, d, lineThickness, color, capType, capPoints);
-        ShapeSegmentDrawing.DrawSegment(d, a, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(a, b, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(b, c, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(c, d, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(d, a, lineThickness, color, capType, capPoints);
     }
 
     /// <summary>
@@ -76,10 +78,10 @@ public static class ShapeQuadDrawing
         var side4 = a - d;
         var end4 = d + side4 * sideLengthFactor;
         
-        ShapeSegmentDrawing.DrawSegment(a, end1, lineThickness, color, capType, capPoints);
-        ShapeSegmentDrawing.DrawSegment(b, end2, lineThickness, color, capType, capPoints);
-        ShapeSegmentDrawing.DrawSegment(c, end3, lineThickness, color, capType, capPoints);
-        ShapeSegmentDrawing.DrawSegment(d, end4, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(a, end1, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(b, end2, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(c, end3, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(d, end4, lineThickness, color, capType, capPoints);
     }
     
     /// <summary>
@@ -179,10 +181,10 @@ public static class ShapeQuadDrawing
     /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
     public static void DrawQuadLines(Vector2 a, Vector2 b, Vector2 c, Vector2 d, LineDrawingInfo lineInfo)
     {
-        ShapeSegmentDrawing.DrawSegment(a, b, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-        ShapeSegmentDrawing.DrawSegment(b, c, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-        ShapeSegmentDrawing.DrawSegment(c, d, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
-        ShapeSegmentDrawing.DrawSegment(d, a, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        SegmentDrawing.DrawSegment(a, b, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        SegmentDrawing.DrawSegment(b, c, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        SegmentDrawing.DrawSegment(c, d, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
+        SegmentDrawing.DrawSegment(d, a, lineInfo.Thickness, lineInfo.Color, lineInfo.CapType, lineInfo.CapPoints);
     }
 
     /// <summary>
@@ -290,10 +292,10 @@ public static class ShapeQuadDrawing
     /// </remarks>
     public static void DrawVertices(this Quad q, float vertexRadius, ColorRgba color, int circleSegments = 8)
     {
-        ShapeCircleDrawing.DrawCircle(q.A, vertexRadius, color, circleSegments);
-        ShapeCircleDrawing.DrawCircle(q.B, vertexRadius, color, circleSegments);
-        ShapeCircleDrawing.DrawCircle(q.C, vertexRadius, color, circleSegments);
-        ShapeCircleDrawing.DrawCircle(q.D, vertexRadius, color, circleSegments);
+        CircleDrawing.DrawCircle(q.A, vertexRadius, color, circleSegments);
+        CircleDrawing.DrawCircle(q.B, vertexRadius, color, circleSegments);
+        CircleDrawing.DrawCircle(q.C, vertexRadius, color, circleSegments);
+        CircleDrawing.DrawCircle(q.D, vertexRadius, color, circleSegments);
     }
 
     /// <summary>
@@ -334,10 +336,10 @@ public static class ShapeQuadDrawing
             return;
         }
         
-        ShapeSegmentDrawing.DrawSegment(q.A, q.B, lineInfo, sideScaleFactor, sideScaleOrigin);
-        ShapeSegmentDrawing.DrawSegment(q.B, q.C, lineInfo, sideScaleFactor, sideScaleOrigin);
-        ShapeSegmentDrawing.DrawSegment(q.C, q.D, lineInfo, sideScaleFactor, sideScaleOrigin);
-        ShapeSegmentDrawing.DrawSegment(q.D, q.A, lineInfo, sideScaleFactor, sideScaleOrigin);
+        SegmentDrawing.DrawSegment(q.A, q.B, lineInfo, sideScaleFactor, sideScaleOrigin);
+        SegmentDrawing.DrawSegment(q.B, q.C, lineInfo, sideScaleFactor, sideScaleOrigin);
+        SegmentDrawing.DrawSegment(q.C, q.D, lineInfo, sideScaleFactor, sideScaleOrigin);
+        SegmentDrawing.DrawSegment(q.D, q.A, lineInfo, sideScaleFactor, sideScaleOrigin);
         
     }
     private static void DrawQuadLinesPercentageHelper(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, float percentage, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
@@ -355,11 +357,11 @@ public static class ShapeQuadDrawing
         {
             float p = perimeterToDraw / l1;
             nextP = curP.Lerp(nextP, p);
-            ShapeSegmentDrawing.DrawSegment(curP, nextP, lineThickness, color);
+            SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color);
             return;
         }
                 
-        ShapeSegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
         perimeterToDraw -= l1;
                 
         // Draw second segment
@@ -369,11 +371,11 @@ public static class ShapeQuadDrawing
         {
             float p = perimeterToDraw / l2;
             nextP = curP.Lerp(nextP, p);
-            ShapeSegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
             return;
         }
                 
-        ShapeSegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
         perimeterToDraw -= l2;
                 
         // Draw third segment
@@ -383,11 +385,11 @@ public static class ShapeQuadDrawing
         {
             float p = perimeterToDraw / l3;
             nextP = curP.Lerp(nextP, p);
-            ShapeSegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
             return;
         }
         
-        ShapeSegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
         perimeterToDraw -= l3;
                
         // Draw fourth segment
@@ -398,7 +400,7 @@ public static class ShapeQuadDrawing
             float p = perimeterToDraw / l4;
             nextP = curP.Lerp(nextP, p);
         }
-        ShapeSegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
     }
    
 }

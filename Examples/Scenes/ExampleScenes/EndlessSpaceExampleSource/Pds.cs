@@ -4,7 +4,6 @@ using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.Rect;
 using ShapeEngine.StaticLib;
-using ShapeEngine.StaticLib.Drawing;
 
 namespace Examples.Scenes.ExampleScenes.EndlessSpaceExampleSource;
 

@@ -1,6 +1,5 @@
 using System.Numerics;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.Circle;
 using ShapeEngine.Geometry.Polygon;
 using ShapeEngine.Geometry.Polyline;
@@ -8,8 +7,9 @@ using ShapeEngine.Geometry.Quad;
 using ShapeEngine.Geometry.Rect;
 using ShapeEngine.Geometry.Segment;
 using ShapeEngine.Geometry.Triangle;
+using ShapeEngine.StaticLib;
 
-namespace ShapeEngine.StaticLib.Drawing;
+namespace ShapeEngine.Geometry;
 
 /// <summary>
 /// Provides static methods for drawing shapes and outlines with configurable gaps (dashed or segmented effects).
@@ -19,7 +19,7 @@ namespace ShapeEngine.StaticLib.Drawing;
 /// All methods in this class are static and intended for rendering shapes with customizable gaps.
 /// Useful for visual effects such as dashed lines, segmented outlines, or highlighting.
 /// </remarks>
-public static class ShapeGappedDrawing
+public static class GappedDrawing
 {
     /// <summary>
     /// Draws a line segment with gaps, creating a dashed or segmented effect.
@@ -44,7 +44,7 @@ public static class ShapeGappedDrawing
     {
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
         {
-            ShapeSegmentDrawing.DrawSegment(start, end, lineInfo);
+            SegmentDrawing.DrawSegment(start, end, lineInfo);
             return length > 0f ? length : -1f;
         }
 
@@ -83,7 +83,7 @@ public static class ShapeGappedDrawing
         int drawnLines = 0;
         while (drawnLines <= lines)
         {
-            ShapeSegmentDrawing.DrawSegment(curStart, curEnd, lineInfo);
+            SegmentDrawing.DrawSegment(curStart, curEnd, lineInfo);
 
             if (remainingLineLength > 0f)
             {
@@ -208,7 +208,7 @@ public static class ShapeGappedDrawing
                     points.Add(p);
                     if (points.Count == 2)
                     {
-                        ShapeSegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
+                        SegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
                     }
                     else
                     {
@@ -216,7 +216,7 @@ public static class ShapeGappedDrawing
                         {
                             var p1 = points[i];
                             var p2 = points[(i + 1) % points.Count];
-                            ShapeSegmentDrawing.DrawSegment(p1, p2, lineInfo);
+                            SegmentDrawing.DrawSegment(p1, p2, lineInfo);
                         }
                     }
                     
@@ -322,7 +322,7 @@ public static class ShapeGappedDrawing
                     points.Add(p);
                     if (points.Count == 2)
                     {
-                        ShapeSegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
+                        SegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
                     }
                     else
                     {
@@ -330,7 +330,7 @@ public static class ShapeGappedDrawing
                         {
                             var p1 = points[i];
                             var p2 = points[(i + 1) % points.Count];
-                            ShapeSegmentDrawing.DrawSegment(p1, p2, lineInfo);
+                            SegmentDrawing.DrawSegment(p1, p2, lineInfo);
                         }
                     }
                     
@@ -376,7 +376,7 @@ public static class ShapeGappedDrawing
     /// <remarks>
     /// This is a convenience wrapper for <see cref="DrawGappedSegment"/>.
     /// </remarks>
-    public static float DrawGapped(this Segment s, float length, LineDrawingInfo lineInfo,
+    public static float DrawGapped(this Segment.Segment s, float length, LineDrawingInfo lineInfo,
         GappedOutlineDrawingInfo gapDrawingInfo) => DrawGappedSegment(s.Start, s.End, length, lineInfo, gapDrawingInfo);
 
     /// <summary>
@@ -392,7 +392,7 @@ public static class ShapeGappedDrawing
     /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no outline is drawn.
     /// - The <paramref name="sides"/> parameter controls the smoothness of the circle.
     /// </remarks>
-    public static void DrawGappedOutline(this Circle circle, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo, float rotDeg, int sides = 18)
+    public static void DrawGappedOutline(this Circle.Circle circle, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo, float rotDeg, int sides = 18)
     {
         if (sides < 3) return;
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
@@ -454,7 +454,7 @@ public static class ShapeGappedDrawing
                     points.Add(p);
                     if (points.Count == 2)
                     {
-                        ShapeSegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
+                        SegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
                     }
                     else
                     {
@@ -462,7 +462,7 @@ public static class ShapeGappedDrawing
                         {
                             var p1 = points[i];
                             var p2 = points[(i + 1) % points.Count];
-                            ShapeSegmentDrawing.DrawSegment(p1, p2, lineInfo);
+                            SegmentDrawing.DrawSegment(p1, p2, lineInfo);
                         }
                     }
                     
@@ -506,22 +506,22 @@ public static class ShapeGappedDrawing
         if (innerRadius <= 0 && outerRadius <= 0) return;
         
         
-        int outerSides = ShapeCircleDrawing.GetCircleSideCount(outerRadius, sideLength);
+        int outerSides = CircleDrawing.GetCircleSideCount(outerRadius, sideLength);
         if (innerRadius <= 0)
         {
-            DrawGappedOutline(new Circle(center, outerRadius), lineInfo, gapDrawingInfo, rotDeg, outerSides);
+            DrawGappedOutline(new Circle.Circle(center, outerRadius), lineInfo, gapDrawingInfo, rotDeg, outerSides);
             return;
         }
 
-        int innerSides = ShapeCircleDrawing.GetCircleSideCount(innerRadius, sideLength);
+        int innerSides = CircleDrawing.GetCircleSideCount(innerRadius, sideLength);
         if (outerRadius <= 0)
         {
-            DrawGappedOutline(new Circle(center, innerRadius), lineInfo, gapDrawingInfo, rotDeg, innerSides);
+            DrawGappedOutline(new Circle.Circle(center, innerRadius), lineInfo, gapDrawingInfo, rotDeg, innerSides);
             return;
         }
         
-        DrawGappedOutline(new Circle(center, innerRadius), lineInfo, gapDrawingInfo, rotDeg, innerSides);
-        DrawGappedOutline(new Circle(center, outerRadius), lineInfo, gapDrawingInfo, rotDeg, outerSides);
+        DrawGappedOutline(new Circle.Circle(center, innerRadius), lineInfo, gapDrawingInfo, rotDeg, innerSides);
+        DrawGappedOutline(new Circle.Circle(center, outerRadius), lineInfo, gapDrawingInfo, rotDeg, outerSides);
     }
    
     
@@ -544,7 +544,7 @@ public static class ShapeGappedDrawing
     /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the outline is drawn solid.
     /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no outline is drawn.
     /// </remarks>
-    public static float DrawGappedOutline(this Triangle triangle, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
+    public static float DrawGappedOutline(this Triangle.Triangle triangle, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
     {
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
         {
@@ -608,7 +608,7 @@ public static class ShapeGappedDrawing
                     points.Add(p);
                     if (points.Count == 2)
                     {
-                        ShapeSegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
+                        SegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
                     }
                     else
                     {
@@ -616,7 +616,7 @@ public static class ShapeGappedDrawing
                         {
                             var p1 = points[i];
                             var p2 = points[(i + 1) % points.Count];
-                            ShapeSegmentDrawing.DrawSegment(p1, p2, lineInfo);
+                            SegmentDrawing.DrawSegment(p1, p2, lineInfo);
                         }
                     }
                     
@@ -662,7 +662,7 @@ public static class ShapeGappedDrawing
     /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the outline is drawn solid.
     /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no outline is drawn.
     /// </remarks>
-    public static float DrawGappedOutline(this Rect rect, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
+    public static float DrawGappedOutline(this Rect.Rect rect, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
     {
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
         {
@@ -725,7 +725,7 @@ public static class ShapeGappedDrawing
                     points.Add(p);
                     if (points.Count == 2)
                     {
-                        ShapeSegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
+                        SegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
                     }
                     else
                     {
@@ -733,7 +733,7 @@ public static class ShapeGappedDrawing
                         {
                             var p1 = points[i];
                             var p2 = points[(i + 1) % points.Count];
-                            ShapeSegmentDrawing.DrawSegment(p1, p2, lineInfo);
+                            SegmentDrawing.DrawSegment(p1, p2, lineInfo);
                         }
                     }
                     
@@ -779,7 +779,7 @@ public static class ShapeGappedDrawing
     /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the outline is drawn solid.
     /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no outline is drawn.
     /// </remarks>
-    public static float DrawGappedOutline(this Quad quad, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
+    public static float DrawGappedOutline(this Quad.Quad quad, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
     {
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
         {
@@ -843,7 +843,7 @@ public static class ShapeGappedDrawing
                     points.Add(p);
                     if (points.Count == 2)
                     {
-                        ShapeSegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
+                        SegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
                     }
                     else
                     {
@@ -851,7 +851,7 @@ public static class ShapeGappedDrawing
                         {
                             var p1 = points[i];
                             var p2 = points[(i + 1) % points.Count];
-                            ShapeSegmentDrawing.DrawSegment(p1, p2, lineInfo);
+                            SegmentDrawing.DrawSegment(p1, p2, lineInfo);
                         }
                     }
                     
@@ -897,7 +897,7 @@ public static class ShapeGappedDrawing
     /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the outline is drawn solid.
     /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no outline is drawn.
     /// </remarks>
-    public static float DrawGappedOutline(this Polygon poly, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
+    public static float DrawGappedOutline(this Polygon.Polygon poly, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
     {
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
         {
@@ -957,7 +957,7 @@ public static class ShapeGappedDrawing
                     points.Add(p);
                     if (points.Count == 2)
                     {
-                        ShapeSegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
+                        SegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
                     }
                     else
                     {
@@ -965,7 +965,7 @@ public static class ShapeGappedDrawing
                         {
                             var p1 = points[i];
                             var p2 = points[(i + 1) % points.Count];
-                            ShapeSegmentDrawing.DrawSegment(p1, p2, lineInfo);
+                            SegmentDrawing.DrawSegment(p1, p2, lineInfo);
                         }
                     }
                     
@@ -1011,7 +1011,7 @@ public static class ShapeGappedDrawing
     /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the polyline is drawn solid.
     /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no polyline is drawn.
     /// </remarks>
-    public static float DrawGappedOutline(this Polyline polyline, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
+    public static float DrawGappedOutline(this Polyline.Polyline polyline, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
     {
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
         {
@@ -1068,7 +1068,7 @@ public static class ShapeGappedDrawing
                     
                     if (points.Count == 2)
                     {
-                        ShapeSegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
+                        SegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
                     }
                     else
                     {
@@ -1076,7 +1076,7 @@ public static class ShapeGappedDrawing
                         {
                             var p1 = points[i];
                             var p2 = points[(i + 1) % points.Count];
-                            ShapeSegmentDrawing.DrawSegment(p1, p2, lineInfo);
+                            SegmentDrawing.DrawSegment(p1, p2, lineInfo);
                         }
                     }
                     points.Clear();
@@ -1093,7 +1093,7 @@ public static class ShapeGappedDrawing
                         points.Add(nextPoint);
                         if (points.Count == 2)
                         {
-                            ShapeSegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
+                            SegmentDrawing.DrawSegment(points[0], points[1], lineInfo);
                         }
                         else
                         {
@@ -1101,7 +1101,7 @@ public static class ShapeGappedDrawing
                             {
                                 var p1 = points[i];
                                 var p2 = points[(i + 1) % points.Count];
-                                ShapeSegmentDrawing.DrawSegment(p1, p2, lineInfo);
+                                SegmentDrawing.DrawSegment(p1, p2, lineInfo);
                             }
                         }
                         points.Clear();

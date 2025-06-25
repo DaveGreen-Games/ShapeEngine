@@ -3,10 +3,11 @@ using ShapeEngine.Color;
 using ShapeEngine.Core;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry;
+using ShapeEngine.Geometry.Circle;
 using ShapeEngine.Geometry.Triangle;
 using ShapeEngine.Input;
 using ShapeEngine.StaticLib;
-using ShapeEngine.StaticLib.Drawing;
 
 namespace Examples.Scenes.ExampleScenes.PhysicsExampleSource;
 

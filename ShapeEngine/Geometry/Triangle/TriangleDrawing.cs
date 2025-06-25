@@ -2,10 +2,11 @@ using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry;
-using ShapeEngine.Geometry.Triangle;
+using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.Segment;
+using ShapeEngine.StaticLib;
 
-namespace ShapeEngine.StaticLib.Drawing;
+namespace ShapeEngine.Geometry.Triangle;
 
 /// <summary>
 /// Provides static methods for drawing triangles and collections of triangles with various styles and options.
@@ -14,7 +15,7 @@ namespace ShapeEngine.StaticLib.Drawing;
 /// This class contains extension methods for drawing <see cref="Triangle"/> and <see cref="Triangulation"/> objects,
 /// as well as static methods for drawing triangles using raw vertex data. Supports filled, outlined, partial, and scaled outlines.
 /// </remarks>
-public static class ShapeTriangleDrawing
+public static class TriangleDrawing
 {
     /// <summary>
     /// Draws a filled triangle using the specified vertices and color.
@@ -37,9 +38,9 @@ public static class ShapeTriangleDrawing
     /// <param name="capPoints">The number of points used for the cap style.</param>
     public static void DrawTriangleLines(Vector2 a, Vector2 b, Vector2 c, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
-        ShapeSegmentDrawing.DrawSegment(a, b, lineThickness, color, capType, capPoints);
-        ShapeSegmentDrawing.DrawSegment(b, c, lineThickness, color, capType, capPoints);
-        ShapeSegmentDrawing.DrawSegment(c, a, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(a, b, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(b, c, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(c, a, lineThickness, color, capType, capPoints);
     }
 
     /// <summary>
@@ -67,9 +68,9 @@ public static class ShapeTriangleDrawing
         var side3 = a - c;
         var end3 = c + side3 * sideLengthFactor;
 
-        ShapeSegmentDrawing.DrawSegment(a, end1, lineThickness, color, capType, capPoints);
-        ShapeSegmentDrawing.DrawSegment(b, end2, lineThickness, color, capType, capPoints);
-        ShapeSegmentDrawing.DrawSegment(c, end3, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(a, end1, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(b, end2, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(c, end3, lineThickness, color, capType, capPoints);
     }
 
     /// <summary>
@@ -81,9 +82,9 @@ public static class ShapeTriangleDrawing
     /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
     public static void DrawTriangleLines(Vector2 a, Vector2 b, Vector2 c, LineDrawingInfo lineInfo)
     {
-        ShapeSegmentDrawing.DrawSegment(a, b, lineInfo);
-        ShapeSegmentDrawing.DrawSegment(b, c, lineInfo);
-        ShapeSegmentDrawing.DrawSegment(c, a, lineInfo);
+        SegmentDrawing.DrawSegment(a, b, lineInfo);
+        SegmentDrawing.DrawSegment(b, c, lineInfo);
+        SegmentDrawing.DrawSegment(c, a, lineInfo);
     }
 
     /// <summary>
@@ -152,9 +153,9 @@ public static class ShapeTriangleDrawing
     /// <param name="circleSegments">The number of segments to use for each circle (default is 8).</param>
     public static void DrawVertices(this Triangle t, float vertexRadius, ColorRgba color, int circleSegments = 8)
     {
-        ShapeCircleDrawing.DrawCircle(t.A, vertexRadius, color, circleSegments);
-        ShapeCircleDrawing.DrawCircle(t.B, vertexRadius, color, circleSegments);
-        ShapeCircleDrawing.DrawCircle(t.C, vertexRadius, color, circleSegments);
+        CircleDrawing.DrawCircle(t.A, vertexRadius, color, circleSegments);
+        CircleDrawing.DrawCircle(t.B, vertexRadius, color, circleSegments);
+        CircleDrawing.DrawCircle(t.C, vertexRadius, color, circleSegments);
     }
 
     /// <summary>
@@ -425,9 +426,9 @@ public static class ShapeTriangleDrawing
 
         if(rotDeg != 0) t = t.ChangeRotation(rotDeg * ShapeMath.DEGTORAD, rotOrigin);
 
-        ShapeSegmentDrawing.DrawSegment(t.A, t.B, lineInfo, sideScaleFactor, sideScaleOrigin);
-        ShapeSegmentDrawing.DrawSegment(t.B, t.C, lineInfo, sideScaleFactor, sideScaleOrigin);
-        ShapeSegmentDrawing.DrawSegment(t.C, t.A, lineInfo, sideScaleFactor, sideScaleOrigin);
+        SegmentDrawing.DrawSegment(t.A, t.B, lineInfo, sideScaleFactor, sideScaleOrigin);
+        SegmentDrawing.DrawSegment(t.B, t.C, lineInfo, sideScaleFactor, sideScaleOrigin);
+        SegmentDrawing.DrawSegment(t.C, t.A, lineInfo, sideScaleFactor, sideScaleOrigin);
     }
 
     private static void DrawTriangleLinesPercentageHelper(Vector2 p1, Vector2 p2, Vector2 p3, float percentage, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
@@ -444,11 +445,11 @@ public static class ShapeTriangleDrawing
         {
             float p = perimeterToDraw / l1;
             nextP = curP.Lerp(nextP, p);
-            ShapeSegmentDrawing.DrawSegment(curP, nextP, lineThickness, color);
+            SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color);
             return;
         }
 
-        ShapeSegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
         perimeterToDraw -= l1;
 
         // Draw second segment
@@ -458,11 +459,11 @@ public static class ShapeTriangleDrawing
         {
             float p = perimeterToDraw / l2;
             nextP = curP.Lerp(nextP, p);
-            ShapeSegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
             return;
         }
 
-        ShapeSegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
         perimeterToDraw -= l2;
 
         // Draw third segment
@@ -474,6 +475,6 @@ public static class ShapeTriangleDrawing
             nextP = curP.Lerp(nextP, p);
         }
 
-        ShapeSegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
+        SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, capType, capPoints);
     }
 }

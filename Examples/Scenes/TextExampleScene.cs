@@ -6,7 +6,6 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.Circle;
 using ShapeEngine.Geometry.Rect;
 using ShapeEngine.Input;
-using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Text;
 
 namespace Examples.Scenes

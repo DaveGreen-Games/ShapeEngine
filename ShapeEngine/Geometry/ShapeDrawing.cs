@@ -1,8 +1,11 @@
 ﻿using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.Segment;
+using ShapeEngine.StaticLib;
 
-namespace ShapeEngine.StaticLib.Drawing;
+namespace ShapeEngine.Geometry;
 
 /// <summary>
 /// Provides extension methods for drawing shapes and outlines using lists of <see cref="Vector2"/> points.
@@ -43,7 +46,7 @@ public static class ShapeDrawing
                 startColorRgba.B + blueStep * i,
                 startColorRgba.A + alphaStep * i
             );
-            ShapeSegmentDrawing.DrawSegment(start, end, lineThickness, finalColorRgba, capType, capPoints);
+            SegmentDrawing.DrawSegment(start, end, lineThickness, finalColorRgba, capType, capPoints);
         }
     }
 
@@ -63,7 +66,7 @@ public static class ShapeDrawing
         {
             var start = shapePoints[i];
             var end = shapePoints[(i + 1) % shapePoints.Count];
-            ShapeSegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
         }
     }
 
@@ -84,7 +87,7 @@ public static class ShapeDrawing
         {
             var start = shapePoints[i];
             var end = shapePoints[(i + 1) % shapePoints.Count];
-            ShapeSegmentDrawing.DrawSegment(start, end, lineThickness, color, sideLengthFactor,  capType, capPoints);
+            SegmentDrawing.DrawSegment(start, end, lineThickness, color, sideLengthFactor,  capType, capPoints);
         }
     }
 
@@ -120,7 +123,7 @@ public static class ShapeDrawing
         {
             var start = pos + (relativePoints[i] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
             var end = pos + (relativePoints[(i + 1) % relativePoints.Count] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
-            ShapeSegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
         }
     }
 
@@ -193,13 +196,13 @@ public static class ShapeDrawing
             if (l <= perimeterToDraw)
             {
                 perimeterToDraw -= l;
-                ShapeSegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
+                SegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
             }
             else
             {
                 float f = perimeterToDraw / l;
                 end = start.Lerp(end, f);
-                ShapeSegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
+                SegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
                 return;
             }
 
@@ -296,7 +299,7 @@ public static class ShapeDrawing
         {
             var start = shapePoints[i];
             var end = shapePoints[(i + 1) % shapePoints.Count];
-            ShapeSegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
+            SegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
         }
 
     }
@@ -336,7 +339,7 @@ public static class ShapeDrawing
         {
             var start = pos + (relativePoints[i] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
             var end = pos + (relativePoints[(i + 1) % relativePoints.Count] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
-            ShapeSegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
+            SegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
         }
 
     }
@@ -386,8 +389,8 @@ public static class ShapeDrawing
             var prev = points[(i - 1) % points.Count];
             var cur = points[i];
             var next = points[(i + 1) % points.Count];
-            ShapeSegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
-            ShapeSegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
         }
     }
 
@@ -418,8 +421,8 @@ public static class ShapeDrawing
             var prev = points[(i - 1) % points.Count];
             var cur = points[i];
             var next = points[(i + 1) % points.Count];
-            ShapeSegmentDrawing.DrawSegment(cur, cur.Lerp(next, cornerF), lineThickness, color, capType, capPoints);
-            ShapeSegmentDrawing.DrawSegment(cur, cur.Lerp(prev, cornerF), lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(cur, cur.Lerp(next, cornerF), lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(cur, cur.Lerp(prev, cornerF), lineThickness, color, capType, capPoints);
         }
     }
 
@@ -438,8 +441,8 @@ public static class ShapeDrawing
             var prev = points[(i - 1) % points.Count];
             var cur = points[i];
             var next = points[(i + 1) % points.Count];
-            ShapeSegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineInfo);
-            ShapeSegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineInfo);
+            SegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineInfo);
+            SegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineInfo);
         }
     }
 
@@ -464,8 +467,8 @@ public static class ShapeDrawing
             var prev = points[(i - 1) % points.Count];
             var cur = points[i];
             var next = points[(i + 1) % points.Count];
-            ShapeSegmentDrawing.DrawSegment(cur, cur.Lerp(next, cornerF), lineInfo);
-            ShapeSegmentDrawing.DrawSegment(cur, cur.Lerp(prev, cornerF), lineInfo);
+            SegmentDrawing.DrawSegment(cur, cur.Lerp(next, cornerF), lineInfo);
+            SegmentDrawing.DrawSegment(cur, cur.Lerp(prev, cornerF), lineInfo);
         }
     }
 
@@ -486,8 +489,8 @@ public static class ShapeDrawing
             var prev = points[(i-1)%points.Count];
             var cur = points[i];
             var next = points[(i+1)%points.Count];
-            ShapeSegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
-            ShapeSegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
         }
     }
 
@@ -514,8 +517,8 @@ public static class ShapeDrawing
             var prev = points[(i - 1) % points.Count];
             var cur = points[i];
             var next = points[(i + 1) % points.Count];
-            ShapeSegmentDrawing.DrawSegment(cur, cur.Lerp(next, cornerF), lineThickness, color, capType, capPoints);
-            ShapeSegmentDrawing.DrawSegment(cur, cur.Lerp(prev, cornerF), lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(cur, cur.Lerp(next, cornerF), lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(cur, cur.Lerp(prev, cornerF), lineThickness, color, capType, capPoints);
         }
     }
 
@@ -533,8 +536,8 @@ public static class ShapeDrawing
             var prev = points[(i-1)%points.Count];
             var cur = points[i];
             var next = points[(i+1)%points.Count];
-            ShapeSegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineInfo);
-            ShapeSegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineInfo);
+            SegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineInfo);
+            SegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineInfo);
         }
     }
 
@@ -558,8 +561,8 @@ public static class ShapeDrawing
             var prev = points[(i - 1) % points.Count];
             var cur = points[i];
             var next = points[(i + 1) % points.Count];
-            ShapeSegmentDrawing.DrawSegment(cur, cur.Lerp(next, cornerF), lineInfo);
-            ShapeSegmentDrawing.DrawSegment(cur, cur.Lerp(prev, cornerF), lineInfo);
+            SegmentDrawing.DrawSegment(cur, cur.Lerp(next, cornerF), lineInfo);
+            SegmentDrawing.DrawSegment(cur, cur.Lerp(prev, cornerF), lineInfo);
         }
     }
 
@@ -628,7 +631,7 @@ public static class ShapeDrawing
     {
         foreach (var p in points)
         {
-            ShapeCircleDrawing.DrawCircle(p, vertexRadius, color, circleSegments);
+            CircleDrawing.DrawCircle(p, vertexRadius, color, circleSegments);
         }
     }
 }

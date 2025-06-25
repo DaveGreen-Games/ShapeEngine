@@ -7,7 +7,6 @@ using ShapeEngine.Geometry.Polygon;
 using ShapeEngine.Geometry.Triangle;
 using ShapeEngine.Input;
 using ShapeEngine.StaticLib;
-using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Random;
 
 namespace Examples.Scenes.ExampleScenes.EndlessSpaceExampleSource;

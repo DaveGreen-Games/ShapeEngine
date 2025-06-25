@@ -1,13 +1,13 @@
 using System.Numerics;
 using ShapeEngine.Color;
-using ShapeEngine.Geometry.Line;
+using ShapeEngine.Geometry.Segment;
 
-namespace ShapeEngine.StaticLib.Drawing;
+namespace ShapeEngine.Geometry.Line;
 
 /// <summary>
 /// Provides static methods for drawing lines using specified parameters or a <c>Line</c> object.
 /// </summary>
-public static class ShapeLineDrawing
+public static class LineDrawing
 {
     /// <summary>
     /// Draws a line at a given point, in a specified direction, with a given length, thickness, and color.
@@ -25,7 +25,7 @@ public static class ShapeLineDrawing
     public static void DrawLine(Vector2 point, Vector2 direction, float length, float thickness, ColorRgba color)
     {
         if(length <= 0 || thickness <= 0 || (direction.X == 0f && direction.Y == 0f)) return;
-        ShapeSegmentDrawing.DrawSegment(point - direction * length * 0.5f, point + direction * length * 0.5f, thickness, color);
+        SegmentDrawing.DrawSegment(point - direction * length * 0.5f, point + direction * length * 0.5f, thickness, color);
     }
 
     /// <summary>
@@ -43,7 +43,7 @@ public static class ShapeLineDrawing
     public static void Draw(this Line line, float length, float thickness, ColorRgba color)
     {
         if(!line.IsValid || length <= 0f || thickness <= 0f) return;
-        ShapeSegmentDrawing.DrawSegment(line.Point - (line.Direction * length * 0.5f), line.Point + (line.Direction * length * 0.5f), thickness, color);
+        SegmentDrawing.DrawSegment(line.Point - (line.Direction * length * 0.5f), line.Point + (line.Direction * length * 0.5f), thickness, color);
     }
 
 }

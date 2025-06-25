@@ -1,8 +1,8 @@
 ﻿using System.Numerics;
 using Examples.Scenes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry;
 using ShapeEngine.UI;
-using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Text;
 
 namespace Examples.UIElements

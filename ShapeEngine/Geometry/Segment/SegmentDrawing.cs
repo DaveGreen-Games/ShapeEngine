@@ -2,9 +2,9 @@ using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.Segment;
+using ShapeEngine.StaticLib;
 
-namespace ShapeEngine.StaticLib.Drawing;
+namespace ShapeEngine.Geometry.Segment;
 
 /// <summary>
 /// Provides static methods for drawing line segments and collections of segments with various styles, thicknesses, and effects.
@@ -12,7 +12,7 @@ namespace ShapeEngine.StaticLib.Drawing;
 /// <remarks>
 /// This class contains extension methods for <see cref="Segment"/> and <see cref="Segments"/> to simplify drawing operations.
 /// </remarks>
-public static class ShapeSegmentDrawing
+public static class SegmentDrawing
 {
     /// <summary>
     /// Draws a segment from <paramref name="start"/> to a point along the direction to <paramref name="end"/>, scaled by <paramref name="sideLengthFactor"/>.

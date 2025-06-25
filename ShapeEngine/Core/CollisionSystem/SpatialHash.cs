@@ -10,7 +10,6 @@ using ShapeEngine.Geometry.Ray;
 using ShapeEngine.Geometry.Rect;
 using ShapeEngine.Geometry.Segment;
 using ShapeEngine.Geometry.Triangle;
-using ShapeEngine.StaticLib.Drawing;
 
 namespace ShapeEngine.Core.CollisionSystem;
 

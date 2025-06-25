@@ -1,13 +1,13 @@
 using System.Numerics;
 using ShapeEngine.Color;
-using ShapeEngine.Geometry.Ray;
+using ShapeEngine.Geometry.Segment;
 
-namespace ShapeEngine.StaticLib.Drawing;
+namespace ShapeEngine.Geometry.Ray;
 
 /// <summary>
 /// Provides static methods for drawing rays using specified parameters or a <c>Ray</c> object.
 /// </summary>
-public static class ShapeRayDrawing
+public static class RayDrawing
 {
     /// <summary>
     /// Draws a ray starting from a given point in a specified direction, with a given length, thickness, and color.
@@ -24,7 +24,7 @@ public static class ShapeRayDrawing
     public static void DrawRay(Vector2 point, Vector2 direction, float length, float thickness, ColorRgba color)
     {
         if(length <= 0 || thickness <= 0 || (direction.X == 0f && direction.Y == 0f)) return;
-        ShapeSegmentDrawing.DrawSegment(point, point + direction * length, thickness, color);
+        SegmentDrawing.DrawSegment(point, point + direction * length, thickness, color);
     }
 
     /// <summary>
@@ -41,7 +41,7 @@ public static class ShapeRayDrawing
     public static void Draw(this Ray ray, float length, float thickness, ColorRgba color)
     {
         if(!ray.IsValid || length <= 0f || thickness <= 0f) return;
-        ShapeSegmentDrawing.DrawSegment(ray.Point, ray.Point + ray.Direction * length, thickness, color);
+        SegmentDrawing.DrawSegment(ray.Point, ray.Point + ray.Direction * length, thickness, color);
     }
 
 }

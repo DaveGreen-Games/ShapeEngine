@@ -6,11 +6,12 @@ using System.Text;
 using ShapeEngine.Color;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.Circle;
 using ShapeEngine.Geometry.Polygon;
 using ShapeEngine.Geometry.Rect;
 using ShapeEngine.Geometry.Segment;
+using ShapeEngine.Geometry.Triangle;
 using ShapeEngine.Input;
-using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Random;
 namespace Examples.Scenes.ExampleScenes
 {
@@ -994,7 +995,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             if (segmentStarted)
             {
-                ShapeCircleDrawing.DrawCircle(startPoint, 15f, Colors.Highlight);
+                CircleDrawing.DrawCircle(startPoint, 15f, Colors.Highlight);
                 Segment s = new(startPoint, mousePos);
                 s.Draw(4, Colors.Highlight);
 

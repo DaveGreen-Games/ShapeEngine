@@ -6,9 +6,10 @@ using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.Circle;
 using ShapeEngine.Geometry.Polygon;
 using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.Triangle;
 using ShapeEngine.StaticLib;
 using ShapeEngine.Random;
-using ShapeEngine.StaticLib.Drawing;
+
 namespace Examples.Scenes.ExampleScenes.EndlessSpaceExampleSource;
 
 internal class AsteroidObstacle : CollisionObject

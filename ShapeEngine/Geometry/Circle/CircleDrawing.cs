@@ -2,9 +2,11 @@ using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.Segment;
+using ShapeEngine.StaticLib;
 
-namespace ShapeEngine.StaticLib.Drawing;
+namespace ShapeEngine.Geometry.Circle;
 
 /// <summary>
 /// Provides static methods for drawing circles and circle-related shapes with various options,
@@ -15,7 +17,7 @@ namespace ShapeEngine.StaticLib.Drawing;
 /// It offers both simple and advanced
 /// circle drawing utilities, including performance-optimized methods for small circles.
 /// </remarks>
-public static class ShapeCircleDrawing
+public static class CircleDrawing
 {
     /// <summary>
     /// Draws a filled circle at the specified center with the given radius and color.
@@ -107,7 +109,7 @@ public static class ShapeCircleDrawing
             var curP = c.Center + new Vector2(c.Radius, 0f).Rotate(rotRad + angleStep * i);
             var nextP = c.Center + new Vector2(c.Radius, 0f).Rotate(rotRad + angleStep * nextIndex);
 
-            ShapeSegmentDrawing.DrawSegment(curP, nextP, lineInfo);
+            SegmentDrawing.DrawSegment(curP, nextP, lineInfo);
         }
     }
 
@@ -271,7 +273,7 @@ public static class ShapeCircleDrawing
             var start = c.Center + new Vector2(c.Radius, 0f).Rotate(rotRad + angleStep * i);
             var end = c.Center + new Vector2(c.Radius, 0f).Rotate(rotRad + angleStep * nextIndex);
 
-            ShapeSegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
+            SegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
         }
     }
 
@@ -321,12 +323,12 @@ public static class ShapeCircleDrawing
             if (sideLength > perimeterToDraw)
             {
                 nextP = curP.Lerp(nextP, perimeterToDraw / sideLength);
-                ShapeSegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, lineCapType, capPoints);
+                SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, lineCapType, capPoints);
                 return;
             }
             else
             {
-                ShapeSegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, lineCapType, capPoints);
+                SegmentDrawing.DrawSegment(curP, nextP, lineThickness, color, lineCapType, capPoints);
                 perimeterToDraw -= sideLength;
             }
         }
@@ -343,7 +345,7 @@ public static class ShapeCircleDrawing
     /// </remarks>
     public static void DrawCircleFast(Vector2 center, float radius, ColorRgba color)
     {
-        ShapeRectDrawing.DrawRect(center - new Vector2(radius, radius), center + new Vector2(radius, radius), color);
+        RectDrawing.DrawRect(center - new Vector2(radius, radius), center + new Vector2(radius, radius), color);
     }
 
     /// <summary>
@@ -411,7 +413,7 @@ public static class ShapeCircleDrawing
             var curP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * i);
             var nextP = center + new Vector2(radius, 0f).Rotate(rotRad + angleStep * nextIndex);
 
-            ShapeSegmentDrawing.DrawSegment(curP, nextP, lineInfo);
+            SegmentDrawing.DrawSegment(curP, nextP, lineInfo);
         }
     }
 
@@ -571,10 +573,10 @@ public static class ShapeCircleDrawing
         if (closed)
         {
             var sectorStart = c.Center + (ShapeVec.Right() * c.Radius).Rotate(startAngleRad);
-            ShapeSegmentDrawing.DrawSegment(c.Center, sectorStart, lineInfo, sideScaleFactor, sideScaleOrigin);
+            SegmentDrawing.DrawSegment(c.Center, sectorStart, lineInfo, sideScaleFactor, sideScaleOrigin);
 
             var sectorEnd = c.Center + (ShapeVec.Right() * c.Radius).Rotate(endAngleRad);
-            ShapeSegmentDrawing.DrawSegment(c.Center, sectorEnd, lineInfo, sideScaleFactor, sideScaleOrigin);
+            SegmentDrawing.DrawSegment(c.Center, sectorEnd, lineInfo, sideScaleFactor, sideScaleOrigin);
         }
         for (int i = 0; i < sides; i++)
         {
@@ -582,7 +584,7 @@ public static class ShapeCircleDrawing
             var start = c.Center + new Vector2(c.Radius, 0f).Rotate(startAngleRad + angleStep * i);
             var end = c.Center + new Vector2(c.Radius, 0f).Rotate(startAngleRad + angleStep * nextIndex);
 
-            ShapeSegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
+            SegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
         }
     }
 
@@ -606,16 +608,16 @@ public static class ShapeCircleDrawing
         if (closed)
         {
             var sectorStart = center + (ShapeVec.Right() * radius + new Vector2(lineInfo.Thickness / 2, 0)).Rotate(startAngleRad);
-            ShapeSegmentDrawing.DrawSegment(center, sectorStart, lineInfo);
+            SegmentDrawing.DrawSegment(center, sectorStart, lineInfo);
 
             var sectorEnd = center + (ShapeVec.Right() * radius + new Vector2(lineInfo.Thickness / 2, 0)).Rotate(endAngleRad);
-            ShapeSegmentDrawing.DrawSegment(center, sectorEnd, lineInfo);
+            SegmentDrawing.DrawSegment(center, sectorEnd, lineInfo);
         }
         for (var i = 0; i < sides; i++)
         {
             var start = center + (ShapeVec.Right() * radius).Rotate(startAngleRad + angleStep * i);
             var end = center + (ShapeVec.Right() * radius).Rotate(startAngleRad + angleStep * (i + 1));
-            ShapeSegmentDrawing.DrawSegment(start, end, lineInfo);
+            SegmentDrawing.DrawSegment(start, end, lineInfo);
         }
     }
 
@@ -654,16 +656,16 @@ public static class ShapeCircleDrawing
         if (closed)
         {
             var sectorStart = center + (ShapeVec.Right() * radius + new Vector2(lineInfo.Thickness / 2, 0)).Rotate(startAngleRad);
-            ShapeSegmentDrawing.DrawSegment(center, sectorStart, lineInfo);
+            SegmentDrawing.DrawSegment(center, sectorStart, lineInfo);
 
             var sectorEnd = center + (ShapeVec.Right() * radius + new Vector2(lineInfo.Thickness / 2, 0)).Rotate(endAngleRad);
-            ShapeSegmentDrawing.DrawSegment(center, sectorEnd, lineInfo);
+            SegmentDrawing.DrawSegment(center, sectorEnd, lineInfo);
         }
         for (var i = 0; i < sides; i++)
         {
             var start = center + (ShapeVec.Right() * radius).Rotate(startAngleRad + angleStep * i);
             var end = center + (ShapeVec.Right() * radius).Rotate(startAngleRad + angleStep * (i + 1));
-            ShapeSegmentDrawing.DrawSegment(start, end, lineInfo);
+            SegmentDrawing.DrawSegment(start, end, lineInfo);
         }
     }
 
@@ -704,16 +706,16 @@ public static class ShapeCircleDrawing
         if (closed)
         {
             var sectorStart = center + (ShapeVec.Right() * radius + new Vector2(lineThickness / 2, 0)).Rotate(startAngleRad);
-            ShapeSegmentDrawing.DrawSegment(center, sectorStart, lineThickness, color, LineCapType.CappedExtended, 4);
+            SegmentDrawing.DrawSegment(center, sectorStart, lineThickness, color, LineCapType.CappedExtended, 4);
 
             var sectorEnd = center + (ShapeVec.Right() * radius + new Vector2(lineThickness / 2, 0)).Rotate(endAngleRad);
-            ShapeSegmentDrawing.DrawSegment(center, sectorEnd, lineThickness, color, LineCapType.CappedExtended, 4);
+            SegmentDrawing.DrawSegment(center, sectorEnd, lineThickness, color, LineCapType.CappedExtended, 4);
         }
         for (var i = 0; i < sides; i++)
         {
             var start = center + (ShapeVec.Right() * radius).Rotate(startAngleRad + angleStep * i);
             var end = center + (ShapeVec.Right() * radius).Rotate(startAngleRad + angleStep * (i + 1));
-            ShapeSegmentDrawing.DrawSegment(start, end, lineThickness, color, LineCapType.CappedExtended, 4);
+            SegmentDrawing.DrawSegment(start, end, lineThickness, color, LineCapType.CappedExtended, 4);
         }
     }
 
@@ -754,16 +756,16 @@ public static class ShapeCircleDrawing
         if (closed)
         {
             var sectorStart = center + (ShapeVec.Right() * radius + new Vector2(lineThickness / 2, 0)).Rotate(startAngleRad);
-            ShapeSegmentDrawing.DrawSegment(center, sectorStart, lineThickness, color, LineCapType.CappedExtended, 2);
+            SegmentDrawing.DrawSegment(center, sectorStart, lineThickness, color, LineCapType.CappedExtended, 2);
 
             var sectorEnd = center + (ShapeVec.Right() * radius + new Vector2(lineThickness / 2, 0)).Rotate(endAngleRad);
-            ShapeSegmentDrawing.DrawSegment(center, sectorEnd, lineThickness, color, LineCapType.CappedExtended, 2);
+            SegmentDrawing.DrawSegment(center, sectorEnd, lineThickness, color, LineCapType.CappedExtended, 2);
         }
         for (var i = 0; i < sides; i++)
         {
             var start = center + (ShapeVec.Right() * radius).Rotate(startAngleRad + angleStep * i);
             var end = center + (ShapeVec.Right() * radius).Rotate(startAngleRad + angleStep * (i + 1));
-            ShapeSegmentDrawing.DrawSegment(start, end, lineThickness, color, LineCapType.CappedExtended, 2);
+            SegmentDrawing.DrawSegment(start, end, lineThickness, color, LineCapType.CappedExtended, 2);
         }
     }
 
@@ -823,7 +825,7 @@ public static class ShapeCircleDrawing
             var down = new Vector2(0f, y);
             var start = p + up.Rotate(rotRad);
             var end = p + down.Rotate(rotRad);
-            ShapeSegmentDrawing.DrawSegment(start, end, lineThickness, lineColorRgba);
+            SegmentDrawing.DrawSegment(start, end, lineThickness, lineColorRgba);
             cur.X -= spacing;
         }
 
@@ -839,7 +841,7 @@ public static class ShapeCircleDrawing
             var down = new Vector2(0f, y);
             var start = p + up.Rotate(rotRad);
             var end = p + down.Rotate(rotRad);
-            ShapeSegmentDrawing.DrawSegment(start, end, lineThickness, lineColorRgba);
+            SegmentDrawing.DrawSegment(start, end, lineThickness, lineColorRgba);
             cur.X += spacing;
         }
     }

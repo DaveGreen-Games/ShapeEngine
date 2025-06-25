@@ -5,10 +5,11 @@ using ShapeEngine.Color;
 using ShapeEngine.Core;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.Segment;
 using ShapeEngine.Input;
 using ShapeEngine.StaticLib;
-using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Random;
 using ShapeEngine.Screen;
 using ShapeEngine.Text;
@@ -110,7 +111,7 @@ public class CurveDataExample : ExampleScene
     {
         var controlPoint = new Vector2(-1000 + curveTime * 2000, yOffset);
         controlPoint.Draw(20, Colors.Warm, 32);
-        ShapeSegmentDrawing.DrawSegment(new Vector2(-1000, yOffset), new Vector2(1000, yOffset), 2f, Colors.Light, LineCapType.Capped, 12);
+        SegmentDrawing.DrawSegment(new Vector2(-1000, yOffset), new Vector2(1000, yOffset), 2f, Colors.Light, LineCapType.Capped, 12);
         if (testCurve.Sample(curveTime, out var value))
         {
             var p = new Vector2(-1000 + curveTime * 2000, yOffset + value);
@@ -131,7 +132,7 @@ public class CurveDataExample : ExampleScene
             var kPoint = new Vector2(-1000 + k * 2000, yOffset);
             var kPointStart = new Vector2(kPoint.X, yOffset + 20);
             var kPointEnd = new Vector2(kPoint.X, yOffset - 20);
-            ShapeSegmentDrawing.DrawSegment(kPointStart, kPointEnd, 2, Colors.Light, LineCapType.Capped, 12);
+            SegmentDrawing.DrawSegment(kPointStart, kPointEnd, 2, Colors.Light, LineCapType.Capped, 12);
             
             var point = new Vector2(-1000 + k * 2000, yOffset + v);
             if (i < testCurve.Count - 1)
@@ -139,7 +140,7 @@ public class CurveDataExample : ExampleScene
                 var nextK = testCurve.Keys[i + 1];
                 var nextV = testCurve.Values[i + 1];
                 var next = new Vector2(-1000 + nextK * 2000, yOffset + nextV);
-                ShapeSegmentDrawing.DrawSegment(point, next, 4, curveColor, LineCapType.CappedExtended, 12);
+                SegmentDrawing.DrawSegment(point, next, 4, curveColor, LineCapType.CappedExtended, 12);
             }
 
             if (i == curIndex)
@@ -158,7 +159,7 @@ public class CurveDataExample : ExampleScene
         var controlPoint = new Vector2(-1000 + curveTime * 2000, yOffset);
         controlPoint.Draw(20, Colors.Warm, 32);
         
-        ShapeSegmentDrawing.DrawSegment(new Vector2(-1000, yOffset), new Vector2(1000, yOffset), 2f, Colors.Light, LineCapType.Capped, 12);
+        SegmentDrawing.DrawSegment(new Vector2(-1000, yOffset), new Vector2(1000, yOffset), 2f, Colors.Light, LineCapType.Capped, 12);
         if (testCurve2.Sample(curveTime, out var value))
         {
             value += new Vector2(0, yOffset);
@@ -179,12 +180,12 @@ public class CurveDataExample : ExampleScene
             var kPoint = new Vector2(-1000 + k * 2000, yOffset);
             var kPointStart = new Vector2(kPoint.X, yOffset + 20);
             var kPointEnd = new Vector2(kPoint.X, yOffset - 20);
-            ShapeSegmentDrawing.DrawSegment(kPointStart, kPointEnd, 2, Colors.Light, LineCapType.Capped, 12);
+            SegmentDrawing.DrawSegment(kPointStart, kPointEnd, 2, Colors.Light, LineCapType.Capped, 12);
             if (i < testCurve2.Count - 1)
             {
                 var nextV = testCurve2.Values[i + 1];
                 nextV += new Vector2(0, yOffset);
-                ShapeSegmentDrawing.DrawSegment(v, nextV, 4, curveColor, LineCapType.CappedExtended, 12);
+                SegmentDrawing.DrawSegment(v, nextV, 4, curveColor, LineCapType.CappedExtended, 12);
             }
 
             if (i == curIndex)

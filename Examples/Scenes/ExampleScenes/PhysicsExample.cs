@@ -4,12 +4,13 @@ using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry;
+using ShapeEngine.Geometry.Circle;
 using ShapeEngine.Geometry.Rect;
 using ShapeEngine.StaticLib;
 using ShapeEngine.Random;
 using ShapeEngine.Screen;
 using ShapeEngine.Text;
-using ShapeEngine.StaticLib.Drawing;
 using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes;
@@ -70,7 +71,7 @@ public class PhysicsExample : ExampleScene
                 var y = Rng.Instance.RandF(0f, 2048);
                 var pos = new Vector2(x, y);
                 var size = sizeRange.Rand();
-                ShapeCircleDrawing.DrawCircle(pos, size, color);
+                CircleDrawing.DrawCircle(pos, size, color);
             }
             t.EndDraw();
             
@@ -226,10 +227,10 @@ public class PhysicsExample : ExampleScene
         var universeLineInfo = new LineDrawingInfo(14f, Colors.Warm, LineCapType.Extended, 0);
         var stripedLineInfo = new LineDrawingInfo(14f, Colors.Warm.SetAlpha(200), LineCapType.None, 0);
         
-        ShapeStripedDrawing.DrawStripedRing(Vector2.Zero, SectorRadiusInside, SectorRadiusOutside, 1f, stripedLineInfo, 0f);
+        StripedDrawing.DrawStripedRing(Vector2.Zero, SectorRadiusInside, SectorRadiusOutside, 1f, stripedLineInfo, 0f);
         
-        ShapeCircleDrawing.DrawCircleLines(Vector2.Zero, SectorRadiusInside, universeLineInfo , 0f, 24f);
-        ShapeCircleDrawing.DrawCircleLines(Vector2.Zero, SectorRadiusOutside, universeLineInfo, 0f, 24f);
+        CircleDrawing.DrawCircleLines(Vector2.Zero, SectorRadiusInside, universeLineInfo , 0f, 24f);
+        CircleDrawing.DrawCircleLines(Vector2.Zero, SectorRadiusOutside, universeLineInfo, 0f, 24f);
         
         var textCount = 12;
         var angleStepRad = (360f / textCount) * ShapeMath.DEGTORAD;

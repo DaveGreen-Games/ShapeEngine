@@ -9,7 +9,6 @@ using ShapeEngine.Input;
 using Raylib_cs;
 using ShapeEngine.Geometry.Circle;
 using ShapeEngine.Geometry.Rect;
-using ShapeEngine.StaticLib.Drawing;
 using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes
@@ -131,10 +130,10 @@ namespace Examples.Scenes.ExampleScenes
                 var hullColor = colorScheme.Hull;
                 var cockpitColor = colorScheme.Cockpit;
                 
-                ShapeCircleDrawing.DrawCircle(hull.Center - rightThruster * hull.Radius, hull.Radius / 6, outlineColor, 12);
-                ShapeCircleDrawing.DrawCircle(hull.Center - leftThruster * hull.Radius, hull.Radius / 6, outlineColor, 12);
+                CircleDrawing.DrawCircle(hull.Center - rightThruster * hull.Radius, hull.Radius / 6, outlineColor, 12);
+                CircleDrawing.DrawCircle(hull.Center - leftThruster * hull.Radius, hull.Radius / 6, outlineColor, 12);
                 hull.Draw(hullColor);
-                ShapeCircleDrawing.DrawCircle(hull.Center + movementDir * hull.Radius * 0.66f, hull.Radius * 0.33f, cockpitColor, 12);
+                CircleDrawing.DrawCircle(hull.Center + movementDir * hull.Radius * 0.66f, hull.Radius * 0.33f, cockpitColor, 12);
 
                 hull.DrawLines(4f, outlineColor);
             }

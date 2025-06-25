@@ -1,13 +1,13 @@
 using System.Numerics;
 using ShapeEngine.Color;
-using ShapeEngine.Geometry;
+using ShapeEngine.Geometry.Circle;
 
-namespace ShapeEngine.StaticLib.Drawing;
+namespace ShapeEngine.Geometry;
 
 /// <summary>
 /// Provides extension methods for drawing points and collections of points.
 /// </summary>
-public static class ShapePointDrawing
+public static class PointDrawing
 {
     /// <summary>
     /// Draws a point as a circle at the specified position.
@@ -16,7 +16,7 @@ public static class ShapePointDrawing
     /// <param name="radius">The radius of the circle to draw.</param>
     /// <param name="color">The color of the circle.</param>
     /// <param name="segments">The number of segments to use for the circle. Default is 16.</param>
-    public static void Draw(this Vector2 p, float radius, ColorRgba color, int segments = 16) => ShapeCircleDrawing.DrawCircle(p, radius, color, segments);
+    public static void Draw(this Vector2 p, float radius, ColorRgba color, int segments = 16) => CircleDrawing.DrawCircle(p, radius, color, segments);
 
     /// <summary>
     /// Draws each point in a collection as a circle.

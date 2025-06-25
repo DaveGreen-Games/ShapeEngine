@@ -2,8 +2,10 @@ using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Geometry.Circle;
 using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.Segment;
+using ShapeEngine.StaticLib;
 
-namespace ShapeEngine.StaticLib.Drawing;
+namespace ShapeEngine.Geometry;
 
 /// <summary>
 /// Provides extension methods for drawing UI shapes such as bars and outlines for rectangles and circles.
@@ -11,7 +13,7 @@ namespace ShapeEngine.StaticLib.Drawing;
 /// <remarks>
 /// These methods are intended for rendering progress bars, outlines, and similar UI elements with customizable appearance.
 /// </remarks>
-public static class ShapeUIDrawing
+public static class UIDrawing
 {
     /// <summary>
     /// Draws an outline bar along the border of a rectangle, filling the outline based on the specified progress value.
@@ -23,7 +25,7 @@ public static class ShapeUIDrawing
     /// <remarks>
     /// The outline is drawn in four segments (top, right, bottom, left), and the progress value determines how many segments are filled.
     /// </remarks>
-    public static void DrawOutlineBar(this Rect rect, float thickness, float f, ColorRgba color)
+    public static void DrawOutlineBar(this Rect.Rect rect, float thickness, float f, ColorRgba color)
     {
         var thicknessOffsetX = new Vector2(thickness, 0f);
         var thicknessOffsetY = new Vector2(0f, thickness);
@@ -64,7 +66,7 @@ public static class ShapeUIDrawing
 
             //last line
             if (i == lines - 1) end = ShapeVec.Lerp(start, end, newF);
-            ShapeSegmentDrawing.DrawSegment(start, end, thickness, color);
+            SegmentDrawing.DrawSegment(start, end, thickness, color);
             // DrawLineEx(start, end, thickness, color.ToRayColor());
         }
     }
@@ -82,7 +84,7 @@ public static class ShapeUIDrawing
     /// The outline is drawn in four segments (top, right, bottom, left), and the progress value determines how many segments are filled.
     /// The rectangle is rotated around the specified pivot point.
     /// </remarks>
-    public static void DrawOutlineBar(this Rect rect, Vector2 pivot, float angleDeg, float thickness, float f, ColorRgba color)
+    public static void DrawOutlineBar(this Rect.Rect rect, Vector2 pivot, float angleDeg, float thickness, float f, ColorRgba color)
     {
         var rr = rect.RotateCorners(pivot, angleDeg);
         //Vector2 thicknessOffsetX = new Vector2(thickness, 0f);
@@ -127,7 +129,7 @@ public static class ShapeUIDrawing
 
             //last line
             if (i == lines - 1) end = ShapeVec.Lerp(start, end, newF);
-            ShapeSegmentDrawing.DrawSegment(start, end, thickness, color);
+            SegmentDrawing.DrawSegment(start, end, thickness, color);
             // Raylib.DrawLineEx(start, end, thickness, color.ToRayColor());
         }
     }
@@ -142,7 +144,7 @@ public static class ShapeUIDrawing
     /// <remarks>
     /// The outline is drawn as a sector of the circle, starting from 0 degrees.
     /// </remarks>
-    public static void DrawOutlineBar(this Circle c, float thickness, float f, ColorRgba color) => ShapeCircleDrawing.DrawCircleSectorLines(c.Center, c.Radius, 0, 360 * f, thickness, color, false);
+    public static void DrawOutlineBar(this Circle.Circle c, float thickness, float f, ColorRgba color) => CircleDrawing.DrawCircleSectorLines(c.Center, c.Radius, 0, 360 * f, thickness, color, false);
 
     /// <summary>
     /// Draws an outline bar along the circumference of a circle, starting at a specified angle offset, and filling based on the progress value.
@@ -155,7 +157,7 @@ public static class ShapeUIDrawing
     /// <remarks>
     /// The outline is drawn as a sector of the circle, starting from the specified angle offset.
     /// </remarks>
-    public static void DrawOutlineBar(this Circle c, float startOffsetDeg, float thickness, float f, ColorRgba color) => ShapeCircleDrawing.DrawCircleSectorLines(c.Center, c.Radius, 0, 360 * f, startOffsetDeg, thickness, color, false);
+    public static void DrawOutlineBar(this Circle.Circle c, float startOffsetDeg, float thickness, float f, ColorRgba color) => CircleDrawing.DrawCircleSectorLines(c.Center, c.Radius, 0, 360 * f, startOffsetDeg, thickness, color, false);
 
     /// <summary>
     /// Draws a filled bar inside a rectangle, representing progress with customizable margins and colors.
@@ -180,10 +182,10 @@ public static class ShapeUIDrawing
     /// <item><description>left 0.5, right 0.5, top 0, bottom 0 -> bar fills from center to left and right edges. </description></item>
     /// </list>
     /// </example>
-    public static void DrawBar(this Rect rect, float f, ColorRgba barColorRgba, ColorRgba bgColorRgba, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
+    public static void DrawBar(this Rect.Rect rect, float f, ColorRgba barColorRgba, ColorRgba bgColorRgba, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
     {
         f = 1.0f - f;
-        Rect.Margins progressMargins = new(f * top, f * right, f * bottom, f * left);
+        Rect.Rect.Margins progressMargins = new(f * top, f * right, f * bottom, f * left);
         var progressRect = rect.ApplyMargins(progressMargins); // progressMargins.Apply(rect);
         rect.Draw(bgColorRgba);
         progressRect.Draw(barColorRgba);
@@ -215,10 +217,10 @@ public static class ShapeUIDrawing
     /// <item><description>left 0.5, right 0.5, top 0, bottom 0 -> bar fills from center to left and right edges. </description></item>
     /// </list>
     /// </example>
-    public static void DrawBar(this Rect rect, Vector2 pivot, float angleDeg, float f, ColorRgba barColorRgba, ColorRgba bgColorRgba, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
+    public static void DrawBar(this Rect.Rect rect, Vector2 pivot, float angleDeg, float f, ColorRgba barColorRgba, ColorRgba bgColorRgba, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
     {
         f = 1.0f - f;
-        Rect.Margins progressMargins = new(f * top, f * right, f * bottom, f * left);
+        Rect.Rect.Margins progressMargins = new(f * top, f * right, f * bottom, f * left);
         var progressRect = rect.ApplyMargins(progressMargins); // progressMargins.Apply(rect);
         rect.Draw(pivot, angleDeg, bgColorRgba);
         progressRect.Draw(pivot, angleDeg, barColorRgba);

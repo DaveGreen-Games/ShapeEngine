@@ -3,10 +3,10 @@ using ShapeEngine.Screen;
 using System.Numerics;
 using System.Text;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.Circle;
 using ShapeEngine.Geometry.Rect;
 using ShapeEngine.Geometry.Segment;
 using ShapeEngine.Input;
-using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Random;
 namespace Examples.Scenes.ExampleScenes
 {
@@ -150,8 +150,8 @@ namespace Examples.Scenes.ExampleScenes
 
             var c = Colors.Cold; // new ColorRgba(Color.CornflowerBlue);
             float f = camera.ZoomFactor;
-            ShapeCircleDrawing.DrawCircle(camera.BasePosition, 8f * f, c);
-            ShapeCircleDrawing.DrawCircleLines(camera.BasePosition, 64 * f, 2f * f, c);
+            CircleDrawing.DrawCircle(camera.BasePosition, 8f * f, c);
+            CircleDrawing.DrawCircleLines(camera.BasePosition, 64 * f, 2f * f, c);
             Segment hor = new(camera.BasePosition - new Vector2(3000 * f, 0), camera.BasePosition + new Vector2(3000 * f, 0));
             hor.Draw(2f * f, c);
             Segment ver = new(camera.BasePosition - new Vector2(0, 3000 * f), camera.BasePosition + new Vector2(0, 3000 * f));

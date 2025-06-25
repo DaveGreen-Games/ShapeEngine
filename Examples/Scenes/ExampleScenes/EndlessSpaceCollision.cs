@@ -7,13 +7,13 @@ using Examples.Scenes.ExampleScenes.EndlessSpaceExampleSource;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.Circle;
 using ShapeEngine.Geometry.Polygon;
 using ShapeEngine.Geometry.Rect;
 using ShapeEngine.Input;
 using Size = ShapeEngine.Core.Structs.Size;
 using ShapeEngine.Random;
-using ShapeEngine.StaticLib.Drawing;
 
 // using Examples.Scenes.ExampleScenes.EndlessSpaceExampleSource;
 namespace Examples.Scenes.ExampleScenes;
@@ -217,7 +217,7 @@ public class EndlessSpaceCollision : ExampleScene
         {
             var pos = screeninfo.Area.GetRandomPointInside();
             
-            ShapeCircleDrawing.DrawCircleFast(pos, Rng.Instance.RandF(1, 5), Colors.Highlight.SetAlpha(alpha));
+            CircleDrawing.DrawCircleFast(pos, Rng.Instance.RandF(1, 5), Colors.Highlight.SetAlpha(alpha));
         }
     }
 
@@ -884,24 +884,24 @@ public class EndlessSpaceCollision : ExampleScene
         // }
        
         
-        ShapeCircleDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, -80, -10, 12f, Colors.PcDark.ColorRgba, false, 8f);
-        ShapeCircleDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, -100, -170, 12f, Colors.PcDark.ColorRgba, false, 8f);
-        ShapeCircleDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, 170, 10, 12f, Colors.PcDark.ColorRgba, false, 8f);
+        CircleDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, -80, -10, 12f, Colors.PcDark.ColorRgba, false, 8f);
+        CircleDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, -100, -170, 12f, Colors.PcDark.ColorRgba, false, 8f);
+        CircleDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, 170, 10, 12f, Colors.PcDark.ColorRgba, false, 8f);
 
         if (minigun.ReloadF > 0f)
         {
-            ShapeCircleDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, -80, ShapeMath.LerpFloat(-80, -10, minigun.ReloadF), 4f, Colors.PcWarm.ColorRgba, false, 8f);
+            CircleDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, -80, ShapeMath.LerpFloat(-80, -10, minigun.ReloadF), 4f, Colors.PcWarm.ColorRgba, false, 8f);
         }
-        else ShapeCircleDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, -80, ShapeMath.LerpFloat(-80, -10, 1f - minigun.ClipSizeF), 4f, Colors.PcCold.ColorRgba, false, 8f);
+        else CircleDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, -80, ShapeMath.LerpFloat(-80, -10, 1f - minigun.ClipSizeF), 4f, Colors.PcCold.ColorRgba, false, 8f);
 
         if (cannon.ReloadF > 0f)
         {
-            ShapeCircleDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, -100, ShapeMath.LerpFloat(-100, -170, cannon.ReloadF), 4f, Colors.PcWarm.ColorRgba, false, 8f);
+            CircleDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, -100, ShapeMath.LerpFloat(-100, -170, cannon.ReloadF), 4f, Colors.PcWarm.ColorRgba, false, 8f);
         }
-        else ShapeCircleDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, -100, ShapeMath.LerpFloat(-100, -170, 1f - cannon.ClipSizeF), 4f, Colors.PcCold.ColorRgba, false, 8f);
+        else CircleDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, -100, ShapeMath.LerpFloat(-100, -170, 1f - cannon.ClipSizeF), 4f, Colors.PcCold.ColorRgba, false, 8f);
         
         
-        ShapeCircleDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, 170, ShapeMath.LerpFloat(170, 10, ship.HealthF), 4f, Colors.PcWarm.ColorRgba, false, 8f);
+        CircleDrawing.DrawCircleSectorLines(ship.Transform.Position, 250f, 170, ShapeMath.LerpFloat(170, 10, ship.HealthF), 4f, Colors.PcWarm.ColorRgba, false, 8f);
     }
     protected override void OnDrawGameUIExample(ScreenInfo gameUi)
     {

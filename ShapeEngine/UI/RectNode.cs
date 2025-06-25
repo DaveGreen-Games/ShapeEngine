@@ -2,7 +2,6 @@ using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.Rect;
-using ShapeEngine.StaticLib.Drawing;
 
 namespace ShapeEngine.UI;
 

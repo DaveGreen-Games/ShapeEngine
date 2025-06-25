@@ -4,10 +4,10 @@ using ShapeEngine.Color;
 using ShapeEngine.Core;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.Circle;
 using ShapeEngine.Geometry.Polygon;
 using ShapeEngine.Random;
 using ShapeEngine.StaticLib;
-using ShapeEngine.StaticLib.Drawing;
 using Size = ShapeEngine.Core.Structs.Size;
 
 namespace Examples.Scenes.ExampleScenes.PhysicsExampleSource;
@@ -44,7 +44,7 @@ public class AsteroidForceParticle(ValueRange radiusRange, float lifetime, float
         float f = timer / lifetime;
         if(reversed) f = 1f - f;
         var radius = radiusRange.Lerp(f);
-        ShapeCircleDrawing.DrawCircleLines(curPosition, radius, thickness, color.ColorRgba.SetAlpha(200), 8f);
+        CircleDrawing.DrawCircleLines(curPosition, radius, thickness, color.ColorRgba.SetAlpha(200), 8f);
     }
 }
 

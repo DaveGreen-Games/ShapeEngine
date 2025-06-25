@@ -5,9 +5,9 @@ using System.Reflection;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.Circle;
 using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.Segment;
 using ShapeEngine.Input;
 using ShapeEngine.StaticLib;
-using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Text;
 
 namespace Examples.Scenes.ExampleScenes

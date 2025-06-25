@@ -3,7 +3,6 @@ using Examples.PayloadSystem;
 using ShapeEngine.Color;
 using ShapeEngine.Geometry.Segment;
 using ShapeEngine.StaticLib;
-using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Random;
 
 namespace Examples.Scenes.ExampleScenes.EndlessSpaceExampleSource;

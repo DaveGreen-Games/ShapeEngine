@@ -5,6 +5,7 @@ using System.Reflection.Metadata.Ecma335;
 using ShapeEngine.Color;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.Circle;
 using ShapeEngine.Geometry.Line;
 using ShapeEngine.Geometry.Polygon;
@@ -16,7 +17,6 @@ using ShapeEngine.Geometry.Segment;
 using ShapeEngine.Geometry.Triangle;
 using ShapeEngine.Input;
 using ShapeEngine.StaticLib;
-using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Random;
 using Size = ShapeEngine.Core.Structs.Size;
 
@@ -1617,7 +1617,7 @@ public class ShapeIntersectionExample : ExampleScene
                 foreach (var cp in result)
                 {
                     cp.Point.Draw(12f, Colors.Cold, 16);
-                    ShapeSegmentDrawing.DrawSegment(cp.Point, cp.Point + cp.Normal * 75f, 2f, Colors.Cold, LineCapType.Capped, 4);
+                    SegmentDrawing.DrawSegment(cp.Point, cp.Point + cp.Normal * 75f, 2f, Colors.Cold, LineCapType.Capped, 4);
                 }
             }
             

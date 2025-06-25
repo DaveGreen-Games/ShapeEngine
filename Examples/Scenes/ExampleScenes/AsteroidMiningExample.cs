@@ -6,12 +6,12 @@ using ShapeEngine.Color;
 using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
+using ShapeEngine.Geometry.Circle;
 using ShapeEngine.Geometry.Polygon;
 using ShapeEngine.Geometry.Rect;
 using ShapeEngine.Geometry.Segment;
 using ShapeEngine.Geometry.Triangle;
 using ShapeEngine.Input;
-using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Random;
 namespace Examples.Scenes.ExampleScenes
 {
@@ -464,7 +464,7 @@ namespace Examples.Scenes.ExampleScenes
             if (hybernate) return;
             var c = Colors.Cold;
             shape.DrawLines(4f, c);
-            ShapeCircleDrawing.DrawCircle(tip, 8f, c);
+            CircleDrawing.DrawCircle(tip, 8f, c);
 
             if (laserEnabled && laserPoints.Count > 1)
             {
@@ -472,7 +472,7 @@ namespace Examples.Scenes.ExampleScenes
                 {
                     Segment laserSegment = new(laserPoints[i], laserPoints[i + 1]);
                     laserSegment.Draw(4f, c);
-                    ShapeCircleDrawing.DrawCircle(laserPoints[i + 1], Rng.Instance.RandF(6f, 12f), c, 12);
+                    CircleDrawing.DrawCircle(laserPoints[i + 1], Rng.Instance.RandF(6f, 12f), c, 12);
                 }
                 
             }

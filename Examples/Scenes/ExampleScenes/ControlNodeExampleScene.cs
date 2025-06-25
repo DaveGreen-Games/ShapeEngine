@@ -4,7 +4,6 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.Rect;
 using ShapeEngine.Input;
 using ShapeEngine.StaticLib;
-using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Text;
 using ShapeEngine.UI;
 

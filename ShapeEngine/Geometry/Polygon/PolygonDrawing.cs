@@ -2,9 +2,12 @@ using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.Polygon;
+using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.Segment;
+using ShapeEngine.Geometry.Triangle;
+using ShapeEngine.StaticLib;
 
-namespace ShapeEngine.StaticLib.Drawing;
+namespace ShapeEngine.Geometry.Polygon;
 
 /// <summary>
 /// Provides extension methods for drawing polygons with various styles and options.
@@ -14,7 +17,7 @@ namespace ShapeEngine.StaticLib.Drawing;
 /// including filled, outlined, cornered, and vertex-based renderings.
 /// Many methods support relative transformations and color gradients.
 /// </remarks>
-public static class ShapePolygonDrawing
+public static class PolygonDrawing
 {
     /// <summary>
     /// Draws a convex polygon filled with the specified color, using the polygon's centroid as the center.
@@ -121,7 +124,7 @@ public static class ShapePolygonDrawing
         if (poly.Count < 3) return;
         if (poly.Count == 3)
         {
-            ShapeTriangleDrawing.DrawTriangle(poly[0], poly[1], poly[2], color);
+            TriangleDrawing.DrawTriangle(poly[0], poly[1], poly[2], color);
             return;
         }
         poly.Triangulate().Draw(color);
@@ -142,8 +145,8 @@ public static class ShapePolygonDrawing
         if (poly.Count < 3) return;
 
         DrawLines(poly, lineThickness, startColorRgba, endColorRgba);
-        ShapeCircleDrawing.DrawCircle(poly[0], lineThickness * 2f, startColorRgba);
-        ShapeCircleDrawing.DrawCircle(poly[^1], lineThickness * 2f, endColorRgba);
+        CircleDrawing.DrawCircle(poly[0], lineThickness * 2f, startColorRgba);
+        CircleDrawing.DrawCircle(poly[^1], lineThickness * 2f, endColorRgba);
     }
 
     /// <summary>
@@ -174,7 +177,7 @@ public static class ShapePolygonDrawing
                 startColorRgba.B + blueStep * i,
                 startColorRgba.A + alphaStep * i
             );
-            ShapeSegmentDrawing.DrawSegment(start, end, lineThickness, finalColorRgba, capType, capPoints);
+            SegmentDrawing.DrawSegment(start, end, lineThickness, finalColorRgba, capType, capPoints);
         }
     }
 
@@ -194,7 +197,7 @@ public static class ShapePolygonDrawing
         {
             var start = poly[i];
             var end = poly[(i + 1) % poly.Count];
-            ShapeSegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
         }
     }
 
@@ -215,7 +218,7 @@ public static class ShapePolygonDrawing
         {
             var start = poly[i];
             var end = poly[(i + 1) % poly.Count];
-            ShapeSegmentDrawing.DrawSegment(start, end, lineThickness, color, sideLengthFactor,  capType, capPoints);
+            SegmentDrawing.DrawSegment(start, end, lineThickness, color, sideLengthFactor,  capType, capPoints);
         }
     }
 
@@ -238,7 +241,7 @@ public static class ShapePolygonDrawing
         {
             var start = pos + (relative[i] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
             var end = pos + (relative[(i + 1) % relative.Count] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
-            ShapeSegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
         }
     }
 
@@ -361,7 +364,7 @@ public static class ShapePolygonDrawing
     {
         foreach (var p in poly)
         {
-            ShapeCircleDrawing.DrawCircle(p, vertexRadius, color, circleSegments);
+            CircleDrawing.DrawCircle(p, vertexRadius, color, circleSegments);
         }
     }
 
@@ -386,8 +389,8 @@ public static class ShapePolygonDrawing
             var prev = poly[(i - 1) % poly.Count];
             var cur = poly[i];
             var next = poly[(i + 1) % poly.Count];
-            ShapeSegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
-            ShapeSegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
         }
     }
 
@@ -413,8 +416,8 @@ public static class ShapePolygonDrawing
             var prev = poly[(i - 1) % poly.Count];
             var cur = poly[i];
             var next = poly[(i + 1) % poly.Count];
-            ShapeSegmentDrawing.DrawSegment(cur, cur.Lerp(next, cornerF), lineThickness, color, capType, capPoints);
-            ShapeSegmentDrawing.DrawSegment(cur, cur.Lerp(prev, cornerF), lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(cur, cur.Lerp(next, cornerF), lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(cur, cur.Lerp(prev, cornerF), lineThickness, color, capType, capPoints);
         }
     }
 
@@ -435,8 +438,8 @@ public static class ShapePolygonDrawing
             var prev = poly[(i - 1) % poly.Count];
             var cur = poly[i];
             var next = poly[(i + 1) % poly.Count];
-            ShapeSegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineInfo);
-            ShapeSegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineInfo);
+            SegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineInfo);
+            SegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineInfo);
         }
     }
 
@@ -458,8 +461,8 @@ public static class ShapePolygonDrawing
             var prev = poly[(i - 1) % poly.Count];
             var cur = poly[i];
             var next = poly[(i + 1) % poly.Count];
-            ShapeSegmentDrawing.DrawSegment(cur, cur.Lerp(next, cornerF), lineInfo);
-            ShapeSegmentDrawing.DrawSegment(cur, cur.Lerp(prev, cornerF), lineInfo);
+            SegmentDrawing.DrawSegment(cur, cur.Lerp(next, cornerF), lineInfo);
+            SegmentDrawing.DrawSegment(cur, cur.Lerp(prev, cornerF), lineInfo);
         }
     }
 
@@ -482,8 +485,8 @@ public static class ShapePolygonDrawing
             var prev = poly[(i-1)%poly.Count];
             var cur = poly[i];
             var next = poly[(i+1)%poly.Count];
-            ShapeSegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
-            ShapeSegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
         }
     }
 
@@ -507,8 +510,8 @@ public static class ShapePolygonDrawing
             var prev = poly[(i - 1) % poly.Count];
             var cur = poly[i];
             var next = poly[(i + 1) % poly.Count];
-            ShapeSegmentDrawing.DrawSegment(cur, cur.Lerp(next, cornerF), lineThickness, color, capType, capPoints);
-            ShapeSegmentDrawing.DrawSegment(cur, cur.Lerp(prev, cornerF), lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(cur, cur.Lerp(next, cornerF), lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(cur, cur.Lerp(prev, cornerF), lineThickness, color, capType, capPoints);
         }
     }
 
@@ -528,8 +531,8 @@ public static class ShapePolygonDrawing
             var prev = poly[(i-1)%poly.Count];
             var cur = poly[i];
             var next = poly[(i+1)%poly.Count];
-            ShapeSegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineInfo);
-            ShapeSegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineInfo);
+            SegmentDrawing.DrawSegment(cur, cur + next.Normalize() * cornerLength, lineInfo);
+            SegmentDrawing.DrawSegment(cur, cur + prev.Normalize() * cornerLength, lineInfo);
         }
     }
 
@@ -550,8 +553,8 @@ public static class ShapePolygonDrawing
             var prev = poly[(i - 1) % poly.Count];
             var cur = poly[i];
             var next = poly[(i + 1) % poly.Count];
-            ShapeSegmentDrawing.DrawSegment(cur, cur.Lerp(next, cornerF), lineInfo);
-            ShapeSegmentDrawing.DrawSegment(cur, cur.Lerp(prev, cornerF), lineInfo);
+            SegmentDrawing.DrawSegment(cur, cur.Lerp(next, cornerF), lineInfo);
+            SegmentDrawing.DrawSegment(cur, cur.Lerp(prev, cornerF), lineInfo);
         }
     }
 
@@ -639,7 +642,7 @@ public static class ShapePolygonDrawing
         {
             var start = poly[i];
             var end = poly[(i + 1) % poly.Count];
-            ShapeSegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
+            SegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
         }
         
     }
@@ -683,7 +686,7 @@ public static class ShapePolygonDrawing
         {
             var start = pos + (relative[i] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
             var end = pos + (relative[(i + 1) % relative.Count] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
-            ShapeSegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
+            SegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
         }
         
     }

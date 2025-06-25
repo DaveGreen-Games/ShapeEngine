@@ -3,7 +3,6 @@ using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Random;
 using ShapeEngine.StaticLib;
-using ShapeEngine.StaticLib.Drawing;
 
 namespace ShapeEngine.Geometry.Segment;
 

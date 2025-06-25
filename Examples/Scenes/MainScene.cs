@@ -7,11 +7,11 @@ using Examples.Scenes.ExampleScenes;
 using Examples.UIElements;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.Rect;
 using ShapeEngine.Geometry.Segment;
 using ShapeEngine.Input;
 using ShapeEngine.Persistent;
-using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Text;
 
 namespace Examples.Scenes

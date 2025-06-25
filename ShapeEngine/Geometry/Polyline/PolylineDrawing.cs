@@ -1,9 +1,11 @@
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.Polyline;
+using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.Segment;
+using ShapeEngine.StaticLib;
 
-namespace ShapeEngine.StaticLib.Drawing;
+namespace ShapeEngine.Geometry.Polyline;
 
 /// <summary>
 /// Provides extension methods for drawing polylines with various styles, colors, and transformations.
@@ -12,7 +14,7 @@ namespace ShapeEngine.StaticLib.Drawing;
 /// This static class contains a variety of drawing utilities for <see cref="Polyline"/> objects, including support for color gradients,
 /// partial outlines, scaling, and glow effects. All methods are intended for rendering purposes and do not modify the polyline data.
 /// </remarks>
-public static class ShapePolylineDrawing
+public static class PolylineDrawing
 {
     /// <summary>
     /// Draws the polyline using a single color and specified thickness.
@@ -29,7 +31,7 @@ public static class ShapePolylineDrawing
         {
             var start = polyline[i];
             var end = polyline[i + 1];
-            ShapeSegmentDrawing.DrawSegment(start, end, thickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(start, end, thickness, color, capType, capPoints);
         }
     }
 
@@ -45,7 +47,7 @@ public static class ShapePolylineDrawing
         {
             var start = polyline[i];
             var end = polyline[i + 1];
-            ShapeSegmentDrawing.DrawSegment(start, end, lineInfo);
+            SegmentDrawing.DrawSegment(start, end, lineInfo);
         }
     }
 
@@ -68,7 +70,7 @@ public static class ShapePolylineDrawing
             var start = polyline[i];
             var end = polyline[i + 1];
             var c = colors[i % colors.Count];
-            ShapeSegmentDrawing.DrawSegment(start, end, thickness, c, capType, capPoints);
+            SegmentDrawing.DrawSegment(start, end, thickness, c, capType, capPoints);
         }
     }
 
@@ -102,7 +104,7 @@ public static class ShapePolylineDrawing
         {
             var start = pos + (relative[i] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
             var end = pos + (relative[(i + 1) % relative.Count] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
-            ShapeSegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
+            SegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
         }
     }
 
@@ -202,13 +204,13 @@ public static class ShapePolylineDrawing
             if (l < perimeterToDraw)
             {
                 perimeterToDraw -= l;
-                ShapeSegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
+                SegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
             }
             else
             {
                 float f = perimeterToDraw / l;
                 end = start.Lerp(end, f);
-                ShapeSegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
+                SegmentDrawing.DrawSegment(start, end, lineThickness, color, capType, capPoints);
                 return;
             }
         }
@@ -302,7 +304,7 @@ public static class ShapePolylineDrawing
         {
             var start = polyline[i];
             var end = polyline[(i + 1) % polyline.Count];
-            ShapeSegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
+            SegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
         }
     }
 
@@ -348,7 +350,7 @@ public static class ShapePolylineDrawing
         {
             var start = pos + (relative[i] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
             var end = pos + (relative[(i + 1) % relative.Count] * size).Rotate(rotDeg * ShapeMath.DEGTORAD);
-            ShapeSegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
+            SegmentDrawing.DrawSegment(start, end, lineInfo, sideScaleFactor, sideScaleOrigin);
         }
     }
 
@@ -393,7 +395,7 @@ public static class ShapePolylineDrawing
     {
         foreach (var p in polyline)
         {
-            ShapeCircleDrawing.DrawCircle(p, vertexRadius, color, circleSegments);
+            CircleDrawing.DrawCircle(p, vertexRadius, color, circleSegments);
         }
     }
 
@@ -426,7 +428,7 @@ public static class ShapePolylineDrawing
         {
             var start = polyline[i];
             var end = polyline[i + 1];
-            ShapeSegmentDrawing.DrawSegmentGlow(start, end, width, endWidth, color, endColorRgba, steps, capType, capPoints);
+            SegmentDrawing.DrawSegmentGlow(start, end, width, endWidth, color, endColorRgba, steps, capType, capPoints);
         }
     }
 }
