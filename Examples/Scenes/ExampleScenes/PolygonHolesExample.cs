@@ -7,6 +7,7 @@ using Clipper2Lib;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
+using ShapeEngine.Geometry.Points;
 using ShapeEngine.Geometry.Polygon;
 using ShapeEngine.Geometry.Rect;
 using ShapeEngine.Geometry.Triangle;

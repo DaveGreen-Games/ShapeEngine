@@ -1,5 +1,6 @@
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
+using ShapeEngine.Geometry.Points;
 using ShapeEngine.Geometry.Polyline;
 using ShapeEngine.Geometry.Rect;
 

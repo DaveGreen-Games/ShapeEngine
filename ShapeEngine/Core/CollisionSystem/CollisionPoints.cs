@@ -1,6 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
+using ShapeEngine.Geometry.Points;
 using ShapeEngine.StaticLib;
 using ShapeEngine.Random;
 

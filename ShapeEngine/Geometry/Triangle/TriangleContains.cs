@@ -73,7 +73,7 @@ public readonly partial struct Triangle
         return ContainsTrianglePoints(A, B, C, polygon);
     }
 
-    public bool ContainsShape(Points points)
+    public bool ContainsShape(Points.Points points)
     {
         return ContainsTrianglePoints(A, B, C, points);
     }

@@ -73,7 +73,7 @@ public readonly partial struct Quad
         return ContainsQuadPoints(A, B, C, D, polygon);
     }
 
-    public bool ContainsShape(Points points)
+    public bool ContainsShape(Points.Points points)
     {
         return ContainsQuadPoints(A, B, C, D, points);
     }

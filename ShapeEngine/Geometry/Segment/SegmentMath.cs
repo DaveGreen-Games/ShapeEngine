@@ -28,10 +28,10 @@ public readonly partial struct Segment
         return new(Start.Truncate(), End.Truncate());
     }
 
-    public Points? GetProjectedShapePoints(Vector2 v)
+    public Points.Points? GetProjectedShapePoints(Vector2 v)
     {
         if (v.LengthSquared() <= 0f) return null;
-        var points = new Points
+        var points = new Points.Points
         {
             Start,
             End,
@@ -44,7 +44,7 @@ public readonly partial struct Segment
     public Polygon.Polygon? ProjectShape(Vector2 v)
     {
         if (v.LengthSquared() <= 0f) return null;
-        var points = new Points
+        var points = new Points.Points
         {
             Start,
             End,

@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.Points;
 using ShapeEngine.Geometry.Polygon;
 using ShapeEngine.Geometry.Polyline;
 using ShapeEngine.Geometry.Rect;
@@ -261,9 +262,9 @@ public readonly partial struct Circle : IEquatable<Circle>
     /// </summary>
     /// <param name="amount">The number of random points to generate.</param>
     /// <returns>A <see cref="Points"/> collection containing the random points.</returns>
-    public Points GetRandomPoints(int amount)
+    public Points.Points GetRandomPoints(int amount)
     {
-        var points = new Points();
+        var points = new Points.Points();
         for (int i = 0; i < amount; i++)
         {
             points.Add(GetRandomPoint());
@@ -292,9 +293,9 @@ public readonly partial struct Circle : IEquatable<Circle>
     /// </summary>
     /// <param name="amount">The number of random points to generate.</param>
     /// <returns>A <see cref="Points"/> collection containing the random edge points.</returns>
-    public Points GetRandomPointsOnEdge(int amount)
+    public Points.Points GetRandomPointsOnEdge(int amount)
     {
-        var points = new Points();
+        var points = new Points.Points();
         for (int i = 0; i < amount; i++)
         {
             points.Add(GetRandomPointOnEdge());
@@ -327,10 +328,10 @@ public readonly partial struct Circle : IEquatable<Circle>
     /// </summary>
     /// <param name="count">The number of vertices to generate. Default is 16.</param>
     /// <returns>A <see cref="Points"/> collection containing the vertices of the circle.</returns>
-    public Points GetVertices(int count = 16)
+    public Points.Points GetVertices(int count = 16)
     {
         float angleStep = (MathF.PI * 2f) / count;
-        Points points = new();
+        Points.Points points = new();
         for (int i = 0; i < count; i++)
         {
             Vector2 p = Center + new Vector2(Radius, 0f).Rotate(angleStep * i);
@@ -663,7 +664,7 @@ public readonly partial struct Circle : IEquatable<Circle>
     /// <returns>
     /// A <see cref="Points"/> collection containing the interpolated edge points, or <c>null</c> if the input is invalid.
     /// </returns>
-    public Points? GetInterpolatedEdgePoints(float t, int vertexCount)
+    public Points.Points? GetInterpolatedEdgePoints(float t, int vertexCount)
     {
         if(vertexCount < 3) return null;
         
@@ -690,7 +691,7 @@ public readonly partial struct Circle : IEquatable<Circle>
     /// A <see cref="Points"/> collection containing the interpolated edge points,
     /// or <c>null</c> if the input is invalid.
     /// </returns>
-    public Points? GetInterpolatedEdgePoints(float t, int steps, int vertexCount)
+    public Points.Points? GetInterpolatedEdgePoints(float t, int steps, int vertexCount)
     {
         if(vertexCount < 3) return null;
         

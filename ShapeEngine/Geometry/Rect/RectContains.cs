@@ -73,7 +73,7 @@ public readonly partial struct Rect
         return ContainsRectPoints(TopLeft, BottomRight, polygon);
     }
 
-    public bool ContainsShape(Points points)
+    public bool ContainsShape(Points.Points points)
     {
         return ContainsRectPoints(TopLeft, BottomRight, points);
     }

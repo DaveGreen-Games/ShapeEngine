@@ -14,7 +14,7 @@ using ShapeEngine.Geometry.Segments;
 using ShapeEngine.Geometry.Triangle;
 using ShapeEngine.StaticLib;
 
-namespace ShapeEngine.Geometry;
+namespace ShapeEngine.Geometry.Points;
 
 /// <summary>
 /// Represents a collection of 2D points and provides various geometric and transformation operations.
@@ -722,12 +722,12 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
             otherIndex);
     }
     /// <summary>
-    /// Finds the closest point in this collection to the specified <see cref="Segments"/>.
+    /// Finds the closest point in this collection to the specified <see cref="other"/>.
     /// </summary>
-    /// <param name="other">The <see cref="Segments"/> to compare against.</param>
+    /// <param name="other">The <see cref="ClosestPointResult"/> to compare against.</param>
     /// <returns>A <see cref="ClosestPointResult"/> containing the closest point in this collection and the corresponding point on the segments.</returns>
     /// <remarks>
-    /// If the collection is empty, returns a default <see cref="ClosestPointResult"/>.
+    /// If the collection is empty, returns a default <see cref="Segments"/>.
     /// </remarks>
     public ClosestPointResult GetClosestPoint(Segments.Segments other)
     {

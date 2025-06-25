@@ -27,7 +27,7 @@ public class PolyShape : ShapeContainer
     /// </summary>
     /// <param name="offset">The transform offset to apply to the shape.</param>
     /// <param name="relativePoints">The points that define the polygon in local space.</param>
-    public PolyShape(Transform2D offset, Points relativePoints)
+    public PolyShape(Transform2D offset, Points.Points relativePoints)
     {
         Offset = offset;
         RelativeShape = relativePoints.ToPolygon();

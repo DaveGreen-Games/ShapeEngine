@@ -60,7 +60,7 @@ public readonly partial struct Segment : IEquatable<Segment>
 
     public Polyline.Polyline ToPolyline() { return new Polyline.Polyline() {Start, End}; }
     public Segments.Segments GetEdges() { return new Segments.Segments(){this}; }
-    public Points Inflate(float thickness, float alignement = 0.5f)
+    public Points.Points Inflate(float thickness, float alignement = 0.5f)
     {
         var dir = Dir;
         var left = dir.GetPerpendicularLeft();
@@ -90,9 +90,9 @@ public readonly partial struct Segment : IEquatable<Segment>
     #region Point & Vertext
 
     public Vector2 GetPoint(float f) { return Start.Lerp(End, f); }
-    public Points GetVertices()
+    public Points.Points GetVertices()
     {
-        var points = new Points
+        var points = new Points.Points
         {
             Start,
             End
@@ -101,9 +101,9 @@ public readonly partial struct Segment : IEquatable<Segment>
     }
 
     public Vector2 GetRandomPoint() { return this.GetPoint(Rng.Instance.RandF()); }
-    public Points GetRandomPoints(int amount)
+    public Points.Points GetRandomPoints(int amount)
     {
-        var points = new Points();
+        var points = new Points.Points();
         for (int i = 0; i < amount; i++)
         {
             points.Add(GetRandomPoint());

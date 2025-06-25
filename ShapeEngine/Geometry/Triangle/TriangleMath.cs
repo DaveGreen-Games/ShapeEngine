@@ -239,10 +239,10 @@ public readonly partial struct Triangle
 
     public Vector2 GetCentroid() => (A + B + C) / 3;
 
-    public Points? GetProjectedShapePoints(Vector2 v)
+    public Points.Points? GetProjectedShapePoints(Vector2 v)
     {
         if (v.LengthSquared() <= 0f) return null;
-        var points = new Points
+        var points = new Points.Points
         {
             A,
             B,
@@ -257,7 +257,7 @@ public readonly partial struct Triangle
     public Polygon.Polygon? ProjectShape(Vector2 v)
     {
         if (v.LengthSquared() <= 0f) return null;
-        var points = new Points
+        var points = new Points.Points
         {
             A,
             B,

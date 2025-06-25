@@ -1102,7 +1102,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     
     #region Public
     
-    public Points GetUniquePoints()
+    public Points.Points GetUniquePoints()
     {
         var uniqueVertices = new HashSet<Vector2>();
         for (var i = 0; i < Count; i++)

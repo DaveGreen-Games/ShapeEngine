@@ -26,7 +26,7 @@ public class PolyLineShape : ShapeContainer
     /// </summary>
     /// <param name="offset">The transform offset to apply to the shape.</param>
     /// <param name="relativePoints">The points that define the polyline in local space.</param>
-    public PolyLineShape(Transform2D offset, Points relativePoints)
+    public PolyLineShape(Transform2D offset, Points.Points relativePoints)
     {
         Offset = offset;
         RelativeShape = relativePoints.ToPolyline();

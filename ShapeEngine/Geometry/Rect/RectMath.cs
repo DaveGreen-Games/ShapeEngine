@@ -64,10 +64,10 @@ public readonly partial struct Rect
 
     #region Math
 
-    public Points? GetProjectedShapePoints(Vector2 v)
+    public Points.Points? GetProjectedShapePoints(Vector2 v)
     {
         if (v.LengthSquared() <= 0f) return null;
-        var points = new Points
+        var points = new Points.Points
         {
             A, B, C, D,
             A + v,
@@ -82,7 +82,7 @@ public readonly partial struct Rect
     {
         if (v.LengthSquared() <= 0f) return null;
 
-        var points = new Points
+        var points = new Points.Points
         {
             A, B, C, D,
             A + v,

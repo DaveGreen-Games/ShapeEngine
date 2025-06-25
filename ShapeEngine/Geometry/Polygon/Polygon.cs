@@ -13,7 +13,7 @@ namespace ShapeEngine.Geometry.Polygon;
 /// <summary>
 /// Points shoud be in CCW order.
 /// </summary>
-public class Polygon : Points, IEquatable<Polygon>
+public class Polygon : Points.Points, IEquatable<Polygon>
 {
     private static CollisionPoints collisionPointsReference = new(4);
     public override Polygon Copy() => new(this);
@@ -35,7 +35,7 @@ public class Polygon : Points, IEquatable<Polygon>
     /// </summary>
     /// <param name="points"></param>
     public Polygon(IEnumerable<Vector2> points) { AddRange(points); }
-    public Polygon(Points points) : base(points.Count) { AddRange(points); }
+    public Polygon(Points.Points points) : base(points.Count) { AddRange(points); }
     
     public Polygon(Polygon poly) : base(poly.Count) { AddRange(poly); }
     public Polygon(Polyline.Polyline polyLine) : base(polyLine.Count) { AddRange(polyLine); }
@@ -141,7 +141,7 @@ public class Polygon : Points, IEquatable<Polygon>
     public void RemoveColinearVertices()
     {
         if (Count < 3) return;
-        Points result = new();
+        Points.Points result = new();
         for (int i = 0; i < Count; i++)
         {
             var cur = this[i];
@@ -158,7 +158,7 @@ public class Polygon : Points, IEquatable<Polygon>
     public void RemoveDuplicates(float toleranceSquared = 0.001f)
     {
         if (Count < 3) return;
-        Points result = new();
+        Points.Points result = new();
 
         for (var i = 0; i < Count; i++)
         {
@@ -172,7 +172,7 @@ public class Polygon : Points, IEquatable<Polygon>
     public void Smooth(float amount, float baseWeight)
     {
         if (Count < 3) return;
-        Points result = new();
+        Points.Points result = new();
         var centroid = GetCentroid();
         for (int i = 0; i < Count; i++)
         {
@@ -211,9 +211,9 @@ public class Polygon : Points, IEquatable<Polygon>
         return (new Transform2D(pos, 0f, new Size(size, 0f), 1f), relativeShape);
     }
 
-    public Points ToRelativePoints(Transform2D transform)
+    public Points.Points ToRelativePoints(Transform2D transform)
     {
-        var points = new Points(Count);
+        var points = new Points.Points(Count);
         for (int i = 0; i < Count; i++)
         {
             var p = transform.RevertPosition(this[i]);
@@ -365,11 +365,11 @@ public class Polygon : Points, IEquatable<Polygon>
     
     #region Math
 
-    public Points? GetProjectedShapePoints(Vector2 v)
+    public Points.Points? GetProjectedShapePoints(Vector2 v)
     {
         if (v.LengthSquared() <= 0f) return null;
         
-        var points = new Points(Count);
+        var points = new Points.Points(Count);
         for (var i = 0; i < Count; i++)
         {
             points.Add(this[i]);
@@ -382,7 +382,7 @@ public class Polygon : Points, IEquatable<Polygon>
     {
         if (v.LengthSquared() <= 0f) return null;
         
-        var points = new Points(Count);
+        var points = new Points.Points(Count);
         for (var i = 0; i < Count; i++)
         {
             points.Add(this[i]);
@@ -509,7 +509,7 @@ public class Polygon : Points, IEquatable<Polygon>
         return true;
     }
 
-    public Points ToPoints()
+    public Points.Points ToPoints()
     {
         return new(this);
     }
@@ -947,7 +947,7 @@ public class Polygon : Points, IEquatable<Polygon>
         var item = Rng.Instance.PickRandomItem(items.ToArray());
         return item.GetRandomPointInside();
     }
-    public Points GetRandomPointsInside(int amount)
+    public Points.Points GetRandomPointsInside(int amount)
     {
         var triangles = Triangulate();
         WeightedItem<Triangle.Triangle>[] items = new WeightedItem<Triangle.Triangle>[triangles.Count];
@@ -959,7 +959,7 @@ public class Polygon : Points, IEquatable<Polygon>
 
 
         List<Triangle.Triangle> pickedTriangles = Rng.Instance.PickRandomItems(amount, items);
-        Points randomPoints = new();
+        Points.Points randomPoints = new();
         foreach (var tri in pickedTriangles) randomPoints.Add(tri.GetRandomPointInside());
 
         return randomPoints;
@@ -967,7 +967,7 @@ public class Polygon : Points, IEquatable<Polygon>
     public Vector2 GetRandomVertex() { return Rng.Instance.RandCollection(this); }
     public Segment.Segment GetRandomEdge() => GetEdges().GetRandomSegment();
     public Vector2 GetRandomPointOnEdge() => GetRandomEdge().GetRandomPoint();
-    public Points GetRandomPointsOnEdge(int amount) => GetEdges().GetRandomPoints(amount);
+    public Points.Points GetRandomPointsOnEdge(int amount) => GetEdges().GetRandomPoints(amount);
     public Vector2 GetRandomPointConvex()
     {
         var edges = GetEdges();
@@ -1177,7 +1177,7 @@ public class Polygon : Points, IEquatable<Polygon>
 
     
     
-    public static Polygon GetShape(Points relative, Transform2D transform)
+    public static Polygon GetShape(Points.Points relative, Transform2D transform)
     {
         if (relative.Count < 3) return new();
         Polygon shape = new();
@@ -2139,7 +2139,7 @@ public class Polygon : Points, IEquatable<Polygon>
     {
         return ContainsPoints(this, a, b, c, d);
     }
-    public bool ContainsPoints(Points points)
+    public bool ContainsPoints(Points.Points points)
     {
         return ContainsPoints(this, points);
     }
@@ -3077,7 +3077,7 @@ public class Polygon : Points, IEquatable<Polygon>
     //https://www.youtube.com/watch?v=YNyULRrydVI -> coding train
     //https://en.wikipedia.org/wiki/Gift_wrapping_algorithm -> wiki
     public static Polygon FindConvexHull(List<Vector2> points) => ConvexHull_JarvisMarch(points);
-    public static Polygon FindConvexHull(Points points) => ConvexHull_JarvisMarch(points);
+    public static Polygon FindConvexHull(Points.Points points) => ConvexHull_JarvisMarch(points);
     public static Polygon FindConvexHull(params Vector2[] points) => ConvexHull_JarvisMarch(points.ToList());
     public static Polygon FindConvexHull(Polygon points) => ConvexHull_JarvisMarch(points);
     public static Polygon FindConvexHull(params Polygon[] shapes)

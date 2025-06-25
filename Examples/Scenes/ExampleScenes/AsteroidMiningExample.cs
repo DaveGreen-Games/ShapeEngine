@@ -7,6 +7,7 @@ using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.Points;
 using ShapeEngine.Geometry.Polygon;
 using ShapeEngine.Geometry.Rect;
 using ShapeEngine.Geometry.Segment;

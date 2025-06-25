@@ -1,6 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.Points;
 using ShapeEngine.Geometry.Polygon;
 using ShapeEngine.Geometry.Polyline;
 using ShapeEngine.Geometry.Quad;
@@ -262,7 +263,7 @@ public static class GappedDrawing
     /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the outline is drawn solid.
     /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no outline is drawn.
     /// </remarks>
-    public static float DrawGappedOutline(this Points shapePoints, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
+    public static float DrawGappedOutline(this Points.Points shapePoints, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
     {
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
         {

@@ -119,7 +119,7 @@ public readonly partial struct Quad : IEquatable<Quad>
     public Segments.Segments GetEdges() => new() { SegmentAToB, SegmentBToC, SegmentCToD, SegmentDToA };
 
     public Polygon.Polygon ToPolygon() => new() { A, B, C, D };
-    public Points ToPoints() => new() { A, B, C, D };
+    public Points.Points ToPoints() => new() { A, B, C, D };
     public Polyline.Polyline ToPolyline() => new() { A, B, C, D };
     public Triangulation Triangulate()
     {
@@ -159,9 +159,9 @@ public readonly partial struct Quad : IEquatable<Quad>
     }
 
     public Vector2 GetRandomPointInside() => GetPoint(Rng.Instance.RandF(), Rng.Instance.RandF());
-    public Points GetRandomPointsInside(int amount)
+    public Points.Points GetRandomPointsInside(int amount)
     {
-        var points = new Points();
+        var points = new Points.Points();
         for (int i = 0; i < amount; i++)
         {
             points.Add(GetRandomPointInside());
@@ -172,9 +172,9 @@ public readonly partial struct Quad : IEquatable<Quad>
     public Vector2 GetRandomVertex() => GetVertex(Rng.Instance.RandI(0, 3));
     public Segment.Segment GetRandomEdge()  => GetEdge(Rng.Instance.RandI(0, 3));
     public Vector2 GetRandomPointOnEdge() => GetRandomEdge().GetRandomPoint();
-    public Points GetRandomPointsOnEdge(int amount)
+    public Points.Points GetRandomPointsOnEdge(int amount)
     {
-        var points = new Points();
+        var points = new Points.Points();
 
         var ab = SegmentAToB;
         var bc = SegmentBToC;
@@ -323,16 +323,16 @@ public readonly partial struct Quad : IEquatable<Quad>
     #region Interpolated Edge Points
 
     
-    public Points? GetInterpolatedEdgePoints(float t)
+    public Points.Points? GetInterpolatedEdgePoints(float t)
     {
         var a1 = A.Lerp(B, t);
         var b1 = B.Lerp(C, t);
         var c1 = C.Lerp(D, t);
         var d1 = D.Lerp(A, t);
         
-        return new Points(4){a1, b1, c1, d1};
+        return new Points.Points(4){a1, b1, c1, d1};
     }
-    public Points? GetInterpolatedEdgePoints(float t, int steps)
+    public Points.Points? GetInterpolatedEdgePoints(float t, int steps)
     {
         if(steps <= 1) return GetInterpolatedEdgePoints(t);
         
@@ -356,7 +356,7 @@ public readonly partial struct Quad : IEquatable<Quad>
             remainingSteps--;
         }
         
-        return new Points(4){a1, b1, c1, d1};
+        return new Points.Points(4){a1, b1, c1, d1};
     }
     
     #endregion

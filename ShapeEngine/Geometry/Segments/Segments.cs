@@ -38,7 +38,7 @@ public partial class Segments : ShapeList<Segment.Segment>
         return this[i];
     }
     
-    public Points GetUniquePoints()
+    public Points.Points GetUniquePoints()
     {
         var uniqueVertices = new HashSet<Vector2>();
         for (int i = 0; i < Count; i++)
@@ -73,7 +73,7 @@ public partial class Segments : ShapeList<Segment.Segment>
         return Rng.Instance.PickRandomItem(items);
     }
     public Vector2 GetRandomPoint() => GetRandomSegment().GetRandomPoint();
-    public Points GetRandomPoints(int amount)
+    public Points.Points GetRandomPoints(int amount)
     {
         var items = new WeightedItem<Segment.Segment>[Count];
         for (var i = 0; i < Count; i++)
@@ -82,7 +82,7 @@ public partial class Segments : ShapeList<Segment.Segment>
             items[i] = new(seg, (int)seg.LengthSquared);
         }
         var pickedSegments = Rng.Instance.PickRandomItems(amount, items);
-        var randomPoints = new Points();
+        var randomPoints = new Points.Points();
         foreach (var seg in pickedSegments)
         {
             randomPoints.Add(seg.GetRandomPoint());

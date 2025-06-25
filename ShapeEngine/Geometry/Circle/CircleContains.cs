@@ -213,7 +213,7 @@ public readonly partial struct Circle
     /// </summary>
     /// <param name="points">The points to check.</param>
     /// <returns><c>true</c> if all points are inside the circle; otherwise, <c>false</c>.</returns>
-    public bool ContainsShape(Points points)
+    public bool ContainsShape(Points.Points points)
     {
         return ContainsCirclePoints(Center, Radius, points);
     }
