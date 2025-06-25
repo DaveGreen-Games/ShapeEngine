@@ -1,5 +1,5 @@
-using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.CollisionSystem;
 
 namespace ShapeEngine.Geometry.Quad;
 

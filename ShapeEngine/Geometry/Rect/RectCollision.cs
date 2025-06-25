@@ -1,6 +1,6 @@
 using System.Numerics;
-using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.Rect;

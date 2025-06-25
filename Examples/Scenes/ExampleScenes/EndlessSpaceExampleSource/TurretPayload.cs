@@ -1,10 +1,10 @@
 using System.Numerics;
 using Examples.PayloadSystem;
 using Raylib_cs;
-using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.Segment;
 using ShapeEngine.StaticLib;
 

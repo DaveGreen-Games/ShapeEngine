@@ -1,10 +1,10 @@
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
-using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.Triangle;
 using ShapeEngine.Input;
 using ShapeEngine.StaticLib;

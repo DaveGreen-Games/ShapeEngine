@@ -1,5 +1,5 @@
-using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.Polygon;
 using ShapeEngine.Geometry.Polyline;
 using ShapeEngine.Geometry.Quad;

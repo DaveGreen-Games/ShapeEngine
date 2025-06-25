@@ -1,8 +1,8 @@
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
-using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.Polygon;
 using ShapeEngine.Geometry.Triangle;
 using ShapeEngine.Input;

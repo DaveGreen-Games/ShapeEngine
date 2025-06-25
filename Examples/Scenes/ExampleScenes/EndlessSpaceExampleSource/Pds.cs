@@ -1,7 +1,7 @@
 using System.Numerics;
 using Examples.PayloadSystem;
-using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.Rect;
 using ShapeEngine.StaticLib;
 

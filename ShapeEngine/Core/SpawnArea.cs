@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using ShapeEngine.Color;
-using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.Rect;
 
 namespace ShapeEngine.Core

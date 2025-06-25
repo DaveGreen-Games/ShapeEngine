@@ -1,9 +1,9 @@
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
-using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
+using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.Ray;
 using ShapeEngine.Geometry.Segment;
 using ShapeEngine.Input;

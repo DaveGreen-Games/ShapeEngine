@@ -1,6 +1,6 @@
 using System.Numerics;
-using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.Line;
 using ShapeEngine.Geometry.Polygon;
 using ShapeEngine.Geometry.Polyline;

@@ -1,5 +1,5 @@
 using System.Numerics;
-using ShapeEngine.Core.CollisionSystem;
+using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.Ray;

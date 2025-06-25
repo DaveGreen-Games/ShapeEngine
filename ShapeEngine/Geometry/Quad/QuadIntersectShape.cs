@@ -1,4 +1,4 @@
-using ShapeEngine.Core.CollisionSystem;
+using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.Segment;
 
 namespace ShapeEngine.Geometry.Quad;

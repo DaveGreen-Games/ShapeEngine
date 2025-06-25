@@ -3,10 +3,10 @@ using ShapeEngine.StaticLib;
 using System.Numerics;
 using System.Text;
 using ShapeEngine.Color;
-using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.Points;
 using ShapeEngine.Geometry.Polygon;
 using ShapeEngine.Geometry.Rect;
@@ -283,7 +283,7 @@ namespace Examples.Scenes.ExampleScenes
         public override Rect GetBoundingBox() { return collider.GetBoundingBox(); }
     }
 
-    public class AsteroidCollider : PolyCollider
+    public class AsteroidCollider : PolygonCollider
     {
         public AsteroidCollider(Transform2D offset, Polygon relativeShape) : base(offset, relativeShape)
         {

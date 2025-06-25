@@ -3,7 +3,6 @@ using Examples.Scenes.ExampleScenes.PhysicsExampleSource;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
-using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.Rect;

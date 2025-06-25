@@ -1,5 +1,4 @@
 ﻿using System.Numerics;
-using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.Segment;
 using ShapeEngine.Random;

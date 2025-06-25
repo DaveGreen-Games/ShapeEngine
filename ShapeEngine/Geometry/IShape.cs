@@ -1,0 +1,80 @@
+using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.Line;
+using ShapeEngine.Geometry.Polygon;
+using ShapeEngine.Geometry.Polyline;
+using ShapeEngine.Geometry.Quad;
+using ShapeEngine.Geometry.Ray;
+using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.Segment;
+using ShapeEngine.Geometry.Triangle;
+
+namespace ShapeEngine.Geometry;
+
+/// <summary>
+/// Interface for all shape types used in the collision system.
+/// </summary>
+/// <remarks>
+/// Provides a unified API for retrieving specific shape representations for collision detection and geometric operations.
+/// </remarks>
+public interface IShape
+{
+    /// <summary>
+    /// Gets the type of the shape.
+    /// </summary>
+    /// <returns>The <see cref="ShapeType"/> of this shape.</returns>
+    ShapeType GetShapeType();
+
+    /// <summary>
+    /// Gets the shape as a <see cref="Ray"/>.
+    /// </summary>
+    /// <returns>A <see cref="Ray"/> representation of the shape.</returns>
+    Ray.Ray GetRayShape();
+
+    /// <summary>
+    /// Gets the shape as a <see cref="Line"/>.
+    /// </summary>
+    /// <returns>A <see cref="Line"/> representation of the shape.</returns>
+    Line.Line GetLineShape();
+
+    /// <summary>
+    /// Gets the shape as a <see cref="Segment"/>.
+    /// </summary>
+    /// <returns>A <see cref="Segment"/> representation of the shape.</returns>
+    Segment.Segment GetSegmentShape();
+
+    /// <summary>
+    /// Gets the shape as a <see cref="Circle"/>.
+    /// </summary>
+    /// <returns>A <see cref="Circle"/> representation of the shape.</returns>
+    Circle.Circle GetCircleShape();
+
+    /// <summary>
+    /// Gets the shape as a <see cref="Triangle"/>.
+    /// </summary>
+    /// <returns>A <see cref="Triangle"/> representation of the shape.</returns>
+    Triangle.Triangle GetTriangleShape();
+
+    /// <summary>
+    /// Gets the shape as a <see cref="Quad"/>.
+    /// </summary>
+    /// <returns>A <see cref="Quad"/> representation of the shape.</returns>
+    Quad.Quad GetQuadShape();
+
+    /// <summary>
+    /// Gets the shape as a <see cref="Rect"/>.
+    /// </summary>
+    /// <returns>A <see cref="Rect"/> representation of the shape.</returns>
+    Rect.Rect GetRectShape();
+
+    /// <summary>
+    /// Gets the shape as a <see cref="Polygon"/>.
+    /// </summary>
+    /// <returns>A <see cref="Polygon"/> representation of the shape.</returns>
+    Polygon.Polygon GetPolygonShape();
+
+    /// <summary>
+    /// Gets the shape as a <see cref="Polyline"/>.
+    /// </summary>
+    /// <returns>A <see cref="Polyline"/> representation of the shape.</returns>
+    Polyline.Polyline GetPolylineShape();
+}
