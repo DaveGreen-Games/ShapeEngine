@@ -1,0 +1,80 @@
+using System.Numerics;
+using ShapeEngine.Core.CollisionSystem;
+
+namespace ShapeEngine.Geometry.Rect;
+
+public readonly partial struct Rect
+{
+    public bool ContainsPoint(Vector2 p) => ContainsRectPoint(TopLeft, BottomRight, p);
+    public bool ContainsPoints(Vector2 u, Vector2 v) => ContainsRectPoints(TopLeft, BottomRight, u, v);
+    public bool ContainsPoints(Vector2 u, Vector2 v, Vector2 w) => ContainsRectPoints(TopLeft, BottomRight, u, v, w);
+    public bool ContainsPoints(Vector2 u, Vector2 v, Vector2 w, Vector2 x) => ContainsRectPoints(TopLeft, BottomRight, u, v, w, x);
+    public bool ContainsPoints(List<Vector2> points) => ContainsRectPoints(TopLeft, BottomRight, points);
+
+    public bool ContainsCollisionObject(CollisionObject collisionObject)
+    {
+        if (!collisionObject.HasColliders) return false;
+        foreach (var collider in collisionObject.Colliders)
+        {
+            if (!ContainsCollider(collider)) return false;
+        }
+
+        return true;
+    }
+
+    public bool ContainsCollider(Collider collider)
+    {
+        switch (collider.GetShapeType())
+        {
+            case ShapeType.Circle: return ContainsShape(collider.GetCircleShape());
+            case ShapeType.Segment: return ContainsShape(collider.GetSegmentShape());
+            case ShapeType.Triangle: return ContainsShape(collider.GetTriangleShape());
+            case ShapeType.Quad: return ContainsShape(collider.GetQuadShape());
+            case ShapeType.Rect: return ContainsShape(collider.GetRectShape());
+            case ShapeType.Poly: return ContainsShape(collider.GetPolygonShape());
+            case ShapeType.PolyLine: return ContainsShape(collider.GetPolylineShape());
+        }
+
+        return false;
+    }
+
+    public bool ContainsShape(Segment.Segment segment)
+    {
+        return ContainsRectPoints(TopLeft, BottomRight, segment.Start, segment.End);
+    }
+
+    public bool ContainsShape(Circle.Circle circle)
+    {
+        return ContainsRectCircle(TopLeft, BottomRight, circle.Center, circle.Radius);
+    }
+
+    public bool ContainsShape(Rect rect)
+    {
+        return ContainsRectRect(TopLeft, BottomRight, rect.TopLeft, rect.BottomRight);
+    }
+
+    public bool ContainsShape(Triangle.Triangle triangle)
+    {
+        return ContainsRectPoints(TopLeft, BottomRight, triangle.A, triangle.B, triangle.C);
+    }
+
+    public bool ContainsShape(Quad.Quad quad)
+    {
+        return ContainsRectPoints(TopLeft, BottomRight, quad.A, quad.B, quad.C, quad.D);
+    }
+
+    public bool ContainsShape(Polyline.Polyline polyline)
+    {
+        return ContainsRectPoints(TopLeft, BottomRight, polyline);
+    }
+
+    public bool ContainsShape(Polygon.Polygon polygon)
+    {
+        return ContainsRectPoints(TopLeft, BottomRight, polygon);
+    }
+
+    public bool ContainsShape(Points points)
+    {
+        return ContainsRectPoints(TopLeft, BottomRight, points);
+    }
+}
