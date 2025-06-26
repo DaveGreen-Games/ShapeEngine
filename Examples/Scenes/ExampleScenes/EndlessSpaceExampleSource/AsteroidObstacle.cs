@@ -1,11 +1,15 @@
 using System.Numerics;
 using ShapeEngine.Core;
-using ShapeEngine.Core.CollisionSystem;
-using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry;
+using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.CollisionSystem;
+using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.StaticLib;
 using ShapeEngine.Random;
-using ShapeEngine.StaticLib.Drawing;
+
 namespace Examples.Scenes.ExampleScenes.EndlessSpaceExampleSource;
 
 internal class AsteroidObstacle : CollisionObject
@@ -17,7 +21,7 @@ internal class AsteroidObstacle : CollisionObject
     private static readonly GappedOutlineDrawingInfo SmallAsteroidGappedOutlineInfo = new GappedOutlineDrawingInfo(2, 0f, 0.75f);
     
     
-    private PolyCollider collider;
+    private PolygonCollider collider;
     public Triangulation Triangulation;
     private Rect bb;
 
@@ -64,7 +68,7 @@ internal class AsteroidObstacle : CollisionObject
         chaseStrength = ShapeMath.LerpFloat(0.5f, 1f, EndlessSpaceCollision.DifficultyFactor);
         if (!big) Velocity *= 3f;
         
-        collider = new PolyCollider(new(0f), relativeShape);
+        collider = new PolygonCollider(new(0f), relativeShape);
         collider.ComputeCollision = false;
         collider.ComputeIntersections = false;
         collider.CollisionLayer = CollisionLayer;

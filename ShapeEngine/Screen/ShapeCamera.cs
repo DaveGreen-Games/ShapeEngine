@@ -4,7 +4,7 @@ using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.StaticLib;
 using ShapeEngine.Timing;
-using ShapeEngine.Core.Shapes;
+using ShapeEngine.Geometry.RectDef;
 
 namespace ShapeEngine.Screen;
 

@@ -2,12 +2,12 @@ using System.Drawing;
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
-using ShapeEngine.Core.CollisionSystem;
-using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.CollisionSystem;
+using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Random;
 using ShapeEngine.StaticLib;
-using ShapeEngine.StaticLib.Drawing;
 using Size = ShapeEngine.Core.Structs.Size;
 
 namespace Examples.Scenes.ExampleScenes.PhysicsExampleSource;
@@ -44,7 +44,7 @@ public class AsteroidForceParticle(ValueRange radiusRange, float lifetime, float
         float f = timer / lifetime;
         if(reversed) f = 1f - f;
         var radius = radiusRange.Lerp(f);
-        ShapeCircleDrawing.DrawCircleLines(curPosition, radius, thickness, color.ColorRgba.SetAlpha(200), 8f);
+        CircleDrawing.DrawCircleLines(curPosition, radius, thickness, color.ColorRgba.SetAlpha(200), 8f);
     }
 }
 
@@ -60,7 +60,7 @@ public class Asteroid : CollisionObject
     );
     
     private readonly PaletteColor paletteColor;
-    private readonly PolyCollider collider;
+    private readonly PolygonCollider collider;
     public readonly AsteroidType AsteroidType;
     public float AttractionForce;
     private float tempAttractionForce = 0f;
@@ -84,7 +84,7 @@ public class Asteroid : CollisionObject
         Transform = new Transform2D(position, 0f, new Size(randSize), 1f);
         paletteColor = color;
         var relativePoints = Polygon.GenerateRelative(15, 0.4f, 1f);
-        collider = new PolyCollider(new(), relativePoints);
+        collider = new PolygonCollider(new(), relativePoints);
         collider.ComputeCollision = true;
         collider.ComputeIntersections = true;
         collider.CollisionLayer = (uint)CollisionLayers.Asteroid;

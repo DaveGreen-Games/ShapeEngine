@@ -1,6 +1,6 @@
 ﻿
 using System.Numerics;
-using ShapeEngine.Core.Shapes;
+using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Input;
 using ShapeEngine.Text;
 

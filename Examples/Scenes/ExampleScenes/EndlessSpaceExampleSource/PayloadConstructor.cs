@@ -1,6 +1,6 @@
 using Examples.PayloadSystem;
-using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.CollisionSystem;
 
 namespace Examples.Scenes.ExampleScenes.EndlessSpaceExampleSource;
 

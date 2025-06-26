@@ -1,6 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Color;
-using ShapeEngine.StaticLib.Drawing;
+using ShapeEngine.Geometry.SegmentDef;
 
 namespace ShapeEngine.Text;
 
@@ -61,6 +61,6 @@ public struct Caret
     public void Draw(Vector2 top, float height)
     {
         var bottom = top + new Vector2(0f, height);
-        ShapeSegmentDrawing.DrawSegment(top, bottom, WidthRelative * height, Color);
+        SegmentDrawing.DrawSegment(top, bottom, WidthRelative * height, Color);
     }
 }

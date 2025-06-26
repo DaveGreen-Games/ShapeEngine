@@ -1,5 +1,5 @@
 ﻿using ShapeEngine.Color;
-using ShapeEngine.Core.Shapes;
+using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Text;
 
 namespace ShapeEngine.Achievements;

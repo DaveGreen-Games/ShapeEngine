@@ -1,8 +1,8 @@
 using System.Numerics;
-using ShapeEngine.Core.Shapes;
+using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.StaticLib;
 using ShapeEngine.Random;
-using ShapeEngine.StaticLib.Drawing;
+
 namespace Examples.Scenes.ExampleScenes.EndlessSpaceExampleSource;
 
 internal class AsteroidShard

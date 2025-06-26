@@ -1,7 +1,7 @@
 using System.Numerics;
-using ShapeEngine.Core.Interfaces;
-using ShapeEngine.Core.Shapes;
+using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Screen;

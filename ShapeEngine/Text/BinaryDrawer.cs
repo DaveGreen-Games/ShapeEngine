@@ -1,8 +1,7 @@
 using ShapeEngine.Color;
-using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.StaticLib;
-using ShapeEngine.StaticLib.Drawing;
 
 namespace ShapeEngine.Text;
 

@@ -5,11 +5,10 @@ using ShapeEngine.Random;
 using ShapeEngine.Screen;
 using System.Numerics;
 using ShapeEngine.Color;
-using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Core.Shapes;
+using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Input;
-using ShapeEngine.StaticLib.Drawing;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -213,10 +212,10 @@ namespace Examples.Scenes.ExampleScenes
                 var outlineColor = Selected ? outlineColorActive : outlineColorInactive;
                 var hullColor = Selected ? hullColorActive : hullColorInactive;
                 var cockpitColor = Selected ? cockpitColorActive : cockpitColorInactive;
-                ShapeCircleDrawing.DrawCircle(hull.Center - rightThruster * hull.Radius, hull.Radius / 6, outlineColor.ColorRgba, 12);
-                ShapeCircleDrawing.DrawCircle(hull.Center - leftThruster * hull.Radius, hull.Radius / 6, outlineColor.ColorRgba, 12);
+                CircleDrawing.DrawCircle(hull.Center - rightThruster * hull.Radius, hull.Radius / 6, outlineColor.ColorRgba, 12);
+                CircleDrawing.DrawCircle(hull.Center - leftThruster * hull.Radius, hull.Radius / 6, outlineColor.ColorRgba, 12);
                 hull.Draw(hullColor.ColorRgba);
-                ShapeCircleDrawing.DrawCircle(hull.Center + movementDir * hull.Radius * 0.66f, hull.Radius * 0.33f, cockpitColor.ColorRgba, 12);
+                CircleDrawing.DrawCircle(hull.Center + movementDir * hull.Radius * 0.66f, hull.Radius * 0.33f, cockpitColor.ColorRgba, 12);
 
                 hull.DrawLines(4f, outlineColor.ColorRgba);
 

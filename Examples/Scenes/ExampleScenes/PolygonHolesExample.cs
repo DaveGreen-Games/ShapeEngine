@@ -5,10 +5,13 @@ using System.Numerics;
 using System.Text;
 using Clipper2Lib;
 using ShapeEngine.Color;
-using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry;
+using ShapeEngine.Geometry.PointsDef;
+using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.Input;
-using ShapeEngine.StaticLib.Drawing;
 using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes;

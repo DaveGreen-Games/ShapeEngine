@@ -4,11 +4,14 @@ using ShapeEngine.StaticLib;
 using System.Numerics;
 using System.Text;
 using ShapeEngine.Color;
-using ShapeEngine.Core.CollisionSystem;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Core.Shapes;
+using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.CollisionSystem;
+using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.SegmentDef;
+using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.Input;
-using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Random;
 namespace Examples.Scenes.ExampleScenes
 {
@@ -30,10 +33,10 @@ namespace Examples.Scenes.ExampleScenes
     }
     internal class PolyWall : CollisionObject
     {
-        private readonly PolyCollider polyCollider;
+        private readonly PolygonCollider polyCollider;
         public PolyWall(Vector2 start, Vector2 end) : base((start + end) / 2)
         {
-            var col = new PolyCollider(new(),new Segment(start, end), 40f, 0.5f);
+            var col = new PolygonCollider(new(),new Segment(start, end), 40f, 0.5f);
             col.ComputeCollision = false;
             col.ComputeIntersections = false;
             col.Enabled = true;
@@ -65,10 +68,10 @@ namespace Examples.Scenes.ExampleScenes
     }
     internal class BoundaryWall : CollisionObject
     {
-        private PolyCollider polyCollider;
+        private PolygonCollider polyCollider;
         public BoundaryWall(Vector2 start, Vector2 end)
         {
-            var col = new PolyCollider(new(),new Segment(start, end), 40f, 0.5f);
+            var col = new PolygonCollider(new(),new Segment(start, end), 40f, 0.5f);
             col.ComputeCollision = false;
             col.ComputeIntersections = false;
             col.Enabled = true;
@@ -390,14 +393,14 @@ namespace Examples.Scenes.ExampleScenes
     {
         private const float Size = 50f;
         
-        private PolyCollider polyCollider;
+        private PolygonCollider polyCollider;
         private float rotationSpeedRad;
         private bool leftGameArea = false;
         private Rect boundingBox;
         public Rock(Vector2 pos) : base(new Transform2D(pos, 0f, new Size(Size, 0f), 1f))
         {
             var shape = Polygon.GenerateRelative(6, 0.5f, 1f);
-            var col = new PolyCollider(new(), shape);
+            var col = new PolygonCollider(new(), shape);
             col.ComputeCollision = true;
             col.ComputeIntersections = true;
             col.Enabled = true;
@@ -992,7 +995,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             if (segmentStarted)
             {
-                ShapeCircleDrawing.DrawCircle(startPoint, 15f, Colors.Highlight);
+                CircleDrawing.DrawCircle(startPoint, 15f, Colors.Highlight);
                 Segment s = new(startPoint, mousePos);
                 s.Draw(4, Colors.Highlight);
 

@@ -1,6 +1,5 @@
 using System.Numerics;
-using ShapeEngine.Core.Shapes;
-using ShapeEngine.StaticLib;
+using ShapeEngine.Geometry.RectDef;
 
 namespace Examples.PayloadSystem;
 

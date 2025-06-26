@@ -1,7 +1,7 @@
 ﻿
 using System.Numerics;
-using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Input;
 using ShapeEngine.Text;
 

@@ -1,9 +1,10 @@
 using System.Numerics;
-using ShapeEngine.Core.CollisionSystem;
-using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry;
+using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.CollisionSystem;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.StaticLib;
-using ShapeEngine.StaticLib.Drawing;
 
 namespace Examples.Scenes.ExampleScenes.EndlessSpaceExampleSource;
 
@@ -37,7 +38,7 @@ internal class Penetrator : ExplosivePayload
         {
             var w = ShapeMath.LerpFloat(1f, 18f, TravelF);
             var c = Colors.PcMedium.ColorRgba.Lerp(Colors.PcWarm.ColorRgba, TravelF);
-            ShapeSegmentDrawing.DrawSegment(StartLocation, TargetLocation, w, c, LineCapType.Capped, 8);
+            SegmentDrawing.DrawSegment(StartLocation, TargetLocation, w, c, LineCapType.Capped, 8);
             // ShapeDrawing.DrawLineGlow(StartLocation, TargetLocation, 4f, 12f, Colors.PcWarm.ColorRgba, Colors.PcWarm.ColorRgba, 12, LineCapType.Capped, 8);
         }
     }
@@ -49,7 +50,7 @@ internal class Penetrator : ExplosivePayload
             var f = 1f - (SmokeTimer / Info.SmokeDuration);
             var color = Colors.PcWarm.ColorRgba.Lerp(Colors.PcMedium.ColorRgba.SetAlpha(50), f);
             var size = Info.Radius; // ShapeMath.LerpFloat(Info.Radius * 0.5f, Info.Radius * 3f, f);
-            ShapeCircleDrawing.DrawCircle(CurPosition, size, color, 24);
+            CircleDrawing.DrawCircle(CurPosition, size, color, 24);
             // ShapeDrawing.DrawCircle(CurPosition, Info.Radius * 0.05f , color, 18);
         }
 

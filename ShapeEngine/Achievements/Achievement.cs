@@ -1,7 +1,7 @@
 using ShapeEngine.Color;
-using ShapeEngine.Core.Shapes;
+using ShapeEngine.Geometry;
+using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.StaticLib;
-using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Text;
 
 namespace ShapeEngine.Achievements;

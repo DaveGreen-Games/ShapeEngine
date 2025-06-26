@@ -1,4 +1,5 @@
 using System.Numerics;
+using ShapeEngine.Geometry.CollisionSystem;
 
 namespace ShapeEngine.Core.Structs;
 

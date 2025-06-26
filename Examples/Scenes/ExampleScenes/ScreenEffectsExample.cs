@@ -5,11 +5,10 @@ using ShapeEngine.StaticLib;
 using ShapeEngine.Random;
 using ShapeEngine.Screen;
 using ShapeEngine.Color;
-using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Core.Shapes;
+using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Input;
-using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Text;
 
 namespace Examples.Scenes.ExampleScenes
@@ -29,9 +28,9 @@ namespace Examples.Scenes.ExampleScenes
             var color = Colors.Dark; // new ColorRgba(System.Drawing.Color.DarkGray);
             if (circle.Radius > 2f && circle.Radius <= 3f) color = Colors.Dark.ChangeBrightness(0.025f); // new(System.Drawing.Color.LightGray);
             else if (circle.Radius > 3f) color = Colors.Dark.ChangeBrightness(0.05f); // new(System.Drawing.Color.AntiqueWhite);
-            ShapeCircleDrawing.DrawCircleFast(circle.Center, circle.Radius, color);
+            CircleDrawing.DrawCircleFast(circle.Center, circle.Radius, color);
         }
-        public void Draw(ColorRgba c) => ShapeCircleDrawing.DrawCircleFast(circle.Center, circle.Radius, c);
+        public void Draw(ColorRgba c) => CircleDrawing.DrawCircleFast(circle.Center, circle.Radius, c);
     }
     internal class Comet
     {
@@ -229,10 +228,10 @@ namespace Examples.Scenes.ExampleScenes
         {
             var rightThruster = movementDir.RotateDeg(-25);
             var leftThruster = movementDir.RotateDeg(25);
-            ShapeCircleDrawing.DrawCircle(Hull.Center - rightThruster * Hull.Radius, Hull.Radius / 6, outlineColor.ColorRgba, 12);
-            ShapeCircleDrawing.DrawCircle(Hull.Center - leftThruster * Hull.Radius, Hull.Radius / 6, outlineColor.ColorRgba, 12);
+            CircleDrawing.DrawCircle(Hull.Center - rightThruster * Hull.Radius, Hull.Radius / 6, outlineColor.ColorRgba, 12);
+            CircleDrawing.DrawCircle(Hull.Center - leftThruster * Hull.Radius, Hull.Radius / 6, outlineColor.ColorRgba, 12);
             Hull.Draw(hullColor.ColorRgba);
-            ShapeCircleDrawing.DrawCircle(Hull.Center + movementDir * Hull.Radius * 0.66f, Hull.Radius * 0.33f, cockpitColor.ColorRgba, 12);
+            CircleDrawing.DrawCircle(Hull.Center + movementDir * Hull.Radius * 0.66f, Hull.Radius * 0.33f, cockpitColor.ColorRgba, 12);
 
             Hull.DrawLines(4f, outlineColor.ColorRgba);
         }

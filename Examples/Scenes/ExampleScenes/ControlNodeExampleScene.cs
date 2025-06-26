@@ -1,10 +1,9 @@
 using System.Numerics;
 using Raylib_cs;
-using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Input;
 using ShapeEngine.StaticLib;
-using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Text;
 using ShapeEngine.UI;
 

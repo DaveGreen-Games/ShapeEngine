@@ -1,9 +1,10 @@
 ﻿using ShapeEngine.Core;
 using System.Numerics;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Core.Shapes;
+using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Input;
-using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Random;
 
 namespace Examples.Scenes.ExampleScenes
@@ -54,7 +55,7 @@ namespace Examples.Scenes.ExampleScenes
                 _ => Colors.Medium
             };
 
-            ShapeCircleDrawing.DrawCircleFast(Transform.Position, Transform.ScaledSize.Width, color);
+            CircleDrawing.DrawCircleFast(Transform.Position, Transform.ScaledSize.Width, color);
         }
 
         public override void DrawGameUI(ScreenInfo gameUi)

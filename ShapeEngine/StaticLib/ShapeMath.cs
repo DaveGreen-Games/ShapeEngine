@@ -31,6 +31,14 @@ public static class ShapeMath
     /// The mathematical constant τ (tau), equal to 2π, representing one full turn in radians.
     /// </summary>
     public const float Tau = 6.2831855f;
+    /// <summary>
+    /// A small constant value used for floating-point comparisons to account for precision errors.
+    /// </summary>
+    public const double Epsilon = ShapeMath.EpsilonF;
+    /// <summary>
+    /// A small constant value used for floating-point comparisons to account for precision errors (float version).
+    /// </summary>
+    public const float EpsilonF = 1e-10f;
     #endregion
     
     #region Round

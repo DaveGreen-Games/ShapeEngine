@@ -1,7 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Color;
-using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.RectDef;
 
 namespace ShapeEngine.Screen;
 

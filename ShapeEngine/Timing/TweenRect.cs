@@ -1,5 +1,5 @@
 using ShapeEngine.Core;
-using ShapeEngine.Core.Shapes;
+using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Timing;

@@ -4,7 +4,7 @@ using ShapeEngine.StaticLib;
 using System.Numerics;
 using System.Text.RegularExpressions;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Core.Shapes;
+using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Input;
 using ShapeEngine.Text;
 

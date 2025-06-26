@@ -2,12 +2,12 @@ using Raylib_cs;
 using ShapeEngine.Core;
 using System.Numerics;
 using System.Reflection;
-using ShapeEngine.Core.Interfaces;
-using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Input;
 using ShapeEngine.StaticLib;
-using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Text;
 
 namespace Examples.Scenes.ExampleScenes

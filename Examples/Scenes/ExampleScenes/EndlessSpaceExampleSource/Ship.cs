@@ -1,13 +1,12 @@
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
-using ShapeEngine.Core.CollisionSystem;
-using ShapeEngine.Core.Interfaces;
-using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.CollisionSystem;
+using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.Input;
 using ShapeEngine.StaticLib;
-using ShapeEngine.StaticLib.Drawing;
 using ShapeEngine.Random;
 
 namespace Examples.Scenes.ExampleScenes.EndlessSpaceExampleSource;
