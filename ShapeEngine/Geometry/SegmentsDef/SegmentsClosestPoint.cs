@@ -7,6 +7,7 @@ using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RayDef;
 using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.StaticLib;
 
@@ -21,14 +22,14 @@ public partial class Segments
 
         var first = points[0];
         var second = points[1];
-        var closest = SegmentDef.Segment.GetClosestPointSegmentPoint(first, second, p, out disSquared);
+        var closest = Segment.GetClosestPointSegmentPoint(first, second, p, out disSquared);
 
         for (var i = 1; i < points.Count; i++)
         {
             var p1 = points[i];
             var p2 = points[(i + 1) % points.Count];
 
-            var cp = SegmentDef.Segment.GetClosestPointSegmentPoint(p1, p2, p, out float dis);
+            var cp = Segment.GetClosestPointSegmentPoint(p1, p2, p, out float dis);
             if (dis < disSquared)
             {
                 closest = cp;
@@ -45,13 +46,13 @@ public partial class Segments
         if (Count <= 2) return new();
 
         var closestSegment = this[0];
-        var closestPoint = SegmentDef.Segment.GetClosestPointSegmentPoint(closestSegment.Start, closestSegment.End, p, out disSquared);
+        var closestPoint = Segment.GetClosestPointSegmentPoint(closestSegment.Start, closestSegment.End, p, out disSquared);
 
         for (var i = 1; i < Count; i++)
         {
             var curSegment = this[i];
 
-            var cp = SegmentDef.Segment.GetClosestPointSegmentPoint(curSegment.Start, curSegment.End, p, out float dis);
+            var cp = Segment.GetClosestPointSegmentPoint(curSegment.Start, curSegment.End, p, out float dis);
             if (dis < disSquared)
             {
                 closestSegment = curSegment;
@@ -70,13 +71,13 @@ public partial class Segments
         if (Count <= 2) return new();
 
         var closestSegment = this[0];
-        var closestPoint = SegmentDef.Segment.GetClosestPointSegmentPoint(closestSegment.Start, closestSegment.End, p, out disSquared);
+        var closestPoint = Segment.GetClosestPointSegmentPoint(closestSegment.Start, closestSegment.End, p, out disSquared);
         index = 0;
         for (var i = 1; i < Count; i++)
         {
             var curSegment = this[i];
 
-            var cp = SegmentDef.Segment.GetClosestPointSegmentPoint(curSegment.Start, curSegment.End, p, out float dis);
+            var cp = Segment.GetClosestPointSegmentPoint(curSegment.Start, curSegment.End, p, out float dis);
             if (dis < disSquared)
             {
                 index = i;
@@ -134,14 +135,14 @@ public partial class Segments
     {
         if (Count <= 2) return new();
         var closestSegment = this[0];
-        var result = SegmentDef.Segment.GetClosestPointSegmentLine(closestSegment.Start, closestSegment.End, other.Point, other.Direction, out float disSquared);
+        var result = Segment.GetClosestPointSegmentLine(closestSegment.Start, closestSegment.End, other.Point, other.Direction, out float disSquared);
         var selfIndex = 0;
 
         for (var i = 1; i < Count; i++)
         {
             var curSegment = this[i];
 
-            var cp = SegmentDef.Segment.GetClosestPointSegmentLine(curSegment.Start, curSegment.End, other.Point, other.Direction, out float dis);
+            var cp = Segment.GetClosestPointSegmentLine(curSegment.Start, curSegment.End, other.Point, other.Direction, out float dis);
             if (dis < disSquared)
             {
                 selfIndex = i;
@@ -163,14 +164,14 @@ public partial class Segments
         if (Count <= 2) return new();
 
         var closestSegment = this[0];
-        var result = SegmentDef.Segment.GetClosestPointSegmentRay(closestSegment.Start, closestSegment.End, other.Point, other.Direction, out float disSquared);
+        var result = Segment.GetClosestPointSegmentRay(closestSegment.Start, closestSegment.End, other.Point, other.Direction, out float disSquared);
         var selfIndex = 0;
 
         for (var i = 1; i < Count; i++)
         {
             var segment = this[i];
 
-            var cp = SegmentDef.Segment.GetClosestPointSegmentRay(segment.Start, segment.End, other.Point, other.Direction, out float dis);
+            var cp = Segment.GetClosestPointSegmentRay(segment.Start, segment.End, other.Point, other.Direction, out float dis);
             if (dis < disSquared)
             {
                 selfIndex = i;
@@ -187,19 +188,19 @@ public partial class Segments
             selfIndex);
     }
 
-    public ClosestPointResult GetClosestPoint(SegmentDef.Segment other)
+    public ClosestPointResult GetClosestPoint(Segment other)
     {
         if (Count <= 2) return new();
 
         var closestSegment = this[0];
-        var result = SegmentDef.Segment.GetClosestPointSegmentSegment(closestSegment.Start, closestSegment.End, other.Start, other.End, out float disSquared);
+        var result = Segment.GetClosestPointSegmentSegment(closestSegment.Start, closestSegment.End, other.Start, other.End, out float disSquared);
         var selfIndex = 0;
 
         for (var i = 1; i < Count; i++)
         {
             var segment = this[i];
 
-            var cp = SegmentDef.Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, other.Start, other.End, out float dis);
+            var cp = Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, other.Start, other.End, out float dis);
             if (dis < disSquared)
             {
                 selfIndex = i;
@@ -221,14 +222,14 @@ public partial class Segments
         if (Count <= 2) return new();
 
         var closestSegment = this[0];
-        var result = SegmentDef.Segment.GetClosestPointSegmentCircle(closestSegment.Start, closestSegment.End, other.Center, other.Radius, out float disSquared);
+        var result = Segment.GetClosestPointSegmentCircle(closestSegment.Start, closestSegment.End, other.Center, other.Radius, out float disSquared);
         var selfIndex = 0;
 
         for (var i = 1; i < Count; i++)
         {
             var segment = this[i];
 
-            var cp = SegmentDef.Segment.GetClosestPointSegmentCircle(segment.Start, segment.End, other.Center, other.Radius, out float dis);
+            var cp = Segment.GetClosestPointSegmentCircle(segment.Start, segment.End, other.Center, other.Radius, out float dis);
             if (dis < disSquared)
             {
                 selfIndex = i;
@@ -261,7 +262,7 @@ public partial class Segments
         {
             var segment = this[i];
 
-            var cp = SegmentDef.Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, other.A, other.B, out float dis);
+            var cp = Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, other.A, other.B, out float dis);
             if (dis < disSquared || disSquared < 0)
             {
                 selfIndex = i;
@@ -272,7 +273,7 @@ public partial class Segments
                 otherNormal = other.B - other.A;
             }
 
-            cp = SegmentDef.Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, other.B, other.C, out dis);
+            cp = Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, other.B, other.C, out dis);
             if (dis < disSquared || disSquared < 0)
             {
                 selfIndex = i;
@@ -283,7 +284,7 @@ public partial class Segments
                 otherNormal = other.C - other.B;
             }
 
-            cp = SegmentDef.Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, other.C, other.A, out dis);
+            cp = Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, other.C, other.A, out dis);
             if (dis < disSquared || disSquared < 0)
             {
                 selfIndex = i;
@@ -318,7 +319,7 @@ public partial class Segments
         {
             var segment = this[i];
 
-            var cp = SegmentDef.Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, other.A, other.B, out float dis);
+            var cp = Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, other.A, other.B, out float dis);
             if (dis < disSquared || disSquared < 0)
             {
                 selfIndex = i;
@@ -329,7 +330,7 @@ public partial class Segments
                 otherNormal = other.B - other.A;
             }
 
-            cp = SegmentDef.Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, other.B, other.C, out dis);
+            cp = Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, other.B, other.C, out dis);
             if (dis < disSquared || disSquared < 0)
             {
                 selfIndex = i;
@@ -340,7 +341,7 @@ public partial class Segments
                 otherNormal = other.C - other.B;
             }
 
-            cp = SegmentDef.Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, other.C, other.D, out dis);
+            cp = Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, other.C, other.D, out dis);
             if (dis < disSquared || disSquared < 0)
             {
                 selfIndex = i;
@@ -351,7 +352,7 @@ public partial class Segments
                 otherNormal = other.D - other.C;
             }
 
-            cp = SegmentDef.Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, other.D, other.A, out dis);
+            cp = Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, other.D, other.A, out dis);
             if (dis < disSquared || disSquared < 0)
             {
                 selfIndex = i;
@@ -386,7 +387,7 @@ public partial class Segments
         {
             var segment = this[i];
 
-            var cp = SegmentDef.Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, other.A, other.B, out float dis);
+            var cp = Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, other.A, other.B, out float dis);
             if (dis < disSquared || disSquared < 0)
             {
                 selfIndex = i;
@@ -397,7 +398,7 @@ public partial class Segments
                 otherNormal = other.B - other.A;
             }
 
-            cp = SegmentDef.Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, other.B, other.C, out dis);
+            cp = Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, other.B, other.C, out dis);
             if (dis < disSquared || disSquared < 0)
             {
                 selfIndex = i;
@@ -408,7 +409,7 @@ public partial class Segments
                 otherNormal = other.C - other.B;
             }
 
-            cp = SegmentDef.Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, other.C, other.D, out dis);
+            cp = Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, other.C, other.D, out dis);
             if (dis < disSquared || disSquared < 0)
             {
                 selfIndex = i;
@@ -419,7 +420,7 @@ public partial class Segments
                 otherNormal = other.D - other.C;
             }
 
-            cp = SegmentDef.Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, other.D, other.A, out dis);
+            cp = Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, other.D, other.A, out dis);
             if (dis < disSquared || disSquared < 0)
             {
                 selfIndex = i;
@@ -458,7 +459,7 @@ public partial class Segments
             {
                 var otherP1 = other[j];
                 var otherP2 = other[(j + 1) % Count];
-                var cp = SegmentDef.Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, otherP1, otherP2, out float dis);
+                var cp = Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, otherP1, otherP2, out float dis);
                 if (dis < disSquared || disSquared < 0)
                 {
                     selfIndex = i;
@@ -498,7 +499,7 @@ public partial class Segments
             {
                 var otherP1 = other[j];
                 var otherP2 = other[j + 1];
-                var cp = SegmentDef.Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, otherP1, otherP2, out float dis);
+                var cp = Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, otherP1, otherP2, out float dis);
                 if (dis < disSquared || disSquared < 0)
                 {
                     selfIndex = i;
@@ -537,7 +538,7 @@ public partial class Segments
             for (var j = 0; j < other.Count; j++)
             {
                 var otherSegment = other[j];
-                var cp = SegmentDef.Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, otherSegment.Start, otherSegment.End, out float dis);
+                var cp = Segment.GetClosestPointSegmentSegment(segment.Start, segment.End, otherSegment.Start, otherSegment.End, out float dis);
                 if (dis < disSquared || disSquared < 0)
                 {
                     selfIndex = i;
@@ -558,19 +559,19 @@ public partial class Segments
             otherIndex);
     }
 
-    public (SegmentDef.Segment segment, CollisionPoint segmentPoint) GetClosestSegment(Vector2 p, out float disSquared)
+    public (Segment segment, CollisionPoint segmentPoint) GetClosestSegment(Vector2 p, out float disSquared)
     {
         disSquared = -1;
         if (Count <= 2) return (new(), new());
 
         var closestSegment = this[0];
-        var closest = SegmentDef.Segment.GetClosestPointSegmentPoint(closestSegment.Start, closestSegment.End, p, out disSquared);
+        var closest = Segment.GetClosestPointSegmentPoint(closestSegment.Start, closestSegment.End, p, out disSquared);
 
         for (var i = 1; i < Count; i++)
         {
             var curSegment = this[i];
 
-            var cp = SegmentDef.Segment.GetClosestPointSegmentPoint(curSegment.Start, curSegment.End, p, out float dis);
+            var cp = Segment.GetClosestPointSegmentPoint(curSegment.Start, curSegment.End, p, out float dis);
             if (dis < disSquared)
             {
                 closestSegment = curSegment;

@@ -1,5 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Geometry.LineDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.RayDef;
@@ -72,27 +73,8 @@ public readonly partial struct Ray
     public static (Vector2 self, Vector2 other) GetClosestPointRaySegment(Vector2 rayPoint, Vector2 rayDirection, Vector2 segmentStart, Vector2 segmentEnd,
         out float disSquared)
     {
-        var result = SegmentDef.Segment.GetClosestPointSegmentRay(segmentStart, segmentEnd, rayPoint, rayDirection, out disSquared);
+        var result = Segment.GetClosestPointSegmentRay(segmentStart, segmentEnd, rayPoint, rayDirection, out disSquared);
         return (result.other, result.self);
-
-        // var d1 = rayDirection.Normalize();
-        // var d2 = segmentEnd - segmentStart;
-        //
-        // float a = Vector2.Dot(d1, d1);
-        // float b = Vector2.Dot(d1, d2);
-        // float e = Vector2.Dot(d2, d2);
-        // var r = rayPoint - segmentStart;
-        // float c = Vector2.Dot(d1, r);
-        // float f = Vector2.Dot(d2, r);
-        //
-        // float denominator = a * e - b * b;
-        // float t1 = Math.Max(0, (b * f - c * e) / denominator);
-        // float t2 = Math.Max(0, Math.Min(1, (a * f - b * c) / denominator));
-        //
-        // var closestPoint1 = rayPoint + t1 * d1;
-        // var closestPoint2 = segmentStart + t2 * d2;
-        // disSquared = (closestPoint1 - closestPoint2).LengthSquared();
-        // return (closestPoint1, closestPoint2);
     }
 
     public static (Vector2 self, Vector2 other) GetClosestPointRayCircle(Vector2 rayPoint, Vector2 rayDirection, Vector2 circleCenter, float circleRadius,

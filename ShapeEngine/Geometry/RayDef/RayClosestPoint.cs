@@ -87,7 +87,7 @@ public readonly partial struct Ray
 
     public ClosestPointResult GetClosestPoint(Segment other)
     {
-        var result = SegmentDef.Segment.GetClosestPointSegmentRay(other.Start, other.End, Point, Direction, out var disSquared);
+        var result = Segment.GetClosestPointSegmentRay(other.Start, other.End, Point, Direction, out var disSquared);
         return new(
             new(result.other, Normal),
             new(result.self, other.Normal),

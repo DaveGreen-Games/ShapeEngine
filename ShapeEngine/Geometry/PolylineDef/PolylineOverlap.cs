@@ -6,6 +6,7 @@ using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RayDef;
 using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.SegmentsDef;
 using ShapeEngine.Geometry.TriangleDef;
 
@@ -33,7 +34,7 @@ public partial class Polyline
     public bool OverlapRect(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => OverlapPolylineQuad(this, a, b, c, d);
     public bool OverlapPolygon(List<Vector2> points) => OverlapPolylinePolygon(this, points);
     public bool OverlapPolyline(List<Vector2> points) => OverlapPolylinePolyline(this, points);
-    public bool OverlapSegments(List<SegmentDef.Segment> segments) => OverlapPolylineSegments(this, segments);
+    public bool OverlapSegments(List<Segment> segments) => OverlapPolylineSegments(this, segments);
     public bool OverlapShape(Line line) => OverlapPolylineLine(this, line.Point, line.Direction);
     public bool OverlapShape(Ray ray) => OverlapPolylineRay(this, ray.Point, ray.Direction);
 
@@ -86,14 +87,14 @@ public partial class Polyline
 
             foreach (var seg in segments)
             {
-                if (SegmentDef.Segment.OverlapSegmentSegment(start, end, seg.Start, seg.End)) return true;
+                if (Segment.OverlapSegmentSegment(start, end, seg.Start, seg.End)) return true;
             }
         }
 
         return false;
     }
 
-    public bool OverlapShape(SegmentDef.Segment s) => s.OverlapShape(this);
+    public bool OverlapShape(Segment s) => s.OverlapShape(this);
     public bool OverlapShape(Circle c) => c.OverlapShape(this);
     public bool OverlapShape(Triangle t) => t.OverlapShape(this);
     public bool OverlapShape(Rect r) => r.OverlapShape(this);
@@ -114,7 +115,7 @@ public partial class Polyline
                 var bStart = b[j];
                 var bEnd = b[j + 1];
 
-                if (SegmentDef.Segment.OverlapSegmentSegment(start, end, bStart, bEnd)) return true;
+                if (Segment.OverlapSegmentSegment(start, end, bStart, bEnd)) return true;
             }
         }
 

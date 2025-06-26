@@ -1,13 +1,12 @@
 using System.Numerics;
 using ShapeEngine.Geometry.CollisionSystem;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.CircleDef;
 
 public readonly partial struct Circle
 {
-    #region Static
-
     /// <summary>
     /// Calculates the intersection points between two circles.
     /// </summary>
@@ -244,7 +243,7 @@ public readonly partial struct Circle
             {
                 // intersection point is not actually within line segment
                 var p = new Vector2(iX, iY);
-                var n = SegmentDef.Segment.GetNormal(new(segStartX, segStartY), new(segEndX, segEndY), false); // p - new Vector2(circleX, circleY);
+                var n = Segment.GetNormal(new(segStartX, segStartY), new(segEndX, segEndY), false); // p - new Vector2(circleX, circleY);
                 var cp = new CollisionPoint(p, n);
                 return (cp, new());
             }
@@ -273,7 +272,7 @@ public readonly partial struct Circle
 
                 var p = new Vector2(i1X, i1Y);
                 // var n = p - new Vector2(circleX, circleY);
-                var n = SegmentDef.Segment.GetNormal(new(segStartX, segStartY), new(segEndX, segEndY), false);
+                var n = Segment.GetNormal(new(segStartX, segStartY), new(segEndX, segEndY), false);
                 a = new CollisionPoint(p, n);
             }
 
@@ -288,7 +287,7 @@ public readonly partial struct Circle
                 // intersectionPoints.Add(new Vector2(i2X, i2Y));
                 var p = new Vector2(i2X, i2Y);
                 // var n = p - new Vector2(circleX, circleY);
-                var n = SegmentDef.Segment.GetNormal(new(segStartX, segStartY), new(segEndX, segEndY), false);
+                var n = Segment.GetNormal(new(segStartX, segStartY), new(segEndX, segEndY), false);
                 b = new CollisionPoint(p, n);
             }
 
@@ -298,5 +297,4 @@ public readonly partial struct Circle
         return (new(), new());
     }
 
-    #endregion
 }

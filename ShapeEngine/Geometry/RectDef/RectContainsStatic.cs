@@ -1,4 +1,5 @@
 using System.Numerics;
+using ShapeEngine.Geometry.SegmentDef;
 
 namespace ShapeEngine.Geometry.RectDef;
 
@@ -79,16 +80,16 @@ public readonly partial struct Rect
         var b = new Vector2(topLeft.X, bottomRight.Y);
         var c = bottomRight;
         var d = new Vector2(bottomRight.X, topLeft.Y);
-        var result = SegmentDef.Segment.IntersectSegmentCircle(a, b, circleCenter, circleRadius);
+        var result = Segment.IntersectSegmentCircle(a, b, circleCenter, circleRadius);
         if (result.a.Valid || result.b.Valid) return false;
 
-        result = SegmentDef.Segment.IntersectSegmentCircle(b, c, circleCenter, circleRadius);
+        result = Segment.IntersectSegmentCircle(b, c, circleCenter, circleRadius);
         if (result.a.Valid || result.b.Valid) return false;
 
-        result = SegmentDef.Segment.IntersectSegmentCircle(c, d, circleCenter, circleRadius);
+        result = Segment.IntersectSegmentCircle(c, d, circleCenter, circleRadius);
         if (result.a.Valid || result.b.Valid) return false;
 
-        result = SegmentDef.Segment.IntersectSegmentCircle(d, a, circleCenter, circleRadius);
+        result = Segment.IntersectSegmentCircle(d, a, circleCenter, circleRadius);
         if (result.a.Valid || result.b.Valid) return false;
         return true;
     }

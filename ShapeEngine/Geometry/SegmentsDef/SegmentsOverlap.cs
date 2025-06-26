@@ -6,6 +6,7 @@ using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RayDef;
 using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.TriangleDef;
 
 namespace ShapeEngine.Geometry.SegmentsDef;
@@ -21,7 +22,7 @@ public partial class Segments
     public bool OverlapRect(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => OverlapSegmentsQuad(this, a, b, c, d);
     public bool OverlapPolygon(List<Vector2> points) => OverlapSegmentsPolygon(this, points);
     public bool OverlapPolyline(List<Vector2> points) => OverlapSegmentsPolyline(this, points);
-    public bool OverlapSegments(List<SegmentDef.Segment> segments) => OverlapSegmentsSegments(this, segments);
+    public bool OverlapSegments(List<Segment> segments) => OverlapSegmentsSegments(this, segments);
     public bool OverlapShape(Line line) => OverlapSegmentsLine(this, line.Point, line.Direction);
     public bool OverlapShape(Ray ray) => OverlapSegmentsRay(this, ray.Point, ray.Direction);
 
@@ -31,18 +32,18 @@ public partial class Segments
         {
             foreach (var bSeg in b)
             {
-                if (SegmentDef.Segment.OverlapSegmentSegment(seg.Start, seg.End, bSeg.Start, bSeg.End)) return true;
+                if (Segment.OverlapSegmentSegment(seg.Start, seg.End, bSeg.Start, bSeg.End)) return true;
             }
         }
 
         return false;
     }
 
-    public bool OverlapShape(SegmentDef.Segment s)
+    public bool OverlapShape(Segment s)
     {
         foreach (var seg in this)
         {
-            if (SegmentDef.Segment.OverlapSegmentSegment(seg.Start, seg.End, s.Start, s.End)) return true;
+            if (Segment.OverlapSegmentSegment(seg.Start, seg.End, s.Start, s.End)) return true;
         }
 
         return false;
@@ -52,7 +53,7 @@ public partial class Segments
     {
         foreach (var seg in this)
         {
-            if (SegmentDef.Segment.OverlapSegmentCircle(seg.Start, seg.End, c.Center, c.Radius)) return true;
+            if (Segment.OverlapSegmentCircle(seg.Start, seg.End, c.Center, c.Radius)) return true;
         }
 
         return false;

@@ -24,7 +24,7 @@ public readonly partial struct Ray
     public bool OverlapRect(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => OverlapRayQuad(Point, Direction, a, b, c, d);
     public bool OverlapPolygon(List<Vector2> points) => OverlapRayPolygon(Point, Direction, points);
     public bool OverlapPolyline(List<Vector2> points) => OverlapRayPolyline(Point, Direction, points);
-    public bool OverlapSegments(List<SegmentDef.Segment> segments) => OverlapRaySegments(Point, Direction, segments);
+    public bool OverlapSegments(List<Segment> segments) => OverlapRaySegments(Point, Direction, segments);
 
     public bool Overlap(Collider collider)
     {
@@ -64,7 +64,7 @@ public readonly partial struct Ray
         return false;
     }
 
-    public bool OverlapShape(SegmentDef.Segment segment) => OverlapRaySegment(Point, Direction, segment.Start, segment.End);
+    public bool OverlapShape(Segment segment) => OverlapRaySegment(Point, Direction, segment.Start, segment.End);
     public bool OverlapShape(Line line) => OverlapRayLine(Point, Direction, line.Point, line.Direction);
     public bool OverlapShape(Ray ray) => OverlapRayRay(Point, Direction, ray.Point, ray.Direction);
     public bool OverlapShape(Circle circle) => OverlapRayCircle(Point, Direction, circle.Center, circle.Radius);

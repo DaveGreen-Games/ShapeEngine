@@ -25,7 +25,7 @@ public readonly partial struct Rect
     public bool OverlapRect(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => OverlapRectQuad(A, B, C, D, a, b, c, d);
     public bool OverlapPolygon(List<Vector2> points) => OverlapRectPolygon(A, B, C, D, points);
     public bool OverlapPolyline(List<Vector2> points) => OverlapRectPolyline(A, B, C, D, points);
-    public bool OverlapSegments(List<SegmentDef.Segment> segments) => OverlapRectSegments(A, B, C, D, segments);
+    public bool OverlapSegments(List<Segment> segments) => OverlapRectSegments(A, B, C, D, segments);
     public bool OverlapShape(Line line) => OverlapRectLine(A, B, C, D, line.Point, line.Direction);
     public bool OverlapShape(Ray ray) => OverlapRectRay(A, B, C, D, ray.Point, ray.Direction);
 
@@ -77,7 +77,7 @@ public readonly partial struct Rect
         return false;
     }
 
-    public bool OverlapShape(SegmentDef.Segment s) => s.OverlapShape(this);
+    public bool OverlapShape(Segment s) => s.OverlapShape(this);
     public bool OverlapShape(Circle c) => c.OverlapShape(this);
     public bool OverlapShape(Triangle t) => t.OverlapShape(this);
     public bool OverlapShape(Quad q) => q.OverlapShape(this);
@@ -108,10 +108,10 @@ public readonly partial struct Rect
         {
             var start = poly[i];
             var end = poly[(i + 1) % poly.Count];
-            if (SegmentDef.Segment.OverlapSegmentSegment(a, b, start, end)) return true;
-            if (SegmentDef.Segment.OverlapSegmentSegment(b, c, start, end)) return true;
-            if (SegmentDef.Segment.OverlapSegmentSegment(c, d, start, end)) return true;
-            if (SegmentDef.Segment.OverlapSegmentSegment(d, a, start, end)) return true;
+            if (Segment.OverlapSegmentSegment(a, b, start, end)) return true;
+            if (Segment.OverlapSegmentSegment(b, c, start, end)) return true;
+            if (Segment.OverlapSegmentSegment(c, d, start, end)) return true;
+            if (Segment.OverlapSegmentSegment(d, a, start, end)) return true;
 
             if (Polygon.ContainsPointCheck(start, end, a)) oddNodes = !oddNodes;
         }
@@ -132,10 +132,10 @@ public readonly partial struct Rect
         {
             var start = pl[i];
             var end = pl[(i + 1) % pl.Count];
-            if (SegmentDef.Segment.OverlapSegmentSegment(a, b, start, end)) return true;
-            if (SegmentDef.Segment.OverlapSegmentSegment(b, c, start, end)) return true;
-            if (SegmentDef.Segment.OverlapSegmentSegment(c, d, start, end)) return true;
-            if (SegmentDef.Segment.OverlapSegmentSegment(d, a, start, end)) return true;
+            if (Segment.OverlapSegmentSegment(a, b, start, end)) return true;
+            if (Segment.OverlapSegmentSegment(b, c, start, end)) return true;
+            if (Segment.OverlapSegmentSegment(c, d, start, end)) return true;
+            if (Segment.OverlapSegmentSegment(d, a, start, end)) return true;
         }
 
         return false;

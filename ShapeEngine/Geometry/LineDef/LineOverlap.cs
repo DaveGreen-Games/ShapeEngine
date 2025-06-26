@@ -102,7 +102,7 @@ public readonly partial struct Line
     /// </summary>
     /// <param name="segments">A list of <see cref="Segment"/> objects to check for overlap with the line.</param>
     /// <returns>True if the line overlaps with any segment in the list; otherwise, false.</returns>
-    public bool OverlapSegments(List<SegmentDef.Segment> segments) => OverlapLineSegments(Point, Direction, segments);
+    public bool OverlapSegments(List<Segment> segments) => OverlapLineSegments(Point, Direction, segments);
 
     /// <summary>
     /// Determines whether this infinite line overlaps (intersects) with the shape of the specified <see cref="Collider"/>.
@@ -166,7 +166,7 @@ public readonly partial struct Line
     /// </summary>
     /// <param name="segment">The <see cref="Segment"/> to check for overlap with this line.</param>
     /// <returns>True if the line and segment overlap (intersect); otherwise, false.</returns>
-    public bool OverlapShape(SegmentDef.Segment segment) => OverlapLineSegment(Point, Direction, segment.Start, segment.End);
+    public bool OverlapShape(Segment segment) => OverlapLineSegment(Point, Direction, segment.Start, segment.End);
 
     /// <summary>
     /// Determines whether this infinite line and the specified <see cref="Circle"/> overlap (i.e., the line passes through or touches the circle).

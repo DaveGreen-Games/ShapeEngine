@@ -1,4 +1,5 @@
 using System.Numerics;
+using ShapeEngine.Geometry.SegmentDef;
 
 namespace ShapeEngine.Geometry.PolygonDef;
 
@@ -102,7 +103,7 @@ public partial class Polygon
         {
             var polyStart = polygon[i];
             var polyEnd = polygon[(i + 1) % polygon.Count];
-            if (SegmentDef.Segment.IntersectSegmentSegment(segmentStart, segmentEnd, polyStart, polyEnd).Valid)
+            if (Segment.IntersectSegmentSegment(segmentStart, segmentEnd, polyStart, polyEnd).Valid)
             {
                 return false;
             }
@@ -119,7 +120,7 @@ public partial class Polygon
         {
             var polyStart = polygon[i];
             var polyEnd = polygon[(i + 1) % polygon.Count];
-            var result = SegmentDef.Segment.IntersectSegmentCircle(polyStart, polyEnd, circleCenter, circleRadius);
+            var result = Segment.IntersectSegmentCircle(polyStart, polyEnd, circleCenter, circleRadius);
             if (result.a.Valid || result.b.Valid)
             {
                 return false;
@@ -137,17 +138,17 @@ public partial class Polygon
         {
             var polyStart = polygon[i];
             var polyEnd = polygon[(i + 1) % polygon.Count];
-            if (SegmentDef.Segment.IntersectSegmentSegment(polyStart, polyEnd, a, b).Valid)
+            if (Segment.IntersectSegmentSegment(polyStart, polyEnd, a, b).Valid)
             {
                 return false;
             }
 
-            if (SegmentDef.Segment.IntersectSegmentSegment(polyStart, polyEnd, b, c).Valid)
+            if (Segment.IntersectSegmentSegment(polyStart, polyEnd, b, c).Valid)
             {
                 return false;
             }
 
-            if (SegmentDef.Segment.IntersectSegmentSegment(polyStart, polyEnd, c, a).Valid)
+            if (Segment.IntersectSegmentSegment(polyStart, polyEnd, c, a).Valid)
             {
                 return false;
             }
@@ -164,22 +165,22 @@ public partial class Polygon
         {
             var polyStart = polygon[i];
             var polyEnd = polygon[(i + 1) % polygon.Count];
-            if (SegmentDef.Segment.IntersectSegmentSegment(polyStart, polyEnd, a, b).Valid)
+            if (Segment.IntersectSegmentSegment(polyStart, polyEnd, a, b).Valid)
             {
                 return false;
             }
 
-            if (SegmentDef.Segment.IntersectSegmentSegment(polyStart, polyEnd, b, c).Valid)
+            if (Segment.IntersectSegmentSegment(polyStart, polyEnd, b, c).Valid)
             {
                 return false;
             }
 
-            if (SegmentDef.Segment.IntersectSegmentSegment(polyStart, polyEnd, c, d).Valid)
+            if (Segment.IntersectSegmentSegment(polyStart, polyEnd, c, d).Valid)
             {
                 return false;
             }
 
-            if (SegmentDef.Segment.IntersectSegmentSegment(polyStart, polyEnd, d, a).Valid)
+            if (Segment.IntersectSegmentSegment(polyStart, polyEnd, d, a).Valid)
             {
                 return false;
             }
@@ -206,7 +207,7 @@ public partial class Polygon
                 var polylineStart = polyline[j];
                 var polylineEnd = polyline[j + 1];
 
-                if (SegmentDef.Segment.IntersectSegmentSegment(polyStart, polyEnd, polylineStart, polylineEnd).Valid)
+                if (Segment.IntersectSegmentSegment(polyStart, polyEnd, polylineStart, polylineEnd).Valid)
                 {
                     return false;
                 }
@@ -229,7 +230,7 @@ public partial class Polygon
                 var polylineStart = other[j];
                 var polylineEnd = other[(j + 1) % other.Count];
 
-                if (SegmentDef.Segment.IntersectSegmentSegment(polyStart, polyEnd, polylineStart, polylineEnd).Valid)
+                if (Segment.IntersectSegmentSegment(polyStart, polyEnd, polylineStart, polylineEnd).Valid)
                 {
                     return false;
                 }

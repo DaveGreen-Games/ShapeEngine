@@ -936,25 +936,25 @@ public static class StripedDrawing
                 
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
-                    var segment = new SegmentDef.Segment(outsideClosestPoint, outsideFurthestPoint);
+                    var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
                     segment.Draw(striped);
                 }
                 else if (insideFurthestDis > outsideFurthestDis)
                 {
-                    var segment = new SegmentDef.Segment(outsideClosestPoint, insideClosestPoint);
+                    var segment = new Segment(outsideClosestPoint, insideClosestPoint);
                     segment.Draw(striped);
                 }   
                 else if (insideClosestDis < outsideClosestDis)
                 {
-                    var segment = new SegmentDef.Segment(insideFurthestPoint, outsideFurthestPoint);
+                    var segment = new Segment(insideFurthestPoint, outsideFurthestPoint);
                     segment.Draw(striped);
                 }
                 else
                 {
-                    var segment1 = new SegmentDef.Segment(outsideClosestPoint, insideClosestPoint);
+                    var segment1 = new Segment(outsideClosestPoint, insideClosestPoint);
                     segment1.Draw(striped);
                 
-                    var segment2 = new SegmentDef.Segment(insideFurthestPoint, outsideFurthestPoint);
+                    var segment2 = new Segment(insideFurthestPoint, outsideFurthestPoint);
                     segment2.Draw(striped);
                 }
             }
@@ -1002,7 +1002,7 @@ public static class StripedDrawing
             var insideShapePoints = Ray.IntersectRayRect(cur, rayDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
             if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
             {
-                var segment = new SegmentDef.Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
+                var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
             }
             else
@@ -1060,25 +1060,25 @@ public static class StripedDrawing
                 
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
-                    var segment = new SegmentDef.Segment(outsideClosestPoint, outsideFurthestPoint);
+                    var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
                     segment.Draw(striped);
                 }
                 else if (insideFurthestDis > outsideFurthestDis)
                 {
-                    var segment = new SegmentDef.Segment(outsideClosestPoint, insideClosestPoint);
+                    var segment = new Segment(outsideClosestPoint, insideClosestPoint);
                     segment.Draw(striped);
                 }   
                 else if (insideClosestDis < outsideClosestDis)
                 {
-                    var segment = new SegmentDef.Segment(insideFurthestPoint, outsideFurthestPoint);
+                    var segment = new Segment(insideFurthestPoint, outsideFurthestPoint);
                     segment.Draw(striped);
                 }
                 else
                 {
-                    var segment1 = new SegmentDef.Segment(outsideClosestPoint, insideClosestPoint);
+                    var segment1 = new Segment(outsideClosestPoint, insideClosestPoint);
                     segment1.Draw(striped);
                 
-                    var segment2 = new SegmentDef.Segment(insideFurthestPoint, outsideFurthestPoint);
+                    var segment2 = new Segment(insideFurthestPoint, outsideFurthestPoint);
                     segment2.Draw(striped);
                 }
             }
@@ -1127,7 +1127,7 @@ public static class StripedDrawing
             
             if(count <= 0) //ray did not hit the inside shape, draw ray between edge of the outside shape
             {
-                var segment = new SegmentDef.Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
+                var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
             }
             else
@@ -1152,7 +1152,7 @@ public static class StripedDrawing
                 }
                 if (collisionPointsReference.Count == 2)//no sorting or loop needed for exactly 2 points
                 {
-                    var segment = new SegmentDef.Segment(collisionPointsReference[0].Point, collisionPointsReference[1].Point);
+                    var segment = new Segment(collisionPointsReference[0].Point, collisionPointsReference[1].Point);
                     segment.Draw(striped);
                     cur += dir * spacing;
                     collisionPointsReference.Clear();
@@ -1166,7 +1166,7 @@ public static class StripedDrawing
                 {
                     var p1 = collisionPointsReference[j].Point;
                     var p2 = collisionPointsReference[j + 1].Point;
-                    var segment = new SegmentDef.Segment(p1, p2);
+                    var segment = new Segment(p1, p2);
                     segment.Draw(striped);
                 }
                 
@@ -1214,7 +1214,7 @@ public static class StripedDrawing
             var intersection = Line.IntersectLineTriangle(cur, lineDir, a, b, c);
             if (intersection.a.Valid && intersection.b.Valid)
             {
-                var segment = new SegmentDef.Segment(intersection.a.Point, intersection.b.Point);
+                var segment = new Segment(intersection.a.Point, intersection.b.Point);
                 segment.Draw(striped);
             }
             cur += dir * spacing;
@@ -1252,7 +1252,7 @@ public static class StripedDrawing
             var intersection = Line.IntersectLineTriangle(cur, lineDir, a, b, c);
             if (intersection.a.Valid && intersection.b.Valid)
             {
-                var segment = new SegmentDef.Segment(intersection.a.Point, intersection.b.Point);
+                var segment = new Segment(intersection.a.Point, intersection.b.Point);
                 var info = i % 2 == 0 ? striped : alternatingStriped;
                 segment.Draw(info);
             }
@@ -1290,7 +1290,7 @@ public static class StripedDrawing
             var intersection = Line.IntersectLineTriangle(cur, lineDir, a, b, c);
             if (intersection.a.Valid && intersection.b.Valid)
             {
-                var segment = new SegmentDef.Segment(intersection.a.Point, intersection.b.Point);
+                var segment = new Segment(intersection.a.Point, intersection.b.Point);
                 var infoIndex = i % alternatingStriped.Length;
                 var info = alternatingStriped[infoIndex];
                 segment.Draw(info);
@@ -1328,7 +1328,7 @@ public static class StripedDrawing
             var intersection = Line.IntersectLineTriangle(cur, lineDir, triangle.A, triangle.B, triangle.C);
             if (intersection.a.Valid && intersection.b.Valid)
             {
-                var segment = new SegmentDef.Segment(intersection.a.Point, intersection.b.Point);
+                var segment = new Segment(intersection.a.Point, intersection.b.Point);
                 segment.Draw(striped);
             }
             
@@ -1370,7 +1370,7 @@ public static class StripedDrawing
             var intersection = Line.IntersectLineTriangle(cur, lineDir, triangle.A, triangle.B, triangle.C);
             if (intersection.a.Valid && intersection.b.Valid)
             {
-                var segment = new SegmentDef.Segment(intersection.a.Point, intersection.b.Point);
+                var segment = new Segment(intersection.a.Point, intersection.b.Point);
                 var info = i % 2 == 0 ? striped : alternatingStriped;
                 segment.Draw(info);
             }
@@ -1414,7 +1414,7 @@ public static class StripedDrawing
             var intersection = Line.IntersectLineTriangle(cur, lineDir, triangle.A, triangle.B, triangle.C);
             if (intersection.a.Valid && intersection.b.Valid)
             {
-                var segment = new SegmentDef.Segment(intersection.a.Point, intersection.b.Point);
+                var segment = new Segment(intersection.a.Point, intersection.b.Point);
                 var infoIndex = i % alternatingStriped.Length;
                 var info = alternatingStriped[infoIndex];
                 segment.Draw(info);
@@ -1471,7 +1471,7 @@ public static class StripedDrawing
             var insideShapePoints = Ray.IntersectRayCircle(cur, rayDir, insideShape.Center, insideShape.Radius);
             if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
             {
-                var segment = new SegmentDef.Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
+                var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
             }
             else
@@ -1530,25 +1530,25 @@ public static class StripedDrawing
                 //draw outside shape segments because the inside shape points are outside the outside shape
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
-                    var segment = new SegmentDef.Segment(outsideClosestPoint, outsideFurthestPoint);
+                    var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
                     segment.Draw(striped);
                 }
                 else if (insideFurthestDis > outsideFurthestDis) //part of the inside shape is outside the outside shape
                 {
-                    var segment = new SegmentDef.Segment(outsideClosestPoint, insideClosestPoint);
+                    var segment = new Segment(outsideClosestPoint, insideClosestPoint);
                     segment.Draw(striped);
                 }   
                 else if (insideClosestDis < outsideClosestDis) //part of the inside shape is outside the outside shape
                 {
-                    var segment = new SegmentDef.Segment(insideFurthestPoint, outsideFurthestPoint);
+                    var segment = new Segment(insideFurthestPoint, outsideFurthestPoint);
                     segment.Draw(striped);
                 }
                 else //inside shape is completely inside the outside shape - draw everything normal
                 {
-                    var segment1 = new SegmentDef.Segment(outsideClosestPoint, insideClosestPoint);
+                    var segment1 = new Segment(outsideClosestPoint, insideClosestPoint);
                     segment1.Draw(striped);
                 
-                    var segment2 = new SegmentDef.Segment(insideFurthestPoint, outsideFurthestPoint);
+                    var segment2 = new Segment(insideFurthestPoint, outsideFurthestPoint);
                     segment2.Draw(striped);
                 }
                 
@@ -1610,7 +1610,7 @@ public static class StripedDrawing
             var insideShapePoints = Ray.IntersectRayTriangle(cur, rayDir, insideShape.A, insideShape.B, insideShape.C);
             if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
             {
-                var segment = new SegmentDef.Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
+                var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
             }
             else
@@ -1668,25 +1668,25 @@ public static class StripedDrawing
                 
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
-                    var segment = new SegmentDef.Segment(outsideClosestPoint, outsideFurthestPoint);
+                    var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
                     segment.Draw(striped);
                 }
                 else if (insideFurthestDis > outsideFurthestDis)
                 {
-                    var segment = new SegmentDef.Segment(outsideClosestPoint, insideClosestPoint);
+                    var segment = new Segment(outsideClosestPoint, insideClosestPoint);
                     segment.Draw(striped);
                 }   
                 else if (insideClosestDis < outsideClosestDis)
                 {
-                    var segment = new SegmentDef.Segment(insideFurthestPoint, outsideFurthestPoint);
+                    var segment = new Segment(insideFurthestPoint, outsideFurthestPoint);
                     segment.Draw(striped);
                 }
                 else
                 {
-                    var segment1 = new SegmentDef.Segment(outsideClosestPoint, insideClosestPoint);
+                    var segment1 = new Segment(outsideClosestPoint, insideClosestPoint);
                     segment1.Draw(striped);
                 
-                    var segment2 = new SegmentDef.Segment(insideFurthestPoint, outsideFurthestPoint);
+                    var segment2 = new Segment(insideFurthestPoint, outsideFurthestPoint);
                     segment2.Draw(striped);
                 }
             }
@@ -1735,7 +1735,7 @@ public static class StripedDrawing
             var insideShapePoints = Ray.IntersectRayQuad(cur, rayDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
             if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
             {
-                var segment = new SegmentDef.Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
+                var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
             }
             else
@@ -1793,25 +1793,25 @@ public static class StripedDrawing
                 
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
-                    var segment = new SegmentDef.Segment(outsideClosestPoint, outsideFurthestPoint);
+                    var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
                     segment.Draw(striped);
                 }
                 else if (insideFurthestDis > outsideFurthestDis)
                 {
-                    var segment = new SegmentDef.Segment(outsideClosestPoint, insideClosestPoint);
+                    var segment = new Segment(outsideClosestPoint, insideClosestPoint);
                     segment.Draw(striped);
                 }   
                 else if (insideClosestDis < outsideClosestDis)
                 {
-                    var segment = new SegmentDef.Segment(insideFurthestPoint, outsideFurthestPoint);
+                    var segment = new Segment(insideFurthestPoint, outsideFurthestPoint);
                     segment.Draw(striped);
                 }
                 else
                 {
-                    var segment1 = new SegmentDef.Segment(outsideClosestPoint, insideClosestPoint);
+                    var segment1 = new Segment(outsideClosestPoint, insideClosestPoint);
                     segment1.Draw(striped);
                 
-                    var segment2 = new SegmentDef.Segment(insideFurthestPoint, outsideFurthestPoint);
+                    var segment2 = new Segment(insideFurthestPoint, outsideFurthestPoint);
                     segment2.Draw(striped);
                 }
             }
@@ -1860,7 +1860,7 @@ public static class StripedDrawing
             var insideShapePoints = Ray.IntersectRayRect(cur, rayDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
             if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
             {
-                var segment = new SegmentDef.Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
+                var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
             }
             else
@@ -1918,25 +1918,25 @@ public static class StripedDrawing
                 
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
-                    var segment = new SegmentDef.Segment(outsideClosestPoint, outsideFurthestPoint);
+                    var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
                     segment.Draw(striped);
                 }
                 else if (insideFurthestDis > outsideFurthestDis)
                 {
-                    var segment = new SegmentDef.Segment(outsideClosestPoint, insideClosestPoint);
+                    var segment = new Segment(outsideClosestPoint, insideClosestPoint);
                     segment.Draw(striped);
                 }   
                 else if (insideClosestDis < outsideClosestDis)
                 {
-                    var segment = new SegmentDef.Segment(insideFurthestPoint, outsideFurthestPoint);
+                    var segment = new Segment(insideFurthestPoint, outsideFurthestPoint);
                     segment.Draw(striped);
                 }
                 else
                 {
-                    var segment1 = new SegmentDef.Segment(outsideClosestPoint, insideClosestPoint);
+                    var segment1 = new Segment(outsideClosestPoint, insideClosestPoint);
                     segment1.Draw(striped);
                 
-                    var segment2 = new SegmentDef.Segment(insideFurthestPoint, outsideFurthestPoint);
+                    var segment2 = new Segment(insideFurthestPoint, outsideFurthestPoint);
                     segment2.Draw(striped);
                 }
             }
@@ -1986,7 +1986,7 @@ public static class StripedDrawing
             
             if(count <= 0) //ray did not hit the inside shape, draw ray between edge of the outside shape
             {
-                var segment = new SegmentDef.Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
+                var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
             }
             else
@@ -2011,7 +2011,7 @@ public static class StripedDrawing
                 }
                 if (collisionPointsReference.Count == 2)//no sorting or loop needed for exactly 2 points
                 {
-                    var segment = new SegmentDef.Segment(collisionPointsReference[0].Point, collisionPointsReference[1].Point);
+                    var segment = new Segment(collisionPointsReference[0].Point, collisionPointsReference[1].Point);
                     segment.Draw(striped);
                     cur += dir * spacing;
                     collisionPointsReference.Clear();
@@ -2025,7 +2025,7 @@ public static class StripedDrawing
                 {
                     var p1 = collisionPointsReference[j].Point;
                     var p2 = collisionPointsReference[j + 1].Point;
-                    var segment = new SegmentDef.Segment(p1, p2);
+                    var segment = new Segment(p1, p2);
                     segment.Draw(striped);
                 }
                 
@@ -2074,7 +2074,7 @@ public static class StripedDrawing
             var intersection = Line.IntersectLineQuad(cur, lineDir, a, b, c, d);
             if (intersection.a.Valid && intersection.b.Valid)
             {
-                var segment = new SegmentDef.Segment(intersection.a.Point, intersection.b.Point);
+                var segment = new Segment(intersection.a.Point, intersection.b.Point);
                 segment.Draw(striped);
             }
             cur += dir * spacing;
@@ -2113,7 +2113,7 @@ public static class StripedDrawing
             var intersection = Line.IntersectLineQuad(cur, lineDir, a, b, c, d);
             if (intersection.a.Valid && intersection.b.Valid)
             {
-                var segment = new SegmentDef.Segment(intersection.a.Point, intersection.b.Point);
+                var segment = new Segment(intersection.a.Point, intersection.b.Point);
                 var info = i % 2 == 0 ? striped : alternatingStriped;
                 segment.Draw(info);
             }
@@ -2152,7 +2152,7 @@ public static class StripedDrawing
             var intersection = Line.IntersectLineQuad(cur, lineDir, a, b, c, d);
             if (intersection.a.Valid && intersection.b.Valid)
             {
-                var segment = new SegmentDef.Segment(intersection.a.Point, intersection.b.Point);
+                var segment = new Segment(intersection.a.Point, intersection.b.Point);
                 var infoIndex = i % alternatingStriped.Length;
                 var info = alternatingStriped[infoIndex];
                 segment.Draw(info);
@@ -2190,7 +2190,7 @@ public static class StripedDrawing
             var intersection = Line.IntersectLineQuad(cur, lineDir, quad.A, quad.B, quad.C, quad.D);
             if (intersection.a.Valid && intersection.b.Valid)
             {
-                var segment = new SegmentDef.Segment(intersection.a.Point, intersection.b.Point);
+                var segment = new Segment(intersection.a.Point, intersection.b.Point);
                 segment.Draw(striped);
             }
             
@@ -2232,7 +2232,7 @@ public static class StripedDrawing
             var intersection = Line.IntersectLineQuad(cur, lineDir, quad.A, quad.B, quad.C, quad.D);
             if (intersection.a.Valid && intersection.b.Valid)
             {
-                var segment = new SegmentDef.Segment(intersection.a.Point, intersection.b.Point);
+                var segment = new Segment(intersection.a.Point, intersection.b.Point);
                 var info = i % 2 == 0 ? striped : alternatingStriped;
                 segment.Draw(info);
             }
@@ -2276,7 +2276,7 @@ public static class StripedDrawing
             var intersection = Line.IntersectLineQuad(cur, lineDir, quad.A, quad.B, quad.C, quad.D);
             if (intersection.a.Valid && intersection.b.Valid)
             {
-                var segment = new SegmentDef.Segment(intersection.a.Point, intersection.b.Point);
+                var segment = new Segment(intersection.a.Point, intersection.b.Point);
                 var infoIndex = i % alternatingStriped.Length;
                 var info = alternatingStriped[infoIndex];
                 segment.Draw(info);
@@ -2333,7 +2333,7 @@ public static class StripedDrawing
             var insideShapePoints = Ray.IntersectRayCircle(cur, rayDir, insideShape.Center, insideShape.Radius);
             if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
             {
-                var segment = new SegmentDef.Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
+                var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
             }
             else
@@ -2391,25 +2391,25 @@ public static class StripedDrawing
                 //draw outside shape segments because the inside shape points are outside the outside shape
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
-                    var segment = new SegmentDef.Segment(outsideClosestPoint, outsideFurthestPoint);
+                    var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
                     segment.Draw(striped);
                 }
                 else if (insideFurthestDis > outsideFurthestDis) //part of the inside shape is outside the outside shape
                 {
-                    var segment = new SegmentDef.Segment(outsideClosestPoint, insideClosestPoint);
+                    var segment = new Segment(outsideClosestPoint, insideClosestPoint);
                     segment.Draw(striped);
                 }   
                 else if (insideClosestDis < outsideClosestDis) //part of the inside shape is outside the outside shape
                 {
-                    var segment = new SegmentDef.Segment(insideFurthestPoint, outsideFurthestPoint);
+                    var segment = new Segment(insideFurthestPoint, outsideFurthestPoint);
                     segment.Draw(striped);
                 }
                 else //inside shape is completely inside the outside shape - draw everything normal
                 {
-                    var segment1 = new SegmentDef.Segment(outsideClosestPoint, insideClosestPoint);
+                    var segment1 = new Segment(outsideClosestPoint, insideClosestPoint);
                     segment1.Draw(striped);
                 
-                    var segment2 = new SegmentDef.Segment(insideFurthestPoint, outsideFurthestPoint);
+                    var segment2 = new Segment(insideFurthestPoint, outsideFurthestPoint);
                     segment2.Draw(striped);
                 }
                 
@@ -2471,7 +2471,7 @@ public static class StripedDrawing
             var insideShapePoints = Ray.IntersectRayTriangle(cur, rayDir, insideShape.A, insideShape.B, insideShape.C);
             if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
             {
-                var segment = new SegmentDef.Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
+                var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
             }
             else
@@ -2528,25 +2528,25 @@ public static class StripedDrawing
                 }
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
-                    var segment = new SegmentDef.Segment(outsideClosestPoint, outsideFurthestPoint);
+                    var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
                     segment.Draw(striped);
                 }
                 else if (insideFurthestDis > outsideFurthestDis)
                 {
-                    var segment = new SegmentDef.Segment(outsideClosestPoint, insideClosestPoint);
+                    var segment = new Segment(outsideClosestPoint, insideClosestPoint);
                     segment.Draw(striped);
                 }   
                 else if (insideClosestDis < outsideClosestDis)
                 {
-                    var segment = new SegmentDef.Segment(insideFurthestPoint, outsideFurthestPoint);
+                    var segment = new Segment(insideFurthestPoint, outsideFurthestPoint);
                     segment.Draw(striped);
                 }
                 else
                 {
-                    var segment1 = new SegmentDef.Segment(outsideClosestPoint, insideClosestPoint);
+                    var segment1 = new Segment(outsideClosestPoint, insideClosestPoint);
                     segment1.Draw(striped);
                 
-                    var segment2 = new SegmentDef.Segment(insideFurthestPoint, outsideFurthestPoint);
+                    var segment2 = new Segment(insideFurthestPoint, outsideFurthestPoint);
                     segment2.Draw(striped);
                 }
             }
@@ -2595,7 +2595,7 @@ public static class StripedDrawing
             var insideShapePoints = Ray.IntersectRayQuad(cur, rayDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
             if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
             {
-                var segment = new SegmentDef.Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
+                var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
             }
             else
@@ -2652,25 +2652,25 @@ public static class StripedDrawing
                 }
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
-                    var segment = new SegmentDef.Segment(outsideClosestPoint, outsideFurthestPoint);
+                    var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
                     segment.Draw(striped);
                 }
                 else if (insideFurthestDis > outsideFurthestDis)
                 {
-                    var segment = new SegmentDef.Segment(outsideClosestPoint, insideClosestPoint);
+                    var segment = new Segment(outsideClosestPoint, insideClosestPoint);
                     segment.Draw(striped);
                 }   
                 else if (insideClosestDis < outsideClosestDis)
                 {
-                    var segment = new SegmentDef.Segment(insideFurthestPoint, outsideFurthestPoint);
+                    var segment = new Segment(insideFurthestPoint, outsideFurthestPoint);
                     segment.Draw(striped);
                 }
                 else
                 {
-                    var segment1 = new SegmentDef.Segment(outsideClosestPoint, insideClosestPoint);
+                    var segment1 = new Segment(outsideClosestPoint, insideClosestPoint);
                     segment1.Draw(striped);
                 
-                    var segment2 = new SegmentDef.Segment(insideFurthestPoint, outsideFurthestPoint);
+                    var segment2 = new Segment(insideFurthestPoint, outsideFurthestPoint);
                     segment2.Draw(striped);
                 }
             }
@@ -2719,7 +2719,7 @@ public static class StripedDrawing
             var insideShapePoints = Ray.IntersectRayRect(cur, rayDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
             if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
             {
-                var segment = new SegmentDef.Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
+                var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
             }
             else
@@ -2776,25 +2776,25 @@ public static class StripedDrawing
                 }
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
-                    var segment = new SegmentDef.Segment(outsideClosestPoint, outsideFurthestPoint);
+                    var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
                     segment.Draw(striped);
                 }
                 else if (insideFurthestDis > outsideFurthestDis)
                 {
-                    var segment = new SegmentDef.Segment(outsideClosestPoint, insideClosestPoint);
+                    var segment = new Segment(outsideClosestPoint, insideClosestPoint);
                     segment.Draw(striped);
                 }   
                 else if (insideClosestDis < outsideClosestDis)
                 {
-                    var segment = new SegmentDef.Segment(insideFurthestPoint, outsideFurthestPoint);
+                    var segment = new Segment(insideFurthestPoint, outsideFurthestPoint);
                     segment.Draw(striped);
                 }
                 else
                 {
-                    var segment1 = new SegmentDef.Segment(outsideClosestPoint, insideClosestPoint);
+                    var segment1 = new Segment(outsideClosestPoint, insideClosestPoint);
                     segment1.Draw(striped);
                 
-                    var segment2 = new SegmentDef.Segment(insideFurthestPoint, outsideFurthestPoint);
+                    var segment2 = new Segment(insideFurthestPoint, outsideFurthestPoint);
                     segment2.Draw(striped);
                 }
             }
@@ -2844,7 +2844,7 @@ public static class StripedDrawing
             
             if(count <= 0) //ray did not hit the inside shape, draw ray between edge of the outside shape
             {
-                var segment = new SegmentDef.Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
+                var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
             }
             else
@@ -2869,7 +2869,7 @@ public static class StripedDrawing
                 }
                 if (collisionPointsReference.Count == 2)//no sorting or loop needed for exactly 2 points
                 {
-                    var segment = new SegmentDef.Segment(collisionPointsReference[0].Point, collisionPointsReference[1].Point);
+                    var segment = new Segment(collisionPointsReference[0].Point, collisionPointsReference[1].Point);
                     segment.Draw(striped);
                     cur += dir * spacing;
                     collisionPointsReference.Clear();
@@ -2883,7 +2883,7 @@ public static class StripedDrawing
                 {
                     var p1 = collisionPointsReference[j].Point;
                     var p2 = collisionPointsReference[j + 1].Point;
-                    var segment = new SegmentDef.Segment(p1, p2);
+                    var segment = new Segment(p1, p2);
                     segment.Draw(striped);
                 }
                 
@@ -2931,7 +2931,7 @@ public static class StripedDrawing
             var intersection = Line.IntersectLineRect(cur, lineDir, a, b, c, d);
             if (intersection.a.Valid && intersection.b.Valid)
             {
-                var segment = new SegmentDef.Segment(intersection.a.Point, intersection.b.Point);
+                var segment = new Segment(intersection.a.Point, intersection.b.Point);
                 segment.Draw(striped);
             }
             cur += dir * spacing;
@@ -2969,7 +2969,7 @@ public static class StripedDrawing
             var intersection = Line.IntersectLineRect(cur, lineDir, a, b, c, d);
             if (intersection.a.Valid && intersection.b.Valid)
             {
-                var segment = new SegmentDef.Segment(intersection.a.Point, intersection.b.Point);
+                var segment = new Segment(intersection.a.Point, intersection.b.Point);
                 var info = i % 2 == 0 ? striped : alternatingStriped;
                 segment.Draw(info);
             }
@@ -3007,7 +3007,7 @@ public static class StripedDrawing
             var intersection = Line.IntersectLineRect(cur, lineDir, a, b, c, d);
             if (intersection.a.Valid && intersection.b.Valid)
             {
-                var segment = new SegmentDef.Segment(intersection.a.Point, intersection.b.Point);
+                var segment = new Segment(intersection.a.Point, intersection.b.Point);
                 var infoIndex = i % alternatingStriped.Length;
                 var info = alternatingStriped[infoIndex];
                 segment.Draw(info);
@@ -3044,7 +3044,7 @@ public static class StripedDrawing
             var intersection = Line.IntersectLineRect(cur, lineDir, rect.A, rect.B, rect.C, rect.D);
             if (intersection.a.Valid && intersection.b.Valid)
             {
-                var segment = new SegmentDef.Segment(intersection.a.Point, intersection.b.Point);
+                var segment = new Segment(intersection.a.Point, intersection.b.Point);
                 segment.Draw(striped);
             }
             
@@ -3085,7 +3085,7 @@ public static class StripedDrawing
             var intersection = Line.IntersectLineRect(cur, lineDir, rect.A, rect.B, rect.C, rect.D);
             if (intersection.a.Valid && intersection.b.Valid)
             {
-                var segment = new SegmentDef.Segment(intersection.a.Point, intersection.b.Point);
+                var segment = new Segment(intersection.a.Point, intersection.b.Point);
                 var info = i % 2 == 0 ? striped : alternatingStriped;
                 segment.Draw(info);
             }
@@ -3128,7 +3128,7 @@ public static class StripedDrawing
             var intersection = Line.IntersectLineRect(cur, lineDir, rect.A, rect.B, rect.C, rect.D);
             if (intersection.a.Valid && intersection.b.Valid)
             {
-                var segment = new SegmentDef.Segment(intersection.a.Point, intersection.b.Point);
+                var segment = new Segment(intersection.a.Point, intersection.b.Point);
                 var infoIndex = i % alternatingStriped.Length;
                 var info = alternatingStriped[infoIndex];
                 segment.Draw(info);
@@ -3184,7 +3184,7 @@ public static class StripedDrawing
             var insideShapePoints = Ray.IntersectRayCircle(cur, rayDir, insideShape.Center, insideShape.Radius);
             if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
             {
-                var segment = new SegmentDef.Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
+                var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
             }
             else
@@ -3242,25 +3242,25 @@ public static class StripedDrawing
                 //draw outside shape segments because the inside shape points are outside the outside shape
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
-                    var segment = new SegmentDef.Segment(outsideClosestPoint, outsideFurthestPoint);
+                    var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
                     segment.Draw(striped);
                 }
                 else if (insideFurthestDis > outsideFurthestDis) //part of the inside shape is outside the outside shape
                 {
-                    var segment = new SegmentDef.Segment(outsideClosestPoint, insideClosestPoint);
+                    var segment = new Segment(outsideClosestPoint, insideClosestPoint);
                     segment.Draw(striped);
                 }   
                 else if (insideClosestDis < outsideClosestDis) //part of the inside shape is outside the outside shape
                 {
-                    var segment = new SegmentDef.Segment(insideFurthestPoint, outsideFurthestPoint);
+                    var segment = new Segment(insideFurthestPoint, outsideFurthestPoint);
                     segment.Draw(striped);
                 }
                 else //inside shape is completely inside the outside shape - draw everything normal
                 {
-                    var segment1 = new SegmentDef.Segment(outsideClosestPoint, insideClosestPoint);
+                    var segment1 = new Segment(outsideClosestPoint, insideClosestPoint);
                     segment1.Draw(striped);
                 
-                    var segment2 = new SegmentDef.Segment(insideFurthestPoint, outsideFurthestPoint);
+                    var segment2 = new Segment(insideFurthestPoint, outsideFurthestPoint);
                     segment2.Draw(striped);
                 }
                 
@@ -3322,7 +3322,7 @@ public static class StripedDrawing
             var insideShapePoints = Ray.IntersectRayTriangle(cur, rayDir, insideShape.A, insideShape.B, insideShape.C);
             if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
             {
-                var segment = new SegmentDef.Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
+                var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
             }
             else
@@ -3379,25 +3379,25 @@ public static class StripedDrawing
                 }
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
-                    var segment = new SegmentDef.Segment(outsideClosestPoint, outsideFurthestPoint);
+                    var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
                     segment.Draw(striped);
                 }
                 else if (insideFurthestDis > outsideFurthestDis)
                 {
-                    var segment = new SegmentDef.Segment(outsideClosestPoint, insideClosestPoint);
+                    var segment = new Segment(outsideClosestPoint, insideClosestPoint);
                     segment.Draw(striped);
                 }   
                 else if (insideClosestDis < outsideClosestDis)
                 {
-                    var segment = new SegmentDef.Segment(insideFurthestPoint, outsideFurthestPoint);
+                    var segment = new Segment(insideFurthestPoint, outsideFurthestPoint);
                     segment.Draw(striped);
                 }
                 else
                 {
-                    var segment1 = new SegmentDef.Segment(outsideClosestPoint, insideClosestPoint);
+                    var segment1 = new Segment(outsideClosestPoint, insideClosestPoint);
                     segment1.Draw(striped);
                 
-                    var segment2 = new SegmentDef.Segment(insideFurthestPoint, outsideFurthestPoint);
+                    var segment2 = new Segment(insideFurthestPoint, outsideFurthestPoint);
                     segment2.Draw(striped);
                 }
             }
@@ -3445,7 +3445,7 @@ public static class StripedDrawing
             var insideShapePoints = Ray.IntersectRayQuad(cur, rayDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
             if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
             {
-                var segment = new SegmentDef.Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
+                var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
             }
             else
@@ -3502,25 +3502,25 @@ public static class StripedDrawing
                 }
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
-                    var segment = new SegmentDef.Segment(outsideClosestPoint, outsideFurthestPoint);
+                    var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
                     segment.Draw(striped);
                 }
                 else if (insideFurthestDis > outsideFurthestDis)
                 {
-                    var segment = new SegmentDef.Segment(outsideClosestPoint, insideClosestPoint);
+                    var segment = new Segment(outsideClosestPoint, insideClosestPoint);
                     segment.Draw(striped);
                 }   
                 else if (insideClosestDis < outsideClosestDis)
                 {
-                    var segment = new SegmentDef.Segment(insideFurthestPoint, outsideFurthestPoint);
+                    var segment = new Segment(insideFurthestPoint, outsideFurthestPoint);
                     segment.Draw(striped);
                 }
                 else
                 {
-                    var segment1 = new SegmentDef.Segment(outsideClosestPoint, insideClosestPoint);
+                    var segment1 = new Segment(outsideClosestPoint, insideClosestPoint);
                     segment1.Draw(striped);
                 
-                    var segment2 = new SegmentDef.Segment(insideFurthestPoint, outsideFurthestPoint);
+                    var segment2 = new Segment(insideFurthestPoint, outsideFurthestPoint);
                     segment2.Draw(striped);
                 }
             }
@@ -3568,7 +3568,7 @@ public static class StripedDrawing
             var insideShapePoints = Ray.IntersectRayRect(cur, rayDir, insideShape.A, insideShape.B, insideShape.C, insideShape.D);
             if (!insideShapePoints.a.Valid && !insideShapePoints.b.Valid) //draw the ray - circle intersection points
             {
-                var segment = new SegmentDef.Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
+                var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
             }
             else
@@ -3625,25 +3625,25 @@ public static class StripedDrawing
                 }
                 if (insideClosestDis > outsideFurthestDis || insideFurthestDis < outsideClosestDis)
                 {
-                    var segment = new SegmentDef.Segment(outsideClosestPoint, outsideFurthestPoint);
+                    var segment = new Segment(outsideClosestPoint, outsideFurthestPoint);
                     segment.Draw(striped);
                 }
                 else if (insideFurthestDis > outsideFurthestDis)
                 {
-                    var segment = new SegmentDef.Segment(outsideClosestPoint, insideClosestPoint);
+                    var segment = new Segment(outsideClosestPoint, insideClosestPoint);
                     segment.Draw(striped);
                 }   
                 else if (insideClosestDis < outsideClosestDis)
                 {
-                    var segment = new SegmentDef.Segment(insideFurthestPoint, outsideFurthestPoint);
+                    var segment = new Segment(insideFurthestPoint, outsideFurthestPoint);
                     segment.Draw(striped);
                 }
                 else
                 {
-                    var segment1 = new SegmentDef.Segment(outsideClosestPoint, insideClosestPoint);
+                    var segment1 = new Segment(outsideClosestPoint, insideClosestPoint);
                     segment1.Draw(striped);
                 
-                    var segment2 = new SegmentDef.Segment(insideFurthestPoint, outsideFurthestPoint);
+                    var segment2 = new Segment(insideFurthestPoint, outsideFurthestPoint);
                     segment2.Draw(striped);
                 }
             }
@@ -3692,7 +3692,7 @@ public static class StripedDrawing
             
             if(count <= 0) //ray did not hit the inside shape, draw ray between edge of the outside shape
             {
-                var segment = new SegmentDef.Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
+                var segment = new Segment(outsideShapePoints.a.Point, outsideShapePoints.b.Point);
                 segment.Draw(striped);
             }
             else
@@ -3717,7 +3717,7 @@ public static class StripedDrawing
                 }
                 if (collisionPointsReference.Count == 2)//no sorting or loop needed for exactly 2 points
                 {
-                    var segment = new SegmentDef.Segment(collisionPointsReference[0].Point, collisionPointsReference[1].Point);
+                    var segment = new Segment(collisionPointsReference[0].Point, collisionPointsReference[1].Point);
                     segment.Draw(striped);
                     cur += dir * spacing;
                     collisionPointsReference.Clear();
@@ -3731,7 +3731,7 @@ public static class StripedDrawing
                 {
                     var p1 = collisionPointsReference[j].Point;
                     var p2 = collisionPointsReference[j + 1].Point;
-                    var segment = new SegmentDef.Segment(p1, p2);
+                    var segment = new Segment(p1, p2);
                     segment.Draw(striped);
                 }
                 
@@ -4092,7 +4092,7 @@ public static class StripedDrawing
                 {
                     var p1 = collisionPointsReference[j].Point;
                     var p2 = collisionPointsReference[j + 1].Point;
-                    var segment = new SegmentDef.Segment(p1, p2);
+                    var segment = new Segment(p1, p2);
                     segment.Draw(striped);
                 }
             }
@@ -4113,7 +4113,7 @@ public static class StripedDrawing
                 {
                     var p1 = collisionPointsReference[j].Point;
                     var p2 = collisionPointsReference[j + 1].Point;
-                    var segment = new SegmentDef.Segment(p1, p2);
+                    var segment = new Segment(p1, p2);
                     segment.Draw(striped);
                 }
             }
@@ -4172,7 +4172,7 @@ public static class StripedDrawing
                 {
                     var p1 = collisionPointsReference[j].Point;
                     var p2 = collisionPointsReference[j + 1].Point;
-                    var segment = new SegmentDef.Segment(p1, p2);
+                    var segment = new Segment(p1, p2);
                     segment.Draw(striped);
                 }
             }
@@ -4193,7 +4193,7 @@ public static class StripedDrawing
                 {
                     var p1 = collisionPointsReference[j].Point;
                     var p2 = collisionPointsReference[j + 1].Point;
-                    var segment = new SegmentDef.Segment(p1, p2);
+                    var segment = new Segment(p1, p2);
                     segment.Draw(striped);
                 }
             }
@@ -4252,7 +4252,7 @@ public static class StripedDrawing
                 {
                     var p1 = collisionPointsReference[j].Point;
                     var p2 = collisionPointsReference[j + 1].Point;
-                    var segment = new SegmentDef.Segment(p1, p2);
+                    var segment = new Segment(p1, p2);
                     segment.Draw(striped);
                 }
             }
@@ -4273,7 +4273,7 @@ public static class StripedDrawing
                 {
                     var p1 = collisionPointsReference[j].Point;
                     var p2 = collisionPointsReference[j + 1].Point;
-                    var segment = new SegmentDef.Segment(p1, p2);
+                    var segment = new Segment(p1, p2);
                     segment.Draw(striped);
                 }
             }
@@ -4332,7 +4332,7 @@ public static class StripedDrawing
                 {
                     var p1 = collisionPointsReference[j].Point;
                     var p2 = collisionPointsReference[j + 1].Point;
-                    var segment = new SegmentDef.Segment(p1, p2);
+                    var segment = new Segment(p1, p2);
                     segment.Draw(striped);
                 }
             }
@@ -4353,7 +4353,7 @@ public static class StripedDrawing
                 {
                     var p1 = collisionPointsReference[j].Point;
                     var p2 = collisionPointsReference[j + 1].Point;
-                    var segment = new SegmentDef.Segment(p1, p2);
+                    var segment = new Segment(p1, p2);
                     segment.Draw(striped);
                 }
             }
@@ -4412,7 +4412,7 @@ public static class StripedDrawing
                 {
                     var p1 = collisionPointsReference[j].Point;
                     var p2 = collisionPointsReference[j + 1].Point;
-                    var segment = new SegmentDef.Segment(p1, p2);
+                    var segment = new Segment(p1, p2);
                     segment.Draw(striped);
                 }
             }
@@ -4438,7 +4438,7 @@ public static class StripedDrawing
                 {
                     var p1 = collisionPointsReference[j].Point;
                     var p2 = collisionPointsReference[j + 1].Point;
-                    var segment = new SegmentDef.Segment(p1, p2);
+                    var segment = new Segment(p1, p2);
                     segment.Draw(striped);
                 }
             }

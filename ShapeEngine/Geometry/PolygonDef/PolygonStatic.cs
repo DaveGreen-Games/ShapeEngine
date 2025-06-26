@@ -1,6 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.SegmentsDef;
 using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.Random;
@@ -16,7 +17,7 @@ public partial class Polygon
     /// <param name="rayPoint"></param>
     /// <param name="rayDirection"></param>
     /// <returns></returns>
-    public List<SegmentDef.Segment>? CutRayWithPolygon(Vector2 rayPoint, Vector2 rayDirection)
+    public List<Segment>? CutRayWithPolygon(Vector2 rayPoint, Vector2 rayDirection)
     {
         if (Count < 3) return null;
         if (rayDirection.X == 0 && rayDirection.Y == 0) return null;
@@ -27,12 +28,12 @@ public partial class Polygon
 
         intersectionPoints.SortClosestFirst(rayPoint);
 
-        var segments = new List<SegmentDef.Segment>();
+        var segments = new List<Segment>();
         for (int i = 0; i < intersectionPoints.Count - 1; i += 2)
         {
             var segmentStart = intersectionPoints[i].Point;
             var segmentEnd = intersectionPoints[i + 1].Point;
-            var segment = new SegmentDef.Segment(segmentStart, segmentEnd);
+            var segment = new Segment(segmentStart, segmentEnd);
             segments.Add(segment);
         }
 
@@ -46,7 +47,7 @@ public partial class Polygon
     /// <param name="rayDirection"></param>
     /// <param name="result"></param>
     /// <returns></returns>
-    public int CutRayWithPolygon(Vector2 rayPoint, Vector2 rayDirection, ref List<SegmentDef.Segment> result)
+    public int CutRayWithPolygon(Vector2 rayPoint, Vector2 rayDirection, ref List<Segment> result)
     {
         if (Count < 3) return 0;
         if (rayDirection.X == 0 && rayDirection.Y == 0) return 0;
@@ -62,7 +63,7 @@ public partial class Polygon
         {
             var segmentStart = collisionPointsReference[i].Point;
             var segmentEnd = collisionPointsReference[i + 1].Point;
-            var segment = new SegmentDef.Segment(segmentStart, segmentEnd);
+            var segment = new Segment(segmentStart, segmentEnd);
             result.Add(segment);
         }
 
@@ -165,7 +166,7 @@ public partial class Polygon
         return uniqueEdges;
     }
 
-    private static bool IsSimilar(Segments segments, SegmentDef.Segment seg)
+    private static bool IsSimilar(Segments segments, Segment seg)
     {
         var counter = 0;
         foreach (var segment in segments)
@@ -316,7 +317,7 @@ public partial class Polygon
     /// <param name="minSectionLength">The minimum factor of the length between points along the line.(0-1)</param>
     /// <param name="maxSectionLength">The maximum factor of the length between points along the line.(0-1)</param>
     /// <returns>Returns the a generated polygon.</returns>
-    public static Polygon Generate(SegmentDef.Segment segment, float magMin = 0.1f, float magMax = 0.25f, float minSectionLength = 0.025f,
+    public static Polygon Generate(Segment segment, float magMin = 0.1f, float magMax = 0.25f, float minSectionLength = 0.025f,
         float maxSectionLength = 0.1f)
     {
         Polygon poly = new() { segment.Start };

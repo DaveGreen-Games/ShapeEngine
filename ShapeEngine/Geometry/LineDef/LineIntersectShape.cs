@@ -23,7 +23,7 @@ public readonly partial struct Line
     /// <remarks>
     /// This is a convenience method that uses the line's point and direction.
     /// </remarks>
-    public CollisionPoints? IntersectShape(SegmentDef.Segment segment)
+    public CollisionPoints? IntersectShape(Segment segment)
     {
         var result = IntersectLineSegment(Point, Direction, segment.Start, segment.End, segment.Normal);
         if (result.Valid)
@@ -384,7 +384,7 @@ public readonly partial struct Line
     /// <remarks>
     /// This method checks if the line intersects the segment and, if so, adds the intersection point to the collection.
     /// </remarks>
-    public int IntersectShape(SegmentDef.Segment s, ref CollisionPoints points)
+    public int IntersectShape(Segment s, ref CollisionPoints points)
     {
         var cp = IntersectLineSegment(Point, Direction, s.Start, s.End);
         if (cp.Valid)

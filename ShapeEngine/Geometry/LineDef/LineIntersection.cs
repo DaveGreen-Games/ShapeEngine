@@ -37,7 +37,7 @@ public readonly partial struct Line
     /// <remarks>
     /// This is a convenience method that uses the line's point and direction.
     /// </remarks>
-    public CollisionPoint IntersectSegment(SegmentDef.Segment segment) => IntersectLineSegment(Point, Direction, segment.Start, segment.End, segment.Normal);
+    public CollisionPoint IntersectSegment(Segment segment) => IntersectLineSegment(Point, Direction, segment.Start, segment.End, segment.Normal);
 
     /// <summary>
     /// Computes the intersection point between this line and another infinite line.
@@ -232,7 +232,7 @@ public readonly partial struct Line
     /// <remarks>
     /// This is a convenience method that uses the line's point and direction.
     /// </remarks>
-    public CollisionPoints? IntersectSegments(List<SegmentDef.Segment> segments, int maxCollisionPoints = -1) =>
+    public CollisionPoints? IntersectSegments(List<Segment> segments, int maxCollisionPoints = -1) =>
         IntersectLineSegments(Point, Direction, segments, maxCollisionPoints);
 
     /// <summary>

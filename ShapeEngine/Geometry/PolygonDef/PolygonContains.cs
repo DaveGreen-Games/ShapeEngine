@@ -4,6 +4,7 @@ using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.TriangleDef;
 
 namespace ShapeEngine.Geometry.PolygonDef;
@@ -43,7 +44,7 @@ public partial class Polygon
         return false;
     }
 
-    public bool ContainsShape(SegmentDef.Segment segment) => ContainsPolygonSegment(this, segment.Start, segment.End);
+    public bool ContainsShape(Segment segment) => ContainsPolygonSegment(this, segment.Start, segment.End);
     public bool ContainsShape(Circle circle) => ContainsPolygonCircle(this, circle.Center, circle.Radius);
     public bool ContainsShape(Rect rect) => ContainsPolygonRect(this, rect.A, rect.B, rect.C, rect.D);
     public bool ContainsShape(Triangle triangle) => ContainsPolygonTriangle(this, triangle.A, triangle.B, triangle.C);

@@ -4,6 +4,7 @@ using ShapeEngine.Geometry.LineDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RayDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.TriangleDef;
 
 namespace ShapeEngine.Geometry.PolylineDef;
@@ -12,7 +13,7 @@ public partial class Polyline
 {
     public static bool OverlapPolylineSegment(List<Vector2> points, Vector2 segmentStart, Vector2 segmentEnd)
     {
-        return SegmentDef.Segment.OverlapSegmentPolyline(segmentStart, segmentEnd, points);
+        return Segment.OverlapSegmentPolyline(segmentStart, segmentEnd, points);
     }
 
     public static bool OverlapPolylineLine(List<Vector2> points, Vector2 linePoint, Vector2 lineDirection)
@@ -64,14 +65,14 @@ public partial class Polyline
                 var bStart = points2[j];
                 var bEnd = points2[j + 1];
 
-                if (SegmentDef.Segment.OverlapSegmentSegment(start, end, bStart, bEnd)) return true;
+                if (Segment.OverlapSegmentSegment(start, end, bStart, bEnd)) return true;
             }
         }
 
         return false;
     }
 
-    public static bool OverlapPolylineSegments(List<Vector2> points, List<SegmentDef.Segment> segments)
+    public static bool OverlapPolylineSegments(List<Vector2> points, List<Segment> segments)
     {
         if (points.Count < 2 || segments.Count <= 0) return false;
 
@@ -82,7 +83,7 @@ public partial class Polyline
 
             foreach (var seg in segments)
             {
-                if (SegmentDef.Segment.OverlapSegmentSegment(start, end, seg.Start, seg.End)) return true;
+                if (Segment.OverlapSegmentSegment(start, end, seg.Start, seg.End)) return true;
             }
         }
 

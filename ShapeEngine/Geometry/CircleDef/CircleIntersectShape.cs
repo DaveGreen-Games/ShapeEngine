@@ -132,7 +132,7 @@ public readonly partial struct Circle
     /// <returns>
     /// A <see cref="CollisionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
     /// </returns>
-    public CollisionPoints? IntersectShape(SegmentDef.Segment s)
+    public CollisionPoints? IntersectShape(Segment s)
     {
         var result = IntersectCircleSegment(Center, Radius, s.Start, s.End);
         if (result.a.Valid || result.b.Valid)
@@ -493,7 +493,7 @@ public readonly partial struct Circle
     /// If <c>true</c>, the method returns after the first valid intersection is found.
     /// </param>
     /// <returns>The number of intersection points found and added.</returns>
-    public int IntersectShape(SegmentDef.Segment s, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Segment s, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         var result = IntersectCircleSegment(Center, Radius, s.Start, s.End);
         if (result.a.Valid && result.b.Valid)

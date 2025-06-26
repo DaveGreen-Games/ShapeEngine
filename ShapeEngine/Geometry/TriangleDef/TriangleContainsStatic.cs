@@ -1,4 +1,5 @@
 using System.Numerics;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.TriangleDef;
@@ -63,13 +64,13 @@ public readonly partial struct Triangle
     {
         if (!ContainsTrianglePoint(tA, tB, tC, circleCenter)) return false;
 
-        var result = SegmentDef.Segment.IntersectSegmentCircle(tA, tB, circleCenter, circleRadius);
+        var result = Segment.IntersectSegmentCircle(tA, tB, circleCenter, circleRadius);
         if (result.a.Valid || result.b.Valid) return false;
 
-        result = SegmentDef.Segment.IntersectSegmentCircle(tB, tC, circleCenter, circleRadius);
+        result = Segment.IntersectSegmentCircle(tB, tC, circleCenter, circleRadius);
         if (result.a.Valid || result.b.Valid) return false;
 
-        result = SegmentDef.Segment.IntersectSegmentCircle(tC, tA, circleCenter, circleRadius);
+        result = Segment.IntersectSegmentCircle(tC, tA, circleCenter, circleRadius);
         if (result.a.Valid || result.b.Valid) return false;
 
         return true;

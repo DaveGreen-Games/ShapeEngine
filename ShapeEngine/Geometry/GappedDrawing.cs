@@ -377,7 +377,7 @@ public static class GappedDrawing
     /// <remarks>
     /// This is a convenience wrapper for <see cref="DrawGappedSegment"/>.
     /// </remarks>
-    public static float DrawGapped(this SegmentDef.Segment s, float length, LineDrawingInfo lineInfo,
+    public static float DrawGapped(this Segment s, float length, LineDrawingInfo lineInfo,
         GappedOutlineDrawingInfo gapDrawingInfo) => DrawGappedSegment(s.Start, s.End, length, lineInfo, gapDrawingInfo);
 
     /// <summary>

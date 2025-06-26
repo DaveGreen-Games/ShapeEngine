@@ -2,6 +2,7 @@ using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.LineDef;
 using ShapeEngine.Geometry.RayDef;
+using ShapeEngine.Geometry.SegmentDef;
 
 namespace ShapeEngine.Geometry.SegmentsDef;
 
@@ -14,7 +15,7 @@ public partial class Segments
 
         foreach (var seg in this)
         {
-            var result = SegmentDef.Segment.IntersectSegmentRay(seg.Start, seg.End, r.Point, r.Direction, r.Normal);
+            var result = Segment.IntersectSegmentRay(seg.Start, seg.End, r.Point, r.Direction, r.Normal);
             if (result.Valid)
             {
                 points ??= new();
@@ -32,7 +33,7 @@ public partial class Segments
 
         foreach (var seg in this)
         {
-            var result = SegmentDef.Segment.IntersectSegmentLine(seg.Start, seg.End, l.Point, l.Direction, l.Normal);
+            var result = Segment.IntersectSegmentLine(seg.Start, seg.End, l.Point, l.Direction, l.Normal);
             if (result.Valid)
             {
                 points ??= new();
@@ -43,14 +44,14 @@ public partial class Segments
         return points;
     }
 
-    public CollisionPoints? IntersectShape(SegmentDef.Segment s)
+    public CollisionPoints? IntersectShape(Segment s)
     {
         if (Count <= 0) return null;
         CollisionPoints? points = null;
 
         foreach (var seg in this)
         {
-            var result = SegmentDef.Segment.IntersectSegmentSegment(seg.Start, seg.End, s.Start, s.End);
+            var result = Segment.IntersectSegmentSegment(seg.Start, seg.End, s.Start, s.End);
             if (result.Valid)
             {
                 points ??= new();
@@ -67,7 +68,7 @@ public partial class Segments
         CollisionPoints? points = null;
         foreach (var seg in this)
         {
-            var result = SegmentDef.Segment.IntersectSegmentCircle(seg.Start, seg.End, c.Center, c.Radius);
+            var result = Segment.IntersectSegmentCircle(seg.Start, seg.End, c.Center, c.Radius);
             if (result.a.Valid || result.b.Valid)
             {
                 points ??= new();
@@ -88,7 +89,7 @@ public partial class Segments
         {
             foreach (var bSeg in shape)
             {
-                var result = SegmentDef.Segment.IntersectSegmentSegment(seg.Start, seg.End, bSeg.Start, bSeg.End);
+                var result = Segment.IntersectSegmentSegment(seg.Start, seg.End, bSeg.Start, bSeg.End);
                 if (result.Valid)
                 {
                     points ??= new();
@@ -107,7 +108,7 @@ public partial class Segments
 
         foreach (var seg in this)
         {
-            var result = SegmentDef.Segment.IntersectSegmentRay(seg.Start, seg.End, r.Point, r.Direction, r.Normal);
+            var result = Segment.IntersectSegmentRay(seg.Start, seg.End, r.Point, r.Direction, r.Normal);
             if (result.Valid)
             {
                 points.Add(result);
@@ -126,7 +127,7 @@ public partial class Segments
 
         foreach (var seg in this)
         {
-            var result = SegmentDef.Segment.IntersectSegmentLine(seg.Start, seg.End, l.Point, l.Direction, l.Normal);
+            var result = Segment.IntersectSegmentLine(seg.Start, seg.End, l.Point, l.Direction, l.Normal);
             if (result.Valid)
             {
                 points.Add(result);
@@ -138,14 +139,14 @@ public partial class Segments
         return count;
     }
 
-    public int IntersectShape(SegmentDef.Segment s, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Segment s, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count <= 0) return 0;
         var count = 0;
 
         foreach (var seg in this)
         {
-            var result = SegmentDef.Segment.IntersectSegmentSegment(seg.Start, seg.End, s.Start, s.End);
+            var result = Segment.IntersectSegmentSegment(seg.Start, seg.End, s.Start, s.End);
             if (result.Valid)
             {
                 points.Add(result);
@@ -163,7 +164,7 @@ public partial class Segments
         var count = 0;
         foreach (var seg in this)
         {
-            var result = SegmentDef.Segment.IntersectSegmentCircle(seg.Start, seg.End, c.Center, c.Radius);
+            var result = Segment.IntersectSegmentCircle(seg.Start, seg.End, c.Center, c.Radius);
             if (result.a.Valid)
             {
                 points.Add(result.a);
@@ -191,7 +192,7 @@ public partial class Segments
         {
             foreach (var bSeg in shape)
             {
-                var result = SegmentDef.Segment.IntersectSegmentSegment(seg.Start, seg.End, bSeg.Start, bSeg.End);
+                var result = Segment.IntersectSegmentSegment(seg.Start, seg.End, bSeg.Start, bSeg.End);
                 if (result.Valid)
                 {
                     points.Add(result);

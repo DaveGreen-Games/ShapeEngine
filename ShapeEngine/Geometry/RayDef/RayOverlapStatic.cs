@@ -1,6 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.QuadDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.TriangleDef;
 
 namespace ShapeEngine.Geometry.RayDef;
@@ -169,7 +170,7 @@ public readonly partial struct Ray
         return false;
     }
 
-    public static bool OverlapRaySegments(Vector2 rayPoint, Vector2 rayDirection, List<SegmentDef.Segment> segments)
+    public static bool OverlapRaySegments(Vector2 rayPoint, Vector2 rayDirection, List<Segment> segments)
     {
         if (segments.Count <= 0) return false;
 

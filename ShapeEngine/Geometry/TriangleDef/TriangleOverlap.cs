@@ -7,6 +7,7 @@ using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.RayDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.SegmentsDef;
 
 namespace ShapeEngine.Geometry.TriangleDef;
@@ -22,7 +23,7 @@ public readonly partial struct Triangle
     public bool OverlapRect(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => OverlapTriangleQuad(A, B, C, a, b, c, d);
     public bool OverlapPolygon(List<Vector2> points) => OverlapTrianglePolygon(A, B, C, points);
     public bool OverlapPolyline(List<Vector2> points) => OverlapTrianglePolyline(A, B, C, points);
-    public bool OverlapSegments(List<SegmentDef.Segment> segments) => OverlapTriangleSegments(A, B, C, segments);
+    public bool OverlapSegments(List<Segment> segments) => OverlapTriangleSegments(A, B, C, segments);
     public bool OverlapShape(Line line) => OverlapTriangleLine(A, B, C, line.Point, line.Direction);
     public bool OverlapShape(Ray ray) => OverlapTriangleRay(A, B, C, ray.Point, ray.Direction);
 
@@ -72,15 +73,15 @@ public readonly partial struct Triangle
 
         foreach (var seg in segments)
         {
-            if (SegmentDef.Segment.OverlapSegmentSegment(A, B, seg.Start, seg.End)) return true;
-            if (SegmentDef.Segment.OverlapSegmentSegment(B, C, seg.Start, seg.End)) return true;
-            if (SegmentDef.Segment.OverlapSegmentSegment(C, A, seg.Start, seg.End)) return true;
+            if (Segment.OverlapSegmentSegment(A, B, seg.Start, seg.End)) return true;
+            if (Segment.OverlapSegmentSegment(B, C, seg.Start, seg.End)) return true;
+            if (Segment.OverlapSegmentSegment(C, A, seg.Start, seg.End)) return true;
         }
 
         return false;
     }
 
-    public bool OverlapShape(SegmentDef.Segment s) => s.OverlapShape(this);
+    public bool OverlapShape(Segment s) => s.OverlapShape(this);
     public bool OverlapShape(Circle c) => c.OverlapShape(this);
 
     public bool OverlapShape(Triangle b)
@@ -89,17 +90,17 @@ public readonly partial struct Triangle
 
         if (b.ContainsPoint(A)) return true;
 
-        if (SegmentDef.Segment.OverlapSegmentSegment(A, B, b.A, b.B)) return true;
-        if (SegmentDef.Segment.OverlapSegmentSegment(A, B, b.B, b.C)) return true;
-        if (SegmentDef.Segment.OverlapSegmentSegment(A, B, b.C, b.A)) return true;
+        if (Segment.OverlapSegmentSegment(A, B, b.A, b.B)) return true;
+        if (Segment.OverlapSegmentSegment(A, B, b.B, b.C)) return true;
+        if (Segment.OverlapSegmentSegment(A, B, b.C, b.A)) return true;
 
-        if (SegmentDef.Segment.OverlapSegmentSegment(B, C, b.A, b.B)) return true;
-        if (SegmentDef.Segment.OverlapSegmentSegment(B, C, b.B, b.C)) return true;
-        if (SegmentDef.Segment.OverlapSegmentSegment(B, C, b.C, b.A)) return true;
+        if (Segment.OverlapSegmentSegment(B, C, b.A, b.B)) return true;
+        if (Segment.OverlapSegmentSegment(B, C, b.B, b.C)) return true;
+        if (Segment.OverlapSegmentSegment(B, C, b.C, b.A)) return true;
 
-        if (SegmentDef.Segment.OverlapSegmentSegment(C, A, b.A, b.B)) return true;
-        if (SegmentDef.Segment.OverlapSegmentSegment(C, A, b.B, b.C)) return true;
-        return SegmentDef.Segment.OverlapSegmentSegment(C, A, b.C, b.A);
+        if (Segment.OverlapSegmentSegment(C, A, b.A, b.B)) return true;
+        if (Segment.OverlapSegmentSegment(C, A, b.B, b.C)) return true;
+        return Segment.OverlapSegmentSegment(C, A, b.C, b.A);
     }
 
     public bool OverlapShape(Rect r)
@@ -110,24 +111,24 @@ public readonly partial struct Triangle
         if (r.ContainsPoint(A)) return true;
 
         var b = r.BottomLeft;
-        if (SegmentDef.Segment.OverlapSegmentSegment(A, B, a, b)) return true;
+        if (Segment.OverlapSegmentSegment(A, B, a, b)) return true;
 
         var c = r.BottomRight;
-        if (SegmentDef.Segment.OverlapSegmentSegment(A, B, b, c)) return true;
+        if (Segment.OverlapSegmentSegment(A, B, b, c)) return true;
 
         var d = r.TopRight;
-        if (SegmentDef.Segment.OverlapSegmentSegment(A, B, c, d)) return true;
-        if (SegmentDef.Segment.OverlapSegmentSegment(A, B, d, a)) return true;
+        if (Segment.OverlapSegmentSegment(A, B, c, d)) return true;
+        if (Segment.OverlapSegmentSegment(A, B, d, a)) return true;
 
-        if (SegmentDef.Segment.OverlapSegmentSegment(B, C, a, b)) return true;
-        if (SegmentDef.Segment.OverlapSegmentSegment(B, C, b, c)) return true;
-        if (SegmentDef.Segment.OverlapSegmentSegment(B, C, c, d)) return true;
-        if (SegmentDef.Segment.OverlapSegmentSegment(B, C, d, a)) return true;
+        if (Segment.OverlapSegmentSegment(B, C, a, b)) return true;
+        if (Segment.OverlapSegmentSegment(B, C, b, c)) return true;
+        if (Segment.OverlapSegmentSegment(B, C, c, d)) return true;
+        if (Segment.OverlapSegmentSegment(B, C, d, a)) return true;
 
-        if (SegmentDef.Segment.OverlapSegmentSegment(C, A, a, b)) return true;
-        if (SegmentDef.Segment.OverlapSegmentSegment(C, A, b, c)) return true;
-        if (SegmentDef.Segment.OverlapSegmentSegment(C, A, c, d)) return true;
-        return SegmentDef.Segment.OverlapSegmentSegment(C, A, d, a);
+        if (Segment.OverlapSegmentSegment(C, A, a, b)) return true;
+        if (Segment.OverlapSegmentSegment(C, A, b, c)) return true;
+        if (Segment.OverlapSegmentSegment(C, A, c, d)) return true;
+        return Segment.OverlapSegmentSegment(C, A, d, a);
     }
 
     public bool OverlapShape(Quad q)
@@ -136,20 +137,20 @@ public readonly partial struct Triangle
 
         if (q.ContainsPoint(A)) return true;
 
-        if (SegmentDef.Segment.OverlapSegmentSegment(A, B, q.A, q.B)) return true;
-        if (SegmentDef.Segment.OverlapSegmentSegment(A, B, q.B, q.C)) return true;
-        if (SegmentDef.Segment.OverlapSegmentSegment(A, B, q.C, q.D)) return true;
-        if (SegmentDef.Segment.OverlapSegmentSegment(A, B, q.D, q.A)) return true;
+        if (Segment.OverlapSegmentSegment(A, B, q.A, q.B)) return true;
+        if (Segment.OverlapSegmentSegment(A, B, q.B, q.C)) return true;
+        if (Segment.OverlapSegmentSegment(A, B, q.C, q.D)) return true;
+        if (Segment.OverlapSegmentSegment(A, B, q.D, q.A)) return true;
 
-        if (SegmentDef.Segment.OverlapSegmentSegment(B, C, q.A, q.B)) return true;
-        if (SegmentDef.Segment.OverlapSegmentSegment(B, C, q.B, q.C)) return true;
-        if (SegmentDef.Segment.OverlapSegmentSegment(B, C, q.C, q.D)) return true;
-        if (SegmentDef.Segment.OverlapSegmentSegment(B, C, q.D, q.A)) return true;
+        if (Segment.OverlapSegmentSegment(B, C, q.A, q.B)) return true;
+        if (Segment.OverlapSegmentSegment(B, C, q.B, q.C)) return true;
+        if (Segment.OverlapSegmentSegment(B, C, q.C, q.D)) return true;
+        if (Segment.OverlapSegmentSegment(B, C, q.D, q.A)) return true;
 
-        if (SegmentDef.Segment.OverlapSegmentSegment(C, A, q.A, q.B)) return true;
-        if (SegmentDef.Segment.OverlapSegmentSegment(C, A, q.B, q.C)) return true;
-        if (SegmentDef.Segment.OverlapSegmentSegment(C, A, q.C, q.D)) return true;
-        return SegmentDef.Segment.OverlapSegmentSegment(C, A, q.D, q.A);
+        if (Segment.OverlapSegmentSegment(C, A, q.A, q.B)) return true;
+        if (Segment.OverlapSegmentSegment(C, A, q.B, q.C)) return true;
+        if (Segment.OverlapSegmentSegment(C, A, q.C, q.D)) return true;
+        return Segment.OverlapSegmentSegment(C, A, q.D, q.A);
     }
 
     public bool OverlapShape(Polygon poly)
@@ -164,9 +165,9 @@ public readonly partial struct Triangle
         {
             var start = poly[i];
             var end = poly[(i + 1) % poly.Count];
-            if (SegmentDef.Segment.OverlapSegmentSegment(A, B, start, end)) return true;
-            if (SegmentDef.Segment.OverlapSegmentSegment(B, C, start, end)) return true;
-            if (SegmentDef.Segment.OverlapSegmentSegment(C, A, start, end)) return true;
+            if (Segment.OverlapSegmentSegment(A, B, start, end)) return true;
+            if (Segment.OverlapSegmentSegment(B, C, start, end)) return true;
+            if (Segment.OverlapSegmentSegment(C, A, start, end)) return true;
 
             if (Polygon.ContainsPointCheck(start, end, A)) oddNodes = !oddNodes;
         }
@@ -184,9 +185,9 @@ public readonly partial struct Triangle
         {
             var start = pl[i];
             var end = pl[(i + 1) % pl.Count];
-            if (SegmentDef.Segment.OverlapSegmentSegment(A, B, start, end)) return true;
-            if (SegmentDef.Segment.OverlapSegmentSegment(B, C, start, end)) return true;
-            if (SegmentDef.Segment.OverlapSegmentSegment(C, A, start, end)) return true;
+            if (Segment.OverlapSegmentSegment(A, B, start, end)) return true;
+            if (Segment.OverlapSegmentSegment(B, C, start, end)) return true;
+            if (Segment.OverlapSegmentSegment(C, A, start, end)) return true;
         }
 
         return false;

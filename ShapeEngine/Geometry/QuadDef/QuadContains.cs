@@ -4,6 +4,7 @@ using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.TriangleDef;
 
 namespace ShapeEngine.Geometry.QuadDef;
@@ -43,7 +44,7 @@ public readonly partial struct Quad
         return false;
     }
 
-    public bool ContainsShape(SegmentDef.Segment segment)
+    public bool ContainsShape(Segment segment)
     {
         return ContainsQuadPoints(A, B, C, D, segment.Start, segment.End);
     }

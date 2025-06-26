@@ -3,6 +3,7 @@ using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.LineDef;
 using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RayDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.TriangleDef;
 
 namespace ShapeEngine.Geometry.RectDef;
@@ -11,7 +12,7 @@ public readonly partial struct Rect
 {
     public static bool OverlapRectSegment(Vector2 a, Vector2 b, Vector2 c, Vector2 d, Vector2 segmentStart, Vector2 segmentEnd)
     {
-        return SegmentDef.Segment.OverlapSegmentQuad(segmentStart, segmentEnd, a, b, c, d);
+        return Segment.OverlapSegmentQuad(segmentStart, segmentEnd, a, b, c, d);
     }
 
     public static bool OverlapRectLine(Vector2 a, Vector2 b, Vector2 c, Vector2 d, Vector2 linePoint, Vector2 lineDirection)
@@ -54,7 +55,7 @@ public readonly partial struct Rect
         return Quad.OverlapQuadPolyline(a, b, c, d, points);
     }
 
-    public static bool OverlapRectSegments(Vector2 a, Vector2 b, Vector2 c, Vector2 d, List<SegmentDef.Segment> segments)
+    public static bool OverlapRectSegments(Vector2 a, Vector2 b, Vector2 c, Vector2 d, List<Segment> segments)
     {
         return Quad.OverlapQuadSegments(a, b, c, d, segments);
     }

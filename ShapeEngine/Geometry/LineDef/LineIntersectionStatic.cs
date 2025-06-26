@@ -1,6 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.RayDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.LineDef;
@@ -68,7 +69,7 @@ public readonly partial struct Line
         var intersection = linePoint + t * lineDirection;
 
         // Check if the intersection point is within the segment
-        if (SegmentDef.Segment.IsPointOnSegment(intersection, segmentStart, segmentEnd))
+        if (Segment.IsPointOnSegment(intersection, segmentStart, segmentEnd))
         {
             // The normal vector can be taken as perpendicular to the segment direction
             segmentDirection = segmentDirection.Normalize();
@@ -720,7 +721,7 @@ public readonly partial struct Line
     /// <remarks>
     /// The function iterates through all segments in the collection to find intersections with the line.
     /// </remarks>
-    public static CollisionPoints? IntersectLineSegments(Vector2 linePoint, Vector2 lineDirection, List<SegmentDef.Segment> segments, int maxCollisionPoints = -1)
+    public static CollisionPoints? IntersectLineSegments(Vector2 linePoint, Vector2 lineDirection, List<Segment> segments, int maxCollisionPoints = -1)
     {
         if (segments.Count <= 0) return null;
         if (maxCollisionPoints == 0) return null;

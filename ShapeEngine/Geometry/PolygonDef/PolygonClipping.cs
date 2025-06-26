@@ -1,6 +1,7 @@
 using System.Numerics;
 using Clipper2Lib;
 using ShapeEngine.Geometry.LineDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.SegmentsDef;
 using ShapeEngine.Random;
 using ShapeEngine.StaticLib;
@@ -87,7 +88,7 @@ public partial class Polygon
         return this.CutShape(cut);
     }
 
-    public (Polygons newShapes, Polygons cutOuts) CutShapeSimple(SegmentDef.Segment cutLine, float minSectionLength = 0.025f, float maxSectionLength = 0.1f,
+    public (Polygons newShapes, Polygons cutOuts) CutShapeSimple(Segment cutLine, float minSectionLength = 0.025f, float maxSectionLength = 0.1f,
         float minMagnitude = 0.05f, float maxMagnitude = 0.25f)
     {
         var cut = Generate(cutLine, minMagnitude, maxMagnitude, minSectionLength, maxSectionLength);
@@ -111,7 +112,7 @@ public partial class Polygon
         return Split(segment);
     }
 
-    public Polygons? Split(SegmentDef.Segment segment)
+    public Polygons? Split(Segment segment)
     {
         var result = this.Difference(segment);
         if (result.Count <= 0) return null;
@@ -167,7 +168,7 @@ public partial class Polygon
     public Segments? GenerateFractureLine(Vector2 start, Vector2 end, float maxOffsetPercentage, int linePoints)
     {
         if (linePoints < 1) return null;
-        if (maxOffsetPercentage < 0f) return [new SegmentDef.Segment(start, end)];
+        if (maxOffsetPercentage < 0f) return [new Segment(start, end)];
 
         var w = end - start;
         var disSquared = w.LengthSquared();
@@ -196,12 +197,12 @@ public partial class Polygon
 
             var nextLinePoint = point + offset;
 
-            var segment = new SegmentDef.Segment(curLinePoint, nextLinePoint);
+            var segment = new Segment(curLinePoint, nextLinePoint);
             curLinePoint = nextLinePoint;
             result.Add(segment);
         }
 
-        result.Add(new SegmentDef.Segment(curLinePoint, end));
+        result.Add(new Segment(curLinePoint, end));
 
         return result;
     }

@@ -6,6 +6,7 @@ using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.RayDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.SegmentsDef;
 using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.StaticLib;
@@ -14,8 +15,6 @@ namespace ShapeEngine.Geometry.CircleDef;
 
 public readonly partial struct Circle
 {
-    #region Closest Point
-
     /// <summary>
     /// Gets the closest point on the circle to a given point.
     /// </summary>
@@ -86,7 +85,7 @@ public readonly partial struct Circle
     /// </summary>
     /// <param name="other">The segment to check.</param>
     /// <returns>A <see cref="ClosestPointResult"/> representing the closest point.</returns>
-    public ClosestPointResult GetClosestPoint(SegmentDef.Segment other)
+    public ClosestPointResult GetClosestPoint(Segment other)
     {
         var d1 = other.End - other.Start;
 
@@ -385,5 +384,4 @@ public readonly partial struct Circle
         return vertex;
     }
 
-    #endregion
 }

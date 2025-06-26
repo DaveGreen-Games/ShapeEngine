@@ -4,6 +4,7 @@ using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.QuadDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.TriangleDef;
 
 namespace ShapeEngine.Geometry.RectDef;
@@ -43,7 +44,7 @@ public readonly partial struct Rect
         return false;
     }
 
-    public bool ContainsShape(SegmentDef.Segment segment)
+    public bool ContainsShape(Segment segment)
     {
         return ContainsRectPoints(TopLeft, BottomRight, segment.Start, segment.End);
     }

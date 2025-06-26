@@ -4,6 +4,7 @@ using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.StaticLib;
 
@@ -147,7 +148,7 @@ public readonly partial struct Circle
     /// </summary>
     /// <param name="segment">The segment to check.</param>
     /// <returns><c>true</c> if the segment is inside the circle; otherwise, <c>false</c>.</returns>
-    public bool ContainsShape(SegmentDef.Segment segment)
+    public bool ContainsShape(Segment segment)
     {
         return ContainsCircleSegment(Center, Radius, segment.Start, segment.End);
     }

@@ -3,6 +3,7 @@ using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.LineDef;
 using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RayDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.TriangleDef;
 
 namespace ShapeEngine.Geometry.PolygonDef;
@@ -11,7 +12,7 @@ public partial class Polygon
 {
     public static bool OverlapPolygonSegment(List<Vector2> points, Vector2 segmentStart, Vector2 segmentEnd)
     {
-        return SegmentDef.Segment.OverlapSegmentPolygon(segmentStart, segmentEnd, points);
+        return Segment.OverlapSegmentPolygon(segmentStart, segmentEnd, points);
     }
 
     public static bool OverlapPolygonLine(List<Vector2> points, Vector2 linePoint, Vector2 lineDirection)
@@ -64,7 +65,7 @@ public partial class Polygon
             {
                 var start2 = points2[j];
                 var end2 = points2[(j + 1) % points2.Count];
-                if (SegmentDef.Segment.OverlapSegmentSegment(start1, end1, start2, end2)) return true;
+                if (Segment.OverlapSegmentSegment(start1, end1, start2, end2)) return true;
 
                 if (containsPoints2CheckFinished) continue;
                 if (Polygon.ContainsPointCheck(start2, end2, pointToCeck1)) oddNodes2 = !oddNodes2;
@@ -99,7 +100,7 @@ public partial class Polygon
             {
                 var start2 = points2[j];
                 var end2 = points2[j + 1];
-                if (SegmentDef.Segment.OverlapSegmentSegment(start1, end1, start2, end2)) return true;
+                if (Segment.OverlapSegmentSegment(start1, end1, start2, end2)) return true;
             }
 
             if (Polygon.ContainsPointCheck(start1, end1, pointToCeck)) oddNodes = !oddNodes;
@@ -108,7 +109,7 @@ public partial class Polygon
         return oddNodes;
     }
 
-    public static bool OverlapPolygonSegments(List<Vector2> points, List<SegmentDef.Segment> segments)
+    public static bool OverlapPolygonSegments(List<Vector2> points, List<Segment> segments)
     {
         if (points.Count < 3 || segments.Count <= 0) return false;
 
@@ -123,7 +124,7 @@ public partial class Polygon
 
             foreach (var seg in segments)
             {
-                if (SegmentDef.Segment.OverlapSegmentSegment(start, end, seg.Start, seg.End)) return true;
+                if (Segment.OverlapSegmentSegment(start, end, seg.Start, seg.End)) return true;
             }
 
             if (Polygon.ContainsPointCheck(start, end, pointToCeck)) oddNodes = !oddNodes;

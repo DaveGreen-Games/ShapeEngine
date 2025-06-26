@@ -5,6 +5,7 @@ using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RayDef;
 using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.SegmentsDef;
 using ShapeEngine.Geometry.TriangleDef;
 
@@ -57,7 +58,7 @@ public partial class Polyline
         var count = 0;
         for (var i = 0; i < Count - 1; i++)
         {
-            var result = SegmentDef.Segment.IntersectSegmentRay(this[i], this[(i + 1) % Count], r.Point, r.Direction, r.Normal);
+            var result = Segment.IntersectSegmentRay(this[i], this[(i + 1) % Count], r.Point, r.Direction, r.Normal);
             if (result.Valid)
             {
                 points.Add(result);
@@ -76,7 +77,7 @@ public partial class Polyline
         var count = 0;
         for (var i = 0; i < Count - 1; i++)
         {
-            var result = SegmentDef.Segment.IntersectSegmentLine(this[i], this[(i + 1) % Count], l.Point, l.Direction, l.Normal);
+            var result = Segment.IntersectSegmentLine(this[i], this[(i + 1) % Count], l.Point, l.Direction, l.Normal);
             if (result.Valid)
             {
                 points.Add(result);
@@ -88,14 +89,14 @@ public partial class Polyline
         return count;
     }
 
-    public int IntersectShape(SegmentDef.Segment s, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Segment s, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count < 2) return 0;
 
         var count = 0;
         for (var i = 0; i < Count - 1; i++)
         {
-            var result = SegmentDef.Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], s.Start, s.End);
+            var result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], s.Start, s.End);
             if (result.Valid)
             {
                 points.Add(result);
@@ -115,7 +116,7 @@ public partial class Polyline
 
         for (var i = 0; i < Count - 1; i++)
         {
-            var result = SegmentDef.Segment.IntersectSegmentCircle(this[i], this[(i + 1) % Count], c.Center, c.Radius);
+            var result = Segment.IntersectSegmentCircle(this[i], this[(i + 1) % Count], c.Center, c.Radius);
             if (result.a.Valid)
             {
                 points.Add(result.a);
@@ -141,7 +142,7 @@ public partial class Polyline
         var count = 0;
         for (var i = 0; i < Count - 1; i++)
         {
-            var result = SegmentDef.Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], t.A, t.B);
+            var result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], t.A, t.B);
             if (result.Valid)
             {
                 points.Add(result);
@@ -149,7 +150,7 @@ public partial class Polyline
                 count++;
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], t.B, t.C);
+            result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], t.B, t.C);
             if (result.Valid)
             {
                 points.Add(result);
@@ -157,7 +158,7 @@ public partial class Polyline
                 count++;
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], t.C, t.A);
+            result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], t.C, t.A);
             if (result.Valid)
             {
                 points.Add(result);
@@ -176,7 +177,7 @@ public partial class Polyline
         var count = 0;
         for (var i = 0; i < Count - 1; i++)
         {
-            var result = SegmentDef.Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], q.A, q.B);
+            var result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], q.A, q.B);
             if (result.Valid)
             {
                 points.Add(result);
@@ -184,7 +185,7 @@ public partial class Polyline
                 count++;
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], q.B, q.C);
+            result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], q.B, q.C);
             if (result.Valid)
             {
                 points.Add(result);
@@ -192,7 +193,7 @@ public partial class Polyline
                 count++;
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], q.C, q.D);
+            result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], q.C, q.D);
             if (result.Valid)
             {
                 points.Add(result);
@@ -200,7 +201,7 @@ public partial class Polyline
                 count++;
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], q.D, q.A);
+            result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], q.D, q.A);
             if (result.Valid)
             {
                 points.Add(result);
@@ -223,7 +224,7 @@ public partial class Polyline
         var d = r.TopRight;
         for (var i = 0; i < Count - 1; i++)
         {
-            var result = SegmentDef.Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], a, b);
+            var result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], a, b);
             if (result.Valid)
             {
                 points.Add(result);
@@ -231,7 +232,7 @@ public partial class Polyline
                 count++;
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], b, c);
+            result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], b, c);
             if (result.Valid)
             {
                 points.Add(result);
@@ -239,7 +240,7 @@ public partial class Polyline
                 count++;
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], c, d);
+            result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], c, d);
             if (result.Valid)
             {
                 points.Add(result);
@@ -247,7 +248,7 @@ public partial class Polyline
                 count++;
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], d, a);
+            result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], d, a);
             if (result.Valid)
             {
                 points.Add(result);
@@ -267,7 +268,7 @@ public partial class Polyline
         {
             for (var j = 0; j < p.Count; j++)
             {
-                var result = SegmentDef.Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], p[j], p[(j + 1) % p.Count]);
+                var result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], p[j], p[(j + 1) % p.Count]);
                 if (result.Valid)
                 {
                     points.Add(result);
@@ -288,7 +289,7 @@ public partial class Polyline
         {
             for (var j = 0; j < pl.Count - 1; j++)
             {
-                var result = SegmentDef.Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], pl[j], pl[(j + 1) % pl.Count]);
+                var result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], pl[j], pl[(j + 1) % pl.Count]);
                 if (result.Valid)
                 {
                     points.Add(result);
@@ -309,7 +310,7 @@ public partial class Polyline
         {
             foreach (var seg in shape)
             {
-                var result = SegmentDef.Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], seg.Start, seg.End);
+                var result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], seg.Start, seg.End);
                 if (result.Valid)
                 {
                     points.Add(result);

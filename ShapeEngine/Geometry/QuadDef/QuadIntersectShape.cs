@@ -5,6 +5,7 @@ using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.RayDef;
 using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.SegmentsDef;
 using ShapeEngine.Geometry.TriangleDef;
 
@@ -58,28 +59,28 @@ public readonly partial struct Quad
 
         foreach (var seg in segments)
         {
-            var result = SegmentDef.Segment.IntersectSegmentSegment(A, B, seg.Start, seg.End);
+            var result = Segment.IntersectSegmentSegment(A, B, seg.Start, seg.End);
             if (result.Valid)
             {
                 points ??= new();
                 points.Add(result);
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(B, C, seg.Start, seg.End);
+            result = Segment.IntersectSegmentSegment(B, C, seg.Start, seg.End);
             if (result.Valid)
             {
                 points ??= new();
                 points.Add(result);
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(C, D, seg.Start, seg.End);
+            result = Segment.IntersectSegmentSegment(C, D, seg.Start, seg.End);
             if (result.Valid)
             {
                 points ??= new();
                 points.Add(result);
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(D, A, seg.Start, seg.End);
+            result = Segment.IntersectSegmentSegment(D, A, seg.Start, seg.End);
             if (result.Valid)
             {
                 points ??= new();
@@ -93,28 +94,28 @@ public readonly partial struct Quad
     public CollisionPoints? IntersectShape(Ray r)
     {
         CollisionPoints? points = null;
-        var result = SegmentDef.Segment.IntersectSegmentRay(A, B, r.Point, r.Direction, r.Normal);
+        var result = Segment.IntersectSegmentRay(A, B, r.Point, r.Direction, r.Normal);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentRay(B, C, r.Point, r.Direction, r.Normal);
+        result = Segment.IntersectSegmentRay(B, C, r.Point, r.Direction, r.Normal);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentRay(C, D, r.Point, r.Direction, r.Normal);
+        result = Segment.IntersectSegmentRay(C, D, r.Point, r.Direction, r.Normal);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentRay(D, A, r.Point, r.Direction, r.Normal);
+        result = Segment.IntersectSegmentRay(D, A, r.Point, r.Direction, r.Normal);
         if (result.Valid)
         {
             points ??= new();
@@ -127,28 +128,28 @@ public readonly partial struct Quad
     public CollisionPoints? IntersectShape(Line l)
     {
         CollisionPoints? points = null;
-        var result = SegmentDef.Segment.IntersectSegmentLine(A, B, l.Point, l.Direction, l.Normal);
+        var result = Segment.IntersectSegmentLine(A, B, l.Point, l.Direction, l.Normal);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentLine(B, C, l.Point, l.Direction, l.Normal);
+        result = Segment.IntersectSegmentLine(B, C, l.Point, l.Direction, l.Normal);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentLine(C, D, l.Point, l.Direction, l.Normal);
+        result = Segment.IntersectSegmentLine(C, D, l.Point, l.Direction, l.Normal);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentLine(D, A, l.Point, l.Direction, l.Normal);
+        result = Segment.IntersectSegmentLine(D, A, l.Point, l.Direction, l.Normal);
         if (result.Valid)
         {
             points ??= new();
@@ -158,31 +159,31 @@ public readonly partial struct Quad
         return points;
     }
 
-    public CollisionPoints? IntersectShape(SegmentDef.Segment s)
+    public CollisionPoints? IntersectShape(Segment s)
     {
         CollisionPoints? points = null;
-        var result = SegmentDef.Segment.IntersectSegmentSegment(A, B, s.Start, s.End);
+        var result = Segment.IntersectSegmentSegment(A, B, s.Start, s.End);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(B, C, s.Start, s.End);
+        result = Segment.IntersectSegmentSegment(B, C, s.Start, s.End);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(C, D, s.Start, s.End);
+        result = Segment.IntersectSegmentSegment(C, D, s.Start, s.End);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(D, A, s.Start, s.End);
+        result = Segment.IntersectSegmentSegment(D, A, s.Start, s.End);
         if (result.Valid)
         {
             points ??= new();
@@ -195,7 +196,7 @@ public readonly partial struct Quad
     public CollisionPoints? IntersectShape(Circle c)
     {
         CollisionPoints? points = null;
-        var result = SegmentDef.Segment.IntersectSegmentCircle(A, B, c.Center, c.Radius);
+        var result = Segment.IntersectSegmentCircle(A, B, c.Center, c.Radius);
         if (result.a.Valid || result.b.Valid)
         {
             points ??= new();
@@ -203,7 +204,7 @@ public readonly partial struct Quad
             if (result.b.Valid) points.Add(result.b);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentCircle(B, C, c.Center, c.Radius);
+        result = Segment.IntersectSegmentCircle(B, C, c.Center, c.Radius);
         if (result.a.Valid || result.b.Valid)
         {
             points ??= new();
@@ -211,7 +212,7 @@ public readonly partial struct Quad
             if (result.b.Valid) points.Add(result.b);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentCircle(C, D, c.Center, c.Radius);
+        result = Segment.IntersectSegmentCircle(C, D, c.Center, c.Radius);
         if (result.a.Valid || result.b.Valid)
         {
             points ??= new();
@@ -219,7 +220,7 @@ public readonly partial struct Quad
             if (result.b.Valid) points.Add(result.b);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentCircle(D, A, c.Center, c.Radius);
+        result = Segment.IntersectSegmentCircle(D, A, c.Center, c.Radius);
         if (result.a.Valid || result.b.Valid)
         {
             points ??= new();
@@ -233,21 +234,21 @@ public readonly partial struct Quad
     public CollisionPoints? IntersectShape(Triangle t)
     {
         CollisionPoints? points = null;
-        var result = SegmentDef.Segment.IntersectSegmentSegment(A, B, t.A, t.B);
+        var result = Segment.IntersectSegmentSegment(A, B, t.A, t.B);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(A, B, t.B, t.C);
+        result = Segment.IntersectSegmentSegment(A, B, t.B, t.C);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(A, B, t.C, t.A);
+        result = Segment.IntersectSegmentSegment(A, B, t.C, t.A);
         if (result.Valid)
         {
             points ??= new();
@@ -255,63 +256,63 @@ public readonly partial struct Quad
         }
 
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(B, C, t.A, t.B);
+        result = Segment.IntersectSegmentSegment(B, C, t.A, t.B);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(B, C, t.B, t.C);
+        result = Segment.IntersectSegmentSegment(B, C, t.B, t.C);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(B, C, t.C, t.A);
+        result = Segment.IntersectSegmentSegment(B, C, t.C, t.A);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(C, D, t.A, t.B);
+        result = Segment.IntersectSegmentSegment(C, D, t.A, t.B);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(C, D, t.B, t.C);
+        result = Segment.IntersectSegmentSegment(C, D, t.B, t.C);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(C, D, t.C, t.A);
+        result = Segment.IntersectSegmentSegment(C, D, t.C, t.A);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(D, A, t.A, t.B);
+        result = Segment.IntersectSegmentSegment(D, A, t.A, t.B);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(D, A, t.B, t.C);
+        result = Segment.IntersectSegmentSegment(D, A, t.B, t.C);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(D, A, t.C, t.A);
+        result = Segment.IntersectSegmentSegment(D, A, t.C, t.A);
         if (result.Valid)
         {
             points ??= new();
@@ -326,7 +327,7 @@ public readonly partial struct Quad
         CollisionPoints? points = null;
         var a = r.TopLeft;
         var b = r.BottomLeft;
-        var result = SegmentDef.Segment.IntersectSegmentSegment(A, B, a, b);
+        var result = Segment.IntersectSegmentSegment(A, B, a, b);
         if (result.Valid)
         {
             points ??= new();
@@ -334,7 +335,7 @@ public readonly partial struct Quad
         }
 
         var c = r.BottomRight;
-        result = SegmentDef.Segment.IntersectSegmentSegment(A, B, b, c);
+        result = Segment.IntersectSegmentSegment(A, B, b, c);
         if (result.Valid)
         {
             points ??= new();
@@ -342,43 +343,14 @@ public readonly partial struct Quad
         }
 
         var d = r.TopRight;
-        result = SegmentDef.Segment.IntersectSegmentSegment(A, B, c, d);
+        result = Segment.IntersectSegmentSegment(A, B, c, d);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(A, B, d, a);
-        if (result.Valid)
-        {
-            points ??= new();
-            points.Add(result);
-        }
-
-
-        result = SegmentDef.Segment.IntersectSegmentSegment(B, C, a, b);
-        if (result.Valid)
-        {
-            points ??= new();
-            points.Add(result);
-        }
-
-        result = SegmentDef.Segment.IntersectSegmentSegment(B, C, b, c);
-        if (result.Valid)
-        {
-            points ??= new();
-            points.Add(result);
-        }
-
-        result = SegmentDef.Segment.IntersectSegmentSegment(B, C, c, d);
-        if (result.Valid)
-        {
-            points ??= new();
-            points.Add(result);
-        }
-
-        result = SegmentDef.Segment.IntersectSegmentSegment(B, C, d, a);
+        result = Segment.IntersectSegmentSegment(A, B, d, a);
         if (result.Valid)
         {
             points ??= new();
@@ -386,28 +358,28 @@ public readonly partial struct Quad
         }
 
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(C, D, a, b);
+        result = Segment.IntersectSegmentSegment(B, C, a, b);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(C, D, b, c);
+        result = Segment.IntersectSegmentSegment(B, C, b, c);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(C, D, c, d);
+        result = Segment.IntersectSegmentSegment(B, C, c, d);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(C, D, d, a);
+        result = Segment.IntersectSegmentSegment(B, C, d, a);
         if (result.Valid)
         {
             points ??= new();
@@ -415,28 +387,57 @@ public readonly partial struct Quad
         }
 
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(D, A, a, b);
+        result = Segment.IntersectSegmentSegment(C, D, a, b);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(D, A, b, c);
+        result = Segment.IntersectSegmentSegment(C, D, b, c);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(D, A, c, d);
+        result = Segment.IntersectSegmentSegment(C, D, c, d);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(D, A, d, a);
+        result = Segment.IntersectSegmentSegment(C, D, d, a);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+
+
+        result = Segment.IntersectSegmentSegment(D, A, a, b);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+
+        result = Segment.IntersectSegmentSegment(D, A, b, c);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+
+        result = Segment.IntersectSegmentSegment(D, A, c, d);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+
+        result = Segment.IntersectSegmentSegment(D, A, d, a);
         if (result.Valid)
         {
             points ??= new();
@@ -449,57 +450,28 @@ public readonly partial struct Quad
     public CollisionPoints? IntersectShape(Quad q)
     {
         CollisionPoints? points = null;
-        var result = SegmentDef.Segment.IntersectSegmentSegment(A, B, q.A, q.B);
+        var result = Segment.IntersectSegmentSegment(A, B, q.A, q.B);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(A, B, q.B, q.C);
+        result = Segment.IntersectSegmentSegment(A, B, q.B, q.C);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(A, B, q.C, q.D);
+        result = Segment.IntersectSegmentSegment(A, B, q.C, q.D);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(A, B, q.D, q.A);
-        if (result.Valid)
-        {
-            points ??= new();
-            points.Add(result);
-        }
-
-
-        result = SegmentDef.Segment.IntersectSegmentSegment(B, C, q.A, q.B);
-        if (result.Valid)
-        {
-            points ??= new();
-            points.Add(result);
-        }
-
-        result = SegmentDef.Segment.IntersectSegmentSegment(B, C, q.B, q.C);
-        if (result.Valid)
-        {
-            points ??= new();
-            points.Add(result);
-        }
-
-        result = SegmentDef.Segment.IntersectSegmentSegment(B, C, q.C, q.D);
-        if (result.Valid)
-        {
-            points ??= new();
-            points.Add(result);
-        }
-
-        result = SegmentDef.Segment.IntersectSegmentSegment(B, C, q.D, q.A);
+        result = Segment.IntersectSegmentSegment(A, B, q.D, q.A);
         if (result.Valid)
         {
             points ??= new();
@@ -507,56 +479,85 @@ public readonly partial struct Quad
         }
 
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(C, D, q.A, q.B);
+        result = Segment.IntersectSegmentSegment(B, C, q.A, q.B);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(C, D, q.B, q.C);
+        result = Segment.IntersectSegmentSegment(B, C, q.B, q.C);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(C, D, q.C, q.D);
+        result = Segment.IntersectSegmentSegment(B, C, q.C, q.D);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(C, D, q.D, q.A);
+        result = Segment.IntersectSegmentSegment(B, C, q.D, q.A);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(D, A, q.A, q.B);
+
+        result = Segment.IntersectSegmentSegment(C, D, q.A, q.B);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(D, A, q.B, q.C);
+        result = Segment.IntersectSegmentSegment(C, D, q.B, q.C);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(D, A, q.C, q.D);
+        result = Segment.IntersectSegmentSegment(C, D, q.C, q.D);
         if (result.Valid)
         {
             points ??= new();
             points.Add(result);
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(D, A, q.D, q.A);
+        result = Segment.IntersectSegmentSegment(C, D, q.D, q.A);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+
+        result = Segment.IntersectSegmentSegment(D, A, q.A, q.B);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+
+        result = Segment.IntersectSegmentSegment(D, A, q.B, q.C);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+
+        result = Segment.IntersectSegmentSegment(D, A, q.C, q.D);
+        if (result.Valid)
+        {
+            points ??= new();
+            points.Add(result);
+        }
+
+        result = Segment.IntersectSegmentSegment(D, A, q.D, q.A);
         if (result.Valid)
         {
             points ??= new();
@@ -573,28 +574,28 @@ public readonly partial struct Quad
         CollisionPoints? points = null;
         for (var i = 0; i < p.Count; i++)
         {
-            var result = SegmentDef.Segment.IntersectSegmentSegment(A, B, p[i], p[(i + 1) % p.Count]);
+            var result = Segment.IntersectSegmentSegment(A, B, p[i], p[(i + 1) % p.Count]);
             if (result.Valid)
             {
                 points ??= new();
                 points.Add(result);
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(B, C, p[i], p[(i + 1) % p.Count]);
+            result = Segment.IntersectSegmentSegment(B, C, p[i], p[(i + 1) % p.Count]);
             if (result.Valid)
             {
                 points ??= new();
                 points.Add(result);
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(C, D, p[i], p[(i + 1) % p.Count]);
+            result = Segment.IntersectSegmentSegment(C, D, p[i], p[(i + 1) % p.Count]);
             if (result.Valid)
             {
                 points ??= new();
                 points.Add(result);
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(D, A, p[i], p[(i + 1) % p.Count]);
+            result = Segment.IntersectSegmentSegment(D, A, p[i], p[(i + 1) % p.Count]);
             if (result.Valid)
             {
                 points ??= new();
@@ -612,28 +613,28 @@ public readonly partial struct Quad
         CollisionPoints? points = null;
         for (var i = 0; i < pl.Count - 1; i++)
         {
-            var result = SegmentDef.Segment.IntersectSegmentSegment(A, B, pl[i], pl[(i + 1) % pl.Count]);
+            var result = Segment.IntersectSegmentSegment(A, B, pl[i], pl[(i + 1) % pl.Count]);
             if (result.Valid)
             {
                 points ??= new();
                 points.Add(result);
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(B, C, pl[i], pl[(i + 1) % pl.Count]);
+            result = Segment.IntersectSegmentSegment(B, C, pl[i], pl[(i + 1) % pl.Count]);
             if (result.Valid)
             {
                 points ??= new();
                 points.Add(result);
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(C, D, pl[i], pl[(i + 1) % pl.Count]);
+            result = Segment.IntersectSegmentSegment(C, D, pl[i], pl[(i + 1) % pl.Count]);
             if (result.Valid)
             {
                 points ??= new();
                 points.Add(result);
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(D, A, pl[i], pl[(i + 1) % pl.Count]);
+            result = Segment.IntersectSegmentSegment(D, A, pl[i], pl[(i + 1) % pl.Count]);
             if (result.Valid)
             {
                 points ??= new();
@@ -685,7 +686,7 @@ public readonly partial struct Quad
     public int IntersectShape(Ray r, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
-        var result = SegmentDef.Segment.IntersectSegmentRay(A, B, r.Point, r.Direction, r.Normal);
+        var result = Segment.IntersectSegmentRay(A, B, r.Point, r.Direction, r.Normal);
         if (result.Valid)
         {
             points.Add(result);
@@ -693,17 +694,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentRay(B, C, r.Point, r.Direction, r.Normal);
-        if (result.Valid)
-        {
-            points.Add(result);
-            if (returnAfterFirstValid) return 1;
-            count++;
-        }
-
-        if (count >= 2) return count;
-
-        result = SegmentDef.Segment.IntersectSegmentRay(C, D, r.Point, r.Direction, r.Normal);
+        result = Segment.IntersectSegmentRay(B, C, r.Point, r.Direction, r.Normal);
         if (result.Valid)
         {
             points.Add(result);
@@ -713,7 +704,17 @@ public readonly partial struct Quad
 
         if (count >= 2) return count;
 
-        result = SegmentDef.Segment.IntersectSegmentRay(D, A, r.Point, r.Direction, r.Normal);
+        result = Segment.IntersectSegmentRay(C, D, r.Point, r.Direction, r.Normal);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        if (count >= 2) return count;
+
+        result = Segment.IntersectSegmentRay(D, A, r.Point, r.Direction, r.Normal);
         if (result.Valid)
         {
             points.Add(result);
@@ -726,7 +727,7 @@ public readonly partial struct Quad
     public int IntersectShape(Line l, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
-        var result = SegmentDef.Segment.IntersectSegmentLine(A, B, l.Point, l.Direction, l.Normal);
+        var result = Segment.IntersectSegmentLine(A, B, l.Point, l.Direction, l.Normal);
         if (result.Valid)
         {
             points.Add(result);
@@ -734,17 +735,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentLine(B, C, l.Point, l.Direction, l.Normal);
-        if (result.Valid)
-        {
-            points.Add(result);
-            if (returnAfterFirstValid) return 1;
-            count++;
-        }
-
-        if (count >= 2) return count;
-
-        result = SegmentDef.Segment.IntersectSegmentLine(C, D, l.Point, l.Direction, l.Normal);
+        result = Segment.IntersectSegmentLine(B, C, l.Point, l.Direction, l.Normal);
         if (result.Valid)
         {
             points.Add(result);
@@ -754,7 +745,17 @@ public readonly partial struct Quad
 
         if (count >= 2) return count;
 
-        result = SegmentDef.Segment.IntersectSegmentLine(D, A, l.Point, l.Direction, l.Normal);
+        result = Segment.IntersectSegmentLine(C, D, l.Point, l.Direction, l.Normal);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        if (count >= 2) return count;
+
+        result = Segment.IntersectSegmentLine(D, A, l.Point, l.Direction, l.Normal);
         if (result.Valid)
         {
             points.Add(result);
@@ -764,10 +765,10 @@ public readonly partial struct Quad
         return count;
     }
 
-    public int IntersectShape(SegmentDef.Segment s, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Segment s, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
-        var result = SegmentDef.Segment.IntersectSegmentSegment(A, B, s.Start, s.End);
+        var result = Segment.IntersectSegmentSegment(A, B, s.Start, s.End);
         if (result.Valid)
         {
             points.Add(result);
@@ -775,17 +776,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(B, C, s.Start, s.End);
-        if (result.Valid)
-        {
-            points.Add(result);
-            if (returnAfterFirstValid) return 1;
-            count++;
-        }
-
-        if (count >= 2) return count;
-
-        result = SegmentDef.Segment.IntersectSegmentSegment(C, D, s.Start, s.End);
+        result = Segment.IntersectSegmentSegment(B, C, s.Start, s.End);
         if (result.Valid)
         {
             points.Add(result);
@@ -795,7 +786,17 @@ public readonly partial struct Quad
 
         if (count >= 2) return count;
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(D, A, s.Start, s.End);
+        result = Segment.IntersectSegmentSegment(C, D, s.Start, s.End);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        if (count >= 2) return count;
+
+        result = Segment.IntersectSegmentSegment(D, A, s.Start, s.End);
         if (result.Valid)
         {
             points.Add(result);
@@ -808,7 +809,7 @@ public readonly partial struct Quad
     public int IntersectShape(Circle c, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
-        var result = SegmentDef.Segment.IntersectSegmentCircle(A, B, c.Center, c.Radius);
+        var result = Segment.IntersectSegmentCircle(A, B, c.Center, c.Radius);
         if (result.a.Valid)
         {
             points.Add(result.a);
@@ -823,7 +824,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentCircle(B, C, c.Center, c.Radius);
+        result = Segment.IntersectSegmentCircle(B, C, c.Center, c.Radius);
         if (result.a.Valid)
         {
             points.Add(result.a);
@@ -838,7 +839,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentCircle(C, D, c.Center, c.Radius);
+        result = Segment.IntersectSegmentCircle(C, D, c.Center, c.Radius);
         if (result.a.Valid)
         {
             points.Add(result.a);
@@ -853,7 +854,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentCircle(D, A, c.Center, c.Radius);
+        result = Segment.IntersectSegmentCircle(D, A, c.Center, c.Radius);
         if (result.a.Valid)
         {
             points.Add(result.a);
@@ -873,7 +874,7 @@ public readonly partial struct Quad
     public int IntersectShape(Triangle t, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
-        var result = SegmentDef.Segment.IntersectSegmentSegment(A, B, t.A, t.B);
+        var result = Segment.IntersectSegmentSegment(A, B, t.A, t.B);
         if (result.Valid)
         {
             points.Add(result);
@@ -881,7 +882,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(A, B, t.B, t.C);
+        result = Segment.IntersectSegmentSegment(A, B, t.B, t.C);
         if (result.Valid)
         {
             points.Add(result);
@@ -889,7 +890,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(A, B, t.C, t.A);
+        result = Segment.IntersectSegmentSegment(A, B, t.C, t.A);
         if (result.Valid)
         {
             points.Add(result);
@@ -898,7 +899,7 @@ public readonly partial struct Quad
         }
 
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(B, C, t.A, t.B);
+        result = Segment.IntersectSegmentSegment(B, C, t.A, t.B);
         if (result.Valid)
         {
             points.Add(result);
@@ -906,7 +907,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(B, C, t.B, t.C);
+        result = Segment.IntersectSegmentSegment(B, C, t.B, t.C);
         if (result.Valid)
         {
             points.Add(result);
@@ -914,7 +915,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(B, C, t.C, t.A);
+        result = Segment.IntersectSegmentSegment(B, C, t.C, t.A);
         if (result.Valid)
         {
             points.Add(result);
@@ -922,7 +923,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(C, D, t.A, t.B);
+        result = Segment.IntersectSegmentSegment(C, D, t.A, t.B);
         if (result.Valid)
         {
             points.Add(result);
@@ -930,7 +931,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(C, D, t.B, t.C);
+        result = Segment.IntersectSegmentSegment(C, D, t.B, t.C);
         if (result.Valid)
         {
             points.Add(result);
@@ -938,7 +939,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(C, D, t.C, t.A);
+        result = Segment.IntersectSegmentSegment(C, D, t.C, t.A);
         if (result.Valid)
         {
             points.Add(result);
@@ -946,7 +947,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(D, A, t.A, t.B);
+        result = Segment.IntersectSegmentSegment(D, A, t.A, t.B);
         if (result.Valid)
         {
             points.Add(result);
@@ -954,7 +955,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(D, A, t.B, t.C);
+        result = Segment.IntersectSegmentSegment(D, A, t.B, t.C);
         if (result.Valid)
         {
             points.Add(result);
@@ -962,7 +963,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(D, A, t.C, t.A);
+        result = Segment.IntersectSegmentSegment(D, A, t.C, t.A);
         if (result.Valid)
         {
             points.Add(result);
@@ -975,7 +976,7 @@ public readonly partial struct Quad
     public int IntersectShape(Quad q, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
-        var result = SegmentDef.Segment.IntersectSegmentSegment(A, B, q.A, q.B);
+        var result = Segment.IntersectSegmentSegment(A, B, q.A, q.B);
         if (result.Valid)
         {
             points.Add(result);
@@ -983,7 +984,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(A, B, q.B, q.C);
+        result = Segment.IntersectSegmentSegment(A, B, q.B, q.C);
         if (result.Valid)
         {
             points.Add(result);
@@ -991,7 +992,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(A, B, q.C, q.D);
+        result = Segment.IntersectSegmentSegment(A, B, q.C, q.D);
         if (result.Valid)
         {
             points.Add(result);
@@ -999,40 +1000,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(A, B, q.D, q.A);
-        if (result.Valid)
-        {
-            points.Add(result);
-            if (returnAfterFirstValid) return 1;
-            count++;
-        }
-
-
-        result = SegmentDef.Segment.IntersectSegmentSegment(B, C, q.A, q.B);
-        if (result.Valid)
-        {
-            points.Add(result);
-            if (returnAfterFirstValid) return 1;
-            count++;
-        }
-
-        result = SegmentDef.Segment.IntersectSegmentSegment(B, C, q.B, q.C);
-        if (result.Valid)
-        {
-            points.Add(result);
-            if (returnAfterFirstValid) return 1;
-            count++;
-        }
-
-        result = SegmentDef.Segment.IntersectSegmentSegment(B, C, q.C, q.D);
-        if (result.Valid)
-        {
-            points.Add(result);
-            if (returnAfterFirstValid) return 1;
-            count++;
-        }
-
-        result = SegmentDef.Segment.IntersectSegmentSegment(B, C, q.D, q.A);
+        result = Segment.IntersectSegmentSegment(A, B, q.D, q.A);
         if (result.Valid)
         {
             points.Add(result);
@@ -1041,7 +1009,7 @@ public readonly partial struct Quad
         }
 
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(C, D, q.A, q.B);
+        result = Segment.IntersectSegmentSegment(B, C, q.A, q.B);
         if (result.Valid)
         {
             points.Add(result);
@@ -1049,7 +1017,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(C, D, q.B, q.C);
+        result = Segment.IntersectSegmentSegment(B, C, q.B, q.C);
         if (result.Valid)
         {
             points.Add(result);
@@ -1057,7 +1025,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(C, D, q.C, q.D);
+        result = Segment.IntersectSegmentSegment(B, C, q.C, q.D);
         if (result.Valid)
         {
             points.Add(result);
@@ -1065,7 +1033,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(C, D, q.D, q.A);
+        result = Segment.IntersectSegmentSegment(B, C, q.D, q.A);
         if (result.Valid)
         {
             points.Add(result);
@@ -1073,7 +1041,8 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(D, A, q.A, q.B);
+
+        result = Segment.IntersectSegmentSegment(C, D, q.A, q.B);
         if (result.Valid)
         {
             points.Add(result);
@@ -1081,7 +1050,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(D, A, q.B, q.C);
+        result = Segment.IntersectSegmentSegment(C, D, q.B, q.C);
         if (result.Valid)
         {
             points.Add(result);
@@ -1089,7 +1058,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(D, A, q.C, q.D);
+        result = Segment.IntersectSegmentSegment(C, D, q.C, q.D);
         if (result.Valid)
         {
             points.Add(result);
@@ -1097,7 +1066,39 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(D, A, q.D, q.A);
+        result = Segment.IntersectSegmentSegment(C, D, q.D, q.A);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        result = Segment.IntersectSegmentSegment(D, A, q.A, q.B);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        result = Segment.IntersectSegmentSegment(D, A, q.B, q.C);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        result = Segment.IntersectSegmentSegment(D, A, q.C, q.D);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        result = Segment.IntersectSegmentSegment(D, A, q.D, q.A);
         if (result.Valid)
         {
             points.Add(result);
@@ -1112,7 +1113,7 @@ public readonly partial struct Quad
         var count = 0;
         var a = r.TopLeft;
         var b = r.BottomLeft;
-        var result = SegmentDef.Segment.IntersectSegmentSegment(A, B, a, b);
+        var result = Segment.IntersectSegmentSegment(A, B, a, b);
         if (result.Valid)
         {
             points.Add(result);
@@ -1121,7 +1122,7 @@ public readonly partial struct Quad
         }
 
         var c = r.BottomRight;
-        result = SegmentDef.Segment.IntersectSegmentSegment(A, B, b, c);
+        result = Segment.IntersectSegmentSegment(A, B, b, c);
         if (result.Valid)
         {
             points.Add(result);
@@ -1130,7 +1131,7 @@ public readonly partial struct Quad
         }
 
         var d = r.TopRight;
-        result = SegmentDef.Segment.IntersectSegmentSegment(A, B, c, d);
+        result = Segment.IntersectSegmentSegment(A, B, c, d);
         if (result.Valid)
         {
             points.Add(result);
@@ -1138,40 +1139,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(A, B, d, a);
-        if (result.Valid)
-        {
-            points.Add(result);
-            if (returnAfterFirstValid) return 1;
-            count++;
-        }
-
-
-        result = SegmentDef.Segment.IntersectSegmentSegment(B, C, a, b);
-        if (result.Valid)
-        {
-            points.Add(result);
-            if (returnAfterFirstValid) return 1;
-            count++;
-        }
-
-        result = SegmentDef.Segment.IntersectSegmentSegment(B, C, b, c);
-        if (result.Valid)
-        {
-            points.Add(result);
-            if (returnAfterFirstValid) return 1;
-            count++;
-        }
-
-        result = SegmentDef.Segment.IntersectSegmentSegment(B, C, c, d);
-        if (result.Valid)
-        {
-            points.Add(result);
-            if (returnAfterFirstValid) return 1;
-            count++;
-        }
-
-        result = SegmentDef.Segment.IntersectSegmentSegment(B, C, d, a);
+        result = Segment.IntersectSegmentSegment(A, B, d, a);
         if (result.Valid)
         {
             points.Add(result);
@@ -1180,7 +1148,7 @@ public readonly partial struct Quad
         }
 
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(C, D, a, b);
+        result = Segment.IntersectSegmentSegment(B, C, a, b);
         if (result.Valid)
         {
             points.Add(result);
@@ -1188,7 +1156,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(C, D, b, c);
+        result = Segment.IntersectSegmentSegment(B, C, b, c);
         if (result.Valid)
         {
             points.Add(result);
@@ -1196,7 +1164,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(C, D, c, d);
+        result = Segment.IntersectSegmentSegment(B, C, c, d);
         if (result.Valid)
         {
             points.Add(result);
@@ -1204,7 +1172,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(C, D, d, a);
+        result = Segment.IntersectSegmentSegment(B, C, d, a);
         if (result.Valid)
         {
             points.Add(result);
@@ -1213,7 +1181,7 @@ public readonly partial struct Quad
         }
 
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(D, A, a, b);
+        result = Segment.IntersectSegmentSegment(C, D, a, b);
         if (result.Valid)
         {
             points.Add(result);
@@ -1221,7 +1189,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(D, A, b, c);
+        result = Segment.IntersectSegmentSegment(C, D, b, c);
         if (result.Valid)
         {
             points.Add(result);
@@ -1229,7 +1197,7 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(D, A, c, d);
+        result = Segment.IntersectSegmentSegment(C, D, c, d);
         if (result.Valid)
         {
             points.Add(result);
@@ -1237,7 +1205,40 @@ public readonly partial struct Quad
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(D, A, d, a);
+        result = Segment.IntersectSegmentSegment(C, D, d, a);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+
+        result = Segment.IntersectSegmentSegment(D, A, a, b);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        result = Segment.IntersectSegmentSegment(D, A, b, c);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        result = Segment.IntersectSegmentSegment(D, A, c, d);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        result = Segment.IntersectSegmentSegment(D, A, d, a);
         if (result.Valid)
         {
             points.Add(result);
@@ -1254,7 +1255,7 @@ public readonly partial struct Quad
         var count = 0;
         for (var i = 0; i < p.Count; i++)
         {
-            var result = SegmentDef.Segment.IntersectSegmentSegment(A, B, p[i], p[(i + 1) % p.Count]);
+            var result = Segment.IntersectSegmentSegment(A, B, p[i], p[(i + 1) % p.Count]);
             if (result.Valid)
             {
                 points.Add(result);
@@ -1262,7 +1263,7 @@ public readonly partial struct Quad
                 count++;
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(B, C, p[i], p[(i + 1) % p.Count]);
+            result = Segment.IntersectSegmentSegment(B, C, p[i], p[(i + 1) % p.Count]);
             if (result.Valid)
             {
                 points.Add(result);
@@ -1270,7 +1271,7 @@ public readonly partial struct Quad
                 count++;
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(C, D, p[i], p[(i + 1) % p.Count]);
+            result = Segment.IntersectSegmentSegment(C, D, p[i], p[(i + 1) % p.Count]);
             if (result.Valid)
             {
                 points.Add(result);
@@ -1278,7 +1279,7 @@ public readonly partial struct Quad
                 count++;
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(D, A, p[i], p[(i + 1) % p.Count]);
+            result = Segment.IntersectSegmentSegment(D, A, p[i], p[(i + 1) % p.Count]);
             if (result.Valid)
             {
                 points.Add(result);
@@ -1297,7 +1298,7 @@ public readonly partial struct Quad
         var count = 0;
         for (var i = 0; i < pl.Count - 1; i++)
         {
-            var result = SegmentDef.Segment.IntersectSegmentSegment(A, B, pl[i], pl[(i + 1) % pl.Count]);
+            var result = Segment.IntersectSegmentSegment(A, B, pl[i], pl[(i + 1) % pl.Count]);
             if (result.Valid)
             {
                 points.Add(result);
@@ -1305,7 +1306,7 @@ public readonly partial struct Quad
                 count++;
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(B, C, pl[i], pl[(i + 1) % pl.Count]);
+            result = Segment.IntersectSegmentSegment(B, C, pl[i], pl[(i + 1) % pl.Count]);
             if (result.Valid)
             {
                 points.Add(result);
@@ -1313,7 +1314,7 @@ public readonly partial struct Quad
                 count++;
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(C, D, pl[i], pl[(i + 1) % pl.Count]);
+            result = Segment.IntersectSegmentSegment(C, D, pl[i], pl[(i + 1) % pl.Count]);
             if (result.Valid)
             {
                 points.Add(result);
@@ -1321,7 +1322,7 @@ public readonly partial struct Quad
                 count++;
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(D, A, pl[i], pl[(i + 1) % pl.Count]);
+            result = Segment.IntersectSegmentSegment(D, A, pl[i], pl[(i + 1) % pl.Count]);
             if (result.Valid)
             {
                 points.Add(result);
@@ -1341,7 +1342,7 @@ public readonly partial struct Quad
 
         foreach (var seg in shape)
         {
-            var result = SegmentDef.Segment.IntersectSegmentSegment(A, B, seg.Start, seg.End);
+            var result = Segment.IntersectSegmentSegment(A, B, seg.Start, seg.End);
             if (result.Valid)
             {
                 points.Add(result);
@@ -1349,7 +1350,7 @@ public readonly partial struct Quad
                 count++;
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(B, C, seg.Start, seg.End);
+            result = Segment.IntersectSegmentSegment(B, C, seg.Start, seg.End);
             if (result.Valid)
             {
                 points.Add(result);
@@ -1357,7 +1358,7 @@ public readonly partial struct Quad
                 count++;
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(C, D, seg.Start, seg.End);
+            result = Segment.IntersectSegmentSegment(C, D, seg.Start, seg.End);
             if (result.Valid)
             {
                 points.Add(result);
@@ -1365,7 +1366,7 @@ public readonly partial struct Quad
                 count++;
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(D, A, seg.Start, seg.End);
+            result = Segment.IntersectSegmentSegment(D, A, seg.Start, seg.End);
             if (result.Valid)
             {
                 points.Add(result);

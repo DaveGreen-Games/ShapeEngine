@@ -1,6 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.RectDef;
@@ -154,11 +155,11 @@ public readonly partial struct Rect
         var edgeBStart = corners[2];
         var edgeBEnd = corners[3];
 
-        var edgeARange = SegmentDef.Segment.ProjectSegment(edgeAStart, edgeAEnd, n);
-        var edgeBRange = SegmentDef.Segment.ProjectSegment(edgeBStart, edgeBEnd, n);
+        var edgeARange = Segment.ProjectSegment(edgeAStart, edgeAEnd, n);
+        var edgeBRange = Segment.ProjectSegment(edgeBStart, edgeBEnd, n);
         var rProjection = RangeHull(edgeARange, edgeBRange);
 
-        var axisRange = SegmentDef.Segment.ProjectSegment(axisStart, axisEnd, n);
+        var axisRange = Segment.ProjectSegment(axisStart, axisEnd, n);
         return !axisRange.OverlapValueRange(rProjection);
     }
 

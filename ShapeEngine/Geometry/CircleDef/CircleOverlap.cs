@@ -88,7 +88,7 @@ public readonly partial struct Circle
     /// </summary>
     /// <param name="s">The segment to check for overlap.</param>
     /// <returns><c>true</c> if the circle overlaps with the segment; otherwise, <c>false</c>.</returns>
-    public bool OverlapShape(SegmentDef.Segment s) => OverlapCircleSegment(Center, Radius, s.Start, s.End);
+    public bool OverlapShape(Segment s) => OverlapCircleSegment(Center, Radius, s.Start, s.End);
 
     /// <summary>
     /// Determines whether this circle overlaps with a line.
@@ -121,9 +121,9 @@ public readonly partial struct Circle
         if (ContainsPoint(t.A)) return true;
         if (t.ContainsPoint(Center)) return true;
 
-        if (SegmentDef.Segment.OverlapSegmentCircle(t.A, t.B, Center, Radius)) return true;
-        if (SegmentDef.Segment.OverlapSegmentCircle(t.B, t.C, Center, Radius)) return true;
-        return SegmentDef.Segment.OverlapSegmentCircle(t.C, t.A, Center, Radius);
+        if (Segment.OverlapSegmentCircle(t.A, t.B, Center, Radius)) return true;
+        if (Segment.OverlapSegmentCircle(t.B, t.C, Center, Radius)) return true;
+        return Segment.OverlapSegmentCircle(t.C, t.A, Center, Radius);
     }
 
     /// <summary>
@@ -136,10 +136,10 @@ public readonly partial struct Circle
         if (ContainsPoint(q.A)) return true;
         if (q.ContainsPoint(Center)) return true;
 
-        if (SegmentDef.Segment.OverlapSegmentCircle(q.A, q.B, Center, Radius)) return true;
-        if (SegmentDef.Segment.OverlapSegmentCircle(q.B, q.C, Center, Radius)) return true;
-        if (SegmentDef.Segment.OverlapSegmentCircle(q.C, q.D, Center, Radius)) return true;
-        return SegmentDef.Segment.OverlapSegmentCircle(q.D, q.A, Center, Radius);
+        if (Segment.OverlapSegmentCircle(q.A, q.B, Center, Radius)) return true;
+        if (Segment.OverlapSegmentCircle(q.B, q.C, Center, Radius)) return true;
+        if (Segment.OverlapSegmentCircle(q.C, q.D, Center, Radius)) return true;
+        return Segment.OverlapSegmentCircle(q.D, q.A, Center, Radius);
     }
 
     /// <summary>
@@ -280,6 +280,6 @@ public readonly partial struct Circle
     /// </summary>
     /// <param name="segments">The list of segments to check for overlap.</param>
     /// <returns><c>true</c> if the circle overlaps with any of the segments; otherwise, <c>false</c>.</returns>
-    public bool OverlapSegments(List<SegmentDef.Segment> segments) => OverlapCircleSegments(Center, Radius, segments);
+    public bool OverlapSegments(List<Segment> segments) => OverlapCircleSegments(Center, Radius, segments);
 
 }

@@ -6,6 +6,7 @@ using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RayDef;
 using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.SegmentsDef;
 using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.StaticLib;
@@ -21,14 +22,14 @@ public partial class Polyline
 
         var first = points[0];
         var second = points[1];
-        var closest = SegmentDef.Segment.GetClosestPointSegmentPoint(first, second, p, out disSquared);
+        var closest = Segment.GetClosestPointSegmentPoint(first, second, p, out disSquared);
 
         for (var i = 1; i < points.Count - 1; i++)
         {
             var p1 = points[i];
             var p2 = points[i + 1];
 
-            var cp = SegmentDef.Segment.GetClosestPointSegmentPoint(p1, p2, p, out float dis);
+            var cp = Segment.GetClosestPointSegmentPoint(p1, p2, p, out float dis);
             if (dis < disSquared)
             {
                 closest = cp;
@@ -47,14 +48,14 @@ public partial class Polyline
         var first = this[0];
         var second = this[1];
         var normal = second - first;
-        var closest = SegmentDef.Segment.GetClosestPointSegmentPoint(first, second, p, out disSquared);
+        var closest = Segment.GetClosestPointSegmentPoint(first, second, p, out disSquared);
 
         for (var i = 1; i < Count - 1; i++)
         {
             var p1 = this[i];
             var p2 = this[i + 1];
 
-            var cp = SegmentDef.Segment.GetClosestPointSegmentPoint(p1, p2, p, out float dis);
+            var cp = Segment.GetClosestPointSegmentPoint(p1, p2, p, out float dis);
             if (dis < disSquared)
             {
                 closest = cp;
@@ -76,14 +77,14 @@ public partial class Polyline
         var second = this[1];
         index = 0;
         var normal = second - first;
-        var closest = SegmentDef.Segment.GetClosestPointSegmentPoint(first, second, p, out disSquared);
+        var closest = Segment.GetClosestPointSegmentPoint(first, second, p, out disSquared);
 
         for (var i = 1; i < Count - 1; i++)
         {
             var p1 = this[i];
             var p2 = this[i + 1];
 
-            var cp = SegmentDef.Segment.GetClosestPointSegmentPoint(p1, p2, p, out float dis);
+            var cp = Segment.GetClosestPointSegmentPoint(p1, p2, p, out float dis);
             if (dis < disSquared)
             {
                 index = i;
@@ -152,7 +153,7 @@ public partial class Polyline
         var first = this[0];
         var second = this[1];
         var normal = second - first;
-        var result = SegmentDef.Segment.GetClosestPointSegmentLine(first, second, other.Point, other.Direction, out float disSquared);
+        var result = Segment.GetClosestPointSegmentLine(first, second, other.Point, other.Direction, out float disSquared);
         var selfIndex = 0;
 
         for (var i = 1; i < Count - 1; i++)
@@ -160,7 +161,7 @@ public partial class Polyline
             var p1 = this[i];
             var p2 = this[i + 1];
 
-            var cp = SegmentDef.Segment.GetClosestPointSegmentLine(p1, p2, other.Point, other.Direction, out float dis);
+            var cp = Segment.GetClosestPointSegmentLine(p1, p2, other.Point, other.Direction, out float dis);
             if (dis < disSquared)
             {
                 selfIndex = i;
@@ -184,7 +185,7 @@ public partial class Polyline
         var first = this[0];
         var second = this[1];
         var normal = second - first;
-        var result = SegmentDef.Segment.GetClosestPointSegmentRay(first, second, other.Point, other.Direction, out float disSquared);
+        var result = Segment.GetClosestPointSegmentRay(first, second, other.Point, other.Direction, out float disSquared);
         var selfIndex = 0;
 
         for (var i = 1; i < Count - 1; i++)
@@ -192,7 +193,7 @@ public partial class Polyline
             var p1 = this[i];
             var p2 = this[i + 1];
 
-            var cp = SegmentDef.Segment.GetClosestPointSegmentRay(p1, p2, other.Point, other.Direction, out float dis);
+            var cp = Segment.GetClosestPointSegmentRay(p1, p2, other.Point, other.Direction, out float dis);
             if (dis < disSquared)
             {
                 selfIndex = i;
@@ -209,14 +210,14 @@ public partial class Polyline
             selfIndex);
     }
 
-    public new ClosestPointResult GetClosestPoint(SegmentDef.Segment other)
+    public new ClosestPointResult GetClosestPoint(Segment other)
     {
         if (Count < 2) return new();
 
         var first = this[0];
         var second = this[1];
         var normal = second - first;
-        var result = SegmentDef.Segment.GetClosestPointSegmentSegment(first, second, other.Start, other.End, out float disSquared);
+        var result = Segment.GetClosestPointSegmentSegment(first, second, other.Start, other.End, out float disSquared);
         var selfIndex = 0;
 
         for (var i = 1; i < Count - 1; i++)
@@ -224,7 +225,7 @@ public partial class Polyline
             var p1 = this[i];
             var p2 = this[i + 1];
 
-            var cp = SegmentDef.Segment.GetClosestPointSegmentSegment(p1, p2, other.Start, other.End, out float dis);
+            var cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.Start, other.End, out float dis);
             if (dis < disSquared)
             {
                 selfIndex = i;
@@ -248,7 +249,7 @@ public partial class Polyline
         var first = this[0];
         var second = this[1];
         var normal = second - first;
-        var result = SegmentDef.Segment.GetClosestPointSegmentCircle(first, second, other.Center, other.Radius, out float disSquared);
+        var result = Segment.GetClosestPointSegmentCircle(first, second, other.Center, other.Radius, out float disSquared);
         var selfIndex = 0;
 
         for (var i = 1; i < Count - 1; i++)
@@ -256,7 +257,7 @@ public partial class Polyline
             var p1 = this[i];
             var p2 = this[i + 1];
 
-            var cp = SegmentDef.Segment.GetClosestPointSegmentCircle(p1, p2, other.Center, other.Radius, out float dis);
+            var cp = Segment.GetClosestPointSegmentCircle(p1, p2, other.Center, other.Radius, out float dis);
             if (dis < disSquared)
             {
                 selfIndex = i;
@@ -290,7 +291,7 @@ public partial class Polyline
             var p1 = this[i];
             var p2 = this[i + 1];
 
-            var cp = SegmentDef.Segment.GetClosestPointSegmentSegment(p1, p2, other.A, other.B, out float dis);
+            var cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.A, other.B, out float dis);
             if (dis < disSquared || disSquared < 0)
             {
                 selfIndex = i;
@@ -301,7 +302,7 @@ public partial class Polyline
                 otherNormal = other.B - other.A;
             }
 
-            cp = SegmentDef.Segment.GetClosestPointSegmentSegment(p1, p2, other.B, other.C, out dis);
+            cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.B, other.C, out dis);
             if (dis < disSquared || disSquared < 0)
             {
                 selfIndex = i;
@@ -312,7 +313,7 @@ public partial class Polyline
                 otherNormal = other.C - other.B;
             }
 
-            cp = SegmentDef.Segment.GetClosestPointSegmentSegment(p1, p2, other.C, other.A, out dis);
+            cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.C, other.A, out dis);
             if (dis < disSquared || disSquared < 0)
             {
                 selfIndex = i;
@@ -348,7 +349,7 @@ public partial class Polyline
             var p1 = this[i];
             var p2 = this[i + 1];
 
-            var cp = SegmentDef.Segment.GetClosestPointSegmentSegment(p1, p2, other.A, other.B, out float dis);
+            var cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.A, other.B, out float dis);
             if (dis < disSquared || disSquared < 0)
             {
                 selfIndex = i;
@@ -359,7 +360,7 @@ public partial class Polyline
                 otherNormal = other.B - other.A;
             }
 
-            cp = SegmentDef.Segment.GetClosestPointSegmentSegment(p1, p2, other.B, other.C, out dis);
+            cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.B, other.C, out dis);
             if (dis < disSquared || disSquared < 0)
             {
                 selfIndex = i;
@@ -370,7 +371,7 @@ public partial class Polyline
                 otherNormal = other.C - other.B;
             }
 
-            cp = SegmentDef.Segment.GetClosestPointSegmentSegment(p1, p2, other.C, other.D, out dis);
+            cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.C, other.D, out dis);
             if (dis < disSquared || disSquared < 0)
             {
                 selfIndex = i;
@@ -381,7 +382,7 @@ public partial class Polyline
                 otherNormal = other.D - other.C;
             }
 
-            cp = SegmentDef.Segment.GetClosestPointSegmentSegment(p1, p2, other.D, other.A, out dis);
+            cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.D, other.A, out dis);
             if (dis < disSquared || disSquared < 0)
             {
                 selfIndex = i;
@@ -417,7 +418,7 @@ public partial class Polyline
             var p1 = this[i];
             var p2 = this[i + 1];
 
-            var cp = SegmentDef.Segment.GetClosestPointSegmentSegment(p1, p2, other.A, other.B, out float dis);
+            var cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.A, other.B, out float dis);
             if (dis < disSquared || disSquared < 0)
             {
                 selfIndex = i;
@@ -428,7 +429,7 @@ public partial class Polyline
                 otherNormal = other.B - other.A;
             }
 
-            cp = SegmentDef.Segment.GetClosestPointSegmentSegment(p1, p2, other.B, other.C, out dis);
+            cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.B, other.C, out dis);
             if (dis < disSquared || disSquared < 0)
             {
                 selfIndex = i;
@@ -439,7 +440,7 @@ public partial class Polyline
                 otherNormal = other.C - other.B;
             }
 
-            cp = SegmentDef.Segment.GetClosestPointSegmentSegment(p1, p2, other.C, other.D, out dis);
+            cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.C, other.D, out dis);
             if (dis < disSquared || disSquared < 0)
             {
                 selfIndex = i;
@@ -450,7 +451,7 @@ public partial class Polyline
                 otherNormal = other.D - other.C;
             }
 
-            cp = SegmentDef.Segment.GetClosestPointSegmentSegment(p1, p2, other.D, other.A, out dis);
+            cp = Segment.GetClosestPointSegmentSegment(p1, p2, other.D, other.A, out dis);
             if (dis < disSquared || disSquared < 0)
             {
                 selfIndex = i;
@@ -490,7 +491,7 @@ public partial class Polyline
             {
                 var otherP1 = other[j];
                 var otherP2 = other[(j + 1) % other.Count];
-                var cp = SegmentDef.Segment.GetClosestPointSegmentSegment(p1, p2, otherP1, otherP2, out float dis);
+                var cp = Segment.GetClosestPointSegmentSegment(p1, p2, otherP1, otherP2, out float dis);
                 if (dis < disSquared || disSquared < 0)
                 {
                     selfIndex = i;
@@ -531,7 +532,7 @@ public partial class Polyline
             {
                 var otherP1 = other[j];
                 var otherP2 = other[j + 1];
-                var cp = SegmentDef.Segment.GetClosestPointSegmentSegment(p1, p2, otherP1, otherP2, out float dis);
+                var cp = Segment.GetClosestPointSegmentSegment(p1, p2, otherP1, otherP2, out float dis);
                 if (dis < disSquared || disSquared < 0)
                 {
                     selfIndex = i;
@@ -571,7 +572,7 @@ public partial class Polyline
             for (var j = 0; j < other.Count; j++)
             {
                 var otherSegment = other[j];
-                var cp = SegmentDef.Segment.GetClosestPointSegmentSegment(p1, p2, otherSegment.Start, otherSegment.End, out float dis);
+                var cp = Segment.GetClosestPointSegmentSegment(p1, p2, otherSegment.Start, otherSegment.End, out float dis);
                 if (dis < disSquared || disSquared < 0)
                 {
                     selfIndex = i;
@@ -592,12 +593,12 @@ public partial class Polyline
             otherIndex);
     }
 
-    public (SegmentDef.Segment segment, CollisionPoint segmentPoint) GetClosestSegment(Vector2 p, out float disSquared)
+    public (Segment segment, CollisionPoint segmentPoint) GetClosestSegment(Vector2 p, out float disSquared)
     {
         disSquared = -1;
         if (Count < 2) return (new(), new());
 
-        var closestSegment = new SegmentDef.Segment(this[0], this[1]);
+        var closestSegment = new Segment(this[0], this[1]);
         var closest = closestSegment.GetClosestPoint(p, out disSquared);
 
         for (var i = 1; i < Count - 1; i++)
@@ -605,12 +606,12 @@ public partial class Polyline
             var p1 = this[i];
             var p2 = this[i + 1];
 
-            var cp = SegmentDef.Segment.GetClosestPointSegmentPoint(p1, p2, p, out float dis);
+            var cp = Segment.GetClosestPointSegmentPoint(p1, p2, p, out float dis);
             if (dis < disSquared)
             {
                 var normal = (p2 - p1).GetPerpendicularRight().Normalize();
                 closest = new(cp, normal);
-                closestSegment = new SegmentDef.Segment(p1, p2);
+                closestSegment = new Segment(p1, p2);
                 disSquared = dis;
             }
         }

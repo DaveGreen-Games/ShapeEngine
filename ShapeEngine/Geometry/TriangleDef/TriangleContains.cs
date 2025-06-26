@@ -5,6 +5,7 @@ using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.SegmentDef;
 
 namespace ShapeEngine.Geometry.TriangleDef;
 
@@ -43,7 +44,7 @@ public readonly partial struct Triangle
         return false;
     }
 
-    public bool ContainsShape(SegmentDef.Segment segment)
+    public bool ContainsShape(Segment segment)
     {
         return ContainsTrianglePoints(A, B, C, segment.Start, segment.End);
     }

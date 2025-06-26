@@ -59,7 +59,7 @@ public readonly partial struct Rect
         var c = BottomRight;
         var d = TopRight;
 
-        var result = SegmentDef.Segment.IntersectSegmentRay(a, b, r.Point, r.Direction, r.Normal);
+        var result = Segment.IntersectSegmentRay(a, b, r.Point, r.Direction, r.Normal);
         if (result.Valid)
         {
             points.Add(result);
@@ -67,17 +67,7 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentRay(b, c, r.Point, r.Direction, r.Normal);
-        if (result.Valid)
-        {
-            points.Add(result);
-            if (returnAfterFirstValid) return 1;
-            count++;
-        }
-
-        if (count >= 2) return count;
-
-        result = SegmentDef.Segment.IntersectSegmentRay(c, d, r.Point, r.Direction, r.Normal);
+        result = Segment.IntersectSegmentRay(b, c, r.Point, r.Direction, r.Normal);
         if (result.Valid)
         {
             points.Add(result);
@@ -87,7 +77,17 @@ public readonly partial struct Rect
 
         if (count >= 2) return count;
 
-        result = SegmentDef.Segment.IntersectSegmentRay(d, a, r.Point, r.Direction, r.Normal);
+        result = Segment.IntersectSegmentRay(c, d, r.Point, r.Direction, r.Normal);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        if (count >= 2) return count;
+
+        result = Segment.IntersectSegmentRay(d, a, r.Point, r.Direction, r.Normal);
         if (result.Valid)
         {
             points.Add(result);
@@ -105,7 +105,7 @@ public readonly partial struct Rect
         var c = BottomRight;
         var d = TopRight;
 
-        var result = SegmentDef.Segment.IntersectSegmentLine(a, b, l.Point, l.Direction, l.Normal);
+        var result = Segment.IntersectSegmentLine(a, b, l.Point, l.Direction, l.Normal);
         if (result.Valid)
         {
             points.Add(result);
@@ -113,17 +113,7 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentLine(b, c, l.Point, l.Direction, l.Normal);
-        if (result.Valid)
-        {
-            points.Add(result);
-            if (returnAfterFirstValid) return 1;
-            count++;
-        }
-
-        if (count >= 2) return count;
-
-        result = SegmentDef.Segment.IntersectSegmentLine(c, d, l.Point, l.Direction, l.Normal);
+        result = Segment.IntersectSegmentLine(b, c, l.Point, l.Direction, l.Normal);
         if (result.Valid)
         {
             points.Add(result);
@@ -133,7 +123,17 @@ public readonly partial struct Rect
 
         if (count >= 2) return count;
 
-        result = SegmentDef.Segment.IntersectSegmentLine(d, a, l.Point, l.Direction, l.Normal);
+        result = Segment.IntersectSegmentLine(c, d, l.Point, l.Direction, l.Normal);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        if (count >= 2) return count;
+
+        result = Segment.IntersectSegmentLine(d, a, l.Point, l.Direction, l.Normal);
         if (result.Valid)
         {
             points.Add(result);
@@ -143,7 +143,7 @@ public readonly partial struct Rect
         return count;
     }
 
-    public int IntersectShape(SegmentDef.Segment s, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Segment s, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
         var a = TopLeft;
@@ -151,7 +151,7 @@ public readonly partial struct Rect
         var c = BottomRight;
         var d = TopRight;
 
-        var result = SegmentDef.Segment.IntersectSegmentSegment(a, b, s.Start, s.End);
+        var result = Segment.IntersectSegmentSegment(a, b, s.Start, s.End);
         if (result.Valid)
         {
             points.Add(result);
@@ -159,17 +159,7 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(b, c, s.Start, s.End);
-        if (result.Valid)
-        {
-            points.Add(result);
-            if (returnAfterFirstValid) return 1;
-            count++;
-        }
-
-        if (count >= 2) return count;
-
-        result = SegmentDef.Segment.IntersectSegmentSegment(c, d, s.Start, s.End);
+        result = Segment.IntersectSegmentSegment(b, c, s.Start, s.End);
         if (result.Valid)
         {
             points.Add(result);
@@ -179,7 +169,17 @@ public readonly partial struct Rect
 
         if (count >= 2) return count;
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(d, a, s.Start, s.End);
+        result = Segment.IntersectSegmentSegment(c, d, s.Start, s.End);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        if (count >= 2) return count;
+
+        result = Segment.IntersectSegmentSegment(d, a, s.Start, s.End);
         if (result.Valid)
         {
             points.Add(result);
@@ -198,7 +198,7 @@ public readonly partial struct Rect
         var c = BottomRight;
         var d = TopRight;
 
-        var result = SegmentDef.Segment.IntersectSegmentCircle(a, b, circle.Center, circle.Radius);
+        var result = Segment.IntersectSegmentCircle(a, b, circle.Center, circle.Radius);
         if (result.a.Valid)
         {
             points.Add(result.a);
@@ -213,7 +213,7 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentCircle(b, c, circle.Center, circle.Radius);
+        result = Segment.IntersectSegmentCircle(b, c, circle.Center, circle.Radius);
         if (result.a.Valid)
         {
             points.Add(result.a);
@@ -228,7 +228,7 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentCircle(c, d, circle.Center, circle.Radius);
+        result = Segment.IntersectSegmentCircle(c, d, circle.Center, circle.Radius);
         if (result.a.Valid)
         {
             points.Add(result.a);
@@ -243,7 +243,7 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentCircle(d, a, circle.Center, circle.Radius);
+        result = Segment.IntersectSegmentCircle(d, a, circle.Center, circle.Radius);
         if (result.a.Valid)
         {
             points.Add(result.a);
@@ -269,7 +269,7 @@ public readonly partial struct Rect
         var c = BottomRight;
         var d = TopRight;
 
-        var result = SegmentDef.Segment.IntersectSegmentSegment(a, b, t.A, t.B);
+        var result = Segment.IntersectSegmentSegment(a, b, t.A, t.B);
         if (result.Valid)
         {
             points.Add(result);
@@ -277,7 +277,7 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(a, b, t.B, t.C);
+        result = Segment.IntersectSegmentSegment(a, b, t.B, t.C);
         if (result.Valid)
         {
             points.Add(result);
@@ -285,32 +285,7 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(a, b, t.C, t.A);
-        if (result.Valid)
-        {
-            points.Add(result);
-            if (returnAfterFirstValid) return 1;
-            count++;
-        }
-
-
-        result = SegmentDef.Segment.IntersectSegmentSegment(b, c, t.A, t.B);
-        if (result.Valid)
-        {
-            points.Add(result);
-            if (returnAfterFirstValid) return 1;
-            count++;
-        }
-
-        result = SegmentDef.Segment.IntersectSegmentSegment(b, c, t.B, t.C);
-        if (result.Valid)
-        {
-            points.Add(result);
-            if (returnAfterFirstValid) return 1;
-            count++;
-        }
-
-        result = SegmentDef.Segment.IntersectSegmentSegment(b, c, t.C, t.A);
+        result = Segment.IntersectSegmentSegment(a, b, t.C, t.A);
         if (result.Valid)
         {
             points.Add(result);
@@ -319,7 +294,7 @@ public readonly partial struct Rect
         }
 
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(c, d, t.A, t.B);
+        result = Segment.IntersectSegmentSegment(b, c, t.A, t.B);
         if (result.Valid)
         {
             points.Add(result);
@@ -327,7 +302,7 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(c, d, t.B, t.C);
+        result = Segment.IntersectSegmentSegment(b, c, t.B, t.C);
         if (result.Valid)
         {
             points.Add(result);
@@ -335,7 +310,7 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(c, d, t.C, t.A);
+        result = Segment.IntersectSegmentSegment(b, c, t.C, t.A);
         if (result.Valid)
         {
             points.Add(result);
@@ -343,7 +318,8 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(d, a, t.A, t.B);
+
+        result = Segment.IntersectSegmentSegment(c, d, t.A, t.B);
         if (result.Valid)
         {
             points.Add(result);
@@ -351,7 +327,7 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(d, a, t.B, t.C);
+        result = Segment.IntersectSegmentSegment(c, d, t.B, t.C);
         if (result.Valid)
         {
             points.Add(result);
@@ -359,7 +335,31 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(d, a, t.C, t.A);
+        result = Segment.IntersectSegmentSegment(c, d, t.C, t.A);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        result = Segment.IntersectSegmentSegment(d, a, t.A, t.B);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        result = Segment.IntersectSegmentSegment(d, a, t.B, t.C);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        result = Segment.IntersectSegmentSegment(d, a, t.C, t.A);
         if (result.Valid)
         {
             points.Add(result);
@@ -376,7 +376,7 @@ public readonly partial struct Rect
         var b = BottomLeft;
         var c = BottomRight;
         var d = TopRight;
-        var result = SegmentDef.Segment.IntersectSegmentSegment(a, b, q.A, q.B);
+        var result = Segment.IntersectSegmentSegment(a, b, q.A, q.B);
         if (result.Valid)
         {
             points.Add(result);
@@ -384,7 +384,7 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(a, b, q.B, q.C);
+        result = Segment.IntersectSegmentSegment(a, b, q.B, q.C);
         if (result.Valid)
         {
             points.Add(result);
@@ -392,7 +392,7 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(a, b, q.C, q.D);
+        result = Segment.IntersectSegmentSegment(a, b, q.C, q.D);
         if (result.Valid)
         {
             points.Add(result);
@@ -400,40 +400,7 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(a, b, q.D, q.A);
-        if (result.Valid)
-        {
-            points.Add(result);
-            if (returnAfterFirstValid) return 1;
-            count++;
-        }
-
-
-        result = SegmentDef.Segment.IntersectSegmentSegment(b, c, q.A, q.B);
-        if (result.Valid)
-        {
-            points.Add(result);
-            if (returnAfterFirstValid) return 1;
-            count++;
-        }
-
-        result = SegmentDef.Segment.IntersectSegmentSegment(b, c, q.B, q.C);
-        if (result.Valid)
-        {
-            points.Add(result);
-            if (returnAfterFirstValid) return 1;
-            count++;
-        }
-
-        result = SegmentDef.Segment.IntersectSegmentSegment(b, c, q.C, q.D);
-        if (result.Valid)
-        {
-            points.Add(result);
-            if (returnAfterFirstValid) return 1;
-            count++;
-        }
-
-        result = SegmentDef.Segment.IntersectSegmentSegment(b, c, q.D, q.A);
+        result = Segment.IntersectSegmentSegment(a, b, q.D, q.A);
         if (result.Valid)
         {
             points.Add(result);
@@ -442,7 +409,7 @@ public readonly partial struct Rect
         }
 
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(c, d, q.A, q.B);
+        result = Segment.IntersectSegmentSegment(b, c, q.A, q.B);
         if (result.Valid)
         {
             points.Add(result);
@@ -450,7 +417,7 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(c, d, q.B, q.C);
+        result = Segment.IntersectSegmentSegment(b, c, q.B, q.C);
         if (result.Valid)
         {
             points.Add(result);
@@ -458,7 +425,7 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(c, d, q.C, q.D);
+        result = Segment.IntersectSegmentSegment(b, c, q.C, q.D);
         if (result.Valid)
         {
             points.Add(result);
@@ -466,7 +433,7 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(c, d, q.D, q.A);
+        result = Segment.IntersectSegmentSegment(b, c, q.D, q.A);
         if (result.Valid)
         {
             points.Add(result);
@@ -474,7 +441,8 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(d, a, q.A, q.B);
+
+        result = Segment.IntersectSegmentSegment(c, d, q.A, q.B);
         if (result.Valid)
         {
             points.Add(result);
@@ -482,7 +450,7 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(d, a, q.B, q.C);
+        result = Segment.IntersectSegmentSegment(c, d, q.B, q.C);
         if (result.Valid)
         {
             points.Add(result);
@@ -490,7 +458,7 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(d, a, q.C, q.D);
+        result = Segment.IntersectSegmentSegment(c, d, q.C, q.D);
         if (result.Valid)
         {
             points.Add(result);
@@ -498,7 +466,39 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(d, a, q.D, q.A);
+        result = Segment.IntersectSegmentSegment(c, d, q.D, q.A);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        result = Segment.IntersectSegmentSegment(d, a, q.A, q.B);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        result = Segment.IntersectSegmentSegment(d, a, q.B, q.C);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        result = Segment.IntersectSegmentSegment(d, a, q.C, q.D);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        result = Segment.IntersectSegmentSegment(d, a, q.D, q.A);
         if (result.Valid)
         {
             points.Add(result);
@@ -521,7 +521,7 @@ public readonly partial struct Rect
         var rC = r.BottomRight;
         var rD = r.TopRight;
 
-        var result = SegmentDef.Segment.IntersectSegmentSegment(a, b, rA, rB);
+        var result = Segment.IntersectSegmentSegment(a, b, rA, rB);
         if (result.Valid)
         {
             points.Add(result);
@@ -530,7 +530,7 @@ public readonly partial struct Rect
         }
 
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(a, b, rB, rC);
+        result = Segment.IntersectSegmentSegment(a, b, rB, rC);
         if (result.Valid)
         {
             points.Add(result);
@@ -539,7 +539,7 @@ public readonly partial struct Rect
         }
 
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(a, b, rC, rD);
+        result = Segment.IntersectSegmentSegment(a, b, rC, rD);
         if (result.Valid)
         {
             points.Add(result);
@@ -547,40 +547,7 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(a, b, rD, rA);
-        if (result.Valid)
-        {
-            points.Add(result);
-            if (returnAfterFirstValid) return 1;
-            count++;
-        }
-
-
-        result = SegmentDef.Segment.IntersectSegmentSegment(b, c, rA, rB);
-        if (result.Valid)
-        {
-            points.Add(result);
-            if (returnAfterFirstValid) return 1;
-            count++;
-        }
-
-        result = SegmentDef.Segment.IntersectSegmentSegment(b, c, rB, rC);
-        if (result.Valid)
-        {
-            points.Add(result);
-            if (returnAfterFirstValid) return 1;
-            count++;
-        }
-
-        result = SegmentDef.Segment.IntersectSegmentSegment(b, c, rC, rD);
-        if (result.Valid)
-        {
-            points.Add(result);
-            if (returnAfterFirstValid) return 1;
-            count++;
-        }
-
-        result = SegmentDef.Segment.IntersectSegmentSegment(b, c, rD, rA);
+        result = Segment.IntersectSegmentSegment(a, b, rD, rA);
         if (result.Valid)
         {
             points.Add(result);
@@ -589,7 +556,7 @@ public readonly partial struct Rect
         }
 
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(c, d, rA, rB);
+        result = Segment.IntersectSegmentSegment(b, c, rA, rB);
         if (result.Valid)
         {
             points.Add(result);
@@ -597,7 +564,7 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(c, d, rB, rC);
+        result = Segment.IntersectSegmentSegment(b, c, rB, rC);
         if (result.Valid)
         {
             points.Add(result);
@@ -605,7 +572,7 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(c, d, rC, rD);
+        result = Segment.IntersectSegmentSegment(b, c, rC, rD);
         if (result.Valid)
         {
             points.Add(result);
@@ -613,7 +580,7 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(c, d, rD, rA);
+        result = Segment.IntersectSegmentSegment(b, c, rD, rA);
         if (result.Valid)
         {
             points.Add(result);
@@ -622,7 +589,7 @@ public readonly partial struct Rect
         }
 
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(d, a, rA, rB);
+        result = Segment.IntersectSegmentSegment(c, d, rA, rB);
         if (result.Valid)
         {
             points.Add(result);
@@ -630,7 +597,7 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(d, a, rB, rC);
+        result = Segment.IntersectSegmentSegment(c, d, rB, rC);
         if (result.Valid)
         {
             points.Add(result);
@@ -638,7 +605,7 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(d, a, rC, rD);
+        result = Segment.IntersectSegmentSegment(c, d, rC, rD);
         if (result.Valid)
         {
             points.Add(result);
@@ -646,7 +613,40 @@ public readonly partial struct Rect
             count++;
         }
 
-        result = SegmentDef.Segment.IntersectSegmentSegment(d, a, rD, rA);
+        result = Segment.IntersectSegmentSegment(c, d, rD, rA);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+
+        result = Segment.IntersectSegmentSegment(d, a, rA, rB);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        result = Segment.IntersectSegmentSegment(d, a, rB, rC);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        result = Segment.IntersectSegmentSegment(d, a, rC, rD);
+        if (result.Valid)
+        {
+            points.Add(result);
+            if (returnAfterFirstValid) return 1;
+            count++;
+        }
+
+        result = Segment.IntersectSegmentSegment(d, a, rD, rA);
         if (result.Valid)
         {
             points.Add(result);
@@ -669,7 +669,7 @@ public readonly partial struct Rect
 
         for (var i = 0; i < p.Count; i++)
         {
-            var result = SegmentDef.Segment.IntersectSegmentSegment(a, b, p[i], p[(i + 1) % p.Count]);
+            var result = Segment.IntersectSegmentSegment(a, b, p[i], p[(i + 1) % p.Count]);
             if (result.Valid)
             {
                 points.Add(result);
@@ -677,7 +677,7 @@ public readonly partial struct Rect
                 count++;
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(b, c, p[i], p[(i + 1) % p.Count]);
+            result = Segment.IntersectSegmentSegment(b, c, p[i], p[(i + 1) % p.Count]);
             if (result.Valid)
             {
                 points.Add(result);
@@ -685,7 +685,7 @@ public readonly partial struct Rect
                 count++;
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(c, d, p[i], p[(i + 1) % p.Count]);
+            result = Segment.IntersectSegmentSegment(c, d, p[i], p[(i + 1) % p.Count]);
             if (result.Valid)
             {
                 points.Add(result);
@@ -693,7 +693,7 @@ public readonly partial struct Rect
                 count++;
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(d, a, p[i], p[(i + 1) % p.Count]);
+            result = Segment.IntersectSegmentSegment(d, a, p[i], p[(i + 1) % p.Count]);
             if (result.Valid)
             {
                 points.Add(result);
@@ -717,7 +717,7 @@ public readonly partial struct Rect
         var d = TopRight;
         for (var i = 0; i < pl.Count - 1; i++)
         {
-            var result = SegmentDef.Segment.IntersectSegmentSegment(a, b, pl[i], pl[(i + 1) % pl.Count]);
+            var result = Segment.IntersectSegmentSegment(a, b, pl[i], pl[(i + 1) % pl.Count]);
             if (result.Valid)
             {
                 points.Add(result);
@@ -725,7 +725,7 @@ public readonly partial struct Rect
                 count++;
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(b, c, pl[i], pl[(i + 1) % pl.Count]);
+            result = Segment.IntersectSegmentSegment(b, c, pl[i], pl[(i + 1) % pl.Count]);
             if (result.Valid)
             {
                 points.Add(result);
@@ -733,7 +733,7 @@ public readonly partial struct Rect
                 count++;
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(c, d, pl[i], pl[(i + 1) % pl.Count]);
+            result = Segment.IntersectSegmentSegment(c, d, pl[i], pl[(i + 1) % pl.Count]);
             if (result.Valid)
             {
                 points.Add(result);
@@ -741,7 +741,7 @@ public readonly partial struct Rect
                 count++;
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(d, a, pl[i], pl[(i + 1) % pl.Count]);
+            result = Segment.IntersectSegmentSegment(d, a, pl[i], pl[(i + 1) % pl.Count]);
             if (result.Valid)
             {
                 points.Add(result);
@@ -766,7 +766,7 @@ public readonly partial struct Rect
 
         foreach (var seg in shape)
         {
-            var result = SegmentDef.Segment.IntersectSegmentSegment(a, b, seg.Start, seg.End);
+            var result = Segment.IntersectSegmentSegment(a, b, seg.Start, seg.End);
             if (result.Valid)
             {
                 points.Add(result);
@@ -774,7 +774,7 @@ public readonly partial struct Rect
                 count++;
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(b, c, seg.Start, seg.End);
+            result = Segment.IntersectSegmentSegment(b, c, seg.Start, seg.End);
             if (result.Valid)
             {
                 points.Add(result);
@@ -782,7 +782,7 @@ public readonly partial struct Rect
                 count++;
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(c, d, seg.Start, seg.End);
+            result = Segment.IntersectSegmentSegment(c, d, seg.Start, seg.End);
             if (result.Valid)
             {
                 points.Add(result);
@@ -790,7 +790,7 @@ public readonly partial struct Rect
                 count++;
             }
 
-            result = SegmentDef.Segment.IntersectSegmentSegment(d, a, seg.Start, seg.End);
+            result = Segment.IntersectSegmentSegment(d, a, seg.Start, seg.End);
             if (result.Valid)
             {
                 points.Add(result);

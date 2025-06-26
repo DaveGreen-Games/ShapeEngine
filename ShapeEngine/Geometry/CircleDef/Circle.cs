@@ -281,7 +281,7 @@ public readonly partial struct Circle : IEquatable<Circle>
     /// Gets a random edge segment of the circle.
     /// </summary>
     /// <returns>A random edge as a <see cref="Segment"/>.</returns>
-    public SegmentDef.Segment GetRandomEdge() { return Rng.Instance.RandCollection(GetEdges()); }
+    public Segment GetRandomEdge() { return Rng.Instance.RandCollection(GetEdges()); }
 
     /// <summary>
     /// Gets a random point on the circle's edge.

@@ -51,7 +51,7 @@ public readonly partial struct Ray
         return null;
     }
 
-    public CollisionPoints? IntersectShape(SegmentDef.Segment segment)
+    public CollisionPoints? IntersectShape(Segment segment)
     {
         var result = IntersectRaySegment(Point, Direction, segment.Start, segment.End, segment.Normal);
         Console.WriteLine($"Point of intersection: {result.Point} - Normal: {result.Normal} - Valid: {result.Valid}");
@@ -247,7 +247,7 @@ public readonly partial struct Ray
         return 0;
     }
 
-    public int IntersectShape(SegmentDef.Segment s, ref CollisionPoints points)
+    public int IntersectShape(Segment s, ref CollisionPoints points)
     {
         var cp = IntersectRaySegment(Point, Direction, s.Start, s.End);
         if (cp.Valid)

@@ -1,5 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.SegmentDef;
 
 namespace ShapeEngine.Geometry.QuadDef;
 
@@ -59,16 +60,16 @@ public readonly partial struct Quad
     {
         if (!ContainsQuadPoint(qA, qB, qC, qD, circleCenter)) return false;
 
-        var result = SegmentDef.Segment.IntersectSegmentCircle(qA, qB, circleCenter, circleRadius);
+        var result = Segment.IntersectSegmentCircle(qA, qB, circleCenter, circleRadius);
         if (result.a.Valid || result.b.Valid) return false;
 
-        result = SegmentDef.Segment.IntersectSegmentCircle(qB, qC, circleCenter, circleRadius);
+        result = Segment.IntersectSegmentCircle(qB, qC, circleCenter, circleRadius);
         if (result.a.Valid || result.b.Valid) return false;
 
-        result = SegmentDef.Segment.IntersectSegmentCircle(qC, qD, circleCenter, circleRadius);
+        result = Segment.IntersectSegmentCircle(qC, qD, circleCenter, circleRadius);
         if (result.a.Valid || result.b.Valid) return false;
 
-        result = SegmentDef.Segment.IntersectSegmentCircle(qD, qA, circleCenter, circleRadius);
+        result = Segment.IntersectSegmentCircle(qD, qA, circleCenter, circleRadius);
         if (result.a.Valid || result.b.Valid) return false;
         return true;
     }

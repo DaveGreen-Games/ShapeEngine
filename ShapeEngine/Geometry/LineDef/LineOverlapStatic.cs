@@ -45,7 +45,7 @@ public readonly partial struct Line
         // Calculate the intersection point
         var intersection = linePoint + t * lineDirection;
 
-        return SegmentDef.Segment.IsPointOnSegment(intersection, segmentStart, segmentEnd);
+        return Segment.IsPointOnSegment(intersection, segmentStart, segmentEnd);
     }
 
     /// <summary>
@@ -255,7 +255,7 @@ public readonly partial struct Line
     /// <param name="lineDirection">The direction vector of the infinite line.</param>
     /// <param name="segments">A list of <see cref="Segment"/> objects to check for overlap with the line.</param>
     /// <returns>True if the line overlaps with any segment in the list; otherwise, false.</returns>
-    public static bool OverlapLineSegments(Vector2 linePoint, Vector2 lineDirection, List<SegmentDef.Segment> segments)
+    public static bool OverlapLineSegments(Vector2 linePoint, Vector2 lineDirection, List<Segment> segments)
     {
         if (segments.Count <= 0) return false;
 

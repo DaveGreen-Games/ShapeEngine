@@ -1345,7 +1345,7 @@ public class CollisionHandler : IBounds
     /// <item>The result is cleared before being populated.</item>
     /// </list>
     /// </remarks>
-    public void CastSpace(SegmentDef.Segment shape, BitFlag collisionMask, ref CastSpaceResult result)
+    public void CastSpace(Segment shape, BitFlag collisionMask, ref CastSpaceResult result)
     {
         if(result.Count > 0) result.Clear();
         collisionCandidateBuckets.Clear();
@@ -1700,7 +1700,7 @@ public class CollisionHandler : IBounds
     /// <remarks>
     /// Only enabled colliders in the collision system are checked.
     /// </remarks>
-    public int CastSpace(SegmentDef.Segment shape, BitFlag collisionMask)
+    public int CastSpace(Segment shape, BitFlag collisionMask)
     {
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();

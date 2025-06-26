@@ -1,6 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.QuadDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.StaticLib;
 
@@ -36,7 +37,7 @@ public readonly partial struct Circle
     /// <returns><c>true</c> if the circle overlaps with the segment; otherwise, <c>false</c>.</returns>
     public static bool OverlapCircleSegment(Vector2 cPos, float cRadius, Vector2 segStart, Vector2 segEnd)
     {
-        if (cRadius <= 0.0f) return SegmentDef.Segment.IsPointOnSegment(cPos, segStart, segEnd);
+        if (cRadius <= 0.0f) return Segment.IsPointOnSegment(cPos, segStart, segEnd);
         if (ContainsCirclePoint(cPos, cRadius, segStart)) return true;
         // if (ContainsCirclePoint(cPos, cRadius, segEnd)) return true;
 
@@ -196,7 +197,7 @@ public readonly partial struct Circle
     /// <param name="radius">The radius of the circle.</param>
     /// <param name="segments">The collection of segments.</param>
     /// <returns><c>true</c> if the circle overlaps with the segments; otherwise, <c>false</c>.</returns>
-    public static bool OverlapCircleSegments(Vector2 center, float radius, List<SegmentDef.Segment> segments)
+    public static bool OverlapCircleSegments(Vector2 center, float radius, List<Segment> segments)
     {
         if (segments.Count <= 0) return false;
 

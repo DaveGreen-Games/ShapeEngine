@@ -237,7 +237,7 @@ public class CircleSector
         for (int i = 0; i < accuracy + 2; i++)
         {
             var p = center + v;
-            result.Add(new SegmentDef.Segment(prevPoint, p));
+            result.Add(new Segment(prevPoint, p));
             prevPoint = p;
             v = v.Rotate(angleStep);
         }

@@ -397,7 +397,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="segment">The segment to query.</param>
     /// <param name="candidates">A set to populate with unique colliders.</param>
-    public void GetUniqueCandidates(SegmentDef.Segment segment, ref HashSet<Collider> candidates)
+    public void GetUniqueCandidates(Segment segment, ref HashSet<Collider> candidates)
     {
         List<int> bucketIds = new();
         GetCellIDs(segment, ref bucketIds);
@@ -694,7 +694,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="segment">The segment to check.</param>
     /// <param name="idList">The list to populate with cell IDs.</param>
-    private void GetCellIDs(SegmentDef.Segment segment, ref List<int> idList)
+    private void GetCellIDs(Segment segment, ref List<int> idList)
     {
         var boundingRect = segment.GetBoundingBox();
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);

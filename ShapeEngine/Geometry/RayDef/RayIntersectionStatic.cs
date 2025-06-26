@@ -1,6 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.LineDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.RayDef;
@@ -373,7 +374,7 @@ public readonly partial struct Ray
         return result;
     }
 
-    public static CollisionPoints? IntersectRaySegments(Vector2 rayPoint, Vector2 rayDirection, List<SegmentDef.Segment> segments, int maxCollisionPoints = -1)
+    public static CollisionPoints? IntersectRaySegments(Vector2 rayPoint, Vector2 rayDirection, List<Segment> segments, int maxCollisionPoints = -1)
     {
         if (segments.Count <= 0) return null;
         if (maxCollisionPoints == 0) return null;

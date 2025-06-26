@@ -137,9 +137,9 @@ public readonly partial struct Line
     /// <returns>
     /// A <see cref="ClosestPointResult"/> containing the closest points on the line and the segment, their normals, and the squared distance between them.
     /// </returns>
-    public ClosestPointResult GetClosestPoint(SegmentDef.Segment other)
+    public ClosestPointResult GetClosestPoint(Segment other)
     {
-        var result = SegmentDef.Segment.GetClosestPointSegmentLine(other.Start, other.End, Point, Direction, out var disSquared);
+        var result = Segment.GetClosestPointSegmentLine(other.Start, other.End, Point, Direction, out var disSquared);
         return new(
             new(result.other, Normal),
             new(result.self, other.Normal),

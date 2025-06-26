@@ -178,18 +178,18 @@ public partial class Points
     /// <remarks>
     /// If the collection is empty, returns a default <see cref="ClosestPointResult"/>.
     /// </remarks>
-    public ClosestPointResult GetClosestPoint(SegmentDef.Segment other)
+    public ClosestPointResult GetClosestPoint(Segment other)
     {
         if (Count <= 0) return new();
         var closest = this[0];
-        var pointOnOther = SegmentDef.Segment.GetClosestPointSegmentPoint(other.Start, other.End, closest, out float disSquared);
+        var pointOnOther = Segment.GetClosestPointSegmentPoint(other.Start, other.End, closest, out float disSquared);
         var selfIndex = 0;
 
         for (var i = 1; i < Count; i++)
         {
             var next = this[i];
 
-            var result = SegmentDef.Segment.GetClosestPointSegmentPoint(other.Start, other.End, next, out float dis);
+            var result = Segment.GetClosestPointSegmentPoint(other.Start, other.End, next, out float dis);
             if (dis < disSquared)
             {
                 selfIndex = i;
