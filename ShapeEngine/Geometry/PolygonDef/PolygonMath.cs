@@ -194,7 +194,8 @@ public partial class Polygon
     /// </remarks>
     public bool IsConvex()
     {
-        int num = this.Count;
+        int num = Count;
+        if (num < 3) return false;
         bool isPositive = false;
 
         for (int i = 0; i < num; i++)
@@ -209,6 +210,30 @@ public partial class Polygon
         }
 
         return true;
+        
+        //TODO: better variant? Use this instead? (Generated with GitHub Copilot based on the above code!)
+        // 
+        // int num = this.Count;
+        // if (num < 3) return false;
+        //
+        // bool? sign = null;
+        // for (int i = 0; i < num; i++)
+        // {
+        //     int prev = (i + num - 1) % num;
+        //     int next = (i + 1) % num;
+        //     var d0 = this[i] - this[prev];
+        //     var d1 = this[next] - this[i];
+        //     float cross = d0.Cross(d1);
+        //
+        //     if (cross == 0f) continue; // Collinear, skip
+        //
+        //     bool currentSign = cross > 0f;
+        //     if (sign == null)
+        //         sign = currentSign;
+        //     else if (sign != currentSign)
+        //         return false;
+        // }
+        // return true;
     }
     /// <summary>
     /// Converts the polygon to a <see cref="Points"/> collection.
