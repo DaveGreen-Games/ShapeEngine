@@ -3,6 +3,7 @@ using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.TriangleDef;
+using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.RayDef;
 
@@ -12,7 +13,7 @@ public readonly partial struct Ray
     {
         float denominator = rayDirection.X * (segmentEnd.Y - segmentStart.Y) - rayDirection.Y * (segmentEnd.X - segmentStart.X);
 
-        if (Math.Abs(denominator) < 1e-10)
+        if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         {
             return false;
         }
@@ -33,7 +34,7 @@ public readonly partial struct Ray
     {
         float denominator = rayDirection.X * lineDirection.Y - rayDirection.Y * lineDirection.X;
 
-        if (Math.Abs(denominator) < 1e-10)
+        if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         {
             return false;
         }
@@ -53,7 +54,7 @@ public readonly partial struct Ray
     {
         float denominator = ray1Direction.X * ray2Direction.Y - ray1Direction.Y * ray2Direction.X;
 
-        if (Math.Abs(denominator) < 1e-10)
+        if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         {
             return false;
         }
@@ -94,7 +95,7 @@ public readonly partial struct Ray
             }
         }
 
-        if (Math.Abs(distanceToCenter - circleRadius) < 1e-10)
+        if (Math.Abs(distanceToCenter - circleRadius) < ShapeMath.EpsilonF)
         {
             if (Vector2.Dot(closestPoint - rayPoint, rayDirection) >= 0)
             {

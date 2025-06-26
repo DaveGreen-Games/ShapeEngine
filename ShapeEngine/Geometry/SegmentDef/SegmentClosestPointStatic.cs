@@ -41,7 +41,7 @@ public readonly partial struct Segment
         float f = Vector2.Dot(d2, r);
 
         float s, t;
-        if (a <= 1e-10 && e <= 1e-10)
+        if (a <= ShapeMath.EpsilonF && e <= ShapeMath.EpsilonF)
         {
             // Both segments degenerate into points
             s = t = 0.0f;
@@ -50,7 +50,7 @@ public readonly partial struct Segment
             return (segment1Start, segment2Start);
         }
 
-        if (a <= 1e-10)
+        if (a <= ShapeMath.EpsilonF)
         {
             // First segment degenerates into a point
             s = 0.0f;
@@ -59,7 +59,7 @@ public readonly partial struct Segment
         else
         {
             float c = Vector2.Dot(d1, r);
-            if (e <= 1e-10)
+            if (e <= ShapeMath.EpsilonF)
             {
                 // Second segment degenerates into a point
                 t = 0.0f;
@@ -127,7 +127,7 @@ public readonly partial struct Segment
 
         float s, tLine;
 
-        if (Math.Abs(denominator) < 1e-10)
+        if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         {
             // The segment and line are parallel
             s = Math.Clamp(-d / a, 0.0f, 1.0f);
@@ -197,7 +197,7 @@ public readonly partial struct Segment
 
         float s, tRay;
 
-        if (Math.Abs(denominator) < 1e-10)
+        if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         {
             // The segment and ray are parallel
             s = Math.Clamp(-d / a, 0.0f, 1.0f);

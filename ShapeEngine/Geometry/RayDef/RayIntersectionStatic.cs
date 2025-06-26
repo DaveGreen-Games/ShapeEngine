@@ -24,7 +24,7 @@ public readonly partial struct Ray
     {
         float denominator = rayDirection.X * (segmentEnd.Y - segmentStart.Y) - rayDirection.Y * (segmentEnd.X - segmentStart.X);
 
-        if (Math.Abs(denominator) < 1e-10)
+        if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         {
             return (new(), -1f);
         }
@@ -60,7 +60,7 @@ public readonly partial struct Ray
     {
         float denominator = rayDirection.X * lineDirection.Y - rayDirection.Y * lineDirection.X;
 
-        if (Math.Abs(denominator) < 1e-10)
+        if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         {
             return (new(), -1f);
         }
@@ -94,7 +94,7 @@ public readonly partial struct Ray
     {
         float denominator = ray1Direction.X * ray2Direction.Y - ray1Direction.Y * ray2Direction.X;
 
-        if (Math.Abs(denominator) < 1e-10)
+        if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         {
             return (new(), -1f);
         }
@@ -129,7 +129,7 @@ public readonly partial struct Ray
     {
         float denominator = rayDirection.X * (segmentEnd.Y - segmentStart.Y) - rayDirection.Y * (segmentEnd.X - segmentStart.X);
 
-        if (Math.Abs(denominator) < 1e-10)
+        if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         {
             return new();
         }
@@ -164,7 +164,7 @@ public readonly partial struct Ray
     {
         float denominator = rayDirection.X * lineDirection.Y - rayDirection.Y * lineDirection.X;
 
-        if (Math.Abs(denominator) < 1e-10)
+        if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         {
             return new();
         }
@@ -197,7 +197,7 @@ public readonly partial struct Ray
     {
         float denominator = ray1Direction.X * ray2Direction.Y - ray1Direction.Y * ray2Direction.X;
 
-        if (Math.Abs(denominator) < 1e-10)
+        if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         {
             return new();
         }
@@ -256,7 +256,7 @@ public readonly partial struct Ray
 
             return (a, b);
         }
-        else if (Math.Abs(distanceToCenter - radius) < 1e-10)
+        else if (Math.Abs(distanceToCenter - radius) < ShapeMath.EpsilonF)
         {
             if (Vector2.Dot(closestPoint - rayPoint, rayDirection) >= 0)
             {

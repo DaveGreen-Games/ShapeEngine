@@ -33,7 +33,7 @@ public readonly partial struct Line
         float denominator = lineDirection.X * segmentDirection.Y - lineDirection.Y * segmentDirection.X;
 
         // Check if lines are parallel (denominator is zero)
-        if (Math.Abs(denominator) < 1e-10)
+        if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         {
             return false;
         }
@@ -65,7 +65,7 @@ public readonly partial struct Line
         float denominator = line1Direction.X * line2Direction.Y - line1Direction.Y * line2Direction.X;
 
         // Check if lines are parallel (denominator is zero)
-        if (Math.Abs(denominator) < 1e-10)
+        if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         {
             return false;
         }
@@ -94,7 +94,7 @@ public readonly partial struct Line
         float denominator = lineDirection.X * rayDirection.Y - lineDirection.Y * rayDirection.X;
 
         // Check if lines are parallel (denominator is zero)
-        if (Math.Abs(denominator) < 1e-10)
+        if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         {
             return false;
         }
@@ -135,7 +135,7 @@ public readonly partial struct Line
         // Check if the line intersects the circle
         if (distanceToCenter < circleRadius) return true;
 
-        if (Math.Abs(distanceToCenter - circleRadius) < 1e-10) return true;
+        if (Math.Abs(distanceToCenter - circleRadius) < ShapeMath.EpsilonF) return true;
 
         return false;
     }

@@ -95,7 +95,7 @@ public readonly partial struct Segment
         float f = Vector2.Dot(d2, r);
 
         float s, t;
-        if (a <= 1e-10 && e <= 1e-10)
+        if (a <= ShapeMath.EpsilonF && e <= ShapeMath.EpsilonF)
         {
             // Both segments degenerate into points
             // s = t = 0.0f;
@@ -106,7 +106,7 @@ public readonly partial struct Segment
                 ShapeMath.ClampToZero(r.LengthSquared()));
         }
 
-        if (a <= 1e-10)
+        if (a <= ShapeMath.EpsilonF)
         {
             // First segment degenerates into a point
             s = 0.0f;
@@ -115,7 +115,7 @@ public readonly partial struct Segment
         else
         {
             float c = Vector2.Dot(d1, r);
-            if (e <= 1e-10)
+            if (e <= ShapeMath.EpsilonF)
             {
                 // Second segment degenerates into a point
                 t = 0.0f;

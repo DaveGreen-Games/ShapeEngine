@@ -142,7 +142,7 @@ public readonly partial struct Circle
             return (a, b);
         }
 
-        if (Math.Abs(distanceToCenter - circleRadius) < 1e-10)
+        if (Math.Abs(distanceToCenter - circleRadius) < ShapeMath.EpsilonF)
         {
             if (Vector2.Dot(closestPoint - rayPoint, rayDirection) >= 0)
             {
@@ -197,7 +197,7 @@ public readonly partial struct Circle
             return (p1, p2);
         }
 
-        if (Math.Abs(distanceToCenter - circleRadius) < 1e-10)
+        if (Math.Abs(distanceToCenter - circleRadius) < ShapeMath.EpsilonF)
         {
             var p = new CollisionPoint(closestPoint, lineNormal);
             return (p, new());

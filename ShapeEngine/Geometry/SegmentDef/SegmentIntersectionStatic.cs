@@ -16,7 +16,7 @@ public readonly partial struct Segment
         float denominator = dir1.X * dir2.Y - dir1.Y * dir2.X;
 
         // Check if segments are parallel (denominator is zero)
-        if (Math.Abs(denominator) < 1e-10)
+        if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         {
             return (new(), -1);
         }
@@ -49,7 +49,7 @@ public readonly partial struct Segment
         float denominator = dir1.X * dir2.Y - dir1.Y * dir2.X;
 
         // Check if segments are parallel (denominator is zero)
-        if (Math.Abs(denominator) < 1e-10)
+        if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         {
             return (new(), -1);
         }
@@ -74,7 +74,7 @@ public readonly partial struct Segment
     {
         float denominator = (segmentEnd.X - segmentStart.X) * lineDirection.Y - (segmentEnd.Y - segmentStart.Y) * lineDirection.X;
 
-        if (Math.Abs(denominator) < 1e-10)
+        if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         {
             return (new(), -1);
         }
@@ -97,7 +97,7 @@ public readonly partial struct Segment
     {
         float denominator = (segmentEnd.X - segmentStart.X) * rayDirection.Y - (segmentEnd.Y - segmentStart.Y) * rayDirection.X;
 
-        if (Math.Abs(denominator) < 1e-10)
+        if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         {
             return (new(), -1);
         }
@@ -122,7 +122,7 @@ public readonly partial struct Segment
     {
         float denominator = (segmentEnd.X - segmentStart.X) * lineDirection.Y - (segmentEnd.Y - segmentStart.Y) * lineDirection.X;
 
-        if (Math.Abs(denominator) < 1e-10)
+        if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         {
             return (new(), -1);
         }
@@ -145,7 +145,7 @@ public readonly partial struct Segment
     {
         float denominator = (segmentEnd.X - segmentStart.X) * rayDirection.Y - (segmentEnd.Y - segmentStart.Y) * rayDirection.X;
 
-        if (Math.Abs(denominator) < 1e-10)
+        if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         {
             return (new(), -1);
         }
@@ -175,7 +175,7 @@ public readonly partial struct Segment
         // float denominator = lineDirection.X * segmentDirection.Y - lineDirection.Y * segmentDirection.X;
         //
         // // Check if lines are parallel (denominator is zero)
-        // if (Math.Abs(denominator) < 1e-10)
+        // if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         // {
         //     return new();
         // }
@@ -199,7 +199,7 @@ public readonly partial struct Segment
 
         // float denominator = (segmentEnd.X - segmentStart.X) * lineDirection.Y - (segmentEnd.Y - segmentStart.Y) * lineDirection.X;
         //
-        // if (Math.Abs(denominator) < 1e-10)
+        // if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         // {
         //     return new();
         // }
@@ -222,7 +222,7 @@ public readonly partial struct Segment
     {
         float denominator = rayDirection.X * (segmentEnd.Y - segmentStart.Y) - rayDirection.Y * (segmentEnd.X - segmentStart.X);
 
-        if (Math.Abs(denominator) < 1e-10)
+        if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         {
             return new();
         }
@@ -257,7 +257,7 @@ public readonly partial struct Segment
         float denominator = dir1.X * dir2.Y - dir1.Y * dir2.X;
 
         // Check if segments are parallel (denominator is zero)
-        if (Math.Abs(denominator) < 1e-10)
+        if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         {
             return new();
         }
@@ -352,7 +352,7 @@ public readonly partial struct Segment
                 // results.Add((intersection2, normal2));
             }
         }
-        else if (Math.Abs(distanceToCenter - radius) < 1e-10)
+        else if (Math.Abs(distanceToCenter - radius) < ShapeMath.EpsilonF)
         {
             // The segment is tangent to the circle
             if (IsPointOnSegment(closestPoint, segmentStart, segmentEnd))

@@ -27,7 +27,7 @@ public readonly partial struct Line
         float crossProduct = toPoint.X * lineDirection.Y - toPoint.Y * lineDirection.X;
 
         // If the cross product is close to zero, the point is on the line
-        return Math.Abs(crossProduct) < 1e-10;
+        return Math.Abs(crossProduct) < ShapeMath.EpsilonF;
     }
 
     /// <summary>
@@ -56,7 +56,7 @@ public readonly partial struct Line
         float denominator = lineDirection.X * segmentDirection.Y - lineDirection.Y * segmentDirection.X;
 
         // Check if lines are parallel (denominator is zero)
-        if (Math.Abs(denominator) < 1e-10)
+        if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         {
             return (new(), -1f);
         }
@@ -128,7 +128,7 @@ public readonly partial struct Line
         float denominator = line1Direction.X * line2Direction.Y - line1Direction.Y * line2Direction.X;
 
         // Check if lines are parallel (denominator is zero)
-        if (Math.Abs(denominator) < 1e-10)
+        if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         {
             return (new(), -1f);
         }
@@ -193,7 +193,7 @@ public readonly partial struct Line
         float denominator = lineDirection.X * rayDirection.Y - lineDirection.Y * rayDirection.X;
 
         // Check if lines are parallel (denominator is zero)
-        if (Math.Abs(denominator) < 1e-10)
+        if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         {
             return (new(), -1f);
         }
@@ -281,7 +281,7 @@ public readonly partial struct Line
         // float denominator = lineDirection.X * segmentDirection.Y - lineDirection.Y * segmentDirection.X;
         //
         // // Check if lines are parallel (denominator is zero)
-        // if (Math.Abs(denominator) < 1e-10)
+        // if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         // {
         //     return new();
         // }
@@ -350,7 +350,7 @@ public readonly partial struct Line
         float denominator = line1Direction.X * line2Direction.Y - line1Direction.Y * line2Direction.X;
 
         // Check if lines are parallel (denominator is zero)
-        if (Math.Abs(denominator) < 1e-10)
+        if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         {
             return new();
         }
@@ -409,7 +409,7 @@ public readonly partial struct Line
         float denominator = lineDirection.X * rayDirection.Y - lineDirection.Y * rayDirection.X;
 
         // Check if lines are parallel (denominator is zero)
-        if (Math.Abs(denominator) < 1e-10)
+        if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         {
             return new();
         }
@@ -511,7 +511,7 @@ public readonly partial struct Line
             return (p1, p2);
         }
 
-        if (Math.Abs(distanceToCenter - circleRadius) < 1e-10)
+        if (Math.Abs(distanceToCenter - circleRadius) < ShapeMath.EpsilonF)
         {
             var p = new CollisionPoint(closestPoint, (closestPoint - circleCenter).Normalize());
             return (p, new());

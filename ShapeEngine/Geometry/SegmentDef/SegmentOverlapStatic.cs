@@ -38,7 +38,7 @@ public readonly partial struct Segment
     {
         float denominator = rayDirection.X * (segmentEnd.Y - segmentStart.Y) - rayDirection.Y * (segmentEnd.X - segmentStart.X);
 
-        if (Math.Abs(denominator) < 1e-10)
+        if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         {
             return false;
         }
@@ -56,7 +56,7 @@ public readonly partial struct Segment
 
         // float denominator = (segmentEnd.X - segmentStart.X) * rayDirection.Y - (segmentEnd.Y - segmentStart.Y) * rayDirection.X;
         //
-        // if (Math.Abs(denominator) < 1e-10)
+        // if (Math.Abs(denominator) < ShapeMath.EpsilonF)
         // {
         //     return false;
         // }
