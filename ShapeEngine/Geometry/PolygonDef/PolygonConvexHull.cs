@@ -1,7 +1,9 @@
 using System.Numerics;
+using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.PolygonDef;
+
 
 public partial class Polygon
 {
@@ -39,6 +41,11 @@ public partial class Polygon
         return q;
     }
 
+    /// <summary>
+    /// Finds the convex hull of a set of points using the Jarvis March algorithm.
+    /// </summary>
+    /// <param name="points">The list of points to compute the convex hull for.</param>
+    /// <returns>A <see cref="Polygon"/> representing the convex hull.</returns>
     private static Polygon ConvexHull_JarvisMarch(List<Vector2> points)
     {
         var hull = new List<Vector2>();
@@ -70,14 +77,35 @@ public partial class Polygon
 
         return new Polygon(hull);
     }
-    
+    /// <summary>
+    /// Finds the convex hull of a list of points.
+    /// </summary>
+    /// <param name="points">The list of points.</param>
+    /// <returns>A <see cref="Polygon"/> representing the convex hull.</returns>
     public static Polygon FindConvexHull(List<Vector2> points) => ConvexHull_JarvisMarch(points);
-    
-    public static Polygon FindConvexHull(PointsDef.Points points) => ConvexHull_JarvisMarch(points);
-    
+    /// <summary>
+    /// Finds the convex hull of a set of points.
+    /// </summary>
+    /// <param name="points">The points as a <see cref="Points"/> collection.</param>
+    /// <returns>A <see cref="Polygon"/> representing the convex hull.</returns>
+    public static Polygon FindConvexHull(Points points) => ConvexHull_JarvisMarch(points);
+    /// <summary>
+    /// Finds the convex hull of a set of points.
+    /// </summary>
+    /// <param name="points">The points as an array of <see cref="Vector2"/>.</param>
+    /// <returns>A <see cref="Polygon"/> representing the convex hull.</returns>
     public static Polygon FindConvexHull(params Vector2[] points) => ConvexHull_JarvisMarch(points.ToList());
+    /// <summary>
+    /// Finds the convex hull of a polygon's points.
+    /// </summary>
+    /// <param name="points">The polygon whose points are used.</param>
+    /// <returns>A <see cref="Polygon"/> representing the convex hull.</returns>
     public static Polygon FindConvexHull(Polygon points) => ConvexHull_JarvisMarch(points);
-    
+    /// <summary>
+    /// Finds the convex hull of multiple polygons by combining all their points.
+    /// </summary>
+    /// <param name="shapes">The polygons to combine.</param>
+    /// <returns>A <see cref="Polygon"/> representing the convex hull of all points.</returns>
     public static Polygon FindConvexHull(params Polygon[] shapes)
     {
         var allPoints = new List<Vector2>();

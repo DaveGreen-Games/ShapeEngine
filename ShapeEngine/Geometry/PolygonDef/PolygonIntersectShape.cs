@@ -12,8 +12,16 @@ using ShapeEngine.Geometry.TriangleDef;
 
 namespace ShapeEngine.Geometry.PolygonDef;
 
+
 public partial class Polygon
 {
+    /// <summary>
+    /// Computes intersection points between a polygon and a ray.
+    /// </summary>
+    /// <param name="polygon">The polygon as a list of points.</param>
+    /// <param name="rayPoint">The origin of the ray.</param>
+    /// <param name="rayDirection">The direction of the ray.</param>
+    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
     public static CollisionPoints? IntersectPolygonRay(List<Vector2> polygon, Vector2 rayPoint, Vector2 rayDirection)
     {
         if (polygon.Count < 3) return null;
@@ -30,7 +38,11 @@ public partial class Polygon
         }
         return points;
     }
-
+    /// <summary>
+    /// Computes intersection points between this polygon and a collider.
+    /// </summary>
+    /// <param name="collider">The collider to test against.</param>
+    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
     public CollisionPoints? Intersect(Collider collider)
     {
         if (!collider.Enabled) return null;
@@ -68,7 +80,11 @@ public partial class Polygon
 
         return null;
     }
-
+    /// <summary>
+    /// Computes intersection points between this polygon and a ray.
+    /// </summary>
+    /// <param name="r">The ray to test against.</param>
+    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
     public CollisionPoints? IntersectShape(Ray r)
     {
         if (Count < 3) return null;
@@ -85,7 +101,11 @@ public partial class Polygon
 
         return points;
     }
-
+    /// <summary>
+    /// Computes intersection points between this polygon and a line.
+    /// </summary>
+    /// <param name="l">The line to test against.</param>
+    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
     public CollisionPoints? IntersectShape(Line l)
     {
         if (Count < 3) return null;
@@ -102,7 +122,11 @@ public partial class Polygon
 
         return points;
     }
-
+    /// <summary>
+    /// Computes intersection points between this polygon and a segment.
+    /// </summary>
+    /// <param name="s">The segment to test against.</param>
+    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
     public CollisionPoints? IntersectShape(Segment s)
     {
         if (Count < 3) return null;
@@ -119,7 +143,11 @@ public partial class Polygon
 
         return points;
     }
-
+    /// <summary>
+    /// Computes intersection points between this polygon and a circle.
+    /// </summary>
+    /// <param name="c">The circle to test against.</param>
+    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
     public CollisionPoints? IntersectShape(Circle c)
     {
         if (Count < 3) return null;
@@ -139,7 +167,11 @@ public partial class Polygon
 
         return points;
     }
-
+    /// <summary>
+    /// Computes intersection points between this polygon and a triangle.
+    /// </summary>
+    /// <param name="t">The triangle to test against.</param>
+    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
     public CollisionPoints? IntersectShape(Triangle t)
     {
         if (Count < 3) return null;
@@ -171,7 +203,11 @@ public partial class Polygon
 
         return points;
     }
-
+    /// <summary>
+    /// Computes intersection points between this polygon and a rectangle.
+    /// </summary>
+    /// <param name="r">The rectangle to test against.</param>
+    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
     public CollisionPoints? IntersectShape(Rect r)
     {
         if (Count < 3) return null;
@@ -216,7 +252,11 @@ public partial class Polygon
 
         return points;
     }
-
+    /// <summary>
+    /// Computes intersection points between this polygon and a quad.
+    /// </summary>
+    /// <param name="q">The quad to test against.</param>
+    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
     public CollisionPoints? IntersectShape(Quad q)
     {
         if (Count < 3) return null;
@@ -255,7 +295,11 @@ public partial class Polygon
 
         return points;
     }
-
+    /// <summary>
+    /// Computes intersection points between this polygon and another polygon.
+    /// </summary>
+    /// <param name="p">The other polygon to test against.</param>
+    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
     public CollisionPoints? IntersectShape(Polygon p)
     {
         if (Count < 3 || p.Count < 3) return null;
@@ -275,7 +319,11 @@ public partial class Polygon
 
         return points;
     }
-
+    /// <summary>
+    /// Computes intersection points between this polygon and a polyline.
+    /// </summary>
+    /// <param name="pl">The polyline to test against.</param>
+    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
     public CollisionPoints? IntersectShape(Polyline pl)
     {
         if (Count < 3 || pl.Count < 2) return null;
@@ -295,7 +343,14 @@ public partial class Polygon
 
         return points;
     }
-
+    /// <summary>
+    /// Computes intersection points between this polygon and a set of segments.
+    /// </summary>
+    /// <param name="segments">The segments to test against.</param>
+    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
+    /// <remarks>
+    /// Each segment in the set is tested against all edges of the polygon. All valid intersection points are collected and returned.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Segments segments)
     {
         if (Count < 3 || segments.Count <= 0) return null;

@@ -14,30 +14,112 @@ namespace ShapeEngine.Geometry.PolygonDef;
 
 public partial class Polygon
 {
+    /// <summary>
+    /// Checks if this polygon overlaps with a line segment.
+    /// </summary>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <returns>True if the segment overlaps the polygon; otherwise, false.</returns>
+    /// <remarks>Uses polygon-segment intersection logic.</remarks>
     public bool OverlapSegment(Vector2 segmentStart, Vector2 segmentEnd) => OverlapPolygonSegment(this, segmentStart, segmentEnd);
     
+    /// <summary>
+    /// Checks if this polygon overlaps with a line.
+    /// </summary>
+    /// <param name="linePoint">A point on the line.</param>
+    /// <param name="lineDirection">The direction vector of the line.</param>
+    /// <returns>True if the line overlaps the polygon; otherwise, false.</returns>
+    /// <remarks>Line is infinite in both directions.</remarks>
     public bool OverlapLine(Vector2 linePoint, Vector2 lineDirection) => OverlapPolygonLine(this, linePoint, lineDirection);
     
+    /// <summary>
+    /// Checks if this polygon overlaps with a ray.
+    /// </summary>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <returns>True if the ray overlaps the polygon; otherwise, false.</returns>
+    /// <remarks>Ray is infinite in one direction from the origin.</remarks>
     public bool OverlapRay(Vector2 rayPoint, Vector2 rayDirection) => OverlapPolygonRay(this, rayPoint, rayDirection);
     
+    /// <summary>
+    /// Checks if this polygon overlaps with a circle.
+    /// </summary>
+    /// <param name="circleCenter">The center of the circle.</param>
+    /// <param name="circleRadius">The radius of the circle.</param>
+    /// <returns>True if the circle overlaps the polygon; otherwise, false.</returns>
     public bool OverlapCircle(Vector2 circleCenter, float circleRadius) => OverlapPolygonCircle(this, circleCenter, circleRadius);
     
+    /// <summary>
+    /// Checks if this polygon overlaps with a triangle.
+    /// </summary>
+    /// <param name="a">First vertex of the triangle.</param>
+    /// <param name="b">Second vertex of the triangle.</param>
+    /// <param name="c">Third vertex of the triangle.</param>
+    /// <returns>True if the triangle overlaps the polygon; otherwise, false.</returns>
     public bool OverlapTriangle(Vector2 a, Vector2 b, Vector2 c) => OverlapPolygonTriangle(this, a, b, c);
     
+    /// <summary>
+    /// Checks if this polygon overlaps with a quadrilateral.
+    /// </summary>
+    /// <param name="a">First vertex of the quad.</param>
+    /// <param name="b">Second vertex of the quad.</param>
+    /// <param name="c">Third vertex of the quad.</param>
+    /// <param name="d">Fourth vertex of the quad.</param>
+    /// <returns>True if the quad overlaps the polygon; otherwise, false.</returns>
     public bool OverlapQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => OverlapPolygonQuad(this, a, b, c, d);
     
+    /// <summary>
+    /// Checks if this polygon overlaps with a rectangle (represented by four points).
+    /// </summary>
+    /// <param name="a">First vertex of the rectangle.</param>
+    /// <param name="b">Second vertex of the rectangle.</param>
+    /// <param name="c">Third vertex of the rectangle.</param>
+    /// <param name="d">Fourth vertex of the rectangle.</param>
+    /// <returns>True if the rectangle overlaps the polygon; otherwise, false.</returns>
+    /// <remarks>Rectangle is treated as a quad.</remarks>
     public bool OverlapRect(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => OverlapPolygonQuad(this, a, b, c, d);
     
+    /// <summary>
+    /// Checks if this polygon overlaps with another polygon defined by a list of points.
+    /// </summary>
+    /// <param name="points">The vertices of the other polygon.</param>
+    /// <returns>True if the polygons overlap; otherwise, false.</returns>
     public bool OverlapPolygon(List<Vector2> points) => OverlapPolygonPolygon(this, points);
     
+    /// <summary>
+    /// Checks if this polygon overlaps with a polyline.
+    /// </summary>
+    /// <param name="points">The points of the polyline.</param>
+    /// <returns>True if the polyline overlaps the polygon; otherwise, false.</returns>
     public bool OverlapPolyline(List<Vector2> points) => OverlapPolygonPolyline(this, points);
     
+    /// <summary>
+    /// Checks if this polygon overlaps with a collection of segments.
+    /// </summary>
+    /// <param name="segments">The list of segments.</param>
+    /// <returns>True if any segment overlaps the polygon; otherwise, false.</returns>
     public bool OverlapSegments(List<Segment> segments) => OverlapPolygonSegments(this, segments);
     
+    /// <summary>
+    /// Checks if this polygon overlaps with a line shape.
+    /// </summary>
+    /// <param name="line">The line shape.</param>
+    /// <returns>True if the line overlaps the polygon; otherwise, false.</returns>
     public bool OverlapShape(Line line) => OverlapPolygonLine(this, line.Point, line.Direction);
     
+    /// <summary>
+    /// Checks if this polygon overlaps with a ray shape.
+    /// </summary>
+    /// <param name="ray">The ray shape.</param>
+    /// <returns>True if the ray overlaps the polygon; otherwise, false.</returns>
     public bool OverlapShape(Ray ray) => OverlapPolygonRay(this, ray.Point, ray.Direction);
     
+    /// <summary>
+    /// Checks if this polygon overlaps with a generic collider shape.
+    /// </summary>
+    /// <param name="collider">The collider to test against.</param>
+    /// <returns>True if the collider's shape overlaps the polygon; otherwise, false.</returns>
+    /// <remarks>Supports multiple shape types via the collider interface.</remarks>
     public bool Overlap(Collider collider)
     {
         if (!collider.Enabled) return false;
@@ -76,16 +158,52 @@ public partial class Polygon
         return false;
     }
 
+    /// <summary>
+    /// Checks if this polygon overlaps with a segment shape.
+    /// </summary>
+    /// <param name="s">The segment shape to test against.</param>
+    /// <returns>True if the segment overlaps the polygon; otherwise, false.</returns>
+    /// <remarks>Delegates to the segment's overlap logic for polygons.</remarks>
     public bool OverlapShape(Segment s) => s.OverlapShape(this);
     
+    /// <summary>
+    /// Checks if this polygon overlaps with a circle shape.
+    /// </summary>
+    /// <param name="c">The circle shape to test against.</param>
+    /// <returns>True if the circle overlaps the polygon; otherwise, false.</returns>
+    /// <remarks>Delegates to the circle's overlap logic for polygons.</remarks>
     public bool OverlapShape(Circle c) => c.OverlapShape(this);
     
+    /// <summary>
+    /// Checks if this polygon overlaps with a triangle shape.
+    /// </summary>
+    /// <param name="t">The triangle shape to test against.</param>
+    /// <returns>True if the triangle overlaps the polygon; otherwise, false.</returns>
+    /// <remarks>Delegates to the triangle's overlap logic for polygons.</remarks>
     public bool OverlapShape(Triangle t) => t.OverlapShape(this);
     
+    /// <summary>
+    /// Checks if this polygon overlaps with a rectangle shape.
+    /// </summary>
+    /// <param name="r">The rectangle shape to test against.</param>
+    /// <returns>True if the rectangle overlaps the polygon; otherwise, false.</returns>
+    /// <remarks>Delegates to the rectangle's overlap logic for polygons.</remarks>
     public bool OverlapShape(Rect r) => r.OverlapShape(this);
     
+    /// <summary>
+    /// Checks if this polygon overlaps with a quadrilateral shape.
+    /// </summary>
+    /// <param name="q">The quadrilateral shape to test against.</param>
+    /// <returns>True if the quadrilateral overlaps the polygon; otherwise, false.</returns>
+    /// <remarks>Delegates to the quad's overlap logic for polygons.</remarks>
     public bool OverlapShape(Quad q) => q.OverlapShape(this);
-
+    
+    /// <summary>
+    /// Checks if this polygon overlaps with another polygon.
+    /// </summary>
+    /// <param name="b">The other polygon to test against.</param>
+    /// <returns>True if the polygons overlap; otherwise, false.</returns>
+    /// <remarks>Uses edge intersection and point-in-polygon checks for both polygons.</remarks>
     public bool OverlapShape(Polygon b)
     {
         if (Count < 3 || b.Count < 3) return false;
@@ -124,6 +242,12 @@ public partial class Polygon
         return oddNodesThis || oddNodesB;
     }
 
+    /// <summary>
+    /// Checks if this polygon overlaps with a polyline shape.
+    /// </summary>
+    /// <param name="pl">The polyline shape to test against.</param>
+    /// <returns>True if the polyline overlaps the polygon; otherwise, false.</returns>
+    /// <remarks>Uses segment-segment intersection and point-in-polygon checks.</remarks>
     public bool OverlapShape(Polyline pl)
     {
         if (Count < 3 || pl.Count < 2) return false;
@@ -150,6 +274,12 @@ public partial class Polygon
         return oddNodes;
     }
 
+    /// <summary>
+    /// Checks if this polygon overlaps with a collection of segments.
+    /// </summary>
+    /// <param name="segments">The segments to test against.</param>
+    /// <returns>True if any segment overlaps the polygon; otherwise, false.</returns>
+    /// <remarks>Uses segment-segment intersection and point-in-polygon checks.</remarks>
     public bool OverlapShape(Segments segments)
     {
         if (Count < 3 || segments.Count <= 0) return false;
