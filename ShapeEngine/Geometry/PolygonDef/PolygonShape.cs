@@ -1,5 +1,6 @@
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CollisionSystem;
+using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.SegmentDef;
 
 namespace ShapeEngine.Geometry.PolygonDef;
@@ -27,7 +28,7 @@ public class PolygonShape : ShapeContainer
     /// </summary>
     /// <param name="offset">The transform offset to apply to the shape.</param>
     /// <param name="relativePoints">The points that define the polygon in local space.</param>
-    public PolygonShape(Transform2D offset, PointsDef.Points relativePoints)
+    public PolygonShape(Transform2D offset, Points relativePoints)
     {
         Offset = offset;
         RelativeShape = relativePoints.ToPolygon();

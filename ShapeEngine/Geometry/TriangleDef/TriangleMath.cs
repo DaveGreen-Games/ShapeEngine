@@ -1,5 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.StaticLib;
 
@@ -240,10 +241,10 @@ public readonly partial struct Triangle
 
     public Vector2 GetCentroid() => (A + B + C) / 3;
 
-    public PointsDef.Points? GetProjectedShapePoints(Vector2 v)
+    public Points? GetProjectedShapePoints(Vector2 v)
     {
         if (v.LengthSquared() <= 0f) return null;
-        var points = new PointsDef.Points
+        var points = new Points
         {
             A,
             B,
@@ -258,7 +259,7 @@ public readonly partial struct Triangle
     public Polygon? ProjectShape(Vector2 v)
     {
         if (v.LengthSquared() <= 0f) return null;
-        var points = new PointsDef.Points
+        var points = new Points
         {
             A,
             B,

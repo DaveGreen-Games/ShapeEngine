@@ -1,5 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Geometry.CollisionSystem;
+using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.QuadDef;
@@ -218,7 +219,7 @@ public readonly partial struct Circle
     /// </summary>
     /// <param name="points">The points to check.</param>
     /// <returns><c>true</c> if all points are inside the circle; otherwise, <c>false</c>.</returns>
-    public bool ContainsShape(PointsDef.Points points)
+    public bool ContainsShape(Points points)
     {
         return ContainsCirclePoints(Center, Radius, points);
     }

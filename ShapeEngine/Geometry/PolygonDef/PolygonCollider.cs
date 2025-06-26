@@ -1,5 +1,6 @@
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CollisionSystem;
+using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
 
@@ -29,7 +30,7 @@ public class PolygonCollider : Collider
     /// </summary>
     /// <param name="offset">The transform offset for the collider.</param>
     /// <param name="relativePoints">The points defining the polygon in local space.</param>
-    public PolygonCollider(Transform2D offset, PointsDef.Points relativePoints) : base(offset)
+    public PolygonCollider(Transform2D offset, Points relativePoints) : base(offset)
     {
         RelativeShape = relativePoints.ToPolygon();
         shape = new(RelativeShape.Count);

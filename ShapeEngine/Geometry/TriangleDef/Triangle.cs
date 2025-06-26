@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.RectDef;
@@ -98,7 +99,7 @@ public readonly partial struct Triangle : IEquatable<Triangle>
         return new(center, r);
     }
     
-    public PointsDef.Points ToPoints() => new() {A, B, C};
+    public Points ToPoints() => new() {A, B, C};
     public Polygon ToPolygon() => new() {A, B, C};
     public Polyline ToPolyline() => new() { A, B, C };
     public Segments GetEdges() => new() { SegmentAToB, SegmentBToC, SegmentCToA };
@@ -122,7 +123,7 @@ public readonly partial struct Triangle : IEquatable<Triangle>
     {
         if (pointCount < 0) return new() { new(A, B, C) };
 
-        PointsDef.Points points = new() { A, B, C };
+        Points points = new() { A, B, C };
 
         for (int i = 0; i < pointCount; i++)
         {
@@ -189,9 +190,9 @@ public readonly partial struct Triangle : IEquatable<Triangle>
     }
 
     public Vector2 GetRandomPointInside() => this.GetPoint(Rng.Instance.RandF(), Rng.Instance.RandF());
-    public PointsDef.Points GetRandomPointsInside(int amount)
+    public Points GetRandomPointsInside(int amount)
     {
-        var points = new PointsDef.Points();
+        var points = new Points();
         for (int i = 0; i < amount; i++)
         {
             points.Add(GetRandomPointInside());
@@ -207,7 +208,7 @@ public readonly partial struct Triangle : IEquatable<Triangle>
     }
     public Segment GetRandomEdge() => GetEdges().GetRandomSegment();
     public Vector2 GetRandomPointOnEdge() => GetRandomEdge().GetRandomPoint();
-    public PointsDef.Points GetRandomPointsOnEdge(int amount) => GetEdges().GetRandomPoints(amount);
+    public Points GetRandomPointsOnEdge(int amount) => GetEdges().GetRandomPoints(amount);
 
     public Segment GetSegment(int index)
     {
@@ -418,15 +419,15 @@ public readonly partial struct Triangle : IEquatable<Triangle>
     #region Interpolated Edge Points
 
     
-    public PointsDef.Points? GetInterpolatedEdgePoints(float t)
+    public Points? GetInterpolatedEdgePoints(float t)
     {
         var a1 = A.Lerp(B, t);
         var b1 = B.Lerp(C, t);
         var c1 = C.Lerp(A, t);
         
-        return new PointsDef.Points(3){a1, b1, c1};
+        return new Points(3){a1, b1, c1};
     }
-    public PointsDef.Points? GetInterpolatedEdgePoints(float t, int steps)
+    public Points? GetInterpolatedEdgePoints(float t, int steps)
     {
         if(steps <= 1) return GetInterpolatedEdgePoints(t);
         
@@ -448,7 +449,7 @@ public readonly partial struct Triangle : IEquatable<Triangle>
             remainingSteps--;
         }
         
-        return new PointsDef.Points(3){a1, b1, c1};
+        return new Points(3){a1, b1, c1};
     }
     
     #endregion

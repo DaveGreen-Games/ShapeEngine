@@ -4,6 +4,7 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.LineDef;
+using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.QuadDef;
@@ -1111,7 +1112,7 @@ public class Triangulation : ShapeList<Triangle>
     
     #region Public
     
-    public PointsDef.Points GetUniquePoints()
+    public Points GetUniquePoints()
     {
         var uniqueVertices = new HashSet<Vector2>();
         for (var i = 0; i < Count; i++)

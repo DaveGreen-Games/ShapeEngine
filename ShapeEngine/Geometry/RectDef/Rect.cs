@@ -2,6 +2,7 @@
 using Raylib_cs;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.SegmentDef;
@@ -164,7 +165,7 @@ public readonly partial struct Rect : IEquatable<Rect>
         return poly;
     }
 
-    public PointsDef.Points RotateList(float angleDeg, AnchorPoint alignement)
+    public Points RotateList(float angleDeg, AnchorPoint alignement)
     {
         var points = ToPoints();
         var pivot = TopLeft + (Size * alignement.ToVector2()).ToVector2();
@@ -172,7 +173,7 @@ public readonly partial struct Rect : IEquatable<Rect>
         return points;
     }
 
-    public PointsDef.Points ToPoints() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
+    public Points ToPoints() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
     public Polygon ToPolygon() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
     public Polyline ToPolyline() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
     public Segments GetEdges() 
@@ -358,9 +359,9 @@ public readonly partial struct Rect : IEquatable<Rect>
     }
     public Vector2 GetRandomPointInside() { return new(Rng.Instance.RandF(X, X + Width), Rng.Instance.RandF(Y, Y + Height)); }
     
-    public PointsDef.Points GetRandomPointsInside(int amount)
+    public Points GetRandomPointsInside(int amount)
     {
-        var points = new PointsDef.Points();
+        var points = new Points();
         for (int i = 0; i < amount; i++)
         {
             points.Add(GetRandomPointInside());
@@ -378,7 +379,7 @@ public readonly partial struct Rect : IEquatable<Rect>
     }
     public Segment GetRandomEdge() => GetEdges().GetRandomSegment();
     public Vector2 GetRandomPointOnEdge() => GetRandomEdge().GetRandomPoint();
-    public PointsDef.Points GetRandomPointsOnEdge(int amount) => GetEdges().GetRandomPoints(amount);
+    public Points GetRandomPointsOnEdge(int amount) => GetEdges().GetRandomPoints(amount);
 
 
     #endregion
@@ -651,16 +652,16 @@ public readonly partial struct Rect : IEquatable<Rect>
     #endregion
 
     #region Interpolated Edge Points
-    public PointsDef.Points? GetInterpolatedEdgePoints(float t)
+    public Points? GetInterpolatedEdgePoints(float t)
     {
         var a1 = A.Lerp(B, t);
         var b1 = B.Lerp(C, t);
         var c1 = C.Lerp(D, t);
         var d1 = D.Lerp(A, t);
         
-        return new PointsDef.Points(4){a1, b1, c1, d1};
+        return new Points(4){a1, b1, c1, d1};
     }
-    public PointsDef.Points? GetInterpolatedEdgePoints(float t, int steps)
+    public Points? GetInterpolatedEdgePoints(float t, int steps)
     {
         if(steps <= 1) return GetInterpolatedEdgePoints(t);
         
@@ -684,7 +685,7 @@ public readonly partial struct Rect : IEquatable<Rect>
             remainingSteps--;
         }
         
-        return new PointsDef.Points(4){a1, b1, c1, d1};
+        return new Points(4){a1, b1, c1, d1};
     }
     #endregion
 }

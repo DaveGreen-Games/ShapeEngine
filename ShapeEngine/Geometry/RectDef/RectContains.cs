@@ -1,6 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.CollisionSystem;
+using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.QuadDef;
@@ -79,7 +80,7 @@ public readonly partial struct Rect
         return ContainsRectPoints(TopLeft, BottomRight, polygon);
     }
 
-    public bool ContainsShape(PointsDef.Points points)
+    public bool ContainsShape(Points points)
     {
         return ContainsRectPoints(TopLeft, BottomRight, points);
     }

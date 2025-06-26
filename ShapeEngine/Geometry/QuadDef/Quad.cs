@@ -1,5 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.RectDef;
@@ -123,7 +124,7 @@ public readonly partial struct Quad : IEquatable<Quad>
     public Segments GetEdges() => new() { SegmentAToB, SegmentBToC, SegmentCToD, SegmentDToA };
 
     public Polygon ToPolygon() => new() { A, B, C, D };
-    public PointsDef.Points ToPoints() => new() { A, B, C, D };
+    public Points ToPoints() => new() { A, B, C, D };
     public Polyline ToPolyline() => new() { A, B, C, D };
     public Triangulation Triangulate()
     {
@@ -163,9 +164,9 @@ public readonly partial struct Quad : IEquatable<Quad>
     }
 
     public Vector2 GetRandomPointInside() => GetPoint(Rng.Instance.RandF(), Rng.Instance.RandF());
-    public PointsDef.Points GetRandomPointsInside(int amount)
+    public Points GetRandomPointsInside(int amount)
     {
-        var points = new PointsDef.Points();
+        var points = new Points();
         for (int i = 0; i < amount; i++)
         {
             points.Add(GetRandomPointInside());
@@ -176,9 +177,9 @@ public readonly partial struct Quad : IEquatable<Quad>
     public Vector2 GetRandomVertex() => GetVertex(Rng.Instance.RandI(0, 3));
     public Segment GetRandomEdge()  => GetEdge(Rng.Instance.RandI(0, 3));
     public Vector2 GetRandomPointOnEdge() => GetRandomEdge().GetRandomPoint();
-    public PointsDef.Points GetRandomPointsOnEdge(int amount)
+    public Points GetRandomPointsOnEdge(int amount)
     {
-        var points = new PointsDef.Points();
+        var points = new Points();
 
         var ab = SegmentAToB;
         var bc = SegmentBToC;
@@ -327,16 +328,16 @@ public readonly partial struct Quad : IEquatable<Quad>
     #region Interpolated Edge Points
 
     
-    public PointsDef.Points? GetInterpolatedEdgePoints(float t)
+    public Points? GetInterpolatedEdgePoints(float t)
     {
         var a1 = A.Lerp(B, t);
         var b1 = B.Lerp(C, t);
         var c1 = C.Lerp(D, t);
         var d1 = D.Lerp(A, t);
         
-        return new PointsDef.Points(4){a1, b1, c1, d1};
+        return new Points(4){a1, b1, c1, d1};
     }
-    public PointsDef.Points? GetInterpolatedEdgePoints(float t, int steps)
+    public Points? GetInterpolatedEdgePoints(float t, int steps)
     {
         if(steps <= 1) return GetInterpolatedEdgePoints(t);
         
@@ -360,7 +361,7 @@ public readonly partial struct Quad : IEquatable<Quad>
             remainingSteps--;
         }
         
-        return new PointsDef.Points(4){a1, b1, c1, d1};
+        return new Points(4){a1, b1, c1, d1};
     }
     
     #endregion

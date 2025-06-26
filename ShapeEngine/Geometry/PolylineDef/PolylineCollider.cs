@@ -1,5 +1,6 @@
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CollisionSystem;
+using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.RectDef;
 
 namespace ShapeEngine.Geometry.PolylineDef;
@@ -28,7 +29,7 @@ public class PolylineCollider : Collider
     /// </summary>
     /// <param name="offset">The transform offset for the collider.</param>
     /// <param name="relativePoints">The points defining the polyline in local space.</param>
-    public PolylineCollider(Transform2D offset, PointsDef.Points relativePoints) : base(offset)
+    public PolylineCollider(Transform2D offset, Points relativePoints) : base(offset)
     {
         RelativeShape = relativePoints.ToPolyline();
         shape = new(RelativeShape.Count);

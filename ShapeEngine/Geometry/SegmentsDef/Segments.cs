@@ -1,5 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Core;
+using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Random;
 
@@ -39,7 +40,7 @@ public partial class Segments : ShapeList<Segment>
         return this[i];
     }
     
-    public PointsDef.Points GetUniquePoints()
+    public Points GetUniquePoints()
     {
         var uniqueVertices = new HashSet<Vector2>();
         for (int i = 0; i < Count; i++)
@@ -74,7 +75,7 @@ public partial class Segments : ShapeList<Segment>
         return Rng.Instance.PickRandomItem(items);
     }
     public Vector2 GetRandomPoint() => GetRandomSegment().GetRandomPoint();
-    public PointsDef.Points GetRandomPoints(int amount)
+    public Points GetRandomPoints(int amount)
     {
         var items = new WeightedItem<Segment>[Count];
         for (var i = 0; i < Count; i++)
@@ -83,7 +84,7 @@ public partial class Segments : ShapeList<Segment>
             items[i] = new(seg, (int)seg.LengthSquared);
         }
         var pickedSegments = Rng.Instance.PickRandomItems(amount, items);
-        var randomPoints = new PointsDef.Points();
+        var randomPoints = new Points();
         foreach (var seg in pickedSegments)
         {
             randomPoints.Add(seg.GetRandomPoint());

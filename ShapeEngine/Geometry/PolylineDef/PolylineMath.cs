@@ -1,5 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.StaticLib;
 
@@ -9,10 +10,10 @@ public partial class Polyline
 {
     #region Math
 
-    public PointsDef.Points? GetProjectedShapePoints(Vector2 v)
+    public Points? GetProjectedShapePoints(Vector2 v)
     {
         if (v.LengthSquared() <= 0f) return null;
-        var points = new PointsDef.Points(Count);
+        var points = new Points(Count);
         for (var i = 0; i < Count; i++)
         {
             points.Add(this[i]);
@@ -26,7 +27,7 @@ public partial class Polyline
     {
         if (v.LengthSquared() <= 0f) return null;
 
-        var points = new PointsDef.Points(Count);
+        var points = new Points(Count);
         for (var i = 0; i < Count; i++)
         {
             points.Add(this[i]);

@@ -1,6 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.CollisionSystem;
+using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RectDef;
@@ -171,7 +172,7 @@ public partial class Polygon
     /// </summary>
     /// <param name="points">The set of points to test.</param>
     /// <returns>True if all points are inside the polygon; otherwise, false.</returns>
-    public bool ContainsPoints(PointsDef.Points points)
+    public bool ContainsPoints(Points points)
     {
         return ContainsPoints(this, points);
     }

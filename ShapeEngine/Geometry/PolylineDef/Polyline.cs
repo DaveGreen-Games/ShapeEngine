@@ -2,6 +2,7 @@
 using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
@@ -11,7 +12,7 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.PolylineDef;
 
-public partial class Polyline : PointsDef.Points, IEquatable<Polyline>
+public partial class Polyline : Points, IEquatable<Polyline>
 {
     #region Constructors
     public Polyline() { }
@@ -22,7 +23,7 @@ public partial class Polyline : PointsDef.Points, IEquatable<Polyline>
     /// </summary>
     /// <param name="points"></param>
     public Polyline(IEnumerable<Vector2> points) { AddRange(points); }
-    public Polyline(PointsDef.Points points) : base(points.Count) { AddRange(points); }
+    public Polyline(Points points) : base(points.Count) { AddRange(points); }
     public Polyline(Polyline polyLine) : base(polyLine.Count) { AddRange(polyLine); }
     public Polyline(Polygon poly) : base(poly.Count) { AddRange(poly); }
     #endregion
@@ -91,7 +92,7 @@ public partial class Polyline : PointsDef.Points, IEquatable<Polyline>
         return segments;
     }
     
-    public PointsDef.Points ToPoints() { return new(this); }
+    public Points ToPoints() { return new(this); }
 
     #endregion
     
@@ -116,11 +117,11 @@ public partial class Polyline : PointsDef.Points, IEquatable<Polyline>
     /// </summary>
     /// <param name="t">The value t for interpolation. Should be between 0 - 1.</param>
     /// <returns></returns>
-    public PointsDef.Points? InterpolatedEdgePoints(float t)
+    public Points? InterpolatedEdgePoints(float t)
     {
         if (Count < 2) return null;
 
-        var result = new PointsDef.Points();
+        var result = new Points();
         for (int i = 0; i < Count - 1; i++)
         {
             var cur = this[i];
@@ -137,14 +138,14 @@ public partial class Polyline : PointsDef.Points, IEquatable<Polyline>
     /// <param name="t">The value t for interpolation. Should be between 0 - 1.</param>
     /// <param name="steps">Recursive steps. The amount of times the result of InterpolatedEdgesPoints will be run through InterpolateEdgePoints.</param>
     /// <returns></returns>
-    public PointsDef.Points? InterpolatedEdgePoints(float t, int steps)
+    public Points? InterpolatedEdgePoints(float t, int steps)
     {
         if (Count < 2) return null;
         if (steps <= 1) return InterpolatedEdgePoints(t);
 
         int remainingSteps = steps;
-        var result = new PointsDef.Points();
-        var buffer = new PointsDef.Points();
+        var result = new Points();
+        var buffer = new Points();
         while (remainingSteps > 0)
         {
             var target = result.Count <= 0 ? this : result;
@@ -167,7 +168,7 @@ public partial class Polyline : PointsDef.Points, IEquatable<Polyline>
     #endregion
     
     #region Static
-    public static Polyline GetShape(PointsDef.Points relative, Transform2D transform)
+    public static Polyline GetShape(Points relative, Transform2D transform)
     {
         if (relative.Count < 3) return new();
         Polyline shape = new();

@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentsDef;
@@ -63,7 +64,7 @@ public readonly partial struct Segment : IEquatable<Segment>
 
     public Polyline ToPolyline() { return new Polyline() {Start, End}; }
     public Segments GetEdges() { return new Segments(){this}; }
-    public PointsDef.Points Inflate(float thickness, float alignement = 0.5f)
+    public Points Inflate(float thickness, float alignement = 0.5f)
     {
         var dir = Dir;
         var left = dir.GetPerpendicularLeft();
@@ -93,9 +94,9 @@ public readonly partial struct Segment : IEquatable<Segment>
     #region Point & Vertext
 
     public Vector2 GetPoint(float f) { return Start.Lerp(End, f); }
-    public PointsDef.Points GetVertices()
+    public Points GetVertices()
     {
-        var points = new PointsDef.Points
+        var points = new Points
         {
             Start,
             End
@@ -104,9 +105,9 @@ public readonly partial struct Segment : IEquatable<Segment>
     }
 
     public Vector2 GetRandomPoint() { return this.GetPoint(Rng.Instance.RandF()); }
-    public PointsDef.Points GetRandomPoints(int amount)
+    public Points GetRandomPoints(int amount)
     {
-        var points = new PointsDef.Points();
+        var points = new Points();
         for (int i = 0; i < amount; i++)
         {
             points.Add(GetRandomPoint());
