@@ -2,7 +2,12 @@ using System.ComponentModel;
 using System.Numerics;
 using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.PolylineDef;
+using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.SegmentDef;
+using ShapeEngine.Geometry.TriangleDef;
 
 namespace ShapeEngine.Geometry.CollisionSystem;
 
@@ -349,11 +354,11 @@ public abstract class CollisionObject : PhysicsObject
     /// Gets the axis-aligned bounding box that contains all enabled colliders of this object.
     /// </summary>
     /// <returns>The bounding <see cref="Rect"/>.</returns>
-    public override Rect.Rect GetBoundingBox()
+    public override Rect GetBoundingBox()
     {
         if (!Enabled || !HasColliders) return new();
     
-        Rect.Rect boundingBox = new();
+        Rect boundingBox = new();
         foreach (var col in Colliders)
         {
             if(!col.Enabled) continue;
@@ -403,7 +408,7 @@ public abstract class CollisionObject : PhysicsObject
     /// </summary>
     /// <param name="shape">The segment shape.</param>
     /// <returns><c>true</c> if there is an overlap; otherwise, <c>false</c>.</returns>
-    public bool Overlap(Segment.Segment shape)
+    public bool Overlap(Segment shape)
     {
         if (!Enabled || !HasColliders) return false;
         foreach (var col in Colliders)
@@ -418,7 +423,7 @@ public abstract class CollisionObject : PhysicsObject
     /// </summary>
     /// <param name="shape">The circle shape.</param>
     /// <returns><c>true</c> if there is an overlap; otherwise, <c>false</c>.</returns>
-    public bool Overlap(Circle.Circle shape)
+    public bool Overlap(Circle shape)
     {
         if (!Enabled || !HasColliders) return false;
         foreach (var col in Colliders)
@@ -433,7 +438,7 @@ public abstract class CollisionObject : PhysicsObject
     /// </summary>
     /// <param name="shape">The triangle shape.</param>
     /// <returns><c>true</c> if there is an overlap; otherwise, <c>false</c>.</returns>
-    public bool Overlap(Triangle.Triangle shape)
+    public bool Overlap(Triangle shape)
     {
         if (!Enabled || !HasColliders) return false;
         foreach (var col in Colliders)
@@ -448,7 +453,7 @@ public abstract class CollisionObject : PhysicsObject
     /// </summary>
     /// <param name="shape">The rectangle shape.</param>
     /// <returns><c>true</c> if there is an overlap; otherwise, <c>false</c>.</returns>
-    public bool Overlap(Rect.Rect shape)
+    public bool Overlap(Rect shape)
     {
         if (!Enabled || !HasColliders) return false;
         foreach (var col in Colliders)
@@ -463,7 +468,7 @@ public abstract class CollisionObject : PhysicsObject
     /// </summary>
     /// <param name="shape">The polygon shape.</param>
     /// <returns><c>true</c> if there is an overlap; otherwise, <c>false</c>.</returns>
-    public bool Overlap(Polygon.Polygon shape)
+    public bool Overlap(Polygon shape)
     {
         if (!Enabled || !HasColliders) return false;
         foreach (var col in Colliders)
@@ -478,7 +483,7 @@ public abstract class CollisionObject : PhysicsObject
     /// </summary>
     /// <param name="shape">The polyline shape.</param>
     /// <returns><c>true</c> if there is an overlap; otherwise, <c>false</c>.</returns>
-    public bool Overlap(Polyline.Polyline shape)
+    public bool Overlap(Polyline shape)
     {
         if (!Enabled || !HasColliders) return false;
         foreach (var col in Colliders)
@@ -538,7 +543,7 @@ public abstract class CollisionObject : PhysicsObject
     /// </summary>
     /// <param name="shape">The segment shape.</param>
     /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Segment.Segment shape)
+    public CollisionPoints? Intersect(Segment shape)
     {
         if (!Enabled || !HasColliders) return null;
         CollisionPoints? result = null;
@@ -557,7 +562,7 @@ public abstract class CollisionObject : PhysicsObject
     /// </summary>
     /// <param name="shape">The circle shape.</param>
     /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Circle.Circle shape)
+    public CollisionPoints? Intersect(Circle shape)
     {
         if (!Enabled || !HasColliders) return null;
         CollisionPoints? result = null;
@@ -576,7 +581,7 @@ public abstract class CollisionObject : PhysicsObject
     /// </summary>
     /// <param name="shape">The triangle shape.</param>
     /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Triangle.Triangle shape)
+    public CollisionPoints? Intersect(Triangle shape)
     {
         if (!Enabled || !HasColliders) return null;
         CollisionPoints? result = null;
@@ -595,7 +600,7 @@ public abstract class CollisionObject : PhysicsObject
     /// </summary>
     /// <param name="shape">The rectangle shape.</param>
     /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Rect.Rect shape)
+    public CollisionPoints? Intersect(Rect shape)
     {
         if (!Enabled || !HasColliders) return null;
         CollisionPoints? result = null;
@@ -614,7 +619,7 @@ public abstract class CollisionObject : PhysicsObject
     /// </summary>
     /// <param name="shape">The polygon shape.</param>
     /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Polygon.Polygon shape)
+    public CollisionPoints? Intersect(Polygon shape)
     {
         if (!Enabled || !HasColliders) return null;
         CollisionPoints? result = null;
@@ -633,7 +638,7 @@ public abstract class CollisionObject : PhysicsObject
     /// </summary>
     /// <param name="shape">The polyline shape.</param>
     /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Polyline.Polyline shape)
+    public CollisionPoints? Intersect(Polyline shape)
     {
         if (!Enabled || !HasColliders) return null;
         CollisionPoints? result = null;

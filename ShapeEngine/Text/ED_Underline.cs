@@ -1,8 +1,8 @@
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
-using ShapeEngine.Geometry.Rect;
-using ShapeEngine.Geometry.Segment;
+using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Text;

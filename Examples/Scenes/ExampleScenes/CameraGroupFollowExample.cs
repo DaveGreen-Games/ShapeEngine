@@ -6,8 +6,8 @@ using ShapeEngine.Screen;
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.Circle;
-using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Input;
 
 namespace Examples.Scenes.ExampleScenes

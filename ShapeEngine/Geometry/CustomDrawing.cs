@@ -2,10 +2,10 @@ using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.CollisionSystem;
-using ShapeEngine.Geometry.Segment;
-using ShapeEngine.Geometry.Triangle;
+using ShapeEngine.Geometry.SegmentDef;
+using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry;
@@ -79,7 +79,7 @@ public static class CustomDrawing
     /// <remarks>
     /// Returns empty shapes if parameters are invalid.
     /// </remarks>
-    public static (Segment.Segment tail, Triangle.Triangle head) CalculateArrowPoints(Vector2 tailPoint, Vector2 headPoint, float headWidth, float headLength)
+    public static (SegmentDef.Segment tail, Triangle head) CalculateArrowPoints(Vector2 tailPoint, Vector2 headPoint, float headWidth, float headLength)
     {
         if(headWidth <= 0 || headLength <= 0) return (new(), new());
         
@@ -120,7 +120,7 @@ public static class CustomDrawing
     /// <remarks>
     /// Returns empty shapes if parameters are invalid.
     /// </remarks>
-    public static (Segment.Segment tail, Triangle.Triangle head) CalculateArrowPoints2(Vector2 tailPoint, Vector2 headPoint, float headWidth, float headLengthFactor)
+    public static (SegmentDef.Segment tail, Triangle head) CalculateArrowPoints2(Vector2 tailPoint, Vector2 headPoint, float headWidth, float headLengthFactor)
     {
         if(headWidth <= 0 || headLengthFactor <= 0) return (new(), new());
         
@@ -157,7 +157,7 @@ public static class CustomDrawing
     /// <remarks>
     /// Returns empty shapes if parameters are invalid.
     /// </remarks>
-    public static (Segment.Segment tail, Triangle.Triangle head) CalculateArrowPoints3(Vector2 tailPoint, Vector2 headPoint, float headWidthFactor, float headLengthFactor)
+    public static (SegmentDef.Segment tail, Triangle head) CalculateArrowPoints3(Vector2 tailPoint, Vector2 headPoint, float headWidthFactor, float headLengthFactor)
     {
         if(headWidthFactor <= 0 || headLengthFactor <= 0) return (new(), new());
         

@@ -1,13 +1,13 @@
 using System.Numerics;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.Circle;
-using ShapeEngine.Geometry.Points;
-using ShapeEngine.Geometry.Polygon;
-using ShapeEngine.Geometry.Polyline;
-using ShapeEngine.Geometry.Quad;
-using ShapeEngine.Geometry.Rect;
-using ShapeEngine.Geometry.Segment;
-using ShapeEngine.Geometry.Triangle;
+using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.PointsDef;
+using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.PolylineDef;
+using ShapeEngine.Geometry.QuadDef;
+using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.SegmentDef;
+using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry;
@@ -263,7 +263,7 @@ public static class GappedDrawing
     /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the outline is drawn solid.
     /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no outline is drawn.
     /// </remarks>
-    public static float DrawGappedOutline(this Points.Points shapePoints, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
+    public static float DrawGappedOutline(this PointsDef.Points shapePoints, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
     {
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
         {
@@ -377,7 +377,7 @@ public static class GappedDrawing
     /// <remarks>
     /// This is a convenience wrapper for <see cref="DrawGappedSegment"/>.
     /// </remarks>
-    public static float DrawGapped(this Segment.Segment s, float length, LineDrawingInfo lineInfo,
+    public static float DrawGapped(this SegmentDef.Segment s, float length, LineDrawingInfo lineInfo,
         GappedOutlineDrawingInfo gapDrawingInfo) => DrawGappedSegment(s.Start, s.End, length, lineInfo, gapDrawingInfo);
 
     /// <summary>
@@ -393,7 +393,7 @@ public static class GappedDrawing
     /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no outline is drawn.
     /// - The <paramref name="sides"/> parameter controls the smoothness of the circle.
     /// </remarks>
-    public static void DrawGappedOutline(this Circle.Circle circle, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo, float rotDeg, int sides = 18)
+    public static void DrawGappedOutline(this Circle circle, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo, float rotDeg, int sides = 18)
     {
         if (sides < 3) return;
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
@@ -510,19 +510,19 @@ public static class GappedDrawing
         int outerSides = CircleDrawing.GetCircleSideCount(outerRadius, sideLength);
         if (innerRadius <= 0)
         {
-            DrawGappedOutline(new Circle.Circle(center, outerRadius), lineInfo, gapDrawingInfo, rotDeg, outerSides);
+            DrawGappedOutline(new Circle(center, outerRadius), lineInfo, gapDrawingInfo, rotDeg, outerSides);
             return;
         }
 
         int innerSides = CircleDrawing.GetCircleSideCount(innerRadius, sideLength);
         if (outerRadius <= 0)
         {
-            DrawGappedOutline(new Circle.Circle(center, innerRadius), lineInfo, gapDrawingInfo, rotDeg, innerSides);
+            DrawGappedOutline(new Circle(center, innerRadius), lineInfo, gapDrawingInfo, rotDeg, innerSides);
             return;
         }
         
-        DrawGappedOutline(new Circle.Circle(center, innerRadius), lineInfo, gapDrawingInfo, rotDeg, innerSides);
-        DrawGappedOutline(new Circle.Circle(center, outerRadius), lineInfo, gapDrawingInfo, rotDeg, outerSides);
+        DrawGappedOutline(new Circle(center, innerRadius), lineInfo, gapDrawingInfo, rotDeg, innerSides);
+        DrawGappedOutline(new Circle(center, outerRadius), lineInfo, gapDrawingInfo, rotDeg, outerSides);
     }
    
     
@@ -545,7 +545,7 @@ public static class GappedDrawing
     /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the outline is drawn solid.
     /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no outline is drawn.
     /// </remarks>
-    public static float DrawGappedOutline(this Triangle.Triangle triangle, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
+    public static float DrawGappedOutline(this Triangle triangle, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
     {
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
         {
@@ -663,7 +663,7 @@ public static class GappedDrawing
     /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the outline is drawn solid.
     /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no outline is drawn.
     /// </remarks>
-    public static float DrawGappedOutline(this Rect.Rect rect, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
+    public static float DrawGappedOutline(this Rect rect, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
     {
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
         {
@@ -780,7 +780,7 @@ public static class GappedDrawing
     /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the outline is drawn solid.
     /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no outline is drawn.
     /// </remarks>
-    public static float DrawGappedOutline(this Quad.Quad quad, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
+    public static float DrawGappedOutline(this Quad quad, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
     {
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
         {
@@ -898,7 +898,7 @@ public static class GappedDrawing
     /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the outline is drawn solid.
     /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no outline is drawn.
     /// </remarks>
-    public static float DrawGappedOutline(this Polygon.Polygon poly, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
+    public static float DrawGappedOutline(this Polygon poly, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
     {
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
         {
@@ -1012,7 +1012,7 @@ public static class GappedDrawing
     /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the polyline is drawn solid.
     /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no polyline is drawn.
     /// </remarks>
-    public static float DrawGappedOutline(this Polyline.Polyline polyline, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
+    public static float DrawGappedOutline(this Polyline polyline, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
     {
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
         {

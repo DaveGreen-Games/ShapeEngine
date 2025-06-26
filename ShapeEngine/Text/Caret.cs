@@ -1,6 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Color;
-using ShapeEngine.Geometry.Segment;
+using ShapeEngine.Geometry.SegmentDef;
 
 namespace ShapeEngine.Text;
 

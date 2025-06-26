@@ -1,4 +1,4 @@
-using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.RectDef;
 
 namespace ShapeEngine.Pathfinding;
 

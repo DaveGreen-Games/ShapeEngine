@@ -1,4 +1,7 @@
 using System.Numerics;
+using ShapeEngine.Geometry.LineDef;
+using ShapeEngine.Geometry.SegmentDef;
+using ShapeEngine.Geometry.RayDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.CollisionSystem;
@@ -57,17 +60,17 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
     /// </summary>
     /// <param name="length">The length of the segment.</param>
     /// <returns>A segment from the collision point in the direction of the normal.</returns>
-    public Segment.Segment GetNormalSegment(float length) => new Segment.Segment(Point, Point + Normal * length);
+    public Segment GetNormalSegment(float length) => new Segment(Point, Point + Normal * length);
     /// <summary>
     /// Gets a ray representing the normal at this collision point.
     /// </summary>
     /// <returns>A ray from the collision point in the direction of the normal.</returns>
-    public Ray.Ray GetNormalRay() => new Ray.Ray(Point, Normal);
+    public Ray GetNormalRay() => new Ray(Point, Normal);
     /// <summary>
     /// Gets a line representing the normal at this collision point.
     /// </summary>
     /// <returns>A line from the collision point in the direction of the normal.</returns>
-    public Line.Line GetNormalLine() => new Line.Line(Point, Normal);
+    public Line GetNormalLine() => new Line(Point, Normal);
     
     /// <summary>
     /// Determines if this collision point is closer to the reference point than the current minimum distance squared.

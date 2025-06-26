@@ -2,11 +2,11 @@ using System.Numerics;
 using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
-using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.CollisionSystem;
-using ShapeEngine.Geometry.Polygon;
-using ShapeEngine.Geometry.Rect;
-using ShapeEngine.Geometry.Triangle;
+using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.StaticLib;
 using ShapeEngine.Random;
 

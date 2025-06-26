@@ -2,7 +2,7 @@ using System.Numerics;
 using Examples.PayloadSystem;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CollisionSystem;
-using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.StaticLib;
 
 namespace Examples.Scenes.ExampleScenes.EndlessSpaceExampleSource;

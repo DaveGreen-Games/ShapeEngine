@@ -1,14 +1,14 @@
 ﻿using System.Numerics;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.Circle;
-using ShapeEngine.Geometry.Line;
-using ShapeEngine.Geometry.Polygon;
-using ShapeEngine.Geometry.Polyline;
-using ShapeEngine.Geometry.Quad;
-using ShapeEngine.Geometry.Ray;
-using ShapeEngine.Geometry.Rect;
-using ShapeEngine.Geometry.Segment;
-using ShapeEngine.Geometry.Triangle;
+using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.LineDef;
+using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.PolylineDef;
+using ShapeEngine.Geometry.QuadDef;
+using ShapeEngine.Geometry.RayDef;
+using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.SegmentDef;
+using ShapeEngine.Geometry.TriangleDef;
 
 namespace ShapeEngine.Geometry.CollisionSystem;
 
@@ -288,14 +288,14 @@ public abstract class Collider : Shape
     /// Gets the axis-aligned bounding box of this collider.
     /// </summary>
     /// <returns>The bounding <see cref="Rect"/>.</returns>
-    public abstract Rect.Rect GetBoundingBox();
+    public abstract Rect GetBoundingBox();
 
     /// <summary>
     /// Projects this collider's shape along a given vector.
     /// </summary>
     /// <param name="v">The direction vector to project along.</param>
     /// <returns>A <see cref="Polygon"/> representing the projection, or null if not supported.</returns>
-    public Polygon.Polygon? Project(Vector2 v)
+    public Polygon? Project(Vector2 v)
     {
         switch (GetShapeType())
         {
@@ -390,7 +390,7 @@ public abstract class Collider : Shape
     /// </summary>
     /// <param name="shape">The segment to test against.</param>
     /// <returns>A <see cref="ClosestPointResult"/> describing the closest points and related data.</returns>
-    public ClosestPointResult GetClosestPoint(Segment.Segment shape)
+    public ClosestPointResult GetClosestPoint(Segment shape)
     {
         
         switch (GetShapeType())
@@ -415,7 +415,7 @@ public abstract class Collider : Shape
     /// </summary>
     /// <param name="line">The line to test against.</param>
     /// <returns>A <see cref="ClosestPointResult"/> describing the closest points and related data.</returns>
-    public ClosestPointResult GetClosestPoint(Line.Line line)
+    public ClosestPointResult GetClosestPoint(Line line)
     {
         
         switch (GetShapeType())
@@ -440,7 +440,7 @@ public abstract class Collider : Shape
     /// </summary>
     /// <param name="ray">The ray to test against.</param>
     /// <returns>A <see cref="ClosestPointResult"/> describing the closest points and related data.</returns>
-    public ClosestPointResult GetClosestPoint(Ray.Ray ray)
+    public ClosestPointResult GetClosestPoint(Ray ray)
     {
         
         switch (GetShapeType())
@@ -465,7 +465,7 @@ public abstract class Collider : Shape
     /// </summary>
     /// <param name="shape">The circle to test against.</param>
     /// <returns>A <see cref="ClosestPointResult"/> describing the closest points and related data.</returns>
-    public ClosestPointResult GetClosestPoint(Circle.Circle shape)
+    public ClosestPointResult GetClosestPoint(Circle shape)
     {
         
         switch (GetShapeType())
@@ -490,7 +490,7 @@ public abstract class Collider : Shape
     /// </summary>
     /// <param name="shape">The triangle to test against.</param>
     /// <returns>A <see cref="ClosestPointResult"/> describing the closest points and related data.</returns>
-    public ClosestPointResult GetClosestPoint(Triangle.Triangle shape)
+    public ClosestPointResult GetClosestPoint(Triangle shape)
     {
         
         switch (GetShapeType())
@@ -515,7 +515,7 @@ public abstract class Collider : Shape
     /// </summary>
     /// <param name="shape">The quad to test against.</param>
     /// <returns>A <see cref="ClosestPointResult"/> describing the closest points and related data.</returns>
-    public ClosestPointResult GetClosestPoint(Quad.Quad shape)
+    public ClosestPointResult GetClosestPoint(Quad shape)
     {
         
         switch (GetShapeType())
@@ -540,7 +540,7 @@ public abstract class Collider : Shape
     /// </summary>
     /// <param name="shape">The rectangle to test against.</param>
     /// <returns>A <see cref="ClosestPointResult"/> describing the closest points and related data.</returns>
-    public ClosestPointResult GetClosestPoint(Rect.Rect shape)
+    public ClosestPointResult GetClosestPoint(Rect shape)
     {
         
         switch (GetShapeType())
@@ -565,7 +565,7 @@ public abstract class Collider : Shape
     /// </summary>
     /// <param name="shape">The polygon to test against.</param>
     /// <returns>A <see cref="ClosestPointResult"/> describing the closest points and related data.</returns>
-    public ClosestPointResult GetClosestPoint(Polygon.Polygon shape)
+    public ClosestPointResult GetClosestPoint(Polygon shape)
     {
         
         switch (GetShapeType())
@@ -590,7 +590,7 @@ public abstract class Collider : Shape
     /// </summary>
     /// <param name="shape">The polyline to test against.</param>
     /// <returns>A <see cref="ClosestPointResult"/> describing the closest points and related data.</returns>
-    public ClosestPointResult GetClosestPoint(Polyline.Polyline shape)
+    public ClosestPointResult GetClosestPoint(Polyline shape)
     {
         
         switch (GetShapeType())
@@ -671,7 +671,7 @@ public abstract class Collider : Shape
     /// The entire shape must be fully enclosed within this collider for the method to return true.
     /// Partial overlaps or edge contacts are not considered as containment.
     /// </remarks>
-    public bool ContainsShape(Segment.Segment shape)
+    public bool ContainsShape(Segment shape)
     {
         switch (GetShapeType())
         {
@@ -698,7 +698,7 @@ public abstract class Collider : Shape
     /// The entire shape must be fully enclosed within this collider for the method to return true.
     /// Partial overlaps or edge contacts are not considered as containment.
     /// </remarks>
-    public bool ContainsShape(Circle.Circle shape)
+    public bool ContainsShape(Circle shape)
     {
         switch (GetShapeType())
         {
@@ -725,7 +725,7 @@ public abstract class Collider : Shape
     /// The entire shape must be fully enclosed within this collider for the method to return true.
     /// Partial overlaps or edge contacts are not considered as containment.
     /// </remarks>
-    public bool ContainsShape(Triangle.Triangle shape)
+    public bool ContainsShape(Triangle shape)
     {
         switch (GetShapeType())
         {
@@ -752,7 +752,7 @@ public abstract class Collider : Shape
     /// The entire shape must be fully enclosed within this collider for the method to return true.
     /// Partial overlaps or edge contacts are not considered as containment.
     /// </remarks>
-    public bool ContainsShape(Quad.Quad shape)
+    public bool ContainsShape(Quad shape)
     {
         switch (GetShapeType())
         {
@@ -779,7 +779,7 @@ public abstract class Collider : Shape
     /// The entire shape must be fully enclosed within this collider for the method to return true.
     /// Partial overlaps or edge contacts are not considered as containment.
     /// </remarks>
-    public bool ContainsShape(Rect.Rect shape)
+    public bool ContainsShape(Rect shape)
     {
         switch (GetShapeType())
         {
@@ -806,7 +806,7 @@ public abstract class Collider : Shape
     /// The entire shape must be fully enclosed within this collider for the method to return true.
     /// Partial overlaps or edge contacts are not considered as containment.
     /// </remarks>
-    public bool ContainsShape(Polygon.Polygon shape)
+    public bool ContainsShape(Polygon shape)
     {
         switch (GetShapeType())
         {
@@ -833,7 +833,7 @@ public abstract class Collider : Shape
     /// The entire shape must be fully enclosed within this collider for the method to return true.
     /// Partial overlaps or edge contacts are not considered as containment.
     /// </remarks>
-    public bool ContainsShape(Polyline.Polyline shape)
+    public bool ContainsShape(Polyline shape)
     {
         switch (GetShapeType())
         {
@@ -924,7 +924,7 @@ public abstract class Collider : Shape
     /// </summary>
     /// <param name="segment">The segment to check for overlap.</param>
     /// <returns>True if there is an overlap, otherwise false.</returns>
-    public bool Overlap(Segment.Segment segment)
+    public bool Overlap(Segment segment)
     { 
         if (!Enabled) return false;
         
@@ -966,7 +966,7 @@ public abstract class Collider : Shape
     /// </summary>
     /// <param name="line">The segment to check for overlap.</param>
     /// <returns>True if there is an overlap, otherwise false.</returns>
-    public bool Overlap(Line.Line line)
+    public bool Overlap(Line line)
     { 
         if (!Enabled) return false;
         
@@ -1008,7 +1008,7 @@ public abstract class Collider : Shape
     /// </summary>
     /// <param name="ray">The segment to check for overlap.</param>
     /// <returns>True if there is an overlap, otherwise false.</returns>
-    public bool Overlap(Ray.Ray ray)
+    public bool Overlap(Ray ray)
     { 
         if (!Enabled) return false;
         
@@ -1050,7 +1050,7 @@ public abstract class Collider : Shape
     /// </summary>
     /// <param name="triangle">The segment to check for overlap.</param>
     /// <returns>True if there is an overlap, otherwise false.</returns>
-    public bool Overlap(Triangle.Triangle triangle)
+    public bool Overlap(Triangle triangle)
     {
         if (!Enabled) return false;
 
@@ -1092,7 +1092,7 @@ public abstract class Collider : Shape
     /// </summary>
     /// <param name="circle">The segment to check for overlap.</param>
     /// <returns>True if there is an overlap, otherwise false.</returns>
-    public bool Overlap(Circle.Circle circle)
+    public bool Overlap(Circle circle)
     {
         if (!Enabled) return false;
 
@@ -1134,7 +1134,7 @@ public abstract class Collider : Shape
     /// </summary>
     /// <param name="rect">The segment to check for overlap.</param>
     /// <returns>True if there is an overlap, otherwise false.</returns>
-    public bool Overlap(Rect.Rect rect)
+    public bool Overlap(Rect rect)
     {
         if (!Enabled) return false;
 
@@ -1176,7 +1176,7 @@ public abstract class Collider : Shape
     /// </summary>
     /// <param name="quad">The segment to check for overlap.</param>
     /// <returns>True if there is an overlap, otherwise false.</returns>
-    public bool Overlap(Quad.Quad quad)
+    public bool Overlap(Quad quad)
     {
         if (!Enabled) return false;
 
@@ -1218,7 +1218,7 @@ public abstract class Collider : Shape
     /// </summary>
     /// <param name="poly">The segment to check for overlap.</param>
     /// <returns>True if there is an overlap, otherwise false.</returns>
-    public bool Overlap(Polygon.Polygon poly)
+    public bool Overlap(Polygon poly)
     {
         if (!Enabled) return false;
 
@@ -1260,7 +1260,7 @@ public abstract class Collider : Shape
     /// </summary>
     /// <param name="polyLine">The segment to check for overlap.</param>
     /// <returns>True if there is an overlap, otherwise false.</returns>
-    public bool Overlap(Polyline.Polyline polyLine)
+    public bool Overlap(Polyline polyLine)
     {
         if (!Enabled) return false;
 
@@ -1373,7 +1373,7 @@ public abstract class Collider : Shape
     /// </summary>
     /// <param name="ray">The ray to check for intersection.</param>
     /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Ray.Ray ray)
+    public CollisionPoints? Intersect(Ray ray)
     {
         if (!Enabled) return null;
 
@@ -1415,7 +1415,7 @@ public abstract class Collider : Shape
     /// </summary>
     /// <param name="line">The ray to check for intersection.</param>
     /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Line.Line line)
+    public CollisionPoints? Intersect(Line line)
     {
         if (!Enabled) return null;
 
@@ -1457,7 +1457,7 @@ public abstract class Collider : Shape
     /// </summary>
     /// <param name="segment">The ray to check for intersection.</param>
     /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Segment.Segment segment)
+    public CollisionPoints? Intersect(Segment segment)
     {
         if (!Enabled) return null;
 
@@ -1499,7 +1499,7 @@ public abstract class Collider : Shape
     /// </summary>
     /// <param name="triangle">The ray to check for intersection.</param>
     /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Triangle.Triangle triangle)
+    public CollisionPoints? Intersect(Triangle triangle)
     {
         if (!Enabled) return null;
 
@@ -1541,7 +1541,7 @@ public abstract class Collider : Shape
     /// </summary>
     /// <param name="circle">The ray to check for intersection.</param>
     /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Circle.Circle circle)
+    public CollisionPoints? Intersect(Circle circle)
     {
         if (!Enabled) return null;
 
@@ -1583,7 +1583,7 @@ public abstract class Collider : Shape
     /// </summary>
     /// <param name="rect">The ray to check for intersection.</param>
     /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Rect.Rect rect)
+    public CollisionPoints? Intersect(Rect rect)
     {
         if (!Enabled) return null;
 
@@ -1625,7 +1625,7 @@ public abstract class Collider : Shape
     /// </summary>
     /// <param name="quad">The ray to check for intersection.</param>
     /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Quad.Quad quad)
+    public CollisionPoints? Intersect(Quad quad)
     {
         if (!Enabled) return null;
 
@@ -1667,7 +1667,7 @@ public abstract class Collider : Shape
     /// </summary>
     /// <param name="poly">The ray to check for intersection.</param>
     /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Polygon.Polygon poly)
+    public CollisionPoints? Intersect(Polygon poly)
     {
         if (!Enabled) return null;
 
@@ -1709,7 +1709,7 @@ public abstract class Collider : Shape
     /// </summary>
     /// <param name="polyLine">The ray to check for intersection.</param>
     /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Polyline.Polyline polyLine)
+    public CollisionPoints? Intersect(Polyline polyLine)
     {
         if (!Enabled) return null;
 
@@ -1839,7 +1839,7 @@ public abstract class Collider : Shape
     /// If true, the method returns after finding the first valid intersection; otherwise, it continues to find all intersections.
     /// </param>
     /// <returns>The number of intersection points found and added to <paramref name="points"/>.</returns>
-    public int Intersect(Ray.Ray ray, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int Intersect(Ray ray, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (!Enabled) return 0;
 
@@ -1886,7 +1886,7 @@ public abstract class Collider : Shape
     /// If true, the method returns after finding the first valid intersection; otherwise, it continues to find all intersections.
     /// </param>
     /// <returns>The number of intersection points found and added to <paramref name="points"/>.</returns>
-    public int Intersect(Line.Line line, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int Intersect(Line line, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (!Enabled) return 0;
 
@@ -1933,7 +1933,7 @@ public abstract class Collider : Shape
     /// If true, the method returns after finding the first valid intersection; otherwise, it continues to find all intersections.
     /// </param>
     /// <returns>The number of intersection points found and added to <paramref name="points"/>.</returns>
-    public int Intersect(Segment.Segment segment, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int Intersect(Segment segment, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (!Enabled) return 0;
 
@@ -1980,7 +1980,7 @@ public abstract class Collider : Shape
     /// If true, the method returns after finding the first valid intersection; otherwise, it continues to find all intersections.
     /// </param>
     /// <returns>The number of intersection points found and added to <paramref name="points"/>.</returns>
-    public int Intersect(Triangle.Triangle triangle, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int Intersect(Triangle triangle, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (!Enabled) return 0;
 
@@ -2027,7 +2027,7 @@ public abstract class Collider : Shape
     /// If true, the method returns after finding the first valid intersection; otherwise, it continues to find all intersections.
     /// </param>
     /// <returns>The number of intersection points found and added to <paramref name="points"/>.</returns>
-    public int Intersect(Circle.Circle circle, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int Intersect(Circle circle, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (!Enabled) return 0;
 
@@ -2074,7 +2074,7 @@ public abstract class Collider : Shape
     /// If true, the method returns after finding the first valid intersection; otherwise, it continues to find all intersections.
     /// </param>
     /// <returns>The number of intersection points found and added to <paramref name="points"/>.</returns>
-    public int Intersect(Rect.Rect rect, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int Intersect(Rect rect, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (!Enabled) return 0;
 
@@ -2121,7 +2121,7 @@ public abstract class Collider : Shape
     /// If true, the method returns after finding the first valid intersection; otherwise, it continues to find all intersections.
     /// </param>
     /// <returns>The number of intersection points found and added to <paramref name="points"/>.</returns>
-    public int Intersect(Quad.Quad quad, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int Intersect(Quad quad, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (!Enabled) return 0;
 
@@ -2168,7 +2168,7 @@ public abstract class Collider : Shape
     /// If true, the method returns after finding the first valid intersection; otherwise, it continues to find all intersections.
     /// </param>
     /// <returns>The number of intersection points found and added to <paramref name="points"/>.</returns>
-    public int Intersect(Polygon.Polygon poly, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int Intersect(Polygon poly, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (!Enabled) return 0;
 
@@ -2215,7 +2215,7 @@ public abstract class Collider : Shape
     /// If true, the method returns after finding the first valid intersection; otherwise, it continues to find all intersections.
     /// </param>
     /// <returns>The number of intersection points found and added to <paramref name="points"/>.</returns>
-    public int Intersect(Polyline.Polyline polyLine, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int Intersect(Polyline polyLine, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (!Enabled) return 0;
 

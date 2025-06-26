@@ -1,9 +1,9 @@
 ﻿using ShapeEngine.Core;
 using System.Numerics;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.Circle;
-using ShapeEngine.Geometry.Polygon;
-using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Input;
 using ShapeEngine.Random;
 

@@ -7,8 +7,8 @@ using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
 using Raylib_cs;
-using ShapeEngine.Geometry.Circle;
-using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.RectDef;
 using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes

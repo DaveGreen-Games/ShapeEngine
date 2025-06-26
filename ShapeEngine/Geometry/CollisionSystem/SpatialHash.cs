@@ -2,7 +2,15 @@
 using ShapeEngine.Color;
 using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.LineDef;
+using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.PolylineDef;
+using ShapeEngine.Geometry.QuadDef;
+using ShapeEngine.Geometry.RayDef;
+using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.SegmentDef;
+using ShapeEngine.Geometry.TriangleDef;
 
 namespace ShapeEngine.Geometry.CollisionSystem;
 
@@ -51,7 +59,7 @@ public class SpatialHash : IBounds
     /// <summary>
     /// Gets the bounds of the spatial hash grid.
     /// </summary>
-    public Rect.Rect Bounds { get; private set; }
+    public Rect Bounds { get; private set; }
     /// <summary>
     /// Gets the width of each grid cell.
     /// </summary>
@@ -79,7 +87,7 @@ public class SpatialHash : IBounds
     private readonly Dictionary<Collider, List<int>> register = new();
     private readonly HashSet<Collider> registerKeys = [];
     private bool boundsResizeQueued;
-    private Rect.Rect newBounds;
+    private Rect newBounds;
     #endregion
     
     #region Constructors
@@ -111,7 +119,7 @@ public class SpatialHash : IBounds
     /// <param name="bounds">The bounding rectangle for the grid.</param>
     /// <param name="rows">The number of rows in the grid.</param>
     /// <param name="cols">The number of columns in the grid.</param>
-    public SpatialHash(Rect.Rect bounds, int rows, int cols)
+    public SpatialHash(Rect bounds, int rows, int cols)
     {
         this.Bounds = bounds;
         this.Rows = rows;
@@ -163,7 +171,7 @@ public class SpatialHash : IBounds
     /// Queues a resize of the spatial hash bounds to the specified rectangle. The resize is applied on the next clear.
     /// </summary>
     /// <param name="targetBounds">The new bounds for the grid.</param>
-    public void ResizeBounds(Rect.Rect targetBounds) 
+    public void ResizeBounds(Rect targetBounds) 
     {
         newBounds = targetBounds;
         boundsResizeQueued = true;
@@ -245,7 +253,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="segment">The segment to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetCandidateBuckets(Segment.Segment segment, ref List<Bucket> candidateBuckets)
+    public void GetCandidateBuckets(Segment segment, ref List<Bucket> candidateBuckets)
     {
         List<int> bucketIds = new();
         GetCellIDs(segment, ref bucketIds);
@@ -257,7 +265,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="line">The line to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetCandidateBuckets(Line.Line line, ref List<Bucket> candidateBuckets)
+    public void GetCandidateBuckets(Line line, ref List<Bucket> candidateBuckets)
     {
         List<int> bucketIds = new();
         GetCellIDs(line, ref bucketIds);
@@ -269,7 +277,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="ray">The ray to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetCandidateBuckets(Ray.Ray ray, ref List<Bucket> candidateBuckets)
+    public void GetCandidateBuckets(Ray ray, ref List<Bucket> candidateBuckets)
     {
         List<int> bucketIds = new();
         GetCellIDs(ray, ref bucketIds);
@@ -281,7 +289,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="circle">The circle to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetCandidateBuckets(Circle.Circle circle, ref List<Bucket> candidateBuckets)
+    public void GetCandidateBuckets(Circle circle, ref List<Bucket> candidateBuckets)
     {
         List<int> bucketIds = new();
         GetCellIDs(circle, ref bucketIds);
@@ -293,7 +301,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="triangle">The triangle to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetCandidateBuckets(Triangle.Triangle triangle, ref List<Bucket> candidateBuckets)
+    public void GetCandidateBuckets(Triangle triangle, ref List<Bucket> candidateBuckets)
     {
         List<int> bucketIds = new();
         GetCellIDs(triangle, ref bucketIds);
@@ -305,7 +313,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="rect">The rectangle to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetCandidateBuckets(Rect.Rect rect, ref List<Bucket> candidateBuckets)
+    public void GetCandidateBuckets(Rect rect, ref List<Bucket> candidateBuckets)
     {
         List<int> bucketIds = new();
         GetCellIDs(rect, ref bucketIds);
@@ -317,7 +325,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="quad">The quad to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetCandidateBuckets(Quad.Quad quad, ref List<Bucket> candidateBuckets)
+    public void GetCandidateBuckets(Quad quad, ref List<Bucket> candidateBuckets)
     {
         List<int> bucketIds = new();
         GetCellIDs(quad, ref bucketIds);
@@ -329,7 +337,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="poly">The polygon to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetCandidateBuckets(Polygon.Polygon poly, ref List<Bucket> candidateBuckets)
+    public void GetCandidateBuckets(Polygon poly, ref List<Bucket> candidateBuckets)
     {
         List<int> bucketIds = new();
         GetCellIDs(poly, ref bucketIds);
@@ -341,7 +349,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="polyLine">The polyline to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetCandidateBuckets(Polyline.Polyline polyLine, ref List<Bucket> candidateBuckets)
+    public void GetCandidateBuckets(Polyline polyLine, ref List<Bucket> candidateBuckets)
     {
         List<int> bucketIds = new();
         GetCellIDs(polyLine, ref bucketIds);
@@ -389,7 +397,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="segment">The segment to query.</param>
     /// <param name="candidates">A set to populate with unique colliders.</param>
-    public void GetUniqueCandidates(Segment.Segment segment, ref HashSet<Collider> candidates)
+    public void GetUniqueCandidates(SegmentDef.Segment segment, ref HashSet<Collider> candidates)
     {
         List<int> bucketIds = new();
         GetCellIDs(segment, ref bucketIds);
@@ -401,7 +409,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="circle">The circle to query.</param>
     /// <param name="candidates">A set to populate with unique colliders.</param>
-    public void GetUniqueCandidates(Circle.Circle circle, ref HashSet<Collider> candidates)
+    public void GetUniqueCandidates(Circle circle, ref HashSet<Collider> candidates)
     {
         List<int> bucketIds = new();
         GetCellIDs(circle, ref bucketIds);
@@ -413,7 +421,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="triangle">The triangle to query.</param>
     /// <param name="candidates">A set to populate with unique colliders.</param>
-    public void GetUniqueCandidates(Triangle.Triangle triangle, ref HashSet<Collider> candidates)
+    public void GetUniqueCandidates(Triangle triangle, ref HashSet<Collider> candidates)
     {
         List<int> bucketIds = new();
         GetCellIDs(triangle, ref bucketIds);
@@ -425,7 +433,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="rect">The rectangle to query.</param>
     /// <param name="candidates">A set to populate with unique colliders.</param>
-    public void GetUniqueCandidates(Rect.Rect rect, ref HashSet<Collider> candidates)
+    public void GetUniqueCandidates(Rect rect, ref HashSet<Collider> candidates)
     {
         List<int> bucketIds = new();
         GetCellIDs(rect, ref bucketIds);
@@ -437,7 +445,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="quad">The quad to query.</param>
     /// <param name="candidates">A set to populate with unique colliders.</param>
-    public void GetUniqueCandidates(Quad.Quad quad, ref HashSet<Collider> candidates)
+    public void GetUniqueCandidates(Quad quad, ref HashSet<Collider> candidates)
     {
         List<int> bucketIds = new();
         GetCellIDs(quad, ref bucketIds);
@@ -449,7 +457,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="poly">The polygon to query.</param>
     /// <param name="candidates">A set to populate with unique colliders.</param>
-    public void GetUniqueCandidates(Polygon.Polygon poly, ref HashSet<Collider> candidates)
+    public void GetUniqueCandidates(Polygon poly, ref HashSet<Collider> candidates)
     {
         List<int> bucketIds = new();
         GetCellIDs(poly, ref bucketIds);
@@ -461,7 +469,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="polyLine">The polyline to query.</param>
     /// <param name="candidates">A set to populate with unique colliders.</param>
-    public void GetUniqueCandidates(Polyline.Polyline polyLine, ref HashSet<Collider> candidates)
+    public void GetUniqueCandidates(Polyline polyLine, ref HashSet<Collider> candidates)
     {
         List<int> bucketIds = new();
         GetCellIDs(polyLine, ref bucketIds);
@@ -478,7 +486,7 @@ public class SpatialHash : IBounds
         for (int i = 0; i < BucketCount; i++)
         {
             var coords = GetCoordinatesGrid(i);
-            var rect = new Rect.Rect(Bounds.X + coords.x * SpacingX, Bounds.Y + coords.y * SpacingY, SpacingX, SpacingY);
+            var rect = new Rect(Bounds.X + coords.x * SpacingX, Bounds.Y + coords.y * SpacingY, SpacingX, SpacingY);
             rect.DrawLines(2f, border);
             int id = GetCellId(coords.x, coords.y);
             if (buckets[id].Count > 0)
@@ -560,16 +568,16 @@ public class SpatialHash : IBounds
     /// <param name="x">Grid x coordinate.</param>
     /// <param name="y">Grid y coordinate.</param>
     /// <returns>Rectangle of the cell in world space.</returns>
-    private Rect.Rect GetCellRectangle(int x, int y)
+    private Rect GetCellRectangle(int x, int y)
     {
-        return new Rect.Rect(Bounds.X + x * SpacingX, Bounds.Y + y * SpacingY, SpacingX, SpacingY);
+        return new Rect(Bounds.X + x * SpacingX, Bounds.Y + y * SpacingY, SpacingX, SpacingY);
     }
     /// <summary>
     /// Gets the rectangle representing a cell by its index.
     /// </summary>
     /// <param name="index">The bucket index.</param>
     /// <returns>Rectangle of the cell in world space.</returns>
-    private Rect.Rect GetCellRectangle(int index)
+    private Rect GetCellRectangle(int index)
     {
         return GetCellRectangle(index % Cols, index / Cols);
     }
@@ -686,7 +694,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="segment">The segment to check.</param>
     /// <param name="idList">The list to populate with cell IDs.</param>
-    private void GetCellIDs(Segment.Segment segment, ref List<int> idList)
+    private void GetCellIDs(SegmentDef.Segment segment, ref List<int> idList)
     {
         var boundingRect = segment.GetBoundingBox();
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
@@ -707,7 +715,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="line">The line to check.</param>
     /// <param name="idList">The list to populate with cell IDs.</param>
-    private void GetCellIDs(Line.Line line, ref List<int> idList)
+    private void GetCellIDs(Line line, ref List<int> idList)
     {
         var boundingRect = line.GetBoundingBox();
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
@@ -728,7 +736,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="ray">The ray to check.</param>
     /// <param name="idList">The list to populate with cell IDs.</param>
-    private void GetCellIDs(Ray.Ray ray, ref List<int> idList)
+    private void GetCellIDs(Ray ray, ref List<int> idList)
     {
         var boundingRect = ray.GetBoundingBox();
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
@@ -749,7 +757,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="triangle">The triangle to check.</param>
     /// <param name="idList">The list to populate with cell IDs.</param>
-    private void GetCellIDs(Triangle.Triangle triangle, ref List<int> idList)
+    private void GetCellIDs(Triangle triangle, ref List<int> idList)
     {
         var boundingRect = triangle.GetBoundingBox();
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
@@ -770,7 +778,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="quad">The quad to check.</param>
     /// <param name="idList">The list to populate with cell IDs.</param>
-    private void GetCellIDs(Quad.Quad quad, ref List<int> idList)
+    private void GetCellIDs(Quad quad, ref List<int> idList)
     {
         var boundingRect = quad.GetBoundingBox();
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
@@ -791,7 +799,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="circle">The circle to check.</param>
     /// <param name="idList">The list to populate with cell IDs.</param>
-    private void GetCellIDs(Circle.Circle circle, ref List<int> idList)
+    private void GetCellIDs(Circle circle, ref List<int> idList)
     {
         var boundingRect = circle.GetBoundingBox();
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
@@ -812,7 +820,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="rect">The rect to check.</param>
     /// <param name="idList">The list to populate with cell IDs.</param>
-    private void GetCellIDs(Rect.Rect rect, ref List<int> idList)
+    private void GetCellIDs(Rect rect, ref List<int> idList)
     {
         var topLeft = GetCellCoordinate(rect.X, rect.Y);
         var bottomRight = GetCellCoordinate(rect.X + rect.Width, rect.Y + rect.Height);
@@ -832,7 +840,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="poly">The poly to check.</param>
     /// <param name="idList">The list to populate with cell IDs.</param>
-    private void GetCellIDs(Polygon.Polygon poly, ref List<int> idList)
+    private void GetCellIDs(Polygon poly, ref List<int> idList)
     {
         var boundingRect = poly.GetBoundingBox();
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
@@ -853,7 +861,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="polyLine">The polyline to check.</param>
     /// <param name="idList">The list to populate with cell IDs.</param>
-    private void GetCellIDs(Polyline.Polyline polyLine, ref List<int> idList)
+    private void GetCellIDs(Polyline polyLine, ref List<int> idList)
     {
         var boundingRect = polyLine.GetBoundingBox();
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);

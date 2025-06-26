@@ -1,9 +1,9 @@
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.CollisionSystem;
-using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.StaticLib;
 
 namespace Examples.Scenes.ExampleScenes.EndlessSpaceExampleSource;

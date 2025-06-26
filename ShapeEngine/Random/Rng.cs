@@ -3,7 +3,7 @@ using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.RectDef;
 
 namespace ShapeEngine.Random;
 

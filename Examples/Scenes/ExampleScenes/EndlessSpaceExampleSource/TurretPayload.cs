@@ -3,9 +3,9 @@ using Examples.PayloadSystem;
 using Raylib_cs;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
-using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.CollisionSystem;
-using ShapeEngine.Geometry.Segment;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.StaticLib;
 
 namespace Examples.Scenes.ExampleScenes.EndlessSpaceExampleSource;

@@ -1,10 +1,10 @@
 ﻿using System.Numerics;
 using Clipper2Lib;
-using ShapeEngine.Geometry.Polygon;
-using ShapeEngine.Geometry.Polyline;
-using ShapeEngine.Geometry.Rect;
-using ShapeEngine.Geometry.Segment;
-using ShapeEngine.Geometry.Segments;
+using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.PolylineDef;
+using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.SegmentDef;
+using ShapeEngine.Geometry.SegmentsDef;
 
 namespace ShapeEngine.StaticLib;
 

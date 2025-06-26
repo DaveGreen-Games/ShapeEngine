@@ -4,8 +4,8 @@ using ShapeEngine.Screen;
 using System.Numerics;
 using Examples.UIElements;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.Rect;
-using ShapeEngine.Geometry.Segment;
+using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Input;
 using ShapeEngine.Text;
 

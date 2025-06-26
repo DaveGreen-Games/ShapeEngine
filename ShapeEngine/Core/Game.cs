@@ -4,7 +4,7 @@ using Raylib_cs;
 using ShapeEngine.Audio;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Input;
 using ShapeEngine.StaticLib;
 using ShapeEngine.Screen;

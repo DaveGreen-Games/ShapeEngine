@@ -1,20 +1,29 @@
 using System.Numerics;
 using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.CollisionSystem;
-using ShapeEngine.Geometry.Segment;
+using ShapeEngine.Geometry.LineDef;
+using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.PolylineDef;
+using ShapeEngine.Geometry.QuadDef;
+using ShapeEngine.Geometry.RayDef;
+using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.SegmentDef;
+using ShapeEngine.Geometry.SegmentsDef;
+using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.Random;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry;
 
-public class Triangulation : ShapeList<Triangle.Triangle>
+public class Triangulation : ShapeList<Triangle>
 {
     #region Constructors
     public Triangulation() { }
     public Triangulation(int capacity) : base(capacity) { }
     //public Triangulation(IShape shape) { AddRange(shape.Triangulate()); }
-    public Triangulation(IEnumerable<Triangle.Triangle> triangles) { AddRange(triangles); }
+    public Triangulation(IEnumerable<Triangle> triangles) { AddRange(triangles); }
     #endregion
         
     #region Equals & HashCode
@@ -62,13 +71,13 @@ public class Triangulation : ShapeList<Triangle.Triangle>
             triangleIndex,
             -1);
     }
-    public (CollisionPoint point, Triangle.Triangle triangle) GetClosestTriangle(Vector2 p, out float disSquared, out int triangleIndex)
+    public (CollisionPoint point, Triangle triangle) GetClosestTriangle(Vector2 p, out float disSquared, out int triangleIndex)
     {
         disSquared = -1;
         triangleIndex = -1;
         if (Count <= 0) return (new(), new());
 
-        var closestTriangle = new Triangle.Triangle();
+        var closestTriangle = new Triangle();
         var contained = false;
         var closestPoint = new CollisionPoint();
 
@@ -105,7 +114,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
         
     
     
-    public static CollisionPoint GetClosestPointTriangulationPoint(List<Triangle.Triangle> triangles, Vector2 p, out float disSquared)
+    public static CollisionPoint GetClosestPointTriangulationPoint(List<Triangle> triangles, Vector2 p, out float disSquared)
     {
         disSquared = -1;
         if (triangles.Count <= 0) return new();
@@ -205,7 +214,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
         return closestVertex;
     }
 
-    public ClosestPointResult GetClosestPoint(Line.Line other, out int triangleIndex)
+    public ClosestPointResult GetClosestPoint(Line other, out int triangleIndex)
     {
         triangleIndex = -1;
         if (Count <= 0) return new();
@@ -227,7 +236,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
 
         return closestResult;
     }
-    public ClosestPointResult GetClosestPoint(Ray.Ray other, out int triangleIndex)
+    public ClosestPointResult GetClosestPoint(Ray other, out int triangleIndex)
     {
         triangleIndex = -1;
         if (Count <= 0) return new();
@@ -249,7 +258,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
 
         return closestResult;
     }
-    public ClosestPointResult GetClosestPoint(Segment.Segment other, out int triangleIndex)
+    public ClosestPointResult GetClosestPoint(Segment other, out int triangleIndex)
     {
         triangleIndex = -1;
         if (Count <= 0) return new();
@@ -271,7 +280,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
 
         return closestResult;
     }
-    public ClosestPointResult GetClosestPoint(Circle.Circle other, out int triangleIndex)
+    public ClosestPointResult GetClosestPoint(Circle other, out int triangleIndex)
     {
         triangleIndex = -1;
         if (Count <= 0) return new();
@@ -293,7 +302,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
 
         return closestResult;
     }
-    public ClosestPointResult GetClosestPoint(Triangle.Triangle other, out int triangleIndex)
+    public ClosestPointResult GetClosestPoint(Triangle other, out int triangleIndex)
     {
         triangleIndex = -1;
         if (Count <= 0) return new();
@@ -315,7 +324,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
 
         return closestResult;
     }
-    public ClosestPointResult GetClosestPoint(Quad.Quad other, out int triangleIndex)
+    public ClosestPointResult GetClosestPoint(Quad other, out int triangleIndex)
     {
         triangleIndex = -1;
         if (Count <= 0) return new();
@@ -337,7 +346,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
 
         return closestResult;
     }
-    public ClosestPointResult GetClosestPoint(Rect.Rect other, out int triangleIndex)
+    public ClosestPointResult GetClosestPoint(Rect other, out int triangleIndex)
     {
         triangleIndex = -1;
         if (Count <= 0) return new();
@@ -359,7 +368,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
 
         return closestResult;
     }
-    public ClosestPointResult GetClosestPoint(Polygon.Polygon other, out int triangleIndex)
+    public ClosestPointResult GetClosestPoint(Polygon other, out int triangleIndex)
     {
         triangleIndex = -1;
         if (Count <= 0) return new();
@@ -381,7 +390,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
 
         return closestResult;
     }
-    public ClosestPointResult GetClosestPoint(Polyline.Polyline other, out int triangleIndex)
+    public ClosestPointResult GetClosestPoint(Polyline other, out int triangleIndex)
     {
         triangleIndex = -1;
         if (Count <= 0) return new();
@@ -403,7 +412,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
 
         return closestResult;
     }
-    public ClosestPointResult GetClosestPoint(Segments.Segments other, out int triangleIndex)
+    public ClosestPointResult GetClosestPoint(Segments other, out int triangleIndex)
     {
         triangleIndex = -1;
         if (Count <= 0) return new();
@@ -426,7 +435,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
         return closestResult;
     }
 
-    public (Segment.Segment segment, CollisionPoint segmentPoint) GetClosestSegment(Vector2 p, out float disSquared, out int triangleIndex)
+    public (SegmentDef.Segment segment, CollisionPoint segmentPoint) GetClosestSegment(Vector2 p, out float disSquared, out int triangleIndex)
     {
         triangleIndex = -1;
         disSquared = -1f;
@@ -505,7 +514,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// </summary>
     /// <param name="shape"></param>
     /// <returns>Returns true after the first overlap is found. If no overlap is found, returns false.</returns>
-    public bool OverlapShape(Line.Line shape)
+    public bool OverlapShape(Line shape)
     {
         for (int i = 0; i < Count; i++)
         {
@@ -520,7 +529,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// </summary>
     /// <param name="shape"></param>
     /// <returns>Returns true after the first overlap is found. If no overlap is found, returns false.</returns>
-    public bool OverlapShape(Ray.Ray shape)
+    public bool OverlapShape(Ray shape)
     {
         for (int i = 0; i < Count; i++)
         {
@@ -535,7 +544,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// </summary>
     /// <param name="shape"></param>
     /// <returns>Returns true after the first overlap is found. If no overlap is found, returns false.</returns>
-    public bool OverlapShape(Segment.Segment shape)
+    public bool OverlapShape(SegmentDef.Segment shape)
     {
         for (int i = 0; i < Count; i++)
         {
@@ -550,7 +559,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// </summary>
     /// <param name="shape"></param>
     /// <returns>Returns true after the first overlap is found. If no overlap is found, returns false.</returns>
-    public bool OverlapShape(Circle.Circle shape)
+    public bool OverlapShape(Circle shape)
     {
         for (int i = 0; i < Count; i++)
         {
@@ -565,7 +574,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// </summary>
     /// <param name="shape"></param>
     /// <returns>Returns true after the first overlap is found. If no overlap is found, returns false.</returns>
-    public  bool OverlapShape(Triangle.Triangle shape)
+    public  bool OverlapShape(Triangle shape)
     {
         for (int i = 0; i < Count; i++)
         {
@@ -580,7 +589,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// </summary>
     /// <param name="shape"></param>
     /// <returns>Returns true after the first overlap is found. If no overlap is found, returns false.</returns>
-    public  bool OverlapShape(Rect.Rect shape)
+    public  bool OverlapShape(Rect shape)
     {
         for (int i = 0; i < Count; i++)
         {
@@ -595,7 +604,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// </summary>
     /// <param name="shape"></param>
     /// <returns>Returns true after the first overlap is found. If no overlap is found, returns false.</returns>
-    public  bool OverlapShape(Quad.Quad shape)
+    public  bool OverlapShape(Quad shape)
     {
         for (int i = 0; i < Count; i++)
         {
@@ -610,7 +619,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// </summary>
     /// <param name="shape"></param>
     /// <returns>Returns true after the first overlap is found. If no overlap is found, returns false.</returns>
-    public  bool OverlapShape(Polygon.Polygon shape)
+    public  bool OverlapShape(Polygon shape)
     {
         for (int i = 0; i < Count; i++)
         {
@@ -625,7 +634,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// </summary>
     /// <param name="shape"></param>
     /// <returns>Returns true after the first overlap is found. If no overlap is found, returns false.</returns>
-    public  bool OverlapShape(Polyline.Polyline shape)
+    public  bool OverlapShape(Polyline shape)
     {
         for (int i = 0; i < Count; i++)
         {
@@ -640,7 +649,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// </summary>
     /// <param name="segments"></param>
     /// <returns>Returns true after the first overlap is found. If no overlap is found, returns false.</returns>
-    public  bool OverlapShape(Segments.Segments segments)
+    public  bool OverlapShape(Segments segments)
     {
         for (int i = 0; i < Count; i++)
         {
@@ -676,7 +685,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// <param name="shape">The shape to check against.</param>
     /// <param name="triangleIndices">All triangle indices that overlap the specified shape.</param>
     /// <returns>Return true if at least 1 overlap was found, otherwise return false. Does not return early. All triangle have to be checked.</returns>
-    public bool OverlapShape(Line.Line shape, out List<int>? triangleIndices)
+    public bool OverlapShape(Line shape, out List<int>? triangleIndices)
     {
         triangleIndices = null;
         for (int i = 0; i < Count; i++)
@@ -695,7 +704,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// <param name="shape">The shape to check against.</param>
     /// <param name="triangleIndices">All triangle indices that overlap the specified shape.</param>
     /// <returns>Return true if at least 1 overlap was found, otherwise return false. Does not return early. All triangle have to be checked.</returns>
-    public bool OverlapShape(Ray.Ray shape, out List<int>? triangleIndices)
+    public bool OverlapShape(Ray shape, out List<int>? triangleIndices)
     {
         triangleIndices = null;
         for (int i = 0; i < Count; i++)
@@ -714,7 +723,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// <param name="shape">The shape to check against.</param>
     /// <param name="triangleIndices">All triangle indices that overlap the specified shape.</param>
     /// <returns>Return true if at least 1 overlap was found, otherwise return false. Does not return early. All triangle have to be checked.</returns>
-    public bool OverlapShape(Segment.Segment shape, out List<int>? triangleIndices)
+    public bool OverlapShape(SegmentDef.Segment shape, out List<int>? triangleIndices)
     {
         triangleIndices = null;
         for (int i = 0; i < Count; i++)
@@ -733,7 +742,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// <param name="shape">The shape to check against.</param>
     /// <param name="triangleIndices">All triangle indices that overlap the specified shape.</param>
     /// <returns>Return true if at least 1 overlap was found, otherwise return false. Does not return early. All triangle have to be checked.</returns>
-    public bool OverlapShape(Circle.Circle shape, out List<int>? triangleIndices)
+    public bool OverlapShape(Circle shape, out List<int>? triangleIndices)
     {
         triangleIndices = null;
         for (int i = 0; i < Count; i++)
@@ -752,7 +761,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// <param name="shape">The shape to check against.</param>
     /// <param name="triangleIndices">All triangle indices that overlap the specified shape.</param>
     /// <returns>Return true if at least 1 overlap was found, otherwise return false. Does not return early. All triangle have to be checked.</returns>
-    public bool OverlapShape(Triangle.Triangle shape, out List<int>? triangleIndices)
+    public bool OverlapShape(Triangle shape, out List<int>? triangleIndices)
     {
         triangleIndices = null;
         for (int i = 0; i < Count; i++)
@@ -771,7 +780,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// <param name="shape">The shape to check against.</param>
     /// <param name="triangleIndices">All triangle indices that overlap the specified shape.</param>
     /// <returns>Return true if at least 1 overlap was found, otherwise return false. Does not return early. All triangle have to be checked.</returns>
-    public bool OverlapShape(Rect.Rect shape, out List<int>? triangleIndices)
+    public bool OverlapShape(Rect shape, out List<int>? triangleIndices)
     {
         triangleIndices = null;
         for (int i = 0; i < Count; i++)
@@ -790,7 +799,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// <param name="shape">The shape to check against.</param>
     /// <param name="triangleIndices">All triangle indices that overlap the specified shape.</param>
     /// <returns>Return true if at least 1 overlap was found, otherwise return false. Does not return early. All triangle have to be checked.</returns>
-    public bool OverlapShape(Quad.Quad shape, out List<int>? triangleIndices)
+    public bool OverlapShape(Quad shape, out List<int>? triangleIndices)
     {
         triangleIndices = null;
         for (int i = 0; i < Count; i++)
@@ -809,7 +818,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// <param name="shape">The shape to check against.</param>
     /// <param name="triangleIndices">All triangle indices that overlap the specified shape.</param>
     /// <returns>Return true if at least 1 overlap was found, otherwise return false. Does not return early. All triangle have to be checked.</returns>
-    public bool OverlapShape(Polygon.Polygon shape, out List<int>? triangleIndices)
+    public bool OverlapShape(Polygon shape, out List<int>? triangleIndices)
     {
         triangleIndices = null;
         for (int i = 0; i < Count; i++)
@@ -828,7 +837,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// <param name="shape">The shape to check against.</param>
     /// <param name="triangleIndices">All triangle indices that overlap the specified shape.</param>
     /// <returns>Return true if at least 1 overlap was found, otherwise return false. Does not return early. All triangle have to be checked.</returns>
-    public bool OverlapShape(Polyline.Polyline shape, out List<int>? triangleIndices)
+    public bool OverlapShape(Polyline shape, out List<int>? triangleIndices)
     {
         triangleIndices = null;
         for (int i = 0; i < Count; i++)
@@ -847,7 +856,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// <param name="segments">The segments to check against.</param>
     /// <param name="triangleIndices">All triangle indices that overlap the specified segments.</param>
     /// <returns>Return true if at least 1 overlap was found, otherwise return false. Does not return early. All triangle have to be checked.</returns>
-    public bool OverlapShape(Segments.Segments segments, out List<int>? triangleIndices)
+    public bool OverlapShape(Segments segments, out List<int>? triangleIndices)
     {
         triangleIndices = null;
         for (int i = 0; i < Count; i++)
@@ -892,7 +901,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// </summary>
     /// <param name="shape">The shape to check the triangles against.</param>
     /// <returns>Returns a dictionary where the key represents the index of the triangle and the value represents the found collision points.</returns>
-    public Dictionary<int, CollisionPoints>? IntersectShape(Line.Line shape)
+    public Dictionary<int, CollisionPoints>? IntersectShape(Line shape)
     {
         Dictionary<int, CollisionPoints>? result = null;
         for (int i = 0; i < Count; i++)
@@ -913,7 +922,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// </summary>
     /// <param name="shape">The shape to check the triangles against.</param>
     /// <returns>Returns a dictionary where the key represents the index of the triangle and the value represents the found collision points.</returns>
-    public Dictionary<int, CollisionPoints>? IntersectShape(Ray.Ray shape)
+    public Dictionary<int, CollisionPoints>? IntersectShape(Ray shape)
     {
         Dictionary<int, CollisionPoints>? result = null;
         for (int i = 0; i < Count; i++)
@@ -934,7 +943,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// </summary>
     /// <param name="shape">The shape to check the triangles against.</param>
     /// <returns>Returns a dictionary where the key represents the index of the triangle and the value represents the found collision points.</returns>
-    public Dictionary<int, CollisionPoints>? IntersectShape(Segment.Segment shape)
+    public Dictionary<int, CollisionPoints>? IntersectShape(SegmentDef.Segment shape)
     {
         Dictionary<int, CollisionPoints>? result = null;
         for (int i = 0; i < Count; i++)
@@ -955,7 +964,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// </summary>
     /// <param name="shape">The shape to check the triangles against.</param>
     /// <returns>Returns a dictionary where the key represents the index of the triangle and the value represents the found collision points.</returns>
-    public Dictionary<int, CollisionPoints>? IntersectShape(Circle.Circle shape)
+    public Dictionary<int, CollisionPoints>? IntersectShape(Circle shape)
     {
         Dictionary<int, CollisionPoints>? result = null;
         for (int i = 0; i < Count; i++)
@@ -976,7 +985,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// </summary>
     /// <param name="shape">The shape to check the triangles against.</param>
     /// <returns>Returns a dictionary where the key represents the index of the triangle and the value represents the found collision points.</returns>
-    public  Dictionary<int, CollisionPoints>? IntersectShape(Triangle.Triangle shape)
+    public  Dictionary<int, CollisionPoints>? IntersectShape(Triangle shape)
     {
         Dictionary<int, CollisionPoints>? result = null;
         for (int i = 0; i < Count; i++)
@@ -997,7 +1006,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// </summary>
     /// <param name="shape">The shape to check the triangles against.</param>
     /// <returns>Returns a dictionary where the key represents the index of the triangle and the value represents the found collision points.</returns>
-    public Dictionary<int, CollisionPoints>? IntersectShape(Rect.Rect shape)
+    public Dictionary<int, CollisionPoints>? IntersectShape(Rect shape)
     {
         Dictionary<int, CollisionPoints>? result = null;
         for (int i = 0; i < Count; i++)
@@ -1018,7 +1027,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// </summary>
     /// <param name="shape">The shape to check the triangles against.</param>
     /// <returns>Returns a dictionary where the key represents the index of the triangle and the value represents the found collision points.</returns>
-    public Dictionary<int, CollisionPoints>? IntersectShape(Quad.Quad shape)
+    public Dictionary<int, CollisionPoints>? IntersectShape(Quad shape)
     {
         Dictionary<int, CollisionPoints>? result = null;
         for (int i = 0; i < Count; i++)
@@ -1039,7 +1048,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// </summary>
     /// <param name="shape">The shape to check the triangles against.</param>
     /// <returns>Returns a dictionary where the key represents the index of the triangle and the value represents the found collision points.</returns>
-    public  Dictionary<int, CollisionPoints>? IntersectShape(Polygon.Polygon shape)
+    public  Dictionary<int, CollisionPoints>? IntersectShape(Polygon shape)
     {
         Dictionary<int, CollisionPoints>? result = null;
         for (int i = 0; i < Count; i++)
@@ -1060,7 +1069,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// </summary>
     /// <param name="shape">The shape to check the triangles against.</param>
     /// <returns>Returns a dictionary where the key represents the index of the triangle and the value represents the found collision points.</returns>
-    public  Dictionary<int, CollisionPoints>? IntersectShape(Polyline.Polyline shape)
+    public  Dictionary<int, CollisionPoints>? IntersectShape(Polyline shape)
     {
         Dictionary<int, CollisionPoints>? result = null;
         for (int i = 0; i < Count; i++)
@@ -1081,7 +1090,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     /// </summary>
     /// <param name="shape">The shape to check the triangles against.</param>
     /// <returns>Returns a dictionary where the key represents the index of the triangle and the value represents the found collision points.</returns>
-    public  Dictionary<int, CollisionPoints>? IntersectShape(Segments.Segments shape)
+    public  Dictionary<int, CollisionPoints>? IntersectShape(Segments shape)
     {
         Dictionary<int, CollisionPoints>? result = null;
         for (int i = 0; i < Count; i++)
@@ -1102,7 +1111,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     
     #region Public
     
-    public Points.Points GetUniquePoints()
+    public PointsDef.Points GetUniquePoints()
     {
         var uniqueVertices = new HashSet<Vector2>();
         for (var i = 0; i < Count; i++)
@@ -1115,9 +1124,9 @@ public class Triangulation : ShapeList<Triangle.Triangle>
 
         return new(uniqueVertices);
     }
-    public Segments.Segments GetUniqueSegments()
+    public Segments GetUniqueSegments()
     {
-        var unique = new HashSet<Segment.Segment>();
+        var unique = new HashSet<SegmentDef.Segment>();
         for (var i = 0; i < Count; i++)
         {
             var tri = this[i];
@@ -1130,7 +1139,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
     }
     public Triangulation GetUniqueTriangles()
     {
-        var uniqueTriangles = new HashSet<Triangle.Triangle>();
+        var uniqueTriangles = new HashSet<Triangle>();
         for (var i = 0; i < Count; i++)
         {
             var tri = this[i];
@@ -1150,7 +1159,7 @@ public class Triangulation : ShapeList<Triangle.Triangle>
         return result;
     }
 
-    public Segment.Segment GetSegment(int triangleIndex, int segmentIndex)
+    public SegmentDef.Segment GetSegment(int triangleIndex, int segmentIndex)
     {
         var i = triangleIndex % Count;
         return this[i].GetSegment(segmentIndex);

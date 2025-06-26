@@ -1,7 +1,7 @@
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Input;
 using ShapeEngine.StaticLib;
 using ShapeEngine.Text;

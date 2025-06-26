@@ -1,6 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Core;
-using ShapeEngine.Geometry.Points;
+using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Random;
 using ShapeEngine.StaticLib;
 
@@ -1060,7 +1060,7 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     /// Returns a set of unique points from the collision points list.
     /// </summary>
     /// <returns>A <see cref="Points"/> collection containing unique points.</returns>
-    public Points.Points GetUniquePoints()
+    public PointsDef.Points GetUniquePoints()
     {
         var uniqueVertices = new HashSet<Vector2>();
         for (var i = 0; i < Count; i++)

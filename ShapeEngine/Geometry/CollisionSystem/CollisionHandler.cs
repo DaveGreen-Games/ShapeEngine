@@ -2,15 +2,15 @@
 using ShapeEngine.Color;
 using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.Circle;
-using ShapeEngine.Geometry.Line;
-using ShapeEngine.Geometry.Polygon;
-using ShapeEngine.Geometry.Polyline;
-using ShapeEngine.Geometry.Quad;
-using ShapeEngine.Geometry.Ray;
-using ShapeEngine.Geometry.Rect;
-using ShapeEngine.Geometry.Segment;
-using ShapeEngine.Geometry.Triangle;
+using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.LineDef;
+using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.PolylineDef;
+using ShapeEngine.Geometry.QuadDef;
+using ShapeEngine.Geometry.RayDef;
+using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.SegmentDef;
+using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.CollisionSystem;
@@ -210,7 +210,7 @@ public class CollisionHandler : IBounds
     /// <summary>
     /// Gets the bounding rectangle of the collision system.
     /// </summary>
-    public Rect.Rect Bounds => spatialHash.Bounds;
+    public Rect Bounds => spatialHash.Bounds;
     
     private readonly CollisionObjectRegister collisionBodyRegister;
     
@@ -259,7 +259,7 @@ public class CollisionHandler : IBounds
     /// <param name="rows">The number of rows in the spatial hash grid.</param>
     /// <param name="cols">The number of columns in the spatial hash grid.</param>
     /// <param name="startCapacity">The initial capacity for object registers. Default is 1024.</param>
-    public CollisionHandler(Rect.Rect bounds, int rows, int cols, int startCapacity = 1024)
+    public CollisionHandler(Rect bounds, int rows, int cols, int startCapacity = 1024)
     {
         spatialHash = new(bounds.X, bounds.Y, bounds.Width, bounds.Height, rows, cols);
         
@@ -316,7 +316,7 @@ public class CollisionHandler : IBounds
     /// Resizes the bounds of the collision system.
     /// </summary>
     /// <param name="newBounds">The new bounding rectangle.</param>
-    public void ResizeBounds(Rect.Rect newBounds) => spatialHash.ResizeBounds(newBounds);
+    public void ResizeBounds(Rect newBounds) => spatialHash.ResizeBounds(newBounds);
 
     /// <summary>
     /// Removes all registered collision objects and clears the collision system.
@@ -707,7 +707,7 @@ public class CollisionHandler : IBounds
     /// <remarks>
     /// Only enabled colliders are considered for intersection checks in this query.
     /// </remarks>
-    public IntersectSpaceResult? IntersectSpace(Segment.Segment shape, Vector2 origin, BitFlag collisionMask)
+    public IntersectSpaceResult? IntersectSpace(Segment shape, Vector2 origin, BitFlag collisionMask)
     {
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
@@ -762,7 +762,7 @@ public class CollisionHandler : IBounds
     /// <remarks>
     /// Only enabled colliders are considered for intersection checks in this query.
     /// </remarks>
-    public IntersectSpaceResult? IntersectSpace(Line.Line line, Vector2 origin, BitFlag collisionMask)
+    public IntersectSpaceResult? IntersectSpace(Line line, Vector2 origin, BitFlag collisionMask)
     {
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
@@ -817,7 +817,7 @@ public class CollisionHandler : IBounds
     /// <remarks>
     /// Only enabled colliders are considered for intersection checks in this query.
     /// </remarks>
-    public IntersectSpaceResult? IntersectSpace(Ray.Ray ray, Vector2 origin, BitFlag collisionMask)
+    public IntersectSpaceResult? IntersectSpace(Ray ray, Vector2 origin, BitFlag collisionMask)
     {
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
@@ -872,7 +872,7 @@ public class CollisionHandler : IBounds
     /// <remarks>
     /// Only enabled colliders are considered for intersection checks in this query.
     /// </remarks>
-    public IntersectSpaceResult? IntersectSpace(Triangle.Triangle shape, Vector2 origin, BitFlag collisionMask)
+    public IntersectSpaceResult? IntersectSpace(Triangle shape, Vector2 origin, BitFlag collisionMask)
     {
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
@@ -927,7 +927,7 @@ public class CollisionHandler : IBounds
     /// <remarks>
     /// Only enabled colliders are considered for intersection checks in this query.
     /// </remarks>
-    public IntersectSpaceResult? IntersectSpace(Circle.Circle shape, Vector2 origin, BitFlag collisionMask)
+    public IntersectSpaceResult? IntersectSpace(Circle shape, Vector2 origin, BitFlag collisionMask)
     {
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
@@ -982,7 +982,7 @@ public class CollisionHandler : IBounds
     /// <remarks>
     /// Only enabled colliders are considered for intersection checks in this query.
     /// </remarks>
-    public IntersectSpaceResult? IntersectSpace(Rect.Rect shape, Vector2 origin, BitFlag collisionMask)
+    public IntersectSpaceResult? IntersectSpace(Rect shape, Vector2 origin, BitFlag collisionMask)
     {
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
@@ -1037,7 +1037,7 @@ public class CollisionHandler : IBounds
     /// <remarks>
     /// Only enabled colliders are considered for intersection checks in this query.
     /// </remarks>
-    public IntersectSpaceResult? IntersectSpace(Quad.Quad shape, Vector2 origin, BitFlag collisionMask)
+    public IntersectSpaceResult? IntersectSpace(Quad shape, Vector2 origin, BitFlag collisionMask)
     {
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
@@ -1092,7 +1092,7 @@ public class CollisionHandler : IBounds
     /// <remarks>
     /// Only enabled colliders are considered for intersection checks in this query.
     /// </remarks>
-    public IntersectSpaceResult? IntersectSpace(Polygon.Polygon shape, Vector2 origin, BitFlag collisionMask)
+    public IntersectSpaceResult? IntersectSpace(Polygon shape, Vector2 origin, BitFlag collisionMask)
     {
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
@@ -1147,7 +1147,7 @@ public class CollisionHandler : IBounds
     /// <remarks>
     /// Only enabled colliders are considered for intersection checks in this query.
     /// </remarks>
-    public IntersectSpaceResult? IntersectSpace(Polyline.Polyline shape, Vector2 origin, BitFlag collisionMask)
+    public IntersectSpaceResult? IntersectSpace(Polyline shape, Vector2 origin, BitFlag collisionMask)
     {
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
@@ -1345,7 +1345,7 @@ public class CollisionHandler : IBounds
     /// <item>The result is cleared before being populated.</item>
     /// </list>
     /// </remarks>
-    public void CastSpace(Segment.Segment shape, BitFlag collisionMask, ref CastSpaceResult result)
+    public void CastSpace(SegmentDef.Segment shape, BitFlag collisionMask, ref CastSpaceResult result)
     {
         if(result.Count > 0) result.Clear();
         collisionCandidateBuckets.Clear();
@@ -1380,7 +1380,7 @@ public class CollisionHandler : IBounds
     /// <item>The result is cleared before being populated.</item>
     /// </list>
     /// </remarks>
-    public void CastSpace(Line.Line line, BitFlag collisionMask, ref CastSpaceResult result)
+    public void CastSpace(Line line, BitFlag collisionMask, ref CastSpaceResult result)
     {
         if(result.Count > 0) result.Clear();
         collisionCandidateBuckets.Clear();
@@ -1415,7 +1415,7 @@ public class CollisionHandler : IBounds
     /// <item>The result is cleared before being populated.</item>
     /// </list>
     /// </remarks>
-    public void CastSpace(Ray.Ray ray, BitFlag collisionMask, ref CastSpaceResult result)
+    public void CastSpace(Ray ray, BitFlag collisionMask, ref CastSpaceResult result)
     {
         if(result.Count > 0) result.Clear();
         collisionCandidateBuckets.Clear();
@@ -1450,7 +1450,7 @@ public class CollisionHandler : IBounds
     /// <item>The result is cleared before being populated.</item>
     /// </list>
     /// </remarks>
-    public void CastSpace(Triangle.Triangle shape, BitFlag collisionMask, ref CastSpaceResult result)
+    public void CastSpace(Triangle shape, BitFlag collisionMask, ref CastSpaceResult result)
     {
         if(result.Count > 0) result.Clear();
         collisionCandidateBuckets.Clear();
@@ -1485,7 +1485,7 @@ public class CollisionHandler : IBounds
     /// <item>The result is cleared before being populated.</item>
     /// </list>
     /// </remarks>
-    public void CastSpace(Circle.Circle shape, BitFlag collisionMask, ref CastSpaceResult result)
+    public void CastSpace(Circle shape, BitFlag collisionMask, ref CastSpaceResult result)
     {
         if(result.Count > 0) result.Clear();
         collisionCandidateBuckets.Clear();
@@ -1520,7 +1520,7 @@ public class CollisionHandler : IBounds
     /// <item>The result is cleared before being populated.</item>
     /// </list>
     /// </remarks>
-    public void CastSpace(Rect.Rect shape, BitFlag collisionMask, ref CastSpaceResult result)
+    public void CastSpace(Rect shape, BitFlag collisionMask, ref CastSpaceResult result)
     {
         if(result.Count > 0) result.Clear();
         collisionCandidateBuckets.Clear();
@@ -1555,7 +1555,7 @@ public class CollisionHandler : IBounds
     /// <item>The result is cleared before being populated.</item>
     /// </list>
     /// </remarks>
-    public void CastSpace(Polygon.Polygon shape, BitFlag collisionMask, ref CastSpaceResult result)
+    public void CastSpace(Polygon shape, BitFlag collisionMask, ref CastSpaceResult result)
     {
         if(result.Count > 0) result.Clear();
         collisionCandidateBuckets.Clear();
@@ -1590,7 +1590,7 @@ public class CollisionHandler : IBounds
     /// <item>The result is cleared before being populated.</item>
     /// </list>
     /// </remarks>
-    public void CastSpace(Polyline.Polyline shape, BitFlag collisionMask, ref CastSpaceResult result)
+    public void CastSpace(Polyline shape, BitFlag collisionMask, ref CastSpaceResult result)
     {
         if(result.Count > 0) result.Clear();
         collisionCandidateBuckets.Clear();
@@ -1700,7 +1700,7 @@ public class CollisionHandler : IBounds
     /// <remarks>
     /// Only enabled colliders in the collision system are checked.
     /// </remarks>
-    public int CastSpace(Segment.Segment shape, BitFlag collisionMask)
+    public int CastSpace(SegmentDef.Segment shape, BitFlag collisionMask)
     {
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
@@ -1734,7 +1734,7 @@ public class CollisionHandler : IBounds
     /// <remarks>
     /// Only enabled colliders in the collision system are checked.
     /// </remarks>
-    public int CastSpace(Line.Line line, BitFlag collisionMask)
+    public int CastSpace(Line line, BitFlag collisionMask)
     {
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
@@ -1768,7 +1768,7 @@ public class CollisionHandler : IBounds
     /// <remarks>
     /// Only enabled colliders in the collision system are checked.
     /// </remarks>
-    public int CastSpace(Ray.Ray ray, BitFlag collisionMask)
+    public int CastSpace(Ray ray, BitFlag collisionMask)
     {
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
@@ -1802,7 +1802,7 @@ public class CollisionHandler : IBounds
     /// <remarks>
     /// Only enabled colliders in the collision system are checked.
     /// </remarks>
-    public int CastSpace(Triangle.Triangle shape, BitFlag collisionMask)
+    public int CastSpace(Triangle shape, BitFlag collisionMask)
     {
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
@@ -1836,7 +1836,7 @@ public class CollisionHandler : IBounds
     /// <remarks>
     /// Only enabled colliders in the collision system are checked.
     /// </remarks>
-    public int CastSpace(Circle.Circle shape, BitFlag collisionMask)
+    public int CastSpace(Circle shape, BitFlag collisionMask)
     {
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
@@ -1870,7 +1870,7 @@ public class CollisionHandler : IBounds
     /// <remarks>
     /// Only enabled colliders in the collision system are checked.
     /// </remarks>
-    public int CastSpace(Rect.Rect shape, BitFlag collisionMask)
+    public int CastSpace(Rect shape, BitFlag collisionMask)
     {
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
@@ -1904,7 +1904,7 @@ public class CollisionHandler : IBounds
     /// <remarks>
     /// Only enabled colliders in the collision system are checked.
     /// </remarks>
-    public int CastSpace(Polygon.Polygon shape, BitFlag collisionMask)
+    public int CastSpace(Polygon shape, BitFlag collisionMask)
     {
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
@@ -1938,7 +1938,7 @@ public class CollisionHandler : IBounds
     /// <remarks>
     /// Only enabled colliders in the collision system are checked.
     /// </remarks>
-    public int CastSpace(Polyline.Polyline shape, BitFlag collisionMask)
+    public int CastSpace(Polyline shape, BitFlag collisionMask)
     {
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();

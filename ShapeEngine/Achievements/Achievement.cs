@@ -1,6 +1,6 @@
 using ShapeEngine.Color;
 using ShapeEngine.Geometry;
-using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.StaticLib;
 using ShapeEngine.Text;
 

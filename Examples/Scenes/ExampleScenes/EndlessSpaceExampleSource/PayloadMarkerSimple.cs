@@ -1,5 +1,5 @@
 using Examples.PayloadSystem;
-using ShapeEngine.Geometry.Circle;
+using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.StaticLib;
 
 namespace Examples.Scenes.ExampleScenes.EndlessSpaceExampleSource;

@@ -1,3 +1,4 @@
+using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry;
@@ -67,7 +68,7 @@ public class FractureHelper
      ///   </item>
      /// </list>
      /// </remarks>
-    public FractureInfo Fracture(Polygon.Polygon shape, Polygon.Polygon cutShape)
+    public FractureInfo Fracture(Polygon shape, Polygon cutShape)
     {
         var cutOuts = ShapeClipper.Intersect(shape, cutShape).ToPolygons(true);
         var newShapes = ShapeClipper.Difference(shape, cutShape).ToPolygons(true);

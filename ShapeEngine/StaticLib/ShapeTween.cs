@@ -4,7 +4,7 @@
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
-using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.RectDef;
 
 namespace ShapeEngine.StaticLib;
 

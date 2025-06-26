@@ -1,6 +1,6 @@
 using ShapeEngine.Color;
-using ShapeEngine.Geometry.Rect;
-using ShapeEngine.Geometry.Segment;
+using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.StaticLib;
 
 namespace Examples.Scenes.ExampleScenes.EndlessSpaceExampleSource;

@@ -1,6 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.RectDef;
 
 namespace ShapeEngine.Core;
 

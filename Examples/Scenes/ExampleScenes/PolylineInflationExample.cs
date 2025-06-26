@@ -6,11 +6,11 @@ using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
 using ShapeEngine.Geometry;
-using ShapeEngine.Geometry.Circle;
-using ShapeEngine.Geometry.Polygon;
-using ShapeEngine.Geometry.Polyline;
-using ShapeEngine.Geometry.Rect;
-using ShapeEngine.Geometry.Segment;
+using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.PolylineDef;
+using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.SegmentDef;
 using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes

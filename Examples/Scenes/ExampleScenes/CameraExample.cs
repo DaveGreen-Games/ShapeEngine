@@ -3,9 +3,9 @@ using ShapeEngine.Screen;
 using System.Numerics;
 using System.Text;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.Circle;
-using ShapeEngine.Geometry.Rect;
-using ShapeEngine.Geometry.Segment;
+using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Input;
 using ShapeEngine.Random;
 namespace Examples.Scenes.ExampleScenes

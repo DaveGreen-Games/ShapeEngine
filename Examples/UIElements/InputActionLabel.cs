@@ -5,7 +5,7 @@ using ShapeEngine.Input;
 using ShapeEngine.Text;
 using Raylib_cs;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.Rect;
+using ShapeEngine.Geometry.RectDef;
 
 namespace Examples.UIElements;
 

@@ -1,6 +1,15 @@
 using System.Numerics;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.CollisionSystem;
+using ShapeEngine.Geometry.LineDef;
+using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.PolylineDef;
+using ShapeEngine.Geometry.QuadDef;
+using ShapeEngine.Geometry.RayDef;
+using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.SegmentDef;
+using ShapeEngine.Geometry.TriangleDef;
 
 namespace ShapeEngine.Geometry;
 
@@ -144,29 +153,29 @@ public abstract class Shape : IShape
     public abstract ShapeType GetShapeType();
 
     /// <inheritdoc/>
-    public virtual Ray.Ray GetRayShape() => new();
+    public virtual Ray GetRayShape() => new();
 
     /// <inheritdoc/>
-    public virtual Line.Line GetLineShape() => new();
+    public virtual Line GetLineShape() => new();
 
     /// <inheritdoc/>
-    public virtual Segment.Segment GetSegmentShape() => new();
+    public virtual Segment GetSegmentShape() => new();
 
     /// <inheritdoc/>
-    public virtual Circle.Circle GetCircleShape() => new();
+    public virtual Circle GetCircleShape() => new();
 
     /// <inheritdoc/>
-    public virtual Triangle.Triangle GetTriangleShape() => new();
+    public virtual Triangle GetTriangleShape() => new();
 
     /// <inheritdoc/>
-    public virtual Quad.Quad GetQuadShape() => new();
+    public virtual Quad GetQuadShape() => new();
 
     /// <inheritdoc/>
-    public virtual Rect.Rect GetRectShape() => new();
+    public virtual Rect GetRectShape() => new();
 
     /// <inheritdoc/>
-    public virtual Polygon.Polygon GetPolygonShape() => new();
+    public virtual Polygon GetPolygonShape() => new();
 
     /// <inheritdoc/>
-    public virtual Polyline.Polyline GetPolylineShape() => new();
+    public virtual Polyline GetPolylineShape() => new();
 }
