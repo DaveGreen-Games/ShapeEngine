@@ -15,6 +15,19 @@ namespace ShapeEngine.Geometry.PolylineDef;
 
 public partial class Polyline
 {
+    /// <summary>
+    /// Finds the closest point on a polyline (defined by a list of points) to a given point.
+    /// </summary>
+    /// <param name="points">The list of points defining the polyline. Must contain at least two points.</param>
+    /// <param name="p">The point to which the closest point on the polyline is sought.</param>
+    /// <param name="disSquared">Outputs the squared distance from <paramref name="p"/> to the closest point on the polyline.</param>
+    /// <returns>The closest point on the polyline to <paramref name="p"/>.
+    /// Returns <c>Vector2.Zero</c> if the polyline has fewer than two points.</returns>
+    /// <remarks>
+    /// This method iterates through each segment of the polyline
+    /// and finds the closest point on each segment to <paramref name="p"/>.
+    /// The closest of these is returned.
+    /// </remarks>
     public static Vector2 GetClosestPointPolylinePoint(List<Vector2> points, Vector2 p, out float disSquared)
     {
         disSquared = -1;
@@ -40,6 +53,18 @@ public partial class Polyline
         return closest;
     }
 
+    /// <summary>
+    /// Finds the closest point on this polyline instance to a given point.
+    /// </summary>
+    /// <param name="p">The point to which the closest point on the polyline is sought.</param>
+    /// <param name="disSquared">Outputs the squared distance from <paramref name="p"/> to the closest point on the polyline.</param>
+    /// <returns>A <see cref="CollisionPoint"/> representing the closest point on the polyline.
+    /// Returns a default value if the polyline has fewer than two points.</returns>
+    /// <remarks>
+    /// This method iterates through each segment of the polyline
+    /// and finds the closest point on each segment to <paramref name="p"/>.
+    /// The closest of these is returned as a <see cref="CollisionPoint"/>.
+    /// </remarks>
     public new CollisionPoint GetClosestPoint(Vector2 p, out float disSquared)
     {
         disSquared = -1;
@@ -67,6 +92,20 @@ public partial class Polyline
         return new(closest, normal.GetPerpendicularRight().Normalize());
     }
 
+    /// <summary>
+    /// Finds the closest point on this polyline instance to a given point,
+    /// and returns the index of the closest segment.
+    /// </summary>
+    /// <param name="p">The point to which the closest point on the polyline is sought.</param>
+    /// <param name="disSquared">Outputs the squared distance from <paramref name="p"/> to the closest point on the polyline.</param>
+    /// <param name="index">Outputs the index of the segment containing the closest point.</param>
+    /// <returns>A <see cref="CollisionPoint"/> representing the closest point on the polyline.
+    /// Returns a default value if the polyline has fewer than two points.</returns>
+    /// <remarks>
+    /// This method iterates through each segment of the polyline
+    /// and finds the closest point on each segment to <paramref name="p"/>.
+    /// The closest of these is returned as a <see cref="CollisionPoint"/>, and the segment index is provided.
+    /// </remarks>
     public new CollisionPoint GetClosestPoint(Vector2 p, out float disSquared, out int index)
     {
         disSquared = -1;
@@ -97,6 +136,17 @@ public partial class Polyline
         return new(closest, normal.GetPerpendicularRight().Normalize());
     }
 
+    /// <summary>
+    /// Finds the closest vertex (point) in the polyline to a given point.
+    /// </summary>
+    /// <param name="p">The point to which the closest vertex is sought.</param>
+    /// <param name="disSquared">Outputs the squared distance from <paramref name="p"/> to the closest vertex.</param>
+    /// <param name="index">Outputs the index of the closest vertex.</param>
+    /// <returns>The closest vertex as a <see cref="Vector2"/>.
+    /// Returns <c>Vector2.Zero</c> if the polyline has fewer than two points.</returns>
+    /// <remarks>
+    /// This method iterates through all vertices and finds the one closest to <paramref name="p"/>.
+    /// </remarks>
     public Vector2 GetClosestVertex(Vector2 p, out float disSquared, out int index)
     {
         disSquared = -1;
@@ -122,6 +172,17 @@ public partial class Polyline
         return closest;
     }
 
+    /// <summary>
+    /// Finds the furthest vertex (point) in the polyline from a given point.
+    /// </summary>
+    /// <param name="p">The point from which the furthest vertex is sought.</param>
+    /// <param name="disSquared">Outputs the squared distance from <paramref name="p"/> to the furthest vertex.</param>
+    /// <param name="index">Outputs the index of the furthest vertex.</param>
+    /// <returns>The furthest vertex as a <see cref="Vector2"/>.
+    /// Returns <c>Vector2.Zero</c> if the polyline has fewer than two points.</returns>
+    /// <remarks>
+    /// This method iterates through all vertices and finds the one furthest from <paramref name="p"/>.
+    /// </remarks>
     public Vector2 GetFurthestVertex(Vector2 p, out float disSquared, out int index)
     {
         disSquared = -1;
@@ -147,6 +208,17 @@ public partial class Polyline
         return furthest;
     }
 
+    /// <summary>
+    /// Finds the closest point between this polyline and a given line.
+    /// </summary>
+    /// <param name="other">The <see cref="Line"/> to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and related data.
+    /// Returns a default value if the polyline has fewer than two points.</returns>
+    /// <remarks>
+    /// This method iterates through each segment of the polyline
+    /// and finds the closest point on each segment to the line.
+    /// The closest of these is returned as a <see cref="ClosestPointResult"/>.
+    /// </remarks>
     public new ClosestPointResult GetClosestPoint(Line other)
     {
         if (Count < 2) return new();
@@ -178,6 +250,17 @@ public partial class Polyline
             selfIndex);
     }
 
+    /// <summary>
+    /// Finds the closest point between this polyline and a <see cref="Ray"/>.
+    /// </summary>
+    /// <param name="other">The <see cref="Ray"/> to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and related data.
+    /// Returns a default value if the polyline has fewer than two points.</returns>
+    /// <remarks>
+    /// This method iterates through each segment of the polyline
+    /// and finds the closest point on each segment to the ray.
+    /// The closest of these is returned as a <see cref="ClosestPointResult"/>.
+    /// </remarks>
     public new ClosestPointResult GetClosestPoint(Ray other)
     {
         if (Count < 2) return new();
@@ -210,6 +293,17 @@ public partial class Polyline
             selfIndex);
     }
 
+    /// <summary>
+    /// Finds the closest point between this polyline and a <see cref="Segment"/>.
+    /// </summary>
+    /// <param name="other">The <see cref="Segment"/> to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and related data.
+    /// Returns a default value if the polyline has fewer than two points.</returns>
+    /// <remarks>
+    /// This method iterates through each segment of the polyline
+    /// and finds the closest point on each segment to the segment.
+    /// The closest of these is returned as a <see cref="ClosestPointResult"/>.
+    /// </remarks>
     public new ClosestPointResult GetClosestPoint(Segment other)
     {
         if (Count < 2) return new();
@@ -242,6 +336,17 @@ public partial class Polyline
             selfIndex);
     }
 
+    /// <summary>
+    /// Finds the closest point between this polyline and a <see cref="Circle"/>.
+    /// </summary>
+    /// <param name="other">The <see cref="Circle"/> to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and related data.
+    /// Returns a default value if the polyline has fewer than two points.</returns>
+    /// <remarks>
+    /// This method iterates through each segment of the polyline
+    /// and finds the closest point on each segment to the circle.
+    /// The closest of these is returned as a <see cref="ClosestPointResult"/>.
+    /// </remarks>
     public new ClosestPointResult GetClosestPoint(Circle other)
     {
         if (Count < 2) return new();
@@ -275,6 +380,17 @@ public partial class Polyline
         );
     }
 
+    /// <summary>
+    /// Finds the closest point between this polyline and a <see cref="Triangle"/>.
+    /// </summary>
+    /// <param name="other">The <see cref="Triangle"/> to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and related data.
+    /// Returns a default value if the polyline has fewer than two points.</returns>
+    /// <remarks>
+    /// This method iterates through each segment of the polyline and each edge of the triangle,
+    /// finding the closest points between all segment pairs.
+    /// The closest of these is returned as a <see cref="ClosestPointResult"/>.
+    /// </remarks>
     public new ClosestPointResult GetClosestPoint(Triangle other)
     {
         if (Count < 2) return new();
@@ -333,6 +449,17 @@ public partial class Polyline
             otherIndex);
     }
 
+    /// <summary>
+    /// Finds the closest point between this polyline and a <see cref="Quad"/>.
+    /// </summary>
+    /// <param name="other">The <see cref="Quad"/> to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and related data.
+    /// Returns a default value if the polyline has fewer than two points.</returns>
+    /// <remarks>
+    /// This method iterates through each segment of the polyline and each edge of the quad,
+    /// finding the closest points between all segment pairs.
+    /// The closest of these is returned as a <see cref="ClosestPointResult"/>.
+    /// </remarks>
     public new ClosestPointResult GetClosestPoint(Quad other)
     {
         if (Count < 2) return new();
@@ -402,6 +529,17 @@ public partial class Polyline
             otherIndex);
     }
 
+    /// <summary>
+    /// Finds the closest point between this polyline and a <see cref="Rect"/>.
+    /// </summary>
+    /// <param name="other">The <see cref="Rect"/> to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and related data.
+    /// Returns a default value if the polyline has fewer than two points.</returns>
+    /// <remarks>
+    /// This method iterates through each segment of the polyline and each edge of the rectangle,
+    /// finding the closest points between all segment pairs.
+    /// The closest of these is returned as a <see cref="ClosestPointResult"/>.
+    /// </remarks>
     public new ClosestPointResult GetClosestPoint(Rect other)
     {
         if (Count < 2) return new();
@@ -471,6 +609,17 @@ public partial class Polyline
             otherIndex);
     }
 
+    /// <summary>
+    /// Finds the closest point between this polyline and a <see cref="Polygon"/>.
+    /// </summary>
+    /// <param name="other">The <see cref="Polygon"/> to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and related data.
+    /// Returns a default value if the polyline has fewer than two points.</returns>
+    /// <remarks>
+    /// This method iterates through each segment of the polyline and each edge of the polygon,
+    /// finding the closest points between all segment pairs.
+    /// The closest of these is returned as a <see cref="ClosestPointResult"/>.
+    /// </remarks>
     public new ClosestPointResult GetClosestPoint(Polygon other)
     {
         if (Count < 2) return new();
@@ -512,6 +661,17 @@ public partial class Polyline
             otherIndex);
     }
 
+    /// <summary>
+    /// Finds the closest point between this polyline and another <see cref="Polyline"/>.
+    /// </summary>
+    /// <param name="other">The <see cref="Polyline"/> to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and related data.
+    /// Returns a default value if either polyline has fewer than two points.</returns>
+    /// <remarks>
+    /// This method iterates through each segment of both polylines,
+    /// finding the closest points between all segment pairs.
+    /// The closest of these is returned as a <see cref="ClosestPointResult"/>.
+    /// </remarks>
     public new ClosestPointResult GetClosestPoint(Polyline other)
     {
         if (Count < 2) return new();
@@ -553,6 +713,16 @@ public partial class Polyline
             otherIndex);
     }
 
+    /// <summary>
+    /// Finds the closest point between this polyline and another <see cref="Segments"/> collection.
+    /// </summary>
+    /// <param name="other">The <see cref="Segments"/> collection to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and related data. Returns a default value if the polyline has fewer than two points.</returns>
+    /// <remarks>
+    /// This method iterates through each segment of the polyline and each segment of the <paramref name="other"/> collection,
+    /// finding the closest points between all segment pairs.
+    /// The closest of these is returned as a <see cref="ClosestPointResult"/>.
+    /// </remarks>
     public new ClosestPointResult GetClosestPoint(Segments other)
     {
         if (Count < 2) return new();
@@ -593,6 +763,17 @@ public partial class Polyline
             otherIndex);
     }
 
+    /// <summary>
+    /// Finds the closest segment to a given point, and the corresponding point on the segment.
+    /// </summary>
+    /// <param name="p">The point to which the closest segment is sought.</param>
+    /// <param name="disSquared">Outputs the squared distance from <paramref name="p"/> to the closest point on the segment.</param>
+    /// <returns>A tuple containing the closest <see cref="Segment"/> and the closest point on that segment as a <see cref="CollisionPoint"/>.</returns>
+    /// <remarks>
+    /// This method iterates through each segment of the polyline
+    /// and finds the closest point on each segment to <paramref name="p"/>.
+    /// The closest of these segments and points is returned.
+    /// </remarks>
     public (Segment segment, CollisionPoint segmentPoint) GetClosestSegment(Vector2 p, out float disSquared)
     {
         disSquared = -1;
@@ -620,3 +801,4 @@ public partial class Polyline
     }
 
 }
+

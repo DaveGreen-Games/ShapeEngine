@@ -95,5 +95,4 @@ public class PolylineCollider : Collider
     /// </summary>
     /// <returns>The <see cref="Polyline"/> shape.</returns>
     public override Polyline GetPolylineShape() => shape;
-   
 }

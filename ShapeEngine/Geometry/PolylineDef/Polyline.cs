@@ -12,23 +12,66 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.PolylineDef;
 
+/// <summary>
+/// Represents a polyline, which is a series of connected points in 2D space.
+/// Provides methods for geometric operations and shape conversions.
+/// </summary>
+/// <remarks>
+/// Points should be provided in counter-clockwise (CCW) order for correct geometric behavior.
+/// Use the <see cref="ReverseOrder"/> method if your points are in clockwise (CW) order.
+/// </remarks>
 public partial class Polyline : Points, IEquatable<Polyline>
 {
     #region Constructors
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Polyline"/> class with no points.
+    /// </summary>
     public Polyline() { }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Polyline"/> class with a specified capacity.
+    /// </summary>
+    /// <param name="capacity">The initial number of points the polyline can contain without resizing.</param>
     public Polyline(int capacity) : base(capacity) { }
     
     /// <summary>
-    /// Points should be in CCW order. Use Reverse if they are in CW order.
+    /// Initializes a new instance of the <see cref="Polyline"/> class from a collection of points.
     /// </summary>
-    /// <param name="points"></param>
+    /// <param name="points">The points to initialize the polyline with.
+    /// Should be in CCW order for correct geometric operations.</param>
+    /// <remarks>
+    /// If the points are in CW order, use the <see cref="ReverseOrder"/> method to correct the order.
+    /// </remarks>
     public Polyline(IEnumerable<Vector2> points) { AddRange(points); }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Polyline"/> class from an existing <see cref="Points"/> collection.
+    /// </summary>
+    /// <param name="points">The <see cref="Points"/> collection to copy points from.</param>
     public Polyline(Points points) : base(points.Count) { AddRange(points); }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Polyline"/> class by copying another <see cref="Polyline"/>.
+    /// </summary>
+    /// <param name="polyLine">The <see cref="Polyline"/> to copy points from.</param>
     public Polyline(Polyline polyLine) : base(polyLine.Count) { AddRange(polyLine); }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Polyline"/> class from a <see cref="Polygon"/>.
+    /// </summary>
+    /// <param name="poly">The <see cref="Polygon"/> whose points will be used to initialize the polyline.</param>
     public Polyline(Polygon poly) : base(poly.Count) { AddRange(poly); }
     #endregion
 
     #region Equals & HashCode
+    /// <summary>
+    /// Determines whether the specified <see cref="Polyline"/> is equal to the current <see cref="Polyline"/>.
+    /// </summary>
+    /// <param name="other">The <see cref="Polyline"/> to compare with the current polyline.</param>
+    /// <returns><c>true</c> if the polylines are equal; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// Equality is determined by comparing the number of points and the similarity of each corresponding point.
+    /// </remarks>
     public bool Equals(Polyline? other)
     {
         if (other == null) return false;
@@ -40,12 +83,30 @@ public partial class Polyline : Points, IEquatable<Polyline>
         }
         return true;
     }
+    
+    /// <summary>
+    /// Determines whether the specified object is equal to the current <see cref="Polyline"/>.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current polyline.</param>
+    /// <returns><c>true</c> if the specified object is a <see cref="Polyline"/> and is equal to the current polyline; otherwise, <c>false</c>.</returns>
+    public override bool Equals(object? obj)
+    {
+        return Equals(obj as Polyline);
+    }
+    /// <summary>
+    /// Returns a hash code for the current <see cref="Polyline"/>.
+    /// </summary>
+    /// <returns>A hash code for the current polyline.</returns>
     public override int GetHashCode() => Game.GetHashCode(this);
 
     #endregion
 
     #region Shapes
 
+    /// <summary>
+    /// Calculates the minimal bounding circle that contains all points of the polyline.
+    /// </summary>
+    /// <returns>A <see cref="Circle"/> that bounds the polyline.</returns>
     public Circle GetBoundingCircle()
     {
         float maxD = 0f;
@@ -61,6 +122,10 @@ public partial class Polyline : Points, IEquatable<Polyline>
 
         return new Circle(origin, MathF.Sqrt(maxD));
     }
+    /// <summary>
+    /// Calculates the axis-aligned bounding box that contains all points of the polyline.
+    /// </summary>
+    /// <returns>A <see cref="Rect"/> that bounds the polyline.</returns>
     public Rect GetBoundingBox()
     {
         if (Count < 2) return new();
@@ -74,11 +139,12 @@ public partial class Polyline : Points, IEquatable<Polyline>
         return r;
     }
 
-    /// <summary>
-    /// Return the segments of the polyline. If points are in ccw order the normals face to the right of the direction of the segments.
-    /// If InsideNormals = true the normals face to the left of the direction of the segments.
-    /// </summary>
-    /// <returns></returns>
+   /// <summary>
+   /// Returns the segments (edges) of the polyline as a <see cref="Segments"/> collection.
+   /// If the points are in counter-clockwise (CCW) order, the segment normals face to the right of the segment direction.
+   /// If <c>InsideNormals</c> is true, the normals face to the left of the segment direction.
+   /// </summary>
+   /// <returns>A <see cref="Segments"/> collection representing the polyline's edges.</returns>
     public Segments GetEdges()
     {
         if (Count <= 1) return new();
@@ -91,12 +157,26 @@ public partial class Polyline : Points, IEquatable<Polyline>
         }
         return segments;
     }
-    
+    /// <summary>
+    /// Converts this <see cref="Polyline"/> to a <see cref="Points"/> collection containing the same points.
+    /// </summary>
+    /// <returns>A new <see cref="Points"/> instance with the points from this polyline.</returns>
     public Points ToPoints() { return new(this); }
 
     #endregion
     
     #region Points & Vertex
+    /// <summary>
+    /// Reverses the order of points in the polyline.
+    /// After calling this method,
+    /// the polyline will be in clockwise (CW) order if it was counter-clockwise (CCW) before and vice versa.
+    /// </summary>
+    public void ReverseOrder() => Reverse();
+    /// <summary>
+    /// Gets the segment (edge) between the two points at the specified index.
+    /// </summary>
+    /// <param name="index">The index of the segment to retrieve.</param>
+    /// <returns>The <see cref="Segment"/> at the specified index, or an empty segment if the index is out of range.</returns>
     public Segment GetSegment(int index)
     { 
         if (index < 0) return new Segment();
@@ -106,7 +186,15 @@ public partial class Polyline : Points, IEquatable<Polyline>
         return new Segment(this[first], this[second]);
     }
     
+    /// <summary>
+    /// Gets a random vertex (point) from the polyline.
+    /// </summary>
+    /// <returns>A random <see cref="Vector2"/> vertex from the polyline.</returns>
     public Vector2 GetRandomVertex() { return Rng.Instance.RandCollection(this); }
+    /// <summary>
+    /// Gets a random edge (segment) from the polyline.
+    /// </summary>
+    /// <returns>A random <see cref="Segment"/> edge from the polyline.</returns>
     public Segment GetRandomEdge() => GetEdges().GetRandomSegment();
     #endregion
     
@@ -115,7 +203,7 @@ public partial class Polyline : Points, IEquatable<Polyline>
     /// <summary>
     /// Interpolate the edge(segment) between each pair of points using t and return the new interpolated points.
     /// </summary>
-    /// <param name="t">The value t for interpolation. Should be between 0 - 1.</param>
+    /// <param name="t">The value t for interpolation. Should be between <c>0 - 1</c>.</param>
     /// <returns></returns>
     public Points? InterpolatedEdgePoints(float t)
     {
@@ -135,8 +223,8 @@ public partial class Polyline : Points, IEquatable<Polyline>
     /// <summary>
     /// Interpolate the edge(segment) between each pair of points using t and return the new interpolated points.
     /// </summary>
-    /// <param name="t">The value t for interpolation. Should be between 0 - 1.</param>
-    /// <param name="steps">Recursive steps. The amount of times the result of InterpolatedEdgesPoints will be run through InterpolateEdgePoints.</param>
+    /// <param name="t">The value t for interpolation. Should be between <c>0 - 1</c>.</param>
+    /// <param name="steps">Recursive steps. The number of times the result of InterpolatedEdgesPoints will be run through InterpolateEdgePoints.</param>
     /// <returns></returns>
     public Points? InterpolatedEdgePoints(float t, int steps)
     {
@@ -168,6 +256,12 @@ public partial class Polyline : Points, IEquatable<Polyline>
     #endregion
     
     #region Static
+    /// <summary>
+    /// Creates a polyline shape from a set of relative points and a transformation.
+    /// </summary>
+    /// <param name="relative">The relative points that define the shape of the polyline.</param>
+    /// <param name="transform">The transformation to apply to the relative points.</param>
+    /// <returns>A new <see cref="Polyline"/> instance representing the transformed shape.</returns>
     public static Polyline GetShape(Points relative, Transform2D transform)
     {
         if (relative.Count < 3) return new();
@@ -179,7 +273,7 @@ public partial class Polyline : Points, IEquatable<Polyline>
         }
         return shape;
     }
+
+    
     #endregion
 }
-
-
