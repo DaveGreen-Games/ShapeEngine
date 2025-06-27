@@ -8,6 +8,16 @@ namespace ShapeEngine.Geometry.RectDef;
 
 public readonly partial struct Rect
 {
+    /// <summary>
+    /// Checks if a bounding circle is out of the rectangle bounds and wraps it around if necessary.
+    /// </summary>
+    /// <param name="boundingCircle">The circle to check and wrap around the rectangle bounds.</param>
+    /// <returns>
+    /// A tuple containing a boolean indicating if the circle was out of bounds and the new position for the circle.
+    /// </returns>
+    /// <remarks>
+    /// If the circle's center plus or minus its radius exceeds the rectangle's bounds, its position is wrapped to the opposite side.
+    /// </remarks>
     public (bool outOfBounds, Vector2 newPos) BoundsWrapAround(Circle boundingCircle)
     {
         var pos = boundingCircle.Center;
@@ -39,6 +49,16 @@ public readonly partial struct Rect
         return (outOfBounds, newPos);
     }
 
+    /// <summary>
+    /// Checks if a bounding rectangle is out of the rectangle bounds and wraps it around if necessary.
+    /// </summary>
+    /// <param name="boundingBox">The rectangle to check and wrap around the rectangle bounds.</param>
+    /// <returns>
+    /// A tuple containing a boolean indicating if the rectangle was out of bounds and the new position for the rectangle.
+    /// </returns>
+    /// <remarks>
+    /// If the rectangle's center plus or minus half its size exceeds the rectangle's bounds, its position is wrapped to the opposite side.
+    /// </remarks>
     public (bool outOfBounds, Vector2 newPos) BoundsWrapAround(Rect boundingBox)
     {
         var pos = boundingBox.Center;
@@ -70,6 +90,16 @@ public readonly partial struct Rect
         return (outOfBounds, newPos);
     }
 
+    /// <summary>
+    /// Checks for collision between the rectangle and a bounding circle, returning collision information.
+    /// </summary>
+    /// <param name="boundingCircle">The circle to check for collision with the rectangle.</param>
+    /// <returns>
+    /// A <see cref="BoundsCollisionInfo"/> object containing details about the collision points and normals.
+    /// </returns>
+    /// <remarks>
+    /// The method checks both horizontal and vertical bounds and provides the closest collision points and normals if a collision occurs.
+    /// </remarks>
     public BoundsCollisionInfo BoundsCollision(Circle boundingCircle)
     {
         var pos = boundingCircle.Center;
@@ -111,6 +141,16 @@ public readonly partial struct Rect
         return new(pos, horizontal, vertical);
     }
 
+    /// <summary>
+    /// Checks for collision between the rectangle and a bounding rectangle, returning collision information.
+    /// </summary>
+    /// <param name="boundingBox">The rectangle to check for collision with the rectangle.</param>
+    /// <returns>
+    /// A <see cref="BoundsCollisionInfo"/> object containing details about the collision points and normals.
+    /// </returns>
+    /// <remarks>
+    /// The method checks both horizontal and vertical bounds and provides the closest collision points and normals if a collision occurs.
+    /// </remarks>
     public BoundsCollisionInfo BoundsCollision(Rect boundingBox)
     {
         var pos = boundingBox.Center;

@@ -15,6 +15,19 @@ namespace ShapeEngine.Geometry.RectDef;
 
 public readonly partial struct Rect
 {
+    /// <summary>
+    /// Returns the closest point on the rectangle (defined by four corners) to a given point.
+    /// </summary>
+    /// <param name="a">Top-left corner of the rectangle.</param>
+    /// <param name="b">Bottom-left corner of the rectangle.</param>
+    /// <param name="c">Bottom-right corner of the rectangle.</param>
+    /// <param name="d">Top-right corner of the rectangle.</param>
+    /// <param name="p">The point to find the closest point to.</param>
+    /// <param name="disSquared">The squared distance from <paramref name="p"/> to the closest point on the rectangle.</param>
+    /// <returns>The closest point on the rectangle to <paramref name="p"/>.</returns>
+    /// <remarks>
+    /// This method checks all four edges of the rectangle and returns the closest point on any edge.
+    /// </remarks>
     public static Vector2 GetClosestPointRectPoint(Vector2 a, Vector2 b, Vector2 c, Vector2 d, Vector2 p, out float disSquared)
     {
         var min = Segment.GetClosestPointSegmentPoint(a, b, p, out float minDisSq);
@@ -36,14 +49,23 @@ public readonly partial struct Rect
         cp = Segment.GetClosestPointSegmentPoint(d, a, p, out dis);
         if (dis < minDisSq)
         {
-            disSquared = dis;
-            return cp;
+            min = cp;
+            minDisSq = dis;
         }
 
         disSquared = minDisSq;
         return min;
     }
 
+    /// <summary>
+    /// Returns the closest point on this rectangle to a given point, along with the outward normal at that point.
+    /// </summary>
+    /// <param name="p">The point to find the closest point to.</param>
+    /// <param name="disSquared">The squared distance from <paramref name="p"/> to the closest point on the rectangle.</param>
+    /// <returns>A <see cref="CollisionPoint"/> containing the closest point and the outward normal.</returns>
+    /// <remarks>
+    /// The normal is perpendicular to the edge where the closest point lies, pointing outward from the rectangle.
+    /// </remarks>
     public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared)
     {
         var min = Segment.GetClosestPointSegmentPoint(A, B, p, out disSquared);
@@ -76,6 +98,16 @@ public readonly partial struct Rect
         return new(min, normal.GetPerpendicularRight().Normalize());
     }
 
+    /// <summary>
+    /// Returns the closest point on this rectangle to a given point, along with the outward normal and the edge index.
+    /// </summary>
+    /// <param name="p">The point to find the closest point to.</param>
+    /// <param name="disSquared">The squared distance from <paramref name="p"/> to the closest point on the rectangle.</param>
+    /// <param name="index">The index of the edge (0 = AB, 1 = BC, 2 = CD, 3 = DA) where the closest point lies.</param>
+    /// <returns>A <see cref="CollisionPoint"/> containing the closest point and the outward normal.</returns>
+    /// <remarks>
+    /// The normal is perpendicular to the edge where the closest point lies, pointing outward from the rectangle.
+    /// </remarks>
     public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared, out int index)
     {
         var min = Segment.GetClosestPointSegmentPoint(A, B, p, out disSquared);
@@ -112,6 +144,11 @@ public readonly partial struct Rect
         return new(min, normal.GetPerpendicularRight().Normalize());
     }
 
+    /// <summary>
+    /// Returns the closest point and normal between this rectangle and a line.
+    /// </summary>
+    /// <param name="other">The line to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points, normals, squared distance, and edge index.</returns>
     public ClosestPointResult GetClosestPoint(Line other)
     {
         var closestResult = Segment.GetClosestPointSegmentLine(A, B, other.Point, other.Direction, out float disSquared);
@@ -152,6 +189,11 @@ public readonly partial struct Rect
             selfIndex);
     }
 
+    /// <summary>
+    /// Returns the closest point and normal between this rectangle and a ray.
+    /// </summary>
+    /// <param name="other">The ray to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points, normals, squared distance, and edge index.</returns>
     public ClosestPointResult GetClosestPoint(Ray other)
     {
         var closestResult = Segment.GetClosestPointSegmentRay(A, B, other.Point, other.Direction, out float disSquared);
@@ -191,6 +233,11 @@ public readonly partial struct Rect
             selfIndex);
     }
 
+    /// <summary>
+    /// Returns the closest point and normal between this rectangle and a segment.
+    /// </summary>
+    /// <param name="other">The segment to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points, normals, squared distance, and edge index.</returns>
     public ClosestPointResult GetClosestPoint(Segment other)
     {
         var closestResult = Segment.GetClosestPointSegmentSegment(A, B, other.Start, other.End, out float disSquared);
@@ -231,6 +278,11 @@ public readonly partial struct Rect
             selfIndex);
     }
 
+    /// <summary>
+    /// Returns the closest point and normal between this rectangle and a circle.
+    /// </summary>
+    /// <param name="other">The circle to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points, normals, squared distance, and edge index.</returns>
     public ClosestPointResult GetClosestPoint(Circle other)
     {
         var closestResult = Segment.GetClosestPointSegmentCircle(A, B, other.Center, other.Radius, out float disSquared);
@@ -271,6 +323,11 @@ public readonly partial struct Rect
             selfIndex);
     }
 
+    /// <summary>
+    /// Returns the closest point and normal between this rectangle and a triangle.
+    /// </summary>
+    /// <param name="other">The triangle to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points, normals, squared distance, and edge indices.</returns>
     public ClosestPointResult GetClosestPoint(Triangle other)
     {
         var closestResult = Segment.GetClosestPointSegmentSegment(A, B, other.A, other.B, out float disSquared);
@@ -404,6 +461,11 @@ public readonly partial struct Rect
             otherIndex);
     }
 
+    /// <summary>
+    /// Returns the closest point and normal between this rectangle and a quad.
+    /// </summary>
+    /// <param name="other">The quad to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points, normals, squared distance, and edge indices.</returns>
     public ClosestPointResult GetClosestPoint(Quad other)
     {
         var closestResult = Segment.GetClosestPointSegmentSegment(A, B, other.A, other.B, out float disSquared);
@@ -579,6 +641,11 @@ public readonly partial struct Rect
             otherIndex);
     }
 
+    /// <summary>
+    /// Returns the closest point and normal between this rectangle and another rectangle.
+    /// </summary>
+    /// <param name="other">The rectangle to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points, normals, squared distance, and edge indices.</returns>
     public ClosestPointResult GetClosestPoint(Rect other)
     {
         var closestResult = Segment.GetClosestPointSegmentSegment(A, B, other.A, other.B, out float disSquared);
@@ -753,7 +820,11 @@ public readonly partial struct Rect
             selfIndex,
             otherIndex);
     }
-
+    /// <summary>
+    /// Returns the closest point and normal between this rectangle and a polygon.
+    /// </summary>
+    /// <param name="other">The polygon to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points, normals, squared distance, and edge indices.</returns>
     public ClosestPointResult GetClosestPoint(Polygon other)
     {
         if (other.Count < 3) return new();
@@ -822,7 +893,11 @@ public readonly partial struct Rect
             selfIndex,
             otherIndex);
     }
-
+    /// <summary>
+    /// Returns the closest point and normal between this rectangle and a polyline.
+    /// </summary>
+    /// <param name="other">The polyline to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points, normals, squared distance, and edge indices.</returns>
     public ClosestPointResult GetClosestPoint(Polyline other)
     {
         if (other.Count < 2) return new();
@@ -891,6 +966,11 @@ public readonly partial struct Rect
             otherIndex);
     }
 
+    /// <summary>
+    /// Returns the closest point and normal between this rectangle and a set of segments.
+    /// </summary>
+    /// <param name="other">The segments to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points, normals, squared distance, and edge indices.</returns>
     public ClosestPointResult GetClosestPoint(Segments other)
     {
         if (other.Count <= 0) return new();
@@ -911,6 +991,12 @@ public readonly partial struct Rect
         return closestResult;
     }
 
+    /// <summary>
+    /// Returns the closest segment and its closest point to a given point.
+    /// </summary>
+    /// <param name="p">The point to compare against.</param>
+    /// <param name="disSquared">The squared distance from <paramref name="p"/> to the closest segment.</param>
+    /// <returns>A tuple containing the closest <see cref="Segment"/> and its closest <see cref="CollisionPoint"/>.</returns>
     public (Segment segment, CollisionPoint segmentPoint) GetClosestSegment(Vector2 p, out float disSquared)
     {
         var closestSegment = TopSegment;
@@ -947,6 +1033,13 @@ public readonly partial struct Rect
         return (closestSegment, closestResult);
     }
 
+    /// <summary>
+    /// Returns the closest vertex of the rectangle to a given point.
+    /// </summary>
+    /// <param name="p">The point to compare against.</param>
+    /// <param name="disSquared">The squared distance from <paramref name="p"/> to the closest vertex.</param>
+    /// <param name="index">The index of the closest vertex (0 = TopLeft, 1 = BottomLeft, 2 = BottomRight, 3 = TopRight).</param>
+    /// <returns>The closest <see cref="Vector2"/> vertex.</returns>
     public Vector2 GetClosestVertex(Vector2 p, out float disSquared, out int index)
     {
         var closest = TopLeft;
@@ -980,6 +1073,13 @@ public readonly partial struct Rect
         return closest;
     }
 
+    /// <summary>
+    /// Returns the furthest vertex of the rectangle from a given point.
+    /// </summary>
+    /// <param name="p">The point to compare against.</param>
+    /// <param name="disSquared">The squared distance from <paramref name="p"/> to the furthest vertex.</param>
+    /// <param name="index">The index of the furthest vertex (0 = TopLeft, 1 = BottomLeft, 2 = BottomRight, 3 = TopRight).</param>
+    /// <returns>The furthest <see cref="Vector2"/> vertex.</returns>
     public Vector2 GetFurthestVertex(Vector2 p, out float disSquared, out int index)
     {
         var furthest = TopLeft;

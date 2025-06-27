@@ -13,59 +13,130 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.RectDef;
 
+/// <summary>
+/// Represents a rectangle defined by its top-left corner, width, and height, with various geometric and utility operations.
+/// </summary>
 public readonly partial struct Rect : IEquatable<Rect>
 {
     #region Members
 
+    /// <summary>
+    /// Gets the X-coordinate of the top-left corner of the rectangle.
+    /// </summary>
     public readonly float X;
+    /// <summary>
+    /// Gets the Y-coordinate of the top-left corner of the rectangle.
+    /// </summary>
     public readonly float Y;
+    /// <summary>
+    /// Gets the width of the rectangle.
+    /// </summary>
     public readonly float Width;
+    /// <summary>
+    /// Gets the height of the rectangle.
+    /// </summary>
     public readonly float Height;
 
     #endregion
 
     #region Getter Setter
+    /// <summary>
+    /// Gets the top-left corner of the rectangle as a <see cref="Vector2"/>.
+    /// </summary>
     public Vector2 TopLeft => new(X, Y);
+    /// <summary>
+    /// Gets the top-right corner of the rectangle as a <see cref="Vector2"/>.
+    /// </summary>
     public Vector2 TopRight => new(X + Width, Y);
+    /// <summary>
+    /// Gets the bottom-right corner of the rectangle as a <see cref="Vector2"/>.
+    /// </summary>
     public Vector2 BottomRight => new(X + Width, Y + Height);
+    /// <summary>
+    /// Gets the bottom-left corner of the rectangle as a <see cref="Vector2"/>.
+    /// </summary>
     public Vector2 BottomLeft => new(X, Y + Height);
+    /// <summary>
+    /// Gets the center point of the rectangle as a <see cref="Vector2"/>.
+    /// </summary>
     public Vector2 Center => new(X + Width * 0.5f, Y + Height * 0.5f);
 
     /// <summary>
-    /// Top Left
+    /// Gets the top-left corner of the rectangle (alias for <see cref="TopLeft"/>).
     /// </summary>
     public Vector2 A => TopLeft;
     /// <summary>
-    /// Bottom Left
+    /// Gets the bottom-left corner of the rectangle (alias for <see cref="BottomLeft"/>).
     /// </summary>
     public Vector2 B => BottomLeft;
     /// <summary>
-    /// Bottom Right
+    /// Gets the bottom-right corner of the rectangle (alias for <see cref="BottomRight"/>).
     /// </summary>
     public Vector2 C => BottomRight;
     /// <summary>
-    /// Top Right
+    /// Gets the top-right corner of the rectangle (alias for <see cref="TopRight"/>).
     /// </summary>
     public Vector2 D => TopRight;
 
+    /// <summary>
+    /// Gets all four corners of the rectangle as a tuple: (topLeft, bottomLeft, bottomRight, topRight).
+    /// </summary>
     public readonly (Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr) Corners =>
         (TopLeft, BottomLeft, BottomRight, TopRight);
 
+    /// <summary>
+    /// Gets the Y-coordinate of the top edge of the rectangle.
+    /// </summary>
     public float Top => Y;
+    /// <summary>
+    /// Gets the Y-coordinate of the bottom edge of the rectangle.
+    /// </summary>
     public float Bottom => Y + Height;
+    /// <summary>
+    /// Gets the X-coordinate of the left edge of the rectangle.
+    /// </summary>
     public float Left => X;
+    /// <summary>
+    /// Gets the X-coordinate of the right edge of the rectangle.
+    /// </summary>
     public float Right => X + Width;
 
+    /// <summary>
+    /// Gets the left edge of the rectangle as a <see cref="Segment"/>.
+    /// </summary>
     public Segment LeftSegment => new(TopLeft, BottomLeft);
+    /// <summary>
+    /// Gets the bottom edge of the rectangle as a <see cref="Segment"/>.
+    /// </summary>
     public Segment BottomSegment => new(BottomLeft, BottomRight);
+    /// <summary>
+    /// Gets the right edge of the rectangle as a <see cref="Segment"/>.
+    /// </summary>
     public Segment RightSegment => new(BottomRight, TopRight);
+    /// <summary>
+    /// Gets the top edge of the rectangle as a <see cref="Segment"/>.
+    /// </summary>
     public Segment TopSegment => new(TopRight, TopLeft);
+    /// <summary>
+    /// Gets the size of the rectangle as a <see cref="Size"/>.
+    /// </summary>
     public Size Size => new(Width, Height);
+    /// <summary>
+    /// Gets the rectangle as a <see cref="Rectangle"/> structure.
+    /// </summary>
     public Rectangle Rectangle => new(X, Y, Width, Height);
 
     #endregion
 
     #region Constructors
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Rect"/> struct with the specified position and size.
+    /// </summary>
+    /// <param name="x">The X-coordinate of the top-left corner.</param>
+    /// <param name="y">The Y-coordinate of the top-left corner.</param>
+    /// <param name="width">The width of the rectangle.</param>
+    /// <param name="height">The height of the rectangle.</param>
+    /// <remarks>Use this constructor to create a rectangle by specifying its position and size directly.</remarks>
     public Rect(float x, float y, float width, float height)
     {
         this.X = x;
@@ -74,6 +145,12 @@ public readonly partial struct Rect : IEquatable<Rect>
         this.Height = height;
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Rect"/> struct from two corner points.
+    /// </summary>
+    /// <param name="topLeft">The top-left corner of the rectangle.</param>
+    /// <param name="bottomRight">The bottom-right corner of the rectangle.</param>
+    /// <remarks>Width and height are calculated from the difference between the two points.</remarks>
     public Rect(Vector2 topLeft, Vector2 bottomRight)
     {
         var final = Fix(topLeft, bottomRight);
@@ -83,6 +160,12 @@ public readonly partial struct Rect : IEquatable<Rect>
         this.Height = final.bottomRight.Y - this.Y;
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Rect"/> struct from a top-left point and a size.
+    /// </summary>
+    /// <param name="topLeft">The top-left corner of the rectangle.</param>
+    /// <param name="size">The size of the rectangle.</param>
+    /// <remarks>Use this constructor to create a rectangle by specifying its top-left corner and size.</remarks>
     public Rect(Vector2 topLeft, Size size)
     {
         this.X = topLeft.X;
@@ -90,6 +173,13 @@ public readonly partial struct Rect : IEquatable<Rect>
         this.Width = size.Width;
         this.Height = size.Height;
     }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Rect"/> struct from a position, size, and alignment anchor.
+    /// </summary>
+    /// <param name="position">The reference position for the rectangle.</param>
+    /// <param name="size">The size of the rectangle.</param>
+    /// <param name="alignement">The anchor point used to align the rectangle relative to the position.</param>
+    /// <remarks>The anchor point determines how the rectangle is positioned relative to the given position.</remarks>
     public Rect(Vector2 position, Size size, AnchorPoint alignement)
     {
         var offset = size * alignement.ToVector2();
@@ -100,6 +190,10 @@ public readonly partial struct Rect : IEquatable<Rect>
         this.Height = size.Height;
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Rect"/> struct from a <see cref="Rectangle"/> structure.
+    /// </summary>
+    /// <param name="rect">The rectangle structure.</param>
     public Rect(Rectangle rect)
     {
         this.X = rect.X;
@@ -110,6 +204,11 @@ public readonly partial struct Rect : IEquatable<Rect>
     #endregion
 
     #region Equality & HashCode
+    /// <summary>
+    /// Determines whether the specified <see cref="Rect"/> is equal to the current <see cref="Rect"/>.
+    /// </summary>
+    /// <param name="other">The rectangle to compare with the current rectangle.</param>
+    /// <returns><c>true</c> if the specified rectangle is equal to the current rectangle; otherwise, <c>false</c>.</returns>
     public bool Equals(Rect other)
     {
         return
@@ -124,22 +223,43 @@ public readonly partial struct Rect : IEquatable<Rect>
         //    Math.Abs(Height - other.Height) < GameLoop.FloatComparisonTolerance;
     }
 
+    /// <summary>
+    /// Determines whether two <see cref="Rect"/> instances are equal.
+    /// </summary>
+    /// <param name="left">The first rectangle to compare.</param>
+    /// <param name="right">The second rectangle to compare.</param>
+    /// <returns><c>true</c> if the rectangles are equal; otherwise, <c>false</c>.</returns>
     public static bool operator ==(Rect left, Rect right)
     {
         return left.Equals(right);
     }
 
+    /// <summary>
+    /// Determines whether two <see cref="Rect"/> instances are not equal.
+    /// </summary>
+    /// <param name="left">The first rectangle to compare.</param>
+    /// <param name="right">The second rectangle to compare.</param>
+    /// <returns><c>true</c> if the rectangles are not equal; otherwise, <c>false</c>.</returns>
     public static bool operator !=(Rect left, Rect right)
     {
         return !(left == right);
     }
 
+    /// <summary>
+    /// Determines whether the specified object is equal to the current <see cref="Rect"/>.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current rectangle.</param>
+    /// <returns><c>true</c> if the specified object is a <see cref="Rect"/> and is equal to the current rectangle; otherwise, <c>false</c>.</returns>
     public override bool Equals(object? obj)
     {
         if (obj is Rect r) return Equals(r);
         return false;
     }
 
+    /// <summary>
+    /// Returns a hash code for the current <see cref="Rect"/>.
+    /// </summary>
+    /// <returns>A hash code for the current rectangle.</returns>
     public override int GetHashCode()
     {
         // return HashCode.Combine(X, Y, Width, Height);
@@ -165,6 +285,12 @@ public readonly partial struct Rect : IEquatable<Rect>
         return poly;
     }
 
+    /// <summary>
+    /// Rotates the corners of the rectangle and returns the resulting points as a <see cref="Points"/> list.
+    /// </summary>
+    /// <param name="angleDeg">The angle in degrees to rotate.</param>
+    /// <param name="alignement">The anchor point for rotation.</param>
+    /// <returns>A <see cref="Points"/> list of the rotated corners.</returns>
     public Points RotateList(float angleDeg, AnchorPoint alignement)
     {
         var points = ToPoints();
@@ -173,23 +299,44 @@ public readonly partial struct Rect : IEquatable<Rect>
         return points;
     }
 
-    public Points ToPoints() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
-    public Polygon ToPolygon() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
-    public Polyline ToPolyline() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
+    /// <summary>
+    /// Converts the rectangle to a list of points representing its corners.
+    /// </summary>
+    /// <returns>A <see cref="Points"/> object containing the corners of the rectangle.</returns>
+    public Points ToPoints() { return [TopLeft, BottomLeft, BottomRight, TopRight]; }
+    /// <summary>
+    /// Converts the rectangle to a polygon representing its shape.
+    /// </summary>
+    /// <returns>A <see cref="Polygon"/> object representing the rectangle.</returns>
+    public Polygon ToPolygon() { return [TopLeft, BottomLeft, BottomRight, TopRight]; }
+    /// <summary>
+    /// Converts the rectangle to a polyline representing its outline.
+    /// </summary>
+    /// <returns>A <see cref="Polyline"/> object representing the rectangle's outline.</returns>
+    public Polyline ToPolyline() { return [TopLeft, BottomLeft, BottomRight, TopRight]; }
+    /// <summary>
+    /// Gets the edges of the rectangle as segments.
+    /// </summary>
+    /// <returns>A <see cref="Segments"/> object containing the segments representing the edges of the rectangle in counter-clockwise order: left, bottom, right, top.</returns>
     public Segments GetEdges() 
     {
-        var A = TopLeft;
-        var B = BottomLeft;
-        var C = BottomRight;
-        var D = TopRight;
+        var a = TopLeft;
+        var b = BottomLeft;
+        var c = BottomRight;
+        var d = TopRight;
 
-        Segment left = new(A, B);
-        Segment bottom = new(B, C);
-        Segment right = new(C, D);
-        Segment top = new(D, A);
-        return new() { left, bottom, right, top };
+        Segment left = new(a, b);
+        Segment bottom = new(b, c);
+        Segment right = new(c, d);
+        Segment top = new(d, a);
+        return [left, bottom, right, top];
     }
 
+    /// <summary>
+    /// Triangulates the rectangle into two triangles.
+    /// </summary>
+    /// <returns>A <see cref="Triangulation"/> object containing the two triangles that make up the rectangle.
+    /// The triangles are ordered as (TopLeft, BottomLeft, BottomRight) and (TopLeft, BottomRight, TopRight).</returns>
     public Triangulation Triangulate()
     {
         Triangle a = new(TopLeft, BottomLeft, BottomRight);
@@ -197,6 +344,14 @@ public readonly partial struct Rect : IEquatable<Rect>
         return new Triangulation() { a, b };
     }
 
+    /// <summary>
+    /// Gets points for slanted corners of the rectangle.
+    /// </summary>
+    /// <param name="tlCorner">Top-left corner slant amount.</param>
+    /// <param name="trCorner">Top-right corner slant amount.</param>
+    /// <param name="brCorner">Bottom-right corner slant amount.</param>
+    /// <param name="blCorner">Bottom-left corner slant amount.</param>
+    /// <returns>A <see cref="Polygon"/> object containing the slanted corner points.</returns>
     public Polygon GetSlantedCornerPoints(float tlCorner, float trCorner, float brCorner, float blCorner)
     {
         var tl = TopLeft;
@@ -337,6 +492,11 @@ public readonly partial struct Rect : IEquatable<Rect>
     #endregion
     
     #region Points & Vertex
+    /// <summary>
+    /// Gets the segment of the rectangle at the specified index.
+    /// </summary>
+    /// <param name="index">The index of the segment (0-3).</param>
+    /// <returns>The <see cref="Segment"/> representing the specified segment of the rectangle.</returns>
     public Segment GetSegment(int index)
     {
         if (index < 0) return new Segment();
@@ -346,19 +506,39 @@ public readonly partial struct Rect : IEquatable<Rect>
         if(i == 2) return new Segment(C, D);
         return new Segment(D, A);
     }
+    /// <summary>
+    /// Gets a point on the rectangle based on the specified alignment anchor.
+    /// </summary>
+    /// <param name="alignement">The anchor point used to align the point relative to the rectangle.</param>
+    /// <returns>A <see cref="Vector2"/> representing the point on the rectangle.</returns>
     public Vector2 GetPoint(AnchorPoint alignement)
     {
         var offset = Size * alignement.ToVector2();
         return TopLeft + offset;
     }
+    /// <summary>
+    /// Rotates the corners of the rectangle around a pivot point by the specified angle.
+    /// </summary>
+    /// <param name="pivot">The pivot point for the rotation.</param>
+    /// <param name="angleDeg">The angle in degrees to rotate the corners.</param>
+    /// <returns>A tuple containing the rotated corners of the rectangle.</returns>
     public (Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr) RotateCorners(Vector2 pivot, float angleDeg)
     {
         var poly = ToPolygon();
         poly.ChangeRotation(angleDeg * ShapeMath.DEGTORAD, pivot);
         return new(poly[0], poly[1], poly[2], poly[3]);
     }
+    /// <summary>
+    /// Gets a random point inside the rectangle.
+    /// </summary>
+    /// <returns>A <see cref="Vector2"/> representing a random point inside the rectangle.</returns>
     public Vector2 GetRandomPointInside() { return new(Rng.Instance.RandF(X, X + Width), Rng.Instance.RandF(Y, Y + Height)); }
     
+    /// <summary>
+    /// Gets a specified number of random points inside the rectangle.
+    /// </summary>
+    /// <param name="amount">The number of random points to generate.</param>
+    /// <returns>A <see cref="Points"/> object containing the random points inside the rectangle.</returns>
     public Points GetRandomPointsInside(int amount)
     {
         var points = new Points();
@@ -369,6 +549,10 @@ public readonly partial struct Rect : IEquatable<Rect>
         return points;
     }
 
+    /// <summary>
+    /// Gets a random vertex (corner) of the rectangle.
+    /// </summary>
+    /// <returns>A <see cref="Vector2"/> representing a random vertex of the rectangle.</returns>
     public Vector2 GetRandomVertex()
     {
         int randIndex = Rng.Instance.RandI(0, 3);
@@ -377,8 +561,21 @@ public readonly partial struct Rect : IEquatable<Rect>
         else if (randIndex == 2) return BottomRight;
         else return TopRight;
     }
+    /// <summary>
+    /// Gets a random edge of the rectangle as a <see cref="Segment"/>.
+    /// </summary>
+    /// <returns>A <see cref="Segment"/> representing a random edge of the rectangle.</returns>
     public Segment GetRandomEdge() => GetEdges().GetRandomSegment();
+    /// <summary>
+    /// Gets a random point on the perimeter of the rectangle.
+    /// </summary>
+    /// <returns>A <see cref="Vector2"/> representing a random point on the rectangle's edge.</returns>
     public Vector2 GetRandomPointOnEdge() => GetRandomEdge().GetRandomPoint();
+    /// <summary>
+    /// Gets a specified number of random points on the perimeter of the rectangle.
+    /// </summary>
+    /// <param name="amount">The number of random points to generate on the edge.</param>
+    /// <returns>A <see cref="Points"/> object containing the random points on the rectangle's edge.</returns>
     public Points GetRandomPointsOnEdge(int amount) => GetEdges().GetRandomPoints(amount);
 
 
@@ -394,9 +591,10 @@ public readonly partial struct Rect : IEquatable<Rect>
     public Vector2 GetCorner(int corner) => ToPolygon()[corner % 4];
 
     /// <summary>
-    /// Points are ordered in ccw order starting from the top left. (tl, bl, br, tr)
+    /// Gets the corners of the rectangle relative to a given position. Points are ordered in counter-clockwise order starting from the top left.
     /// </summary>
-    /// <returns></returns>
+    /// <param name="pos">The position to subtract from each corner.</param>
+    /// <returns>A <see cref="Polygon"/> containing the relative corner points.</returns>
     public Polygon GetPointsRelative(Vector2 pos)
     {
         var points = ToPolygon(); //GetPoints(rect);
@@ -412,9 +610,9 @@ public readonly partial struct Rect : IEquatable<Rect>
     /// <summary>
     /// Checks if the top left point is further up & left than the bottom right point and returns the correct points if necessary.
     /// </summary>
-    /// <param name="topLeft"></param>
-    /// <param name="bottomRight"></param>
-    /// <returns></returns>
+    /// <param name="topLeft">The top-left point.</param>
+    /// <param name="bottomRight">The bottom-right point.</param>
+    /// <returns>A tuple containing the corrected top-left and bottom-right points.</returns>
     public static (Vector2 topLeft, Vector2 bottomRight) Fix(Vector2 topLeft, Vector2 bottomRight)
     {
         Vector2 newTopLeft = new
@@ -428,15 +626,14 @@ public readonly partial struct Rect : IEquatable<Rect>
             MathF.Max(topLeft.Y, bottomRight.Y)
         );
 
-
         return (newTopLeft, newBottomRight);
     }
     /// <summary>
-    /// Construct 9 rects out of an outer and inner rect.
+    /// Constructs 9 rectangles out of an outer and inner rectangle.
     /// </summary>
-    /// <param name="inner">The inner rect. Has to be inside of the outer rect.</param>
-    /// <param name="outer">The outer rect. Has to be bigger than the inner rect.</param>
-    /// <returns>A list of rectangle in the order [TL,TC,TR,LC,C,RC,BL,BC,BR].</returns>
+    /// <param name="inner">The inner rectangle. Must be inside the outer rectangle.</param>
+    /// <param name="outer">The outer rectangle. Must be larger than the inner rectangle.</param>
+    /// <returns>A list of rectangles in the order [TL, TC, TR, LC, C, RC, BL, BC, BR].</returns>
     public static List<Rect> GetNineTiles(Rect inner, Rect outer)
     {
         List<Rect> tiles = new();
@@ -487,13 +684,13 @@ public readonly partial struct Rect : IEquatable<Rect>
     }
 
     /// <summary>
-    /// Returns the segments of a rect in ccw order. (tl -> bl, bl -> br, br -> tr, tr -> tl)
+    /// Returns the segments of a rectangle in counter-clockwise order. (tl -> bl, bl -> br, br -> tr, tr -> tl)
     /// </summary>
-    /// <param name="tl"></param>
-    /// <param name="bl"></param>
-    /// <param name="br"></param>
-    /// <param name="tr"></param>
-    /// <returns></returns>
+    /// <param name="tl">Top-left corner.</param>
+    /// <param name="bl">Bottom-left corner.</param>
+    /// <param name="br">Bottom-right corner.</param>
+    /// <param name="tr">Top-right corner.</param>
+    /// <returns>A <see cref="Segments"/> object containing the rectangle's edges.</returns>
     public static Segments GetEdges(Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr)
     {
         Segments segments = new()
@@ -503,19 +700,16 @@ public readonly partial struct Rect : IEquatable<Rect>
 
         return segments;
     }
+    /// <summary>
+    /// Creates a rectangle from a circle by using the circle's center and radius.
+    /// </summary>
+    /// <param name="c">The circle to create the rectangle from.</param>
+    /// <returns>A <see cref="Rect"/> representing the bounding rectangle of the circle.</returns>
     public static Rect FromCircle(Circle c) => new(c.Center, new Size(c.Radius, c.Radius), new (0.5f, 0.5f));
-    // public static bool IsPointInRect(Vector2 point, Vector2 topLeft, Vector2 size)
-    // {
-    //     float left = topLeft.X;
-    //     float top = topLeft.Y;
-    //     float right = topLeft.X + size.X;
-    //     float bottom = topLeft.Y + size.Y;
-    //
-    //     return left <= point.X && right >= point.X && top <= point.Y && bottom >= point.Y;
-    //     
-    //     // return (double) this.X <= (double) value.X && (double) value.X < (double) (this.X + this.Width) && (double) this.Y <= (double) value.Y && (double) value.Y < (double) (this.Y + this.Height);
-    // }
 
+    /// <summary>
+    /// Gets an empty rectangle with zero size.
+    /// </summary>
     public static Rect Empty => new();
     private static ValueRange RangeHull(ValueRange a, ValueRange b)
     {
@@ -529,6 +723,12 @@ public readonly partial struct Rect : IEquatable<Rect>
 
     #region Operators
 
+    /// <summary>
+    /// Adds two rectangles component-wise.
+    /// </summary>
+    /// <param name="left">The first rectangle to add.</param>
+    /// <param name="right">The second rectangle to add.</param>
+    /// <returns>The result of the addition.</returns>
     public static Rect operator +(Rect left, Rect right)
     {
         return new
@@ -539,6 +739,12 @@ public readonly partial struct Rect : IEquatable<Rect>
                 left.Height + right.Height
             );
     }
+    /// <summary>
+    /// Subtracts one rectangle from another component-wise.
+    /// </summary>
+    /// <param name="left">The rectangle to subtract from.</param>
+    /// <param name="right">The rectangle to subtract.</param>
+    /// <returns>The result of the subtraction.</returns>
     public static Rect operator -(Rect left, Rect right)
     {
         return new
@@ -549,6 +755,12 @@ public readonly partial struct Rect : IEquatable<Rect>
             left.Height - right.Height
         );
     }
+    /// <summary>
+    /// Multiplies two rectangles component-wise.
+    /// </summary>
+    /// <param name="left">The first rectangle to multiply.</param>
+    /// <param name="right">The second rectangle to multiply.</param>
+    /// <returns>The result of the multiplication.</returns>
     public static Rect operator *(Rect left, Rect right)
     {
         return new
@@ -559,6 +771,12 @@ public readonly partial struct Rect : IEquatable<Rect>
             left.Height * right.Height
         );
     }
+    /// <summary>
+    /// Divides one rectangle by another component-wise.
+    /// </summary>
+    /// <param name="left">The rectangle to divide.</param>
+    /// <param name="right">The rectangle to divide by.</param>
+    /// <returns>The result of the division.</returns>
     public static Rect operator /(Rect left, Rect right)
     {
         return new
@@ -569,6 +787,12 @@ public readonly partial struct Rect : IEquatable<Rect>
             left.Height / right.Height
         );
     }
+    /// <summary>
+    /// Adds a vector to a rectangle's position.
+    /// </summary>
+    /// <param name="left">The rectangle.</param>
+    /// <param name="right">The vector to add.</param>
+    /// <returns>The result of the addition.</returns>
     public static Rect operator +(Rect left, Vector2 right)
     {
         return new
@@ -579,6 +803,12 @@ public readonly partial struct Rect : IEquatable<Rect>
             left.Height
         );
     }
+    /// <summary>
+    /// Subtracts a vector from a rectangle's position.
+    /// </summary>
+    /// <param name="left">The rectangle.</param>
+    /// <param name="right">The vector to subtract.</param>
+    /// <returns>The result of the subtraction.</returns>
     public static Rect operator -(Rect left, Vector2 right)
     {
         return new
@@ -589,6 +819,12 @@ public readonly partial struct Rect : IEquatable<Rect>
             left.Height
         );
     }
+    /// <summary>
+    /// Multiplies a rectangle's position and size by a vector component-wise.
+    /// </summary>
+    /// <param name="left">The rectangle.</param>
+    /// <param name="right">The vector to multiply by.</param>
+    /// <returns>The result of the multiplication.</returns>
     public static Rect operator *(Rect left, Vector2 right)
     {
         return new
@@ -599,6 +835,12 @@ public readonly partial struct Rect : IEquatable<Rect>
             left.Height * right.Y
         );
     }
+    /// <summary>
+    /// Divides a rectangle's position and size by a vector component-wise.
+    /// </summary>
+    /// <param name="left">The rectangle.</param>
+    /// <param name="right">The vector to divide by.</param>
+    /// <returns>The result of the division.</returns>
     public static Rect operator /(Rect left, Vector2 right)
     {
         return new
@@ -609,6 +851,12 @@ public readonly partial struct Rect : IEquatable<Rect>
             left.Height / right.Y
         );
     }
+    /// <summary>
+    /// Adds a scalar to a rectangle's position and size.
+    /// </summary>
+    /// <param name="left">The rectangle.</param>
+    /// <param name="right">The scalar value to add.</param>
+    /// <returns>The result of the addition.</returns>
     public static Rect operator +(Rect left, float right)
     {
         return new
@@ -619,6 +867,12 @@ public readonly partial struct Rect : IEquatable<Rect>
             left.Height + right
         );
     }
+    /// <summary>
+    /// Subtracts a scalar from a rectangle's position and size.
+    /// </summary>
+    /// <param name="left">The rectangle.</param>
+    /// <param name="right">The scalar value to subtract.</param>
+    /// <returns>The result of the subtraction.</returns>
     public static Rect operator -(Rect left, float right)
     {
         return new
@@ -629,6 +883,12 @@ public readonly partial struct Rect : IEquatable<Rect>
             left.Height - right
         );
     }
+    /// <summary>
+    /// Multiplies a rectangle's position and size by a scalar.
+    /// </summary>
+    /// <param name="left">The rectangle.</param>
+    /// <param name="right">The scalar value to multiply by.</param>
+    /// <returns>The result of the multiplication.</returns>
     public static Rect operator *(Rect left, float right)
     {
         return new
@@ -639,6 +899,12 @@ public readonly partial struct Rect : IEquatable<Rect>
             left.Height * right
         );
     }
+    /// <summary>
+    /// Divides a rectangle's position and size by a scalar.
+    /// </summary>
+    /// <param name="left">The rectangle.</param>
+    /// <param name="right">The scalar value to divide by.</param>
+    /// <returns>The result of the division.</returns>
     public static Rect operator /(Rect left, float right)
     {
         return new
@@ -652,6 +918,11 @@ public readonly partial struct Rect : IEquatable<Rect>
     #endregion
 
     #region Interpolated Edge Points
+    /// <summary>
+    /// Gets interpolated points along the edges of the rectangle.
+    /// </summary>
+    /// <param name="t">The interpolation factor (0 to 1).</param>
+    /// <returns>A <see cref="Points"/> object containing the interpolated edge points.</returns>
     public Points? GetInterpolatedEdgePoints(float t)
     {
         var a1 = A.Lerp(B, t);
@@ -661,6 +932,12 @@ public readonly partial struct Rect : IEquatable<Rect>
         
         return new Points(4){a1, b1, c1, d1};
     }
+    /// <summary>
+    /// Gets interpolated points along the edges of the rectangle with specified steps.
+    /// </summary>
+    /// <param name="t">The interpolation factor (0 to 1).</param>
+    /// <param name="steps">The number of steps for interpolation.</param>
+    /// <returns>A <see cref="Points"/> object containing the interpolated edge points.</returns>
     public Points? GetInterpolatedEdgePoints(float t, int steps)
     {
         if(steps <= 1) return GetInterpolatedEdgePoints(t);
