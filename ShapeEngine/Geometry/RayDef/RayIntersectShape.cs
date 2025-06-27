@@ -13,6 +13,14 @@ namespace ShapeEngine.Geometry.RayDef;
 
 public readonly partial struct Ray
 {
+    /// <summary>
+    /// Computes all intersection points between this ray and a generic collider shape.
+    /// </summary>
+    /// <param name="collider">The collider to test for intersection. Must be enabled.</param>
+    /// <returns>A <see cref="CollisionPoints"/> object containing all intersection points, or null if there are none or the collider is not enabled.</returns>
+    /// <remarks>
+    /// The method dispatches to the appropriate shape-specific intersection method based on the collider's shape type.
+    /// </remarks>
     public CollisionPoints? Intersect(Collider collider)
     {
         if (!collider.Enabled) return null;
@@ -50,7 +58,14 @@ public readonly partial struct Ray
 
         return null;
     }
-
+    /// <summary>
+    /// Computes all intersection points between this ray and a segment.
+    /// </summary>
+    /// <param name="segment">The segment to test for intersection.</param>
+    /// <returns>A <see cref="CollisionPoints"/> object containing the intersection point, or null if there is no intersection.</returns>
+    /// <remarks>
+    /// Only a single intersection point is possible for a ray and a segment.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Segment segment)
     {
         var result = IntersectRaySegment(Point, Direction, segment.Start, segment.End, segment.Normal);
@@ -64,7 +79,14 @@ public readonly partial struct Ray
 
         return null;
     }
-
+    /// <summary>
+    /// Computes all intersection points between this ray and a line.
+    /// </summary>
+    /// <param name="line">The line to test for intersection.</param>
+    /// <returns>A <see cref="CollisionPoints"/> object containing the intersection point, or null if there is no intersection.</returns>
+    /// <remarks>
+    /// Only a single intersection point is possible for a ray and a line.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Line line)
     {
         var result = IntersectRayLine(Point, Direction, line.Point, line.Direction, line.Normal);
@@ -77,7 +99,14 @@ public readonly partial struct Ray
 
         return null;
     }
-
+    /// <summary>
+    /// Computes all intersection points between this ray and another ray.
+    /// </summary>
+    /// <param name="ray">The other ray to test for intersection.</param>
+    /// <returns>A <see cref="CollisionPoints"/> object containing the intersection point, or null if there is no intersection.</returns>
+    /// <remarks>
+    /// Only a single intersection point is possible for two rays.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Ray ray)
     {
         var result = IntersectRayRay(Point, Direction, ray.Point, ray.Direction, ray.Normal);
@@ -90,7 +119,14 @@ public readonly partial struct Ray
 
         return null;
     }
-
+    /// <summary>
+    /// Computes all intersection points between this ray and a circle.
+    /// </summary>
+    /// <param name="circle">The circle to test for intersection.</param>
+    /// <returns>A <see cref="CollisionPoints"/> object containing all intersection points, or null if there are none.</returns>
+    /// <remarks>
+    /// There can be zero, one, or two intersection points for a ray and a circle.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Circle circle)
     {
         var result = IntersectCircle(circle);
@@ -112,7 +148,14 @@ public readonly partial struct Ray
 
         return null;
     }
-
+    /// <summary>
+    /// Computes all intersection points between this ray and a triangle.
+    /// </summary>
+    /// <param name="t">The triangle to test for intersection.</param>
+    /// <returns>A <see cref="CollisionPoints"/> object containing all intersection points, or null if there are none.</returns>
+    /// <remarks>
+    /// There can be zero, one, or two intersection points for a ray and a triangle.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Triangle t)
     {
         var result = IntersectRayTriangle(Point, Direction, t.A, t.B, t.C);
@@ -134,7 +177,14 @@ public readonly partial struct Ray
 
         return null;
     }
-
+    /// <summary>
+    /// Computes all intersection points between this ray and a quad.
+    /// </summary>
+    /// <param name="q">The quad to test for intersection.</param>
+    /// <returns>A <see cref="CollisionPoints"/> object containing all intersection points, or null if there are none.</returns>
+    /// <remarks>
+    /// There can be zero, one, or two intersection points for a ray and a quad.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Quad q)
     {
         var result = IntersectRayQuad(Point, Direction, q.A, q.B, q.C, q.D);
@@ -156,7 +206,14 @@ public readonly partial struct Ray
 
         return null;
     }
-
+    /// <summary>
+    /// Computes all intersection points between this ray and a rectangle.
+    /// </summary>
+    /// <param name="r">The rectangle to test for intersection.</param>
+    /// <returns>A <see cref="CollisionPoints"/> object containing all intersection points, or null if there are none.</returns>
+    /// <remarks>
+    /// There can be zero, one, or two intersection points for a ray and a rectangle.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Rect r)
     {
         var result = IntersectRayQuad(Point, Direction, r.A, r.B, r.C, r.D);
@@ -178,13 +235,49 @@ public readonly partial struct Ray
 
         return null;
     }
-
+    /// <summary>
+    /// Computes all intersection points between this ray and a polygon.
+    /// </summary>
+    /// <param name="p">The polygon to test for intersection.</param>
+    /// <param name="maxCollisionPoints">The maximum number of collision points to compute. Default is -1, which means no limit.</param>
+    /// <returns>A <see cref="CollisionPoints"/> object containing all intersection points, or null if there are none.</returns>
+    /// <remarks>
+    /// The method uses the ray-polygon intersection algorithm, which may return multiple intersection points depending on the polygon's shape and the ray's direction.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Polygon p, int maxCollisionPoints = -1) => IntersectRayPolygon(Point, Direction, p, maxCollisionPoints);
+    /// <summary>
+    /// Computes all intersection points between this ray and a polyline.
+    /// </summary>
+    /// <param name="pl">The polyline to test for intersection.</param>
+    /// <param name="maxCollisionPoints">The maximum number of collision points to compute. Default is -1, which means no limit.</param>
+    /// <returns>A <see cref="CollisionPoints"/> object containing all intersection points, or null if there are none.</returns>
+    /// <remarks>
+    /// The method uses the ray-polyline intersection algorithm, which may return multiple intersection points depending on the polyline's shape and the ray's direction.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Polyline pl, int maxCollisionPoints = -1) => IntersectRayPolyline(Point, Direction, pl, maxCollisionPoints);
 
+    /// <summary>
+    /// Computes all intersection points between this ray and a set of segments.
+    /// </summary>
+    /// <param name="segments">The set of segments to test for intersection.</param>
+    /// <param name="maxCollisionPoints">The maximum number of collision points to compute. Default is -1, which means no limit.</param>
+    /// <returns>A <see cref="CollisionPoints"/> object containing all intersection points, or null if there are none.</returns>
+    /// <remarks>
+    /// The method uses the ray-segments intersection algorithm, which may return multiple intersection points depending on the segments' shapes and the ray's direction.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Segments segments, int maxCollisionPoints = -1) =>
         IntersectRaySegments(Point, Direction, segments, maxCollisionPoints);
 
+    /// <summary>
+    /// Computes all intersection points between this ray and a generic collider shape, and stores them in the provided <see cref="CollisionPoints"/> object.
+    /// </summary>
+    /// <param name="collider">The collider to test for intersection. Must be enabled.</param>
+    /// <param name="points">The <see cref="CollisionPoints"/> object to store the intersection points.</param>
+    /// <param name="returnAfterFirstValid">If true, the method returns after finding the first valid intersection point. Default is false.</param>
+    /// <returns>The number of valid intersection points found.</returns>
+    /// <remarks>
+    /// The method dispatches to the appropriate shape-specific intersection method based on the collider's shape type.
+    /// </remarks>
     public int Intersect(Collider collider, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (!collider.Enabled) return 0;
@@ -222,7 +315,15 @@ public readonly partial struct Ray
 
         return 0;
     }
-
+    /// <summary>
+    /// Computes all intersection points between this ray and another ray, and stores the result in the provided <see cref="CollisionPoints"/> object.
+    /// </summary>
+    /// <param name="r">The other ray to test for intersection.</param>
+    /// <param name="points">The <see cref="CollisionPoints"/> object to store the intersection points.</param>
+    /// <returns>The number of valid intersection points found.</returns>
+    /// <remarks>
+    /// Only a single intersection point is possible for two rays.
+    /// </remarks>
     public int IntersectShape(Ray r, ref CollisionPoints points)
     {
         var cp = IntersectRayRay(Point, Direction, r.Point, r.Direction, r.Normal);
@@ -234,7 +335,15 @@ public readonly partial struct Ray
 
         return 0;
     }
-
+    /// <summary>
+    /// Computes all intersection points between this ray and a line, and stores the result in the provided <see cref="CollisionPoints"/> object.
+    /// </summary>
+    /// <param name="l">The line to test for intersection.</param>
+    /// <param name="points">The <see cref="CollisionPoints"/> object to store the intersection points.</param>
+    /// <returns>The number of valid intersection points found.</returns>
+    /// <remarks>
+    /// Only a single intersection point is possible for a ray and a line.
+    /// </remarks>
     public int IntersectShape(Line l, ref CollisionPoints points)
     {
         var cp = IntersectRayLine(Point, Direction, l.Point, l.Direction, l.Normal);
@@ -246,7 +355,15 @@ public readonly partial struct Ray
 
         return 0;
     }
-
+    /// <summary>
+    /// Computes all intersection points between this ray and a segment, and stores the result in the provided <see cref="CollisionPoints"/> object.
+    /// </summary>
+    /// <param name="s">The segment to test for intersection.</param>
+    /// <param name="points">The <see cref="CollisionPoints"/> object to store the intersection points.</param>
+    /// <returns>The number of valid intersection points found.</returns>
+    /// <remarks>
+    /// Only a single intersection point is possible for a ray and a segment.
+    /// </remarks>
     public int IntersectShape(Segment s, ref CollisionPoints points)
     {
         var cp = IntersectRaySegment(Point, Direction, s.Start, s.End);
@@ -258,7 +375,16 @@ public readonly partial struct Ray
 
         return 0;
     }
-
+    /// <summary>
+    /// Computes all intersection points between this ray and a circle, and stores the result in the provided <see cref="CollisionPoints"/> object.
+    /// </summary>
+    /// <param name="c">The circle to test for intersection.</param>
+    /// <param name="points">The <see cref="CollisionPoints"/> object to store the intersection points.</param>
+    /// <param name="returnAfterFirstValid">If true, the method returns after finding the first valid intersection point. Default is false.</param>
+    /// <returns>The number of valid intersection points found.</returns>
+    /// <remarks>
+    /// There can be zero, one, or two intersection points for a ray and a circle.
+    /// </remarks>
     public int IntersectShape(Circle c, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         var result = IntersectRayCircle(Point, Direction, c.Center, c.Radius);
@@ -290,7 +416,16 @@ public readonly partial struct Ray
 
         return 0;
     }
-
+    /// <summary>
+    /// Computes all intersection points between this ray and a triangle, and stores the result in the provided <see cref="CollisionPoints"/> object.
+    /// </summary>
+    /// <param name="t">The triangle to test for intersection.</param>
+    /// <param name="points">The <see cref="CollisionPoints"/> object to store the intersection points.</param>
+    /// <param name="returnAfterFirstValid">If true, the method returns after finding the first valid intersection point. Default is false.</param>
+    /// <returns>The number of valid intersection points found.</returns>
+    /// <remarks>
+    /// Intersecting a triangle with a ray can result in zero, one, or two intersection points.
+    /// </remarks>
     public int IntersectShape(Triangle t, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         var cp = IntersectRaySegment(Point, Direction, t.A, t.B);
@@ -322,7 +457,16 @@ public readonly partial struct Ray
 
         return count;
     }
-
+    /// <summary>
+    /// Computes all intersection points between this ray and a quad, and stores the result in the provided <see cref="CollisionPoints"/> object.
+    /// </summary>
+    /// <param name="q">The quad to test for intersection.</param>
+    /// <param name="points">The <see cref="CollisionPoints"/> object to store the intersection points.</param>
+    /// <param name="returnAfterFirstValid">If true, the method returns after finding the first valid intersection point. Default is false.</param>
+    /// <returns>The number of valid intersection points found.</returns>
+    /// <remarks>
+    /// Intersecting a quad with a ray can result in zero, one, or two intersection points.
+    /// </remarks>
     public int IntersectShape(Quad q, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         var cp = IntersectRaySegment(Point, Direction, q.A, q.B);
@@ -365,7 +509,16 @@ public readonly partial struct Ray
 
         return count;
     }
-
+    /// <summary>
+    /// Computes all intersection points between this ray and a rectangle, and stores the result in the provided <see cref="CollisionPoints"/> object.
+    /// </summary>
+    /// <param name="r">The rectangle to test for intersection.</param>
+    /// <param name="points">The <see cref="CollisionPoints"/> object to store the intersection points.</param>
+    /// <param name="returnAfterFirstValid">If true, the method returns after finding the first valid intersection point. Default is false.</param>
+    /// <returns>The number of valid intersection points found.</returns>
+    /// <remarks>
+    /// Intersecting a rectangle with a ray can result in zero, one, or two intersection points.
+    /// </remarks>
     public int IntersectShape(Rect r, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         var a = r.TopLeft;
@@ -413,7 +566,16 @@ public readonly partial struct Ray
 
         return count;
     }
-
+    /// <summary>
+    /// Computes all intersection points between this ray and a polygon, and stores the result in the provided <see cref="CollisionPoints"/> object.
+    /// </summary>
+    /// <param name="p">The polygon to test for intersection.</param>
+    /// <param name="points">The <see cref="CollisionPoints"/> object to store the intersection points.</param>
+    /// <param name="returnAfterFirstValid">If true, the method returns after finding the first valid intersection point. Default is false.</param>
+    /// <returns>The number of valid intersection points found.</returns>
+    /// <remarks>
+    /// The method uses the ray-polygon intersection algorithm, which may return multiple intersection points depending on the polygon's shape and the ray's direction.
+    /// </remarks>
     public int IntersectShape(Polygon p, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (p.Count < 3) return 0;
@@ -431,7 +593,16 @@ public readonly partial struct Ray
 
         return count;
     }
-
+    /// <summary>
+    /// Computes all intersection points between this ray and a polyline, and stores the result in the provided <see cref="CollisionPoints"/> object.
+    /// </summary>
+    /// <param name="pl">The polyline to test for intersection.</param>
+    /// <param name="points">The <see cref="CollisionPoints"/> object to store the intersection points.</param>
+    /// <param name="returnAfterFirstValid">If true, the method returns after finding the first valid intersection point. Default is false.</param>
+    /// <returns>The number of valid intersection points found.</returns>
+    /// <remarks>
+    /// The method uses the ray-polyline intersection algorithm, which may return multiple intersection points depending on the polyline's shape and the ray's direction.
+    /// </remarks>
     public int IntersectShape(Polyline pl, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (pl.Count < 2) return 0;
@@ -449,7 +620,16 @@ public readonly partial struct Ray
 
         return count;
     }
-
+    /// <summary>
+    /// Computes all intersection points between this ray and a set of segments, and stores the result in the provided <see cref="CollisionPoints"/> object.
+    /// </summary>
+    /// <param name="shape">The set of segments to test for intersection.</param>
+    /// <param name="points">The <see cref="CollisionPoints"/> object to store the intersection points.</param>
+    /// <param name="returnAfterFirstValid">If true, the method returns after finding the first valid intersection point. Default is false.</param>
+    /// <returns>The number of valid intersection points found.</returns>
+    /// <remarks>
+    /// The method uses the ray-segments intersection algorithm, which may return multiple intersection points depending on the segments' shapes and the ray's direction.
+    /// </remarks>
     public int IntersectShape(Segments shape, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (shape.Count <= 0) return 0;

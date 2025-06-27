@@ -8,6 +8,16 @@ namespace ShapeEngine.Geometry.RayDef;
 
 public readonly partial struct Ray
 {
+    /// <summary>
+    /// Determines whether a point lies on a given ray.
+    /// </summary>
+    /// <param name="point">The point to check.</param>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <returns>True if the point is on the ray; otherwise, false.</returns>
+    /// <remarks>
+    /// The point must be in the same direction as the ray and also lie on the infinite line defined by the ray.
+    /// </remarks>
     public static bool IsPointOnRay(Vector2 point, Vector2 rayPoint, Vector2 rayDirection)
     {
         // Calculate the vector from the ray point to the given point
@@ -20,6 +30,17 @@ public readonly partial struct Ray
         return dotProduct >= 0 && Line.IsPointOnLine(point, rayPoint, rayDirection);
     }
 
+    /// <summary>
+    /// Computes the intersection information between a ray and a segment defined by two points.
+    /// </summary>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <returns>A tuple containing the <see cref="CollisionPoint"/> and the parameter t along the ray, or -1 if no intersection.</returns>
+    /// <remarks>
+    /// The returned parameter t is the distance along the ray direction to the intersection point.
+    /// </remarks>
     public static (CollisionPoint p, float t) IntersectRaySegmentInfo(Vector2 rayPoint, Vector2 rayDirection, Vector2 segmentStart, Vector2 segmentEnd)
     {
         float denominator = rayDirection.X * (segmentEnd.Y - segmentStart.Y) - rayDirection.Y * (segmentEnd.X - segmentStart.X);
@@ -44,6 +65,15 @@ public readonly partial struct Ray
         return (new(), -1f);
     }
 
+    /// <summary>
+    /// Computes the intersection information between a ray and a segment, using a provided segment normal.
+    /// </summary>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <param name="segmentNormal">The normal vector of the segment.</param>
+    /// <returns>A tuple containing the <see cref="CollisionPoint"/> (with the provided normal) and the parameter t along the ray, or -1 if no intersection.</returns>
     public static (CollisionPoint p, float t) IntersectRaySegmentInfo(Vector2 rayPoint, Vector2 rayDirection, Vector2 segmentStart, Vector2 segmentEnd,
         Vector2 segmentNormal)
     {
@@ -56,6 +86,17 @@ public readonly partial struct Ray
         return (new(), -1f);
     }
 
+    /// <summary>
+    /// Computes the intersection information between a ray and a line defined by a point and direction.
+    /// </summary>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="linePoint">A point on the line.</param>
+    /// <param name="lineDirection">The direction vector of the line.</param>
+    /// <returns>A tuple containing the <see cref="CollisionPoint"/> and the parameter t along the ray, or -1 if no intersection.</returns>
+    /// <remarks>
+    /// The returned parameter t is the distance along the ray direction to the intersection point.
+    /// </remarks>
     public static (CollisionPoint p, float t) IntersectRayLineInfo(Vector2 rayPoint, Vector2 rayDirection, Vector2 linePoint, Vector2 lineDirection)
     {
         float denominator = rayDirection.X * lineDirection.Y - rayDirection.Y * lineDirection.X;
@@ -78,6 +119,15 @@ public readonly partial struct Ray
         return (new(), -1f);
     }
 
+    /// <summary>
+    /// Computes the intersection information between a ray and a line, using a provided line normal.
+    /// </summary>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="linePoint">A point on the line.</param>
+    /// <param name="lineDirection">The direction vector of the line.</param>
+    /// <param name="lineNormal">The normal vector of the line.</param>
+    /// <returns>A tuple containing the <see cref="CollisionPoint"/> (with the provided normal) and the parameter t along the ray, or -1 if no intersection.</returns>
     public static (CollisionPoint p, float t) IntersectRayLineInfo(Vector2 rayPoint, Vector2 rayDirection, Vector2 linePoint, Vector2 lineDirection,
         Vector2 lineNormal)
     {
@@ -90,6 +140,17 @@ public readonly partial struct Ray
         return (new(), -1f);
     }
 
+    /// <summary>
+    /// Computes the intersection information between two rays.
+    /// </summary>
+    /// <param name="ray1Point">The origin point of the first ray.</param>
+    /// <param name="ray1Direction">The direction vector of the first ray.</param>
+    /// <param name="ray2Point">The origin point of the second ray.</param>
+    /// <param name="ray2Direction">The direction vector of the second ray.</param>
+    /// <returns>A tuple containing the <see cref="CollisionPoint"/> and the parameter t along the first ray, or -1 if no intersection.</returns>
+    /// <remarks>
+    /// The returned parameter t is the distance along the first ray direction to the intersection point.
+    /// </remarks>
     public static (CollisionPoint p, float t) IntersectRayRayInfo(Vector2 ray1Point, Vector2 ray1Direction, Vector2 ray2Point, Vector2 ray2Direction)
     {
         float denominator = ray1Direction.X * ray2Direction.Y - ray1Direction.Y * ray2Direction.X;
@@ -113,6 +174,15 @@ public readonly partial struct Ray
         return (new(), -1f);
     }
 
+    /// <summary>
+    /// Computes the intersection information between two rays, using a provided normal for the second ray.
+    /// </summary>
+    /// <param name="ray1Point">The origin point of the first ray.</param>
+    /// <param name="ray1Direction">The direction vector of the first ray.</param>
+    /// <param name="ray2Point">The origin point of the second ray.</param>
+    /// <param name="ray2Direction">The direction vector of the second ray.</param>
+    /// <param name="ray2Normal">The normal vector of the second ray.</param>
+    /// <returns>A tuple containing the <see cref="CollisionPoint"/> (with the provided normal) and the parameter t along the first ray, or -1 if no intersection.</returns>
     public static (CollisionPoint p, float t) IntersectRayRayInfo(Vector2 ray1Point, Vector2 ray1Direction, Vector2 ray2Point, Vector2 ray2Direction,
         Vector2 ray2Normal)
     {
@@ -125,6 +195,14 @@ public readonly partial struct Ray
         return (new(), -1f);
     }
 
+    /// <summary>
+    /// Computes the intersection point between a ray and a segment defined by two points.
+    /// </summary>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <returns>The <see cref="CollisionPoint"/> representing the intersection point, or an invalid <see cref="CollisionPoint"/> if no intersection occurs.</returns>
     public static CollisionPoint IntersectRaySegment(Vector2 rayPoint, Vector2 rayDirection, Vector2 segmentStart, Vector2 segmentEnd)
     {
         float denominator = rayDirection.X * (segmentEnd.Y - segmentStart.Y) - rayDirection.Y * (segmentEnd.X - segmentStart.X);
@@ -149,6 +227,15 @@ public readonly partial struct Ray
         return new();
     }
 
+    /// <summary>
+    /// Computes the intersection point between a ray and a segment, using a provided normal for the segment.
+    /// </summary>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <param name="segmentNormal">The normal vector of the segment.</param>
+    /// <returns>The <see cref="CollisionPoint"/> representing the intersection point (with the provided normal), or an invalid <see cref="CollisionPoint"/> if no intersection occurs.</returns>
     public static CollisionPoint IntersectRaySegment(Vector2 rayPoint, Vector2 rayDirection, Vector2 segmentStart, Vector2 segmentEnd, Vector2 segmentNormal)
     {
         var result = IntersectRaySegment(rayPoint, rayDirection, segmentStart, segmentEnd);
@@ -160,6 +247,14 @@ public readonly partial struct Ray
         return new();
     }
 
+    /// <summary>
+    /// Computes the intersection point between a ray and a line defined by a point and direction.
+    /// </summary>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="linePoint">A point on the line.</param>
+    /// <param name="lineDirection">The direction vector of the line.</param>
+    /// <returns>The <see cref="CollisionPoint"/> representing the intersection point, or an invalid <see cref="CollisionPoint"/> if no intersection occurs.</returns>
     public static CollisionPoint IntersectRayLine(Vector2 rayPoint, Vector2 rayDirection, Vector2 linePoint, Vector2 lineDirection)
     {
         float denominator = rayDirection.X * lineDirection.Y - rayDirection.Y * lineDirection.X;
@@ -182,6 +277,15 @@ public readonly partial struct Ray
         return new();
     }
 
+    /// <summary>
+    /// Computes the intersection point between a ray and a line, using a provided normal for the line.
+    /// </summary>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="linePoint">A point on the line.</param>
+    /// <param name="lineDirection">The direction vector of the line.</param>
+    /// <param name="lineNormal">The normal vector of the line.</param>
+    /// <returns>The <see cref="CollisionPoint"/> representing the intersection point (with the provided normal), or an invalid <see cref="CollisionPoint"/> if no intersection occurs.</returns>
     public static CollisionPoint IntersectRayLine(Vector2 rayPoint, Vector2 rayDirection, Vector2 linePoint, Vector2 lineDirection, Vector2 lineNormal)
     {
         var result = IntersectRayLine(rayPoint, rayDirection, linePoint, lineDirection);
@@ -193,6 +297,14 @@ public readonly partial struct Ray
         return new();
     }
 
+    /// <summary>
+    /// Computes the intersection point between two rays.
+    /// </summary>
+    /// <param name="ray1Point">The origin point of the first ray.</param>
+    /// <param name="ray1Direction">The direction vector of the first ray.</param>
+    /// <param name="ray2Point">The origin point of the second ray.</param>
+    /// <param name="ray2Direction">The direction vector of the second ray.</param>
+    /// <returns>The <see cref="CollisionPoint"/> representing the intersection point, or an invalid <see cref="CollisionPoint"/> if no intersection occurs.</returns>
     public static CollisionPoint IntersectRayRay(Vector2 ray1Point, Vector2 ray1Direction, Vector2 ray2Point, Vector2 ray2Direction)
     {
         float denominator = ray1Direction.X * ray2Direction.Y - ray1Direction.Y * ray2Direction.X;
@@ -216,6 +328,15 @@ public readonly partial struct Ray
         return new();
     }
 
+    /// <summary>
+    /// Computes the intersection point between two rays, using a provided normal for the second ray.
+    /// </summary>
+    /// <param name="ray1Point">The origin point of the first ray.</param>
+    /// <param name="ray1Direction">The direction vector of the first ray.</param>
+    /// <param name="ray2Point">The origin point of the second ray.</param>
+    /// <param name="ray2Direction">The direction vector of the second ray.</param>
+    /// <param name="ray2Normal">The normal vector of the second ray.</param>
+    /// <returns>The <see cref="CollisionPoint"/> representing the intersection point (with the provided normal), or an invalid <see cref="CollisionPoint"/> if no intersection occurs.</returns>
     public static CollisionPoint IntersectRayRay(Vector2 ray1Point, Vector2 ray1Direction, Vector2 ray2Point, Vector2 ray2Direction, Vector2 ray2Normal)
     {
         var result = IntersectRayRay(ray1Point, ray1Direction, ray2Point, ray2Direction);
@@ -227,6 +348,17 @@ public readonly partial struct Ray
         return new();
     }
 
+    /// <summary>
+    /// Computes the intersection points between a ray and a circle.
+    /// </summary>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="circleCenter">The center point of the circle.</param>
+    /// <param name="radius">The radius of the circle.</param>
+    /// <returns>A tuple containing two <see cref="CollisionPoint"/>s representing the intersection points, or two invalid <see cref="CollisionPoint"/>s if no intersection occurs.</returns>
+    /// <remarks>
+    /// If the ray is tangent to the circle, one valid <see cref="CollisionPoint"/> and one invalid <see cref="CollisionPoint"/> will be returned.
+    /// </remarks>
     public static (CollisionPoint a, CollisionPoint b) IntersectRayCircle(Vector2 rayPoint, Vector2 rayDirection, Vector2 circleCenter, float radius)
     {
         var toCircle = circleCenter - rayPoint;
@@ -268,6 +400,15 @@ public readonly partial struct Ray
         return (new(), new());
     }
 
+    /// <summary>
+    /// Computes the intersection points between a ray and a triangle defined by three points.
+    /// </summary>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="a">The first vertex of the triangle.</param>
+    /// <param name="b">The second vertex of the triangle.</param>
+    /// <param name="c">The third vertex of the triangle.</param>
+    /// <returns>A tuple containing two <see cref="CollisionPoint"/>s representing the intersection points, or two invalid <see cref="CollisionPoint"/>s if no intersection occurs.</returns>
     public static (CollisionPoint a, CollisionPoint b) IntersectRayTriangle(Vector2 rayPoint, Vector2 rayDirection, Vector2 a, Vector2 b, Vector2 c)
     {
         CollisionPoint resultA = new();
@@ -295,6 +436,16 @@ public readonly partial struct Ray
         return (resultA, resultB);
     }
 
+    /// <summary>
+    /// Computes the intersection points between a ray and a quadrilateral defined by four points.
+    /// </summary>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="a">The first vertex of the quadrilateral.</param>
+    /// <param name="b">The second vertex of the quadrilateral.</param>
+    /// <param name="c">The third vertex of the quadrilateral.</param>
+    /// <param name="d">The fourth vertex of the quadrilateral.</param>
+    /// <returns>A tuple containing two <see cref="CollisionPoint"/>s representing the intersection points, or two invalid <see cref="CollisionPoint"/>s if no intersection occurs.</returns>
     public static (CollisionPoint a, CollisionPoint b) IntersectRayQuad(Vector2 rayPoint, Vector2 rayDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
         CollisionPoint resultA = new();
@@ -331,11 +482,32 @@ public readonly partial struct Ray
         return (resultA, resultB);
     }
 
+    /// <summary>
+    /// Computes the intersection points between a ray and a rectangle defined by four points.
+    /// </summary>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="a">The first vertex of the rectangle.</param>
+    /// <param name="b">The second vertex of the rectangle.</param>
+    /// <param name="c">The third vertex of the rectangle.</param>
+    /// <param name="d">The fourth vertex of the rectangle.</param>
+    /// <returns>A tuple containing two <see cref="CollisionPoint"/>s representing the intersection points, or two invalid <see cref="CollisionPoint"/>s if no intersection occurs.</returns>
     public static (CollisionPoint a, CollisionPoint b) IntersectRayRect(Vector2 rayPoint, Vector2 rayDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
         return IntersectRayQuad(rayPoint, rayDirection, a, b, c, d);
     }
 
+    /// <summary>
+    /// Computes the intersection points between a ray and a polygon defined by a list of points.
+    /// </summary>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="points">The list of points defining the polygon.</param>
+    /// <param name="maxCollisionPoints">The maximum number of collision points to return, or -1 for no limit.</param>
+    /// <returns>A list of <see cref="CollisionPoint"/>s representing the intersection points, or null if the polygon has fewer than 3 points.</returns>
+    /// <remarks>
+    /// If <paramref name="maxCollisionPoints"/> is greater than 0, the method will return at most that many collision points.
+    /// </remarks>
     public static CollisionPoints? IntersectRayPolygon(Vector2 rayPoint, Vector2 rayDirection, List<Vector2> points, int maxCollisionPoints = -1)
     {
         if (points.Count < 3) return null;
@@ -355,6 +527,17 @@ public readonly partial struct Ray
         return result;
     }
 
+    /// <summary>
+    /// Computes the intersection points between a ray and a polyline defined by a list of points.
+    /// </summary>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="points">The list of points defining the polyline.</param>
+    /// <param name="maxCollisionPoints">The maximum number of collision points to return, or -1 for no limit.</param>
+    /// <returns>A list of <see cref="CollisionPoint"/>s representing the intersection points, or null if the polyline has fewer than 2 points.</returns>
+    /// <remarks>
+    /// If <paramref name="maxCollisionPoints"/> is greater than 0, the method will return at most that many collision points.
+    /// </remarks>
     public static CollisionPoints? IntersectRayPolyline(Vector2 rayPoint, Vector2 rayDirection, List<Vector2> points, int maxCollisionPoints = -1)
     {
         if (points.Count < 3) return null;
@@ -374,6 +557,17 @@ public readonly partial struct Ray
         return result;
     }
 
+    /// <summary>
+    /// Computes the intersection points between a ray and a list of segments.
+    /// </summary>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="segments">The list of segments to test for intersection.</param>
+    /// <param name="maxCollisionPoints">The maximum number of collision points to return, or -1 for no limit.</param>
+    /// <returns>A list of <see cref="CollisionPoint"/>s representing the intersection points, or null if the list of segments is empty.</returns>
+    /// <remarks>
+    /// If <paramref name="maxCollisionPoints"/> is greater than 0, the method will return at most that many collision points.
+    /// </remarks>
     public static CollisionPoints? IntersectRaySegments(Vector2 rayPoint, Vector2 rayDirection, List<Segment> segments, int maxCollisionPoints = -1)
     {
         if (segments.Count <= 0) return null;
@@ -394,6 +588,18 @@ public readonly partial struct Ray
         return result;
     }
 
+    /// <summary>
+    /// Computes the intersection points between a ray and a polygon defined by a list of points, and stores the results in a provided list.
+    /// </summary>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="points">The list of points defining the polygon.</param>
+    /// <param name="result">The list to store the resulting collision points.</param>
+    /// <param name="returnAfterFirstValid">If true, the method will return after finding the first valid intersection.</param>
+    /// <returns>The total number of intersection points found.</returns>
+    /// <remarks>
+    /// The method will add valid collision points to the <paramref name="result"/> list.
+    /// </remarks>
     public static int IntersectRayPolygon(Vector2 rayPoint, Vector2 rayDirection, List<Vector2> points, ref CollisionPoints result,
         bool returnAfterFirstValid = false)
     {
