@@ -21,6 +21,7 @@ public class QuadShape : ShapeContainer
     /// Initializes a new instance of the <see cref="QuadShape"/> class with a default alignment.
     /// </summary>
     /// <param name="offset">The transform offset to apply to the shape.</param>
+    /// <remarks>Creates a quad shape with the default anchor point alignment.</remarks>
     public QuadShape(Transform2D offset)
     {
         Offset = offset;
@@ -31,6 +32,7 @@ public class QuadShape : ShapeContainer
     /// </summary>
     /// <param name="offset">The transform offset to apply to the shape.</param>
     /// <param name="alignement">The anchor point for alignment.</param>
+    /// <remarks>Creates a quad shape with the specified anchor point alignment.</remarks>
     public QuadShape(Transform2D offset, AnchorPoint alignement)
     {
         Offset = offset;

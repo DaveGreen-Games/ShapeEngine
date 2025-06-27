@@ -11,6 +11,13 @@ public readonly partial struct Quad
 {
     #region Math
 
+    /// <summary>
+    /// Gets the projected points of the quad along a given vector.
+    /// </summary>
+    /// <param name="v">The vector along which to project the quad's vertices.</param>
+    /// <returns>A <see cref="Points"/> collection containing the original and projected vertices,
+    /// or null if the vector is zero.</returns>
+    /// <remarks>Projects each vertex of the quad along the specified vector and returns all resulting points.</remarks>
     public Points? GetProjectedShapePoints(Vector2 v)
     {
         if (v.LengthSquared() <= 0f) return null;
@@ -25,6 +32,13 @@ public readonly partial struct Quad
         return points;
     }
 
+    /// <summary>
+    /// Projects the quad along a given vector and returns the convex hull as a polygon.
+    /// </summary>
+    /// <param name="v">The vector along which to project the quad's vertices.</param>
+    /// <returns>A <see cref="Polygon"/> representing the convex hull of the projected shape,
+    /// or null if the vector is zero.</returns>
+    /// <remarks>Useful for shadow or extrusion effects.</remarks>
     public Polygon? ProjectShape(Vector2 v)
     {
         if (v.LengthSquared() <= 0f) return null;
@@ -39,6 +53,9 @@ public readonly partial struct Quad
         return Polygon.FindConvexHull(points);
     }
 
+    /// <summary>
+    /// Returns a new quad with all vertices floored to the nearest integer values.
+    /// </summary>
     public Quad Floor()
     {
         return new
@@ -50,6 +67,9 @@ public readonly partial struct Quad
         );
     }
 
+    /// <summary>
+    /// Returns a new quad with all vertices ceiled to the nearest integer values.
+    /// </summary>
     public Quad Ceiling()
     {
         return new
@@ -61,6 +81,9 @@ public readonly partial struct Quad
         );
     }
 
+    /// <summary>
+    /// Returns a new quad with all vertices rounded to the nearest integer values.
+    /// </summary>
     public Quad Round()
     {
         return new
@@ -72,6 +95,9 @@ public readonly partial struct Quad
         );
     }
 
+    /// <summary>
+    /// Returns a new quad with all vertices truncated (rounded toward zero).
+    /// </summary>
     public Quad Truncate()
     {
         return new
@@ -83,9 +109,23 @@ public readonly partial struct Quad
         );
     }
 
+    /// <summary>
+    /// Calculates the perimeter of the quad by summing the lengths of its edges.
+    /// </summary>
+    /// <returns>The total perimeter length.</returns>
     public float GetPerimeter() => AB.Length() + BC.Length() + CD.Length() + DA.Length();
+
+    /// <summary>
+    /// Calculates the sum of the squared lengths of the quad's edges.
+    /// </summary>
+    /// <returns>The sum of squared edge lengths.</returns>
     public float GetPerimeterSquared() => AB.LengthSquared() + BC.LengthSquared() + CD.LengthSquared() + DA.LengthSquared();
 
+    /// <summary>
+    /// Calculates the area of the quad by dividing it into two triangles.
+    /// </summary>
+    /// <returns>The total area of the quad.</returns>
+    /// <remarks>Area is computed as the sum of the areas of triangles ABC and CDA.</remarks>
     public float GetArea()
     {
         Triangle abc = new(A, B, C);
@@ -97,6 +137,12 @@ public readonly partial struct Quad
 
     #region Transform
 
+    /// <summary>
+    /// Rotates the quad by a specified angle in radians around a given anchor point.
+    /// </summary>
+    /// <param name="rad">The angle in radians to rotate.</param>
+    /// <param name="alignement">The anchor point for rotation.</param>
+    /// <returns>A new <see cref="Quad"/> rotated by the specified angle.</returns>
     public Quad ChangeRotation(float rad, AnchorPoint alignement)
     {
         var pivotPoint = GetPoint(alignement);
@@ -107,15 +153,38 @@ public readonly partial struct Quad
         return new(a, b, c, d);
     }
 
+    /// <summary>
+    /// Rotates the quad to a specific angle in radians around a given anchor point.
+    /// </summary>
+    /// <param name="angleRad">The target angle in radians.</param>
+    /// <param name="alignement">The anchor point for rotation.</param>
+    /// <returns>A new <see cref="Quad"/> with the specified rotation.</returns>
+    /// <remarks>Uses the shortest rotation path to reach the target angle.</remarks>
     public Quad SetRotation(float angleRad, AnchorPoint alignement)
     {
         float amount = ShapeMath.GetShortestAngleRad(AngleRad, angleRad);
         return ChangeRotation(amount, alignement);
     }
 
+    /// <summary>
+    /// Rotates the quad by a specified angle in radians around its center.
+    /// </summary>
+    /// <param name="rad">The angle in radians to rotate.</param>
+    /// <returns>A new <see cref="Quad"/> rotated by the specified angle.</returns>
     public Quad ChangeRotation(float rad) => ChangeRotation(rad, AnchorPoint.Center);
+
+    /// <summary>
+    /// Rotates the quad to a specific angle in radians around its center.
+    /// </summary>
+    /// <param name="angleRad">The target angle in radians.</param>
+    /// <returns>A new <see cref="Quad"/> with the specified rotation.</returns>
     public Quad SetRotation(float angleRad) => SetRotation(angleRad, AnchorPoint.Center);
 
+    /// <summary>
+    /// Moves the quad by the specified offset vector.
+    /// </summary>
+    /// <param name="offset">The vector by which to move the quad.</param>
+    /// <returns>A new <see cref="Quad"/> translated by the offset.</returns>
     public Quad ChangePosition(Vector2 offset)
     {
         return new
@@ -127,6 +196,12 @@ public readonly partial struct Quad
         );
     }
 
+    /// <summary>
+    /// Moves the quad so that the specified anchor point aligns with a new position.
+    /// </summary>
+    /// <param name="newPosition">The new position for the anchor point.</param>
+    /// <param name="alignement">The anchor point to align.</param>
+    /// <returns>A new <see cref="Quad"/> with the anchor point at the new position.</returns>
     public Quad SetPosition(Vector2 newPosition, AnchorPoint alignement)
     {
         var p = GetPoint(alignement);
@@ -140,10 +215,33 @@ public readonly partial struct Quad
         );
     }
 
+    /// <summary>
+    /// Moves the quad so that its center aligns with a new position.
+    /// </summary>
+    /// <param name="newPosition">The new position for the center.</param>
+    /// <returns>A new <see cref="Quad"/> with its center at the new position.</returns>
     public Quad SetPosition(Vector2 newPosition) => SetPosition(newPosition, AnchorPoint.Center);
+
+    /// <summary>
+    /// Scales the size of the quad uniformly by a scalar value, relative to the origin.
+    /// </summary>
+    /// <param name="scale">The scale factor.</param>
+    /// <returns>A new <see cref="Quad"/> scaled by the given factor.</returns>
     public Quad ScaleSize(float scale) => this * scale;
+
+    /// <summary>
+    /// Scales the size of the quad component-wise by a <see cref="Size"/>, relative to the origin.
+    /// </summary>
+    /// <param name="scale">The scale factors for width and height.</param>
+    /// <returns>A new <see cref="Quad"/> scaled by the given size.</returns>
     public Quad ScaleSize(Size scale) => new Quad(A * scale, B * scale, C * scale, D * scale);
 
+    /// <summary>
+    /// Scales the size of the quad uniformly by a scalar value, relative to a specified anchor point.
+    /// </summary>
+    /// <param name="scale">The scale factor.</param>
+    /// <param name="alignement">The anchor point for scaling.</param>
+    /// <returns>A new <see cref="Quad"/> scaled by the given factor around the anchor point.</returns>
     public Quad ScaleSize(float scale, AnchorPoint alignement)
     {
         var p = GetPoint(alignement);
@@ -156,6 +254,12 @@ public readonly partial struct Quad
         );
     }
 
+    /// <summary>
+    /// Scales the size of the quad component-wise by a <see cref="Size"/>, relative to a specified anchor point.
+    /// </summary>
+    /// <param name="scale">The scale factors for width and height.</param>
+    /// <param name="alignement">The anchor point for scaling.</param>
+    /// <returns>A new <see cref="Quad"/> scaled by the given size around the anchor point.</returns>
     public Quad ScaleSize(Size scale, AnchorPoint alignement)
     {
         var p = GetPoint(alignement);
@@ -168,8 +272,19 @@ public readonly partial struct Quad
         );
     }
 
+    /// <summary>
+    /// Changes the size of the quad by a specified amount, relative to its center.
+    /// </summary>
+    /// <param name="amount">The amount to change the size by.</param>
+    /// <returns>A new <see cref="Quad"/> with the size changed by the specified amount.</returns>
     public Quad ChangeSize(float amount) => ChangeSize(amount, AnchorPoint.Center);
 
+    /// <summary>
+    /// Changes the size of the quad by a specified amount, relative to a specified anchor point.
+    /// </summary>
+    /// <param name="amount">The amount to change the size by.</param>
+    /// <param name="alignement">The anchor point for resizing.</param>
+    /// <returns>A new <see cref="Quad"/> with the size changed by the specified amount around the anchor point.</returns>
     public Quad ChangeSize(float amount, AnchorPoint alignement)
     {
         Vector2 newA, newB, newC, newD;
@@ -219,8 +334,19 @@ public readonly partial struct Quad
         return new(newA, newB, newC, newD);
     }
 
+    /// <summary>
+    /// Sets the size of the quad to a specific value, relative to its center.
+    /// </summary>
+    /// <param name="size">The new size for the quad.</param>
+    /// <returns>A new <see cref="Quad"/> with the specified size.</returns>
     public Quad SetSize(float size) => SetSize(size, AnchorPoint.Center);
 
+    /// <summary>
+    /// Sets the size of the quad to a specific value, relative to a specified anchor point.
+    /// </summary>
+    /// <param name="size">The new size for the quad.</param>
+    /// <param name="alignement">The anchor point for resizing.</param>
+    /// <returns>A new <see cref="Quad"/> with the specified size around the anchor point.</returns>
     public Quad SetSize(float size, AnchorPoint alignement)
     {
         Vector2 newA, newB, newC, newD;
@@ -270,13 +396,16 @@ public readonly partial struct Quad
         return new(newA, newB, newC, newD);
     }
 
-    /// <summary>
-    /// Moves the quad by transform.Position
-    /// Rotates the moved quad by transform.RotationRad
-    /// Changes the size of the rotated quad by transform.Size!
-    /// </summary>
-    /// <param name="offset"></param>
-    /// <returns></returns>
+      /// <summary>
+      /// Applies a transform to the quad by:
+      /// <list type="bullet">
+      /// <item>Moving it by <paramref name="offset"/>.Position</item>
+      /// <item>Rotating the moved quad by <paramref name="offset"/>.RotationRad</item>
+      /// <item>Changing the size of the rotated quad by <paramref name="offset"/>.ScaledSize.Length</item>
+      /// </list>
+      /// </summary>
+      /// <param name="offset">The transform to apply to the quad.</param>
+      /// <returns>A new <see cref="Quad"/> with the applied transform.</returns>
     public Quad ApplyOffset(Transform2D offset)
     {
         var newQuad = ChangePosition(offset.Position);
@@ -285,12 +414,11 @@ public readonly partial struct Quad
     }
 
     /// <summary>
-    /// Moves the quad to transform.Position
-    /// Rotates the moved quad to transform.RotationRad
-    /// Sets the size of the rotated quad to transform.Size.Width
+    /// Sets the transform of the quad to match the given <see cref="Transform2D"/>.
     /// </summary>
-    /// <param name="transform"></param>
-    /// <returns></returns>
+    /// <param name="transform">The transform to set.</param>
+    /// <returns>A new <see cref="Quad"/> with the specified transform.</returns>
+    /// <remarks>Moves, rotates, and sets the size of the quad in sequence.</remarks>
     public Quad SetTransform(Transform2D transform)
     {
         var newQuad = SetPosition(transform.Position);
@@ -299,13 +427,16 @@ public readonly partial struct Quad
     }
 
     /// <summary>
-    /// Moves the quad by transform.Position
-    /// Rotates the moved quad by transform.RotationRad
-    /// Changes the size of the rotated quad by transform.Size.Width!
+    /// Applies a transform to the quad by:
+    /// <list type="bullet">
+    /// <item>Moving it by <paramref name="offset"/>.Position</item>
+    /// <item>Rotating the moved quad by <paramref name="offset"/>.RotationRad around the specified <paramref name="alignement"/></item>
+    /// <item>Changing the size of the rotated quad by <paramref name="offset"/>.ScaledSize.Length, relative to <paramref name="alignement"/></item>
+    /// </list>
     /// </summary>
-    /// <param name="offset"></param>
-    /// <param name="alignement"></param>
-    /// <returns></returns>
+    /// <param name="offset">The transform to apply to the quad.</param>
+    /// <param name="alignement">The anchor point for rotation and scaling.</param>
+    /// <returns>A new <see cref="Quad"/> with the applied transform.</returns>
     public Quad ApplyOffset(Transform2D offset, AnchorPoint alignement)
     {
         var newQuad = ChangePosition(offset.Position);
@@ -314,13 +445,16 @@ public readonly partial struct Quad
     }
 
     /// <summary>
-    /// Moves the quad to transform.Position
-    /// Rotates the moved quad to transform.RotationRad
-    /// Sets the size of the rotated quad to transform.Size.Width
+    /// Sets the transform of the quad by:
+    /// <list type="bullet">
+    /// <item>Moving it to <paramref name="transform"/>.Position, aligning <paramref name="alignement"/></item>
+    /// <item>Rotating the moved quad to <paramref name="transform"/>.RotationRad around <paramref name="alignement"/></item>
+    /// <item>Setting the size of the rotated quad to <paramref name="transform"/>.ScaledSize.Length, relative to <paramref name="alignement"/></item>
+    /// </list>
     /// </summary>
-    /// <param name="transform"></param>
-    /// <param name="alignement"></param>
-    /// <returns></returns>
+    /// <param name="transform">The transform to set.</param>
+    /// <param name="alignement">The anchor point for alignment, rotation, and scaling.</param>
+    /// <returns>A new <see cref="Quad"/> with the specified transform.</returns>
     public Quad SetTransform(Transform2D transform, AnchorPoint alignement)
     {
         var newQuad = SetPosition(transform.Position, alignement);

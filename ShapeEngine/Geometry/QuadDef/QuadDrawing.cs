@@ -24,6 +24,7 @@ public static class QuadDrawing
     /// <param name="c">The third vertex of the quad.</param>
     /// <param name="d">The fourth vertex of the quad.</param>
     /// <param name="color">The color to fill the quad.</param>
+    /// <remarks>Fills the quad by drawing two triangles.</remarks>
     public static void DrawQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d, ColorRgba color)
     {
         Raylib.DrawTriangle(a, b, c, color.ToRayColor());
@@ -41,6 +42,7 @@ public static class QuadDrawing
     /// <param name="color">The color of the outline.</param>
     /// <param name="capType">The style of the line caps.</param>
     /// <param name="capPoints">The number of points used for the cap style.</param>
+    /// <remarks>Draws each side of the quad as a separate segment.</remarks>
     public static void DrawQuadLines(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         SegmentDrawing.DrawSegment(a, b, lineThickness, color, capType, capPoints);
