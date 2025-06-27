@@ -113,7 +113,8 @@ public partial class Polyline
     /// The interpolated <see cref="Vector2"/> at the specified normalized position.
     /// </returns>
     /// <remarks>
-    /// If <paramref name="f"/> is 0, returns the first point; if 1, returns the last. For intermediate values, interpolates along the segments.
+    /// If <paramref name="f"/> is 0, returns the first point; if 1, returns the last.
+    /// For intermediate values, interpolates along the segments.
     /// </remarks>
     public Vector2 GetPoint(float f)
     {
@@ -244,7 +245,8 @@ public partial class Polyline
     /// </summary>
     /// <param name="scale">The scale factor to apply to all points relative to the centroid.</param>
     /// <remarks>
-    /// A scale of 1 leaves the polyline unchanged; values greater than 1 enlarge it, and values between 0 and 1 shrink it.
+    /// A scale of <c>1</c> leaves the polyline unchanged; values greater than <c>1</c> enlarge it,
+    /// and values between <c>0 and 1</c> shrink it.
     /// </remarks>
     public void ScaleSize(float scale)
     {
@@ -297,7 +299,8 @@ public partial class Polyline
     /// Returns a new polyline translated so its centroid is at the specified position.
     /// </summary>
     /// <param name="newPosition">The new centroid position for the copy.</param>
-    /// <returns>A new <see cref="Polyline"/> with the centroid at <paramref name="newPosition"/>, or null if fewer than 2 points.</returns>
+    /// <returns>A new <see cref="Polyline"/> with the centroid at <paramref name="newPosition"/>,
+    /// or null if fewer than 2 points.</returns>
     /// <remarks>
     /// The original polyline is not modified.
     /// </remarks>
@@ -313,7 +316,8 @@ public partial class Polyline
     /// Returns a new polyline translated by the specified offset.
     /// </summary>
     /// <param name="offset">The vector by which to offset all points.</param>
-    /// <returns>A new <see cref="Polyline"/> translated by <paramref name="offset"/>, or null if fewer than 2 points.</returns>
+    /// <returns>A new <see cref="Polyline"/> translated by <paramref name="offset"/>,
+    /// or null if fewer than 2 points.</returns>
     /// <remarks>
     /// The original polyline is not modified.
     /// </remarks>

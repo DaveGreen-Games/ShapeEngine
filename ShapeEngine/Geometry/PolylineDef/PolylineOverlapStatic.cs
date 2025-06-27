@@ -114,7 +114,8 @@ public partial class Polyline
     /// <param name="rd">The fourth vertex of the rectangle.</param>
     /// <returns>True if the polyline overlaps with the rectangle; otherwise, false.</returns>
     /// <remarks>
-    /// This method checks if any segment of the polyline intersects with the given rectangle.
+    /// Checks if any segment of the polyline intersects with the specified rectangle.
+    /// Internally uses <c>Quad.OverlapQuadPolyline</c> for compatibility with rotated rectangles.
     /// </remarks>
     public static bool OverlapPolylineRect(List<Vector2> points, Vector2 ra, Vector2 rb, Vector2 rc, Vector2 rd)
     {
