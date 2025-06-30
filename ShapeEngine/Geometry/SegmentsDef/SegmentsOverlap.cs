@@ -13,19 +13,96 @@ namespace ShapeEngine.Geometry.SegmentsDef;
 
 public partial class Segments
 {
+    /// <summary>
+    /// Checks if the segments overlap with a segment.
+    /// </summary>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <returns>True if the segments overlap with the segment, false otherwise.</returns>
     public bool OverlapSegment(Vector2 segmentStart, Vector2 segmentEnd) => OverlapSegmentsSegment(this, segmentStart, segmentEnd);
+    /// <summary>
+    /// Checks if the segments overlap with a line.
+    /// </summary>
+    /// <param name="linePoint">A point on the line.</param>
+    /// <param name="lineDirection">The direction of the line.</param>
+    /// <returns>True if the segments overlap with the line, false otherwise.</returns>
     public bool OverlapLine(Vector2 linePoint, Vector2 lineDirection) => OverlapSegmentsLine(this, linePoint, lineDirection);
+    /// <summary>
+    /// Checks if the segments overlap with a ray.
+    /// </summary>
+    /// <param name="rayPoint">The starting point of the ray.</param>
+    /// <param name="rayDirection">The direction of the ray.</param>
+    /// <returns>True if the segments overlap with the ray, false otherwise.</returns>
     public bool OverlapRay(Vector2 rayPoint, Vector2 rayDirection) => OverlapSegmentsRay(this, rayPoint, rayDirection);
+    /// <summary>
+    /// Checks if the segments overlap with a circle.
+    /// </summary>
+    /// <param name="circleCenter">The center of the circle.</param>
+    /// <param name="circleRadius">The radius of the circle.</param>
+    /// <returns>True if the segments overlap with the circle, false otherwise.</returns>
     public bool OverlapCircle(Vector2 circleCenter, float circleRadius) => OverlapSegmentsCircle(this, circleCenter, circleRadius);
+    /// <summary>
+    /// Checks if the segments overlap with a triangle.
+    /// </summary>
+    /// <param name="a">The first vertex of the triangle.</param>
+    /// <param name="b">The second vertex of the triangle.</param>
+    /// <param name="c">The third vertex of the triangle.</param>
+    /// <returns>True if the segments overlap with the triangle, false otherwise.</returns>
     public bool OverlapTriangle(Vector2 a, Vector2 b, Vector2 c) => OverlapSegmentsTriangle(this, a, b, c);
+    /// <summary>
+    /// Checks if the segments overlap with a quad.
+    /// </summary>
+    /// <param name="a">The first vertex of the quad.</param>
+    /// <param name="b">The second vertex of the quad.</param>
+    /// <param name="c">The third vertex of the quad.</param>
+    /// <param name="d">The fourth vertex of the quad.</param>
+    /// <returns>True if the segments overlap with the quad, false otherwise.</returns>
     public bool OverlapQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => OverlapSegmentsQuad(this, a, b, c, d);
+    /// <summary>
+    /// Checks if the segments overlap with a rectangle.
+    /// </summary>
+    /// <param name="a">The first vertex of the rectangle.</param>
+    /// <param name="b">The second vertex of the rectangle.</param>
+    /// <param name="c">The third vertex of the rectangle.</param>
+    /// <param name="d">The fourth vertex of the rectangle.</param>
+    /// <returns>True if the segments overlap with the rectangle, false otherwise.</returns>
     public bool OverlapRect(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => OverlapSegmentsQuad(this, a, b, c, d);
+    /// <summary>
+    /// Checks if the segments overlap with a polygon.
+    /// </summary>
+    /// <param name="points">The vertices of the polygon.</param>
+    /// <returns>True if the segments overlap with the polygon, false otherwise.</returns>
     public bool OverlapPolygon(List<Vector2> points) => OverlapSegmentsPolygon(this, points);
+    /// <summary>
+    /// Checks if the segments overlap with a polyline.
+    /// </summary>
+    /// <param name="points">The vertices of the polyline.</param>
+    /// <returns>True if the segments overlap with the polyline, false otherwise.</returns>
     public bool OverlapPolyline(List<Vector2> points) => OverlapSegmentsPolyline(this, points);
+    /// <summary>
+    /// Checks if the segments overlap with another set of segments.
+    /// </summary>
+    /// <param name="segments">The other set of segments.</param>
+    /// <returns>True if the segments overlap with the other set of segments, false otherwise.</returns>
     public bool OverlapSegments(List<Segment> segments) => OverlapSegmentsSegments(this, segments);
+    /// <summary>
+    /// Checks if the segments overlap with a line.
+    /// </summary>
+    /// <param name="line">The line to check for overlap with.</param>
+    /// <returns>True if the segments overlap with the line, false otherwise.</returns>
     public bool OverlapShape(Line line) => OverlapSegmentsLine(this, line.Point, line.Direction);
+    /// <summary>
+    /// Checks if the segments overlap with a ray.
+    /// </summary>
+    /// <param name="ray">The ray to check for overlap with.</param>
+    /// <returns>True if the segments overlap with the ray, false otherwise.</returns>
     public bool OverlapShape(Ray ray) => OverlapSegmentsRay(this, ray.Point, ray.Direction);
 
+    /// <summary>
+    /// Checks if the segments overlap with another set of segments.
+    /// </summary>
+    /// <param name="b">The other set of segments.</param>
+    /// <returns>True if the segments overlap with the other set of segments, false otherwise.</returns>
     public bool OverlapShape(Segments b)
     {
         foreach (var seg in this)
@@ -39,6 +116,11 @@ public partial class Segments
         return false;
     }
 
+    /// <summary>
+    /// Checks if the segments overlap with a segment.
+    /// </summary>
+    /// <param name="s">The segment to check for overlap with.</param>
+    /// <returns>True if the segments overlap with the segment, false otherwise.</returns>
     public bool OverlapShape(Segment s)
     {
         foreach (var seg in this)
@@ -49,6 +131,11 @@ public partial class Segments
         return false;
     }
 
+    /// <summary>
+    /// Checks if the segments overlap with a circle.
+    /// </summary>
+    /// <param name="c">The circle to check for overlap with.</param>
+    /// <returns>True if the segments overlap with the circle, false otherwise.</returns>
     public bool OverlapShape(Circle c)
     {
         foreach (var seg in this)
@@ -59,10 +146,35 @@ public partial class Segments
         return false;
     }
 
+    /// <summary>
+    /// Checks if the segments overlap with a triangle.
+    /// </summary>
+    /// <param name="t">The triangle to check for overlap with.</param>
+    /// <returns>True if the segments overlap with the triangle, false otherwise.</returns>
     public bool OverlapShape(Triangle t) => t.OverlapShape(this);
+    /// <summary>
+    /// Checks if the segments overlap with a quad.
+    /// </summary>
+    /// <param name="q">The quad to check for overlap with.</param>
+    /// <returns>True if the segments overlap with the quad, false otherwise.</returns>
     public bool OverlapShape(Quad q) => q.OverlapShape(this);
+    /// <summary>
+    /// Checks if the segments overlap with a rectangle.
+    /// </summary>
+    /// <param name="r">The rectangle to check for overlap with.</param>
+    /// <returns>True if the segments overlap with the rectangle, false otherwise.</returns>
     public bool OverlapShape(Rect r) => r.OverlapShape(this);
+    /// <summary>
+    /// Checks if the segments overlap with a polyline.
+    /// </summary>
+    /// <param name="pl">The polyline to check for overlap with.</param>
+    /// <returns>True if the segments overlap with the polyline, false otherwise.</returns>
     public bool OverlapShape(Polyline pl) => pl.OverlapShape(this);
+    /// <summary>
+    /// Checks if the segments overlap with a polygon.
+    /// </summary>
+    /// <param name="p">The polygon to check for overlap with.</param>
+    /// <returns>True if the segments overlap with the polygon, false otherwise.</returns>
     public bool OverlapShape(Polygon p) => p.OverlapShape(this);
 
 }
