@@ -8,18 +8,48 @@ using ShapeEngine.Random;
 
 namespace ShapeEngine.Geometry.TriangulationDef;
 
+/// <summary>
+/// Represents a collection of triangles with utility methods for:
+/// <list type="bullet">
+/// <item>Performing triangulation operations</item>
+/// <item>Finding the closest point or triangle to a given location</item>
+/// <item>Checking if a point is contained within any triangle</item>
+/// <item>Detecting intersections with other shapes or colliders</item>
+/// </list>
+/// </summary>
 public partial class Triangulation : ShapeList<Triangle>
 {
     #region Constructors
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Triangulation"/> class.
+    /// </summary>
     public Triangulation() { }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Triangulation"/> class with the specified capacity.
+    /// </summary>
+    /// <param name="capacity">The number of triangles the collection can initially store.</param>
     public Triangulation(int capacity) : base(capacity) { }
     //public Triangulation(IShape shape) { AddRange(shape.Triangulate()); }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Triangulation"/> class with the specified triangles.
+    /// </summary>
+    /// <param name="triangles">The collection of triangles to initialize with.</param>
     public Triangulation(IEnumerable<Triangle> triangles) { AddRange(triangles); }
     #endregion
         
     #region Equals & HashCode
+    /// <summary>
+    /// Returns a hash code for this triangulation.
+    /// </summary>
+    /// <returns>A hash code for the current object.</returns>
     public override int GetHashCode() => Game.GetHashCode(this);
 
+    /// <summary>
+    /// Determines whether the specified <see cref="Triangulation"/> is equal to the current instance.
+    /// </summary>
+    /// <param name="other">The triangulation to compare with the current instance.</param>
+    /// <returns><c>true</c> if the specified triangulation is equal to the current instance; otherwise, <c>false</c>.</returns>
+    /// <remarks>Equality is determined by comparing the count and each triangle in order.</remarks>
     public bool Equals(Triangulation? other)
     {
         if (other == null) return false;
@@ -34,6 +64,10 @@ public partial class Triangulation : ShapeList<Triangle>
 
     #region Public
     
+    /// <summary>
+    /// Gets all unique points from all triangles in the triangulation.
+    /// </summary>
+    /// <returns>A <see cref="Points"/> collection containing all unique vertices.</returns>
     public Points GetUniquePoints()
     {
         var uniqueVertices = new HashSet<Vector2>();
@@ -47,6 +81,10 @@ public partial class Triangulation : ShapeList<Triangle>
 
         return new(uniqueVertices);
     }
+    /// <summary>
+    /// Gets all unique segments from all triangles in the triangulation.
+    /// </summary>
+    /// <returns>A <see cref="Segments"/> collection containing all unique segments.</returns>
     public Segments GetUniqueSegments()
     {
         var unique = new HashSet<Segment>();
@@ -60,6 +98,10 @@ public partial class Triangulation : ShapeList<Triangle>
 
         return new(unique);
     }
+    /// <summary>
+    /// Gets all unique triangles in the triangulation.
+    /// </summary>
+    /// <returns>A <see cref="Triangulation"/> containing all unique triangles.</returns>
     public Triangulation GetUniqueTriangles()
     {
         var uniqueTriangles = new HashSet<Triangle>();
@@ -71,6 +113,11 @@ public partial class Triangulation : ShapeList<Triangle>
 
         return new(uniqueTriangles);
     }
+    /// <summary>
+    /// Gets all triangles that contain the specified point.
+    /// </summary>
+    /// <param name="p">The point to test for containment.</param>
+    /// <returns>A <see cref="Triangulation"/> containing all triangles that contain the point.</returns>
     public Triangulation GetContainingTriangles(Vector2 p)
     {
         Triangulation result = new();
@@ -82,6 +129,13 @@ public partial class Triangulation : ShapeList<Triangle>
         return result;
     }
 
+    /// <summary>
+    /// Gets the segment of a triangle at the specified indices.
+    /// </summary>
+    /// <param name="triangleIndex">The index of the triangle in the collection.</param>
+    /// <param name="segmentIndex">The index of the segment in the triangle (0, 1, or 2).</param>
+    /// <returns>The <see cref="Segment"/> at the specified indices.</returns>
+    /// <remarks>Indices are wrapped using modulo operation.</remarks>
     public Segment GetSegment(int triangleIndex, int segmentIndex)
     {
         var i = triangleIndex % Count;
@@ -89,10 +143,12 @@ public partial class Triangulation : ShapeList<Triangle>
     }
     
     /// <summary>
-    /// Remove all triangles with an area less than the threshold. If threshold is smaller or equal to 0, nothing happens.
+    /// Remove all triangles with an area less than the threshold.
     /// </summary>
-    /// <param name="areaThreshold"></param>
-    /// <returns></returns>
+    /// <param name="areaThreshold">The minimum area a triangle must have to remain in the collection.
+    /// If the threshold is smaller or equal to 0, the function returns 0 immediately.</param>
+    /// <returns>The number of triangles removed.</returns>
+    /// <remarks>Triangles with area less than <paramref name="areaThreshold"/> are removed from the collection.</remarks>
     public int Remove(float areaThreshold)
     {
         if (areaThreshold <= 0f) return 0;
@@ -139,16 +195,16 @@ public partial class Triangulation : ShapeList<Triangle>
     /// <returns></returns>
     public Triangulation Subdivide(float minArea)
     {
-        Triangulation final = new();
+        Triangulation final = [];
 
-        Triangulation queue = new();
+        Triangulation queue = [];
         queue.AddRange(this);
         while (queue.Count > 0)
         {
             int endIndex = queue.Count - 1;
             var tri = queue[endIndex];
 
-            var triArea = tri.GetArea();
+            float triArea = tri.GetArea();
             if (triArea < minArea) final.Add(tri);
             else queue.AddRange(tri.Triangulate(minArea));
             queue.RemoveAt(endIndex);

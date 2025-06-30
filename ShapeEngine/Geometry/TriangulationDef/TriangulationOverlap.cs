@@ -95,10 +95,11 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Find if any triangle in this collection overlaps the specified shape.
+    /// Determines if any triangle in this collection overlaps the specified triangle shape.
     /// </summary>
-    /// <param name="shape"></param>
+    /// <param name="shape">The triangle to check for overlap.</param>
     /// <returns>Returns true after the first overlap is found. If no overlap is found, returns false.</returns>
+    /// <remarks>Returns as soon as an overlapping triangle is found.</remarks>
     public bool OverlapShape(Triangle shape)
     {
         for (int i = 0; i < Count; i++)
@@ -111,10 +112,11 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Find if any triangle in this collection overlaps the specified shape.
+    /// Determines if any triangle in this collection overlaps the specified rectangle shape.
     /// </summary>
-    /// <param name="shape"></param>
+    /// <param name="shape">The rectangle to check for overlap.</param>
     /// <returns>Returns true after the first overlap is found. If no overlap is found, returns false.</returns>
+    /// <remarks>Returns as soon as an overlapping triangle is found.</remarks>
     public bool OverlapShape(Rect shape)
     {
         for (int i = 0; i < Count; i++)
@@ -127,10 +129,11 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Find if any triangle in this collection overlaps the specified shape.
+    /// Determines if any triangle in this collection overlaps the specified quadrilateral shape.
     /// </summary>
-    /// <param name="shape"></param>
+    /// <param name="shape">The quadrilateral to check for overlap.</param>
     /// <returns>Returns true after the first overlap is found. If no overlap is found, returns false.</returns>
+    /// <remarks>Returns as soon as an overlapping triangle is found.</remarks>
     public bool OverlapShape(Quad shape)
     {
         for (int i = 0; i < Count; i++)
@@ -143,10 +146,11 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Find if any triangle in this collection overlaps the specified shape.
+    /// Determines if any triangle in this collection overlaps the specified polygon shape.
     /// </summary>
-    /// <param name="shape"></param>
+    /// <param name="shape">The polygon to check for overlap.</param>
     /// <returns>Returns true after the first overlap is found. If no overlap is found, returns false.</returns>
+    /// <remarks>Returns as soon as an overlapping triangle is found.</remarks>
     public bool OverlapShape(Polygon shape)
     {
         for (int i = 0; i < Count; i++)
@@ -159,10 +163,11 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Find if any triangle in this collection overlaps the specified shape.
+    /// Determines if any triangle in this collection overlaps the specified polyline shape.
     /// </summary>
-    /// <param name="shape"></param>
+    /// <param name="shape">The polyline to check for overlap.</param>
     /// <returns>Returns true after the first overlap is found. If no overlap is found, returns false.</returns>
+    /// <remarks>Returns as soon as an overlapping triangle is found.</remarks>
     public bool OverlapShape(Polyline shape)
     {
         for (int i = 0; i < Count; i++)
@@ -175,16 +180,17 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Find if any triangle in this collection overlaps the specified shape.
+    /// Determines if any triangle in this collection overlaps the specified segments shape.
     /// </summary>
-    /// <param name="segments"></param>
+    /// <param name="shape">The segments to check for overlap.</param>
     /// <returns>Returns true after the first overlap is found. If no overlap is found, returns false.</returns>
-    public bool OverlapShape(Segments segments)
+    /// <remarks>Returns as soon as an overlapping triangle is found.</remarks>
+    public bool OverlapShape(Segments shape)
     {
         for (int i = 0; i < Count; i++)
         {
             var tri = this[i];
-            if (tri.OverlapShape(segments)) return true;
+            if (tri.OverlapShape(shape)) return true;
         }
 
         return false;
