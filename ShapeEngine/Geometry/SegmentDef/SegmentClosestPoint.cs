@@ -15,6 +15,15 @@ namespace ShapeEngine.Geometry.SegmentDef;
 
 public readonly partial struct Segment
 {
+    /// <summary>
+    /// Finds the closest point on this segment to a given point.
+    /// </summary>
+    /// <param name="p">The point to find the closest point to.</param>
+    /// <param name="disSquared">The squared distance from the point to the closest point on the segment.</param>
+    /// <returns>A <see cref="CollisionPoint"/> representing the closest point and its normal.</returns>
+    /// <remarks>
+    /// If the closest point is at the segment's endpoint, the normal is chosen based on the direction to the point.
+    /// </remarks>
     public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared)
     {
         Vector2 c;
@@ -32,6 +41,14 @@ public readonly partial struct Segment
         return new(c, -Normal);
     }
 
+    /// <summary>
+    /// Finds the closest points between this segment and a line.
+    /// </summary>
+    /// <param name="other">The line to compare with.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.</returns>
+    /// <remarks>
+    /// The result includes the closest point on the segment and the closest point on the line, along with their normals and the squared distance between them.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Line other)
     {
         var result = GetClosestPointSegmentLine(Start, End, other.Point, other.Direction, out float disSquared);
@@ -39,27 +56,16 @@ public readonly partial struct Segment
             new(result.self, Normal),
             new(result.other, other.Normal),
             disSquared);
-        // var d1 = End - Start;
-        // var d2 = other.Direction;
-        // var r = Start - other.Point;
-        //
-        // float a = Vector2.Dot(d1, d1);
-        // float b = Vector2.Dot(d1, d2);
-        // float c = Vector2.Dot(d2, r);
-        // float e = Vector2.Dot(d2, d2);
-        //
-        // float s = Math.Clamp((b * c - a * c) / (a * e - b * b), 0.0f, 1.0f);
-        // float t = (b * s + c) / e;
-        //
-        // var closestPoint1 = Start + s * d1;
-        // var closestPoint2 = other.Point + t * d2;
-        // float disSquared = (closestPoint2 - closestPoint1).LengthSquared();
-        // return new(
-        //     new(closestPoint1, Normal), 
-        //     new(closestPoint2, other.Normal),
-        //     disSquared);
     }
 
+    /// <summary>
+    /// Finds the closest points between this segment and a ray.
+    /// </summary>
+    /// <param name="other">The ray to compare with.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.</returns>
+    /// <remarks>
+    /// The result includes the closest point on the segment and the closest point on the ray, along with their normals and the squared distance between them.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Ray other)
     {
         var result = GetClosestPointSegmentRay(Start, End, other.Point, other.Direction, out var disSquared);
@@ -67,23 +73,16 @@ public readonly partial struct Segment
             new(result.self, Normal),
             new(result.other, other.Normal),
             disSquared);
-        // var d1 = End - Start;
-        // var d2 = other.Direction;
-        // var r = Start - other.Point;
-        //
-        // float a = Vector2.Dot(d1, d1);
-        // float b = Vector2.Dot(d1, d2);
-        // float c = Vector2.Dot(d2, r);
-        // float e = Vector2.Dot(d2, d2);
-        //
-        // float s = Math.Clamp((b * c - a * c) / (a * e - b * b), 0.0f, 1.0f);
-        // float t = Math.Max(0.0f, (b * s + c) / e);
-        //
-        // var closestPoint1 = Start + s * d1;
-        // var closestPoint2 = other.Point + t * d2;
-        // float disSquared = (closestPoint2 - closestPoint1).LengthSquared();
     }
 
+    /// <summary>
+    /// Finds the closest points between this segment and another segment.
+    /// </summary>
+    /// <param name="other">The other segment to compare with.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.</returns>
+    /// <remarks>
+    /// Handles degenerate cases where either or both segments are points.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Segment other)
     {
         var d1 = End - Start;
@@ -162,6 +161,14 @@ public readonly partial struct Segment
             disSquared);
     }
 
+    /// <summary>
+    /// Finds the closest points between this segment and a circle.
+    /// </summary>
+    /// <param name="other">The circle to compare with.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.</returns>
+    /// <remarks>
+    /// The closest point on the circle is found along the direction from the circle's center to the segment.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Circle other)
     {
         var d1 = End - Start;
@@ -183,6 +190,14 @@ public readonly partial struct Segment
             disSquared);
     }
 
+    /// <summary>
+    /// Finds the closest points between this segment and a triangle.
+    /// </summary>
+    /// <param name="other">The triangle to compare with.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.</returns>
+    /// <remarks>
+    /// The closest point is determined by checking all triangle edges.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Triangle other)
     {
         var closestResult = GetClosestPointSegmentSegment(Start, End, other.A, other.B, out float minDisSquared);
@@ -224,6 +239,14 @@ public readonly partial struct Segment
             otherIndex);
     }
 
+    /// <summary>
+    /// Finds the closest points between this segment and a quadrilateral.
+    /// </summary>
+    /// <param name="other">The quadrilateral to compare with.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.</returns>
+    /// <remarks>
+    /// The closest point is determined by checking all quad edges.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Quad other)
     {
         var closestResult = GetClosestPointSegmentSegment(Start, End, other.A, other.B, out float minDisSquared);
@@ -267,6 +290,14 @@ public readonly partial struct Segment
             otherIndex);
     }
 
+    /// <summary>
+    /// Finds the closest points between this segment and a rectangle.
+    /// </summary>
+    /// <param name="other">The rectangle to compare with.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.</returns>
+    /// <remarks>
+    /// The closest point is determined by checking all rectangle edges.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Rect other)
     {
         var closestResult = GetClosestPointSegmentSegment(Start, End, other.A, other.B, out float minDisSquared);
@@ -310,6 +341,14 @@ public readonly partial struct Segment
             otherIndex);
     }
 
+    /// <summary>
+    /// Finds the closest points between this segment and a polygon.
+    /// </summary>
+    /// <param name="other">The polygon to compare with.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.</returns>
+    /// <remarks>
+    /// The closest point is determined by checking all polygon edges.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Polygon other)
     {
         if (other.Count < 3) return new();
@@ -342,6 +381,14 @@ public readonly partial struct Segment
             otherIndex);
     }
 
+    /// <summary>
+    /// Finds the closest points between this segment and a polyline.
+    /// </summary>
+    /// <param name="other">The polyline to compare with.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.</returns>
+    /// <remarks>
+    /// The closest point is determined by checking all polyline segments.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Polyline other)
     {
         if (other.Count < 2) return new();
@@ -374,6 +421,14 @@ public readonly partial struct Segment
             otherIndex);
     }
 
+    /// <summary>
+    /// Finds the closest points between this segment and a set of segments.
+    /// </summary>
+    /// <param name="segments">The set of segments to compare with.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.</returns>
+    /// <remarks>
+    /// Iterates through each segment in the set to find the closest points.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Segments segments)
     {
         if (segments.Count <= 0) return new();
@@ -396,6 +451,12 @@ public readonly partial struct Segment
         return closestResult.SetOtherSegmentIndex(otherIndex);
     }
 
+    /// <summary>
+    /// Returns the vertex (Start or End) of the segment that is closest to the given point <paramref name="p"/>.
+    /// </summary>
+    /// <param name="p">The point to compare against the segment's vertices.</param>
+    /// <param name="disSquared">The squared distance from <paramref name="p"/> to the closest vertex.</param>
+    /// <returns>The closest vertex (Start or End) as a <see cref="Vector2"/>.</returns>
     public Vector2 GetClosestVertex(Vector2 p, out float disSquared)
     {
         float disSqA = (p - Start).LengthSquared();
@@ -410,6 +471,12 @@ public readonly partial struct Segment
         return End;
     }
 
+    /// <summary>
+    /// Returns the vertex (Start or End) of the segment that is furthest from the given point <paramref name="p"/>.
+    /// </summary>
+    /// <param name="p">The point to compare against the segment's vertices.</param>
+    /// <param name="disSquared">The squared distance from <paramref name="p"/> to the furthest vertex.</param>
+    /// <returns>The furthest vertex (Start or End) as a <see cref="Vector2"/>.</returns>
     public Vector2 GetFurthestVertex(Vector2 p, out float disSquared)
     {
         float disSqA = (p - Start).LengthSquared();

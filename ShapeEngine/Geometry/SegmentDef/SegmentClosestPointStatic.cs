@@ -5,6 +5,14 @@ namespace ShapeEngine.Geometry.SegmentDef;
 
 public readonly partial struct Segment
 {
+    /// <summary>
+    /// Finds the closest point on a segment to a given point.
+    /// </summary>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <param name="p">The point to find the closest point to.</param>
+    /// <param name="disSquared">The squared distance from the point to the closest point on the segment.</param>
+    /// <returns>The closest point on the segment to the given point.</returns>
     public static Vector2 GetClosestPointSegmentPoint(Vector2 segmentStart, Vector2 segmentEnd, Vector2 p, out float disSquared)
     {
         var w = (segmentEnd - segmentStart);
@@ -29,6 +37,16 @@ public readonly partial struct Segment
         return result;
     }
 
+    /// <summary>
+    /// Finds the closest points between two segments.
+    /// </summary>
+    /// <param name="segment1Start">The start point of the first segment.</param>
+    /// <param name="segment1End">The end point of the first segment.</param>
+    /// <param name="segment2Start">The start point of the second segment.</param>
+    /// <param name="segment2End">The end point of the second segment.</param>
+    /// <param name="disSquared">The squared distance between the closest points.</param>
+    /// <returns>A tuple containing the closest point on each segment.</returns>
+    /// <remarks>Handles degenerate cases where either or both segments are points.</remarks>
     public static (Vector2 self, Vector2 other) GetClosestPointSegmentSegment(Vector2 segment1Start, Vector2 segment1End, Vector2 segment2Start,
         Vector2 segment2End, out float disSquared)
     {
@@ -110,6 +128,16 @@ public readonly partial struct Segment
         return linePoint + projectionLength * lineDirectionNormalized;
     }
 
+    /// <summary>
+    /// Finds the closest points between a segment and a line.
+    /// </summary>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <param name="linePoint">A point on the line.</param>
+    /// <param name="lineDirection">The direction vector of the line.</param>
+    /// <param name="disSquared">The squared distance between the closest points.</param>
+    /// <returns>A tuple containing the closest point on the segment and the closest point on the line.</returns>
+    /// <remarks>Handles parallel and non-parallel cases.</remarks>
     public static (Vector2 self, Vector2 other) GetClosestPointSegmentLine(Vector2 segmentStart, Vector2 segmentEnd, Vector2 linePoint, Vector2 lineDirection,
         out float disSquared)
     {
@@ -180,6 +208,16 @@ public readonly partial struct Segment
         return rayStart + projectionLength * rayDirectionNormalized;
     }
 
+    /// <summary>
+    /// Finds the closest points between a segment and a ray.
+    /// </summary>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="disSquared">The squared distance between the closest points.</param>
+    /// <returns>A tuple containing the closest point on the segment and the closest point on the ray.</returns>
+    /// <remarks>Handles parallel and non-parallel cases, and ensures the closest point on the ray is not behind the ray's origin.</remarks>
     public static (Vector2 self, Vector2 other) GetClosestPointSegmentRay(Vector2 segmentStart, Vector2 segmentEnd, Vector2 rayPoint, Vector2 rayDirection,
         out float disSquared)
     {
@@ -254,6 +292,16 @@ public readonly partial struct Segment
         return (closestPointOnSegment, closestPointOnRay);
     }
 
+    /// <summary>
+    /// Finds the closest points between a segment and a circle.
+    /// </summary>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <param name="circleCenter">The center of the circle.</param>
+    /// <param name="circleRadius">The radius of the circle.</param>
+    /// <param name="disSquared">The squared distance between the closest points.</param>
+    /// <returns>A tuple containing the closest point on the segment and the closest point on the circle.</returns>
+    /// <remarks>The closest point on the circle is found along the direction from the circle's center to the segment.</remarks>
     public static (Vector2 self, Vector2 other) GetClosestPointSegmentCircle(Vector2 segmentStart, Vector2 segmentEnd, Vector2 circleCenter, float circleRadius,
         out float disSquared)
     {
