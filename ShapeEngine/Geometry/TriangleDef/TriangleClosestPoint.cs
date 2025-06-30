@@ -15,6 +15,19 @@ namespace ShapeEngine.Geometry.TriangleDef;
 
 public readonly partial struct Triangle
 {
+    /// <summary>
+    /// Finds the closest point on a triangle's perimeter to a specified point using static triangle vertices.
+    /// </summary>
+    /// <param name="a">The first vertex of the triangle.</param>
+    /// <param name="b">The second vertex of the triangle.</param>
+    /// <param name="c">The third vertex of the triangle.</param>
+    /// <param name="p">The point to find the closest point to.</param>
+    /// <param name="disSquared">When this method returns, contains the squared distance to the closest point.</param>
+    /// <returns>The closest point on the triangle's perimeter to the specified point.</returns>
+    /// <remarks>
+    /// This static method checks all three edges of the triangle and returns the closest point found.
+    /// The squared distance is provided for performance reasons to avoid expensive square root calculations.
+    /// </remarks>
     public static Vector2 GetClosestPointTrianglePoint(Vector2 a, Vector2 b, Vector2 c, Vector2 p, out float disSquared)
     {
         var min = Segment.GetClosestPointSegmentPoint(a, b, p, out disSquared);
@@ -36,6 +49,16 @@ public readonly partial struct Triangle
         return min;
     }
 
+    /// <summary>
+    /// Finds the closest point on this triangle's perimeter to a specified point.
+    /// </summary>
+    /// <param name="p">The point to find the closest point to.</param>
+    /// <param name="disSquared">When this method returns, contains the squared distance to the closest point.</param>
+    /// <returns>A collision point containing the closest point and its surface normal.</returns>
+    /// <remarks>
+    /// This method checks all three edges of the triangle and returns the closest point with its corresponding
+    /// surface normal. The normal points outward from the triangle's surface at the closest point.
+    /// </remarks>
     public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared)
     {
         var min = Segment.GetClosestPointSegmentPoint(A, B, p, out disSquared);
@@ -60,6 +83,17 @@ public readonly partial struct Triangle
         return new(min, normal.GetPerpendicularRight().Normalize());
     }
 
+    /// <summary>
+    /// Finds the closest point on this triangle's perimeter to a specified point, including edge index information.
+    /// </summary>
+    /// <param name="p">The point to find the closest point to.</param>
+    /// <param name="disSquared">When this method returns, contains the squared distance to the closest point.</param>
+    /// <param name="index">When this method returns, contains the index of the edge containing the closest point (0=A-B, 1=B-C, 2=C-A).</param>
+    /// <returns>A collision point containing the closest point and its surface normal.</returns>
+    /// <remarks>
+    /// This method extends the basic closest point functionality by also providing the index of the edge
+    /// that contains the closest point, which is useful for edge-specific operations and analysis.
+    /// </remarks>
     public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared, out int index)
     {
         var min = Segment.GetClosestPointSegmentPoint(A, B, p, out disSquared);
@@ -87,6 +121,15 @@ public readonly partial struct Triangle
         return new(min, normal.GetPerpendicularRight().Normalize());
     }
 
+    /// <summary>
+    /// Finds the closest points between this triangle and a line.
+    /// </summary>
+    /// <param name="other">The line to find the closest points with.</param>
+    /// <returns>A result containing the closest points on both shapes, the squared distance, and the triangle edge index.</returns>
+    /// <remarks>
+    /// This method finds the closest approach between the triangle's perimeter and an infinite line.
+    /// The result includes collision points for both shapes with their respective surface normals.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Line other)
     {
         var closestResult = Segment.GetClosestPointSegmentLine(A, B, other.Point, other.Direction, out float disSquared);
@@ -118,6 +161,15 @@ public readonly partial struct Triangle
             index);
     }
 
+    /// <summary>
+    /// Finds the closest points between this triangle and a ray.
+    /// </summary>
+    /// <param name="other">The ray to find the closest points with.</param>
+    /// <returns>A result containing the closest points on both shapes, the squared distance, and the triangle edge index.</returns>
+    /// <remarks>
+    /// This method finds the closest approach between the triangle's perimeter and a ray (semi-infinite line).
+    /// The result includes collision points for both shapes with their respective surface normals.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Ray other)
     {
         var closestResult = Segment.GetClosestPointSegmentRay(A, B, other.Point, other.Direction, out float disSquared);
@@ -149,6 +201,15 @@ public readonly partial struct Triangle
             index);
     }
 
+    /// <summary>
+    /// Finds the closest points between this triangle and a line segment.
+    /// </summary>
+    /// <param name="other">The segment to find the closest points with.</param>
+    /// <returns>A result containing the closest points on both shapes, the squared distance, and the triangle edge index.</returns>
+    /// <remarks>
+    /// This method finds the closest approach between the triangle's perimeter and a finite line segment.
+    /// The result includes collision points for both shapes with their respective surface normals.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Segment other)
     {
         var closestResult = Segment.GetClosestPointSegmentSegment(A, B, other.Start, other.End, out float disSquared);
@@ -180,6 +241,15 @@ public readonly partial struct Triangle
             index);
     }
 
+    /// <summary>
+    /// Finds the closest points between this triangle and a circle.
+    /// </summary>
+    /// <param name="other">The circle to find the closest points with.</param>
+    /// <returns>A result containing the closest points on both shapes, the squared distance, and the triangle edge index.</returns>
+    /// <remarks>
+    /// This method finds the closest approach between the triangle's perimeter and a circle's circumference.
+    /// The result includes collision points for both shapes with their respective surface normals.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Circle other)
     {
         var closestResult = Segment.GetClosestPointSegmentCircle(A, B, other.Center, other.Radius, out float disSquared);
@@ -210,6 +280,15 @@ public readonly partial struct Triangle
             index);
     }
 
+    /// <summary>
+    /// Finds the closest points between this triangle and another triangle.
+    /// </summary>
+    /// <param name="other">The other triangle to find the closest points with.</param>
+    /// <returns>A result containing the closest points on both triangles, the squared distance, and edge indices.</returns>
+    /// <remarks>
+    /// This method performs a comprehensive comparison between all edges of both triangles to find
+    /// the closest approach points. This is useful for collision detection and proximity analysis.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Triangle other)
     {
         var closestResult = Segment.GetClosestPointSegmentSegment(A, B, other.A, other.B, out float disSquared);
@@ -310,6 +389,15 @@ public readonly partial struct Triangle
             otherIndex);
     }
 
+    /// <summary>
+    /// Finds the closest points between this triangle and a quadrilateral.
+    /// </summary>
+    /// <param name="other">The quad to find the closest points with.</param>
+    /// <returns>A result containing the closest points on both shapes, the squared distance, and edge indices.</returns>
+    /// <remarks>
+    /// This method compares the triangle's edges against all four edges of the quadrilateral
+    /// to find the closest approach points between the two shapes.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Quad other)
     {
         var closestResult = Segment.GetClosestPointSegmentSegment(A, B, other.A, other.B, out float disSquared);
@@ -440,6 +528,15 @@ public readonly partial struct Triangle
             otherIndex);
     }
 
+    /// <summary>
+    /// Finds the closest points between this triangle and a rectangle.
+    /// </summary>
+    /// <param name="other">The rectangle to find the closest points with.</param>
+    /// <returns>A result containing the closest points on both shapes, the squared distance, and edge indices.</returns>
+    /// <remarks>
+    /// This method compares the triangle's edges against all four edges of the rectangle
+    /// to find the closest approach points between the two shapes.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Rect other)
     {
         var closestResult = Segment.GetClosestPointSegmentSegment(A, B, other.A, other.B, out float disSquared);
@@ -570,6 +667,15 @@ public readonly partial struct Triangle
             otherIndex);
     }
 
+    /// <summary>
+    /// Finds the closest points between this triangle and a polygon.
+    /// </summary>
+    /// <param name="other">The polygon to find the closest points with.</param>
+    /// <returns>A result containing the closest points on both shapes, the squared distance, and edge indices.</returns>
+    /// <remarks>
+    /// This method compares the triangle's edges against all edges of the polygon
+    /// to find the closest approach points. The polygon can have any number of vertices.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Polygon other)
     {
         if (other.Count < 3) return new();
@@ -628,6 +734,15 @@ public readonly partial struct Triangle
             otherIndex);
     }
 
+    /// <summary>
+    /// Finds the closest points between this triangle and a polyline.
+    /// </summary>
+    /// <param name="other">The polyline to find the closest points with.</param>
+    /// <returns>A result containing the closest points on both shapes, the squared distance, and edge indices.</returns>
+    /// <remarks>
+    /// This method compares the triangle's edges against all segments of the polyline
+    /// to find the closest approach points. Unlike polygons, polylines are not closed shapes.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Polyline other)
     {
         if (other.Count < 2) return new();
@@ -686,6 +801,15 @@ public readonly partial struct Triangle
             otherIndex);
     }
 
+    /// <summary>
+    /// Finds the closest points between this triangle and a collection of line segments.
+    /// </summary>
+    /// <param name="other">The segments collection to find the closest points with.</param>
+    /// <returns>A result containing the closest points on both shapes, the squared distance, and edge indices.</returns>
+    /// <remarks>
+    /// This method compares the triangle's edges against all segments in the collection
+    /// to find the closest approach points between any triangle edge and any segment.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Segments other)
     {
         if (other.Count <= 0) return new();
@@ -706,6 +830,16 @@ public readonly partial struct Triangle
         return closestResult;
     }
 
+    /// <summary>
+    /// Finds the triangle edge closest to a specified point.
+    /// </summary>
+    /// <param name="p">The point to find the closest edge to.</param>
+    /// <param name="disSquared">When this method returns, contains the squared distance to the closest edge.</param>
+    /// <returns>A tuple containing the closest edge as a segment and the closest point on that edge with its normal.</returns>
+    /// <remarks>
+    /// This method is useful when you need to know which specific edge of the triangle is closest to a point,
+    /// along with the exact closest point on that edge and its surface normal.
+    /// </remarks>
     public (Segment segment, CollisionPoint segmentPoint) GetClosestSegment(Vector2 p, out float disSquared)
     {
         var closestSegment = SegmentAToB;
@@ -732,6 +866,17 @@ public readonly partial struct Triangle
         return (closestSegment, closestResult);
     }
 
+    /// <summary>
+    /// Finds the triangle vertex closest to a specified point.
+    /// </summary>
+    /// <param name="p">The point to find the closest vertex to.</param>
+    /// <param name="disSquared">When this method returns, contains the squared distance to the closest vertex.</param>
+    /// <param name="index">When this method returns, contains the index of the closest vertex (0=A, 1=B, 2=C).</param>
+    /// <returns>The position of the closest vertex.</returns>
+    /// <remarks>
+    /// This method compares distances to all three vertices and returns the closest one along with its index.
+    /// This is useful for vertex-specific operations and snapping behaviors.
+    /// </remarks>
     public Vector2 GetClosestVertex(Vector2 p, out float disSquared, out int index)
     {
         var closest = A;
@@ -756,6 +901,17 @@ public readonly partial struct Triangle
         return closest;
     }
 
+    /// <summary>
+    /// Finds the triangle vertex furthest from a specified point.
+    /// </summary>
+    /// <param name="p">The point to find the furthest vertex from.</param>
+    /// <param name="disSquared">When this method returns, contains the squared distance to the furthest vertex.</param>
+    /// <param name="index">When this method returns, contains the index of the furthest vertex (0=A, 1=B, 2=C).</param>
+    /// <returns>The position of the furthest vertex.</returns>
+    /// <remarks>
+    /// This method compares distances to all three vertices and returns the furthest one along with its index.
+    /// This is useful for finding the vertex that provides maximum separation from a given point.
+    /// </remarks>
     public Vector2 GetFurthestVertex(Vector2 p, out float disSquared, out int index)
     {
         var furthest = A;

@@ -14,19 +14,156 @@ namespace ShapeEngine.Geometry.TriangleDef;
 
 public readonly partial struct Triangle
 {
+    /// <summary>
+    /// Tests whether this triangle overlaps with a line segment defined by two points.
+    /// </summary>
+    /// <param name="segmentStart">The start point of the line segment.</param>
+    /// <param name="segmentEnd">The end point of the line segment.</param>
+    /// <returns>True if the triangle overlaps with the line segment; otherwise, false.</returns>
+    /// <remarks>
+    /// This method checks for any intersection or containment between the triangle and the line segment.
+    /// Overlap includes cases where the segment intersects triangle edges or is completely contained within the triangle.
+    /// </remarks>
     public bool OverlapSegment(Vector2 segmentStart, Vector2 segmentEnd) => OverlapTriangleSegment(A, B, C, segmentStart, segmentEnd);
+    
+    /// <summary>
+    /// Tests whether this triangle overlaps with an infinite line defined by a point and direction.
+    /// </summary>
+    /// <param name="linePoint">A point on the infinite line.</param>
+    /// <param name="lineDirection">The direction vector of the line.</param>
+    /// <returns>True if the triangle overlaps with the line; otherwise, false.</returns>
+    /// <remarks>
+    /// This method checks for any intersection between the triangle and the infinite line.
+    /// Since the line is infinite, this tests whether the line passes through any part of the triangle.
+    /// </remarks>
     public bool OverlapLine(Vector2 linePoint, Vector2 lineDirection) => OverlapTriangleLine(A, B, C, linePoint, lineDirection);
+    
+    /// <summary>
+    /// Tests whether this triangle overlaps with a ray (semi-infinite line) defined by an origin point and direction.
+    /// </summary>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <returns>True if the triangle overlaps with the ray; otherwise, false.</returns>
+    /// <remarks>
+    /// This method checks for any intersection between the triangle and the ray.
+    /// The ray extends infinitely in one direction from the origin point.
+    /// </remarks>
     public bool OverlapRay(Vector2 rayPoint, Vector2 rayDirection) => OverlapTriangleRay(A, B, C, rayPoint, rayDirection);
+    
+    /// <summary>
+    /// Tests whether this triangle overlaps with a circle defined by center and radius.
+    /// </summary>
+    /// <param name="circleCenter">The center point of the circle.</param>
+    /// <param name="circleRadius">The radius of the circle.</param>
+    /// <returns>True if the triangle overlaps with the circle; otherwise, false.</returns>
+    /// <remarks>
+    /// This method checks for any intersection or containment between the triangle and circle.
+    /// Overlap includes cases where they intersect, one contains the other, or they share boundary points.
+    /// </remarks>
     public bool OverlapCircle(Vector2 circleCenter, float circleRadius) => OverlapTriangleCircle(A, B, C, circleCenter, circleRadius);
+    
+    /// <summary>
+    /// Tests whether this triangle overlaps with another triangle defined by three vertices.
+    /// </summary>
+    /// <param name="a">The first vertex of the other triangle.</param>
+    /// <param name="b">The second vertex of the other triangle.</param>
+    /// <param name="c">The third vertex of the other triangle.</param>
+    /// <returns>True if the triangles overlap; otherwise, false.</returns>
+    /// <remarks>
+    /// This method performs comprehensive triangle-triangle overlap testing, checking for
+    /// intersection, containment, or shared boundaries between the two triangles.
+    /// </remarks>
     public bool OverlapTriangle(Vector2 a, Vector2 b, Vector2 c) => OverlapTriangleTriangle(A, B, C, a, b, c);
+    
+    /// <summary>
+    /// Tests whether this triangle overlaps with a quadrilateral defined by four vertices.
+    /// </summary>
+    /// <param name="a">The first vertex of the quadrilateral.</param>
+    /// <param name="b">The second vertex of the quadrilateral.</param>
+    /// <param name="c">The third vertex of the quadrilateral.</param>
+    /// <param name="d">The fourth vertex of the quadrilateral.</param>
+    /// <returns>True if the triangle overlaps with the quadrilateral; otherwise, false.</returns>
+    /// <remarks>
+    /// This method checks for any intersection or containment between the triangle and quadrilateral.
+    /// </remarks>
     public bool OverlapQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => OverlapTriangleQuad(A, B, C, a, b, c, d);
+    
+    /// <summary>
+    /// Tests whether this triangle overlaps with a rectangle defined by four vertices.
+    /// </summary>
+    /// <param name="a">The first vertex of the rectangle.</param>
+    /// <param name="b">The second vertex of the rectangle.</param>
+    /// <param name="c">The third vertex of the rectangle.</param>
+    /// <param name="d">The fourth vertex of the rectangle.</param>
+    /// <returns>True if the triangle overlaps with the rectangle; otherwise, false.</returns>
+    /// <remarks>
+    /// This method checks for any intersection or containment between the triangle and rectangle.
+    /// The rectangle is treated as a general quadrilateral for overlap testing.
+    /// </remarks>
     public bool OverlapRect(Vector2 a, Vector2 b, Vector2 c, Vector2 d) => OverlapTriangleQuad(A, B, C, a, b, c, d);
+    
+    /// <summary>
+    /// Tests whether this triangle overlaps with a polygon defined by a list of vertices.
+    /// </summary>
+    /// <param name="points">The vertices of the polygon in order.</param>
+    /// <returns>True if the triangle overlaps with the polygon; otherwise, false.</returns>
+    /// <remarks>
+    /// This method checks for any intersection or containment between the triangle and polygon.
+    /// The polygon can have any number of vertices and can be convex or concave.
+    /// </remarks>
     public bool OverlapPolygon(List<Vector2> points) => OverlapTrianglePolygon(A, B, C, points);
+    
+    /// <summary>
+    /// Tests whether this triangle overlaps with a polyline (open polygon) defined by a list of vertices.
+    /// </summary>
+    /// <param name="points">The vertices of the polyline in order.</param>
+    /// <returns>True if the triangle overlaps with the polyline; otherwise, false.</returns>
+    /// <remarks>
+    /// This method checks for any intersection between the triangle and the polyline.
+    /// Unlike polygons, polylines are not closed shapes and represent a series of connected line segments.
+    /// </remarks>
     public bool OverlapPolyline(List<Vector2> points) => OverlapTrianglePolyline(A, B, C, points);
+    
+    /// <summary>
+    /// Tests whether this triangle overlaps with a collection of line segments.
+    /// </summary>
+    /// <param name="segments">The collection of line segments to test against.</param>
+    /// <returns>True if the triangle overlaps with any of the segments; otherwise, false.</returns>
+    /// <remarks>
+    /// This method checks for intersection between the triangle and any segment in the collection.
+    /// Returns true as soon as any overlap is found for performance efficiency.
+    /// </remarks>
     public bool OverlapSegments(List<Segment> segments) => OverlapTriangleSegments(A, B, C, segments);
+    
+    /// <summary>
+    /// Tests whether this triangle overlaps with a line shape.
+    /// </summary>
+    /// <param name="line">The line to test for overlap with.</param>
+    /// <returns>True if the triangle overlaps with the line; otherwise, false.</returns>
+    /// <remarks>
+    /// This method provides a convenient overload for testing overlap with Line objects.
+    /// </remarks>
     public bool OverlapShape(Line line) => OverlapTriangleLine(A, B, C, line.Point, line.Direction);
+    
+    /// <summary>
+    /// Tests whether this triangle overlaps with a ray shape.
+    /// </summary>
+    /// <param name="ray">The ray to test for overlap with.</param>
+    /// <returns>True if the triangle overlaps with the ray; otherwise, false.</returns>
+    /// <remarks>
+    /// This method provides a convenient overload for testing overlap with Ray objects.
+    /// </remarks>
     public bool OverlapShape(Ray ray) => OverlapTriangleRay(A, B, C, ray.Point, ray.Direction);
 
+    /// <summary>
+    /// Tests whether this triangle overlaps with a collider of any supported shape type.
+    /// </summary>
+    /// <param name="collider">The collider to test for overlap with.</param>
+    /// <returns>True if the triangle overlaps with the collider; otherwise, false.</returns>
+    /// <remarks>
+    /// This method determines the collider's shape type and delegates to the appropriate
+    /// shape-specific overlap method. If the collider is disabled, this method returns false.
+    /// </remarks>
     public bool Overlap(Collider collider)
     {
         if (!collider.Enabled) return false;
@@ -65,6 +202,15 @@ public readonly partial struct Triangle
         return false;
     }
 
+    /// <summary>
+    /// Tests whether this triangle overlaps with a collection of line segments.
+    /// </summary>
+    /// <param name="segments">The segments collection to test for overlap with.</param>
+    /// <returns>True if the triangle overlaps with any segment in the collection; otherwise, false.</returns>
+    /// <remarks>
+    /// This method iterates through all segments and returns true as soon as any overlap is found.
+    /// This provides better performance than checking all segments when only overlap detection is needed.
+    /// </remarks>
     public bool OverlapShape(Segments segments)
     {
         if (segments.Count <= 0) return false;
@@ -81,9 +227,35 @@ public readonly partial struct Triangle
         return false;
     }
 
+    /// <summary>
+    /// Tests whether this triangle overlaps with a line segment.
+    /// </summary>
+    /// <param name="s">The segment to test for overlap with.</param>
+    /// <returns>True if the triangle overlaps with the segment; otherwise, false.</returns>
+    /// <remarks>
+    /// This method delegates to the segment's overlap testing method for consistency and performance.
+    /// </remarks>
     public bool OverlapShape(Segment s) => s.OverlapShape(this);
+    
+    /// <summary>
+    /// Tests whether this triangle overlaps with a circle.
+    /// </summary>
+    /// <param name="c">The circle to test for overlap with.</param>
+    /// <returns>True if the triangle overlaps with the circle; otherwise, false.</returns>
+    /// <remarks>
+    /// This method delegates to the circle's overlap testing method for consistency and performance.
+    /// </remarks>
     public bool OverlapShape(Circle c) => c.OverlapShape(this);
 
+    /// <summary>
+    /// Tests whether this triangle overlaps with another triangle.
+    /// </summary>
+    /// <param name="b">The other triangle to test for overlap with.</param>
+    /// <returns>True if the triangles overlap; otherwise, false.</returns>
+    /// <remarks>
+    /// This method performs comprehensive triangle-triangle overlap testing using the Separating Axis Theorem
+    /// or similar geometric algorithms to determine if the triangles intersect, contain each other, or share boundaries.
+    /// </remarks>
     public bool OverlapShape(Triangle b)
     {
         if (ContainsPoint(b.A)) return true;
@@ -103,6 +275,15 @@ public readonly partial struct Triangle
         return Segment.OverlapSegmentSegment(C, A, b.C, b.A);
     }
 
+    /// <summary>
+    /// Tests whether this triangle overlaps with a rectangle.
+    /// </summary>
+    /// <param name="r">The rectangle to test for overlap with.</param>
+    /// <returns>True if the triangle overlaps with the rectangle; otherwise, false.</returns>
+    /// <remarks>
+    /// This method checks for any intersection or containment between the triangle and rectangle.
+    /// The rectangle is converted to its four vertices for overlap testing.
+    /// </remarks>
     public bool OverlapShape(Rect r)
     {
         var a = r.TopLeft;
@@ -131,6 +312,15 @@ public readonly partial struct Triangle
         return Segment.OverlapSegmentSegment(C, A, d, a);
     }
 
+    /// <summary>
+    /// Tests whether this triangle overlaps with a quadrilateral.
+    /// </summary>
+    /// <param name="q">The quadrilateral to test for overlap with.</param>
+    /// <returns>True if the triangle overlaps with the quadrilateral; otherwise, false.</returns>
+    /// <remarks>
+    /// This method checks for any intersection or containment between the triangle and quadrilateral.
+    /// Uses the quadrilateral's four vertices for comprehensive overlap testing.
+    /// </remarks>
     public bool OverlapShape(Quad q)
     {
         if (ContainsPoint(q.A)) return true;
@@ -152,7 +342,15 @@ public readonly partial struct Triangle
         if (Segment.OverlapSegmentSegment(C, A, q.C, q.D)) return true;
         return Segment.OverlapSegmentSegment(C, A, q.D, q.A);
     }
-
+    /// <summary>
+    /// Tests whether this triangle overlaps with a polygon.
+    /// </summary>
+    /// <param name="poly">The polygon to test for overlap with.</param>
+    /// <returns>True if the triangle overlaps with the polygon; otherwise, false.</returns>
+    /// <remarks>
+    /// This method checks for any intersection or containment between the triangle and the polygon.
+    /// The polygon can have any number of vertices and can be convex or concave.
+    /// </remarks>
     public bool OverlapShape(Polygon poly)
     {
         if (poly.Count < 3) return false;
@@ -175,6 +373,15 @@ public readonly partial struct Triangle
         return oddNodes;
     }
 
+    /// <summary>
+    /// Tests whether this triangle overlaps with a polyline.
+    /// </summary>
+    /// <param name="pl">The polyline to test for overlap with.</param>
+    /// <returns>True if the triangle overlaps with the polyline; otherwise, false.</returns>
+    /// <remarks>
+    /// This method checks for intersection between the triangle and any segment of the polyline.
+    /// Polylines are open shapes consisting of connected line segments.
+    /// </remarks>
     public bool OverlapShape(Polyline pl)
     {
         if (pl.Count < 2) return false;
