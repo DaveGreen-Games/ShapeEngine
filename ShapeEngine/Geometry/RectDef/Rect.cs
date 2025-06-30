@@ -8,6 +8,7 @@ using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.SegmentsDef;
 using ShapeEngine.Geometry.TriangleDef;
+using ShapeEngine.Geometry.TriangulationDef;
 using ShapeEngine.Random;
 using ShapeEngine.StaticLib;
 

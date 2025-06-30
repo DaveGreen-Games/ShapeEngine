@@ -1,4 +1,5 @@
 using ShapeEngine.Geometry.PolygonDef;
+using ShapeEngine.Geometry.TriangulationDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry;

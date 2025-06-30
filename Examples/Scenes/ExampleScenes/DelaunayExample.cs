@@ -13,6 +13,7 @@ using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.TriangleDef;
+using ShapeEngine.Geometry.TriangulationDef;
 using ShapeEngine.Input;
 using Color = System.Drawing.Color;
 
