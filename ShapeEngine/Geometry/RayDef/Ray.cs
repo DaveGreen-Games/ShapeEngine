@@ -154,7 +154,6 @@ public readonly partial struct Ray
         if (flippedNormal) return direction.GetPerpendicularLeft().Normalize();
         return direction.GetPerpendicularRight().Normalize();
     }
-    // public bool IsPointOnRay(Vector2 point) => IsPointOnRay(point, Point, Direction);
     
     /// <summary>
     /// Gets the bounding box of the ray using <see cref="MaxLength"/>.

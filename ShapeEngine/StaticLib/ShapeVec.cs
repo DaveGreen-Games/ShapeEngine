@@ -606,11 +606,13 @@ public static class ShapeVec
     /// <summary>
     /// Normalizes the given vector.
     /// </summary>
-    /// <param name="v"></param>
+    /// <param name="v">The vector to normalize.</param>
     /// <returns>Returns the normalized vector.</returns>
     /// <remarks>
-    /// Returns v if the squared length of the vector is one.
-    /// Returns a zero vector if the squared length is zero.
+    /// <list type="bullet">
+    /// <item>Returns <paramref name="v"/> if the squared length of <paramref name="v"/> is one (normalized already).</item>
+    /// <item>Returns a zero vector if the squared length of <paramref name="v"/> is zero.</item>
+    /// </list>
     /// </remarks>
     public static Vector2 Normalize(this Vector2 v) 
     {
