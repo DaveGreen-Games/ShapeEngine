@@ -165,11 +165,11 @@ public readonly partial struct Quad : IEquatable<Quad>
     /// <param name="pos">The position of the quad.</param>
     /// <param name="size">The size of the quad.</param>
     /// <param name="rotRad">The rotation in radians.</param>
-    /// <param name="alignement">The anchor point for alignment.</param>
+    /// <param name="alignment">The anchor point for alignment.</param>
     /// <remarks>Creates a quad with the specified alignment and rotation.</remarks>
-    public Quad(Vector2 pos, Size size, float rotRad, AnchorPoint alignement)
+    public Quad(Vector2 pos, Size size, float rotRad, AnchorPoint alignment)
     {
-        var offset = size * alignement.ToVector2();
+        var offset = size * alignment.ToVector2();
         var topLeft = pos - offset;
         
         var a = topLeft;
@@ -266,9 +266,9 @@ public readonly partial struct Quad : IEquatable<Quad>
     /// <summary>
     /// Gets a point on the quad based on alignment.
     /// </summary>
-    /// <param name="alignement">The alignment anchor point.</param>
+    /// <param name="alignment">The alignment anchor point.</param>
     /// <returns>A <see cref="Vector2"/> representing the point.</returns>
-    public Vector2 GetPoint(AnchorPoint alignement) => GetPoint(alignement.X, alignement.Y);
+    public Vector2 GetPoint(AnchorPoint alignment) => GetPoint(alignment.X, alignment.Y);
     /// <summary>
     /// Gets a point on the quad based on alignment values.
     /// </summary>
@@ -284,9 +284,9 @@ public readonly partial struct Quad : IEquatable<Quad>
     /// <summary>
     /// Gets a point on the quad using the same alignment value for both coordinates.
     /// </summary>
-    /// <param name="alignement">The alignment value.</param>
+    /// <param name="alignment">The alignment value.</param>
     /// <returns>A <see cref="Vector2"/> representing the point.</returns>
-    public Vector2 GetPoint(float alignement) => GetPoint(alignement, alignement);
+    public Vector2 GetPoint(float alignment) => GetPoint(alignment, alignment);
 
     /// <summary>
     /// Gets a vertex of the quad by index.

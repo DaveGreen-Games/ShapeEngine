@@ -50,14 +50,14 @@ public class PolygonShape : ShapeContainer
     /// <param name="offset">The transform offset to apply to the shape.</param>
     /// <param name="s">The segment to inflate into a polygon.</param>
     /// <param name="inflation">The amount to inflate the segment.</param>
-    /// <param name="alignement">The alignment factor for inflation (default is 0.5).</param>
+    /// <param name="alignment">The alignment factor for inflation (default is 0.5).</param>
     /// <remarks>
     /// Uses <see cref="Segment.Inflate"/> function.
     /// </remarks>
-    public PolygonShape(Transform2D offset, Segment s, float inflation, float alignement = 0.5f)
+    public PolygonShape(Transform2D offset, Segment s, float inflation, float alignment = 0.5f)
     {
         Offset = offset;
-        shape = s.Inflate(inflation, alignement).ToPolygon();
+        shape = s.Inflate(inflation, alignment).ToPolygon();
         RelativeShape = new(shape.Count);
     }
     /// <inheritdoc/>

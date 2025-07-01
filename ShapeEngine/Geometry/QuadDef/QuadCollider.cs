@@ -18,7 +18,7 @@ public class QuadCollider : Collider
     /// <remarks>
     /// The alignment determines how the quad is positioned relative to its transform.
     /// </remarks>
-    public AnchorPoint Alignement { get; set; }
+    public AnchorPoint Alignment { get; set; }
     /// <summary>
     /// Initializes a new instance of <see cref="QuadCollider"/> with a transform offset.
     /// </summary>
@@ -30,18 +30,18 @@ public class QuadCollider : Collider
     /// </remarks>
     public QuadCollider(Transform2D offset) : base(offset)
     {
-        this.Alignement = new();
+        this.Alignment = new();
     }
     /// <summary>
     /// Initializes a new instance of <see cref="QuadCollider"/> with a transform offset and alignment.
     /// </summary>
     /// <param name="offset">The transform offset for the collider.
     /// This determines the collider's position, rotation, and scale relative to its parent.</param>
-    /// <param name="alignement">The alignment anchor point.
+    /// <param name="alignment">The alignment anchor point.
     /// Determines how the quad is positioned relative to its transform.</param>
-    public QuadCollider(Transform2D offset, AnchorPoint alignement) : base(offset)
+    public QuadCollider(Transform2D offset, AnchorPoint alignment) : base(offset)
     {
-        this.Alignement = alignement;
+        this.Alignment = alignment;
     }
     /// <summary>
     /// Gets the bounding box of the quad collider in world space.
@@ -63,5 +63,5 @@ public class QuadCollider : Collider
     /// <remarks>
     /// The quad is constructed from the current transform's position, scaled size, rotation, and the alignment anchor point.
     /// </remarks>
-    public override Quad GetQuadShape() => new Quad(CurTransform.Position, CurTransform.ScaledSize, CurTransform.RotationRad, Alignement);
+    public override Quad GetQuadShape() => new Quad(CurTransform.Position, CurTransform.ScaledSize, CurTransform.RotationRad, Alignment);
 }

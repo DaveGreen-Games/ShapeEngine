@@ -34,7 +34,7 @@ public readonly partial struct Rect
         var gapSize = new Size(hGapSize, vGapSize);
         var elementSize = new Size(elementWidth, elementHeight);
         var direction = grid.Placement.ToVector2();
-        var alignement = grid.Placement.Invert().ToAlignement();
+        var alignment = grid.Placement.Invert().ToAlignement();
         // curOffset = new(0f, 0f);
 
         if (grid.Count <= 0) return null;
@@ -51,7 +51,7 @@ public readonly partial struct Rect
                     (
                         startPos + ((gapSize + elementSize) * coords.ToVector2() * direction),
                         elementSize,
-                        alignement
+                        alignment
                     );
 
                     result.Add(r);
@@ -69,7 +69,7 @@ public readonly partial struct Rect
                     (
                         startPos + ((gapSize + elementSize) * coords.ToVector2() * direction),
                         elementSize,
-                        alignement
+                        alignment
                     );
 
                     result.Add(r);

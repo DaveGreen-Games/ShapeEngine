@@ -14,7 +14,7 @@ public class QuadShape : ShapeContainer
     /// <summary>
     /// Gets or sets the alignment anchor point for the quad.
     /// </summary>
-    public AnchorPoint Alignement { get; set; }
+    public AnchorPoint Alignment { get; set; }
     
     /// <summary>
     /// Initializes a new instance of the <see cref="QuadShape"/> class with a default alignment.
@@ -24,21 +24,21 @@ public class QuadShape : ShapeContainer
     public QuadShape(Transform2D offset)
     {
         Offset = offset;
-        this.Alignement = new();
+        this.Alignment = new();
     }
     /// <summary>
     /// Initializes a new instance of the <see cref="QuadShape"/> class with a specified alignment.
     /// </summary>
     /// <param name="offset">The transform offset to apply to the shape.</param>
-    /// <param name="alignement">The anchor point for alignment.</param>
+    /// <param name="alignment">The anchor point for alignment.</param>
     /// <remarks>Creates a quad shape with the specified anchor point alignment.</remarks>
-    public QuadShape(Transform2D offset, AnchorPoint alignement)
+    public QuadShape(Transform2D offset, AnchorPoint alignment)
     {
         Offset = offset;
-        this.Alignement = alignement;
+        this.Alignment = alignment;
     }
     /// <inheritdoc/>
     public override ShapeType GetShapeType() => ShapeType.Quad;
     /// <inheritdoc/>
-    public override Quad GetQuadShape() => new (CurTransform.Position, CurTransform.ScaledSize, CurTransform.RotationRad, Alignement);
+    public override Quad GetQuadShape() => new (CurTransform.Position, CurTransform.ScaledSize, CurTransform.RotationRad, Alignment);
 }

@@ -306,7 +306,7 @@ public static class QuadDrawing
     /// <param name="q">The quad to outline.</param>
     /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
     /// <param name="rotDeg">The rotation of the quad in degrees.</param>
-    /// <param name="alignement">The anchor point for rotation alignment.</param>
+    /// <param name="alignment">The anchor point for rotation alignment.</param>
     /// <param name="sideScaleFactor">
     /// <para>The scale factor for each side.</para>
     /// <list type="bullet">
@@ -326,11 +326,11 @@ public static class QuadDrawing
     /// <remarks>
     /// Allows for dynamic scaling and rotation of quad outlines, useful for effects and animations.
     /// </remarks>
-    public static void DrawLinesScaled(this Quad q, LineDrawingInfo lineInfo, float rotDeg, AnchorPoint alignement, float sideScaleFactor, float sideScaleOrigin = 0.5f)
+    public static void DrawLinesScaled(this Quad q, LineDrawingInfo lineInfo, float rotDeg, AnchorPoint alignment, float sideScaleFactor, float sideScaleOrigin = 0.5f)
     {
         if (sideScaleFactor <= 0) return;
         
-        if(rotDeg != 0) q = q.ChangeRotation(rotDeg * ShapeMath.DEGTORAD, alignement);
+        if(rotDeg != 0) q = q.ChangeRotation(rotDeg * ShapeMath.DEGTORAD, alignment);
         
         if (sideScaleFactor >= 1)
         {

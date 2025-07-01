@@ -51,10 +51,10 @@ public class PolygonCollider : Collider
     /// <param name="offset">The transform offset for the collider.</param>
     /// <param name="s">The segment to inflate.</param>
     /// <param name="inflation">The amount to inflate the segment.</param>
-    /// <param name="alignement">The alignment of the inflated polygon (0=start, 1=end, 0.5=center).</param>
-    public PolygonCollider(Transform2D offset, Segment s, float inflation, float alignement = 0.5f) : base(offset)
+    /// <param name="alignment">The alignment of the inflated polygon (0=start, 1=end, 0.5=center).</param>
+    public PolygonCollider(Transform2D offset, Segment s, float inflation, float alignment = 0.5f) : base(offset)
     {
-        shape = s.Inflate(inflation, alignement).ToPolygon();
+        shape = s.Inflate(inflation, alignment).ToPolygon();
         RelativeShape = new(shape.Count);
     }
     /// <summary>

@@ -52,22 +52,22 @@ public class TextEmphasisBox
     /// </summary>
     /// <param name="text">The text to draw.</param>
     /// <param name="rect">The rectangle area to draw the text in.</param>
-    /// <param name="alignement">The anchor point for text alignment.</param>
+    /// <param name="alignment">The anchor point for text alignment.</param>
     /// <param name="mousePos">The current mouse position (for emphasis detection).</param>
     /// <param name="textWrapType">The type of text wrapping to use.</param>
-    public void Draw(string text, Rect rect, AnchorPoint alignement, Vector2 mousePos, TextWrapType textWrapType = TextWrapType.None)
+    public void Draw(string text, Rect rect, AnchorPoint alignment, Vector2 mousePos, TextWrapType textWrapType = TextWrapType.None)
     {
         if(textWrapType == TextWrapType.None)
         {
-            TextFont.DrawTextWrapNone(text, rect ,alignement, Caret, Emphases);
+            TextFont.DrawTextWrapNone(text, rect ,alignment, Caret, Emphases);
         }
         else if (textWrapType == TextWrapType.Char)
         {
-            TextFont.DrawTextWrapChar(text, rect, alignement, Caret, Emphases);
+            TextFont.DrawTextWrapChar(text, rect, alignment, Caret, Emphases);
         }
         else
         {
-            TextFont.DrawTextWrapWord(text, rect, alignement, Caret, Emphases);
+            TextFont.DrawTextWrapWord(text, rect, alignment, Caret, Emphases);
         }
     }
     #endregion

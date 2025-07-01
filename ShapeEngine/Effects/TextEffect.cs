@@ -37,10 +37,10 @@ public class TextEffect : Effect
     /// Draws the text using the specified font and alignment.
     /// </summary>
     /// <param name="textFont">The font to use for drawing the text.</param>
-    /// <param name="alignement">The anchor point for text alignment.</param>
-    protected void DrawText(TextFont textFont, AnchorPoint alignement)
+    /// <param name="alignment">The anchor point for text alignment.</param>
+    protected void DrawText(TextFont textFont, AnchorPoint alignment)
     {
-        textFont.DrawTextWrapNone(Text, GetBoundingBox(), alignement);
+        textFont.DrawTextWrapNone(Text, GetBoundingBox(), alignment);
     }
 }
 

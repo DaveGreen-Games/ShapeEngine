@@ -349,11 +349,11 @@ public static class ShapeVec
     /// </summary>
     /// <param name="pos">The original position.</param>
     /// <param name="size">The size to align.</param>
-    /// <param name="alignement">The anchor point for alignment.</param>
+    /// <param name="alignment">The anchor point for alignment.</param>
     /// <returns>The aligned position.</returns>
-    public static Vector2 Align(this Vector2 pos, Size size, AnchorPoint alignement)
+    public static Vector2 Align(this Vector2 pos, Size size, AnchorPoint alignment)
     {
-        return pos - (size * alignement).ToVector2();
+        return pos - (size * alignment).ToVector2();
     }
     /// <summary>
     /// Wraps the vector components to be within the specified min and max bounds.

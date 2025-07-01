@@ -128,7 +128,7 @@ public class ControlNodeContainer : ControlNode
     private Vector2 startPos;
     private Size elementSize = new();
     private Vector2 direction;
-    private AnchorPoint alignement = new();
+    private AnchorPoint alignment = new();
     #endregion
     
     #region Override
@@ -177,7 +177,7 @@ public class ControlNodeContainer : ControlNode
         gapSize = new(hGapSize, vGapSize);
         elementSize = new(elementWidth, elementHeight);
         direction = Grid.Placement.ToVector2();
-        alignement = Grid.Placement.Invert().ToAlignement();
+        alignment = Grid.Placement.Invert().ToAlignement();
         curOffset = new(0f, 0f);
 
 
@@ -202,7 +202,7 @@ public class ControlNodeContainer : ControlNode
             (
                 startPos + ((gapSize + elementSize) * coords.ToVector2() * direction),
                 elementSize,
-                alignement
+                alignment
             );
 
             return r;
@@ -223,7 +223,7 @@ public class ControlNodeContainer : ControlNode
             (
                 startPos + curOffset, 
                 clampedSize,
-                alignement
+                alignment
             );
 
             curOffset += (gapSize + size) * direction;

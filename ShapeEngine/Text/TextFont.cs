@@ -159,16 +159,16 @@ public class TextFont
     /// </summary>
     /// <param name="c">The character to draw.</param>
     /// <param name="rect">The rectangle defining the position and size.</param>
-    /// <param name="alignement">The alignment of the character within the rectangle.</param>
-    public void Draw(char c, Rect rect, AnchorPoint alignement)
+    /// <param name="alignment">The alignment of the character within the rectangle.</param>
+    public void Draw(char c, Rect rect, AnchorPoint alignment)
     {
-        if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
+        if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignment);
         float f = rect.Size.Height / BaseSize;
         float fontSize = BaseSize * f;
         var charSize = FontDimensions.GetCharSize(c, fontSize);
         
-        var uiPos = rect.GetPoint(alignement);
-        var charRect = new Rect(uiPos, charSize, alignement);
+        var uiPos = rect.GetPoint(alignment);
+        var charRect = new Rect(uiPos, charSize, alignment);
         
         Raylib.DrawTextCodepoint(Font, c, charRect.TopLeft, fontSize, ColorRgba.ToRayColor());
     }
@@ -181,14 +181,14 @@ public class TextFont
     /// <param name="text">The text to draw.</param>
     /// <param name="rect">The rectangle defining the position and size.</param>
     /// <param name="rotDeg">The rotation angle in degrees.</param>
-    /// <param name="alignement">The alignment of the text within the rectangle.</param>
-    public void Draw(string text, Rect rect, float rotDeg, AnchorPoint alignement)
+    /// <param name="alignment">The alignment of the text within the rectangle.</param>
+    public void Draw(string text, Rect rect, float rotDeg, AnchorPoint alignment)
     {
-        if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
+        if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignment);
         var scaledFont = FontDimensions.ScaleDynamic(text, rect.Size);
         var textSize = scaledFont.GetTextSize(text);
-        Rect r = new(rect.GetPoint(alignement), textSize, alignement);
-        var originOffset = (alignement * textSize).ToVector2();
+        Rect r = new(rect.GetPoint(alignment), textSize, alignment);
+        var originOffset = (alignment * textSize).ToVector2();
         Raylib.DrawTextPro(scaledFont.Font, text, r.TopLeft + originOffset, originOffset, rotDeg, scaledFont.Size, scaledFont.Spacing, ColorRgba.ToRayColor());
     }
     /// <summary>
@@ -209,11 +209,11 @@ public class TextFont
     /// </summary>
     /// <param name="word">The word to draw.</param>
     /// <param name="topLeft">The top-left position for the word.</param>
-    /// <param name="alignement">The alignment of the word within the rectangle.</param>
-    public void DrawWord(string word, Vector2 topLeft, AnchorPoint alignement)
+    /// <param name="alignment">The alignment of the word within the rectangle.</param>
+    public void DrawWord(string word, Vector2 topLeft, AnchorPoint alignment)
     {
         var size = FontDimensions.GetTextSize(word);
-        Rect r = new(topLeft, size, alignement);
+        Rect r = new(topLeft, size, alignment);
         Raylib.DrawTextEx(Font, word, r.TopLeft, FontSize, FontSpacing, ColorRgba.ToRayColor());
     }
     /// <summary>
@@ -221,17 +221,17 @@ public class TextFont
     /// </summary>
     /// <param name="word">The word to draw.</param>
     /// <param name="topLeft">The top-left position for the word.</param>
-    /// <param name="alignement">The alignment of the word within the rectangle.</param>
+    /// <param name="alignment">The alignment of the word within the rectangle.</param>
     /// <param name="caret">The caret indicating the text cursor position.</param>
-    public void DrawWord(string word, Vector2 topLeft, AnchorPoint alignement, Caret caret)
+    public void DrawWord(string word, Vector2 topLeft, AnchorPoint alignment, Caret caret)
     {
-        DrawWord(word, topLeft, alignement);
+        DrawWord(word, topLeft, alignment);
         
         if (caret.IsValid)
         {
             string caretText = word.Substring(0, caret.Index);
             var caretTextSize =  FontDimensions.GetTextSize(caretText);
-            Rect r = new(topLeft, caretTextSize, alignement);
+            Rect r = new(topLeft, caretTextSize, alignment);
         
             var caretTop = r.TopLeft + new Vector2(caretTextSize.Width + FontSpacing * 0.5f, 0f);
             caret.Draw(caretTop, FontSize);
@@ -242,13 +242,13 @@ public class TextFont
     /// </summary>
     /// <param name="word">The word to draw.</param>
     /// <param name="rect">The rectangle defining the position and size.</param>
-    /// <param name="alignement">The alignment of the word within the rectangle.</param>
-    public void DrawWord(string word, Rect rect, AnchorPoint alignement)
+    /// <param name="alignment">The alignment of the word within the rectangle.</param>
+    public void DrawWord(string word, Rect rect, AnchorPoint alignment)
     {
-        if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
+        if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignment);
         var scaledFont = FontDimensions.ScaleDynamic(word, rect.Size);
         var textSize = scaledFont.GetTextSize(word);
-        Rect r = new(rect.GetPoint(alignement), textSize, alignement);
+        Rect r = new(rect.GetPoint(alignment), textSize, alignment);
         DrawWord(word, r.TopLeft, scaledFont);
     }
     /// <summary>
@@ -256,14 +256,14 @@ public class TextFont
     /// </summary>
     /// <param name="word">The word to draw.</param>
     /// <param name="rect">The rectangle defining the position and size.</param>
-    /// <param name="alignement">The alignment of the word within the rectangle.</param>
+    /// <param name="alignment">The alignment of the word within the rectangle.</param>
     /// <param name="emphasis">The emphasis settings for the word.</param>
-    public void DrawWord(string word, Rect rect, AnchorPoint alignement, Emphasis emphasis)
+    public void DrawWord(string word, Rect rect, AnchorPoint alignment, Emphasis emphasis)
     {
-        if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
+        if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignment);
         var scaledFont = FontDimensions.ScaleDynamic(word, rect.Size);
         var textSize = scaledFont.GetTextSize(word);
-        Rect r = new(rect.GetPoint(alignement), textSize, alignement);
+        Rect r = new(rect.GetPoint(alignment), textSize, alignment);
 
         var emphasisRect = r.ApplyMargins(EmphasisRectMargins); // EmphasisRectMargins.Apply(r);
         
@@ -278,12 +278,12 @@ public class TextFont
     /// </summary>
     /// <param name="text">The text to draw.</param>
     /// <param name="rect">The rectangle defining the position and size.</param>
-    /// <param name="alignement">The alignment of the text within the rectangle.</param>
-    public void DrawTextWrapNone(string text, Rect rect, AnchorPoint alignement)
+    /// <param name="alignment">The alignment of the text within the rectangle.</param>
+    public void DrawTextWrapNone(string text, Rect rect, AnchorPoint alignment)
     {
         var scaledFont = FontDimensions.ScaleDynamic(text, rect.Size);
         var textSize = scaledFont.GetTextSize(text);
-        Rect r = new(rect.GetPoint(alignement), textSize, alignement);
+        Rect r = new(rect.GetPoint(alignment), textSize, alignment);
         DrawWord(text, r.TopLeft, scaledFont);
     }
     /// <summary>
@@ -291,13 +291,13 @@ public class TextFont
     /// </summary>
     /// <param name="text">The text to draw.</param>
     /// <param name="rect">The rectangle defining the position and size.</param>
-    /// <param name="alignement">The alignment of the text within the rectangle.</param>
+    /// <param name="alignment">The alignment of the text within the rectangle.</param>
     /// <param name="colorRgba">The color to use for text rendering.</param>
-    public void DrawTextWrapNone(string text, Rect rect, AnchorPoint alignement, ColorRgba colorRgba)
+    public void DrawTextWrapNone(string text, Rect rect, AnchorPoint alignment, ColorRgba colorRgba)
     {
         var scaledFont = FontDimensions.ScaleDynamic(text, rect.Size);
         var textSize = scaledFont.GetTextSize(text);
-        Rect r = new(rect.GetPoint(alignement), textSize, alignement);
+        Rect r = new(rect.GetPoint(alignment), textSize, alignment);
         DrawWord(text, r.TopLeft, colorRgba, scaledFont);
     }
 
@@ -306,13 +306,13 @@ public class TextFont
     /// </summary>
     /// <param name="text">The text to draw.</param>
     /// <param name="rect">The rectangle defining the position and size.</param>
-    /// <param name="alignement">The alignment of the text within the rectangle.</param>
+    /// <param name="alignment">The alignment of the text within the rectangle.</param>
     /// <param name="caret">The caret indicating the text cursor position.</param>
-    public void DrawTextWrapNone(string text, Rect rect, AnchorPoint alignement, Caret caret)
+    public void DrawTextWrapNone(string text, Rect rect, AnchorPoint alignment, Caret caret)
     {
         var scaledFont = FontDimensions.ScaleDynamic(text, rect.Size);
         var textSize = scaledFont.GetTextSize(text);
-        Rect r = new(rect.GetPoint(alignement), textSize, alignement);
+        Rect r = new(rect.GetPoint(alignment), textSize, alignment);
         DrawWord(text, r.TopLeft, scaledFont);
 
         if (caret.IsValid)
@@ -329,17 +329,17 @@ public class TextFont
     /// </summary>
     /// <param name="text">The text to draw.</param>
     /// <param name="rect">The rectangle defining the position and size.</param>
-    /// <param name="alignement">The alignment of the text within the rectangle.</param>
+    /// <param name="alignment">The alignment of the text within the rectangle.</param>
     /// <param name="caret">The caret indicating the text cursor position.</param>
     /// <param name="emphases">The list of emphases to apply to the text.</param>
-    public void DrawTextWrapNone(string text, Rect rect, AnchorPoint alignement, Caret caret, List<TextEmphasis>? emphases)
+    public void DrawTextWrapNone(string text, Rect rect, AnchorPoint alignment, Caret caret, List<TextEmphasis>? emphases)
     {
-        if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
+        if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignment);
         
         var scaledFont = FontDimensions.ScaleDynamic(text, rect.Size);
         var textSize = scaledFont.GetTextSize(text);
-        var uiPos = rect.GetPoint(alignement);
-        var topLeft = uiPos - alignement * textSize;
+        var uiPos = rect.GetPoint(alignment);
+        var topLeft = uiPos - alignment * textSize;
         
         var curWordPos = topLeft;
         var curWord = string.Empty;
@@ -402,40 +402,40 @@ public class TextFont
     /// </summary>
     /// <param name="text">The text to draw.</param>
     /// <param name="rect">The rectangle defining the position and size.</param>
-    /// <param name="alignement">The alignment of the text within the rectangle.</param>
-    public void DrawTextWrapChar(string text, Rect rect, AnchorPoint alignement)
+    /// <param name="alignment">The alignment of the text within the rectangle.</param>
+    public void DrawTextWrapChar(string text, Rect rect, AnchorPoint alignment)
     {
-        DrawTextWrapChar(text, rect, alignement, new(), null);
+        DrawTextWrapChar(text, rect, alignment, new(), null);
     }
     /// <summary>
     /// Draws text with character wrapping and a caret, within the specified rectangle.
     /// </summary>
     /// <param name="text">The text to draw.</param>
     /// <param name="rect">The rectangle defining the position and size.</param>
-    /// <param name="alignement">The alignment of the text within the rectangle.</param>
+    /// <param name="alignment">The alignment of the text within the rectangle.</param>
     /// <param name="caret">The caret indicating the text cursor position.</param>
-    public void DrawTextWrapChar(string text, Rect rect, AnchorPoint alignement, Caret caret)
+    public void DrawTextWrapChar(string text, Rect rect, AnchorPoint alignment, Caret caret)
     {
-        DrawTextWrapChar(text, rect, alignement, caret, null);
+        DrawTextWrapChar(text, rect, alignment, caret, null);
     }
     /// <summary>
     /// Draws text with character wrapping, a caret, and specified emphases, within the rectangle.
     /// </summary>
     /// <param name="text">The text to draw.</param>
     /// <param name="rect">The rectangle defining the position and size.</param>
-    /// <param name="alignement">The alignment of the text within the rectangle.</param>
+    /// <param name="alignment">The alignment of the text within the rectangle.</param>
     /// <param name="caret">The caret indicating the text cursor position.</param>
     /// <param name="emphases">The list of emphases to apply to the text.</param>
-    public void DrawTextWrapChar(string text, Rect rect, AnchorPoint alignement, Caret caret, List<TextEmphasis>? emphases)
+    public void DrawTextWrapChar(string text, Rect rect, AnchorPoint alignment, Caret caret, List<TextEmphasis>? emphases)
     {
-        if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
+        if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignment);
         // var rectSize = rect.Size;
         
         var textSize = FontDimensions.GetTextBaseSize(text);
     
         if (textSize.Width < rect.Size.Width)//no wrapping needed
         {
-            DrawTextWrapNone(text, rect, alignement, caret, emphases);
+            DrawTextWrapNone(text, rect, alignment, caret, emphases);
         }
         else
         {
@@ -708,39 +708,39 @@ public class TextFont
     /// </summary>
     /// <param name="text">The text to draw.</param>
     /// <param name="rect">The rectangle defining the position and size.</param>
-    /// <param name="alignement">The alignment of the text within the rectangle.</param>
-    public void DrawTextWrapWord(string text, Rect rect, AnchorPoint alignement)
+    /// <param name="alignment">The alignment of the text within the rectangle.</param>
+    public void DrawTextWrapWord(string text, Rect rect, AnchorPoint alignment)
     {
-        DrawTextWrapWord(text, rect, alignement, new(), null);
+        DrawTextWrapWord(text, rect, alignment, new(), null);
     }
     /// <summary>
     /// Draws text with word wrapping, and a caret within the specified rectangle.
     /// </summary>
     /// <param name="text">The text to draw.</param>
     /// <param name="rect">The rectangle defining the position and size.</param>
-    /// <param name="alignement">The alignment of the text within the rectangle.</param>
+    /// <param name="alignment">The alignment of the text within the rectangle.</param>
     /// <param name="caret">The caret indicating the text cursor position.</param>
-    public void DrawTextWrapWord(string text, Rect rect, AnchorPoint alignement, Caret caret)
+    public void DrawTextWrapWord(string text, Rect rect, AnchorPoint alignment, Caret caret)
     {
-        DrawTextWrapWord(text, rect, alignement, new(), null);
+        DrawTextWrapWord(text, rect, alignment, new(), null);
     }
     /// <summary>
     /// Draws text with word wrapping, a caret, and specified emphases within the rectangle.
     /// </summary>
     /// <param name="text">The text to draw.</param>
     /// <param name="rect">The rectangle defining the position and size.</param>
-    /// <param name="alignement">The alignment of the text within the rectangle.</param>
+    /// <param name="alignment">The alignment of the text within the rectangle.</param>
     /// <param name="caret">The caret indicating the text cursor position.</param>
     /// <param name="emphases">The list of emphases to apply to the text.</param>
-    public void DrawTextWrapWord(string text, Rect rect, AnchorPoint alignement, Caret caret, List<TextEmphasis>? emphases)
+    public void DrawTextWrapWord(string text, Rect rect, AnchorPoint alignment, Caret caret, List<TextEmphasis>? emphases)
     {
-        if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
+        if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignment);
         // var rectSize = rect.Size;
         var textSize = FontDimensions.GetTextBaseSize(text);
     
         if (textSize.Width < rect.Size.Width)
         {
-            DrawTextWrapNone(text, rect, alignement, caret, emphases);
+            DrawTextWrapNone(text, rect, alignment, caret, emphases);
         }
         else
         {

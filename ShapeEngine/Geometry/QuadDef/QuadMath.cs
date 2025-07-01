@@ -141,11 +141,11 @@ public readonly partial struct Quad
     /// Rotates the quad by a specified angle in radians around a given anchor point.
     /// </summary>
     /// <param name="rad">The angle in radians to rotate.</param>
-    /// <param name="alignement">The anchor point for rotation.</param>
+    /// <param name="alignment">The anchor point for rotation.</param>
     /// <returns>A new <see cref="Quad"/> rotated by the specified angle.</returns>
-    public Quad ChangeRotation(float rad, AnchorPoint alignement)
+    public Quad ChangeRotation(float rad, AnchorPoint alignment)
     {
-        var pivotPoint = GetPoint(alignement);
+        var pivotPoint = GetPoint(alignment);
         var a = pivotPoint + (A - pivotPoint).Rotate(rad);
         var b = pivotPoint + (B - pivotPoint).Rotate(rad);
         var c = pivotPoint + (C - pivotPoint).Rotate(rad);
@@ -157,13 +157,13 @@ public readonly partial struct Quad
     /// Rotates the quad to a specific angle in radians around a given anchor point.
     /// </summary>
     /// <param name="angleRad">The target angle in radians.</param>
-    /// <param name="alignement">The anchor point for rotation.</param>
+    /// <param name="alignment">The anchor point for rotation.</param>
     /// <returns>A new <see cref="Quad"/> with the specified rotation.</returns>
     /// <remarks>Uses the shortest rotation path to reach the target angle.</remarks>
-    public Quad SetRotation(float angleRad, AnchorPoint alignement)
+    public Quad SetRotation(float angleRad, AnchorPoint alignment)
     {
         float amount = ShapeMath.GetShortestAngleRad(AngleRad, angleRad);
-        return ChangeRotation(amount, alignement);
+        return ChangeRotation(amount, alignment);
     }
 
     /// <summary>
@@ -200,11 +200,11 @@ public readonly partial struct Quad
     /// Moves the quad so that the specified anchor point aligns with a new position.
     /// </summary>
     /// <param name="newPosition">The new position for the anchor point.</param>
-    /// <param name="alignement">The anchor point to align.</param>
+    /// <param name="alignment">The anchor point to align.</param>
     /// <returns>A new <see cref="Quad"/> with the anchor point at the new position.</returns>
-    public Quad SetPosition(Vector2 newPosition, AnchorPoint alignement)
+    public Quad SetPosition(Vector2 newPosition, AnchorPoint alignment)
     {
-        var p = GetPoint(alignement);
+        var p = GetPoint(alignment);
         var translation = newPosition - p;
         return new
         (
@@ -240,11 +240,11 @@ public readonly partial struct Quad
     /// Scales the size of the quad uniformly by a scalar value, relative to a specified anchor point.
     /// </summary>
     /// <param name="scale">The scale factor.</param>
-    /// <param name="alignement">The anchor point for scaling.</param>
+    /// <param name="alignment">The anchor point for scaling.</param>
     /// <returns>A new <see cref="Quad"/> scaled by the given factor around the anchor point.</returns>
-    public Quad ScaleSize(float scale, AnchorPoint alignement)
+    public Quad ScaleSize(float scale, AnchorPoint alignment)
     {
-        var p = GetPoint(alignement);
+        var p = GetPoint(alignment);
         return new
         (
             A + (A - p) * scale,
@@ -258,11 +258,11 @@ public readonly partial struct Quad
     /// Scales the size of the quad component-wise by a <see cref="Size"/>, relative to a specified anchor point.
     /// </summary>
     /// <param name="scale">The scale factors for width and height.</param>
-    /// <param name="alignement">The anchor point for scaling.</param>
+    /// <param name="alignment">The anchor point for scaling.</param>
     /// <returns>A new <see cref="Quad"/> scaled by the given size around the anchor point.</returns>
-    public Quad ScaleSize(Size scale, AnchorPoint alignement)
+    public Quad ScaleSize(Size scale, AnchorPoint alignment)
     {
-        var p = GetPoint(alignement);
+        var p = GetPoint(alignment);
         return new
         (
             A + (A - p) * scale,
@@ -283,13 +283,13 @@ public readonly partial struct Quad
     /// Changes the size of the quad by a specified amount, relative to a specified anchor point.
     /// </summary>
     /// <param name="amount">The amount to change the size by.</param>
-    /// <param name="alignement">The anchor point for resizing.</param>
+    /// <param name="alignment">The anchor point for resizing.</param>
     /// <returns>A new <see cref="Quad"/> with the size changed by the specified amount around the anchor point.</returns>
-    public Quad ChangeSize(float amount, AnchorPoint alignement)
+    public Quad ChangeSize(float amount, AnchorPoint alignment)
     {
         Vector2 newA, newB, newC, newD;
 
-        var origin = GetPoint(alignement);
+        var origin = GetPoint(alignment);
 
         var wA = (A - origin);
         var lSqA = wA.LengthSquared();
@@ -345,13 +345,13 @@ public readonly partial struct Quad
     /// Sets the size of the quad to a specific value, relative to a specified anchor point.
     /// </summary>
     /// <param name="size">The new size for the quad.</param>
-    /// <param name="alignement">The anchor point for resizing.</param>
+    /// <param name="alignment">The anchor point for resizing.</param>
     /// <returns>A new <see cref="Quad"/> with the specified size around the anchor point.</returns>
-    public Quad SetSize(float size, AnchorPoint alignement)
+    public Quad SetSize(float size, AnchorPoint alignment)
     {
         Vector2 newA, newB, newC, newD;
 
-        var origin = GetPoint(alignement);
+        var origin = GetPoint(alignment);
 
         var wA = (A - origin);
         var lSqA = wA.LengthSquared();
@@ -430,36 +430,36 @@ public readonly partial struct Quad
     /// Applies a transform to the quad by:
     /// <list type="bullet">
     /// <item>Moving it by <paramref name="offset"/>.Position</item>
-    /// <item>Rotating the moved quad by <paramref name="offset"/>.RotationRad around the specified <paramref name="alignement"/></item>
-    /// <item>Changing the size of the rotated quad by <paramref name="offset"/>.ScaledSize.Length, relative to <paramref name="alignement"/></item>
+    /// <item>Rotating the moved quad by <paramref name="offset"/>.RotationRad around the specified <paramref name="alignment"/></item>
+    /// <item>Changing the size of the rotated quad by <paramref name="offset"/>.ScaledSize.Length, relative to <paramref name="alignment"/></item>
     /// </list>
     /// </summary>
     /// <param name="offset">The transform to apply to the quad.</param>
-    /// <param name="alignement">The anchor point for rotation and scaling.</param>
+    /// <param name="alignment">The anchor point for rotation and scaling.</param>
     /// <returns>A new <see cref="Quad"/> with the applied transform.</returns>
-    public Quad ApplyOffset(Transform2D offset, AnchorPoint alignement)
+    public Quad ApplyOffset(Transform2D offset, AnchorPoint alignment)
     {
         var newQuad = ChangePosition(offset.Position);
-        newQuad = newQuad.ChangeRotation(offset.RotationRad, alignement);
-        return newQuad.ChangeSize(offset.ScaledSize.Length, alignement);
+        newQuad = newQuad.ChangeRotation(offset.RotationRad, alignment);
+        return newQuad.ChangeSize(offset.ScaledSize.Length, alignment);
     }
 
     /// <summary>
     /// Sets the transform of the quad by:
     /// <list type="bullet">
-    /// <item>Moving it to <paramref name="transform"/>.Position, aligning <paramref name="alignement"/></item>
-    /// <item>Rotating the moved quad to <paramref name="transform"/>.RotationRad around <paramref name="alignement"/></item>
-    /// <item>Setting the size of the rotated quad to <paramref name="transform"/>.ScaledSize.Length, relative to <paramref name="alignement"/></item>
+    /// <item>Moving it to <paramref name="transform"/>.Position, aligning <paramref name="alignment"/></item>
+    /// <item>Rotating the moved quad to <paramref name="transform"/>.RotationRad around <paramref name="alignment"/></item>
+    /// <item>Setting the size of the rotated quad to <paramref name="transform"/>.ScaledSize.Length, relative to <paramref name="alignment"/></item>
     /// </list>
     /// </summary>
     /// <param name="transform">The transform to set.</param>
-    /// <param name="alignement">The anchor point for alignment, rotation, and scaling.</param>
+    /// <param name="alignment">The anchor point for alignment, rotation, and scaling.</param>
     /// <returns>A new <see cref="Quad"/> with the specified transform.</returns>
-    public Quad SetTransform(Transform2D transform, AnchorPoint alignement)
+    public Quad SetTransform(Transform2D transform, AnchorPoint alignment)
     {
-        var newQuad = SetPosition(transform.Position, alignement);
-        newQuad = newQuad.SetRotation(transform.RotationRad, alignement);
-        return newQuad.SetSize(transform.ScaledSize.Length, alignement);
+        var newQuad = SetPosition(transform.Position, alignment);
+        newQuad = newQuad.SetRotation(transform.RotationRad, alignment);
+        return newQuad.SetSize(transform.ScaledSize.Length, alignment);
     }
 
     #endregion

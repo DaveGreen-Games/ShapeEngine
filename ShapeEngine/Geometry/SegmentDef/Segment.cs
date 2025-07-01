@@ -138,17 +138,17 @@ public readonly partial struct Segment : IEquatable<Segment>
     /// Inflates the segment, creating a set of points representing a thicker line.
     /// </summary>
     /// <param name="thickness">The thickness of the inflated segment.</param>
-    /// <param name="alignement">The alignment of the inflation, from 0 (start) to 1 (end). Default is 0.5 (center).</param>
+    /// <param name="alignment">The alignment of the inflation, from 0 (start) to 1 (end). Default is 0.5 (center).</param>
     /// <returns>A <see cref="Points"/> collection representing the inflated segment.</returns>
-    public Points Inflate(float thickness, float alignement = 0.5f)
+    public Points Inflate(float thickness, float alignment = 0.5f)
     {
         var dir = Dir;
         var left = dir.GetPerpendicularLeft();
         var right = dir.GetPerpendicularRight();
-        var a = Start + left * thickness * alignement;
-        var b = Start + right * thickness * (1 - alignement);
-        var c = End + right * thickness * (1 - alignement);
-        var d = End + left * thickness * alignement;
+        var a = Start + left * thickness * alignment;
+        var b = Start + right * thickness * (1 - alignment);
+        var c = End + right * thickness * (1 - alignment);
+        var d = End + left * thickness * alignment;
 
         return new() { a, b, c, d };
     }

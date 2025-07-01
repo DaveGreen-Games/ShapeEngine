@@ -179,11 +179,11 @@ public readonly partial struct Rect : IEquatable<Rect>
     /// </summary>
     /// <param name="position">The reference position for the rectangle.</param>
     /// <param name="size">The size of the rectangle.</param>
-    /// <param name="alignement">The anchor point used to align the rectangle relative to the position.</param>
+    /// <param name="alignment">The anchor point used to align the rectangle relative to the position.</param>
     /// <remarks>The anchor point determines how the rectangle is positioned relative to the given position.</remarks>
-    public Rect(Vector2 position, Size size, AnchorPoint alignement)
+    public Rect(Vector2 position, Size size, AnchorPoint alignment)
     {
-        var offset = size * alignement.ToVector2();
+        var offset = size * alignment.ToVector2();
         var topLeft = position - offset;
         this.X = topLeft.X;
         this.Y = topLeft.Y;
@@ -276,12 +276,12 @@ public readonly partial struct Rect : IEquatable<Rect>
     /// Points are ordered in ccw order starting with top left (tl, bl, br, tr).
     /// </summary>
     /// <param name="angleDeg">The angle in degrees to rotate.</param>
-    /// <param name="alignement">The anchor point for rotation.</param>
+    /// <param name="alignment">The anchor point for rotation.</param>
     /// <returns></returns>
-    public Polygon Rotate(float angleDeg, AnchorPoint alignement)
+    public Polygon Rotate(float angleDeg, AnchorPoint alignment)
     {
         var poly = ToPolygon();
-        var pivot = TopLeft + (Size * alignement.ToVector2()).ToVector2();
+        var pivot = TopLeft + (Size * alignment.ToVector2()).ToVector2();
         poly.ChangeRotation(angleDeg * ShapeMath.DEGTORAD, pivot);
         return poly;
     }
@@ -290,12 +290,12 @@ public readonly partial struct Rect : IEquatable<Rect>
     /// Rotates the corners of the rectangle and returns the resulting points as a <see cref="Points"/> list.
     /// </summary>
     /// <param name="angleDeg">The angle in degrees to rotate.</param>
-    /// <param name="alignement">The anchor point for rotation.</param>
+    /// <param name="alignment">The anchor point for rotation.</param>
     /// <returns>A <see cref="Points"/> list of the rotated corners.</returns>
-    public Points RotateList(float angleDeg, AnchorPoint alignement)
+    public Points RotateList(float angleDeg, AnchorPoint alignment)
     {
         var points = ToPoints();
-        var pivot = TopLeft + (Size * alignement.ToVector2()).ToVector2();
+        var pivot = TopLeft + (Size * alignment.ToVector2()).ToVector2();
         points.ChangeRotation(angleDeg * ShapeMath.DEGTORAD, pivot);
         return points;
     }
@@ -510,11 +510,11 @@ public readonly partial struct Rect : IEquatable<Rect>
     /// <summary>
     /// Gets a point on the rectangle based on the specified alignment anchor.
     /// </summary>
-    /// <param name="alignement">The anchor point used to align the point relative to the rectangle.</param>
+    /// <param name="alignment">The anchor point used to align the point relative to the rectangle.</param>
     /// <returns>A <see cref="Vector2"/> representing the point on the rectangle.</returns>
-    public Vector2 GetPoint(AnchorPoint alignement)
+    public Vector2 GetPoint(AnchorPoint alignment)
     {
-        var offset = Size * alignement.ToVector2();
+        var offset = Size * alignment.ToVector2();
         return TopLeft + offset;
     }
     /// <summary>

@@ -790,7 +790,7 @@ public static class CircleDrawing
     /// Draws a checkered pattern of lines inside a circle, optionally with a background color.
     /// </summary>
     /// <param name="pos">The position of the circle (before alignment).</param>
-    /// <param name="alignement">The anchor point alignment for the circle.</param>
+    /// <param name="alignment">The anchor point alignment for the circle.</param>
     /// <param name="radius">The radius of the circle.</param>
     /// <param name="spacing">The spacing between checkered lines.</param>
     /// <param name="lineThickness">The thickness of the checkered lines.</param>
@@ -801,12 +801,12 @@ public static class CircleDrawing
     /// <remarks>
     /// Useful for visualizing grid or checkered overlays on circular shapes.
     /// </remarks>
-    public static void DrawCircleCheckeredLines(Vector2 pos, AnchorPoint alignement, float radius, float spacing, float lineThickness, float angleDeg, ColorRgba lineColorRgba, ColorRgba bgColorRgba, int circleSegments)
+    public static void DrawCircleCheckeredLines(Vector2 pos, AnchorPoint alignment, float radius, float spacing, float lineThickness, float angleDeg, ColorRgba lineColorRgba, ColorRgba bgColorRgba, int circleSegments)
     {
 
         float maxDimension = radius;
         var size = new Vector2(radius, radius) * 2f;
-        var aVector = alignement.ToVector2() * size;
+        var aVector = alignment.ToVector2() * size;
         var center = pos - aVector + size / 2;
         float rotRad = angleDeg * ShapeMath.DEGTORAD;
 
