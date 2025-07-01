@@ -924,7 +924,7 @@ public readonly partial struct Rect : IEquatable<Rect>
     /// </summary>
     /// <param name="t">The interpolation factor (0 to 1).</param>
     /// <returns>A <see cref="Points"/> object containing the interpolated edge points.</returns>
-    public Points? GetInterpolatedEdgePoints(float t)
+    public Points GetInterpolatedEdgePoints(float t)
     {
         var a1 = A.Lerp(B, t);
         var b1 = B.Lerp(C, t);
@@ -939,7 +939,7 @@ public readonly partial struct Rect : IEquatable<Rect>
     /// <param name="t">The interpolation factor (0 to 1).</param>
     /// <param name="steps">The number of steps for interpolation.</param>
     /// <returns>A <see cref="Points"/> object containing the interpolated edge points.</returns>
-    public Points? GetInterpolatedEdgePoints(float t, int steps)
+    public Points GetInterpolatedEdgePoints(float t, int steps)
     {
         if(steps <= 1) return GetInterpolatedEdgePoints(t);
         

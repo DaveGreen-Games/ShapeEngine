@@ -37,7 +37,7 @@ public class ControlNodeSlider : ControlNode
     /// <summary>
     /// Gets the current normalized value (0-1) of the slider.
     /// </summary>
-    public float CurF { get; private set; } = 0f;
+    public float CurF { get; private set; }
     /// <summary>
     /// The step size (normalized) for keyboard/gamepad value changes.
     /// </summary>

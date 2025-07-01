@@ -1,5 +1,4 @@
 ﻿using System.Numerics;
-using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolygonDef;
@@ -222,7 +221,7 @@ public readonly partial struct Triangle : IEquatable<Triangle>
     {
         if(ContainsPoint(p)) return this;
 
-        var closest = GetClosestSegment(p, out float disSquared);
+        var closest = GetClosestSegment(p, out float _);
         return new Triangle(p, closest.segment);
     }
 

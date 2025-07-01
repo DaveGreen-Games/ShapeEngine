@@ -1,5 +1,4 @@
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.CollisionSystem;
 
 namespace ShapeEngine.Geometry.RectDef;
 

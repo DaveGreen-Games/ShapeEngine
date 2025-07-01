@@ -106,8 +106,8 @@ public readonly struct Dimensions : IEquatable<Dimensions>, IFormattable
     {
         if (Width == targetDimensions.Width && Height == targetDimensions.Height) return targetDimensions;
 
-        float fWidth = (float)targetDimensions.Width / (float)targetDimensions.Height;
-        float fHeight = (float)targetDimensions.Height / (float)targetDimensions.Width;
+        float fWidth = targetDimensions.Width / (float)targetDimensions.Height;
+        float fHeight = targetDimensions.Height / (float)targetDimensions.Width;
 
         int w = Width;
         int h = Height;

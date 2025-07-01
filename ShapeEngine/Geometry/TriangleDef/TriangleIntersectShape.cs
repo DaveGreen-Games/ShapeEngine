@@ -80,22 +80,22 @@ public readonly partial struct Triangle
             var result = Segment.IntersectSegmentSegment(A, B, seg.Start, seg.End);
             if (result.Valid)
             {
-                points ??= new();
-                points.Add((CollisionPoint)result);
+                points ??= [];
+                points.Add(result);
             }
 
             result = Segment.IntersectSegmentSegment(B, C, seg.Start, seg.End);
             if (result.Valid)
             {
-                points ??= new();
-                points.Add((CollisionPoint)result);
+                points ??= [];
+                points.Add(result);
             }
 
             result = Segment.IntersectSegmentSegment(C, A, seg.Start, seg.End);
             if (result.Valid)
             {
-                points ??= new();
-                points.Add((CollisionPoint)result);
+                points ??= [];
+                points.Add(result);
             }
         }
 

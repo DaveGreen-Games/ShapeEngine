@@ -1,7 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
-using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.SegmentDef;
@@ -15,7 +14,7 @@ namespace ShapeEngine.Geometry.SegmentDef;
 public class SegmentShape : ShapeContainer
 {
     private Vector2 dir;
-    private float originOffset = 0f;
+    private float originOffset;
     
     /// <summary>
     /// <see cref="OriginOffset"/> defines where the origin / pivot point lies on the segment: Range: <c>0 - 1</c>

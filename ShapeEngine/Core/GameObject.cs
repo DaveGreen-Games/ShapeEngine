@@ -39,7 +39,7 @@ public abstract class GameObject : IUpdateable, IDrawable
     /// <summary>
     /// Gets whether this object is dead (killed).
     /// </summary>
-    public bool IsDead { get; private set; } = false;
+    public bool IsDead { get; private set; }
     
     /// <summary>
     /// Gets the bounding box of this object in world space.

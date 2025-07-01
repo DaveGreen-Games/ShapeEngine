@@ -48,8 +48,7 @@ public partial class Triangulation
             closestPoint,
             new CollisionPoint(p, (closestPoint.Point - p).Normalize()),
             disSquared,
-            triangleIndex,
-            -1);
+            triangleIndex);
     }
 
     /// <summary>

@@ -23,8 +23,8 @@ public partial class Segments
             var result = Segment.IntersectSegmentRay(seg.Start, seg.End, r.Point, r.Direction, r.Normal);
             if (result.Valid)
             {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
+                points ??= [];
+                points.AddRange(result);
             }
         }
 
@@ -46,8 +46,8 @@ public partial class Segments
             var result = Segment.IntersectSegmentLine(seg.Start, seg.End, l.Point, l.Direction, l.Normal);
             if (result.Valid)
             {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
+                points ??= [];
+                points.AddRange(result);
             }
         }
 
@@ -69,8 +69,8 @@ public partial class Segments
             var result = Segment.IntersectSegmentSegment(seg.Start, seg.End, s.Start, s.End);
             if (result.Valid)
             {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
+                points ??= [];
+                points.AddRange(result);
             }
         }
 

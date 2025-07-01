@@ -1,5 +1,4 @@
 ﻿using System.Numerics;
-using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.StaticLib;
@@ -297,7 +296,7 @@ public static class ShapeVec
             count ++;
         }
 
-        float invArrayLen = 1f / (float)count;
+        float invArrayLen = 1f / count;
         return new Vector2(sx * invArrayLen, sy * invArrayLen);
     }
     

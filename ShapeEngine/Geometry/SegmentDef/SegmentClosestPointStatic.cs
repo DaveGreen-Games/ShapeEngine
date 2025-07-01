@@ -62,7 +62,7 @@ public readonly partial struct Segment
         if (a <= ShapeMath.EpsilonF && e <= ShapeMath.EpsilonF)
         {
             // Both segments degenerate into points
-            s = t = 0.0f;
+            // s = t = 0.0f;
             disSquared = (segment1Start - segment2Start).LengthSquared();
             disSquared = ShapeMath.ClampToZero(disSquared);
             return (segment1Start, segment2Start);

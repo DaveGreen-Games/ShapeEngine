@@ -1,7 +1,6 @@
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.RectDef;
-using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Text;
 
@@ -99,7 +98,7 @@ public class BinaryDrawer
             var c = chars[i];
             if(!binary.TryGetValue(c, out int[]? binaryCode)) continue;
             backgroundDrawer(split[i], c);
-            var grid = split[i].Split(gridWidth, gridHeight, true);
+            var grid = split[i].Split(gridWidth, gridHeight);
             for (int j = 0; j < grid.Count; j++)
             {
                 cellDrawer(grid[j], binaryCode[j], j, GridSize);

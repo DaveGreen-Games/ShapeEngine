@@ -13,10 +13,10 @@ internal abstract class Node : IComparable<Node>
     /// </summary>
     private class NodeWeight
     {
-        private int blockCount = 0;
-        private float baseValue = 0;
-        private float flat = 0;
-        private float bonus = 0;
+        private int blockCount;
+        private float baseValue;
+        private float flat;
+        private float bonus;
         public bool Blocked => blockCount > 0;
 
         public void Apply(NodeValue value)
@@ -97,8 +97,8 @@ internal abstract class Node : IComparable<Node>
 
     #region Internal
 
-    internal HashSet<Node>? Neighbors = null;
-    internal HashSet<Node>? Connections = null;
+    internal HashSet<Node>? Neighbors;
+    internal HashSet<Node>? Connections;
     internal float GScore = float.PositiveInfinity;
     internal float FScore = float.PositiveInfinity;
     internal float H = float.PositiveInfinity;
@@ -108,7 +108,7 @@ internal abstract class Node : IComparable<Node>
     #region Private
 
     private readonly NodeWeight weight = new();
-    private Dictionary<uint, NodeWeight>? weights = null;
+    private Dictionary<uint, NodeWeight>? weights;
     
     #endregion
         

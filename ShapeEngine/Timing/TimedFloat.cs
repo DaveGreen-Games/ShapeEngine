@@ -9,12 +9,12 @@ public class TimedFloat : ISequenceableTimedFloat
     /// <summary>
     /// The remaining time for this timed float.
     /// </summary>
-    private float timer = 0f;
+    private float timer;
 
     /// <summary>
     /// The value to be applied to the total.
     /// </summary>
-    private float value = 0f;
+    private float value;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TimedFloat"/> class with a specified duration and value.

@@ -1056,14 +1056,14 @@ public static class GappedDrawing
                 
                 if (points.Count == 0)
                 {
-                    var prevDistance = nextDistance;
+                    // var prevDistance = nextDistance;
                     nextDistance += nonGapPercentageRange * perimeter;
                     points.Add(p);
 
                 }
                 else
                 {
-                    var prevDistance = nextDistance;
+                    // var prevDistance = nextDistance;
                     nextDistance += gapPercentageRange * perimeter;
                     points.Add(p);
                     

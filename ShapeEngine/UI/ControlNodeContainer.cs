@@ -1,7 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.RectDef;
-using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.UI;
 
@@ -117,18 +116,18 @@ public class ControlNodeContainer : ControlNode
     /// <summary>
     /// Gets or sets the gap between elements in the container as a <see cref="Vector2"/>.
     /// </summary>
-    public Vector2 Gap { get; set; } = new();
+    public Vector2 Gap { get; set; }
 
     #region Private Members
-    private int displayIndex = 0;
+    private int displayIndex;
     
-    private bool dirty = false;
+    private bool dirty;
     
-    private Vector2 curOffset = new();
+    private Vector2 curOffset;
     private Size gapSize = new();
-    private Vector2 startPos = new();
+    private Vector2 startPos;
     private Size elementSize = new();
-    private Vector2 direction = new();
+    private Vector2 direction;
     private AnchorPoint alignement = new();
     #endregion
     
@@ -393,7 +392,7 @@ public class ControlNodeContainer : ControlNode
     /// <summary>
     /// Gets the maximum number of pages based on the display count and child count.
     /// </summary>
-    public int MaxPages => DisplayCount <= 0 ? 1 : (int)MathF.Ceiling((float)ChildCount / (float)DisplayCount);
+    public int MaxPages => DisplayCount <= 0 ? 1 : (int)MathF.Ceiling(ChildCount / (float)DisplayCount);
     /// <summary>
     /// Gets the current page number.
     /// </summary>

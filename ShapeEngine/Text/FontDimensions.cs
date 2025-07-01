@@ -289,7 +289,7 @@ public readonly struct FontDimensions
     public Size GetCharSize(char c)
     {
         var baseSize = GetCharBaseSize(c);
-        float f = Size / (float)BaseSize;
+        float f = Size / BaseSize;
         return baseSize * f;
     }
     /// <summary>
@@ -301,7 +301,7 @@ public readonly struct FontDimensions
     public Size GetCharSize(char c, float fontSize)
     {
         var baseSize = GetCharBaseSize(c);
-        float f = fontSize / (float)BaseSize;
+        float f = fontSize / BaseSize;
         return baseSize * f;
     }
     /// <summary>

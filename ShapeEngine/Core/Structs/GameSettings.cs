@@ -1,6 +1,5 @@
 using Raylib_cs;
 using ShapeEngine.Screen;
-using ShapeEngine.Stats;
 
 namespace ShapeEngine.Core.Structs;
 
@@ -20,7 +19,7 @@ public readonly struct GameSettings
     /// Creates a new GameSettings instance with fixed dimensions and the nearest scaling disabled.
     /// </summary>
     public static GameSettings FixedMode =>
-        new GameSettings(new Dimensions(320, 180), -1, TextureFilter.Point, ShaderSupportType.Multi, false);
+        new GameSettings(new Dimensions(320, 180), -1, TextureFilter.Point, ShaderSupportType.Multi);
 
     /// <summary>
     /// Creates a new GameSettings instance with fixed dimensions and the nearest scaling enabled.

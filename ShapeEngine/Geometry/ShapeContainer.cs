@@ -16,7 +16,7 @@ public abstract class ShapeContainer : Shape
     /// <summary>
     /// Gets or sets the parent of this shape container.
     /// </summary>
-    public ShapeContainer? Parent { get; set; } = null;
+    public ShapeContainer? Parent { get; set; }
     
     // List of child shape containers. Not exposed publicly.
     private List<ShapeContainer> children { get; set; } = [];

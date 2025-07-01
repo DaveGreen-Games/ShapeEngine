@@ -1,5 +1,4 @@
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.SegmentDef;
 

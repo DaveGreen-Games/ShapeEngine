@@ -1,5 +1,4 @@
 using ShapeEngine.Geometry;
-using ShapeEngine.Geometry.CollisionSystem;
 
 namespace ShapeEngine.Pathfinding;
 

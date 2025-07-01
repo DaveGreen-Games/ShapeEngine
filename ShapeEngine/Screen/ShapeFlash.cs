@@ -1,5 +1,4 @@
 using ShapeEngine.Color;
-using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Screen;
 
@@ -14,11 +13,11 @@ internal sealed class ShapeFlash
     /// <summary>
     /// The maximum duration of the flash effect in seconds.
     /// </summary>
-    private float maxDuration = 0.0f;
+    private float maxDuration;
     /// <summary>
     /// The current timer for the flash effect in seconds.
     /// </summary>
-    private float flashTimer = 0.0f;
+    private float flashTimer;
     /// <summary>
     /// The starting color of the flash.
     /// </summary>
