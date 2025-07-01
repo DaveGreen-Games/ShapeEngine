@@ -177,7 +177,13 @@ public readonly partial struct Ray
     /// Finds the closest points between this ray and a triangle.
     /// </summary>
     /// <param name="other">The triangle to find the closest point to.</param>
-    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.</returns>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.
+    /// The <c>otherSegmentIndex</c> indicates the closest edge of the triangle.
+    /// <list type="bullet">
+    /// <item>0 = AB</item>
+    /// <item>1 = BC</item>
+    /// <item>2 = CA</item>
+    /// </list></returns>
     /// <remarks>
     /// Checks each edge of the triangle for the closest point.
     /// </remarks>
@@ -221,7 +227,14 @@ public readonly partial struct Ray
     /// Finds the closest points between this ray and a quad.
     /// </summary>
     /// <param name="other">The quad to find the closest point to.</param>
-    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.</returns>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.
+    /// The <c>otherSegmentIndex</c> indicates the closest edge of the quad.
+    /// <list type="bullet">
+    /// <item>0 = AB</item>
+    /// <item>1 = BC</item>
+    /// <item>2 = CD</item>
+    /// <item>3 = DA</item>
+    /// </list></returns>
     /// <remarks>
     /// Checks each edge of the quad for the closest point.
     /// </remarks>
@@ -274,7 +287,14 @@ public readonly partial struct Ray
     /// Finds the closest points between this ray and a rectangle.
     /// </summary>
     /// <param name="other">The rectangle to find the closest point to.</param>
-    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.</returns>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.
+    /// The <c>otherSegmentIndex</c> indicates the closest edge of the rect.
+    /// <list type="bullet">
+    /// <item>0 = AB</item>
+    /// <item>1 = BC</item>
+    /// <item>2 = CD</item>
+    /// <item>3 = DA</item>
+    /// </list></returns>
     /// <remarks>
     /// Checks each edge of the rectangle for the closest point.
     /// </remarks>
@@ -325,7 +345,8 @@ public readonly partial struct Ray
     /// Finds the closest points between this ray and a polygon.
     /// </summary>
     /// <param name="other">The polygon to find the closest point to.</param>
-    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.</returns>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.
+    /// The <c>otherIndex</c> is the edge index of the polygon.</returns>
     /// <remarks>
     /// Checks each edge of the polygon for the closest point.
     /// </remarks>
@@ -364,7 +385,8 @@ public readonly partial struct Ray
     /// Finds the closest points between this ray and a polyline.
     /// </summary>
     /// <param name="other">The polyline to find the closest point to.</param>
-    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.</returns>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.
+    /// The <c>otherIndex</c> is the edge index of the polyline.</returns>
     /// <remarks>
     /// Checks each segment of the polyline for the closest point.
     /// </remarks>
@@ -402,7 +424,8 @@ public readonly partial struct Ray
     /// Finds the closest points between this ray and a set of segments.
     /// </summary>
     /// <param name="segments">The set of segments to find the closest point to.</param>
-    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.</returns>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.
+    /// The <c>otherIndex</c> is the index of the segment.</returns>
     /// <remarks>
     /// Iterates through each segment and finds the closest point.
     /// </remarks>

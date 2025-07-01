@@ -540,7 +540,7 @@ public readonly partial struct Ray
     /// </remarks>
     public static CollisionPoints? IntersectRayPolyline(Vector2 rayPoint, Vector2 rayDirection, List<Vector2> points, int maxCollisionPoints = -1)
     {
-        if (points.Count < 3) return null;
+        if (points.Count < 2) return null;
         if (maxCollisionPoints == 0) return null;
         CollisionPoints? result = null;
         for (var i = 0; i < points.Count - 1; i++)
