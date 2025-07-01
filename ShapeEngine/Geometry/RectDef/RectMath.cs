@@ -32,17 +32,17 @@ public readonly partial struct Rect
     /// Scales the size of the rectangle by a uniform factor, using the specified anchor point for alignment.
     /// </summary>
     /// <param name="scale">The uniform scale factor.</param>
-    /// <param name="alignement">The anchor point for alignment.</param>
+    /// <param name="alignment">The anchor point for alignment.</param>
     /// <returns>A new rectangle with the scaled size.</returns>
-    public Rect ScaleSize(float scale, AnchorPoint alignement) => new(GetPoint(alignement), Size * scale, alignement);
+    public Rect ScaleSize(float scale, AnchorPoint alignment) => new(GetPoint(alignment), Size * scale, alignment);
 
     /// <summary>
     /// Scales the size of the rectangle by a vector factor, using the specified anchor point for alignment.
     /// </summary>
     /// <param name="scale">The scale factor for width and height.</param>
-    /// <param name="alignement">The anchor point for alignment.</param>
+    /// <param name="alignment">The anchor point for alignment.</param>
     /// <returns>A new rectangle with the scaled size.</returns>
-    public Rect ScaleSize(Vector2 scale, AnchorPoint alignement) => new(GetPoint(alignement), Size * scale, alignement);
+    public Rect ScaleSize(Vector2 scale, AnchorPoint alignment) => new(GetPoint(alignment), Size * scale, alignment);
 
     /// <summary>
     /// Sets the size of the rectangle to the specified value, keeping the top-left corner fixed.
@@ -55,41 +55,41 @@ public readonly partial struct Rect
     /// Sets the size of the rectangle to the specified value, using the specified anchor point for alignment.
     /// </summary>
     /// <param name="newSize">The new size for the rectangle.</param>
-    /// <param name="alignement">The anchor point for alignment.</param>
+    /// <param name="alignment">The anchor point for alignment.</param>
     /// <returns>A new rectangle with the specified size and alignment.</returns>
-    public Rect SetSize(Size newSize, AnchorPoint alignement) => new(GetPoint(alignement), newSize, alignement);
+    public Rect SetSize(Size newSize, AnchorPoint alignment) => new(GetPoint(alignment), newSize, alignment);
 
     /// <summary>
     /// Sets the size of the rectangle to a uniform value, using the specified anchor point for alignment.
     /// </summary>
     /// <param name="newSize">The new size for both width and height.</param>
-    /// <param name="alignement">The anchor point for alignment.</param>
+    /// <param name="alignment">The anchor point for alignment.</param>
     /// <returns>A new rectangle with the specified size and alignment.</returns>
-    public Rect SetSize(float newSize, AnchorPoint alignement) => new(GetPoint(alignement), new Size(newSize), alignement);
+    public Rect SetSize(float newSize, AnchorPoint alignment) => new(GetPoint(alignment), new Size(newSize), alignment);
 
     /// <summary>
     /// Changes the size of the rectangle by a uniform amount, using the specified anchor point for alignment.
     /// </summary>
     /// <param name="amount">The amount to change the size by (positive to expand, negative to shrink).</param>
-    /// <param name="alignement">The anchor point for alignment.</param>
+    /// <param name="alignment">The anchor point for alignment.</param>
     /// <returns>A new rectangle with the changed size and alignment.</returns>
-    public Rect ChangeSize(float amount, AnchorPoint alignement) => new(GetPoint(alignement), Size + amount, alignement);
+    public Rect ChangeSize(float amount, AnchorPoint alignment) => new(GetPoint(alignment), Size + amount, alignment);
 
     /// <summary>
     /// Changes the size of the rectangle by a vector amount, using the specified anchor point for alignment.
     /// </summary>
     /// <param name="amount">The amount to change the size by for width and height.</param>
-    /// <param name="alignement">The anchor point for alignment.</param>
+    /// <param name="alignment">The anchor point for alignment.</param>
     /// <returns>A new rectangle with the changed size and alignment.</returns>
-    public Rect ChangeSize(Size amount, AnchorPoint alignement) => new(GetPoint(alignement), Size + amount, alignement);
+    public Rect ChangeSize(Size amount, AnchorPoint alignment) => new(GetPoint(alignment), Size + amount, alignment);
 
     /// <summary>
     /// Sets the position of the rectangle to the specified value, using the specified anchor point for alignment.
     /// </summary>
     /// <param name="newPosition">The new position for the rectangle.</param>
-    /// <param name="alignement">The anchor point for alignment.</param>
+    /// <param name="alignment">The anchor point for alignment.</param>
     /// <returns>A new rectangle with the specified position and alignment.</returns>
-    public Rect SetPosition(Vector2 newPosition, AnchorPoint alignement) => new(newPosition, Size, alignement);
+    public Rect SetPosition(Vector2 newPosition, AnchorPoint alignment) => new(newPosition, Size, alignment);
 
     /// <summary>
     /// Sets the position of the rectangle to the specified value, keeping the anchor at (0,0).
@@ -113,25 +113,25 @@ public readonly partial struct Rect
     /// Changes the size of the moved rect by offset.ScaledSize
     /// </summary>
     /// <param name="offset"></param>
-    /// <param name="alignement"></param>
+    /// <param name="alignment"></param>
     /// <returns></returns>
-    public Rect ApplyOffset(Transform2D offset, AnchorPoint alignement)
+    public Rect ApplyOffset(Transform2D offset, AnchorPoint alignment)
     {
         var newRect = ChangePosition(offset.Position);
-        return newRect.ChangeSize(offset.ScaledSize, alignement);
+        return newRect.ChangeSize(offset.ScaledSize, alignment);
     }
 
     /// <summary>
     /// Moves the rect to transform.Position
-    /// Sets the size of the moved rect to transform.Size
+    /// Sets the size of the moved rect to transform.ScaledSize
     /// </summary>
     /// <param name="transform"></param>
-    /// <param name="alignement"></param>
+    /// <param name="alignment"></param>
     /// <returns></returns>
-    public Rect SetTransform(Transform2D transform, AnchorPoint alignement)
+    public Rect SetTransform(Transform2D transform, AnchorPoint alignment)
     {
-        var newRect = SetPosition(transform.Position, alignement);
-        return newRect.SetSize(transform.BaseSize, alignement);
+        var newRect = SetPosition(transform.Position, alignment);
+        return newRect.SetSize(transform.ScaledSize, alignment);
     }
 
     #endregion
@@ -244,7 +244,8 @@ public readonly partial struct Rect
     /// <returns>The squared perimeter of the rectangle.</returns>
     public float GetPerimeterSquared()
     {
-        return (Width * Width) * 2 + (Height * Height) * 2;
+        var p = Width * 2 + Height * 2;
+        return p * p;
     }
 
     /// <summary>
@@ -262,7 +263,7 @@ public readonly partial struct Rect
     /// <param name="axisStart">The start point of the axis.</param>
     /// <param name="axisEnd">The end point of the axis.</param>
     /// <returns>True if there is a separating axis, false otherwise.</returns>
-    public bool SeperateAxis(Vector2 axisStart, Vector2 axisEnd)
+    public bool SeparateAxis(Vector2 axisStart, Vector2 axisEnd)
     {
         var n = axisStart - axisEnd;
         var corners = ToPolygon();
@@ -300,11 +301,11 @@ public readonly partial struct Rect
     /// <summary>
     /// Returns a new rectangle with the same size and top-left, but with a different anchor alignment.
     /// </summary>
-    /// <param name="alignement">The anchor point for alignment.</param>
+    /// <param name="alignment">The anchor point for alignment.</param>
     /// <returns>A new rectangle with the specified alignment.</returns>
-    public Rect Align(AnchorPoint alignement)
+    public Rect Align(AnchorPoint alignment)
     {
-        return new(TopLeft, Size, alignement);
+        return new(TopLeft, Size, alignment);
     }
 
     /// <summary>

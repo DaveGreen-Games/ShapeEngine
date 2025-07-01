@@ -34,13 +34,13 @@ public readonly partial struct Rect
                 return IntersectShape(c, ref points, returnAfterFirstValid);
             case ShapeType.Ray:
                 var rayShape = collider.GetRayShape();
-                return IntersectShape(rayShape, ref points);
+                return IntersectShape(rayShape, ref points, returnAfterFirstValid);
             case ShapeType.Line:
                 var l = collider.GetLineShape();
-                return IntersectShape(l, ref points);
+                return IntersectShape(l, ref points, returnAfterFirstValid);
             case ShapeType.Segment:
                 var s = collider.GetSegmentShape();
-                return IntersectShape(s, ref points);
+                return IntersectShape(s, ref points, returnAfterFirstValid);
             case ShapeType.Triangle:
                 var t = collider.GetTriangleShape();
                 return IntersectShape(t, ref points, returnAfterFirstValid);

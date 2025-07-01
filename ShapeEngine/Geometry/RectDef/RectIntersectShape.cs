@@ -433,7 +433,7 @@ public readonly partial struct Rect
     /// A <see cref="CollisionPoints"/> object containing intersection points, or null if there are no intersections.
     /// </returns>
     /// <remarks>
-    /// Each side of the rectangle is tested against the corresponding side of the other rectangle.
+    /// Each side of the rectangle is tested against all four sides of the other rectangle.
     /// </remarks>
     public CollisionPoints? IntersectShape(Rect r)
     {
@@ -576,7 +576,7 @@ public readonly partial struct Rect
     /// A <see cref="CollisionPoints"/> object containing intersection points, or null if there are no intersections.
     /// </returns>
     /// <remarks>
-    /// Each side of the rectangle is tested against the corresponding side of the quadrilateral.
+    /// Each side of the rectangle is tested against all four sides of the quadrilateral.
     /// </remarks>
     public CollisionPoints? IntersectShape(Quad q)
     {

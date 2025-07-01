@@ -179,14 +179,14 @@ public readonly partial struct Rect
     /// <param name="bottomRight">The bottom-right corner of the rectangle.</param>
     /// <param name="tA">The first vertex of the triangle.</param>
     /// <param name="tB">The second vertex of the triangle.</param>
-    /// <param name="tc">The third vertex of the triangle.</param>
+    /// <param name="tC">The third vertex of the triangle.</param>
     /// <returns>True if all triangle vertices are inside the rectangle; otherwise, false.</returns>
     /// <remarks>
     /// All triangle vertices must be inside or on the edge of the rectangle.
     /// </remarks>
-    public static bool ContainsRectTriangle(Vector2 topLeft, Vector2 bottomRight, Vector2 tA, Vector2 tB, Vector2 tc)
+    public static bool ContainsRectTriangle(Vector2 topLeft, Vector2 bottomRight, Vector2 tA, Vector2 tB, Vector2 tC)
     {
-        return ContainsRectPoints(topLeft, bottomRight, tA, tB, tc);
+        return ContainsRectPoints(topLeft, bottomRight, tA, tB, tC);
     }
 
     /// <summary>
@@ -223,7 +223,7 @@ public readonly partial struct Rect
         var x = topLeft1.X;
         var y = topLeft1.Y;
         var width = bottomRight1.X - x;
-        var height = bottomRight1.Y - x;
+        var height = bottomRight1.Y - y;
 
         var otherX = topLeft2.X;
         var otherY = topLeft2.Y;

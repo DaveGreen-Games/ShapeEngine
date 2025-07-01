@@ -49,7 +49,7 @@ public readonly partial struct Rect
     /// <remarks>
     /// This method first splits the rectangle horizontally, then splits each resulting rectangle vertically.
     /// </remarks>
-    public (Rect topLeft, Rect bottomLeft, Rect bottomRight, Rect TopRight) Split(float horizontal, float vertical)
+    public (Rect topLeft, Rect bottomLeft, Rect bottomRight, Rect topRight) Split(float horizontal, float vertical)
     {
         var hor = SplitH(horizontal);
         var left = hor.left.SplitV(vertical);

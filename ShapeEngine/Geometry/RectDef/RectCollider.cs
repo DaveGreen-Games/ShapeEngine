@@ -15,23 +15,23 @@ public class RectCollider : Collider
     /// <summary>
     /// Gets or sets the alignment anchor point for the rectangle.
     /// </summary>
-    public AnchorPoint Alignement { get; set; }
+    public AnchorPoint Alignment { get; set; }
     /// <summary>
     /// Initializes a new instance of <see cref="RectCollider"/> with a transform offset.
     /// </summary>
     /// <param name="offset">The transform offset for the collider.</param>
     public RectCollider(Transform2D offset) : base(offset)
     {
-        Alignement = new();
+        Alignment = new();
     }
     /// <summary>
     /// Initializes a new instance of <see cref="RectCollider"/> with a transform offset and alignment.
     /// </summary>
     /// <param name="offset">The transform offset for the collider.</param>
-    /// <param name="alignement">The alignment anchor point.</param>
-    public RectCollider(Transform2D offset, AnchorPoint alignement) : base(offset)
+    /// <param name="alignment">The alignment anchor point.</param>
+    public RectCollider(Transform2D offset, AnchorPoint alignment) : base(offset)
     {
-        Alignement = alignement;
+        Alignment = alignment;
     }
     /// <summary>
     /// Gets the bounding box of the rectangle collider.
@@ -47,5 +47,5 @@ public class RectCollider : Collider
     /// Gets the rectangle shape in world (absolute) space.
     /// </summary>
     /// <returns>The <see cref="Rect"/> shape.</returns>
-    public override Rect GetRectShape() => new(CurTransform.Position, CurTransform.ScaledSize, Alignement);
+    public override Rect GetRectShape() => new(CurTransform.Position, CurTransform.ScaledSize, Alignment);
 }

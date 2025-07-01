@@ -18,7 +18,7 @@ public class RectShape : ShapeContainer
     /// <remarks>
     /// The <see cref="AnchorPoint"/> specifies the reference point for alignment, such as center, top-left, etc.
     /// </remarks>
-    public AnchorPoint Alignement { get; set; }
+    public AnchorPoint Alignment { get; set; }
     
     /// <summary>
     /// Initializes a new instance of the <see cref="RectShape"/> class with a default alignment.
@@ -30,23 +30,23 @@ public class RectShape : ShapeContainer
     public RectShape(Transform2D offset)
     {
         Offset = offset;
-        Alignement = new();
+        Alignment = new();
     }
     /// <summary>
     /// Initializes a new instance of the <see cref="RectShape"/> class with a specified alignment.
     /// </summary>
     /// <param name="offset">The <see cref="Transform2D"/> offset to apply to the shape, specifying position, rotation, and scale.</param>
-    /// <param name="alignement">The <see cref="AnchorPoint"/> to use for alignment, determining how the rectangle is anchored.</param>
+    /// <param name="alignment">The <see cref="AnchorPoint"/> to use for alignment, determining how the rectangle is anchored.</param>
     /// <remarks>
     /// Use this constructor to explicitly set the alignment anchor point.
     /// </remarks>
-    public RectShape(Transform2D offset, AnchorPoint alignement)
+    public RectShape(Transform2D offset, AnchorPoint alignment)
     {
         Offset = offset;
-        Alignement = alignement;
+        Alignment = alignment;
     }
     /// <inheritdoc/>
     public override ShapeType GetShapeType() => ShapeType.Rect;
     /// <inheritdoc/>
-    public override Rect GetRectShape() => new(CurTransform.Position, CurTransform.ScaledSize, Alignement);
+    public override Rect GetRectShape() => new(CurTransform.Position, CurTransform.ScaledSize, Alignment);
 }

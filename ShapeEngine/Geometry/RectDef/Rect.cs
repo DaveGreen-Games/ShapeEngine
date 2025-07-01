@@ -82,7 +82,7 @@ public readonly partial struct Rect : IEquatable<Rect>
     /// <summary>
     /// Gets all four corners of the rectangle as a tuple: (topLeft, bottomLeft, bottomRight, topRight).
     /// </summary>
-    public readonly (Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr) Corners =>
+    public (Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr) Corners =>
         (TopLeft, BottomLeft, BottomRight, TopRight);
 
     /// <summary>
@@ -273,10 +273,10 @@ public readonly partial struct Rect : IEquatable<Rect>
     #region Shapes
 
     /// <summary>
-    /// Points are ordered in ccw order starting with top left. (tl, bl, br, tr)
+    /// Points are ordered in ccw order starting with top left (tl, bl, br, tr).
     /// </summary>
-    /// <param name="alignement"></param>
-    /// <param name="angleDeg"></param>
+    /// <param name="angleDeg">The angle in degrees to rotate.</param>
+    /// <param name="alignement">The anchor point for rotation.</param>
     /// <returns></returns>
     public Polygon Rotate(float angleDeg, AnchorPoint alignement)
     {
@@ -395,10 +395,10 @@ public readonly partial struct Rect : IEquatable<Rect>
     /// <summary>
     /// Get the points to draw a rectangle with slanted corners. The corner values are the percentage of the width/height of the rectange the should be used for the slant.
     /// </summary>
-    /// <param name="tlCorner">Should be bewteen 0 - 1</param>
-    /// <param name="trCorner">Should be bewteen 0 - 1</param>
-    /// <param name="brCorner">Should be bewteen 0 - 1</param>
-    /// <param name="blCorner">Should be bewteen 0 - 1</param>
+    /// <param name="tlCorner">Should be between 0 - 1</param>
+    /// <param name="trCorner">Should be between 0 - 1</param>
+    /// <param name="brCorner">Should be between 0 - 1</param>
+    /// <param name="blCorner">Should be between 0 - 1</param>
     /// <returns>Returns points in ccw order.</returns>
     public Polygon GetSlantedCornerPointsRelative(float tlCorner, float trCorner, float brCorner, float blCorner)
     {
