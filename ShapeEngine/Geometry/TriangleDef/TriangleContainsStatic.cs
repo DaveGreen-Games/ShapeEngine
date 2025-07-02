@@ -33,7 +33,13 @@ public readonly partial struct Triangle
         float c2 = bc.Cross(bp);
         float c3 = ca.Cross(cp);
 
-        return c1 < 0f && c2 < 0f && c3 < 0f;
+        //can handle CW and CCW
+        bool allNonNegative = c1 >= 0f && c2 >= 0f && c3 >= 0f; //CCW order
+        bool allNonPositive = c1 <= 0f && c2 <= 0f && c3 <= 0f; //CW order
+
+        return allNonNegative || allNonPositive;
+        
+        // return c1 >= 0f && c2 >= 0f && c3 >= 0f;
     }
 
     /// <summary>
@@ -226,7 +232,7 @@ public readonly partial struct Triangle
     /// <returns>True if all vertices of the polyline are contained within the triangle; otherwise, false.</returns>
     /// <remarks>
     /// Since triangles are convex shapes, containment of all vertices ensures containment of the entire polyline.
-    /// If the polyline collection is empty, this method returns true.
+    /// If the polyline collection is empty, this method returns false.
     /// </remarks>
     public static bool ContainsTrianglePolyline(Vector2 tA, Vector2 tB, Vector2 tC, List<Vector2> polyline)
     {
@@ -243,7 +249,7 @@ public readonly partial struct Triangle
     /// <returns>True if all vertices of the polygon are contained within the triangle; otherwise, false.</returns>
     /// <remarks>
     /// Since triangles are convex shapes, containment of all vertices ensures containment of the entire polygon.
-    /// If the polygon collection is empty, this method returns true.
+    /// If the polygon collection is empty, this method returns false.
     /// </remarks>
     public static bool ContainsTrianglePolygon(Vector2 tA, Vector2 tB, Vector2 tC, List<Vector2> polygon)
     {

@@ -284,7 +284,7 @@ public readonly partial struct Triangle
     /// Finds the closest points between this triangle and another triangle.
     /// </summary>
     /// <param name="other">The other triangle to find the closest points with.</param>
-    /// <returns>A result containing the closest points on both triangles, the squared distance, and edge indices.</returns>
+    /// <returns>A result containing the closest points on both triangles, the squared distance, and the edge index for this triangle and the other triangle.</returns>
     /// <remarks>
     /// This method performs a comprehensive comparison between all edges of both triangles to find
     /// the closest approach points. This is useful for collision detection and proximity analysis.

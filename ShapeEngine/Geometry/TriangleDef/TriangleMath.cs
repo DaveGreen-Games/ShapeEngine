@@ -285,12 +285,11 @@ public readonly partial struct Triangle
     }
 
     /// <summary>
-    /// Moves the triangle by transform.Position
-    /// Rotates the moved triangle by transform.RotationRad
-    /// Changes the size of the rotated triangle by transform.Size.Width!
+    /// Moves the triangle by offset.Position, rotates the result around its new centroid by offset.RotationRad,
+    /// and changes the size of the rotated triangle by offset.ScaledSize.Length.
     /// </summary>
-    /// <param name="offset"></param>
-    /// <returns></returns>
+    /// <param name="offset">The transformation to apply.</param>
+    /// <returns>A new triangle with the transformation applied.</returns>
     public Triangle ApplyOffset(Transform2D offset)
     {
         var newTriangle = ChangePosition(offset.Position);
@@ -299,13 +298,12 @@ public readonly partial struct Triangle
     }
 
     /// <summary>
-    /// Moves the triangle by transform.Position
-    /// Rotates the moved triangle by transform.RotationRad
-    /// Changes the size of the rotated triangle by transform.Size.Width!
+    /// Moves the triangle by offset.Position, rotates the result around the specified origin by offset.RotationRad,
+    /// and changes the size of the rotated triangle by offset.ScaledSize.Length around the same origin.
     /// </summary>
-    /// <param name="offset"></param>
-    /// <param name="origin"></param>
-    /// <returns></returns>
+    /// <param name="offset">The transformation to apply.</param>
+    /// <param name="origin">The origin point for rotation and scaling.</param>
+    /// <returns>A new triangle with the transformation applied.</returns>
     public Triangle ApplyOffset(Transform2D offset, Vector2 origin)
     {
         var newTriangle = ChangePosition(offset.Position);
@@ -314,12 +312,11 @@ public readonly partial struct Triangle
     }
 
     /// <summary>
-    /// Moves the triangle to transform.Position
-    /// Rotates the moved triangle to transform.RotationRad
-    /// Sets the size of the rotated triangle to transform.ScaledSize.Length
+    /// Moves the triangle to transform.Position, sets the rotation of the moved triangle to transform.RotationRad,
+    /// and sets the size of the rotated triangle to transform.ScaledSize.Length. The centroid is used as the origin for rotation and scaling.
     /// </summary>
-    /// <param name="transform"></param>
-    /// <returns></returns>
+    /// <param name="transform">The transform to apply.</param>
+    /// <returns>A new triangle with the transform applied.</returns>
     public Triangle SetTransform(Transform2D transform)
     {
         var newTriangle = SetPosition(transform.Position);
@@ -328,13 +325,13 @@ public readonly partial struct Triangle
     }
 
     /// <summary>
-    /// Moves the triangle to transform.Position
-    /// Rotates the moved triangle to transform.RotationRad
-    /// Sets the size of the rotated triangle to transform.ScaledSize.Length
+    /// Moves the triangle to transform.Position, sets the rotation of the moved triangle to transform.RotationRad,
+    /// and sets the size of the rotated triangle to transform.ScaledSize.Length. All transformations are performed
+    /// relative to the specified origin.
     /// </summary>
-    /// <param name="transform"></param>
-    /// <param name="origin"></param>
-    /// <returns></returns>
+    /// <param name="transform">The transform to apply.</param>
+    /// <param name="origin">The origin for all transformations.</param>
+    /// <returns>A new triangle with the transform applied.</returns>
     public Triangle SetTransform(Transform2D transform, Vector2 origin)
     {
         var newTriangle = SetPosition(transform.Position, origin);
@@ -539,4 +536,3 @@ public readonly partial struct Triangle
 
     #endregion
 }
-

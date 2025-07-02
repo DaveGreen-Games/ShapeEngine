@@ -589,21 +589,21 @@ public readonly partial struct Triangle
         CollisionPoints? points = null;
         for (var i = 0; i < pl.Count - 1; i++)
         {
-            CollisionPoint colPoint = Segment.IntersectSegmentSegment(A, B, pl[i], pl[(i + 1) % pl.Count]);
+            var colPoint = Segment.IntersectSegmentSegment(A, B, pl[i], pl[i + 1]);
             if (colPoint.Valid)
             {
                 points ??= new();
                 points.Add(colPoint);
             }
 
-            colPoint = Segment.IntersectSegmentSegment(B, C, pl[i], pl[(i + 1) % pl.Count]);
+            colPoint = Segment.IntersectSegmentSegment(B, C, pl[i], pl[i + 1]);
             if (colPoint.Valid)
             {
                 points ??= new();
                 points.Add(colPoint);
             }
 
-            colPoint = Segment.IntersectSegmentSegment(C, A, pl[i], pl[(i + 1) % pl.Count]);
+            colPoint = Segment.IntersectSegmentSegment(C, A, pl[i], pl[i + 1]);
             if (colPoint.Valid)
             {
                 points ??= new();
@@ -1226,7 +1226,7 @@ public readonly partial struct Triangle
         var count = 0;
         for (var i = 0; i < pl.Count - 1; i++)
         {
-            var result = Segment.IntersectSegmentSegment(A, B, pl[i], pl[(i + 1) % pl.Count]);
+            var result = Segment.IntersectSegmentSegment(A, B, pl[i], pl[i + 1]);
             if (result.Valid)
             {
                 points.Add(result);
@@ -1234,7 +1234,7 @@ public readonly partial struct Triangle
                 count++;
             }
 
-            result = Segment.IntersectSegmentSegment(B, C, pl[i], pl[(i + 1) % pl.Count]);
+            result = Segment.IntersectSegmentSegment(B, C, pl[i], pl[i + 1]);
             if (result.Valid)
             {
                 points.Add(result);
@@ -1242,7 +1242,7 @@ public readonly partial struct Triangle
                 count++;
             }
 
-            result = Segment.IntersectSegmentSegment(C, A, pl[i], pl[(i + 1) % pl.Count]);
+            result = Segment.IntersectSegmentSegment(C, A, pl[i], pl[i + 1]);
             if (result.Valid)
             {
                 points.Add(result);

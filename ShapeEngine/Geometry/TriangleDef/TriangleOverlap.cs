@@ -355,6 +355,8 @@ public readonly partial struct Triangle
     {
         if (poly.Count < 3) return false;
 
+        //TODO: This function might not check all possible scenarios for overlaps
+        // in testing it seems to work 100% but AI thinks it does not check for everything
         if (ContainsPoint(poly[0])) return true;
 
         var oddNodes = false;
@@ -391,7 +393,7 @@ public readonly partial struct Triangle
         for (var i = 0; i < pl.Count - 1; i++)
         {
             var start = pl[i];
-            var end = pl[(i + 1) % pl.Count];
+            var end = pl[i + 1];
             if (Segment.OverlapSegmentSegment(A, B, start, end)) return true;
             if (Segment.OverlapSegmentSegment(B, C, start, end)) return true;
             if (Segment.OverlapSegmentSegment(C, A, start, end)) return true;

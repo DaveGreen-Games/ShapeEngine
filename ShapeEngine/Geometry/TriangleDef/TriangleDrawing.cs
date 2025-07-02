@@ -238,33 +238,33 @@ public static class TriangleDrawing
 
         if (startCorner == 0)
         {
-            if (negative)
+            if (negative) //CW
             {
                 DrawTriangleLinesPercentageHelper(a, c, b, percentage, lineThickness, color, capType, capPoints);
             }
-            else
+            else //CCW
             {
                 DrawTriangleLinesPercentageHelper(a, b, c, percentage, lineThickness, color, capType, capPoints);
             }
         }
         else if (startCorner == 1)
         {
-            if (negative)
+            if (negative) //CW
             {
-                DrawTriangleLinesPercentageHelper(b, a, c,  percentage, lineThickness, color, capType, capPoints);
+                DrawTriangleLinesPercentageHelper(c, b, a,  percentage, lineThickness, color, capType, capPoints);
             }
-            else
+            else //CCW
             {
                 DrawTriangleLinesPercentageHelper(b, c, a,  percentage, lineThickness, color, capType, capPoints);
             }
         }
         else if (startCorner == 2)
         {
-            if (negative)
+            if (negative) //CW
             {
-                DrawTriangleLinesPercentageHelper(c, b, a, percentage, lineThickness, color, capType, capPoints);
+                DrawTriangleLinesPercentageHelper(b, a, c, percentage, lineThickness, color, capType, capPoints);
             }
-            else
+            else //CCW
             {
                 DrawTriangleLinesPercentageHelper(c, a, b, percentage, lineThickness, color, capType, capPoints);
             }

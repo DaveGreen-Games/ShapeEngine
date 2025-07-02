@@ -18,7 +18,9 @@ public readonly partial struct Triangle
     /// <param name="p">The point to test for containment.</param>
     /// <returns>True if the point is inside or on the boundary of the triangle; otherwise, false.</returns>
     /// <remarks>
-    /// This method uses barycentric coordinates to efficiently determine point containment.
+    /// This method uses the cross product method to determine point containment by checking
+    /// that the point is on the same side of all three triangle edges. This assumes the triangle
+    /// vertices are in counter-clockwise order for proper containment testing.
     /// Points on the triangle's edges are considered to be contained within the triangle.
     /// </remarks>
     public bool ContainsPoint(Vector2 p) => ContainsTrianglePoint(A, B, C, p);

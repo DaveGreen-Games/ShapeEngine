@@ -460,12 +460,12 @@ public readonly partial struct Triangle : IEquatable<Triangle>
     public bool IsSimilar(Triangle other)
     {
         return 
-            (A.IsSimilar(A) && B.IsSimilar(B) && C.IsSimilar(C) ) || 
-            (C.IsSimilar(A) && A.IsSimilar(B) && B.IsSimilar(C) ) || 
-            (B.IsSimilar(A) && C.IsSimilar(B) && A.IsSimilar(C) ) ||
-            (B.IsSimilar(A) && A.IsSimilar(B) && C.IsSimilar(C) ) ||
-            (C.IsSimilar(A) && B.IsSimilar(B) && A.IsSimilar(C) ) ||
-            (A.IsSimilar(A) && C.IsSimilar(B) && B.IsSimilar(C) );
+            (A.IsSimilar(other.A) && B.IsSimilar(other.B) && C.IsSimilar(other.C) ) || 
+            (C.IsSimilar(other.A) && A.IsSimilar(other.B) && B.IsSimilar(other.C) ) || 
+            (B.IsSimilar(other.A) && C.IsSimilar(other.B) && A.IsSimilar(other.C) ) ||
+            (B.IsSimilar(other.A) && A.IsSimilar(other.B) && C.IsSimilar(other.C) ) ||
+            (C.IsSimilar(other.A) && B.IsSimilar(other.B) && A.IsSimilar(other.C) ) ||
+            (A.IsSimilar(other.A) && C.IsSimilar(other.B) && B.IsSimilar(other.C) );
         
         //return 
         //    (A == other.A && B == other.B && C == other.C) || 
