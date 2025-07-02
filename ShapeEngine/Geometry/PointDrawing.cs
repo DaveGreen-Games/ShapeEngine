@@ -1,6 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.PointsDef;
 
 namespace ShapeEngine.Geometry;
 
@@ -25,7 +26,7 @@ public static class PointDrawing
     /// <param name="r">The radius of each circle.</param>
     /// <param name="color">The color of the circles.</param>
     /// <param name="segments">The number of segments to use for each circle. Default is 16.</param>
-    public static void Draw(this PointsDef.Points points, float r, ColorRgba color, int segments = 16)
+    public static void Draw(this Points points, float r, ColorRgba color, int segments = 16)
     {
         foreach (var p in points)
         {

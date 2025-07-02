@@ -13,6 +13,16 @@ namespace ShapeEngine.Geometry.RectDef;
 
 public readonly partial struct Rect
 {
+    /// <summary>
+    /// Computes intersection points between this rectangle and the specified collider.
+    /// </summary>
+    /// <param name="collider">The collider to test for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing intersection points, or null if there are no intersections or the collider is disabled.
+    /// </returns>
+    /// <remarks>
+    /// Dispatches to the appropriate shape-specific intersection method based on the collider's shape type.
+    /// </remarks>
     public CollisionPoints? Intersect(Collider collider)
     {
         if (!collider.Enabled) return null;
@@ -51,6 +61,16 @@ public readonly partial struct Rect
         return null;
     }
 
+    /// <summary>
+    /// Computes intersection points between this rectangle and a set of segments.
+    /// </summary>
+    /// <param name="segments">The segments to test for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing intersection points, or null if there are no intersections.
+    /// </returns>
+    /// <remarks>
+    /// Each segment is tested against all four sides of the rectangle.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Segments segments)
     {
         if (segments.Count <= 0) return null;
@@ -96,6 +116,16 @@ public readonly partial struct Rect
         return points;
     }
 
+    /// <summary>
+    /// Computes intersection points between this rectangle and a ray.
+    /// </summary>
+    /// <param name="r">The ray to test for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing intersection points, or null if there are no intersections.
+    /// </returns>
+    /// <remarks>
+    /// Each side of the rectangle is tested against the ray.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Ray r)
     {
         CollisionPoints? points = null;
@@ -135,6 +165,16 @@ public readonly partial struct Rect
         return points;
     }
 
+    /// <summary>
+    /// Computes intersection points between this rectangle and a line.
+    /// </summary>
+    /// <param name="l">The line to test for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing intersection points, or null if there are no intersections.
+    /// </returns>
+    /// <remarks>
+    /// Each side of the rectangle is tested against the line.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Line l)
     {
         CollisionPoints? points = null;
@@ -174,6 +214,16 @@ public readonly partial struct Rect
         return points;
     }
 
+    /// <summary>
+    /// Computes intersection points between this rectangle and a segment.
+    /// </summary>
+    /// <param name="s">The segment to test for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing intersection points, or null if there are no intersections.
+    /// </returns>
+    /// <remarks>
+    /// Each side of the rectangle is tested against the segment.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Segment s)
     {
         CollisionPoints? points = null;
@@ -213,6 +263,16 @@ public readonly partial struct Rect
         return points;
     }
 
+    /// <summary>
+    /// Computes intersection points between this rectangle and a circle.
+    /// </summary>
+    /// <param name="circle">The circle to test for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing intersection points, or null if there are no intersections.
+    /// </returns>
+    /// <remarks>
+    /// Each side of the rectangle is tested against the circle.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Circle circle)
     {
         CollisionPoints? points = null;
@@ -257,6 +317,16 @@ public readonly partial struct Rect
         return points;
     }
 
+    /// <summary>
+    /// Computes intersection points between this rectangle and a triangle.
+    /// </summary>
+    /// <param name="t">The triangle to test for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing intersection points, or null if there are no intersections.
+    /// </returns>
+    /// <remarks>
+    /// Each side of the rectangle is tested against the triangle's edges.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Triangle t)
     {
         CollisionPoints? points = null;
@@ -355,6 +425,16 @@ public readonly partial struct Rect
         return points;
     }
 
+    /// <summary>
+    /// Computes intersection points between this rectangle and another rectangle.
+    /// </summary>
+    /// <param name="r">The rectangle to test for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing intersection points, or null if there are no intersections.
+    /// </returns>
+    /// <remarks>
+    /// Each side of the rectangle is tested against all four sides of the other rectangle.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Rect r)
     {
         CollisionPoints? points = null;
@@ -488,6 +568,16 @@ public readonly partial struct Rect
         return points;
     }
 
+    /// <summary>
+    /// Computes intersection points between this rectangle and a quadrilateral.
+    /// </summary>
+    /// <param name="q">The quadrilateral to test for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing intersection points, or null if there are no intersections.
+    /// </returns>
+    /// <remarks>
+    /// Each side of the rectangle is tested against all four sides of the quadrilateral.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Quad q)
     {
         CollisionPoints? points = null;
@@ -612,6 +702,16 @@ public readonly partial struct Rect
         return points;
     }
 
+    /// <summary>
+    /// Computes intersection points between this rectangle and a polygon.
+    /// </summary>
+    /// <param name="p">The polygon to test for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing intersection points, or null if there are no intersections.
+    /// </returns>
+    /// <remarks>
+    /// Each side of the rectangle is tested against each edge of the polygon.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Polygon p)
     {
         if (p.Count < 3) return null;
@@ -657,6 +757,16 @@ public readonly partial struct Rect
         return points;
     }
 
+    /// <summary>
+    /// Computes intersection points between this rectangle and a polyline.
+    /// </summary>
+    /// <param name="pl">The polyline to test for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing intersection points, or null if there are no intersections.
+    /// </returns>
+    /// <remarks>
+    /// Each side of the rectangle is tested against each segment of the polyline.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Polyline pl)
     {
         if (pl.Count < 2) return null;

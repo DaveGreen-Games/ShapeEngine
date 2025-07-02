@@ -574,9 +574,9 @@ public readonly struct Grid : IEquatable<Grid>
     public Rect GetRect(Rect bounds, Coordinates coordinates)
     {
         var cellSize = GetCellSize(bounds);
-        var alignement = Placement.Invert().ToAlignement();
-        var pos = bounds.GetPoint(alignement);
-        return new(pos, cellSize, alignement);
+        var alignment = Placement.Invert().ToAlignement();
+        var pos = bounds.GetPoint(alignment);
+        return new(pos, cellSize, alignment);
     }
     /// <summary>
     /// Determines if the given coordinates are inside the bounds of the grid.

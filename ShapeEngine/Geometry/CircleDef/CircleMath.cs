@@ -102,11 +102,11 @@ public readonly partial struct Circle
     /// <param name="pointCount">The number of points to generate for the projection. Default is 8.</param>
     /// <returns>A <see cref="Points"/> collection representing the projected shape points,
     /// or null if invalid parameters are provided.</returns>
-    public PointsDef.Points? GetProjectedShapePoints(Vector2 v, int pointCount = 8)
+    public Points? GetProjectedShapePoints(Vector2 v, int pointCount = 8)
     {
         if (pointCount < 4 || v.LengthSquared() <= 0f) return null;
         float angleStep = (MathF.PI * 2f) / pointCount;
-        PointsDef.Points points = new(pointCount * 2);
+        Points points = new(pointCount * 2);
         for (var i = 0; i < pointCount; i++)
         {
             var p = Center + new Vector2(Radius, 0f).Rotate(angleStep * i);
@@ -128,7 +128,7 @@ public readonly partial struct Circle
     {
         if (pointCount < 4 || v.LengthSquared() <= 0f) return null;
         float angleStep = (MathF.PI * 2f) / pointCount;
-        PointsDef.Points points = new(pointCount * 2);
+        Points points = new(pointCount * 2);
         for (var i = 0; i < pointCount; i++)
         {
             var p = Center + new Vector2(Radius, 0f).Rotate(angleStep * i);

@@ -15,6 +15,15 @@ namespace ShapeEngine.Geometry.RayDef;
 
 public readonly partial struct Ray
 {
+    /// <summary>
+    /// Finds the closest point on this ray to a given point.
+    /// </summary>
+    /// <param name="point">The point to find the closest point to.</param>
+    /// <param name="disSquared">The squared distance from the point to the closest point on the ray.</param>
+    /// <returns>A <see cref="CollisionPoint"/> representing the closest point and its normal.</returns>
+    /// <remarks>
+    /// If the projection of the point onto the ray is behind the ray's origin, the origin is returned as the closest point.
+    /// </remarks>
     public CollisionPoint GetClosestPoint(Vector2 point, out float disSquared)
     {
         var toPoint = point - Point;
@@ -36,7 +45,14 @@ public readonly partial struct Ray
         if (dot >= 0) return new(closestPointOnRay, Normal);
         return new(closestPointOnRay, -Normal);
     }
-
+    /// <summary>
+    /// Finds the closest points between this ray and a line.
+    /// </summary>
+    /// <param name="other">The line to find the closest point to.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.</returns>
+    /// <remarks>
+    /// Uses a helper function to compute the closest points and distance squared.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Line other)
     {
         // var result = other.GetClosestPoint(this);
@@ -48,7 +64,14 @@ public readonly partial struct Ray
             disSquared
         );
     }
-
+    /// <summary>
+    /// Finds the closest points between this ray and another ray.
+    /// </summary>
+    /// <param name="other">The other ray to find the closest point to.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.</returns>
+    /// <remarks>
+    /// Uses a helper function to compute the closest points and distance squared.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Ray other)
     {
         var result = GetClosestPointRayRay(Point, Direction, other.Point, other.Direction, out var disSquared);
@@ -84,7 +107,14 @@ public readonly partial struct Ray
         //     disSquared
         // );
     }
-
+    /// <summary>
+    /// Finds the closest points between this ray and a segment.
+    /// </summary>
+    /// <param name="other">The segment to find the closest point to.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.</returns>
+    /// <remarks>
+    /// Uses a helper function to compute the closest points and distance squared.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Segment other)
     {
         var result = Segment.GetClosestPointSegmentRay(other.Start, other.End, Point, Direction, out var disSquared);
@@ -116,7 +146,14 @@ public readonly partial struct Ray
         //     disSquared
         //     );
     }
-
+    /// <summary>
+    /// Finds the closest points between this ray and a circle.
+    /// </summary>
+    /// <param name="other">The circle to find the closest point to.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.</returns>
+    /// <remarks>
+    /// Computes the closest point on the ray to the circle's center, then finds the closest point on the circle's circumference.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Circle other)
     {
         var d1 = Direction;
@@ -136,7 +173,20 @@ public readonly partial struct Ray
             disSquared
         );
     }
-
+    /// <summary>
+    /// Finds the closest points between this ray and a triangle.
+    /// </summary>
+    /// <param name="other">The triangle to find the closest point to.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.
+    /// The <c>otherSegmentIndex</c> indicates the closest edge of the triangle.
+    /// <list type="bullet">
+    /// <item>0 = AB</item>
+    /// <item>1 = BC</item>
+    /// <item>2 = CA</item>
+    /// </list></returns>
+    /// <remarks>
+    /// Checks each edge of the triangle for the closest point.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Triangle other)
     {
         var closestResult = GetClosestPointRaySegment(Point, Direction, other.A, other.B, out float minDisSquared);
@@ -173,7 +223,21 @@ public readonly partial struct Ray
             otherIndex
         );
     }
-
+    /// <summary>
+    /// Finds the closest points between this ray and a quad.
+    /// </summary>
+    /// <param name="other">The quad to find the closest point to.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.
+    /// The <c>otherSegmentIndex</c> indicates the closest edge of the quad.
+    /// <list type="bullet">
+    /// <item>0 = AB</item>
+    /// <item>1 = BC</item>
+    /// <item>2 = CD</item>
+    /// <item>3 = DA</item>
+    /// </list></returns>
+    /// <remarks>
+    /// Checks each edge of the quad for the closest point.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Quad other)
     {
         var closestResult = GetClosestPointRaySegment(Point, Direction, other.A, other.B, out float minDisSquared);
@@ -219,7 +283,21 @@ public readonly partial struct Ray
             otherIndex
         );
     }
-
+    /// <summary>
+    /// Finds the closest points between this ray and a rectangle.
+    /// </summary>
+    /// <param name="other">The rectangle to find the closest point to.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.
+    /// The <c>otherSegmentIndex</c> indicates the closest edge of the rect.
+    /// <list type="bullet">
+    /// <item>0 = AB</item>
+    /// <item>1 = BC</item>
+    /// <item>2 = CD</item>
+    /// <item>3 = DA</item>
+    /// </list></returns>
+    /// <remarks>
+    /// Checks each edge of the rectangle for the closest point.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Rect other)
     {
         var closestResult = GetClosestPointRaySegment(Point, Direction, other.A, other.B, out float minDisSquared);
@@ -263,7 +341,15 @@ public readonly partial struct Ray
             -1,
             otherIndex);
     }
-
+    /// <summary>
+    /// Finds the closest points between this ray and a polygon.
+    /// </summary>
+    /// <param name="other">The polygon to find the closest point to.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.
+    /// The <c>otherIndex</c> is the edge index of the polygon.</returns>
+    /// <remarks>
+    /// Checks each edge of the polygon for the closest point.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Polygon other)
     {
         if (other.Count < 3) return new();
@@ -295,7 +381,15 @@ public readonly partial struct Ray
             -1,
             otherIndex);
     }
-
+    /// <summary>
+    /// Finds the closest points between this ray and a polyline.
+    /// </summary>
+    /// <param name="other">The polyline to find the closest point to.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.
+    /// The <c>otherIndex</c> is the edge index of the polyline.</returns>
+    /// <remarks>
+    /// Checks each segment of the polyline for the closest point.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Polyline other)
     {
         if (other.Count < 2) return new();
@@ -326,7 +420,15 @@ public readonly partial struct Ray
             -1,
             otherIndex);
     }
-
+    /// <summary>
+    /// Finds the closest points between this ray and a set of segments.
+    /// </summary>
+    /// <param name="segments">The set of segments to find the closest point to.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points and their normals.
+    /// The <c>otherIndex</c> is the index of the segment.</returns>
+    /// <remarks>
+    /// Iterates through each segment and finds the closest point.
+    /// </remarks>
     public ClosestPointResult GetClosestPoint(Segments segments)
     {
         if (segments.Count <= 0) return new();

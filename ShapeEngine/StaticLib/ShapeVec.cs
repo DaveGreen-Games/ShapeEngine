@@ -1,5 +1,4 @@
 ﻿using System.Numerics;
-using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.StaticLib;
@@ -297,7 +296,7 @@ public static class ShapeVec
             count ++;
         }
 
-        float invArrayLen = 1f / (float)count;
+        float invArrayLen = 1f / count;
         return new Vector2(sx * invArrayLen, sy * invArrayLen);
     }
     
@@ -350,11 +349,11 @@ public static class ShapeVec
     /// </summary>
     /// <param name="pos">The original position.</param>
     /// <param name="size">The size to align.</param>
-    /// <param name="alignement">The anchor point for alignment.</param>
+    /// <param name="alignment">The anchor point for alignment.</param>
     /// <returns>The aligned position.</returns>
-    public static Vector2 Align(this Vector2 pos, Size size, AnchorPoint alignement)
+    public static Vector2 Align(this Vector2 pos, Size size, AnchorPoint alignment)
     {
-        return pos - (size * alignement).ToVector2();
+        return pos - (size * alignment).ToVector2();
     }
     /// <summary>
     /// Wraps the vector components to be within the specified min and max bounds.
@@ -607,11 +606,13 @@ public static class ShapeVec
     /// <summary>
     /// Normalizes the given vector.
     /// </summary>
-    /// <param name="v"></param>
+    /// <param name="v">The vector to normalize.</param>
     /// <returns>Returns the normalized vector.</returns>
     /// <remarks>
-    /// Returns v if the squared length of the vector is one.
-    /// Returns a zero vector if the squared length is zero.
+    /// <list type="bullet">
+    /// <item>Returns <paramref name="v"/> if the squared length of <paramref name="v"/> is one (normalized already).</item>
+    /// <item>Returns a zero vector if the squared length of <paramref name="v"/> is zero.</item>
+    /// </list>
     /// </remarks>
     public static Vector2 Normalize(this Vector2 v) 
     {

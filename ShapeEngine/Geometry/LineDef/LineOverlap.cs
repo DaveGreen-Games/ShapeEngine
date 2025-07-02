@@ -9,7 +9,6 @@ using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.SegmentsDef;
 using ShapeEngine.Geometry.TriangleDef;
-using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.LineDef;
 

@@ -6,6 +6,14 @@ namespace ShapeEngine.Geometry.SegmentDef;
 
 public readonly partial struct Segment
 {
+    /// <summary>
+    /// Computes the intersection point and time between two segments.
+    /// </summary>
+    /// <param name="segment1Start">The start point of the first segment.</param>
+    /// <param name="segment1End">The end point of the first segment.</param>
+    /// <param name="segment2Start">The start point of the second segment.</param>
+    /// <param name="segment2End">The end point of the second segment.</param>
+    /// <returns>A tuple containing the <see cref="CollisionPoint"/> and the intersection time along the first segment. If there is no intersection, the collision point is invalid and the time is -1.</returns>
     public static (CollisionPoint point, float time) IntersectSegmentSegmentInfo(Vector2 segment1Start, Vector2 segment1End, Vector2 segment2Start,
         Vector2 segment2End)
     {
@@ -39,6 +47,15 @@ public readonly partial struct Segment
         return (new(), -1);
     }
 
+    /// <summary>
+    /// Computes the intersection point and time between two segments, using a provided normal for the second segment.
+    /// </summary>
+    /// <param name="segment1Start">The start point of the first segment.</param>
+    /// <param name="segment1End">The end point of the first segment.</param>
+    /// <param name="segment2Start">The start point of the second segment.</param>
+    /// <param name="segment2End">The end point of the second segment.</param>
+    /// <param name="segment2Normal">The normal vector to use for the second segment.</param>
+    /// <returns>A tuple containing the <see cref="CollisionPoint"/> and the intersection time along the first segment. If there is no intersection, the collision point is invalid and the time is -1.</returns>
     public static (CollisionPoint point, float time) IntersectSegmentSegmentInfo(Vector2 segment1Start, Vector2 segment1End, Vector2 segment2Start,
         Vector2 segment2End, Vector2 segment2Normal)
     {
@@ -69,6 +86,14 @@ public readonly partial struct Segment
         return (new(), -1);
     }
 
+    /// <summary>
+    /// Computes the intersection point and time between a segment and a line.
+    /// </summary>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <param name="linePoint">A point on the line.</param>
+    /// <param name="lineDirection">The direction vector of the line.</param>
+    /// <returns>A tuple containing the <see cref="CollisionPoint"/> and the intersection time along the segment. If there is no intersection, the collision point is invalid and the time is -1.</returns>
     public static (CollisionPoint point, float time) IntersectSegmentLineInfo(Vector2 segmentStart, Vector2 segmentEnd, Vector2 linePoint,
         Vector2 lineDirection)
     {
@@ -93,6 +118,14 @@ public readonly partial struct Segment
         return (new(), -1);
     }
 
+    /// <summary>
+    /// Computes the intersection point and time between a segment and a ray.
+    /// </summary>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <param name="rayPoint">The origin of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <returns>A tuple containing the <see cref="CollisionPoint"/> and the intersection time along the segment. If there is no intersection, the collision point is invalid and the time is -1.</returns>
     public static (CollisionPoint point, float time) IntersectSegmentRayInfo(Vector2 segmentStart, Vector2 segmentEnd, Vector2 rayPoint, Vector2 rayDirection)
     {
         float denominator = (segmentEnd.X - segmentStart.X) * rayDirection.Y - (segmentEnd.Y - segmentStart.Y) * rayDirection.X;
@@ -117,6 +150,15 @@ public readonly partial struct Segment
         return (new(), -1);
     }
 
+    /// <summary>
+    /// Computes the intersection point and time between a segment and a line, using a provided normal for the line.
+    /// </summary>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <param name="linePoint">A point on the line.</param>
+    /// <param name="lineDirection">The direction vector of the line.</param>
+    /// <param name="lineNormal">The normal vector to use for the line.</param>
+    /// <returns>A tuple containing the <see cref="CollisionPoint"/> and the intersection time along the segment. If there is no intersection, the collision point is invalid and the time is -1.</returns>
     public static (CollisionPoint point, float time) IntersectSegmentLineInfo(Vector2 segmentStart, Vector2 segmentEnd, Vector2 linePoint,
         Vector2 lineDirection, Vector2 lineNormal)
     {
@@ -140,6 +182,15 @@ public readonly partial struct Segment
         return (new(), -1);
     }
 
+    /// <summary>
+    /// Computes the intersection point and time between a segment and a ray, using a provided normal for the ray.
+    /// </summary>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <param name="rayPoint">The origin of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="rayNormal">The normal vector to use for the ray.</param>
+    /// <returns>A tuple containing the <see cref="CollisionPoint"/> and the intersection time along the segment. If there is no intersection, the collision point is invalid and the time is -1.</returns>
     public static (CollisionPoint point, float time) IntersectSegmentRayInfo(Vector2 segmentStart, Vector2 segmentEnd, Vector2 rayPoint, Vector2 rayDirection,
         Vector2 rayNormal)
     {
@@ -162,7 +213,14 @@ public readonly partial struct Segment
 
         return (new(), -1);
     }
-
+    /// <summary>
+    /// Computes the intersection point between a segment and a line.
+    /// </summary>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <param name="linePoint">A point on the line.</param>
+    /// <param name="lineDirection">The direction vector of the line.</param>
+    /// <returns>A <see cref="CollisionPoint"/> representing the intersection, or an invalid point if there is no intersection.</returns>
     public static CollisionPoint IntersectSegmentLine(Vector2 segmentStart, Vector2 segmentEnd, Vector2 linePoint, Vector2 lineDirection)
     {
         var result = IntersectSegmentRay(segmentStart, segmentEnd, linePoint, lineDirection);
@@ -218,6 +276,14 @@ public readonly partial struct Segment
         // return new();
     }
 
+    /// <summary>
+    /// Computes the intersection point between a segment and a ray.
+    /// </summary>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <param name="rayPoint">The origin of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <returns>A <see cref="CollisionPoint"/> representing the intersection, or an invalid point if there is no intersection.</returns>
     public static CollisionPoint IntersectSegmentRay(Vector2 segmentStart, Vector2 segmentEnd, Vector2 rayPoint, Vector2 rayDirection)
     {
         float denominator = rayDirection.X * (segmentEnd.Y - segmentStart.Y) - rayDirection.Y * (segmentEnd.X - segmentStart.X);
@@ -241,6 +307,14 @@ public readonly partial struct Segment
         return new();
     }
 
+    /// <summary>
+    /// Computes the intersection point between two segments.
+    /// </summary>
+    /// <param name="segment1Start">The start point of the first segment.</param>
+    /// <param name="segment1End">The end point of the first segment.</param>
+    /// <param name="segment2Start">The start point of the second segment.</param>
+    /// <param name="segment2End">The end point of the second segment.</param>
+    /// <returns>A <see cref="CollisionPoint"/> representing the intersection, or an invalid point if there is no intersection.</returns>
     public static CollisionPoint IntersectSegmentSegment(Vector2 segment1Start, Vector2 segment1End, Vector2 segment2Start, Vector2 segment2End)
     {
         //OLD VERSION
@@ -280,6 +354,15 @@ public readonly partial struct Segment
         return new();
     }
 
+    /// <summary>
+    /// Computes the intersection point between a segment and a line, using a provided normal for the line.
+    /// </summary>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <param name="linePoint">A point on the line.</param>
+    /// <param name="lineDirection">The direction vector of the line.</param>
+    /// <param name="lineNormal">The normal vector to use for the line.</param>
+    /// <returns>A <see cref="CollisionPoint"/> representing the intersection, or an invalid point if there is no intersection.</returns>
     public static CollisionPoint IntersectSegmentLine(Vector2 segmentStart, Vector2 segmentEnd, Vector2 linePoint, Vector2 lineDirection, Vector2 lineNormal)
     {
         var result = IntersectSegmentLine(segmentStart, segmentEnd, linePoint, lineDirection);
@@ -291,6 +374,15 @@ public readonly partial struct Segment
         return new();
     }
 
+    /// <summary>
+    /// Computes the intersection point between a segment and a ray, using a provided normal for the ray.
+    /// </summary>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <param name="rayPoint">The origin of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="rayNormal">The normal vector to use for the ray.</param>
+    /// <returns>A <see cref="CollisionPoint"/> representing the intersection, or an invalid point if there is no intersection.</returns>
     public static CollisionPoint IntersectSegmentRay(Vector2 segmentStart, Vector2 segmentEnd, Vector2 rayPoint, Vector2 rayDirection, Vector2 rayNormal)
     {
         var result = IntersectSegmentRay(segmentStart, segmentEnd, rayPoint, rayDirection);
@@ -302,6 +394,15 @@ public readonly partial struct Segment
         return new();
     }
 
+    /// <summary>
+    /// Computes the intersection point between two segments, using a provided normal for the second segment.
+    /// </summary>
+    /// <param name="segment1Start">The start point of the first segment.</param>
+    /// <param name="segment1End">The end point of the first segment.</param>
+    /// <param name="segment2Start">The start point of the second segment.</param>
+    /// <param name="segment2End">The end point of the second segment.</param>
+    /// <param name="segment2Normal">The normal vector to use for the second segment.</param>
+    /// <returns>A <see cref="CollisionPoint"/> representing the intersection, or an invalid point if there is no intersection.</returns>
     public static CollisionPoint IntersectSegmentSegment(Vector2 segment1Start, Vector2 segment1End, Vector2 segment2Start, Vector2 segment2End,
         Vector2 segment2Normal)
     {
@@ -314,6 +415,14 @@ public readonly partial struct Segment
         return new();
     }
 
+    /// <summary>
+    /// Computes the intersection points between a segment and a circle.
+    /// </summary>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <param name="circleCenter">The center of the circle.</param>
+    /// <param name="radius">The radius of the circle.</param>
+    /// <returns>A tuple of <see cref="CollisionPoint"/> representing the intersection points (a, b).</returns>
     public static (CollisionPoint a, CollisionPoint b) IntersectSegmentCircle(Vector2 segmentStart, Vector2 segmentEnd, Vector2 circleCenter, float radius)
     {
         CollisionPoint a = new();
@@ -363,7 +472,15 @@ public readonly partial struct Segment
 
         return (a, b);
     }
-
+    /// <summary>
+    /// Computes the intersection points between a segment and a triangle.
+    /// </summary>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <param name="a">First vertex of the triangle.</param>
+    /// <param name="b">Second vertex of the triangle.</param>
+    /// <param name="c">Third vertex of the triangle.</param>
+    /// <returns>A tuple of <see cref="CollisionPoint"/> representing the intersection points (a, b).</returns>
     public static (CollisionPoint a, CollisionPoint b) IntersectSegmentTriangle(Vector2 segmentStart, Vector2 segmentEnd, Vector2 a, Vector2 b, Vector2 c)
     {
         CollisionPoint resultA = new();
@@ -391,6 +508,16 @@ public readonly partial struct Segment
         return (resultA, resultB);
     }
 
+    /// <summary>
+    /// Computes the intersection points between a segment and a quadrilateral.
+    /// </summary>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <param name="a">First vertex of the quad.</param>
+    /// <param name="b">Second vertex of the quad.</param>
+    /// <param name="c">Third vertex of the quad.</param>
+    /// <param name="d">Fourth vertex of the quad.</param>
+    /// <returns>A tuple of <see cref="CollisionPoint"/> representing the intersection points (a, b).</returns>
     public static (CollisionPoint a, CollisionPoint b) IntersectSegmentQuad(Vector2 segmentStart, Vector2 segmentEnd, Vector2 a, Vector2 b, Vector2 c,
         Vector2 d)
     {
@@ -428,12 +555,30 @@ public readonly partial struct Segment
         return (resultA, resultB);
     }
 
+    /// <summary>
+    /// Computes the intersection points between a segment and a rectangle.
+    /// </summary>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <param name="a">First vertex of the rectangle.</param>
+    /// <param name="b">Second vertex of the rectangle.</param>
+    /// <param name="c">Third vertex of the rectangle.</param>
+    /// <param name="d">Fourth vertex of the rectangle.</param>
+    /// <returns>A tuple of <see cref="CollisionPoint"/> representing the intersection points (a, b).</returns>
     public static (CollisionPoint a, CollisionPoint b) IntersectSegmentRect(Vector2 segmentStart, Vector2 segmentEnd, Vector2 a, Vector2 b, Vector2 c,
         Vector2 d)
     {
         return IntersectSegmentQuad(segmentStart, segmentEnd, a, b, c, d);
     }
 
+    /// <summary>
+    /// Computes all intersection points between a segment and a polygon.
+    /// </summary>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <param name="points">The list of polygon vertices.</param>
+    /// <param name="maxCollisionPoints">The maximum number of collision points to return. -1 for unlimited.</param>
+    /// <returns>A <see cref="CollisionPoints"/> collection, or null if there are no intersections.</returns>
     public static CollisionPoints? IntersectSegmentPolygon(Vector2 segmentStart, Vector2 segmentEnd, List<Vector2> points, int maxCollisionPoints = -1)
     {
         if (points.Count < 3) return null;
@@ -453,6 +598,14 @@ public readonly partial struct Segment
         return result;
     }
 
+    /// <summary>
+    /// Computes all intersection points between a segment and a polyline.
+    /// </summary>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <param name="points">The list of polyline vertices.</param>
+    /// <param name="maxCollisionPoints">The maximum number of collision points to return. -1 for unlimited.</param>
+    /// <returns>A <see cref="CollisionPoints"/> collection, or null if there are no intersections.</returns>
     public static CollisionPoints? IntersectSegmentPolyline(Vector2 segmentStart, Vector2 segmentEnd, List<Vector2> points, int maxCollisionPoints = -1)
     {
         if (points.Count < 3) return null;
@@ -472,6 +625,14 @@ public readonly partial struct Segment
         return result;
     }
 
+    /// <summary>
+    /// Computes all intersection points between a segment and a set of segments.
+    /// </summary>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <param name="segments">The set of segments to test against.</param>
+    /// <param name="maxCollisionPoints">The maximum number of collision points to return. -1 for unlimited.</param>
+    /// <returns>A <see cref="CollisionPoints"/> collection, or null if there are no intersections.</returns>
     public static CollisionPoints? IntersectSegmentSegments(Vector2 segmentStart, Vector2 segmentEnd, List<Segment> segments, int maxCollisionPoints = -1)
     {
         if (segments.Count <= 0) return null;

@@ -83,12 +83,15 @@ public static class RectDrawing
     }
 
     /// <summary>
-    /// Draws a grid within the specified bounds.
+    /// Draws a grid within the specified bounds using the given line thickness and color.
     /// </summary>
-    /// <param name="grid">The grid definition (rows and columns).</param>
+    /// <param name="grid">The grid definition specifying the number of rows and columns.</param>
     /// <param name="bounds">The rectangle bounds in which to draw the grid.</param>
     /// <param name="lineThickness">The thickness of the grid lines.</param>
     /// <param name="color">The color of the grid lines.</param>
+    /// <remarks>
+    /// The grid is drawn using horizontal and vertical lines spaced according to the number of rows and columns.
+    /// </remarks>
     public static void Draw(this Grid grid, Rect bounds, float lineThickness, ColorRgba color)
     {
         Vector2 rowSpacing = new(0f, bounds.Height / grid.Rows);
@@ -821,3 +824,4 @@ public static class RectDrawing
     }
 
 }
+

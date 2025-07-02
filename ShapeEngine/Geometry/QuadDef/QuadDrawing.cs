@@ -24,6 +24,7 @@ public static class QuadDrawing
     /// <param name="c">The third vertex of the quad.</param>
     /// <param name="d">The fourth vertex of the quad.</param>
     /// <param name="color">The color to fill the quad.</param>
+    /// <remarks>Fills the quad by drawing two triangles.</remarks>
     public static void DrawQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d, ColorRgba color)
     {
         Raylib.DrawTriangle(a, b, c, color.ToRayColor());
@@ -41,6 +42,7 @@ public static class QuadDrawing
     /// <param name="color">The color of the outline.</param>
     /// <param name="capType">The style of the line caps.</param>
     /// <param name="capPoints">The number of points used for the cap style.</param>
+    /// <remarks>Draws each side of the quad as a separate segment.</remarks>
     public static void DrawQuadLines(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
         SegmentDrawing.DrawSegment(a, b, lineThickness, color, capType, capPoints);
@@ -304,7 +306,7 @@ public static class QuadDrawing
     /// <param name="q">The quad to outline.</param>
     /// <param name="lineInfo">The line drawing information (thickness, color, cap type, etc.).</param>
     /// <param name="rotDeg">The rotation of the quad in degrees.</param>
-    /// <param name="alignement">The anchor point for rotation alignment.</param>
+    /// <param name="alignment">The anchor point for rotation alignment.</param>
     /// <param name="sideScaleFactor">
     /// <para>The scale factor for each side.</para>
     /// <list type="bullet">
@@ -324,11 +326,11 @@ public static class QuadDrawing
     /// <remarks>
     /// Allows for dynamic scaling and rotation of quad outlines, useful for effects and animations.
     /// </remarks>
-    public static void DrawLinesScaled(this Quad q, LineDrawingInfo lineInfo, float rotDeg, AnchorPoint alignement, float sideScaleFactor, float sideScaleOrigin = 0.5f)
+    public static void DrawLinesScaled(this Quad q, LineDrawingInfo lineInfo, float rotDeg, AnchorPoint alignment, float sideScaleFactor, float sideScaleOrigin = 0.5f)
     {
         if (sideScaleFactor <= 0) return;
         
-        if(rotDeg != 0) q = q.ChangeRotation(rotDeg * ShapeMath.DEGTORAD, alignement);
+        if(rotDeg != 0) q = q.ChangeRotation(rotDeg * ShapeMath.DEGTORAD, alignment);
         
         if (sideScaleFactor >= 1)
         {

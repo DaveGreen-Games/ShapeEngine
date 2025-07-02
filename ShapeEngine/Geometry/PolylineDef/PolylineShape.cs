@@ -1,5 +1,5 @@
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.CollisionSystem;
+using ShapeEngine.Geometry.PointsDef;
 
 namespace ShapeEngine.Geometry.PolylineDef;
 
@@ -26,7 +26,7 @@ public class PolylineShape : ShapeContainer
     /// </summary>
     /// <param name="offset">The transform offset to apply to the shape.</param>
     /// <param name="relativePoints">The points that define the polyline in local space.</param>
-    public PolylineShape(Transform2D offset, PointsDef.Points relativePoints)
+    public PolylineShape(Transform2D offset, Points relativePoints)
     {
         Offset = offset;
         RelativeShape = relativePoints.ToPolyline();

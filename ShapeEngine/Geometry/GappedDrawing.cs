@@ -263,7 +263,7 @@ public static class GappedDrawing
     /// - If <paramref name="gapDrawingInfo.Gaps"/> is 0 or <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 0, the outline is drawn solid.
     /// - If <paramref name="gapDrawingInfo.GapPerimeterPercentage"/> is 1 or greater, no outline is drawn.
     /// </remarks>
-    public static float DrawGappedOutline(this PointsDef.Points shapePoints, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
+    public static float DrawGappedOutline(this Points shapePoints, float perimeter, LineDrawingInfo lineInfo, GappedOutlineDrawingInfo gapDrawingInfo)
     {
         if (gapDrawingInfo.Gaps <= 0 || gapDrawingInfo.GapPerimeterPercentage <= 0f)
         {
@@ -1056,14 +1056,14 @@ public static class GappedDrawing
                 
                 if (points.Count == 0)
                 {
-                    var prevDistance = nextDistance;
+                    // var prevDistance = nextDistance;
                     nextDistance += nonGapPercentageRange * perimeter;
                     points.Add(p);
 
                 }
                 else
                 {
-                    var prevDistance = nextDistance;
+                    // var prevDistance = nextDistance;
                     nextDistance += gapPercentageRange * perimeter;
                     points.Add(p);
                     

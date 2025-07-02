@@ -1,6 +1,5 @@
 ﻿using ShapeEngine.StaticLib;
 using System.Numerics;
-using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.RectDef;
@@ -541,23 +540,23 @@ public class Rng
     /// <summary>
     /// Returns a random rectangle with random position and size, aligned by the specified anchor point.
     /// </summary>
-    /// <param name="alignement">The anchor point for alignment.</param>
-    public Rect RandRect(AnchorPoint alignement)
+    /// <param name="alignment">The anchor point for alignment.</param>
+    public Rect RandRect(AnchorPoint alignment)
     {
         var pos = RandVec2();
         var size = RandSize();
-        return new(pos, size, alignement);
+        return new(pos, size, alignment);
     }
     /// <summary>
     /// Returns a random rectangle at the given origin with random position and size, aligned by the specified anchor point.
     /// </summary>
     /// <param name="origin">The origin vector.</param>
-    /// <param name="alignement">The anchor point for alignment.</param>
-    public Rect RandRect(Vector2 origin, AnchorPoint alignement)
+    /// <param name="alignment">The anchor point for alignment.</param>
+    public Rect RandRect(Vector2 origin, AnchorPoint alignment)
     {
         var pos = RandVec2();
         var size = RandSize();
-        return new(origin + pos, size, alignement);
+        return new(origin + pos, size, alignment);
     }
     /// <summary>
     /// Returns a random rectangle with position and size in the specified ranges, aligned by the specified anchor point.
@@ -566,12 +565,12 @@ public class Rng
     /// <param name="posMax">Maximum position value.</param>
     /// <param name="sizeMin">Minimum size value.</param>
     /// <param name="sizeMax">Maximum size value.</param>
-    /// <param name="alignement">The anchor point for alignment.</param>
-    public Rect RandRect(float posMin, float posMax, float sizeMin, float sizeMax, AnchorPoint alignement)
+    /// <param name="alignment">The anchor point for alignment.</param>
+    public Rect RandRect(float posMin, float posMax, float sizeMin, float sizeMax, AnchorPoint alignment)
     {
         var pos = RandVec2(posMin, posMax);
         var size = RandSize(sizeMin, sizeMax);
-        return new(pos, size, alignement);
+        return new(pos, size, alignment);
     }
     /// <summary>
     /// Returns a random rectangle at the given origin with position and size in the specified ranges, aligned by the specified anchor point.
@@ -581,12 +580,12 @@ public class Rng
     /// <param name="posMax">Maximum position value.</param>
     /// <param name="sizeMin">Minimum size value.</param>
     /// <param name="sizeMax">Maximum size value.</param>
-    /// <param name="alignement">The anchor point for alignment.</param>
-    public Rect RandRect(Vector2 origin, float posMin, float posMax, float sizeMin, float sizeMax, AnchorPoint alignement)
+    /// <param name="alignment">The anchor point for alignment.</param>
+    public Rect RandRect(Vector2 origin, float posMin, float posMax, float sizeMin, float sizeMax, AnchorPoint alignment)
     {
         var pos = RandVec2(posMin, posMax);
         var size = RandSize(sizeMin, sizeMax);
-        return new(origin + pos, size, alignement);
+        return new(origin + pos, size, alignment);
     }
     #endregion
 

@@ -9,6 +9,17 @@ namespace ShapeEngine.Geometry.RayDef;
 
 public readonly partial struct Ray
 {
+    /// <summary>
+    /// Determines whether a ray overlaps a segment defined by two points.
+    /// </summary>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="segmentStart">The start point of the segment.</param>
+    /// <param name="segmentEnd">The end point of the segment.</param>
+    /// <returns>True if the ray overlaps the segment; otherwise, false.</returns>
+    /// <remarks>
+    /// Returns true if the ray and segment intersect at a point on both the ray and the segment.
+    /// </remarks>
     public static bool OverlapRaySegment(Vector2 rayPoint, Vector2 rayDirection, Vector2 segmentStart, Vector2 segmentEnd)
     {
         float denominator = rayDirection.X * (segmentEnd.Y - segmentStart.Y) - rayDirection.Y * (segmentEnd.X - segmentStart.X);
@@ -29,7 +40,17 @@ public readonly partial struct Ray
 
         return false;
     }
-
+    /// <summary>
+    /// Determines whether a ray overlaps a line defined by a point and direction.
+    /// </summary>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="linePoint">A point on the line.</param>
+    /// <param name="lineDirection">The direction vector of the line.</param>
+    /// <returns>True if the ray overlaps the line; otherwise, false.</returns>
+    /// <remarks>
+    /// Returns true if the ray and line intersect at a point on the ray.
+    /// </remarks>
     public static bool OverlapRayLine(Vector2 rayPoint, Vector2 rayDirection, Vector2 linePoint, Vector2 lineDirection)
     {
         float denominator = rayDirection.X * lineDirection.Y - rayDirection.Y * lineDirection.X;
@@ -49,7 +70,17 @@ public readonly partial struct Ray
 
         return false;
     }
-
+    /// <summary>
+    /// Determines whether two rays overlap (intersect at a point on both rays).
+    /// </summary>
+    /// <param name="ray1Point">The origin point of the first ray.</param>
+    /// <param name="ray1Direction">The direction vector of the first ray.</param>
+    /// <param name="ray2Point">The origin point of the second ray.</param>
+    /// <param name="ray2Direction">The direction vector of the second ray.</param>
+    /// <returns>True if the rays overlap; otherwise, false.</returns>
+    /// <remarks>
+    /// Returns true if the rays intersect at a point on both rays.
+    /// </remarks>
     public static bool OverlapRayRay(Vector2 ray1Point, Vector2 ray1Direction, Vector2 ray2Point, Vector2 ray2Direction)
     {
         float denominator = ray1Direction.X * ray2Direction.Y - ray1Direction.Y * ray2Direction.X;
@@ -70,7 +101,17 @@ public readonly partial struct Ray
 
         return false;
     }
-
+    /// <summary>
+    /// Determines whether a ray overlaps a circle.
+    /// </summary>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="circleCenter">The center of the circle.</param>
+    /// <param name="circleRadius">The radius of the circle.</param>
+    /// <returns>True if the ray overlaps the circle; otherwise, false.</returns>
+    /// <remarks>
+    /// Returns true if the ray intersects the circle at one or two points.
+    /// </remarks>
     public static bool OverlapRayCircle(Vector2 rayPoint, Vector2 rayDirection, Vector2 circleCenter, float circleRadius)
     {
         var toCircle = circleCenter - rayPoint;
@@ -105,7 +146,18 @@ public readonly partial struct Ray
 
         return false;
     }
-
+    /// <summary>
+    /// Determines whether a ray overlaps a triangle defined by three points.
+    /// </summary>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="a">The first vertex of the triangle.</param>
+    /// <param name="b">The second vertex of the triangle.</param>
+    /// <param name="c">The third vertex of the triangle.</param>
+    /// <returns>True if the ray overlaps the triangle; otherwise, false.</returns>
+    /// <remarks>
+    /// Returns true if the ray intersects the triangle at a point on the ray and inside the triangle.
+    /// </remarks>
     public static bool OverlapRayTriangle(Vector2 rayPoint, Vector2 rayDirection, Vector2 a, Vector2 b, Vector2 c)
     {
         if (Triangle.ContainsTrianglePoint(a, b, c, rayPoint)) return true;
@@ -121,7 +173,19 @@ public readonly partial struct Ray
 
         return false;
     }
-
+    /// <summary>
+    /// Determines whether a ray overlaps a quadrilateral defined by four points.
+    /// </summary>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="a">The first vertex of the quadrilateral.</param>
+    /// <param name="b">The second vertex of the quadrilateral.</param>
+    /// <param name="c">The third vertex of the quadrilateral.</param>
+    /// <param name="d">The fourth vertex of the quadrilateral.</param>
+    /// <returns>True if the ray overlaps the quadrilateral; otherwise, false.</returns>
+    /// <remarks>
+    /// Returns true if the ray intersects the quadrilateral at a point on the ray and inside the quadrilateral.
+    /// </remarks>
     public static bool OverlapRayQuad(Vector2 rayPoint, Vector2 rayDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
         if (Quad.ContainsQuadPoint(a, b, c, d, rayPoint)) return true;
@@ -140,12 +204,33 @@ public readonly partial struct Ray
 
         return false;
     }
-
+    /// <summary>
+    /// Determines whether a ray overlaps a rectangle defined by four points.
+    /// </summary>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="a">The first vertex of the rectangle.</param>
+    /// <param name="b">The second vertex of the rectangle.</param>
+    /// <param name="c">The third vertex of the rectangle.</param>
+    /// <param name="d">The fourth vertex of the rectangle.</param>
+    /// <returns>True if the ray overlaps the rectangle; otherwise, false.</returns>
+    /// <remarks>
+    /// Returns true if the ray intersects the rectangle at a point on the ray and inside the rectangle.
+    /// </remarks>
     public static bool OverlapRayRect(Vector2 rayPoint, Vector2 rayDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
         return OverlapRayQuad(rayPoint, rayDirection, a, b, c, d);
     }
-
+    /// <summary>
+    /// Determines whether a ray overlaps a polygon defined by a list of points.
+    /// </summary>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="points">The list of points defining the polygon.</param>
+    /// <returns>True if the ray overlaps the polygon; otherwise, false.</returns>
+    /// <remarks>
+    /// Returns true if the ray intersects the polygon at a point on the ray and inside the polygon.
+    /// </remarks>
     public static bool OverlapRayPolygon(Vector2 rayPoint, Vector2 rayDirection, List<Vector2> points)
     {
         if (points.Count < 3) return false;
@@ -158,7 +243,16 @@ public readonly partial struct Ray
 
         return false;
     }
-
+    /// <summary>
+    /// Determines whether a ray overlaps a polyline defined by a list of points.
+    /// </summary>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="points">The list of points defining the polyline.</param>
+    /// <returns>True if the ray overlaps the polyline; otherwise, false.</returns>
+    /// <remarks>
+    /// Returns true if the ray intersects the polyline at a point on the ray and on the polyline.
+    /// </remarks>
     public static bool OverlapRayPolyline(Vector2 rayPoint, Vector2 rayDirection, List<Vector2> points)
     {
         if (points.Count < 3) return false;
@@ -170,7 +264,16 @@ public readonly partial struct Ray
 
         return false;
     }
-
+    /// <summary>
+    /// Determines whether a ray overlaps any of the segments in a list of segments.
+    /// </summary>
+    /// <param name="rayPoint">The origin point of the ray.</param>
+    /// <param name="rayDirection">The direction vector of the ray.</param>
+    /// <param name="segments">The list of segments.</param>
+    /// <returns>True if the ray overlaps any segment; otherwise, false.</returns>
+    /// <remarks>
+    /// Returns true if the ray intersects any segment at a point on the ray and on the segment.
+    /// </remarks>
     public static bool OverlapRaySegments(Vector2 rayPoint, Vector2 rayDirection, List<Segment> segments)
     {
         if (segments.Count <= 0) return false;

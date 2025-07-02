@@ -1,7 +1,6 @@
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
-using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.SegmentsDef;
 using ShapeEngine.StaticLib;
 

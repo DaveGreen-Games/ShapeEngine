@@ -1,12 +1,17 @@
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.RectDef;
-using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Text;
 
+/// <summary>
+/// A tester class for the binary drawer.
+/// </summary>
 public static class BinaryDrawerTester
 {
+    /// <summary>
+    /// A standard 3x5 binary drawer.
+    /// </summary>
     public static readonly BinaryDrawer BinaryDrawer3x5Standard = 
         new BinaryDrawer
         (
@@ -42,6 +47,9 @@ public static class BinaryDrawerTester
             );
 }
 
+/// <summary>
+/// Draws text based on a binary grid for each character.
+/// </summary>
 public class BinaryDrawer
 {
     private readonly Dictionary<char, int[]> binary;
@@ -49,7 +57,19 @@ public class BinaryDrawer
     private readonly int gridHeight;
     private readonly Action<Rect, int, int, int> cellDrawer;
     private readonly Action<Rect, char> backgroundDrawer;
+    /// <summary>
+    /// The total size of the grid (width * height).
+    /// </summary>
     public int GridSize => gridWidth * gridHeight;
+    
+    /// <summary>
+    /// Creates a new binary drawer.
+    /// </summary>
+    /// <param name="binary">The dictionary that maps characters to their binary representation.</param>
+    /// <param name="gridWidth">The width of the character grid.</param>
+    /// <param name="gridHeight">The height of the character grid.</param>
+    /// <param name="cellDrawer">The action to draw each cell of the character.</param>
+    /// <param name="backgroundDrawer">The action to draw the background for each character.</param>
     public BinaryDrawer(Dictionary<char, int[]> binary, int gridWidth, int gridHeight, Action<Rect, int, int, int> cellDrawer, Action<Rect, char> backgroundDrawer)
     {
         this.binary = binary;
@@ -59,6 +79,12 @@ public class BinaryDrawer
         this.backgroundDrawer = backgroundDrawer;
     }
 
+    /// <summary>
+    /// Draws the given text inside the given rectangle.
+    /// </summary>
+    /// <param name="text">The text to draw.</param>
+    /// <param name="rect">The rectangle to draw the text in.</param>
+    /// <param name="spacing">The spacing between characters.</param>
     public void Draw(string text, Rect rect, float spacing = 0.05f)
     {
         var chars = text.ToCharArray();
@@ -72,7 +98,7 @@ public class BinaryDrawer
             var c = chars[i];
             if(!binary.TryGetValue(c, out int[]? binaryCode)) continue;
             backgroundDrawer(split[i], c);
-            var grid = split[i].Split(gridWidth, gridHeight, true);
+            var grid = split[i].Split(gridWidth, gridHeight);
             for (int j = 0; j < grid.Count; j++)
             {
                 cellDrawer(grid[j], binaryCode[j], j, GridSize);

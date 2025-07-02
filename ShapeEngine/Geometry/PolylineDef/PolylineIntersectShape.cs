@@ -13,6 +13,17 @@ namespace ShapeEngine.Geometry.PolylineDef;
 
 public partial class Polyline
 {
+    /// <summary>
+    /// Computes the intersection points between this polyline and another collider's shape.
+    /// </summary>
+    /// <param name="collider">The collider whose shape will be tested for intersection with this polyline.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing intersection points,
+    /// or <c>null</c> if there are no intersections or the collider is disabled.
+    /// </returns>
+    /// <remarks>
+    /// The method dispatches to the appropriate intersection routine based on the collider's shape type.
+    /// </remarks>
     public CollisionPoints? Intersect(Collider collider)
     {
         if (!collider.Enabled) return null;
@@ -51,6 +62,17 @@ public partial class Polyline
         return null;
     }
 
+    /// <summary>
+    /// Computes the intersection points between this polyline and a <see cref="Ray"/>.
+    /// </summary>
+    /// <param name="ray">The <see cref="Ray"/> to test for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing intersection points,
+    /// or <c>null</c> if there are no intersections.
+    /// </returns>
+    /// <remarks>
+    /// Iterates through each segment of the polyline and checks for intersection with the ray.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Ray ray)
     {
         if (Count < 2) return null;
@@ -69,6 +91,17 @@ public partial class Polyline
         return points;
     }
 
+    /// <summary>
+    /// Computes the intersection points between this polyline and a <see cref="Line"/>.
+    /// </summary>
+    /// <param name="l">The <see cref="Line"/> to test for intersection.</param>
+    /// <returns>
+    /// A <see cref="CollisionPoints"/> object containing intersection points,
+    /// or <c>null</c> if there are no intersections.
+    /// </returns>
+    /// <remarks>
+    /// Iterates through each segment of the polyline and checks for intersection with the line.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Line l)
     {
         if (Count < 2) return null;
@@ -87,6 +120,15 @@ public partial class Polyline
         return points;
     }
 
+    /// <summary>
+    /// Computes the intersection points between this polyline and a <see cref="Segment"/>.
+    /// </summary>
+    /// <param name="s">The <see cref="Segment"/> to test for intersection.</param>
+    /// <returns>A <see cref="CollisionPoints"/> object containing intersection points,
+    /// or <c>null</c> if there are no intersections.</returns>
+    /// <remarks>
+    /// Iterates through each segment of the polyline and checks for intersection with the segment.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Segment s)
     {
         if (Count < 2) return null;
@@ -105,6 +147,15 @@ public partial class Polyline
         return points;
     }
 
+    /// <summary>
+    /// Computes the intersection points between this polyline and a <see cref="Circle"/>.
+    /// </summary>
+    /// <param name="c">The <see cref="Circle"/> to test for intersection.</param>
+    /// <returns>A <see cref="CollisionPoints"/> object containing intersection points,
+    /// or <c>null</c> if there are no intersections.</returns>
+    /// <remarks>
+    /// Iterates through each segment of the polyline and checks for intersection with the circle.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Circle c)
     {
         if (Count < 2) return null;
@@ -125,6 +176,15 @@ public partial class Polyline
         return points;
     }
 
+    /// <summary>
+    /// Computes the intersection points between this polyline and a <see cref="Triangle"/>.
+    /// </summary>
+    /// <param name="t">The <see cref="Triangle"/> to test for intersection.</param>
+    /// <returns>A <see cref="CollisionPoints"/> object containing intersection points,
+    /// or <c>null</c> if there are no intersections.</returns>
+    /// <remarks>
+    /// Iterates through each segment of the polyline and each edge of the triangle, checking for intersections.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Triangle t)
     {
         if (Count < 2) return null;
@@ -159,6 +219,15 @@ public partial class Polyline
         return points;
     }
 
+    /// <summary>
+    /// Computes the intersection points between this polyline and a <see cref="Rect"/>.
+    /// </summary>
+    /// <param name="r">The <see cref="Rect"/> to test for intersection.</param>
+    /// <returns>A <see cref="CollisionPoints"/> object containing intersection points,
+    /// or <c>null</c> if there are no intersections.</returns>
+    /// <remarks>
+    /// Iterates through each segment of the polyline and each edge of the rectangle, checking for intersections.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Rect r)
     {
         if (Count < 2) return null;
@@ -204,6 +273,15 @@ public partial class Polyline
         return points;
     }
 
+    /// <summary>
+    /// Computes the intersection points between this polyline and a <see cref="Quad"/>.
+    /// </summary>
+    /// <param name="q">The <see cref="Quad"/> to test for intersection.</param>
+    /// <returns>A <see cref="CollisionPoints"/> object containing intersection points,
+    /// or <c>null</c> if there are no intersections.</returns>
+    /// <remarks>
+    /// Iterates through each segment of the polyline and each edge of the quad, checking for intersections.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Quad q)
     {
         if (Count < 2) return null;
@@ -245,6 +323,15 @@ public partial class Polyline
         return points;
     }
 
+    /// <summary>
+    /// Computes the intersection points between this polyline and a <see cref="Polygon"/>.
+    /// </summary>
+    /// <param name="p">The <see cref="Polygon"/> to test for intersection.</param>
+    /// <returns>A <see cref="CollisionPoints"/> object containing intersection points,
+    /// or <c>null</c> if there are no intersections.</returns>
+    /// <remarks>
+    /// Iterates through each segment of the polyline and each edge of the polygon, checking for intersections.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Polygon p)
     {
         if (p.Count < 3 || Count < 2) return null;
@@ -265,6 +352,15 @@ public partial class Polyline
         return points;
     }
 
+    /// <summary>
+    /// Computes the intersection points between this polyline and another <see cref="Polyline"/>.
+    /// </summary>
+    /// <param name="pl">The <see cref="Polyline"/> to test for intersection.</param>
+    /// <returns>A <see cref="CollisionPoints"/> object containing intersection points,
+    /// or <c>null</c> if there are no intersections.</returns>
+    /// <remarks>
+    /// Iterates through each segment of both polylines, checking for intersections between all segment pairs.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Polyline pl)
     {
         if (pl.Count < 2 || Count < 2) return null;
@@ -285,6 +381,15 @@ public partial class Polyline
         return points;
     }
 
+    /// <summary>
+    /// Computes the intersection points between this polyline and a <see cref="Segments"/> collection.
+    /// </summary>
+    /// <param name="segments">The <see cref="Segments"/> collection to test for intersection.</param>
+    /// <returns>A <see cref="CollisionPoints"/> object containing intersection points,
+    /// or <c>null</c> if there are no intersections.</returns>
+    /// <remarks>
+    /// Iterates through each segment of the polyline and each segment in the collection, checking for intersections.
+    /// </remarks>
     public CollisionPoints? IntersectShape(Segments segments)
     {
         if (Count < 2 || segments.Count <= 0) return null;

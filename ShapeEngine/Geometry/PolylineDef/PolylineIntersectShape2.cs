@@ -13,6 +13,20 @@ namespace ShapeEngine.Geometry.PolylineDef;
 
 public partial class Polyline
 {
+    /// <summary>
+    /// Computes the intersection points between this polyline and another collider's shape,
+    /// storing results in a provided <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="collider">The collider whose shape will be tested for intersection with this polyline.</param>
+    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection
+    /// where intersection points will be stored.</param>
+    /// <param name="returnAfterFirstValid">If true, the method returns after finding the first valid intersection;
+    /// otherwise, it finds all intersections.</param>
+    /// <returns>The number of intersection points found.</returns>
+    /// <remarks>
+    /// The method dispatches to the appropriate intersection routine based on the collider's shape type.
+    /// This overload allows for efficient accumulation of results.
+    /// </remarks>
     public int Intersect(Collider collider, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (!collider.Enabled) return 0;
@@ -51,6 +65,17 @@ public partial class Polyline
         return 0;
     }
 
+    /// <summary>
+    /// Computes the intersection points between this polyline and a <see cref="Ray"/>, storing results in a provided <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="r">The <see cref="Ray"/> to test for intersection.</param>
+    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection where intersection points will be stored.</param>
+    /// <param name="returnAfterFirstValid">If true, the method returns after finding the first valid intersection; otherwise, it finds all intersections.</param>
+    /// <returns>The number of intersection points found.</returns>
+    /// <remarks>
+    /// Iterates through each segment of the polyline and checks for intersection with the ray.
+    /// This overload allows for efficient accumulation of results.
+    /// </remarks>
     public int IntersectShape(Ray r, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count < 2) return 0;
@@ -70,6 +95,19 @@ public partial class Polyline
         return count;
     }
 
+    /// <summary>
+    /// Computes the intersection points between this polyline and a <see cref="Line"/>,
+    /// storing results in a provided <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="l">The <see cref="Line"/> to test for intersection.</param>
+    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection where intersection points will be stored.</param>
+    /// <param name="returnAfterFirstValid">If true, the method returns after finding the first valid intersection;
+    /// otherwise, it finds all intersections.</param>
+    /// <returns>The number of intersection points found.</returns>
+    /// <remarks>
+    /// Iterates through each segment of the polyline and checks for intersection with the line.
+    /// This overload allows for efficient accumulation of results.
+    /// </remarks>
     public int IntersectShape(Line l, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count < 2) return 0;
@@ -89,6 +127,19 @@ public partial class Polyline
         return count;
     }
 
+    /// <summary>
+    /// Computes the intersection points between this polyline and a <see cref="Segment"/>,
+    /// storing results in a provided <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="s">The <see cref="Segment"/> to test for intersection.</param>
+    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection where intersection points will be stored.</param>
+    /// <param name="returnAfterFirstValid">If true, the method returns after finding the first valid intersection;
+    /// otherwise, it finds all intersections.</param>
+    /// <returns>The number of intersection points found.</returns>
+    /// <remarks>
+    /// Iterates through each segment of the polyline and checks for intersection with the segment.
+    /// This overload allows for efficient accumulation of results.
+    /// </remarks>
     public int IntersectShape(Segment s, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count < 2) return 0;
@@ -108,6 +159,19 @@ public partial class Polyline
         return count;
     }
 
+    /// <summary>
+    /// Computes the intersection points between this polyline and a <see cref="Circle"/>,
+    /// storing results in a provided <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="c">The <see cref="Circle"/> to test for intersection.</param>
+    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection where intersection points will be stored.</param>
+    /// <param name="returnAfterFirstValid">If true, the method returns after finding the first valid intersection;
+    /// otherwise, it finds all intersections.</param>
+    /// <returns>The number of intersection points found.</returns>
+    /// <remarks>
+    /// Iterates through each segment of the polyline and checks for intersection with the circle.
+    /// This overload allows for efficient accumulation of results.
+    /// </remarks>
     public int IntersectShape(Circle c, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count < 2) return 0;
@@ -135,6 +199,19 @@ public partial class Polyline
         return count;
     }
 
+    /// <summary>
+    /// Computes the intersection points between this polyline and a <see cref="Triangle"/>,
+    /// storing results in a provided <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="t">The <see cref="Triangle"/> to test for intersection.</param>
+    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection where intersection points will be stored.</param>
+    /// <param name="returnAfterFirstValid">If true, the method returns after finding the first valid intersection;
+    /// otherwise, it finds all intersections.</param>
+    /// <returns>The number of intersection points found.</returns>
+    /// <remarks>
+    /// Iterates through each segment of the polyline and each edge of the triangle, checking for intersections.
+    /// This overload allows for efficient accumulation of results.
+    /// </remarks>
     public int IntersectShape(Triangle t, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count < 2) return 0;
@@ -170,6 +247,19 @@ public partial class Polyline
         return count;
     }
 
+    /// <summary>
+    /// Computes the intersection points between this polyline and a <see cref="Quad"/>,
+    /// storing results in a provided <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="q">The <see cref="Quad"/> to test for intersection.</param>
+    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection where intersection points will be stored.</param>
+    /// <param name="returnAfterFirstValid">If true, the method returns after finding the first valid intersection;
+    /// otherwise, it finds all intersections.</param>
+    /// <returns>The number of intersection points found.</returns>
+    /// <remarks>
+    /// Iterates through each segment of the polyline and each edge of the quad, checking for intersections.
+    /// This overload allows for efficient accumulation of results.
+    /// </remarks>
     public int IntersectShape(Quad q, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count < 2) return 0;
@@ -213,6 +303,19 @@ public partial class Polyline
         return count;
     }
 
+    /// <summary>
+    /// Computes the intersection points between this polyline and a <see cref="Rect"/>, storing results in a provided <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="r">The <see cref="Rect"/> to test for intersection.</param>
+    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection
+    /// where intersection points will be stored.</param>
+    /// <param name="returnAfterFirstValid">If true, the method returns after finding the first valid intersection;
+    /// otherwise, it finds all intersections.</param>
+    /// <returns>The number of intersection points found.</returns>
+    /// <remarks>
+    /// Iterates through each segment of the polyline and each edge of the rectangle, checking for intersections.
+    /// This overload allows for efficient accumulation of results.
+    /// </remarks>
     public int IntersectShape(Rect r, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count < 2) return 0;
@@ -260,6 +363,20 @@ public partial class Polyline
         return count;
     }
 
+    /// <summary>
+    /// Computes the intersection points between this polyline and a <see cref="Polygon"/>,
+    /// storing results in a provided <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="p">The <see cref="Polygon"/> to test for intersection.</param>
+    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection
+    /// where intersection points will be stored.</param>
+    /// <param name="returnAfterFirstValid">If true, the method returns after finding the first valid intersection;
+    /// otherwise, it finds all intersections.</param>
+    /// <returns>The number of intersection points found.</returns>
+    /// <remarks>
+    /// Iterates through each segment of the polyline and each edge of the polygon, checking for intersections.
+    /// This overload allows for efficient accumulation of results.
+    /// </remarks>
     public int IntersectShape(Polygon p, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (p.Count < 3 || Count < 2) return 0;
@@ -281,6 +398,20 @@ public partial class Polyline
         return count;
     }
 
+    /// <summary>
+    /// Computes the intersection points between this polyline and another <see cref="Polyline"/>,
+    /// storing results in a provided <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="pl">The <see cref="Polyline"/> to test for intersection.</param>
+    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection
+    /// where intersection points will be stored.</param>
+    /// <param name="returnAfterFirstValid">If true, the method returns after finding the first valid intersection;
+    /// otherwise, it finds all intersections.</param>
+    /// <returns>The number of intersection points found.</returns>
+    /// <remarks>
+    /// Iterates through each segment of both polylines, checking for intersections between all segment pairs.
+    /// This overload allows for efficient accumulation of results.
+    /// </remarks>
     public int IntersectShape(Polyline pl, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (pl.Count < 2 || Count < 2) return 0;
@@ -302,6 +433,20 @@ public partial class Polyline
         return count;
     }
 
+    /// <summary>
+    /// Computes the intersection points between this polyline and a <see cref="Segments"/> collection,
+    /// storing results in a provided <see cref="CollisionPoints"/> collection.
+    /// </summary>
+    /// <param name="shape">The <see cref="Segments"/> collection to test for intersection.</param>
+    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection
+    /// where intersection points will be stored.</param>
+    /// <param name="returnAfterFirstValid">If true, the method returns after finding the first valid intersection;
+    /// otherwise, it finds all intersections.</param>
+    /// <returns>The number of intersection points found.</returns>
+    /// <remarks>
+    /// Iterates through each segment of the polyline and each segment in the collection, checking for intersections.
+    /// This overload allows for efficient accumulation of results.
+    /// </remarks>
     public int IntersectShape(Segments shape, ref CollisionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count < 2 || shape.Count <= 0) return 0;

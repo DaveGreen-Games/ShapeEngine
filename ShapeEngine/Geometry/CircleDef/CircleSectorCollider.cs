@@ -30,15 +30,15 @@ public class CircleSectorCollider : Collider
     /// </summary>
     public float AngleSectorRad { get; private set; }
     /// <summary>
-    /// Represents <see cref="Collider.CurTransform"/>.Position (center of the sector).
+    /// Represents <c>CurTransform.Position</c> (center of the sector).
     /// </summary>
     public Vector2 Center => CurTransform.Position;
     /// <summary>
-    /// Represents <see cref="Collider.CurTransform"/>.ScaledSize.Radius (radius of the sector).
+    /// Represents <c>CurTransform.ScaledSize.Radius</c> (radius of the sector).
     /// </summary>
     public float Radius => CurTransform.ScaledSize.Radius;
     /// <summary>
-    /// Represents <see cref="Collider.CurTransform"/>.RotationRad (rotation of the sector).
+    /// Represents <c>CurTransform.RotationRad</c> (rotation of the sector).
     /// </summary>
     public float RotationRad => CurTransform.RotationRad;
     

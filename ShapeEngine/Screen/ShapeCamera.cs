@@ -141,12 +141,12 @@ public sealed class ShapeCamera
     /// <summary>
     /// Camera alignment anchor point.
     /// </summary>
-    public AnchorPoint Alignement{ get; private set; } = new(0.5f);
+    public AnchorPoint Alignment{ get; private set; } = new(0.5f);
 
     /// <summary>
     /// Offset from base size and alignment.
     /// </summary>
-    public Size BaseOffset => BaseTransform.BaseSize * Alignement.ToVector2();
+    public Size BaseOffset => BaseTransform.BaseSize * Alignment.ToVector2();
 
     /// <summary>
     /// Current camera offset (base + shake + tween).
@@ -188,23 +188,23 @@ public sealed class ShapeCamera
     /// Initializes a new camera at the specified position and alignment.
     /// </summary>
     /// <param name="pos">Base position.</param>
-    /// <param name="alignement">Anchor alignment.</param>
-    public ShapeCamera(Vector2 pos, AnchorPoint alignement)
+    /// <param name="alignment">Anchor alignment.</param>
+    public ShapeCamera(Vector2 pos, AnchorPoint alignment)
     {
         BaseTransform = BaseTransform.SetPosition(pos);
-        this.SetAlignement(alignement);
+        this.SetAlignement(alignment);
     }
 
     /// <summary>
     /// Initializes a new camera at the specified position, alignment, and zoom level.
     /// </summary>
     /// <param name="pos">Base position.</param>
-    /// <param name="alignement">Anchor alignment.</param>
+    /// <param name="alignment">Anchor alignment.</param>
     /// <param name="zoomLevel">Initial zoom level.</param>
-    public ShapeCamera(Vector2 pos, AnchorPoint alignement, float zoomLevel)
+    public ShapeCamera(Vector2 pos, AnchorPoint alignment, float zoomLevel)
     {
         BaseTransform = BaseTransform.SetPosition(pos);
-        this.SetAlignement(alignement);
+        this.SetAlignement(alignment);
         this.SetZoom(zoomLevel);
     }
 
@@ -223,12 +223,12 @@ public sealed class ShapeCamera
     /// Initializes a new camera at the specified position, alignment, and target resolution.
     /// </summary>
     /// <param name="pos">Base position.</param>
-    /// <param name="alignement">Anchor alignment.</param>
+    /// <param name="alignment">Anchor alignment.</param>
     /// <param name="targetResolution">Target resolution for zoom adjustment.</param>
-    public ShapeCamera(Vector2 pos, AnchorPoint alignement, Dimensions targetResolution)
+    public ShapeCamera(Vector2 pos, AnchorPoint alignment, Dimensions targetResolution)
     {
         BaseTransform = BaseTransform.SetPosition(pos);
-        this.SetAlignement(alignement);
+        this.SetAlignement(alignment);
         TargetResolution = targetResolution;
     }
 
@@ -236,13 +236,13 @@ public sealed class ShapeCamera
     /// Initializes a new camera at the specified position, alignment, zoom level, and target resolution.
     /// </summary>
     /// <param name="pos">Base position.</param>
-    /// <param name="alignement">Anchor alignment.</param>
+    /// <param name="alignment">Anchor alignment.</param>
     /// <param name="zoomLevel">Initial zoom level.</param>
     /// <param name="targetResolution">Target resolution for zoom adjustment.</param>
-    public ShapeCamera(Vector2 pos, AnchorPoint alignement, float zoomLevel, Dimensions targetResolution)
+    public ShapeCamera(Vector2 pos, AnchorPoint alignment, float zoomLevel, Dimensions targetResolution)
     {
         BaseTransform = BaseTransform.SetPosition(pos);
-        this.SetAlignement(alignement);
+        this.SetAlignement(alignment);
         this.SetZoom(zoomLevel);
         TargetResolution = targetResolution;
     }
@@ -251,13 +251,13 @@ public sealed class ShapeCamera
     /// Initializes a new camera at the specified position, alignment, zoom level, and rotation.
     /// </summary>
     /// <param name="pos">Base position.</param>
-    /// <param name="alignement">Anchor alignment.</param>
+    /// <param name="alignment">Anchor alignment.</param>
     /// <param name="zoomLevel">Initial zoom level.</param>
     /// <param name="rotationDeg">Initial rotation in degrees.</param>
-    public ShapeCamera(Vector2 pos, AnchorPoint alignement, float zoomLevel, float rotationDeg)
+    public ShapeCamera(Vector2 pos, AnchorPoint alignment, float zoomLevel, float rotationDeg)
     {
         BaseTransform = BaseTransform.SetPosition(pos);
-        this.SetAlignement(alignement);
+        this.SetAlignement(alignment);
         this.SetZoom(zoomLevel);
         this.SetRotation(rotationDeg);
     }
@@ -382,7 +382,7 @@ public sealed class ShapeCamera
     /// <param name="newRect">Target rectangle.</param>
     public void SetCameraRect(Rect newRect)
     {
-        BaseTransform = BaseTransform.SetPosition(newRect.GetPoint(Alignement));
+        BaseTransform = BaseTransform.SetPosition(newRect.GetPoint(Alignment));
         if (newRect.Size != Area.Size) SetZoom( CalculateZoomLevel(newRect.Size) );
     }
     
@@ -422,7 +422,7 @@ public sealed class ShapeCamera
     {
         Follower?.Reset();
         BaseTransform = new Transform2D(new(), 0f);
-        Alignement = new(0.5f);
+        Alignment = new(0.5f);
         BaseZoomLevel = 1f;
     }
 
@@ -462,7 +462,7 @@ public sealed class ShapeCamera
     /// Sets the camera alignment anchor.
     /// </summary>
     /// <param name="newAlignement">New anchor point.</param>
-    public void SetAlignement(AnchorPoint newAlignement) => Alignement = newAlignement;
+    public void SetAlignement(AnchorPoint newAlignement) => Alignment = newAlignement;
 
     /// <summary>
     /// Converts a screen position to world coordinates.

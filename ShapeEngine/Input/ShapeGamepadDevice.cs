@@ -206,7 +206,7 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
         if (!Connected || isLocked) return;
         
         var usedButtons = GetUsedGamepadButtons();
-        var usedAxis = GetUsedGamepadAxis(0.25f);
+        var usedAxis = GetUsedGamepadAxis();
         wasUsed = usedButtons.Count > 0 || usedAxis.Count > 0;
         if(usedButtons.Count > 0) UsedButtons.AddRange(usedButtons);
         if(usedAxis.Count > 0) UsedAxis.AddRange(usedAxis);

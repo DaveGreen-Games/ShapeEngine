@@ -15,6 +15,17 @@ namespace ShapeEngine.Geometry.QuadDef;
 
 public readonly partial struct Quad
 {
+    /// <summary>
+    /// Finds the closest point on the quad's perimeter to a given point.
+    /// </summary>
+    /// <param name="a">First vertex of the quad (CCW order).</param>
+    /// <param name="b">Second vertex of the quad (CCW order).</param>
+    /// <param name="c">Third vertex of the quad (CCW order).</param>
+    /// <param name="d">Fourth vertex of the quad (CCW order).</param>
+    /// <param name="p">The point to find the closest point to.</param>
+    /// <param name="disSquared">The squared distance from <paramref name="p"/> to the closest point.</param>
+    /// <returns>The closest point on the quad's perimeter to <paramref name="p"/>.</returns>
+    /// <remarks>Checks all four edges and returns the closest point and its squared distance.</remarks>
     public static Vector2 GetClosestPointQuadPoint(Vector2 a, Vector2 b, Vector2 c, Vector2 d, Vector2 p, out float disSquared)
     {
         var min = Segment.GetClosestPointSegmentPoint(a, b, p, out float minDisSq);
@@ -44,6 +55,13 @@ public readonly partial struct Quad
         return min;
     }
 
+    /// <summary>
+    /// Finds the closest point on this quad's perimeter to a given point.
+    /// </summary>
+    /// <param name="p">The point to find the closest point to.</param>
+    /// <param name="disSquared">The squared distance from <paramref name="p"/> to the closest point.</param>
+    /// <returns>A <see cref="CollisionPoint"/> containing the closest point and the edge normal.</returns>
+    /// <remarks>Returns the closest point on any edge and the corresponding normal.</remarks>
     public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared)
     {
         var min = Segment.GetClosestPointSegmentPoint(A, B, p, out disSquared);
@@ -76,6 +94,15 @@ public readonly partial struct Quad
         return new(min, normal.GetPerpendicularRight().Normalize());
     }
 
+    /// <summary>
+    /// Finds the closest point on this quad's perimeter to a given point,
+    /// and returns the edge index.
+    /// </summary>
+    /// <param name="p">The point to find the closest point to.</param>
+    /// <param name="disSquared">The squared distance from <paramref name="p"/> to the closest point.</param>
+    /// <param name="index">The index of the edge (0-3) where the closest point was found.</param>
+    /// <returns>A <see cref="CollisionPoint"/> containing the closest point and the edge normal.</returns>
+    /// <remarks>Edge indices: 0=AB, 1=BC, 2=CD, 3=DA.</remarks>
     public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared, out int index)
     {
         var min = Segment.GetClosestPointSegmentPoint(A, B, p, out disSquared);
@@ -111,6 +138,13 @@ public readonly partial struct Quad
         return new(min, normal.GetPerpendicularRight().Normalize());
     }
 
+    /// <summary>
+    /// Finds the closest point between this quad's perimeter and a line.
+    /// </summary>
+    /// <param name="other">The line to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points,
+    /// normals, squared distance, and edge index.</returns>
+    /// <remarks>Checks all four edges and returns the closest result.</remarks>
     public ClosestPointResult GetClosestPoint(Line other)
     {
         var closestResult = Segment.GetClosestPointSegmentLine(A, B, other.Point, other.Direction, out float disSquared);
@@ -151,6 +185,13 @@ public readonly partial struct Quad
             selfIndex);
     }
 
+    /// <summary>
+    /// Finds the closest point between this quad's perimeter and a ray.
+    /// </summary>
+    /// <param name="other">The ray to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points,
+    /// normals, squared distance, and edge index.</returns>
+    /// <remarks>Checks all four edges and returns the closest result.</remarks>
     public ClosestPointResult GetClosestPoint(Ray other)
     {
         var closestResult = Segment.GetClosestPointSegmentRay(A, B, other.Point, other.Direction, out float disSquared);
@@ -190,6 +231,13 @@ public readonly partial struct Quad
             selfIndex);
     }
 
+    /// <summary>
+    /// Finds the closest point between this quad's perimeter and a segment.
+    /// </summary>
+    /// <param name="other">The segment to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points,
+    /// normals, squared distance, and edge index.</returns>
+    /// <remarks>Checks all four edges and returns the closest result.</remarks>
     public ClosestPointResult GetClosestPoint(Segment other)
     {
         var closestResult = Segment.GetClosestPointSegmentSegment(A, B, other.Start, other.End, out float disSquared);
@@ -230,6 +278,13 @@ public readonly partial struct Quad
             selfIndex);
     }
 
+    /// <summary>
+    /// Finds the closest point between this quad's perimeter and a circle.
+    /// </summary>
+    /// <param name="other">The circle to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points,
+    /// normals, squared distance, and edge index.</returns>
+    /// <remarks>Checks all four edges and returns the closest result.</remarks>
     public ClosestPointResult GetClosestPoint(Circle other)
     {
         var closestResult = Segment.GetClosestPointSegmentCircle(A, B, other.Center, other.Radius, out float disSquared);
@@ -270,6 +325,13 @@ public readonly partial struct Quad
             selfIndex);
     }
 
+    /// <summary>
+    /// Finds the closest point between this quad's perimeter and a triangle.
+    /// </summary>
+    /// <param name="other">The triangle to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points,
+    /// normals, squared distance, and edge index.</returns>
+    /// <remarks>Checks all four edges and returns the closest result.</remarks>
     public ClosestPointResult GetClosestPoint(Triangle other)
     {
         var closestResult = Segment.GetClosestPointSegmentSegment(A, B, other.A, other.B, out float disSquared);
@@ -403,6 +465,13 @@ public readonly partial struct Quad
             otherIndex);
     }
 
+    /// <summary>
+    /// Finds the closest point between this quad's perimeter and another quad.
+    /// </summary>
+    /// <param name="other">The quad to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points,
+    /// normals, squared distance, and edge index.</returns>
+    /// <remarks>Checks all four edges and returns the closest result.</remarks>
     public ClosestPointResult GetClosestPoint(Quad other)
     {
         var closestResult = Segment.GetClosestPointSegmentSegment(A, B, other.A, other.B, out float disSquared);
@@ -578,6 +647,13 @@ public readonly partial struct Quad
             otherIndex);
     }
 
+    /// <summary>
+    /// Finds the closest point between this quad's perimeter and a rectangle.
+    /// </summary>
+    /// <param name="other">The rectangle to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points,
+    /// normals, squared distance, and edge index.</returns>
+    /// <remarks>Checks all four edges and returns the closest result.</remarks>
     public ClosestPointResult GetClosestPoint(Rect other)
     {
         var closestResult = Segment.GetClosestPointSegmentSegment(A, B, other.A, other.B, out float disSquared);
@@ -753,6 +829,13 @@ public readonly partial struct Quad
             otherIndex);
     }
 
+    /// <summary>
+    /// Finds the closest point between this quad's perimeter and a polygon.
+    /// </summary>
+    /// <param name="other">The polygon to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points,
+    /// normals, squared distance, and edge index.</returns>
+    /// <remarks>Checks all four edges and returns the closest result.</remarks>
     public ClosestPointResult GetClosestPoint(Polygon other)
     {
         if (other.Count < 3) return new();
@@ -822,6 +905,12 @@ public readonly partial struct Quad
             otherIndex);
     }
 
+    /// <summary>
+    /// Finds the closest point between this quad's perimeter and a polyline.
+    /// </summary>
+    /// <param name="other">The polyline to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points, normals, squared distance, and edge index.</returns>
+    /// <remarks>Checks all four edges and returns the closest result.</remarks>
     public ClosestPointResult GetClosestPoint(Polyline other)
     {
         if (other.Count < 2) return new();
@@ -890,6 +979,13 @@ public readonly partial struct Quad
             otherIndex);
     }
 
+    /// <summary>
+    /// Finds the closest point between this quad's perimeter and a set of segments.
+    /// </summary>
+    /// <param name="other">The set of segments to compare against.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest points,
+    /// normals, squared distance, and edge index.</returns>
+    /// <remarks>Checks all four edges and returns the closest result.</remarks>
     public ClosestPointResult GetClosestPoint(Segments other)
     {
         if (other.Count <= 0) return new();
@@ -910,6 +1006,13 @@ public readonly partial struct Quad
         return closestResult;
     }
 
+    /// <summary>
+    /// Finds the closest segment of the quad to a given point and returns the segment and the closest point on it.
+    /// </summary>
+    /// <param name="p">The point to compare against.</param>
+    /// <param name="disSquared">The squared distance from <paramref name="p"/> to the closest point on the segment.</param>
+    /// <returns>A tuple containing the closest <see cref="Segment"/> and its closest <see cref="CollisionPoint"/> to <paramref name="p"/>.</returns>
+    /// <remarks>Checks all four edges and returns the closest segment and point.</remarks>
     public (Segment segment, CollisionPoint segmentPoint) GetClosestSegment(Vector2 p, out float disSquared)
     {
         var closestSegment = SegmentAToB;
@@ -946,6 +1049,14 @@ public readonly partial struct Quad
         return (closestSegment, closestResult);
     }
 
+    /// <summary>
+    /// Finds the closest vertex of the quad to a given point.
+    /// </summary>
+    /// <param name="p">The point to compare against.</param>
+    /// <param name="disSquared">The squared distance from <paramref name="p"/> to the closest vertex.</param>
+    /// <param name="index">The index (0-3) of the closest vertex.</param>
+    /// <returns>The closest <see cref="Vector2"/> vertex to <paramref name="p"/>.</returns>
+    /// <remarks>Returns the closest of the four vertices (A, B, C, D).</remarks>
     public Vector2 GetClosestVertex(Vector2 p, out float disSquared, out int index)
     {
         var closest = A;
@@ -979,6 +1090,14 @@ public readonly partial struct Quad
         return closest;
     }
 
+    /// <summary>
+    /// Finds the furthest vertex of the quad from a given point.
+    /// </summary>
+    /// <param name="p">The point to compare against.</param>
+    /// <param name="disSquared">The squared distance from <paramref name="p"/> to the furthest vertex.</param>
+    /// <param name="index">The index <c>(0-3)</c> of the furthest vertex.</param>
+    /// <returns>The furthest <see cref="Vector2"/> vertex from <paramref name="p"/>.</returns>
+    /// <remarks>Returns the furthest of the four vertices (A, B, C, D).</remarks>
     public Vector2 GetFurthestVertex(Vector2 p, out float disSquared, out int index)
     {
         var furthest = A;
@@ -1013,3 +1132,4 @@ public readonly partial struct Quad
     }
 
 }
+

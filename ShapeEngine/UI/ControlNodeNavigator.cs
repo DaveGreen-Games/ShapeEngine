@@ -71,7 +71,7 @@ public class ControlNodeNavigator
     /// <summary>
     /// Gets whether navigation is currently active.
     /// </summary>
-    public bool IsNavigating { get; private set; } = false;
+    public bool IsNavigating { get; private set; }
 
     #endregion
 

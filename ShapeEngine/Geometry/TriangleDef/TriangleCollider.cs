@@ -42,7 +42,7 @@ public class TriangleCollider : Collider
     /// Initializes a new instance of <see cref="TriangleCollider"/> with a list of relative points.
     /// </summary>
     /// <param name="offset">The transform offset for the collider.</param>
-    /// <param name="relativePoints">A list of up to three points in local space (range -1 to 1 on x & y axis).</param>
+    /// <param name="relativePoints">A list of up to three points in local space.</param>
     public TriangleCollider(Transform2D offset, List<Vector2> relativePoints) : base(offset)
     {
         if (relativePoints.Count <= 0)
@@ -75,7 +75,7 @@ public class TriangleCollider : Collider
     /// Initializes a new instance of <see cref="TriangleCollider"/> with an array of relative points.
     /// </summary>
     /// <param name="offset">The transform offset for the collider.</param>
-    /// <param name="relativePoints">An array of up to three points in local space (range -1 to 1 on x & y axis).</param>
+    /// <param name="relativePoints">An array of up to three points in local space.</param>
     public TriangleCollider(Transform2D offset, Vector2[] relativePoints) : base(offset)
     {
         if (relativePoints.Length <= 0)

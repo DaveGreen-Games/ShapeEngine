@@ -266,7 +266,7 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
             case ShapeKeyboardButton.PAGE_UP: return shortHand ? "PUp" : "Page Up";
             case ShapeKeyboardButton.PAGE_DOWN: return shortHand ? "PDwn" : "Page Down";
             case ShapeKeyboardButton.HOME: return shortHand ? "Hom" : "Home";
-            case ShapeKeyboardButton.END: return shortHand ? "End" : "End";
+            case ShapeKeyboardButton.END: return shortHand ? "End" : "End Key";
             case ShapeKeyboardButton.CAPS_LOCK: return shortHand ? "CpsL" : "Caps Lock";
             case ShapeKeyboardButton.SCROLL_LOCK: return shortHand ? "ScrL" : "Scroll Lock";
             case ShapeKeyboardButton.NUM_LOCK: return shortHand ? "NumL" : "Num Lock";
@@ -345,7 +345,7 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
     public float GetValue(ShapeKeyboardButton button, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         if (isLocked) return 0f;
-        bool modifierActive = IModifierKey.IsActive(modifierOperator, modifierKeys, null);
+        bool modifierActive = IModifierKey.IsActive(modifierOperator, modifierKeys);
         return (modifierActive && Raylib.IsKeyDown((KeyboardKey)button)) ? 1f : 0f;
     }
     /// <summary>
@@ -433,7 +433,7 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
     public float GetValue(ShapeKeyboardButton neg, ShapeKeyboardButton pos, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         if (isLocked) return 0f;
-        if (!IModifierKey.IsActive(modifierOperator, modifierKeys, null)) return 0f;
+        if (!IModifierKey.IsActive(modifierOperator, modifierKeys)) return 0f;
         
         return GetValue(neg, pos);
     }

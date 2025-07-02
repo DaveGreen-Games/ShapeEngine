@@ -1060,7 +1060,7 @@ public class CollisionPoints : ShapeList<CollisionPoint>
     /// Returns a set of unique points from the collision points list.
     /// </summary>
     /// <returns>A <see cref="Points"/> collection containing unique points.</returns>
-    public PointsDef.Points GetUniquePoints()
+    public Points GetUniquePoints()
     {
         var uniqueVertices = new HashSet<Vector2>();
         for (var i = 0; i < Count; i++)

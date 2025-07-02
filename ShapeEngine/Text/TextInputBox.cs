@@ -247,7 +247,7 @@ public class TextInputBox
     /// Adds a list of Unicode characters at the current caret position.
     /// </summary>
     /// <param name="unicodeCharacters">The list of Unicode character codes to add.</param>
-    /// <returns>True if characters were added, false if not active or empty <see cref="unicodeCharacters"/> list.</returns>
+    /// <returns>True if characters were added, false if not active or empty <c>unicodeCharacters</c> list.</returns>
     public bool AddCharacters(List<int> unicodeCharacters)
     {
         if (!Active) return false;
@@ -269,7 +269,7 @@ public class TextInputBox
     /// Adds a list of characters at the current caret position.
     /// </summary>
     /// <param name="characters">The list of characters to add.</param>
-    /// <returns>True if characters were added, false if not active or empty <see cref="characters"/> list.</returns>
+    /// <returns>True if characters were added, false if not active or empty <c>characters</c> list.</returns>
     public bool AddCharacters(List<char> characters)
     {
         if (!Active) return false;

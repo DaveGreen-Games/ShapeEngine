@@ -7,6 +7,7 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.Geometry.StripedDrawingDef;
 using ShapeEngine.StaticLib;
 using ShapeEngine.Random;
 using ShapeEngine.Screen;

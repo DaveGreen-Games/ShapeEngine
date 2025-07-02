@@ -65,15 +65,7 @@ public readonly partial struct Line
         float denominator = line1Direction.X * line2Direction.Y - line1Direction.Y * line2Direction.X;
 
         // Check if lines are parallel (denominator is zero)
-        if (Math.Abs(denominator) < ShapeMath.EpsilonF)
-        {
-            return false;
-        }
-
-        // Calculate the intersection point using parameter t
-        var difference = line2Point - line1Point;
-        float t = (difference.X * line2Direction.Y - difference.Y * line2Direction.X) / denominator;
-
+        if (Math.Abs(denominator) < ShapeMath.EpsilonF) return false;
         return true;
     }
 

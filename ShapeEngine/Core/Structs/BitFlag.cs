@@ -252,7 +252,7 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// <returns>The updated flag set with the specified flag toggled.</returns>
     public static int SetIntFlag(int flag, int value)
     {
-        return flag ^= value;
+        return flag ^ value;
     }
 
     /// <summary>
@@ -263,7 +263,7 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// <returns>The updated flag set with the specified flag added.</returns>
     public static int AddIntFlag(int flag, int value)
     {
-        return flag |= value;
+        return flag | value;
     }
 
     /// <summary>
@@ -274,7 +274,7 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// <returns>The updated flag set with the specified flag removed.</returns>
     public static int RemoveIntFlag(int flag, int value)
     {
-        return flag &= ~value;
+        return flag & ~value;
     }
 
     /// <summary>
@@ -359,7 +359,7 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// <returns>The updated flag set with the specified flag toggled.</returns>
     public static uint SetUintFlag(uint flag, uint value)
     {
-        return flag ^= value;
+        return flag ^ value;
     }
 
     /// <summary>
@@ -370,7 +370,7 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// <returns>The updated flag set with the specified flag added.</returns>
     public static uint AddUintFlag(uint flag, uint value)
     {
-        return flag |= value;
+        return flag | value;
     }
 
     /// <summary>
@@ -381,7 +381,7 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// <returns>The updated flag set with the specified flag removed.</returns>
     public static uint RemoveUintFlag(uint flag, uint value)
     {
-        return flag &= ~value;
+        return flag & ~value;
     }
 
     /// <summary>

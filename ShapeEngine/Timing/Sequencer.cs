@@ -6,7 +6,7 @@ internal static class SequencerIdGenerator
     /// <summary>
     /// Static counter for generating unique sequence IDs.
     /// </summary>
-    private static uint idCounter = 0;
+    private static uint idCounter;
 
     /// <summary>
     /// Gets the next unique sequence ID.

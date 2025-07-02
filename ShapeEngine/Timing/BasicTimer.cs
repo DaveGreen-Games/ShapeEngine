@@ -33,7 +33,7 @@ public class BasicTimer
     /// <summary>
     /// Gets the normalized remaining time (from 1.0 at start to 0.0 at finish).
     /// </summary>
-    public float F { get; protected set; } = 0.0f;
+    public float F { get; protected set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BasicTimer"/> class.

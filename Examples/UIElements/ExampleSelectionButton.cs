@@ -2,6 +2,7 @@
 using Examples.Scenes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
+using ShapeEngine.Geometry.StripedDrawingDef;
 using ShapeEngine.UI;
 using ShapeEngine.Text;
 

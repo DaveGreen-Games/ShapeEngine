@@ -213,7 +213,7 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
     {
         if (isLocked) return 0f;
         if (!GameWindow.Instance.MouseOnScreen) return 0f;
-        if (!IModifierKey.IsActive(modifierOperator, modifierKeys, null)) return 0f;
+        if (!IModifierKey.IsActive(modifierOperator, modifierKeys)) return 0f;
         return GetValue(axis, deadzone);
     }
     /// <summary>
@@ -286,7 +286,7 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
     {
         if (isLocked) return 0f;
         if (!GameWindow.Instance.MouseOnScreen) return 0f;
-        if (!IModifierKey.IsActive(modifierOperator, modifierKeys, null)) return 0f;
+        if (!IModifierKey.IsActive(modifierOperator, modifierKeys)) return 0f;
         return GetValue(axis, deadzone);
     }
     /// <summary>
@@ -414,7 +414,7 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
     {
         if (isLocked) return 0f;
         if (!GameWindow.Instance.MouseOnScreen) return 0f;
-        if (!IModifierKey.IsActive(modifierOperator, modifierKeys, null)) return 0f;
+        if (!IModifierKey.IsActive(modifierOperator, modifierKeys)) return 0f;
         return GetValue(button, deadzone);
     }
     /// <summary>
@@ -522,7 +522,7 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
     public float GetValue(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         if (isLocked) return 0f;
-        if (!IModifierKey.IsActive(modifierOperator, modifierKeys, null)) return 0f;
+        if (!IModifierKey.IsActive(modifierOperator, modifierKeys)) return 0f;
         return GetValue(neg, pos, deadzone);
     }
     /// <summary>

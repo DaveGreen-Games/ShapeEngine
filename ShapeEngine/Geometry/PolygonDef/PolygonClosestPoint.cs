@@ -13,8 +13,16 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.PolygonDef;
 
+
 public partial class Polygon
 {
+    /// <summary>
+    /// Finds the closest point on a polygon (defined by a list of points) to a given point.
+    /// </summary>
+    /// <param name="points">The polygon points.</param>
+    /// <param name="p">The point to test.</param>
+    /// <param name="disSquared">The squared distance to the closest point (output).</param>
+    /// <returns>The closest point on the polygon.</returns>
     public static Vector2 GetClosestPointPolygonPoint(List<Vector2> points, Vector2 p, out float disSquared)
     {
         disSquared = -1;
@@ -39,7 +47,12 @@ public partial class Polygon
 
         return closest;
     }
-
+    /// <summary>
+    /// Finds the closest point on this polygon to a given point.
+    /// </summary>
+    /// <param name="p">The point to test.</param>
+    /// <param name="disSquared">The squared distance to the closest point (output).</param>
+    /// <returns>The closest point and its normal as a <see cref="CollisionPoint"/>.</returns>
     public new CollisionPoint GetClosestPoint(Vector2 p, out float disSquared)
     {
         disSquared = -1;
@@ -66,7 +79,14 @@ public partial class Polygon
 
         return new(closest, normal.GetPerpendicularRight().Normalize());
     }
-
+    /// <summary>
+    /// Finds the closest point on this polygon to a given point,
+    /// and returns the index of the closest edge.
+    /// </summary>
+    /// <param name="p">The point to test.</param>
+    /// <param name="disSquared">The squared distance to the closest point (output).</param>
+    /// <param name="index">The index of the closest edge (output).</param>
+    /// <returns>The closest point and its normal as a <see cref="CollisionPoint"/>.</returns>
     public new CollisionPoint GetClosestPoint(Vector2 p, out float disSquared, out int index)
     {
         disSquared = -1;
@@ -96,7 +116,13 @@ public partial class Polygon
 
         return new(closest, normal.GetPerpendicularRight().Normalize());
     }
-
+    /// <summary>
+    /// Finds the closest vertex of this polygon to a given point.
+    /// </summary>
+    /// <param name="p">The point to test.</param>
+    /// <param name="disSquared">The squared distance to the closest vertex (output).</param>
+    /// <param name="index">The index of the closest vertex (output).</param>
+    /// <returns>The closest vertex.</returns>
     public Vector2 GetClosestVertex(Vector2 p, out float disSquared, out int index)
     {
         disSquared = -1;
@@ -121,7 +147,13 @@ public partial class Polygon
 
         return closest;
     }
-
+    /// <summary>
+    /// Finds the furthest vertex of this polygon from a given point.
+    /// </summary>
+    /// <param name="p">The point to test.</param>
+    /// <param name="disSquared">The squared distance to the furthest vertex (output).</param>
+    /// <param name="index">The index of the furthest vertex (output).</param>
+    /// <returns>The furthest vertex.</returns>
     public Vector2 GetFurthestVertex(Vector2 p, out float disSquared, out int index)
     {
         disSquared = -1;
@@ -146,7 +178,11 @@ public partial class Polygon
 
         return furthest;
     }
-
+    /// <summary>
+    /// Finds the closest point between this polygon and a line.
+    /// </summary>
+    /// <param name="other">The line to test against.</param>
+    /// <returns>The closest point result.</returns>
     public new ClosestPointResult GetClosestPoint(Line other)
     {
         if (Count <= 2) return new();
@@ -177,7 +213,11 @@ public partial class Polygon
             disSquared,
             selfIndex);
     }
-
+    /// <summary>
+    /// Finds the closest point between this polygon and a ray.
+    /// </summary>
+    /// <param name="other">The ray to test against.</param>
+    /// <returns>The closest point result.</returns>
     public new ClosestPointResult GetClosestPoint(Ray other)
     {
         if (Count <= 2) return new();
@@ -209,7 +249,11 @@ public partial class Polygon
             disSquared,
             selfIndex);
     }
-
+    /// <summary>
+    /// Finds the closest point between this polygon and a segment.
+    /// </summary>
+    /// <param name="other">The segment to test against.</param>
+    /// <returns>The closest point result.</returns>
     public new ClosestPointResult GetClosestPoint(Segment other)
     {
         if (Count <= 2) return new();
@@ -241,7 +285,11 @@ public partial class Polygon
             disSquared,
             selfIndex);
     }
-
+    /// <summary>
+    /// Finds the closest point between this polygon and a circle.
+    /// </summary>
+    /// <param name="other">The circle to test against.</param>
+    /// <returns>The closest point result.</returns>
     public new ClosestPointResult GetClosestPoint(Circle other)
     {
         if (Count <= 2) return new();
@@ -274,7 +322,11 @@ public partial class Polygon
             selfIndex
         );
     }
-
+    /// <summary>
+    /// Finds the closest point between this polygon and a triangle.
+    /// </summary>
+    /// <param name="other">The triangle to test against.</param>
+    /// <returns>The closest point result.</returns>
     public new ClosestPointResult GetClosestPoint(Triangle other)
     {
         if (Count <= 2) return new();
@@ -332,7 +384,11 @@ public partial class Polygon
             selfIndex,
             otherIndex);
     }
-
+    /// <summary>
+    /// Finds the closest point between this polygon and a quad.
+    /// </summary>
+    /// <param name="other">The quad to test against.</param>
+    /// <returns>The closest point result.</returns>
     public new ClosestPointResult GetClosestPoint(Quad other)
     {
         if (Count <= 2) return new();
@@ -401,7 +457,11 @@ public partial class Polygon
             selfIndex,
             otherIndex);
     }
-
+    /// <summary>
+    /// Finds the closest point between this polygon and a rectangle.
+    /// </summary>
+    /// <param name="other">The rectangle to test against.</param>
+    /// <returns>The closest point result.</returns>
     public new ClosestPointResult GetClosestPoint(Rect other)
     {
         if (Count <= 2) return new();
@@ -470,7 +530,11 @@ public partial class Polygon
             selfIndex,
             otherIndex);
     }
-
+    /// <summary>
+    /// Finds the closest point between this polygon and another polygon.
+    /// </summary>
+    /// <param name="other">The other polygon to test against.</param>
+    /// <returns>The closest point result.</returns>
     public new ClosestPointResult GetClosestPoint(Polygon other)
     {
         if (Count <= 2) return new();
@@ -511,7 +575,11 @@ public partial class Polygon
             selfIndex,
             otherIndex);
     }
-
+    /// <summary>
+    /// Finds the closest point between this polygon and a polyline.
+    /// </summary>
+    /// <param name="other">The polyline to test against.</param>
+    /// <returns>The closest point result.</returns>
     public new ClosestPointResult GetClosestPoint(Polyline other)
     {
         if (Count <= 2) return new();
@@ -552,7 +620,11 @@ public partial class Polygon
             selfIndex,
             otherIndex);
     }
-
+    /// <summary>
+    /// Finds the closest point between this polygon and a set of segments.
+    /// </summary>
+    /// <param name="other">The segments to test against.</param>
+    /// <returns>The closest point result.</returns>
     public new ClosestPointResult GetClosestPoint(Segments other)
     {
         if (Count <= 2) return new();
@@ -592,7 +664,12 @@ public partial class Polygon
             selfIndex,
             otherIndex);
     }
-
+    /// <summary>
+    /// Finds the closest segment of this polygon to a given point.
+    /// </summary>
+    /// <param name="p">The point to test.</param>
+    /// <param name="disSquared">The squared distance to the closest segment (output).</param>
+    /// <returns>The closest segment and its closest point as a <see cref="CollisionPoint"/>.</returns>
     public (Segment segment, CollisionPoint segmentPoint) GetClosestSegment(Vector2 p, out float disSquared)
     {
         disSquared = -1;
