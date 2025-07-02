@@ -773,10 +773,11 @@ public class InputAction
     /// Determines if the specified access tag has access.
     /// <remarks>
     /// <see cref="AllAccessTag"/> always returns true (has access).
-    /// If <see cref="tag"/> is contained in the current blacklist, this function will return false (no access).
-    /// If <see cref="tag"/> is not contained in the current blacklist and
-    /// <see cref="tag"/> is contained in the current whitelist, or the current whitelist is empty,
-    /// this function will return true (has access).
+    /// <list type="bullet">
+    /// <item>If <c>tag</c> is contained in the current blacklist, this function will return false (no access).</item>
+    /// <item>If <c>tag</c> is not contained in the current blacklist and <c>tag</c> is contained in the current whitelist,
+    /// or the current whitelist is empty, this function will return true (has access).</item>
+    /// </list>
     /// </remarks>
     /// </summary>
     /// <param name="tag">The access tag to check.</param>
@@ -791,7 +792,7 @@ public class InputAction
     /// Determines if input is available for the specified access tag.
     /// <remarks>
     /// Always returns true if <see cref="Locked"/> is false.
-    /// Otherwise returns <see cref="HasAccess(uint)"/> with the <see cref="tag"/> parameter.
+    /// Otherwise returns <see cref="HasAccess(uint)"/> with the <c>tag</c> parameter.
     /// </remarks>
     /// </summary>
     /// <param name="tag">The access tag to check.</param>

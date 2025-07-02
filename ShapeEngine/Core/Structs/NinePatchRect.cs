@@ -164,10 +164,10 @@ public readonly struct NinePatchRect
         BottomRight = rects.Count > 8 ? rects[8].ApplyMargins(marginH, marginH, marginV, marginV) : new();
     }
     /// <summary>
-    /// Sets the rect in left to right & top to bottom order (top left is first, bottomRight is last).
-    /// Only the first nine rects are used. If there are less than 9 rects, the remaining will be filled with empty rects.
+    /// Initializes a NinePatchRect from a list of rectangles in left-to-right, top-to-bottom order.
+    /// Only the first nine rectangles are used; any missing entries are filled with empty rectangles.
     /// </summary>
-    /// <param name="rects"></param>
+    /// <param name="rects">A list of rectangles to assign to the nine-patch grid.</param>
     public NinePatchRect(IReadOnlyList<Rect> rects)
     {
         TopLeft = rects.Count > 0 ? rects[0] : new();

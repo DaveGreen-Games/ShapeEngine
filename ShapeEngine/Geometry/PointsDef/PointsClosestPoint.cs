@@ -452,7 +452,7 @@ public partial class Points
     }
 
     /// <summary>
-    /// Finds the closest point in this collection to the specified <see cref="other"/>.
+    /// Finds the closest point in this collection to the specified shape.
     /// </summary>
     /// <param name="other">The <see cref="ClosestPointResult"/> to compare against.</param>
     /// <returns>A <see cref="ClosestPointResult"/> containing the closest point in this collection and the corresponding point on the segments.</returns>

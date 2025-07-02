@@ -121,13 +121,15 @@ public readonly struct GameSettings
     /// </summary>
     public readonly ScreenTextureMode ScreenTextureMode;
     
-    /// <summary>
-    /// Gets the fixed framerate for the fixed update loop.
-    /// The delta time used in the physics update will always be 1/FixedFramerate.
-    /// Setting this to smaller or equal to 0 will disable the fixed update loop! FixedUpdate & InterpolateFixedUpdate will no longer be called!
-    /// Fixed Framerate bigger than 0 and smaller than 30 will be set to 30.
-    /// The physics update is always called after the normal update function if enabled.
-    /// </summary>
+   /// <summary>
+   /// Gets the fixed framerate used for the fixed update loop.
+   /// <list type="bullet">
+   /// <item>The physics update uses a delta time of <c>1 / FixedFramerate</c>.</item>
+   /// <item>If set to 0 or less, the fixed update loop is disabled and <c>FixedUpdate</c>/<c>InterpolateFixedUpdate</c> will not be called.</item>
+   /// <item>Values greater than 0 but less than 30 are clamped to 30.</item>
+   /// <item>When enabled, the physics update runs after the normal update function.</item>
+   /// </list>
+   /// </summary>
     public readonly int FixedFramerate;
 
     /// <summary>

@@ -609,11 +609,12 @@ public readonly partial struct Rect : IEquatable<Rect>
 
     #region Static
     /// <summary>
-    /// Checks if the top left point is further up & left than the bottom right point and returns the correct points if necessary.
+    /// Ensures the first point is the top-left and the second is the bottom-right,
+    /// swapping them if necessary so that the returned tuple always represents a valid rectangle.
     /// </summary>
-    /// <param name="topLeft">The top-left point.</param>
-    /// <param name="bottomRight">The bottom-right point.</param>
-    /// <returns>A tuple containing the corrected top-left and bottom-right points.</returns>
+    /// <param name="topLeft">A corner point, intended as top-left.</param>
+    /// <param name="bottomRight">A corner point, intended as bottom-right.</param>
+    /// <returns>A tuple with the corrected top-left and bottom-right points.</returns>
     public static (Vector2 topLeft, Vector2 bottomRight) Fix(Vector2 topLeft, Vector2 bottomRight)
     {
         Vector2 newTopLeft = new

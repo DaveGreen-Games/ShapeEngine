@@ -7,7 +7,7 @@ namespace ShapeEngine.Geometry.QuadDef;
 /// Represents a quadrilateral (quad) collider used for collision detection in 2D space.
 /// </summary>
 /// <remarks>
-/// The quad's position, size, and rotation are determined by the current transform (<see cref="Collider.CurTransform"/>).
+/// The quad's position, size, and rotation are determined by the (<c>CurTransform</c>).
 /// Alignment is controlled by an anchor point, allowing flexible positioning relative to the transform.
 /// </remarks>
 public class QuadCollider : Collider
