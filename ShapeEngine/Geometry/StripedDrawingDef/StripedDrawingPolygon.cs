@@ -693,6 +693,7 @@ public static partial class StripedDrawing
             }
 
             var insideCount = Line.IntersectLinePolygon(cur, lineDir, insideShape, ref collisionPointsReference);
+            //this is correct, insideCount <= 0 leads to crashes!
             if (insideCount < 0) //draw the lines in the outside shape
             {
                 collisionPointsReference.SortClosestFirst(cur);

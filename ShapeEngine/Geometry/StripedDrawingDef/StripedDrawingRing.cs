@@ -7,7 +7,7 @@ namespace ShapeEngine.Geometry.StripedDrawingDef;
 public static partial class StripedDrawing
 {
     /// <summary>
-    /// Draw a striped ring.Draws lines across the circumference of the ring.
+    /// Draw a striped ring. Draws lines across the circumference of the ring.
     /// Each line starts on the inner radius and ends on the outer radius.
     /// </summary>
     /// <param name="center">The center of the ring.</param>
@@ -46,7 +46,7 @@ public static partial class StripedDrawing
     }
 
     /// <summary>
-    /// Draw an alternating striped ring.Draws lines across the circumference of the ring.
+    /// Draw an alternating striped ring. Draws lines across the circumference of the ring.
     /// Each line starts on the inner radius and ends on the outer radius.
     /// </summary>
     /// <param name="center">The center of the ring.</param>
@@ -55,8 +55,8 @@ public static partial class StripedDrawing
     /// <param name="outerRadius">The outer radius of the ring.
     /// Should be positive and bigger than the inner radius.</param>
     /// <param name="angleSpacingDeg">The spacing between each line in degrees.</param>
-    /// <param name="striped">The line drawing info for how to draw the even numbered lines.</param>
-    /// <param name="alternatingStriped">The alternate line drawing info for how to draw the odd numbered lines.</param>
+    /// <param name="striped">The first line drawing info for drawing even lines.</param>
+    /// <param name="alternatingStriped">The second line drawing info for drawing odd lines.</param>
     /// <param name="angleOffset">The start offset.
     /// Value is wrapped between 0 and 1 and multiplied with the angleSpacingDeg.
     /// So the min offset is zero and the max offset is angleSpacingDeg!</param>
@@ -88,7 +88,7 @@ public static partial class StripedDrawing
     }
 
     /// <summary>
-    /// Draw an alternating striped ring.Draws lines across the circumference of the ring.
+    /// Draw an alternating striped ring. Draws lines across the circumference of the ring.
     /// Each line starts on the inner radius and ends on the outer radius.
     /// </summary>
     /// <param name="center">The center of the ring.</param>
@@ -100,7 +100,8 @@ public static partial class StripedDrawing
     /// <param name="angleOffset">The start offset.
     /// Value is wrapped between 0 and 1 and multiplied with the angleSpacingDeg.
     /// So the min offset is zero and the max offset is angleSpacingDeg!</param>
-    /// <param name="alternatingStriped">The line drawing infos for how to draw each of the lines based on their number.</param>
+    /// <param name="alternatingStriped">The line drawing infos for drawing each line.
+    /// Each info is used in sequence and wraps around if there are more lines.</param>
     public static void DrawStripedRing(Vector2 center, float innerRadius, float outerRadius, float angleSpacingDeg, float angleOffset,
         params LineDrawingInfo[] alternatingStriped)
     {
@@ -130,7 +131,7 @@ public static partial class StripedDrawing
     }
 
     /// <summary>
-    /// Draw a sector of  striped ring.Draws lines across the circumference of the ring.
+    /// Draw a sector of a striped ring. Draws lines across the circumference of the ring.
     /// Each line starts on the inner radius and ends on the outer radius.
     /// </summary>
     /// <param name="center">The center of the ring.</param>
@@ -194,7 +195,7 @@ public static partial class StripedDrawing
     }
 
     /// <summary>
-    /// Draw a sector of an alternating striped ring.Draws lines across the circumference of the ring.
+    /// Draw a sector of an alternating striped ring. Draws lines across the circumference of the ring.
     /// Each line starts on the inner radius and ends on the outer radius.
     /// </summary>
     /// <param name="center">The center of the ring.</param>
@@ -207,8 +208,8 @@ public static partial class StripedDrawing
     /// Can be negative and/or bigger than maxAngleDeg.</param>
     /// <param name="maxAngleDeg">The end of the sector in degrees.
     /// Can be negative and/or smaller than the minAngleDeg.</param>
-    /// <param name="striped">The line drawing info for how to draw the even numbered lines.</param>
-    /// <param name="alternatingStriped">The line drawing info for how to draw the odd numbered lines.</param>
+    /// <param name="striped">The first line drawing info for drawing even lines.</param>
+    /// <param name="alternatingStriped">The second line drawing info for drawing odd lines.</param>
     /// <param name="angleOffset">The start offset.
     /// Value is wrapped between 0 and 1 and multiplied with the angleSpacingDeg.
     /// So the min offset is zero and the max offset is angleSpacingDeg!</param>
@@ -263,7 +264,7 @@ public static partial class StripedDrawing
     }
 
     /// <summary>
-    /// Draw a sector of an alternating striped ring.Draws lines across the circumference of the ring.
+    /// Draw a sector of an alternating striped ring. Draws lines across the circumference of the ring.
     /// Each line starts on the inner radius and ends on the outer radius.
     /// </summary>
     /// <param name="center">The center of the ring.</param>
@@ -279,7 +280,8 @@ public static partial class StripedDrawing
     /// <param name="angleOffset">The start offset.
     /// Value is wrapped between 0 and 1 and multiplied with the angleSpacingDeg.
     /// So the min offset is zero and the max offset is angleSpacingDeg!</param>
-    /// <param name="alternatingStriped">The line drawing infos for how to draw the each of the numbered lines.</param>
+    /// <param name="alternatingStriped">The line drawing infos for how to draw each of the lines.
+    /// Each info is used in sequence and wraps around if there are more lines.</param>
     public static void DrawStripedRing(Vector2 center, float innerRadius, float outerRadius, float angleSpacingDeg, float minAngleDeg, float maxAngleDeg,
         float angleOffset, params LineDrawingInfo[] alternatingStriped)
     {
@@ -333,3 +335,4 @@ public static partial class StripedDrawing
     }
 
 }
+
