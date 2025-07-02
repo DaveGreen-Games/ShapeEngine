@@ -54,12 +54,12 @@ public readonly partial struct Triangle
     /// </summary>
     /// <param name="p">The point to find the closest point to.</param>
     /// <param name="disSquared">When this method returns, contains the squared distance to the closest point.</param>
-    /// <returns>A collision point containing the closest point and its surface normal.</returns>
+    /// <returns>A intersection point containing the closest point and its surface normal.</returns>
     /// <remarks>
     /// This method checks all three edges of the triangle and returns the closest point with its corresponding
     /// surface normal. The normal points outward from the triangle's surface at the closest point.
     /// </remarks>
-    public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared)
+    public IntersectionPoint GetClosestPoint(Vector2 p, out float disSquared)
     {
         var min = Segment.GetClosestPointSegmentPoint(A, B, p, out disSquared);
         var normal = B - A;
@@ -89,12 +89,12 @@ public readonly partial struct Triangle
     /// <param name="p">The point to find the closest point to.</param>
     /// <param name="disSquared">When this method returns, contains the squared distance to the closest point.</param>
     /// <param name="index">When this method returns, contains the index of the edge containing the closest point (0=A-B, 1=B-C, 2=C-A).</param>
-    /// <returns>A collision point containing the closest point and its surface normal.</returns>
+    /// <returns>A intersection point containing the closest point and its surface normal.</returns>
     /// <remarks>
     /// This method extends the basic closest point functionality by also providing the index of the edge
     /// that contains the closest point, which is useful for edge-specific operations and analysis.
     /// </remarks>
-    public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared, out int index)
+    public IntersectionPoint GetClosestPoint(Vector2 p, out float disSquared, out int index)
     {
         var min = Segment.GetClosestPointSegmentPoint(A, B, p, out disSquared);
         var normal = B - A;
@@ -840,7 +840,7 @@ public readonly partial struct Triangle
     /// This method is useful when you need to know which specific edge of the triangle is closest to a point,
     /// along with the exact closest point on that edge and its surface normal.
     /// </remarks>
-    public (Segment segment, CollisionPoint segmentPoint) GetClosestSegment(Vector2 p, out float disSquared)
+    public (Segment segment, IntersectionPoint segmentPoint) GetClosestSegment(Vector2 p, out float disSquared)
     {
         var closestSegment = SegmentAToB;
         var closestResult = closestSegment.GetClosestPoint(p, out disSquared);

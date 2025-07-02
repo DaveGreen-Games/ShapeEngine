@@ -360,11 +360,11 @@ public abstract class Collider : Shape
     /// </summary>
     /// <param name="p">The point in world space to test against.</param>
     /// <param name="disSquared">Outputs the squared distance from the point to the closest point on the collider. Returns -1 if not applicable.</param>
-    /// <returns>A <see cref="CollisionPoint"/> representing the closest point on the collider.</returns>
+    /// <returns>A <see cref="IntersectionPoint"/> representing the closest point on the collider.</returns>
     /// <remarks>
     /// The squared distance is often more efficient for comparisons than the actual distance.
     /// </remarks>
-    public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared)
+    public IntersectionPoint GetClosestPoint(Vector2 p, out float disSquared)
     {
         disSquared = -1;
         switch (GetShapeType())
@@ -1304,11 +1304,11 @@ public abstract class Collider : Shape
     /// Returns the intersection points between this collider and another <see cref="CollisionObject"/>.
     /// </summary>
     /// <param name="other">The other collision object.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(CollisionObject other)
+    /// <returns>A <see cref="IntersectionPoints"/> collection, or null if no intersection.</returns>
+    public IntersectionPoints? Intersect(CollisionObject other)
     {
         if (!Enabled || !other.Enabled || !other.HasColliders) return null;
-        CollisionPoints? result = null;
+        IntersectionPoints? result = null;
         foreach (var otherCol in other.Colliders)
         {
             var points = Intersect(otherCol);
@@ -1323,8 +1323,8 @@ public abstract class Collider : Shape
     /// Returns the intersection points between this collider and another collider.
     /// </summary>
     /// <param name="other">The other collider.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Collider other)
+    /// <returns>A <see cref="IntersectionPoints"/> collection, or null if no intersection.</returns>
+    public IntersectionPoints? Intersect(Collider other)
     {
         if (!Enabled || !other.Enabled) return null;
 
@@ -1347,8 +1347,8 @@ public abstract class Collider : Shape
     /// Returns the intersection points between this collider and the given shape.
     /// </summary>
     /// <param name="other">The other shape.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(IShape other)
+    /// <returns>A <see cref="IntersectionPoints"/> collection, or null if no intersection.</returns>
+    public IntersectionPoints? Intersect(IShape other)
     {
         if (!Enabled) return null;
 
@@ -1372,8 +1372,8 @@ public abstract class Collider : Shape
     /// Returns the intersection points between this collider and the given <see cref="Ray"/>.
     /// </summary>
     /// <param name="ray">The ray to check for intersection.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Ray ray)
+    /// <returns>A <see cref="IntersectionPoints"/> collection, or null if no intersection.</returns>
+    public IntersectionPoints? Intersect(Ray ray)
     {
         if (!Enabled) return null;
 
@@ -1414,8 +1414,8 @@ public abstract class Collider : Shape
     /// Returns the intersection points between this collider and the given <see cref="Line"/>.
     /// </summary>
     /// <param name="line">The ray to check for intersection.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Line line)
+    /// <returns>A <see cref="IntersectionPoints"/> collection, or null if no intersection.</returns>
+    public IntersectionPoints? Intersect(Line line)
     {
         if (!Enabled) return null;
 
@@ -1456,8 +1456,8 @@ public abstract class Collider : Shape
     /// Returns the intersection points between this collider and the given <see cref="Segment"/>.
     /// </summary>
     /// <param name="segment">The ray to check for intersection.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Segment segment)
+    /// <returns>A <see cref="IntersectionPoints"/> collection, or null if no intersection.</returns>
+    public IntersectionPoints? Intersect(Segment segment)
     {
         if (!Enabled) return null;
 
@@ -1498,8 +1498,8 @@ public abstract class Collider : Shape
     /// Returns the intersection points between this collider and the given <see cref="Triangle"/>.
     /// </summary>
     /// <param name="triangle">The ray to check for intersection.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Triangle triangle)
+    /// <returns>A <see cref="IntersectionPoints"/> collection, or null if no intersection.</returns>
+    public IntersectionPoints? Intersect(Triangle triangle)
     {
         if (!Enabled) return null;
 
@@ -1540,8 +1540,8 @@ public abstract class Collider : Shape
     /// Returns the intersection points between this collider and the given <see cref="Circle"/>.
     /// </summary>
     /// <param name="circle">The ray to check for intersection.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Circle circle)
+    /// <returns>A <see cref="IntersectionPoints"/> collection, or null if no intersection.</returns>
+    public IntersectionPoints? Intersect(Circle circle)
     {
         if (!Enabled) return null;
 
@@ -1582,8 +1582,8 @@ public abstract class Collider : Shape
     /// Returns the intersection points between this collider and the given <see cref="Rect"/>.
     /// </summary>
     /// <param name="rect">The ray to check for intersection.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Rect rect)
+    /// <returns>A <see cref="IntersectionPoints"/> collection, or null if no intersection.</returns>
+    public IntersectionPoints? Intersect(Rect rect)
     {
         if (!Enabled) return null;
 
@@ -1624,8 +1624,8 @@ public abstract class Collider : Shape
     /// Returns the intersection points between this collider and the given <see cref="Quad"/>.
     /// </summary>
     /// <param name="quad">The ray to check for intersection.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Quad quad)
+    /// <returns>A <see cref="IntersectionPoints"/> collection, or null if no intersection.</returns>
+    public IntersectionPoints? Intersect(Quad quad)
     {
         if (!Enabled) return null;
 
@@ -1666,8 +1666,8 @@ public abstract class Collider : Shape
     /// Returns the intersection points between this collider and the given <see cref="Polygon"/>.
     /// </summary>
     /// <param name="poly">The ray to check for intersection.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Polygon poly)
+    /// <returns>A <see cref="IntersectionPoints"/> collection, or null if no intersection.</returns>
+    public IntersectionPoints? Intersect(Polygon poly)
     {
         if (!Enabled) return null;
 
@@ -1708,8 +1708,8 @@ public abstract class Collider : Shape
     /// Returns the intersection points between this collider and the given <see cref="Polyline"/>.
     /// </summary>
     /// <param name="polyLine">The ray to check for intersection.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Polyline polyLine)
+    /// <returns>A <see cref="IntersectionPoints"/> collection, or null if no intersection.</returns>
+    public IntersectionPoints? Intersect(Polyline polyLine)
     {
         if (!Enabled) return null;
 
@@ -1753,12 +1753,12 @@ public abstract class Collider : Shape
     /// Adds the intersection points to the provided <paramref name="points"/> collection.
     /// </summary>
     /// <param name="other">The other collision object to check for intersection.</param>
-    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to store the intersection points.</param>
+    /// <param name="points">A reference to a <see cref="IntersectionPoints"/> collection to store the intersection points.</param>
     /// <param name="returnAfterFirstValid">
     /// If true, the method returns after finding the first valid intersection; otherwise, it continues to find all intersections.
     /// </param>
     /// <returns>The number of intersection points found and added to <paramref name="points"/>.</returns>
-    public int Intersect(CollisionObject other, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int Intersect(CollisionObject other, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (!Enabled || !other.Enabled || !other.HasColliders) return 0;
         var count = 0;
@@ -1774,12 +1774,12 @@ public abstract class Collider : Shape
     /// Adds the intersection points to the provided <paramref name="points"/> collection.
     /// </summary>
     /// <param name="other">The other collider to check for intersection.</param>
-    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to store the intersection points.</param>
+    /// <param name="points">A reference to a <see cref="IntersectionPoints"/> collection to store the intersection points.</param>
     /// <param name="returnAfterFirstValid">
     /// If true, the method returns after finding the first valid intersection; otherwise, it continues to find all intersections.
     /// </param>
     /// <returns>The number of intersection points found and added to <paramref name="points"/>.</returns>
-    public int Intersect(Collider other, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int Intersect(Collider other, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (!Enabled || !other.Enabled) return 0;
 
@@ -1804,12 +1804,12 @@ public abstract class Collider : Shape
     /// Adds the intersection points to the provided <paramref name="points"/> collection.
     /// </summary>
     /// <param name="other">The other shape to check for intersection.</param>
-    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to store the intersection points.</param>
+    /// <param name="points">A reference to a <see cref="IntersectionPoints"/> collection to store the intersection points.</param>
     /// <param name="returnAfterFirstValid">
     /// If true, the method returns after finding the first valid intersection; otherwise, it continues to find all intersections.
     /// </param>
     /// <returns>The number of intersection points found and added to <paramref name="points"/>.</returns>
-    public int Intersect(IShape other, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int Intersect(IShape other, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (!Enabled) return 0;
 
@@ -1834,12 +1834,12 @@ public abstract class Collider : Shape
     /// Adds the intersection points to the provided <paramref name="points"/> collection.
     /// </summary>
     /// <param name="ray">The ray to check for intersection.</param>
-    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to store the intersection points.</param>
+    /// <param name="points">A reference to a <see cref="IntersectionPoints"/> collection to store the intersection points.</param>
     /// <param name="returnAfterFirstValid">
     /// If true, the method returns after finding the first valid intersection; otherwise, it continues to find all intersections.
     /// </param>
     /// <returns>The number of intersection points found and added to <paramref name="points"/>.</returns>
-    public int Intersect(Ray ray, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int Intersect(Ray ray, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (!Enabled) return 0;
 
@@ -1881,12 +1881,12 @@ public abstract class Collider : Shape
     /// Adds the intersection points to the provided <paramref name="points"/> collection.
     /// </summary>
     /// <param name="line">The ray to check for intersection.</param>
-    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to store the intersection points.</param>
+    /// <param name="points">A reference to a <see cref="IntersectionPoints"/> collection to store the intersection points.</param>
     /// <param name="returnAfterFirstValid">
     /// If true, the method returns after finding the first valid intersection; otherwise, it continues to find all intersections.
     /// </param>
     /// <returns>The number of intersection points found and added to <paramref name="points"/>.</returns>
-    public int Intersect(Line line, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int Intersect(Line line, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (!Enabled) return 0;
 
@@ -1928,12 +1928,12 @@ public abstract class Collider : Shape
     /// Adds the intersection points to the provided <paramref name="points"/> collection.
     /// </summary>
     /// <param name="segment">The ray to check for intersection.</param>
-    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to store the intersection points.</param>
+    /// <param name="points">A reference to a <see cref="IntersectionPoints"/> collection to store the intersection points.</param>
     /// <param name="returnAfterFirstValid">
     /// If true, the method returns after finding the first valid intersection; otherwise, it continues to find all intersections.
     /// </param>
     /// <returns>The number of intersection points found and added to <paramref name="points"/>.</returns>
-    public int Intersect(Segment segment, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int Intersect(Segment segment, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (!Enabled) return 0;
 
@@ -1975,12 +1975,12 @@ public abstract class Collider : Shape
     /// Adds the intersection points to the provided <paramref name="points"/> collection.
     /// </summary>
     /// <param name="triangle">The ray to check for intersection.</param>
-    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to store the intersection points.</param>
+    /// <param name="points">A reference to a <see cref="IntersectionPoints"/> collection to store the intersection points.</param>
     /// <param name="returnAfterFirstValid">
     /// If true, the method returns after finding the first valid intersection; otherwise, it continues to find all intersections.
     /// </param>
     /// <returns>The number of intersection points found and added to <paramref name="points"/>.</returns>
-    public int Intersect(Triangle triangle, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int Intersect(Triangle triangle, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (!Enabled) return 0;
 
@@ -2022,12 +2022,12 @@ public abstract class Collider : Shape
     /// Adds the intersection points to the provided <paramref name="points"/> collection.
     /// </summary>
     /// <param name="circle">The ray to check for intersection.</param>
-    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to store the intersection points.</param>
+    /// <param name="points">A reference to a <see cref="IntersectionPoints"/> collection to store the intersection points.</param>
     /// <param name="returnAfterFirstValid">
     /// If true, the method returns after finding the first valid intersection; otherwise, it continues to find all intersections.
     /// </param>
     /// <returns>The number of intersection points found and added to <paramref name="points"/>.</returns>
-    public int Intersect(Circle circle, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int Intersect(Circle circle, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (!Enabled) return 0;
 
@@ -2069,12 +2069,12 @@ public abstract class Collider : Shape
     /// Adds the intersection points to the provided <paramref name="points"/> collection.
     /// </summary>
     /// <param name="rect">The ray to check for intersection.</param>
-    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to store the intersection points.</param>
+    /// <param name="points">A reference to a <see cref="IntersectionPoints"/> collection to store the intersection points.</param>
     /// <param name="returnAfterFirstValid">
     /// If true, the method returns after finding the first valid intersection; otherwise, it continues to find all intersections.
     /// </param>
     /// <returns>The number of intersection points found and added to <paramref name="points"/>.</returns>
-    public int Intersect(Rect rect, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int Intersect(Rect rect, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (!Enabled) return 0;
 
@@ -2116,12 +2116,12 @@ public abstract class Collider : Shape
     /// Adds the intersection points to the provided <paramref name="points"/> collection.
     /// </summary>
     /// <param name="quad">The ray to check for intersection.</param>
-    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to store the intersection points.</param>
+    /// <param name="points">A reference to a <see cref="IntersectionPoints"/> collection to store the intersection points.</param>
     /// <param name="returnAfterFirstValid">
     /// If true, the method returns after finding the first valid intersection; otherwise, it continues to find all intersections.
     /// </param>
     /// <returns>The number of intersection points found and added to <paramref name="points"/>.</returns>
-    public int Intersect(Quad quad, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int Intersect(Quad quad, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (!Enabled) return 0;
 
@@ -2163,12 +2163,12 @@ public abstract class Collider : Shape
     /// Adds the intersection points to the provided <paramref name="points"/> collection.
     /// </summary>
     /// <param name="poly">The ray to check for intersection.</param>
-    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to store the intersection points.</param>
+    /// <param name="points">A reference to a <see cref="IntersectionPoints"/> collection to store the intersection points.</param>
     /// <param name="returnAfterFirstValid">
     /// If true, the method returns after finding the first valid intersection; otherwise, it continues to find all intersections.
     /// </param>
     /// <returns>The number of intersection points found and added to <paramref name="points"/>.</returns>
-    public int Intersect(Polygon poly, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int Intersect(Polygon poly, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (!Enabled) return 0;
 
@@ -2210,12 +2210,12 @@ public abstract class Collider : Shape
     /// Adds the intersection points to the provided <paramref name="points"/> collection.
     /// </summary>
     /// <param name="polyLine">The ray to check for intersection.</param>
-    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to store the intersection points.</param>
+    /// <param name="points">A reference to a <see cref="IntersectionPoints"/> collection to store the intersection points.</param>
     /// <param name="returnAfterFirstValid">
     /// If true, the method returns after finding the first valid intersection; otherwise, it continues to find all intersections.
     /// </param>
     /// <returns>The number of intersection points found and added to <paramref name="points"/>.</returns>
-    public int Intersect(Polyline polyLine, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int Intersect(Polyline polyLine, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (!Enabled) return 0;
 

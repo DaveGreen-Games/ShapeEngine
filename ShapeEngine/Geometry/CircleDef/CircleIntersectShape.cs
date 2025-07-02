@@ -18,12 +18,12 @@ public readonly partial struct Circle
     /// </summary>
     /// <param name="collider">The collider to test for intersection. Can represent various shapes.</param>
     /// <returns>
-    /// A <see cref="CollisionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
+    /// A <see cref="IntersectionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
     /// </returns>
     /// <remarks>
     /// The method dispatches to the appropriate shape-specific intersection logic based on the collider's type.
     /// </remarks>
-    public CollisionPoints? Intersect(Collider collider)
+    public IntersectionPoints? Intersect(Collider collider)
     {
         if (!collider.Enabled) return null;
 
@@ -66,14 +66,14 @@ public readonly partial struct Circle
     /// </summary>
     /// <param name="c">The other circle to test for intersection.</param>
     /// <returns>
-    /// A <see cref="CollisionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
+    /// A <see cref="IntersectionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
     /// </returns>
-    public CollisionPoints? IntersectShape(Circle c)
+    public IntersectionPoints? IntersectShape(Circle c)
     {
         var result = IntersectCircleCircle(Center, Radius, c.Center, c.Radius);
         if (result.a.Valid || result.b.Valid)
         {
-            var points = new CollisionPoints();
+            var points = new IntersectionPoints();
             if (result.a.Valid) points.Add(result.a);
             if (result.b.Valid) points.Add(result.b);
             return points;
@@ -87,14 +87,14 @@ public readonly partial struct Circle
     /// </summary>
     /// <param name="r">The ray to test for intersection.</param>
     /// <returns>
-    /// A <see cref="CollisionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
+    /// A <see cref="IntersectionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
     /// </returns>
-    public CollisionPoints? IntersectShape(Ray r)
+    public IntersectionPoints? IntersectShape(Ray r)
     {
         var result = IntersectCircleRay(Center, Radius, r.Point, r.Direction, r.Normal);
         if (result.a.Valid || result.b.Valid)
         {
-            var points = new CollisionPoints();
+            var points = new IntersectionPoints();
             if (result.a.Valid) points.Add(result.a);
             if (result.b.Valid) points.Add(result.b);
             return points;
@@ -108,15 +108,15 @@ public readonly partial struct Circle
     /// </summary>
     /// <param name="l">The line to test for intersection.</param>
     /// <returns>
-    /// A <see cref="CollisionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
+    /// A <see cref="IntersectionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
     /// </returns>
-    public CollisionPoints? IntersectShape(Line l)
+    public IntersectionPoints? IntersectShape(Line l)
     {
         var result = IntersectCircleLine(Center, Radius, l.Point, l.Direction, l.Normal);
 
         if (result.a.Valid || result.b.Valid)
         {
-            var points = new CollisionPoints();
+            var points = new IntersectionPoints();
             if (result.a.Valid) points.Add(result.a);
             if (result.b.Valid) points.Add(result.b);
             return points;
@@ -130,14 +130,14 @@ public readonly partial struct Circle
     /// </summary>
     /// <param name="s">The segment to test for intersection.</param>
     /// <returns>
-    /// A <see cref="CollisionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
+    /// A <see cref="IntersectionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
     /// </returns>
-    public CollisionPoints? IntersectShape(Segment s)
+    public IntersectionPoints? IntersectShape(Segment s)
     {
         var result = IntersectCircleSegment(Center, Radius, s.Start, s.End);
         if (result.a.Valid || result.b.Valid)
         {
-            var points = new CollisionPoints();
+            var points = new IntersectionPoints();
             if (result.a.Valid) points.Add(result.a);
             if (result.b.Valid) points.Add(result.b);
             return points;
@@ -151,11 +151,11 @@ public readonly partial struct Circle
     /// </summary>
     /// <param name="t">The triangle to test for intersection.</param>
     /// <returns>
-    /// A <see cref="CollisionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
+    /// A <see cref="IntersectionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
     /// </returns>
-    public CollisionPoints? IntersectShape(Triangle t)
+    public IntersectionPoints? IntersectShape(Triangle t)
     {
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         var result = IntersectCircleSegment(Center, Radius, t.A, t.B);
         if (result.a.Valid || result.b.Valid)
         {
@@ -188,11 +188,11 @@ public readonly partial struct Circle
     /// </summary>
     /// <param name="r">The rectangle to test for intersection.</param>
     /// <returns>
-    /// A <see cref="CollisionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
+    /// A <see cref="IntersectionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
     /// </returns>
-    public CollisionPoints? IntersectShape(Rect r)
+    public IntersectionPoints? IntersectShape(Rect r)
     {
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         var a = r.TopLeft;
         var b = r.BottomLeft;
 
@@ -238,11 +238,11 @@ public readonly partial struct Circle
     /// </summary>
     /// <param name="q">The quad to test for intersection.</param>
     /// <returns>
-    /// A <see cref="CollisionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
+    /// A <see cref="IntersectionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
     /// </returns>
-    public CollisionPoints? IntersectShape(Quad q)
+    public IntersectionPoints? IntersectShape(Quad q)
     {
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
 
         var result = IntersectCircleSegment(Center, Radius, q.A, q.B);
         if (result.a.Valid || result.b.Valid)
@@ -284,13 +284,13 @@ public readonly partial struct Circle
     /// </summary>
     /// <param name="p">The polygon to test for intersection.</param>
     /// <returns>
-    /// A <see cref="CollisionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
+    /// A <see cref="IntersectionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
     /// </returns>
-    public CollisionPoints? IntersectShape(Polygon p)
+    public IntersectionPoints? IntersectShape(Polygon p)
     {
         if (p.Count < 3) return null;
 
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
 
         for (var i = 0; i < p.Count; i++)
         {
@@ -311,13 +311,13 @@ public readonly partial struct Circle
     /// </summary>
     /// <param name="pl">The polyline to test for intersection.</param>
     /// <returns>
-    /// A <see cref="CollisionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
+    /// A <see cref="IntersectionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
     /// </returns>
-    public CollisionPoints? IntersectShape(Polyline pl)
+    public IntersectionPoints? IntersectShape(Polyline pl)
     {
         if (pl.Count < 2) return null;
 
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
 
         for (var i = 0; i < pl.Count - 1; i++)
         {
@@ -338,11 +338,11 @@ public readonly partial struct Circle
     /// </summary>
     /// <param name="shape">The collection of segments to test for intersection.</param>
     /// <returns>
-    /// A <see cref="CollisionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
+    /// A <see cref="IntersectionPoints"/> object containing the intersection points, or <c>null</c> if there is no intersection.
     /// </returns>
-    public CollisionPoints? IntersectShape(Segments shape)
+    public IntersectionPoints? IntersectShape(Segments shape)
     {
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         foreach (var seg in shape)
         {
             var result = IntersectCircleSegment(Center, Radius, seg.Start, seg.End);
@@ -358,7 +358,7 @@ public readonly partial struct Circle
     }
 
     /// <summary>
-    /// Calculates and adds intersection points between this circle and a collider to the provided <see cref="CollisionPoints"/> collection.
+    /// Calculates and adds intersection points between this circle and a collider to the provided <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="collider">The collider to test for intersection.</param>
     /// <param name="points">The collection to which valid intersection points will be added.</param>
@@ -366,7 +366,7 @@ public readonly partial struct Circle
     /// If <c>true</c>, the method returns after the first valid intersection is found.
     /// </param>
     /// <returns>The number of intersection points found and added.</returns> 
-    public int Intersect(Collider collider, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int Intersect(Collider collider, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (!collider.Enabled) return 0;
 
@@ -405,7 +405,7 @@ public readonly partial struct Circle
     }
 
     /// <summary>
-    /// Calculates and adds intersection points between this circle and a ray to the provided <see cref="CollisionPoints"/> collection.
+    /// Calculates and adds intersection points between this circle and a ray to the provided <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="r">The ray to test for intersection.</param>
     /// <param name="points">The collection to which valid intersection points will be added.</param>
@@ -413,7 +413,7 @@ public readonly partial struct Circle
     /// If <c>true</c>, the method returns after the first valid intersection is found.
     /// </param>
     /// <returns>The number of intersection points found and added.</returns>
-    public int IntersectShape(Ray r, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Ray r, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var result = IntersectCircleRay(Center, Radius, r.Point, r.Direction, r.Normal);
         if (result.a.Valid && result.b.Valid)
@@ -445,7 +445,7 @@ public readonly partial struct Circle
     }
 
     /// <summary>
-    /// Calculates and adds intersection points between this circle and a line to the provided <see cref="CollisionPoints"/> collection.
+    /// Calculates and adds intersection points between this circle and a line to the provided <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="l">The line to test for intersection.</param>
     /// <param name="points">The collection to which valid intersection points will be added.</param>
@@ -453,7 +453,7 @@ public readonly partial struct Circle
     /// If <c>true</c>, the method returns after the first valid intersection is found.
     /// </param>
     /// <returns>The number of intersection points found and added.</returns>
-    public int IntersectShape(Line l, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Line l, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var result = IntersectCircleLine(Center, Radius, l.Point, l.Direction, l.Normal);
         if (result.a.Valid && result.b.Valid)
@@ -485,7 +485,7 @@ public readonly partial struct Circle
     }
 
     /// <summary>
-    /// Calculates and adds intersection points between this circle and a segment to the provided <see cref="CollisionPoints"/> collection.
+    /// Calculates and adds intersection points between this circle and a segment to the provided <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="s">The segment to test for intersection.</param>
     /// <param name="points">The collection to which valid intersection points will be added.</param>
@@ -493,7 +493,7 @@ public readonly partial struct Circle
     /// If <c>true</c>, the method returns after the first valid intersection is found.
     /// </param>
     /// <returns>The number of intersection points found and added.</returns>
-    public int IntersectShape(Segment s, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Segment s, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var result = IntersectCircleSegment(Center, Radius, s.Start, s.End);
         if (result.a.Valid && result.b.Valid)
@@ -525,7 +525,7 @@ public readonly partial struct Circle
     }
 
     /// <summary>
-    /// Calculates and adds intersection points between this circle and another circle to the provided <see cref="CollisionPoints"/> collection.
+    /// Calculates and adds intersection points between this circle and another circle to the provided <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="c">The other circle to test for intersection.</param>
     /// <param name="points">The collection to which valid intersection points will be added.</param>
@@ -533,7 +533,7 @@ public readonly partial struct Circle
     /// If <c>true</c>, the method returns after the first valid intersection is found.
     /// </param>
     /// <returns>The number of intersection points found and added.</returns>
-    public int IntersectShape(Circle c, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Circle c, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var result = IntersectCircleCircle(Center, Radius, c.Center, c.Radius);
         if (result.a.Valid && result.b.Valid)
@@ -565,7 +565,7 @@ public readonly partial struct Circle
     }
 
     /// <summary>
-    /// Calculates and adds intersection points between this circle and a triangle to the provided <see cref="CollisionPoints"/> collection.
+    /// Calculates and adds intersection points between this circle and a triangle to the provided <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="t">The triangle to test for intersection.</param>
     /// <param name="points">The collection to which valid intersection points will be added.</param>
@@ -573,7 +573,7 @@ public readonly partial struct Circle
     /// If <c>true</c>, the method returns after the first valid intersection is found.
     /// </param>
     /// <returns>The number of intersection points found and added.</returns>
-    public int IntersectShape(Triangle t, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Triangle t, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var result = IntersectCircleSegment(Center, Radius, t.A, t.B);
         var count = 0;
@@ -624,7 +624,7 @@ public readonly partial struct Circle
     }
 
     /// <summary>
-    /// Calculates and adds intersection points between this circle and a quadrilateral to the provided <see cref="CollisionPoints"/> collection.
+    /// Calculates and adds intersection points between this circle and a quadrilateral to the provided <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="q">The quad to test for intersection.</param>
     /// <param name="points">The collection to which valid intersection points will be added.</param>
@@ -632,7 +632,7 @@ public readonly partial struct Circle
     /// If <c>true</c>, the method returns after the first valid intersection is found.
     /// </param>
     /// <returns>The number of intersection points found and added.</returns>
-    public int IntersectShape(Quad q, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Quad q, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
 
@@ -699,7 +699,7 @@ public readonly partial struct Circle
     }
 
     /// <summary>
-    /// Calculates and adds intersection points between this circle and a rectangle to the provided <see cref="CollisionPoints"/> collection.
+    /// Calculates and adds intersection points between this circle and a rectangle to the provided <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="r">The rectangle to test for intersection.</param>
     /// <param name="points">The collection to which valid intersection points will be added.</param>
@@ -707,7 +707,7 @@ public readonly partial struct Circle
     /// If <c>true</c>, the method returns after the first valid intersection is found.
     /// </param>
     /// <returns>The number of intersection points found and added.</returns>
-    public int IntersectShape(Rect r, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Rect r, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
         var a = r.TopLeft;
@@ -778,7 +778,7 @@ public readonly partial struct Circle
     }
 
     /// <summary>
-    /// Calculates and adds intersection points between this circle and a polygon to the provided <see cref="CollisionPoints"/> collection.
+    /// Calculates and adds intersection points between this circle and a polygon to the provided <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="p">The polygon to test for intersection.</param>
     /// <param name="points">The collection to which valid intersection points will be added.</param>
@@ -786,7 +786,7 @@ public readonly partial struct Circle
     /// If <c>true</c>, the method returns after the first valid intersection is found.
     /// </param>
     /// <returns>The number of intersection points found and added.</returns>
-    public int IntersectShape(Polygon p, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Polygon p, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (p.Count < 3) return 0;
 
@@ -814,7 +814,7 @@ public readonly partial struct Circle
     }
 
     /// <summary>
-    /// Calculates and adds intersection points between this circle and a polyline to the provided <see cref="CollisionPoints"/> collection.
+    /// Calculates and adds intersection points between this circle and a polyline to the provided <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="pl">The polyline to test for intersection.</param>
     /// <param name="points">The collection to which valid intersection points will be added.</param>
@@ -822,7 +822,7 @@ public readonly partial struct Circle
     /// If <c>true</c>, the method returns after the first valid intersection is found.
     /// </param>
     /// <returns>The number of intersection points found and added.</returns>
-    public int IntersectShape(Polyline pl, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Polyline pl, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (pl.Count < 2) return 0;
 
@@ -850,7 +850,7 @@ public readonly partial struct Circle
     }
 
     /// <summary>
-    /// Calculates and adds intersection points between this circle and a collection of segments to the provided <see cref="CollisionPoints"/> collection.
+    /// Calculates and adds intersection points between this circle and a collection of segments to the provided <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="shape">The collection of segments to test for intersection.</param>
     /// <param name="points">The collection to which valid intersection points will be added.</param>
@@ -858,7 +858,7 @@ public readonly partial struct Circle
     /// If <c>true</c>, the method returns after the first valid intersection is found.
     /// </param>
     /// <returns>The number of intersection points found and added.</returns>
-    public int IntersectShape(Segments shape, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Segments shape, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
         foreach (var seg in shape)

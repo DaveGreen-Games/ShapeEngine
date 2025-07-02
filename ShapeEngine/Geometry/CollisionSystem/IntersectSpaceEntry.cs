@@ -6,10 +6,10 @@ namespace ShapeEngine.Geometry.CollisionSystem;
 /// Represents an entry in the intersection space, containing collision points and information about the other collider involved in the intersection.
 /// </summary>
 /// <remarks>
-/// This class extends <see cref="CollisionPoints"/> and is used to store collision points resulting from intersection tests with another collider.
+/// This class extends <see cref="IntersectionPoints"/> and is used to store collision points resulting from intersection tests with another collider.
 /// It also stores the velocity of the other collider at the time of intersection.
 /// </remarks>
-public class IntersectSpaceEntry : CollisionPoints
+public class IntersectSpaceEntry : IntersectionPoints
 {
     /// <summary>
     /// The collider that this entry represents as the other collider in the intersection.
@@ -35,7 +35,7 @@ public class IntersectSpaceEntry : CollisionPoints
     /// </summary>
     /// <param name="otherCollider">The other collider involved in the intersection.</param>
     /// <param name="points">The list of collision points to add to this entry.</param>
-    public IntersectSpaceEntry(Collider otherCollider, List<CollisionPoint> points) : base(points.Count)
+    public IntersectSpaceEntry(Collider otherCollider, List<IntersectionPoint> points) : base(points.Count)
     {
         OtherCollider = otherCollider;
         OtherVel = otherCollider.Velocity;
@@ -46,18 +46,18 @@ public class IntersectSpaceEntry : CollisionPoints
     #region Pointing Towards
     
     /// <summary>
-    /// Gets the collision point whose normal is most closely facing towards the position of the other collider.
+    /// Gets the intersection point whose normal is most closely facing towards the position of the other collider.
     /// </summary>
-    /// <returns>The <see cref="CollisionPoint"/> facing towards the other collider's position.</returns>
-    public CollisionPoint GetCollisionPointFacingTowardsPoint()
+    /// <returns>The <see cref="IntersectionPoint"/> facing towards the other collider's position.</returns>
+    public IntersectionPoint GetCollisionPointFacingTowardsPoint()
     {
         return GetCollisionPointFacingTowardsPoint(OtherCollider.CurTransform.Position);
     }
     /// <summary>
-    /// Gets the collision point whose normal is most closely facing towards the velocity direction of the other collider.
+    /// Gets the intersection point whose normal is most closely facing towards the velocity direction of the other collider.
     /// </summary>
-    /// <returns>The <see cref="CollisionPoint"/> facing towards the other collider's velocity direction.</returns>
-    public CollisionPoint GetCollisionPointFacingTowardsDir()
+    /// <returns>The <see cref="IntersectionPoint"/> facing towards the other collider's velocity direction.</returns>
+    public IntersectionPoint GetCollisionPointFacingTowardsDir()
     {
         return GetCollisionPointFacingTowardsDir(OtherVel);
     }
@@ -69,29 +69,29 @@ public class IntersectSpaceEntry : CollisionPoints
     /// <summary>
     /// Validates the collision points in this entry using the other collider's velocity as the reference direction and its position as the reference point.
     /// </summary>
-    /// <param name="combined">An averaged <see cref="CollisionPoint"/> of all remaining valid collision points.</param>
-    /// <param name="closest">The <see cref="CollisionPoint"/> that is closest to the reference point.</param>
+    /// <param name="combined">An averaged <see cref="IntersectionPoint"/> of all remaining valid collision points.</param>
+    /// <param name="closest">The <see cref="IntersectionPoint"/> that is closest to the reference point.</param>
     /// <returns>Returns <c>true</c> if there are valid points remaining after validation; otherwise, <c>false</c>.</returns>
     /// <remarks>
     /// Removes:
-    /// - Invalid <see cref="CollisionPoint"/>s
+    /// - Invalid <see cref="IntersectionPoint"/>s
     /// - Points with normals facing in the same direction as the reference direction
-    /// - Points with normals facing in the opposite direction as the reference point (from <see cref="CollisionPoint"/> towards the reference point)
+    /// - Points with normals facing in the opposite direction as the reference point (from <see cref="IntersectionPoint"/> towards the reference point)
     /// </remarks>
-    public bool ValidateByOther( out CollisionPoint combined, out CollisionPoint closest)
+    public bool ValidateByOther( out IntersectionPoint combined, out IntersectionPoint closest)
     {
         return Validate(OtherVel, OtherCollider.CurTransform.Position, out combined, out closest);
     }
     /// <summary>
     /// Validates the collision points in this entry using the other collider's velocity as the reference direction and its position as the reference point.
     /// </summary>
-    /// <param name="validationResult">The result containing the combined <see cref="CollisionPoint"/>, the closest and furthest points from the reference point, and the point with normal facing towards the reference point.</param>
+    /// <param name="validationResult">The result containing the combined <see cref="IntersectionPoint"/>, the closest and furthest points from the reference point, and the point with normal facing towards the reference point.</param>
     /// <returns>Returns <c>true</c> if there are valid points remaining after validation; otherwise, <c>false</c>.</returns>
     /// <remarks>
     /// Removes:
-    /// - Invalid <see cref="CollisionPoint"/>s
+    /// - Invalid <see cref="IntersectionPoint"/>s
     /// - Points with normals facing in the same direction as the reference direction
-    /// - Points with normals facing in the opposite direction as the reference point (from <see cref="CollisionPoint"/> towards the reference point)
+    /// - Points with normals facing in the opposite direction as the reference point (from <see cref="IntersectionPoint"/> towards the reference point)
     /// </remarks>
     public bool ValidateByOther(out CollisionPointValidationResult validationResult)
     {

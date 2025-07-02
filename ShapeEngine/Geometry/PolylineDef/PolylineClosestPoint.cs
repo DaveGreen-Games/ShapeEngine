@@ -58,14 +58,14 @@ public partial class Polyline
     /// </summary>
     /// <param name="p">The point to which the closest point on the polyline is sought.</param>
     /// <param name="disSquared">Outputs the squared distance from <paramref name="p"/> to the closest point on the polyline.</param>
-    /// <returns>A <see cref="CollisionPoint"/> representing the closest point on the polyline.
+    /// <returns>A <see cref="IntersectionPoint"/> representing the closest point on the polyline.
     /// Returns a default value if the polyline has fewer than two points.</returns>
     /// <remarks>
     /// This method iterates through each segment of the polyline
     /// and finds the closest point on each segment to <paramref name="p"/>.
-    /// The closest of these is returned as a <see cref="CollisionPoint"/>.
+    /// The closest of these is returned as a <see cref="IntersectionPoint"/>.
     /// </remarks>
-    public new CollisionPoint GetClosestPoint(Vector2 p, out float disSquared)
+    public new IntersectionPoint GetClosestPoint(Vector2 p, out float disSquared)
     {
         disSquared = -1;
         if (Count < 2) return new();
@@ -99,14 +99,14 @@ public partial class Polyline
     /// <param name="p">The point to which the closest point on the polyline is sought.</param>
     /// <param name="disSquared">Outputs the squared distance from <paramref name="p"/> to the closest point on the polyline.</param>
     /// <param name="index">Outputs the index of the segment containing the closest point.</param>
-    /// <returns>A <see cref="CollisionPoint"/> representing the closest point on the polyline.
+    /// <returns>A <see cref="IntersectionPoint"/> representing the closest point on the polyline.
     /// Returns a default value if the polyline has fewer than two points.</returns>
     /// <remarks>
     /// This method iterates through each segment of the polyline
     /// and finds the closest point on each segment to <paramref name="p"/>.
-    /// The closest of these is returned as a <see cref="CollisionPoint"/>, and the segment index is provided.
+    /// The closest of these is returned as a <see cref="IntersectionPoint"/>, and the segment index is provided.
     /// </remarks>
-    public new CollisionPoint GetClosestPoint(Vector2 p, out float disSquared, out int index)
+    public new IntersectionPoint GetClosestPoint(Vector2 p, out float disSquared, out int index)
     {
         disSquared = -1;
         index = -1;
@@ -768,13 +768,13 @@ public partial class Polyline
     /// </summary>
     /// <param name="p">The point to which the closest segment is sought.</param>
     /// <param name="disSquared">Outputs the squared distance from <paramref name="p"/> to the closest point on the segment.</param>
-    /// <returns>A tuple containing the closest <see cref="Segment"/> and the closest point on that segment as a <see cref="CollisionPoint"/>.</returns>
+    /// <returns>A tuple containing the closest <see cref="Segment"/> and the closest point on that segment as a <see cref="IntersectionPoint"/>.</returns>
     /// <remarks>
     /// This method iterates through each segment of the polyline
     /// and finds the closest point on each segment to <paramref name="p"/>.
     /// The closest of these segments and points is returned.
     /// </remarks>
-    public (Segment segment, CollisionPoint segmentPoint) GetClosestSegment(Vector2 p, out float disSquared)
+    public (Segment segment, IntersectionPoint segmentPoint) GetClosestSegment(Vector2 p, out float disSquared)
     {
         disSquared = -1;
         if (Count < 2) return (new(), new());

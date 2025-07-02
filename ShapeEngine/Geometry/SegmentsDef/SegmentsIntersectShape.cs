@@ -13,10 +13,10 @@ public partial class Segments
     /// </summary>
     /// <param name="r">The ray to intersect with.</param>
     /// <returns>A list of collision points if there are any intersections, otherwise null.</returns>
-    public CollisionPoints? IntersectShape(Ray r)
+    public IntersectionPoints? IntersectShape(Ray r)
     {
         if (Count <= 0) return null;
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
 
         foreach (var seg in this)
         {
@@ -36,10 +36,10 @@ public partial class Segments
     /// </summary>
     /// <param name="l">The line to intersect with.</param>
     /// <returns>A list of collision points if there are any intersections, otherwise null.</returns>
-    public CollisionPoints? IntersectShape(Line l)
+    public IntersectionPoints? IntersectShape(Line l)
     {
         if (Count <= 0) return null;
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
 
         foreach (var seg in this)
         {
@@ -59,10 +59,10 @@ public partial class Segments
     /// </summary>
     /// <param name="s">The segment to intersect with.</param>
     /// <returns>A list of collision points if there are any intersections, otherwise null.</returns>
-    public CollisionPoints? IntersectShape(Segment s)
+    public IntersectionPoints? IntersectShape(Segment s)
     {
         if (Count <= 0) return null;
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
 
         foreach (var seg in this)
         {
@@ -82,10 +82,10 @@ public partial class Segments
     /// </summary>
     /// <param name="c">The circle to intersect with.</param>
     /// <returns>A list of collision points if there are any intersections, otherwise null.</returns>
-    public CollisionPoints? IntersectShape(Circle c)
+    public IntersectionPoints? IntersectShape(Circle c)
     {
         if (Count <= 0) return null;
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         foreach (var seg in this)
         {
             var result = Segment.IntersectSegmentCircle(seg.Start, seg.End, c.Center, c.Radius);
@@ -105,10 +105,10 @@ public partial class Segments
     /// </summary>
     /// <param name="shape">The segments to intersect with.</param>
     /// <returns>A list of collision points if there are any intersections, otherwise null.</returns>
-    public CollisionPoints? IntersectShape(Segments shape)
+    public IntersectionPoints? IntersectShape(Segments shape)
     {
         if (Count <= 0) return null;
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
 
         foreach (var seg in this)
         {
@@ -133,7 +133,7 @@ public partial class Segments
     /// <param name="points">The list of collision points to add to.</param>
     /// <param name="returnAfterFirstValid">If true, the method will return after the first valid intersection is found.</param>
     /// <returns>The number of intersections found.</returns>
-    public int IntersectShape(Ray r, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Ray r, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count <= 0) return 0;
         var count = 0;
@@ -159,7 +159,7 @@ public partial class Segments
     /// <param name="points">The list of collision points to add to.</param>
     /// <param name="returnAfterFirstValid">If true, the method will return after the first valid intersection is found.</param>
     /// <returns>The number of intersections found.</returns>
-    public int IntersectShape(Line l, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Line l, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count <= 0) return 0;
         var count = 0;
@@ -185,7 +185,7 @@ public partial class Segments
     /// <param name="points">The list of collision points to add to.</param>
     /// <param name="returnAfterFirstValid">If true, the method will return after the first valid intersection is found.</param>
     /// <returns>The number of intersections found.</returns>
-    public int IntersectShape(Segment s, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Segment s, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count <= 0) return 0;
         var count = 0;
@@ -211,7 +211,7 @@ public partial class Segments
     /// <param name="points">The list of collision points to add to.</param>
     /// <param name="returnAfterFirstValid">If true, the method will return after the first valid intersection is found.</param>
     /// <returns>The number of intersections found.</returns>
-    public int IntersectShape(Circle c, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Circle c, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count <= 0) return 0;
         var count = 0;
@@ -243,7 +243,7 @@ public partial class Segments
     /// <param name="points">The list of collision points to add to.</param>
     /// <param name="returnAfterFirstValid">If true, the method will return after the first valid intersection is found.</param>
     /// <returns>The number of intersections found.</returns>
-    public int IntersectShape(Segments shape, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Segments shape, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count <= 0) return 0;
         var count = 0;

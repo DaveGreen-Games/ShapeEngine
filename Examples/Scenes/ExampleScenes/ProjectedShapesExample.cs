@@ -26,11 +26,11 @@ public class ProjectedShapesExample : ExampleScene
         public abstract ShapeType GetShapeType();
         public abstract ClosestDistance GetClosestDistanceTo(Shape shape);
         public abstract bool OverlapWith(Shape shape);
-        public abstract CollisionPoints? IntersectWith(Shape shape);
+        public abstract IntersectionPoints? IntersectWith(Shape shape);
 
         public abstract ClosestDistance GetClosestDistanceTo(Polygon polygon);
         public abstract bool OverlapWith(Polygon polygon);
-        public abstract CollisionPoints? IntersectWith(Polygon polygon);
+        public abstract IntersectionPoints? IntersectWith(Polygon polygon);
         
         public abstract Polygon? GetProjectionPoints(Vector2 projectionPosition);
         
@@ -81,7 +81,7 @@ public class ProjectedShapesExample : ExampleScene
     //     {
     //         return false;
     //     }
-    //     public override CollisionPoints? IntersectWith(Shape shape)
+    //     public override IntersectionPoints? IntersectWith(Shape shape)
     //     {
     //         return null;
     //     }
@@ -146,7 +146,7 @@ public class ProjectedShapesExample : ExampleScene
             if (shape is PolylineShape polylineShape) return Segment.OverlapShape(polylineShape.Polyline);
             return new();
         }
-        public override CollisionPoints? IntersectWith(Shape shape)
+        public override IntersectionPoints? IntersectWith(Shape shape)
         {
             // if (shape is PointShape pointShape) return null;
             if (shape is SegmentShape segmentShape) return Segment.IntersectShape(segmentShape.Segment);
@@ -163,7 +163,7 @@ public class ProjectedShapesExample : ExampleScene
 
         public override bool OverlapWith(Polygon polygon) => Segment.OverlapShape(polygon);
 
-        public override CollisionPoints? IntersectWith(Polygon polygon) => polygon.IntersectShape(Segment);
+        public override IntersectionPoints? IntersectWith(Polygon polygon) => polygon.IntersectShape(Segment);
         
         public override Polygon? GetProjectionPoints(Vector2 projectionPosition)
         {
@@ -217,7 +217,7 @@ public class ProjectedShapesExample : ExampleScene
             if (shape is PolylineShape polylineShape) return Circle.OverlapShape(polylineShape.Polyline);
             return new();
         }
-        public override CollisionPoints? IntersectWith(Shape shape)
+        public override IntersectionPoints? IntersectWith(Shape shape)
         {
             // if (shape is PointShape pointShape) return null;
             if (shape is SegmentShape segmentShape) return Circle.IntersectShape(segmentShape.Segment);
@@ -234,7 +234,7 @@ public class ProjectedShapesExample : ExampleScene
 
         public override bool OverlapWith(Polygon polygon) => Circle.OverlapShape(polygon);
 
-        public override CollisionPoints? IntersectWith(Polygon polygon) => polygon.IntersectShape(Circle);
+        public override IntersectionPoints? IntersectWith(Polygon polygon) => polygon.IntersectShape(Circle);
         
         public override Polygon? GetProjectionPoints(Vector2 projectionPosition)
         {
@@ -298,7 +298,7 @@ public class ProjectedShapesExample : ExampleScene
             if (shape is PolylineShape polylineShape) return Triangle.OverlapShape(polylineShape.Polyline);
             return new();
         }
-        public override CollisionPoints? IntersectWith(Shape shape)
+        public override IntersectionPoints? IntersectWith(Shape shape)
         {
             // if (shape is PointShape pointShape) return null;
             if (shape is SegmentShape segmentShape) return Triangle.IntersectShape(segmentShape.Segment);
@@ -315,7 +315,7 @@ public class ProjectedShapesExample : ExampleScene
 
         public override bool OverlapWith(Polygon polygon) => Triangle.OverlapShape(polygon);
 
-        public override CollisionPoints? IntersectWith(Polygon polygon) => polygon.IntersectShape(Triangle);
+        public override IntersectionPoints? IntersectWith(Polygon polygon) => polygon.IntersectShape(Triangle);
         public override Polygon? GetProjectionPoints(Vector2 projectionPosition)
         {
             var v = projectionPosition - position;
@@ -370,7 +370,7 @@ public class ProjectedShapesExample : ExampleScene
             if (shape is PolylineShape polylineShape) return Quad.OverlapShape(polylineShape.Polyline);
             return new();
         }
-        public override CollisionPoints? IntersectWith(Shape shape)
+        public override IntersectionPoints? IntersectWith(Shape shape)
         {
             // if (shape is PointShape pointShape) return null;
             if (shape is SegmentShape segmentShape) return Quad.IntersectShape(segmentShape.Segment);
@@ -387,7 +387,7 @@ public class ProjectedShapesExample : ExampleScene
 
         public override bool OverlapWith(Polygon polygon) => Quad.OverlapShape(polygon);
 
-        public override CollisionPoints? IntersectWith(Polygon polygon) => polygon.IntersectShape(Quad);
+        public override IntersectionPoints? IntersectWith(Polygon polygon) => polygon.IntersectShape(Quad);
         
         public override Polygon? GetProjectionPoints(Vector2 projectionPosition)
         {
@@ -443,7 +443,7 @@ public class ProjectedShapesExample : ExampleScene
             if (shape is PolylineShape polylineShape) return Rect.OverlapShape(polylineShape.Polyline);
             return new();
         }
-        public override CollisionPoints? IntersectWith(Shape shape)
+        public override IntersectionPoints? IntersectWith(Shape shape)
         {
             // if (shape is PointShape pointShape) return null;
             if (shape is SegmentShape segmentShape) return Rect.IntersectShape(segmentShape.Segment);
@@ -459,7 +459,7 @@ public class ProjectedShapesExample : ExampleScene
 
         public override bool OverlapWith(Polygon polygon) => Rect.OverlapShape(polygon);
 
-        public override CollisionPoints? IntersectWith(Polygon polygon) => polygon.IntersectShape(Rect);
+        public override IntersectionPoints? IntersectWith(Polygon polygon) => polygon.IntersectShape(Rect);
         public override Polygon? GetProjectionPoints(Vector2 projectionPosition)
         {
             var v = projectionPosition - Rect.Center;
@@ -517,7 +517,7 @@ public class ProjectedShapesExample : ExampleScene
             if (shape is PolylineShape polylineShape) return Polygon.OverlapShape(polylineShape.Polyline);
             return new();
         }
-        public override CollisionPoints? IntersectWith(Shape shape)
+        public override IntersectionPoints? IntersectWith(Shape shape)
         {
             // if (shape is PointShape pointShape) return null;
             if (shape is SegmentShape segmentShape) return Polygon.IntersectShape(segmentShape.Segment);
@@ -533,7 +533,7 @@ public class ProjectedShapesExample : ExampleScene
 
         public override bool OverlapWith(Polygon polygon) => Polygon.OverlapShape(polygon);
 
-        public override CollisionPoints? IntersectWith(Polygon polygon) => polygon.IntersectShape(Polygon);
+        public override IntersectionPoints? IntersectWith(Polygon polygon) => polygon.IntersectShape(Polygon);
         public override Polygon? GetProjectionPoints(Vector2 projectionPosition)
         {
             var v = projectionPosition - position;
@@ -598,7 +598,7 @@ public class ProjectedShapesExample : ExampleScene
             if (shape is PolylineShape polylineShape) return Polyline.OverlapShape(polylineShape.Polyline);
             return new();
         }
-        public override CollisionPoints? IntersectWith(Shape shape)
+        public override IntersectionPoints? IntersectWith(Shape shape)
         {
             // if (shape is PointShape pointShape) return null;
             if (shape is SegmentShape segmentShape) return Polyline.IntersectShape(segmentShape.Segment);
@@ -614,7 +614,7 @@ public class ProjectedShapesExample : ExampleScene
 
         public override bool OverlapWith(Polygon polygon) => Polyline.OverlapShape(polygon);
 
-        public override CollisionPoints? IntersectWith(Polygon polygon) => polygon.IntersectShape(Polyline);
+        public override IntersectionPoints? IntersectWith(Polygon polygon) => polygon.IntersectShape(Polyline);
         public override Polygon? GetProjectionPoints(Vector2 projectionPosition)
         {
             var v = projectionPosition -position;

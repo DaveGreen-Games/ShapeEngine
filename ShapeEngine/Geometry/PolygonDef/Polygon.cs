@@ -39,7 +39,7 @@ namespace ShapeEngine.Geometry.PolygonDef;
 /// </remarks>
 public partial class Polygon : Points, IEquatable<Polygon>
 {
-    private static CollisionPoints collisionPointsReference = new(4);
+    private static IntersectionPoints intersectionPointsReference = new(4);
     /// <summary>
     /// Creates a deep copy of the current polygon.
     /// </summary>

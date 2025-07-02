@@ -82,7 +82,7 @@ internal class Ship : CollisionObject, ICameraFollowTarget
     protected override void Collision(CollisionInformation info)
     {
         if(info.Count <= 0 || info.Other is not AsteroidObstacle a) return;
-        if(!info.Validate(out CollisionPoint combined)) return;
+        if(!info.Validate(out IntersectionPoint combined)) return;
             
         a.Cut(GetCutShape());
             

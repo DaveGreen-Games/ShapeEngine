@@ -228,14 +228,14 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void Collision(CollisionInformation info)
         {
-            // CollisionPoint p = new();
+            // IntersectionPoint p = new();
             // if (info.Count > 0)
             // {
             //     foreach (var collision in info)
             //     {
             //         if(!collision.FirstContact) continue;
             //         if(collision.Points == null) continue;
-            //         if (collision.Validate(out CollisionPoint combined))
+            //         if (collision.Validate(out IntersectionPoint combined))
             //         {
             //             if (combined.Valid) p = p.Combine(combined);
             //         }
@@ -244,7 +244,7 @@ namespace Examples.Scenes.ExampleScenes
 
             if(!info.FirstContact) return;
             
-            var p = info.FilteredCollisionPoint;
+            var p = info.FilteredIntersectionPoint;
             if (p.Valid)
             {
                 Velocity = Velocity.Reflect(p.Normal);
@@ -325,7 +325,7 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void Collision(CollisionInformation info)
         {
-            CollisionPoint p = new();
+            IntersectionPoint p = new();
             if (info.Count > 0)
             {
                 foreach (var collision in info)
@@ -484,7 +484,7 @@ namespace Examples.Scenes.ExampleScenes
         
         protected override void Collision(CollisionInformation info)
         {
-            CollisionPoint p = new();
+            IntersectionPoint p = new();
             if (info.Count > 0)
             {
                 foreach (var collision in info)
@@ -575,14 +575,14 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void Collision(CollisionInformation info)
         {
-            // CollisionPoint p = new();
+            // IntersectionPoint p = new();
             // if (info.Count > 0)
             // {
             //     foreach (var collision in info)
             //     {
             //         if(!collision.FirstContact) continue;
             //         if(collision.Points == null) continue;
-            //         if (collision.Validate(out CollisionPoint combined))
+            //         if (collision.Validate(out IntersectionPoint combined))
             //         {
             //             // var cp = collision.Points.GetAverageCollisionPoint();
             //             if (combined.Valid) p = p.Combine(combined);
@@ -591,7 +591,7 @@ namespace Examples.Scenes.ExampleScenes
             // }
 
             if(!info.FirstContact) return;
-            var p = info.FilteredCollisionPoint;
+            var p = info.FilteredIntersectionPoint;
             if (p.Valid)
             {
                 Velocity = Velocity.Reflect(p.Normal);

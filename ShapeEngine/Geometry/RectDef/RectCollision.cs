@@ -104,8 +104,8 @@ public readonly partial struct Rect
     {
         var pos = boundingCircle.Center;
         var radius = boundingCircle.Radius;
-        CollisionPoint horizontal;
-        CollisionPoint vertical;
+        IntersectionPoint horizontal;
+        IntersectionPoint vertical;
         if (pos.X + radius > Right)
         {
             pos.X = Right - radius;
@@ -157,8 +157,8 @@ public readonly partial struct Rect
         var halfSize = boundingBox.Size * 0.5f;
 
         var newPos = pos;
-        CollisionPoint horizontal;
-        CollisionPoint vertical;
+        IntersectionPoint horizontal;
+        IntersectionPoint vertical;
         if (pos.X + halfSize.Width > Right)
         {
             newPos.X = Right - halfSize.Width;

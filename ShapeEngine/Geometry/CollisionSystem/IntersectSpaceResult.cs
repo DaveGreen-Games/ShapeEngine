@@ -150,20 +150,20 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
     /// <summary>
     /// Validates all registers using the specified reference direction, removing invalid or misaligned collision points.
     /// </summary>
-    /// <param name="referenceDirection">The direction to check collision point normals against.</param>
-    /// <param name="combined">The averaged collision point of all remaining valid points.</param>
+    /// <param name="referenceDirection">The direction to check intersection point normals against.</param>
+    /// <param name="combined">The averaged intersection point of all remaining valid points.</param>
     /// <returns>True if there are valid points remaining; otherwise, false.</returns>
     /// <remarks>
     /// Removes:
-    /// - Invalid <see cref="CollisionPoint"/>s
+    /// - Invalid <see cref="IntersectionPoint"/>s
     /// - Points with normals facing in the same direction as the reference direction
     /// - Points with normals facing in the opposite direction as the reference point
     /// </remarks>
-    public bool Validate(Vector2 referenceDirection, out CollisionPoint combined)
+    public bool Validate(Vector2 referenceDirection, out IntersectionPoint combined)
     {
         if (Count <= 0)
         {
-            combined = new CollisionPoint();
+            combined = new IntersectionPoint();
             return false;
         }
         
@@ -173,7 +173,7 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
         for (int i = Count - 1; i >= 0; i--)
         {
             var register = this[i];
-            var valid = register.Validate(referenceDirection, out CollisionPoint combinedEntryPoint);
+            var valid = register.Validate(referenceDirection, out IntersectionPoint combinedEntryPoint);
             if (!valid)
             {
                 RemoveAt(i);
@@ -186,31 +186,31 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
 
         if (Count <= 0)
         {
-            combined = new CollisionPoint();
+            combined = new IntersectionPoint();
             return false;
         }
-        combined = new CollisionPoint(avgPoint / count, avgNormal.Normalize());
+        combined = new IntersectionPoint(avgPoint / count, avgNormal.Normalize());
         
         return true;
     }
     /// <summary>
     /// Validates all registers using the specified reference direction and point, removing invalid or misaligned collision points.
     /// </summary>
-    /// <param name="referenceDirection">The direction to check collision point normals against.</param>
+    /// <param name="referenceDirection">The direction to check intersection point normals against.</param>
     /// <param name="referencePoint">The point to check direction from.</param>
-    /// <param name="combined">The averaged collision point of all remaining valid points.</param>
+    /// <param name="combined">The averaged intersection point of all remaining valid points.</param>
     /// <returns>True if there are valid points remaining; otherwise, false.</returns>
     /// <remarks>
     /// Removes:
-    /// - Invalid <see cref="CollisionPoint"/>s
+    /// - Invalid <see cref="IntersectionPoint"/>s
     /// - Points with normals facing in the same direction as the reference direction
     /// - Points with normals facing in the opposite direction as the reference point
     /// </remarks>
-    public bool Validate(Vector2 referenceDirection, Vector2 referencePoint, out CollisionPoint combined)
+    public bool Validate(Vector2 referenceDirection, Vector2 referencePoint, out IntersectionPoint combined)
     {
         if (Count <= 0)
         {
-            combined = new CollisionPoint();
+            combined = new IntersectionPoint();
             return false;
         }
         
@@ -220,7 +220,7 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
         for (int i = Count - 1; i >= 0; i--)
         {
             var register = this[i];
-            var valid = register.Validate(referenceDirection, referencePoint, out CollisionPoint combinedEntryPoint);
+            var valid = register.Validate(referenceDirection, referencePoint, out IntersectionPoint combinedEntryPoint);
             if (!valid)
             {
                 RemoveAt(i);
@@ -233,39 +233,39 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
         
         if (Count <= 0)
         {
-            combined = new CollisionPoint();
+            combined = new IntersectionPoint();
             return false;
         }
         
-        combined = new CollisionPoint(avgPoint / count, avgNormal.Normalize());
+        combined = new IntersectionPoint(avgPoint / count, avgNormal.Normalize());
         return true;
     }
     /// <summary>
     /// Validates all registers and provides both the averaged and closest collision points.
     /// </summary>
-    /// <param name="referenceDirection">The direction to check collision point normals against.</param>
+    /// <param name="referenceDirection">The direction to check intersection point normals against.</param>
     /// <param name="referencePoint">The point to check direction from.</param>
-    /// <param name="combined">The averaged collision point of all remaining valid points.</param>
-    /// <param name="closest">The closest collision point to the reference point.</param>
+    /// <param name="combined">The averaged intersection point of all remaining valid points.</param>
+    /// <param name="closest">The closest intersection point to the reference point.</param>
     /// <returns>True if there are valid points remaining; otherwise, false.</returns>
     /// <remarks>
     /// Removes:
-    /// - Invalid <see cref="CollisionPoint"/>s
+    /// - Invalid <see cref="IntersectionPoint"/>s
     /// - Points with normals facing in the same direction as the reference direction
     /// - Points with normals facing in the opposite direction as the reference point
     /// </remarks>
-    public bool Validate(Vector2 referenceDirection, Vector2 referencePoint, out CollisionPoint combined, out CollisionPoint closest)
+    public bool Validate(Vector2 referenceDirection, Vector2 referencePoint, out IntersectionPoint combined, out IntersectionPoint closest)
     {
         if (Count <= 0)
         {
-            combined = new CollisionPoint();
-            closest = new CollisionPoint();
+            combined = new IntersectionPoint();
+            closest = new IntersectionPoint();
             return false;
         }
         
         var avgPoint = new Vector2();
         var avgNormal = new Vector2();
-        closest  = new CollisionPoint();
+        closest  = new IntersectionPoint();
         var closestDistanceSquared = -1f;
         var count = 0;
         for (int i = Count - 1; i >= 0; i--)
@@ -291,38 +291,38 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
         
         if (Count <= 0)
         {
-            combined = new CollisionPoint();
+            combined = new IntersectionPoint();
             return false;
         }
         
-        combined = new CollisionPoint(avgPoint / count, avgNormal.Normalize());
+        combined = new IntersectionPoint(avgPoint / count, avgNormal.Normalize());
         return true;
     }
     /// <summary>
     /// Validates all registers using only a reference point, providing the averaged and closest collision points.
     /// </summary>
     /// <param name="referencePoint">The point to check direction from.</param>
-    /// <param name="combined">The averaged collision point of all remaining valid points.</param>
-    /// <param name="closest">The closest collision point to the reference point.</param>
+    /// <param name="combined">The averaged intersection point of all remaining valid points.</param>
+    /// <param name="closest">The closest intersection point to the reference point.</param>
     /// <returns>True if there are valid points remaining; otherwise, false.</returns>
     /// <remarks>
     /// Removes:
-    /// - Invalid <see cref="CollisionPoint"/>s
+    /// - Invalid <see cref="IntersectionPoint"/>s
     /// - Points with normals facing in the same direction as the reference direction
     /// - Points with normals facing in the opposite direction as the reference point
     /// </remarks>
-    public bool Validate(Vector2 referencePoint, out CollisionPoint combined, out CollisionPoint closest)
+    public bool Validate(Vector2 referencePoint, out IntersectionPoint combined, out IntersectionPoint closest)
     {
         if (Count <= 0)
         {
-            combined = new CollisionPoint();
-            closest = new CollisionPoint();
+            combined = new IntersectionPoint();
+            closest = new IntersectionPoint();
             return false;
         }
         
         var avgPoint = new Vector2();
         var avgNormal = new Vector2();
-        closest  = new CollisionPoint();
+        closest  = new IntersectionPoint();
         var closestDistanceSquared = -1f;
         var count = 0;
         for (int i = Count - 1; i >= 0; i--)
@@ -347,11 +347,11 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
         
         if (Count <= 0)
         {
-            combined = new CollisionPoint();
+            combined = new IntersectionPoint();
             return false;
         }
         
-        combined = new CollisionPoint(avgPoint / count, avgNormal.Normalize());
+        combined = new IntersectionPoint(avgPoint / count, avgNormal.Normalize());
         return true;
     }
     /// <summary>
@@ -362,7 +362,7 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
     /// <returns>True if there are valid points remaining; otherwise, false.</returns>
     /// <remarks>
     /// Removes:
-    /// - Invalid <see cref="CollisionPoint"/>s
+    /// - Invalid <see cref="IntersectionPoint"/>s
     /// - Points with normals facing in the same direction as the reference direction
     /// - Points with normals facing in the opposite direction as the reference point
     /// </remarks>
@@ -376,9 +376,9 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
         
         var avgPoint = new Vector2();
         var avgNormal = new Vector2();
-        var closest  = new CollisionPoint();
-        var furthest  = new CollisionPoint();
-        var pointing  = new CollisionPoint();
+        var closest  = new IntersectionPoint();
+        var furthest  = new IntersectionPoint();
+        var pointing  = new IntersectionPoint();
         var maxDot = -1f;
         var closestDistanceSquared = -1f;
         var furthestDistanceSquared = -1f;
@@ -423,20 +423,20 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
             return false;
         }
         
-        var combined = new CollisionPoint(avgPoint / count, avgNormal.Normalize());
+        var combined = new IntersectionPoint(avgPoint / count, avgNormal.Normalize());
         validationResult = new CollisionPointValidationResult(combined, closest, furthest, pointing);
         return true;
     }
     /// <summary>
     /// Validates all registers using both a reference direction and point, providing a detailed validation result.
     /// </summary>
-    /// <param name="referenceDirection">The direction to check collision point normals against.</param>
+    /// <param name="referenceDirection">The direction to check intersection point normals against.</param>
     /// <param name="referencePoint">The point to check direction from.</param>
     /// <param name="validationResult">The result containing combined, closest, furthest, and pointing-towards collision points.</param>
     /// <returns>True if there are valid points remaining; otherwise, false.</returns>
     /// <remarks>
     /// Removes:
-    /// - Invalid <see cref="CollisionPoint"/>s
+    /// - Invalid <see cref="IntersectionPoint"/>s
     /// - Points with normals facing in the same direction as the reference direction
     /// - Points with normals facing in the opposite direction as the reference point
     /// </remarks>
@@ -450,9 +450,9 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
         
         var avgPoint = new Vector2();
         var avgNormal = new Vector2();
-        var closest  = new CollisionPoint();
-        var furthest  = new CollisionPoint();
-        var pointing  = new CollisionPoint();
+        var closest  = new IntersectionPoint();
+        var furthest  = new IntersectionPoint();
+        var pointing  = new IntersectionPoint();
         var maxDot = -1f;
         var closestDistanceSquared = -1f;
         var furthestDistanceSquared = -1f;
@@ -496,7 +496,7 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
             return false;
         }
         
-        var combined = new CollisionPoint(avgPoint / count, avgNormal.Normalize());
+        var combined = new IntersectionPoint(avgPoint / count, avgNormal.Normalize());
         validationResult = new CollisionPointValidationResult(combined, closest, furthest, pointing);
         return true;
     }
@@ -773,23 +773,23 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
     
     #region Closest/Furthest Collision Points
     /// <summary>
-    /// Gets the collision point in all registers that is closest to the origin.
+    /// Gets the intersection point in all registers that is closest to the origin.
     /// </summary>
-    /// <param name="closestDistanceSquared">The squared distance to the closest collision point.</param>
-    /// <returns>The closest <see cref="CollisionPoint"/> or a default value if none exist.</returns>
-    public CollisionPoint GetClosestCollisionPoint(out float closestDistanceSquared)
+    /// <param name="closestDistanceSquared">The squared distance to the closest intersection point.</param>
+    /// <returns>The closest <see cref="IntersectionPoint"/> or a default value if none exist.</returns>
+    public IntersectionPoint GetClosestCollisionPoint(out float closestDistanceSquared)
     {
         closestDistanceSquared = -1;
         if (Count <= 0) return new();
         return GetClosestCollisionPoint(Origin, out closestDistanceSquared);
     }
     /// <summary>
-    /// Gets the collision point in all registers that is closest to the specified position.
+    /// Gets the intersection point in all registers that is closest to the specified position.
     /// </summary>
     /// <param name="position">The point to compare distances from.</param>
-    /// <param name="closestDistanceSquared">The squared distance to the closest collision point.</param>
-    /// <returns>The closest <see cref="CollisionPoint"/> or a default value if none exist.</returns>
-    public CollisionPoint GetClosestCollisionPoint(Vector2 position, out float closestDistanceSquared)
+    /// <param name="closestDistanceSquared">The squared distance to the closest intersection point.</param>
+    /// <returns>The closest <see cref="IntersectionPoint"/> or a default value if none exist.</returns>
+    public IntersectionPoint GetClosestCollisionPoint(Vector2 position, out float closestDistanceSquared)
     {
         closestDistanceSquared = -1;
         if (Count <= 0) return new();
@@ -812,23 +812,23 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
         return closestPoint;
     }
     /// <summary>
-    /// Gets the collision point in all registers that is furthest from the origin.
+    /// Gets the intersection point in all registers that is furthest from the origin.
     /// </summary>
-    /// <param name="furthestDistanceSquared">The squared distance to the furthest collision point.</param>
-    /// <returns>The furthest <see cref="CollisionPoint"/> or a default value if none exist.</returns>
-    public CollisionPoint GetFurthestCollisionPoint(out float furthestDistanceSquared)
+    /// <param name="furthestDistanceSquared">The squared distance to the furthest intersection point.</param>
+    /// <returns>The furthest <see cref="IntersectionPoint"/> or a default value if none exist.</returns>
+    public IntersectionPoint GetFurthestCollisionPoint(out float furthestDistanceSquared)
     {
         furthestDistanceSquared = -1;
         if (Count <= 0) return new();
         return GetFurthestCollisionPoint(Origin, out furthestDistanceSquared);
     }
     /// <summary>
-    /// Gets the collision point in all registers that is furthest from the specified position.
+    /// Gets the intersection point in all registers that is furthest from the specified position.
     /// </summary>
     /// <param name="position">The point to compare distances from.</param>
-    /// <param name="furthestDistanceSquared">The squared distance to the furthest collision point.</param>
-    /// <returns>The furthest <see cref="CollisionPoint"/> or a default value if none exist.</returns>
-    public CollisionPoint GetFurthestCollisionPoint(Vector2 position, out float furthestDistanceSquared)
+    /// <param name="furthestDistanceSquared">The squared distance to the furthest intersection point.</param>
+    /// <returns>The furthest <see cref="IntersectionPoint"/> or a default value if none exist.</returns>
+    public IntersectionPoint GetFurthestCollisionPoint(Vector2 position, out float furthestDistanceSquared)
     {
         furthestDistanceSquared = -1;
         if (Count <= 0) return new();
@@ -854,15 +854,15 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
     
     #region Point Towards
     /// <summary>
-    /// Gets the collision point whose normal is most closely facing towards the specified reference point.
+    /// Gets the intersection point whose normal is most closely facing towards the specified reference point.
     /// </summary>
     /// <param name="referencePoint">The point to compare direction against.</param>
-    /// <returns>The <see cref="CollisionPoint"/> facing most towards the reference point, or a default value if none exist.</returns>
-    public CollisionPoint GetCollisionPointFacingTowardsPoint(Vector2 referencePoint)
+    /// <returns>The <see cref="IntersectionPoint"/> facing most towards the reference point, or a default value if none exist.</returns>
+    public IntersectionPoint GetCollisionPointFacingTowardsPoint(Vector2 referencePoint)
     {
      if(Count <= 0) return new();
      if(Count == 1) return this[0].GetCollisionPointFacingTowardsPoint(referencePoint);        
-     var pointing  = new CollisionPoint();
+     var pointing  = new IntersectionPoint();
      var maxDot = -1f;
      for (int i = Count - 1; i >= 0; i--)
      {
@@ -882,15 +882,15 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
      return pointing;
     }
     /// <summary>
-    /// Gets the collision point whose normal is most closely facing towards the specified reference direction.
+    /// Gets the intersection point whose normal is most closely facing towards the specified reference direction.
     /// </summary>
     /// <param name="referenceDirection">The direction to compare against.</param>
-    /// <returns>The <see cref="CollisionPoint"/> facing most towards the reference direction, or a default value if none exist.</returns>
-    public CollisionPoint GetCollisionPointFacingTowardsDir(Vector2 referenceDirection)
+    /// <returns>The <see cref="IntersectionPoint"/> facing most towards the reference direction, or a default value if none exist.</returns>
+    public IntersectionPoint GetCollisionPointFacingTowardsDir(Vector2 referenceDirection)
     {
      if(Count <= 0) return new();
      if(Count == 1) return this[0].GetCollisionPointFacingTowardsDir(referenceDirection);        
-     var pointing  = new CollisionPoint();
+     var pointing  = new IntersectionPoint();
      var maxDot = -1f;
      for (int i = Count - 1; i >= 0; i--)
      {
@@ -909,10 +909,10 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
      return pointing;
     }
     /// <summary>
-    /// Gets the collision point whose normal is most closely facing towards the origin.
+    /// Gets the intersection point whose normal is most closely facing towards the origin.
     /// </summary>
-    /// <returns>The <see cref="CollisionPoint"/> facing most towards the origin.</returns>
-    public CollisionPoint GetCollisionPointFacingTowardsOrigin()
+    /// <returns>The <see cref="IntersectionPoint"/> facing most towards the origin.</returns>
+    public IntersectionPoint GetCollisionPointFacingTowardsOrigin()
     {
      return GetCollisionPointFacingTowardsPoint(Origin);
     }

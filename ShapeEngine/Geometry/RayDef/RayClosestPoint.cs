@@ -20,11 +20,11 @@ public readonly partial struct Ray
     /// </summary>
     /// <param name="point">The point to find the closest point to.</param>
     /// <param name="disSquared">The squared distance from the point to the closest point on the ray.</param>
-    /// <returns>A <see cref="CollisionPoint"/> representing the closest point and its normal.</returns>
+    /// <returns>A <see cref="IntersectionPoint"/> representing the closest point and its normal.</returns>
     /// <remarks>
     /// If the projection of the point onto the ray is behind the ray's origin, the origin is returned as the closest point.
     /// </remarks>
-    public CollisionPoint GetClosestPoint(Vector2 point, out float disSquared)
+    public IntersectionPoint GetClosestPoint(Vector2 point, out float disSquared)
     {
         var toPoint = point - Point;
 

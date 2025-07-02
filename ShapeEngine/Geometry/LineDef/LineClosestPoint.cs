@@ -20,11 +20,11 @@ public readonly partial struct Line
     /// </summary>
     /// <param name="point">The point from which the closest point on the line is sought.</param>
     /// <param name="disSquared">Outputs the squared distance between the closest point on the line and the given point.</param>
-    /// <returns>A <see cref="CollisionPoint"/> representing the closest point on the line and its normal.</returns>
+    /// <returns>A <see cref="IntersectionPoint"/> representing the closest point on the line and its normal.</returns>
     /// <remarks>
     /// The normal is oriented to face the point if it is on the same side as the line's normal, otherwise it is flipped.
     /// </remarks>
-    public CollisionPoint GetClosestPoint(Vector2 point, out float disSquared)
+    public IntersectionPoint GetClosestPoint(Vector2 point, out float disSquared)
     {
         // Normalize the direction vector of the line
         var normalizedLineDirection = Direction.Normalize();

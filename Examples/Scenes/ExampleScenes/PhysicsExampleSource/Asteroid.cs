@@ -168,7 +168,7 @@ public class Asteroid : CollisionObject
             return;
         }
         
-        var cp = info.FilteredCollisionPoint;
+        var cp = info.FilteredIntersectionPoint;
         if (!cp.Valid)
         {
             return;

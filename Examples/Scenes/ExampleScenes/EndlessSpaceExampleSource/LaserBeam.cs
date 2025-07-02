@@ -27,7 +27,7 @@ internal class LaserBeam
     private float damageTimer = 0f;
     private float chargeTimer = 0f;
     private float chargeDuration = 1f;
-    private CollisionPoint hitPoint = new();
+    private IntersectionPoint hitPoint = new();
     private List<LaserBeamParticle> particles = new();
     private float laserBeamWidthVariationFactor = 1f;
     private float laserBeamWidthVariationFactorTimer = 0f;

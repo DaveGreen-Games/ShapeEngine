@@ -57,21 +57,21 @@ public partial class Polygon
         if (rayDirection.X == 0 && rayDirection.Y == 0) return 0;
 
         rayDirection = rayDirection.Normalize();
-        var intersectionPoints = IntersectPolygonRay(this, rayPoint, rayDirection, ref collisionPointsReference);
+        var intersectionPoints = IntersectPolygonRay(this, rayPoint, rayDirection, ref intersectionPointsReference);
         if (intersectionPoints < 2) return 0;
 
         int count = result.Count;
-        collisionPointsReference.SortClosestFirst(rayPoint);
+        intersectionPointsReference.SortClosestFirst(rayPoint);
 
-        for (int i = 0; i < collisionPointsReference.Count - 1; i += 2)
+        for (int i = 0; i < intersectionPointsReference.Count - 1; i += 2)
         {
-            var segmentStart = collisionPointsReference[i].Point;
-            var segmentEnd = collisionPointsReference[i + 1].Point;
+            var segmentStart = intersectionPointsReference[i].Point;
+            var segmentEnd = intersectionPointsReference[i + 1].Point;
             var segment = new Segment(segmentStart, segmentEnd);
             result.Add(segment);
         }
 
-        collisionPointsReference.Clear();
+        intersectionPointsReference.Clear();
         return result.Count - count;
     }
 
