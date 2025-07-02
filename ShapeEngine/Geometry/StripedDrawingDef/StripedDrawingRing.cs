@@ -105,6 +105,7 @@ public static partial class StripedDrawing
     public static void DrawStripedRing(Vector2 center, float innerRadius, float outerRadius, float angleSpacingDeg, float angleOffset,
         params LineDrawingInfo[] alternatingStriped)
     {
+        if (alternatingStriped.Length <= 0) return;
         if (angleSpacingDeg <= 0) return;
         if (outerRadius < 0f) outerRadius = 0f;
         if (innerRadius < 0f) innerRadius = 0f;
@@ -285,6 +286,7 @@ public static partial class StripedDrawing
     public static void DrawStripedRing(Vector2 center, float innerRadius, float outerRadius, float angleSpacingDeg, float minAngleDeg, float maxAngleDeg,
         float angleOffset, params LineDrawingInfo[] alternatingStriped)
     {
+        if (alternatingStriped.Length <= 0) return;
         if (angleSpacingDeg <= 0) return;
         if (outerRadius < 0f) outerRadius = 0f;
         if (innerRadius < 0f) innerRadius = 0f;

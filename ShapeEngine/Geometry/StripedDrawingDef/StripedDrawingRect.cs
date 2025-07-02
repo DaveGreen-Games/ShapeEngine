@@ -107,6 +107,7 @@ public static partial class StripedDrawing
     public static void DrawStriped(this Rect rect, float spacing, float angleDeg, params LineDrawingInfo[] alternatingStriped)
     {
         if (spacing <= 0) return;
+        if (alternatingStriped.Length <= 0) return;
         float maxDimension = (rect.TopLeft - rect.BottomRight).Length();
 
         if (spacing > maxDimension) return;
@@ -232,6 +233,7 @@ public static partial class StripedDrawing
     /// <param name="alternatingStriped">The line drawing infos for drawing each line. Each info is used in sequence and wraps around if there are more lines.</param>
     public static void DrawStriped(this Rect rect, CurveFloat spacingCurve, float angleDeg, params LineDrawingInfo[] alternatingStriped)
     {
+        if (alternatingStriped.Length <= 0) return;
         if (spacingCurve.HasKeys == false) return;
         var center = rect.Center;
         float maxDimension = (rect.TopLeft - rect.BottomRight).Length();

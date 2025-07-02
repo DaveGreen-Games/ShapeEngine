@@ -121,6 +121,7 @@ public static partial class StripedDrawing
     public static void DrawStriped(this Polygon polygon, float spacing, float angleDeg, params LineDrawingInfo[] alternatingStriped)
     {
         if (spacing <= 0) return;
+        if (alternatingStriped.Length <= 0) return;
         var center = polygon.GetCentroid();
 
         polygon.GetFurthestVertex(center, out float disSquared, out int _);
@@ -278,6 +279,7 @@ public static partial class StripedDrawing
     /// <param name="alternatingStriped">The line drawing infos for drawing each line. Each info is used in sequence and wraps around if there are more lines.</param>
     public static void DrawStriped(this Polygon polygon, CurveFloat spacingCurve, float angleDeg, params LineDrawingInfo[] alternatingStriped)
     {
+        if (alternatingStriped.Length <= 0) return;
         if (spacingCurve.HasKeys == false) return;
         var center = polygon.GetCentroid();
         polygon.GetFurthestVertex(center, out float disSquared, out int _);
