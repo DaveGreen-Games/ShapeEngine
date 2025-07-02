@@ -145,8 +145,7 @@ public partial class Triangulation : ShapeList<Triangle>
     /// <summary>
     /// Remove all triangles with an area less than the threshold.
     /// </summary>
-    /// <param name="areaThreshold">The minimum area a triangle must have to remain in the collection.
-    /// If the threshold is smaller or equal to 0, the function returns 0 immediately.</param>
+    /// <param name="areaThreshold">The area threshold. Triangles with an area less than this value will be removed. If the threshold is less than or equal to 0, no triangles are removed.</param>
     /// <returns>The number of triangles removed.</returns>
     /// <remarks>Triangles with area less than <paramref name="areaThreshold"/> are removed from the collection.</remarks>
     public int Remove(float areaThreshold)
@@ -167,10 +166,10 @@ public partial class Triangulation : ShapeList<Triangle>
 
     #region Triangulation
     /// <summary>
-    /// Get a new triangulation with triangles with an area >= areaThreshold.
+    /// Creates a new triangulation containing triangles from the current triangulation that meet the specified area threshold.
     /// </summary>
-    /// <param name="areaThreshold"></param>
-    /// <returns></returns>
+    /// <param name="areaThreshold">The minimum area a triangle must have to be included in the new triangulation.</param>
+    /// <returns>A new <see cref="Triangulation"/> containing triangles with an area greater than or equal to the threshold.</returns>
     public Triangulation Get(float areaThreshold)
     {
         Triangulation newTriangulation = new();
@@ -191,7 +190,7 @@ public partial class Triangulation : ShapeList<Triangle>
     /// <summary>
     /// Subdivide the triangulation until all triangles are smaller than min area.
     /// </summary>
-    /// <param name="minArea">A triangle will always be subdivided if the area is bigger than min area.s</param>
+    /// <param name="minArea">A triangle will always be subdivided if the area is bigger than min area.</param>
     /// <returns></returns>
     public Triangulation Subdivide(float minArea)
     {

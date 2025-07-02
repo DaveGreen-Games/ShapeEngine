@@ -15,10 +15,10 @@ namespace ShapeEngine.Geometry.TriangulationDef;
 public partial class Triangulation
 {
     /// <summary>
-    /// Find if any triangle in this collection overlaps the specified shape.
+    /// Determines if any triangle in this collection overlaps with the specified collider.
     /// </summary>
-    /// <param name="collider"></param>
-    /// <returns>Returns true after the first overlap is found. If no overlap is found, returns false.</returns>
+    /// <param name="collider">The collider to check for overlap.</param>
+    /// <returns><c>true</c> if any triangle overlaps with the collider; otherwise, <c>false</c>.</returns>
     public bool Overlap(Collider collider)
     {
         for (int i = 0; i < Count; i++)
@@ -31,10 +31,10 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Find if any triangle in this collection overlaps the specified shape.
+    /// Determines if any triangle in this collection overlaps the specified line.
     /// </summary>
-    /// <param name="shape"></param>
-    /// <returns>Returns true after the first overlap is found. If no overlap is found, returns false.</returns>
+    /// <param name="shape">The line to check for overlap.</param>
+    /// <returns><c>true</c> if any triangle overlaps with the line; otherwise, <c>false</c>.</returns>
     public bool OverlapShape(Line shape)
     {
         for (int i = 0; i < Count; i++)
@@ -47,10 +47,10 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Find if any triangle in this collection overlaps the specified shape.
+    /// Determines if any triangle in this collection overlaps the specified ray.
     /// </summary>
-    /// <param name="shape"></param>
-    /// <returns>Returns true after the first overlap is found. If no overlap is found, returns false.</returns>
+    /// <param name="shape">The ray to check for overlap.</param>
+    /// <returns><c>true</c> if any triangle overlaps with the ray; otherwise, <c>false</c>.</returns>
     public bool OverlapShape(Ray shape)
     {
         for (int i = 0; i < Count; i++)
@@ -63,10 +63,10 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Find if any triangle in this collection overlaps the specified shape.
+    /// Determines if any triangle in this collection overlaps the specified segment.
     /// </summary>
-    /// <param name="shape"></param>
-    /// <returns>Returns true after the first overlap is found. If no overlap is found, returns false.</returns>
+    /// <param name="shape">The segment to check for overlap.</param>
+    /// <returns><c>true</c> if any triangle overlaps with the segment; otherwise, <c>false</c>.</returns>
     public bool OverlapShape(Segment shape)
     {
         for (int i = 0; i < Count; i++)
@@ -79,10 +79,10 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Find if any triangle in this collection overlaps the specified shape.
+    /// Determines if any triangle in this collection overlaps the specified circle.
     /// </summary>
-    /// <param name="shape"></param>
-    /// <returns>Returns true after the first overlap is found. If no overlap is found, returns false.</returns>
+    /// <param name="shape">The circle to check for overlap.</param>
+    /// <returns><c>true</c> if any triangle overlaps with the circle; otherwise, <c>false</c>.</returns>
     public bool OverlapShape(Circle shape)
     {
         for (int i = 0; i < Count; i++)
@@ -98,7 +98,7 @@ public partial class Triangulation
     /// Determines if any triangle in this collection overlaps the specified triangle shape.
     /// </summary>
     /// <param name="shape">The triangle to check for overlap.</param>
-    /// <returns>Returns true after the first overlap is found. If no overlap is found, returns false.</returns>
+    /// <returns><c>true</c> if any triangle overlaps with the other triangle; otherwise, <c>false</c>.</returns>
     /// <remarks>Returns as soon as an overlapping triangle is found.</remarks>
     public bool OverlapShape(Triangle shape)
     {
@@ -115,7 +115,7 @@ public partial class Triangulation
     /// Determines if any triangle in this collection overlaps the specified rectangle shape.
     /// </summary>
     /// <param name="shape">The rectangle to check for overlap.</param>
-    /// <returns>Returns true after the first overlap is found. If no overlap is found, returns false.</returns>
+    /// <returns><c>true</c> if any triangle overlaps with the rectangle; otherwise, <c>false</c>.</returns>
     /// <remarks>Returns as soon as an overlapping triangle is found.</remarks>
     public bool OverlapShape(Rect shape)
     {
@@ -132,7 +132,7 @@ public partial class Triangulation
     /// Determines if any triangle in this collection overlaps the specified quadrilateral shape.
     /// </summary>
     /// <param name="shape">The quadrilateral to check for overlap.</param>
-    /// <returns>Returns true after the first overlap is found. If no overlap is found, returns false.</returns>
+    /// <returns><c>true</c> if any triangle overlaps with the quadrilateral; otherwise, <c>false</c>.</returns>
     /// <remarks>Returns as soon as an overlapping triangle is found.</remarks>
     public bool OverlapShape(Quad shape)
     {
@@ -149,7 +149,7 @@ public partial class Triangulation
     /// Determines if any triangle in this collection overlaps the specified polygon shape.
     /// </summary>
     /// <param name="shape">The polygon to check for overlap.</param>
-    /// <returns>Returns true after the first overlap is found. If no overlap is found, returns false.</returns>
+    /// <returns><c>true</c> if any triangle overlaps with the polygon; otherwise, <c>false</c>.</returns>
     /// <remarks>Returns as soon as an overlapping triangle is found.</remarks>
     public bool OverlapShape(Polygon shape)
     {
@@ -166,7 +166,7 @@ public partial class Triangulation
     /// Determines if any triangle in this collection overlaps the specified polyline shape.
     /// </summary>
     /// <param name="shape">The polyline to check for overlap.</param>
-    /// <returns>Returns true after the first overlap is found. If no overlap is found, returns false.</returns>
+    /// <returns><c>true</c> if any triangle overlaps with the polyline; otherwise, <c>false</c>.</returns>
     /// <remarks>Returns as soon as an overlapping triangle is found.</remarks>
     public bool OverlapShape(Polyline shape)
     {
@@ -183,7 +183,7 @@ public partial class Triangulation
     /// Determines if any triangle in this collection overlaps the specified segments shape.
     /// </summary>
     /// <param name="shape">The segments to check for overlap.</param>
-    /// <returns>Returns true after the first overlap is found. If no overlap is found, returns false.</returns>
+    /// <returns><c>true</c> if any triangle overlaps with the segments; otherwise, <c>false</c>.</returns>
     /// <remarks>Returns as soon as an overlapping triangle is found.</remarks>
     public bool OverlapShape(Segments shape)
     {
@@ -197,11 +197,11 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Find all triangles in this collection that overlap the specified shape.
+    /// Finds all triangles in this collection that overlap the specified collider.
     /// </summary>
     /// <param name="collider">The collider to check against.</param>
-    /// <param name="triangleIndices">All triangle indices that overlap the specified collider.</param>
-    /// <returns>Return true if at least 1 overlap was found, otherwise return false. Does not return early. All triangle have to be checked.</returns>
+    /// <param name="triangleIndices">A list of indices of the triangles that overlap with the collider.</param>
+    /// <returns><c>true</c> if at least one overlap was found; otherwise, <c>false</c>.</returns>
     public bool Overlap(Collider collider, out List<int>? triangleIndices)
     {
         triangleIndices = null;
@@ -217,11 +217,11 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Find all triangles in this collection that overlap the specified shape.
+    /// Finds all triangles in this collection that overlap the specified line.
     /// </summary>
-    /// <param name="shape">The shape to check against.</param>
-    /// <param name="triangleIndices">All triangle indices that overlap the specified shape.</param>
-    /// <returns>Return true if at least 1 overlap was found, otherwise return false. Does not return early. All triangle have to be checked.</returns>
+    /// <param name="shape">The line to check against.</param>
+    /// <param name="triangleIndices">A list of indices of the triangles that overlap with the line.</param>
+    /// <returns><c>true</c> if at least one overlap was found; otherwise, <c>false</c>.</returns>
     public bool OverlapShape(Line shape, out List<int>? triangleIndices)
     {
         triangleIndices = null;
@@ -237,11 +237,11 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Find all triangles in this collection that overlap the specified shape.
+    /// Finds all triangles in this collection that overlap the specified ray.
     /// </summary>
-    /// <param name="shape">The shape to check against.</param>
-    /// <param name="triangleIndices">All triangle indices that overlap the specified shape.</param>
-    /// <returns>Return true if at least 1 overlap was found, otherwise return false. Does not return early. All triangle have to be checked.</returns>
+    /// <param name="shape">The ray to check against.</param>
+    /// <param name="triangleIndices">A list of indices of the triangles that overlap with the ray.</param>
+    /// <returns><c>true</c> if at least one overlap was found; otherwise, <c>false</c>.</returns>
     public bool OverlapShape(Ray shape, out List<int>? triangleIndices)
     {
         triangleIndices = null;
@@ -257,11 +257,11 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Find all triangles in this collection that overlap the specified shape.
+    /// Finds all triangles in this collection that overlap the specified segment.
     /// </summary>
-    /// <param name="shape">The shape to check against.</param>
-    /// <param name="triangleIndices">All triangle indices that overlap the specified shape.</param>
-    /// <returns>Return true if at least 1 overlap was found, otherwise return false. Does not return early. All triangle have to be checked.</returns>
+    /// <param name="shape">The segment to check against.</param>
+    /// <param name="triangleIndices">A list of indices of the triangles that overlap with the segment.</param>
+    /// <returns><c>true</c> if at least one overlap was found; otherwise, <c>false</c>.</returns>
     public bool OverlapShape(Segment shape, out List<int>? triangleIndices)
     {
         triangleIndices = null;
@@ -277,11 +277,11 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Find all triangles in this collection that overlap the specified shape.
+    /// Finds all triangles in this collection that overlap the specified circle.
     /// </summary>
-    /// <param name="shape">The shape to check against.</param>
-    /// <param name="triangleIndices">All triangle indices that overlap the specified shape.</param>
-    /// <returns>Return true if at least 1 overlap was found, otherwise return false. Does not return early. All triangle have to be checked.</returns>
+    /// <param name="shape">The circle to check against.</param>
+    /// <param name="triangleIndices">A list of indices of the triangles that overlap with the circle.</param>
+    /// <returns><c>true</c> if at least one overlap was found; otherwise, <c>false</c>.</returns>
     public bool OverlapShape(Circle shape, out List<int>? triangleIndices)
     {
         triangleIndices = null;
@@ -297,11 +297,11 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Find all triangles in this collection that overlap the specified shape.
+    /// Finds all triangles in this collection that overlap the specified triangle.
     /// </summary>
-    /// <param name="shape">The shape to check against.</param>
-    /// <param name="triangleIndices">All triangle indices that overlap the specified shape.</param>
-    /// <returns>Return true if at least 1 overlap was found, otherwise return false. Does not return early. All triangle have to be checked.</returns>
+    /// <param name="shape">The triangle to check against.</param>
+    /// <param name="triangleIndices">A list of indices of the triangles that overlap with the other triangle.</param>
+    /// <returns><c>true</c> if at least one overlap was found; otherwise, <c>false</c>.</returns>
     public bool OverlapShape(Triangle shape, out List<int>? triangleIndices)
     {
         triangleIndices = null;
@@ -317,11 +317,11 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Find all triangles in this collection that overlap the specified shape.
+    /// Finds all triangles in this collection that overlap the specified rectangle.
     /// </summary>
-    /// <param name="shape">The shape to check against.</param>
-    /// <param name="triangleIndices">All triangle indices that overlap the specified shape.</param>
-    /// <returns>Return true if at least 1 overlap was found, otherwise return false. Does not return early. All triangle have to be checked.</returns>
+    /// <param name="shape">The rectangle to check against.</param>
+    /// <param name="triangleIndices">A list of indices of the triangles that overlap with the rectangle.</param>
+    /// <returns><c>true</c> if at least one overlap was found; otherwise, <c>false</c>.</returns>
     public bool OverlapShape(Rect shape, out List<int>? triangleIndices)
     {
         triangleIndices = null;
@@ -337,11 +337,11 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Find all triangles in this collection that overlap the specified shape.
+    /// Finds all triangles in this collection that overlap the specified quad.
     /// </summary>
-    /// <param name="shape">The shape to check against.</param>
-    /// <param name="triangleIndices">All triangle indices that overlap the specified shape.</param>
-    /// <returns>Return true if at least 1 overlap was found, otherwise return false. Does not return early. All triangle have to be checked.</returns>
+    /// <param name="shape">The quad to check against.</param>
+    /// <param name="triangleIndices">A list of indices of the triangles that overlap with the quad.</param>
+    /// <returns><c>true</c> if at least one overlap was found; otherwise, <c>false</c>.</returns>
     public bool OverlapShape(Quad shape, out List<int>? triangleIndices)
     {
         triangleIndices = null;
@@ -357,11 +357,11 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Find all triangles in this collection that overlap the specified shape.
+    /// Finds all triangles in this collection that overlap the specified polygon.
     /// </summary>
-    /// <param name="shape">The shape to check against.</param>
-    /// <param name="triangleIndices">All triangle indices that overlap the specified shape.</param>
-    /// <returns>Return true if at least 1 overlap was found, otherwise return false. Does not return early. All triangle have to be checked.</returns>
+    /// <param name="shape">The polygon to check against.</param>
+    /// <param name="triangleIndices">A list of indices of the triangles that overlap with the polygon.</param>
+    /// <returns><c>true</c> if at least one overlap was found; otherwise, <c>false</c>.</returns>
     public bool OverlapShape(Polygon shape, out List<int>? triangleIndices)
     {
         triangleIndices = null;
@@ -377,11 +377,11 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Find all triangles in this collection that overlap the specified shape.
+    /// Finds all triangles in this collection that overlap the specified polyline.
     /// </summary>
-    /// <param name="shape">The shape to check against.</param>
-    /// <param name="triangleIndices">All triangle indices that overlap the specified shape.</param>
-    /// <returns>Return true if at least 1 overlap was found, otherwise return false. Does not return early. All triangle have to be checked.</returns>
+    /// <param name="shape">The polyline to check against.</param>
+    /// <param name="triangleIndices">A list of indices of the triangles that overlap with the polyline.</param>
+    /// <returns><c>true</c> if at least one overlap was found; otherwise, <c>false</c>.</returns>
     public bool OverlapShape(Polyline shape, out List<int>? triangleIndices)
     {
         triangleIndices = null;
@@ -397,11 +397,11 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Find all triangles in this collection that overlap the specified segments.
+    /// Finds all triangles in this collection that overlap the specified segments.
     /// </summary>
     /// <param name="segments">The segments to check against.</param>
-    /// <param name="triangleIndices">All triangle indices that overlap the specified segments.</param>
-    /// <returns>Return true if at least 1 overlap was found, otherwise return false. Does not return early. All triangle have to be checked.</returns>
+    /// <param name="triangleIndices">A list of indices of the triangles that overlap with the segments.</param>
+    /// <returns><c>true</c> if at least one overlap was found; otherwise, <c>false</c>.</returns>
     public bool OverlapShape(Segments segments, out List<int>? triangleIndices)
     {
         triangleIndices = null;

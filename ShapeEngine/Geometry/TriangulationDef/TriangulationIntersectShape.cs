@@ -16,10 +16,10 @@ namespace ShapeEngine.Geometry.TriangulationDef;
 public partial class Triangulation
 {
     /// <summary>
-    /// Finds all triangles that intersect the specified collider.
+    /// Checks for intersections between the triangles in this triangulation and the specified collider.
     /// </summary>
-    /// <param name="collider">The collider to check the triangles against.</param>
-    /// <returns>A dictionary where the key is the index of the triangle and the value is the found collision points, or <c>null</c> if no intersections are found.</returns>
+    /// <param name="collider">The collider to check for intersections.</param>
+    /// <returns>A dictionary mapping the index of each intersecting triangle to the resulting <see cref="CollisionPoints"/>. Returns <c>null</c> if no intersections are found.</returns>
     /// <remarks>Only triangles with valid intersections are included in the result.</remarks>
     public Dictionary<int, CollisionPoints>? Intersect(Collider collider)
     {
@@ -39,10 +39,10 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Finds all triangles that intersect the specified line shape.
+    /// Checks for intersections between the triangles in this triangulation and the specified line.
     /// </summary>
-    /// <param name="shape">The line to check the triangles against.</param>
-    /// <returns>A dictionary where the key is the index of the triangle and the value is the found collision points, or <c>null</c> if no intersections are found.</returns>
+    /// <param name="shape">The line to check for intersections.</param>
+    /// <returns>A dictionary mapping the index of each intersecting triangle to the resulting <see cref="CollisionPoints"/>. Returns <c>null</c> if no intersections are found.</returns>
     /// <remarks>Only triangles with valid intersections are included in the result.</remarks>
     public Dictionary<int, CollisionPoints>? IntersectShape(Line shape)
     {
@@ -62,10 +62,10 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Finds all triangles that intersect the specified ray shape.
+    /// Checks for intersections between the triangles in this triangulation and the specified ray.
     /// </summary>
-    /// <param name="shape">The ray to check the triangles against.</param>
-    /// <returns>A dictionary where the key is the index of the triangle and the value is the found collision points, or <c>null</c> if no intersections are found.</returns>
+    /// <param name="shape">The ray to check for intersections.</param>
+    /// <returns>A dictionary mapping the index of each intersecting triangle to the resulting <see cref="CollisionPoints"/>. Returns <c>null</c> if no intersections are found.</returns>
     /// <remarks>Only triangles with valid intersections are included in the result.</remarks>
     public Dictionary<int, CollisionPoints>? IntersectShape(Ray shape)
     {
@@ -85,10 +85,10 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Finds all triangles that intersect the specified segment shape.
+    /// Checks for intersections between the triangles in this triangulation and the specified segment.
     /// </summary>
-    /// <param name="shape">The segment to check the triangles against.</param>
-    /// <returns>A dictionary where the key is the index of the triangle and the value is the found collision points, or <c>null</c> if no intersections are found.</returns>
+    /// <param name="shape">The segment to check for intersections.</param>
+    /// <returns>A dictionary mapping the index of each intersecting triangle to the resulting <see cref="CollisionPoints"/>. Returns <c>null</c> if no intersections are found.</returns>
     /// <remarks>Only triangles with valid intersections are included in the result.</remarks>
     public Dictionary<int, CollisionPoints>? IntersectShape(Segment shape)
     {
@@ -108,10 +108,10 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Finds all triangles that intersect the specified circle shape.
+    /// Checks for intersections between the triangles in this triangulation and the specified circle.
     /// </summary>
-    /// <param name="shape">The circle to check the triangles against.</param>
-    /// <returns>A dictionary where the key is the index of the triangle and the value is the found collision points, or <c>null</c> if no intersections are found.</returns>
+    /// <param name="shape">The circle to check for intersections.</param>
+    /// <returns>A dictionary mapping the index of each intersecting triangle to the resulting <see cref="CollisionPoints"/>. Returns <c>null</c> if no intersections are found.</returns>
     /// <remarks>Only triangles with valid intersections are included in the result.</remarks>
     public Dictionary<int, CollisionPoints>? IntersectShape(Circle shape)
     {
@@ -131,10 +131,10 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Finds all triangles that intersect the specified triangle shape.
+    /// Checks for intersections between the triangles in this triangulation and the specified triangle.
     /// </summary>
-    /// <param name="shape">The triangle to check the triangles against.</param>
-    /// <returns>A dictionary where the key is the index of the triangle and the value is the found collision points, or <c>null</c> if no intersections are found.</returns>
+    /// <param name="shape">The triangle to check for intersections.</param>
+    /// <returns>A dictionary mapping the index of each intersecting triangle to the resulting <see cref="CollisionPoints"/>. Returns <c>null</c> if no intersections are found.</returns>
     /// <remarks>Only triangles with valid intersections are included in the result.</remarks>
     public Dictionary<int, CollisionPoints>? IntersectShape(Triangle shape)
     {
@@ -154,10 +154,10 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Finds all triangles that intersect the specified rectangle shape.
+    /// Checks for intersections between the triangles in this triangulation and the specified rectangle.
     /// </summary>
-    /// <param name="shape">The rectangle to check the triangles against.</param>
-    /// <returns>A dictionary where the key is the index of the triangle and the value is the found collision points, or <c>null</c> if no intersections are found.</returns>
+    /// <param name="shape">The rectangle to check for intersections.</param>
+    /// <returns>A dictionary mapping the index of each intersecting triangle to the resulting <see cref="CollisionPoints"/>. Returns <c>null</c> if no intersections are found.</returns>
     /// <remarks>Only triangles with valid intersections are included in the result.</remarks>
     public Dictionary<int, CollisionPoints>? IntersectShape(Rect shape)
     {
@@ -177,10 +177,10 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Finds all triangles that intersect the specified quadrilateral shape.
+    /// Checks for intersections between the triangles in this triangulation and the specified quad.
     /// </summary>
-    /// <param name="shape">The quadrilateral to check the triangles against.</param>
-    /// <returns>A dictionary where the key is the index of the triangle and the value is the found collision points, or <c>null</c> if no intersections are found.</returns>
+    /// <param name="shape">The quad to check for intersections.</param>
+    /// <returns>A dictionary mapping the index of each intersecting triangle to the resulting <see cref="CollisionPoints"/>. Returns <c>null</c> if no intersections are found.</returns>
     /// <remarks>Only triangles with valid intersections are included in the result.</remarks>
     public Dictionary<int, CollisionPoints>? IntersectShape(Quad shape)
     {
@@ -200,10 +200,10 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Finds all triangles that intersect the specified polygon shape.
+    /// Checks for intersections between the triangles in this triangulation and the specified polygon.
     /// </summary>
-    /// <param name="shape">The polygon to check the triangles against.</param>
-    /// <returns>A dictionary where the key is the index of the triangle and the value is the found collision points, or <c>null</c> if no intersections are found.</returns>
+    /// <param name="shape">The polygon to check for intersections.</param>
+    /// <returns>A dictionary mapping the index of each intersecting triangle to the resulting <see cref="CollisionPoints"/>. Returns <c>null</c> if no intersections are found.</returns>
     /// <remarks>Only triangles with valid intersections are included in the result.</remarks>
     public Dictionary<int, CollisionPoints>? IntersectShape(Polygon shape)
     {
@@ -223,10 +223,10 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Finds all triangles that intersect the specified polyline shape.
+    /// Checks for intersections between the triangles in this triangulation and the specified polyline.
     /// </summary>
-    /// <param name="shape">The polyline to check the triangles against.</param>
-    /// <returns>A dictionary where the key is the index of the triangle and the value is the found collision points, or <c>null</c> if no intersections are found.</returns>
+    /// <param name="shape">The polyline to check for intersections.</param>
+    /// <returns>A dictionary mapping the index of each intersecting triangle to the resulting <see cref="CollisionPoints"/>. Returns <c>null</c> if no intersections are found.</returns>
     /// <remarks>Only triangles with valid intersections are included in the result.</remarks>
     public Dictionary<int, CollisionPoints>? IntersectShape(Polyline shape)
     {
@@ -246,10 +246,10 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Finds all triangles that intersect the specified segments shape.
+    /// Checks for intersections between the triangles in this triangulation and the specified segments.
     /// </summary>
-    /// <param name="shape">The segments to check the triangles against.</param>
-    /// <returns>A dictionary where the key is the index of the triangle and the value is the found collision points, or <c>null</c> if no intersections are found.</returns>
+    /// <param name="shape">The segments to check for intersections.</param>
+    /// <returns>A dictionary mapping the index of each intersecting triangle to the resulting <see cref="CollisionPoints"/>. Returns <c>null</c> if no intersections are found.</returns>
     /// <remarks>Only triangles with valid intersections are included in the result.</remarks>
     public Dictionary<int, CollisionPoints>? IntersectShape(Segments shape)
     {

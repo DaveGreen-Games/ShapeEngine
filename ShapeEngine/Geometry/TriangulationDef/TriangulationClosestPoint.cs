@@ -21,7 +21,7 @@ public partial class Triangulation
     /// Finds the closest point in the triangulation to the specified point.
     /// </summary>
     /// <param name="p">The point to which the closest point is sought.</param>
-    /// <returns>A <see cref="ClosestPointResult"/> containing the closest point, direction, distance squared, and triangle index information.</returns>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest point on the triangulation and the point 'p'.</returns>
     /// <remarks>If the triangulation is empty, returns a default <see cref="ClosestPointResult"/>.</remarks>
     public ClosestPointResult GetClosestPoint(Vector2 p)
     {
@@ -44,11 +44,7 @@ public partial class Triangulation
             }
         }
 
-        return new(
-            closestPoint,
-            new CollisionPoint(p, (closestPoint.Point - p).Normalize()),
-            disSquared,
-            triangleIndex);
+        return new(closestPoint, new CollisionPoint(p, (closestPoint.Point - p).Normalize()), disSquared, triangleIndex);
     }
 
     /// <summary>
@@ -236,11 +232,11 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Finds the closest point on a line to the specified point.
+    /// Finds the closest point in the triangulation to the specified line.
     /// </summary>
-    /// <param name="other">The line to which the closest point is sought.</param>
-    /// <param name="triangleIndex">The index of the triangle in the triangulation.</param>
-    /// <returns>A <see cref="ClosestPointResult"/> containing the closest point, direction, distance squared, and triangle index information.</returns>
+    /// <param name="other">The line to find the closest point to.</param>
+    /// <param name="triangleIndex">The index of the triangle in the triangulation that is closest to the line.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest point on the triangulation and the closest point on the line.</returns>
     /// <remarks>If the triangulation is empty, returns a default <see cref="ClosestPointResult"/>.</remarks>
     public ClosestPointResult GetClosestPoint(Line other, out int triangleIndex)
     {
@@ -265,11 +261,11 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Finds the closest point on a ray to the specified point.
+    /// Finds the closest point in the triangulation to the specified ray.
     /// </summary>
-    /// <param name="other">The ray to which the closest point is sought.</param>
-    /// <param name="triangleIndex">The index of the triangle in the triangulation.</param>
-    /// <returns>A <see cref="ClosestPointResult"/> containing the closest point, direction, distance squared, and triangle index information.</returns>
+    /// <param name="other">The ray to find the closest point to.</param>
+    /// <param name="triangleIndex">The index of the triangle in the triangulation that is closest to the ray.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest point on the triangulation and the closest point on the ray.</returns>
     /// <remarks>If the triangulation is empty, returns a default <see cref="ClosestPointResult"/>.</remarks>
     public ClosestPointResult GetClosestPoint(Ray other, out int triangleIndex)
     {
@@ -294,11 +290,11 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Finds the closest point on a segment to the specified point.
+    /// Finds the closest point in the triangulation to the specified segment.
     /// </summary>
-    /// <param name="other">The segment to which the closest point is sought.</param>
-    /// <param name="triangleIndex">The index of the triangle in the triangulation.</param>
-    /// <returns>A <see cref="ClosestPointResult"/> containing the closest point, direction, distance squared, and triangle index information.</returns>
+    /// <param name="other">The segment to find the closest point to.</param>
+    /// <param name="triangleIndex">The index of the triangle in the triangulation that is closest to the segment.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest point on the triangulation and the closest point on the segment.</returns>
     /// <remarks>If the triangulation is empty, returns a default <see cref="ClosestPointResult"/>.</remarks>
     public ClosestPointResult GetClosestPoint(Segment other, out int triangleIndex)
     {
@@ -323,11 +319,11 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Finds the closest point on a circle to the specified point.
+    /// Finds the closest point in the triangulation to the specified circle.
     /// </summary>
-    /// <param name="other">The circle to which the closest point is sought.</param>
-    /// <param name="triangleIndex">The index of the triangle in the triangulation.</param>
-    /// <returns>A <see cref="ClosestPointResult"/> containing the closest point, direction, distance squared, and triangle index information.</returns>
+    /// <param name="other">The circle to find the closest point to.</param>
+    /// <param name="triangleIndex">The index of the triangle in the triangulation that is closest to the circle.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest point on the triangulation and the closest point on the circle.</returns>
     /// <remarks>If the triangulation is empty, returns a default <see cref="ClosestPointResult"/>.</remarks>
     public ClosestPointResult GetClosestPoint(Circle other, out int triangleIndex)
     {
@@ -352,11 +348,11 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Finds the closest point on a triangle to the specified point.
+    /// Finds the closest point in the triangulation to the specified triangle.
     /// </summary>
-    /// <param name="other">The triangle to which the closest point is sought.</param>
-    /// <param name="triangleIndex">The index of the triangle in the triangulation.</param>
-    /// <returns>A <see cref="ClosestPointResult"/> containing the closest point, direction, distance squared, and triangle index information.</returns>
+    /// <param name="other">The triangle to find the closest point to.</param>
+    /// <param name="triangleIndex">The index of the triangle in the triangulation that is closest to the other triangle.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest point on the triangulation and the closest point on the other triangle.</returns>
     /// <remarks>If the triangulation is empty, returns a default <see cref="ClosestPointResult"/>.</remarks>
     public ClosestPointResult GetClosestPoint(Triangle other, out int triangleIndex)
     {
@@ -381,11 +377,11 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Finds the closest point on a quadrilateral to the specified point.
+    /// Finds the closest point in the triangulation to the specified quad.
     /// </summary>
-    /// <param name="other">The quadrilateral to which the closest point is sought.</param>
-    /// <param name="triangleIndex">The index of the triangle in the triangulation.</param>
-    /// <returns>A <see cref="ClosestPointResult"/> containing the closest point, direction, distance squared, and triangle index information.</returns>
+    /// <param name="other">The quad to find the closest point to.</param>
+    /// <param name="triangleIndex">The index of the triangle in the triangulation that is closest to the quad.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest point on the triangulation and the closest point on the quad.</returns>
     /// <remarks>If the triangulation is empty, returns a default <see cref="ClosestPointResult"/>.</remarks>
     public ClosestPointResult GetClosestPoint(Quad other, out int triangleIndex)
     {
@@ -410,11 +406,11 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Finds the closest point on a rectangle to the specified point.
+    /// Finds the closest point in the triangulation to the specified rectangle.
     /// </summary>
-    /// <param name="other">The rectangle to which the closest point is sought.</param>
-    /// <param name="triangleIndex">The index of the triangle in the triangulation.</param>
-    /// <returns>A <see cref="ClosestPointResult"/> containing the closest point, direction, distance squared, and triangle index information.</returns>
+    /// <param name="other">The rectangle to find the closest point to.</param>
+    /// <param name="triangleIndex">The index of the triangle in the triangulation that is closest to the rectangle.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest point on the triangulation and the closest point on the rectangle.</returns>
     /// <remarks>If the triangulation is empty, returns a default <see cref="ClosestPointResult"/>.</remarks>
     public ClosestPointResult GetClosestPoint(Rect other, out int triangleIndex)
     {
@@ -439,11 +435,11 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Finds the closest point on a polygon to the specified point.
+    /// Finds the closest point in the triangulation to the specified polygon.
     /// </summary>
-    /// <param name="other">The polygon to which the closest point is sought.</param>
-    /// <param name="triangleIndex">The index of the triangle in the triangulation.</param>
-    /// <returns>A <see cref="ClosestPointResult"/> containing the closest point, direction, distance squared, and triangle index information.</returns>
+    /// <param name="other">The polygon to find the closest point to.</param>
+    /// <param name="triangleIndex">The index of the triangle in the triangulation that is closest to the polygon.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest point on the triangulation and the closest point on the polygon.</returns>
     /// <remarks>If the triangulation is empty, returns a default <see cref="ClosestPointResult"/>.</remarks>
     public ClosestPointResult GetClosestPoint(Polygon other, out int triangleIndex)
     {
@@ -468,11 +464,11 @@ public partial class Triangulation
     }
 
     /// <summary>
-    /// Finds the closest point on a polyline to the specified point.
+    /// Finds the closest point in the triangulation to the specified polyline.
     /// </summary>
-    /// <param name="other">The polyline to which the closest point is sought.</param>
-    /// <param name="triangleIndex">The index of the triangle in the triangulation.</param>
-    /// <returns>A <see cref="ClosestPointResult"/> containing the closest point, direction, distance squared, and triangle index information.</returns>
+    /// <param name="other">The polyline to find the closest point to.</param>
+    /// <param name="triangleIndex">The index of the triangle in the triangulation that is closest to the polyline.</param>
+    /// <returns>A <see cref="ClosestPointResult"/> containing the closest point on the triangulation and the closest point on the polyline.</returns>
     /// <remarks>If the triangulation is empty, returns a default <see cref="ClosestPointResult"/>.</remarks>
     public ClosestPointResult GetClosestPoint(Polyline other, out int triangleIndex)
     {
@@ -562,3 +558,4 @@ public partial class Triangulation
     }
 
 }
+
