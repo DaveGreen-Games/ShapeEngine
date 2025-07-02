@@ -46,7 +46,7 @@ public class IntersectSpaceEntry : IntersectionPoints
     #region Pointing Towards
     
     /// <summary>
-    /// Gets the collision point whose normal is most closely facing towards the position of the other collider.
+    /// Gets the intersection point whose normal is most closely facing towards the position of the other collider.
     /// </summary>
     /// <returns>The <see cref="IntersectionPoint"/> facing towards the other collider's position.</returns>
     public IntersectionPoint GetCollisionPointFacingTowardsPoint()
@@ -54,7 +54,7 @@ public class IntersectSpaceEntry : IntersectionPoints
         return GetCollisionPointFacingTowardsPoint(OtherCollider.CurTransform.Position);
     }
     /// <summary>
-    /// Gets the collision point whose normal is most closely facing towards the velocity direction of the other collider.
+    /// Gets the intersection point whose normal is most closely facing towards the velocity direction of the other collider.
     /// </summary>
     /// <returns>The <see cref="IntersectionPoint"/> facing towards the other collider's velocity direction.</returns>
     public IntersectionPoint GetCollisionPointFacingTowardsDir()

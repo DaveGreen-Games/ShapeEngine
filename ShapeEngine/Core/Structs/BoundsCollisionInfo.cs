@@ -18,11 +18,11 @@ public readonly struct BoundsCollisionInfo
     /// </summary>
     public readonly Vector2 SafePosition;
     /// <summary>
-    /// The collision point where the object left the bounds on the horizontal plane (left to right).
+    /// The intersection point where the object left the bounds on the horizontal plane (left to right).
     /// </summary>
     public readonly IntersectionPoint Horizontal;
     /// <summary>
-    /// The collision point where the object left the bounds on the vertical plane (top to bottom).
+    /// The intersection point where the object left the bounds on the vertical plane (top to bottom).
     /// </summary>
     public readonly IntersectionPoint Vertical;
     /// <summary>
@@ -43,8 +43,8 @@ public readonly struct BoundsCollisionInfo
     /// Initializes a new instance of the <see cref="BoundsCollisionInfo"/> struct with the specified safe position and collision points.
     /// </summary>
     /// <param name="safePosition">The closest position within the bounds that is considered safe.</param>
-    /// <param name="horizontal">The collision point on the horizontal plane.</param>
-    /// <param name="vertical">The collision point on the vertical plane.</param>
+    /// <param name="horizontal">The intersection point on the horizontal plane.</param>
+    /// <param name="vertical">The intersection point on the vertical plane.</param>
     public BoundsCollisionInfo(Vector2 safePosition, IntersectionPoint horizontal, IntersectionPoint vertical)
     {
         SafePosition = safePosition;
@@ -56,7 +56,7 @@ public readonly struct BoundsCollisionInfo
     /// Creates a <see cref="BoundsCollisionInfo"/> instance for a horizontal collision only.
     /// </summary>
     /// <param name="safePosition">The closest position within the bounds that is considered safe.</param>
-    /// <param name="horizontal">The collision point on the horizontal plane.</param>
+    /// <param name="horizontal">The intersection point on the horizontal plane.</param>
     /// <returns>A <see cref="BoundsCollisionInfo"/> with only the horizontal collision set.</returns>
     public static BoundsCollisionInfo GetHorizontal(Vector2 safePosition, IntersectionPoint horizontal) =>
         new(safePosition, horizontal, new());
@@ -65,7 +65,7 @@ public readonly struct BoundsCollisionInfo
     /// Creates a <see cref="BoundsCollisionInfo"/> instance for a vertical collision only.
     /// </summary>
     /// <param name="safePosition">The closest position within the bounds that is considered safe.</param>
-    /// <param name="vertical">The collision point on the vertical plane.</param>
+    /// <param name="vertical">The intersection point on the vertical plane.</param>
     /// <returns>A <see cref="BoundsCollisionInfo"/> with only the vertical collision set.</returns>
     public static BoundsCollisionInfo GetVertical(Vector2 safePosition, IntersectionPoint vertical) =>
         new(safePosition, new(), vertical);

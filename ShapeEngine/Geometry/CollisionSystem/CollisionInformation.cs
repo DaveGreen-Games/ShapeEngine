@@ -39,7 +39,7 @@ public class CollisionInformation : List<Collision>
     /// </summary>
     public int TotalCollisionPointCount { get; private set; }
     /// <summary>
-    /// The filtered collision point.
+    /// The filtered intersection point.
     /// Only valid when the collision object has <see cref="CollisionObject.FilterCollisionPoints"/> enabled and
     /// the collider has <see cref="Collider.ComputeIntersections"/> enabled.
     /// </summary>
@@ -82,9 +82,9 @@ public class CollisionInformation : List<Collision>
     #endregion
 
     /// <summary>
-    /// Generates a filtered collision point based on the specified filter type and reference point.
+    /// Generates a filtered intersection point based on the specified filter type and reference point.
     /// </summary>
-    /// <param name="filterType">The filter type to use for selecting the collision point.</param>
+    /// <param name="filterType">The filter type to use for selecting the intersection point.</param>
     /// <param name="referencePoint">The reference point for filtering.</param>
     internal void GenerateFilteredCollisionPoint(CollisionPointsFilterType filterType, Vector2 referencePoint)
     {
@@ -283,10 +283,10 @@ public class CollisionInformation : List<Collision>
 
     
     /// <summary>
-    /// Determines whether any collision point in any collision matches the specified predicate.
+    /// Determines whether any intersection point in any collision matches the specified predicate.
     /// </summary>
-    /// <param name="match">A predicate to test each collision point.</param>
-    /// <returns>True if a matching collision point exists; otherwise, false.</returns>
+    /// <param name="match">A predicate to test each intersection point.</param>
+    /// <returns>True if a matching intersection point exists; otherwise, false.</returns>
     public bool ExistsCollisionPoint(Predicate<IntersectionPoint> match)
     {
         if(Count <= 0) return false;
@@ -299,9 +299,9 @@ public class CollisionInformation : List<Collision>
     }
     /// <summary>
     /// Returns the first <see cref="IntersectionPoint"/> that matches the given predicate across all collisions.
-    /// If no matching collision point is found, returns an empty <see cref="IntersectionPoint"/>.
+    /// If no matching intersection point is found, returns an empty <see cref="IntersectionPoint"/>.
     /// </summary>
-    /// <param name="match">Predicate to test each collision point.</param>
+    /// <param name="match">Predicate to test each intersection point.</param>
     /// <returns>The first matching <see cref="IntersectionPoint"/>, or an empty one if none found.</returns>
     public IntersectionPoint FindCollisionPoint(Predicate<IntersectionPoint> match)
     {
@@ -318,7 +318,7 @@ public class CollisionInformation : List<Collision>
     /// Finds all collision points that match the given predicate across all valid collisions.
     /// Returns a <see cref="IntersectionPoints"/> collection if any are found; otherwise, returns null.
     /// </summary>
-    /// <param name="match">Predicate to test each collision point.</param>
+    /// <param name="match">Predicate to test each intersection point.</param>
     /// <returns>A <see cref="IntersectionPoints"/> collection of matching points, or null if none found.</returns>
     public IntersectionPoints? FindAllCollisionPoints(Predicate<IntersectionPoint> match)
     {
@@ -387,7 +387,7 @@ public class CollisionInformation : List<Collision>
         return result;
     }
     /// <summary>
-    /// Calculates and returns the average (combined) collision point from all valid collision points
+    /// Calculates and returns the average (combined) intersection point from all valid collision points
     /// across all valid collisions in this collection.
     /// </summary>
     /// <returns>The combined <see cref="IntersectionPoint"/> if any exist; otherwise, an empty <see cref="IntersectionPoint"/>.</returns>
@@ -432,7 +432,7 @@ public class CollisionInformation : List<Collision>
         return result;
     }
     /// <summary>
-    /// Gets the furthest collision point from the specified reference point within all valid collisions.
+    /// Gets the furthest intersection point from the specified reference point within all valid collisions.
     /// </summary>
     /// <param name="referencePoint">The reference point to measure distance from.</param>
     /// <returns>The furthest <see cref="IntersectionPoint"/> from the reference point, or an empty <see cref="IntersectionPoint"/> if none exist.</returns>
@@ -462,7 +462,7 @@ public class CollisionInformation : List<Collision>
     /// and outputs the squared distance to that point. If no valid collision points exist, returns an empty <see cref="IntersectionPoint"/>
     /// and sets <paramref name="closestDistanceSquared"/> to a negative value.
     /// </summary>
-    /// <param name="closestDistanceSquared">The squared distance to the closest collision point, or a negative value if none found.</param>
+    /// <param name="closestDistanceSquared">The squared distance to the closest intersection point, or a negative value if none found.</param>
     /// <returns>The closest <see cref="IntersectionPoint"/>, or an empty one if none exist.</returns>
     public IntersectionPoint GetClosestCollisionPoint(out float closestDistanceSquared)
     {
@@ -490,7 +490,7 @@ public class CollisionInformation : List<Collision>
     /// and outputs the squared distance to that point. If no valid collision points exist, returns an empty <see cref="IntersectionPoint"/>
     /// and sets <paramref name="furthestDistanceSquared"/> to a negative value.
     /// </summary>
-    /// <param name="furthestDistanceSquared">The squared distance to the furthest collision point, or a negative value if none found.</param>
+    /// <param name="furthestDistanceSquared">The squared distance to the furthest intersection point, or a negative value if none found.</param>
     /// <returns>The furthest <see cref="IntersectionPoint"/> from <see cref="Self"/>.Transform.Position, or an empty one if none exist.</returns>
     public IntersectionPoint GetFurthestCollisionPoint(out float furthestDistanceSquared)
     {
@@ -519,9 +519,9 @@ public class CollisionInformation : List<Collision>
     /// If no valid collision points exist, returns an empty <see cref="IntersectionPoint"/>
     /// and sets <paramref name="closestDistanceSquared"/> to a negative value.
     /// </summary>
-    /// <param name="referencePoint">The reference point for finding the closest collision point.</param>
+    /// <param name="referencePoint">The reference point for finding the closest intersection point.</param>
     /// <param name="closestDistanceSquared">
-    /// The squared distance between the closest collision point and the reference point. Negative if no valid point is found.
+    /// The squared distance between the closest intersection point and the reference point. Negative if no valid point is found.
     /// </param>
     /// <returns>The closest <see cref="IntersectionPoint"/>, or an empty one if none exist.</returns>
     public IntersectionPoint GetClosestCollisionPoint(Vector2 referencePoint, out float closestDistanceSquared)
@@ -551,9 +551,9 @@ public class CollisionInformation : List<Collision>
     /// If no valid collision points exist, returns an empty <see cref="IntersectionPoint"/>
     /// and sets <paramref name="furthestDistanceSquared"/> to a negative value.
     /// </summary>
-    /// <param name="referencePoint">The reference point for finding the furthest collision point.</param>
+    /// <param name="referencePoint">The reference point for finding the furthest intersection point.</param>
     /// <param name="furthestDistanceSquared">
-    /// The squared distance between the furthest collision point and the reference point. Negative if no valid point is found.
+    /// The squared distance between the furthest intersection point and the reference point. Negative if no valid point is found.
     /// </param>
     /// <returns>The furthest <see cref="IntersectionPoint"/>, or an empty one if none exist.</returns>
     public IntersectionPoint GetFurthestCollisionPoint(Vector2 referencePoint, out float furthestDistanceSquared)

@@ -54,7 +54,7 @@ public readonly partial struct Triangle
     /// </summary>
     /// <param name="p">The point to find the closest point to.</param>
     /// <param name="disSquared">When this method returns, contains the squared distance to the closest point.</param>
-    /// <returns>A collision point containing the closest point and its surface normal.</returns>
+    /// <returns>A intersection point containing the closest point and its surface normal.</returns>
     /// <remarks>
     /// This method checks all three edges of the triangle and returns the closest point with its corresponding
     /// surface normal. The normal points outward from the triangle's surface at the closest point.
@@ -89,7 +89,7 @@ public readonly partial struct Triangle
     /// <param name="p">The point to find the closest point to.</param>
     /// <param name="disSquared">When this method returns, contains the squared distance to the closest point.</param>
     /// <param name="index">When this method returns, contains the index of the edge containing the closest point (0=A-B, 1=B-C, 2=C-A).</param>
-    /// <returns>A collision point containing the closest point and its surface normal.</returns>
+    /// <returns>A intersection point containing the closest point and its surface normal.</returns>
     /// <remarks>
     /// This method extends the basic closest point functionality by also providing the index of the edge
     /// that contains the closest point, which is useful for edge-specific operations and analysis.

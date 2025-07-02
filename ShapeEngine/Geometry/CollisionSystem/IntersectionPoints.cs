@@ -51,11 +51,11 @@ public class IntersectionPoints : ShapeList<IntersectionPoint>
 
     #region Members
     /// <summary>
-    /// Gets the first collision point in the list, or an empty <see cref="IntersectionPoint"/> if the list is empty.
+    /// Gets the first intersection point in the list, or an empty <see cref="IntersectionPoint"/> if the list is empty.
     /// </summary>
     public IntersectionPoint First => Count > 0 ? this[0] : new IntersectionPoint();
     /// <summary>
-    /// Gets the last collision point in the list, or an empty <see cref="IntersectionPoint"/> if the list is empty.
+    /// Gets the last intersection point in the list, or an empty <see cref="IntersectionPoint"/> if the list is empty.
     /// </summary>
     public IntersectionPoint Last => Count > 0 ? this[Count - 1] : new IntersectionPoint();
     /// <summary>
@@ -288,7 +288,7 @@ public class IntersectionPoints : ShapeList<IntersectionPoint>
     /// </summary>
     /// <param name="referenceDirection">The direction to check IntersectionPoint normals against.</param>
     /// <param name="referencePoint">The direction from the reference point towards to IntersectionPoint  to check IntersectionPoint Normals against.</param>
-    /// <param name="validationResult">The result of the combined IntersectionPoint, and the  closest/furthest collision point from the reference point, and the IntersectionPoint with normal facing towards the referencePoint.</param>
+    /// <param name="validationResult">The result of the combined IntersectionPoint, and the  closest/furthest intersection point from the reference point, and the IntersectionPoint with normal facing towards the referencePoint.</param>
     /// <returns>Returns true if there are valid points remaining</returns>
     public bool Validate(Vector2 referenceDirection, Vector2 referencePoint,  out CollisionPointValidationResult validationResult)
     {
@@ -433,7 +433,7 @@ public class IntersectionPoints : ShapeList<IntersectionPoint>
     /// Removes all invalid <see cref="IntersectionPoint"/> instances from the list.
     /// </summary>
     /// <param name="referencePoint">The direction from the reference point towards to IntersectionPoint  to check IntersectionPoint Normals against.</param>
-    /// <param name="validationResult">The result of the combined IntersectionPoint, and the  closest/furthest collision point from the reference point, and the IntersectionPoint with normal facing towards the referencePoint.</param>
+    /// <param name="validationResult">The result of the combined IntersectionPoint, and the  closest/furthest intersection point from the reference point, and the IntersectionPoint with normal facing towards the referencePoint.</param>
     /// <returns>Returns true if there are valid points remaining</returns>
     public bool Validate(Vector2 referencePoint,  out CollisionPointValidationResult validationResult)
     {
@@ -591,11 +591,11 @@ public class IntersectionPoints : ShapeList<IntersectionPoint>
     #region IntersectionPoint
     /// <summary>
     /// Filters the IntersectionPoints list based on a given filter type and reference point.
-    /// PointingTowards and PointingAway calculate the direction from the collision point to the reference point.
-    /// PointingTowards uses the normal that is facing the same direction as the direction from the collision point to the reference point.
-    /// PointingAway uses the normal that is facing the opposite direction as the direction from the collision point to the reference point.
+    /// PointingTowards and PointingAway calculate the direction from the intersection point to the reference point.
+    /// PointingTowards uses the normal that is facing the same direction as the direction from the intersection point to the reference point.
+    /// PointingAway uses the normal that is facing the opposite direction as the direction from the intersection point to the reference point.
     /// </summary>
-    /// <param name="filterType">The filter type for selecting a collision point.</param>
+    /// <param name="filterType">The filter type for selecting a intersection point.</param>
     /// <param name="referencePoint">The reference point that is used for closest, furthest, pointing towards, and pointing away calculations.</param>
     /// <returns></returns>
     public IntersectionPoint Filter(CollisionPointsFilterType filterType, Vector2 referencePoint = new())
@@ -680,7 +680,7 @@ public class IntersectionPoints : ShapeList<IntersectionPoint>
     /// PointingTowards uses the Normal that is facing the same direction as the referenceDirection.
     /// PointingAway uses the Normal that is facing the opposite direction as the reference direction.
     /// </summary>
-    /// <param name="filterType">The filter type for selecting a collision point.</param>
+    /// <param name="filterType">The filter type for selecting a intersection point.</param>
     /// <param name="referencePoint">The reference point that is used for closest and furthest calculations.</param>
     /// <param name="referenceDirection">The reference direction that is used for pointing towards and pointing away calculations.</param>
     /// <returns></returns>
@@ -724,7 +724,7 @@ public class IntersectionPoints : ShapeList<IntersectionPoint>
     }
     
     /// <summary>
-    /// Gets the combined collision point, averaging the position and normal of all valid collision points.
+    /// Gets the combined intersection point, averaging the position and normal of all valid collision points.
     /// </summary>
     /// <returns>The combined IntersectionPoint.</returns>
     public IntersectionPoint GetCombinedCollisionPoint()
@@ -743,7 +743,7 @@ public class IntersectionPoints : ShapeList<IntersectionPoint>
         return new(avgPoint / count, avgNormal.Normalize());
     }
     /// <summary>
-    /// Gets the closest collision point to the specified reference point.
+    /// Gets the closest intersection point to the specified reference point.
     /// </summary>
     /// <param name="referencePoint">The reference point to measure distance against.</param>
     /// <returns>The closest IntersectionPoint.</returns>
@@ -769,7 +769,7 @@ public class IntersectionPoints : ShapeList<IntersectionPoint>
         return closest;
     }
     /// <summary>
-    /// Gets the furthest collision point from the specified reference point.
+    /// Gets the furthest intersection point from the specified reference point.
     /// </summary>
     /// <param name="referencePoint">The reference point to measure distance against.</param>
     /// <returns>The furthest IntersectionPoint.</returns>
@@ -795,7 +795,7 @@ public class IntersectionPoints : ShapeList<IntersectionPoint>
         return furthest;
     }
     /// <summary>
-    /// Gets the closest collision point to the specified reference point, and outputs the distance squared to that point.
+    /// Gets the closest intersection point to the specified reference point, and outputs the distance squared to that point.
     /// </summary>
     /// <param name="referencePoint">The reference point to measure distance against.</param>
     /// <param name="closestDistanceSquared">The distance squared to the closest IntersectionPoint.</param>
@@ -823,7 +823,7 @@ public class IntersectionPoints : ShapeList<IntersectionPoint>
         return closest;
     }
     /// <summary>
-    /// Gets the furthest collision point from the specified reference point, and outputs the distance squared to that point.
+    /// Gets the furthest intersection point from the specified reference point, and outputs the distance squared to that point.
     /// </summary>
     /// <param name="referencePoint">The reference point to measure distance against.</param>
     /// <param name="furthestDistanceSquared">The distance squared to the furthest IntersectionPoint.</param>
@@ -851,7 +851,7 @@ public class IntersectionPoints : ShapeList<IntersectionPoint>
     }
 
     /// <summary>
-    /// Finds the <see cref="IntersectionPoint"/> whose normal most closely faces the direction from the collision point to the specified reference point.
+    /// Finds the <see cref="IntersectionPoint"/> whose normal most closely faces the direction from the intersection point to the specified reference point.
     /// Calculates the dot product between each normal and the direction vector to the reference point, returning the point with the highest value.
     /// </summary>
     /// <param name="referencePoint">The point to which normals should be compared.</param>
@@ -883,7 +883,7 @@ public class IntersectionPoints : ShapeList<IntersectionPoint>
     /// <summary>
     /// Finds the <see cref="IntersectionPoint"/> whose normal most closely aligns with the specified reference direction.
     /// </summary>
-    /// <param name="referenceDir">The direction to compare against each collision point's normal.</param>
+    /// <param name="referenceDir">The direction to compare against each intersection point's normal.</param>
     /// <returns>The <see cref="IntersectionPoint"/> with the most aligned normal, or an empty point if none are valid.</returns>
     public IntersectionPoint GetCollisionPointFacingTowardsDir(Vector2 referenceDir)
     {

@@ -13,7 +13,7 @@ public readonly partial struct Segment
     /// <param name="segment1End">The end point of the first segment.</param>
     /// <param name="segment2Start">The start point of the second segment.</param>
     /// <param name="segment2End">The end point of the second segment.</param>
-    /// <returns>A tuple containing the <see cref="IntersectionPoint"/> and the intersection time along the first segment. If there is no intersection, the collision point is invalid and the time is -1.</returns>
+    /// <returns>A tuple containing the <see cref="IntersectionPoint"/> and the intersection time along the first segment. If there is no intersection, the intersection point is invalid and the time is -1.</returns>
     public static (IntersectionPoint point, float time) IntersectSegmentSegmentInfo(Vector2 segment1Start, Vector2 segment1End, Vector2 segment2Start,
         Vector2 segment2End)
     {
@@ -55,7 +55,7 @@ public readonly partial struct Segment
     /// <param name="segment2Start">The start point of the second segment.</param>
     /// <param name="segment2End">The end point of the second segment.</param>
     /// <param name="segment2Normal">The normal vector to use for the second segment.</param>
-    /// <returns>A tuple containing the <see cref="IntersectionPoint"/> and the intersection time along the first segment. If there is no intersection, the collision point is invalid and the time is -1.</returns>
+    /// <returns>A tuple containing the <see cref="IntersectionPoint"/> and the intersection time along the first segment. If there is no intersection, the intersection point is invalid and the time is -1.</returns>
     public static (IntersectionPoint point, float time) IntersectSegmentSegmentInfo(Vector2 segment1Start, Vector2 segment1End, Vector2 segment2Start,
         Vector2 segment2End, Vector2 segment2Normal)
     {
@@ -93,7 +93,7 @@ public readonly partial struct Segment
     /// <param name="segmentEnd">The end point of the segment.</param>
     /// <param name="linePoint">A point on the line.</param>
     /// <param name="lineDirection">The direction vector of the line.</param>
-    /// <returns>A tuple containing the <see cref="IntersectionPoint"/> and the intersection time along the segment. If there is no intersection, the collision point is invalid and the time is -1.</returns>
+    /// <returns>A tuple containing the <see cref="IntersectionPoint"/> and the intersection time along the segment. If there is no intersection, the intersection point is invalid and the time is -1.</returns>
     public static (IntersectionPoint point, float time) IntersectSegmentLineInfo(Vector2 segmentStart, Vector2 segmentEnd, Vector2 linePoint,
         Vector2 lineDirection)
     {
@@ -125,7 +125,7 @@ public readonly partial struct Segment
     /// <param name="segmentEnd">The end point of the segment.</param>
     /// <param name="rayPoint">The origin of the ray.</param>
     /// <param name="rayDirection">The direction vector of the ray.</param>
-    /// <returns>A tuple containing the <see cref="IntersectionPoint"/> and the intersection time along the segment. If there is no intersection, the collision point is invalid and the time is -1.</returns>
+    /// <returns>A tuple containing the <see cref="IntersectionPoint"/> and the intersection time along the segment. If there is no intersection, the intersection point is invalid and the time is -1.</returns>
     public static (IntersectionPoint point, float time) IntersectSegmentRayInfo(Vector2 segmentStart, Vector2 segmentEnd, Vector2 rayPoint, Vector2 rayDirection)
     {
         float denominator = (segmentEnd.X - segmentStart.X) * rayDirection.Y - (segmentEnd.Y - segmentStart.Y) * rayDirection.X;
@@ -158,7 +158,7 @@ public readonly partial struct Segment
     /// <param name="linePoint">A point on the line.</param>
     /// <param name="lineDirection">The direction vector of the line.</param>
     /// <param name="lineNormal">The normal vector to use for the line.</param>
-    /// <returns>A tuple containing the <see cref="IntersectionPoint"/> and the intersection time along the segment. If there is no intersection, the collision point is invalid and the time is -1.</returns>
+    /// <returns>A tuple containing the <see cref="IntersectionPoint"/> and the intersection time along the segment. If there is no intersection, the intersection point is invalid and the time is -1.</returns>
     public static (IntersectionPoint point, float time) IntersectSegmentLineInfo(Vector2 segmentStart, Vector2 segmentEnd, Vector2 linePoint,
         Vector2 lineDirection, Vector2 lineNormal)
     {
@@ -190,7 +190,7 @@ public readonly partial struct Segment
     /// <param name="rayPoint">The origin of the ray.</param>
     /// <param name="rayDirection">The direction vector of the ray.</param>
     /// <param name="rayNormal">The normal vector to use for the ray.</param>
-    /// <returns>A tuple containing the <see cref="IntersectionPoint"/> and the intersection time along the segment. If there is no intersection, the collision point is invalid and the time is -1.</returns>
+    /// <returns>A tuple containing the <see cref="IntersectionPoint"/> and the intersection time along the segment. If there is no intersection, the intersection point is invalid and the time is -1.</returns>
     public static (IntersectionPoint point, float time) IntersectSegmentRayInfo(Vector2 segmentStart, Vector2 segmentEnd, Vector2 rayPoint, Vector2 rayDirection,
         Vector2 rayNormal)
     {

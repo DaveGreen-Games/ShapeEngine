@@ -153,20 +153,20 @@ public class Collision
     #region IntersectionPoint
 
     /// <summary>
-    /// Checks if there is any collision point that matches the conditions defined by the specified predicate.
+    /// Checks if there is any intersection point that matches the conditions defined by the specified predicate.
     /// </summary>
     /// <param name="match">The predicate that defines the conditions of the collision points to search for.</param>
-    /// <returns>true if any collision point matches the predicate; otherwise, false.</returns>
+    /// <returns>true if any intersection point matches the predicate; otherwise, false.</returns>
     public bool Exists(Predicate<IntersectionPoint> match)
     {
         return Points is { Count: > 0 } && Points.Exists(match);
     }
     /// <summary>
-    /// Finds the first collision point that matches the conditions defined by the specified predicate.
+    /// Finds the first intersection point that matches the conditions defined by the specified predicate.
     /// </summary>
-    /// <param name="match">The predicate that defines the conditions of the collision point to search for.</param>
+    /// <param name="match">The predicate that defines the conditions of the intersection point to search for.</param>
     /// <returns>
-    /// The first collision point that matches the predicate, or a default <see cref="IntersectionPoint"/> if no match is found.
+    /// The first intersection point that matches the predicate, or a default <see cref="IntersectionPoint"/> if no match is found.
     /// </returns>
     public IntersectionPoint Find(Predicate<IntersectionPoint> match)
     {
@@ -188,7 +188,7 @@ public class Collision
     }
     
     /// <summary>
-    /// Calculates the combined collision point from all valid collision points.
+    /// Calculates the combined intersection point from all valid collision points.
     /// </summary>
     /// <returns>
     /// The combined <see cref="IntersectionPoint"/> representing the average position and normal of all valid collision points,
@@ -199,7 +199,7 @@ public class Collision
         return Points is not { Count: > 0 } ? new IntersectionPoint() : Points.GetCombinedCollisionPoint();
     }
     /// <summary>
-    /// Finds the collision point closest to the 'self' collider's position.
+    /// Finds the intersection point closest to the 'self' collider's position.
     /// </summary>
     /// <returns>
     /// The closest <see cref="IntersectionPoint"/> to the 'self' collider's position,
@@ -210,7 +210,7 @@ public class Collision
         return Points is not { Count: > 0 } ? new IntersectionPoint() : Points.GetClosestCollisionPoint(Self.CurTransform.Position);
     }
     /// <summary>
-    /// Finds the collision point furthest from the 'self' collider's position.
+    /// Finds the intersection point furthest from the 'self' collider's position.
     /// </summary>
     /// <returns>
     /// The furthest <see cref="IntersectionPoint"/> from the 'self' collider's position,
@@ -221,9 +221,9 @@ public class Collision
         return Points is not { Count: > 0 } ? new IntersectionPoint() : Points.GetFurthestCollisionPoint(Self.CurTransform.Position);
     }
     /// <summary>
-    /// Finds the collision point closest to the 'self' collider's position and provides the distance squared to that point.
+    /// Finds the intersection point closest to the 'self' collider's position and provides the distance squared to that point.
     /// </summary>
-    /// <param name="closestDistanceSquared">Outputs the distance squared to the closest collision point.</param>
+    /// <param name="closestDistanceSquared">Outputs the distance squared to the closest intersection point.</param>
     /// <returns>
     /// The closest <see cref="IntersectionPoint"/> to the 'self' collider's position,
     /// or a default <see cref="IntersectionPoint"/> if there are no collision points.
@@ -234,9 +234,9 @@ public class Collision
         return Points is not { Count: > 0 } ? new IntersectionPoint() : Points.GetClosestCollisionPoint(Self.CurTransform.Position, out closestDistanceSquared);
     }
     /// <summary>
-    /// Finds the collision point furthest from the 'self' collider's position and provides the distance squared to that point.
+    /// Finds the intersection point furthest from the 'self' collider's position and provides the distance squared to that point.
     /// </summary>
-    /// <param name="furthestDistanceSquared">Outputs the distance squared to the furthest collision point.</param>
+    /// <param name="furthestDistanceSquared">Outputs the distance squared to the furthest intersection point.</param>
     /// <returns>
     /// The furthest <see cref="IntersectionPoint"/> from the 'self' collider's position,
     /// or a default <see cref="IntersectionPoint"/> if there are no collision points.
@@ -248,8 +248,8 @@ public class Collision
     }
 
     /// <summary>
-    /// Finds the collision point with the normal facing most in the direction of the <see cref="Self"/> colliders position.
-    /// Each collision point normal is checked against the direction from the collision point towards the reference point.
+    /// Finds the intersection point with the normal facing most in the direction of the <see cref="Self"/> colliders position.
+    /// Each intersection point normal is checked against the direction from the intersection point towards the reference point.
     /// </summary>
     /// <returns>
     /// The <see cref="IntersectionPoint"/> facing most towards the 'self' collider's position,
@@ -261,7 +261,7 @@ public class Collision
     }
    
     /// <summary>
-    /// Finds the collision point with the normal facing most in the direction of <see cref="SelfVel"/>.
+    /// Finds the intersection point with the normal facing most in the direction of <see cref="SelfVel"/>.
     /// </summary>
     /// <returns>
     /// The <see cref="IntersectionPoint"/> facing most in the direction of <see cref="SelfVel"/>,

@@ -423,7 +423,7 @@ public class CollisionHandler : IBounds
                                     }
                                     
                                     //shapes overlap but no collision points means collidable is completely inside other
-                                    //closest point on bounds of other are now used for collision point
+                                    //closest point on bounds of other are now used for intersection point
                                     if (collisionPoints == null || collisionPoints.Count <= 0)
                                     {
                                         var refPoint = collider.PrevTransform.Position;// PrevPosition;
@@ -501,7 +501,7 @@ public class CollisionHandler : IBounds
                                     }
                                     
                                     //shapes overlap but no collision points means collidable is completely inside other
-                                    //closest point on bounds of other are now used for collision point
+                                    //closest point on bounds of other are now used for intersection point
                                     if (collisionPoints == null || collisionPoints.Count <= 0)
                                     {
                                         var refPoint = collider.PrevTransform.Position;// PrevPosition;

@@ -150,8 +150,8 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
     /// <summary>
     /// Validates all registers using the specified reference direction, removing invalid or misaligned collision points.
     /// </summary>
-    /// <param name="referenceDirection">The direction to check collision point normals against.</param>
-    /// <param name="combined">The averaged collision point of all remaining valid points.</param>
+    /// <param name="referenceDirection">The direction to check intersection point normals against.</param>
+    /// <param name="combined">The averaged intersection point of all remaining valid points.</param>
     /// <returns>True if there are valid points remaining; otherwise, false.</returns>
     /// <remarks>
     /// Removes:
@@ -196,9 +196,9 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
     /// <summary>
     /// Validates all registers using the specified reference direction and point, removing invalid or misaligned collision points.
     /// </summary>
-    /// <param name="referenceDirection">The direction to check collision point normals against.</param>
+    /// <param name="referenceDirection">The direction to check intersection point normals against.</param>
     /// <param name="referencePoint">The point to check direction from.</param>
-    /// <param name="combined">The averaged collision point of all remaining valid points.</param>
+    /// <param name="combined">The averaged intersection point of all remaining valid points.</param>
     /// <returns>True if there are valid points remaining; otherwise, false.</returns>
     /// <remarks>
     /// Removes:
@@ -243,10 +243,10 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
     /// <summary>
     /// Validates all registers and provides both the averaged and closest collision points.
     /// </summary>
-    /// <param name="referenceDirection">The direction to check collision point normals against.</param>
+    /// <param name="referenceDirection">The direction to check intersection point normals against.</param>
     /// <param name="referencePoint">The point to check direction from.</param>
-    /// <param name="combined">The averaged collision point of all remaining valid points.</param>
-    /// <param name="closest">The closest collision point to the reference point.</param>
+    /// <param name="combined">The averaged intersection point of all remaining valid points.</param>
+    /// <param name="closest">The closest intersection point to the reference point.</param>
     /// <returns>True if there are valid points remaining; otherwise, false.</returns>
     /// <remarks>
     /// Removes:
@@ -302,8 +302,8 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
     /// Validates all registers using only a reference point, providing the averaged and closest collision points.
     /// </summary>
     /// <param name="referencePoint">The point to check direction from.</param>
-    /// <param name="combined">The averaged collision point of all remaining valid points.</param>
-    /// <param name="closest">The closest collision point to the reference point.</param>
+    /// <param name="combined">The averaged intersection point of all remaining valid points.</param>
+    /// <param name="closest">The closest intersection point to the reference point.</param>
     /// <returns>True if there are valid points remaining; otherwise, false.</returns>
     /// <remarks>
     /// Removes:
@@ -430,7 +430,7 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
     /// <summary>
     /// Validates all registers using both a reference direction and point, providing a detailed validation result.
     /// </summary>
-    /// <param name="referenceDirection">The direction to check collision point normals against.</param>
+    /// <param name="referenceDirection">The direction to check intersection point normals against.</param>
     /// <param name="referencePoint">The point to check direction from.</param>
     /// <param name="validationResult">The result containing combined, closest, furthest, and pointing-towards collision points.</param>
     /// <returns>True if there are valid points remaining; otherwise, false.</returns>
@@ -773,9 +773,9 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
     
     #region Closest/Furthest Collision Points
     /// <summary>
-    /// Gets the collision point in all registers that is closest to the origin.
+    /// Gets the intersection point in all registers that is closest to the origin.
     /// </summary>
-    /// <param name="closestDistanceSquared">The squared distance to the closest collision point.</param>
+    /// <param name="closestDistanceSquared">The squared distance to the closest intersection point.</param>
     /// <returns>The closest <see cref="IntersectionPoint"/> or a default value if none exist.</returns>
     public IntersectionPoint GetClosestCollisionPoint(out float closestDistanceSquared)
     {
@@ -784,10 +784,10 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
         return GetClosestCollisionPoint(Origin, out closestDistanceSquared);
     }
     /// <summary>
-    /// Gets the collision point in all registers that is closest to the specified position.
+    /// Gets the intersection point in all registers that is closest to the specified position.
     /// </summary>
     /// <param name="position">The point to compare distances from.</param>
-    /// <param name="closestDistanceSquared">The squared distance to the closest collision point.</param>
+    /// <param name="closestDistanceSquared">The squared distance to the closest intersection point.</param>
     /// <returns>The closest <see cref="IntersectionPoint"/> or a default value if none exist.</returns>
     public IntersectionPoint GetClosestCollisionPoint(Vector2 position, out float closestDistanceSquared)
     {
@@ -812,9 +812,9 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
         return closestPoint;
     }
     /// <summary>
-    /// Gets the collision point in all registers that is furthest from the origin.
+    /// Gets the intersection point in all registers that is furthest from the origin.
     /// </summary>
-    /// <param name="furthestDistanceSquared">The squared distance to the furthest collision point.</param>
+    /// <param name="furthestDistanceSquared">The squared distance to the furthest intersection point.</param>
     /// <returns>The furthest <see cref="IntersectionPoint"/> or a default value if none exist.</returns>
     public IntersectionPoint GetFurthestCollisionPoint(out float furthestDistanceSquared)
     {
@@ -823,10 +823,10 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
         return GetFurthestCollisionPoint(Origin, out furthestDistanceSquared);
     }
     /// <summary>
-    /// Gets the collision point in all registers that is furthest from the specified position.
+    /// Gets the intersection point in all registers that is furthest from the specified position.
     /// </summary>
     /// <param name="position">The point to compare distances from.</param>
-    /// <param name="furthestDistanceSquared">The squared distance to the furthest collision point.</param>
+    /// <param name="furthestDistanceSquared">The squared distance to the furthest intersection point.</param>
     /// <returns>The furthest <see cref="IntersectionPoint"/> or a default value if none exist.</returns>
     public IntersectionPoint GetFurthestCollisionPoint(Vector2 position, out float furthestDistanceSquared)
     {
@@ -854,7 +854,7 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
     
     #region Point Towards
     /// <summary>
-    /// Gets the collision point whose normal is most closely facing towards the specified reference point.
+    /// Gets the intersection point whose normal is most closely facing towards the specified reference point.
     /// </summary>
     /// <param name="referencePoint">The point to compare direction against.</param>
     /// <returns>The <see cref="IntersectionPoint"/> facing most towards the reference point, or a default value if none exist.</returns>
@@ -882,7 +882,7 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
      return pointing;
     }
     /// <summary>
-    /// Gets the collision point whose normal is most closely facing towards the specified reference direction.
+    /// Gets the intersection point whose normal is most closely facing towards the specified reference direction.
     /// </summary>
     /// <param name="referenceDirection">The direction to compare against.</param>
     /// <returns>The <see cref="IntersectionPoint"/> facing most towards the reference direction, or a default value if none exist.</returns>
@@ -909,7 +909,7 @@ public class IntersectSpaceResult : List<IntersectSpaceRegister>
      return pointing;
     }
     /// <summary>
-    /// Gets the collision point whose normal is most closely facing towards the origin.
+    /// Gets the intersection point whose normal is most closely facing towards the origin.
     /// </summary>
     /// <returns>The <see cref="IntersectionPoint"/> facing most towards the origin.</returns>
     public IntersectionPoint GetCollisionPointFacingTowardsOrigin()
