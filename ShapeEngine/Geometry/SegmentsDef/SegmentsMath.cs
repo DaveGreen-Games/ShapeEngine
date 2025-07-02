@@ -75,7 +75,7 @@ public partial class Segments
     /// </summary>
     /// <param name="length">The new length of the segments.</param>
     /// <param name="originF">The origin of the change. 0.5f is the center of the segment.</param>
-    public void SetSize(float length, float originF = 0.5f)
+    public void SetLength(float length, float originF = 0.5f)
     {
         for (var i = 0; i < Count; i++)
         {
@@ -222,15 +222,15 @@ public partial class Segments
     /// <summary>
     /// Creates a new list of segments with the length of all segments set to a given value.
     /// </summary>
-    /// <param name="size">The new length of the segments.</param>
+    /// <param name="length">The new length of the segments.</param>
     /// <param name="originF">The origin of the change. 0.5f is the center of the segment.</param>
     /// <returns>A new list of segments with the length set.</returns>
-    public Segments SetLengthCopy(float size, float originF = 0.5f)
+    public Segments SetLengthCopy(float length, float originF = 0.5f)
     {
         var newSegments = new Segments(Count);
         for (var i = 0; i < Count; i++)
         {
-            newSegments.Add(this[i].SetLength(size, originF));
+            newSegments.Add(this[i].SetLength(length, originF));
         }
 
         return newSegments;

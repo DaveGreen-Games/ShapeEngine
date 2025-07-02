@@ -16,12 +16,12 @@ namespace ShapeEngine.Geometry.SegmentsDef;
 public partial class Segments
 {
     /// <summary>
-    /// Gets the closest point on a list of segments to a given point.
+    /// Gets the closest point on a series of connected segments to a given point.
     /// </summary>
-    /// <param name="points">The list of points that define the segments.</param>
+    /// <param name="points">The list of vertices that define the segments. Each pair of consecutive points is treated as a segment.</param>
     /// <param name="p">The point to find the closest point to.</param>
     /// <param name="disSquared">The squared distance between the point and the closest point.</param>
-    /// <returns>The closest point on the segments to the given point.</returns>
+    /// <returns>The closest point on the segments to the given point. Returns a new Vector2() if there are 2 or less points.</returns>
     public static Vector2 GetClosestPointSegmentsPoint(List<Vector2> points, Vector2 p, out float disSquared)
     {
         disSquared = -1;
@@ -52,7 +52,7 @@ public partial class Segments
     /// </summary>
     /// <param name="p">The point to find the closest point to.</param>
     /// <param name="disSquared">The squared distance between the point and the closest point.</param>
-    /// <returns>A collision point with the closest point and the normal of the segment.</returns>
+    /// <returns>A CollisionPoint representing the closest point. Returns a new CollisionPoint() if there are 2 or less segments.</returns>
     public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared)
     {
         disSquared = -1;
@@ -83,7 +83,7 @@ public partial class Segments
     /// <param name="p">The point to find the closest point to.</param>
     /// <param name="disSquared">The squared distance between the point and the closest point.</param>
     /// <param name="index">The index of the segment that contains the closest point.</param>
-    /// <returns>A collision point with the closest point and the normal of the segment.</returns>
+    /// <returns>A CollisionPoint representing the closest point. Returns a new CollisionPoint() if there are 2 or less segments.</returns>
     public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared, out int index)
     {
         disSquared = -1;
@@ -116,7 +116,7 @@ public partial class Segments
     /// <param name="p">The point to find the closest vertex to.</param>
     /// <param name="disSquared">The squared distance between the point and the closest vertex.</param>
     /// <param name="index">The index of the segment that contains the closest vertex.</param>
-    /// <returns>The closest vertex to the given point.</returns>
+    /// <returns>The closest vertex to the given point. Returns a new Vector2() if there are 2 or less segments.</returns>
     public Vector2 GetClosestVertex(Vector2 p, out float disSquared, out int index)
     {
         disSquared = -1;
@@ -162,7 +162,9 @@ public partial class Segments
     /// Gets the closest point on the segments to a given line.
     /// </summary>
     /// <param name="other">The line to find the closest point to.</param>
-    /// <returns>A ClosestPointResult containing the closest points on the segments and the line, the squared distance between them, and the index of the segment that contains the closest point.</returns>
+    /// <returns>A ClosestPointResult containing the closest points on the segments and the line,
+    /// the squared distance between them, and the index of the segment that contains the closest point.
+    /// Returns a new ClosestPointResult() if there are 2 or less segments.</returns>
     public ClosestPointResult GetClosestPoint(Line other)
     {
         if (Count <= 2) return new();
@@ -195,7 +197,9 @@ public partial class Segments
     /// Gets the closest point on the segments to a given ray.
     /// </summary>
     /// <param name="other">The ray to find the closest point to.</param>
-    /// <returns>A ClosestPointResult containing the closest points on the segments and the ray, the squared distance between them, and the index of the segment that contains the closest point.</returns>
+    /// <returns>A ClosestPointResult containing the closest points on the segments and the ray,
+    /// the squared distance between them, and the index of the segment that contains the closest point.
+    /// Returns a new ClosestPointResult() if there are 2 or less segments.</returns>
     public ClosestPointResult GetClosestPoint(Ray other)
     {
         if (Count <= 2) return new();
@@ -229,7 +233,9 @@ public partial class Segments
     /// Gets the closest point on the segments to a given segment.
     /// </summary>
     /// <param name="other">The segment to find the closest point to.</param>
-    /// <returns>A ClosestPointResult containing the closest points on the segments and the other segment, the squared distance between them, and the index of the segment that contains the closest point.</returns>
+    /// <returns>A ClosestPointResult containing the closest points on the segments and the other segment,
+    /// the squared distance between them, and the index of the segment that contains the closest point.
+    /// Returns a new ClosestPointResult() if there are 2 or less segments.</returns>
     public ClosestPointResult GetClosestPoint(Segment other)
     {
         if (Count <= 2) return new();
@@ -263,7 +269,9 @@ public partial class Segments
     /// Gets the closest point on the segments to a given circle.
     /// </summary>
     /// <param name="other">The circle to find the closest point to.</param>
-    /// <returns>A ClosestPointResult containing the closest points on the segments and the circle, the squared distance between them, and the index of the segment that contains the closest point.</returns>
+    /// <returns>A ClosestPointResult containing the closest points on the segments and the circle,
+    /// the squared distance between them, and the index of the segment that contains the closest point.
+    /// Returns a new ClosestPointResult() if there are 2 or less segments.</returns>
     public ClosestPointResult GetClosestPoint(Circle other)
     {
         if (Count <= 2) return new();
@@ -298,7 +306,9 @@ public partial class Segments
     /// Gets the closest point on the segments to a given triangle.
     /// </summary>
     /// <param name="other">The triangle to find the closest point to.</param>
-    /// <returns>A ClosestPointResult containing the closest points on the segments and the triangle, the squared distance between them, and the indices of the segments that contain the closest points.</returns>
+    /// <returns>A ClosestPointResult containing the closest points on the segments and the triangle,
+    /// the squared distance between them, and the indices of the segments that contain the closest points.
+    /// Returns a new ClosestPointResult() if there are 2 or less segments.</returns>
     public ClosestPointResult GetClosestPoint(Triangle other)
     {
         if (Count <= 2) return new();
@@ -360,7 +370,9 @@ public partial class Segments
     /// Gets the closest point on the segments to a given quad.
     /// </summary>
     /// <param name="other">The quad to find the closest point to.</param>
-    /// <returns>A ClosestPointResult containing the closest points on the segments and the quad, the squared distance between them, and the indices of the segments that contain the closest points.</returns>
+    /// <returns>A ClosestPointResult containing the closest points on the segments and the quad,
+    /// the squared distance between them, and the indices of the segments that contain the closest points.
+    /// Returns a new ClosestPointResult() if there are 2 or less segments.</returns>
     public ClosestPointResult GetClosestPoint(Quad other)
     {
         if (Count <= 2) return new();
@@ -433,7 +445,9 @@ public partial class Segments
     /// Gets the closest point on the segments to a given rectangle.
     /// </summary>
     /// <param name="other">The rectangle to find the closest point to.</param>
-    /// <returns>A ClosestPointResult containing the closest points on the segments and the rectangle, the squared distance between them, and the indices of the segments that contain the closest points.</returns>
+    /// <returns>A ClosestPointResult containing the closest points on the segments and the rectangle,
+    /// the squared distance between them, and the indices of the segments that contain the closest points.
+    /// Returns a new ClosestPointResult() if there are 2 or less segments.</returns>
     public ClosestPointResult GetClosestPoint(Rect other)
     {
         if (Count <= 2) return new();
@@ -506,7 +520,9 @@ public partial class Segments
     /// Gets the closest point on the segments to a given polygon.
     /// </summary>
     /// <param name="other">The polygon to find the closest point to.</param>
-    /// <returns>A ClosestPointResult containing the closest points on the segments and the polygon, the squared distance between them, and the indices of the segments that contain the closest points.</returns>
+    /// <returns>A ClosestPointResult containing the closest points on the segments and the polygon,
+    /// the squared distance between them, and the indices of the segments that contain the closest points.
+    /// Returns a new ClosestPointResult() if there are 2 or less segments.</returns>
     public ClosestPointResult GetClosestPoint(Polygon other)
     {
         if (Count <= 2) return new();
@@ -551,7 +567,9 @@ public partial class Segments
     /// Gets the closest point on the segments to a given polyline.
     /// </summary>
     /// <param name="other">The polyline to find the closest point to.</param>
-    /// <returns>A ClosestPointResult containing the closest points on the segments and the polyline, the squared distance between them, and the indices of the segments that contain the closest points.</returns>
+    /// <returns>A ClosestPointResult containing the closest points on the segments and the polyline,
+    /// the squared distance between them, and the indices of the segments that contain the closest points.
+    /// Returns a new ClosestPointResult() if there are 2 or less segments.</returns>
     public ClosestPointResult GetClosestPoint(Polyline other)
     {
         if (Count <= 2) return new();
@@ -596,7 +614,9 @@ public partial class Segments
     /// Gets the closest point on the segments to a given set of segments.
     /// </summary>
     /// <param name="other">The set of segments to find the closest point to.</param>
-    /// <returns>A ClosestPointResult containing the closest points on the segments and the other segments, the squared distance between them, and the indices of the segments that contain the closest points.</returns>
+    /// <returns>A ClosestPointResult containing the closest points on the segments and the other segments,
+    /// the squared distance between them, and the indices of the segments that contain the closest points.
+    /// Returns a new ClosestPointResult() if there are 2 or less segments.</returns>
     public ClosestPointResult GetClosestPoint(Segments other)
     {
         if (Count <= 2) return new();
@@ -641,7 +661,8 @@ public partial class Segments
     /// </summary>
     /// <param name="p">The point to find the closest segment and point to.</param>
     /// <param name="disSquared">The squared distance between the point and the closest point on the segment.</param>
-    /// <returns>A tuple containing the closest segment and the closest point on the segment to the given point.</returns>
+    /// <returns>A tuple containing the closest segment and the closest point on the segment to the given point.
+    /// Returns a new empty segment and collision point if there are 2 or less segments.</returns>
     public (Segment segment, CollisionPoint segmentPoint) GetClosestSegment(Vector2 p, out float disSquared)
     {
         disSquared = -1;

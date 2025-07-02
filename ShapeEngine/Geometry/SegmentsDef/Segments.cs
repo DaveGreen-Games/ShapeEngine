@@ -3,6 +3,7 @@ using ShapeEngine.Core;
 using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Random;
+using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Geometry.SegmentsDef;
 
@@ -59,12 +60,14 @@ public partial class Segments : ShapeList<Segment>
     /// Gets the segment at the specified index.
     /// </summary>
     /// <param name="index">The index of the segment to get.</param>
-    /// <returns>The segment at the specified index. If the index is out of bounds, it will be wrapped around.</returns>
+    /// <returns>The segment at the specified index, with the index wrapped if out of bounds.</returns>
     public Segment GetSegment(int index)
     {
-        if (index < 0) return new Segment();
+        // if (index < 0) return new Segment();
         if (Count <= 0) return new Segment();
-        var i = index % Count;
+        var i =ShapeMath.WrapI(index, 0, Count - 1);
+        // var i = ((index % Count) + Count) % Count;
+        // var i = index % Count;
         return this[i];
     }
     
