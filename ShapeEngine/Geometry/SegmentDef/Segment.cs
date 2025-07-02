@@ -100,7 +100,7 @@ public readonly partial struct Segment : IEquatable<Segment>
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="Segment"/> struct as a sub-segment of an existing segment.
+    /// Initializes a new instance of the <see cref="Segment"/> struct from an origin, length, and rotation.
     /// </summary>
     /// <param name="origin">The origin point of the segment.</param>
     /// <param name="length">The length of the segment.</param>
