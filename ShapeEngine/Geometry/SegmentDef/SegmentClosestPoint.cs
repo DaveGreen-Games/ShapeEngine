@@ -20,11 +20,11 @@ public readonly partial struct Segment
     /// </summary>
     /// <param name="p">The point to find the closest point to.</param>
     /// <param name="disSquared">The squared distance from the point to the closest point on the segment.</param>
-    /// <returns>A <see cref="CollisionPoint"/> representing the closest point and its normal.</returns>
+    /// <returns>A <see cref="IntersectionPoint"/> representing the closest point and its normal.</returns>
     /// <remarks>
     /// If the closest point is at the segment's endpoint, the normal is chosen based on the direction to the point.
     /// </remarks>
-    public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared)
+    public IntersectionPoint GetClosestPoint(Vector2 p, out float disSquared)
     {
         Vector2 c;
         var w = Displacement;

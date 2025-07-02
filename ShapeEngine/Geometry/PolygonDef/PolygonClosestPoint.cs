@@ -52,8 +52,8 @@ public partial class Polygon
     /// </summary>
     /// <param name="p">The point to test.</param>
     /// <param name="disSquared">The squared distance to the closest point (output).</param>
-    /// <returns>The closest point and its normal as a <see cref="CollisionPoint"/>.</returns>
-    public new CollisionPoint GetClosestPoint(Vector2 p, out float disSquared)
+    /// <returns>The closest point and its normal as a <see cref="IntersectionPoint"/>.</returns>
+    public new IntersectionPoint GetClosestPoint(Vector2 p, out float disSquared)
     {
         disSquared = -1;
         if (Count <= 2) return new();
@@ -86,8 +86,8 @@ public partial class Polygon
     /// <param name="p">The point to test.</param>
     /// <param name="disSquared">The squared distance to the closest point (output).</param>
     /// <param name="index">The index of the closest edge (output).</param>
-    /// <returns>The closest point and its normal as a <see cref="CollisionPoint"/>.</returns>
-    public new CollisionPoint GetClosestPoint(Vector2 p, out float disSquared, out int index)
+    /// <returns>The closest point and its normal as a <see cref="IntersectionPoint"/>.</returns>
+    public new IntersectionPoint GetClosestPoint(Vector2 p, out float disSquared, out int index)
     {
         disSquared = -1;
         index = -1;
@@ -669,8 +669,8 @@ public partial class Polygon
     /// </summary>
     /// <param name="p">The point to test.</param>
     /// <param name="disSquared">The squared distance to the closest segment (output).</param>
-    /// <returns>The closest segment and its closest point as a <see cref="CollisionPoint"/>.</returns>
-    public (Segment segment, CollisionPoint segmentPoint) GetClosestSegment(Vector2 p, out float disSquared)
+    /// <returns>The closest segment and its closest point as a <see cref="IntersectionPoint"/>.</returns>
+    public (Segment segment, IntersectionPoint segmentPoint) GetClosestSegment(Vector2 p, out float disSquared)
     {
         disSquared = -1;
         if (Count <= 2) return (new(), new());

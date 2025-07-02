@@ -38,13 +38,13 @@ public readonly partial struct Line
     /// <param name="segmentStart">The start point of the segment.</param>
     /// <param name="segmentEnd">The end point of the segment.</param>
     /// <returns>
-    /// A tuple containing the <see cref="CollisionPoint"/> at the intersection and the parameter t along the line.
-    /// If no intersection exists, returns an invalid <see cref="CollisionPoint"/> and t = -1.
+    /// A tuple containing the <see cref="IntersectionPoint"/> at the intersection and the parameter t along the line.
+    /// If no intersection exists, returns an invalid <see cref="IntersectionPoint"/> and t = -1.
     /// </returns>
     /// <remarks>
     /// The intersection is only valid if it lies within the segment bounds.
     /// </remarks>
-    public static (CollisionPoint p, float t) IntersectLineSegmentInfo(Vector2 linePoint, Vector2 lineDirection, Vector2 segmentStart, Vector2 segmentEnd)
+    public static (IntersectionPoint p, float t) IntersectLineSegmentInfo(Vector2 linePoint, Vector2 lineDirection, Vector2 segmentStart, Vector2 segmentEnd)
     {
         // Line AB (infinite line) represented by linePoint and lineDirection
         // Line segment CD represented by segmentStart and segmentEnd
@@ -88,15 +88,15 @@ public readonly partial struct Line
     /// <param name="lineDirection">The direction vector of the infinite line.</param>
     /// <param name="segmentStart">The start point of the segment.</param>
     /// <param name="segmentEnd">The end point of the segment.</param>
-    /// <param name="segmentNormal">The normal vector of the segment, used for the resulting <see cref="CollisionPoint"/>.</param>
+    /// <param name="segmentNormal">The normal vector of the segment, used for the resulting <see cref="IntersectionPoint"/>.</param>
     /// <returns>
-    /// A tuple containing the <see cref="CollisionPoint"/> at the intersection (with the provided normal) and the parameter t along the line.
-    /// If no intersection exists, returns an invalid <see cref="CollisionPoint"/> and t = -1.
+    /// A tuple containing the <see cref="IntersectionPoint"/> at the intersection (with the provided normal) and the parameter t along the line.
+    /// If no intersection exists, returns an invalid <see cref="IntersectionPoint"/> and t = -1.
     /// </returns>
     /// <remarks>
     /// Use this overload when the segment's normal is already known.
     /// </remarks>
-    public static (CollisionPoint p, float t) IntersectLineSegmentInfo(Vector2 linePoint, Vector2 lineDirection, Vector2 segmentStart, Vector2 segmentEnd,
+    public static (IntersectionPoint p, float t) IntersectLineSegmentInfo(Vector2 linePoint, Vector2 lineDirection, Vector2 segmentStart, Vector2 segmentEnd,
         Vector2 segmentNormal)
     {
         var result = IntersectLineSegmentInfo(linePoint, lineDirection, segmentStart, segmentEnd);
@@ -116,13 +116,13 @@ public readonly partial struct Line
     /// <param name="line2Point">A point through which the second line passes.</param>
     /// <param name="line2Direction">The direction vector of the second line.</param>
     /// <returns>
-    /// A tuple containing the <see cref="CollisionPoint"/> at the intersection and the parameter t along the first line.
-    /// If the lines are parallel, returns an invalid <see cref="CollisionPoint"/> and t = -1.
+    /// A tuple containing the <see cref="IntersectionPoint"/> at the intersection and the parameter t along the first line.
+    /// If the lines are parallel, returns an invalid <see cref="IntersectionPoint"/> and t = -1.
     /// </returns>
     /// <remarks>
     /// The intersection is valid only if the lines are not parallel.
     /// </remarks>
-    public static (CollisionPoint p, float t) IntersectLineLineInfo(Vector2 line1Point, Vector2 line1Direction, Vector2 line2Point, Vector2 line2Direction)
+    public static (IntersectionPoint p, float t) IntersectLineLineInfo(Vector2 line1Point, Vector2 line1Direction, Vector2 line2Point, Vector2 line2Direction)
     {
         // Calculate the denominator of the intersection formula
         float denominator = line1Direction.X * line2Direction.Y - line1Direction.Y * line2Direction.X;
@@ -153,15 +153,15 @@ public readonly partial struct Line
     /// <param name="line1Direction">The direction vector of the first line.</param>
     /// <param name="line2Point">A point through which the second line passes.</param>
     /// <param name="line2Direction">The direction vector of the second line.</param>
-    /// <param name="line2Normal">The normal vector of the second line, used for the resulting <see cref="CollisionPoint"/>.</param>
+    /// <param name="line2Normal">The normal vector of the second line, used for the resulting <see cref="IntersectionPoint"/>.</param>
     /// <returns>
-    /// A tuple containing the <see cref="CollisionPoint"/> at the intersection (with the provided normal) and the parameter t along the first line.
-    /// If the lines are parallel, returns an invalid <see cref="CollisionPoint"/> and t = -1.
+    /// A tuple containing the <see cref="IntersectionPoint"/> at the intersection (with the provided normal) and the parameter t along the first line.
+    /// If the lines are parallel, returns an invalid <see cref="IntersectionPoint"/> and t = -1.
     /// </returns>
     /// <remarks>
     /// Use this overload when the second line's normal is already known.
     /// </remarks>
-    public static (CollisionPoint p, float t) IntersectLineLineInfo(Vector2 line1Point, Vector2 line1Direction, Vector2 line2Point, Vector2 line2Direction,
+    public static (IntersectionPoint p, float t) IntersectLineLineInfo(Vector2 line1Point, Vector2 line1Direction, Vector2 line2Point, Vector2 line2Direction,
         Vector2 line2Normal)
     {
         var result = IntersectLineLineInfo(line1Point, line1Direction, line2Point, line2Direction);
@@ -181,13 +181,13 @@ public readonly partial struct Line
     /// <param name="rayPoint">The origin point of the ray.</param>
     /// <param name="rayDirection">The direction vector of the ray.</param>
     /// <returns>
-    /// A tuple containing the <see cref="CollisionPoint"/> at the intersection and the parameter t along the line.
-    /// If the intersection does not lie in the direction of the ray, returns an invalid <see cref="CollisionPoint"/> and t = -1.
+    /// A tuple containing the <see cref="IntersectionPoint"/> at the intersection and the parameter t along the line.
+    /// If the intersection does not lie in the direction of the ray, returns an invalid <see cref="IntersectionPoint"/> and t = -1.
     /// </returns>
     /// <remarks>
     /// The intersection is valid only if it lies in the positive direction of the ray.
     /// </remarks>
-    public static (CollisionPoint p, float t) IntersectLineRayInfo(Vector2 linePoint, Vector2 lineDirection, Vector2 rayPoint, Vector2 rayDirection)
+    public static (IntersectionPoint p, float t) IntersectLineRayInfo(Vector2 linePoint, Vector2 lineDirection, Vector2 rayPoint, Vector2 rayDirection)
     {
         // Calculate the denominator of the intersection formula
         float denominator = lineDirection.X * rayDirection.Y - lineDirection.Y * rayDirection.X;
@@ -227,15 +227,15 @@ public readonly partial struct Line
     /// <param name="lineDirection">The direction vector of the infinite line.</param>
     /// <param name="rayPoint">The origin point of the ray.</param>
     /// <param name="rayDirection">The direction vector of the ray.</param>
-    /// <param name="rayNormal">The normal vector of the ray, used for the resulting <see cref="CollisionPoint"/>.</param>
+    /// <param name="rayNormal">The normal vector of the ray, used for the resulting <see cref="IntersectionPoint"/>.</param>
     /// <returns>
-    /// A tuple containing the <see cref="CollisionPoint"/> at the intersection (with the provided normal) and the parameter t along the line.
-    /// If the intersection does not lie in the direction of the ray, returns an invalid <see cref="CollisionPoint"/> and t = -1.
+    /// A tuple containing the <see cref="IntersectionPoint"/> at the intersection (with the provided normal) and the parameter t along the line.
+    /// If the intersection does not lie in the direction of the ray, returns an invalid <see cref="IntersectionPoint"/> and t = -1.
     /// </returns>
     /// <remarks>
     /// Use this overload when the ray's normal is already known.
     /// </remarks>
-    public static (CollisionPoint p, float t) IntersectLineRayInfo(Vector2 linePoint, Vector2 lineDirection, Vector2 rayPoint, Vector2 rayDirection,
+    public static (IntersectionPoint p, float t) IntersectLineRayInfo(Vector2 linePoint, Vector2 lineDirection, Vector2 rayPoint, Vector2 rayDirection,
         Vector2 rayNormal)
     {
         var result = IntersectLineRayInfo(linePoint, lineDirection, rayPoint, rayDirection);
@@ -255,12 +255,12 @@ public readonly partial struct Line
     /// <param name="segmentStart">The start point of the segment.</param>
     /// <param name="segmentEnd">The end point of the segment.</param>
     /// <returns>
-    /// A <see cref="CollisionPoint"/> at the intersection, or an invalid <see cref="CollisionPoint"/> if no intersection exists.
+    /// A <see cref="IntersectionPoint"/> at the intersection, or an invalid <see cref="IntersectionPoint"/> if no intersection exists.
     /// </returns>
     /// <remarks>
     /// The intersection is valid only if it lies within the segment bounds.
     /// </remarks>
-    public static CollisionPoint IntersectLineSegment(Vector2 linePoint, Vector2 lineDirection, Vector2 segmentStart, Vector2 segmentEnd)
+    public static IntersectionPoint IntersectLineSegment(Vector2 linePoint, Vector2 lineDirection, Vector2 segmentStart, Vector2 segmentEnd)
     {
         var result = Ray.IntersectRaySegment(linePoint, lineDirection, segmentStart, segmentEnd);
         if (result.Valid) return result;
@@ -313,14 +313,14 @@ public readonly partial struct Line
     /// <param name="lineDirection">The direction vector of the infinite line.</param>
     /// <param name="segmentStart">The start point of the segment.</param>
     /// <param name="segmentEnd">The end point of the segment.</param>
-    /// <param name="segmentNormal">The normal vector of the segment, used for the resulting <see cref="CollisionPoint"/>.</param>
+    /// <param name="segmentNormal">The normal vector of the segment, used for the resulting <see cref="IntersectionPoint"/>.</param>
     /// <returns>
-    /// A <see cref="CollisionPoint"/> at the intersection (with the provided normal), or an invalid <see cref="CollisionPoint"/> if no intersection exists.
+    /// A <see cref="IntersectionPoint"/> at the intersection (with the provided normal), or an invalid <see cref="IntersectionPoint"/> if no intersection exists.
     /// </returns>
     /// <remarks>
     /// Use this overload when the segment's normal is already known.
     /// </remarks>
-    public static CollisionPoint IntersectLineSegment(Vector2 linePoint, Vector2 lineDirection, Vector2 segmentStart, Vector2 segmentEnd, Vector2 segmentNormal)
+    public static IntersectionPoint IntersectLineSegment(Vector2 linePoint, Vector2 lineDirection, Vector2 segmentStart, Vector2 segmentEnd, Vector2 segmentNormal)
     {
         var result = IntersectLineSegment(linePoint, lineDirection, segmentStart, segmentEnd);
         if (result.Valid)
@@ -339,12 +339,12 @@ public readonly partial struct Line
     /// <param name="line2Point">A point through which the second line passes.</param>
     /// <param name="line2Direction">The direction vector of the second line.</param>
     /// <returns>
-    /// A <see cref="CollisionPoint"/> at the intersection, or an invalid <see cref="CollisionPoint"/> if the lines are parallel.
+    /// A <see cref="IntersectionPoint"/> at the intersection, or an invalid <see cref="IntersectionPoint"/> if the lines are parallel.
     /// </returns>
     /// <remarks>
     /// The intersection is valid only if the lines are not parallel.
     /// </remarks>
-    public static CollisionPoint IntersectLineLine(Vector2 line1Point, Vector2 line1Direction, Vector2 line2Point, Vector2 line2Direction)
+    public static IntersectionPoint IntersectLineLine(Vector2 line1Point, Vector2 line1Direction, Vector2 line2Point, Vector2 line2Direction)
     {
         // Calculate the denominator of the intersection formula
         float denominator = line1Direction.X * line2Direction.Y - line1Direction.Y * line2Direction.X;
@@ -375,11 +375,11 @@ public readonly partial struct Line
     /// <param name="line1Direction">The direction vector of the first line.</param>
     /// <param name="line2Point">A point through which the second line passes.</param>
     /// <param name="line2Direction">The direction vector of the second line.</param>
-    /// <param name="line2Normal">The normal vector of the second line, used for the resulting <see cref="CollisionPoint"/>.</param>
+    /// <param name="line2Normal">The normal vector of the second line, used for the resulting <see cref="IntersectionPoint"/>.</param>
     /// <returns>
-    /// A <see cref="CollisionPoint"/> at the intersection (with the provided normal), or an invalid <see cref="CollisionPoint"/> if the lines are parallel.
+    /// A <see cref="IntersectionPoint"/> at the intersection (with the provided normal), or an invalid <see cref="IntersectionPoint"/> if the lines are parallel.
     /// </returns>
-    public static CollisionPoint IntersectLineLine(Vector2 line1Point, Vector2 line1Direction, Vector2 line2Point, Vector2 line2Direction, Vector2 line2Normal)
+    public static IntersectionPoint IntersectLineLine(Vector2 line1Point, Vector2 line1Direction, Vector2 line2Point, Vector2 line2Direction, Vector2 line2Normal)
     {
         var result = IntersectLineLine(line1Point, line1Direction, line2Point, line2Direction);
         if (result.Valid)
@@ -398,12 +398,12 @@ public readonly partial struct Line
     /// <param name="rayPoint">The origin point of the ray.</param>
     /// <param name="rayDirection">The direction vector of the ray.</param>
     /// <returns>
-    /// A <see cref="CollisionPoint"/> at the intersection, or an invalid <see cref="CollisionPoint"/> if the intersection does not lie in the direction of the ray.
+    /// A <see cref="IntersectionPoint"/> at the intersection, or an invalid <see cref="IntersectionPoint"/> if the intersection does not lie in the direction of the ray.
     /// </returns>
     /// <remarks>
     /// The intersection is valid only if it lies in the positive direction of the ray.
     /// </remarks>
-    public static CollisionPoint IntersectLineRay(Vector2 linePoint, Vector2 lineDirection, Vector2 rayPoint, Vector2 rayDirection)
+    public static IntersectionPoint IntersectLineRay(Vector2 linePoint, Vector2 lineDirection, Vector2 rayPoint, Vector2 rayDirection)
     {
         // Calculate the denominator of the intersection formula
         float denominator = lineDirection.X * rayDirection.Y - lineDirection.Y * rayDirection.X;
@@ -443,14 +443,14 @@ public readonly partial struct Line
     /// <param name="lineDirection">The direction vector of the infinite line.</param>
     /// <param name="rayPoint">The origin point of the ray.</param>
     /// <param name="rayDirection">The direction vector of the ray.</param>
-    /// <param name="rayNormal">The normal vector of the ray, used for the resulting <see cref="CollisionPoint"/>.</param>
+    /// <param name="rayNormal">The normal vector of the ray, used for the resulting <see cref="IntersectionPoint"/>.</param>
     /// <returns>
-    /// A <see cref="CollisionPoint"/> at the intersection (with the provided normal), or an invalid <see cref="CollisionPoint"/> if the intersection does not lie in the direction of the ray.
+    /// A <see cref="IntersectionPoint"/> at the intersection (with the provided normal), or an invalid <see cref="IntersectionPoint"/> if the intersection does not lie in the direction of the ray.
     /// </returns>
     /// <remarks>
     /// Use this overload when the ray's normal is already known.
     /// </remarks>
-    public static CollisionPoint IntersectLineRay(Vector2 linePoint, Vector2 lineDirection, Vector2 rayPoint, Vector2 rayDirection, Vector2 rayNormal)
+    public static IntersectionPoint IntersectLineRay(Vector2 linePoint, Vector2 lineDirection, Vector2 rayPoint, Vector2 rayDirection, Vector2 rayNormal)
     {
         var result = IntersectLineRay(linePoint, lineDirection, rayPoint, rayDirection);
         if (result.Valid)
@@ -469,13 +469,13 @@ public readonly partial struct Line
     /// <param name="circleCenter">The center of the circle.</param>
     /// <param name="circleRadius">The radius of the circle.</param>
     /// <returns>
-    /// A tuple containing two <see cref="CollisionPoint"/> objects representing the intersection points.
+    /// A tuple containing two <see cref="IntersectionPoint"/> objects representing the intersection points.
     /// If no intersection exists, both points are invalid.
     /// </returns>
     /// <remarks>
     /// The function calculates the closest approach of the line to the circle and determines if the line intersects the circle.
     /// </remarks>
-    public static (CollisionPoint a, CollisionPoint b) IntersectLineCircle(Vector2 linePoint, Vector2 lineDirection, Vector2 circleCenter, float circleRadius)
+    public static (IntersectionPoint a, IntersectionPoint b) IntersectLineCircle(Vector2 linePoint, Vector2 lineDirection, Vector2 circleCenter, float circleRadius)
     {
         // Normalize the direction vector
         lineDirection = lineDirection.Normalize();
@@ -506,14 +506,14 @@ public readonly partial struct Line
             var normal1 = (intersection1 - circleCenter).Normalize();
             var normal2 = (intersection2 - circleCenter).Normalize();
 
-            var p1 = new CollisionPoint(intersection1, normal1);
-            var p2 = new CollisionPoint(intersection2, normal2);
+            var p1 = new IntersectionPoint(intersection1, normal1);
+            var p2 = new IntersectionPoint(intersection2, normal2);
             return (p1, p2);
         }
 
         if (Math.Abs(distanceToCenter - circleRadius) < ShapeMath.EpsilonF)
         {
-            var p = new CollisionPoint(closestPoint, (closestPoint - circleCenter).Normalize());
+            var p = new IntersectionPoint(closestPoint, (closestPoint - circleCenter).Normalize());
             return (p, new());
         }
 
@@ -529,16 +529,16 @@ public readonly partial struct Line
     /// <param name="b">The second vertex of the triangle.</param>
     /// <param name="c">The third vertex of the triangle.</param>
     /// <returns>
-    /// A tuple containing up to two <see cref="CollisionPoint"/> objects representing the intersection points.
+    /// A tuple containing up to two <see cref="IntersectionPoint"/> objects representing the intersection points.
     /// If no intersection exists, both points are invalid.
     /// </returns>
     /// <remarks>
     /// The function checks each edge of the triangle for intersections with the line.
     /// </remarks>
-    public static (CollisionPoint a, CollisionPoint b) IntersectLineTriangle(Vector2 linePoint, Vector2 lineDirection, Vector2 a, Vector2 b, Vector2 c)
+    public static (IntersectionPoint a, IntersectionPoint b) IntersectLineTriangle(Vector2 linePoint, Vector2 lineDirection, Vector2 a, Vector2 b, Vector2 c)
     {
-        CollisionPoint resultA = new();
-        CollisionPoint resultB = new();
+        IntersectionPoint resultA = new();
+        IntersectionPoint resultB = new();
 
         var cp = IntersectLineSegment(linePoint, lineDirection, a, b);
         if (cp.Valid) resultA = cp;
@@ -572,16 +572,16 @@ public readonly partial struct Line
     /// <param name="c">The third vertex of the quadrilateral.</param>
     /// <param name="d">The fourth vertex of the quadrilateral.</param>
     /// <returns>
-    /// A tuple containing up to two <see cref="CollisionPoint"/> objects representing the intersection points.
+    /// A tuple containing up to two <see cref="IntersectionPoint"/> objects representing the intersection points.
     /// If no intersection exists, both points are invalid.
     /// </returns>
     /// <remarks>
     /// The function checks each edge of the quadrilateral for intersections with the line.
     /// </remarks>
-    public static (CollisionPoint a, CollisionPoint b) IntersectLineQuad(Vector2 linePoint, Vector2 lineDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+    public static (IntersectionPoint a, IntersectionPoint b) IntersectLineQuad(Vector2 linePoint, Vector2 lineDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
-        CollisionPoint resultA = new();
-        CollisionPoint resultB = new();
+        IntersectionPoint resultA = new();
+        IntersectionPoint resultB = new();
 
         var cp = IntersectLineSegment(linePoint, lineDirection, a, b);
         if (cp.Valid)
@@ -633,13 +633,13 @@ public readonly partial struct Line
     /// <param name="c">The third vertex of the rectangle.</param>
     /// <param name="d">The fourth vertex of the rectangle.</param>
     /// <returns>
-    /// A tuple containing up to two <see cref="CollisionPoint"/> objects representing the intersection points.
+    /// A tuple containing up to two <see cref="IntersectionPoint"/> objects representing the intersection points.
     /// If no intersection exists, both points are invalid.
     /// </returns>
     /// <remarks>
     /// This function is a specialized version of <see cref="IntersectLineQuad"/> for rectangles.
     /// </remarks>
-    public static (CollisionPoint a, CollisionPoint b) IntersectLineRect(Vector2 linePoint, Vector2 lineDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+    public static (IntersectionPoint a, IntersectionPoint b) IntersectLineRect(Vector2 linePoint, Vector2 lineDirection, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
         return IntersectLineQuad(linePoint, lineDirection, a, b, c, d);
     }
@@ -652,16 +652,16 @@ public readonly partial struct Line
     /// <param name="points">A list of vertices defining the polygon.</param>
     /// <param name="maxCollisionPoints">The maximum number of collision points to return. Use -1 for no limit.</param>
     /// <returns>
-    /// A <see cref="CollisionPoints"/> object containing the intersection points, or null if no intersections exist.
+    /// A <see cref="IntersectionPoints"/> object containing the intersection points, or null if no intersections exist.
     /// </returns>
     /// <remarks>
     /// The function iterates through all edges of the polygon to find intersections with the line.
     /// </remarks>
-    public static CollisionPoints? IntersectLinePolygon(Vector2 linePoint, Vector2 lineDirection, List<Vector2> points, int maxCollisionPoints = -1)
+    public static IntersectionPoints? IntersectLinePolygon(Vector2 linePoint, Vector2 lineDirection, List<Vector2> points, int maxCollisionPoints = -1)
     {
         if (points.Count < 3) return null;
         if (maxCollisionPoints == 0) return null;
-        CollisionPoints? result = null;
+        IntersectionPoints? result = null;
         for (var i = 0; i < points.Count; i++)
         {
             var colPoint = IntersectLineSegment(linePoint, lineDirection, points[i], points[(i + 1) % points.Count]);
@@ -684,16 +684,16 @@ public readonly partial struct Line
     /// <param name="points">A list of vertices defining the polyline.</param>
     /// <param name="maxCollisionPoints">The maximum number of collision points to return. Use -1 for no limit.</param>
     /// <returns>
-    /// A <see cref="CollisionPoints"/> object containing the intersection points, or null if no intersections exist.
+    /// A <see cref="IntersectionPoints"/> object containing the intersection points, or null if no intersections exist.
     /// </returns>
     /// <remarks>
     /// The function iterates through all segments of the polyline to find intersections with the line.
     /// </remarks>
-    public static CollisionPoints? IntersectLinePolyline(Vector2 linePoint, Vector2 lineDirection, List<Vector2> points, int maxCollisionPoints = -1)
+    public static IntersectionPoints? IntersectLinePolyline(Vector2 linePoint, Vector2 lineDirection, List<Vector2> points, int maxCollisionPoints = -1)
     {
         if (points.Count < 3) return null;
         if (maxCollisionPoints == 0) return null;
-        CollisionPoints? result = null;
+        IntersectionPoints? result = null;
         for (var i = 0; i < points.Count - 1; i++)
         {
             var colPoint = IntersectLineSegment(linePoint, lineDirection, points[i], points[i + 1]);
@@ -716,16 +716,16 @@ public readonly partial struct Line
     /// <param name="segments">A list of segments to check for intersections.</param>
     /// <param name="maxCollisionPoints">The maximum number of collision points to return. Use -1 for no limit.</param>
     /// <returns>
-    /// A <see cref="CollisionPoints"/> object containing the intersection points, or null if no intersections exist.
+    /// A <see cref="IntersectionPoints"/> object containing the intersection points, or null if no intersections exist.
     /// </returns>
     /// <remarks>
     /// The function iterates through all segments in the collection to find intersections with the line.
     /// </remarks>
-    public static CollisionPoints? IntersectLineSegments(Vector2 linePoint, Vector2 lineDirection, List<Segment> segments, int maxCollisionPoints = -1)
+    public static IntersectionPoints? IntersectLineSegments(Vector2 linePoint, Vector2 lineDirection, List<Segment> segments, int maxCollisionPoints = -1)
     {
         if (segments.Count <= 0) return null;
         if (maxCollisionPoints == 0) return null;
-        CollisionPoints? result = null;
+        IntersectionPoints? result = null;
 
         foreach (var seg in segments)
         {
@@ -747,7 +747,7 @@ public readonly partial struct Line
     /// <param name="linePoint">A point through which the infinite line passes.</param>
     /// <param name="lineDirection">The direction vector of the infinite line.</param>
     /// <param name="points">A list of vertices defining the polygon. The polygon is assumed to be closed and non-self-intersecting.</param>
-    /// <param name="result">A reference to a <see cref="CollisionPoints"/> object that will be populated with intersection points, if any.</param>
+    /// <param name="result">A reference to a <see cref="IntersectionPoints"/> object that will be populated with intersection points, if any.</param>
     /// <param name="returnAfterFirstValid">
     /// If true, the function returns after finding the first valid intersection point. If false, all intersection points are found.
     /// </param>
@@ -755,7 +755,7 @@ public readonly partial struct Line
     /// <remarks>
     /// The function iterates through all edges of the polygon and checks for intersections with the line.
     /// </remarks>
-    public static int IntersectLinePolygon(Vector2 linePoint, Vector2 lineDirection, List<Vector2> points, ref CollisionPoints result,
+    public static int IntersectLinePolygon(Vector2 linePoint, Vector2 lineDirection, List<Vector2> points, ref IntersectionPoints result,
         bool returnAfterFirstValid = false)
     {
         if (points.Count < 3) return 0;

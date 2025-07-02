@@ -500,12 +500,12 @@ public abstract class CollisionObject : PhysicsObject
     /// Returns the intersection points between this object and another <see cref="CollisionObject"/>.
     /// </summary>
     /// <param name="other">The other collision object.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(CollisionObject other)
+    /// <returns>A <see cref="IntersectionPoints"/> collection, or null if no intersection.</returns>
+    public IntersectionPoints? Intersect(CollisionObject other)
     {
         if (!Enabled || !other.Enabled || !HasColliders || !other.HasColliders) return null;
             
-        CollisionPoints? result = null;
+        IntersectionPoints? result = null;
         foreach (var col in Colliders)
         {
             foreach (var otherCol in other.Colliders)
@@ -523,11 +523,11 @@ public abstract class CollisionObject : PhysicsObject
     /// Returns the intersection points between this object and a specific collider.
     /// </summary>
     /// <param name="other">The other collider.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Collider other)
+    /// <returns>A <see cref="IntersectionPoints"/> collection, or null if no intersection.</returns>
+    public IntersectionPoints? Intersect(Collider other)
     {
         if (!Enabled || !other.Enabled || !HasColliders) return null;
-        CollisionPoints? result = null;
+        IntersectionPoints? result = null;
         foreach (var col in Colliders)
         {
             var points = col.Intersect(other);
@@ -542,11 +542,11 @@ public abstract class CollisionObject : PhysicsObject
     /// Returns the intersection points between this object and a segment shape.
     /// </summary>
     /// <param name="shape">The segment shape.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Segment shape)
+    /// <returns>A <see cref="IntersectionPoints"/> collection, or null if no intersection.</returns>
+    public IntersectionPoints? Intersect(Segment shape)
     {
         if (!Enabled || !HasColliders) return null;
-        CollisionPoints? result = null;
+        IntersectionPoints? result = null;
         foreach (var col in Colliders)
         {
             var points = col.Intersect(shape);
@@ -561,11 +561,11 @@ public abstract class CollisionObject : PhysicsObject
     /// Returns the intersection points between this object and a circle shape.
     /// </summary>
     /// <param name="shape">The circle shape.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Circle shape)
+    /// <returns>A <see cref="IntersectionPoints"/> collection, or null if no intersection.</returns>
+    public IntersectionPoints? Intersect(Circle shape)
     {
         if (!Enabled || !HasColliders) return null;
-        CollisionPoints? result = null;
+        IntersectionPoints? result = null;
         foreach (var col in Colliders)
         {
             var points = col.Intersect(shape);
@@ -580,11 +580,11 @@ public abstract class CollisionObject : PhysicsObject
     /// Returns the intersection points between this object and a triangle shape.
     /// </summary>
     /// <param name="shape">The triangle shape.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Triangle shape)
+    /// <returns>A <see cref="IntersectionPoints"/> collection, or null if no intersection.</returns>
+    public IntersectionPoints? Intersect(Triangle shape)
     {
         if (!Enabled || !HasColliders) return null;
-        CollisionPoints? result = null;
+        IntersectionPoints? result = null;
         foreach (var col in Colliders)
         {
             var points = col.Intersect(shape);
@@ -599,11 +599,11 @@ public abstract class CollisionObject : PhysicsObject
     /// Returns the intersection points between this object and a rectangle shape.
     /// </summary>
     /// <param name="shape">The rectangle shape.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Rect shape)
+    /// <returns>A <see cref="IntersectionPoints"/> collection, or null if no intersection.</returns>
+    public IntersectionPoints? Intersect(Rect shape)
     {
         if (!Enabled || !HasColliders) return null;
-        CollisionPoints? result = null;
+        IntersectionPoints? result = null;
         foreach (var col in Colliders)
         {
             var points = col.Intersect(shape);
@@ -618,11 +618,11 @@ public abstract class CollisionObject : PhysicsObject
     /// Returns the intersection points between this object and a polygon shape.
     /// </summary>
     /// <param name="shape">The polygon shape.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Polygon shape)
+    /// <returns>A <see cref="IntersectionPoints"/> collection, or null if no intersection.</returns>
+    public IntersectionPoints? Intersect(Polygon shape)
     {
         if (!Enabled || !HasColliders) return null;
-        CollisionPoints? result = null;
+        IntersectionPoints? result = null;
         foreach (var col in Colliders)
         {
             var points = col.Intersect(shape);
@@ -637,11 +637,11 @@ public abstract class CollisionObject : PhysicsObject
     /// Returns the intersection points between this object and a polyline shape.
     /// </summary>
     /// <param name="shape">The polyline shape.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection, or null if no intersection.</returns>
-    public CollisionPoints? Intersect(Polyline shape)
+    /// <returns>A <see cref="IntersectionPoints"/> collection, or null if no intersection.</returns>
+    public IntersectionPoints? Intersect(Polyline shape)
     {
         if (!Enabled || !HasColliders) return null;
-        CollisionPoints? result = null;
+        IntersectionPoints? result = null;
         foreach (var col in Colliders)
         {
             var points = col.Intersect(shape);

@@ -22,7 +22,7 @@ public partial class Polygon
     /// <param name="rayDirection">The direction of the ray.</param>
     /// <param name="result">The collection to which intersection points are added.</param>
     /// <returns>The number of new intersection points added.</returns>
-    public static int IntersectPolygonRay(List<Vector2> polygon, Vector2 rayPoint, Vector2 rayDirection, ref CollisionPoints result)
+    public static int IntersectPolygonRay(List<Vector2> polygon, Vector2 rayPoint, Vector2 rayDirection, ref IntersectionPoints result)
     {
         if (polygon.Count < 3) return 0;
         int count = result.Count;
@@ -44,7 +44,7 @@ public partial class Polygon
     /// <param name="points">The collection to which intersection points are added.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first valid intersection is found.</param>
     /// <returns>The number of new intersection points added.</returns>
-    public int Intersect(Collider collider, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int Intersect(Collider collider, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (!collider.Enabled) return 0;
 
@@ -88,7 +88,7 @@ public partial class Polygon
     /// <param name="points">The collection to which intersection points are added.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first valid intersection is found.</param>
     /// <returns>The number of new intersection points added.</returns>
-    public int IntersectShape(Ray r, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Ray r, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count < 3) return 0;
         var count = 0;
@@ -112,7 +112,7 @@ public partial class Polygon
     /// <param name="points">The collection to which intersection points are added.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first valid intersection is found.</param>
     /// <returns>The number of new intersection points added.</returns>
-    public int IntersectShape(Line l, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Line l, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count < 3) return 0;
         var count = 0;
@@ -136,7 +136,7 @@ public partial class Polygon
     /// <param name="points">The collection to which intersection points are added.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first valid intersection is found.</param>
     /// <returns>The number of new intersection points added.</returns>
-    public int IntersectShape(Segment s, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Segment s, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count < 3) return 0;
         var count = 0;
@@ -160,7 +160,7 @@ public partial class Polygon
     /// <param name="points">The collection to which intersection points are added.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first valid intersection is found.</param>
     /// <returns>The number of new intersection points added.</returns>
-    public int IntersectShape(Circle c, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Circle c, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count < 3) return 0;
 
@@ -193,7 +193,7 @@ public partial class Polygon
     /// <param name="points">The collection to which intersection points are added.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first valid intersection is found.</param>
     /// <returns>The number of new intersection points added.</returns>
-    public int IntersectShape(Triangle t, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Triangle t, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count < 3) return 0;
 
@@ -234,7 +234,7 @@ public partial class Polygon
     /// <param name="points">The collection to which intersection points are added.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first valid intersection is found.</param>
     /// <returns>The number of new intersection points added.</returns>
-    public int IntersectShape(Quad q, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Quad q, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count < 3) return 0;
 
@@ -283,7 +283,7 @@ public partial class Polygon
     /// <param name="points">The collection to which intersection points are added.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first valid intersection is found.</param>
     /// <returns>The number of new intersection points added.</returns>
-    public int IntersectShape(Rect r, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Rect r, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count < 3) return 0;
 
@@ -338,7 +338,7 @@ public partial class Polygon
     /// <param name="points">The collection to which intersection points are added.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first valid intersection is found.</param>
     /// <returns>The number of new intersection points added.</returns>
-    public int IntersectShape(Polygon p, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Polygon p, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count < 3 || p.Count < 3) return 0;
         var count = 0;
@@ -365,7 +365,7 @@ public partial class Polygon
     /// <param name="points">The collection to which intersection points are added.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first valid intersection is found.</param>
     /// <returns>The number of new intersection points added.</returns>
-    public int IntersectShape(Polyline pl, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Polyline pl, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count < 3 || pl.Count < 2) return 0;
         var count = 0;
@@ -395,7 +395,7 @@ public partial class Polygon
     /// <remarks>
     /// Each segment in the set is tested against all edges of the polygon. All valid intersection points are collected and returned unless <paramref name="returnAfterFirstValid"/> is true.
     /// </remarks>
-    public int IntersectShape(Segments shape, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Segments shape, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (Count < 3 || shape.Count <= 0) return 0;
         var count = 0;

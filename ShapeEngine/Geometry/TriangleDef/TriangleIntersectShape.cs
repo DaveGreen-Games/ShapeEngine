@@ -17,12 +17,12 @@ public readonly partial struct Triangle
     /// Tests for intersection between this triangle and a collider, returning collision points if found.
     /// </summary>
     /// <param name="collider">The collider to test intersection with.</param>
-    /// <returns>A CollisionPoints object containing intersection data if intersections are found; otherwise, null.</returns>
+    /// <returns>A IntersectionPoints object containing intersection data if intersections are found; otherwise, null.</returns>
     /// <remarks>
     /// This method determines the shape type of the collider and delegates to the appropriate
     /// shape-specific intersection method. If the collider is disabled, this method returns null.
     /// </remarks>
-    public CollisionPoints? Intersect(Collider collider)
+    public IntersectionPoints? Intersect(Collider collider)
     {
         if (!collider.Enabled) return null;
 
@@ -64,16 +64,16 @@ public readonly partial struct Triangle
     /// Tests for intersection between this triangle and a collection of line segments.
     /// </summary>
     /// <param name="segments">The collection of segments to test intersection with.</param>
-    /// <returns>A CollisionPoints object containing intersection data if intersections are found; otherwise, null.</returns>
+    /// <returns>A IntersectionPoints object containing intersection data if intersections are found; otherwise, null.</returns>
     /// <remarks>
     /// This method tests intersection with each segment in the collection and combines all intersection points.
     /// </remarks>
-    public CollisionPoints? IntersectShape(Segments segments)
+    public IntersectionPoints? IntersectShape(Segments segments)
     {
         if (segments == null) throw new ArgumentNullException(nameof(segments));
         if (segments.Count <= 0) return null;
 
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
 
         foreach (var seg in segments)
         {
@@ -106,14 +106,14 @@ public readonly partial struct Triangle
     /// Tests for intersection between this triangle and a ray.
     /// </summary>
     /// <param name="r">The ray to test intersection with.</param>
-    /// <returns>A CollisionPoints object containing intersection data if intersections are found; otherwise, null.</returns>
+    /// <returns>A IntersectionPoints object containing intersection data if intersections are found; otherwise, null.</returns>
     /// <remarks>
     /// This method checks intersection with the ray against all three edges of the triangle.
     /// A ray can intersect a triangle at most at two points.
     /// </remarks>
-    public CollisionPoints? IntersectShape(Ray r)
+    public IntersectionPoints? IntersectShape(Ray r)
     {
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         var result = Segment.IntersectSegmentRay(A, B, r.Point, r.Direction, r.Normal);
         if (result.Valid)
         {
@@ -142,14 +142,14 @@ public readonly partial struct Triangle
     /// Tests for intersection between this triangle and a line.
     /// </summary>
     /// <param name="l">The line to test intersection with.</param>
-    /// <returns>A CollisionPoints object containing intersection data if intersections are found; otherwise, null.</returns>
+    /// <returns>A IntersectionPoints object containing intersection data if intersections are found; otherwise, null.</returns>
     /// <remarks>
     /// This method checks intersection with the infinite line against all three edges of the triangle.
     /// A line can intersect a triangle at most at two points.
     /// </remarks>
-    public CollisionPoints? IntersectShape(Line l)
+    public IntersectionPoints? IntersectShape(Line l)
     {
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         var result = Segment.IntersectSegmentLine(A, B, l.Point, l.Direction, l.Normal);
         if (result.Valid)
         {
@@ -178,14 +178,14 @@ public readonly partial struct Triangle
     /// Tests for intersection between this triangle and a line segment.
     /// </summary>
     /// <param name="s">The segment to test intersection with.</param>
-    /// <returns>A CollisionPoints object containing intersection data if intersections are found; otherwise, null.</returns>
+    /// <returns>A IntersectionPoints object containing intersection data if intersections are found; otherwise, null.</returns>
     /// <remarks>
     /// This method checks intersection with the line segment against all three edges of the triangle.
     /// A segment can intersect a triangle at most at two points.
     /// </remarks>
-    public CollisionPoints? IntersectShape(Segment s)
+    public IntersectionPoints? IntersectShape(Segment s)
     {
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         var result = Segment.IntersectSegmentSegment(A, B, s.Start, s.End);
         if (result.Valid)
         {
@@ -214,14 +214,14 @@ public readonly partial struct Triangle
     /// Tests for intersection between this triangle and a circle.
     /// </summary>
     /// <param name="c">The circle to test intersection with.</param>
-    /// <returns>A CollisionPoints object containing intersection data if intersections are found; otherwise, null.</returns>
+    /// <returns>A IntersectionPoints object containing intersection data if intersections are found; otherwise, null.</returns>
     /// <remarks>
     /// This method checks intersection with the circle against all three edges of the triangle.
     /// A circle can intersect multiple edges of a triangle, potentially creating many intersection points.
     /// </remarks>
-    public CollisionPoints? IntersectShape(Circle c)
+    public IntersectionPoints? IntersectShape(Circle c)
     {
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         var result = Segment.IntersectSegmentCircle(A, B, c.Center, c.Radius);
         if (result.a.Valid || result.b.Valid)
         {
@@ -253,14 +253,14 @@ public readonly partial struct Triangle
     /// Tests for intersection between this triangle and another triangle.
     /// </summary>
     /// <param name="t">The triangle to test intersection with.</param>
-    /// <returns>A CollisionPoints object containing intersection data if intersections are found; otherwise, null.</returns>
+    /// <returns>A IntersectionPoints object containing intersection data if intersections are found; otherwise, null.</returns>
     /// <remarks>
     /// This method performs a comprehensive intersection test by checking all edges of both triangles
     /// against each other. Two triangles can have complex intersection patterns with multiple points.
     /// </remarks>
-    public CollisionPoints? IntersectShape(Triangle t)
+    public IntersectionPoints? IntersectShape(Triangle t)
     {
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         var result = Segment.IntersectSegmentSegment(A, B, t.A, t.B);
         if (result.Valid)
         {
@@ -332,13 +332,13 @@ public readonly partial struct Triangle
     /// Tests for intersection between this triangle and a rectangle.
     /// </summary>
     /// <param name="r">The rectangle to test intersection with.</param>
-    /// <returns>A CollisionPoints object containing intersection data if intersections are found; otherwise, null.</returns>
+    /// <returns>A IntersectionPoints object containing intersection data if intersections are found; otherwise, null.</returns>
     /// <remarks>
     /// This method checks intersection by testing all triangle edges against all rectangle edges.
     /// </remarks>
-    public CollisionPoints? IntersectShape(Rect r)
+    public IntersectionPoints? IntersectShape(Rect r)
     {
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         var a = r.TopLeft;
         var b = r.BottomLeft;
         var result = Segment.IntersectSegmentSegment(A, B, a, b);
@@ -436,13 +436,13 @@ public readonly partial struct Triangle
     /// Tests for intersection between this triangle and a quadrilateral.
     /// </summary>
     /// <param name="q">The quad to test intersection with.</param>
-    /// <returns>A CollisionPoints object containing intersection data if intersections are found; otherwise, null.</returns>
+    /// <returns>A IntersectionPoints object containing intersection data if intersections are found; otherwise, null.</returns>
     /// <remarks>
     /// This method checks intersection by testing all triangle edges against all quadrilateral edges.
     /// </remarks>
-    public CollisionPoints? IntersectShape(Quad q)
+    public IntersectionPoints? IntersectShape(Quad q)
     {
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         var result = Segment.IntersectSegmentSegment(A, B, q.A, q.B);
         if (result.Valid)
         {
@@ -536,16 +536,16 @@ public readonly partial struct Triangle
     /// Tests for intersection between this triangle and a polygon.
     /// </summary>
     /// <param name="p">The polygon to test intersection with.</param>
-    /// <returns>A CollisionPoints object containing intersection data if intersections are found; otherwise, null.</returns>
+    /// <returns>A IntersectionPoints object containing intersection data if intersections are found; otherwise, null.</returns>
     /// <remarks>
     /// This method checks intersection by testing all triangle edges against all polygon edges.
     /// The polygon can have any number of vertices.
     /// </remarks>
-    public CollisionPoints? IntersectShape(Polygon p)
+    public IntersectionPoints? IntersectShape(Polygon p)
     {
         if (p.Count < 3) return null;
 
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         for (var i = 0; i < p.Count; i++)
         {
             var colPoint = Segment.IntersectSegmentSegment(A, B, p[i], p[(i + 1) % p.Count]);
@@ -577,16 +577,16 @@ public readonly partial struct Triangle
     /// Tests for intersection between this triangle and a polyline.
     /// </summary>
     /// <param name="pl">The polyline to test intersection with.</param>
-    /// <returns>A CollisionPoints object containing intersection data if intersections are found; otherwise, null.</returns>
+    /// <returns>A IntersectionPoints object containing intersection data if intersections are found; otherwise, null.</returns>
     /// <remarks>
     /// This method checks intersection by testing all triangle edges against all polyline segments.
     /// Unlike polygons, polylines are not closed shapes.
     /// </remarks>
-    public CollisionPoints? IntersectShape(Polyline pl)
+    public IntersectionPoints? IntersectShape(Polyline pl)
     {
         if (pl.Count < 2) return null;
 
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         for (var i = 0; i < pl.Count - 1; i++)
         {
             var colPoint = Segment.IntersectSegmentSegment(A, B, pl[i], pl[i + 1]);
@@ -622,10 +622,10 @@ public readonly partial struct Triangle
     /// <param name="returnAfterFirstValid">If true, returns immediately after finding the first valid intersection.</param>
     /// <returns>The number of intersection points found and added to the collection.</returns>
     /// <remarks>
-    /// This performance-optimized method avoids allocating new CollisionPoints objects by reusing an existing collection.
+    /// This performance-optimized method avoids allocating new IntersectionPoints objects by reusing an existing collection.
     /// Useful for high-frequency intersection testing where garbage collection pressure should be minimized.
     /// </remarks>
-    public int Intersect(Collider collider, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int Intersect(Collider collider, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (!collider.Enabled) return 0;
 
@@ -671,9 +671,9 @@ public readonly partial struct Triangle
     /// <param name="returnAfterFirstValid">If true, returns immediately after finding the first valid intersection.</param>
     /// <returns>The number of intersection points found and added to the collection.</returns>
     /// <remarks>
-    /// This performance-optimized method avoids allocating new CollisionPoints objects.
+    /// This performance-optimized method avoids allocating new IntersectionPoints objects.
     /// </remarks>
-    public int IntersectShape(Ray r, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Ray r, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
         var result = Segment.IntersectSegmentRay(A, B, r.Point, r.Direction, r.Normal);
@@ -712,9 +712,9 @@ public readonly partial struct Triangle
     /// <param name="returnAfterFirstValid">If true, returns immediately after finding the first valid intersection.</param>
     /// <returns>The number of intersection points found and added to the collection.</returns>
     /// <remarks>
-    /// This performance-optimized method avoids allocating new CollisionPoints objects.
+    /// This performance-optimized method avoids allocating new IntersectionPoints objects.
     /// </remarks>
-    public int IntersectShape(Line l, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Line l, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
         var result = Segment.IntersectSegmentLine(A, B, l.Point, l.Direction, l.Normal);
@@ -753,9 +753,9 @@ public readonly partial struct Triangle
     /// <param name="returnAfterFirstValid">If true, returns immediately after finding the first valid intersection.</param>
     /// <returns>The number of intersection points found and added to the collection.</returns>
     /// <remarks>
-    /// This performance-optimized method avoids allocating new CollisionPoints objects.
+    /// This performance-optimized method avoids allocating new IntersectionPoints objects.
     /// </remarks>
-    public int IntersectShape(Segment s, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Segment s, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
         var result = Segment.IntersectSegmentSegment(A, B, s.Start, s.End);
@@ -794,9 +794,9 @@ public readonly partial struct Triangle
     /// <param name="returnAfterFirstValid">If true, returns immediately after finding the first valid intersection.</param>
     /// <returns>The number of intersection points found and added to the collection.</returns>
     /// <remarks>
-    /// This performance-optimized method avoids allocating new CollisionPoints objects.
+    /// This performance-optimized method avoids allocating new IntersectionPoints objects.
     /// </remarks>
-    public int IntersectShape(Circle c, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Circle c, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
         var result = Segment.IntersectSegmentCircle(A, B, c.Center, c.Radius);
@@ -854,9 +854,9 @@ public readonly partial struct Triangle
     /// <param name="returnAfterFirstValid">If true, returns immediately after finding the first valid intersection.</param>
     /// <returns>The number of intersection points found and added to the collection.</returns>
     /// <remarks>
-    /// This performance-optimized method avoids allocating new CollisionPoints objects.
+    /// This performance-optimized method avoids allocating new IntersectionPoints objects.
     /// </remarks>
-    public int IntersectShape(Triangle t, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Triangle t, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
         var result = Segment.IntersectSegmentSegment(A, B, t.A, t.B);
@@ -942,9 +942,9 @@ public readonly partial struct Triangle
     /// <param name="returnAfterFirstValid">If true, returns immediately after finding the first valid intersection.</param>
     /// <returns>The number of intersection points found and added to the collection.</returns>
     /// <remarks>
-    /// This performance-optimized method avoids allocating new CollisionPoints objects.
+    /// This performance-optimized method avoids allocating new IntersectionPoints objects.
     /// </remarks>
-    public int IntersectShape(Quad q, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Quad q, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
         var result = Segment.IntersectSegmentSegment(A, B, q.A, q.B);
@@ -1055,9 +1055,9 @@ public readonly partial struct Triangle
     /// <param name="returnAfterFirstValid">If true, returns immediately after finding the first valid intersection.</param>
     /// <returns>The number of intersection points found and added to the collection.</returns>
     /// <remarks>
-    /// This performance-optimized method avoids allocating new CollisionPoints objects.
+    /// This performance-optimized method avoids allocating new IntersectionPoints objects.
     /// </remarks>
-    public int IntersectShape(Rect r, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Rect r, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
         var a = r.TopLeft;
@@ -1172,9 +1172,9 @@ public readonly partial struct Triangle
     /// <param name="returnAfterFirstValid">If true, returns immediately after finding the first valid intersection.</param>
     /// <returns>The number of intersection points found and added to the collection.</returns>
     /// <remarks>
-    /// This performance-optimized method avoids allocating new CollisionPoints objects.
+    /// This performance-optimized method avoids allocating new IntersectionPoints objects.
     /// </remarks>
-    public int IntersectShape(Polygon p, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Polygon p, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (p.Count < 3) return 0;
 
@@ -1217,9 +1217,9 @@ public readonly partial struct Triangle
     /// <param name="returnAfterFirstValid">If true, returns immediately after finding the first valid intersection.</param>
     /// <returns>The number of intersection points found and added to the collection.</returns>
     /// <remarks>
-    /// This performance-optimized method avoids allocating new CollisionPoints objects.
+    /// This performance-optimized method avoids allocating new IntersectionPoints objects.
     /// </remarks>
-    public int IntersectShape(Polyline pl, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Polyline pl, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (pl.Count < 2) return 0;
 
@@ -1262,10 +1262,10 @@ public readonly partial struct Triangle
     /// <param name="returnAfterFirstValid">If true, returns immediately after finding the first valid intersection.</param>
     /// <returns>The number of intersection points found and added to the collection.</returns>
     /// <remarks>
-    /// This performance-optimized method avoids allocating new CollisionPoints objects by reusing an existing collection.
+    /// This performance-optimized method avoids allocating new IntersectionPoints objects by reusing an existing collection.
     /// Useful for high-frequency intersection testing where garbage collection pressure should be minimized.
     /// </remarks>
-    public int IntersectShape(Segments shape, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Segments shape, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (shape.Count <= 0) return 0;
 

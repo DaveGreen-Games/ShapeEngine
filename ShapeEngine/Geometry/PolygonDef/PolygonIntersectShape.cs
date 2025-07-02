@@ -21,11 +21,11 @@ public partial class Polygon
     /// <param name="polygon">The polygon as a list of points.</param>
     /// <param name="rayPoint">The origin of the ray.</param>
     /// <param name="rayDirection">The direction of the ray.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
-    public static CollisionPoints? IntersectPolygonRay(List<Vector2> polygon, Vector2 rayPoint, Vector2 rayDirection)
+    /// <returns>A <see cref="IntersectionPoints"/> collection of intersection points, or null if none.</returns>
+    public static IntersectionPoints? IntersectPolygonRay(List<Vector2> polygon, Vector2 rayPoint, Vector2 rayDirection)
     {
         if (polygon.Count < 3) return null;
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         for (var i = 0; i < polygon.Count; i++)
         {
             var result = Segment.IntersectSegmentRay(polygon[i], polygon[(i + 1) % polygon.Count], rayPoint, rayDirection);
@@ -42,8 +42,8 @@ public partial class Polygon
     /// Computes intersection points between this polygon and a collider.
     /// </summary>
     /// <param name="collider">The collider to test against.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
-    public CollisionPoints? Intersect(Collider collider)
+    /// <returns>A <see cref="IntersectionPoints"/> collection of intersection points, or null if none.</returns>
+    public IntersectionPoints? Intersect(Collider collider)
     {
         if (!collider.Enabled) return null;
 
@@ -84,11 +84,11 @@ public partial class Polygon
     /// Computes intersection points between this polygon and a ray.
     /// </summary>
     /// <param name="r">The ray to test against.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
-    public CollisionPoints? IntersectShape(Ray r)
+    /// <returns>A <see cref="IntersectionPoints"/> collection of intersection points, or null if none.</returns>
+    public IntersectionPoints? IntersectShape(Ray r)
     {
         if (Count < 3) return null;
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         for (var i = 0; i < Count; i++)
         {
             var result = Segment.IntersectSegmentRay(this[i], this[(i + 1) % Count], r.Point, r.Direction, r.Normal);
@@ -105,11 +105,11 @@ public partial class Polygon
     /// Computes intersection points between this polygon and a line.
     /// </summary>
     /// <param name="l">The line to test against.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
-    public CollisionPoints? IntersectShape(Line l)
+    /// <returns>A <see cref="IntersectionPoints"/> collection of intersection points, or null if none.</returns>
+    public IntersectionPoints? IntersectShape(Line l)
     {
         if (Count < 3) return null;
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         for (var i = 0; i < Count; i++)
         {
             var result = Segment.IntersectSegmentLine(this[i], this[(i + 1) % Count], l.Point, l.Direction, l.Normal);
@@ -126,11 +126,11 @@ public partial class Polygon
     /// Computes intersection points between this polygon and a segment.
     /// </summary>
     /// <param name="s">The segment to test against.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
-    public CollisionPoints? IntersectShape(Segment s)
+    /// <returns>A <see cref="IntersectionPoints"/> collection of intersection points, or null if none.</returns>
+    public IntersectionPoints? IntersectShape(Segment s)
     {
         if (Count < 3) return null;
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         for (var i = 0; i < Count; i++)
         {
             var result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], s.Start, s.End);
@@ -147,12 +147,12 @@ public partial class Polygon
     /// Computes intersection points between this polygon and a circle.
     /// </summary>
     /// <param name="c">The circle to test against.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
-    public CollisionPoints? IntersectShape(Circle c)
+    /// <returns>A <see cref="IntersectionPoints"/> collection of intersection points, or null if none.</returns>
+    public IntersectionPoints? IntersectShape(Circle c)
     {
         if (Count < 3) return null;
 
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
 
         for (var i = 0; i < Count; i++)
         {
@@ -171,12 +171,12 @@ public partial class Polygon
     /// Computes intersection points between this polygon and a triangle.
     /// </summary>
     /// <param name="t">The triangle to test against.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
-    public CollisionPoints? IntersectShape(Triangle t)
+    /// <returns>A <see cref="IntersectionPoints"/> collection of intersection points, or null if none.</returns>
+    public IntersectionPoints? IntersectShape(Triangle t)
     {
         if (Count < 3) return null;
 
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         for (var i = 0; i < Count; i++)
         {
             var result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], t.A, t.B);
@@ -207,12 +207,12 @@ public partial class Polygon
     /// Computes intersection points between this polygon and a rectangle.
     /// </summary>
     /// <param name="r">The rectangle to test against.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
-    public CollisionPoints? IntersectShape(Rect r)
+    /// <returns>A <see cref="IntersectionPoints"/> collection of intersection points, or null if none.</returns>
+    public IntersectionPoints? IntersectShape(Rect r)
     {
         if (Count < 3) return null;
 
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
 
         var a = r.TopLeft;
         var b = r.BottomLeft;
@@ -256,12 +256,12 @@ public partial class Polygon
     /// Computes intersection points between this polygon and a quad.
     /// </summary>
     /// <param name="q">The quad to test against.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
-    public CollisionPoints? IntersectShape(Quad q)
+    /// <returns>A <see cref="IntersectionPoints"/> collection of intersection points, or null if none.</returns>
+    public IntersectionPoints? IntersectShape(Quad q)
     {
         if (Count < 3) return null;
 
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         for (var i = 0; i < Count; i++)
         {
             var result = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], q.A, q.B);
@@ -299,11 +299,11 @@ public partial class Polygon
     /// Computes intersection points between this polygon and another polygon.
     /// </summary>
     /// <param name="p">The other polygon to test against.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
-    public CollisionPoints? IntersectShape(Polygon p)
+    /// <returns>A <see cref="IntersectionPoints"/> collection of intersection points, or null if none.</returns>
+    public IntersectionPoints? IntersectShape(Polygon p)
     {
         if (Count < 3 || p.Count < 3) return null;
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         for (var i = 0; i < Count; i++)
         {
             for (var j = 0; j < p.Count; j++)
@@ -323,11 +323,11 @@ public partial class Polygon
     /// Computes intersection points between this polygon and a polyline.
     /// </summary>
     /// <param name="pl">The polyline to test against.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
-    public CollisionPoints? IntersectShape(Polyline pl)
+    /// <returns>A <see cref="IntersectionPoints"/> collection of intersection points, or null if none.</returns>
+    public IntersectionPoints? IntersectShape(Polyline pl)
     {
         if (Count < 3 || pl.Count < 2) return null;
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         for (var i = 0; i < Count; i++)
         {
             for (var j = 0; j < pl.Count - 1; j++)
@@ -347,14 +347,14 @@ public partial class Polygon
     /// Computes intersection points between this polygon and a set of segments.
     /// </summary>
     /// <param name="segments">The segments to test against.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
+    /// <returns>A <see cref="IntersectionPoints"/> collection of intersection points, or null if none.</returns>
     /// <remarks>
     /// Each segment in the set is tested against all edges of the polygon. All valid intersection points are collected and returned.
     /// </remarks>
-    public CollisionPoints? IntersectShape(Segments segments)
+    public IntersectionPoints? IntersectShape(Segments segments)
     {
         if (Count < 3 || segments.Count <= 0) return null;
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         for (var i = 0; i < Count; i++)
         {
             foreach (var seg in segments)

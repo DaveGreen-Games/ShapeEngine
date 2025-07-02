@@ -13,11 +13,11 @@ public readonly struct ClosestPointResult
     /// <summary>
     /// The closest point on the 'self' shape or segment.
     /// </summary>
-    public readonly CollisionPoint Self;
+    public readonly IntersectionPoint Self;
     /// <summary>
     /// The closest point on the 'other' shape or segment.
     /// </summary>
-    public readonly CollisionPoint Other;
+    public readonly IntersectionPoint Other;
     /// <summary>
     /// The squared distance between <see cref="Self"/> and <see cref="Other"/>.
     /// </summary>
@@ -54,7 +54,7 @@ public readonly struct ClosestPointResult
     /// <param name="distanceSquared">The squared distance between the points.</param>
     /// <param name="segmentIndex">The segment index on the 'self' shape (default -1).</param>
     /// <param name="otherSegmentIndex">The segment index on the 'other' shape (default -1).</param>
-    public ClosestPointResult(CollisionPoint self, CollisionPoint other, float distanceSquared, int segmentIndex = -1, int otherSegmentIndex = -1)
+    public ClosestPointResult(IntersectionPoint self, IntersectionPoint other, float distanceSquared, int segmentIndex = -1, int otherSegmentIndex = -1)
     {
         Self = self;
         Other = other;

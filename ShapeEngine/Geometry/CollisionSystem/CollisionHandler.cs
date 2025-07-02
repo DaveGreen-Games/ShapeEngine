@@ -412,7 +412,7 @@ public class CollisionHandler : IBounds
                                 
                                 if (computeIntersections)
                                 {
-                                    CollisionPoints? collisionPoints;
+                                    IntersectionPoints? collisionPoints;
                                     if (passivChecking)
                                     {
                                         collisionPoints = candidate.Intersect(projected);
@@ -490,7 +490,7 @@ public class CollisionHandler : IBounds
                                 
                                 if (computeIntersections)
                                 {                                                         
-                                    CollisionPoints? collisionPoints;
+                                    IntersectionPoints? collisionPoints;
                                     if (passivChecking)
                                     {
                                         collisionPoints = candidate.Intersect(collider);

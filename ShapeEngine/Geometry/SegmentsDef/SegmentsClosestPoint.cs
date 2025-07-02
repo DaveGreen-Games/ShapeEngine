@@ -52,8 +52,8 @@ public partial class Segments
     /// </summary>
     /// <param name="p">The point to find the closest point to.</param>
     /// <param name="disSquared">The squared distance between the point and the closest point.</param>
-    /// <returns>A CollisionPoint representing the closest point. Returns a new CollisionPoint() if there are 2 or less segments.</returns>
-    public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared)
+    /// <returns>A IntersectionPoint representing the closest point. Returns a new IntersectionPoint() if there are 2 or less segments.</returns>
+    public IntersectionPoint GetClosestPoint(Vector2 p, out float disSquared)
     {
         disSquared = -1;
         if (Count <= 2) return new();
@@ -83,8 +83,8 @@ public partial class Segments
     /// <param name="p">The point to find the closest point to.</param>
     /// <param name="disSquared">The squared distance between the point and the closest point.</param>
     /// <param name="index">The index of the segment that contains the closest point.</param>
-    /// <returns>A CollisionPoint representing the closest point. Returns a new CollisionPoint() if there are 2 or less segments.</returns>
-    public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared, out int index)
+    /// <returns>A IntersectionPoint representing the closest point. Returns a new IntersectionPoint() if there are 2 or less segments.</returns>
+    public IntersectionPoint GetClosestPoint(Vector2 p, out float disSquared, out int index)
     {
         disSquared = -1;
         index = -1;
@@ -663,7 +663,7 @@ public partial class Segments
     /// <param name="disSquared">The squared distance between the point and the closest point on the segment.</param>
     /// <returns>A tuple containing the closest segment and the closest point on the segment to the given point.
     /// Returns a new empty segment and collision point if there are 2 or less segments.</returns>
-    public (Segment segment, CollisionPoint segmentPoint) GetClosestSegment(Vector2 p, out float disSquared)
+    public (Segment segment, IntersectionPoint segmentPoint) GetClosestSegment(Vector2 p, out float disSquared)
     {
         disSquared = -1;
         if (Count <= 2) return (new(), new());

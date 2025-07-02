@@ -12,7 +12,7 @@ namespace ShapeEngine.Geometry.CollisionSystem;
 /// <remarks>
 /// Provides utility methods for combining, comparing, and manipulating collision points and their normals.
 /// </remarks>
-public readonly struct CollisionPoint : IEquatable<CollisionPoint>
+public readonly struct IntersectionPoint : IEquatable<IntersectionPoint>
 {
     #region Members
     /// <summary>
@@ -33,20 +33,20 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
     #region Constructors
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="CollisionPoint"/> struct with default values (zero point and zero normal).
+    /// Initializes a new instance of the <see cref="IntersectionPoint"/> struct with default values (zero point and zero normal).
     /// </summary>
-    public CollisionPoint() 
+    public IntersectionPoint() 
     { 
         Point = new(); 
         Normal = new();
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="CollisionPoint"/> struct with the specified point and normal.
+    /// Initializes a new instance of the <see cref="IntersectionPoint"/> struct with the specified point and normal.
     /// </summary>
     /// <param name="p">The position of the collision point.</param>
     /// <param name="n">The normal vector at the collision point.</param>
-    public CollisionPoint(Vector2 p, Vector2 n)
+    public IntersectionPoint(Vector2 p, Vector2 n)
     {
         Point = p; 
         Normal = n;
@@ -80,7 +80,7 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
     /// <param name="curMinDisSquared">The current minimum distance squared.</param>
     /// <param name="newMinDisSquared">The new minimum distance squared, if this point is closer.</param>
     /// <returns>True if this point is closer, false otherwise.</returns>
-    public static bool IsCloser(CollisionPoint p, Vector2 referencePoint, float curMinDisSquared, out float newMinDisSquared)
+    public static bool IsCloser(IntersectionPoint p, Vector2 referencePoint, float curMinDisSquared, out float newMinDisSquared)
     {
         var disSquared = (p.Point - referencePoint).LengthSquared();
         if (disSquared < curMinDisSquared || curMinDisSquared < 0)
@@ -100,7 +100,7 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
     /// <param name="curMaxDisSquared">The current maximum distance squared.</param>
     /// <param name="newMaxDisSquared">The new maximum distance squared, if this point is further.</param>
     /// <returns>True if this point is further away, false otherwise.</returns>
-    public static bool IsFurther(CollisionPoint p, Vector2 referencePoint, float curMaxDisSquared, out float newMaxDisSquared)
+    public static bool IsFurther(IntersectionPoint p, Vector2 referencePoint, float curMaxDisSquared, out float newMaxDisSquared)
     {
         var disSquared = (p.Point - referencePoint).LengthSquared();
         if (disSquared > curMaxDisSquared || curMaxDisSquared < 0)
@@ -121,7 +121,7 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
     /// <param name="curDot">The cur maximum dot value from the previous collision points. If 0 returns true automatically with the new dot.</param>
     /// <param name="newDot">The new maximum dot value. If the normal of p is pointing more in the same direction of the reference direction than cur dot suggests. </param>
     /// <returns></returns>
-    public static bool IsPointingTowards(CollisionPoint p, Vector2 referenceDir, float curDot, out float newDot)
+    public static bool IsPointingTowards(IntersectionPoint p, Vector2 referenceDir, float curDot, out float newDot)
     {
         var dot = p.Normal.Dot(referenceDir);
         if (dot > curDot || curDot == 0f)
@@ -141,7 +141,7 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
     /// <param name="curDot">The cur minimum dot value from the previous collision points. If 0 return true automatically with the new dot.</param>
     /// <param name="newDot">The new minimum dot value. If the normal from p is pointing more in the opposite direction of the reference direction than cur dot suggests.</param>
     /// <returns></returns>
-    public static bool IsPointingAway(CollisionPoint p, Vector2 referenceDir, float curDot, out float newDot)
+    public static bool IsPointingAway(IntersectionPoint p, Vector2 referenceDir, float curDot, out float newDot)
     {
         var dot = p.Normal.Dot(referenceDir);
         if (dot < curDot || curDot == 0f)
@@ -158,7 +158,7 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
     /// </summary>
     /// <param name="other">The other collision point to combine with.</param>
     /// <returns>A new collision point representing the combination of this point and the other.</returns>
-    public CollisionPoint Combine(CollisionPoint other) => new((Point + other.Point) / 2, (Normal + other.Normal).Normalize());
+    public IntersectionPoint Combine(IntersectionPoint other) => new((Point + other.Point) / 2, (Normal + other.Normal).Normalize());
     
     /// <summary>
     /// Static method to combine two collision points by averaging their positions and normals.
@@ -166,14 +166,14 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
     /// <param name="a">The first collision point.</param>
     /// <param name="b">The second collision point.</param>
     /// <returns>A new collision point representing the combination of the two points.</returns>
-    public static CollisionPoint Combine(CollisionPoint a, CollisionPoint b) => new((a.Point + b.Point) / 2, (a.Normal + b.Normal).Normalize());
+    public static IntersectionPoint Combine(IntersectionPoint a, IntersectionPoint b) => new((a.Point + b.Point) / 2, (a.Normal + b.Normal).Normalize());
 
     /// <summary>
     /// Static method to combine multiple collision points by averaging their positions and normals.
     /// </summary>
     /// <param name="points">The array of collision points to combine.</param>
     /// <returns>A new collision point representing the combination of all provided points.</returns>
-    public static CollisionPoint Combine(params CollisionPoint[] points)
+    public static IntersectionPoint Combine(params IntersectionPoint[] points)
     {
         if(points.Length == 0) return new();
         var avgPoint = Vector2.Zero;
@@ -191,7 +191,7 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
     /// </summary>
     /// <param name="other">The other collision point to compare with.</param>
     /// <returns>True if the points and normals are equal, false otherwise.</returns>
-    public bool Equals(CollisionPoint other)
+    public bool Equals(IntersectionPoint other)
     {
         return other.Point == Point && other.Normal == Normal;
     }
@@ -208,7 +208,7 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
     /// Flips the normal of the collision point, keeping the position the same.
     /// </summary>
     /// <returns>A new collision point with the normal flipped.</returns>
-    public CollisionPoint FlipNormal()
+    public IntersectionPoint FlipNormal()
     {
         return new(Point, Normal.Flip());
     }
@@ -217,7 +217,7 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
     /// </summary>
     /// <param name="referencePoint">The reference point to check the direction against.</param>
     /// <returns>This collision point if the normal is not facing the opposite direction of the reference point, otherwise a new collision point with the normal flipped.</returns>
-    public CollisionPoint FlipNormal(Vector2 referencePoint)
+    public IntersectionPoint FlipNormal(Vector2 referencePoint)
     {
         Vector2 dir = referencePoint - Point;
         if (dir.IsFacingTheOppositeDirection(Normal)) return FlipNormal();
@@ -247,28 +247,28 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
     /// </summary>
     /// <param name="angleRad">The angle in radians to rotate the normal.</param>
     /// <returns>A new collision point with the normal rotated by the given angle.</returns>
-    public CollisionPoint RotateNormal(float angleRad) => !Valid ? this : new(Point, Normal.Rotate(angleRad));
+    public IntersectionPoint RotateNormal(float angleRad) => !Valid ? this : new(Point, Normal.Rotate(angleRad));
 
     /// <summary>
     /// Rotates the normal of the collision point by the given angle in degrees.
     /// </summary>
     /// <param name="angleDeg">The angle in degrees to rotate the normal.</param>
     /// <returns>A new collision point with the normal rotated by the given angle.</returns>
-    public CollisionPoint RotateNormalDeg(float angleDeg) => !Valid ? this : new(Point, Normal.Rotate(angleDeg * ShapeMath.DEGTORAD));
+    public IntersectionPoint RotateNormalDeg(float angleDeg) => !Valid ? this : new(Point, Normal.Rotate(angleDeg * ShapeMath.DEGTORAD));
 
     /// <summary>
     /// Sets a new point for the collision point, keeping the normal the same.
     /// </summary>
     /// <param name="newPoint">The new position for the collision point.</param>
     /// <returns>A new collision point with the updated position.</returns>
-    public CollisionPoint SetPoint(Vector2 newPoint) => new(newPoint, Normal);
+    public IntersectionPoint SetPoint(Vector2 newPoint) => new(newPoint, Normal);
 
     /// <summary>
     /// Sets a new normal for the collision point.
     /// </summary>
     /// <param name="newNormal">The new normal vector for the collision point.</param>
     /// <returns>A new collision point with the updated normal.</returns>
-    public CollisionPoint SetNormal(Vector2 newNormal) => new(Point, newNormal.Normalize());
+    public IntersectionPoint SetNormal(Vector2 newNormal) => new(Point, newNormal.Normalize());
 
     #endregion
     
@@ -280,7 +280,7 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
     /// <param name="a"></param>
     /// <param name="b"></param>
     /// <returns></returns>
-    public static CollisionPoint operator +(CollisionPoint a, CollisionPoint b)
+    public static IntersectionPoint operator +(IntersectionPoint a, IntersectionPoint b)
     {
         return new(a.Point + b.Point, (a.Normal + b.Normal).Normalize());
     }
@@ -291,7 +291,7 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
     /// <param name="a"></param>
     /// <param name="b"></param>
     /// <returns></returns>
-    public static CollisionPoint operator -(CollisionPoint a, CollisionPoint b)
+    public static IntersectionPoint operator -(IntersectionPoint a, IntersectionPoint b)
     {
         return new(a.Point - b.Point, (a.Normal - b.Normal).Normalize());
     }
@@ -302,7 +302,7 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
     /// <param name="a"></param>
     /// <param name="scalar"></param>
     /// <returns></returns>
-    public static CollisionPoint operator *(CollisionPoint a, float scalar)
+    public static IntersectionPoint operator *(IntersectionPoint a, float scalar)
     {
         return new(a.Point * scalar, a.Normal);
     }
@@ -313,7 +313,7 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
     /// <param name="a"></param>
     /// <param name="scalar"></param>
     /// <returns></returns>
-    public static CollisionPoint operator /(CollisionPoint a, float scalar)
+    public static IntersectionPoint operator /(IntersectionPoint a, float scalar)
     {
         return new(a.Point / scalar, a.Normal);
     }
@@ -324,7 +324,7 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
     /// <param name="a"></param>
     /// <param name="b"></param>
     /// <returns></returns>
-    public static CollisionPoint operator +(CollisionPoint a, Vector2  b)
+    public static IntersectionPoint operator +(IntersectionPoint a, Vector2  b)
     {
         return new(a.Point + b, a.Normal);
     }
@@ -335,7 +335,7 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
     /// <param name="a"></param>
     /// <param name="b"></param>
     /// <returns></returns>
-    public static CollisionPoint operator -(CollisionPoint a, Vector2  b)
+    public static IntersectionPoint operator -(IntersectionPoint a, Vector2  b)
     {
         return new(a.Point - b, a.Normal);
     }
@@ -346,7 +346,7 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
     /// <param name="a"></param>
     /// <param name="b"></param>
     /// <returns></returns>
-    public static CollisionPoint operator *(CollisionPoint a, Vector2 b)
+    public static IntersectionPoint operator *(IntersectionPoint a, Vector2 b)
     {
         return new(a.Point * b, a.Normal);
     }
@@ -357,11 +357,39 @@ public readonly struct CollisionPoint : IEquatable<CollisionPoint>
     /// <param name="a"></param>
     /// <param name="b"></param>
     /// <returns></returns>
-    public static CollisionPoint operator /(CollisionPoint a, Vector2 b)
+    public static IntersectionPoint operator /(IntersectionPoint a, Vector2 b)
     {
         return new(a.Point / b, a.Normal);
     }
-    
-    
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+    {
+        return obj is IntersectionPoint point && Equals(point);
+    }
+
+    /// <summary>
+    /// Determines whether two <see cref="IntersectionPoint"/> instances are equal by comparing their points and normals.
+    /// </summary>
+    /// <param name="left">The first <see cref="IntersectionPoint"/> to compare.</param>
+    /// <param name="right">The second <see cref="IntersectionPoint"/> to compare.</param>
+    /// <returns>True if both the point and normal are equal; otherwise, false.</returns>
+    public static bool operator ==(IntersectionPoint left, IntersectionPoint right)
+    {
+        return left.Equals(right);
+    }
+
+    /// <summary>
+    /// Determines whether two <see cref="IntersectionPoint"/> instances are not equal by comparing their points and normals.
+    /// </summary>
+    /// <param name="left">The first <see cref="IntersectionPoint"/> to compare.</param>
+    /// <param name="right">The second <see cref="IntersectionPoint"/> to compare.</param>
+    /// <returns>True if either the point or normal are not equal; otherwise, false.</returns>
+    public static bool operator !=(IntersectionPoint left, IntersectionPoint right)
+    {
+        return !(left == right);
+    }
+
+
     #endregion
 }

@@ -37,7 +37,7 @@ public class Collision
     /// <remarks>
     /// If there are no collision points, this instance represents an overlap rather than an intersection.
     /// </remarks>
-    public readonly CollisionPoints? Points;
+    public readonly IntersectionPoints? Points;
     /// <summary>
     /// Gets an <see cref="Overlap"/> object representing this collision.
     /// </summary>
@@ -71,7 +71,7 @@ public class Collision
     /// If null or empty (Count &lt;= 0), <see cref="Points"/> will be set to null,
     /// indicating an overlap rather than an intersection.
     /// </param>
-    public Collision(Collider self, Collider other, bool firstContact, CollisionPoints? collisionPoints)
+    public Collision(Collider self, Collider other, bool firstContact, IntersectionPoints? collisionPoints)
     {
         Self = self;
         Other = other;
@@ -107,13 +107,13 @@ public class Collision
     /// <summary>
     /// Validates the collision points using <see cref="SelfVel"/> as reference direction and <see cref="Self"/>.CurTransform.Position as reference point.
     /// </summary>
-    /// <param name="combined">The average <see cref="CollisionPoint"/> of all valid collision points.</param>
+    /// <param name="combined">The average <see cref="IntersectionPoint"/> of all valid collision points.</param>
     /// <returns>Returns true if there are valid collision points left.</returns>
-    public bool Validate(out CollisionPoint combined)
+    public bool Validate(out IntersectionPoint combined)
     {
         if (Points == null || Points.Count <= 0)
         {
-            combined = new CollisionPoint();
+            combined = new IntersectionPoint();
             return false;
         }
         return Points.Validate(SelfVel, Self.CurTransform.Position, out combined);
@@ -121,15 +121,15 @@ public class Collision
     /// <summary>
     /// Validates the collision points using <see cref="SelfVel"/> as reference direction and <see cref="Self"/>.CurTransform.Position as reference point.
     /// </summary>
-    /// <param name="combined">The average <see cref="CollisionPoint"/> of all valid collision points.</param>
-    /// <param name="closest">The closest valid <see cref="CollisionPoint"/> to the reference point.</param>
+    /// <param name="combined">The average <see cref="IntersectionPoint"/> of all valid collision points.</param>
+    /// <param name="closest">The closest valid <see cref="IntersectionPoint"/> to the reference point.</param>
     /// <returns>Returns true if there are valid collision points left.</returns>
-    public bool Validate(out CollisionPoint combined, out CollisionPoint closest)
+    public bool Validate(out IntersectionPoint combined, out IntersectionPoint closest)
     {
         if (Points == null || Points.Count <= 0)
         {
-            combined = new CollisionPoint();
-            closest = new CollisionPoint(); 
+            combined = new IntersectionPoint();
+            closest = new IntersectionPoint(); 
             return false;
         }
         return Points.Validate(SelfVel, Self.CurTransform.Position, out combined, out closest);
@@ -150,14 +150,14 @@ public class Collision
     }
     #endregion
     
-    #region CollisionPoint
+    #region IntersectionPoint
 
     /// <summary>
     /// Checks if there is any collision point that matches the conditions defined by the specified predicate.
     /// </summary>
     /// <param name="match">The predicate that defines the conditions of the collision points to search for.</param>
     /// <returns>true if any collision point matches the predicate; otherwise, false.</returns>
-    public bool Exists(Predicate<CollisionPoint> match)
+    public bool Exists(Predicate<IntersectionPoint> match)
     {
         return Points is { Count: > 0 } && Points.Exists(match);
     }
@@ -166,9 +166,9 @@ public class Collision
     /// </summary>
     /// <param name="match">The predicate that defines the conditions of the collision point to search for.</param>
     /// <returns>
-    /// The first collision point that matches the predicate, or a default <see cref="CollisionPoint"/> if no match is found.
+    /// The first collision point that matches the predicate, or a default <see cref="IntersectionPoint"/> if no match is found.
     /// </returns>
-    public CollisionPoint Find(Predicate<CollisionPoint> match)
+    public IntersectionPoint Find(Predicate<IntersectionPoint> match)
     {
         return Points is not { Count: > 0 } ? new() : Points.Find(match);
     }
@@ -177,10 +177,10 @@ public class Collision
     /// </summary>
     /// <param name="match">The predicate that defines the conditions of the collision points to search for.</param>
     /// <returns>
-    /// A new <see cref="CollisionPoints"/> instance containing all the collision points that match the predicate,
+    /// A new <see cref="IntersectionPoints"/> instance containing all the collision points that match the predicate,
     /// or null if no points match.
     /// </returns>
-    public CollisionPoints? FindAll(Predicate<CollisionPoint> match)
+    public IntersectionPoints? FindAll(Predicate<IntersectionPoint> match)
     {
         if (Points is not { Count: > 0 }) return null;
         var result = Points.FindAll(match);
@@ -191,60 +191,60 @@ public class Collision
     /// Calculates the combined collision point from all valid collision points.
     /// </summary>
     /// <returns>
-    /// The combined <see cref="CollisionPoint"/> representing the average position and normal of all valid collision points,
-    /// or a default <see cref="CollisionPoint"/> if there are no valid points.
+    /// The combined <see cref="IntersectionPoint"/> representing the average position and normal of all valid collision points,
+    /// or a default <see cref="IntersectionPoint"/> if there are no valid points.
     /// </returns>
-    public CollisionPoint GetCombinedCollisionPoint()
+    public IntersectionPoint GetCombinedCollisionPoint()
     {
-        return Points is not { Count: > 0 } ? new CollisionPoint() : Points.GetCombinedCollisionPoint();
+        return Points is not { Count: > 0 } ? new IntersectionPoint() : Points.GetCombinedCollisionPoint();
     }
     /// <summary>
     /// Finds the collision point closest to the 'self' collider's position.
     /// </summary>
     /// <returns>
-    /// The closest <see cref="CollisionPoint"/> to the 'self' collider's position,
-    /// or a default <see cref="CollisionPoint"/> if there are no collision points.
+    /// The closest <see cref="IntersectionPoint"/> to the 'self' collider's position,
+    /// or a default <see cref="IntersectionPoint"/> if there are no collision points.
     /// </returns>
-    public CollisionPoint GetClosestCollisionPoint()
+    public IntersectionPoint GetClosestCollisionPoint()
     {
-        return Points is not { Count: > 0 } ? new CollisionPoint() : Points.GetClosestCollisionPoint(Self.CurTransform.Position);
+        return Points is not { Count: > 0 } ? new IntersectionPoint() : Points.GetClosestCollisionPoint(Self.CurTransform.Position);
     }
     /// <summary>
     /// Finds the collision point furthest from the 'self' collider's position.
     /// </summary>
     /// <returns>
-    /// The furthest <see cref="CollisionPoint"/> from the 'self' collider's position,
-    /// or a default <see cref="CollisionPoint"/> if there are no collision points.
+    /// The furthest <see cref="IntersectionPoint"/> from the 'self' collider's position,
+    /// or a default <see cref="IntersectionPoint"/> if there are no collision points.
     /// </returns>
-    public CollisionPoint GetFurthestCollisionPoint()
+    public IntersectionPoint GetFurthestCollisionPoint()
     {
-        return Points is not { Count: > 0 } ? new CollisionPoint() : Points.GetFurthestCollisionPoint(Self.CurTransform.Position);
+        return Points is not { Count: > 0 } ? new IntersectionPoint() : Points.GetFurthestCollisionPoint(Self.CurTransform.Position);
     }
     /// <summary>
     /// Finds the collision point closest to the 'self' collider's position and provides the distance squared to that point.
     /// </summary>
     /// <param name="closestDistanceSquared">Outputs the distance squared to the closest collision point.</param>
     /// <returns>
-    /// The closest <see cref="CollisionPoint"/> to the 'self' collider's position,
-    /// or a default <see cref="CollisionPoint"/> if there are no collision points.
+    /// The closest <see cref="IntersectionPoint"/> to the 'self' collider's position,
+    /// or a default <see cref="IntersectionPoint"/> if there are no collision points.
     /// </returns>
-    public CollisionPoint GetClosestCollisionPoint(out float closestDistanceSquared)
+    public IntersectionPoint GetClosestCollisionPoint(out float closestDistanceSquared)
     {
         closestDistanceSquared = -1;
-        return Points is not { Count: > 0 } ? new CollisionPoint() : Points.GetClosestCollisionPoint(Self.CurTransform.Position, out closestDistanceSquared);
+        return Points is not { Count: > 0 } ? new IntersectionPoint() : Points.GetClosestCollisionPoint(Self.CurTransform.Position, out closestDistanceSquared);
     }
     /// <summary>
     /// Finds the collision point furthest from the 'self' collider's position and provides the distance squared to that point.
     /// </summary>
     /// <param name="furthestDistanceSquared">Outputs the distance squared to the furthest collision point.</param>
     /// <returns>
-    /// The furthest <see cref="CollisionPoint"/> from the 'self' collider's position,
-    /// or a default <see cref="CollisionPoint"/> if there are no collision points.
+    /// The furthest <see cref="IntersectionPoint"/> from the 'self' collider's position,
+    /// or a default <see cref="IntersectionPoint"/> if there are no collision points.
     /// </returns>
-    public CollisionPoint GetFurthestCollisionPoint(out float furthestDistanceSquared)
+    public IntersectionPoint GetFurthestCollisionPoint(out float furthestDistanceSquared)
     {
         furthestDistanceSquared = -1;
-        return Points is not { Count: > 0 } ? new CollisionPoint() : Points.GetFurthestCollisionPoint(Self.CurTransform.Position, out furthestDistanceSquared);
+        return Points is not { Count: > 0 } ? new IntersectionPoint() : Points.GetFurthestCollisionPoint(Self.CurTransform.Position, out furthestDistanceSquared);
     }
 
     /// <summary>
@@ -252,24 +252,24 @@ public class Collision
     /// Each collision point normal is checked against the direction from the collision point towards the reference point.
     /// </summary>
     /// <returns>
-    /// The <see cref="CollisionPoint"/> facing most towards the 'self' collider's position,
-    /// or a default <see cref="CollisionPoint"/> if there are no collision points.
+    /// The <see cref="IntersectionPoint"/> facing most towards the 'self' collider's position,
+    /// or a default <see cref="IntersectionPoint"/> if there are no collision points.
     /// </returns>
-    public CollisionPoint GetCollisionPointFacingTowardsSelf()
+    public IntersectionPoint GetCollisionPointFacingTowardsSelf()
     {
-        return Points is not { Count: > 0 } ? new CollisionPoint() : Points.GetCollisionPointFacingTowardsPoint(Self.CurTransform.Position);
+        return Points is not { Count: > 0 } ? new IntersectionPoint() : Points.GetCollisionPointFacingTowardsPoint(Self.CurTransform.Position);
     }
    
     /// <summary>
     /// Finds the collision point with the normal facing most in the direction of <see cref="SelfVel"/>.
     /// </summary>
     /// <returns>
-    /// The <see cref="CollisionPoint"/> facing most in the direction of <see cref="SelfVel"/>,
-    /// or a default <see cref="CollisionPoint"/> if there are no collision points or if <see cref="SelfVel"/> is zero.
+    /// The <see cref="IntersectionPoint"/> facing most in the direction of <see cref="SelfVel"/>,
+    /// or a default <see cref="IntersectionPoint"/> if there are no collision points or if <see cref="SelfVel"/> is zero.
     /// </returns>
-    public CollisionPoint GetCollisionPointFacingTowardsSelfVel()
+    public IntersectionPoint GetCollisionPointFacingTowardsSelfVel()
     {
-        if(SelfVel is { X: 0f, Y: 0f } || Points is not { Count: > 0 }) return new CollisionPoint();
+        if(SelfVel is { X: 0f, Y: 0f } || Points is not { Count: > 0 }) return new IntersectionPoint();
         return Points.GetCollisionPointFacingTowardsDir(SelfVel);
     }
     

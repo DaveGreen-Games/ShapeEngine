@@ -14,8 +14,8 @@ public readonly partial struct Circle
     /// <param name="aRadius">The radius of the first circle.</param>
     /// <param name="bPos">The center of the second circle.</param>
     /// <param name="bRadius">The radius of the second circle.</param>
-    /// <returns>A tuple containing the intersection points as <see cref="CollisionPoint"/>.</returns>
-    public static (CollisionPoint a, CollisionPoint b) IntersectCircleCircle(Vector2 aPos, float aRadius, Vector2 bPos, float bRadius)
+    /// <returns>A tuple containing the intersection points as <see cref="IntersectionPoint"/>.</returns>
+    public static (IntersectionPoint a, IntersectionPoint b) IntersectCircleCircle(Vector2 aPos, float aRadius, Vector2 bPos, float bRadius)
     {
         return IntersectCircleCircle(aPos.X, aPos.Y, aRadius, bPos.X, bPos.Y, bRadius);
     }
@@ -29,8 +29,8 @@ public readonly partial struct Circle
     /// <param name="cx1">The x-coordinate of the second circle's center.</param>
     /// <param name="cy1">The y-coordinate of the second circle's center.</param>
     /// <param name="radius1">The radius of the second circle.</param>
-    /// <returns>A tuple containing the intersection points as <see cref="CollisionPoint"/>.</returns>
-    public static (CollisionPoint a, CollisionPoint b) IntersectCircleCircle(float cx0, float cy0, float radius0, float cx1, float cy1, float radius1)
+    /// <returns>A tuple containing the intersection points as <see cref="IntersectionPoint"/>.</returns>
+    public static (IntersectionPoint a, IntersectionPoint b) IntersectCircleCircle(float cx0, float cy0, float radius0, float cx1, float cy1, float radius1)
     {
         // Find the distance between the centers.
         float dx = cx0 - cx1;
@@ -76,15 +76,15 @@ public readonly partial struct Circle
         if (ShapeMath.EqualsF((float)dist, radius0 + radius1))
         {
             var n = intersection1 - new Vector2(cx1, cy1);
-            var cp = new CollisionPoint(intersection1, n.Normalize());
+            var cp = new IntersectionPoint(intersection1, n.Normalize());
             return (cp, new());
         }
 
         var n1 = intersection1 - new Vector2(cx1, cy1);
-        var cp1 = new CollisionPoint(intersection1, n1.Normalize());
+        var cp1 = new IntersectionPoint(intersection1, n1.Normalize());
 
         var n2 = intersection2 - new Vector2(cx1, cy1);
-        var cp2 = new CollisionPoint(intersection2, n2.Normalize());
+        var cp2 = new IntersectionPoint(intersection2, n2.Normalize());
         return (cp1, cp2);
     }
 
@@ -95,8 +95,8 @@ public readonly partial struct Circle
     /// <param name="circleRadius">The radius of the circle.</param>
     /// <param name="start">The start point of the segment.</param>
     /// <param name="end">The end point of the segment.</param>
-    /// <returns>A tuple containing the intersection points as <see cref="CollisionPoint"/>.</returns>
-    public static (CollisionPoint a, CollisionPoint b) IntersectCircleSegment(Vector2 circlePos, float circleRadius, Vector2 start, Vector2 end)
+    /// <returns>A tuple containing the intersection points as <see cref="IntersectionPoint"/>.</returns>
+    public static (IntersectionPoint a, IntersectionPoint b) IntersectCircleSegment(Vector2 circlePos, float circleRadius, Vector2 start, Vector2 end)
     {
         return IntersectCircleSegment(
             circlePos.X, circlePos.Y, circleRadius,
@@ -112,8 +112,8 @@ public readonly partial struct Circle
     /// <param name="rayPoint">The origin point of the ray.</param>
     /// <param name="rayDirection">The direction vector of the ray.</param>
     /// <param name="rayNormal">The normal vector of the ray.</param>
-    /// <returns>A tuple containing the intersection points as <see cref="CollisionPoint"/>.</returns>
-    public static (CollisionPoint a, CollisionPoint b) IntersectCircleRay(Vector2 circleCenter, float circleRadius, Vector2 rayPoint, Vector2 rayDirection,
+    /// <returns>A tuple containing the intersection points as <see cref="IntersectionPoint"/>.</returns>
+    public static (IntersectionPoint a, IntersectionPoint b) IntersectCircleRay(Vector2 circleCenter, float circleRadius, Vector2 rayPoint, Vector2 rayDirection,
         Vector2 rayNormal)
     {
         var toCircle = circleCenter - rayPoint;
@@ -127,8 +127,8 @@ public readonly partial struct Circle
             var intersection1 = closestPoint - offset * rayDirection;
             var intersection2 = closestPoint + offset * rayDirection;
 
-            CollisionPoint a = new();
-            CollisionPoint b = new();
+            IntersectionPoint a = new();
+            IntersectionPoint b = new();
             if (Vector2.Dot(intersection1 - rayPoint, rayDirection) >= 0)
             {
                 a = new(intersection1, rayNormal);
@@ -146,7 +146,7 @@ public readonly partial struct Circle
         {
             if (Vector2.Dot(closestPoint - rayPoint, rayDirection) >= 0)
             {
-                var cp = new CollisionPoint(closestPoint, rayNormal);
+                var cp = new IntersectionPoint(closestPoint, rayNormal);
                 return (cp, new());
             }
         }
@@ -162,8 +162,8 @@ public readonly partial struct Circle
     /// <param name="linePoint">A point on the line.</param>
     /// <param name="lineDirection">The direction vector of the line.</param>
     /// <param name="lineNormal">The normal vector of the line.</param>
-    /// <returns>A tuple containing the intersection points as <see cref="CollisionPoint"/>.</returns>
-    public static (CollisionPoint a, CollisionPoint b) IntersectCircleLine(Vector2 circleCenter, float circleRadius, Vector2 linePoint, Vector2 lineDirection,
+    /// <returns>A tuple containing the intersection points as <see cref="IntersectionPoint"/>.</returns>
+    public static (IntersectionPoint a, IntersectionPoint b) IntersectCircleLine(Vector2 circleCenter, float circleRadius, Vector2 linePoint, Vector2 lineDirection,
         Vector2 lineNormal)
     {
         // Normalize the direction vector
@@ -192,14 +192,14 @@ public readonly partial struct Circle
             var intersection2 = closestPoint + offset * lineDirection;
 
             // Normals at the intersection points
-            var p1 = new CollisionPoint(intersection1, lineNormal);
-            var p2 = new CollisionPoint(intersection2, lineNormal);
+            var p1 = new IntersectionPoint(intersection1, lineNormal);
+            var p2 = new IntersectionPoint(intersection2, lineNormal);
             return (p1, p2);
         }
 
         if (Math.Abs(distanceToCenter - circleRadius) < ShapeMath.EpsilonF)
         {
-            var p = new CollisionPoint(closestPoint, lineNormal);
+            var p = new IntersectionPoint(closestPoint, lineNormal);
             return (p, new());
         }
 
@@ -216,8 +216,8 @@ public readonly partial struct Circle
     /// <param name="segStartY">The y-coordinate of the segment's start point.</param>
     /// <param name="segEndX">The x-coordinate of the segment's end point.</param>
     /// <param name="segEndY">The y-coordinate of the segment's end point.</param>
-    /// <returns>A tuple containing the intersection points as <see cref="CollisionPoint"/>.</returns>
-    public static (CollisionPoint a, CollisionPoint b) IntersectCircleSegment(float circleX, float circleY, float circleRadius, float segStartX,
+    /// <returns>A tuple containing the intersection points as <see cref="IntersectionPoint"/>.</returns>
+    public static (IntersectionPoint a, IntersectionPoint b) IntersectCircleSegment(float circleX, float circleY, float circleRadius, float segStartX,
         float segStartY, float segEndX, float segEndY)
     {
         float difX = segEndX - segStartX;
@@ -244,7 +244,7 @@ public readonly partial struct Circle
                 // intersection point is not actually within line segment
                 var p = new Vector2(iX, iY);
                 var n = Segment.GetNormal(new(segStartX, segStartY), new(segEndX, segEndY), false); // p - new Vector2(circleX, circleY);
-                var cp = new CollisionPoint(p, n);
+                var cp = new IntersectionPoint(p, n);
                 return (cp, new());
             }
 
@@ -254,8 +254,8 @@ public readonly partial struct Circle
         if (dist < circleRadius)
         {
             // List<Vector2>? intersectionPoints = null;
-            CollisionPoint a = new();
-            CollisionPoint b = new();
+            IntersectionPoint a = new();
+            IntersectionPoint b = new();
             // two possible intersection points
 
             float dt = MathF.Sqrt(circleRadius * circleRadius - dist * dist) / MathF.Sqrt(dl);
@@ -273,7 +273,7 @@ public readonly partial struct Circle
                 var p = new Vector2(i1X, i1Y);
                 // var n = p - new Vector2(circleX, circleY);
                 var n = Segment.GetNormal(new(segStartX, segStartY), new(segEndX, segEndY), false);
-                a = new CollisionPoint(p, n);
+                a = new IntersectionPoint(p, n);
             }
 
             // intersection point farthest from A
@@ -288,7 +288,7 @@ public readonly partial struct Circle
                 var p = new Vector2(i2X, i2Y);
                 // var n = p - new Vector2(circleX, circleY);
                 var n = Segment.GetNormal(new(segStartX, segStartY), new(segEndX, segEndY), false);
-                b = new CollisionPoint(p, n);
+                b = new IntersectionPoint(p, n);
             }
 
             return (a, b);

@@ -59,8 +59,8 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
     /// <summary>
     /// Calculates the average collision point and normal from all entries in the register.
     /// </summary>
-    /// <returns>A <see cref="CollisionPoint"/> representing the average point and normal.</returns>
-    public CollisionPoint GetAverageCollisionPoint()
+    /// <returns>A <see cref="IntersectionPoint"/> representing the average point and normal.</returns>
+    public IntersectionPoint GetAverageCollisionPoint()
     {
         var avgPoint = new Vector2();
         var avgNormal = new Vector2();
@@ -70,7 +70,7 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
             avgPoint += sum.Point;
             avgNormal += sum.Normal;
         }
-        return new CollisionPoint(avgPoint / Count, avgNormal.Normalize());
+        return new IntersectionPoint(avgPoint / Count, avgNormal.Normalize());
     }
     #endregion
     
@@ -271,8 +271,8 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
     /// </summary>
     /// <param name="referencePoint">The point to compare distances from.</param>
     /// <param name="closestDistanceSquared">The squared distance to the closest collision point.</param>
-    /// <returns>The closest <see cref="CollisionPoint"/> or a default value if none exist.</returns>
-    public CollisionPoint GetClosestCollisionPoint(Vector2 referencePoint, out float closestDistanceSquared)
+    /// <returns>The closest <see cref="IntersectionPoint"/> or a default value if none exist.</returns>
+    public IntersectionPoint GetClosestCollisionPoint(Vector2 referencePoint, out float closestDistanceSquared)
     {
         closestDistanceSquared = -1;
         if(Count <= 0) return new();
@@ -296,8 +296,8 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
     /// </summary>
     /// <param name="referencePoint">The point to compare distances from.</param>
     /// <param name="furthestDistanceSquared">The squared distance to the furthest collision point.</param>
-    /// <returns>The furthest <see cref="CollisionPoint"/> or a default value if none exist.</returns>
-    public CollisionPoint GetFurthestCollisionPoint(Vector2 referencePoint, out float furthestDistanceSquared)
+    /// <returns>The furthest <see cref="IntersectionPoint"/> or a default value if none exist.</returns>
+    public IntersectionPoint GetFurthestCollisionPoint(Vector2 referencePoint, out float furthestDistanceSquared)
     {
         furthestDistanceSquared = -1;
         if(Count <= 0) return new();
@@ -323,12 +323,12 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
     /// Gets the collision point whose normal is most closely facing towards the specified reference point.
     /// </summary>
     /// <param name="referencePoint">The point to compare direction against.</param>
-    /// <returns>The <see cref="CollisionPoint"/> facing most towards the reference point, or a default value if none exist.</returns>
-    public CollisionPoint GetCollisionPointFacingTowardsPoint(Vector2 referencePoint)
+    /// <returns>The <see cref="IntersectionPoint"/> facing most towards the reference point, or a default value if none exist.</returns>
+    public IntersectionPoint GetCollisionPointFacingTowardsPoint(Vector2 referencePoint)
     {
         if(Count <= 0) return new();
         if(Count == 1) return this[0].GetCollisionPointFacingTowardsPoint(referencePoint);        
-        var pointing  = new CollisionPoint();
+        var pointing  = new IntersectionPoint();
         var maxDot = -1f;
         for (int i = Count - 1; i >= 0; i--)
         {
@@ -351,12 +351,12 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
     /// Gets the collision point whose normal is most closely facing towards the specified reference direction.
     /// </summary>
     /// <param name="referenceDirection">The direction to compare against.</param>
-    /// <returns>The <see cref="CollisionPoint"/> facing most towards the reference direction, or a default value if none exist.</returns>
-    public CollisionPoint GetCollisionPointFacingTowardsDir(Vector2 referenceDirection)
+    /// <returns>The <see cref="IntersectionPoint"/> facing most towards the reference direction, or a default value if none exist.</returns>
+    public IntersectionPoint GetCollisionPointFacingTowardsDir(Vector2 referenceDirection)
     {
         if(Count <= 0) return new();
         if(Count == 1) return this[0].GetCollisionPointFacingTowardsDir(referenceDirection);        
-        var pointing  = new CollisionPoint();
+        var pointing  = new IntersectionPoint();
         var maxDot = -1f;
         for (int i = Count - 1; i >= 0; i--)
         {
@@ -377,16 +377,16 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
     /// <summary>
     /// Gets the collision point whose normal is most closely facing towards the position of the associated collision object.
     /// </summary>
-    /// <returns>The <see cref="CollisionPoint"/> facing most towards the object's position.</returns>
-    public CollisionPoint GetCollisionPointFacingTowardsPoint()
+    /// <returns>The <see cref="IntersectionPoint"/> facing most towards the object's position.</returns>
+    public IntersectionPoint GetCollisionPointFacingTowardsPoint()
     {
         return GetCollisionPointFacingTowardsPoint(OtherCollisionObject.Transform.Position);
     }
     /// <summary>
     /// Gets the collision point whose normal is most closely facing towards the velocity of the associated collision object.
     /// </summary>
-    /// <returns>The <see cref="CollisionPoint"/> facing most towards the object's velocity.</returns>
-    public CollisionPoint GetCollisionPointFacingTowardsDir()
+    /// <returns>The <see cref="IntersectionPoint"/> facing most towards the object's velocity.</returns>
+    public IntersectionPoint GetCollisionPointFacingTowardsDir()
     {
         return GetCollisionPointFacingTowardsDir(OtherCollisionObject.Velocity);
     }
@@ -402,15 +402,15 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
     /// <returns>True if there are valid points remaining; otherwise, false.</returns>
     /// <remarks>
     /// Removes:
-    /// - Invalid <see cref="CollisionPoint"/>s
+    /// - Invalid <see cref="IntersectionPoint"/>s
     /// - Points with normals facing in the same direction as the reference direction
-    /// - Points with normals facing in the opposite direction as the reference point (from CollisionPoint towards the reference point)
+    /// - Points with normals facing in the opposite direction as the reference point (from IntersectionPoint towards the reference point)
     /// </remarks>
-    public bool Validate(Vector2 referenceDirection, out CollisionPoint combined)
+    public bool Validate(Vector2 referenceDirection, out IntersectionPoint combined)
     {
         if (Count <= 0)
         {
-            combined = new CollisionPoint();
+            combined = new IntersectionPoint();
             return false;
         }
         
@@ -420,7 +420,7 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
         for (int i = Count - 1; i >= 0; i--)
         {
             var entry = this[i];
-            var valid = entry.Validate(referenceDirection, out CollisionPoint combinedEntryPoint);
+            var valid = entry.Validate(referenceDirection, out IntersectionPoint combinedEntryPoint);
             if (!valid)
             {
                 RemoveAt(i);
@@ -433,10 +433,10 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
 
         if (Count <= 0)
         {
-            combined = new CollisionPoint();
+            combined = new IntersectionPoint();
             return false;
         }
-        combined = new CollisionPoint(avgPoint / count, avgNormal.Normalize());
+        combined = new IntersectionPoint(avgPoint / count, avgNormal.Normalize());
         
         return true;
     }
@@ -449,15 +449,15 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
     /// <returns>True if there are valid points remaining; otherwise, false.</returns>
     /// <remarks>
     /// Removes:
-    /// - Invalid <see cref="CollisionPoint"/>s
+    /// - Invalid <see cref="IntersectionPoint"/>s
     /// - Points with normals facing in the same direction as the reference direction
-    /// - Points with normals facing in the opposite direction as the reference point (from CollisionPoint towards the reference point)
+    /// - Points with normals facing in the opposite direction as the reference point (from IntersectionPoint towards the reference point)
     /// </remarks>
-    public bool Validate(Vector2 referenceDirection, Vector2 referencePoint, out CollisionPoint combined)
+    public bool Validate(Vector2 referenceDirection, Vector2 referencePoint, out IntersectionPoint combined)
     {
         if (Count <= 0)
         {
-            combined = new CollisionPoint();
+            combined = new IntersectionPoint();
             return false;
         }
         
@@ -468,7 +468,7 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
         {
             var entry = this[i];
             // var valid = entry.ValidateSelf(out var combinedEntryPoint, out var closestToEntry);
-            var valid = entry.Validate(referenceDirection, referencePoint, out CollisionPoint combinedEntryPoint);
+            var valid = entry.Validate(referenceDirection, referencePoint, out IntersectionPoint combinedEntryPoint);
             if (!valid)
             {
                 RemoveAt(i);
@@ -481,11 +481,11 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
         
         if (Count <= 0)
         {
-            combined = new CollisionPoint();
+            combined = new IntersectionPoint();
             return false;
         }
         
-        combined = new CollisionPoint(avgPoint / count, avgNormal.Normalize());
+        combined = new IntersectionPoint(avgPoint / count, avgNormal.Normalize());
         return true;
     }
     /// <summary>
@@ -498,29 +498,29 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
     /// <returns>True if there are valid points remaining; otherwise, false.</returns>
     /// <remarks>
     /// Removes:
-    /// - Invalid <see cref="CollisionPoint"/>s
+    /// - Invalid <see cref="IntersectionPoint"/>s
     /// - Points with normals facing in the same direction as the reference direction
-    /// - Points with normals facing in the opposite direction as the reference point (from CollisionPoint towards the reference point)
+    /// - Points with normals facing in the opposite direction as the reference point (from IntersectionPoint towards the reference point)
     /// </remarks>
-    public bool Validate(Vector2 referenceDirection, Vector2 referencePoint, out CollisionPoint combined, out CollisionPoint closest)
+    public bool Validate(Vector2 referenceDirection, Vector2 referencePoint, out IntersectionPoint combined, out IntersectionPoint closest)
     {
         if (Count <= 0)
         {
-            combined = new CollisionPoint();
-            closest = new CollisionPoint();
+            combined = new IntersectionPoint();
+            closest = new IntersectionPoint();
             return false;
         }
         
         var avgPoint = new Vector2();
         var avgNormal = new Vector2();
-        closest  = new CollisionPoint();
+        closest  = new IntersectionPoint();
         var closestDistanceSquared = -1f;
         var count = 0;
         for (int i = Count - 1; i >= 0; i--)
         {
             var entry = this[i];
             // var valid = entry.ValidateSelf(out var combinedEntryPoint, out var closestToEntry);
-            var valid = entry.Validate(referenceDirection, referencePoint, out CollisionPoint combinedEntryPoint, out CollisionPoint closestToEntry);
+            var valid = entry.Validate(referenceDirection, referencePoint, out IntersectionPoint combinedEntryPoint, out IntersectionPoint closestToEntry);
             if (!valid)
             {
                 RemoveAt(i);
@@ -539,11 +539,11 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
         
         if (Count <= 0)
         {
-            combined = new CollisionPoint();
+            combined = new IntersectionPoint();
             return false;
         }
         
-        combined = new CollisionPoint(avgPoint / count, avgNormal.Normalize());
+        combined = new IntersectionPoint(avgPoint / count, avgNormal.Normalize());
         return true;
     }
     /// <summary>
@@ -555,22 +555,22 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
     /// <returns>True if there are valid points remaining; otherwise, false.</returns>
     /// <remarks>
     /// Removes:
-    /// - Invalid <see cref="CollisionPoint"/>s
+    /// - Invalid <see cref="IntersectionPoint"/>s
     /// - Points with normals facing in the same direction as the reference direction
-    /// - Points with normals facing in the opposite direction as the reference point (from CollisionPoint towards the reference point)
+    /// - Points with normals facing in the opposite direction as the reference point (from IntersectionPoint towards the reference point)
     /// </remarks>
-    public bool Validate(Vector2 referencePoint, out CollisionPoint combined, out CollisionPoint closest)
+    public bool Validate(Vector2 referencePoint, out IntersectionPoint combined, out IntersectionPoint closest)
     {
         if (Count <= 0)
         {
-            combined = new CollisionPoint();
-            closest = new CollisionPoint();
+            combined = new IntersectionPoint();
+            closest = new IntersectionPoint();
             return false;
         }
         
         var avgPoint = new Vector2();
         var avgNormal = new Vector2();
-        closest  = new CollisionPoint();
+        closest  = new IntersectionPoint();
         var closestDistanceSquared = -1f;
         var count = 0;
         for (int i = Count - 1; i >= 0; i--)
@@ -595,11 +595,11 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
         
         if (Count <= 0)
         {
-            combined = new CollisionPoint();
+            combined = new IntersectionPoint();
             return false;
         }
         
-        combined = new CollisionPoint(avgPoint / count, avgNormal.Normalize());
+        combined = new IntersectionPoint(avgPoint / count, avgNormal.Normalize());
         return true;
     }
     /// <summary>
@@ -610,9 +610,9 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
     /// <returns>True if there are valid points remaining; otherwise, false.</returns>
     /// <remarks>
     /// Removes:
-    /// - Invalid <see cref="CollisionPoint"/>s
+    /// - Invalid <see cref="IntersectionPoint"/>s
     /// - Points with normals facing in the same direction as the reference direction
-    /// - Points with normals facing in the opposite direction as the reference point (from CollisionPoint towards the reference point)
+    /// - Points with normals facing in the opposite direction as the reference point (from IntersectionPoint towards the reference point)
     /// </remarks>
     public bool Validate(Vector2 referencePoint, out CollisionPointValidationResult validationResult)
     {
@@ -624,9 +624,9 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
         
         var avgPoint = new Vector2();
         var avgNormal = new Vector2();
-        var closest  = new CollisionPoint();
-        var furthest  = new CollisionPoint();
-        var pointing  = new CollisionPoint();
+        var closest  = new IntersectionPoint();
+        var furthest  = new IntersectionPoint();
+        var pointing  = new IntersectionPoint();
         var maxDot = -1f;
         var closestDistanceSquared = -1f;
         var furthestDistanceSquared = -1f;
@@ -671,7 +671,7 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
             return false;
         }
         
-        var combined = new CollisionPoint(avgPoint / count, avgNormal.Normalize());
+        var combined = new IntersectionPoint(avgPoint / count, avgNormal.Normalize());
         validationResult = new CollisionPointValidationResult(combined, closest, furthest, pointing);
         return true;
     }
@@ -684,9 +684,9 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
     /// <returns>True if there are valid points remaining; otherwise, false.</returns>
     /// <remarks>
     /// Removes:
-    /// - Invalid <see cref="CollisionPoint"/>s
+    /// - Invalid <see cref="IntersectionPoint"/>s
     /// - Points with normals facing in the same direction as the reference direction
-    /// - Points with normals facing in the opposite direction as the reference point (from CollisionPoint towards the reference point)
+    /// - Points with normals facing in the opposite direction as the reference point (from IntersectionPoint towards the reference point)
     /// </remarks>
     public bool Validate(Vector2 referenceDirection, Vector2 referencePoint, out CollisionPointValidationResult validationResult)
     {
@@ -698,9 +698,9 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
         
         var avgPoint = new Vector2();
         var avgNormal = new Vector2();
-        var closest  = new CollisionPoint();
-        var furthest  = new CollisionPoint();
-        var pointing  = new CollisionPoint();
+        var closest  = new IntersectionPoint();
+        var furthest  = new IntersectionPoint();
+        var pointing  = new IntersectionPoint();
         var maxDot = -1f;
         var closestDistanceSquared = -1f;
         var furthestDistanceSquared = -1f;
@@ -744,7 +744,7 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
             return false;
         }
         
-        var combined = new CollisionPoint(avgPoint / count, avgNormal.Normalize());
+        var combined = new IntersectionPoint(avgPoint / count, avgNormal.Normalize());
         validationResult = new CollisionPointValidationResult(combined, closest, furthest, pointing);
         return true;
     }
@@ -752,20 +752,20 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
     
     /// <summary>
     /// Removes:
-    /// - invalid CollisionPoints
-    /// - CollisionPoints with normals facing in the same direction as the reference direction
-    /// - CollisionPoints with normals facing in the opposite direction as the reference point (from CollisionPoint towards the reference point)
+    /// - invalid IntersectionPoints
+    /// - IntersectionPoints with normals facing in the same direction as the reference direction
+    /// - IntersectionPoints with normals facing in the opposite direction as the reference point (from IntersectionPoint towards the reference point)
     /// - Uses Object.Velocity as reference direction.
     /// - Uses Object.Transform.Position as reference point.
     /// </summary>
-    /// <param name="combined">An averaged CollisionPoint of all remaining CollisionPoints of all entries.</param>
-    /// <param name="closest">The CollisionPoint that is closest to the referencePoint.</param>
+    /// <param name="combined">An averaged IntersectionPoint of all remaining IntersectionPoints of all entries.</param>
+    /// <param name="closest">The IntersectionPoint that is closest to the referencePoint.</param>
     /// <returns>Returns true if there are valid points remaining</returns>
-    public bool ValidateByOther(out CollisionPoint combined, out CollisionPoint closest)
+    public bool ValidateByOther(out IntersectionPoint combined, out IntersectionPoint closest)
     {
         var avgPoint = new Vector2();
         var avgNormal = new Vector2();
-        closest  = new CollisionPoint();
+        closest  = new IntersectionPoint();
         var closestDistanceSquared = -1f;
         var count = 0;
         for (int i = Count - 1; i >= 0; i--)
@@ -788,26 +788,26 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
                 closest = closestToEntry;
             }
         }
-        combined = new CollisionPoint(avgPoint / count, avgNormal.Normalize());
+        combined = new IntersectionPoint(avgPoint / count, avgNormal.Normalize());
         return true;
     }
     /// <summary>
     /// Removes:
-    /// - invalid CollisionPoints
-    /// - CollisionPoints with normals facing in the same direction as the reference direction
-    /// - CollisionPoints with normals facing in the opposite direction as the reference point (from CollisionPoint towards the reference point)
+    /// - invalid IntersectionPoints
+    /// - IntersectionPoints with normals facing in the same direction as the reference direction
+    /// - IntersectionPoints with normals facing in the opposite direction as the reference point (from IntersectionPoint towards the reference point)
     /// - Uses Object.Velocity as reference direction.
     /// - Uses Object.Transform.Position as reference point.
     /// </summary>
-    /// <param name="validationResult">The result of the combined CollisionPoint, and the  closest/furthest collision point from the reference point, and the CollisionPoint with normal facing towards the referencePoint.</param>
+    /// <param name="validationResult">The result of the combined IntersectionPoint, and the  closest/furthest collision point from the reference point, and the IntersectionPoint with normal facing towards the referencePoint.</param>
     /// <returns>Returns true if there are valid points remaining</returns>
     public bool ValidateByOther(out CollisionPointValidationResult validationResult)
     {
         var avgPoint = new Vector2();
         var avgNormal = new Vector2();
-        var closest  = new CollisionPoint();
-        var furthest  = new CollisionPoint();
-        var pointing  = new CollisionPoint();
+        var closest  = new IntersectionPoint();
+        var furthest  = new IntersectionPoint();
+        var pointing  = new IntersectionPoint();
         var maxDot = -1f;
         var closestDistanceSquared = -1f;
         var furthestDistanceSquared = -1f;
@@ -845,7 +845,7 @@ public class IntersectSpaceRegister : List<IntersectSpaceEntry>
              furthest = result.Furthest;
             }
         }
-        var combined = new CollisionPoint(avgPoint / count, avgNormal.Normalize());
+        var combined = new IntersectionPoint(avgPoint / count, avgNormal.Normalize());
         validationResult = new CollisionPointValidationResult(combined, closest, furthest, pointing);
         return true;
     }

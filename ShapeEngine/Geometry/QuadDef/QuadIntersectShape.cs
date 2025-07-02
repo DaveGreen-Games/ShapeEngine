@@ -17,9 +17,9 @@ public readonly partial struct Quad
     /// Computes intersection points between this quad and the specified collider.
     /// </summary>
     /// <param name="collider">The collider to test for intersection.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
+    /// <returns>A <see cref="IntersectionPoints"/> collection of intersection points, or null if none.</returns>
     /// <remarks>Returns null if the collider is disabled or no intersection occurs.</remarks>
-    public CollisionPoints? Intersect(Collider collider)
+    public IntersectionPoints? Intersect(Collider collider)
     {
         if (!collider.Enabled) return null;
 
@@ -60,12 +60,12 @@ public readonly partial struct Quad
     /// Computes intersection points between this quad and a set of segments.
     /// </summary>
     /// <param name="segments">The segments to test for intersection.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
-    public CollisionPoints? IntersectShape(Segments segments)
+    /// <returns>A <see cref="IntersectionPoints"/> collection of intersection points, or null if none.</returns>
+    public IntersectionPoints? IntersectShape(Segments segments)
     {
         if (segments.Count <= 0) return null;
 
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
 
         foreach (var seg in segments)
         {
@@ -104,10 +104,10 @@ public readonly partial struct Quad
     /// Computes intersection points between this quad and a ray.
     /// </summary>
     /// <param name="r">The ray to test for intersection.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
-    public CollisionPoints? IntersectShape(Ray r)
+    /// <returns>A <see cref="IntersectionPoints"/> collection of intersection points, or null if none.</returns>
+    public IntersectionPoints? IntersectShape(Ray r)
     {
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         var result = Segment.IntersectSegmentRay(A, B, r.Point, r.Direction, r.Normal);
         if (result.Valid)
         {
@@ -142,10 +142,10 @@ public readonly partial struct Quad
     /// Computes intersection points between this quad and a line.
     /// </summary>
     /// <param name="l">The line to test for intersection.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
-    public CollisionPoints? IntersectShape(Line l)
+    /// <returns>A <see cref="IntersectionPoints"/> collection of intersection points, or null if none.</returns>
+    public IntersectionPoints? IntersectShape(Line l)
     {
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         var result = Segment.IntersectSegmentLine(A, B, l.Point, l.Direction, l.Normal);
         if (result.Valid)
         {
@@ -180,10 +180,10 @@ public readonly partial struct Quad
     /// Computes intersection points between this quad and a segment.
     /// </summary>
     /// <param name="s">The segment to test for intersection.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
-    public CollisionPoints? IntersectShape(Segment s)
+    /// <returns>A <see cref="IntersectionPoints"/> collection of intersection points, or null if none.</returns>
+    public IntersectionPoints? IntersectShape(Segment s)
     {
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         var result = Segment.IntersectSegmentSegment(A, B, s.Start, s.End);
         if (result.Valid)
         {
@@ -218,10 +218,10 @@ public readonly partial struct Quad
     /// Computes intersection points between this quad and a circle.
     /// </summary>
     /// <param name="c">The circle to test for intersection.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
-    public CollisionPoints? IntersectShape(Circle c)
+    /// <returns>A <see cref="IntersectionPoints"/> collection of intersection points, or null if none.</returns>
+    public IntersectionPoints? IntersectShape(Circle c)
     {
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         var result = Segment.IntersectSegmentCircle(A, B, c.Center, c.Radius);
         if (result.a.Valid || result.b.Valid)
         {
@@ -260,10 +260,10 @@ public readonly partial struct Quad
     /// Computes intersection points between this quad and a triangle.
     /// </summary>
     /// <param name="t">The triangle to test for intersection.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
-    public CollisionPoints? IntersectShape(Triangle t)
+    /// <returns>A <see cref="IntersectionPoints"/> collection of intersection points, or null if none.</returns>
+    public IntersectionPoints? IntersectShape(Triangle t)
     {
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         var result = Segment.IntersectSegmentSegment(A, B, t.A, t.B);
         if (result.Valid)
         {
@@ -355,10 +355,10 @@ public readonly partial struct Quad
     /// Computes intersection points between this quad and a rectangle.
     /// </summary>
     /// <param name="r">The rectangle to test for intersection.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
-    public CollisionPoints? IntersectShape(Rect r)
+    /// <returns>A <see cref="IntersectionPoints"/> collection of intersection points, or null if none.</returns>
+    public IntersectionPoints? IntersectShape(Rect r)
     {
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         var a = r.TopLeft;
         var b = r.BottomLeft;
         var result = Segment.IntersectSegmentSegment(A, B, a, b);
@@ -484,10 +484,10 @@ public readonly partial struct Quad
     /// Computes intersection points between this quad and another quad.
     /// </summary>
     /// <param name="q">The quad to test for intersection.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
-    public CollisionPoints? IntersectShape(Quad q)
+    /// <returns>A <see cref="IntersectionPoints"/> collection of intersection points, or null if none.</returns>
+    public IntersectionPoints? IntersectShape(Quad q)
     {
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         var result = Segment.IntersectSegmentSegment(A, B, q.A, q.B);
         if (result.Valid)
         {
@@ -608,12 +608,12 @@ public readonly partial struct Quad
     /// Computes intersection points between this quad and a polygon.
     /// </summary>
     /// <param name="p">The polygon to test for intersection.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
-    public CollisionPoints? IntersectShape(Polygon p)
+    /// <returns>A <see cref="IntersectionPoints"/> collection of intersection points, or null if none.</returns>
+    public IntersectionPoints? IntersectShape(Polygon p)
     {
         if (p.Count < 3) return null;
 
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         for (var i = 0; i < p.Count; i++)
         {
             var result = Segment.IntersectSegmentSegment(A, B, p[i], p[(i + 1) % p.Count]);
@@ -651,12 +651,12 @@ public readonly partial struct Quad
     /// Computes intersection points between this quad and a polyline.
     /// </summary>
     /// <param name="pl">The polyline to test for intersection.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection of intersection points, or null if none.</returns>
-    public CollisionPoints? IntersectShape(Polyline pl)
+    /// <returns>A <see cref="IntersectionPoints"/> collection of intersection points, or null if none.</returns>
+    public IntersectionPoints? IntersectShape(Polyline pl)
     {
         if (pl.Count < 2) return null;
 
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         for (var i = 0; i < pl.Count - 1; i++)
         {
             var result = Segment.IntersectSegmentSegment(A, B, pl[i], pl[(i + 1) % pl.Count]);
@@ -691,13 +691,13 @@ public readonly partial struct Quad
         return points;
     }
     /// <summary>
-    /// Computes intersection points between this quad and a collider, adding results to an existing <see cref="CollisionPoints"/> collection.
+    /// Computes intersection points between this quad and a collider, adding results to an existing <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="collider">The collider to test for intersection.</param>
     /// <param name="points">The collection to add intersection points to.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first intersection is found.</param>
     /// <returns>The number of intersection points found.</returns>
-    public int Intersect(Collider collider, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int Intersect(Collider collider, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (!collider.Enabled) return 0;
 
@@ -736,13 +736,13 @@ public readonly partial struct Quad
     }
     /// <summary>
     /// Computes intersection points between this quad and a ray,
-    /// adding results to an existing <see cref="CollisionPoints"/> collection.
+    /// adding results to an existing <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="r">The ray to test for intersection.</param>
     /// <param name="points">The collection to add intersection points to.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first intersection is found.</param>
     /// <returns>The number of intersection points found.</returns>
-    public int IntersectShape(Ray r, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Ray r, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
         var result = Segment.IntersectSegmentRay(A, B, r.Point, r.Direction, r.Normal);
@@ -783,13 +783,13 @@ public readonly partial struct Quad
         return count;
     }
     /// <summary>
-    /// Computes intersection points between this quad and a line, adding results to an existing <see cref="CollisionPoints"/> collection.
+    /// Computes intersection points between this quad and a line, adding results to an existing <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="l">The line to test for intersection.</param>
     /// <param name="points">The collection to add intersection points to.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first intersection is found.</param>
     /// <returns>The number of intersection points found.</returns>
-    public int IntersectShape(Line l, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Line l, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
         var result = Segment.IntersectSegmentLine(A, B, l.Point, l.Direction, l.Normal);
@@ -830,13 +830,13 @@ public readonly partial struct Quad
         return count;
     }
     /// <summary>
-    /// Computes intersection points between this quad and a segment, adding results to an existing <see cref="CollisionPoints"/> collection.
+    /// Computes intersection points between this quad and a segment, adding results to an existing <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="s">The segment to test for intersection.</param>
     /// <param name="points">The collection to add intersection points to.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first intersection is found.</param>
     /// <returns>The number of intersection points found.</returns>
-    public int IntersectShape(Segment s, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Segment s, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
         var result = Segment.IntersectSegmentSegment(A, B, s.Start, s.End);
@@ -877,13 +877,13 @@ public readonly partial struct Quad
         return count;
     }
     /// <summary>
-    /// Computes intersection points between this quad and a circle, adding results to an existing <see cref="CollisionPoints"/> collection.
+    /// Computes intersection points between this quad and a circle, adding results to an existing <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="c">The circle to test for intersection.</param>
     /// <param name="points">The collection to add intersection points to.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first intersection is found.</param>
     /// <returns>The number of intersection points found.</returns>
-    public int IntersectShape(Circle c, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Circle c, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
         var result = Segment.IntersectSegmentCircle(A, B, c.Center, c.Radius);
@@ -948,13 +948,13 @@ public readonly partial struct Quad
         return count;
     }
     /// <summary>
-    /// Computes intersection points between this quad and a triangle, adding results to an existing <see cref="CollisionPoints"/> collection.
+    /// Computes intersection points between this quad and a triangle, adding results to an existing <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="t">The triangle to test for intersection.</param>
     /// <param name="points">The collection to add intersection points to.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first intersection is found.</param>
     /// <returns>The number of intersection points found.</returns>
-    public int IntersectShape(Triangle t, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Triangle t, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
         var result = Segment.IntersectSegmentSegment(A, B, t.A, t.B);
@@ -1056,13 +1056,13 @@ public readonly partial struct Quad
         return count;
     }
     /// <summary>
-    /// Computes intersection points between this quad and another quad, adding results to an existing <see cref="CollisionPoints"/> collection.
+    /// Computes intersection points between this quad and another quad, adding results to an existing <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="q">The quad to test for intersection.</param>
     /// <param name="points">The collection to add intersection points to.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first intersection is found.</param>
     /// <returns>The number of intersection points found.</returns>
-    public int IntersectShape(Quad q, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Quad q, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
         var result = Segment.IntersectSegmentSegment(A, B, q.A, q.B);
@@ -1198,13 +1198,13 @@ public readonly partial struct Quad
     }
     /// <summary>
     /// Computes intersection points between this quad and a rectangle,
-    /// adding results to an existing <see cref="CollisionPoints"/> collection.
+    /// adding results to an existing <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="r">The rectangle to test for intersection.</param>
     /// <param name="points">The collection to add intersection points to.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first intersection is found.</param>
     /// <returns>The number of intersection points found.</returns>
-    public int IntersectShape(Rect r, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Rect r, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
         var a = r.TopLeft;
@@ -1344,13 +1344,13 @@ public readonly partial struct Quad
         return count;
     }
     /// <summary>
-    /// Computes intersection points between this quad and a polygon, adding results to an existing <see cref="CollisionPoints"/> collection.
+    /// Computes intersection points between this quad and a polygon, adding results to an existing <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="p">The polygon to test for intersection.</param>
     /// <param name="points">The collection to add intersection points to.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first intersection is found.</param>
     /// <returns>The number of intersection points found.</returns>
-    public int IntersectShape(Polygon p, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Polygon p, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (p.Count < 3) return 0;
 
@@ -1393,13 +1393,13 @@ public readonly partial struct Quad
         return count;
     }
     /// <summary>
-    /// Computes intersection points between this quad and a polyline, adding results to an existing <see cref="CollisionPoints"/> collection.
+    /// Computes intersection points between this quad and a polyline, adding results to an existing <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="pl">The polyline to test for intersection.</param>
     /// <param name="points">The collection to add intersection points to.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first intersection is found.</param>
     /// <returns>The number of intersection points found.</returns>
-    public int IntersectShape(Polyline pl, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Polyline pl, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (pl.Count < 2) return 0;
 
@@ -1442,13 +1442,13 @@ public readonly partial struct Quad
         return count;
     }
     /// <summary>
-    /// Computes intersection points between this quad and a set of segments, adding results to an existing <see cref="CollisionPoints"/> collection.
+    /// Computes intersection points between this quad and a set of segments, adding results to an existing <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="shape">The segments to test for intersection.</param>
     /// <param name="points">The collection to add intersection points to.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first intersection is found.</param>
     /// <returns>The number of intersection points found.</returns>
-    public int IntersectShape(Segments shape, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Segments shape, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (shape.Count <= 0) return 0;
 

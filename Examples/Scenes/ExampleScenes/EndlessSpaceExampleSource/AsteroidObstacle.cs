@@ -116,7 +116,7 @@ internal class AsteroidObstacle : CollisionObject
     protected override void Collision(CollisionInformation info)
     {
         if(info.Count <= 0) return;
-        if(!info.Validate(out CollisionPoint combined)) return;
+        if(!info.Validate(out IntersectionPoint combined)) return;
         foreach (var collision in info)
         {
             if(collision.Points == null || collision.Points.Count <= 0 || !collision.FirstContact)continue;

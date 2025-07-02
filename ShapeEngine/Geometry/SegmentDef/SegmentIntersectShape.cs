@@ -17,11 +17,11 @@ public readonly partial struct Segment
     /// Computes all intersection points between this segment and a collider shape.
     /// </summary>
     /// <param name="collider">The collider whose shape will be tested for intersection. Must be enabled.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection containing intersection points, or null if there are no intersections or the collider is disabled.</returns>
+    /// <returns>A <see cref="IntersectionPoints"/> collection containing intersection points, or null if there are no intersections or the collider is disabled.</returns>
     /// <remarks>
     /// The method dispatches to the appropriate shape-specific intersection method based on the collider's shape type.
     /// </remarks>
-    public CollisionPoints? Intersect(Collider collider)
+    public IntersectionPoints? Intersect(Collider collider)
     {
         if (!collider.Enabled) return null;
 
@@ -63,11 +63,11 @@ public readonly partial struct Segment
     /// Computes all intersection points between this segment and another segment.
     /// </summary>
     /// <param name="s">The segment to test against.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection containing intersection points, or null if there are no intersections.</returns>
+    /// <returns>A <see cref="IntersectionPoints"/> collection containing intersection points, or null if there are no intersections.</returns>
     /// <remarks>
     /// Returns a single intersection point if the segments intersect, otherwise null.
     /// </remarks>
-    public CollisionPoints? IntersectShape(Segment s)
+    public IntersectionPoints? IntersectShape(Segment s)
     {
         var cp = IntersectSegmentSegment(Start, End, s.Start, s.End, s.Normal);
         if (cp.Valid) return [cp];
@@ -79,11 +79,11 @@ public readonly partial struct Segment
     /// Computes all intersection points between this segment and a line.
     /// </summary>
     /// <param name="l">The line to test against.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection containing intersection points, or null if there are no intersections.</returns>
+    /// <returns>A <see cref="IntersectionPoints"/> collection containing intersection points, or null if there are no intersections.</returns>
     /// <remarks>
     /// Returns a single intersection point if the segment and line intersect, otherwise null.
     /// </remarks>
-    public CollisionPoints? IntersectShape(Line l)
+    public IntersectionPoints? IntersectShape(Line l)
     {
         var cp = IntersectSegmentLine(Start, End, l.Point, l.Direction, l.Normal);
         if (cp.Valid) return [cp];
@@ -95,11 +95,11 @@ public readonly partial struct Segment
     /// Computes all intersection points between this segment and a ray.
     /// </summary>
     /// <param name="r">The ray to test against.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection containing intersection points, or null if there are no intersections.</returns>
+    /// <returns>A <see cref="IntersectionPoints"/> collection containing intersection points, or null if there are no intersections.</returns>
     /// <remarks>
     /// Returns a single intersection point if the segment and ray intersect, otherwise null.
     /// </remarks>
-    public CollisionPoints? IntersectShape(Ray r)
+    public IntersectionPoints? IntersectShape(Ray r)
     {
         var cp = IntersectSegmentRay(Start, End, r.Point, r.Direction, r.Normal);
         if (cp.Valid) return [cp];
@@ -111,17 +111,17 @@ public readonly partial struct Segment
     /// Computes all intersection points between this segment and a circle.
     /// </summary>
     /// <param name="c">The circle to test against.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection containing intersection points, or null if there are no intersections.</returns>
+    /// <returns>A <see cref="IntersectionPoints"/> collection containing intersection points, or null if there are no intersections.</returns>
     /// <remarks>
     /// May return up to two intersection points depending on the segment's position relative to the circle.
     /// </remarks>
-    public CollisionPoints? IntersectShape(Circle c)
+    public IntersectionPoints? IntersectShape(Circle c)
     {
         var result = IntersectSegmentCircle(Start, End, c.Center, c.Radius);
 
         if (result.a.Valid && result.b.Valid)
         {
-            var points = new CollisionPoints
+            var points = new IntersectionPoints
             {
                 result.a,
                 result.b
@@ -131,13 +131,13 @@ public readonly partial struct Segment
 
         if (result.a.Valid)
         {
-            var points = new CollisionPoints { result.a };
+            var points = new IntersectionPoints { result.a };
             return points;
         }
 
         if (result.b.Valid)
         {
-            var points = new CollisionPoints { result.b };
+            var points = new IntersectionPoints { result.b };
             return points;
         }
 
@@ -148,13 +148,13 @@ public readonly partial struct Segment
     /// Computes all intersection points between this segment and a triangle.
     /// </summary>
     /// <param name="t">The triangle to test against.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection containing intersection points, or null if there are no intersections.</returns>
+    /// <returns>A <see cref="IntersectionPoints"/> collection containing intersection points, or null if there are no intersections.</returns>
     /// <remarks>
     /// May return up to two intersection points, as a segment can intersect a triangle at most twice.
     /// </remarks>
-    public CollisionPoints? IntersectShape(Triangle t)
+    public IntersectionPoints? IntersectShape(Triangle t)
     {
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         var cp = IntersectSegmentSegment(Start, End, t.A, t.B);
         if (cp.Valid)
         {
@@ -186,13 +186,13 @@ public readonly partial struct Segment
     /// Computes all intersection points between this segment and a quadrilateral.
     /// </summary>
     /// <param name="q">The quadrilateral to test against.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection containing intersection points, or null if there are no intersections.</returns>
+    /// <returns>A <see cref="IntersectionPoints"/> collection containing intersection points, or null if there are no intersections.</returns>
     /// <remarks>
     /// May return up to two intersection points, as a segment can intersect a quad at most twice.
     /// </remarks>
-    public CollisionPoints? IntersectShape(Quad q)
+    public IntersectionPoints? IntersectShape(Quad q)
     {
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         var cp = IntersectSegmentSegment(Start, End, q.A, q.B);
         if (cp.Valid)
         {
@@ -234,13 +234,13 @@ public readonly partial struct Segment
     /// Computes all intersection points between this segment and a rectangle.
     /// </summary>
     /// <param name="r">The rectangle to test against.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection containing intersection points, or null if there are no intersections.</returns>
+    /// <returns>A <see cref="IntersectionPoints"/> collection containing intersection points, or null if there are no intersections.</returns>
     /// <remarks>
     /// May return up to two intersection points, as a segment can intersect a rectangle at most twice.
     /// </remarks>
-    public CollisionPoints? IntersectShape(Rect r)
+    public IntersectionPoints? IntersectShape(Rect r)
     {
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         var a = r.TopLeft;
         var b = r.BottomLeft;
 
@@ -287,14 +287,14 @@ public readonly partial struct Segment
     /// Computes all intersection points between this segment and a polygon.
     /// </summary>
     /// <param name="p">The polygon to test against. Must have at least 3 vertices.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection containing intersection points, or null if there are no intersections.</returns>
+    /// <returns>A <see cref="IntersectionPoints"/> collection containing intersection points, or null if there are no intersections.</returns>
     /// <remarks>
     /// Iterates over all polygon edges and collects intersection points with the segment.
     /// </remarks>
-    public CollisionPoints? IntersectShape(Polygon p)
+    public IntersectionPoints? IntersectShape(Polygon p)
     {
         if (p.Count < 3) return null;
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         for (var i = 0; i < p.Count; i++)
         {
             var colPoint = IntersectSegmentSegment(Start, End, p[i], p[(i + 1) % p.Count]);
@@ -312,14 +312,14 @@ public readonly partial struct Segment
     /// Computes all intersection points between this segment and a polyline.
     /// </summary>
     /// <param name="pl">The polyline to test against. Must have at least 2 vertices.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection containing intersection points, or null if there are no intersections.</returns>
+    /// <returns>A <see cref="IntersectionPoints"/> collection containing intersection points, or null if there are no intersections.</returns>
     /// <remarks>
     /// Iterates over all polyline segments and collects intersection points with the segment.
     /// </remarks>
-    public CollisionPoints? IntersectShape(Polyline pl)
+    public IntersectionPoints? IntersectShape(Polyline pl)
     {
         if (pl.Count < 2) return null;
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
         for (var i = 0; i < pl.Count - 1; i++)
         {
             var colPoint = IntersectSegmentSegment(Start, End, pl[i], pl[i + 1]);
@@ -337,14 +337,14 @@ public readonly partial struct Segment
     /// Computes all intersection points between this segment and a set of segments.
     /// </summary>
     /// <param name="shape">The set of segments to test against.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection containing intersection points, or null if there are no intersections.</returns>
+    /// <returns>A <see cref="IntersectionPoints"/> collection containing intersection points, or null if there are no intersections.</returns>
     /// <remarks>
     /// Iterates over all segments in the set and collects intersection points with the segment.
     /// </remarks>
-    public CollisionPoints? IntersectShape(Segments shape)
+    public IntersectionPoints? IntersectShape(Segments shape)
     {
         if (shape.Count <= 0) return null;
-        CollisionPoints? points = null;
+        IntersectionPoints? points = null;
 
         foreach (var seg in shape)
         {
@@ -363,13 +363,13 @@ public readonly partial struct Segment
     /// Computes all intersection points between this segment and a collider shape, storing results in a provided collection.
     /// </summary>
     /// <param name="collider">The collider whose shape will be tested for intersection. Must be enabled.</param>
-    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to store intersection points.</param>
+    /// <param name="points">A reference to a <see cref="IntersectionPoints"/> collection to store intersection points.</param>
     /// <param name="returnAfterFirstValid">If true, the method returns after the first valid intersection is found.</param>
     /// <returns>The number of intersection points found.</returns>
     /// <remarks>
     /// The method dispatches to the appropriate shape-specific intersection method based on the collider's shape type.
     /// </remarks>
-    public int Intersect(Collider collider, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int Intersect(Collider collider, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (!collider.Enabled) return 0;
 
@@ -411,12 +411,12 @@ public readonly partial struct Segment
     /// Computes all intersection points between this segment and a ray, storing results in a provided collection.
     /// </summary>
     /// <param name="r">The ray to test against.</param>
-    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to store intersection points.</param>
+    /// <param name="points">A reference to a <see cref="IntersectionPoints"/> collection to store intersection points.</param>
     /// <returns>The number of intersection points found (0 or 1).</returns>
     /// <remarks>
     /// Returns 1 if the segment and ray intersect, otherwise 0.
     /// </remarks>
-    public int IntersectShape(Ray r, ref CollisionPoints points)
+    public int IntersectShape(Ray r, ref IntersectionPoints points)
     {
         var cp = IntersectSegmentRay(Start, End, r.Point, r.Direction, r.Normal);
         if (cp.Valid)
@@ -432,12 +432,12 @@ public readonly partial struct Segment
     /// Computes all intersection points between this segment and a line, storing results in a provided collection.
     /// </summary>
     /// <param name="l">The line to test against.</param>
-    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to store intersection points.</param>
+    /// <param name="points">A reference to a <see cref="IntersectionPoints"/> collection to store intersection points.</param>
     /// <returns>The number of intersection points found (0 or 1).</returns>
     /// <remarks>
     /// Returns 1 if the segment and line intersect, otherwise 0.
     /// </remarks>
-    public int IntersectShape(Line l, ref CollisionPoints points)
+    public int IntersectShape(Line l, ref IntersectionPoints points)
     {
         var cp = IntersectSegmentLine(Start, End, l.Point, l.Direction, l.Normal);
         if (cp.Valid)
@@ -453,12 +453,12 @@ public readonly partial struct Segment
     /// Computes all intersection points between this segment and another segment, storing results in a provided collection.
     /// </summary>
     /// <param name="s">The segment to test against.</param>
-    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to store intersection points.</param>
+    /// <param name="points">A reference to a <see cref="IntersectionPoints"/> collection to store intersection points.</param>
     /// <returns>The number of intersection points found (0 or 1).</returns>
     /// <remarks>
     /// Returns 1 if the segments intersect, otherwise 0.
     /// </remarks>
-    public int IntersectShape(Segment s, ref CollisionPoints points)
+    public int IntersectShape(Segment s, ref IntersectionPoints points)
     {
         var cp = IntersectSegmentSegment(Start, End, s.Start, s.End);
         if (cp.Valid)
@@ -474,13 +474,13 @@ public readonly partial struct Segment
     /// Computes all intersection points between this segment and a circle, storing results in a provided collection.
     /// </summary>
     /// <param name="c">The circle to test against.</param>
-    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to store intersection points.</param>
+    /// <param name="points">A reference to a <see cref="IntersectionPoints"/> collection to store intersection points.</param>
     /// <param name="returnAfterFirstValid">If true, the method returns after the first valid intersection is found.</param>
     /// <returns>The number of intersection points found (0, 1, or 2).</returns>
     /// <remarks>
     /// May return up to two intersection points depending on the segment's position relative to the circle.
     /// </remarks>
-    public int IntersectShape(Circle c, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Circle c, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var result = IntersectSegmentCircle(Start, End, c.Center, c.Radius);
 
@@ -516,13 +516,13 @@ public readonly partial struct Segment
     /// Computes all intersection points between this segment and a triangle, storing results in a provided collection.
     /// </summary>
     /// <param name="t">The triangle to test against.</param>
-    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to store intersection points.</param>
+    /// <param name="points">A reference to a <see cref="IntersectionPoints"/> collection to store intersection points.</param>
     /// <param name="returnAfterFirstValid">If true, the method returns after the first valid intersection is found.</param>
     /// <returns>The number of intersection points found (0, 1, or 2).</returns>
     /// <remarks>
     /// May return up to two intersection points, as a segment can intersect a triangle at most twice.
     /// </remarks>
-    public int IntersectShape(Triangle t, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Triangle t, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var cp = IntersectSegmentSegment(Start, End, t.A, t.B);
         var count = 0;
@@ -558,13 +558,13 @@ public readonly partial struct Segment
     /// Computes all intersection points between this segment and a quadrilateral, storing results in a provided collection.
     /// </summary>
     /// <param name="q">The quadrilateral to test against.</param>
-    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to store intersection points.</param>
+    /// <param name="points">A reference to a <see cref="IntersectionPoints"/> collection to store intersection points.</param>
     /// <param name="returnAfterFirstValid">If true, the method returns after the first valid intersection is found.</param>
     /// <returns>The number of intersection points found (0, 1, or 2).</returns>
     /// <remarks>
     /// May return up to two intersection points, as a segment can intersect a quad at most twice.
     /// </remarks>
-    public int IntersectShape(Quad q, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Quad q, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var cp = IntersectSegmentSegment(Start, End, q.A, q.B);
         var count = 0;
@@ -611,13 +611,13 @@ public readonly partial struct Segment
     /// Computes all intersection points between this segment and a rectangle, storing results in a provided collection.
     /// </summary>
     /// <param name="r">The rectangle to test against.</param>
-    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to store intersection points.</param>
+    /// <param name="points">A reference to a <see cref="IntersectionPoints"/> collection to store intersection points.</param>
     /// <param name="returnAfterFirstValid">If true, the method returns after the first valid intersection is found.</param>
     /// <returns>The number of intersection points found (0, 1, or 2).</returns>
     /// <remarks>
     /// May return up to two intersection points, as a segment can intersect a rectangle at most twice.
     /// </remarks>
-    public int IntersectShape(Rect r, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Rect r, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var a = r.TopLeft;
         var b = r.BottomLeft;
@@ -669,13 +669,13 @@ public readonly partial struct Segment
     /// Computes all intersection points between this segment and a polygon, storing results in a provided collection.
     /// </summary>
     /// <param name="p">The polygon to test against. Must have at least 3 vertices.</param>
-    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to store intersection points.</param>
+    /// <param name="points">A reference to a <see cref="IntersectionPoints"/> collection to store intersection points.</param>
     /// <param name="returnAfterFirstValid">If true, the method returns after the first valid intersection is found.</param>
     /// <returns>The number of intersection points found.</returns>
     /// <remarks>
     /// Iterates over all polygon edges and collects intersection points with the segment.
     /// </remarks>
-    public int IntersectShape(Polygon p, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Polygon p, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (p.Count < 3) return 0;
         var count = 0;
@@ -697,13 +697,13 @@ public readonly partial struct Segment
     /// Computes all intersection points between this segment and a polyline, storing results in a provided collection.
     /// </summary>
     /// <param name="pl">The polyline to test against. Must have at least 2 vertices.</param>
-    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to store intersection points.</param>
+    /// <param name="points">A reference to a <see cref="IntersectionPoints"/> collection to store intersection points.</param>
     /// <param name="returnAfterFirstValid">If true, the method returns after the first valid intersection is found.</param>
     /// <returns>The number of intersection points found.</returns>
     /// <remarks>
     /// Iterates over all polyline segments and collects intersection points with the segment.
     /// </remarks>
-    public int IntersectShape(Polyline pl, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Polyline pl, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (pl.Count < 2) return 0;
         var count = 0;
@@ -725,13 +725,13 @@ public readonly partial struct Segment
     /// Computes all intersection points between this segment and a set of segments, storing results in a provided collection.
     /// </summary>
     /// <param name="shape">The set of segments to test against.</param>
-    /// <param name="points">A reference to a <see cref="CollisionPoints"/> collection to store intersection points.</param>
+    /// <param name="points">A reference to a <see cref="IntersectionPoints"/> collection to store intersection points.</param>
     /// <param name="returnAfterFirstValid">If true, the method returns after the first valid intersection is found.</param>
     /// <returns>The number of intersection points found.</returns>
     /// <remarks>
     /// Iterates over all segments in the set and collects intersection points with the segment.
     /// </remarks>
-    public int IntersectShape(Segments shape, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Segments shape, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (shape.Count <= 0) return 0;
         var count = 0;

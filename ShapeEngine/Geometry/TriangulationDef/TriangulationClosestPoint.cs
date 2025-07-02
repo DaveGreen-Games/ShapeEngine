@@ -27,7 +27,7 @@ public partial class Triangulation
     {
         if (Count <= 0) return new();
 
-        var closestPoint = new CollisionPoint();
+        var closestPoint = new IntersectionPoint();
         var disSquared = -1f;
         var triangleIndex = -1;
 
@@ -44,7 +44,7 @@ public partial class Triangulation
             }
         }
 
-        return new(closestPoint, new CollisionPoint(p, (closestPoint.Point - p).Normalize()), disSquared, triangleIndex);
+        return new(closestPoint, new IntersectionPoint(p, (closestPoint.Point - p).Normalize()), disSquared, triangleIndex);
     }
 
     /// <summary>
@@ -53,9 +53,9 @@ public partial class Triangulation
     /// <param name="p">The point to which the closest triangle is sought.</param>
     /// <param name="disSquared">The squared distance to the closest point.</param>
     /// <param name="triangleIndex">The index of the closest triangle in the triangulation.</param>
-    /// <returns>A tuple containing the closest <see cref="CollisionPoint"/> and the corresponding <see cref="Triangle"/>.</returns>
+    /// <returns>A tuple containing the closest <see cref="IntersectionPoint"/> and the corresponding <see cref="Triangle"/>.</returns>
     /// <remarks>If the triangulation is empty, returns default values.</remarks>
-    public (CollisionPoint point, Triangle triangle) GetClosestTriangle(Vector2 p, out float disSquared, out int triangleIndex)
+    public (IntersectionPoint point, Triangle triangle) GetClosestTriangle(Vector2 p, out float disSquared, out int triangleIndex)
     {
         disSquared = -1;
         triangleIndex = -1;
@@ -63,7 +63,7 @@ public partial class Triangulation
 
         var closestTriangle = new Triangle();
         var contained = false;
-        var closestPoint = new CollisionPoint();
+        var closestPoint = new IntersectionPoint();
 
         for (var i = 0; i < Count; i++)
         {
@@ -103,9 +103,9 @@ public partial class Triangulation
     /// <param name="triangles">The list of triangles to search.</param>
     /// <param name="p">The point to which the closest point is sought.</param>
     /// <param name="disSquared">The squared distance to the closest point.</param>
-    /// <returns>The <see cref="CollisionPoint"/> in the triangles closest to the specified point.</returns>
-    /// <remarks>If the list is empty, returns a default <see cref="CollisionPoint"/>.</remarks>
-    public static CollisionPoint GetClosestPointTriangulationPoint(List<Triangle> triangles, Vector2 p, out float disSquared)
+    /// <returns>The <see cref="IntersectionPoint"/> in the triangles closest to the specified point.</returns>
+    /// <remarks>If the list is empty, returns a default <see cref="IntersectionPoint"/>.</remarks>
+    public static IntersectionPoint GetClosestPointTriangulationPoint(List<Triangle> triangles, Vector2 p, out float disSquared)
     {
         disSquared = -1;
         if (triangles.Count <= 0) return new();
@@ -132,9 +132,9 @@ public partial class Triangulation
     /// </summary>
     /// <param name="p">The point to which the closest point is sought.</param>
     /// <param name="disSquared">The squared distance to the closest point.</param>
-    /// <returns>The closest <see cref="CollisionPoint"/> in the triangulation to the specified point.</returns>
-    /// <remarks>If the triangulation is empty, returns a default <see cref="CollisionPoint"/>.</remarks>
-    public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared)
+    /// <returns>The closest <see cref="IntersectionPoint"/> in the triangulation to the specified point.</returns>
+    /// <remarks>If the triangulation is empty, returns a default <see cref="IntersectionPoint"/>.</remarks>
+    public IntersectionPoint GetClosestPoint(Vector2 p, out float disSquared)
     {
         disSquared = -1;
         if (Count <= 0) return new();
@@ -164,9 +164,9 @@ public partial class Triangulation
     /// <param name="disSquared">The squared distance to the closest point.</param>
     /// <param name="triangleIndex">The index of the closest triangle in the triangulation.</param>
     /// <param name="segmentIndex">The index of the closest segment in the triangle.</param>
-    /// <returns>The closest <see cref="CollisionPoint"/> in the triangulation to the specified point.</returns>
-    /// <remarks>If the triangulation is empty, returns a default <see cref="CollisionPoint"/>.</remarks>
-    public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared, out int triangleIndex, out int segmentIndex)
+    /// <returns>The closest <see cref="IntersectionPoint"/> in the triangulation to the specified point.</returns>
+    /// <remarks>If the triangulation is empty, returns a default <see cref="IntersectionPoint"/>.</remarks>
+    public IntersectionPoint GetClosestPoint(Vector2 p, out float disSquared, out int triangleIndex, out int segmentIndex)
     {
         disSquared = -1;
         triangleIndex = -1;
@@ -527,9 +527,9 @@ public partial class Triangulation
     /// <param name="p">The point to which the closest segment is sought.</param>
     /// <param name="disSquared">The squared distance to the closest segment.</param>
     /// <param name="triangleIndex">The index of the triangle containing the closest segment.</param>
-    /// <returns>A tuple containing the closest <see cref="Segment"/> and the corresponding <see cref="CollisionPoint"/>.</returns>
+    /// <returns>A tuple containing the closest <see cref="Segment"/> and the corresponding <see cref="IntersectionPoint"/>.</returns>
     /// <remarks>If the triangulation is empty, returns default values.</remarks>
-    public (Segment segment, CollisionPoint segmentPoint) GetClosestSegment(Vector2 p, out float disSquared, out int triangleIndex)
+    public (Segment segment, IntersectionPoint segmentPoint) GetClosestSegment(Vector2 p, out float disSquared, out int triangleIndex)
     {
         triangleIndex = -1;
         disSquared = -1f;

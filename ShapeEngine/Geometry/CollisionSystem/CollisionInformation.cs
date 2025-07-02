@@ -12,7 +12,7 @@ namespace ShapeEngine.Geometry.CollisionSystem;
 /// </remarks>
 public class CollisionInformation : List<Collision>
 {
-    private static readonly CollisionPoints filterList = new CollisionPoints(64);
+    private static readonly IntersectionPoints filterList = new IntersectionPoints(64);
     #region Members
     /// <summary>
     /// The collision object representing 'self' in the collision information.
@@ -43,7 +43,7 @@ public class CollisionInformation : List<Collision>
     /// Only valid when the collision object has <see cref="CollisionObject.FilterCollisionPoints"/> enabled and
     /// the collider has <see cref="Collider.ComputeIntersections"/> enabled.
     /// </summary>
-    public CollisionPoint FilteredCollisionPoint { get; private set; }
+    public IntersectionPoint FilteredIntersectionPoint { get; private set; }
     #endregion
     
     #region Constructors
@@ -60,7 +60,7 @@ public class CollisionInformation : List<Collision>
         Other = other;
         OtherVel = other.Velocity;
         FirstContact = firstContact;
-        FilteredCollisionPoint = new CollisionPoint();
+        FilteredIntersectionPoint = new IntersectionPoint();
     }
     /// <summary>
     /// Initializes a new instance of the <see cref="CollisionInformation"/> class with a list of collisions.
@@ -77,7 +77,7 @@ public class CollisionInformation : List<Collision>
         OtherVel = other.Velocity;
         FirstContact = firstContact;
         AddRange(collisions);
-        FilteredCollisionPoint = new CollisionPoint();
+        FilteredIntersectionPoint = new IntersectionPoint();
     }
     #endregion
 
@@ -95,7 +95,7 @@ public class CollisionInformation : List<Collision>
         }
         if (filterList.Count > 0)
         {
-            FilteredCollisionPoint = filterList.Filter(filterType, referencePoint);
+            FilteredIntersectionPoint = filterList.Filter(filterType, referencePoint);
             filterList.Clear();
         }
     }
@@ -103,16 +103,16 @@ public class CollisionInformation : List<Collision>
     /// <summary>
     /// Validates the collisions and removes invalid ones using <see cref="SelfVel"/> as reference direction and <see cref="Self"/>.CurTransform.Position as reference point.
     /// </summary>
-    /// <param name="combined">The average <see cref="CollisionPoint"/> of all valid collision points.</param>
+    /// <param name="combined">The average <see cref="IntersectionPoint"/> of all valid collision points.</param>
     /// <returns>Returns true if there are valid collision points left.</returns>
-    public bool Validate(out CollisionPoint combined)
+    public bool Validate(out IntersectionPoint combined)
     {
-        combined = new CollisionPoint();
+        combined = new IntersectionPoint();
         if(Count <= 0) return false;
         for (int i = Count - 1; i >= 0; i--)
         {
             var collision = this[i];
-            if (collision.Validate(out CollisionPoint combinedCollisionPoint))
+            if (collision.Validate(out IntersectionPoint combinedCollisionPoint))
             {
                 combined = combinedCollisionPoint.Combine(combined);
             }
@@ -123,19 +123,19 @@ public class CollisionInformation : List<Collision>
     /// <summary>
     /// Validates the collisions and removes invalid ones using <see cref="SelfVel"/> as reference direction and <see cref="Self"/>.CurTransform.Position as reference point.
     /// </summary>
-    /// <param name="combined">The average <see cref="CollisionPoint"/> of all valid collision points.</param>
-    /// <param name="closest">The closest valid <see cref="CollisionPoint"/> to the reference point.</param>
+    /// <param name="combined">The average <see cref="IntersectionPoint"/> of all valid collision points.</param>
+    /// <param name="closest">The closest valid <see cref="IntersectionPoint"/> to the reference point.</param>
     /// <returns>Returns true if there are valid collision points left.</returns>
-    public bool Validate(out CollisionPoint combined, out CollisionPoint closest)
+    public bool Validate(out IntersectionPoint combined, out IntersectionPoint closest)
     {
-        combined = new CollisionPoint();
-        closest = new CollisionPoint();
+        combined = new IntersectionPoint();
+        closest = new IntersectionPoint();
         var closestDistanceSquared = -1f;
         if(Count <= 0) return false;
         for (int i = Count - 1; i >= 0; i--)
         {
             var collision = this[i];
-            if (collision.Validate(out CollisionPoint combinedCollisionPoint, out var closestCollisionPoint))
+            if (collision.Validate(out IntersectionPoint combinedCollisionPoint, out var closestCollisionPoint))
             {
                 combined = combinedCollisionPoint.Combine(combined);
                 var dis = (collision.Self.CurTransform.Position - closestCollisionPoint.Point).LengthSquared();
@@ -157,10 +157,10 @@ public class CollisionInformation : List<Collision>
     public bool Validate(out CollisionPointValidationResult result)
     {
         result = new CollisionPointValidationResult();
-        var combined = new CollisionPoint();
-        var closest = new CollisionPoint();
-        var furthest = new CollisionPoint();
-        var pointing = new CollisionPoint();
+        var combined = new IntersectionPoint();
+        var closest = new IntersectionPoint();
+        var furthest = new IntersectionPoint();
+        var pointing = new IntersectionPoint();
         var closestDistanceSquared = -1f;
         var furthestDistanceSquared = -1f;
         var maxDot = -1f;
@@ -287,7 +287,7 @@ public class CollisionInformation : List<Collision>
     /// </summary>
     /// <param name="match">A predicate to test each collision point.</param>
     /// <returns>True if a matching collision point exists; otherwise, false.</returns>
-    public bool ExistsCollisionPoint(Predicate<CollisionPoint> match)
+    public bool ExistsCollisionPoint(Predicate<IntersectionPoint> match)
     {
         if(Count <= 0) return false;
         foreach (var collision in this)
@@ -298,12 +298,12 @@ public class CollisionInformation : List<Collision>
         return false;
     }
     /// <summary>
-    /// Returns the first <see cref="CollisionPoint"/> that matches the given predicate across all collisions.
-    /// If no matching collision point is found, returns an empty <see cref="CollisionPoint"/>.
+    /// Returns the first <see cref="IntersectionPoint"/> that matches the given predicate across all collisions.
+    /// If no matching collision point is found, returns an empty <see cref="IntersectionPoint"/>.
     /// </summary>
     /// <param name="match">Predicate to test each collision point.</param>
-    /// <returns>The first matching <see cref="CollisionPoint"/>, or an empty one if none found.</returns>
-    public CollisionPoint FindCollisionPoint(Predicate<CollisionPoint> match)
+    /// <returns>The first matching <see cref="IntersectionPoint"/>, or an empty one if none found.</returns>
+    public IntersectionPoint FindCollisionPoint(Predicate<IntersectionPoint> match)
     {
         if(Count <= 0) return new();
         foreach (var collision in this)
@@ -316,20 +316,20 @@ public class CollisionInformation : List<Collision>
     }
     /// <summary>
     /// Finds all collision points that match the given predicate across all valid collisions.
-    /// Returns a <see cref="CollisionPoints"/> collection if any are found; otherwise, returns null.
+    /// Returns a <see cref="IntersectionPoints"/> collection if any are found; otherwise, returns null.
     /// </summary>
     /// <param name="match">Predicate to test each collision point.</param>
-    /// <returns>A <see cref="CollisionPoints"/> collection of matching points, or null if none found.</returns>
-    public CollisionPoints? FindAllCollisionPoints(Predicate<CollisionPoint> match)
+    /// <returns>A <see cref="IntersectionPoints"/> collection of matching points, or null if none found.</returns>
+    public IntersectionPoints? FindAllCollisionPoints(Predicate<IntersectionPoint> match)
     {
         if (Count <= 0) return null;
-        CollisionPoints? result = null;
+        IntersectionPoints? result = null;
         foreach (var collision in this)
         {
            var points = collision.FindAll(match);
            if(points == null) continue;
            
-           result??= new CollisionPoints();
+           result??= new IntersectionPoints();
            result.AddRange(points);
         }
 
@@ -338,14 +338,14 @@ public class CollisionInformation : List<Collision>
 
     
     /// <summary>
-    /// Returns the closest <see cref="CollisionPoint"/> to <see cref="Self"/>.Transform.Position across all valid collisions.
+    /// Returns the closest <see cref="IntersectionPoint"/> to <see cref="Self"/>.Transform.Position across all valid collisions.
     /// </summary>
-    /// <returns>The closest <see cref="CollisionPoint"/>, or an empty one if none exist.</returns>
-    public CollisionPoint GetClosestCollisionPoint()
+    /// <returns>The closest <see cref="IntersectionPoint"/>, or an empty one if none exist.</returns>
+    public IntersectionPoint GetClosestCollisionPoint()
     {
-        if(Count <= 0) return new CollisionPoint();
+        if(Count <= 0) return new IntersectionPoint();
         
-        var result = new CollisionPoint();
+        var result = new IntersectionPoint();
         var closestDistanceSquared = -1f;
         foreach (var collision in this)
         {
@@ -363,14 +363,14 @@ public class CollisionInformation : List<Collision>
     }
 
     /// <summary>
-    /// Returns the furthest <see cref="CollisionPoint"/> from <see cref="Self"/>.Transform.Position across all valid collisions.
+    /// Returns the furthest <see cref="IntersectionPoint"/> from <see cref="Self"/>.Transform.Position across all valid collisions.
     /// </summary>
-    /// <returns>The furthest <see cref="CollisionPoint"/>, or an empty one if none exist.</returns>
-    public CollisionPoint GetFurthestCollisionPoint()
+    /// <returns>The furthest <see cref="IntersectionPoint"/>, or an empty one if none exist.</returns>
+    public IntersectionPoint GetFurthestCollisionPoint()
     {
-        if(Count <= 0) return new CollisionPoint();
+        if(Count <= 0) return new IntersectionPoint();
         
-        var result = new CollisionPoint();
+        var result = new IntersectionPoint();
         var furthestDistanceSquared = -1f;
         foreach (var collision in this)
         {
@@ -390,12 +390,12 @@ public class CollisionInformation : List<Collision>
     /// Calculates and returns the average (combined) collision point from all valid collision points
     /// across all valid collisions in this collection.
     /// </summary>
-    /// <returns>The combined <see cref="CollisionPoint"/> if any exist; otherwise, an empty <see cref="CollisionPoint"/>.</returns>
-    public CollisionPoint GetCombinedCollisionPoint()
+    /// <returns>The combined <see cref="IntersectionPoint"/> if any exist; otherwise, an empty <see cref="IntersectionPoint"/>.</returns>
+    public IntersectionPoint GetCombinedCollisionPoint()
     {
-        if(Count <= 0) return new CollisionPoint();
+        if(Count <= 0) return new IntersectionPoint();
         
-        var result = new CollisionPoint();
+        var result = new IntersectionPoint();
         foreach (var collision in this)
         {
             if(collision.Points is not { Count: > 0 }) continue;
@@ -407,15 +407,15 @@ public class CollisionInformation : List<Collision>
         return result;
     }
     /// <summary>
-    /// Returns the closest <see cref="CollisionPoint"/> to the specified reference point across all valid collisions.
+    /// Returns the closest <see cref="IntersectionPoint"/> to the specified reference point across all valid collisions.
     /// </summary>
     /// <param name="referencePoint">The reference point to measure distance from.</param>
-    /// <returns>The closest <see cref="CollisionPoint"/>, or an empty one if none exist.</returns>
-    public CollisionPoint GetClosestCollisionPoint(Vector2 referencePoint)
+    /// <returns>The closest <see cref="IntersectionPoint"/>, or an empty one if none exist.</returns>
+    public IntersectionPoint GetClosestCollisionPoint(Vector2 referencePoint)
     {
-        if(Count <= 0) return new CollisionPoint();
+        if(Count <= 0) return new IntersectionPoint();
         
-        var result = new CollisionPoint();
+        var result = new IntersectionPoint();
         var closestDistanceSquared = -1f;
         foreach (var collision in this)
         {
@@ -435,12 +435,12 @@ public class CollisionInformation : List<Collision>
     /// Gets the furthest collision point from the specified reference point within all valid collisions.
     /// </summary>
     /// <param name="referencePoint">The reference point to measure distance from.</param>
-    /// <returns>The furthest <see cref="CollisionPoint"/> from the reference point, or an empty <see cref="CollisionPoint"/> if none exist.</returns>
-    public CollisionPoint GetFurthestCollisionPoint(Vector2 referencePoint)
+    /// <returns>The furthest <see cref="IntersectionPoint"/> from the reference point, or an empty <see cref="IntersectionPoint"/> if none exist.</returns>
+    public IntersectionPoint GetFurthestCollisionPoint(Vector2 referencePoint)
     {
-        if(Count <= 0) return new CollisionPoint();
+        if(Count <= 0) return new IntersectionPoint();
         
-        var result = new CollisionPoint();
+        var result = new IntersectionPoint();
         var furthestDistanceSquared = -1f;
         foreach (var collision in this)
         {
@@ -458,18 +458,18 @@ public class CollisionInformation : List<Collision>
     }
     
     /// <summary>
-    /// Returns the closest <see cref="CollisionPoint"/> to <see cref="Self"/>.Transform.Position within all valid collisions,
-    /// and outputs the squared distance to that point. If no valid collision points exist, returns an empty <see cref="CollisionPoint"/>
+    /// Returns the closest <see cref="IntersectionPoint"/> to <see cref="Self"/>.Transform.Position within all valid collisions,
+    /// and outputs the squared distance to that point. If no valid collision points exist, returns an empty <see cref="IntersectionPoint"/>
     /// and sets <paramref name="closestDistanceSquared"/> to a negative value.
     /// </summary>
     /// <param name="closestDistanceSquared">The squared distance to the closest collision point, or a negative value if none found.</param>
-    /// <returns>The closest <see cref="CollisionPoint"/>, or an empty one if none exist.</returns>
-    public CollisionPoint GetClosestCollisionPoint(out float closestDistanceSquared)
+    /// <returns>The closest <see cref="IntersectionPoint"/>, or an empty one if none exist.</returns>
+    public IntersectionPoint GetClosestCollisionPoint(out float closestDistanceSquared)
     {
         closestDistanceSquared = -1f;
-        if(Count <= 0) return new CollisionPoint();
+        if(Count <= 0) return new IntersectionPoint();
         
-        var result = new CollisionPoint();
+        var result = new IntersectionPoint();
         foreach (var collision in this)
         {
             if(collision.Points == null || collision.Points.Count <= 0) continue;
@@ -486,18 +486,18 @@ public class CollisionInformation : List<Collision>
     }
 
     /// <summary>
-    /// Returns the furthest <see cref="CollisionPoint"/> from <see cref="Self"/>.Transform.Position across all valid collisions,
-    /// and outputs the squared distance to that point. If no valid collision points exist, returns an empty <see cref="CollisionPoint"/>
+    /// Returns the furthest <see cref="IntersectionPoint"/> from <see cref="Self"/>.Transform.Position across all valid collisions,
+    /// and outputs the squared distance to that point. If no valid collision points exist, returns an empty <see cref="IntersectionPoint"/>
     /// and sets <paramref name="furthestDistanceSquared"/> to a negative value.
     /// </summary>
     /// <param name="furthestDistanceSquared">The squared distance to the furthest collision point, or a negative value if none found.</param>
-    /// <returns>The furthest <see cref="CollisionPoint"/> from <see cref="Self"/>.Transform.Position, or an empty one if none exist.</returns>
-    public CollisionPoint GetFurthestCollisionPoint(out float furthestDistanceSquared)
+    /// <returns>The furthest <see cref="IntersectionPoint"/> from <see cref="Self"/>.Transform.Position, or an empty one if none exist.</returns>
+    public IntersectionPoint GetFurthestCollisionPoint(out float furthestDistanceSquared)
     {
         furthestDistanceSquared = -1f;
-        if(Count <= 0) return new CollisionPoint();
+        if(Count <= 0) return new IntersectionPoint();
         
-        var result = new CollisionPoint();
+        var result = new IntersectionPoint();
         foreach (var collision in this)
         {
             if(collision.Points == null || collision.Points.Count <= 0) continue;
@@ -514,22 +514,22 @@ public class CollisionInformation : List<Collision>
     }
     
     /// <summary>
-    /// Returns the closest <see cref="CollisionPoint"/> to the specified reference point within all valid collisions,
+    /// Returns the closest <see cref="IntersectionPoint"/> to the specified reference point within all valid collisions,
     /// and outputs the squared distance to that point.
-    /// If no valid collision points exist, returns an empty <see cref="CollisionPoint"/>
+    /// If no valid collision points exist, returns an empty <see cref="IntersectionPoint"/>
     /// and sets <paramref name="closestDistanceSquared"/> to a negative value.
     /// </summary>
     /// <param name="referencePoint">The reference point for finding the closest collision point.</param>
     /// <param name="closestDistanceSquared">
     /// The squared distance between the closest collision point and the reference point. Negative if no valid point is found.
     /// </param>
-    /// <returns>The closest <see cref="CollisionPoint"/>, or an empty one if none exist.</returns>
-    public CollisionPoint GetClosestCollisionPoint(Vector2 referencePoint, out float closestDistanceSquared)
+    /// <returns>The closest <see cref="IntersectionPoint"/>, or an empty one if none exist.</returns>
+    public IntersectionPoint GetClosestCollisionPoint(Vector2 referencePoint, out float closestDistanceSquared)
     {
         closestDistanceSquared = -1f;
-        if(Count <= 0) return new CollisionPoint();
+        if(Count <= 0) return new IntersectionPoint();
         
-        var result = new CollisionPoint();
+        var result = new IntersectionPoint();
         foreach (var collision in this)
         {
             if(collision.Points == null || collision.Points.Count <= 0) continue;
@@ -546,22 +546,22 @@ public class CollisionInformation : List<Collision>
     }
 
     /// <summary>
-    /// Returns the furthest <see cref="CollisionPoint"/> from the specified reference point within all valid collisions,
+    /// Returns the furthest <see cref="IntersectionPoint"/> from the specified reference point within all valid collisions,
     /// and outputs the squared distance to that point.
-    /// If no valid collision points exist, returns an empty <see cref="CollisionPoint"/>
+    /// If no valid collision points exist, returns an empty <see cref="IntersectionPoint"/>
     /// and sets <paramref name="furthestDistanceSquared"/> to a negative value.
     /// </summary>
     /// <param name="referencePoint">The reference point for finding the furthest collision point.</param>
     /// <param name="furthestDistanceSquared">
     /// The squared distance between the furthest collision point and the reference point. Negative if no valid point is found.
     /// </param>
-    /// <returns>The furthest <see cref="CollisionPoint"/>, or an empty one if none exist.</returns>
-    public CollisionPoint GetFurthestCollisionPoint(Vector2 referencePoint, out float furthestDistanceSquared)
+    /// <returns>The furthest <see cref="IntersectionPoint"/>, or an empty one if none exist.</returns>
+    public IntersectionPoint GetFurthestCollisionPoint(Vector2 referencePoint, out float furthestDistanceSquared)
     {
         furthestDistanceSquared = -1f;
-        if(Count <= 0) return new CollisionPoint();
+        if(Count <= 0) return new IntersectionPoint();
         
-        var result = new CollisionPoint();
+        var result = new IntersectionPoint();
         foreach (var collision in this)
         {
             if(collision.Points == null || collision.Points.Count <= 0) continue;

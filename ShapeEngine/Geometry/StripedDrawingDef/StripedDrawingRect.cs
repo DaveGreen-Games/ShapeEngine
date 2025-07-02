@@ -824,7 +824,7 @@ public static partial class StripedDrawing
                 continue;
             }
 
-            var count = Line.IntersectLinePolygon(cur, lineDir, insideShape, ref collisionPointsReference);
+            var count = Line.IntersectLinePolygon(cur, lineDir, insideShape, ref intersectionPointsReference);
 
             if (count <= 0) //ray did not hit the inside shape, draw ray between edge of the outside shape
             {
@@ -834,45 +834,45 @@ public static partial class StripedDrawing
             else
             {
                 //remove all inside shape intersection points that are outside the outside shape
-                for (int j = collisionPointsReference.Count - 1; j >= 0; j--)
+                for (int j = intersectionPointsReference.Count - 1; j >= 0; j--)
                 {
-                    var p = collisionPointsReference[j].Point;
+                    var p = intersectionPointsReference[j].Point;
 
-                    if (!outsideShape.ContainsPoint(p)) collisionPointsReference.RemoveAt(j);
+                    if (!outsideShape.ContainsPoint(p)) intersectionPointsReference.RemoveAt(j);
                 }
 
-                if (outsideShapePoints.a.Valid && !insideShape.ContainsPoint(outsideShapePoints.a.Point)) collisionPointsReference.Add(outsideShapePoints.a);
-                if (outsideShapePoints.b.Valid && !insideShape.ContainsPoint(outsideShapePoints.b.Point)) collisionPointsReference.Add(outsideShapePoints.b);
+                if (outsideShapePoints.a.Valid && !insideShape.ContainsPoint(outsideShapePoints.a.Point)) intersectionPointsReference.Add(outsideShapePoints.a);
+                if (outsideShapePoints.b.Valid && !insideShape.ContainsPoint(outsideShapePoints.b.Point)) intersectionPointsReference.Add(outsideShapePoints.b);
 
                 //all points were remove so just draw the outside shape segment (even with only 1 point left, we continue)
-                if (collisionPointsReference.Count <= 1)
+                if (intersectionPointsReference.Count <= 1)
                 {
                     cur += dir * spacing;
-                    collisionPointsReference.Clear();
+                    intersectionPointsReference.Clear();
                     continue;
                 }
 
-                if (collisionPointsReference.Count == 2) //no sorting or loop needed for exactly 2 points
+                if (intersectionPointsReference.Count == 2) //no sorting or loop needed for exactly 2 points
                 {
-                    var segment = new Segment(collisionPointsReference[0].Point, collisionPointsReference[1].Point);
+                    var segment = new Segment(intersectionPointsReference[0].Point, intersectionPointsReference[1].Point);
                     segment.Draw(striped);
                     cur += dir * spacing;
-                    collisionPointsReference.Clear();
+                    intersectionPointsReference.Clear();
                     continue;
                 }
 
                 //now that only valid points remain, sort them by distance from the current point
-                collisionPointsReference.SortClosestFirst(cur);
+                intersectionPointsReference.SortClosestFirst(cur);
 
-                for (int j = 0; j < collisionPointsReference.Count - 1; j += 2)
+                for (int j = 0; j < intersectionPointsReference.Count - 1; j += 2)
                 {
-                    var p1 = collisionPointsReference[j].Point;
-                    var p2 = collisionPointsReference[j + 1].Point;
+                    var p1 = intersectionPointsReference[j].Point;
+                    var p2 = intersectionPointsReference[j + 1].Point;
                     var segment = new Segment(p1, p2);
                     segment.Draw(striped);
                 }
 
-                collisionPointsReference.Clear();
+                intersectionPointsReference.Clear();
             }
 
             cur += dir * spacing;

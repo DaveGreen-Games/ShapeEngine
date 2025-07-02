@@ -14,16 +14,16 @@ namespace ShapeEngine.Geometry.RectDef;
 public readonly partial struct Rect
 {
     /// <summary>
-    /// Computes the number of intersection points between this rectangle and the specified collider, adding them to the provided <see cref="CollisionPoints"/> collection.
+    /// Computes the number of intersection points between this rectangle and the specified collider, adding them to the provided <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="collider">The collider to test for intersection.</param>
-    /// <param name="points">A reference to the <see cref="CollisionPoints"/> collection to which intersection points will be added.</param>
+    /// <param name="points">A reference to the <see cref="IntersectionPoints"/> collection to which intersection points will be added.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first valid intersection is found; otherwise, finds all intersections.</param>
     /// <returns>The number of intersection points found.</returns>
     /// <remarks>
     /// Dispatches to the appropriate shape-specific intersection method based on the collider's shape type.
     /// </remarks>
-    public int Intersect(Collider collider, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int Intersect(Collider collider, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (!collider.Enabled) return 0;
 
@@ -62,16 +62,16 @@ public readonly partial struct Rect
     }
 
     /// <summary>
-    /// Computes the number of intersection points between this rectangle and a ray, adding them to the provided <see cref="CollisionPoints"/> collection.
+    /// Computes the number of intersection points between this rectangle and a ray, adding them to the provided <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="r">The ray to test for intersection.</param>
-    /// <param name="points">A reference to the <see cref="CollisionPoints"/> collection to which intersection points will be added.</param>
+    /// <param name="points">A reference to the <see cref="IntersectionPoints"/> collection to which intersection points will be added.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first valid intersection is found; otherwise, finds all intersections.</param>
     /// <returns>The number of intersection points found.</returns>
     /// <remarks>
     /// Each side of the rectangle is tested against the ray.
     /// </remarks>
-    public int IntersectShape(Ray r, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Ray r, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
         var a = TopLeft;
@@ -118,16 +118,16 @@ public readonly partial struct Rect
     }
 
     /// <summary>
-    /// Computes the number of intersection points between this rectangle and a line, adding them to the provided <see cref="CollisionPoints"/> collection.
+    /// Computes the number of intersection points between this rectangle and a line, adding them to the provided <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="l">The line to test for intersection.</param>
-    /// <param name="points">A reference to the <see cref="CollisionPoints"/> collection to which intersection points will be added.</param>
+    /// <param name="points">A reference to the <see cref="IntersectionPoints"/> collection to which intersection points will be added.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first valid intersection is found; otherwise, finds all intersections.</param>
     /// <returns>The number of intersection points found.</returns>
     /// <remarks>
     /// Each side of the rectangle is tested against the line.
     /// </remarks>
-    public int IntersectShape(Line l, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Line l, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
         var a = TopLeft;
@@ -174,16 +174,16 @@ public readonly partial struct Rect
     }
 
     /// <summary>
-    /// Computes the number of intersection points between this rectangle and a segment, adding them to the provided <see cref="CollisionPoints"/> collection.
+    /// Computes the number of intersection points between this rectangle and a segment, adding them to the provided <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="s">The segment to test for intersection.</param>
-    /// <param name="points">A reference to the <see cref="CollisionPoints"/> collection to which intersection points will be added.</param>
+    /// <param name="points">A reference to the <see cref="IntersectionPoints"/> collection to which intersection points will be added.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first valid intersection is found; otherwise, finds all intersections.</param>
     /// <returns>The number of intersection points found.</returns>
     /// <remarks>
     /// Each side of the rectangle is tested against the segment.
     /// </remarks>
-    public int IntersectShape(Segment s, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Segment s, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
         var a = TopLeft;
@@ -230,16 +230,16 @@ public readonly partial struct Rect
     }
 
     /// <summary>
-    /// Computes the number of intersection points between this rectangle and a circle, adding them to the provided <see cref="CollisionPoints"/> collection.
+    /// Computes the number of intersection points between this rectangle and a circle, adding them to the provided <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="circle">The circle to test for intersection.</param>
-    /// <param name="points">A reference to the <see cref="CollisionPoints"/> collection to which intersection points will be added.</param>
+    /// <param name="points">A reference to the <see cref="IntersectionPoints"/> collection to which intersection points will be added.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first valid intersection is found; otherwise, finds all intersections.</param>
     /// <returns>The number of intersection points found.</returns>
     /// <remarks>
     /// Each side of the rectangle is tested against the circle.
     /// </remarks>
-    public int IntersectShape(Circle circle, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Circle circle, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
 
@@ -311,16 +311,16 @@ public readonly partial struct Rect
     }
 
     /// <summary>
-    /// Computes the number of intersection points between this rectangle and a triangle, adding them to the provided <see cref="CollisionPoints"/> collection.
+    /// Computes the number of intersection points between this rectangle and a triangle, adding them to the provided <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="t">The triangle to test for intersection.</param>
-    /// <param name="points">A reference to the <see cref="CollisionPoints"/> collection to which intersection points will be added.</param>
+    /// <param name="points">A reference to the <see cref="IntersectionPoints"/> collection to which intersection points will be added.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first valid intersection is found; otherwise, finds all intersections.</param>
     /// <returns>The number of intersection points found.</returns>
     /// <remarks>
     /// Each side of the rectangle is tested against the triangle's edges.
     /// </remarks>
-    public int IntersectShape(Triangle t, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Triangle t, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
 
@@ -430,16 +430,16 @@ public readonly partial struct Rect
     }
 
     /// <summary>
-    /// Computes the number of intersection points between this rectangle and a quad, adding them to the provided <see cref="CollisionPoints"/> collection.
+    /// Computes the number of intersection points between this rectangle and a quad, adding them to the provided <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="q">The quad to test for intersection.</param>
-    /// <param name="points">A reference to the <see cref="CollisionPoints"/> collection to which intersection points will be added.</param>
+    /// <param name="points">A reference to the <see cref="IntersectionPoints"/> collection to which intersection points will be added.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first valid intersection is found; otherwise, finds all intersections.</param>
     /// <returns>The number of intersection points found.</returns>
     /// <remarks>
     /// Each side of the rectangle is tested against the quad's edges.
     /// </remarks>
-    public int IntersectShape(Quad q, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Quad q, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
         var a = TopLeft;
@@ -579,16 +579,16 @@ public readonly partial struct Rect
     }
 
     /// <summary>
-    /// Computes the number of intersection points between this rectangle and another rectangle, adding them to the provided <see cref="CollisionPoints"/> collection.
+    /// Computes the number of intersection points between this rectangle and another rectangle, adding them to the provided <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="r">The rectangle to test for intersection.</param>
-    /// <param name="points">A reference to the <see cref="CollisionPoints"/> collection to which intersection points will be added.</param>
+    /// <param name="points">A reference to the <see cref="IntersectionPoints"/> collection to which intersection points will be added.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first valid intersection is found; otherwise, finds all intersections.</param>
     /// <returns>The number of intersection points found.</returns>
     /// <remarks>
     /// Each side of the rectangle is tested against the other rectangle's sides.
     /// </remarks>
-    public int IntersectShape(Rect r, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Rect r, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         var count = 0;
         var a = TopLeft;
@@ -737,16 +737,16 @@ public readonly partial struct Rect
     }
 
     /// <summary>
-    /// Computes the number of intersection points between this rectangle and a polygon, adding them to the provided <see cref="CollisionPoints"/> collection.
+    /// Computes the number of intersection points between this rectangle and a polygon, adding them to the provided <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="p">The polygon to test for intersection.</param>
-    /// <param name="points">A reference to the <see cref="CollisionPoints"/> collection to which intersection points will be added.</param>
+    /// <param name="points">A reference to the <see cref="IntersectionPoints"/> collection to which intersection points will be added.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first valid intersection is found; otherwise, finds all intersections.</param>
     /// <returns>The number of intersection points found.</returns>
     /// <remarks>
     /// Each side of the rectangle is tested against the polygon's edges.
     /// </remarks>
-    public int IntersectShape(Polygon p, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Polygon p, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (p.Count < 3) return 0;
 
@@ -796,16 +796,16 @@ public readonly partial struct Rect
     }
 
     /// <summary>
-    /// Computes the number of intersection points between this rectangle and a polyline, adding them to the provided <see cref="CollisionPoints"/> collection.
+    /// Computes the number of intersection points between this rectangle and a polyline, adding them to the provided <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="pl">The polyline to test for intersection.</param>
-    /// <param name="points">A reference to the <see cref="CollisionPoints"/> collection to which intersection points will be added.</param>
+    /// <param name="points">A reference to the <see cref="IntersectionPoints"/> collection to which intersection points will be added.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first valid intersection is found; otherwise, finds all intersections.</param>
     /// <returns>The number of intersection points found.</returns>
     /// <remarks>
     /// Each side of the rectangle is tested against the polyline's segments.
     /// </remarks>
-    public int IntersectShape(Polyline pl, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Polyline pl, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (pl.Count < 2) return 0;
 
@@ -854,16 +854,16 @@ public readonly partial struct Rect
     }
 
     /// <summary>
-    /// Computes the number of intersection points between this rectangle and a collection of segments, adding them to the provided <see cref="CollisionPoints"/> collection.
+    /// Computes the number of intersection points between this rectangle and a collection of segments, adding them to the provided <see cref="IntersectionPoints"/> collection.
     /// </summary>
     /// <param name="shape">The collection of segments to test for intersection.</param>
-    /// <param name="points">A reference to the <see cref="CollisionPoints"/> collection to which intersection points will be added.</param>
+    /// <param name="points">A reference to the <see cref="IntersectionPoints"/> collection to which intersection points will be added.</param>
     /// <param name="returnAfterFirstValid">If true, returns after the first valid intersection is found; otherwise, finds all intersections.</param>
     /// <returns>The number of intersection points found.</returns>
     /// <remarks>
     /// Each side of the rectangle is tested against each segment in the collection.
     /// </remarks>
-    public int IntersectShape(Segments shape, ref CollisionPoints points, bool returnAfterFirstValid = false)
+    public int IntersectShape(Segments shape, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
         if (shape.Count <= 0) return 0;
 

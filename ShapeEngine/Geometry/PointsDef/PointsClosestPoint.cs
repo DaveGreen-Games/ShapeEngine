@@ -263,7 +263,7 @@ public partial class Points
     {
         if (Count <= 0) return new();
 
-        var closestOther = new CollisionPoint();
+        var closestOther = new IntersectionPoint();
         int selfIndex = -1;
         int otherIndex = -1;
         float disSquared = -1f;
@@ -303,7 +303,7 @@ public partial class Points
     {
         if (Count <= 0) return new();
 
-        var closestOther = new CollisionPoint();
+        var closestOther = new IntersectionPoint();
         int selfIndex = -1;
         int otherIndex = -1;
         float disSquared = -1f;
@@ -343,7 +343,7 @@ public partial class Points
     {
         if (Count <= 0) return new();
 
-        var closestOther = new CollisionPoint();
+        var closestOther = new IntersectionPoint();
         int selfIndex = -1;
         int otherIndex = -1;
         float disSquared = -1f;
@@ -383,7 +383,7 @@ public partial class Points
     {
         if (Count <= 0) return new();
 
-        var closestOther = new CollisionPoint();
+        var closestOther = new IntersectionPoint();
         int selfIndex = -1;
         int otherIndex = -1;
         float disSquared = -1f;
@@ -423,7 +423,7 @@ public partial class Points
     {
         if (Count <= 0) return new();
 
-        var closestOther = new CollisionPoint();
+        var closestOther = new IntersectionPoint();
         int selfIndex = -1;
         int otherIndex = -1;
         float disSquared = -1f;
@@ -463,7 +463,7 @@ public partial class Points
     {
         if (Count <= 0) return new();
 
-        var closestOther = new CollisionPoint();
+        var closestOther = new IntersectionPoint();
         int selfIndex = -1;
         int otherIndex = -1;
         float disSquared = -1f;

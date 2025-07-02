@@ -20,8 +20,8 @@ public readonly partial struct Circle
     /// </summary>
     /// <param name="p">The point to check.</param>
     /// <param name="disSquared">The squared distance between the circle and the point.</param>
-    /// <returns>A <see cref="CollisionPoint"/> representing the closest point.</returns>
-    public CollisionPoint GetClosestPoint(Vector2 p, out float disSquared)
+    /// <returns>A <see cref="IntersectionPoint"/> representing the closest point.</returns>
+    public IntersectionPoint GetClosestPoint(Vector2 p, out float disSquared)
     {
         var dir = (p - Center).Normalize();
         var closestPoint = Center + dir * Radius;

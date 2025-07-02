@@ -47,7 +47,7 @@ public static class CustomDrawing
     /// <remarks>
     /// Each collision point is visualized as a small circle, and its normal is drawn as a line.
     /// </remarks>
-    public static void Draw(this CollisionPoints colPoints, float lineThickness, ColorRgba intersectColorRgba, ColorRgba normalColorRgba)
+    public static void Draw(this IntersectionPoints colPoints, float lineThickness, ColorRgba intersectColorRgba, ColorRgba normalColorRgba)
     {
         if ( colPoints.Count <= 0) return;
         
