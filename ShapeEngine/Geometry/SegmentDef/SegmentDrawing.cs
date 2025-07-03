@@ -321,8 +321,8 @@ public static class SegmentDrawing
     /// </summary>
     /// <param name="start">The starting point of the segment.</param>
     /// <param name="end">The ending point of the segment.</param>
-    /// <param name="width">The starting width of the glow.</param>
-    /// <param name="endWidth">The ending width of the glow.</param>
+    /// <param name="width">The starting width of the glow. Should be bigger than <c>endWidth</c>.</param>
+    /// <param name="endWidth">The ending width of the glow. Should be smaller than <c>width</c>.</param>
     /// <param name="color">The starting color of the glow.</param>
     /// <param name="endColorRgba">The ending color of the glow.</param>
     /// <param name="steps">The number of steps to interpolate between start and end.</param>
