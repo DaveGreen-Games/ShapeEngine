@@ -1315,7 +1315,7 @@ public class CollisionHandler : IBounds
     /// </remarks>
     public void CastSpace(Collider collider,  ref CastSpaceResult result)
     {
-        if(!collider.Enabled) return;
+        if (!collider.Enabled) return;
         if(result.Count > 0) result.Clear();
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
