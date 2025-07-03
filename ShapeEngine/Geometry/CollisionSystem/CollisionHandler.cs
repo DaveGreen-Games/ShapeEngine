@@ -393,6 +393,7 @@ public class CollisionHandler : IBounds
                     {
                         foreach (var candidate in bucket)
                         {
+
                             if (candidate == collider) continue;
                             if (candidate.Parent == null) continue;
                             if (candidate.Parent == collider.Parent) continue;
@@ -471,13 +472,15 @@ public class CollisionHandler : IBounds
                     {
                         foreach (var candidate in bucket)
                         {
+                            //Only enabled colliders are added to the spatial hash
+                            //Therefore only enabled colliders are in each bucket!
                             if (candidate == collider) continue;
                             if (candidate.Parent == null) continue;
                             if (candidate.Parent == collider.Parent) continue;
                             if (!mask.Has(candidate.CollisionLayer)) continue;
                             if (!collisionCandidateCheckRegister.Add(candidate)) continue;
 
-                            bool overlap = collider.Overlap(candidate); // ShapeGeometry.Overlap(collider, candidate);
+                            bool overlap = collider.Overlap(candidate);
                             if (overlap)
                             {
                                 //multiple colliders can be involved with the same pair of collision objects, therefore we also have to check if the collision object pair was already added to the temp register.
@@ -575,14 +578,11 @@ public class CollisionHandler : IBounds
     
     #endregion
     
-    //TODO: Collider of the query object (collision object, list of colldiers, collider) are never checked if they are enabled at the beginning
-    // Intersect Space and Cast Space region have this problem
-    // Check query collider(s) right away before doing anything else!
     #region Intersect Space
     /// <summary>
     /// Performs intersection queries for all colliders of a <see cref="CollisionObject"/> against the collision system.
     /// </summary>
-    /// <param name="colObject">The collision object whose colliders are used for intersection queries.</param>
+    /// <param name="colObject">The collision object whose colliders are used for intersection queries</param>
     /// <param name="origin">The origin point for the intersection result.</param>
     /// <returns>An <see cref="IntersectSpaceResult"/> containing intersection data, or null if no intersections are found.</returns>
     /// <remarks>
@@ -646,7 +646,7 @@ public class CollisionHandler : IBounds
     /// <summary>
     /// Performs an intersection query for a single <see cref="Collider"/> against the collision system.
     /// </summary>
-    /// <param name="collider">The collider to test for intersections.</param>
+    /// <param name="collider">The collider to test for intersections. The collider needs to be enabled!</param>
     /// <param name="origin">The origin point for the intersection result.</param>
     /// <returns>An <see cref="IntersectSpaceResult"/> containing intersection data, or null if no intersections are found.</returns>
     /// <remarks>
@@ -654,6 +654,7 @@ public class CollisionHandler : IBounds
     /// </remarks>
     public IntersectSpaceResult? IntersectSpace(Collider collider, Vector2 origin)
     {
+        if(!collider.Enabled) return null;
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
         
@@ -1199,7 +1200,7 @@ public class CollisionHandler : IBounds
     /// <summary>
     /// Performs an overlap query for all colliders of a <see cref="CollisionObject"/> against the collision system and stores the results in the provided <see cref="CastSpaceResult"/>.
     /// </summary>
-    /// <param name="collisionBody">The collision object whose colliders are used for the cast query.</param>
+    /// <param name="collisionBody">The collision object whose colliders are used for the cast query. Only enabled colliders from the collisionBody are used!</param>
     /// <param name="result">A reference to the result object that will be populated with colliders that overlap.</param>
     /// <remarks>
     /// <list type="bullet">
@@ -1216,7 +1217,7 @@ public class CollisionHandler : IBounds
     /// <summary>
     /// Performs an overlap query for a list of <see cref="Collider"/> instances against the collision system and stores the results in the provided <see cref="CastSpaceResult"/>.
     /// </summary>
-    /// <param name="colliders">The list of colliders to use for the cast query.</param>
+    /// <param name="colliders">The list of colliders to use for the cast query. Only enabled colliders are used!</param>
     /// <param name="result">A reference to the result object that will be populated with colliders that overlap.</param>
     /// <remarks>
     /// <list type="bullet">
@@ -1232,6 +1233,8 @@ public class CollisionHandler : IBounds
 
         foreach (var collider in colliders)
         {
+            if(!collider.Enabled) continue;
+            
             collisionCandidateBuckets.Clear();
             collisionCandidateCheckRegister.Clear();
             spatialHash.GetCandidateBuckets(collider, ref collisionCandidateBuckets);
@@ -1258,7 +1261,7 @@ public class CollisionHandler : IBounds
     /// <summary>
     /// Performs an overlap query for a set of <see cref="Collider"/> instances against the collision system and stores the results in the provided <see cref="CastSpaceResult"/>.
     /// </summary>
-    /// <param name="colliders">The set of colliders to use for the cast query.</param>
+    /// <param name="colliders">The set of colliders to use for the cast query. Only enabled colliders are used!</param>
     /// <param name="result">A reference to the result object that will be populated with colliders that overlap.</param>
     /// <remarks>
     /// <list type="bullet">
@@ -1274,6 +1277,7 @@ public class CollisionHandler : IBounds
 
         foreach (var collider in colliders)
         {
+            if(!collider.Enabled) continue;
             collisionCandidateBuckets.Clear();
             collisionCandidateCheckRegister.Clear();
             spatialHash.GetCandidateBuckets(collider, ref collisionCandidateBuckets);
@@ -1300,7 +1304,7 @@ public class CollisionHandler : IBounds
     /// <summary>
     /// Performs an overlap query for a single <see cref="Collider"/> against the collision system and stores the results in the provided <see cref="CastSpaceResult"/>.
     /// </summary>
-    /// <param name="collider">The collider to use for the cast query.</param>
+    /// <param name="collider">The collider to use for the cast query. The collider needs to be enabled!</param>
     /// <param name="result">A reference to the result object that will be populated with colliders that overlap.</param>
     /// <remarks>
     /// <list type="bullet">
@@ -1308,8 +1312,9 @@ public class CollisionHandler : IBounds
     /// <item>The result is cleared before being populated.</item>
     /// </list>
     /// </remarks>
-    public void CastSpace(Collider collider,  ref CastSpaceResult result)
+    public void CastSpace(Collider collider, ref CastSpaceResult result)
     {
+        if (!collider.Enabled) return;
         if(result.Count > 0) result.Clear();
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
@@ -1618,7 +1623,7 @@ public class CollisionHandler : IBounds
     /// <summary>
     /// Performs an overlap query for all colliders of a <see cref="CollisionObject"/> against the collision system.
     /// </summary>
-    /// <param name="collisionBody">The collision object whose colliders are used for the cast query.</param>
+    /// <param name="collisionBody">The collision object whose colliders are used for the cast query. Only enabled colliders from the collisionBody are used!</param>
     /// <returns>The number of colliders in the system that overlap with any collider of the given <paramref name="collisionBody"/>.</returns>
     /// <remarks>
     /// Only enabled colliders of the <paramref name="collisionBody"/> are considered.
@@ -1631,6 +1636,8 @@ public class CollisionHandler : IBounds
         int count = 0;
         foreach (var collider in collisionBody.Colliders)
         {
+            if(!collider.Enabled) continue;
+            
             collisionCandidateBuckets.Clear();
             collisionCandidateCheckRegister.Clear();
             spatialHash.GetCandidateBuckets(collider, ref collisionCandidateBuckets);
@@ -1658,13 +1665,14 @@ public class CollisionHandler : IBounds
     /// <summary>
     /// Performs an overlap query for a single <see cref="Collider"/> against the collision system.
     /// </summary>
-    /// <param name="collider">The collider to use for the cast query.</param>
+    /// <param name="collider">The collider to use for the cast query. The collider needs to be enabled!</param>
     /// <returns>The number of colliders in the system that overlap with the given <paramref name="collider"/>.</returns>
     /// <remarks>
     /// Only enabled colliders in the collision system are checked.
     /// </remarks>
     public int CastSpace(Collider collider)
     {
+        if (!collider.Enabled) return 0;
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
         
