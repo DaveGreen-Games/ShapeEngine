@@ -51,11 +51,12 @@ dotnet add package DaveGreen.ShapeEngine
 ## Minimal Project Setup
 
 ``` 
-using System.Drawing; 
-using ShapeEngine.Color; 
-using ShapeEngine.Core; 
-using ShapeEngine.Core.Structs; 
-using ShapeEngine.StaticLib.Drawing;
+using System.Drawing;
+using ShapeEngine.Color;
+using ShapeEngine.Core;
+using ShapeEngine.Core.Structs;
+using ShapeEngine.Geometry;
+using ShapeEngine.Geometry.RectDef;
 
 namespace ShapeEngineProject;   
 
