@@ -724,7 +724,7 @@ public static class PolygonDrawing
     /// </summary>
     /// <param name="polygon">The polygon to draw.</param>
     /// <param name="width">The starting width of the glow. Should be bigger than <c>endWidth</c></param>
-    /// <param name="endWidth">The ending width of the glow. Should be smaller that <c>width</c></param>
+    /// <param name="endWidth">The ending width of the glow. Should be smaller than <c>width</c></param>
     /// <param name="color">The starting color of the glow.</param>
     /// <param name="endColorRgba">The ending color of the glow.</param>
     /// <param name="steps">The number of interpolation steps for the glow effect.</param>
