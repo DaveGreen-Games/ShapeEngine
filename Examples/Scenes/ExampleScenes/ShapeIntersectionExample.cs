@@ -1117,7 +1117,8 @@ public class ShapeIntersectionExample : ExampleScene
 
         public PolygonShape(Vector2 pos, float size)
         {
-            Polygon = Polygon.Generate(pos, Rng.Instance.RandI(8, 16), size / 4, size);
+            var shape = Polygon.Generate(pos, Rng.Instance.RandI(8, 16), size / 4, size);
+            Polygon = shape ?? [];
             position = pos;
         }
         public override void Move(Vector2 newPosition)
@@ -1277,8 +1278,8 @@ public class ShapeIntersectionExample : ExampleScene
 
         public PolylineShape(Vector2 pos, float size)
         {
-            
-            Polyline = Polygon.Generate(pos, Rng.Instance.RandI(8, 16), size / 2, size).ToPolyline();
+            var shape = Polygon.Generate(pos, Rng.Instance.RandI(8, 16), size / 2, size);
+            Polyline = shape == null ? [] : shape.ToPolyline();
             position = pos;
         }
         public override void Move(Vector2 newPosition)

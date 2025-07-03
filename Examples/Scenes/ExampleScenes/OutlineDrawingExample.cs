@@ -157,8 +157,10 @@ public class OutlineDrawingExample : ExampleScene
         triangle = Triangle.Generate(center, size / 2, size);
         rect = new Rect(center, new Size(size, size), new AnchorPoint(0.5f, 0.5f));
         quad = new Quad(center, new Size(size, size), 45 * ShapeMath.DEGTORAD, new AnchorPoint(0.5f, 0.5f));
-        poly = Polygon.Generate(center, 16, radius / 2, radius);
-        polyline = Polygon.Generate(center, 16, radius / 2, radius).ToPolyline();
+        var generatedPolygon = Polygon.Generate(center, 16, radius / 2, radius);
+        var generatedPolyline = Polygon.Generate(center, 16, radius / 2, radius)?.ToPolyline();
+        poly = generatedPolygon ?? []; 
+        polyline = generatedPolyline ?? [];
 
         var font = GAMELOOP.GetFont(FontIDs.JetBrains);
         sideScalingFactorSlider = new("Scaling", 0.5f, 0f, 1f, true); // new(0.5f, "Scaling", font);

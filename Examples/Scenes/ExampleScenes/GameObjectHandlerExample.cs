@@ -400,11 +400,13 @@ namespace Examples.Scenes.ExampleScenes
         public Rock(Vector2 pos) : base(new Transform2D(pos, 0f, new Size(Size, 0f), 1f))
         {
             var shape = Polygon.GenerateRelative(6, 0.5f, 1f);
-            var col = new PolygonCollider(new(), shape);
-            col.ComputeCollision = true;
-            col.ComputeIntersections = true;
-            col.Enabled = true;
-            col.CollisionMask = new(CollisionFlags.WallFlag);
+            var col = new PolygonCollider(new(), shape ?? [])
+            {
+                ComputeCollision = true,
+                ComputeIntersections = true,
+                Enabled = true,
+                CollisionMask = new(CollisionFlags.WallFlag)
+            };
             col.CollisionMask = col.CollisionMask.Add(CollisionFlags.RockFlag);
             col.CollisionMask = col.CollisionMask.Add(CollisionFlags.BoundaryFlag);
             col.CollisionLayer = CollisionFlags.RockFlag;
@@ -414,7 +416,6 @@ namespace Examples.Scenes.ExampleScenes
             AddCollider(col);
 
             polyCollider = col;
-            // polyCollider.OnIntersected += Overlap;
             
             Layer = SpawnAreaLayers.ObjectFlag;
 

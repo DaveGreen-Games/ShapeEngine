@@ -79,23 +79,24 @@ public class Asteroid : CollisionObject
     {
         var minSize = 50f;
         var maxSize = 200f;
-        var randSize = Rng.Instance.RandF(minSize, maxSize);
+        float randSize = Rng.Instance.RandF(minSize, maxSize);
         
         Transform = new Transform2D(position, 0f, new Size(randSize), 1f);
         paletteColor = color;
         var relativePoints = Polygon.GenerateRelative(15, 0.4f, 1f);
-        collider = new PolygonCollider(new(), relativePoints);
-        collider.ComputeCollision = true;
-        collider.ComputeIntersections = true;
-        collider.CollisionLayer = (uint)CollisionLayers.Asteroid;
-        collider.CollisionMask = new BitFlag((uint)CollisionLayers.Asteroid, (uint)CollisionLayers.Ship);
+        collider = new PolygonCollider(new(),relativePoints ?? [])
+        {
+            ComputeCollision = true,
+            ComputeIntersections = true,
+            CollisionLayer = (uint)CollisionLayers.Asteroid,
+            CollisionMask = new BitFlag((uint)CollisionLayers.Asteroid, (uint)CollisionLayers.Ship)
+        };
         AddCollider(collider);
+        
 
         var randDir = Rng.Instance.RandVec2();
-        var sizeF = ShapeMath.LerpInverseFloat(minSize, maxSize, randSize);
-        var randSpeed = ShapeMath.LerpFloat(100, 10, sizeF);
-        // var randSpeed = (maxSize + 10) - randSize;
-        // randSpeed *= 1.25f;
+        float sizeF = ShapeMath.LerpInverseFloat(minSize, maxSize, randSize);
+        float randSpeed = ShapeMath.LerpFloat(100, 10, sizeF);
         Velocity = randDir * randSpeed;
         
         //surface area of circle radius * radius * pi

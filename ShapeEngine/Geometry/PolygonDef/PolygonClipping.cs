@@ -43,12 +43,16 @@ public partial class Polygon
     /// </remarks>
     public bool MergeShapeSelf(Polygon other, float distanceThreshold)
     {
+        if (distanceThreshold <= 0f) return false;
+        
         var result = GetClosestPoint(other);
         if (result.Valid && result.DistanceSquared < distanceThreshold * distanceThreshold)
         {
             var fillShape = Generate(result.Self.Point, 7, distanceThreshold, distanceThreshold * 2);
+            if (fillShape == null) return false;
             UnionShapeSelf(fillShape);
             UnionShapeSelf(other);
+            return true;
         }
 
         return false;
@@ -62,11 +66,13 @@ public partial class Polygon
     /// <returns>The merged polygon if successful; otherwise, null.</returns>
     public Polygon? MergeShape(Polygon other, float distanceThreshold)
     {
+        if(distanceThreshold <= 0f) return null;
         var result = GetClosestPoint(other);
         if (result.Valid && result.DistanceSquared < distanceThreshold * distanceThreshold)
         {
             var fillShape = Generate(result.Self.Point, 7, distanceThreshold, distanceThreshold * 2);
-            var clip = this.Union(fillShape);
+            if(fillShape == null) return null;
+            var clip =  this.Union(fillShape);
             if (clip.Count > 0)
             {
                 clip = clip[0].ToPolygon().Union(other);
@@ -134,10 +140,10 @@ public partial class Polygon
     /// <param name="maxCutRadius">The maximum radius for the cut shape.</param>
     /// <param name="pointCount">The number of points for the generated cut shape. Default is 16.</param>
     /// <returns>A tuple containing the new shapes and the cut-out regions.</returns>
-    public (Polygons newShapes, Polygons cutOuts) CutShapeSimple(Vector2 cutPos, float minCutRadius, float maxCutRadius, int pointCount = 16)
+    public (Polygons newShapes, Polygons cutOuts)? CutShapeSimple(Vector2 cutPos, float minCutRadius, float maxCutRadius, int pointCount = 16)
     {
         var cut = Generate(cutPos, pointCount, minCutRadius, maxCutRadius);
-        return this.CutShape(cut);
+        return cut == null ? null : CutShape(cut);
     }
 
     /// <summary>
@@ -149,11 +155,12 @@ public partial class Polygon
     /// <param name="minMagnitude">Minimum magnitude for the cut. Default is 0.05.</param>
     /// <param name="maxMagnitude">Maximum magnitude for the cut. Default is 0.25.</param>
     /// <returns>A tuple containing the new shapes and the cut-out regions.</returns>
-    public (Polygons newShapes, Polygons cutOuts) CutShapeSimple(Segment cutLine, float minSectionLength = 0.025f, float maxSectionLength = 0.1f,
+    public (Polygons newShapes, Polygons cutOuts)? CutShapeSimple(Segment cutLine, float minSectionLength = 0.025f, float maxSectionLength = 0.1f,
         float minMagnitude = 0.05f, float maxMagnitude = 0.25f)
     {
         var cut = Generate(cutLine, minMagnitude, maxMagnitude, minSectionLength, maxSectionLength);
-        return this.CutShape(cut);
+        if (cut == null) return null;
+        return CutShape(cut);
     }
 
     /// <summary>

@@ -225,7 +225,9 @@ public class PolygonHolesExample : ExampleScene
     
     private void GenerateCurPolygon(Vector2 pos)
     {
-        curPolygon = Polygon.Generate(pos, 12, 50, 100);
+        var shape = Polygon.Generate(pos, 12, 50, 100);
+        if(shape == null) return;
+        curPolygon = shape;
         curPolygonPosition = pos;
     }
     private void PlaceCurPolygon(Vector2 mousePos)
