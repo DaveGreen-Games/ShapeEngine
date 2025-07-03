@@ -393,8 +393,7 @@ public class CollisionHandler : IBounds
                     {
                         foreach (var candidate in bucket)
                         {
-                            //Only enabled colliders are added to the spatial hash
-                            //Therefore only enabled colliders are in each bucket!
+
                             if (candidate == collider) continue;
                             if (candidate.Parent == null) continue;
                             if (candidate.Parent == collider.Parent) continue;
