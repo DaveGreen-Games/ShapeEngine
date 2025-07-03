@@ -636,7 +636,8 @@ public class SpatialHash : IBounds
     /// <param name="collider">The collider to add.</param>
     private void Add(Collider collider)
     {
-        if (!collider.Enabled) return;//SpatialHash is Cleared/Filled every frame, therefore this works
+        // The SpatialHash is cleared and filled every frame, so skipping disabled colliders here is safe.
+        if (!collider.Enabled) return;
             
         List<int> ids;
         if (register.TryGetValue(collider, out var value))
