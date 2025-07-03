@@ -204,6 +204,7 @@ public class SpatialHash : IBounds
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
     public void GetRegisteredCollisionCandidateBuckets(Collider collider, ref List<Bucket> candidateBuckets)
     {
+        if (!collider.Enabled) return;
         if (!register.TryGetValue(collider, out var bucketIds)) return;
         if (bucketIds.Count <= 0) return;
         foreach (var id in bucketIds)
@@ -231,7 +232,7 @@ public class SpatialHash : IBounds
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
     public void GetCandidateBuckets(Collider collider, ref List<Bucket> candidateBuckets)
     {
-        //TODO: Does not check if collider is enabled!
+        if (!collider.Enabled) return;
         if (register.TryGetValue(collider, out var bucketIds))
         {
             if (bucketIds.Count <= 0) return;
@@ -244,7 +245,7 @@ public class SpatialHash : IBounds
             return;
         }
         List<int> ids = new();
-        GetCellIDs(collider, ref ids); //TODO: Does check if collider is enabled
+        GetCellIDs(collider, ref ids);
         FillCandidateBuckets(ids, ref candidateBuckets);
     }
 
@@ -376,6 +377,7 @@ public class SpatialHash : IBounds
     /// <param name="candidates">A set to populate with unique colliders.</param>
     public void GetUniqueCandidates(Collider collider, ref HashSet<Collider> candidates)
     {
+        if (!collider.Enabled) return;
         if (register.TryGetValue(collider, out var bucketIds))
         {
             if (bucketIds.Count <= 0) return;
@@ -634,7 +636,7 @@ public class SpatialHash : IBounds
     /// <param name="collider">The collider to add.</param>
     private void Add(Collider collider)
     {
-        if (!collider.Enabled) return;
+        if (!collider.Enabled) return;//SpatialHash is Cleared/Filled every frame, therefore this works
             
         List<int> ids;
         if (register.TryGetValue(collider, out var value))
