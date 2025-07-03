@@ -66,7 +66,11 @@ namespace Examples.Scenes.ExampleScenes
         private Triangle GenerateTriangle(Vector2 pos, float size)
         {
             var poly = Polygon.Generate(pos, 3, size / 2, size);
-            if(poly == null) return new();
+            if(poly == null) 
+            {
+                Debug.WriteLine("Warning: Failed to generate polygon. Returning null.");
+                return new();
+            }
             return new(poly[0], poly[1], poly[2]);
         }
         
