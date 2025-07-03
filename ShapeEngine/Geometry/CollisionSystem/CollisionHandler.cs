@@ -1313,7 +1313,7 @@ public class CollisionHandler : IBounds
     /// <item>The result is cleared before being populated.</item>
     /// </list>
     /// </remarks>
-    public void CastSpace(Collider collider,  ref CastSpaceResult result)
+    public void CastSpace(Collider collider, ref CastSpaceResult result)
     {
         if (!collider.Enabled) return;
         if(result.Count > 0) result.Clear();
