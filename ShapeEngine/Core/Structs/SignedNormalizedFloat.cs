@@ -123,4 +123,27 @@ public readonly struct SignedNormalizedFloat : IEquatable<SignedNormalizedFloat>
     {
         return Value.GetHashCode();
     }
+
+    
+    /// <summary>
+    /// Determines whether two <see cref="SignedNormalizedFloat"/> instances are equal.
+    /// </summary>
+    /// <param name="left">The first <see cref="SignedNormalizedFloat"/> to compare.</param>
+    /// <param name="right">The second <see cref="SignedNormalizedFloat"/> to compare.</param>
+    /// <returns><c>true</c> if the values are equal; otherwise, <c>false</c>.</returns>
+    public static bool operator ==(SignedNormalizedFloat left, SignedNormalizedFloat right)
+    {
+        return left.Equals(right);
+    }
+    
+    /// <summary>
+    /// Determines whether two <see cref="SignedNormalizedFloat"/> instances are not equal.
+    /// </summary>
+    /// <param name="left">The first <see cref="SignedNormalizedFloat"/> to compare.</param>
+    /// <param name="right">The second <see cref="SignedNormalizedFloat"/> to compare.</param>
+    /// <returns><c>true</c> if the values are not equal; otherwise, <c>false</c>.</returns>
+    public static bool operator !=(SignedNormalizedFloat left, SignedNormalizedFloat right)
+    {
+        return !(left == right);
+    }
 }

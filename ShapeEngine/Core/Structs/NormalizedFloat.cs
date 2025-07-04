@@ -119,4 +119,26 @@ public readonly struct NormalizedFloat : IEquatable<NormalizedFloat>
     {
         return Value.GetHashCode();
     }
+
+    /// <summary>
+    /// Determines whether two <see cref="NormalizedFloat"/> instances are equal.
+    /// </summary>
+    /// <param name="left">The first <see cref="NormalizedFloat"/> to compare.</param>
+    /// <param name="right">The second <see cref="NormalizedFloat"/> to compare.</param>
+    /// <returns><c>true</c> if the values are equal; otherwise, <c>false</c>.</returns>
+    public static bool operator ==(NormalizedFloat left, NormalizedFloat right)
+    {
+        return left.Equals(right);
+    }
+    
+    /// <summary>
+    /// Determines whether two <see cref="NormalizedFloat"/> instances are not equal.
+    /// </summary>
+    /// <param name="left">The first <see cref="NormalizedFloat"/> to compare.</param>
+    /// <param name="right">The second <see cref="NormalizedFloat"/> to compare.</param>
+    /// <returns><c>true</c> if the values are not equal; otherwise, <c>false</c>.</returns>
+    public static bool operator !=(NormalizedFloat left, NormalizedFloat right)
+    {
+        return !(left == right);
+    }
 }

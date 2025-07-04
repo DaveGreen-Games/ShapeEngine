@@ -126,4 +126,26 @@ public readonly struct NormalizedDouble  : IEquatable<NormalizedDouble>
     /// <param name="value">The <see cref="NormalizedDouble"/> value to convert.</param>
     /// <returns>A <see cref="SignedNormalizedFloat"/> representing the mapped value.</returns>
     public static explicit operator SignedNormalizedFloat(NormalizedDouble value) => new((float)(value.Value * 2.0 - 1.0));
+
+    /// <summary>
+    /// Determines whether two <see cref="NormalizedDouble"/> instances are equal.
+    /// </summary>
+    /// <param name="left">The first <see cref="NormalizedDouble"/> to compare.</param>
+    /// <param name="right">The second <see cref="NormalizedDouble"/> to compare.</param>
+    /// <returns><c>true</c> if the values are equal; otherwise, <c>false</c>.</returns>
+    public static bool operator ==(NormalizedDouble left, NormalizedDouble right)
+    {
+        return left.Equals(right);
+    }
+    
+    /// <summary>
+    /// Determines whether two <see cref="NormalizedDouble"/> instances are not equal.
+    /// </summary>
+    /// <param name="left">The first <see cref="NormalizedDouble"/> to compare.</param>
+    /// <param name="right">The second <see cref="NormalizedDouble"/> to compare.</param>
+    /// <returns><c>true</c> if the values are not equal; otherwise, <c>false</c>.</returns>
+    public static bool operator !=(NormalizedDouble left, NormalizedDouble right)
+    {
+        return !(left == right);
+    }
 }
