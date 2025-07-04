@@ -63,15 +63,14 @@ namespace Examples.Scenes.ExampleScenes
         }
         
         
-
-        //public override void Update(float dt, ScreenInfo game, ScreenInfo ui)
-        //{
-        //    
-        //    base.Update(dt, game, ui); //calls area update therefore area bounds have to be updated before that
-        //}
         private Triangle GenerateTriangle(Vector2 pos, float size)
         {
             var poly = Polygon.Generate(pos, 3, size / 2, size);
+            if(poly == null) 
+            {
+                Debug.WriteLine("Warning: Failed to generate polygon. Returning null.");
+                return new();
+            }
             return new(poly[0], poly[1], poly[2]);
         }
         
@@ -181,15 +180,6 @@ namespace Examples.Scenes.ExampleScenes
         {
             
         }
-
-        // protected override void DrawUIExample(ScreenInfo ui)
-        // {
-        //     Vector2 uiSize = ui.Area.Size;
-        //     Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));
-        //
-        //     string text = String.Format("[LMB] Add Point / Remove Point | [RMB] Add 3 Points to Triangle");
-        //     font.DrawText(text, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
-        // }
         
         protected override void OnDrawUIExample(ScreenInfo ui)
         {

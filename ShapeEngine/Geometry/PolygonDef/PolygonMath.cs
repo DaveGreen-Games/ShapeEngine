@@ -181,12 +181,12 @@ public partial class Polygon
     /// <remarks>
     /// <list type="bullet">
     /// <item>
-    ///A convex polygon is a polygon where all interior angles are less than 180°,
+    /// A <c>convex</c> polygon is a polygon where all interior angles are less than 180°,
     /// and every line segment between any two points inside the polygon lies entirely within the polygon.
     /// In other words, no vertices "point inward."
     /// </item>
     /// <item>
-    ///A concave polygon is a polygon that has at least one interior angle greater than 180°,
+    /// A <c>concave</c> polygon is a polygon that has at least one interior angle greater than 180°,
     /// and at least one line segment between points inside the polygon passes outside the polygon.
     /// This means it has at least one "caved-in" or inward-pointing vertex.
     /// </item>
@@ -196,45 +196,79 @@ public partial class Polygon
     {
         int num = Count;
         if (num < 3) return false;
-        bool isPositive = false;
-
-        for (int i = 0; i < num; i++)
-        {
-            int prevIndex = (i == 0) ? num - 1 : i - 1;
-            int nextIndex = (i == num - 1) ? 0 : i + 1;
-            var d0 = this[i] - this[prevIndex];
-            var d1 = this[nextIndex] - this[i];
-            var newIsP = d0.Cross(d1) > 0f;
-            if (i == 0) isPositive = true;
-            else if (isPositive != newIsP) return false;
-        }
-
-        return true;
         
-        //TODO: better variant? Use this instead? (Generated with GitHub Copilot based on the above code!)
-        // 
-        // int num = this.Count;
-        // if (num < 3) return false;
-        //
-        // bool? sign = null;
-        // for (int i = 0; i < num; i++)
-        // {
-        //     int prev = (i + num - 1) % num;
-        //     int next = (i + 1) % num;
-        //     var d0 = this[i] - this[prev];
-        //     var d1 = this[next] - this[i];
-        //     float cross = d0.Cross(d1);
-        //
-        //     if (cross == 0f) continue; // Collinear, skip
-        //
-        //     bool currentSign = cross > 0f;
-        //     if (sign == null)
-        //         sign = currentSign;
-        //     else if (sign != currentSign)
-        //         return false;
-        // }
-        // return true;
+        bool? sign = null;
+        for (var i = 0; i < num; i++)
+        {
+            int prev = (i + num - 1) % num;//wraps around to last index if i is 0
+            int next = (i + 1) % num; //wraps around to 0 if i is last index
+            var d0 = this[i] - this[prev];
+            var d1 = this[next] - this[i];
+            float cross = d0.Cross(d1);
+        
+            //Ignores collinear points and only sets the reference sign on the first valid cross product.
+            if (cross == 0f) continue;
+        
+            //Checks if the current sign of the cross-product is the same as the last
+            //If it is not, the polygon is self-intersecting
+            bool currentSign = cross > 0f;
+            if (sign == null)
+                sign = currentSign;
+            else if (sign != currentSign)
+                return false;
+        }
+        
+        //all cross-product signs were either collinear or the same.
+        return true;
     }
+    
+    /// <summary>
+    /// Determines if a polygon defined by a list of vertices is convex.
+    /// </summary>
+    /// <param name="vertices">The list of vertices representing the polygon.</param>
+    /// <returns>True if the polygon is convex; otherwise, false.</returns>
+    /// <remarks>
+    /// <list type="bullet">
+    /// <item><c>Convex</c>:
+    /// A convex polygon is a polygon where all interior angles are less than 180°,
+    /// and every line segment between any two points inside the polygon lies entirely within the polygon.
+    /// This means none of its vertices "point inward," and the polygon does not have any indentations. </item>
+    /// <item><c>Concave</c>:
+    /// A concave polygon has at least one interior angle greater than 180°
+    /// and at least one vertex that points inward (self-intersecting).</item>
+    /// </list>
+    /// </remarks>
+    public static bool IsConvex(List<Vector2> vertices)
+    {
+        int num = vertices.Count;
+        if (num < 3) return false;
+        
+        bool? sign = null;
+        for (var i = 0; i < num; i++)
+        {
+            int prev = (i + num - 1) % num;//wraps around to last index if i is 0
+            int next = (i + 1) % num; //wraps around to 0 if i is last index
+            var d0 = vertices[i] - vertices[prev];
+            var d1 = vertices[next] - vertices[i];
+            float cross = d0.Cross(d1);
+        
+            //Ignores collinear points and only sets the reference sign on the first valid cross-product.
+            if (cross == 0f) continue;
+        
+            //Checks if the current sign of the cross-product is the same as the last
+            //If it is not, the polygon is self-intersecting (concave)
+            bool currentSign = cross > 0f;
+            if (sign == null)
+                sign = currentSign;
+            else if (sign != currentSign)
+                return false;
+        }
+        
+        //all cross-product signs were either collinear or the same.
+        return true;
+    }
+   
+    
     /// <summary>
     /// Converts the polygon to a <see cref="Points"/> collection.
     /// </summary>

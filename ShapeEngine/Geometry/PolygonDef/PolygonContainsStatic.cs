@@ -1,4 +1,5 @@
 using System.Numerics;
+using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.SegmentDef;
 
 namespace ShapeEngine.Geometry.PolygonDef;
@@ -136,12 +137,17 @@ public partial class Polygon
     /// <returns>True if the segment is fully contained; otherwise, false.</returns>
     public static bool ContainsPolygonSegment(List<Vector2> polygon, Vector2 segmentStart, Vector2 segmentEnd)
     {
-        //if the polygon does not contain both segmentStart and segmentEnd points, the segment is not contained in the polygon
-        //but even if both segmentStart and segmentEnd points are contained the segment could still go outside the polygon -> therefore the for loop check is neeeded
-        //TODO: if there is a performant way to check if a polygon is convex (not self intersecting) than this could be used as an additional easy way out
-        // the for loop is only needed for concave polygons!
+        // First, check if both segment endpoints are inside the polygon.
+        // If either endpoint is outside, the segment cannot be fully contained.
+        // However, even if both endpoints are inside, the segment might still cross the polygon boundary.
+        // Therefore, an additional check is required to ensure the segment does not intersect any polygon edge.
         if (!ContainsPoints(polygon, segmentStart, segmentEnd)) return false;
         
+        // If both segment endpoints are inside and the polygon is convex,
+        // the segment cannot cross the boundary, so it is fully contained.
+        if (IsConvex(polygon)) return true;
+        
+        //Check if the segment crosses the polygon boundary.
         for (int i = 0; i < polygon.Count; i++)
         {
             var polyStart = polygon[i];

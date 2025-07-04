@@ -669,8 +669,7 @@ namespace Examples.Scenes.ExampleScenes
         private void OnAsteroidFractured(Asteroid a, Vector2 point)
         {
             var cutShape = Polygon.Generate(point, Rng.Instance.RandI(6, 12), 35, 100);
-            
-            FractureAsteroid(a, cutShape);
+            if(cutShape != null) FractureAsteroid(a, cutShape);
         }
         private void FractureAsteroid(Asteroid a, Polygon cutShape)
         {
@@ -754,7 +753,8 @@ namespace Examples.Scenes.ExampleScenes
         }
         private void GenerateTriangle()
         {
-            curShape = Polygon.Generate(curPos, 3, curSize / 2, curSize);
+            var shape = Polygon.Generate(curPos, 3, curSize / 2, curSize);
+            if (shape != null) curShape = shape;
         }
         private void GenerateRect()
         {
@@ -763,7 +763,8 @@ namespace Examples.Scenes.ExampleScenes
         }
         private void GeneratePoly()
         {
-            curShape = Polygon.Generate(curPos, 16, curSize * 0.25f, curSize);
+            var shape = Polygon.Generate(curPos, 16, curSize * 0.25f, curSize);
+            if(shape != null) curShape = shape;
         }
         private void PolyModeStarted()
         {

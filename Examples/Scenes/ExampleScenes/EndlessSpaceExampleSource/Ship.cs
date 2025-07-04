@@ -83,8 +83,9 @@ internal class Ship : CollisionObject, ICameraFollowTarget
     {
         if(info.Count <= 0 || info.Other is not AsteroidObstacle a) return;
         if(!info.Validate(out IntersectionPoint combined)) return;
-            
-        a.Cut(GetCutShape());
+
+        var cs = GetCutShape();
+        if(cs != null) a.Cut(cs);
             
         if (collisionStunTimer <= 0f)
         {
@@ -106,19 +107,11 @@ internal class Ship : CollisionObject, ICameraFollowTarget
     }
     
     
-    public Polygon GetCutShape()
+    public Polygon? GetCutShape()
     {
         return Polygon.Generate(Transform.Position, 12, shipSize * 1.5f, shipSize * 3);
     }
 
-    // private Triangle CreateHull(Vector2 pos, float size)
-    // {
-    //     var a = pos + new Vector2(size, 0);
-    //     var b = pos + new Vector2(-size, -size * 0.75f);
-    //     var c = pos + new Vector2(-size, size * 0.75f);
-    //     // pivot = pos;
-    //     return new Triangle(a, b, c);
-    // }
     private Triangle CreateHull()
     {
         var a = new Vector2(1, 0);

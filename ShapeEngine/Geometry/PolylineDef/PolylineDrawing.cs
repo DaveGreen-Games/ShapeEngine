@@ -403,8 +403,8 @@ public static class PolylineDrawing
     /// Draws the polyline with a glow effect, interpolating width and color along each segment.
     /// </summary>
     /// <param name="polyline">The polyline to draw.</param>
-    /// <param name="width">The starting width of the glow.</param>
-    /// <param name="endWidth">The ending width of the glow.</param>
+    /// <param name="width">The starting width of the glow. Should be bigger than <c>endWidth</c>.</param>
+    /// <param name="endWidth">The ending width of the glow. Should be smaller than <c>width</c>.</param>
     /// <param name="color">The starting color of the glow.</param>
     /// <param name="endColorRgba">The ending color of the glow.</param>
     /// <param name="steps">The number of interpolation steps for the glow effect.</param>
@@ -422,13 +422,20 @@ public static class PolylineDrawing
     public static void DrawGlow(this Polyline polyline, float width, float endWidth, ColorRgba color,
         ColorRgba endColorRgba, int steps, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
     {
-        //TODO: shouldn't this function draw the entire polyline each step instead of drawing each segment with all the steps after one another
-        if (polyline.Count < 2) return;
-        for (var i = 0; i < polyline.Count - 1; i++)
+        if (polyline.Count < 2 || steps <= 0) return;
+
+        if (steps == 1)
         {
-            var start = polyline[i];
-            var end = polyline[i + 1];
-            SegmentDrawing.DrawSegmentGlow(start, end, width, endWidth, color, endColorRgba, steps, capType, capPoints);
+            Draw(polyline, width, color, capType, capPoints);
+            return;
+        }
+    
+        for (var s = 0; s < steps; s++)
+        {
+            var f = s / (float)(steps - 1);
+            var currentWidth = ShapeMath.LerpFloat(width, endWidth, f);
+            var currentColor = color.Lerp(endColorRgba, f);
+            Draw(polyline, currentWidth, currentColor, capType, capPoints);
         }
     }
 }

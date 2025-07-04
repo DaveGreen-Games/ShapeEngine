@@ -718,10 +718,44 @@ public static class PolygonDrawing
         DrawLinesScaled(relative, transform.Position, transform.ScaledSize.Length, transform.RotationDeg, lineInfo, sideScaleFactor, sideScaleOrigin);
 
     }
+    
+    /// <summary>
+    /// Draws the polygon with a glow effect, interpolating width and color along each segment.
+    /// </summary>
+    /// <param name="polygon">The polygon to draw.</param>
+    /// <param name="width">The starting width of the glow. Should be bigger than <c>endWidth</c></param>
+    /// <param name="endWidth">The ending width of the glow. Should be smaller than <c>width</c></param>
+    /// <param name="color">The starting color of the glow.</param>
+    /// <param name="endColorRgba">The ending color of the glow.</param>
+    /// <param name="steps">The number of interpolation steps for the glow effect.</param>
+    /// <param name="capType">The type of line cap to use at segment ends.</param>
+    /// <param name="capPoints">The number of points used for the cap rendering.</param>
+    /// <remarks>
+    /// This method creates a glowing outline effect by drawing multiple segments on top of each other, interpolating width and color across all steps.
+    /// <list type="bullet">
+    /// <item><description>The first step uses <paramref name="width"/> and <paramref name="color"/>.</description></item>
+    /// <item><description>The last step uses <paramref name="endWidth"/> and <paramref name="endColorRgba"/>.</description></item>
+    /// <item><description>Intermediate steps interpolate between <paramref name="width"/> / <paramref name="endWidth"/> and <paramref name="color"/> / <paramref name="endColorRgba"/>.</description></item>
+    /// <item><description>Because steps are drawn on top of each other <paramref name="width"/> should be bigger than <paramref name="endWidth"/>.</description></item>
+    /// </list>
+    /// </remarks>
+    public static void DrawGlow(this Polygon polygon, float width, float endWidth, ColorRgba color,
+        ColorRgba endColorRgba, int steps, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+    {
+        if (polygon.Count < 2 || steps <= 0) return;
 
+        if (steps == 1)
+        {
+            DrawLines(polygon, width, color, capType, capPoints);
+            return;
+        }
     
-    //TODO: Add Function for glowing outline drawing like in SHapePolyline drawing
-    
-    
-    
+        for (var s = 0; s < steps; s++)
+        {
+            var f = s / (float)(steps - 1);
+            var currentWidth = ShapeMath.LerpFloat(width, endWidth, f);
+            var currentColor = color.Lerp(endColorRgba, f);
+            DrawLines(polygon, currentWidth, currentColor, capType, capPoints);
+        }
+    }
 }

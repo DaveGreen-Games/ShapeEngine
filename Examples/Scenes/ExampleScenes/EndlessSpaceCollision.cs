@@ -347,6 +347,7 @@ public class EndlessSpaceCollision : ExampleScene
         
         // var shape = Polygon.Generate(pos, AsteroidPointCount, minSize, maxSize);
         var shape = Polygon.GenerateRelative(AsteroidPointCount, 0.5f, 1f);
+        if (shape == null) return;
         var a = new AsteroidObstacle(shape, pos, maxSize, big);
         if (!big) a.target = ship;
         asteroids.Add(a);
@@ -359,6 +360,7 @@ public class EndlessSpaceCollision : ExampleScene
         
         // var shape = Polygon.Generate(pos, AsteroidPointCount, minSize, maxSize);
         var shape = Polygon.GenerateRelative(AsteroidPointCount, 0.5f, 1f);
+        if (shape == null) return;
         var a = new AsteroidObstacle(shape, pos, maxSize, big);
         if (!big) a.target = ship;
         asteroids.Add(a);

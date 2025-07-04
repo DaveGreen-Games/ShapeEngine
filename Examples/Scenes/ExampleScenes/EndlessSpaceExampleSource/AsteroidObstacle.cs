@@ -131,18 +131,7 @@ internal class AsteroidObstacle : CollisionObject
         Triangulation.ChangePosition(moved);
         // moved = true;
     }
-
-    // protected override void OnColliderUpdated(Collider col)
-    // {
-    //     if (moved)
-    //     {
-    //         moved = false;
-    //         var shape = collider.GetPolygonShape();
-    //         bb = shape.GetBoundingBox();
-    //         triangulation = shape.Triangulate();
-    //     }
-    // }
-
+    
     protected override void WasKilled(string? killMessage = null, GameObject? killer = null)
     {
         target = null;
@@ -192,19 +181,6 @@ internal class AsteroidObstacle : CollisionObject
     {
         
     }
-    // private void SetTimer()
-    // {
-    //     timer = ShapeRandom.RandF(Interval, Interval * 4);
-    // }
-    //
-    // public static Polygon GenerateShape(Vector2 position)
-    // {
-    //     return Polygon.Generate(position, AsteroidPointCount, AsteroidMinSize, AsteroidMaxSize);
-    // }
-    //
-    // public ShapeType GetShapeType() => ShapeType.Poly;
-
-    // public Polygon GetPolygonShape() => shape;
     public Polygon GetShape() => collider.GetPolygonShape();
 
     public void Cut(Polygon cutShape)

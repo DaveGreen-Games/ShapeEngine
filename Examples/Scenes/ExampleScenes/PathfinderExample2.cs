@@ -71,7 +71,7 @@ public class PathfinderExample2 : ExampleScene
             SetupInput();
         }
 
-        public Polygon GetCutShape(float minSize)
+        public Polygon? GetCutShape(float minSize)
         {
             var s = MathF.Max(minSize, shipSize);
             return Polygon.Generate(pivot, 12, s, s * 2);
@@ -609,12 +609,8 @@ public class PathfinderExample2 : ExampleScene
             }
         }
 
-        // private void SetTimer()
-        // {
-        //     timer = ShapeRandom.RandF(Interval, Interval * 4);
-        // }
-        //
-        public static Polygon GenerateShape(Vector2 position)
+        
+        public static Polygon? GenerateShape(Vector2 position)
         {
             return Polygon.Generate(position, AsteroidPointCount, AsteroidMinSize, AsteroidMaxSize);
         }
@@ -800,9 +796,13 @@ public class PathfinderExample2 : ExampleScene
                     if (cd.DistanceSquared <= cellDisSq)
                     {
                         var fillShape = Polygon.Generate(cd.Self.Point, 7, cellDistance, cellDistance * 2);
-                        newShape.UnionShapeSelf(fillShape, FillRule.NonZero);
-                        newShape.UnionShapeSelf(existingShape, FillRule.NonZero);
-                        shapes.RemoveAt(j);
+                        if (fillShape != null)
+                        {
+                            newShape.UnionShapeSelf(fillShape, FillRule.NonZero);
+                            newShape.UnionShapeSelf(existingShape, FillRule.NonZero);
+                            shapes.RemoveAt(j);  
+                        }
+                        
                     }
                 }
             }
@@ -899,52 +899,52 @@ public class PathfinderExample2 : ExampleScene
                 if (cd.DistanceSquared < cellDisSq)
                 {
                     fillShape = Polygon.Generate(cd.Self.Point, 7, cellDistance, cellDistance * 2);
-                    var unionResult = Clipper.Union(asteroidShape.ToClipperPaths(), fillShape.ToClipperPaths(), FillRule.NonZero);
-                    if (unionResult.Count > 0)
+                    if (fillShape != null)
                     {
-                        foreach (var pathD in unionResult)
+                        var unionResult = Clipper.Union(asteroidShape.ToClipperPaths(), fillShape.ToClipperPaths(), FillRule.NonZero);
+                        if (unionResult.Count > 0)
                         {
-                            if (pathD.IsHole())
+                            foreach (var pathD in unionResult)
                             {
-                                pathfinder.ApplyNodeValue(pathD.ToPolygon(), AsteroidObstacle.NodeValue);
-                            }
-                            else
-                            {
-                                asteroidShape.Clear();
-                                foreach (var p in pathD)
+                                if (pathD.IsHole())
                                 {
-                                    asteroidShape.AddRange(p.ToVec2());
+                                    pathfinder.ApplyNodeValue(pathD.ToPolygon(), AsteroidObstacle.NodeValue);
+                                }
+                                else
+                                {
+                                    asteroidShape.Clear();
+                                    foreach (var p in pathD)
+                                    {
+                                        asteroidShape.AddRange(p.ToVec2());
+                                    }
                                 }
                             }
                         }
-                    }
+                        pathfinder.ApplyNodeValue(fillShape, AsteroidObstacle.NodeValue);
                     
-                    
-                    // asteroidShape.UnionShapeSelf(fillShape, FillRule.NonZero);
-                    pathfinder.ApplyNodeValue(fillShape, AsteroidObstacle.NodeValue);
-                    
-                    unionResult = Clipper.Union(asteroidShape.ToClipperPaths(), otherShape.ToClipperPaths(), FillRule.NonZero);
-                    if (unionResult.Count > 0)
-                    {
-                        foreach (var pathD in unionResult)
+                        unionResult = Clipper.Union(asteroidShape.ToClipperPaths(), otherShape.ToClipperPaths(), FillRule.NonZero);
+                        if (unionResult.Count > 0)
                         {
-                            if (pathD.IsHole())
+                            foreach (var pathD in unionResult)
                             {
-                                pathfinder.ApplyNodeValue(pathD.ToPolygon(), AsteroidObstacle.NodeValue);
-                            }
-                            else
-                            {
-                                asteroidShape.Clear();
-                                foreach (var p in pathD)
+                                if (pathD.IsHole())
                                 {
-                                    asteroidShape.AddRange(p.ToVec2());
+                                    pathfinder.ApplyNodeValue(pathD.ToPolygon(), AsteroidObstacle.NodeValue);
+                                }
+                                else
+                                {
+                                    asteroidShape.Clear();
+                                    foreach (var p in pathD)
+                                    {
+                                        asteroidShape.AddRange(p.ToVec2());
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    // asteroidShape.UnionShapeSelf(otherShape, FillRule.NonZero);
-                    asteroids.RemoveAt(i);
+                        // asteroidShape.UnionShapeSelf(otherShape, FillRule.NonZero);
+                        asteroids.RemoveAt(i);
+                    }
                 }
             }
             

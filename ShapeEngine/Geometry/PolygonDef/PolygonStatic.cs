@@ -288,10 +288,15 @@ public partial class Polygon
     /// <param name="minLength">Minimum distance from the origin for each point.</param>
     /// <param name="maxLength">Maximum distance from the origin for each point.</param>
     /// <returns>A randomly generated polygon.</returns>
-    public static Polygon GenerateRelative(int pointCount, float minLength, float maxLength)
+    public static Polygon? GenerateRelative(int pointCount, float minLength, float maxLength)
     {
-        //TODO: make return value nullable
-        if (pointCount < 3) return [];
+        if (pointCount < 3) return null;
+        if (Math.Abs(minLength - maxLength) < ShapeMath.Epsilon) return null;
+        if (minLength > maxLength)
+        {
+            //swap
+            (minLength, maxLength) = (maxLength, minLength);
+        }
         Polygon poly = [];
         float angleStep = ShapeMath.PI * 2.0f / pointCount;
 
@@ -313,11 +318,16 @@ public partial class Polygon
     /// <param name="minLength">Minimum distance from the center for each point.</param>
     /// <param name="maxLength">Maximum distance from the center for each point.</param>
     /// <returns>A randomly generated polygon centered at the specified position.</returns>
-    public static Polygon Generate(Vector2 center, int pointCount, float minLength, float maxLength)
+    public static Polygon? Generate(Vector2 center, int pointCount, float minLength, float maxLength)
     {
-        //TODO: make return value nullable?
-        if (pointCount < 3) return [];
-        Polygon points = new();
+        if (pointCount < 3) return null;
+        if (Math.Abs(minLength - maxLength) < ShapeMath.Epsilon) return null;
+        if (minLength > maxLength)
+        {
+            //swap
+            (minLength, maxLength) = (maxLength, minLength);
+        }
+        Polygon points = [];
         float angleStep = ShapeMath.PI * 2.0f / pointCount;
 
         for (int i = 0; i < pointCount; i++)
@@ -340,15 +350,27 @@ public partial class Polygon
     /// <param name="minSectionLength">The minimum factor of the length between points along the line.(0-1)</param>
     /// <param name="maxSectionLength">The maximum factor of the length between points along the line.(0-1)</param>
     /// <returns>Returns the generated polygon.</returns>
-    public static Polygon Generate(Segment segment, float magMin = 0.1f, float magMax = 0.25f, float minSectionLength = 0.025f, float maxSectionLength = 0.1f)
+    public static Polygon? Generate(Segment segment, float magMin = 0.1f, float magMax = 0.25f, float minSectionLength = 0.025f, float maxSectionLength = 0.1f)
     {
-        Polygon poly = new() { segment.Start };
+        if (segment.LengthSquared <= 0) return null;
+        if (magMin <= 0 || magMax <= 0) return null;
+        if (minSectionLength <= 0 || maxSectionLength <= 0) return null;
+        if (magMin > magMax)
+        {
+            (magMin, magMax) = (magMax, magMin);
+        }
+
+        if (minSectionLength > maxSectionLength)
+        {
+            (minSectionLength, maxSectionLength) = (maxSectionLength, minSectionLength);       
+        }
+        Polygon poly = [segment.Start];
         var dir = segment.Dir;
         var dirRight = dir.GetPerpendicularRight();
         var dirLeft = dir.GetPerpendicularLeft();
         float len = segment.Length;
         float minSectionLengthSq = (minSectionLength * len) * (minSectionLength * len);
-        Vector2 cur = segment.Start;
+        var cur = segment.Start;
         while (true)
         {
             cur += dir * Rng.Instance.RandF(minSectionLength, maxSectionLength) * len;
