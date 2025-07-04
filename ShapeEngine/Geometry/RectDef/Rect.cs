@@ -353,48 +353,30 @@ public readonly partial struct Rect : IEquatable<Rect>
     /// <param name="brCorner">Bottom-right corner slant amount.</param>
     /// <param name="blCorner">Bottom-left corner slant amount.</param>
     /// <returns>A <see cref="Polygon"/> object containing the slanted corner points.</returns>
-    public Polygon? GetSlantedCornerPoints(float tlCorner, float trCorner, float brCorner, float blCorner)
+    public Polygon GetSlantedCornerPoints(float tlCorner, float trCorner, float brCorner, float blCorner)
     {
-        if (tlCorner < 0) return null;
-        if (trCorner < 0) return null;
-        if (brCorner < 0) return null;
-        if (blCorner < 0) return null;
+        Polygon points = [];
         
         var tl = TopLeft;
-        var tr = TopRight;
-        var br = BottomRight;
+        tlCorner = MathF.Max(tlCorner, 0);
+        points.Add(tl + new Vector2(MathF.Min(tlCorner, Width), 0f));
+        points.Add(tl + new Vector2(0f, MathF.Min(tlCorner, Height)));
+        
         var bl = BottomLeft;
+        blCorner = MathF.Max(blCorner, 0);
+        points.Add(bl - new Vector2(0f, MathF.Min(blCorner, Height)));
+        points.Add(bl + new Vector2(MathF.Min(blCorner, Width), 0f));
         
-        Polygon points = new();
+        var br = BottomRight;
+        brCorner = MathF.Max(brCorner, 0);
+        points.Add(br - new Vector2(MathF.Min(brCorner, Width), 0f));
+        points.Add(br - new Vector2(0f, MathF.Min(brCorner, Height)));
+       
+        var tr = TopRight;
+        trCorner = MathF.Max(trCorner, 0);
+        points.Add(tr + new Vector2(0f, MathF.Min(trCorner, Height)));
+        points.Add(tr - new Vector2(MathF.Min(trCorner, Width), 0f));
         
-        //It is enough to check if tlCorner is positive, I do not know why I checked if tlCorner is smaller than 1 as well... 
-        //The corner values are absolute in this function, therefore they can be bigger than 1.
-        if (tlCorner > 0f) // && tlCorner < 1f) -> should not be here?! 
-        {
-            points.Add(tl + new Vector2(MathF.Min(tlCorner, Width), 0f));
-            points.Add(tl + new Vector2(0f, MathF.Min(tlCorner, Height)));
-        }
-        //It is enough to check if blCorner is positive, I do not know why I checked if blCorner is smaller than 1 as well... 
-        //The corner values are absolute in this function, therefore they can be bigger than 1.
-        if (blCorner > 0f) // && blCorner < 1f) should not be here?!
-        {
-            points.Add(bl - new Vector2(0f, MathF.Min(tlCorner, Height)));
-            points.Add(bl + new Vector2(MathF.Min(tlCorner, Width), 0f));
-        }
-        //It is enough to check if brCorner is positive, I do not know why I checked if brCorner is smaller than 1 as well... 
-        //The corner values are absolute in this function, therefore they can be bigger than 1.
-        if (brCorner > 0f) // && brCorner < 1f)should not be here?!
-        {
-            points.Add(br - new Vector2(MathF.Min(tlCorner, Width), 0f));
-            points.Add(br - new Vector2(0f, MathF.Min(tlCorner, Height)));
-        }
-        //It is enough to check if trCorner is positive, I do not know why I checked if trCorner is smaller than 1 as well... 
-        //The corner values are absolute in this function, therefore they can be bigger than 1.
-        if (trCorner > 0f) // && trCorner < 1f)should not be here?!
-        {
-            points.Add(tr + new Vector2(0f, MathF.Min(tlCorner, Height)));
-            points.Add(tr - new Vector2(MathF.Min(tlCorner, Width), 0f));
-        }
         return points;
     }
     /// <summary>
@@ -405,41 +387,30 @@ public readonly partial struct Rect : IEquatable<Rect>
     /// <param name="brCorner">Should be between <c>0-1</c></param>
     /// <param name="blCorner">Should be between <c>0-1</c></param>
     /// <returns>Returns points in ccw order.</returns>
-    public Polygon? GetSlantedCornerPointsRelative(float tlCorner, float trCorner, float brCorner, float blCorner)
+    public Polygon GetSlantedCornerPointsRelative(float tlCorner, float trCorner, float brCorner, float blCorner)
     {
-        if (tlCorner is < 0f or > 1f) return null;
-        if (trCorner is < 0f or > 1f) return null;
-        if (brCorner is < 0f or > 1f) return null;
-        if (blCorner is < 0f or > 1f) return null;
-        
+        Polygon points = [];
         
         var tl = TopLeft;
-        var tr = TopRight;
-        var br = BottomRight;
+        tlCorner = ShapeMath.Clamp(tlCorner, 0f, 1f);
+        points.Add(tl + new Vector2(tlCorner * Width, 0f));
+        points.Add(tl + new Vector2(0f, tlCorner * Height));
+        
         var bl = BottomLeft;
+        blCorner = ShapeMath.Clamp(blCorner, 0f, 1f);
+        points.Add(bl - new Vector2(0f, blCorner * Height));
+        points.Add(bl + new Vector2(blCorner * Width, 0f));
         
+        var br = BottomRight;
+        brCorner = ShapeMath.Clamp(brCorner, 0f, 1f);
+        points.Add(br - new Vector2(brCorner * Width, 0f));
+        points.Add(br - new Vector2(0f, brCorner * Height));
         
-        Polygon points = new();
-        if (tlCorner > 0f && tlCorner < 1f)
-        {
-            points.Add(tl + new Vector2(tlCorner * Width, 0f));
-            points.Add(tl + new Vector2(0f, tlCorner * Height));
-        }
-        if (blCorner > 0f && blCorner < 1f)
-        {
-            points.Add(bl - new Vector2(0f, tlCorner * Height));
-            points.Add(bl + new Vector2(tlCorner * Width, 0f));
-        }
-        if (brCorner > 0f && brCorner < 1f)
-        {
-            points.Add(br - new Vector2(tlCorner * Width, 0f));
-            points.Add(br - new Vector2(0f, tlCorner * Height));
-        }
-        if (trCorner > 0f && trCorner < 1f)
-        {
-            points.Add(tr + new Vector2(0f, tlCorner * Height));
-            points.Add(tr - new Vector2(tlCorner * Width, 0f));
-        }
+        var tr = TopRight;
+        trCorner = ShapeMath.Clamp(trCorner, 0f, 1f);
+        points.Add(tr + new Vector2(0f, trCorner * Height));
+        points.Add(tr - new Vector2(trCorner * Width, 0f));
+        
         return points;
     }
     #endregion
