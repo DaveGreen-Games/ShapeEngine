@@ -127,6 +127,21 @@ public partial class Polyline
     public bool OverlapShape(Ray ray) => OverlapPolylineRay(this, ray.Point, ray.Direction);
 
     /// <summary>
+    /// Checks if the polyline overlaps with any collider in the given <see cref="CollisionObject"/>.
+    /// </summary>
+    /// <param name="collision">The collision object containing colliders to check for overlap.</param>
+    /// <returns>True if any collider in the collision object overlaps the polyline; otherwise, false.</returns>
+    public bool Overlap(CollisionObject collision)
+    {
+        if (!collision.HasColliders) return false;
+        foreach (var collider in collision.Colliders)
+        {
+            if(Overlap(collider)) return true;
+        }
+        return false;
+    }
+    
+    /// <summary>
     /// Determines whether the polyline overlaps the specified <see cref="Collider"/>.
     /// </summary>
     /// <param name="collider">The collider to test for overlap.</param>
