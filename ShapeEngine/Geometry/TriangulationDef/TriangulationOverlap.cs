@@ -15,12 +15,28 @@ namespace ShapeEngine.Geometry.TriangulationDef;
 public partial class Triangulation
 {
     /// <summary>
+    /// Checks if a triangle in the collection overlaps with any collider in the given <see cref="CollisionObject"/>.
+    /// </summary>
+    /// <param name="collision">The collision object containing colliders to check for overlap.</param>
+    /// <returns>True if any collider in the collision object overlaps the quad; otherwise, false.</returns>
+    public bool Overlap(CollisionObject collision)
+    {
+        if (!collision.HasColliders) return false;
+        foreach (var collider in collision.Colliders)
+        {
+            if(Overlap(collider)) return true;
+        }
+
+        return false;
+    }
+    /// <summary>
     /// Determines if any triangle in this collection overlaps with the specified collider.
     /// </summary>
     /// <param name="collider">The collider to check for overlap.</param>
     /// <returns><c>true</c> if any triangle overlaps with the collider; otherwise, <c>false</c>.</returns>
     public bool Overlap(Collider collider)
     {
+        if (!collider.Enabled) return false;
         for (int i = 0; i < Count; i++)
         {
             var tri = this[i];

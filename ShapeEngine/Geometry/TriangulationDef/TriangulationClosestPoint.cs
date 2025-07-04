@@ -232,6 +232,69 @@ public partial class Triangulation
     }
 
     /// <summary>
+    /// Finds the closest point in the triangle collection to any collider in the given collision object.
+    /// </summary>
+    /// <param name="collisionObject">The collision object containing one or more colliders to compare against.</param>
+    /// <param name="triangleIndex">The index of the triangle in the triangulation that is closest.</param>
+    /// <returns>
+    /// A <see cref="ClosestPointResult"/> containing the closest point information for the nearest collider.
+    /// </returns>
+    public ClosestPointResult GetClosestPoint(CollisionObject collisionObject, out int triangleIndex)
+    {
+        triangleIndex = -1;
+        if (!collisionObject.HasColliders) return new();
+        var closestPoint = new ClosestPointResult();
+        foreach (var collider in collisionObject.Colliders)
+        {
+            var result = GetClosestPoint(collider, out int index);
+            if(!result.Valid) continue;
+            if (!closestPoint.Valid)
+            {
+                closestPoint = result;
+                triangleIndex = index;
+            }
+            else
+            {
+                if (result.DistanceSquared < closestPoint.DistanceSquared)
+                {
+                    closestPoint = result;
+                    triangleIndex = index;
+                }
+            }
+        }
+        return closestPoint;
+    }
+
+    /// <summary>
+    /// Finds the closest point on the triangle collection to the given collider.
+    /// </summary>
+    /// <param name="collider">The collider to compare against.</param>
+    /// <param name="triangleIndex">The index of the triangle in the triangulation that is closest to the collider.</param>
+    /// <returns>
+    /// A <see cref="ClosestPointResult"/> containing the closest point information for the collider.
+    /// </returns>
+    public ClosestPointResult GetClosestPoint(Collider collider, out int triangleIndex)
+    {
+        triangleIndex = -1;
+        if (!collider.Enabled) return new();
+        switch (collider.GetShapeType())
+        {
+            case ShapeType.Line: return GetClosestPoint(collider.GetLineShape(), out triangleIndex);
+            case ShapeType.Ray: return GetClosestPoint(collider.GetRayShape(), out triangleIndex);
+            case ShapeType.Circle: return GetClosestPoint(collider.GetCircleShape(), out triangleIndex);
+            case ShapeType.Segment: return GetClosestPoint(collider.GetSegmentShape(), out triangleIndex);
+            case ShapeType.Triangle: return GetClosestPoint(collider.GetTriangleShape(), out triangleIndex);
+            case ShapeType.Rect: return GetClosestPoint(collider.GetRectShape(), out triangleIndex);
+            case ShapeType.Quad: return GetClosestPoint(collider.GetQuadShape(), out triangleIndex);
+            case ShapeType.Poly: return GetClosestPoint(collider.GetPolygonShape(),out triangleIndex);
+            case ShapeType.PolyLine: return GetClosestPoint(collider.GetPolylineShape(),out triangleIndex);
+        }
+
+        return new();
+    }
+    
+    
+    /// <summary>
     /// Finds the closest point in the triangulation to the specified line.
     /// </summary>
     /// <param name="other">The line to find the closest point to.</param>
