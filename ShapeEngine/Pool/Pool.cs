@@ -36,7 +36,7 @@ public class Pool : IPool
             var instance = this.createInstance();
             instance.OnInstanceFinished += OnInstanceFinished;
             usable.Add(instance);
-            instance.AddedToPool();
+            instance.OnAddedToPool();
         }
 
         this.id = IdCounter.NextId;
@@ -52,13 +52,13 @@ public class Pool : IPool
     {
         foreach (var item in usable)
         {
-            item.DeletedFromPool();
+            item.OnDeletedFromPool();
         }
         usable.Clear();
         foreach (var item in inUse)
         {
-            item.AddedToPool();
-            item.DeletedFromPool();
+            item.OnAddedToPool();
+            item.OnDeletedFromPool();
         }
         inUse.Clear();
         count = 0;
@@ -84,20 +84,19 @@ public class Pool : IPool
                 var newInstance = createInstance();
                 newInstance.OnInstanceFinished += OnInstanceFinished;
                 usable.Add(newInstance);
-                newInstance.AddedToPool();
+                newInstance.OnAddedToPool();
                 count++;
             }
             else //reuse instance from in-use stack
             {
                 var oldest = PopBack(inUse);
-                oldest.AddedToPool();
                 usable.Add(oldest);
-                oldest.AddedToPool();
+                oldest.OnAddedToPool();
             }
         }
         var instance = Pop(usable);
         inUse.Add(instance);
-        instance.TakenFromPool();
+        instance.OnTakenFromPool();
         return instance;
     }
 
@@ -113,15 +112,13 @@ public class Pool : IPool
         if (usable.Contains(instance)) return;
         if (!inUse.Contains(instance)) return;
         usable.Add(instance);
-        instance.AddedToPool();
+        instance.OnAddedToPool();
     }
-
     private void OnInstanceFinished(IPoolable instance)
     {
         ReturnInstance(instance);
     }
-
-
+    
     /// <summary>
     /// Removes and returns the last instance from the specified list.
     /// </summary>
