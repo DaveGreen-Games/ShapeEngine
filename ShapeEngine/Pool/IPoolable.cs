@@ -9,12 +9,19 @@ public interface IPoolable
     /// Event triggered when the instance has finished its work and is ready to be returned to the pool.
     /// </summary>
     public event Action<IPoolable>? OnInstanceFinished;
+    
     /// <summary>
-    /// Returns the instance to its pool, making it available for reuse.
+    /// Instance was added to pool making it available for reuse.
     /// </summary>
-    public void ReturnToPool(); //Todo: Should be called ReturnedToPool() and should be a simple informational event
+    public void AddedToPool();
+    
     /// <summary>
-    /// Removes the instance from its pool, typically for cleanup or disposal.
+    /// Instance was removed from the pool to be in use.
     /// </summary>
-    public void RemoveFromPool();//Todo: Should be called RemovedFromPool() and should be a simple informational event
+    public void TakenFromPool();
+    
+    /// <summary>
+    /// Instance was removed from the pool permanently, typically for cleanup or disposal.
+    /// </summary>
+    public void DeletedFromPool();
 }
