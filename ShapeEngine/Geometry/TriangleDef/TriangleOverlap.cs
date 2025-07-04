@@ -156,6 +156,21 @@ public readonly partial struct Triangle
     public bool OverlapShape(Ray ray) => OverlapTriangleRay(A, B, C, ray.Point, ray.Direction);
 
     /// <summary>
+    /// Checks if the triangle overlaps with any collider in the given <see cref="CollisionObject"/>.
+    /// </summary>
+    /// <param name="collision">The collision object containing colliders to check for overlap.</param>
+    /// <returns>True if any collider in the collision object overlaps the triangle; otherwise, false.</returns>
+    public bool Overlap(CollisionObject collision)
+    {
+        if (!collision.HasColliders) return false;
+        foreach (var collider in collision.Colliders)
+        {
+            if(Overlap(collider)) return true;
+        }
+
+        return false;
+    }
+    /// <summary>
     /// Tests whether this triangle overlaps with a collider of any supported shape type.
     /// </summary>
     /// <param name="collider">The collider to test for overlap with.</param>
@@ -355,8 +370,6 @@ public readonly partial struct Triangle
     {
         if (poly.Count < 3) return false;
 
-        //TODO: This function might not check all possible scenarios for overlaps
-        // in testing it seems to work 100% but AI thinks it does not check for everything
         if (ContainsPoint(poly[0])) return true;
 
         var oddNodes = false;
