@@ -36,6 +36,7 @@ public class Pool : IPool
             var instance = this.createInstance();
             instance.OnInstanceFinished += OnInstanceFinished;
             usable.Add(instance);
+            instance.AddedToPool();
         }
 
         this.id = IdCounter.NextId;
@@ -51,13 +52,13 @@ public class Pool : IPool
     {
         foreach (var item in usable)
         {
-            item.RemoveFromPool();
+            item.DeletedFromPool();
         }
         usable.Clear();
         foreach (var item in inUse)
         {
-            item.ReturnToPool();
-            item.RemoveFromPool();
+            item.AddedToPool();
+            item.DeletedFromPool();
         }
         inUse.Clear();
         count = 0;
@@ -83,17 +84,20 @@ public class Pool : IPool
                 var newInstance = createInstance();
                 newInstance.OnInstanceFinished += OnInstanceFinished;
                 usable.Add(newInstance);
+                newInstance.AddedToPool();
                 count++;
             }
             else //reuse instance from in-use stack
             {
                 var oldest = PopBack(inUse);
-                oldest.ReturnToPool();
+                oldest.AddedToPool();
                 usable.Add(oldest);
+                oldest.AddedToPool();
             }
         }
         var instance = Pop(usable);
         inUse.Add(instance);
+        instance.TakenFromPool();
         return instance;
     }
 
@@ -108,19 +112,15 @@ public class Pool : IPool
     {
         if (usable.Contains(instance)) return;
         if (!inUse.Contains(instance)) return;
-        instance.ReturnToPool();
         usable.Add(instance);
+        instance.AddedToPool();
     }
 
-
-    /// <inheritdoc/>
-    public void OnInstanceFinished(IPoolable instance)
+    private void OnInstanceFinished(IPoolable instance)
     {
-        //TODO: Would it not be better if ReturnInstance() and OnInstanceFinished() were private or removed altogether from the IPool interface?
-        // An IPoolable instance should trigger an event if finished and then it should automatically return to the pool...
-        // why this complicated logic?
         ReturnInstance(instance);
     }
+
 
     /// <summary>
     /// Removes and returns the last instance from the specified list.
