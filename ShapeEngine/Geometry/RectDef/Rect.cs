@@ -353,13 +353,18 @@ public readonly partial struct Rect : IEquatable<Rect>
     /// <param name="brCorner">Bottom-right corner slant amount.</param>
     /// <param name="blCorner">Bottom-left corner slant amount.</param>
     /// <returns>A <see cref="Polygon"/> object containing the slanted corner points.</returns>
-    public Polygon GetSlantedCornerPoints(float tlCorner, float trCorner, float brCorner, float blCorner)
+    public Polygon? GetSlantedCornerPoints(float tlCorner, float trCorner, float brCorner, float blCorner)
     {
+        if (tlCorner < 0) return null;
+        if (trCorner < 0) return null;
+        if (brCorner < 0) return null;
+        if (blCorner < 0) return null;
+        
         var tl = TopLeft;
         var tr = TopRight;
         var br = BottomRight;
         var bl = BottomLeft;
-        //TODO: should return nullable polygon? If all corner values are not valid than a new polygon is still created and returned...
+        
         Polygon points = new();
         
         //It is enough to check if tlCorner is positive, I do not know why I checked if tlCorner is smaller than 1 as well... 
@@ -395,18 +400,25 @@ public readonly partial struct Rect : IEquatable<Rect>
     /// <summary>
     /// Get the points to draw a rectangle with slanted corners. The corner values are the percentage of the width/height of the rectange the should be used for the slant.
     /// </summary>
-    /// <param name="tlCorner">Should be between 0 - 1</param>
-    /// <param name="trCorner">Should be between 0 - 1</param>
-    /// <param name="brCorner">Should be between 0 - 1</param>
-    /// <param name="blCorner">Should be between 0 - 1</param>
+    /// <param name="tlCorner">Should be between <c>0-1</c></param>
+    /// <param name="trCorner">Should be between <c>0-1</c></param>
+    /// <param name="brCorner">Should be between <c>0-1</c></param>
+    /// <param name="blCorner">Should be between <c>0-1</c></param>
     /// <returns>Returns points in ccw order.</returns>
-    public Polygon GetSlantedCornerPointsRelative(float tlCorner, float trCorner, float brCorner, float blCorner)
+    public Polygon? GetSlantedCornerPointsRelative(float tlCorner, float trCorner, float brCorner, float blCorner)
     {
+        if (tlCorner is < 0f or > 1f) return null;
+        if (trCorner is < 0f or > 1f) return null;
+        if (brCorner is < 0f or > 1f) return null;
+        if (blCorner is < 0f or > 1f) return null;
+        
+        
         var tl = TopLeft;
         var tr = TopRight;
         var br = BottomRight;
         var bl = BottomLeft;
-        //TODO: should return nullable polygon? If all corner values are not valid than a new polygon is still created and returned...
+        
+        
         Polygon points = new();
         if (tlCorner > 0f && tlCorner < 1f)
         {

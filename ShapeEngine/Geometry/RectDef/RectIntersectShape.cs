@@ -14,6 +14,29 @@ namespace ShapeEngine.Geometry.RectDef;
 public readonly partial struct Rect
 {
     /// <summary>
+    /// Computes intersection points between this rect and all colliders in the specified <see cref="CollisionObject"/>.
+    /// </summary>
+    /// <param name="collisionObject">The collision object containing colliders to test for intersection.</param>
+    /// <returns>
+    /// A <see cref="Dictionary{Collider, IntersectionPoints}"/> mapping each collider to its intersection points,
+    /// or null if no colliders are present or no intersections are found.
+    /// </returns>
+    public Dictionary<Collider, IntersectionPoints>? Intersect(CollisionObject collisionObject)
+    {
+        if (!collisionObject.HasColliders) return null;
+
+        Dictionary<Collider, IntersectionPoints>? intersections = null;
+        foreach (var collider in collisionObject.Colliders)
+        {
+            var result = Intersect(collider);
+            if(result == null) continue;
+            intersections ??= new();
+            intersections.Add(collider, result);
+        }
+        return intersections;
+    }
+    
+    /// <summary>
     /// Computes intersection points between this rectangle and the specified collider.
     /// </summary>
     /// <param name="collider">The collider to test for intersection.</param>

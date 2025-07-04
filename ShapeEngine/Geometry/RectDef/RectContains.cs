@@ -86,7 +86,6 @@ public readonly partial struct Rect
 
         return true;
     }
-
     /// <summary>
     /// Determines whether the specified collider is fully contained within this rectangle.
     /// </summary>
@@ -97,6 +96,8 @@ public readonly partial struct Rect
     /// </remarks>
     public bool ContainsCollider(Collider collider)
     {
+        if (!collider.Enabled) return false;
+        
         switch (collider.GetShapeType())
         {
             case ShapeType.Circle: return ContainsShape(collider.GetCircleShape());
