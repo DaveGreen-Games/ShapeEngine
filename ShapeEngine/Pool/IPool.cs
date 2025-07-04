@@ -39,10 +39,5 @@ public interface IPool
     /// Returns an instance to the pool, making it available for reuse.
     /// </summary>
     /// <param name="instance">The instance to return.</param>
-    protected void ReturnInstance(IPoolable instance);
-    // /// <summary>
-    // /// Handles the event when an instance has finished its work and should be returned to the pool.
-    // /// </summary>
-    // /// <param name="instance">The finished instance.</param>
-    // protected void OnInstanceFinished(IPoolable instance);
+    public void ReturnInstance(IPoolable instance);
 }

@@ -11,17 +11,17 @@ public interface IPoolable
     public event Action<IPoolable>? OnInstanceFinished;
     
     /// <summary>
-    /// Instance was added to pool making it available for reuse.
+    /// Instance was added to the pool, making it available for reuse.
     /// </summary>
-    public void AddedToPool();
+    public void OnAddedToPool();
     
     /// <summary>
     /// Instance was removed from the pool to be in use.
     /// </summary>
-    public void TakenFromPool();
+    public void OnTakenFromPool();
     
     /// <summary>
     /// Instance was removed from the pool permanently, typically for cleanup or disposal.
     /// </summary>
-    public void DeletedFromPool();
+    public void OnDeletedFromPool();
 }
