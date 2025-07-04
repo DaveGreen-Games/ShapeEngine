@@ -16,6 +16,56 @@ namespace ShapeEngine.Geometry.LineDef;
 public readonly partial struct Line
 {
     /// <summary>
+    /// Finds the closest point on the Line's perimeter to any collider in the given collision object.
+    /// </summary>
+    /// <param name="collisionObject">The collision object containing one or more colliders to compare against.</param>
+    /// <returns>
+    /// A <see cref="ClosestPointResult"/> containing the closest point information for the nearest collider.
+    /// </returns>
+    public ClosestPointResult GetClosestPoint(CollisionObject collisionObject)
+    {
+        if (!collisionObject.HasColliders) return new();
+        var closestPoint = new ClosestPointResult();
+        foreach (var collider in collisionObject.Colliders)
+        {
+            var result = GetClosestPoint(collider);
+            if(!result.Valid) continue;
+            if (!closestPoint.Valid) closestPoint = result;
+            else
+            {
+                if (result.DistanceSquared < closestPoint.DistanceSquared) closestPoint = result;
+            }
+        }
+        return closestPoint;
+    }
+  
+    /// <summary>
+    /// Finds the closest point on this Line's perimeter to the given collider.
+    /// </summary>
+    /// <param name="collider">The collider to compare against.</param>
+    /// <returns>
+    /// A <see cref="ClosestPointResult"/> containing the closest point information for the collider.
+    /// </returns>
+    public ClosestPointResult GetClosestPoint(Collider collider)
+    {
+        if (!collider.Enabled) return new();
+        switch (collider.GetShapeType())
+        {
+            case ShapeType.Line: return GetClosestPoint(collider.GetLineShape());
+            case ShapeType.Ray: return GetClosestPoint(collider.GetRayShape());
+            case ShapeType.Circle: return GetClosestPoint(collider.GetCircleShape());
+            case ShapeType.Segment: return GetClosestPoint(collider.GetSegmentShape());
+            case ShapeType.Triangle: return GetClosestPoint(collider.GetTriangleShape());
+            case ShapeType.Rect: return GetClosestPoint(collider.GetRectShape());
+            case ShapeType.Quad: return GetClosestPoint(collider.GetQuadShape());
+            case ShapeType.Poly: return GetClosestPoint(collider.GetPolygonShape());
+            case ShapeType.PolyLine: return GetClosestPoint(collider.GetPolylineShape());
+        }
+
+        return new();
+    }
+    
+    /// <summary>
     /// Calculates the closest point on this line to a given point in 2D space.
     /// </summary>
     /// <param name="point">The point from which the closest point on the line is sought.</param>

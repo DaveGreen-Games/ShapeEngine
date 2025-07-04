@@ -113,6 +113,22 @@ public readonly partial struct Rect
     public bool OverlapShape(Ray ray) => OverlapRectRay(A, B, C, D, ray.Point, ray.Direction);
 
     /// <summary>
+    /// Checks if the rect overlaps with any collider in the given <see cref="CollisionObject"/>.
+    /// </summary>
+    /// <param name="collision">The collision object containing colliders to check for overlap.</param>
+    /// <returns>True if any collider in the collision object overlaps the rect; otherwise, false.</returns>
+    public bool Overlap(CollisionObject collision)
+    {
+        if (!collision.HasColliders) return false;
+        foreach (var collider in collision.Colliders)
+        {
+            if(Overlap(collider)) return true;
+        }
+
+        return false;
+    }
+    
+    /// <summary>
     /// Checks if the rectangle overlaps with the specified collider.
     /// </summary>
     /// <param name="collider">The collider to check for overlap.</param>

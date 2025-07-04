@@ -1,5 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.LineDef;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.PolylineDef;
@@ -85,6 +86,68 @@ public partial class Segments
     /// <param name="segments">The other set of segments.</param>
     /// <returns>True if the segments overlap with the other set of segments, false otherwise.</returns>
     public bool OverlapSegments(List<Segment> segments) => OverlapSegmentsSegments(this, segments);
+   
+    /// <summary>
+    /// Checks if any of the segments overlaps with any collider in the given <see cref="CollisionObject"/>.
+    /// </summary>
+    /// <param name="collision">The collision object containing colliders to check for overlap.</param>
+    /// <returns>True if any collider in the collision object overlaps the quad; otherwise, false.</returns>
+    public bool Overlap(CollisionObject collision)
+    {
+        if (!collision.HasColliders) return false;
+        foreach (var collider in collision.Colliders)
+        {
+            if(Overlap(collider)) return true;
+        }
+
+        return false;
+    }
+    /// <summary>
+    /// Determines whether any of the segments overlaps with a collider's shape.
+    /// </summary>
+    /// <param name="collider">The collider whose shape to test against. Must be enabled.</param>
+    /// <returns>True if the segment overlaps the collider's shape; otherwise, false.</returns>
+    /// <remarks>
+    /// Dispatches to the appropriate shape-specific overlap method based on the collider's shape type.
+    /// </remarks>
+    public bool Overlap(Collider collider)
+    {
+        if (!collider.Enabled) return false;
+
+        switch (collider.GetShapeType())
+        {
+            case ShapeType.Circle:
+                var c = collider.GetCircleShape();
+                return OverlapShape(c);
+            case ShapeType.Segment:
+                var s = collider.GetSegmentShape();
+                return OverlapShape(s);
+            case ShapeType.Ray:
+                var rayShape = collider.GetRayShape();
+                return OverlapShape(rayShape);
+            case ShapeType.Line:
+                var l = collider.GetLineShape();
+                return OverlapShape(l);
+            case ShapeType.Triangle:
+                var t = collider.GetTriangleShape();
+                return OverlapShape(t);
+            case ShapeType.Rect:
+                var r = collider.GetRectShape();
+                return OverlapShape(r);
+            case ShapeType.Quad:
+                var q = collider.GetQuadShape();
+                return OverlapShape(q);
+            case ShapeType.Poly:
+                var p = collider.GetPolygonShape();
+                return OverlapShape(p);
+            case ShapeType.PolyLine:
+                var pl = collider.GetPolylineShape();
+                return OverlapShape(pl);
+        }
+
+        return false;
+    }
+
     /// <summary>
     /// Checks if the segments overlap with a line.
     /// </summary>

@@ -104,6 +104,22 @@ public readonly partial struct Line
     public bool OverlapSegments(List<Segment> segments) => OverlapLineSegments(Point, Direction, segments);
 
     /// <summary>
+    /// Checks if the line overlaps with any collider in the given <see cref="CollisionObject"/>.
+    /// </summary>
+    /// <param name="collision">The collision object containing colliders to check for overlap.</param>
+    /// <returns>True if any collider in the collision object overlaps the line; otherwise, false.</returns>
+    public bool Overlap(CollisionObject collision)
+    {
+        if (!collision.HasColliders) return false;
+        foreach (var collider in collision.Colliders)
+        {
+            if(Overlap(collider)) return true;
+        }
+
+        return false;
+    }
+    
+    /// <summary>
     /// Determines whether this infinite line overlaps (intersects) with the shape of the specified <see cref="Collider"/>.
     /// </summary>
     /// <param name="collider">The <see cref="Collider"/> whose shape will be checked for overlap with this line.</param>

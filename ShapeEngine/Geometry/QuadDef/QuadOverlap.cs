@@ -98,23 +98,25 @@ public readonly partial struct Quad
     public bool OverlapSegments(List<Segment> segments) => OverlapQuadSegments(A, B, C, D, segments);
 
     /// <summary>
-    /// Checks if the quad overlaps with a line shape.
+    /// Checks if the quad overlaps with any collider in the given <see cref="CollisionObject"/>.
     /// </summary>
-    /// <param name="line">The line shape to check.</param>
-    /// <returns>True if the line overlaps the quad; otherwise, false.</returns>
-    public bool OverlapShape(Line line) => OverlapQuadLine(A, B, C, D, line.Point, line.Direction);
+    /// <param name="collision">The collision object containing colliders to check for overlap.</param>
+    /// <returns>True if any collider in the collision object overlaps the quad; otherwise, false.</returns>
+    public bool Overlap(CollisionObject collision)
+    {
+        if (!collision.HasColliders) return false;
+        foreach (var collider in collision.Colliders)
+        {
+            if(Overlap(collider)) return true;
+        }
 
-    /// <summary>
-    /// Checks if the quad overlaps with a ray shape.
-    /// </summary>
-    /// <param name="ray">The ray shape to check.</param>
-    /// <returns>True if the ray overlaps the quad; otherwise, false.</returns>
-    public bool OverlapShape(Ray ray) => OverlapQuadRay(A, B, C, D, ray.Point, ray.Direction);
-
+        return false;
+    }
+    
     /// <summary>
     /// Checks if the quad overlaps with a collider's shape.
     /// </summary>
-    /// <param name="collider">The collider whose shape to check.</param>
+    /// <param name="collider">The collider whose shape to check. Has to be enabled.</param>
     /// <returns>True if the collider's shape overlaps the quad; otherwise, false.</returns>
     /// <remarks>Supports multiple shape types, including circle, segment, line,
     /// ray, triangle, rect, quad, polygon, and polyline.</remarks>
@@ -156,6 +158,21 @@ public readonly partial struct Quad
         return false;
     }
 
+    
+    /// <summary>
+    /// Checks if the quad overlaps with a line shape.
+    /// </summary>
+    /// <param name="line">The line shape to check.</param>
+    /// <returns>True if the line overlaps the quad; otherwise, false.</returns>
+    public bool OverlapShape(Line line) => OverlapQuadLine(A, B, C, D, line.Point, line.Direction);
+
+    /// <summary>
+    /// Checks if the quad overlaps with a ray shape.
+    /// </summary>
+    /// <param name="ray">The ray shape to check.</param>
+    /// <returns>True if the ray overlaps the quad; otherwise, false.</returns>
+    public bool OverlapShape(Ray ray) => OverlapQuadRay(A, B, C, D, ray.Point, ray.Direction);
+    
     /// <summary>
     /// Checks if the quad overlaps with a set of segments.
     /// </summary>

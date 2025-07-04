@@ -68,14 +68,11 @@ public readonly partial struct Quad
     /// <summary>
     /// Determines whether the specified collider is contained within this quad.
     /// </summary>
-    /// <param name="collider">The collider to test.</param>
+    /// <param name="collider">The collider to test. Has to be enabled.</param>
     /// <returns><c>true</c> if the collider is inside the quad; otherwise, <c>false</c>.</returns>
-    
-    //TODO: QuadIntersectShape checks if collider is enabled -> shouldn't it check it here as well.
-    //Also check of overlap checks it or not and check all other shapes for this as well
-    //Either Contains, Overlap, Intersection, and ClosestPoint check if collider is enabled or not but it should be consistent across shapes.
     public bool ContainsCollider(Collider collider)
     {
+        if (!collider.Enabled) return false;
         switch (collider.GetShapeType())
         {
             case ShapeType.Circle: return ContainsShape(collider.GetCircleShape());

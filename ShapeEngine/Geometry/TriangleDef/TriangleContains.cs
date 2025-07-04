@@ -98,6 +98,7 @@ public readonly partial struct Triangle
     /// </remarks>
     public bool ContainsCollider(Collider collider)
     {
+        if (!collider.Enabled) return false;
         switch (collider.GetShapeType())
         {
             case ShapeType.Circle: return ContainsShape(collider.GetCircleShape());

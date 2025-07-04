@@ -14,6 +14,77 @@ namespace ShapeEngine.Geometry.LineDef;
 public readonly partial struct Line
 {
     /// <summary>
+    /// Computes intersection points between this line and all colliders in the specified <see cref="CollisionObject"/>.
+    /// </summary>
+    /// <param name="collisionObject">The collision object containing colliders to test for intersection.</param>
+    /// <returns>
+    /// A <see cref="Dictionary{Collider, IntersectionPoints}"/> mapping each collider to its intersection points,
+    /// or null if no colliders are present or no intersections are found.
+    /// </returns>
+    public Dictionary<Collider, IntersectionPoints>? Intersect(CollisionObject collisionObject)
+    {
+        if (!collisionObject.HasColliders) return null;
+
+        Dictionary<Collider, IntersectionPoints>? intersections = null;
+        foreach (var collider in collisionObject.Colliders)
+        {
+            var result = Intersect(collider);
+            if(result == null) continue;
+            intersections ??= new();
+            intersections.Add(collider, result);
+        }
+        return intersections;
+    }
+    
+    /// <summary>
+    /// Computes the intersection points between this line and a collider shape, if any.
+    /// </summary>
+    /// <param name="collider">The <see cref="Collider"/> whose shape will be checked for intersection with this line.</param>
+    /// <returns>
+    /// A <see cref="IntersectionPoints"/> object containing the intersection points, or null if no intersections exist or the collider is disabled.
+    /// </returns>
+    /// <remarks>
+    /// The function dispatches to the appropriate intersection method based on the collider's shape type.
+    /// </remarks>
+    public IntersectionPoints? Intersect(Collider collider)
+    {
+        if (!collider.Enabled) return null;
+
+        switch (collider.GetShapeType())
+        {
+            case ShapeType.Circle:
+                var c = collider.GetCircleShape();
+                return IntersectShape(c);
+            case ShapeType.Ray:
+                var rayShape = collider.GetRayShape();
+                return IntersectShape(rayShape);
+            case ShapeType.Line:
+                var l = collider.GetLineShape();
+                return IntersectShape(l);
+            case ShapeType.Segment:
+                var s = collider.GetSegmentShape();
+                return IntersectShape(s);
+            case ShapeType.Triangle:
+                var t = collider.GetTriangleShape();
+                return IntersectShape(t);
+            case ShapeType.Rect:
+                var r = collider.GetRectShape();
+                return IntersectShape(r);
+            case ShapeType.Quad:
+                var q = collider.GetQuadShape();
+                return IntersectShape(q);
+            case ShapeType.Poly:
+                var p = collider.GetPolygonShape();
+                return IntersectShape(p);
+            case ShapeType.PolyLine:
+                var pl = collider.GetPolylineShape();
+                return IntersectShape(pl);
+        }
+
+        return null;
+    }
+    
+    /// <summary>
     /// Computes the intersection points between this line and a <see cref="Segment"/> shape.
     /// </summary>
     /// <param name="segment">The <see cref="Segment"/> to check for intersection.</param>

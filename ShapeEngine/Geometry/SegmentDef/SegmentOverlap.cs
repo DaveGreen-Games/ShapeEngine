@@ -93,6 +93,22 @@ public readonly partial struct Segment
     /// <param name="segments">The list of segments to test against.</param>
     /// <returns>True if the segment overlaps any segment in the list; otherwise, false.</returns>
     public bool OverlapSegments(List<Segment> segments) => OverlapSegmentSegments(Start, End, segments);
+  
+    /// <summary>
+    /// Checks if the segment overlaps with any collider in the given <see cref="CollisionObject"/>.
+    /// </summary>
+    /// <param name="collision">The collision object containing colliders to check for overlap.</param>
+    /// <returns>True if any collider in the collision object overlaps the quad; otherwise, false.</returns>
+    public bool Overlap(CollisionObject collision)
+    {
+        if (!collision.HasColliders) return false;
+        foreach (var collider in collision.Colliders)
+        {
+            if(Overlap(collider)) return true;
+        }
+
+        return false;
+    }
     /// <summary>
     /// Determines whether the segment overlaps a collider's shape.
     /// </summary>

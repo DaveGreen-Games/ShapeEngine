@@ -39,6 +39,7 @@ public partial class Polygon
     /// </remarks>
     public bool ContainsCollider(Collider collider)
     {
+        if (!collider.Enabled) return false;
         switch (collider.GetShapeType())
         {
             case ShapeType.Circle: return ContainsShape(collider.GetCircleShape());

@@ -14,6 +14,7 @@ namespace ShapeEngine.Geometry.RayDef;
 
 public readonly partial struct Ray
 {
+    
     /// <summary>
     /// Determines whether this ray overlaps the specified point.
     /// </summary>
@@ -92,6 +93,22 @@ public readonly partial struct Ray
     /// <param name="segments">The list of segments to check for overlap.</param>
     /// <returns>True if the ray overlaps any of the segments; otherwise, false.</returns>
     public bool OverlapSegments(List<Segment> segments) => OverlapRaySegments(Point, Direction, segments);
+    
+    /// <summary>
+    /// Checks if the ray overlaps with any collider in the given <see cref="CollisionObject"/>.
+    /// </summary>
+    /// <param name="collision">The collision object containing colliders to check for overlap.</param>
+    /// <returns>True if any collider in the collision object overlaps the quad; otherwise, false.</returns>
+    public bool Overlap(CollisionObject collision)
+    {
+        if (!collision.HasColliders) return false;
+        foreach (var collider in collision.Colliders)
+        {
+            if(Overlap(collider)) return true;
+        }
+
+        return false;
+    }
     /// <summary>
     /// Determines whether this ray overlaps the specified collider.
     /// </summary>
