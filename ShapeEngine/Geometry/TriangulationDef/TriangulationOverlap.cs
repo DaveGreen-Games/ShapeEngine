@@ -18,7 +18,7 @@ public partial class Triangulation
     /// Checks if a triangle in the collection overlaps with any collider in the given <see cref="CollisionObject"/>.
     /// </summary>
     /// <param name="collision">The collision object containing colliders to check for overlap.</param>
-    /// <returns>True if any collider in the collision object overlaps the quad; otherwise, false.</returns>
+    /// <returns>True if any collider in the collision object overlaps any triangle in this collection; otherwise, false.</returns>
     public bool Overlap(CollisionObject collision)
     {
         if (!collision.HasColliders) return false;
