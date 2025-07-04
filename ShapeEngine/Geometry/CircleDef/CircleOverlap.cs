@@ -15,6 +15,21 @@ namespace ShapeEngine.Geometry.CircleDef;
 public readonly partial struct Circle
 {
     /// <summary>
+    /// Checks if the circle overlaps with any collider in the given <see cref="CollisionObject"/>.
+    /// </summary>
+    /// <param name="collision">The collision object containing colliders to check for overlap.</param>
+    /// <returns>True if any collider in the collision object overlaps the circle; otherwise, false.</returns>
+    public bool Overlap(CollisionObject collision)
+    {
+        if (!collision.HasColliders) return false;
+        foreach (var collider in collision.Colliders)
+        {
+            if(Overlap(collider)) return true;
+        }
+
+        return false;
+    }
+    /// <summary>
     /// Determines whether this circle overlaps with the specified collider.
     /// </summary>
     /// <param name="collider">The collider to test for overlap with this circle.

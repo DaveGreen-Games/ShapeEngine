@@ -130,6 +130,7 @@ public readonly partial struct Circle
     /// <returns><c>true</c> if the collider is inside the circle; otherwise, <c>false</c>.</returns>
     public bool ContainsCollider(Collider collider)
     {
+        if (!collider.Enabled) return false;
         switch (collider.GetShapeType())
         {
             case ShapeType.Circle: return ContainsShape(collider.GetCircleShape());
