@@ -1,16 +1,11 @@
-using System.Numerics;
-using System.Runtime.InteropServices;
 using Raylib_cs;
 using ShapeEngine.Audio;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Input;
-using ShapeEngine.StaticLib;
 using ShapeEngine.Screen;
 
 namespace ShapeEngine.Core;
-
 
 /// <summary>
 /// The core game class.
@@ -18,139 +13,6 @@ namespace ShapeEngine.Core;
 /// </summary>
 public partial class Game
 {
-    /// <summary>
-    /// Gets the singleton instance of the current game.
-    /// </summary>
-    /// <remarks>
-    /// This property is initialized automatically in the constructor.
-    /// You need to create a game instance before accessing this property.
-    /// If it is accessed before being set, a NullReferenceException will be thrown.
-    /// You should only ever create one game instance per application,
-    /// but in case you create multiple, this property will always point to the last created game instance.
-    /// </remarks>
-    public static Game CurrentGameInstance { get; private set; } = null!;
-    
-    #region Static
-    /// <summary>
-    /// Gets the current directory where the application is running.
-    /// </summary>
-    /// <remarks>
-    /// This property returns the base directory of the current application domain.
-    /// It is equivalent to the value returned by <see cref="System.IO.Directory.GetCurrentDirectory"/> method.
-    /// </remarks>
-    public static readonly string CURRENT_DIRECTORY = AppDomain.CurrentDomain.BaseDirectory;
-    /// <summary>
-    /// Gets the current operating system platform.
-    /// </summary>
-    /// <remarks>
-    /// The value is determined at runtime and can be one of the following:
-    /// <list type="bullet">
-    /// <item><description>OSPlatform.Windows</description></item>
-    /// <item><description>OSPlatform.Linux</description></item>
-    /// <item><description>OSPlatform.OSX</description></item>
-    /// <item><description>OSPlatform.FreeBSD</description></item>
-    /// </list>
-    /// </remarks>
-    public static OSPlatform OS_PLATFORM { get; private set; } =
-        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? OSPlatform.Windows :
-        RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? OSPlatform.Linux :
-        RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? OSPlatform.OSX :
-        OSPlatform.FreeBSD;
-
-    
-    /// <summary>
-    /// A static property that indicates whether the application is currently in debug mode.
-    /// </summary>
-    public static bool DebugMode { get; private set; } = false;
-
-    /// <summary>
-    /// A static property that indicates whether the application is currently in release mode.
-    /// </summary>
-    public static bool ReleaseMode { get; private set; } = true;
-
-    /// <summary>
-    /// A static method that checks if the current operating system is Windows.
-    /// </summary>
-    /// <returns>True if the operating system is Windows, otherwise false.</returns>
-    public static bool IsWindows() => OS_PLATFORM == OSPlatform.Windows;
-
-    /// <summary>
-    /// A static method that checks if the current operating system is Linux.
-    /// </summary>
-    /// <returns>True if the operating system is Linux, otherwise false.</returns>
-    public static bool IsLinux() => OS_PLATFORM == OSPlatform.Linux;
-
-    /// <summary>
-    /// A static method that checks if the current operating system is macOS.
-    /// </summary>
-    /// <returns>True if the operating system is macOS, otherwise false.</returns>
-    public static bool IsOSX() => OS_PLATFORM == OSPlatform.OSX;
-    /// <summary>
-    /// Checks if the current operating system is macOS and if the application is running in an app bundle.
-    /// </summary>
-    /// <returns>
-    /// Returns true if the operating system is macOS and the application is running in an app bundle.
-    /// Returns false otherwise.
-    /// </returns>
-    public static bool OSXIsRunningInAppBundle()
-    {
-        if(!IsOSX()) return false;
-        
-        string exeDir = AppContext.BaseDirectory.Replace('\\', '/');
-        return exeDir.Contains(".app/Contents/MacOS/");
-    }
-    
-    /// <summary>
-    /// Compares two lists for equality. The lists must contain elements of the same type that implement the IEquatable interface.
-    /// </summary>
-    /// <typeparam name="T">The type of elements in the lists. Must implement the IEquatable interface.</typeparam>
-    /// <param name="a">The first list to compare.</param>
-    /// <param name="b">The second list to compare.</param>
-    /// <returns>
-    /// Returns true if both lists are not null, have the same count, and all corresponding elements in the lists are equal. 
-    /// Returns false otherwise.
-    /// </returns>
-    public static bool IsEqual<T>(List<T>? a, List<T>? b) where T : IEquatable<T>
-    {
-        if (a == null || b == null) return false;
-        if (a.Count != b.Count) return false;
-        for (var i = 0; i < a.Count; i++)
-        {
-            if (!a[i].Equals(b[i])) return false;
-        }
-        return true;
-    }
-    /// <summary>
-    /// Computes and returns the hash code for a generic collection of elements.
-    /// </summary>
-    /// <typeparam name="T">The type of elements in the collection.</typeparam>
-    /// <param name="collection">The collection of elements to compute the hash code for.</param>
-    /// <returns>The computed hash code for the collection.</returns>
-    public static int GetHashCode<T>(IEnumerable<T> collection)
-    {
-        HashCode hash = new();
-        foreach (var element in collection)
-        {
-            hash.Add(element);
-        }
-        return hash.ToHashCode();
-    }
-    /// <summary>
-    /// Gets an item from a collection at the specified index, wrapping around if the index is out of range.
-    /// </summary>
-    /// <typeparam name="T">The type of items in the collection.</typeparam>
-    /// <param name="collection">The collection to get the item from.</param>
-    /// <param name="index">The index of the item to get.</param>
-    /// <returns>The item at the specified index, wrapped around if necessary.</returns>
-    public static T GetItem<T>(List<T> collection, int index)
-    {
-        int i = ShapeMath.WrapIndex(collection.Count, index);
-        return collection[i];
-    }
-
-    
-    #endregion
-
     #region Public Members
     /// <summary>
     /// Gets or sets the command-line arguments passed to the application at launch.
@@ -363,6 +225,12 @@ public partial class Game
     /// </remarks>
     public readonly SortedList<int, Action> DeferredDrawingAfterUI = new();
 
+    /// <summary>
+    /// Gets the current game texture used for rendering.
+    /// </summary>
+    /// <returns>The current ScreenTexture instance used by the game.</returns>
+    public ScreenTexture GetGameTexture() => gameTexture;
+
     #endregion
     
     #region Private Members
@@ -383,6 +251,7 @@ public partial class Game
     
     #endregion
     
+    #region Constructor
     /// <summary>
     /// Initializes a new instance of the Game class with the specified game settings and window settings.
     /// </summary>
@@ -484,281 +353,6 @@ public partial class Game
             else Console.WriteLine("Failed to set current directory to executable's folder in macos.");
         }
     }
-    
-    /// <summary>
-    /// Starts the game loop and runs the game until it is terminated.
-    /// </summary>
-    /// <param name="launchParameters">Command-line arguments or parameters to configure the game at launch.</param>
-    /// <returns>An ExitCode object indicating whether the game should restart.</returns>
-    public ExitCode Run(params string[] launchParameters)
-    {
-        this.LaunchParams = launchParameters;
-
-        quit = false;
-        restart = false;
-        Raylib.SetExitKey(KeyboardKey.Null);
-
-        StartGameloop();
-        RunGameloop();
-        EndGameloop();
-        Raylib.CloseWindow();
-
-        return new ExitCode(restart);
-    }
-    
-    /// <summary>
-    /// Gets the current game texture used for rendering.
-    /// </summary>
-    /// <returns>The current ScreenTexture instance used by the game.</returns>
-    public ScreenTexture GetGameTexture() => gameTexture;
-
-    /// <summary>
-    /// Changes the game's rendering texture to a new one.
-    /// </summary>
-    /// <param name="newScreenTexture">The new screen texture to use for game rendering.</param>
-    /// <returns>Returns the old game texture or null if the newScreenTexture is the same as the game texture.
-    /// The old ScreenTexture should be unloaded and disposed of if no longer needed!</returns>
-    public ScreenTexture? ChangeGameTexture(ScreenTexture newScreenTexture)
-    {
-        if (gameTexture == newScreenTexture) return null;
-
-        gameTexture.OnTextureResized -= GameTextureOnTextureResized;
-        gameTexture.OnDrawGame -= GameTextureOnDrawGame;
-        gameTexture.OnDrawUI -= GameTextureOnDrawUI;
-        
-        newScreenTexture.OnTextureResized += GameTextureOnTextureResized;
-        if(!newScreenTexture.Initialized) newScreenTexture.Initialize(Window.CurScreenSize, Window.MousePosition, curCamera);
-        newScreenTexture.OnDrawGame += GameTextureOnDrawGame;
-        newScreenTexture.OnDrawUI += GameTextureOnDrawUI;
-        
-        var old = gameTexture;
-        gameTexture = newScreenTexture;
-        
-        return old;
-    }
- 
-    #region  Gameloop
-    private void StartGameloop()
-    {
-        ShapeInput.KeyboardDevice.OnButtonPressed += OnKeyboardButtonPressed;
-        ShapeInput.KeyboardDevice.OnButtonReleased += OnKeyboardButtonReleased;
-        ShapeInput.MouseDevice.OnButtonPressed += OnMouseButtonPressed;
-        ShapeInput.MouseDevice.OnButtonReleased += OnMouseButtonReleased;
-        ShapeInput.GamepadDeviceManager.OnGamepadButtonPressed += OnGamepadButtonPressed;
-        ShapeInput.GamepadDeviceManager.OnGamepadButtonReleased += OnGamepadButtonReleased;
-        
-        LoadContent();
-        BeginRun();
-    }
-
-    
-    private void RunGameloop()
-    {
-        while (!quit)
-        {
-            if (Raylib.WindowShouldClose())
-            {
-                Quit();
-                continue;
-            }
-            
-            var dt = Raylib.GetFrameTime();
-            Time = Time.TickF(dt);
-            
-            Window.Update(dt);
-            AudioDevice.Update(dt, curCamera);
-            ShapeInput.Update();
-            
-            if (Window.MouseOnScreen)
-            {
-                if (ShapeInput.CurrentInputDeviceType is InputDeviceType.Keyboard or InputDeviceType.Gamepad)
-                {
-                    Window.MoveMouse(ChangeMousePos(dt, Window.MousePosition, Window.ScreenArea));
-                }
-            }
-            
-            var mousePosUI = Window.MousePosition; 
-            gameTexture.Update(dt, Window.CurScreenSize, mousePosUI, Paused);
-
-            if (customScreenTextures is { Count: > 0 })
-            {
-                for (var i = 0; i < customScreenTextures.Count; i++)
-                {
-                    customScreenTextures[i].Update(dt, Window.CurScreenSize, mousePosUI, Paused);
-                }
-            }
-            
-            GameScreenInfo = gameTexture.GameScreenInfo;
-            GameUiScreenInfo = gameTexture.GameUiScreenInfo;
-            UIScreenInfo = new(Window.ScreenArea, mousePosUI);
-            
-            if (!Paused)
-            {
-                UpdateFlashes(dt);
-            }
-
-            UpdateCursor(dt, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-            
-            if (FixedPhysicsEnabled)
-            {
-                ResolvePreFixedUpdate();
-                AdvanceFixedUpdate(dt);
-            }
-            else ResolveUpdate();
-            
-            DrawToScreen();
-
-            ResolveDeferred();
-        }
-    }
-    private void DrawToScreen()
-    {
-        gameTexture.DrawOnTexture();
-        if (customScreenTextures is { Count: > 0 })
-        {
-            for (var i = 0; i < customScreenTextures.Count; i++)
-            {
-                customScreenTextures[i].DrawOnTexture();
-            }
-        }
-        
-        Raylib.BeginDrawing();
-        Raylib.ClearBackground(BackgroundColorRgba.ToRayColor());
-
-        if (DeferredDrawingBeforeGame.Count > 0)
-        {
-            foreach (var action in DeferredDrawingBeforeGame.Values)
-            {
-                action.Invoke();
-            }
-        }
-        
-        //split custom screen textures into textures to draw to the screen before the game texture
-        //and textures to draw to the screen after the game texture
-        List<ScreenTexture>? drawBefore = null;
-        List<ScreenTexture>? drawAfter = null;
-        if (customScreenTextures is { Count: > 0 })
-        {
-            for (var i = 0; i < customScreenTextures.Count; i++)
-            {
-                //negative draw order means to draw it to screen before the game texture
-                if (customScreenTextures[i].DrawToScreenOrder < 0)
-                {
-                    drawBefore ??= new List<ScreenTexture>();//initialize if it has not been initialized yet
-                    drawBefore.Add(customScreenTextures[i]);
-                }
-                //otherwise it will be drawn to screen after the game texture
-                else
-                {
-                    drawAfter ??= new List<ScreenTexture>();//initialize if it has not been initialized yet
-                    drawAfter.Add(customScreenTextures[i]);
-                }
-            }
-        }
-
-        //draw screen textures to screen before the game texture
-        if (drawBefore is { Count: > 0 })
-        {
-            drawBefore.Sort(
-                (a, b) =>
-                {
-                    if (a.DrawToScreenOrder < b.DrawToScreenOrder) return -1;
-                    if (a.DrawToScreenOrder > b.DrawToScreenOrder) return 1;
-                    return 0;
-                }
-            );
-            for (var i = 0; i < drawBefore.Count; i++)
-            {
-                drawBefore[i].DrawToScreen();
-            }
-        }
-        
-        //draw game texture to screen
-        gameTexture.DrawToScreen();
-        
-        if (DeferredDrawingAfterGame.Count > 0)
-        {
-            foreach (var action in DeferredDrawingAfterGame.Values)
-            {
-                action.Invoke();
-            }
-        }
-        
-        //draw screen textures to screen after the game texture
-        if (drawAfter is { Count: > 0 })
-        {
-            drawAfter.Sort(
-                (a, b) =>
-                {
-                    if (a.DrawToScreenOrder < b.DrawToScreenOrder) return -1;
-                    if (a.DrawToScreenOrder > b.DrawToScreenOrder) return 1;
-                    return 0;
-                }
-            );
-            for (var i = 0; i < drawAfter.Count; i++)
-            {
-                drawAfter[i].DrawToScreen();
-            }
-        }
-        
-        ResolveDrawUI(UIScreenInfo);
-        
-        if (DeferredDrawingAfterUI.Count > 0)
-        {
-            foreach (var action in DeferredDrawingAfterUI.Values)
-            {
-                action.Invoke();
-            }
-        }
-        
-        if (Window.MouseOnScreen) DrawCursorUi(UIScreenInfo);
-        
-        Raylib.EndDrawing();
-    }
-    
-    private void EndGameloop()
-    {
-        EndRun();
-        UnloadContent();
-        Window.Close();
-        gameTexture.Unload();
-    }
-    private void GameTextureOnDrawGame(ScreenInfo gameScreenInfo, ScreenTexture texture)
-    {
-        ResolveDrawGame(gameScreenInfo);
-        if (Window.MouseOnScreen) DrawCursorGame(gameScreenInfo);
-    }
-    private void GameTextureOnDrawUI(ScreenInfo gameUiScreenInfo, ScreenTexture texture)
-    {
-        ResolveDrawGameUI(gameUiScreenInfo);
-        if (Window.MouseOnScreen) DrawCursorGameUi(gameUiScreenInfo);
-    }
-    private void GameTextureOnTextureResized(int w, int h)
-    {
-        ResolveOnGameTextureResized(w, h);
-    }
-    
-    private void AdvanceFixedUpdate(float dt)
-    {
-        const float maxFrameTime = 1f / 30f;
-        float frameTime = dt;
-        // var t = 0.0f;
-
-        if ( frameTime > maxFrameTime ) frameTime = maxFrameTime;
-        
-        physicsAccumulator += frameTime;
-        while ( physicsAccumulator >= FixedPhysicsTimestep )
-        {
-            FixedTime = FixedTime.TickF(FixedPhysicsFramerate);
-            ResolveFixedUpdate();
-            // t += FixedPhysicsTimestep;
-            physicsAccumulator -= FixedPhysicsTimestep;
-        }
-
-        float alpha = physicsAccumulator / FixedPhysicsTimestep;
-        ResolveInterpolateFixedUpdate(alpha);
-    }
-    
     #endregion
 
     #region Custom Screen Textures
@@ -974,378 +568,54 @@ public partial class Game
     /// </summary>
     public void ResetCamera() => Camera = basicCamera;
 
-
-    
-    #endregion
-    
-    #region Virtual
-
     /// <summary>
-    /// Called first after starting the gameloop.
+    /// Changes the game's rendering texture to a new one.
     /// </summary>
-    protected virtual void LoadContent() { }
-    /// <summary>
-    /// Called after LoadContent but before the main loop has started.
-    /// </summary>
-    protected virtual void BeginRun() { }
-
-    /// <summary>
-    /// Updates game state when fixed framerate is disabled. This is the standard update method
-    /// called every frame at variable intervals.
-    /// </summary>
-    /// <param name="time">Contains timing information for the current frame.</param>
-    /// <param name="game">Screen information for the main game area.</param>
-    /// <param name="gameUi">Screen information for the game's UI elements.</param>
-    /// <param name="ui">Screen information for the global UI.</param>
-    protected virtual void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
-    
-    /// <summary>
-    /// Executes before the fixed update when fixed framerate is enabled. Called once per frame
-    /// regardless of the fixed update interval.
-    /// </summary>
-    /// <param name="time">Contains timing information for the current frame.</param>
-    /// <param name="game">Screen information for the main game area.</param>
-    /// <param name="gameUi">Screen information for the game's UI elements.</param>
-    /// <param name="ui">Screen information for the global UI.</param>
-    protected virtual void PreFixedUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
-    
-    /// <summary>
-    /// Updates the game at a fixed time interval when fixed framerate is enabled. This method
-    /// ensures consistent physics and game logic calculations independent of frame rate.
-    /// </summary>
-    /// <param name="fixedTime">Contains timing information for the fixed update cycle.</param>
-    /// <param name="game">Screen information for the main game area.</param>
-    /// <param name="gameUi">Screen information for the game's UI elements.</param>
-    /// <param name="ui">Screen information for the global UI.</param>
-    protected virtual void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
-    
-    /// <summary>
-    /// Interpolates between fixed updates when fixed framerate is enabled. Called every frame
-    /// to provide smooth rendering between physics/logic steps.
-    /// </summary>
-    /// <param name="time">Contains timing information for the current frame.</param>
-    /// <param name="game">Screen information for the main game area.</param>
-    /// <param name="gameUi">Screen information for the game's UI elements.</param>
-    /// <param name="ui">Screen information for the global UI.</param>
-    /// <param name="f">Interpolation factor (0.0 to 1.0) between the current and next fixed update.</param>
-    protected virtual void InterpolateFixedUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui, float f) { }
-
-    
-    /// <summary>
-    /// Renders the main game content to the specified screen.
-    /// </summary>
-    /// <param name="game">The screen information for rendering the game content.</param>
-    protected virtual void DrawGame(ScreenInfo game) { }
-
-    /// <summary>
-    /// Renders the game user interface elements to the specified screen.
-    /// </summary>
-    /// <param name="gameUi">The screen information for rendering the game UI elements.</param>
-    protected virtual void DrawGameUI(ScreenInfo gameUi) { }
-
-    /// <summary>
-    /// Renders the general user interface elements to the specified screen.
-    /// </summary>
-    /// <param name="ui">The screen information for rendering the UI elements.</param>
-    protected virtual void DrawUI(ScreenInfo ui) { }
-
-
-    /// <summary>
-    /// Called before UnloadContent is called after the main gameloop has been exited.
-    /// </summary>
-    protected virtual void EndRun() { }
-    /// <summary>
-    /// Called after EndRun before the application terminates.
-    /// </summary>
-    protected virtual void UnloadContent() { }
-    
-    /// <summary>
-    /// Called when the game texture is resized.
-    /// </summary>
-    /// <param name="w">The new width of the game texture.</param>
-    /// <param name="h">The new height of the game texture.</param>
-    protected virtual void OnGameTextureResized(int w, int h) { }
-
-    /// <summary>
-    /// Called when the window size changes.
-    /// </summary>
-    /// <param name="conversion">The dimension conversion factors between window and game coordinates.</param>
-    protected virtual void OnWindowSizeChanged(DimensionConversionFactors conversion) { }
-
-    /// <summary>
-    /// Called when the window position changes.
-    /// </summary>
-    /// <param name="oldPos">The previous window position.</param>
-    /// <param name="newPos">The new window position.</param>
-    protected virtual void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos) { }
-
-    /// <summary>
-    /// Called when the game window moves to a different monitor.
-    /// </summary>
-    /// <param name="newMonitor">Information about the new monitor.</param>
-    protected virtual void OnMonitorChanged(MonitorInfo newMonitor) { }
-
-    /// <summary>
-    /// Called when the game's paused state changes.
-    /// </summary>
-    /// <param name="newPaused">The new paused state.</param>
-    protected virtual void OnPausedChanged(bool newPaused) { }
-
-    /// <summary>
-    /// Called when the active input device type changes.
-    /// </summary>
-    /// <param name="prevDeviceType">The previous input device type.</param>
-    /// <param name="newDeviceType">The new input device type.</param>
-    protected virtual void OnInputDeviceChanged(InputDeviceType prevDeviceType, InputDeviceType newDeviceType) { }
-
-    /// <summary>
-    /// Called when a gamepad is connected to the system.
-    /// </summary>
-    /// <param name="gamepad">The gamepad device that was connected.</param>
-    protected virtual void OnGamepadConnected(ShapeGamepadDevice gamepad) { }
-
-    /// <summary>
-    /// Called when a gamepad is disconnected from the system.
-    /// </summary>
-    /// <param name="gamepad">The gamepad device that was disconnected.</param>
-    protected virtual void OnGamepadDisconnected(ShapeGamepadDevice gamepad) { }
-
-    /// <summary>
-    /// Called when the mouse cursor enters the game window.
-    /// </summary>
-    protected virtual void OnMouseEnteredScreen() { }
-
-    /// <summary>
-    /// Called when the mouse cursor leaves the game window.
-    /// </summary>
-    protected virtual void OnMouseLeftScreen() { }
-
-    /// <summary>
-    /// Called when the mouse cursor visibility changes.
-    /// </summary>
-    /// <param name="visible">Whether the mouse cursor is now visible.</param>
-    protected virtual void OnMouseVisibilityChanged(bool visible) { }
-
-    /// <summary>
-    /// Called when the mouse input enabled state changes.
-    /// </summary>
-    /// <param name="enabled">Whether mouse input is now enabled.</param>
-    protected virtual void OnMouseEnabledChanged(bool enabled) { }
-
-    /// <summary>
-    /// Called when the window focus state changes.
-    /// </summary>
-    /// <param name="focused">Whether the window is now focused.</param>
-    protected virtual void OnWindowFocusChanged(bool focused) { }
-
-    /// <summary>
-    /// Called when the window fullscreen state changes.
-    /// </summary>
-    /// <param name="fullscreen">Whether the window is now in fullscreen mode.</param>
-    protected virtual void OnWindowFullscreenChanged(bool fullscreen) { }
-
-    /// <summary>
-    /// Called when the window maximize state changes.
-    /// </summary>
-    /// <param name="maximized">Whether the window is now maximized.</param>
-    protected virtual void OnWindowMaximizeChanged(bool maximized) { }
-
-    /// <summary>
-    /// Called when the window minimized state changes.
-    /// </summary>
-    /// <param name="minimized">Whether the window is now minimized.</param>
-    protected virtual void OnWindowMinimizedChanged(bool minimized) { }
-
-    /// <summary>
-    /// Called when the window hidden state changes.
-    /// </summary>
-    /// <param name="hidden">Whether the window is now hidden.</param>
-    protected virtual void OnWindowHiddenChanged(bool hidden) { }
-
-    /// <summary>
-    /// Called when the window topmost state changes.
-    /// </summary>
-    /// <param name="topmost">Whether the window is now in topmost (always on top) mode.</param>
-    protected virtual void OnWindowTopmostChanged(bool topmost) { }
-
-    /// <summary>
-    /// Allows modification of the mouse position before it's used for input processing.
-    /// </summary>
-    /// <param name="dt">Delta time since the last frame.</param>
-    /// <param name="mousePos">The current mouse position.</param>
-    /// <param name="screenArea">The screen area rectangle.</param>
-    /// <returns>The modified mouse position.</returns>
-    protected virtual Vector2 ChangeMousePos(float dt, Vector2 mousePos, Rect screenArea) => mousePos;
-
-    /// <summary>
-    /// Called when an input button is pressed.
-    /// </summary>
-    /// <param name="e">The input event containing information about the button press.</param>
-    protected virtual void OnButtonPressed(InputEvent e) { }
-
-    /// <summary>
-    /// Called when an input button is released.
-    /// </summary>
-    /// <param name="e">The input event containing information about the button release.</param>
-    protected virtual void OnButtonReleased(InputEvent e) { }
-    #endregion
-
-    #region Resolve
-    private void UpdateFlashes(float dt)
+    /// <param name="newScreenTexture">The new screen texture to use for game rendering.</param>
+    /// <returns>Returns the old game texture or null if the newScreenTexture is the same as the game texture.
+    /// The old ScreenTexture should be unloaded and disposed of if no longer needed!</returns>
+    public ScreenTexture? ChangeGameTexture(ScreenTexture newScreenTexture)
     {
-        for (int i = shapeFlashes.Count() - 1; i >= 0; i--)
-        {
-            var flash = shapeFlashes[i];
-            flash.Update(dt);
-            if (flash.IsFinished()) { shapeFlashes.RemoveAt(i); }
-        }
-    }
+        if (gameTexture == newScreenTexture) return null;
 
-    private void OnGamepadButtonReleased(ShapeGamepadDevice gamepad, ShapeGamepadButton button) => ResolveOnButtonReleased(new(gamepad, button));
-    private void OnGamepadButtonPressed(ShapeGamepadDevice gamepad, ShapeGamepadButton button) => ResolveOnButtonPressed(new(gamepad, button));
-    private void OnMouseButtonReleased(ShapeMouseButton button) => ResolveOnButtonReleased(new(button));
-    private void OnMouseButtonPressed(ShapeMouseButton button) => ResolveOnButtonPressed(new(button));
-    private void OnKeyboardButtonReleased(ShapeKeyboardButton button) => ResolveOnButtonReleased(new(button));
-    private void OnKeyboardButtonPressed(ShapeKeyboardButton button) => ResolveOnButtonPressed(new(button));
-    private void ResolveOnButtonPressed(InputEvent e)
-    {
-        OnButtonPressed(e);
-        CurScene.ResolveOnButtonPressed(e);
-    }
-    private void ResolveOnButtonReleased(InputEvent e)
-    {
-        OnButtonReleased(e);
-        CurScene.ResolveOnButtonReleased(e);
-    }
-    private void ResolveUpdate()
-    {
-        TriggerIntervalEventsUpdate(true, Time.Delta);
-        Update(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-        CurScene.ResolveUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-        TriggerIntervalEventsUpdate(false, Time.Delta);
-    }
-    private void ResolvePreFixedUpdate()
-    {
-        PreFixedUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-        CurScene.ResolvePreFixedUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-    }
-    private void ResolveFixedUpdate()
-    {
-        FixedUpdate(FixedTime, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-        CurScene.ResolveFixedUpdate(FixedTime, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-    }
-    private void ResolveInterpolateFixedUpdate(float f)
-    {
-        InterpolateFixedUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo, f);
-        CurScene.ResolveInterpolateFixedUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo, f);
-    }
-    private void ResolveOnGameTextureResized(int w, int h)
-    {
-        OnGameTextureResized(w, h);
-        CurScene.ResolveGameTextureResized(w, h);
-    }
-
-    // private void ResolveOnGameTextureClearBackground()
-    // {
-    //     OnGameTextureClearBackground();
-    //     CurScene.ResolveOnGameTextureClearBackground();
-    // }
-    private void ResolveDrawGame(ScreenInfo game)
-    {
-        TriggerIntervalEventsDrawGame(true, game);
-        DrawGame(game);
-        CurScene.ResolveDrawGame(game);
-        TriggerIntervalEventsDrawGame(false, game);
-    }
-    private void ResolveDrawGameUI(ScreenInfo gameUi)
-    {
-        TriggerIntervalEventsDrawGameUi(true, gameUi);;
-        DrawGameUI(gameUi);
-        CurScene.ResolveDrawGameUI(gameUi);
-        TriggerIntervalEventsDrawGameUi(false, gameUi);;
-    }
-    private void ResolveDrawUI(ScreenInfo ui)
-    {
-        TriggerIntervalEventsDrawUi(true, ui);
-        DrawUI(ui);
-        CurScene.ResolveDrawUI(ui);
-        TriggerIntervalEventsDrawUi(false, ui);
-    }
-    private void ResolveOnWindowSizeChanged(DimensionConversionFactors conversion)
-    {
-        OnWindowSizeChanged(conversion);
-        CurScene.ResolveOnWindowSizeChanged(conversion);
-    }
-    private void ResolveOnWindowPositionChanged(Vector2 oldPos, Vector2 newPos)
-    {
-        //Console.WriteLine($"Window Pos: {Raylib.GetWindowPosition()}");
-        OnWindowPositionChanged(oldPos, newPos);
-        CurScene.ResolveOnWindowPositionChanged(oldPos, newPos);
-    }
-    private void ResolveOnMonitorChanged(MonitorInfo newMonitor)
-    {
-        OnMonitorChanged(newMonitor);
-        CurScene.ResolveOnMonitorChanged(newMonitor);
-    }
-    private void ResolveOnPausedChanged(bool newPaused)
-    {
-        OnPausedChanged(newPaused);
-        CurScene.ResolveOnPausedChanged(newPaused);
-    }
-    private void ResolveOnMouseEnteredScreen()
-    {
-        OnMouseEnteredScreen();
-        CurScene.ResolveOnMouseEnteredScreen();
-    }
-    private void ResolveOnMouseLeftScreen()
-    {
-        OnMouseLeftScreen();
-        CurScene.ResolveOnMouseLeftScreen();
-    }
-    private void ResolveOnMouseVisibilityChanged(bool visible)
-    {
-        OnMouseVisibilityChanged(visible);
-        CurScene.ResolveOnMouseVisibilityChanged(visible);
-    }
-    private void ResolveOnMouseEnabledChanged(bool enabled)
-    {
-        OnMouseEnabledChanged(enabled);
-        CurScene.ResolveOnMouseEnabledChanged(enabled);
-    }
-    private void ResolveOnWindowFocusChanged(bool focused)
-    {
-        OnWindowFocusChanged(focused);
-        CurScene.ResolveOnWindowFocusChanged(focused);
-    }
-    private void ResolveOnWindowFullscreenChanged(bool fullscreen)
-    {
-        OnWindowFullscreenChanged(fullscreen);
-        CurScene.ResolveOnWindowFullscreenChanged(fullscreen);
-    }
-    private void ResolveOnWindowMaximizeChanged(bool maximized)
-    {
-        OnWindowMaximizeChanged(maximized);
-        CurScene.ResolveOnWindowMaximizeChanged(maximized);
+        gameTexture.OnTextureResized -= GameTextureOnTextureResized;
+        gameTexture.OnDrawGame -= GameTextureOnDrawGame;
+        gameTexture.OnDrawUI -= GameTextureOnDrawUI;
         
+        newScreenTexture.OnTextureResized += GameTextureOnTextureResized;
+        if(!newScreenTexture.Initialized) newScreenTexture.Initialize(Window.CurScreenSize, Window.MousePosition, curCamera);
+        newScreenTexture.OnDrawGame += GameTextureOnDrawGame;
+        newScreenTexture.OnDrawUI += GameTextureOnDrawUI;
+        
+        var old = gameTexture;
+        gameTexture = newScreenTexture;
+        
+        return old;
     }
-    private void ResolveOnWindowMinimizedChanged(bool minimized)
+    
+    /// <summary>
+    /// Starts the game loop and runs the game until it is terminated.
+    /// </summary>
+    /// <param name="launchParameters">Command-line arguments or parameters to configure the game at launch.</param>
+    /// <returns>An ExitCode object indicating whether the game should restart.</returns>
+    public ExitCode Run(params string[] launchParameters)
     {
-       OnWindowMinimizedChanged(minimized);
-       CurScene.ResolveOnWindowMinimizedChanged(minimized);
-    }
-    private void ResolveOnWindowHiddenChanged(bool hidden)
-    {
-        OnWindowHiddenChanged(hidden);
-        CurScene.ResolveOnWindowHiddenChanged(hidden);
-    }
-    private void ResolveOnWindowTopmostChanged(bool topmost)
-    {
-        OnWindowTopmostChanged(topmost);
-        CurScene.ResolveOnWindowTopmostChanged(topmost);
+        this.LaunchParams = launchParameters;
+
+        quit = false;
+        restart = false;
+        Raylib.SetExitKey(KeyboardKey.Null);
+
+        StartGameloop();
+        RunGameloop();
+        EndGameloop();
+        Raylib.CloseWindow();
+
+        return new ExitCode(restart);
     }
 
     #endregion
-
+    
     #region Gamepad Connection
     private void ResolveOnGamepadConnectionChanged(ShapeGamepadDevice gamepad, bool connected)
     {
@@ -1364,91 +634,6 @@ public partial class Game
     {
         OnInputDeviceChanged(prevDeviceType, newDeviceType);
         CurScene.ResolveOnInputDeviceChanged(prevDeviceType, newDeviceType);
-    }
-    #endregion
-
-    #region Read/Write to File
-    /// <summary>
-    /// Use the writeAction to write to the text file.
-    /// </summary>
-    /// <param name="path">The path were the file should be. A new one is created if it does not exist.</param>
-    /// <param name="fileName">The name of the file. Needs a valid extension.</param>
-    /// <param name="writeAction">The function that is called with the active StreamWriter. Use Write/ WriteLine functions to write.</param>
-    /// <exception cref="ArgumentException">Filename has no valid extension.</exception>
-    public static void WriteToFile(string path, string fileName, Action<StreamWriter> writeAction)
-    {
-        if (!Path.HasExtension(fileName))
-        {
-            throw new ArgumentException("File name must have a valid extension.");
-        }
-        
-        try
-        {
-            var fullPath = Path.Combine(path, fileName);
-            using (var writer = new StreamWriter(fullPath))
-            {
-                writeAction(writer);
-            }
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine("The file could not be read:");
-            Console.WriteLine(e.Message);
-        }
-    }
-
-    /// <summary>
-    /// Use the readAction to read from the file.
-    /// </summary>
-    /// <param name="path">The path were the file should be. A new one is created if it does not exist.</param>
-    /// <param name="fileName">The name of the file. Needs a valid extension.</param>
-    /// <param name="readAction">The function that is called with the active StreamReader. Use Read/ ReadLine functions to read.</param>
-    /// <exception cref="ArgumentException">Filename has no valid extension.</exception>
-    public static void ReadFromFile(string path, string fileName, Action<StreamReader> readAction)
-    {
-        
-        if (!Path.HasExtension(fileName))
-        {
-            throw new ArgumentException("File name must have a valid extension.");
-        }
-        
-        var fullPath = Path.Combine(path, fileName);
-        try
-        {
-            // Open the text file using a StreamReader.
-            using (StreamReader sr = new StreamReader(fullPath))
-            {
-                readAction(sr);
-            }
-        }
-        catch (Exception e)
-        {
-            // Print any errors to the console.
-            Console.WriteLine("The file could not be read:");
-            Console.WriteLine(e.Message);
-        }
-    }
-   
-    /// <summary>
-    /// Attempts to parse a string value into the specified enum type.
-    /// </summary>
-    /// <typeparam name="TEnum">The enum type to parse the string value into.</typeparam>
-    /// <param name="value">The string value to parse.</param>
-    /// <param name="result">When this method returns, contains the parsed enum value if the parsing succeeded, or the default value if parsing failed.</param>
-    /// <returns>True if the string was successfully parsed into an enum value; otherwise, false.</returns>
-    public static bool TryParseEnum<TEnum>(string value, out TEnum result) where TEnum : struct
-    {
-        if (typeof(TEnum).IsEnum)
-        {
-            if (Enum.TryParse(value, true, out TEnum parsedValue))
-            {
-                result = parsedValue;
-                return true;
-            }
-        }
-
-        result = default(TEnum);
-        return false;
     }
     #endregion
 }
