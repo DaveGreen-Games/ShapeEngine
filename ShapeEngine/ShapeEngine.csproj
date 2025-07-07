@@ -117,8 +117,4 @@
 		<None Include="LICENSE.txt" Pack="true" PackagePath=""/>
 	</ItemGroup>
 
-	<ItemGroup>
-	  <Folder Include="Deprecated\" />
-	</ItemGroup>
-
 </Project>
