@@ -28,7 +28,7 @@ public readonly struct SignedNormalizedDouble : IEquatable<SignedNormalizedDoubl
     /// <param name="b">The end value.</param>
     /// <param name="t">The interpolation factor, typically in the range [0, 1].</param>
     /// <returns>The interpolated double value.</returns>
-    public static double Lerp(double a, double b, NormalizedFloat t) => a + (b - a) * t.Value;
+    public static double Lerp(double a, double b, NormalizedDouble t) => a + (b - a) * t.Value;
 
     /// <summary>
     /// Calculates the interpolation factor between two values for a given value.
