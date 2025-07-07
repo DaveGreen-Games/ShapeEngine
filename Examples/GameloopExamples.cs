@@ -18,6 +18,7 @@ using ShapeEngine.Input;
 using ShapeEngine.Random;
 using ShapeEngine.Text;
 using ShapeEngine.UI;
+using Game = ShapeEngine.Core.GameDef.Game;
 
 
 namespace Examples

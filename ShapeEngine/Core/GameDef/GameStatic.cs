@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using ShapeEngine.StaticLib;
 
-namespace ShapeEngine.Core;
+namespace ShapeEngine.Core.GameDef;
 
 public partial class Game
 {

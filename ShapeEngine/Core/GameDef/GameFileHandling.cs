@@ -1,4 +1,4 @@
-namespace ShapeEngine.Core;
+namespace ShapeEngine.Core.GameDef;
 
 public partial class Game
 {

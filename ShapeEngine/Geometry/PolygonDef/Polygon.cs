@@ -12,6 +12,7 @@ using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.Geometry.TriangulationDef;
 using ShapeEngine.Random;
 using ShapeEngine.StaticLib;
+using Game = ShapeEngine.Core.GameDef.Game;
 using Size = ShapeEngine.Core.Structs.Size;
 
 namespace ShapeEngine.Geometry.PolygonDef;

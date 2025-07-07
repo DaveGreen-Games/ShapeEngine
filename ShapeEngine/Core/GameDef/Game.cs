@@ -5,7 +5,7 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
 using ShapeEngine.Screen;
 
-namespace ShapeEngine.Core;
+namespace ShapeEngine.Core.GameDef;
 
 /// <summary>
 /// The core game class.

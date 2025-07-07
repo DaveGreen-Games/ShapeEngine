@@ -530,7 +530,7 @@ public sealed class GameWindow
 
         cursorState = GetCurCursorState();
 
-        if (Game.IsOSX()) osxWindowScaleDpi = Raylib.GetWindowScaleDPI();
+        if (GameDef.Game.IsOSX()) osxWindowScaleDpi = Raylib.GetWindowScaleDPI();
         else osxWindowScaleDpi = new Vector2(1, 1);
 
         CalculateMonitorConversionFactors();
@@ -976,7 +976,7 @@ public sealed class GameWindow
         int monitor = Raylib.GetCurrentMonitor();
         int mw = Raylib.GetMonitorWidth(monitor);
         int mh = Raylib.GetMonitorHeight(monitor);
-        if (Game.IsOSX())
+        if (GameDef.Game.IsOSX())
         {
              if (IsWindowBorderlessFullscreen() || IsWindowFullscreen())
              {

@@ -29,7 +29,7 @@ public abstract class Scene
     /// <summary>
     /// If the scene is Active Game will be set.
     /// </summary>
-    public Game? Game { get; private set; }
+    public GameDef.Game? Game { get; private set; }
     
     /// <summary>
     /// The current SpawnArea of this scene.
@@ -195,7 +195,7 @@ public abstract class Scene
     
     #region Internal
 
-    internal void SetGameReference(Game? game) => Game = game;
+    internal void SetGameReference(GameDef.Game? game) => Game = game;
 
     internal void ResolveActivate(Scene oldScene)
     {

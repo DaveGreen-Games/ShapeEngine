@@ -3,7 +3,7 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
 using ShapeEngine.Screen;
 
-namespace ShapeEngine.Core;
+namespace ShapeEngine.Core.GameDef;
 
 public partial class Game
 {

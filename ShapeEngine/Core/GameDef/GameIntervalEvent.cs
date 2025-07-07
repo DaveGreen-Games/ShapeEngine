@@ -1,6 +1,6 @@
 using ShapeEngine.Core.Structs;
 
-namespace ShapeEngine.Core;
+namespace ShapeEngine.Core.GameDef;
 
 
 public partial class Game
@@ -48,7 +48,7 @@ public partial class Game
         private bool finished;
 
         /// <summary>
-        /// Initializes a new <see cref="ShapeEngine.Core.Game.IntervalEvent"/> that triggers every frame.
+        /// Initializes a new <see cref="GameDef.Game.IntervalEvent"/> that triggers every frame.
         /// </summary>
         /// <remarks>
         /// Sets <c>Interval</c> to <c>0</c>, causing the event to fire on every update.
@@ -60,7 +60,7 @@ public partial class Game
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ShapeEngine.Core.Game.IntervalEvent"/> class with a custom interval.
+        /// Initializes a new instance of the <see cref="GameDef.Game.IntervalEvent"/> class with a custom interval.
         /// </summary>
         /// <param name="interval">
         /// The interval duration in seconds.

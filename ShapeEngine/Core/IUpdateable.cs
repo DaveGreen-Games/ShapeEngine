@@ -1,3 +1,4 @@
+using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.Core;
@@ -24,7 +25,7 @@ public interface IUpdateable
     public void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui);
     
     /// <summary>
-    /// Called at a fixed interval when <see cref="Core.Game.FixedPhysicsFramerate"/> is enabled.
+    /// Called at a fixed interval when <see cref="GameDef.Game.FixedPhysicsFramerate"/> is enabled.
     /// </summary>
     /// <param name="fixedTime">The fixed time step for this update.</param>
     /// <param name="game">Screen information for the main game view.</param>
@@ -36,7 +37,7 @@ public interface IUpdateable
     public void FixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui);
     
     /// <summary>
-    /// Called every frame after <see cref="FixedUpdate"/> when <see cref="Core.Game.FixedPhysicsFramerate"/> is enabled,
+    /// Called every frame after <see cref="FixedUpdate"/> when <see cref="GameDef.Game.FixedPhysicsFramerate"/> is enabled,
     /// to interpolate between fixed updates.
     /// </summary>
     /// <param name="time">The current game time for this frame.</param>

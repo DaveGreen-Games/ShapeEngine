@@ -4,6 +4,7 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.StaticLib;
+using Game = ShapeEngine.Core.GameDef.Game;
 
 namespace ShapeEngine.Geometry.PointsDef;
 
