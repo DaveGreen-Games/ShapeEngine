@@ -1,4 +1,5 @@
 ﻿global using static Examples.Program;
+using ShapeEngine.Core;
 
 namespace Examples;
 public static class Program

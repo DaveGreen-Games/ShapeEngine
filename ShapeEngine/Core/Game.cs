@@ -10,11 +10,13 @@ using ShapeEngine.StaticLib;
 using ShapeEngine.Screen;
 
 namespace ShapeEngine.Core;
+
+
 /// <summary>
 /// The core game class.
 /// Inherit this class, create a new instance of this class and call Run() to start the game.
 /// </summary>
-public class Game
+public partial class Game
 {
     /// <summary>
     /// Gets the singleton instance of the current game.
@@ -1217,8 +1219,10 @@ public class Game
     }
     private void ResolveUpdate()
     {
+        TriggerIntervalEventsUpdate(true, Time.Delta);
         Update(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
         CurScene.ResolveUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+        TriggerIntervalEventsUpdate(false, Time.Delta);
     }
     private void ResolvePreFixedUpdate()
     {
@@ -1248,18 +1252,24 @@ public class Game
     // }
     private void ResolveDrawGame(ScreenInfo game)
     {
+        TriggerIntervalEventsDrawGame(true, game);
         DrawGame(game);
         CurScene.ResolveDrawGame(game);
+        TriggerIntervalEventsDrawGame(false, game);
     }
     private void ResolveDrawGameUI(ScreenInfo gameUi)
     {
+        TriggerIntervalEventsDrawGameUi(true, gameUi);;
         DrawGameUI(gameUi);
         CurScene.ResolveDrawGameUI(gameUi);
+        TriggerIntervalEventsDrawGameUi(false, gameUi);;
     }
     private void ResolveDrawUI(ScreenInfo ui)
     {
+        TriggerIntervalEventsDrawUi(true, ui);
         DrawUI(ui);
         CurScene.ResolveDrawUI(ui);
+        TriggerIntervalEventsDrawUi(false, ui);
     }
     private void ResolveOnWindowSizeChanged(DimensionConversionFactors conversion)
     {
