@@ -2,6 +2,10 @@ using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.Core;
 
+//TODO: Review 
+// Does this make sense...
+// The logic itself is very simple but it is hard to inject into the draw/update system
+// I think the current implementation is easy but I am not sure yet
 public partial class Game
 {
     /// <summary>
@@ -43,8 +47,8 @@ public partial class Game
         /// </summary>
         public event Action<bool, ScreenInfo>? OnDrawUi;
 
-        private float timer = 0f;
-        private bool finished = false;
+        private float timer;
+        private bool finished;
 
         /// <summary>
         /// Initializes a new <see cref="ShapeEngine.Core.Game.IntervalEvent"/> that triggers every frame.
@@ -52,7 +56,7 @@ public partial class Game
         /// <remarks>
         /// Sets <c>Interval</c> to <c>0</c>, causing the event to fire on every update.
         /// </remarks>
-        internal IntervalEvent()
+        public IntervalEvent()
         {
             Interval = 0f;
             timer = Interval;
@@ -65,7 +69,7 @@ public partial class Game
         /// The interval duration in seconds.
         /// If the value is less than or equal to 0, the event will trigger on every update.
         /// </param>
-        internal IntervalEvent(float interval)
+        public IntervalEvent(float interval)
         {
             Interval = interval;
             timer = Interval;
@@ -94,8 +98,7 @@ public partial class Game
             if (!finished) return;
             OnDrawUi?.Invoke(pre, info);
         }
-
-
+        
         /// <summary>
         /// Updates the interval timer and determines if the event should be triggered.
         /// </summary>
