@@ -7,6 +7,21 @@ namespace ShapeEngine.Core.Structs;
 public readonly struct SignedNormalizedDouble : IEquatable<SignedNormalizedDouble>
 {
     /// <summary>
+    /// Represents the signed normalized double value -1.
+    /// </summary>
+    public static readonly SignedNormalizedDouble MinusOne = new(-1.0);
+    
+    /// <summary>
+    /// Represents the signed normalized double value 0.
+    /// </summary>
+    public static readonly SignedNormalizedDouble Zero = new(0.0);
+    
+    /// <summary>
+    /// Represents the signed normalized double value 1.
+    /// </summary>
+    public static readonly SignedNormalizedDouble One = new(1.0);
+    
+    /// <summary>
     /// Initializes a new instance of <see cref="SignedNormalizedDouble"/>, clamping the value to <c>[-1, 1]</c>.
     /// </summary>
     /// <param name="value">The value to clamp.</param>
@@ -19,13 +34,26 @@ public readonly struct SignedNormalizedDouble : IEquatable<SignedNormalizedDoubl
     /// Gets the signed normalized value in the range <c>[-1, 1]</c>.
     /// </summary>
     public double Value { get; }
-
     
     /// <summary>
     /// Gets the inverse (negated value) of this <see cref="SignedNormalizedDouble"/>.
     /// </summary>
     public SignedNormalizedDouble Inverse => new(-Value);
   
+    /// <summary>
+    /// Returns a <see cref="SignedNormalizedDouble"/> representing the minimum of this value and another.
+    /// </summary>
+    /// <param name="other">The other <see cref="SignedNormalizedDouble"/> to compare with.</param>
+    /// <returns>The minimum value as a <see cref="SignedNormalizedDouble"/>.</returns>
+    public SignedNormalizedDouble Min(SignedNormalizedDouble other) => new(Math.Min(Value, other.Value));
+    
+    /// <summary>
+    /// Returns a <see cref="SignedNormalizedDouble"/> representing the maximum of this value and another.
+    /// </summary>
+    /// <param name="other">The other <see cref="SignedNormalizedDouble"/> to compare with.</param>
+    /// <returns>The maximum value as a <see cref="SignedNormalizedDouble"/>.</returns>
+    public SignedNormalizedDouble Max(SignedNormalizedDouble other) => new(Math.Max(Value, other.Value));
+    
     /// <summary>
     /// Linearly interpolates between two double values using a normalized interpolation factor.
     /// </summary>

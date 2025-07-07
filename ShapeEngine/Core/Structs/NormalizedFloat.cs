@@ -6,6 +6,16 @@ namespace ShapeEngine.Core.Structs;
 public readonly struct NormalizedFloat : IEquatable<NormalizedFloat>
 {
     /// <summary>
+    /// Represents the normalized float value 0.
+    /// </summary>
+    public static readonly NormalizedFloat Zero = new(0f);
+    
+    /// <summary>
+    /// Represents the normalized float value 1.
+    /// </summary>
+    public static readonly NormalizedFloat One = new(1f);
+    
+    /// <summary>
     /// Initializes a new instance of <see cref="NormalizedFloat"/>, clamping the value to <c>[0, 1]</c>.
     /// </summary>
     /// <param name="value">The value to clamp.</param>
@@ -24,6 +34,19 @@ public readonly struct NormalizedFloat : IEquatable<NormalizedFloat>
     /// </summary>
     public NormalizedFloat Inverse => new(1f - Value);
     
+    /// <summary>
+    /// Returns a <see cref="NormalizedFloat"/> representing the minimum of this value and another.
+    /// </summary>
+    /// <param name="other">The other <see cref="NormalizedFloat"/> to compare with.</param>
+    /// <returns>The minimum value as a <see cref="NormalizedFloat"/>.</returns>
+    public NormalizedFloat Min(NormalizedFloat other) => new(MathF.Min(Value, other.Value));
+    
+    /// <summary>
+    /// Returns a <see cref="NormalizedFloat"/> representing the maximum of this value and another.
+    /// </summary>
+    /// <param name="other">The other <see cref="NormalizedFloat"/> to compare with.</param>
+    /// <returns>The maximum value as a <see cref="NormalizedFloat"/>.</returns>
+    public NormalizedFloat Max(NormalizedFloat other) => new(MathF.Max(Value, other.Value));
 
     /// <summary>
     /// Linearly interpolates between two float values using a normalized interpolation factor.

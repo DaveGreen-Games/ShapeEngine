@@ -6,6 +6,16 @@ namespace ShapeEngine.Core.Structs;
 public readonly struct NormalizedDouble  : IEquatable<NormalizedDouble>
 {
     /// <summary>
+    /// Represents the normalized double value 0.
+    /// </summary>
+    public static readonly NormalizedDouble Zero = new(0.0);
+    
+    /// <summary>
+    /// Represents the normalized double value 1.
+    /// </summary>
+    public static readonly NormalizedDouble One = new(1.0);
+    
+    /// <summary>
     /// Initializes a new instance of <see cref="NormalizedDouble"/>, clamping the value to <c>[0, 1]</c>.
     /// </summary>
     /// <param name="value">The value to clamp.</param>
@@ -24,6 +34,20 @@ public readonly struct NormalizedDouble  : IEquatable<NormalizedDouble>
     /// </summary>
     public NormalizedDouble Inverse => new(1.0 - Value);
 
+    /// <summary>
+    /// Returns a <see cref="NormalizedDouble"/> representing the minimum of this value and another.
+    /// </summary>
+    /// <param name="other">The other <see cref="NormalizedDouble"/> to compare with.</param>
+    /// <returns>The minimum value as a <see cref="NormalizedDouble"/>.</returns>
+    public NormalizedDouble Min(NormalizedDouble other) => new(Math.Min(Value, other.Value));
+    
+    /// <summary>
+    /// Returns a <see cref="NormalizedDouble"/> representing the maximum of this value and another.
+    /// </summary>
+    /// <param name="other">The other <see cref="NormalizedDouble"/> to compare with.</param>
+    /// <returns>The maximum value as a <see cref="NormalizedDouble"/>.</returns>
+    public NormalizedDouble Max(NormalizedDouble other) => new(Math.Max(Value, other.Value));
+    
     /// <summary>
     /// Linearly interpolates between two double values using a normalized interpolation factor.
     /// </summary>

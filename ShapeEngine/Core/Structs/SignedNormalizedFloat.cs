@@ -6,6 +6,21 @@ namespace ShapeEngine.Core.Structs;
 public readonly struct SignedNormalizedFloat : IEquatable<SignedNormalizedFloat>
 {
     /// <summary>
+    /// Represents the signed normalized float value -1.
+    /// </summary>
+    public static readonly SignedNormalizedFloat MinusOne = new(-1f);
+    
+    /// <summary>
+    /// Represents the signed normalized float value 0.
+    /// </summary>
+    public static readonly SignedNormalizedFloat Zero = new(0f);
+    
+    /// <summary>
+    /// Represents the signed normalized float value 1.
+    /// </summary>
+    public static readonly SignedNormalizedFloat One = new(1f);
+    
+    /// <summary>
     /// Initializes a new instance of <see cref="SignedNormalizedFloat"/>, clamping the value to <c>[-1, 1]</c>.
     /// </summary>
     /// <param name="value">The value to clamp.</param>
@@ -23,6 +38,20 @@ public readonly struct SignedNormalizedFloat : IEquatable<SignedNormalizedFloat>
     /// Gets the inverse of the current <see cref="SignedNormalizedFloat"/> value.
     /// </summary>
     public SignedNormalizedFloat Inverse => new(-Value);
+    
+    /// <summary>
+    /// Returns a <see cref="SignedNormalizedFloat"/> representing the minimum of this value and another.
+    /// </summary>
+    /// <param name="other">The other <see cref="SignedNormalizedFloat"/> to compare with.</param>
+    /// <returns>The minimum value as a <see cref="SignedNormalizedFloat"/>.</returns>
+    public SignedNormalizedFloat Min(SignedNormalizedFloat other) => new(MathF.Min(Value, other.Value));
+    
+    /// <summary>
+    /// Returns a <see cref="SignedNormalizedFloat"/> representing the maximum of this value and another.
+    /// </summary>
+    /// <param name="other">The other <see cref="SignedNormalizedFloat"/> to compare with.</param>
+    /// <returns>The maximum value as a <see cref="SignedNormalizedFloat"/>.</returns>
+    public SignedNormalizedFloat Max(SignedNormalizedFloat other) => new(MathF.Max(Value, other.Value));
     
   
     /// <summary>
