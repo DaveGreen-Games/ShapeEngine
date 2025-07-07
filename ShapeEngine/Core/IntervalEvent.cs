@@ -2,10 +2,7 @@ using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.Core;
 
-//TODO: Review 
-// Does this make sense...
-// The logic itself is very simple but it is hard to inject into the draw/update system
-// I think the current implementation is easy but I am not sure yet
+
 public partial class Game
 {
     /// <summary>
@@ -126,22 +123,16 @@ public partial class Game
     /// <summary>
     /// Stores all active <see cref="IntervalEvent"/> instances managed by the game.
     /// </summary>
-    private readonly List<IntervalEvent> intervalEvents = [];
+    private readonly HashSet<IntervalEvent> intervalEvents = [];
 
     /// <summary>
-    /// Adds a new <see cref="IntervalEvent"/> with the specified interval.
+    /// Adds a new <see cref="IntervalEvent"/> to the managed set.
     /// </summary>
-    /// <param name="interval">
-    /// The interval duration in seconds for the event.
-    /// If the value is less than or equal to 0, the event will trigger on every update frame.
+    /// <param name="intervalEvent">
+    /// The <see cref="IntervalEvent"/> instance to add.
     /// </param>
-    /// <returns>The created <see cref="IntervalEvent"/> instance.</returns>
-    public IntervalEvent AddIntervalEvent(float interval)
-    {
-        var intervalEvent = new IntervalEvent(interval);
-        intervalEvents.Add(intervalEvent);
-        return intervalEvent;
-    }
+    /// <returns>True if the event was added; otherwise, false.</returns>
+    public bool AddIntervalEvent(IntervalEvent intervalEvent) => intervalEvents.Add(intervalEvent);
 
     /// <summary>
     /// Removes the specified <see cref="IntervalEvent"/> from the list.
