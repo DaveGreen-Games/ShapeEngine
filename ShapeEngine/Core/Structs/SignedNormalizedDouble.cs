@@ -20,6 +20,11 @@ public readonly struct SignedNormalizedDouble : IEquatable<SignedNormalizedDoubl
     /// </summary>
     public double Value { get; }
 
+    
+    /// <summary>
+    /// Gets the inverse (negated value) of this <see cref="SignedNormalizedDouble"/>.
+    /// </summary>
+    public SignedNormalizedDouble Inverse => new(-Value);
   
     /// <summary>
     /// Linearly interpolates between two double values using a normalized interpolation factor.
@@ -35,7 +40,68 @@ public readonly struct SignedNormalizedDouble : IEquatable<SignedNormalizedDoubl
     /// </summary>
     public static SignedNormalizedDouble InverseLerp(double a, double b, double value)
         => new((value - a) / (b - a));
+    
+    /// <summary>
+    /// Adds two <see cref="SignedNormalizedDouble"/> values, clamping the result.
+    /// </summary>
+    public static SignedNormalizedDouble operator +(SignedNormalizedDouble a, SignedNormalizedDouble b) => new(a.Value + b.Value);
 
+    /// <summary>
+    /// Subtracts one <see cref="SignedNormalizedDouble"/> from another, clamping the result.
+    /// </summary>
+    public static SignedNormalizedDouble operator -(SignedNormalizedDouble a, SignedNormalizedDouble b) => new(a.Value - b.Value);
+    
+    /// <summary>
+    /// Multiplies two <see cref="SignedNormalizedDouble"/> values, clamping the result to <c>[0, 1]</c>.
+    /// </summary>
+    public static SignedNormalizedDouble operator *(SignedNormalizedDouble a, SignedNormalizedDouble b) => new(a.Value * b.Value);
+    
+    /// <summary>
+    /// Divides one <see cref="SignedNormalizedDouble"/> by another, clamping the result to <c>[0, 1]</c>. Returns 0 if the divisor is less than or equal to 0.
+    /// </summary>
+    public static SignedNormalizedDouble operator /(SignedNormalizedDouble a, SignedNormalizedDouble b) => b.Value <= 0f ? new(0f) : new(a.Value / b.Value);
+    
+    /// <summary>
+    /// Adds a double and a <see cref="SignedNormalizedDouble"/>, clamping the result to <c>[0, 1]</c>.
+    /// </summary>
+    public static SignedNormalizedDouble operator +(double a, SignedNormalizedDouble b) => new(a + b.Value);
+    
+    /// <summary>
+    /// Subtracts a <see cref="SignedNormalizedDouble"/> from a double, clamping the result to <c>[0, 1]</c>.
+    /// </summary>
+    public static SignedNormalizedDouble operator -(double a, SignedNormalizedDouble b) => new(a - b.Value);
+    
+    /// <summary>
+    /// Multiplies a double by a <see cref="SignedNormalizedDouble"/> and divides by the normalized value, clamping the result to <c>[0, 1]</c>. Returns 0 if the divisor is less than or equal to 0.
+    /// </summary>
+    public static SignedNormalizedDouble operator /(double a, SignedNormalizedDouble b) => b.Value <= 0 ? new(0f) : new(a * b.Value);
+    
+    /// <summary>
+    /// Multiplies a double by a <see cref="SignedNormalizedDouble"/>, clamping the result.
+    /// </summary>
+    public static SignedNormalizedDouble operator *(double a, SignedNormalizedDouble b) => new(a * b.Value);
+    
+    /// <summary>
+    /// Adds a <see cref="SignedNormalizedDouble"/> and a double, clamping the result to <c>[0, 1]</c>.
+    /// </summary>
+    public static SignedNormalizedDouble operator +(SignedNormalizedDouble a, double b) => new(a.Value + b);
+    
+    /// <summary>
+    /// Subtracts a double from a <see cref="SignedNormalizedDouble"/>, clamping the result to <c>[0, 1]</c>.
+    /// </summary>
+    public static SignedNormalizedDouble operator -(SignedNormalizedDouble a, double b) => new(a.Value - b);
+    
+    /// <summary>
+    /// Multiplies a <see cref="SignedNormalizedDouble"/> by a double, clamping the result.
+    /// </summary>
+    public static SignedNormalizedDouble operator *(SignedNormalizedDouble a, double b) => new(a.Value * b);
+    
+    /// <summary>
+    /// Divides a <see cref="SignedNormalizedDouble"/> by a double, clamping the result.
+    /// </summary>
+    public static SignedNormalizedDouble operator /(SignedNormalizedDouble a, double b) => new(a.Value / b);
+
+    
     /// <summary>
     /// Explicitly converts a double to a <see cref="SignedNormalizedDouble"/>, clamping to <c>[0, 1]</c>.
     /// </summary>
@@ -45,37 +111,7 @@ public readonly struct SignedNormalizedDouble : IEquatable<SignedNormalizedDoubl
     /// Implicitly converts a <see cref="SignedNormalizedDouble"/> to a double.
     /// </summary>
     public static implicit operator double(SignedNormalizedDouble normalized) => normalized.Value;
-
-    /// <summary>
-    /// Adds two <see cref="SignedNormalizedDouble"/> values, clamping the result.
-    /// </summary>
-    public static SignedNormalizedDouble operator +(SignedNormalizedDouble a, SignedNormalizedDouble b)
-        => new(a.Value + b.Value);
-
-    /// <summary>
-    /// Subtracts one <see cref="SignedNormalizedDouble"/> from another, clamping the result.
-    /// </summary>
-    public static SignedNormalizedDouble operator -(SignedNormalizedDouble a, SignedNormalizedDouble b)
-        => new(a.Value - b.Value);
-
-    /// <summary>
-    /// Multiplies a <see cref="SignedNormalizedDouble"/> by a double, clamping the result.
-    /// </summary>
-    public static SignedNormalizedDouble operator *(SignedNormalizedDouble a, double b)
-        => new(a.Value * b);
-
-    /// <summary>
-    /// Multiplies a double by a <see cref="SignedNormalizedDouble"/>, clamping the result.
-    /// </summary>
-    public static SignedNormalizedDouble operator *(double a, SignedNormalizedDouble b)
-        => new(a * b.Value);
-
-    /// <summary>
-    /// Divides a <see cref="SignedNormalizedDouble"/> by a double, clamping the result.
-    /// </summary>
-    public static SignedNormalizedDouble operator /(SignedNormalizedDouble a, double b)
-        => new(a.Value / b);
-
+    
     /// <summary>
     /// Explicitly converts a <see cref="SignedNormalizedDouble"/> to a <see cref="NormalizedDouble"/>.
     /// The conversion maps the range [-1, 1] to [0, 1].
@@ -94,6 +130,7 @@ public readonly struct SignedNormalizedDouble : IEquatable<SignedNormalizedDoubl
     /// </summary>
     public static explicit operator SignedNormalizedFloat(SignedNormalizedDouble value) => new((float)value.Value);
 
+    
     /// <inheritdoc/>
     public override string ToString() => Value.ToString("F2");
 

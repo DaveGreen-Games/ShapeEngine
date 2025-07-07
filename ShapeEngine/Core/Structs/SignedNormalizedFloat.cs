@@ -19,6 +19,11 @@ public readonly struct SignedNormalizedFloat : IEquatable<SignedNormalizedFloat>
     /// </summary>
     public float Value { get; }
 
+    /// <summary>
+    /// Gets the inverse of the current <see cref="SignedNormalizedFloat"/> value.
+    /// </summary>
+    public SignedNormalizedFloat Inverse => new(-Value);
+    
   
     /// <summary>
     /// Linearly interpolates between two float values using a normalized interpolation factor.
@@ -35,6 +40,68 @@ public readonly struct SignedNormalizedFloat : IEquatable<SignedNormalizedFloat>
     public static SignedNormalizedFloat InverseLerp(float a, float b, float value)
         => new((value - a) / (b - a));
 
+    
+    /// <summary>
+    /// Adds two <see cref="SignedNormalizedFloat"/> values, clamping the result.
+    /// </summary>
+    public static SignedNormalizedFloat operator +(SignedNormalizedFloat a, SignedNormalizedFloat b) => new(a.Value + b.Value);
+
+    /// <summary>
+    /// Subtracts one <see cref="SignedNormalizedFloat"/> from another, clamping the result.
+    /// </summary>
+    public static SignedNormalizedFloat operator -(SignedNormalizedFloat a, SignedNormalizedFloat b) => new(a.Value - b.Value);
+    
+    /// <summary>
+    /// Multiplies two <see cref="SignedNormalizedFloat"/> values, clamping the result to <c>[0, 1]</c>.
+    /// </summary>
+    public static SignedNormalizedFloat operator *(SignedNormalizedFloat a, SignedNormalizedFloat b) => new(a.Value * b.Value);
+    
+    /// <summary>
+    /// Divides one <see cref="SignedNormalizedFloat"/> by another, clamping the result to <c>[0, 1]</c>. Returns 0 if the divisor is less than or equal to 0.
+    /// </summary>
+    public static SignedNormalizedFloat operator /(SignedNormalizedFloat a, SignedNormalizedFloat b) => b.Value <= 0f ? new(0f) : new(a.Value / b.Value);
+    
+    /// <summary>
+    /// Adds a float and a <see cref="SignedNormalizedFloat"/>, clamping the result to <c>[0, 1]</c>.
+    /// </summary>
+    public static SignedNormalizedFloat operator +(float a, SignedNormalizedFloat b) => new(a + b.Value);
+    
+    /// <summary>
+    /// Subtracts a <see cref="SignedNormalizedFloat"/> from a float, clamping the result to <c>[0, 1]</c>.
+    /// </summary>
+    public static SignedNormalizedFloat operator -(float a, SignedNormalizedFloat b) => new(a - b.Value);
+    
+    /// <summary>
+    /// Multiplies a float by a <see cref="SignedNormalizedFloat"/> and divides by the normalized value, clamping the result to <c>[0, 1]</c>. Returns 0 if the divisor is less than or equal to 0.
+    /// </summary>
+    public static SignedNormalizedFloat operator /(float a, SignedNormalizedFloat b) => b.Value <= 0 ? new(0f) : new(a * b.Value);
+    
+    /// <summary>
+    /// Multiplies a float by a <see cref="SignedNormalizedFloat"/>, clamping the result.
+    /// </summary>
+    public static SignedNormalizedFloat operator *(float a, SignedNormalizedFloat b) => new(a * b.Value);
+    
+    /// <summary>
+    /// Adds a <see cref="SignedNormalizedFloat"/> and a float, clamping the result to <c>[0, 1]</c>.
+    /// </summary>
+    public static SignedNormalizedFloat operator +(SignedNormalizedFloat a, float b) => new(a.Value + b);
+    
+    /// <summary>
+    /// Subtracts a float from a <see cref="SignedNormalizedFloat"/>, clamping the result to <c>[0, 1]</c>.
+    /// </summary>
+    public static SignedNormalizedFloat operator -(SignedNormalizedFloat a, float b) => new(a.Value - b);
+    
+    /// <summary>
+    /// Multiplies a <see cref="SignedNormalizedFloat"/> by a float, clamping the result.
+    /// </summary>
+    public static SignedNormalizedFloat operator *(SignedNormalizedFloat a, float b) => new(a.Value * b);
+    
+    /// <summary>
+    /// Divides a <see cref="SignedNormalizedFloat"/> by a float, clamping the result.
+    /// </summary>
+    public static SignedNormalizedFloat operator /(SignedNormalizedFloat a, float b) => new(a.Value / b);
+
+    
     /// <summary>
     /// Explicitly converts a float to a <see cref="SignedNormalizedFloat"/>, clamping to <c>[0, 1]</c>.
     /// </summary>
@@ -43,55 +110,26 @@ public readonly struct SignedNormalizedFloat : IEquatable<SignedNormalizedFloat>
     /// <summary>
     /// Implicitly converts a <see cref="SignedNormalizedFloat"/> to a float.
     /// </summary>
-    public static implicit operator float(SignedNormalizedFloat normalized) => normalized.Value;
+    public static implicit operator float(SignedNormalizedFloat normalized) => normalized.Value; 
+    
+    /// <summary>
+    /// Explicitly converts a <see cref="SignedNormalizedFloat"/> to a <see cref="NormalizedDouble"/>.
+    /// The value is mapped from \[-1, 1\] to \[0, 1\].
+    /// </summary>
+    public static explicit operator NormalizedDouble(SignedNormalizedFloat value) => new((value.Value + 1.0) / 2.0);
 
     /// <summary>
-    /// Adds two <see cref="SignedNormalizedFloat"/> values, clamping the result.
+    /// Explicitly converts a <see cref="SignedNormalizedFloat"/> to a <see cref="NormalizedFloat"/>.
+    /// The value is mapped from \[-1, 1\] to \[0, 1\].
     /// </summary>
-    public static SignedNormalizedFloat operator +(SignedNormalizedFloat a, SignedNormalizedFloat b)
-        => new(a.Value + b.Value);
+    public static explicit operator NormalizedFloat(SignedNormalizedFloat value) => new((value.Value + 1.0f) / 2.0f);
 
     /// <summary>
-    /// Subtracts one <see cref="SignedNormalizedFloat"/> from another, clamping the result.
+    /// Explicitly converts a <see cref="SignedNormalizedFloat"/> to a <see cref="SignedNormalizedDouble"/>.
     /// </summary>
-    public static SignedNormalizedFloat operator -(SignedNormalizedFloat a, SignedNormalizedFloat b)
-        => new(a.Value - b.Value);
+    public static explicit operator SignedNormalizedDouble(SignedNormalizedFloat value) => new(value.Value);
 
-    /// <summary>
-    /// Multiplies a <see cref="SignedNormalizedFloat"/> by a float, clamping the result.
-    /// </summary>
-    public static SignedNormalizedFloat operator *(SignedNormalizedFloat a, float b)
-        => new(a.Value * b);
-
-    /// <summary>
-    /// Multiplies a float by a <see cref="SignedNormalizedFloat"/>, clamping the result.
-    /// </summary>
-    public static SignedNormalizedFloat operator *(float a, SignedNormalizedFloat b)
-        => new(a * b.Value);
-
-    /// <summary>
-    /// Divides a <see cref="SignedNormalizedFloat"/> by a float, clamping the result.
-    /// </summary>
-    public static SignedNormalizedFloat operator /(SignedNormalizedFloat a, float b)
-        => new(a.Value / b);
-
-   /// <summary>
-   /// Explicitly converts a <see cref="SignedNormalizedFloat"/> to a <see cref="NormalizedDouble"/>.
-   /// The value is mapped from \[-1, 1\] to \[0, 1\].
-   /// </summary>
-   public static explicit operator NormalizedDouble(SignedNormalizedFloat value) => new((value.Value + 1.0) / 2.0);
-   
-   /// <summary>
-   /// Explicitly converts a <see cref="SignedNormalizedFloat"/> to a <see cref="NormalizedFloat"/>.
-   /// The value is mapped from \[-1, 1\] to \[0, 1\].
-   /// </summary>
-   public static explicit operator NormalizedFloat(SignedNormalizedFloat value) => new((value.Value + 1.0f) / 2.0f);
-   
-   /// <summary>
-   /// Explicitly converts a <see cref="SignedNormalizedFloat"/> to a <see cref="SignedNormalizedDouble"/>.
-   /// </summary>
-   public static explicit operator SignedNormalizedDouble(SignedNormalizedFloat value) => new(value.Value);
-
+    
     /// <inheritdoc/>
     public override string ToString() => Value.ToString("F2");
 

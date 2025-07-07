@@ -18,6 +18,11 @@ public readonly struct NormalizedDouble  : IEquatable<NormalizedDouble>
     /// Gets the normalized value in the range <c>[0, 1]</c>.
     /// </summary>
     public double Value { get; }
+    
+    /// <summary>
+    /// Gets the inverse of the normalized value, i.e., <c>1.0 - Value</c>.
+    /// </summary>
+    public NormalizedDouble Inverse => new(1.0 - Value);
 
     /// <summary>
     /// Linearly interpolates between two double values using a normalized interpolation factor.
@@ -32,47 +37,69 @@ public readonly struct NormalizedDouble  : IEquatable<NormalizedDouble>
     /// Calculates the interpolation factor between two values for a given value.
     /// </summary>
     public static NormalizedDouble InverseLerp(double a, double b, double value) => new((value - a) / (b - a));
-
-    /// <summary>
-    /// Explicitly converts a double to a <see cref="NormalizedDouble"/>, clamping to <c>[0, 1]</c>.
-    /// </summary>
-    public static explicit operator NormalizedDouble(double value) => new(value);
-
-    /// <summary>
-    /// Implicitly converts a <see cref="NormalizedDouble"/> to a double.
-    /// </summary>
-    public static implicit operator double(NormalizedDouble normalized) => normalized.Value;
+    
 
     /// <summary>
     /// Adds two <see cref="NormalizedDouble"/> values, clamping the result.
     /// </summary>
-    public static NormalizedDouble operator +(NormalizedDouble a, NormalizedDouble b)
-        => new(a.Value + b.Value);
+    public static NormalizedDouble operator +(NormalizedDouble a, NormalizedDouble b) => new(a.Value + b.Value);
 
     /// <summary>
     /// Subtracts one <see cref="NormalizedDouble"/> from another, clamping the result.
     /// </summary>
-    public static NormalizedDouble operator -(NormalizedDouble a, NormalizedDouble b)
-        => new(a.Value - b.Value);
-
+    public static NormalizedDouble operator -(NormalizedDouble a, NormalizedDouble b) => new(a.Value - b.Value);
+    
     /// <summary>
-    /// Multiplies a <see cref="NormalizedDouble"/> by a double, clamping the result.
+    /// Multiplies two <see cref="NormalizedDouble"/> values, clamping the result to <c>[0, 1]</c>.
     /// </summary>
-    public static NormalizedDouble operator *(NormalizedDouble a, double b)
-        => new(a.Value * b);
-
+    public static NormalizedDouble operator *(NormalizedDouble a, NormalizedDouble b) => new(a.Value * b.Value);
+    
+    /// <summary>
+    /// Divides one <see cref="NormalizedDouble"/> by another, clamping the result to <c>[0, 1]</c>. Returns 0 if the divisor is less than or equal to 0.
+    /// </summary>
+    public static NormalizedDouble operator /(NormalizedDouble a, NormalizedDouble b) => b.Value <= 0f ? new(0f) : new(a.Value / b.Value);
+    
+    /// <summary>
+    /// Adds a double and a <see cref="NormalizedDouble"/>, clamping the result to <c>[0, 1]</c>.
+    /// </summary>
+    public static NormalizedDouble operator +(double a, NormalizedDouble b) => new(a + b.Value);
+    
+    /// <summary>
+    /// Subtracts a <see cref="NormalizedDouble"/> from a double, clamping the result to <c>[0, 1]</c>.
+    /// </summary>
+    public static NormalizedDouble operator -(double a, NormalizedDouble b) => new(a - b.Value);
+    
+    /// <summary>
+    /// Multiplies a double by a <see cref="NormalizedDouble"/> and divides by the normalized value, clamping the result to <c>[0, 1]</c>. Returns 0 if the divisor is less than or equal to 0.
+    /// </summary>
+    public static NormalizedDouble operator /(double a, NormalizedDouble b) => b.Value <= 0 ? new(0f) : new(a * b.Value);
+    
     /// <summary>
     /// Multiplies a double by a <see cref="NormalizedDouble"/>, clamping the result.
     /// </summary>
-    public static NormalizedDouble operator *(double a, NormalizedDouble b)
-        => new(a * b.Value);
-
+    public static NormalizedDouble operator *(double a, NormalizedDouble b) => new(a * b.Value);
+    
+    /// <summary>
+    /// Adds a <see cref="NormalizedDouble"/> and a double, clamping the result to <c>[0, 1]</c>.
+    /// </summary>
+    public static NormalizedDouble operator +(NormalizedDouble a, double b) => new(a.Value + b);
+    
+    /// <summary>
+    /// Subtracts a double from a <see cref="NormalizedDouble"/>, clamping the result to <c>[0, 1]</c>.
+    /// </summary>
+    public static NormalizedDouble operator -(NormalizedDouble a, double b) => new(a.Value - b);
+    
+    /// <summary>
+    /// Multiplies a <see cref="NormalizedDouble"/> by a double, clamping the result.
+    /// </summary>
+    public static NormalizedDouble operator *(NormalizedDouble a, double b) => new(a.Value * b);
+    
     /// <summary>
     /// Divides a <see cref="NormalizedDouble"/> by a double, clamping the result.
     /// </summary>
-    public static NormalizedDouble operator /(NormalizedDouble a, double b)
-        => new(a.Value / b);
+    public static NormalizedDouble operator /(NormalizedDouble a, double b) => new(a.Value / b);
 
+    
     /// <inheritdoc/>
     public override string ToString() => Value.ToString("F4");
 
@@ -105,6 +132,16 @@ public readonly struct NormalizedDouble  : IEquatable<NormalizedDouble>
         return Value.GetHashCode();
     }
 
+    
+    /// <summary>
+    /// Explicitly converts a double to a <see cref="NormalizedDouble"/>, clamping to <c>[0, 1]</c>.
+    /// </summary>
+    public static explicit operator NormalizedDouble(double value) => new(value);
+
+    /// <summary>
+    /// Implicitly converts a <see cref="NormalizedDouble"/> to a double.
+    /// </summary>
+    public static implicit operator double(NormalizedDouble normalized) => normalized.Value;
     
     /// <summary>
     /// Explicitly converts a <see cref="NormalizedDouble"/> to a <see cref="NormalizedFloat"/>, clamping to <c>[0, 1]</c>.

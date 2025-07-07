@@ -18,6 +18,12 @@ public readonly struct NormalizedFloat : IEquatable<NormalizedFloat>
     /// Gets the normalized value in the range <c>[0, 1]</c>.
     /// </summary>
     public float Value { get; }
+    
+    /// <summary>
+    /// Gets the inverse of the normalized value, i.e., <c>1 - Value</c>.
+    /// </summary>
+    public NormalizedFloat Inverse => new(1f - Value);
+    
 
     /// <summary>
     /// Linearly interpolates between two float values using a normalized interpolation factor.
@@ -36,7 +42,69 @@ public readonly struct NormalizedFloat : IEquatable<NormalizedFloat>
     /// <param name="value">The value to find the interpolation factor for.</param>
     /// <returns>The normalized interpolation factor in the range <c>[0, 1]</c>.</returns>
     public static NormalizedFloat InverseLerp(float a, float b, float value) => new((value - a) / (b - a));
+    
 
+    /// <summary>
+    /// Adds two <see cref="NormalizedFloat"/> values, clamping the result.
+    /// </summary>
+    public static NormalizedFloat operator +(NormalizedFloat a, NormalizedFloat b) => new(a.Value + b.Value);
+
+    /// <summary>
+    /// Subtracts one <see cref="NormalizedFloat"/> from another, clamping the result.
+    /// </summary>
+    public static NormalizedFloat operator -(NormalizedFloat a, NormalizedFloat b) => new(a.Value - b.Value);
+    
+    /// <summary>
+    /// Multiplies two <see cref="NormalizedFloat"/> values, clamping the result to <c>[0, 1]</c>.
+    /// </summary>
+    public static NormalizedFloat operator *(NormalizedFloat a, NormalizedFloat b) => new(a.Value * b.Value);
+    
+    /// <summary>
+    /// Divides one <see cref="NormalizedFloat"/> by another, clamping the result to <c>[0, 1]</c>. Returns 0 if the divisor is less than or equal to 0.
+    /// </summary>
+    public static NormalizedFloat operator /(NormalizedFloat a, NormalizedFloat b) => b.Value <= 0f ? new(0f) : new(a.Value / b.Value);
+    
+    /// <summary>
+    /// Adds a float and a <see cref="NormalizedFloat"/>, clamping the result to <c>[0, 1]</c>.
+    /// </summary>
+    public static NormalizedFloat operator +(float a, NormalizedFloat b) => new(a + b.Value);
+    
+    /// <summary>
+    /// Subtracts a <see cref="NormalizedFloat"/> from a float, clamping the result to <c>[0, 1]</c>.
+    /// </summary>
+    public static NormalizedFloat operator -(float a, NormalizedFloat b) => new(a - b.Value);
+    
+    /// <summary>
+    /// Multiplies a float by a <see cref="NormalizedFloat"/> and divides by the normalized value, clamping the result to <c>[0, 1]</c>. Returns 0 if the divisor is less than or equal to 0.
+    /// </summary>
+    public static NormalizedFloat operator /(float a, NormalizedFloat b) => b.Value <= 0 ? new(0f) : new(a * b.Value);
+    
+    /// <summary>
+    /// Multiplies a float by a <see cref="NormalizedFloat"/>, clamping the result.
+    /// </summary>
+    public static NormalizedFloat operator *(float a, NormalizedFloat b) => new(a * b.Value);
+    
+    /// <summary>
+    /// Adds a <see cref="NormalizedFloat"/> and a float, clamping the result to <c>[0, 1]</c>.
+    /// </summary>
+    public static NormalizedFloat operator +(NormalizedFloat a, float b) => new(a.Value + b);
+    
+    /// <summary>
+    /// Subtracts a float from a <see cref="NormalizedFloat"/>, clamping the result to <c>[0, 1]</c>.
+    /// </summary>
+    public static NormalizedFloat operator -(NormalizedFloat a, float b) => new(a.Value - b);
+    
+    /// <summary>
+    /// Multiplies a <see cref="NormalizedFloat"/> by a float, clamping the result.
+    /// </summary>
+    public static NormalizedFloat operator *(NormalizedFloat a, float b) => new(a.Value * b);
+    
+    /// <summary>
+    /// Divides a <see cref="NormalizedFloat"/> by a float, clamping the result.
+    /// </summary>
+    public static NormalizedFloat operator /(NormalizedFloat a, float b) => new(a.Value / b);
+    
+    
     /// <summary>
     /// Explicitly converts a float to a <see cref="NormalizedFloat"/>, clamping to <c>[0, 1]</c>.
     /// </summary>
@@ -46,37 +114,7 @@ public readonly struct NormalizedFloat : IEquatable<NormalizedFloat>
     /// Implicitly converts a <see cref="NormalizedFloat"/> to a float.
     /// </summary>
     public static implicit operator float(NormalizedFloat normalized) => normalized.Value;
-
-    /// <summary>
-    /// Adds two <see cref="NormalizedFloat"/> values, clamping the result.
-    /// </summary>
-    public static NormalizedFloat operator +(NormalizedFloat a, NormalizedFloat b)
-        => new(a.Value + b.Value);
-
-    /// <summary>
-    /// Subtracts one <see cref="NormalizedFloat"/> from another, clamping the result.
-    /// </summary>
-    public static NormalizedFloat operator -(NormalizedFloat a, NormalizedFloat b)
-        => new(a.Value - b.Value);
-
-    /// <summary>
-    /// Multiplies a <see cref="NormalizedFloat"/> by a float, clamping the result.
-    /// </summary>
-    public static NormalizedFloat operator *(NormalizedFloat a, float b)
-        => new(a.Value * b);
-
-    /// <summary>
-    /// Multiplies a float by a <see cref="NormalizedFloat"/>, clamping the result.
-    /// </summary>
-    public static NormalizedFloat operator *(float a, NormalizedFloat b)
-        => new(a * b.Value);
-
-    /// <summary>
-    /// Divides a <see cref="NormalizedFloat"/> by a float, clamping the result.
-    /// </summary>
-    public static NormalizedFloat operator /(NormalizedFloat a, float b)
-        => new(a.Value / b);
-
+    
     /// <summary>
     /// Explicitly converts a <see cref="NormalizedFloat"/> to a <see cref="NormalizedDouble"/>, preserving the normalized value.
     /// </summary>
