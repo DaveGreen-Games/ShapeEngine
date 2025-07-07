@@ -1,12 +1,12 @@
 namespace ShapeEngine.Core.Structs;
 
 /// <summary>
-/// Represents a float value constrained to the <c>[0, 1]</c> range.
+/// Represents a float value constrained to the <c>[-1, 1]</c> range.
 /// </summary>
 public readonly struct SignedNormalizedFloat : IEquatable<SignedNormalizedFloat>
 {
     /// <summary>
-    /// Initializes a new instance of <see cref="SignedNormalizedFloat"/>, clamping the value to <c>[0, 1]</c>.
+    /// Initializes a new instance of <see cref="SignedNormalizedFloat"/>, clamping the value to <c>[-1, 1]</c>.
     /// </summary>
     /// <param name="value">The value to clamp.</param>
     public SignedNormalizedFloat(float value)
@@ -15,7 +15,7 @@ public readonly struct SignedNormalizedFloat : IEquatable<SignedNormalizedFloat>
     }
 
     /// <summary>
-    /// Gets the signed normalized value in the range <c>[0, 1]</c>.
+    /// Gets the signed normalized value in the range <c>[-1, 1]</c>.
     /// </summary>
     public float Value { get; }
 

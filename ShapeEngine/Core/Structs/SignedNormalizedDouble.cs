@@ -6,8 +6,8 @@ namespace ShapeEngine.Core.Structs;
 /// </summary>
 public readonly struct SignedNormalizedDouble : IEquatable<SignedNormalizedDouble>
 {
-        /// <summary>
-    /// Initializes a new instance of <see cref="SignedNormalizedDouble"/>, clamping the value to <c>[0, 1]</c>.
+    /// <summary>
+    /// Initializes a new instance of <see cref="SignedNormalizedDouble"/>, clamping the value to <c>[-1, 1]</c>.
     /// </summary>
     /// <param name="value">The value to clamp.</param>
     public SignedNormalizedDouble(double value)
@@ -16,7 +16,7 @@ public readonly struct SignedNormalizedDouble : IEquatable<SignedNormalizedDoubl
     }
 
     /// <summary>
-    /// Gets the signed normalized value in the range <c>[0, 1]</c>.
+    /// Gets the signed normalized value in the range <c>[-1, 1]</c>.
     /// </summary>
     public double Value { get; }
 

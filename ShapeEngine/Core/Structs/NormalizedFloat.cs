@@ -31,6 +31,10 @@ public readonly struct NormalizedFloat : IEquatable<NormalizedFloat>
     /// <summary>
     /// Calculates the interpolation factor between two values for a given value.
     /// </summary>
+    /// <param name="a">The start value.</param>
+    /// <param name="b">The end value.</param>
+    /// <param name="value">The value to find the interpolation factor for.</param>
+    /// <returns>The normalized interpolation factor in the range <c>[0, 1]</c>.</returns>
     public static NormalizedFloat InverseLerp(float a, float b, float value) => new((value - a) / (b - a));
 
     /// <summary>
