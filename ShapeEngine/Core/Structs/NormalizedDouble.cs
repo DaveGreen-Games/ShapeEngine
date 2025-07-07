@@ -11,7 +11,7 @@ public readonly struct NormalizedDouble  : IEquatable<NormalizedDouble>
     /// <param name="value">The value to clamp.</param>
     public NormalizedDouble(double value)
     {
-        Value = Math.Clamp(value, 0f, 1f);
+        Value = Math.Clamp(value, 0.0, 1.0);
     }
 
     /// <summary>
