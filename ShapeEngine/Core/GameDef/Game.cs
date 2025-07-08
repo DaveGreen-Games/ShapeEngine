@@ -11,6 +11,32 @@ namespace ShapeEngine.Core.GameDef;
 /// The core game class.
 /// Inherit this class, create a new instance of this class and call Run() to start the game.
 /// </summary>
+/// <remarks>
+/// Main Game loop call order:
+/// <list type="bullet">
+/// <item><see cref="LoadContent"/> - Called once.</item>
+/// <item><see cref="BeginRun"/> - Called once.</item>
+/// <item><see cref="Update"/> - Called every frame with variable timing.</item>
+/// <item><see cref="DrawGame"/>- Called every frame.</item>
+/// <item><see cref="DrawGameUI"/> - Called every frame.</item>
+/// <item><see cref="DrawUI"/> - Called every frame.</item>
+/// <item><see cref="EndRun"/> - Called once.</item>
+/// <item><see cref="UnloadContent"/> - Called once.</item>
+/// </list>
+/// Fixed Game loop call order:
+/// <list type="bullet">
+/// <item><see cref="LoadContent"/> - Called once.</item>
+/// <item><see cref="BeginRun"/> - Called once.</item>
+/// <item><see cref="PreFixedUpdate"/> - Called every frame with variable timing.</item>
+/// <item><see cref="FixedUpdate"/> - Called in a fixed interval with fixed timing.</item>
+/// <item><see cref="InterpolateFixedUpdate"/> - Called every frame with variable timing.</item>
+/// <item><see cref="DrawGame"/> - Called every frame.</item>
+/// <item><see cref="DrawGameUI"/> - Called every frame.</item>
+/// <item><see cref="DrawUI"/> - Called every frame.</item>
+/// <item><see cref="EndRun"/> - Called once.</item>
+/// <item><see cref="UnloadContent"/> - Called once.</item>
+/// </list>
+/// </remarks>
 public partial class Game
 {
     #region Public Members
@@ -28,6 +54,22 @@ public partial class Game
     /// </summary>
     /// <remarks>
     /// When true, the fixed update functions will be called at the FixedPhysicsFramerate.
+    /// Fixed Update call order:
+    /// <list type="bullet">
+    /// <item><see cref="PreFixedUpdate"/> with variable timing.</item>
+    /// <item><see cref="FixedUpdate"/> with fixed timing.</item>
+    /// <item><see cref="InterpolateFixedUpdate"/> with variable timing.</item>
+    /// <item><see cref="DrawGame"/></item>
+    /// <item><see cref="DrawGameUI"/></item>
+    /// <item><see cref="DrawUI"/></item>
+    /// </list>
+    /// Unlocked Update call order:
+    /// <list type="bullet">
+    /// <item><see cref="Update"/> with variable timing.</item>
+    /// <item><see cref="DrawGame"/></item>
+    /// <item><see cref="DrawGameUI"/></item>
+    /// <item><see cref="DrawUI"/></item>
+    /// </list>
     /// </remarks>
     public bool FixedPhysicsEnabled { get; private set; }
 
@@ -198,33 +240,6 @@ public partial class Game
     /// </remarks>
     public ScreenTexture GameTexture => gameTexture;
     
-    /// <summary>
-    /// Collection of drawing actions to be executed before the game texture is drawn to the screen.
-    /// </summary>
-    /// <remarks>
-    /// Actions are executed in order of their integer keys (layers), with lower values drawn first.
-    /// Use this for background elements or effects that should appear behind the main game content.
-    /// </remarks>
-    public readonly SortedList<int, Action> DeferredDrawingBeforeGame = new();
-    
-    /// <summary>
-    /// Collection of drawing actions to be executed after the game texture but before the UI texture.
-    /// </summary>
-    /// <remarks>
-    /// Actions are executed in order of their integer keys (layers), with lower values drawn first.
-    /// Use this for elements that should appear on top of the game world but beneath the user interface.
-    /// </remarks>
-    public readonly SortedList<int, Action> DeferredDrawingAfterGame = new();
-    
-    /// <summary>
-    /// Collection of drawing actions to be executed after the UI texture is drawn to the screen.
-    /// </summary>
-    /// <remarks>
-    /// Actions are executed in order of their integer keys (layers), with lower values drawn first.
-    /// Use this for overlays, debug information, or any elements that should appear on top of everything else.
-    /// </remarks>
-    public readonly SortedList<int, Action> DeferredDrawingAfterUI = new();
-
     /// <summary>
     /// Gets the current game texture used for rendering.
     /// </summary>

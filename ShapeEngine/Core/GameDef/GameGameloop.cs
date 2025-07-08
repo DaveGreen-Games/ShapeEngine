@@ -97,14 +97,6 @@ public partial class Game
         Raylib.BeginDrawing();
         Raylib.ClearBackground(BackgroundColorRgba.ToRayColor());
 
-        if (DeferredDrawingBeforeGame.Count > 0)
-        {
-            foreach (var action in DeferredDrawingBeforeGame.Values)
-            {
-                action.Invoke();
-            }
-        }
-
         //split custom screen textures into textures to draw to the screen before the game texture
         //and textures to draw to the screen after the game texture
         if (customScreenTextures is { Count: > 0 })
@@ -145,14 +137,6 @@ public partial class Game
         //draw game texture to screen
         gameTexture.DrawToScreen();
 
-        if (DeferredDrawingAfterGame.Count > 0)
-        {
-            foreach (var action in DeferredDrawingAfterGame.Values)
-            {
-                action.Invoke();
-            }
-        }
-
         //draw screen textures to screen after the game texture
         if (customScreenTexturesDrawAfter is { Count: > 0 })
         {
@@ -173,14 +157,6 @@ public partial class Game
         customScreenTexturesDrawAfter?.Clear();
 
         ResolveDrawUI(UIScreenInfo);
-
-        if (DeferredDrawingAfterUI.Count > 0)
-        {
-            foreach (var action in DeferredDrawingAfterUI.Values)
-            {
-                action.Invoke();
-            }
-        }
 
         if (Window.MouseOnScreen) DrawCursorUi(UIScreenInfo);
 

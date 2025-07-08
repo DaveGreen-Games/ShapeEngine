@@ -41,28 +41,35 @@ public partial class Game
 
     private void ResolveUpdate()
     {
-        TriggerIntervalEventsUpdate(true, Time.Delta);
+        TriggerCustomEventsOnUpdate(true, Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
         Update(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
         CurScene.ResolveUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-        TriggerIntervalEventsUpdate(false, Time.Delta);
+        TriggerCustomEventsOnUpdate(false, Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
     }
 
     private void ResolvePreFixedUpdate()
     {
+        TriggerCustomEventsOnUpdate(true, Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+        //TODO: Rename (also affects spawn area and maybe collision handler!)
         PreFixedUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
         CurScene.ResolvePreFixedUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+        TriggerCustomEventsOnUpdate(false, Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
     }
 
     private void ResolveFixedUpdate()
     {
+        TriggerCustomEventsOnFixedUpdate(true, FixedTime, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
         FixedUpdate(FixedTime, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
         CurScene.ResolveFixedUpdate(FixedTime, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+        TriggerCustomEventsOnFixedUpdate(false, FixedTime, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
     }
 
     private void ResolveInterpolateFixedUpdate(float f)
     {
+        TriggerCustomEventsOnInterpolateFixedUpdate(true, Time, f, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
         InterpolateFixedUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo, f);
         CurScene.ResolveInterpolateFixedUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo, f);
+        TriggerCustomEventsOnInterpolateFixedUpdate(false, Time, f, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
     }
 
     private void ResolveOnGameTextureResized(int w, int h)
@@ -73,28 +80,26 @@ public partial class Game
 
     private void ResolveDrawGame(ScreenInfo game)
     {
-        TriggerIntervalEventsDrawGame(true, game);
+        TriggerCustomEventsOnDrawGame(true, game);
         DrawGame(game);
         CurScene.ResolveDrawGame(game);
-        TriggerIntervalEventsDrawGame(false, game);
+        TriggerCustomEventsOnDrawGame(false, game);
     }
 
     private void ResolveDrawGameUI(ScreenInfo gameUi)
     {
-        TriggerIntervalEventsDrawGameUi(true, gameUi);
-        ;
+        TriggerCustomEventsOnDrawGameUi(true, gameUi);
         DrawGameUI(gameUi);
         CurScene.ResolveDrawGameUI(gameUi);
-        TriggerIntervalEventsDrawGameUi(false, gameUi);
-        ;
+        TriggerCustomEventsOnDrawGameUi(false, gameUi);
     }
 
     private void ResolveDrawUI(ScreenInfo ui)
     {
-        TriggerIntervalEventsDrawUi(true, ui);
+        TriggerCustomEventsOnDrawUi(true, ui);
         DrawUI(ui);
         CurScene.ResolveDrawUI(ui);
-        TriggerIntervalEventsDrawUi(false, ui);
+        TriggerCustomEventsOnDrawUi(false, ui);
     }
 
     private void ResolveOnWindowSizeChanged(DimensionConversionFactors conversion)
