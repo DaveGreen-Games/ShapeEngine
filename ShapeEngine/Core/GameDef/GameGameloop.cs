@@ -7,6 +7,9 @@ namespace ShapeEngine.Core.GameDef;
 
 public partial class Game
 {
+    private List<ScreenTexture>? customScreenTexturesDrawBefore;
+    private List<ScreenTexture>? customScreenTexturesDrawAfter;
+    
     private void StartGameloop()
     {
         ShapeInput.KeyboardDevice.OnButtonPressed += OnKeyboardButtonPressed;
@@ -104,8 +107,6 @@ public partial class Game
 
         //split custom screen textures into textures to draw to the screen before the game texture
         //and textures to draw to the screen after the game texture
-        List<ScreenTexture>? drawBefore = null;
-        List<ScreenTexture>? drawAfter = null;
         if (customScreenTextures is { Count: > 0 })
         {
             for (var i = 0; i < customScreenTextures.Count; i++)
@@ -113,31 +114,31 @@ public partial class Game
                 //negative draw order means to draw it to screen before the game texture
                 if (customScreenTextures[i].DrawToScreenOrder < 0)
                 {
-                    drawBefore ??= new List<ScreenTexture>(); //initialize if it has not been initialized yet
-                    drawBefore.Add(customScreenTextures[i]);
+                    customScreenTexturesDrawBefore ??= []; //initialize if it has not been initialized yet
+                    customScreenTexturesDrawBefore.Add(customScreenTextures[i]);
                 }
                 //otherwise it will be drawn to screen after the game texture
                 else
                 {
-                    drawAfter ??= new List<ScreenTexture>(); //initialize if it has not been initialized yet
-                    drawAfter.Add(customScreenTextures[i]);
+                    customScreenTexturesDrawAfter ??= []; //initialize if it has not been initialized yet
+                    customScreenTexturesDrawAfter.Add(customScreenTextures[i]);
                 }
             }
         }
 
         //draw screen textures to screen before the game texture
-        if (drawBefore is { Count: > 0 })
+        if (customScreenTexturesDrawBefore is { Count: > 0 })
         {
-            drawBefore.Sort((a, b) =>
+            customScreenTexturesDrawBefore.Sort((a, b) =>
                 {
                     if (a.DrawToScreenOrder < b.DrawToScreenOrder) return -1;
                     if (a.DrawToScreenOrder > b.DrawToScreenOrder) return 1;
                     return 0;
                 }
             );
-            for (var i = 0; i < drawBefore.Count; i++)
+            for (var i = 0; i < customScreenTexturesDrawBefore.Count; i++)
             {
-                drawBefore[i].DrawToScreen();
+                customScreenTexturesDrawBefore[i].DrawToScreen();
             }
         }
 
@@ -153,20 +154,23 @@ public partial class Game
         }
 
         //draw screen textures to screen after the game texture
-        if (drawAfter is { Count: > 0 })
+        if (customScreenTexturesDrawAfter is { Count: > 0 })
         {
-            drawAfter.Sort((a, b) =>
+            customScreenTexturesDrawAfter.Sort((a, b) =>
                 {
                     if (a.DrawToScreenOrder < b.DrawToScreenOrder) return -1;
                     if (a.DrawToScreenOrder > b.DrawToScreenOrder) return 1;
                     return 0;
                 }
             );
-            for (var i = 0; i < drawAfter.Count; i++)
+            for (var i = 0; i < customScreenTexturesDrawAfter.Count; i++)
             {
-                drawAfter[i].DrawToScreen();
+                customScreenTexturesDrawAfter[i].DrawToScreen();
             }
         }
+        
+        customScreenTexturesDrawBefore?.Clear();
+        customScreenTexturesDrawAfter?.Clear();
 
         ResolveDrawUI(UIScreenInfo);
 

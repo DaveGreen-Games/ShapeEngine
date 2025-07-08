@@ -248,7 +248,6 @@ public partial class Game
     private float physicsAccumulator;
 
     private List<ScreenTexture>? customScreenTextures;
-    
     #endregion
     
     #region Constructor
