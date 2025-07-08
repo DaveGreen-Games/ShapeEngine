@@ -557,7 +557,7 @@ namespace ShapeEngine.Core
 
                     obj.UpdateParallaxe(ParallaxePosition);
                     
-                    obj.Update(fixedTime, game, gameUi, ui);
+                    obj.FixedUpdate(fixedTime, game, gameUi, ui);
                     
                     if (obj.IsDead || obj.HasLeftBounds(Bounds))
                     {
