@@ -72,10 +72,10 @@ public partial class Game
 
             if (FixedPhysicsEnabled)
             {
-                ResolvePreFixedUpdate();
+                ResolveUpdate(true);
                 AdvanceFixedUpdate(dt);
             }
-            else ResolveUpdate();
+            else ResolveUpdate(false);
 
             DrawToScreen();
 

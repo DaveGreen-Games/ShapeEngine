@@ -39,23 +39,14 @@ public partial class Game
         CurScene.ResolveOnButtonReleased(e);
     }
 
-    private void ResolveUpdate()
+    private void ResolveUpdate(bool fixedFramerateMode)
     {
         TriggerCustomEventsOnUpdate(true, Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
         Update(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-        CurScene.ResolveUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
+        CurScene.ResolveUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo, fixedFramerateMode);
         TriggerCustomEventsOnUpdate(false, Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
     }
-
-    private void ResolvePreFixedUpdate()
-    {
-        TriggerCustomEventsOnUpdate(true, Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-        //TODO: Rename (also affects spawn area and maybe collision handler!)
-        PreFixedUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-        CurScene.ResolvePreFixedUpdate(Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-        TriggerCustomEventsOnUpdate(false, Time, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);
-    }
-
+    
     private void ResolveFixedUpdate()
     {
         TriggerCustomEventsOnFixedUpdate(true, FixedTime, GameScreenInfo, GameUiScreenInfo, UIScreenInfo);

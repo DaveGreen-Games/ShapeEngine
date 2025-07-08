@@ -23,28 +23,15 @@ public partial class Game
     }
 
     /// <summary>
-    /// Updates game state when fixed framerate is disabled. This is the standard update method
+    /// Updates game state when the fixed framerate is disabled.
+    /// This is the standard update method
     /// called every frame at variable intervals.
     /// </summary>
     /// <param name="time">Contains timing information for the current frame.</param>
     /// <param name="game">Screen information for the main game area.</param>
     /// <param name="gameUi">Screen information for the game's UI elements.</param>
     /// <param name="ui">Screen information for the global UI.</param>
-    protected virtual void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
-    {
-    }
-
-    /// <summary>
-    /// Executes before the fixed update when fixed framerate is enabled. Called once per frame
-    /// regardless of the fixed update interval.
-    /// </summary>
-    /// <param name="time">Contains timing information for the current frame.</param>
-    /// <param name="game">Screen information for the main game area.</param>
-    /// <param name="gameUi">Screen information for the game's UI elements.</param>
-    /// <param name="ui">Screen information for the global UI.</param>
-    protected virtual void PreFixedUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
-    {
-    }
+    protected virtual void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui) { }
 
     /// <summary>
     /// Updates the game at a fixed time interval when fixed framerate is enabled. This method

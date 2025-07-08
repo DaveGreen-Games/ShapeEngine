@@ -218,17 +218,18 @@ public abstract class Scene
         RemovePathfinder();
         OnClose();
     }
-    internal void ResolveUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+    internal void ResolveUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui, bool fixedFramerateMode)
     {
-        SpawnArea?.Update(time, game, gameUi, ui);
-        CollisionHandler?.Update(time.Delta);
-        Pathfinder?.Update(time.Delta);
-        
-        OnUpdate(time, game, gameUi, ui);
-    }
-    internal void ResolvePreFixedUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
-    {
-        SpawnArea?.PreFixedUpdate(time, game, gameUi, ui);
+        if (fixedFramerateMode)
+        {
+            SpawnArea?.Update(time, game, gameUi, ui, true);
+        }
+        else
+        {
+            SpawnArea?.Update(time, game, gameUi, ui, false);
+            CollisionHandler?.Update(time.Delta);
+            Pathfinder?.Update(time.Delta);
+        }
         OnUpdate(time, game, gameUi, ui);
     }
     internal void ResolveFixedUpdate(GameTime fixedTime, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)

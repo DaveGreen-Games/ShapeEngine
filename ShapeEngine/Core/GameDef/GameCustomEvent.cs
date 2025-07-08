@@ -126,7 +126,7 @@ public partial class Game
         /// </list>
         /// </remarks>
         protected virtual void PostInterpolateFixedUpdate(GameTime time, float alpha, ScreenInfo gameScreenInfo, ScreenInfo gameUiScreenInfo, ScreenInfo uiScreenInfo) { }
-        
+
         /// <summary>
         /// Called before the update step. Override to execute logic before updates.
         /// </summary>
