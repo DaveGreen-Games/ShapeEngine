@@ -4,11 +4,6 @@ using ShapeEngine.Core;
 
 namespace ShapeEngine.Input;
 
-//TODO: keyboard and gamepad device usage should cancel mouse usage detection!
-//If 2 mouse buttons were pressed in succession and a third press is needed for the mouse to count as used,
-//but a keyboard press happens before the third mouse press, the mouse count / timer is reset.
-//counts for all other devices as well
-
 /// <summary>
 /// Represents a mouse input device, providing access to mouse buttons, axes, and wheel axes,
 /// as well as state tracking and utility methods for mouse input.

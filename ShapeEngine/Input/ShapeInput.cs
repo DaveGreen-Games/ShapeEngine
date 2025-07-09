@@ -112,10 +112,12 @@ public static class ShapeInput
     /// </summary>
     internal static void Update(float dt)
     {
-        var wasOtherDeviceUsed = false;
+        // Prevents input device switching if another device was already used this frame.
+        // For example, keyboard usage can block gamepad and mouse from becoming the active device.
+        var wasOtherDeviceUsed = false; 
         wasOtherDeviceUsed = KeyboardDevice.Update(dt, wasOtherDeviceUsed);
-        wasOtherDeviceUsed = MouseDevice.Update(dt, wasOtherDeviceUsed);
-        GamepadDeviceManager.Update(dt, wasOtherDeviceUsed);
+        wasOtherDeviceUsed = GamepadDeviceManager.Update(dt, wasOtherDeviceUsed);
+        MouseDevice.Update(dt, wasOtherDeviceUsed);
         CheckInputDevice();
     }
 
