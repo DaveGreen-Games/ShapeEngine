@@ -24,6 +24,7 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
     public InputDeviceUsageDetectionSettings.KeyboardSettings UsageDetectionSettings { get; private set; } = new();
     
     private bool wasUsed;
+    private bool wasUsedRaw;
     private bool isLocked;
 
     /// <summary>
@@ -85,7 +86,7 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
     public bool WasUsed() => wasUsed;
     
     /// <inheritdoc cref="ShapeInputDevice"/>
-    public bool WasUsedRaw() => wasUsed;
+    public bool WasUsedRaw() => wasUsedRaw;
     
     /// <summary>
     /// Updates the keyboard device state, including button states and character input.
@@ -110,8 +111,7 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
             unicode = Raylib.GetCharPressed();
         }
         
-        //TODO: raw usage needs to be here as well
-        wasUsed = WasKeyboardUsed();
+        WasKeyboardUsed(dt, wasOtherDeviceUsed, out wasUsed, out wasUsedRaw);
         return wasUsed;
     }
     
@@ -183,7 +183,13 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
     /// <summary>
     /// Determines if the keyboard was used based on button presses.
     /// </summary>
-    private bool WasKeyboardUsed() => !isLocked && UsedButtons.Count > 0;
+    private void WasKeyboardUsed(float dt, bool wasOtherDeviceUsed, out bool used, out bool usedRaw)
+    {
+        used = false;
+        usedRaw = false;
+        // return !isLocked && UsedButtons.Count > 0;
+    } 
+        
 
     /// <summary>
     /// Updates the states of all keyboard buttons.
