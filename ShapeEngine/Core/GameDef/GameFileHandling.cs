@@ -26,7 +26,7 @@ public partial class Game
         }
         catch (Exception e)
         {
-            Console.WriteLine("The file could not be read:");
+            Console.WriteLine("The file could not be written:");
             Console.WriteLine(e.Message);
         }
     }
