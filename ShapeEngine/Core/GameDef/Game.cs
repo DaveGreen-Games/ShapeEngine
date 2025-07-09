@@ -27,7 +27,7 @@ namespace ShapeEngine.Core.GameDef;
 /// <list type="bullet">
 /// <item><see cref="LoadContent"/> - Called once.</item>
 /// <item><see cref="BeginRun"/> - Called once.</item>
-/// <item><see cref="PreFixedUpdate"/> - Called every frame with variable timing.</item>
+/// <item><see cref="Update"/> - Called every frame with variable timing.</item>
 /// <item><see cref="FixedUpdate"/> - Called in a fixed interval with fixed timing.</item>
 /// <item><see cref="InterpolateFixedUpdate"/> - Called every frame with variable timing.</item>
 /// <item><see cref="DrawGame"/> - Called every frame.</item>
@@ -56,7 +56,7 @@ public partial class Game
     /// When true, the fixed update functions will be called at the FixedPhysicsFramerate.
     /// Fixed Update call order:
     /// <list type="bullet">
-    /// <item><see cref="PreFixedUpdate"/> with variable timing.</item>
+    /// <item><see cref="Update"/> with variable timing.</item>
     /// <item><see cref="FixedUpdate"/> with fixed timing.</item>
     /// <item><see cref="InterpolateFixedUpdate"/> with variable timing.</item>
     /// <item><see cref="DrawGame"/></item>
