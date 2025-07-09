@@ -34,7 +34,12 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
     /// <summary>
     /// List of keyboard buttons pressed since the last update.
     /// </summary>
-    public readonly List<ShapeKeyboardButton> UsedButtons = [];
+    public readonly List<ShapeKeyboardButton> PressedButtons = [];
+    
+    /// <summary>
+    /// List of keyboard buttons currently held down.
+    /// </summary>
+    public readonly List<ShapeKeyboardButton> HeldDownButtons = [];
     
     private readonly Dictionary<ShapeKeyboardButton, InputState> buttonStates = new(AllShapeKeyboardButtons.Length);
 
@@ -95,11 +100,22 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
     {
         UpdateButtonStates();
         
-        UsedButtons.Clear();
+        for (int i = HeldDownButtons.Count - 1; i >= 0; i--)
+        {
+            var button = HeldDownButtons[i];
+            if (Raylib.IsKeyUp((KeyboardKey)button))
+            {
+                HeldDownButtons.RemoveAt(i);
+            }
+        }
+        
+        PressedButtons.Clear();
         var keycode = Raylib.GetKeyPressed();
         while (keycode > 0)
         {
-            UsedButtons.Add((ShapeKeyboardButton)keycode);
+            var button = (ShapeKeyboardButton)keycode;
+            PressedButtons.Add(button);
+            HeldDownButtons.Add(button);
             keycode = Raylib.GetKeyPressed();
         }
         
