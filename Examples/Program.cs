@@ -8,5 +8,4 @@ public static class Program
     {
         GAMELOOP.Run(args);
     }
-    
 }

@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Numerics;
 using System.Reflection.Metadata.Ecma335;
 using ShapeEngine.Color;
+using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.CircleDef;
@@ -717,7 +718,7 @@ public class ShapeIntersectionExample : ExampleScene
         {
             if (stripedSpacing > 0f)
             {
-                var dt = ShapeEngine.Core.Game.CurrentGameInstance.Time.Delta;
+                var dt = Game.CurrentGameInstance.Time.Delta;
                 
                 // stripedRotDeg -= StripedRotSpeedDeg * dt;
                 stripedSpacingOffset += dt * 2;
@@ -853,7 +854,7 @@ public class ShapeIntersectionExample : ExampleScene
         {
             if (stripedSpacing > 0f)
             {
-                var dt = ShapeEngine.Core.Game.CurrentGameInstance.Time.Delta;
+                var dt = Game.CurrentGameInstance.Time.Delta;
                 
                 stripedRotDeg += StripedRotSpeedDeg * dt;
                 
@@ -991,7 +992,7 @@ public class ShapeIntersectionExample : ExampleScene
 
             if (stripedSpacing > 0f)
             {
-                var dt = ShapeEngine.Core.Game.CurrentGameInstance.Time.Delta;
+                var dt = Game.CurrentGameInstance.Time.Delta;
                 
                 stripedRotDeg += StripedRotSpeedDeg * dt;
                 
@@ -1135,7 +1136,7 @@ public class ShapeIntersectionExample : ExampleScene
         {
             if (stripedSpacing > 0f)
             {
-                var dt = ShapeEngine.Core.Game.CurrentGameInstance.Time.Delta;
+                var dt = Game.CurrentGameInstance.Time.Delta;
                 
                 stripedRotDeg += StripedRotSpeedDeg * dt;
                 
@@ -1960,7 +1961,7 @@ public class ShapeIntersectionExample : ExampleScene
         var path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
         var fileName = "automated_test_results.txt";
         bool loadingSuccess = false;
-        ShapeEngine.Core.Game.ReadFromFile(path, fileName, (reader) =>
+        Game.ReadFromFile(path, fileName, (reader) =>
         {
             var movingShapeText = reader.ReadLine();
             var staticShapeText = reader.ReadLine();
@@ -1969,9 +1970,9 @@ public class ShapeIntersectionExample : ExampleScene
 
             if (movingShapeText != null && staticShapeText != null && shapeModeText != null && projectionText != null)
             {
-                var movingShapeParse = ShapeEngine.Core.Game.TryParseEnum(movingShapeText, out ShapeType parsedMovingType);
-                var staticShapeParse = ShapeEngine.Core.Game.TryParseEnum(staticShapeText, out ShapeType parsedStaticType);
-                var shapeModeParse = ShapeEngine.Core.Game.TryParseEnum(shapeModeText, out ShapeMode parsedShapeMode);
+                var movingShapeParse = Game.TryParseEnum(movingShapeText, out ShapeType parsedMovingType);
+                var staticShapeParse = Game.TryParseEnum(staticShapeText, out ShapeType parsedStaticType);
+                var shapeModeParse = Game.TryParseEnum(shapeModeText, out ShapeMode parsedShapeMode);
                 bool projectionParse = false;
                 bool parsedProjectionValue = false;
                 if (projectionText == "True")

@@ -1,7 +1,9 @@
+using ShapeEngine.Core.GameDef;
+
 namespace ShapeEngine.Core.Structs;
 
 /// <summary>
-/// Represents an exit code returned by the <see cref="Game.Run"/> function in the Game class.
+/// Represents an exit code returned by the <see cref="GameDef.Game.Run"/> function in the Game class.
 /// </summary>
 public readonly struct ExitCode
 {

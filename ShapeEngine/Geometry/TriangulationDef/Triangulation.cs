@@ -5,6 +5,7 @@ using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.SegmentsDef;
 using ShapeEngine.Geometry.TriangleDef;
 using ShapeEngine.Random;
+using Game = ShapeEngine.Core.GameDef.Game;
 
 namespace ShapeEngine.Geometry.TriangulationDef;
 

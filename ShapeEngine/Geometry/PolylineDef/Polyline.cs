@@ -9,6 +9,7 @@ using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.SegmentsDef;
 using ShapeEngine.Random;
 using ShapeEngine.StaticLib;
+using Game = ShapeEngine.Core.GameDef.Game;
 
 namespace ShapeEngine.Geometry.PolylineDef;
 

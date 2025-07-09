@@ -4,6 +4,7 @@ using ShapeEngine.Color;
 using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.RectDef;
+using Game = ShapeEngine.Core.GameDef.Game;
 
 namespace ShapeEngine.Screen;
 

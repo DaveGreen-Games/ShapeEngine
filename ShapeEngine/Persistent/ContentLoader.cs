@@ -1,6 +1,6 @@
 ﻿using System.Text;
 using Raylib_cs;
-using ShapeEngine.Core;
+using ShapeEngine.Core.GameDef;
 
 
 namespace ShapeEngine.Persistent;

@@ -3,6 +3,7 @@ using ShapeEngine.Core;
 using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Random;
 using ShapeEngine.StaticLib;
+using Game = ShapeEngine.Core.GameDef.Game;
 
 namespace ShapeEngine.Geometry.CollisionSystem;
 

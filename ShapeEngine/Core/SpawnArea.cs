@@ -15,7 +15,7 @@ namespace ShapeEngine.Core
     /// SpawnArea manages collections of <see cref="GameObject"/>s, organized by layer, and provides update, draw, and removal logic.
     /// It supports parallax, area clearing, and event hooks for object addition/removal.
     /// </remarks>
-    public class SpawnArea : IUpdateable, IDrawable, IBounds
+    public class SpawnArea : IDrawable, IBounds
     {
         /// <summary>
         /// Occurs when a <see cref="GameObject"/> is added to the area.
@@ -447,95 +447,91 @@ namespace ShapeEngine.Core
         /// <param name="game">The screen information for the game area.</param>
         /// <param name="gameUi">The screen information for the game UI area.</param>
         /// <param name="ui">The screen information for the UI area.</param>
-        public virtual void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+        /// <param name="fixedFramerateMode">If this update is called in the open frame rate or fixed frame rate mode.</param>
+        public virtual void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui, bool fixedFramerateMode)
         {
-            drawToGameTextureObjects.Clear();
-            drawToGameUiTextureObjects.Clear();
-
-            if (clearAreaActive)
+            if (fixedFramerateMode)
             {
-                if (!Bounds.OverlapShape(clearArea)) clearAreaActive = false;
-            }
-            
-            foreach (var layer in allObjects)
-            {
-                var objs = allObjects[layer.Key];
-                if (objs.Count <= 0) continue;
-
-                for (int i = objs.Count - 1; i >= 0; i--)
+                if (clearAreaActive)
                 {
-                    var obj = objs[i];
+                    if (!Bounds.OverlapShape(clearArea)) clearAreaActive = false;
+                }
+            
+                foreach (var layer in allObjects)
+                {
+                    var objs = allObjects[layer.Key];
+                    if (objs.Count <= 0) continue;
 
-                    if (clearAreaActive && (clearAreaMask.IsEmpty() || clearAreaMask.Has(layer.Key)))
+                    for (int i = objs.Count - 1; i >= 0; i--)
                     {
-                        if (clearArea.OverlapShape(obj.GetBoundingBox()))
+                        var obj = objs[i];
+                    
+                        if (clearAreaActive && (clearAreaMask.IsEmpty() || clearAreaMask.Has(layer.Key)))
                         {
-                            RemoveGameObject(obj);
-                            continue;
+                            if (clearArea.OverlapShape(obj.GetBoundingBox()))
+                            {
+                                RemoveGameObject(obj);
+                                continue;
+                            }
                         }
-                    }
-
                     
-                    obj.UpdateParallaxe(ParallaxePosition);
-                    
-                    if (obj.IsDrawingToGame(game.Area)) drawToGameTextureObjects.Add(obj);
-                    if (obj.IsDrawingToGameUI(gameUi.Area)) drawToGameUiTextureObjects.Add(obj);
-                    
-                    obj.Update(time, game, gameUi, ui);
-                    
-                    if (obj.IsDead || obj.HasLeftBounds(Bounds))
-                    {
-                        RemoveGameObject(obj);
+                        obj.Update(time, game, gameUi, ui);
                     }
                 }
+            
+                clearAreaActive = false;
             }
+            else
+            {
+                drawToGameTextureObjects.Clear();
+                drawToGameUiTextureObjects.Clear();
 
-            clearAreaActive = false;
+                if (clearAreaActive)
+                {
+                    if (!Bounds.OverlapShape(clearArea)) clearAreaActive = false;
+                }
+                
+                foreach (var layer in allObjects)
+                {
+                    var objs = allObjects[layer.Key];
+                    if (objs.Count <= 0) continue;
+
+                    for (int i = objs.Count - 1; i >= 0; i--)
+                    {
+                        var obj = objs[i];
+
+                        if (clearAreaActive && (clearAreaMask.IsEmpty() || clearAreaMask.Has(layer.Key)))
+                        {
+                            if (clearArea.OverlapShape(obj.GetBoundingBox()))
+                            {
+                                RemoveGameObject(obj);
+                                continue;
+                            }
+                        }
+
+                        
+                        obj.UpdateParallaxe(ParallaxePosition);
+                        
+                        if (obj.IsDrawingToGame(game.Area)) drawToGameTextureObjects.Add(obj);
+                        if (obj.IsDrawingToGameUI(gameUi.Area)) drawToGameUiTextureObjects.Add(obj);
+                        
+                        obj.Update(time, game, gameUi, ui);
+                        
+                        if (obj.IsDead || obj.HasLeftBounds(Bounds))
+                        {
+                            RemoveGameObject(obj);
+                        }
+                    }
+                }
+
+                clearAreaActive = false;
+            }
         }
 
         #endregion
         
         #region Fixed Framerate
         
-        /// <summary>
-        /// Pre-updates the spawn area and all contained game objects.
-        /// This method is called before the fixed update step.
-        /// </summary>
-        /// <param name="time">The current game time.</param>
-        /// <param name="game">The screen information for the game area.</param>
-        /// <param name="gameUi">The screen information for the game UI area.</param>
-        /// <param name="ui">The screen information for the UI area.</param>
-        public virtual void PreFixedUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
-        {
-            if (clearAreaActive)
-            {
-                if (!Bounds.OverlapShape(clearArea)) clearAreaActive = false;
-            }
-            
-            foreach (var layer in allObjects)
-            {
-                var objs = allObjects[layer.Key];
-                if (objs.Count <= 0) continue;
-
-                for (int i = objs.Count - 1; i >= 0; i--)
-                {
-                    var obj = objs[i];
-                    
-                    if (clearAreaActive && (clearAreaMask.IsEmpty() || clearAreaMask.Has(layer.Key)))
-                    {
-                        if (clearArea.OverlapShape(obj.GetBoundingBox()))
-                        {
-                            RemoveGameObject(obj);
-                            continue;
-                        }
-                    }
-                    
-                    obj.Update(time, game, gameUi, ui);
-                }
-            }
-            
-            clearAreaActive = false;
-        }
         /// <summary>
         /// Fixed updates the spawn area and all contained game objects.
         /// This method is called with fixed time steps.
@@ -557,7 +553,7 @@ namespace ShapeEngine.Core
 
                     obj.UpdateParallaxe(ParallaxePosition);
                     
-                    obj.Update(fixedTime, game, gameUi, ui);
+                    obj.FixedUpdate(fixedTime, game, gameUi, ui);
                     
                     if (obj.IsDead || obj.HasLeftBounds(Bounds))
                     {
