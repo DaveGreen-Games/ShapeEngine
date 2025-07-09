@@ -16,6 +16,16 @@ public readonly struct InputDeviceUsageDetectionSettings
         }
         
         /// <summary>
+        /// Indicates whether press count detection is enabled (requires both <c>MouseMinPressCount</c> and <c>MouseMinPressInterval</c> to be greater than zero).
+        /// </summary>
+        public bool PressCountEnabled => MouseMinPressCount > 0 && MouseMinPressInterval > 0f;
+        
+        /// <summary>
+        /// Indicates whether used duration detection is enabled (requires <c>MouseMinUsedDuration</c> to be greater than zero).
+        /// </summary>
+        public bool UsedDurationEnabled => MouseMinUsedDuration > 0f;
+        
+        /// <summary>
         /// Indicates whether the input device can be changed to mouse.
         /// </summary>
         /// <remarks>

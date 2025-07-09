@@ -19,14 +19,31 @@ public sealed class ShapeGamepadDeviceManager
     
     private readonly ShapeGamepadDevice[] gamepads;
     /// <summary>
-    /// List of gamepads that were used in the last update.
+    /// List of <see cref="ShapeGamepadDevice"/> instances that registered input during the last update cycle,
+    /// considering any filters or settings applied via <see cref="InputDeviceUsageDetectionSettings"/>.
+    /// This list is cleared and repopulated on each update.
     /// </summary>
-    public readonly List<ShapeGamepadDevice> LastUsedGamepads = new();
+    public readonly List<ShapeGamepadDevice> LastUsedGamepads = [];
+    /// <summary>
+    /// List of <see cref="ShapeGamepadDevice"/> instances that registered input during the last update cycle,
+    /// ignoring any filters or settings from <see cref="InputDeviceUsageDetectionSettings"/>.
+    /// This provides a raw view of all input activity per update.
+    /// </summary>
+    public readonly List<ShapeGamepadDevice> LastUsedGamepadsRaw = [];
 
     /// <summary>
-    /// The most recently used gamepad, or null if none.
+    /// The most recently used gamepad that registered input during the last update cycle,
+    /// considering any filters or settings applied via <see cref="InputDeviceUsageDetectionSettings"/>.
+    /// This is <c>null</c> if no gamepad was used.
     /// </summary>
     public ShapeGamepadDevice? LastUsedGamepad;
+    
+    /// <summary>
+    /// The most recently used gamepad that registered input during the last update cycle,
+    /// ignoring any filters or settings from <see cref="InputDeviceUsageDetectionSettings"/>.
+    /// This is <c>null</c> if no gamepad was used.
+    /// </summary>
+    public ShapeGamepadDevice? LastUsedGamepadRaw;
     
     /// <summary>
     /// Event triggered when a gamepad button is pressed.
@@ -51,9 +68,17 @@ public sealed class ShapeGamepadDeviceManager
     /// <summary>
     /// Updates the state of all managed gamepads and checks for connection changes.
     /// </summary>
-    public void Update()
+    public bool Update(float dt, bool wasOtherDeviceUsed)
     {
-        CheckGamepadConnections();
+        return CheckGamepadConnections(dt, wasOtherDeviceUsed);
+    }
+    
+    internal void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
+    {
+        foreach (var gamepad in gamepads)
+        {
+            gamepad.ApplyInputDeviceChangeSettings(settings);
+        }
     }
     
     #region Gamepad
@@ -153,10 +178,10 @@ public sealed class ShapeGamepadDeviceManager
     /// Checks and updates the connection state of all managed gamepads.
     /// Triggers connection/disconnection events and tracks last used gamepads.
     /// </summary>
-    private void CheckGamepadConnections()
+    private bool CheckGamepadConnections(float dt, bool wasOtherDeviceUsed)
     {
-        //connectedGamepadIndices.Clear();
         LastUsedGamepads.Clear();
+        var used = false;
         for (var i = 0; i < gamepads.Length; i++)
         {
             var gamepad = gamepads[i];
@@ -165,27 +190,20 @@ public sealed class ShapeGamepadDeviceManager
                 if (!gamepad.Connected)
                 {
                     gamepad.Connect();
-                    // ConnectedGamepads.Add(gamepad);
                     OnGamepadConnectionChanged?.Invoke(gamepad, true);
                 }
-                else
-                {
-                    gamepad.Update();
-                    if(gamepad.WasUsed()) 
-                        LastUsedGamepads.Add(gamepad);
-                }
-                // connectedGamepadIndices.Add(i);
+               
+                used = gamepad.Update(dt, wasOtherDeviceUsed);
+                if(gamepad.WasUsed()) 
+                    LastUsedGamepads.Add(gamepad);
             }
-            else
+            
+            if (gamepad.Connected)
             {
-                if (gamepad.Connected)
-                {
-                    if (gamepad == LastUsedGamepad) LastUsedGamepad = null;
+                if (gamepad == LastUsedGamepad) LastUsedGamepad = null;
                     
-                    gamepad.Disconnect();
-                    OnGamepadConnectionChanged?.Invoke(gamepad, false);
-                    // ConnectedGamepads.Remove(gamepad);
-                }
+                gamepad.Disconnect();
+                OnGamepadConnectionChanged?.Invoke(gamepad, false);
             }
         }
 
@@ -194,7 +212,8 @@ public sealed class ShapeGamepadDeviceManager
         {
             LastUsedGamepad = LastUsedGamepads[^1];
         }
-        
+
+        return used;
 
     }
     /// <summary>

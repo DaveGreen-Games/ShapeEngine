@@ -1,5 +1,6 @@
 
 namespace ShapeEngine.Input;
+//TODO: rename all input classes / structs that have a Shape prefix! (ShapeKeyboardDevice to KeyboardDevice for instance)
 
 /// <summary>
 /// Provides static access to input devices (keyboard, mouse, gamepads) and input state queries.
@@ -39,6 +40,28 @@ public static class ShapeInput
     /// </summary>
     public static readonly InputEventHandler EventHandler = new(KeyboardDevice, MouseDevice, GamepadDeviceManager);
 
+    /// <summary>
+    /// Gets or sets the global input device change settings.
+    /// </summary>
+    public static InputDeviceUsageDetectionSettings InputDeviceUsageDetectionSettings { get; private set; } = new();
+    
+    /// <summary>
+    /// Sets the input device change settings and applies them to all input devices.
+    /// </summary>
+    /// <param name="settings">The new input device change settings to apply.</param>
+    /// <remarks>
+    /// Settings are applied to <see cref="MouseDevice"/>,
+    /// <see cref="KeyboardDevice"/>,
+    /// and <see cref="GamepadDeviceManager"/> that applies the settings to all <see cref="ShapeGamepadDevice"/>s.
+    /// </remarks>
+    public static void SetInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
+    {
+        InputDeviceUsageDetectionSettings = settings;
+        MouseDevice.ApplyInputDeviceChangeSettings(settings);
+        KeyboardDevice.ApplyInputDeviceChangeSettings(settings);
+        GamepadDeviceManager.ApplyInputDeviceChangeSettings(settings);
+    }
+    
     /// <summary>
     /// Gets the input state for a keyboard button.
     /// </summary>
@@ -87,11 +110,12 @@ public static class ShapeInput
     /// <summary>
     /// Updates all input devices and checks for input device changes.
     /// </summary>
-    internal static void Update()
+    internal static void Update(float dt)
     {
-        KeyboardDevice.Update();
-        MouseDevice.Update();
-        GamepadDeviceManager.Update();
+        var wasOtherDeviceUsed = false;
+        wasOtherDeviceUsed = KeyboardDevice.Update(dt, wasOtherDeviceUsed);
+        wasOtherDeviceUsed = MouseDevice.Update(dt, wasOtherDeviceUsed);
+        GamepadDeviceManager.Update(dt, wasOtherDeviceUsed);
         CheckInputDevice();
     }
 

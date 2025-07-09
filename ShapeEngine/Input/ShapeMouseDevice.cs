@@ -4,6 +4,11 @@ using ShapeEngine.Core;
 
 namespace ShapeEngine.Input;
 
+//TODO: keyboard and gamepad device usage should cancel mouse usage detection!
+//If 2 mouse buttons were pressed in succession and a third press is needed for the mouse to count as used,
+//but a keyboard press happens before the third mouse press, the mouse count / timer is reset.
+//counts for all other devices as well
+
 /// <summary>
 /// Represents a mouse input device, providing access to mouse buttons, axes, and wheel axes,
 /// as well as state tracking and utility methods for mouse input.
@@ -20,16 +25,17 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
     public static readonly ShapeMouseButton[] AllShapeMouseButtons = Enum.GetValues<ShapeMouseButton>();
 
     /// <summary>
-    /// The minimum movement threshold to consider the mouse as "used".
+    /// Gets the usage detection settings for the mouse input device.
     /// </summary>
-    public float MoveThreshold = 0.5f;
-    /// <summary>
-    /// The minimum mouse wheel movement threshold to consider the mouse as "used".
-    /// </summary>
-    public float MouseWheelThreshold = 0.25f;
-
+    public InputDeviceUsageDetectionSettings.MouseSettings UsageDetectionSettings { get; private set; } = new();
+    
     private bool wasUsed;
+    private bool wasUsedRaw;
     private bool isLocked;
+
+    private int pressedCount = 0;
+    private float pressedCountDurationTimer = 0f;
+    private float usedDurationTimer = 0f;
 
     private readonly Dictionary<ShapeMouseButton, InputState> buttonStates = new(AllShapeMouseButtons.Length);
     private readonly Dictionary<ShapeMouseAxis, InputState> axisStates = new(2);
@@ -74,10 +80,15 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
     /// </summary>
     public InputState GetWheelAxisState(ShapeMouseWheelAxis axis) => wheelAxisStates[axis];
     
-    /// <summary>
-    /// Returns whether the mouse was used in the last update.
-    /// </summary>
+    /// <inheritdoc cref="ShapeInputDevice"/>
+    public void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings) => UsageDetectionSettings = settings.Mouse;
+
+    /// <inheritdoc cref="ShapeInputDevice"/>
     public bool WasUsed() => wasUsed;
+    
+    /// <inheritdoc cref="ShapeInputDevice"/>
+    public bool WasUsedRaw() => wasUsedRaw;
+    
     /// <summary>
     /// Returns whether the mouse device is currently locked.
     /// </summary>
@@ -102,11 +113,13 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
     /// <summary>
     /// Updates the mouse device state, including button, axis, and wheel axis states.
     /// </summary>
-    public void Update()
+    public bool Update(float dt, bool wasOtherDeviceUsed)
     {
         UpdateStates();
         
-        wasUsed = WasMouseUsed(MoveThreshold, MouseWheelThreshold);
+        WasMouseUsed(dt, wasOtherDeviceUsed, out wasUsed, out wasUsedRaw);
+        
+        return wasUsed;
     }
 
     /// <summary>
@@ -117,27 +130,108 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
     /// <summary>
     /// Determines if the mouse was used based on movement or button/wheel activity.
     /// </summary>
-    /// <param name="moveThreshold">Movement threshold.</param>
-    /// <param name="mouseWheelThreshold">Wheel movement threshold.</param>
     /// <returns>True if the mouse was used, otherwise false.</returns>
-    private bool WasMouseUsed(float moveThreshold = 0.5f, float mouseWheelThreshold = 0.25f)
+    private void WasMouseUsed(float dt, bool wasOtherDeviceUsed, out bool used, out bool usedRaw)
     {
-        if (isLocked) return false;
+        used = false;
+        usedRaw = false;
         
-        var mouseDelta = Raylib.GetMouseDelta();
-        if (mouseDelta.LengthSquared() > moveThreshold * moveThreshold) return true;
-        var mouseWheel = Raylib.GetMouseWheelMoveV();
-        if (mouseWheel.LengthSquared() > mouseWheelThreshold * mouseWheelThreshold) return true;
+        if (isLocked) return;
+        
+        var moveThreshold = UsageDetectionSettings.MoveThreshold;
+        var mouseWheelThreshold = UsageDetectionSettings.MouseWheelThreshold;
+        var pressCountEnabled = UsageDetectionSettings.PressCountEnabled;
+        var usedDurationEnabled = UsageDetectionSettings.UsedDurationEnabled;
+        
+        if (!UsageDetectionSettings.MouseDetection || (!pressCountEnabled && !usedDurationEnabled))
+        {
+            if (Raylib.GetMouseDelta().LengthSquared() > moveThreshold * moveThreshold)
+            {
+                usedRaw = true;
+                return;
+            }
+            if (Raylib.GetMouseWheelMoveV().LengthSquared() > mouseWheelThreshold * mouseWheelThreshold || 
+                Raylib.IsMouseButtonDown(MouseButton.Left) || 
+                Raylib.IsMouseButtonDown(MouseButton.Right) || 
+                Raylib.IsMouseButtonDown(MouseButton.Middle) || 
+                Raylib.IsMouseButtonDown(MouseButton.Extra) || 
+                Raylib.IsMouseButtonDown(MouseButton.Forward) || 
+                Raylib.IsMouseButtonDown(MouseButton.Back) || 
+                Raylib.IsMouseButtonDown(MouseButton.Side))
+            {
+                usedRaw = true;
+            }
 
-        if (Raylib.IsMouseButtonDown(MouseButton.Left)) return true;
-        if (Raylib.IsMouseButtonDown(MouseButton.Right)) return true;
-        if (Raylib.IsMouseButtonDown(MouseButton.Middle)) return true;
-        if (Raylib.IsMouseButtonDown(MouseButton.Extra)) return true;
-        if (Raylib.IsMouseButtonDown(MouseButton.Forward)) return true;
-        if (Raylib.IsMouseButtonDown(MouseButton.Back)) return true;
-        if (Raylib.IsMouseButtonDown(MouseButton.Side)) return true;
+            return;
+        }
 
-        return false;
+        if (wasOtherDeviceUsed)
+        {
+            usedDurationTimer = 0f;
+            pressedCount = 0;
+            pressedCountDurationTimer = 0f;
+        }
+        
+        if (pressCountEnabled)
+        {
+            pressedCountDurationTimer += dt;
+            if (pressedCountDurationTimer >= UsageDetectionSettings.MouseMinPressInterval)
+            {
+                pressedCountDurationTimer -= UsageDetectionSettings.MouseMinPressInterval;
+                pressedCount = 0;
+            }
+        }
+        
+        bool movement = Raylib.GetMouseDelta().LengthSquared() > moveThreshold * moveThreshold ||
+                        Raylib.GetMouseWheelMoveV().LengthSquared() > mouseWheelThreshold * mouseWheelThreshold;
+        
+        bool mouseButtonDown = Raylib.IsMouseButtonDown(MouseButton.Left) ||
+                               Raylib.IsMouseButtonDown(MouseButton.Right) ||
+                               Raylib.IsMouseButtonDown(MouseButton.Middle) ||
+                               Raylib.IsMouseButtonDown(MouseButton.Extra) ||
+                               Raylib.IsMouseButtonDown(MouseButton.Forward) ||
+                               Raylib.IsMouseButtonDown(MouseButton.Back) ||
+                               Raylib.IsMouseButtonDown(MouseButton.Side);
+        
+        if (movement || mouseButtonDown)
+        {
+            usedRaw = true;
+            if (usedDurationEnabled)
+            {
+                usedDurationTimer += dt;
+                if (usedDurationTimer > UsageDetectionSettings.MouseMinUsedDuration)
+                {
+                    usedDurationTimer -= UsageDetectionSettings.MouseMinUsedDuration;
+                    used = true;
+                    pressedCount = 0;
+                    pressedCountDurationTimer = 0f;
+                    return;
+                }
+            }
+
+            if (pressCountEnabled)
+            {
+                bool mouseButtonPressedThisFrame = 
+                    Raylib.IsMouseButtonPressed(MouseButton.Left) ||
+                    Raylib.IsMouseButtonPressed(MouseButton.Right) ||
+                    Raylib.IsMouseButtonPressed(MouseButton.Middle) ||
+                    Raylib.IsMouseButtonPressed(MouseButton.Extra) ||
+                    Raylib.IsMouseButtonPressed(MouseButton.Forward) ||
+                    Raylib.IsMouseButtonPressed(MouseButton.Back) ||
+                    Raylib.IsMouseButtonPressed(MouseButton.Side);
+
+                if (mouseButtonPressedThisFrame)
+                {
+                    pressedCount++;
+                    if (pressedCount >= UsageDetectionSettings.MouseMinPressCount)
+                    {
+                        used = true;
+                        pressedCountDurationTimer = 0f;
+                        usedDurationTimer = 0f;
+                    }
+                }
+            }
+        }
     }
 
     /// <summary>

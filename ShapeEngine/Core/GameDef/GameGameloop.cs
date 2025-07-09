@@ -38,7 +38,7 @@ public partial class Game
 
             Window.Update(dt);
             AudioDevice.Update(dt, curCamera);
-            ShapeInput.Update();
+            ShapeInput.Update(dt);
 
             if (Window.MouseOnScreen)
             {

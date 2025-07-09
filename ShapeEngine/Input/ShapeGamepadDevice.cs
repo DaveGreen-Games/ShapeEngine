@@ -100,6 +100,11 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
     /// </summary>
     public int AxisCount { get; private set; }
 
+    /// <summary>
+    /// Gets the usage detection settings for the gamepad input device.
+    /// </summary>
+    public InputDeviceUsageDetectionSettings.GamepadSettings UsageDetectionSettings { get; private set; } = new();
+    
     private bool isLocked;
     private bool wasUsed;
     
@@ -165,11 +170,16 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
     /// Gets the current input state for the specified gamepad axis.
     /// </summary>
     public InputState GetAxisState(ShapeGamepadAxis axis) => axisStates[axis];
+
+    /// <inheritdoc cref="ShapeInputDevice"/>
+    public void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings) => UsageDetectionSettings = settings.Gamepad;
     
-    /// <summary>
-    /// Returns whether the gamepad was used in the last update.
-    /// </summary>
+    /// <inheritdoc cref="ShapeInputDevice"/>
     public bool WasUsed() => wasUsed;
+    
+    /// <inheritdoc cref="ShapeInputDevice"/>
+    public bool WasUsedRaw() => wasUsed;
+    
     /// <summary>
     /// Returns whether the gamepad device is currently locked.
     /// </summary>
@@ -194,7 +204,7 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
     /// <summary>
     /// Updates the gamepad device state, including button and axis states.
     /// </summary>
-    public void Update()
+    public bool Update(float dt, bool wasOtherDeviceUsed)
     {
         UpdateButtonStates();
         UpdateAxisStates();
@@ -203,13 +213,16 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
         if(UsedButtons.Count > 0) UsedButtons.Clear();
         if(UsedAxis.Count > 0) UsedAxis.Clear();
         
-        if (!Connected || isLocked) return;
+        if (!Connected || isLocked) return false;
         
         var usedButtons = GetUsedGamepadButtons();
         var usedAxis = GetUsedGamepadAxis();
         wasUsed = usedButtons.Count > 0 || usedAxis.Count > 0;
         if(usedButtons.Count > 0) UsedButtons.AddRange(usedButtons);
         if(usedAxis.Count > 0) UsedAxis.AddRange(usedAxis);
+
+        //TODO: raw usage needs to be here as well.
+        return wasUsed;
     }
     
     /// <summary>

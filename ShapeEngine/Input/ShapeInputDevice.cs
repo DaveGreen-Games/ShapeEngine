@@ -6,16 +6,37 @@ namespace ShapeEngine.Input;
 /// </summary>
 public interface ShapeInputDevice
 {
+    
     /// <summary>
-    /// Returns whether the device was used in the last update.
+    /// Applies the specified change settings to this input device,
+    /// modifying how device usage is detected and processed.
     /// </summary>
-    /// <returns>True if the device was used, otherwise false.</returns>
+    /// <param name="settings">The change settings to apply to the input device.</param>
+    void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings);
+    
+    /// <summary>
+    /// Indicates whether the device registered any input during the last update cycle,
+    /// taking into account any filters or settings applied to the device with <see cref="InputDeviceUsageDetectionSettings"/>.
+    /// </summary>
+    /// <returns><c>true</c> if the device was used in the last update; otherwise, <c>false</c>.</returns>
     bool WasUsed();
 
     /// <summary>
-    /// Updates the device state.
+    /// Determines if the device registered any input during the last update cycle,
+    /// ignoring any filters or settings specified by <see cref="InputDeviceUsageDetectionSettings"/>.
+    /// Useful for detecting raw device activity.
     /// </summary>
-    void Update();
+    /// <returns><c>true</c> if the device was used in the last update; otherwise, <c>false</c>.</returns>
+    bool WasUsedRaw();
+
+    /// <summary>
+    /// Updates the device state.
+    /// Receives input if another device was used as well in this frame.
+    /// </summary>
+    /// <returns>
+    /// If this device was used this frame. Takes <see cref="InputDeviceUsageDetectionSettings"/> into account.
+    /// </returns>
+    bool Update(float dt, bool otherDeviceUsed);
 
     /// <summary>
     /// Returns whether the device is currently locked.
