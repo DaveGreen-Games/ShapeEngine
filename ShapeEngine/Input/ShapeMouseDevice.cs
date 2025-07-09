@@ -145,12 +145,14 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         
         if (!UsageDetectionSettings.MouseDetection || (!pressCountEnabled && !usedDurationEnabled))
         {
-            if (Raylib.GetMouseDelta().LengthSquared() > moveThreshold * moveThreshold)
+            if (UsageDetectionSettings.IsMouseMoveThresholdEnabled && Raylib.GetMouseDelta().LengthSquared() > moveThreshold * moveThreshold)
             {
                 usedRaw = true;
+                if(UsageDetectionSettings.MouseDetection) used = true;
                 return;
             }
-            if (Raylib.GetMouseWheelMoveV().LengthSquared() > mouseWheelThreshold * mouseWheelThreshold || 
+            if (
+                (UsageDetectionSettings.IsMouseWheelThresholdEnabled && Raylib.GetMouseWheelMoveV().LengthSquared() > mouseWheelThreshold * mouseWheelThreshold) || 
                 Raylib.IsMouseButtonDown(MouseButton.Left) || 
                 Raylib.IsMouseButtonDown(MouseButton.Right) || 
                 Raylib.IsMouseButtonDown(MouseButton.Middle) || 
@@ -160,6 +162,7 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
                 Raylib.IsMouseButtonDown(MouseButton.Side))
             {
                 usedRaw = true;
+                if(UsageDetectionSettings.MouseDetection) used = true;
             }
 
             return;
@@ -182,8 +185,8 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
             }
         }
         
-        bool movement = Raylib.GetMouseDelta().LengthSquared() > moveThreshold * moveThreshold ||
-                        Raylib.GetMouseWheelMoveV().LengthSquared() > mouseWheelThreshold * mouseWheelThreshold;
+        bool movement = (UsageDetectionSettings.IsMouseMoveThresholdEnabled && Raylib.GetMouseDelta().LengthSquared() > moveThreshold * moveThreshold) ||
+                        (UsageDetectionSettings.IsMouseWheelThresholdEnabled && Raylib.GetMouseWheelMoveV().LengthSquared() > mouseWheelThreshold * mouseWheelThreshold);
         
         bool mouseButtonDown = Raylib.IsMouseButtonDown(MouseButton.Left) ||
                                Raylib.IsMouseButtonDown(MouseButton.Right) ||
