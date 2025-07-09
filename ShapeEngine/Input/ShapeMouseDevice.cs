@@ -188,6 +188,13 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         used = false;
         usedRaw = false;
         
+        if (wasOtherDeviceUsed)
+        {
+            usedDurationTimer = 0f;
+            pressedCount = 0;
+            pressedCountDurationTimer = 0f;
+        }
+        
         if (isLocked) return;
         
         var moveThreshold = UsageDetectionSettings.MoveThreshold;
@@ -233,13 +240,6 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
             }
             
             return;
-        }
-
-        if (wasOtherDeviceUsed)
-        {
-            usedDurationTimer = 0f;
-            pressedCount = 0;
-            pressedCountDurationTimer = 0f;
         }
         
         if (pressCountEnabled)
@@ -298,6 +298,7 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
                         used = true;
                         pressedCountDurationTimer = 0f;
                         usedDurationTimer = 0f;
+                        pressedCount = 0;
                     }
                 }
             }

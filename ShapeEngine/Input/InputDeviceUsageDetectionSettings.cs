@@ -333,7 +333,7 @@ public readonly struct InputDeviceUsageDetectionSettings
         /// Returns <c>true</c> if <see cref="RequireSpecialButtonForSelection"/> is enabled and at least one of
         /// <see cref="SelectionButtonPrimary"/>, <see cref="SelectionButtonSecondary"/>, or <see cref="SelectionButtonTertiary"/> is not <c>ShapeKeyboardButton.NONE</c>.
         /// </summary>
-        public bool SpecialButtonEnabled => 
+        public bool SpecialButtonSelectionSystemEnabled => 
             RequireSpecialButtonForSelection && 
             (SelectionButtonPrimary != ShapeKeyboardButton.NONE || 
              SelectionButtonSecondary != ShapeKeyboardButton.NONE || 

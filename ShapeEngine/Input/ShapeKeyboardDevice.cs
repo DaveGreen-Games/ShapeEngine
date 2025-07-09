@@ -26,7 +26,10 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
     private bool wasUsed;
     private bool wasUsedRaw;
     private bool isLocked;
-
+    
+    private int pressedCount = 0;
+    private float pressedCountDurationTimer = 0f;
+    private float usedDurationTimer = 0f;
     /// <summary>
     /// List of characters entered since the last update.
     /// </summary>
@@ -203,7 +206,74 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
     {
         used = false;
         usedRaw = false;
-        // return !isLocked && UsedButtons.Count > 0;
+        
+        if (wasOtherDeviceUsed)
+        {
+            usedDurationTimer = 0f;
+            pressedCount = 0;
+            pressedCountDurationTimer = 0f;
+        }
+        
+        if (isLocked) return;
+
+        usedRaw = PressedButtons.Count > 0;
+
+        if (!UsageDetectionSettings.Detection) return;
+            
+        if (UsageDetectionSettings.SpecialButtonSelectionSystemEnabled)
+        {
+            if (
+                UsageDetectionSettings.SelectionButtonPrimary != ShapeKeyboardButton.NONE &&
+                Raylib.IsKeyDown((KeyboardKey)UsageDetectionSettings.SelectionButtonPrimary) ||
+                UsageDetectionSettings.SelectionButtonSecondary != ShapeKeyboardButton.NONE &&
+                Raylib.IsKeyDown((KeyboardKey)UsageDetectionSettings.SelectionButtonSecondary) ||
+                UsageDetectionSettings.SelectionButtonTertiary != ShapeKeyboardButton.NONE &&
+                Raylib.IsKeyDown((KeyboardKey)UsageDetectionSettings.SelectionButtonTertiary)
+            )
+            {
+                used = true;
+            }
+        }
+        else
+        {
+            var pressCountEnabled = UsageDetectionSettings.PressCountEnabled;
+            var usedDurationEnabled = UsageDetectionSettings.UsedDurationEnabled;
+            
+            if (pressCountEnabled)
+            {
+                pressedCountDurationTimer += dt;
+                if (pressedCountDurationTimer >= UsageDetectionSettings.MinPressInterval)
+                {
+                    pressedCountDurationTimer -= UsageDetectionSettings.MinPressInterval;
+                    pressedCount = 0;
+                }
+            }
+            
+            if (usedDurationEnabled && HeldDownButtons.Count > 0)
+            {
+                usedDurationTimer += dt;
+                if (usedDurationTimer > UsageDetectionSettings.MinUsedDuration)
+                {
+                    usedDurationTimer -= UsageDetectionSettings.MinUsedDuration;
+                    used = true;
+                    pressedCount = 0;
+                    pressedCountDurationTimer = 0f;
+                    return;
+                }
+            }
+            
+            if (pressCountEnabled && PressedButtons.Count > 0)
+            {
+                pressedCount++;
+                if (pressedCount >= UsageDetectionSettings.MinPressCount)
+                {
+                    used = true;
+                    pressedCountDurationTimer = 0f;
+                    usedDurationTimer = 0f;
+                    pressedCount = 0;
+                }
+            }
+        }
     } 
         
 
