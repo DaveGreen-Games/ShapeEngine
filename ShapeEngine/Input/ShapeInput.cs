@@ -1,6 +1,7 @@
 
 namespace ShapeEngine.Input;
 //TODO: rename all input classes / structs that have a Shape prefix! (ShapeKeyboardDevice to KeyboardDevice for instance)
+//some things need shape prefix, like ShapeGamepadButton (raylib uses GamepadButton)
 
 /// <summary>
 /// Provides static access to input devices (keyboard, mouse, gamepads) and input state queries.
@@ -130,7 +131,6 @@ public static class ShapeInput
         }
         
         var selectionCooldownActive = InputDeviceSelectionCooldownActive;
-        var cooldown = 0f;
         var usedInputDevice = InputDeviceType.None;
         // Prevents input device switching if another device was already used this frame.
         // For example, keyboard usage can block gamepad and mouse from becoming the active device.
@@ -176,7 +176,7 @@ public static class ShapeInput
                 else if (usedInputDevice == InputDeviceType.Gamepad) deviceCooldown = GamepadDeviceManager.UsageDetectionSettings.SelectionCooldownDuration;
                 else deviceCooldown = MouseDevice.UsageDetectionSettings.SelectionCooldownDuration;
                
-                cooldown = deviceCooldown > 0f ? deviceCooldown : 0f;
+                float cooldown = deviceCooldown > 0f ? deviceCooldown : 0f;
                 
                 //Update CurInputDeviceType
                 var prevInputDevice = CurrentInputDeviceType;
@@ -233,46 +233,46 @@ public static class ShapeInput
             deviceType == InputDeviceType.Keyboard ? "Keyboard" : "Mouse";
     }
     
-    /// <summary>
-    /// Checks for input device changes based on recent device usage and updates <see cref="CurrentInputDeviceType"/>.
-    /// Triggers <see cref="OnInputDeviceChanged"/> if the device type changes.
-    /// </summary>
-    private static void CheckInputDevice()
-    {
-        var prevInputDevice = CurrentInputDeviceType;
-        if (CurrentInputDeviceType == InputDeviceType.Keyboard)
-        {
-            if (MouseDevice.WasUsed()) CurrentInputDeviceType = InputDeviceType.Mouse;
-            else
-            {
-                if (GamepadDeviceManager.LastUsedGamepads.Count > 0)
-                {
-                    CurrentInputDeviceType = InputDeviceType.Gamepad;
-                }
-            }
-        }
-        else if (CurrentInputDeviceType == InputDeviceType.Mouse)
-        {
-            if (KeyboardDevice.WasUsed()) CurrentInputDeviceType = InputDeviceType.Keyboard;
-            else
-            {
-                if (GamepadDeviceManager.LastUsedGamepads.Count > 0)
-                {
-                    CurrentInputDeviceType = InputDeviceType.Gamepad;
-                }
-            }
-        }
-        else //gamepad
-        {
-            if (MouseDevice.WasUsed()) CurrentInputDeviceType = InputDeviceType.Mouse;
-            else if (KeyboardDevice.WasUsed()) CurrentInputDeviceType = InputDeviceType.Keyboard;
-        }
-
-        if (CurrentInputDeviceType != prevInputDevice)
-        {
-            OnInputDeviceChanged?.Invoke(prevInputDevice, CurrentInputDeviceType);
-        }
-    }
+    // /// <summary>
+    // /// Checks for input device changes based on recent device usage and updates <see cref="CurrentInputDeviceType"/>.
+    // /// Triggers <see cref="OnInputDeviceChanged"/> if the device type changes.
+    // /// </summary>
+    // private static void CheckInputDevice()
+    // {
+    //     var prevInputDevice = CurrentInputDeviceType;
+    //     if (CurrentInputDeviceType == InputDeviceType.Keyboard)
+    //     {
+    //         if (MouseDevice.WasUsed()) CurrentInputDeviceType = InputDeviceType.Mouse;
+    //         else
+    //         {
+    //             if (GamepadDeviceManager.LastUsedGamepads.Count > 0)
+    //             {
+    //                 CurrentInputDeviceType = InputDeviceType.Gamepad;
+    //             }
+    //         }
+    //     }
+    //     else if (CurrentInputDeviceType == InputDeviceType.Mouse)
+    //     {
+    //         if (KeyboardDevice.WasUsed()) CurrentInputDeviceType = InputDeviceType.Keyboard;
+    //         else
+    //         {
+    //             if (GamepadDeviceManager.LastUsedGamepads.Count > 0)
+    //             {
+    //                 CurrentInputDeviceType = InputDeviceType.Gamepad;
+    //             }
+    //         }
+    //     }
+    //     else //gamepad
+    //     {
+    //         if (MouseDevice.WasUsed()) CurrentInputDeviceType = InputDeviceType.Mouse;
+    //         else if (KeyboardDevice.WasUsed()) CurrentInputDeviceType = InputDeviceType.Keyboard;
+    //     }
+    //
+    //     if (CurrentInputDeviceType != prevInputDevice)
+    //     {
+    //         OnInputDeviceChanged?.Invoke(prevInputDevice, CurrentInputDeviceType);
+    //     }
+    // }
     #endregion
 
 }
