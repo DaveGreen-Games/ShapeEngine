@@ -61,6 +61,11 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         wheelAxisStates.Add(ShapeMouseWheelAxis.HORIZONTAL, new());
         wheelAxisStates.Add(ShapeMouseWheelAxis.VERTICAL, new());
     }
+
+    /// <summary>
+    /// Gets the type of this input device, which is always <see cref="InputDeviceType.Mouse"/>.
+    /// </summary>
+    public InputDeviceType GetDeviceType() => InputDeviceType.Mouse;
     
     /// <summary>
     /// Gets the current input state for the specified mouse button.

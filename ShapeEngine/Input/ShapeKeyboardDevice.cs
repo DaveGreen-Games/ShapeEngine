@@ -67,6 +67,11 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
     }
     
     /// <summary>
+    /// Gets the type of this input device, which is always <see cref="InputDeviceType.Keyboard"/>.
+    /// </summary>
+    public InputDeviceType GetDeviceType() => InputDeviceType.Keyboard;
+    
+    /// <summary>
     /// Returns whether the keyboard device is currently locked.
     /// </summary>
     public bool IsLocked() => isLocked;

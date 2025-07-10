@@ -1,12 +1,20 @@
 namespace ShapeEngine.Input;
 
+//TODO: change this to an abstract class or base class -> interface makes no sense because there are only 3 supported input devices and all of them are hard coded
+//there is no generic system in place
+
+
 /// <summary>
 /// Represents a generic input device interface for the ShapeEngine input system.
 /// Provides methods for device usage tracking, locking, updating, and calibration.
 /// </summary>
 public interface ShapeInputDevice
 {
-    
+    /// <summary>
+    /// Gets the type of this input device.
+    /// </summary>
+    /// <returns>The <see cref="InputDeviceType"/> representing the device type.</returns>
+    InputDeviceType GetDeviceType();
     /// <summary>
     /// Applies the specified change settings to this input device,
     /// modifying how device usage is detected and processed.

@@ -165,6 +165,11 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
     }
 
     /// <summary>
+    /// Gets the type of this input device, which is always <see cref="InputDeviceType.Gamepad"/>.
+    /// </summary>
+    public InputDeviceType GetDeviceType() => InputDeviceType.Gamepad;
+    
+    /// <summary>
     /// Gets the current input state for the specified gamepad button.
     /// </summary>
     public InputState GetButtonState(ShapeGamepadButton button) => buttonStates[button];
@@ -172,6 +177,40 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
     /// Gets the current input state for the specified gamepad axis.
     /// </summary>
     public InputState GetAxisState(ShapeGamepadAxis axis) => axisStates[axis];
+    
+    /// <summary>
+    /// Converts a <see cref="ShapeGamepadButton"/> to the corresponding <see cref="GamepadButton"/> used by Raylib.
+    /// </summary>
+    /// <param name="button">The <see cref="ShapeGamepadButton"/> to convert.</param>
+    /// <returns>The equivalent <see cref="GamepadButton"/> value.</returns>
+    public static GamepadButton ToRaylibGamepadButton(ShapeGamepadButton button)
+    {
+        int id = (int)button;
+        if(id is >= 0 and <= (int)GamepadButton.RightThumb) return (GamepadButton)button;
+        return GamepadButton.Unknown;
+    }
+
+    /// <summary>
+    /// Converts a <see cref="GamepadButton"/> from Raylib to the corresponding <see cref="ShapeGamepadButton"/>.
+    /// </summary>
+    /// <param name="button">The Raylib <see cref="GamepadButton"/> to convert.</param>
+    /// <returns>The equivalent <see cref="ShapeGamepadButton"/> value.</returns>
+    public static ShapeGamepadButton ToShapeGamepadButton(GamepadButton button)
+    {
+        return (ShapeGamepadButton)button;
+    }
+
+    /// <summary>
+    /// Checks if the given <see cref="ShapeGamepadButton"/> value corresponds to a valid Raylib gamepad button.
+    /// </summary>
+    /// <param name="button">The <see cref="ShapeGamepadButton"/> to validate.</param>
+    /// <returns>True if the button is a valid Raylib gamepad button; otherwise, false.</returns>
+    public static bool IsValidRaylibGamepadButton(ShapeGamepadButton button)
+    {
+        int id = (int)button;
+        return id is >= 0 and <= (int)GamepadButton.RightThumb;
+    }
+    
 
     /// <summary>
     /// Applies the specified change settings to this gamepad device,
