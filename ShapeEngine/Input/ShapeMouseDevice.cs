@@ -164,7 +164,7 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         
         WasMouseUsed(dt, wasOtherDeviceUsed, out wasUsed, out wasUsedRaw);
         
-        return wasUsed;
+        return wasUsed && !wasOtherDeviceUsed;//safety precaution
     }
 
     /// <summary>

@@ -237,7 +237,7 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
         if(usedAxis.Count > 0) UsedAxis.AddRange(usedAxis);
 
         
-        return wasUsed;
+        return wasUsed && !wasOtherDeviceUsed;//safety precaution
     }
 
     private bool WasUsed(float dt, bool wasOtherDeviceUsed, out bool used, out bool usedRaw)

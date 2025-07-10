@@ -129,7 +129,7 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
         }
         
         WasKeyboardUsed(dt, wasOtherDeviceUsed, out wasUsed, out wasUsedRaw);
-        return wasUsed;
+        return wasUsed && !wasOtherDeviceUsed;//safety precaution
     }
     
     /// <summary>
