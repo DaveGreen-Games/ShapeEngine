@@ -6,6 +6,11 @@ namespace ShapeEngine.Input;
 public enum InputDeviceType
 {
     /// <summary>
+    /// No input device.
+    /// </summary>
+    None = 0,
+    
+    /// <summary>
     /// Keyboard input device.
     /// </summary>
     Keyboard = 1,

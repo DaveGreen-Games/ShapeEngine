@@ -77,6 +77,8 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
     /// </summary>
     public event Action<ShapeGamepadDevice, ShapeGamepadButton>? OnButtonReleased;
 
+    internal event Action<ShapeGamepadDevice, InputDeviceUsageDetectionSettings>? OnInputDeviceChangeSettingsChanged;
+    
     /// <summary>
     /// The index of this gamepad device.
     /// </summary>
@@ -171,13 +173,26 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
     /// </summary>
     public InputState GetAxisState(ShapeGamepadAxis axis) => axisStates[axis];
 
-    /// <inheritdoc cref="ShapeInputDevice"/>
-    public void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings) => UsageDetectionSettings = settings.Gamepad;
-    
-    /// <inheritdoc cref="ShapeInputDevice"/>
+    /// <summary>
+    /// Applies the specified change settings to this gamepad device,
+    /// modifying how device usage is detected and processed.
+    /// Also propagates the settings to all other <see cref="ShapeGamepadDevice"/> instances and the <see cref="ShapeGamepadDeviceManager"/>.
+    /// </summary>
+    /// <param name="settings">The change settings to apply to the input device.</param>
+    public void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
+    {
+        UsageDetectionSettings = settings.Gamepad;
+        OnInputDeviceChangeSettingsChanged?.Invoke(this, settings);
+    }
+    internal void OverrideInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
+    {
+        UsageDetectionSettings = settings.Gamepad;
+    }
+
+    /// <inheritdoc cref="ShapeInputDevice.WasUsed"/>
     public bool WasUsed() => wasUsed;
     
-    /// <inheritdoc cref="ShapeInputDevice"/>
+    /// <inheritdoc cref="ShapeInputDevice.WasUsedRaw"/>
     public bool WasUsedRaw() => wasUsed;
     
     /// <summary>
@@ -201,13 +216,13 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
         isLocked = false;
     }
 
-    /// <summary>
-    /// Updates the gamepad device state, including button and axis states.
-    /// </summary>
+    /// <inheritdoc cref="ShapeInputDevice.Update"/>
     public bool Update(float dt, bool wasOtherDeviceUsed)
     {
         UpdateButtonStates();
         UpdateAxisStates();
+        
+        //TODO: raw usage needs to be here as well.
         
         wasUsed = false;
         if(UsedButtons.Count > 0) UsedButtons.Clear();
@@ -221,8 +236,17 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
         if(usedButtons.Count > 0) UsedButtons.AddRange(usedButtons);
         if(usedAxis.Count > 0) UsedAxis.AddRange(usedAxis);
 
-        //TODO: raw usage needs to be here as well.
+        
         return wasUsed;
+    }
+
+    private bool WasUsed(float dt, bool wasOtherDeviceUsed, out bool used, out bool usedRaw)
+    {
+        used = false;
+        usedRaw = false;
+        if (!Connected || isLocked) return false;
+
+        return usedRaw;
     }
     
     /// <summary>

@@ -55,6 +55,11 @@ public sealed class ShapeGamepadDeviceManager
     public event Action<ShapeGamepadDevice, ShapeGamepadButton>? OnGamepadButtonReleased;
 
     /// <summary>
+    /// Gets the usage detection settings for all the gamepad input devices.
+    /// </summary>
+    public InputDeviceUsageDetectionSettings.GamepadSettings UsageDetectionSettings { get; private set; } = new();
+    
+    /// <summary>
     /// Initializes a new instance of the <see cref="ShapeGamepadDeviceManager"/> class.
     /// </summary>
     /// <param name="maxGamepads">Maximum number of gamepads to manage.</param>
@@ -75,9 +80,10 @@ public sealed class ShapeGamepadDeviceManager
     
     internal void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
     {
+        UsageDetectionSettings = settings.Gamepad;
         foreach (var gamepad in gamepads)
         {
-            gamepad.ApplyInputDeviceChangeSettings(settings);
+            gamepad.OverrideInputDeviceChangeSettings(settings);
         }
     }
     
@@ -227,6 +233,17 @@ public sealed class ShapeGamepadDeviceManager
             gamepads[i] = gamepad;
             gamepad.OnButtonPressed += GamepadButtonWasPressed;
             gamepad.OnButtonReleased += GamepadButtonWasReleased;
+            gamepad.OnInputDeviceChangeSettingsChanged += OnGamepadUsageDetectionSettingsChanged;
+        }
+    }
+
+    private void OnGamepadUsageDetectionSettingsChanged(ShapeGamepadDevice gamepadDevice, InputDeviceUsageDetectionSettings settings)
+    {
+        UsageDetectionSettings = settings.Gamepad;
+        foreach (var gamepad in gamepads)
+        {
+            if(gamepad == gamepadDevice) continue;
+            gamepad.OverrideInputDeviceChangeSettings(settings);
         }
     }
 

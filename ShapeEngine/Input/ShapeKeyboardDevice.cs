@@ -87,18 +87,16 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
         isLocked = false;
     }
     
-    /// <inheritdoc cref="ShapeInputDevice"/>
+    /// <inheritdoc cref="ShapeInputDevice.ApplyInputDeviceChangeSettings"/>
     public void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings) => UsageDetectionSettings = settings.Keyboard;
 
-    /// <inheritdoc cref="ShapeInputDevice"/>
+    /// <inheritdoc cref="ShapeInputDevice.WasUsed"/>
     public bool WasUsed() => wasUsed;
     
-    /// <inheritdoc cref="ShapeInputDevice"/>
+    /// <inheritdoc cref="ShapeInputDevice.WasUsedRaw"/>
     public bool WasUsedRaw() => wasUsedRaw;
     
-    /// <summary>
-    /// Updates the keyboard device state, including button states and character input.
-    /// </summary>
+    /// <inheritdoc cref="ShapeInputDevice.Update"/>
     public bool Update(float dt, bool wasOtherDeviceUsed)
     {
         UpdateButtonStates();
@@ -218,7 +216,7 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
 
         usedRaw = PressedButtons.Count > 0;
 
-        if (!UsageDetectionSettings.Detection) return;
+        if (!UsageDetectionSettings.Detection || wasOtherDeviceUsed) return;
             
         if (UsageDetectionSettings.SpecialButtonSelectionSystemEnabled)
         {

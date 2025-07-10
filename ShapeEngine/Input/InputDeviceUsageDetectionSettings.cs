@@ -26,6 +26,7 @@ public readonly struct InputDeviceUsageDetectionSettings
         /// RequireSpecialButtonForSelection = false;
         /// SelectionButtonPrimary = ShapeMouseButton.NONE;
         /// SelectionButtonSecondary = ShapeMouseButton.NONE;
+        /// SelectionCooldownDuration = 2f;
         /// </code>
         public static readonly MouseSettings Default = new();
         /// <summary>
@@ -41,6 +42,7 @@ public readonly struct InputDeviceUsageDetectionSettings
         /// RequireSpecialButtonForSelection = false;
         /// SelectionButtonPrimary = ShapeMouseButton.NONE;
         /// SelectionButtonSecondary = ShapeMouseButton.NONE;
+        /// SelectionCooldownDuration = 2f;
         /// </code>
         public MouseSettings()
         {
@@ -53,6 +55,7 @@ public readonly struct InputDeviceUsageDetectionSettings
             RequireSpecialButtonForSelection = false;
             SelectionButtonPrimary = ShapeMouseButton.NONE;
             SelectionButtonSecondary = ShapeMouseButton.NONE;
+            SelectionCooldownDuration = 2f;
         }
         
         /// <summary>
@@ -62,7 +65,12 @@ public readonly struct InputDeviceUsageDetectionSettings
         /// <param name="detection">Indicates whether mouse detection is enabled.</param>
         /// <param name="moveThreshold">The minimum movement threshold to consider the mouse as "used".</param>
         /// <param name="wheelThreshold">The minimum mouse wheel movement threshold to consider the mouse as "used".</param>
-        public MouseSettings(bool detection, float moveThreshold, float wheelThreshold)
+        /// <param name="selectionCooldownDuration">
+        /// Specifies the cooldown duration (in seconds) after this device is selected
+        /// during which no other input device can be selected.
+        /// <c>Default is 2 seconds.</c>
+        /// </param>
+        public MouseSettings(bool detection, float moveThreshold, float wheelThreshold, float selectionCooldownDuration = 2f)
         {
             Detection = detection;
             MoveThreshold = moveThreshold;
@@ -73,6 +81,7 @@ public readonly struct InputDeviceUsageDetectionSettings
             RequireSpecialButtonForSelection = false;
             SelectionButtonPrimary = ShapeMouseButton.NONE;
             SelectionButtonSecondary = ShapeMouseButton.NONE;
+            SelectionCooldownDuration = selectionCooldownDuration;
         }
         
         /// <summary>
@@ -84,7 +93,12 @@ public readonly struct InputDeviceUsageDetectionSettings
         /// <param name="minPressCount">The minimum number of mouse button presses required within the specified interval.</param>
         /// <param name="minPressInterval">The time interval (in seconds) from the first mouse button press within which <paramref name="minPressCount"/> must be reached.</param>
         /// <param name="minUsedDuration">The minimum duration (in seconds) of consecutive mouse use required to consider the mouse device as "used".</param>
-        public MouseSettings(float moveThreshold, float wheelThreshold, int minPressCount, float minPressInterval, float minUsedDuration)
+        /// <param name="selectionCooldownDuration">
+        /// Specifies the cooldown duration (in seconds) after this device is selected
+        /// during which no other input device can be selected.
+        /// <c>Default is 2 seconds.</c>
+        /// </param>
+        public MouseSettings(float moveThreshold, float wheelThreshold, int minPressCount, float minPressInterval, float minUsedDuration, float selectionCooldownDuration = 2f)
         {
             Detection = true;
             MoveThreshold = moveThreshold;
@@ -95,6 +109,7 @@ public readonly struct InputDeviceUsageDetectionSettings
             RequireSpecialButtonForSelection = false;
             SelectionButtonPrimary = ShapeMouseButton.NONE;
             SelectionButtonSecondary = ShapeMouseButton.NONE;
+            SelectionCooldownDuration = selectionCooldownDuration;
         }
 
         /// <summary>
@@ -110,7 +125,12 @@ public readonly struct InputDeviceUsageDetectionSettings
         /// <param name="selectionButtonSecondary">Specifies the secondary mouse button to be used for device selection.
         /// If not a valid Raylib mouse button,
         /// <c>ShapeMouseButton.NONE</c> is used.</param>
-        public MouseSettings(ShapeMouseButton selectionButtonPrimary, ShapeMouseButton selectionButtonSecondary)
+        /// <param name="selectionCooldownDuration">
+        /// Specifies the cooldown duration (in seconds) after this device is selected
+        /// during which no other input device can be selected.
+        /// <c>Default is 2 seconds.</c>
+        /// </param>
+        public MouseSettings(ShapeMouseButton selectionButtonPrimary, ShapeMouseButton selectionButtonSecondary, float selectionCooldownDuration = 2f)
         {
             Detection = true;
             MoveThreshold = -1f;
@@ -121,6 +141,7 @@ public readonly struct InputDeviceUsageDetectionSettings
             RequireSpecialButtonForSelection = true;
             SelectionButtonPrimary = ShapeMouseDevice.IsValidRaylibMouseButton(selectionButtonPrimary) ? selectionButtonPrimary : ShapeMouseButton.NONE;
             SelectionButtonSecondary = ShapeMouseDevice.IsValidRaylibMouseButton(selectionButtonSecondary) ? selectionButtonSecondary : ShapeMouseButton.NONE;
+            SelectionCooldownDuration = selectionCooldownDuration;
         }
         
         /// <summary>
@@ -226,6 +247,16 @@ public readonly struct InputDeviceUsageDetectionSettings
         /// <c>Default is ShapeMouseButton.NONE.</c>
         /// </remarks>
         public readonly ShapeMouseButton SelectionButtonSecondary;
+
+        /// <summary>
+        /// Specifies the duration (in seconds) after this device is selected during which no other input device can be selected.
+        /// Used to prevent rapid switching between input devices.
+        /// </summary>
+        /// <remarks>
+        /// <c>Default is 2 seconds</c>.
+        /// Zero and negative values disable the cooldown.
+        /// </remarks>
+        public readonly float SelectionCooldownDuration;
     }
    
     /// <summary>
@@ -246,6 +277,7 @@ public readonly struct InputDeviceUsageDetectionSettings
         /// SelectionButtonPrimary = ShapeKeyboardButton.NONE;
         /// SelectionButtonSecondary = ShapeKeyboardButton.NONE;
         /// SelectionButtonTertiary = ShapeKeyboardButton.NONE;
+        /// SelectionCooldownDuration = 2f;
         /// </code>
         public static readonly KeyboardSettings Default = new();
        
@@ -261,6 +293,7 @@ public readonly struct InputDeviceUsageDetectionSettings
         /// SelectionButtonPrimary = ShapeKeyboardButton.NONE;
         /// SelectionButtonSecondary = ShapeKeyboardButton.NONE;
         /// SelectionButtonTertiary = ShapeKeyboardButton.NONE;
+        /// SelectionCooldownDuration = 2f;
         /// </code>
         public KeyboardSettings()
         {
@@ -273,6 +306,8 @@ public readonly struct InputDeviceUsageDetectionSettings
             SelectionButtonPrimary = ShapeKeyboardButton.NONE;
             SelectionButtonSecondary = ShapeKeyboardButton.NONE;
             SelectionButtonTertiary = ShapeKeyboardButton.NONE;
+
+            SelectionCooldownDuration = 2f;
         }
         
         /// <summary>
@@ -283,7 +318,12 @@ public readonly struct InputDeviceUsageDetectionSettings
         /// <param name="minPressCount">The minimum number of keyboard button presses required within the specified interval.</param>
         /// <param name="minPressInterval">The time interval (in seconds) from the first keyboard button press within which <paramref name="minPressCount"/> must be reached.</param>
         /// <param name="minUsedDuration">The minimum duration (in seconds) of consecutive keyboard use required to consider the keyboard device as "used".</param>
-        public KeyboardSettings(bool detection, int minPressCount = 2, float minPressInterval = 1f, float minUsedDuration = 0.5f)
+        /// <param name="selectionCooldownDuration">
+        /// Specifies the cooldown duration (in seconds) after this device is selected
+        /// during which no other input device can be selected.
+        /// <c>Default is 2 seconds.</c>
+        /// </param>
+        public KeyboardSettings(bool detection, int minPressCount = 2, float minPressInterval = 1f, float minUsedDuration = 0.5f, float selectionCooldownDuration = 2f)
         {
             Detection = detection;
             MinPressCount = minPressCount;
@@ -293,6 +333,7 @@ public readonly struct InputDeviceUsageDetectionSettings
             SelectionButtonPrimary = ShapeKeyboardButton.NONE;
             SelectionButtonSecondary = ShapeKeyboardButton.NONE;
             SelectionButtonTertiary = ShapeKeyboardButton.NONE;
+            SelectionCooldownDuration = selectionCooldownDuration;
         }
 
         /// <summary>
@@ -305,7 +346,12 @@ public readonly struct InputDeviceUsageDetectionSettings
         /// <param name="selectionButtonPrimary">The primary keyboard button used for device selection.</param>
         /// <param name="selectionButtonSecondary">The secondary keyboard button used for device selection.</param>
         /// <param name="selectionButtonTertiary">The tertiary keyboard button used for device selection.</param>
-        public KeyboardSettings(ShapeKeyboardButton selectionButtonPrimary, ShapeKeyboardButton selectionButtonSecondary, ShapeKeyboardButton selectionButtonTertiary)
+        /// <param name="selectionCooldownDuration">
+        /// Specifies the cooldown duration (in seconds) after this device is selected
+        /// during which no other input device can be selected.
+        /// <c>Default is 2 seconds.</c>
+        /// </param>
+        public KeyboardSettings(ShapeKeyboardButton selectionButtonPrimary, ShapeKeyboardButton selectionButtonSecondary, ShapeKeyboardButton selectionButtonTertiary, float selectionCooldownDuration = 2f)
         {
             Detection = true;
             MinPressCount = -1;
@@ -315,6 +361,7 @@ public readonly struct InputDeviceUsageDetectionSettings
             SelectionButtonPrimary = selectionButtonPrimary;
             SelectionButtonSecondary = selectionButtonSecondary;
             SelectionButtonTertiary = selectionButtonTertiary;
+            SelectionCooldownDuration = selectionCooldownDuration;
         }
         
         /// <summary>
@@ -410,11 +457,30 @@ public readonly struct InputDeviceUsageDetectionSettings
         /// </remarks>
         public readonly ShapeKeyboardButton SelectionButtonTertiary;
 
+        /// <summary>
+        /// Specifies the duration (in seconds) after this device is selected during which no other input device can be selected.
+        /// Used to prevent rapid switching between input devices.
+        /// </summary>
+        /// <remarks>
+        /// <c>Default is 2 seconds</c>.
+        /// Zero and negative values disable the cooldown.
+        /// </remarks>
+        public readonly float SelectionCooldownDuration;
     }
     
     public readonly struct GamepadSettings
     {
         public static readonly GamepadSettings Default = new();
+        
+        /// <summary>
+        /// Specifies the duration (in seconds) after this device is selected during which no other input device can be selected.
+        /// Used to prevent rapid switching between input devices.
+        /// </summary>
+        /// <remarks>
+        /// <c>Default is 2 seconds</c>.
+        /// Zero and negative values disable the cooldown.
+        /// </remarks>
+        public readonly float SelectionCooldownDuration;
     }
     
     

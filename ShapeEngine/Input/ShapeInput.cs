@@ -40,13 +40,21 @@ public static class ShapeInput
     /// </summary>
     public static readonly InputEventHandler EventHandler = new(KeyboardDevice, MouseDevice, GamepadDeviceManager);
 
+
+    private static float inputDeviceSelectionCooldownTimer = 0f;
     /// <summary>
-    /// Gets or sets the global input device change settings.
+    /// Indicates whether the input device selection cooldown is currently active.
+    /// Returns true if the cooldown timer is greater than zero.
     /// </summary>
-    public static InputDeviceUsageDetectionSettings InputDeviceUsageDetectionSettings { get; private set; } = new();
+    public static bool InputDeviceSelectionCooldownActive => inputDeviceSelectionCooldownTimer > 0f;
+    
+    // /// <summary>
+    // /// Gets or sets the global input device change settings.
+    // /// </summary>
+    // public static InputDeviceUsageDetectionSettings InputDeviceUsageDetectionSettings { get; private set; } = new();
     
     /// <summary>
-    /// Sets the input device change settings and applies them to all input devices.
+    /// Applies the <see cref="InputDeviceUsageDetectionSettings"/> to all input devices.
     /// </summary>
     /// <param name="settings">The new input device change settings to apply.</param>
     /// <remarks>
@@ -54,9 +62,9 @@ public static class ShapeInput
     /// <see cref="KeyboardDevice"/>,
     /// and <see cref="GamepadDeviceManager"/> that applies the settings to all <see cref="ShapeGamepadDevice"/>s.
     /// </remarks>
-    public static void SetInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
+    public static void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
     {
-        InputDeviceUsageDetectionSettings = settings;
+        // InputDeviceUsageDetectionSettings = settings;
         MouseDevice.ApplyInputDeviceChangeSettings(settings);
         KeyboardDevice.ApplyInputDeviceChangeSettings(settings);
         GamepadDeviceManager.ApplyInputDeviceChangeSettings(settings);
@@ -112,13 +120,79 @@ public static class ShapeInput
     /// </summary>
     internal static void Update(float dt)
     {
+        if (InputDeviceSelectionCooldownActive)
+        {
+            inputDeviceSelectionCooldownTimer -= dt;
+            if (inputDeviceSelectionCooldownTimer <= 0f)
+            {
+                inputDeviceSelectionCooldownTimer = 0f;
+            }
+        }
+        
+        var selectionCooldownActive = InputDeviceSelectionCooldownActive;
+        var cooldown = 0f;
+        var usedInputDevice = InputDeviceType.None;
         // Prevents input device switching if another device was already used this frame.
         // For example, keyboard usage can block gamepad and mouse from becoming the active device.
-        var wasOtherDeviceUsed = false; 
-        wasOtherDeviceUsed = KeyboardDevice.Update(dt, wasOtherDeviceUsed);
+        var wasOtherDeviceUsed = KeyboardDevice.Update(dt, false);
+        if (wasOtherDeviceUsed)
+        {
+            usedInputDevice = InputDeviceType.Keyboard;   
+        }
         wasOtherDeviceUsed = GamepadDeviceManager.Update(dt, wasOtherDeviceUsed);
-        MouseDevice.Update(dt, wasOtherDeviceUsed);
-        CheckInputDevice();
+        if (usedInputDevice == InputDeviceType.None && wasOtherDeviceUsed)
+        {
+            usedInputDevice = InputDeviceType.Gamepad;
+        }
+        wasOtherDeviceUsed = MouseDevice.Update(dt, wasOtherDeviceUsed);
+        if (usedInputDevice == InputDeviceType.None && wasOtherDeviceUsed)
+        {
+            usedInputDevice = InputDeviceType.Mouse;
+        }
+
+        if (usedInputDevice != InputDeviceType.None)
+        {
+            //Update cooldown timer if device was used again
+            if (selectionCooldownActive)
+            {
+                if (usedInputDevice == CurrentInputDeviceType)
+                {
+                    var deviceCooldown = 0f;
+                
+                    if (usedInputDevice == InputDeviceType.Keyboard) deviceCooldown = KeyboardDevice.UsageDetectionSettings.SelectionCooldownDuration;
+                    else if (usedInputDevice == InputDeviceType.Gamepad) deviceCooldown = GamepadDeviceManager.UsageDetectionSettings.SelectionCooldownDuration;
+                    else deviceCooldown = MouseDevice.UsageDetectionSettings.SelectionCooldownDuration;
+               
+                    inputDeviceSelectionCooldownTimer = deviceCooldown > 0f ? deviceCooldown : inputDeviceSelectionCooldownTimer;
+                }
+            }
+            
+            //set new cooldown timer if device was used
+            else
+            {
+                var deviceCooldown = 0f;
+                
+                if (usedInputDevice == InputDeviceType.Keyboard) deviceCooldown = KeyboardDevice.UsageDetectionSettings.SelectionCooldownDuration;
+                else if (usedInputDevice == InputDeviceType.Gamepad) deviceCooldown = GamepadDeviceManager.UsageDetectionSettings.SelectionCooldownDuration;
+                else deviceCooldown = MouseDevice.UsageDetectionSettings.SelectionCooldownDuration;
+               
+                cooldown = deviceCooldown > 0f ? deviceCooldown : 0f;
+                
+                //Update CurInputDeviceType
+                var prevInputDevice = CurrentInputDeviceType;
+                if (prevInputDevice != usedInputDevice)
+                {
+                    CurrentInputDeviceType = usedInputDevice;
+                    OnInputDeviceChanged?.Invoke(prevInputDevice, CurrentInputDeviceType);
+                }
+                
+                //Set Cooldown
+                if (cooldown > 0f)
+                {
+                    inputDeviceSelectionCooldownTimer = cooldown;
+                }
+            }
+        }
     }
 
     #region InputDeviceType

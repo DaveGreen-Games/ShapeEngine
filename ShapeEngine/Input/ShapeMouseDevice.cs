@@ -127,13 +127,13 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
     }
 
     
-    /// <inheritdoc cref="ShapeInputDevice"/>
+    /// <inheritdoc cref="ShapeInputDevice.ApplyInputDeviceChangeSettings"/>
     public void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings) => UsageDetectionSettings = settings.Mouse;
 
-    /// <inheritdoc cref="ShapeInputDevice"/>
+    /// <inheritdoc cref="ShapeInputDevice.WasUsed"/>
     public bool WasUsed() => wasUsed;
     
-    /// <inheritdoc cref="ShapeInputDevice"/>
+    /// <inheritdoc cref="ShapeInputDevice.WasUsedRaw"/>
     public bool WasUsedRaw() => wasUsedRaw;
     
     /// <summary>
@@ -157,9 +157,7 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         isLocked = false;
     }
 
-    /// <summary>
-    /// Updates the mouse device state, including button, axis, and wheel axis states.
-    /// </summary>
+    /// <inheritdoc cref="ShapeInputDevice.Update"/>
     public bool Update(float dt, bool wasOtherDeviceUsed)
     {
         UpdateStates();
@@ -198,12 +196,12 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         var usedDurationEnabled = UsageDetectionSettings.UsedDurationEnabled;
         var specialButtonSelectionSystemEnabled = UsageDetectionSettings.SpecialButtonSelectionSystemEnabled;
         
-        if (!UsageDetectionSettings.Detection || specialButtonSelectionSystemEnabled || (!pressCountEnabled && !usedDurationEnabled))
+        if (wasOtherDeviceUsed || !UsageDetectionSettings.Detection || specialButtonSelectionSystemEnabled || (!pressCountEnabled && !usedDurationEnabled))
         {
             if (UsageDetectionSettings.MoveThresholdEnabled && Raylib.GetMouseDelta().LengthSquared() > moveThreshold * moveThreshold)
             {
                 usedRaw = true;
-                if(UsageDetectionSettings.Detection && !specialButtonSelectionSystemEnabled) used = true;
+                if(UsageDetectionSettings.Detection && !specialButtonSelectionSystemEnabled && !wasOtherDeviceUsed) used = true;
                 return;
             }
             if (
@@ -217,10 +215,10 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
                 Raylib.IsMouseButtonDown(MouseButton.Side))
             {
                 usedRaw = true;
-                if(UsageDetectionSettings.Detection && !specialButtonSelectionSystemEnabled) used = true;
+                if(UsageDetectionSettings.Detection && !specialButtonSelectionSystemEnabled && !wasOtherDeviceUsed) used = true;
             }
 
-            if (specialButtonSelectionSystemEnabled)
+            if (specialButtonSelectionSystemEnabled && !wasOtherDeviceUsed)
             {
                 if ((
                         UsageDetectionSettings.SelectionButtonPrimary != ShapeMouseButton.NONE && 
