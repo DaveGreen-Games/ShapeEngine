@@ -117,12 +117,8 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// Other values are disabled because the can not be used together with special buttons.
         /// <see cref="MoveThreshold"/> and <see cref="WheelThreshold"/> are set to default for the <see cref="MouseDevice.WasUsedRaw"/> system.
         /// </summary>
-        /// <param name="selectionButtonPrimary">Specifies the primary mouse button to be used for device selection.
-        /// If not a valid Raylib mouse button,
-        /// <c>ShapeMouseButton.NONE</c> is used.</param>
-        /// <param name="selectionButtonSecondary">Specifies the secondary mouse button to be used for device selection.
-        /// If not a valid Raylib mouse button,
-        /// <c>ShapeMouseButton.NONE</c> is used.</param>
+        /// <param name="selectionButtonPrimary">Specifies the primary mouse button to be used for device selection.</param>
+        /// <param name="selectionButtonSecondary">Specifies the secondary mouse button to be used for device selection.</param>
         /// <param name="selectionCooldownDuration">
         /// Specifies the cooldown duration (in seconds) after this device is selected
         /// during which no other input device can be selected.
@@ -137,8 +133,8 @@ public readonly partial struct InputDeviceUsageDetectionSettings
             MinPressInterval = -1f;
             MinUsedDuration = -1f;
             RequireSpecialButtonForSelection = true;
-            SelectionButtonPrimary = MouseDevice.IsValidRaylibMouseButton(selectionButtonPrimary) ? selectionButtonPrimary : ShapeMouseButton.NONE;
-            SelectionButtonSecondary = MouseDevice.IsValidRaylibMouseButton(selectionButtonSecondary) ? selectionButtonSecondary : ShapeMouseButton.NONE;
+            SelectionButtonPrimary = selectionButtonPrimary;
+            SelectionButtonSecondary = selectionButtonSecondary;
             SelectionCooldownDuration = selectionCooldownDuration;
         }
 

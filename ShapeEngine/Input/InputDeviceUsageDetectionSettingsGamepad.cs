@@ -59,8 +59,8 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// Other values are set to their defaults: MinPressCount = 2, MinPressInterval = 1f, MinUsedDuration = 0.5f.
         /// </summary>
         /// <param name="detection">Indicates whether gamepad detection is enabled.</param>
-        /// <param name="leftAxisThreshold">The minimum movement threshold for the  analog sticks to consider the gamepad as "used".</param>
-        /// <param name="leftTriggerThreshold">The minimum threshold for the  triggers to consider the gamepad as "used".</param>
+        /// <param name="axisThreshold">The minimum movement threshold for the analog sticks to consider the gamepad as "used".</param>
+        /// <param name="triggerThreshold">The minimum threshold for the triggers to consider the gamepad as "used".</param>
         /// <param name="selectionCooldownDuration">
         /// Specifies the cooldown duration (in seconds) after this device is selected
         /// during which no other input device can be selected.
@@ -119,12 +119,8 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// <see cref="AxisThreshold"/> and <see cref="TriggerThreshold"/> are set to default values
         /// for the <see cref="GamepadDevice.WasUsedRaw"/> system.
         /// </summary>
-        /// <param name="selectionButtonPrimary">Specifies the primary gamepad button to be used for device selection.
-        /// If not a valid Raylib gamepad button,
-        /// <c>ShapeGamepadButton.NONE</c> is used.</param>
-        /// <param name="selectionButtonSecondary">Specifies the secondary gamepad button to be used for device selection.
-        /// If not a valid Raylib gamepad button,
-        /// <c>ShapeGamepadButton.NONE</c> is used.</param>
+        /// <param name="selectionButtonPrimary">Specifies the primary gamepad button to be used for device selection.</param>
+        /// <param name="selectionButtonSecondary">Specifies the secondary gamepad button to be used for device selection.</param>
         /// <param name="selectionCooldownDuration">
         /// Specifies the cooldown duration (in seconds) after this device is selected
         /// during which no other input device can be selected.
@@ -139,10 +135,8 @@ public readonly partial struct InputDeviceUsageDetectionSettings
             MinPressInterval = -1f;
             MinUsedDuration = -1f;
             RequireSpecialButtonForSelection = true;
-            SelectionButtonPrimary = GamepadDevice.IsValidRaylibGamepadButton(selectionButtonPrimary) ? selectionButtonPrimary : ShapeGamepadButton.NONE;
-            SelectionButtonSecondary = GamepadDevice.IsValidRaylibGamepadButton(selectionButtonSecondary)
-                ? selectionButtonSecondary
-                : ShapeGamepadButton.NONE;
+            SelectionButtonPrimary = selectionButtonPrimary;
+            SelectionButtonSecondary = selectionButtonSecondary;
             SelectionCooldownDuration = selectionCooldownDuration;
         }
 

@@ -91,58 +91,6 @@ public sealed class MouseDevice : InputDevice
     /// </summary>
     public InputState GetWheelAxisState(ShapeMouseWheelAxis axis) => wheelAxisStates[axis];
     
-    /// <summary>
-    /// Converts a <see cref="ShapeMouseButton"/> to the corresponding <see cref="MouseButton"/> used by Raylib.
-    /// </summary>
-    /// <param name="button">The <see cref="ShapeMouseButton"/> to convert.</param>
-    /// <returns>The equivalent <see cref="MouseButton"/> value.</returns>
-    public static MouseButton ToRaylibMouseButton(ShapeMouseButton button)
-    {
-        return button switch
-        {
-            ShapeMouseButton.LEFT => MouseButton.Left,
-            ShapeMouseButton.RIGHT => MouseButton.Right,
-            ShapeMouseButton.MIDDLE => MouseButton.Middle,
-            ShapeMouseButton.SIDE => MouseButton.Side,
-            ShapeMouseButton.EXTRA => MouseButton.Extra,
-            ShapeMouseButton.FORWARD => MouseButton.Forward,
-            ShapeMouseButton.BACK => MouseButton.Back,
-            _ => MouseButton.Left
-        };
-    }
-
-    /// <summary>
-    /// Converts a <see cref="MouseButton"/> from Raylib to the corresponding <see cref="ShapeMouseButton"/>.
-    /// </summary>
-    /// <param name="button">The Raylib <see cref="MouseButton"/> to convert.</param>
-    /// <returns>The equivalent <see cref="ShapeMouseButton"/> value.</returns>
-    public static ShapeMouseButton ToShapeMouseButton(MouseButton button)
-    {
-        return button switch
-        {
-            MouseButton.Left => ShapeMouseButton.LEFT,
-            MouseButton.Right => ShapeMouseButton.RIGHT,
-            MouseButton.Middle => ShapeMouseButton.MIDDLE,
-            MouseButton.Side => ShapeMouseButton.SIDE,
-            MouseButton.Extra => ShapeMouseButton.EXTRA,
-            MouseButton.Forward => ShapeMouseButton.FORWARD,
-            MouseButton.Back => ShapeMouseButton.BACK,
-            _ => ShapeMouseButton.NONE
-        };
-    }
-
-    /// <summary>
-    /// Checks if the given <see cref="ShapeMouseButton"/> value corresponds to a valid Raylib mouse button.
-    /// </summary>
-    /// <param name="button">The <see cref="ShapeMouseButton"/> to validate.</param>
-    /// <returns>True if the button is a valid Raylib mouse button; otherwise, false.</returns>
-    public static bool IsValidRaylibMouseButton(ShapeMouseButton button)
-    {
-        int id = (int)button;
-        return id is >= 0 and <= (int)MouseButton.Back;
-    }
-
-    
     /// <inheritdoc cref="InputDevice.ApplyInputDeviceChangeSettings"/>
     public override void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings) => UsageDetectionSettings = settings.Mouse;
 
@@ -865,7 +813,61 @@ public sealed class MouseDevice : InputDevice
     #endregion
 }
 
+/*
 
+    /// <summary>
+   /// Converts a <see cref="ShapeMouseButton"/> to the corresponding <see cref="MouseButton"/> used by Raylib.
+   /// </summary>
+   /// <param name="button">The <see cref="ShapeMouseButton"/> to convert.</param>
+   /// <returns>The equivalent <see cref="MouseButton"/> value.</returns>
+   public static MouseButton ToRaylibMouseButton(ShapeMouseButton button)
+   {
+       return button switch
+       {
+           ShapeMouseButton.LEFT => MouseButton.Left,
+           ShapeMouseButton.RIGHT => MouseButton.Right,
+           ShapeMouseButton.MIDDLE => MouseButton.Middle,
+           ShapeMouseButton.SIDE => MouseButton.Side,
+           ShapeMouseButton.EXTRA => MouseButton.Extra,
+           ShapeMouseButton.FORWARD => MouseButton.Forward,
+           ShapeMouseButton.BACK => MouseButton.Back,
+           _ => MouseButton.Left
+       };
+   }
+
+   /// <summary>
+   /// Converts a <see cref="MouseButton"/> from Raylib to the corresponding <see cref="ShapeMouseButton"/>.
+   /// </summary>
+   /// <param name="button">The Raylib <see cref="MouseButton"/> to convert.</param>
+   /// <returns>The equivalent <see cref="ShapeMouseButton"/> value.</returns>
+   public static ShapeMouseButton ToShapeMouseButton(MouseButton button)
+   {
+       return button switch
+       {
+           MouseButton.Left => ShapeMouseButton.LEFT,
+           MouseButton.Right => ShapeMouseButton.RIGHT,
+           MouseButton.Middle => ShapeMouseButton.MIDDLE,
+           MouseButton.Side => ShapeMouseButton.SIDE,
+           MouseButton.Extra => ShapeMouseButton.EXTRA,
+           MouseButton.Forward => ShapeMouseButton.FORWARD,
+           MouseButton.Back => ShapeMouseButton.BACK,
+           _ => ShapeMouseButton.NONE
+       };
+   }
+
+   /// <summary>
+   /// Checks if the given <see cref="ShapeMouseButton"/> value corresponds to a valid Raylib mouse button.
+   /// </summary>
+   /// <param name="button">The <see cref="ShapeMouseButton"/> to validate.</param>
+   /// <returns>True if the button is a valid Raylib mouse button; otherwise, false.</returns>
+   public static bool IsValidRaylibMouseButton(ShapeMouseButton button)
+   {
+       int id = (int)button;
+       return id is >= 0 and <= (int)MouseButton.Back;
+   }
+
+   
+ */
 
 // /// <summary>
     // /// Determines if the mouse was used based on movement or button/wheel activity.

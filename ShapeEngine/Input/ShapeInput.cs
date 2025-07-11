@@ -244,7 +244,7 @@ public static class ShapeInput
             {
                 if (usedInputDevice == CurrentInputDeviceType)
                 {
-                    var deviceCooldown = 0f;
+                    float deviceCooldown;
                 
                     if (usedInputDevice == InputDeviceType.Keyboard) deviceCooldown = ActiveKeyboardDevice.UsageDetectionSettings.SelectionCooldownDuration;
                     else if (usedInputDevice == InputDeviceType.Gamepad) deviceCooldown = ActiveGamepadDeviceManager.UsageDetectionSettings.SelectionCooldownDuration;
@@ -257,7 +257,7 @@ public static class ShapeInput
             //set new cooldown timer if device was used
             else
             {
-                var deviceCooldown = 0f;
+                float deviceCooldown;
                 
                 if (usedInputDevice == InputDeviceType.Keyboard) deviceCooldown = ActiveKeyboardDevice.UsageDetectionSettings.SelectionCooldownDuration;
                 else if (usedInputDevice == InputDeviceType.Gamepad) deviceCooldown = ActiveGamepadDeviceManager.UsageDetectionSettings.SelectionCooldownDuration;

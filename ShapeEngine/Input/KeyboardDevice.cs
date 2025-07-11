@@ -28,9 +28,9 @@ public sealed class KeyboardDevice : InputDevice
     private bool isLocked;
     private bool isActive;
     
-    private int pressedCount = 0;
-    private float pressedCountDurationTimer = 0f;
-    private float usedDurationTimer = 0f;
+    private int pressedCount;
+    private float pressedCountDurationTimer;
+    private float usedDurationTimer;
     /// <summary>
     /// List of characters entered since the last update.
     /// </summary>
@@ -115,10 +115,7 @@ public sealed class KeyboardDevice : InputDevice
     public override bool Update(float dt, bool wasOtherDeviceUsed)
     {
         UpdateButtonStates();
-
-        PressedButtons.Clear();
-        UsedCharacters.Clear();
-
+        
         if (isLocked)
         {
             wasUsed = false;
@@ -126,6 +123,9 @@ public sealed class KeyboardDevice : InputDevice
             HeldDownButtons.Clear();
             return false;
         }
+        
+        PressedButtons.Clear();
+        UsedCharacters.Clear();
         
         for (int i = HeldDownButtons.Count - 1; i >= 0; i--)
         {
@@ -417,7 +417,7 @@ public sealed class KeyboardDevice : InputDevice
             case ShapeKeyboardButton.RIGHT: return shortHand ? "Rgt" : "Right";
             case ShapeKeyboardButton.LEFT: return shortHand ? "Lft" : "Left";
             case ShapeKeyboardButton.DOWN: return shortHand ? "Dwn" : "Down";
-            case ShapeKeyboardButton.UP: return shortHand ? "Up" : "Up";
+            case ShapeKeyboardButton.UP: return "Up"; //shortHand ? "Up" : "Up";
             case ShapeKeyboardButton.PAGE_UP: return shortHand ? "PUp" : "Page Up";
             case ShapeKeyboardButton.PAGE_DOWN: return shortHand ? "PDwn" : "Page Down";
             case ShapeKeyboardButton.HOME: return shortHand ? "Hom" : "Home";

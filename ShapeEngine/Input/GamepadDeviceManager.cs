@@ -17,7 +17,7 @@ public sealed class GamepadDeviceManager
     /// </summary>
     public int MaxGamepads => gamepads.Length;
     
-    private bool isActive = false;
+    private bool isActive;
     
     private readonly GamepadDevice[] gamepads;
     /// <summary>
