@@ -1,7 +1,5 @@
 
 namespace ShapeEngine.Input;
-//TODO: rename all input classes / structs that have a Shape prefix! (ShapeKeyboardDevice to KeyboardDevice for instance)
-//some things need shape prefix, like ShapeGamepadButton (raylib uses GamepadButton)
 
 /// <summary>
 /// Provides static access to input devices (keyboard, mouse, gamepads) and input state queries.
@@ -12,7 +10,7 @@ public static class ShapeInput
     /// <summary>
     /// Gets the current input device type in use.
     /// </summary>
-    public static InputDeviceType CurrentInputDeviceType { get; private set; } = InputDeviceType.Keyboard;
+    public static InputDeviceType CurrentInputDeviceType { get; private set; }
 
     /// <summary>
     /// Gets the current input device type, but returns Keyboard if Mouse is active.
@@ -25,68 +23,157 @@ public static class ShapeInput
     public static event Action<InputDeviceType, InputDeviceType>? OnInputDeviceChanged;
     
     /// <summary>
+    /// The default global keyboard device instance.
+    /// </summary>
+    public static readonly KeyboardDevice DefaultKeyboardDevice;
+    
+    /// <summary>
+    /// The default global mouse device instance.
+    /// </summary>
+    public static readonly MouseDevice DefaultMouseDevice;
+    
+    /// <summary>
+    /// The default global gamepad device manager instance.
+    /// </summary>
+    public static readonly GamepadDeviceManager DefaultGamepadDeviceManager;
+    
+    /// <summary>
     /// The global keyboard device instance.
     /// </summary>
-    public static readonly KeyboardDevice KeyboardDevice = new();
+    public static KeyboardDevice ActiveKeyboardDevice { get; private set; }
+    
     /// <summary>
     /// The global mouse device instance.
     /// </summary>
-    public static readonly MouseDevice MouseDevice = new();
+    public static MouseDevice ActiveMouseDevice { get; private set; }
+    
     /// <summary>
     /// The global gamepad device manager instance.
     /// </summary>
-    public static readonly GamepadDeviceManager GamepadDeviceManager = new();
+    public static GamepadDeviceManager ActiveGamepadDeviceManager { get; private set; }
+    
     /// <summary>
     /// The global input event handler instance.
     /// </summary>
-    public static readonly InputEventHandler EventHandler = new(KeyboardDevice, MouseDevice, GamepadDeviceManager);
-
-
-    private static float inputDeviceSelectionCooldownTimer = 0f;
+    public static readonly InputEventHandler EventHandler;
+    
     /// <summary>
     /// Indicates whether the input device selection cooldown is currently active.
     /// Returns true if the cooldown timer is greater than zero.
     /// </summary>
     public static bool InputDeviceSelectionCooldownActive => inputDeviceSelectionCooldownTimer > 0f;
+    private static float inputDeviceSelectionCooldownTimer;
+
+    static ShapeInput()
+    {
+        CurrentInputDeviceType = InputDeviceType.Keyboard;
+        
+        DefaultKeyboardDevice = new();
+        DefaultMouseDevice = new();
+        DefaultGamepadDeviceManager = new();
+        
+        ActiveKeyboardDevice = DefaultKeyboardDevice;
+        ActiveMouseDevice = DefaultMouseDevice;
+        ActiveGamepadDeviceManager = DefaultGamepadDeviceManager;
+        
+        ActiveKeyboardDevice.Activate();
+        ActiveMouseDevice.Activate();
+        ActiveGamepadDeviceManager.Activate();
+        
+        EventHandler = new(ActiveKeyboardDevice, ActiveMouseDevice, ActiveGamepadDeviceManager);
+    }
     
-    // /// <summary>
-    // /// Gets or sets the global input device change settings.
-    // /// </summary>
-    // public static InputDeviceUsageDetectionSettings InputDeviceUsageDetectionSettings { get; private set; } = new();
+    /// <summary>
+    /// Changes the active mouse device.
+    /// </summary>
+    /// <param name="device">The new mouse device to set as active.</param>
+    /// <returns>True if the device was changed; otherwise, false.</returns>
+    public static bool ChangeActiveMouseDevice(MouseDevice device)
+    {
+        if (device == ActiveMouseDevice) return false;
+        
+        bool changed = EventHandler.ChangeActiveMouseDevice(device);
+        if (!changed) return false;
+        
+        ActiveMouseDevice.Deactivate();
+        ActiveMouseDevice = device;
+        ActiveMouseDevice.Activate();
+        
+        return true;
+    }
+    
+    /// <summary>
+    /// Changes the active keyboard device.
+    /// </summary>
+    /// <param name="device">The new keyboard device to set as active.</param>
+    /// <returns>True if the device was changed; otherwise, false.</returns>
+    public static bool ChangeActiveKeybordDevice(KeyboardDevice device)
+    {
+        if (device == ActiveKeyboardDevice) return false;
+        
+        bool changed = EventHandler.ChangeActiveKeyboardDevice(device);
+        if (!changed) return false;
+        
+        ActiveKeyboardDevice.Deactivate();
+        ActiveKeyboardDevice = device;
+        ActiveKeyboardDevice.Activate();
+        
+        return true;
+    }
+    
+    /// <summary>
+    /// Changes the active gamepad device manager.
+    /// </summary>
+    /// <param name="deviceManager">The new gamepad device manager to set as active.</param>
+    /// <returns>True if the device manager was changed; otherwise, false.</returns>
+    public static bool ChangeActiveGamepadDeviceManager(GamepadDeviceManager deviceManager)
+    {
+        if (deviceManager == ActiveGamepadDeviceManager) return false;
+        
+        bool changed = EventHandler.ChangeActiveGamepadDeviceManager(deviceManager);
+        if (!changed) return false;
+        
+        ActiveGamepadDeviceManager.Deactivate();
+        ActiveGamepadDeviceManager = deviceManager;
+        ActiveGamepadDeviceManager.Activate();
+        
+        return true;
+    }
+
     
     /// <summary>
     /// Applies the <see cref="InputDeviceUsageDetectionSettings"/> to all input devices.
     /// </summary>
     /// <param name="settings">The new input device change settings to apply.</param>
     /// <remarks>
-    /// Settings are applied to <see cref="MouseDevice"/>,
-    /// <see cref="KeyboardDevice"/>,
-    /// and <see cref="GamepadDeviceManager"/> that applies the settings to all <see cref="GamepadDevice"/>s.
+    /// Settings are applied to <see cref="ActiveMouseDevice"/>,
+    /// <see cref="ActiveKeyboardDevice"/>,
+    /// and <see cref="ActiveGamepadDeviceManager"/> that applies the settings to all <see cref="GamepadDevice"/>s.
     /// </remarks>
     public static void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
     {
         // InputDeviceUsageDetectionSettings = settings;
-        MouseDevice.ApplyInputDeviceChangeSettings(settings);
-        KeyboardDevice.ApplyInputDeviceChangeSettings(settings);
-        GamepadDeviceManager.ApplyInputDeviceChangeSettings(settings);
+        ActiveMouseDevice.ApplyInputDeviceChangeSettings(settings);
+        ActiveKeyboardDevice.ApplyInputDeviceChangeSettings(settings);
+        ActiveGamepadDeviceManager.ApplyInputDeviceChangeSettings(settings);
     }
     
     /// <summary>
     /// Gets the input state for a keyboard button.
     /// </summary>
-    public static InputState GetInputState(this ShapeKeyboardButton button) => KeyboardDevice.GetButtonState(button);
+    public static InputState GetInputState(this ShapeKeyboardButton button) => ActiveKeyboardDevice.GetButtonState(button);
     /// <summary>
     /// Gets the input state for a mouse button.
     /// </summary>
-    public static InputState GetInputState(this ShapeMouseButton button) => MouseDevice.GetButtonState(button);
+    public static InputState GetInputState(this ShapeMouseButton button) => ActiveMouseDevice.GetButtonState(button);
     /// <summary>
     /// Gets the input state for a mouse axis.
     /// </summary>
-    public static InputState GetInputState(this ShapeMouseAxis axis) => MouseDevice.GetAxisState(axis);
+    public static InputState GetInputState(this ShapeMouseAxis axis) => ActiveMouseDevice.GetAxisState(axis);
     /// <summary>
     /// Gets the input state for a mouse wheel axis.
     /// </summary>
-    public static InputState GetInputState(this ShapeMouseWheelAxis axis) => MouseDevice.GetWheelAxisState(axis);
+    public static InputState GetInputState(this ShapeMouseWheelAxis axis) => ActiveMouseDevice.GetWheelAxisState(axis);
     /// <summary>
     /// Gets the input state for a gamepad button on a specific gamepad.
     /// </summary>
@@ -95,7 +182,7 @@ public static class ShapeInput
     /// <returns>The input state for the button.</returns>
     public static InputState GetInputState(this ShapeGamepadButton button, int gamepadIndex)
     {
-        var gamepad = GamepadDeviceManager.GetGamepad(gamepadIndex);
+        var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
 
         if (gamepad == null) return new();
 
@@ -109,7 +196,7 @@ public static class ShapeInput
     /// <returns>The input state for the axis.</returns>
     public static InputState GetInputState(this ShapeGamepadAxis axis, int gamepadIndex)
     {
-        var gamepad = GamepadDeviceManager.GetGamepad(gamepadIndex);
+        var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
 
         if (gamepad == null) return new();
 
@@ -134,17 +221,17 @@ public static class ShapeInput
         var usedInputDevice = InputDeviceType.None;
         // Prevents input device switching if another device was already used this frame.
         // For example, keyboard usage can block gamepad and mouse from becoming the active device.
-        var wasOtherDeviceUsed = KeyboardDevice.Update(dt, false);
+        var wasOtherDeviceUsed = ActiveKeyboardDevice.Update(dt, false);
         if (wasOtherDeviceUsed)
         {
             usedInputDevice = InputDeviceType.Keyboard;   
         }
-        wasOtherDeviceUsed = GamepadDeviceManager.Update(dt, wasOtherDeviceUsed);
+        wasOtherDeviceUsed = ActiveGamepadDeviceManager.Update(dt, wasOtherDeviceUsed);
         if (usedInputDevice == InputDeviceType.None && wasOtherDeviceUsed)
         {
             usedInputDevice = InputDeviceType.Gamepad;
         }
-        wasOtherDeviceUsed = MouseDevice.Update(dt, wasOtherDeviceUsed);
+        wasOtherDeviceUsed = ActiveMouseDevice.Update(dt, wasOtherDeviceUsed);
         if (usedInputDevice == InputDeviceType.None && wasOtherDeviceUsed)
         {
             usedInputDevice = InputDeviceType.Mouse;
@@ -159,9 +246,9 @@ public static class ShapeInput
                 {
                     var deviceCooldown = 0f;
                 
-                    if (usedInputDevice == InputDeviceType.Keyboard) deviceCooldown = KeyboardDevice.UsageDetectionSettings.SelectionCooldownDuration;
-                    else if (usedInputDevice == InputDeviceType.Gamepad) deviceCooldown = GamepadDeviceManager.UsageDetectionSettings.SelectionCooldownDuration;
-                    else deviceCooldown = MouseDevice.UsageDetectionSettings.SelectionCooldownDuration;
+                    if (usedInputDevice == InputDeviceType.Keyboard) deviceCooldown = ActiveKeyboardDevice.UsageDetectionSettings.SelectionCooldownDuration;
+                    else if (usedInputDevice == InputDeviceType.Gamepad) deviceCooldown = ActiveGamepadDeviceManager.UsageDetectionSettings.SelectionCooldownDuration;
+                    else deviceCooldown = ActiveMouseDevice.UsageDetectionSettings.SelectionCooldownDuration;
                
                     inputDeviceSelectionCooldownTimer = deviceCooldown > 0f ? deviceCooldown : inputDeviceSelectionCooldownTimer;
                 }
@@ -172,9 +259,9 @@ public static class ShapeInput
             {
                 var deviceCooldown = 0f;
                 
-                if (usedInputDevice == InputDeviceType.Keyboard) deviceCooldown = KeyboardDevice.UsageDetectionSettings.SelectionCooldownDuration;
-                else if (usedInputDevice == InputDeviceType.Gamepad) deviceCooldown = GamepadDeviceManager.UsageDetectionSettings.SelectionCooldownDuration;
-                else deviceCooldown = MouseDevice.UsageDetectionSettings.SelectionCooldownDuration;
+                if (usedInputDevice == InputDeviceType.Keyboard) deviceCooldown = ActiveKeyboardDevice.UsageDetectionSettings.SelectionCooldownDuration;
+                else if (usedInputDevice == InputDeviceType.Gamepad) deviceCooldown = ActiveGamepadDeviceManager.UsageDetectionSettings.SelectionCooldownDuration;
+                else deviceCooldown = ActiveMouseDevice.UsageDetectionSettings.SelectionCooldownDuration;
                
                 float cooldown = deviceCooldown > 0f ? deviceCooldown : 0f;
                 

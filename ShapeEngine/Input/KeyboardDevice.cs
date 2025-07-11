@@ -26,6 +26,7 @@ public sealed class KeyboardDevice : InputDevice
     private bool wasUsed;
     private bool wasUsedRaw;
     private bool isLocked;
+    private bool isActive;
     
     private int pressedCount = 0;
     private float pressedCountDurationTimer = 0f;
@@ -81,7 +82,15 @@ public sealed class KeyboardDevice : InputDevice
     /// </summary>
     public override void Lock()
     {
+        if (isLocked) return;
         isLocked = true;
+        
+        usedDurationTimer = 0f;
+        pressedCount = 0;
+        pressedCountDurationTimer = 0f;
+        
+        PressedButtons.Clear();
+        HeldDownButtons.Clear();
     }
 
     /// <summary>
@@ -89,6 +98,7 @@ public sealed class KeyboardDevice : InputDevice
     /// </summary>
     public override void Unlock()
     {
+        if (!isLocked) return;
         isLocked = false;
     }
     
@@ -105,6 +115,17 @@ public sealed class KeyboardDevice : InputDevice
     public override bool Update(float dt, bool wasOtherDeviceUsed)
     {
         UpdateButtonStates();
+
+        PressedButtons.Clear();
+        UsedCharacters.Clear();
+
+        if (isLocked)
+        {
+            wasUsed = false;
+            wasUsedRaw = false;
+            HeldDownButtons.Clear();
+            return false;
+        }
         
         for (int i = HeldDownButtons.Count - 1; i >= 0; i--)
         {
@@ -115,7 +136,6 @@ public sealed class KeyboardDevice : InputDevice
             }
         }
         
-        PressedButtons.Clear();
         var keycode = Raylib.GetKeyPressed();
         while (keycode > 0)
         {
@@ -125,7 +145,7 @@ public sealed class KeyboardDevice : InputDevice
             keycode = Raylib.GetKeyPressed();
         }
         
-        UsedCharacters.Clear();
+        
         var unicode = Raylib.GetCharPressed();
         while (unicode > 0)
         {
@@ -141,6 +161,36 @@ public sealed class KeyboardDevice : InputDevice
     /// Calibrates the keyboard device. (Currently not implemented.)
     /// </summary>
     public override void Calibrate(){}
+    
+    /// <summary>
+    /// Indicates whether the mouse device is currently active.
+    /// </summary>
+    public override bool IsActive() => isActive;
+    
+    /// <summary>
+    /// Activates the mouse device, enabling input processing.
+    /// </summary>
+    public override void Activate()
+    {
+        if (isActive) return;
+        isActive = true;
+    }
+    
+    /// <summary>
+    /// Deactivates the mouse device, disabling input processing and resetting state.
+    /// </summary>
+    public override void Deactivate()
+    {
+        if (!isActive) return;
+        isActive = false;
+        
+        usedDurationTimer = 0f;
+        pressedCount = 0;
+        pressedCountDurationTimer = 0f;
+        
+        PressedButtons.Clear();
+        HeldDownButtons.Clear();
+    }
     
     /// <summary>
     /// Gets the current input state for the specified keyboard button.
@@ -278,8 +328,7 @@ public sealed class KeyboardDevice : InputDevice
             }
         }
     } 
-        
-
+    
     /// <summary>
     /// Updates the states of all keyboard buttons.
     /// </summary>

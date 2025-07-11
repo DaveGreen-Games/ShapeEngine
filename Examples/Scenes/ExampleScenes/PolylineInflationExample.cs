@@ -98,13 +98,13 @@ namespace Examples.Scenes.ExampleScenes
             offsetDelta = ShapeMath.Clamp(offsetDelta, 0f, MaxOffset);
 
 
-            if (ShapeInput.KeyboardDevice.IsDown(ShapeKeyboardButton.H))
+            if (ShapeInput.ActiveKeyboardDevice.IsDown(ShapeKeyboardButton.H))
             {
                 collisionSegmentValid = true;
                 collisionSegment = collisionSegment.SetStart(mousePosGame);
             }
 
-            if (ShapeInput.KeyboardDevice.IsDown(ShapeKeyboardButton.G))
+            if (ShapeInput.ActiveKeyboardDevice.IsDown(ShapeKeyboardButton.G))
             {
                 collisionSegmentValid = true;
                 collisionSegment = collisionSegment.SetEnd(mousePosGame);

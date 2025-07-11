@@ -82,13 +82,13 @@ public sealed class InputTypeMouseAxis : IInputType
     /// <inheritdoc/>
     public InputState GetState(GamepadDevice? gamepad = null)
     {
-        return ShapeInput.MouseDevice.CreateInputState(axis, deadzone, modifierOperator, modifierKeys);
+        return ShapeInput.ActiveMouseDevice.CreateInputState(axis, deadzone, modifierOperator, modifierKeys);
     }
 
     /// <inheritdoc/>
     public InputState GetState(InputState prev, GamepadDevice? gamepad = null)
     {
-        return ShapeInput.MouseDevice.CreateInputState(axis, prev, deadzone, modifierOperator, modifierKeys);
+        return ShapeInput.ActiveMouseDevice.CreateInputState(axis, prev, deadzone, modifierOperator, modifierKeys);
     }
 
     /// <inheritdoc/>

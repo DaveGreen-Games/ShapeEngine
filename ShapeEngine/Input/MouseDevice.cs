@@ -27,15 +27,26 @@ public sealed class MouseDevice : InputDevice
     private bool wasUsed;
     private bool wasUsedRaw;
     private bool isLocked;
+    private bool isActive;
 
-    private int pressedCount = 0;
-    private float pressedCountDurationTimer = 0f;
-    private float usedDurationTimer = 0f;
+    private int pressedCount;
+    private float pressedCountDurationTimer;
+    private float usedDurationTimer;
 
     private readonly Dictionary<ShapeMouseButton, InputState> buttonStates = new(AllShapeMouseButtons.Length);
     private readonly Dictionary<ShapeMouseAxis, InputState> axisStates = new(2);
     private readonly Dictionary<ShapeMouseWheelAxis, InputState> wheelAxisStates = new(2);
 
+    /// <summary>
+    /// List of mouse buttons pressed since the last update.
+    /// </summary>
+    public readonly List<ShapeMouseButton> PressedButtons = [];
+    
+    /// <summary>
+    /// List of mouse buttons currently held down.
+    /// </summary>
+    public readonly List<ShapeMouseButton> HeldDownButtons = [];
+    
     /// <summary>
     /// Event triggered when a mouse button is pressed.
     /// </summary>
@@ -151,7 +162,14 @@ public sealed class MouseDevice : InputDevice
     /// </summary>
     public override void Lock()
     {
+        if(isLocked) return;
         isLocked = true;
+        usedDurationTimer = 0f;
+        pressedCount = 0;
+        pressedCountDurationTimer = 0f;
+        
+        PressedButtons.Clear();
+        HeldDownButtons.Clear();
     }
 
     /// <summary>
@@ -159,6 +177,7 @@ public sealed class MouseDevice : InputDevice
     /// </summary>
     public override void Unlock()
     {
+        if(!isLocked) return;
         isLocked = false;
     }
 
@@ -166,6 +185,35 @@ public sealed class MouseDevice : InputDevice
     public override bool Update(float dt, bool wasOtherDeviceUsed)
     {
         UpdateStates();
+
+        if (isLocked)
+        {
+            wasUsed = false;
+            wasUsedRaw = false;
+            return false;
+        }
+        
+        PressedButtons.Clear();
+        for (int i = HeldDownButtons.Count - 1; i >= 0; i--)
+        {
+            var button = HeldDownButtons[i];
+            if (!IsDown(button, UsageDetectionSettings.MoveThreshold, UsageDetectionSettings.WheelThreshold))
+            {
+                HeldDownButtons.RemoveAt(i);
+            }
+        }
+
+        foreach (var button in AllShapeMouseButtons)
+        {
+            if (IsDown(button, UsageDetectionSettings.MoveThreshold, UsageDetectionSettings.WheelThreshold))
+            {
+                if (!HeldDownButtons.Contains(button))
+                {
+                    PressedButtons.Add(button);
+                    HeldDownButtons.Add(button);
+                }
+            }
+        }
         
         WasMouseUsed(dt, wasOtherDeviceUsed, out wasUsed, out wasUsedRaw);
         
@@ -178,9 +226,34 @@ public sealed class MouseDevice : InputDevice
     public override void Calibrate(){ }
 
     /// <summary>
-    /// Determines if the mouse was used based on movement or button/wheel activity.
+    /// Indicates whether the mouse device is currently active.
     /// </summary>
-    /// <returns>True if the mouse was used, otherwise false.</returns>
+    public override bool IsActive() => isActive;
+    
+    /// <summary>
+    /// Activates the mouse device, enabling input processing.
+    /// </summary>
+    public override void Activate()
+    {
+        if (isActive) return;
+        isActive = true;
+    }
+    
+    /// <summary>
+    /// Deactivates the mouse device, disabling input processing and resetting state.
+    /// </summary>
+    public override void Deactivate()
+    {
+        if (!isActive) return;
+        isActive = false;
+        
+        usedDurationTimer = 0f;
+        pressedCount = 0;
+        pressedCountDurationTimer = 0f;
+        
+        PressedButtons.Clear();
+        HeldDownButtons.Clear();
+    }
     private void WasMouseUsed(float dt, bool wasOtherDeviceUsed, out bool used, out bool usedRaw)
     {
         used = false;
@@ -194,77 +267,39 @@ public sealed class MouseDevice : InputDevice
         }
         
         if (isLocked) return;
-        
-        var moveThreshold = UsageDetectionSettings.MoveThreshold;
-        var mouseWheelThreshold = UsageDetectionSettings.WheelThreshold;
-        var pressCountEnabled = UsageDetectionSettings.PressCountEnabled;
-        var usedDurationEnabled = UsageDetectionSettings.UsedDurationEnabled;
-        var specialButtonSelectionSystemEnabled = UsageDetectionSettings.SpecialButtonSelectionSystemEnabled;
-        
-        if (wasOtherDeviceUsed || !UsageDetectionSettings.Detection || specialButtonSelectionSystemEnabled || (!pressCountEnabled && !usedDurationEnabled))
-        {
-            if (UsageDetectionSettings.MoveThresholdEnabled && Raylib.GetMouseDelta().LengthSquared() > moveThreshold * moveThreshold)
-            {
-                usedRaw = true;
-                if(UsageDetectionSettings.Detection && !specialButtonSelectionSystemEnabled && !wasOtherDeviceUsed) used = true;
-                return;
-            }
-            if (
-                (UsageDetectionSettings.WheelThresholdEnabled && Raylib.GetMouseWheelMoveV().LengthSquared() > mouseWheelThreshold * mouseWheelThreshold) || 
-                Raylib.IsMouseButtonDown(MouseButton.Left) || 
-                Raylib.IsMouseButtonDown(MouseButton.Right) || 
-                Raylib.IsMouseButtonDown(MouseButton.Middle) || 
-                Raylib.IsMouseButtonDown(MouseButton.Extra) || 
-                Raylib.IsMouseButtonDown(MouseButton.Forward) || 
-                Raylib.IsMouseButtonDown(MouseButton.Back) || 
-                Raylib.IsMouseButtonDown(MouseButton.Side))
-            {
-                usedRaw = true;
-                if(UsageDetectionSettings.Detection && !specialButtonSelectionSystemEnabled && !wasOtherDeviceUsed) used = true;
-            }
 
-            if (specialButtonSelectionSystemEnabled && !wasOtherDeviceUsed)
+        usedRaw = PressedButtons.Count > 0;
+
+        if (!UsageDetectionSettings.Detection || wasOtherDeviceUsed) return;
+            
+        if (UsageDetectionSettings.SpecialButtonSelectionSystemEnabled)
+        {
+            if (
+                UsageDetectionSettings.SelectionButtonPrimary != ShapeMouseButton.NONE &&
+                IsDown(UsageDetectionSettings.SelectionButtonPrimary, UsageDetectionSettings.MoveThreshold, UsageDetectionSettings.WheelThreshold) ||
+                UsageDetectionSettings.SelectionButtonSecondary != ShapeMouseButton.NONE &&
+                IsDown(UsageDetectionSettings.SelectionButtonSecondary, UsageDetectionSettings.MoveThreshold, UsageDetectionSettings.WheelThreshold)
+            )
             {
-                if ((
-                        UsageDetectionSettings.SelectionButtonPrimary != ShapeMouseButton.NONE && 
-                        Raylib.IsMouseButtonDown((MouseButton)UsageDetectionSettings.SelectionButtonPrimary
-                    )) || (
-                        UsageDetectionSettings.SelectionButtonSecondary != ShapeMouseButton.NONE && 
-                        Raylib.IsMouseButtonDown((MouseButton)UsageDetectionSettings.SelectionButtonSecondary
-                    )))
+                used = true;
+            }
+        }
+        else
+        {
+            var pressCountEnabled = UsageDetectionSettings.PressCountEnabled;
+            var usedDurationEnabled = UsageDetectionSettings.UsedDurationEnabled;
+            
+            if (pressCountEnabled)
+            {
+                pressedCountDurationTimer += dt;
+                if (pressedCountDurationTimer >= UsageDetectionSettings.MinPressInterval)
                 {
-                    used = true;
+                    pressedCountDurationTimer -= UsageDetectionSettings.MinPressInterval;
+                    pressedCount = 0;
                 }
             }
             
-            return;
-        }
-        
-        if (pressCountEnabled)
-        {
-            pressedCountDurationTimer += dt;
-            if (pressedCountDurationTimer >= UsageDetectionSettings.MinPressInterval)
-            {
-                pressedCountDurationTimer -= UsageDetectionSettings.MinPressInterval;
-                pressedCount = 0;
-            }
-        }
-        
-        bool movement = (UsageDetectionSettings.MoveThresholdEnabled && Raylib.GetMouseDelta().LengthSquared() > moveThreshold * moveThreshold) ||
-                        (UsageDetectionSettings.WheelThresholdEnabled && Raylib.GetMouseWheelMoveV().LengthSquared() > mouseWheelThreshold * mouseWheelThreshold);
-        
-        bool mouseButtonDown = Raylib.IsMouseButtonDown(MouseButton.Left) ||
-                               Raylib.IsMouseButtonDown(MouseButton.Right) ||
-                               Raylib.IsMouseButtonDown(MouseButton.Middle) ||
-                               Raylib.IsMouseButtonDown(MouseButton.Extra) ||
-                               Raylib.IsMouseButtonDown(MouseButton.Forward) ||
-                               Raylib.IsMouseButtonDown(MouseButton.Back) ||
-                               Raylib.IsMouseButtonDown(MouseButton.Side);
-        
-        if (movement || mouseButtonDown)
-        {
-            usedRaw = true;
-            if (usedDurationEnabled)
+            if (usedDurationEnabled && HeldDownButtons.Count > 0)
             {
                 usedDurationTimer += dt;
                 if (usedDurationTimer > UsageDetectionSettings.MinUsedDuration)
@@ -276,33 +311,21 @@ public sealed class MouseDevice : InputDevice
                     return;
                 }
             }
-
-            if (pressCountEnabled)
+            
+            if (pressCountEnabled && PressedButtons.Count > 0)
             {
-                bool mouseButtonPressedThisFrame = 
-                    Raylib.IsMouseButtonPressed(MouseButton.Left) ||
-                    Raylib.IsMouseButtonPressed(MouseButton.Right) ||
-                    Raylib.IsMouseButtonPressed(MouseButton.Middle) ||
-                    Raylib.IsMouseButtonPressed(MouseButton.Extra) ||
-                    Raylib.IsMouseButtonPressed(MouseButton.Forward) ||
-                    Raylib.IsMouseButtonPressed(MouseButton.Back) ||
-                    Raylib.IsMouseButtonPressed(MouseButton.Side);
-
-                if (mouseButtonPressedThisFrame)
+                pressedCount++;
+                if (pressedCount >= UsageDetectionSettings.MinPressCount)
                 {
-                    pressedCount++;
-                    if (pressedCount >= UsageDetectionSettings.MinPressCount)
-                    {
-                        used = true;
-                        pressedCountDurationTimer = 0f;
-                        usedDurationTimer = 0f;
-                        pressedCount = 0;
-                    }
+                    used = true;
+                    pressedCountDurationTimer = 0f;
+                    usedDurationTimer = 0f;
+                    pressedCount = 0;
                 }
             }
         }
-    }
-
+    } 
+    
     /// <summary>
     /// Updates the states of all mouse buttons, axes, and wheel axes.
     /// </summary>
@@ -312,7 +335,7 @@ public sealed class MouseDevice : InputDevice
         {
             var button = state.Key;
             var prevState = state.Value;
-            var curState = CreateInputState(button);
+            var curState = CreateInputState(button, UsageDetectionSettings.MoveThreshold, UsageDetectionSettings.WheelThreshold);
             var nextState = new InputState(prevState, curState);
             buttonStates[button] = nextState;
             
@@ -323,14 +346,14 @@ public sealed class MouseDevice : InputDevice
         {
             var axis = state.Key;
             var prevState = state.Value;
-            var curState = CreateInputState(axis);
+            var curState = CreateInputState(axis, UsageDetectionSettings.MoveThreshold);;
             axisStates[axis] = new InputState(prevState, curState);
         }
         foreach (var state in wheelAxisStates)
         {
             var axis = state.Key;
             var prevState = state.Value;
-            var curState = CreateInputState(axis);
+            var curState = CreateInputState(axis, UsageDetectionSettings.WheelThreshold);
             wheelAxisStates[axis] = new InputState(prevState, curState);
         }
     }
@@ -547,43 +570,101 @@ public sealed class MouseDevice : InputDevice
             default: return "No Key";
         }
     }
+
     /// <summary>
-    /// Checks if a modifier mouse button is active, optionally reversing the logic.
+    /// Checks if a modifier key is active, optionally reversing the logic.
     /// </summary>
-    public bool IsModifierActive(ShapeMouseButton modifierKey, bool reverseModifier)
-    {
-        return IsDown(modifierKey) != reverseModifier;
-    }
+    /// <param name="modifierKey">The modifier key to check.</param>
+    /// <param name="reverseModifier">If true, reverses the modifier logic.</param>
+    /// <returns>True if the modifier is active (or inactive if reversed).</returns>
+    public bool IsModifierActive(ShapeMouseButton modifierKey, bool reverseModifier) => IsDown(modifierKey) != reverseModifier;
+
     /// <summary>
-    /// Determines if the specified mouse button is "down".
+    /// Determines if the specified mouse button is down, considering move and wheel deadzones.
     /// </summary>
-    public bool IsDown(ShapeMouseButton button, float deadzone = 0f)
+    /// <param name="button">The mouse button to check.</param>
+    /// <param name="mouseMoveDeadzone">Deadzone for mouse movement axis buttons.</param>
+    /// <param name="mouseWheelDeadzone">Deadzone for mouse wheel axis buttons.</param>
+    /// <returns>True if the button is down.</returns>
+    public bool IsDown(ShapeMouseButton button, float mouseMoveDeadzone = 0f, float mouseWheelDeadzone = 0f)
     {
-        return GetValue(button, deadzone) != 0;
+       return GetValue(button, mouseMoveDeadzone, mouseWheelDeadzone) != 0;
     }
 
     /// <summary>
-    /// Determines if the specified mouse button is "down" with modifier keys.
+    /// Determines if the specified mouse button is down, considering deadzone and modifier keys.
     /// </summary>
-    public bool IsDown(ShapeMouseButton button, float deadzone, ModifierKeyOperator modifierOperator,
-        params IModifierKey[] modifierKeys)
+    /// <param name="button">The mouse button to check.</param>
+    /// <param name="deadzone">Deadzone threshold.</param>
+    /// <param name="modifierOperator">Modifier key operator.</param>
+    /// <param name="modifierKeys">Modifier keys to check.</param>
+    /// <returns>True if the button is down.</returns>
+    public bool IsDown(ShapeMouseButton button, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
-        return GetValue(button, deadzone, modifierOperator, modifierKeys) != 0f;
+       return GetValue(button, deadzone, modifierOperator, modifierKeys) != 0f;
     }
+
+    /// <summary>
+    /// Determines if the specified mouse button is down, considering move/wheel deadzones and modifier keys.
+    /// </summary>
+    /// <param name="button">The mouse button to check.</param>
+    /// <param name="mouseMoveDeadzone">Deadzone for mouse movement axis buttons.</param>
+    /// <param name="mouseWheelDeadzone">Deadzone for mouse wheel axis buttons.</param>
+    /// <param name="modifierOperator">Modifier key operator.</param>
+    /// <param name="modifierKeys">Modifier keys to check.</param>
+    /// <returns>True if the button is down.</returns>
+    public bool IsDown(ShapeMouseButton button, float mouseMoveDeadzone, float mouseWheelDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    {
+       return GetValue(button, mouseMoveDeadzone, mouseWheelDeadzone, modifierOperator, modifierKeys) != 0f;
+    }
+
     /// <summary>
     /// Gets the value of the specified mouse button, considering deadzone and modifier keys.
     /// </summary>
+    /// <param name="button">The mouse button to check.</param>
+    /// <param name="deadzone">Deadzone threshold.</param>
+    /// <param name="modifierOperator">Modifier key operator.</param>
+    /// <param name="modifierKeys">Modifier keys to check.</param>
+    /// <returns>The button value.</returns>
     public float GetValue(ShapeMouseButton button, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
-        if (isLocked) return 0f;
-        if (!GameWindow.Instance.MouseOnScreen) return 0f;
-        if (!IModifierKey.IsActive(modifierOperator, modifierKeys)) return 0f;
-        return GetValue(button, deadzone);
+       if (isLocked) return 0f;
+       if (!GameWindow.Instance.MouseOnScreen) return 0f;
+       if (!IModifierKey.IsActive(modifierOperator, modifierKeys)) return 0f;
+       return GetValue(button, deadzone, deadzone);
     }
+
     /// <summary>
-    /// Gets the value of the specified mouse button, considering deadzone.
+    /// Gets the value of the specified mouse button, considering move/wheel deadzones and modifier keys.
     /// </summary>
-    public float GetValue(ShapeMouseButton button, float deadzone = 0f)
+    /// <param name="button">The mouse button to check.</param>
+    /// <param name="mouseMoveDeadzone">Deadzone for mouse movement axis buttons.</param>
+    /// <param name="mouseWheelDeadzone">Deadzone for mouse wheel axis buttons.</param>
+    /// <param name="modifierOperator">Modifier key operator.</param>
+    /// <param name="modifierKeys">Modifier keys to check.</param>
+    /// <returns>The button value.</returns>
+    public float GetValue(ShapeMouseButton button, float mouseMoveDeadzone, float mouseWheelDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    {
+       if (isLocked) return 0f;
+       if (!GameWindow.Instance.MouseOnScreen) return 0f;
+       if (!IModifierKey.IsActive(modifierOperator, modifierKeys)) return 0f;
+       return GetValue(button, mouseMoveDeadzone, mouseWheelDeadzone);
+    }
+
+    /// <summary>
+    /// Gets the value of the specified <see cref="ShapeMouseButton"/>.
+    /// For wheel and axis buttons, applies the respective deadzone thresholds.
+    /// For standard buttons, returns 1f if pressed, otherwise 0f.
+    /// </summary>
+    /// <param name="button">The mouse button to check.</param>
+    /// <param name="mouseMoveDeadzone">Deadzone threshold for mouse movement axis buttons.</param>
+    /// <param name="mouseWheelDeadzone">Deadzone threshold for mouse wheel axis buttons.</param>
+    /// <returns>
+    /// A float representing the button value:
+    /// - For wheel/axis buttons: the movement value if above deadzone, otherwise 0f.
+    /// - For standard buttons: 1f if pressed, otherwise 0f.
+    /// </returns>
+    public float GetValue(ShapeMouseButton button, float mouseMoveDeadzone = 0f, float mouseWheelDeadzone = 0f)
     {
         if (isLocked) return 0f;
         if (!GameWindow.Instance.MouseOnScreen) return 0f;
@@ -592,22 +673,54 @@ public sealed class MouseDevice : InputDevice
         {
             var value = Raylib.GetMouseWheelMoveV();//.Clamp(-1f, 1f);
             
-            if (button == ShapeMouseButton.MW_LEFT) return value.X < -deadzone ? MathF.Abs(value.X) : 0f;
-            if (button == ShapeMouseButton.MW_RIGHT) return value.X > deadzone ? value.X : 0f;
-            if (button == ShapeMouseButton.MW_UP) return value.Y < -deadzone ? MathF.Abs(value.Y) : 0f;
-            if (button == ShapeMouseButton.MW_DOWN) return value.Y > deadzone ? value.Y : 0f;
+            if (button == ShapeMouseButton.MW_LEFT) return value.X < -mouseWheelDeadzone ? MathF.Abs(value.X) : 0f;
+            if (button == ShapeMouseButton.MW_RIGHT) return value.X > mouseWheelDeadzone ? value.X : 0f;
+            if (button == ShapeMouseButton.MW_UP) return value.Y < -mouseWheelDeadzone ? MathF.Abs(value.Y) : 0f;
+            if (button == ShapeMouseButton.MW_DOWN) return value.Y > mouseWheelDeadzone ? value.Y : 0f;
             return 0f;
         }
         if (id >= 20)
         {
             var mouseDelta = Raylib.GetMouseDelta();
-            if (button == ShapeMouseButton.LEFT_AXIS) return mouseDelta.X < -deadzone ? MathF.Abs(mouseDelta.X) : 0f;
-            if(button == ShapeMouseButton.RIGHT_AXIS) return mouseDelta.X > deadzone ? mouseDelta.X : 0f;
-            if(button == ShapeMouseButton.UP_AXIS) return mouseDelta.Y < -deadzone ? MathF.Abs(mouseDelta.X) : 0f;
-            if(button == ShapeMouseButton.DOWN_AXIS) return mouseDelta.Y > deadzone ? mouseDelta.Y : 0f;
+            if (button == ShapeMouseButton.LEFT_AXIS) return mouseDelta.X < -mouseMoveDeadzone ? MathF.Abs(mouseDelta.X) : 0f;
+            if(button == ShapeMouseButton.RIGHT_AXIS) return mouseDelta.X > mouseMoveDeadzone ? mouseDelta.X : 0f;
+            if(button == ShapeMouseButton.UP_AXIS) return mouseDelta.Y < -mouseMoveDeadzone ? MathF.Abs(mouseDelta.X) : 0f;
+            if(button == ShapeMouseButton.DOWN_AXIS) return mouseDelta.Y > mouseMoveDeadzone ? mouseDelta.Y : 0f;
             return 0f;
         }
         return Raylib.IsMouseButtonDown((MouseButton)id) ? 1f : 0f;
+    }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified mouse button.
+    /// </summary>
+    public InputState CreateInputState(ShapeMouseButton button, float mouseMoveDeadzone, float mouseWheelDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    {
+        var value = GetValue(button, mouseMoveDeadzone, mouseWheelDeadzone, modifierOperator, modifierKeys);
+        bool down = value != 0f;
+        return new(down, !down, down ? 1f : 0f, -1, InputDeviceType.Mouse);
+    }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified mouse button, using a previous state.
+    /// </summary>
+    public InputState CreateInputState(ShapeMouseButton button, InputState previousState, float mouseMoveDeadzone, float mouseWheelDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    {
+        return new(previousState, CreateInputState(button, mouseMoveDeadzone, mouseWheelDeadzone, modifierOperator, modifierKeys));
+    }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified mouse button.
+    /// </summary>
+    public InputState CreateInputState(ShapeMouseButton button, float mouseMoveDeadzone = 0f, float mouseWheelDeadzone = 0f)
+    {
+        var value = GetValue(button, mouseMoveDeadzone, mouseWheelDeadzone);
+        bool down = value != 0f;
+        return new(down, !down, down ? 1f : 0f, -1, InputDeviceType.Mouse);
+    }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified mouse button, using a previous state.
+    /// </summary>
+    public InputState CreateInputState(ShapeMouseButton button, InputState previousState, float mouseMoveDeadzone = 0f, float mouseWheelDeadzone = 0f)
+    {
+        return new(previousState, CreateInputState(button, mouseMoveDeadzone, mouseWheelDeadzone));
     }
     /// <summary>
     /// Creates an <see cref="InputState"/> for the specified mouse button.
@@ -624,22 +737,6 @@ public sealed class MouseDevice : InputDevice
     public InputState CreateInputState(ShapeMouseButton button, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         return new(previousState, CreateInputState(button, deadzone, modifierOperator, modifierKeys));
-    }
-    /// <summary>
-    /// Creates an <see cref="InputState"/> for the specified mouse button.
-    /// </summary>
-    public InputState CreateInputState(ShapeMouseButton button, float deadzone = 0f)
-    {
-        var value = GetValue(button, deadzone);
-        bool down = value != 0f;
-        return new(down, !down, down ? 1f : 0f, -1, InputDeviceType.Mouse);
-    }
-    /// <summary>
-    /// Creates an <see cref="InputState"/> for the specified mouse button, using a previous state.
-    /// </summary>
-    public InputState CreateInputState(ShapeMouseButton button, InputState previousState, float deadzone = 0f)
-    {
-        return new(previousState, CreateInputState(button, deadzone));
     }
     #endregion
 
@@ -671,14 +768,6 @@ public sealed class MouseDevice : InputDevice
     {
         return GetValue(neg, pos, deadzone, modifierOperator, modifierKeys) != 0f;
     }
-
-    /// <summary>
-    /// Determines if the button axis (negative/positive) is "down".
-    /// </summary>
-    public bool IsDown(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = 0f)
-    {
-        return GetValue(neg, pos, deadzone) != 0f;
-    }
     /// <summary>
     /// Gets the value of the button axis (negative/positive), considering deadzone and modifier keys.
     /// </summary>
@@ -688,16 +777,7 @@ public sealed class MouseDevice : InputDevice
         if (!IModifierKey.IsActive(modifierOperator, modifierKeys)) return 0f;
         return GetValue(neg, pos, deadzone);
     }
-    /// <summary>
-    /// Gets the value of the button axis (negative/positive), considering deadzone.
-    /// </summary>
-    public float GetValue(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = 0f)
-    {
-        if (isLocked) return 0f;
-        float vNegative = GetValue(neg, deadzone);
-        float vPositive = GetValue(pos, deadzone);
-        return vPositive - vNegative;
-    }
+   
     /// <summary>
     /// Creates an <see cref="InputState"/> for the button axis (negative/positive).
     /// </summary>
@@ -715,22 +795,201 @@ public sealed class MouseDevice : InputDevice
         return new(previousState, CreateInputState(neg, pos, deadzone, modifierOperator, modifierKeys));
     }
     /// <summary>
+    /// Determines if the button axis (negative/positive) is "down" with modifier keys.
+    /// </summary>
+    public bool IsDown(ShapeMouseButton neg, ShapeMouseButton pos, float mouseMoveDeadzone, float mouseWheelDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    {
+        return GetValue(neg, pos, mouseMoveDeadzone, mouseWheelDeadzone, modifierOperator, modifierKeys) != 0f;
+    }
+
+    /// <summary>
+    /// Determines if the button axis (negative/positive) is "down".
+    /// </summary>
+    public bool IsDown(ShapeMouseButton neg, ShapeMouseButton pos, float mouseMoveDeadzone = 0f, float mouseWheelDeadzone = 0f)
+    {
+        return GetValue(neg, pos, mouseMoveDeadzone, mouseWheelDeadzone) != 0f;
+    }
+    /// <summary>
+    /// Gets the value of the button axis (negative/positive), considering deadzone and modifier keys.
+    /// </summary>
+    public float GetValue(ShapeMouseButton neg, ShapeMouseButton pos, float mouseMoveDeadzone, float mouseWheelDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    {
+        if (isLocked) return 0f;
+        if (!IModifierKey.IsActive(modifierOperator, modifierKeys)) return 0f;
+        return GetValue(neg, pos, mouseMoveDeadzone, mouseWheelDeadzone);
+    }
+    /// <summary>
+    /// Gets the value of the button axis (negative/positive), considering deadzone.
+    /// </summary>
+    public float GetValue(ShapeMouseButton neg, ShapeMouseButton pos, float mouseMoveDeadzone = 0f, float mouseWheelDeadzone = 0f)
+    {
+        if (isLocked) return 0f;
+        float vNegative = GetValue(neg, mouseMoveDeadzone, mouseWheelDeadzone);
+        float vPositive = GetValue(pos, mouseMoveDeadzone, mouseWheelDeadzone);
+        return vPositive - vNegative;
+    }
+    /// <summary>
     /// Creates an <see cref="InputState"/> for the button axis (negative/positive).
     /// </summary>
-    public InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = 0f)
+    public InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, float mouseMoveDeadzone, float mouseWheelDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
-        float axis = GetValue(neg, pos, deadzone);
+        float axis = GetValue(neg, pos, mouseMoveDeadzone, mouseWheelDeadzone, modifierOperator, modifierKeys);
         bool down = axis != 0f;
         return new(down, !down, axis, -1, InputDeviceType.Mouse);
     }
     /// <summary>
     /// Creates an <see cref="InputState"/> for the button axis (negative/positive), using a previous state.
     /// </summary>
-    public InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, InputState previousState, float deadzone = 0f)
+    public InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, InputState previousState, float mouseMoveDeadzone, float mouseWheelDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
-        return new(previousState, CreateInputState(neg, pos, deadzone));
+        return new(previousState, CreateInputState(neg, pos, mouseMoveDeadzone, mouseWheelDeadzone, modifierOperator, modifierKeys));
+    }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the button axis (negative/positive).
+    /// </summary>
+    public InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, float mouseMoveDeadzone = 0f, float mouseWheelDeadzone = 0f)
+    {
+        float axis = GetValue(neg, pos, mouseMoveDeadzone, mouseWheelDeadzone);
+        bool down = axis != 0f;
+        return new(down, !down, axis, -1, InputDeviceType.Mouse);
+    }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the button axis (negative/positive), using a previous state.
+    /// </summary>
+    public InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, InputState previousState, float mouseMoveDeadzone = 0f, float mouseWheelDeadzone = 0f)
+    {
+        return new(previousState, CreateInputState(neg, pos, mouseMoveDeadzone, mouseWheelDeadzone));
     }
     
 
     #endregion
 }
+
+
+
+// /// <summary>
+    // /// Determines if the mouse was used based on movement or button/wheel activity.
+    // /// </summary>
+    // /// <returns>True if the mouse was used, otherwise false.</returns>
+    // private void WasMouseUsed(float dt, bool wasOtherDeviceUsed, out bool used, out bool usedRaw)
+    // {
+    //    
+    //     used = false;
+    //     usedRaw = false;
+    //     
+    //     if (wasOtherDeviceUsed)
+    //     {
+    //         usedDurationTimer = 0f;
+    //         pressedCount = 0;
+    //         pressedCountDurationTimer = 0f;
+    //     }
+    //     
+    //     if (isLocked) return;
+    //     
+    //     var moveThreshold = UsageDetectionSettings.MoveThreshold;
+    //     var mouseWheelThreshold = UsageDetectionSettings.WheelThreshold;
+    //     var pressCountEnabled = UsageDetectionSettings.PressCountEnabled;
+    //     var usedDurationEnabled = UsageDetectionSettings.UsedDurationEnabled;
+    //     var specialButtonSelectionSystemEnabled = UsageDetectionSettings.SpecialButtonSelectionSystemEnabled;
+    //     
+    //     if (wasOtherDeviceUsed || !UsageDetectionSettings.Detection || specialButtonSelectionSystemEnabled || (!pressCountEnabled && !usedDurationEnabled))
+    //     {
+    //         if (UsageDetectionSettings.MoveThresholdEnabled && Raylib.GetMouseDelta().LengthSquared() > moveThreshold * moveThreshold)
+    //         {
+    //             usedRaw = true;
+    //             if(UsageDetectionSettings.Detection && !specialButtonSelectionSystemEnabled && !wasOtherDeviceUsed) used = true;
+    //             return;
+    //         }
+    //         if (
+    //             (UsageDetectionSettings.WheelThresholdEnabled && Raylib.GetMouseWheelMoveV().LengthSquared() > mouseWheelThreshold * mouseWheelThreshold) || 
+    //             Raylib.IsMouseButtonDown(MouseButton.Left) || 
+    //             Raylib.IsMouseButtonDown(MouseButton.Right) || 
+    //             Raylib.IsMouseButtonDown(MouseButton.Middle) || 
+    //             Raylib.IsMouseButtonDown(MouseButton.Extra) || 
+    //             Raylib.IsMouseButtonDown(MouseButton.Forward) || 
+    //             Raylib.IsMouseButtonDown(MouseButton.Back) || 
+    //             Raylib.IsMouseButtonDown(MouseButton.Side))
+    //         {
+    //             usedRaw = true;
+    //             if(UsageDetectionSettings.Detection && !specialButtonSelectionSystemEnabled && !wasOtherDeviceUsed) used = true;
+    //         }
+    //
+    //         if (specialButtonSelectionSystemEnabled && !wasOtherDeviceUsed)
+    //         {
+    //             if ((
+    //                     UsageDetectionSettings.SelectionButtonPrimary != ShapeMouseButton.NONE && 
+    //                     Raylib.IsMouseButtonDown((MouseButton)UsageDetectionSettings.SelectionButtonPrimary
+    //                 )) || (
+    //                     UsageDetectionSettings.SelectionButtonSecondary != ShapeMouseButton.NONE && 
+    //                     Raylib.IsMouseButtonDown((MouseButton)UsageDetectionSettings.SelectionButtonSecondary
+    //                 )))
+    //             {
+    //                 used = true;
+    //             }
+    //         }
+    //         
+    //         return;
+    //     }
+    //     
+    //     if (pressCountEnabled)
+    //     {
+    //         pressedCountDurationTimer += dt;
+    //         if (pressedCountDurationTimer >= UsageDetectionSettings.MinPressInterval)
+    //         {
+    //             pressedCountDurationTimer -= UsageDetectionSettings.MinPressInterval;
+    //             pressedCount = 0;
+    //         }
+    //     }
+    //     
+    //     bool movement = (UsageDetectionSettings.MoveThresholdEnabled && Raylib.GetMouseDelta().LengthSquared() > moveThreshold * moveThreshold) ||
+    //                     (UsageDetectionSettings.WheelThresholdEnabled && Raylib.GetMouseWheelMoveV().LengthSquared() > mouseWheelThreshold * mouseWheelThreshold);
+    //     
+    //     bool mouseButtonDown = Raylib.IsMouseButtonDown(MouseButton.Left) ||
+    //                            Raylib.IsMouseButtonDown(MouseButton.Right) ||
+    //                            Raylib.IsMouseButtonDown(MouseButton.Middle) ||
+    //                            Raylib.IsMouseButtonDown(MouseButton.Extra) ||
+    //                            Raylib.IsMouseButtonDown(MouseButton.Forward) ||
+    //                            Raylib.IsMouseButtonDown(MouseButton.Back) ||
+    //                            Raylib.IsMouseButtonDown(MouseButton.Side);
+    //     
+    //     if (movement || mouseButtonDown)
+    //     {
+    //         usedRaw = true;
+    //         if (usedDurationEnabled)
+    //         {
+    //             usedDurationTimer += dt;
+    //             if (usedDurationTimer > UsageDetectionSettings.MinUsedDuration)
+    //             {
+    //                 usedDurationTimer -= UsageDetectionSettings.MinUsedDuration;
+    //                 used = true;
+    //                 pressedCount = 0;
+    //                 pressedCountDurationTimer = 0f;
+    //                 return;
+    //             }
+    //         }
+    //
+    //         if (pressCountEnabled)
+    //         {
+    //             bool mouseButtonPressedThisFrame = 
+    //                 Raylib.IsMouseButtonPressed(MouseButton.Left) ||
+    //                 Raylib.IsMouseButtonPressed(MouseButton.Right) ||
+    //                 Raylib.IsMouseButtonPressed(MouseButton.Middle) ||
+    //                 Raylib.IsMouseButtonPressed(MouseButton.Extra) ||
+    //                 Raylib.IsMouseButtonPressed(MouseButton.Forward) ||
+    //                 Raylib.IsMouseButtonPressed(MouseButton.Back) ||
+    //                 Raylib.IsMouseButtonPressed(MouseButton.Side);
+    //
+    //             if (mouseButtonPressedThisFrame)
+    //             {
+    //                 pressedCount++;
+    //                 if (pressedCount >= UsageDetectionSettings.MinPressCount)
+    //                 {
+    //                     used = true;
+    //                     pressedCountDurationTimer = 0f;
+    //                     usedDurationTimer = 0f;
+    //                     pressedCount = 0;
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }

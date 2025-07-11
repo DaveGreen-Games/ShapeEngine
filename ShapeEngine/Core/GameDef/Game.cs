@@ -353,7 +353,7 @@ public partial class Game
         UIScreenInfo = new(Window.ScreenArea, mousePosUI);
 
         ShapeInput.OnInputDeviceChanged += ResolveOnInputDeviceChanged;
-        ShapeInput.GamepadDeviceManager.OnGamepadConnectionChanged += ResolveOnGamepadConnectionChanged;
+        ShapeInput.ActiveGamepadDeviceManager.OnGamepadConnectionChanged += ResolveOnActiveGamepadConnectionChanged;
         
         //This sets the current directory to the executable's folder, enabling double-click launches.
         //without this, the executable has to be launched from the command line
@@ -631,7 +631,7 @@ public partial class Game
     #endregion
     
     #region Gamepad Connection
-    private void ResolveOnGamepadConnectionChanged(GamepadDevice gamepad, bool connected)
+    private void ResolveOnActiveGamepadConnectionChanged(GamepadDevice gamepad, bool connected)
     {
         if (connected)
         {

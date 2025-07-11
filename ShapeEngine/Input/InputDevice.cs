@@ -62,4 +62,18 @@ public abstract class InputDevice
     /// Calibrates the device, if supported.
     /// </summary>
     public abstract void Calibrate();
+
+    /// <summary>
+    /// Indicates whether the input device is currently active and able to process input.
+    /// </summary>
+    public abstract bool IsActive();
+    /// <summary>
+    /// Called when the input device is being activated.
+    /// </summary>
+    public abstract void Activate();
+
+    /// <summary>
+    /// Called when the input device is being deactivated.
+    /// </summary>
+    public abstract void Deactivate();
 }

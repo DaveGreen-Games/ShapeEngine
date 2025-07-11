@@ -13,10 +13,8 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// </summary>
         /// <code>
         /// Detection = true;
-        /// LeftAxisThreshold = 0.5f;
-        /// RightAxisThreshold = 0.5f;
-        /// LeftTriggerThreshold = 0.5f;
-        /// RightTriggerThreshold = 0.5f;
+        /// AxisThreshold = 0.5f;
+        /// TriggerThreshold = 0.5f;
         /// MinPressCount = 2;
         /// MinPressInterval = 1f;
         /// MinUsedDuration = 0.5f;
@@ -32,10 +30,8 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// </summary>
         /// <code>
         /// Detection = true;
-        /// LeftAxisThreshold = 0.5f;
-        /// RightAxisThreshold = 0.5f;
-        /// LeftTriggerThreshold = 0.5f;
-        /// RightTriggerThreshold = 0.5f;
+        /// AxisThreshold = 0.5f;
+        /// TriggerThreshold = 0.5f;
         /// MinPressCount = 2;
         /// MinPressInterval = 1f;
         /// MinUsedDuration = 0.5f;
@@ -47,10 +43,8 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         public GamepadSettings()
         {
             Detection = true;
-            LeftAxisThreshold = 0.5f;
-            RightAxisThreshold = 0.5f;
-            LeftTriggerThreshold = 0.5f;
-            RightTriggerThreshold = 0.5f;
+            AxisThreshold = 0.5f;
+            TriggerThreshold = 0.5f;
             MinPressCount = 2;
             MinPressInterval = 1f;
             MinUsedDuration = 0.5f;
@@ -65,24 +59,18 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// Other values are set to their defaults: MinPressCount = 2, MinPressInterval = 1f, MinUsedDuration = 0.5f.
         /// </summary>
         /// <param name="detection">Indicates whether gamepad detection is enabled.</param>
-        /// <param name="leftAxisThreshold">The minimum movement threshold for the left analog stick to consider the gamepad as "used".</param>
-        /// <param name="rightAxisThreshold">The minimum movement threshold for the right analog stick to consider the gamepad as "used".</param>
-        /// <param name="leftTriggerThreshold">The minimum threshold for the left trigger to consider the gamepad as "used".</param>
-        /// <param name="rightTriggerThreshold">The minimum threshold for the right trigger to consider the gamepad as "used".</param>
+        /// <param name="leftAxisThreshold">The minimum movement threshold for the  analog sticks to consider the gamepad as "used".</param>
+        /// <param name="leftTriggerThreshold">The minimum threshold for the  triggers to consider the gamepad as "used".</param>
         /// <param name="selectionCooldownDuration">
         /// Specifies the cooldown duration (in seconds) after this device is selected
         /// during which no other input device can be selected.
         /// <c>Default is 2 seconds.</c>
         /// </param>
-        public GamepadSettings(bool detection, float leftAxisThreshold, float rightAxisThreshold, float leftTriggerThreshold, float rightTriggerThreshold,
-            float selectionCooldownDuration = 2f)
+        public GamepadSettings(bool detection, float axisThreshold, float triggerThreshold, float selectionCooldownDuration = 2f)
         {
             Detection = detection;
-            LeftAxisThreshold = leftAxisThreshold;
-            RightAxisThreshold = rightAxisThreshold;
-            ;
-            LeftTriggerThreshold = leftTriggerThreshold;
-            RightTriggerThreshold = rightTriggerThreshold;
+            AxisThreshold = axisThreshold;
+            TriggerThreshold = triggerThreshold;
             MinPressCount = 2;
             MinPressInterval = 1f;
             MinUsedDuration = 0.5f;
@@ -97,10 +85,8 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// minimum press count, minimum press interval, minimum used duration, and selection cooldown duration.
         /// <see cref="Detection"/> is set to <c>true</c>.
         /// </summary>
-        /// <param name="leftAxisThreshold">The minimum movement threshold for the left analog stick to consider the gamepad as "used".</param>
-        /// <param name="rightAxisThreshold">The minimum movement threshold for the right analog stick to consider the gamepad as "used".</param>
-        /// <param name="leftTriggerThreshold">The minimum threshold for the left trigger to consider the gamepad as "used".</param>
-        /// <param name="rightTriggerThreshold">The minimum threshold for the right trigger to consider the gamepad as "used".</param>
+        /// <param name="axisThreshold">The minimum movement threshold for the analog sticks to consider the gamepad as "used".</param>
+        /// <param name="triggerThreshold">The minimum threshold for the triggers to consider the gamepad as "used".</param>
         /// <param name="minPressCount">The minimum number of gamepad button presses required within the specified interval.</param>
         /// <param name="minPressInterval">The time interval (in seconds) from the first gamepad button press within which <paramref name="minPressCount"/> must be reached.</param>
         /// <param name="minUsedDuration">The minimum duration (in seconds) of consecutive gamepad use required to consider the gamepad device as "used".</param>
@@ -109,15 +95,12 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// during which no other input device can be selected.
         /// <c>Default is 2 seconds.</c>
         /// </param>
-        public GamepadSettings(float leftAxisThreshold, float rightAxisThreshold, float leftTriggerThreshold, float rightTriggerThreshold, int minPressCount,
+        public GamepadSettings(float axisThreshold, float triggerThreshold, int minPressCount,
             float minPressInterval, float minUsedDuration, float selectionCooldownDuration = 2f)
         {
             Detection = true;
-            LeftAxisThreshold = leftAxisThreshold;
-            RightAxisThreshold = rightAxisThreshold;
-            ;
-            LeftTriggerThreshold = leftTriggerThreshold;
-            RightTriggerThreshold = rightTriggerThreshold;
+            AxisThreshold = axisThreshold;
+            TriggerThreshold = triggerThreshold;
             MinPressCount = minPressCount;
             MinPressInterval = minPressInterval;
             MinUsedDuration = minUsedDuration;
@@ -133,7 +116,7 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// minimum used duration, and custom selection buttons for device selection.
         /// <see cref="RequireSpecialButtonForSelection"/> and <see cref="Detection"/> is set to <c>true</c>.
         /// Other values are disabled because the can not be used together with special buttons.
-        /// <see cref="LeftAxisThreshold"/>/<see cref="RightAxisThreshold"/> and <see cref="LeftTriggerThreshold"/>/<see cref="RightTriggerThreshold"/> are set to default values
+        /// <see cref="AxisThreshold"/> and <see cref="TriggerThreshold"/> are set to default values
         /// for the <see cref="GamepadDevice.WasUsedRaw"/> system.
         /// </summary>
         /// <param name="selectionButtonPrimary">Specifies the primary gamepad button to be used for device selection.
@@ -150,10 +133,8 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         public GamepadSettings(ShapeGamepadButton selectionButtonPrimary, ShapeGamepadButton selectionButtonSecondary, float selectionCooldownDuration = 2f)
         {
             Detection = true;
-            LeftAxisThreshold = 0.5f;
-            RightAxisThreshold = 0.5f;
-            LeftTriggerThreshold = 0.5f;
-            RightTriggerThreshold = 0.5f;
+            TriggerThreshold = 0.5f;
+            AxisThreshold = 0.5f;
             MinPressCount = -1;
             MinPressInterval = -1f;
             MinUsedDuration = -1f;
@@ -167,16 +148,14 @@ public readonly partial struct InputDeviceUsageDetectionSettings
 
         private GamepadSettings(
             bool detection,
-            float leftAxisThreshold, float rightAxisThreshold, float leftTriggerThreshold, float rightTriggerThreshold,
+            float axisThreshold, float triggerThreshold,
             int minPressCount, float minPressInterval, float minUsedDuration,
             bool requireSpecialButtonForSelection, ShapeGamepadButton selectionButtonPrimary, ShapeGamepadButton selectionButtonSecondary,
             float selectionCooldownDuration)
         {
             Detection = detection;
-            LeftAxisThreshold = leftAxisThreshold;
-            RightAxisThreshold = rightAxisThreshold;
-            LeftTriggerThreshold = leftTriggerThreshold;
-            RightTriggerThreshold = rightTriggerThreshold;
+            TriggerThreshold = triggerThreshold;
+            AxisThreshold = axisThreshold;
             MinPressCount = minPressCount;
             MinPressInterval = minPressInterval;
             MinUsedDuration = minUsedDuration;
@@ -196,18 +175,18 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// Indicates whether used duration detection is enabled (requires <c>MinUsedDuration</c> to be greater than zero).
         /// </summary>
         public bool UsedDurationEnabled => MinUsedDuration > 0f;
-
+        
         /// <summary>
-        /// Indicates whether any gamepad axis threshold is enabled (greater than 0).
-        /// Returns <c>true</c> if either <see cref="LeftAxisThreshold"/> or <see cref="RightAxisThreshold"/> is greater than 0.
+        /// Gets a value indicating whether axis threshold detection is enabled.
+        /// Detection is enabled when <c>AxisThreshold</c> is greater than 0.
         /// </summary>
-        public bool AxisThresholdEnabled => LeftAxisThreshold > 0f || RightAxisThreshold > 0f;
-
+        public bool AxisThresholdEnabled => AxisThreshold > 0f;
+        
         /// <summary>
-        /// Indicates whether any gamepad trigger threshold is enabled (greater than 0).
-        /// Returns <c>true</c> if either <see cref="LeftTriggerThreshold"/> or <see cref="RightTriggerThreshold"/> is greater than 0.
+        /// Gets a value indicating whether trigger threshold detection is enabled.
+        /// Detection is enabled when <c>TriggerThreshold</c> is greater than 0.
         /// </summary>
-        public bool TriggerThresholdEnabled => LeftTriggerThreshold > 0f || RightTriggerThreshold > 0f;
+        public bool TriggerThresholdEnabled => TriggerThreshold > 0f;
 
         /// <summary>
         /// Gets a value indicating whether selection button detection is enabled for the gamepad.
@@ -219,16 +198,14 @@ public readonly partial struct InputDeviceUsageDetectionSettings
                                                             SelectionButtonSecondary != ShapeGamepadButton.NONE);
 
         /// <summary>
-        /// Returns a new GamepadSettings with the specified axis thresholds, keeping all other values the same.
+        /// Returns a new GamepadSettings with the specified axis threshold, keeping all other values the same.
         /// </summary>
-        public GamepadSettings SetAxisThresholds(float leftAxisThreshold, float rightAxisThreshold)
+        public GamepadSettings SetAxisThresholds(float axisThreshold)
         {
             return new GamepadSettings(
                 Detection,
-                leftAxisThreshold,
-                rightAxisThreshold,
-                LeftTriggerThreshold,
-                RightTriggerThreshold,
+                axisThreshold,
+                TriggerThreshold,
                 MinPressCount,
                 MinPressInterval,
                 MinUsedDuration,
@@ -240,16 +217,14 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         }
 
         /// <summary>
-        /// Returns a new GamepadSettings with the specified trigger thresholds, keeping all other values the same.
+        /// Returns a new GamepadSettings with the specified trigger threshold, keeping all other values the same.
         /// </summary>
-        public GamepadSettings SetTriggerThresholds(float leftTriggerThreshold, float rightTriggerThreshold)
+        public GamepadSettings SetTriggerThresholds(float triggerThreshold)
         {
             return new GamepadSettings(
                 Detection,
-                LeftAxisThreshold,
-                RightAxisThreshold,
-                leftTriggerThreshold,
-                rightTriggerThreshold,
+                AxisThreshold,
+                triggerThreshold,
                 MinPressCount,
                 MinPressInterval,
                 MinUsedDuration,
@@ -272,39 +247,26 @@ public readonly partial struct InputDeviceUsageDetectionSettings
 
         /// <summary>
         /// The minimum movement threshold for the left analog stick to consider the gamepad as "used".
+        /// This effectively represents a movement detection deadzone for the left joystick.
+        /// <c>Value Range 0-1</c>
         /// </summary>
         /// <remarks>
         /// <c>Default is 0.5f.</c>
-        /// Even if <see cref="Detection"/> is set to <c>false</c>, <see cref="LeftAxisThreshold"/> will still be used for <see cref="GamepadDevice.WasUsedRaw"/> system.
+        /// Even if <see cref="Detection"/> is set to <c>false</c>, <see cref="AxisThreshold"/> will still be used for <see cref="GamepadDevice.WasUsedRaw"/> system.
         /// </remarks>
-        public readonly float LeftAxisThreshold;
-
-        /// <summary>
-        /// The minimum movement threshold for the right analog stick to consider the gamepad as "used".
-        /// </summary>
-        /// <remarks>
-        /// <c>Default is 0.5f.</c>
-        /// Even if <see cref="Detection"/> is set to <c>false</c>, <see cref="RightAxisThreshold"/> will still be used for <see cref="GamepadDevice.WasUsedRaw"/> system.
-        /// </remarks>
-        public readonly float RightAxisThreshold;
+        public readonly float AxisThreshold;
 
         /// <summary>
         /// The minimum threshold for the left trigger to consider the gamepad as "used".
+        /// This effectively represents a movement detection deadzone for the left trigger.
+        /// <c>Value Range 0-1</c>
         /// </summary>
         /// <remarks>
         /// <c>Default is 0.5f.</c>
-        /// Even if <see cref="Detection"/> is set to <c>false</c>, <see cref="LeftTriggerThreshold"/> will still be used for <see cref="GamepadDevice.WasUsedRaw"/> system.
+        /// Even if <see cref="Detection"/> is set to <c>false</c>, <see cref="TriggerThreshold"/> will still be used for <see cref="GamepadDevice.WasUsedRaw"/> system.
         /// </remarks>
-        public readonly float LeftTriggerThreshold;
-
-        /// <summary>
-        /// The minimum threshold for the right trigger to consider the gamepad as "used".
-        /// </summary>
-        /// <remarks>
-        /// <c>Default is 0.5f.</c>
-        /// Even if <see cref="Detection"/> is set to <c>false</c>, <see cref="RightTriggerThreshold"/> will still be used for <see cref="GamepadDevice.WasUsedRaw"/> system.
-        /// </remarks>
-        public readonly float RightTriggerThreshold;
+        public readonly float TriggerThreshold;
+        
 
         /// <summary>
         /// The minimum number of gamepad button presses required, within the specified interval, 

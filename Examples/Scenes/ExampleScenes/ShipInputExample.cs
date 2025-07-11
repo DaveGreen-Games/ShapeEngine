@@ -288,7 +288,8 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
-            bool wasOtherDeviceUsed = ShapeInput.MouseDevice.WasUsed() || ShapeInput.KeyboardDevice.WasUsed();
+            // TODO: Use new system in shape input to change active gamepad device manager!
+            bool wasOtherDeviceUsed = ShapeInput.ActiveMouseDevice.WasUsed() || ShapeInput.ActiveKeyboardDevice.WasUsed();
             GamepadManager.Update(dt, wasOtherDeviceUsed);
             
             foreach (var inputHelper in inputActionHelpers)

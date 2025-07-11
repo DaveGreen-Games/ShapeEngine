@@ -893,7 +893,7 @@ public class InputAction
     public static InputState GetState(ShapeKeyboardButton button, uint accessTag)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        return ShapeInput.KeyboardDevice.CreateInputState(button);// InputTypeKeyboardButton.GetState(button);
+        return ShapeInput.ActiveKeyboardDevice.CreateInputState(button);// InputTypeKeyboardButton.GetState(button);
     }
     /// <summary>
     /// Gets the input state for a mouse button.
@@ -904,7 +904,7 @@ public class InputAction
     public static InputState GetState(ShapeMouseButton button, uint accessTag)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        return ShapeInput.MouseDevice.CreateInputState(button); // InputTypeMouseButton.GetState(button);
+        return ShapeInput.ActiveMouseDevice.CreateInputState(button); // InputTypeMouseButton.GetState(button);
     }
     /// <summary>
     /// Gets the input state for a gamepad button.
@@ -917,7 +917,7 @@ public class InputAction
     public static InputState GetState(ShapeGamepadButton button, uint accessTag, int gamepadIndex, float deadzone = 0.2f)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        var gamepad = ShapeInput.GamepadDeviceManager.GetGamepad(gamepadIndex);
+        var gamepad = ShapeInput.ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
         return gamepad == null ? new() : gamepad.CreateInputState(button, deadzone); //  InputTypeGamepadButton.GetState(button, gamepad, deadzone);
     }
     /// <summary>
@@ -930,7 +930,7 @@ public class InputAction
     public static InputState GetState(ShapeKeyboardButton neg, ShapeKeyboardButton pos, uint accessTag)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        return ShapeInput.KeyboardDevice.CreateInputState(neg, pos); // InputTypeKeyboardButtonAxis.GetState(neg, pos);
+        return ShapeInput.ActiveKeyboardDevice.CreateInputState(neg, pos); // InputTypeKeyboardButtonAxis.GetState(neg, pos);
     }
     /// <summary>
     /// Gets the input state for a mouse button axis.
@@ -942,7 +942,7 @@ public class InputAction
     public static InputState GetState(ShapeMouseButton neg, ShapeMouseButton pos, uint accessTag)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        return ShapeInput.MouseDevice.CreateInputState(neg, pos); // InputTypeMouseButtonAxis.GetState(neg, pos);
+        return ShapeInput.ActiveMouseDevice.CreateInputState(neg, pos); // InputTypeMouseButtonAxis.GetState(neg, pos);
     }
     /// <summary>
     /// Gets the input state for a gamepad button axis.
@@ -956,7 +956,7 @@ public class InputAction
     public static InputState GetState(ShapeGamepadButton neg, ShapeGamepadButton pos, uint accessTag, int gamepadIndex, float deadzone = 0.2f)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        var gamepad = ShapeInput.GamepadDeviceManager.GetGamepad(gamepadIndex);
+        var gamepad = ShapeInput.ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
         return gamepad == null ? new() : gamepad.CreateInputState(neg, pos, deadzone);
         // return InputTypeGamepadButtonAxis.GetState(neg, pos, gamepad, deadzone);
     }
@@ -970,7 +970,7 @@ public class InputAction
     public static InputState GetState(ShapeMouseWheelAxis axis, uint accessTag, float deadzone = 1f)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        return ShapeInput.MouseDevice.CreateInputState(axis, deadzone); // InputTypeMouseWheelAxis.GetState(axis);
+        return ShapeInput.ActiveMouseDevice.CreateInputState(axis, deadzone); // InputTypeMouseWheelAxis.GetState(axis);
     }
     /// <summary>
     /// Gets the input state for a gamepad axis.
@@ -983,7 +983,7 @@ public class InputAction
     public static InputState GetState(ShapeGamepadAxis axis, uint accessTag, int gamepadIndex, float deadzone = 0.2f)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        var gamepad = ShapeInput.GamepadDeviceManager.GetGamepad(gamepadIndex);
+        var gamepad = ShapeInput.ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
         return gamepad == null ? new() : gamepad.CreateInputState(axis, deadzone);
         // return InputTypeGamepadAxis.GetState(axis, gamepad, deadzone);
     }

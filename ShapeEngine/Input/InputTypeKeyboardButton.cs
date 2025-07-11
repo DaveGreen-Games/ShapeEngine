@@ -57,13 +57,13 @@ public sealed class InputTypeKeyboardButton : IInputType
     /// <inheritdoc/>
     public InputState GetState(GamepadDevice? gamepad = null)
     {
-        return ShapeInput.KeyboardDevice.CreateInputState(button, modifierOperator, modifierKeys);
+        return ShapeInput.ActiveKeyboardDevice.CreateInputState(button, modifierOperator, modifierKeys);
     }
 
     /// <inheritdoc/>
     public InputState GetState(InputState prev, GamepadDevice? gamepad = null)
     {
-        return ShapeInput.KeyboardDevice.CreateInputState(button, prev, modifierOperator, modifierKeys);
+        return ShapeInput.ActiveKeyboardDevice.CreateInputState(button, prev, modifierOperator, modifierKeys);
     }
 
     /// <inheritdoc/>

@@ -17,6 +17,8 @@ public sealed class GamepadDeviceManager
     /// </summary>
     public int MaxGamepads => gamepads.Length;
     
+    private bool isActive = false;
+    
     private readonly GamepadDevice[] gamepads;
     /// <summary>
     /// List of <see cref="GamepadDevice"/> instances that registered input during the last update cycle,
@@ -76,6 +78,37 @@ public sealed class GamepadDeviceManager
     public bool Update(float dt, bool wasOtherDeviceUsed)
     {
         return CheckGamepadConnections(dt, wasOtherDeviceUsed);
+    }
+
+    /// <summary>
+    /// Indicates whether the gamepad manager is currently active.
+    /// </summary>
+    public bool IsActive() => isActive;
+
+    /// <summary>
+    /// Activates all managed gamepads by calling their <c>Activate()</c> method.
+    /// </summary>
+    public void Activate()
+    {
+        if (isActive) return;
+        isActive = true;
+        foreach (var gamepad in gamepads)
+        {
+            gamepad.Activate();
+        }
+    }
+    
+    /// <summary>
+    /// Deactivates all managed gamepads by calling their <c>Deactivate()</c> method.
+    /// </summary>
+    public void Deactivate()
+    {
+        if (!isActive) return;
+        isActive = false;
+        foreach (var gamepad in gamepads)
+        {
+            gamepad.Deactivate();
+        }
     }
     
     internal void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)

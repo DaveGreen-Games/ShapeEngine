@@ -365,11 +365,11 @@ namespace Examples
             if (!MouseControlEnabled) return mousePos;
             
             //&& ShapeInput.GamepadDeviceManager.LastUsedGamepad.IsDown(ShapeGamepadAxis.RIGHT_TRIGGER, 0.1f)
-            if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Gamepad && ShapeInput.GamepadDeviceManager.LastUsedGamepad != null)
+            if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Gamepad && ShapeInput.ActiveGamepadDeviceManager.LastUsedGamepad != null)
             {
                 mouseMovementTimer = 0f;
                 float speed = screenArea.Size.Max() * 0.75f * dt;
-                int gamepad = ShapeInput.GamepadDeviceManager.LastUsedGamepad.Index;
+                int gamepad = ShapeInput.ActiveGamepadDeviceManager.LastUsedGamepad.Index;
                 var x = InputAction.GetState(ShapeGamepadAxis.LEFT_X, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
                 var y = InputAction.GetState(ShapeGamepadAxis.LEFT_Y, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
 
@@ -414,7 +414,7 @@ namespace Examples
         {
             SetupInput();
 
-            CurGamepad = ShapeInput.GamepadDeviceManager.RequestGamepad(0); // Input.RequestGamepad(0);
+            CurGamepad = ShapeInput.ActiveGamepadDeviceManager.RequestGamepad(0); // Input.RequestGamepad(0);
             if (CurGamepad != null)
             {
                 foreach (var action in inputActions)
@@ -463,7 +463,7 @@ namespace Examples
         protected override void OnGamepadConnected(GamepadDevice gamepad)
         {
             if (CurGamepad != null) return;
-            CurGamepad = ShapeInput.GamepadDeviceManager.RequestGamepad(0);
+            CurGamepad = ShapeInput.ActiveGamepadDeviceManager.RequestGamepad(0);
             
             if (CurGamepad != null)
             {
@@ -479,7 +479,7 @@ namespace Examples
             if (CurGamepad == null) return;
             if (CurGamepad.Index == gamepad.Index)
             {
-                CurGamepad = ShapeInput.GamepadDeviceManager.RequestGamepad(0);
+                CurGamepad = ShapeInput.ActiveGamepadDeviceManager.RequestGamepad(0);
 
                 foreach (var action in inputActions)
                 {

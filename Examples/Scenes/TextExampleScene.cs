@@ -230,7 +230,7 @@ namespace Examples.Scenes
                 }
                 else
                 {
-                    TextInputBox.AddCharacters(ShapeInput.KeyboardDevice.GetStreamChar());
+                    TextInputBox.AddCharacters(ShapeInput.ActiveKeyboardDevice.GetStreamChar());
                 }
 
                 
