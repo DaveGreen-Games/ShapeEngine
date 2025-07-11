@@ -5,8 +5,6 @@ namespace ShapeEngine.Input;
 /// </summary>
 public enum ShapeGamepadButton
 {
-    /// <summary>No button pressed.</summary>
-    NONE = -1,
     /// <summary>Unknown button.</summary>
     UNKNOWN = 0,
 

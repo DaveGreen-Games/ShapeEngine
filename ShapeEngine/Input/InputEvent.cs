@@ -53,8 +53,8 @@ public class InputEvent
     {
         Type = InputDeviceType.Keyboard;
         KeyboardButton = button;
-        MouseButton = ShapeMouseButton.NONE;
-        GamepadButton = ShapeGamepadButton.NONE;
+        MouseButton = ShapeMouseButton.LEFT;
+        GamepadButton = ShapeGamepadButton.UNKNOWN;
         Gamepad = null;
     }
 
@@ -65,9 +65,9 @@ public class InputEvent
     public InputEvent(ShapeMouseButton button)
     {
         Type = InputDeviceType.Mouse;
-        KeyboardButton = ShapeKeyboardButton.NONE;
+        KeyboardButton = ShapeKeyboardButton.SPACE;
         MouseButton = button;
-        GamepadButton = ShapeGamepadButton.NONE;
+        GamepadButton = ShapeGamepadButton.UNKNOWN;
         Gamepad = null;
     }
 
@@ -79,8 +79,8 @@ public class InputEvent
     public InputEvent(GamepadDevice gamepad, ShapeGamepadButton button)
     {
         Type = InputDeviceType.Gamepad;
-        KeyboardButton = ShapeKeyboardButton.NONE;
-        MouseButton = ShapeMouseButton.NONE;
+        KeyboardButton = ShapeKeyboardButton.SPACE;
+        MouseButton = ShapeMouseButton.LEFT;
         GamepadButton = button;
         Gamepad = gamepad;
     }

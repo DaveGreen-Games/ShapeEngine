@@ -17,9 +17,9 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// MinPressInterval = 1f;
         /// MinUsedDuration = 0.5f;
         /// RequireSpecialButtonForSelection = false;
-        /// SelectionButtonPrimary = ShapeKeyboardButton.NONE;
-        /// SelectionButtonSecondary = ShapeKeyboardButton.NONE;
-        /// SelectionButtonTertiary = ShapeKeyboardButton.NONE;
+        /// SelectionButtonPrimary = ShapeKeyboardButton.ESCAPE;
+        /// SelectionButtonSecondary = ShapeKeyboardButton.ENTER;
+        /// SelectionButtonTertiary = ShapeKeyboardButton.SPACE;
         /// SelectionCooldownDuration = 2f;
         /// </code>
         public static readonly KeyboardSettings Default = new();
@@ -33,9 +33,9 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// MinPressInterval = 1f;
         /// MinUsedDuration = 0.5f;
         /// RequireSpecialButtonForSelection = false;
-        /// SelectionButtonPrimary = ShapeKeyboardButton.NONE;
-        /// SelectionButtonSecondary = ShapeKeyboardButton.NONE;
-        /// SelectionButtonTertiary = ShapeKeyboardButton.NONE;
+        /// SelectionButtonPrimary = ShapeKeyboardButton.ESCAPE;
+        /// SelectionButtonSecondary = ShapeKeyboardButton.ENTER;
+        /// SelectionButtonTertiary = ShapeKeyboardButton.SPACE;
         /// SelectionCooldownDuration = 2f;
         /// </code>
         public KeyboardSettings()
@@ -46,9 +46,9 @@ public readonly partial struct InputDeviceUsageDetectionSettings
             MinUsedDuration = 0.5f;
 
             RequireSpecialButtonForSelection = false;
-            SelectionButtonPrimary = ShapeKeyboardButton.NONE;
-            SelectionButtonSecondary = ShapeKeyboardButton.NONE;
-            SelectionButtonTertiary = ShapeKeyboardButton.NONE;
+            SelectionButtonPrimary = ShapeKeyboardButton.ESCAPE;
+            SelectionButtonSecondary = ShapeKeyboardButton.ENTER;
+            SelectionButtonTertiary = ShapeKeyboardButton.SPACE;
 
             SelectionCooldownDuration = 2f;
         }
@@ -74,9 +74,9 @@ public readonly partial struct InputDeviceUsageDetectionSettings
             MinPressInterval = minPressInterval;
             MinUsedDuration = minUsedDuration;
             RequireSpecialButtonForSelection = false;
-            SelectionButtonPrimary = ShapeKeyboardButton.NONE;
-            SelectionButtonSecondary = ShapeKeyboardButton.NONE;
-            SelectionButtonTertiary = ShapeKeyboardButton.NONE;
+            SelectionButtonPrimary = ShapeKeyboardButton.ESCAPE;
+            SelectionButtonSecondary = ShapeKeyboardButton.ENTER;
+            SelectionButtonTertiary = ShapeKeyboardButton.SPACE;
             SelectionCooldownDuration = selectionCooldownDuration;
         }
 
@@ -122,14 +122,9 @@ public readonly partial struct InputDeviceUsageDetectionSettings
 
         /// <summary>
         /// Gets a value indicating whether special button detection is enabled for the keyboard.
-        /// Returns <c>true</c> if <see cref="RequireSpecialButtonForSelection"/> is enabled and at least one of
-        /// <see cref="SelectionButtonPrimary"/>, <see cref="SelectionButtonSecondary"/>, or <see cref="SelectionButtonTertiary"/> is not <c>ShapeKeyboardButton.NONE</c>.
+        /// Returns <c>true</c> if <see cref="RequireSpecialButtonForSelection"/> is enabled.
         /// </summary>
-        public bool SpecialButtonSelectionSystemEnabled =>
-            RequireSpecialButtonForSelection &&
-            (SelectionButtonPrimary != ShapeKeyboardButton.NONE ||
-             SelectionButtonSecondary != ShapeKeyboardButton.NONE ||
-             SelectionButtonTertiary != ShapeKeyboardButton.NONE);
+        public bool SpecialButtonSelectionSystemEnabled => RequireSpecialButtonForSelection;
 
         /// <summary>
         /// Indicates whether the input device can be changed to keyboard.

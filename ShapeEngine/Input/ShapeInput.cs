@@ -239,44 +239,21 @@ public static class ShapeInput
 
         if (usedInputDevice != InputDeviceType.None)
         {
-            //Update cooldown timer if device was used again
-            if (selectionCooldownActive)
+            if(!selectionCooldownActive && usedInputDevice != CurrentInputDeviceType)
             {
-                if (usedInputDevice == CurrentInputDeviceType)
-                {
-                    float deviceCooldown;
+                var prevInputDevice = CurrentInputDeviceType;
+                CurrentInputDeviceType = usedInputDevice;
+                OnInputDeviceChanged?.Invoke(prevInputDevice, CurrentInputDeviceType);
                 
-                    if (usedInputDevice == InputDeviceType.Keyboard) deviceCooldown = ActiveKeyboardDevice.UsageDetectionSettings.SelectionCooldownDuration;
-                    else if (usedInputDevice == InputDeviceType.Gamepad) deviceCooldown = ActiveGamepadDeviceManager.UsageDetectionSettings.SelectionCooldownDuration;
-                    else deviceCooldown = ActiveMouseDevice.UsageDetectionSettings.SelectionCooldownDuration;
-               
-                    inputDeviceSelectionCooldownTimer = deviceCooldown > 0f ? deviceCooldown : inputDeviceSelectionCooldownTimer;
-                }
-            }
-            
-            //set new cooldown timer if device was used
-            else
-            {
                 float deviceCooldown;
                 
                 if (usedInputDevice == InputDeviceType.Keyboard) deviceCooldown = ActiveKeyboardDevice.UsageDetectionSettings.SelectionCooldownDuration;
                 else if (usedInputDevice == InputDeviceType.Gamepad) deviceCooldown = ActiveGamepadDeviceManager.UsageDetectionSettings.SelectionCooldownDuration;
                 else deviceCooldown = ActiveMouseDevice.UsageDetectionSettings.SelectionCooldownDuration;
-               
-                float cooldown = deviceCooldown > 0f ? deviceCooldown : 0f;
                 
-                //Update CurInputDeviceType
-                var prevInputDevice = CurrentInputDeviceType;
-                if (prevInputDevice != usedInputDevice)
+                if (deviceCooldown > 0f)
                 {
-                    CurrentInputDeviceType = usedInputDevice;
-                    OnInputDeviceChanged?.Invoke(prevInputDevice, CurrentInputDeviceType);
-                }
-                
-                //Set Cooldown
-                if (cooldown > 0f)
-                {
-                    inputDeviceSelectionCooldownTimer = cooldown;
+                    inputDeviceSelectionCooldownTimer = deviceCooldown;
                 }
             }
         }

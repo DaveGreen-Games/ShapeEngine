@@ -250,7 +250,11 @@ namespace Examples
             mainBottomRight.AddChild(mainBottomRightBottom);
 
             
-
+            var mouseSettings = new InputDeviceUsageDetectionSettings.MouseSettings();
+            var keyboardSettings = new InputDeviceUsageDetectionSettings.KeyboardSettings();
+            var gamepadSettings = new InputDeviceUsageDetectionSettings.GamepadSettings();
+            var settings = new InputDeviceUsageDetectionSettings(mouseSettings, keyboardSettings, gamepadSettings);
+            ShapeInput.ApplyInputDeviceChangeSettings(settings);
         }
 
         protected override void LoadContent()

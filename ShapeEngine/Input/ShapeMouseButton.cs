@@ -5,8 +5,6 @@ namespace ShapeEngine.Input;
 /// </summary>
 public enum ShapeMouseButton
 {
-    /// <summary>No button or unassigned.</summary>
-    NONE = -1,
     /// <summary>Left mouse button.</summary>
     LEFT = 0,
     /// <summary>Right mouse button.</summary>

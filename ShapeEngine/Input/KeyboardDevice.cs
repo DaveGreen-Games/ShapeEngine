@@ -275,12 +275,10 @@ public sealed class KeyboardDevice : InputDevice
             
         if (UsageDetectionSettings.SpecialButtonSelectionSystemEnabled)
         {
-            if (
-                UsageDetectionSettings.SelectionButtonPrimary != ShapeKeyboardButton.NONE &&
+            if 
+            (
                 Raylib.IsKeyDown((KeyboardKey)UsageDetectionSettings.SelectionButtonPrimary) ||
-                UsageDetectionSettings.SelectionButtonSecondary != ShapeKeyboardButton.NONE &&
                 Raylib.IsKeyDown((KeyboardKey)UsageDetectionSettings.SelectionButtonSecondary) ||
-                UsageDetectionSettings.SelectionButtonTertiary != ShapeKeyboardButton.NONE &&
                 Raylib.IsKeyDown((KeyboardKey)UsageDetectionSettings.SelectionButtonTertiary)
             )
             {

@@ -131,6 +131,9 @@ public sealed class GamepadDevice : InputDevice
     /// List of gamepad axes in use.
     /// </summary>
     public readonly List<ShapeGamepadAxis> HeldAxis = [];
+
+    private readonly HashSet<ShapeGamepadButton> newHeldButtons = [];
+    private readonly HashSet<ShapeGamepadAxis> newHeldAxis = [];
     
     /// <summary>
     /// Event triggered when the connection state changes.
@@ -195,7 +198,7 @@ public sealed class GamepadDevice : InputDevice
     /// Converts a <see cref="ShapeGamepadButton"/> to the corresponding <see cref="ShapeGamepadAxis"/> if applicable.
     /// Returns null if the button does not map to an axis.
     /// </summary>
-    public static ShapeGamepadAxis ToShapeGamepadAxis(ShapeGamepadButton button)
+    public static ShapeGamepadAxis? ToShapeGamepadAxis(ShapeGamepadButton button)
     {
         switch (button)
         {
@@ -209,7 +212,7 @@ public sealed class GamepadDevice : InputDevice
             case ShapeGamepadButton.RIGHT_STICK_DOWN: return ShapeGamepadAxis.RIGHT_Y;
             case ShapeGamepadButton.LEFT_TRIGGER_BOTTOM: return ShapeGamepadAxis.LEFT_TRIGGER;
             case ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM: return ShapeGamepadAxis.RIGHT_TRIGGER;
-            default: return ShapeGamepadAxis.NONE;
+            default: return null;
         }
     }
     
@@ -315,6 +318,9 @@ public sealed class GamepadDevice : InputDevice
         PressedButtons.Clear();
         PressedAxis.Clear();
         
+        UpdateUsedGamepadButtons(UsageDetectionSettings.AxisThreshold, UsageDetectionSettings.TriggerThreshold);
+        UpdateUsedGamepadAxis(UsageDetectionSettings.AxisThreshold, UsageDetectionSettings.TriggerThreshold);
+        
         for (int i = HeldDownButtons.Count - 1; i >= 0; i--)
         {
             var button = HeldDownButtons[i];
@@ -332,8 +338,11 @@ public sealed class GamepadDevice : InputDevice
             }
         }
         
-        UpdateUsedGamepadButtons(UsageDetectionSettings.AxisThreshold, UsageDetectionSettings.TriggerThreshold);
-        UpdateUsedGamepadAxis(UsageDetectionSettings.AxisThreshold, UsageDetectionSettings.TriggerThreshold);
+        HeldDownButtons.AddRange(newHeldButtons);
+        newHeldButtons.Clear();
+        
+        HeldAxis.AddRange(newHeldAxis);
+        newHeldAxis.Clear();
         
         WasGamepadUsed(dt, wasOtherDeviceUsed, out wasUsed, out wasUsedRaw);
         
@@ -360,10 +369,9 @@ public sealed class GamepadDevice : InputDevice
             
         if (UsageDetectionSettings.SpecialButtonSelectionSystemEnabled)
         {
-            if (
-                UsageDetectionSettings.SelectionButtonPrimary != ShapeGamepadButton.NONE &&
+            if 
+            (
                 IsDown(UsageDetectionSettings.SelectionButtonPrimary, UsageDetectionSettings.AxisThreshold, UsageDetectionSettings.TriggerThreshold) ||
-                UsageDetectionSettings.SelectionButtonSecondary != ShapeGamepadButton.NONE &&
                 IsDown(UsageDetectionSettings.SelectionButtonSecondary, UsageDetectionSettings.AxisThreshold, UsageDetectionSettings.TriggerThreshold)
             )
             {
@@ -1082,26 +1090,26 @@ public sealed class GamepadDevice : InputDevice
             if (HeldDownButtons.Contains(b)) continue;
             
             var id = (int)b;
-            bool down;
+            var down = false;
             if (b is ShapeGamepadButton.LEFT_STICK_DOWN or ShapeGamepadButton.LEFT_STICK_UP or ShapeGamepadButton.LEFT_STICK_LEFT or ShapeGamepadButton.LEFT_STICK_RIGHT)
             {
                 var axis = ToShapeGamepadAxis(b);
-                down = IsDown(axis, axisDeadzone);
+                if(axis != null) down = IsDown((ShapeGamepadAxis)axis, axisDeadzone);
             }
             else if (b is ShapeGamepadButton.RIGHT_STICK_DOWN or ShapeGamepadButton.RIGHT_STICK_UP or ShapeGamepadButton.RIGHT_STICK_LEFT or ShapeGamepadButton.RIGHT_STICK_RIGHT)
             {
                 var axis = ToShapeGamepadAxis(b);
-                down = IsDown(axis, axisDeadzone);
+                if(axis != null) down = IsDown((ShapeGamepadAxis)axis, axisDeadzone);
             }
             else if (b == ShapeGamepadButton.LEFT_TRIGGER_BOTTOM)
             {
                 var axis = ToShapeGamepadAxis(b);
-                down = IsDown(axis, triggerDeadzone);
+                if(axis != null)down = IsDown((ShapeGamepadAxis)axis, triggerDeadzone);
             }
             else if (b == ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM)
             {
                 var axis = ToShapeGamepadAxis(b);
-                down = IsDown(axis, triggerDeadzone);
+                if(axis != null) down = IsDown((ShapeGamepadAxis)axis, triggerDeadzone);
             }
             else
             {
@@ -1111,7 +1119,7 @@ public sealed class GamepadDevice : InputDevice
             if (down)
             {
                 PressedButtons.Add(b);
-                HeldDownButtons.Add(b);
+                newHeldButtons.Add(b);
             }
             
         }
@@ -1125,7 +1133,7 @@ public sealed class GamepadDevice : InputDevice
             if (!HeldAxis.Contains(ShapeGamepadAxis.LEFT_X))
             {
                 PressedAxis.Add(ShapeGamepadAxis.LEFT_X);
-                HeldAxis.Add(ShapeGamepadAxis.LEFT_X);
+                newHeldAxis.Add(ShapeGamepadAxis.LEFT_X);
             }
         }
 
@@ -1134,7 +1142,7 @@ public sealed class GamepadDevice : InputDevice
             if (!HeldAxis.Contains(ShapeGamepadAxis.LEFT_Y))
             {
                 PressedAxis.Add(ShapeGamepadAxis.LEFT_Y);
-                HeldAxis.Add(ShapeGamepadAxis.LEFT_Y);
+                newHeldAxis.Add(ShapeGamepadAxis.LEFT_Y);
             }
         }
 
@@ -1143,7 +1151,7 @@ public sealed class GamepadDevice : InputDevice
             if (!HeldAxis.Contains(ShapeGamepadAxis.RIGHT_X))
             {
                 PressedAxis.Add(ShapeGamepadAxis.RIGHT_X);
-                HeldAxis.Add(ShapeGamepadAxis.RIGHT_X);
+                newHeldAxis.Add(ShapeGamepadAxis.RIGHT_X);
             }
         }
 
@@ -1152,7 +1160,7 @@ public sealed class GamepadDevice : InputDevice
             if (!HeldAxis.Contains(ShapeGamepadAxis.RIGHT_Y))
             {
                 PressedAxis.Add(ShapeGamepadAxis.RIGHT_Y);
-                HeldAxis.Add(ShapeGamepadAxis.RIGHT_Y);
+                newHeldAxis.Add(ShapeGamepadAxis.RIGHT_Y);
             }
         }
 
@@ -1161,7 +1169,7 @@ public sealed class GamepadDevice : InputDevice
             if (!HeldAxis.Contains(ShapeGamepadAxis.LEFT_TRIGGER))
             {
                 PressedAxis.Add(ShapeGamepadAxis.LEFT_TRIGGER);
-                HeldAxis.Add(ShapeGamepadAxis.LEFT_TRIGGER);
+                newHeldAxis.Add(ShapeGamepadAxis.LEFT_TRIGGER);
             }
         }
 
@@ -1170,7 +1178,7 @@ public sealed class GamepadDevice : InputDevice
             if (!HeldAxis.Contains(ShapeGamepadAxis.RIGHT_TRIGGER))
             {
                 PressedAxis.Add(ShapeGamepadAxis.RIGHT_TRIGGER);
-                HeldAxis.Add(ShapeGamepadAxis.RIGHT_TRIGGER);
+                newHeldAxis.Add(ShapeGamepadAxis.RIGHT_TRIGGER);
             }
         }
         

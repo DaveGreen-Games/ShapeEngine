@@ -6,10 +6,6 @@ namespace ShapeEngine.Input;
 public enum ShapeGamepadAxis
 {
     /// <summary>
-    /// Invalid axis.
-    /// </summary>
-    NONE = -1,
-    /// <summary>
     /// Left stick horizontal axis.
     /// </summary>
     LEFT_X = 0,

@@ -19,8 +19,8 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// MinPressInterval = 1f;
         /// MinUsedDuration = 0.5f;
         /// RequireSpecialButtonForSelection = false;
-        /// SelectionButtonPrimary = ShapeGamepadButton.NONE;
-        /// SelectionButtonSecondary = ShapeGamepadButton.NONE;
+        /// SelectionButtonPrimary = ShapeGamepadButton.RIGHT_FACE_DOWN;
+        /// SelectionButtonSecondary = ShapeGamepadButton.MIDDLE_RIGHT;
         /// SelectionCooldownDuration = 2f;
         /// </code>
         public static readonly GamepadSettings Default = new();
@@ -36,8 +36,8 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// MinPressInterval = 1f;
         /// MinUsedDuration = 0.5f;
         /// RequireSpecialButtonForSelection = false;
-        /// SelectionButtonPrimary = ShapeGamepadButton.NONE;
-        /// SelectionButtonSecondary = ShapeGamepadButton.NONE;
+        /// SelectionButtonPrimary = ShapeGamepadButton.RIGHT_FACE_DOWN;
+        /// SelectionButtonSecondary = ShapeGamepadButton.MIDDLE_RIGHT;
         /// SelectionCooldownDuration = 2f;
         /// </code>
         public GamepadSettings()
@@ -49,8 +49,8 @@ public readonly partial struct InputDeviceUsageDetectionSettings
             MinPressInterval = 1f;
             MinUsedDuration = 0.5f;
             RequireSpecialButtonForSelection = false;
-            SelectionButtonPrimary = ShapeGamepadButton.NONE;
-            SelectionButtonSecondary = ShapeGamepadButton.NONE;
+            SelectionButtonPrimary = ShapeGamepadButton.RIGHT_FACE_DOWN;
+            SelectionButtonSecondary = ShapeGamepadButton.MIDDLE_RIGHT;
             SelectionCooldownDuration = 2f;
         }
 
@@ -75,8 +75,8 @@ public readonly partial struct InputDeviceUsageDetectionSettings
             MinPressInterval = 1f;
             MinUsedDuration = 0.5f;
             RequireSpecialButtonForSelection = false;
-            SelectionButtonPrimary = ShapeGamepadButton.NONE;
-            SelectionButtonSecondary = ShapeGamepadButton.NONE;
+            SelectionButtonPrimary = ShapeGamepadButton.RIGHT_FACE_DOWN;
+            SelectionButtonSecondary = ShapeGamepadButton.MIDDLE_RIGHT;
             SelectionCooldownDuration = selectionCooldownDuration;
         }
 
@@ -105,8 +105,8 @@ public readonly partial struct InputDeviceUsageDetectionSettings
             MinPressInterval = minPressInterval;
             MinUsedDuration = minUsedDuration;
             RequireSpecialButtonForSelection = false;
-            SelectionButtonPrimary = ShapeGamepadButton.NONE;
-            SelectionButtonSecondary = ShapeGamepadButton.NONE;
+            SelectionButtonPrimary = ShapeGamepadButton.RIGHT_FACE_DOWN;
+            SelectionButtonSecondary = ShapeGamepadButton.MIDDLE_RIGHT;
             SelectionCooldownDuration = selectionCooldownDuration;
         }
 
@@ -184,12 +184,9 @@ public readonly partial struct InputDeviceUsageDetectionSettings
 
         /// <summary>
         /// Gets a value indicating whether selection button detection is enabled for the gamepad.
-        /// Returns <c>true</c> if <see cref="RequireSpecialButtonForSelection"/> is enabled and at least one of
-        /// <see cref="SelectionButtonPrimary"/> or <see cref="SelectionButtonSecondary"/> is not <c>ShapeGamepadButton.NONE</c>.
+        /// Returns <c>true</c> if <see cref="RequireSpecialButtonForSelection"/> is enabled.
         /// </summary>
-        public bool SpecialButtonSelectionSystemEnabled => RequireSpecialButtonForSelection &&
-                                                           (SelectionButtonPrimary != ShapeGamepadButton.NONE ||
-                                                            SelectionButtonSecondary != ShapeGamepadButton.NONE);
+        public bool SpecialButtonSelectionSystemEnabled => RequireSpecialButtonForSelection;
 
         /// <summary>
         /// Returns a new GamepadSettings with the specified axis threshold, keeping all other values the same.

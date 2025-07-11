@@ -19,8 +19,8 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// MinPressInterval = 1f;
         /// MinUsedDuration = 0.5f;
         /// RequireSpecialButtonForSelection = false;
-        /// SelectionButtonPrimary = ShapeMouseButton.NONE;
-        /// SelectionButtonSecondary = ShapeMouseButton.NONE;
+        /// SelectionButtonPrimary = ShapeMouseButton.LEFT;
+        /// SelectionButtonSecondary = ShapeMouseButton.RIGHT;
         /// SelectionCooldownDuration = 2f;
         /// </code>
         public static readonly MouseSettings Default = new();
@@ -36,8 +36,8 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// MinPressInterval = 1f;
         /// MinUsedDuration = 0.5f;
         /// RequireSpecialButtonForSelection = false;
-        /// SelectionButtonPrimary = ShapeMouseButton.NONE;
-        /// SelectionButtonSecondary = ShapeMouseButton.NONE;
+        /// SelectionButtonPrimary = ShapeMouseButton.LEFT;
+        /// SelectionButtonSecondary = ShapeMouseButton.RIGHT;
         /// SelectionCooldownDuration = 2f;
         /// </code>
         public MouseSettings()
@@ -49,8 +49,8 @@ public readonly partial struct InputDeviceUsageDetectionSettings
             MinPressInterval = 1f;
             MinUsedDuration = 0.5f;
             RequireSpecialButtonForSelection = false;
-            SelectionButtonPrimary = ShapeMouseButton.NONE;
-            SelectionButtonSecondary = ShapeMouseButton.NONE;
+            SelectionButtonPrimary = ShapeMouseButton.LEFT;
+            SelectionButtonSecondary = ShapeMouseButton.RIGHT;
             SelectionCooldownDuration = 2f;
         }
 
@@ -75,8 +75,8 @@ public readonly partial struct InputDeviceUsageDetectionSettings
             MinPressInterval = 1f;
             MinUsedDuration = 0.5f;
             RequireSpecialButtonForSelection = false;
-            SelectionButtonPrimary = ShapeMouseButton.NONE;
-            SelectionButtonSecondary = ShapeMouseButton.NONE;
+            SelectionButtonPrimary = ShapeMouseButton.LEFT;
+            SelectionButtonSecondary = ShapeMouseButton.RIGHT;
             SelectionCooldownDuration = selectionCooldownDuration;
         }
 
@@ -104,8 +104,8 @@ public readonly partial struct InputDeviceUsageDetectionSettings
             MinPressInterval = minPressInterval;
             MinUsedDuration = minUsedDuration;
             RequireSpecialButtonForSelection = false;
-            SelectionButtonPrimary = ShapeMouseButton.NONE;
-            SelectionButtonSecondary = ShapeMouseButton.NONE;
+            SelectionButtonPrimary = ShapeMouseButton.LEFT;
+            SelectionButtonSecondary = ShapeMouseButton.RIGHT;
             SelectionCooldownDuration = selectionCooldownDuration;
         }
 
@@ -179,12 +179,9 @@ public readonly partial struct InputDeviceUsageDetectionSettings
 
         /// <summary>
         /// Gets a value indicating whether selection button detection is enabled for the mouse.
-        /// Returns <c>true</c> if <see cref="RequireSpecialButtonForSelection"/> is enabled and at least one of
-        /// <see cref="SelectionButtonPrimary"/> or <see cref="SelectionButtonSecondary"/> is not <c>ShapeMouseButton.NONE</c>.
+        /// Returns <c>true</c> if <see cref="RequireSpecialButtonForSelection"/> is enabled.
         /// </summary>
-        public bool SpecialButtonSelectionSystemEnabled => RequireSpecialButtonForSelection &&
-                                                           (SelectionButtonPrimary != ShapeMouseButton.NONE ||
-                                                            SelectionButtonSecondary != ShapeMouseButton.NONE);
+        public bool SpecialButtonSelectionSystemEnabled => RequireSpecialButtonForSelection;
 
         /// <summary>
         /// Returns a new MouseSettings with the specified MoveThreshold, keeping all other values the same.
