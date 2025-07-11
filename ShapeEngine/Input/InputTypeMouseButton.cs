@@ -68,13 +68,13 @@ public class InputTypeMouseButton : IInputType
     public void SetDeadzone(float value) { deadzone = value; }
 
     /// <inheritdoc/>
-    public InputState GetState(ShapeGamepadDevice? gamepad = null)
+    public InputState GetState(GamepadDevice? gamepad = null)
     {
         return ShapeInput.MouseDevice.CreateInputState(button, deadzone, modifierOperator, modifierKeys);
     }
 
     /// <inheritdoc/>
-    public InputState GetState(InputState prev, ShapeGamepadDevice? gamepad = null)
+    public InputState GetState(InputState prev, GamepadDevice? gamepad = null)
     {
         return ShapeInput.MouseDevice.CreateInputState(button, prev, deadzone, modifierOperator, modifierKeys);
     }
@@ -84,7 +84,7 @@ public class InputTypeMouseButton : IInputType
     {
         StringBuilder sb = new();
         IModifierKey.GetModifierKeyNames(sb, modifierKeys, modifierOperator, shorthand);
-        sb.Append(ShapeMouseDevice.GetButtonName(button, shorthand));
+        sb.Append(MouseDevice.GetButtonName(button, shorthand));
         return sb.ToString();
     }
 

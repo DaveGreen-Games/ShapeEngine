@@ -55,13 +55,13 @@ public sealed class InputTypeKeyboardButton : IInputType
     public void SetDeadzone(float value) { }
 
     /// <inheritdoc/>
-    public InputState GetState(ShapeGamepadDevice? gamepad = null)
+    public InputState GetState(GamepadDevice? gamepad = null)
     {
         return ShapeInput.KeyboardDevice.CreateInputState(button, modifierOperator, modifierKeys);
     }
 
     /// <inheritdoc/>
-    public InputState GetState(InputState prev, ShapeGamepadDevice? gamepad = null)
+    public InputState GetState(InputState prev, GamepadDevice? gamepad = null)
     {
         return ShapeInput.KeyboardDevice.CreateInputState(button, prev, modifierOperator, modifierKeys);
     }
@@ -71,7 +71,7 @@ public sealed class InputTypeKeyboardButton : IInputType
     {
         StringBuilder sb = new();
         IModifierKey.GetModifierKeyNames(sb, modifierKeys, modifierOperator, shorthand);
-        sb.Append(ShapeKeyboardDevice.GetButtonName(button, shorthand));
+        sb.Append(KeyboardDevice.GetButtonName(button, shorthand));
         return sb.ToString();
     }
 

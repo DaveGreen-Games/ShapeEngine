@@ -8,7 +8,7 @@ namespace ShapeEngine.Input;
 /// Represents a mouse input device, providing access to mouse buttons, axes, and wheel axes,
 /// as well as state tracking and utility methods for mouse input.
 /// </summary>
-public sealed class ShapeMouseDevice : ShapeInputDevice
+public sealed class MouseDevice : IInputDevice
 { 
     /// <summary>
     /// All available Raylib mouse buttons.
@@ -46,9 +46,9 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
     public event Action<ShapeMouseButton>? OnButtonReleased;
     
     /// <summary>
-    /// Initializes a new instance of the <see cref="ShapeMouseDevice"/> class.
+    /// Initializes a new instance of the <see cref="MouseDevice"/> class.
     /// </summary>
-    internal ShapeMouseDevice()
+    internal MouseDevice()
     {
         foreach (var button in AllShapeMouseButtons)
         {
@@ -132,13 +132,13 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
     }
 
     
-    /// <inheritdoc cref="ShapeInputDevice.ApplyInputDeviceChangeSettings"/>
+    /// <inheritdoc cref="IInputDevice.ApplyInputDeviceChangeSettings"/>
     public void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings) => UsageDetectionSettings = settings.Mouse;
 
-    /// <inheritdoc cref="ShapeInputDevice.WasUsed"/>
+    /// <inheritdoc cref="IInputDevice.WasUsed"/>
     public bool WasUsed() => wasUsed;
     
-    /// <inheritdoc cref="ShapeInputDevice.WasUsedRaw"/>
+    /// <inheritdoc cref="IInputDevice.WasUsedRaw"/>
     public bool WasUsedRaw() => wasUsedRaw;
     
     /// <summary>
@@ -162,7 +162,7 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         isLocked = false;
     }
 
-    /// <inheritdoc cref="ShapeInputDevice.Update"/>
+    /// <inheritdoc cref="IInputDevice.Update"/>
     public bool Update(float dt, bool wasOtherDeviceUsed)
     {
         UpdateStates();

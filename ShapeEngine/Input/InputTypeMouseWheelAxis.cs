@@ -75,18 +75,18 @@ public class InputTypeMouseWheelAxis : IInputType
     {
         StringBuilder sb = new();
         IModifierKey.GetModifierKeyNames(sb, modifierKeys, modifierOperator, shorthand);
-        sb.Append(ShapeMouseDevice.GetWheelAxisName(axis, shorthand));
+        sb.Append(MouseDevice.GetWheelAxisName(axis, shorthand));
         return sb.ToString();
     }
 
     /// <inheritdoc/>
-    public InputState GetState(ShapeGamepadDevice? gamepad = null)
+    public InputState GetState(GamepadDevice? gamepad = null)
     {
         return ShapeInput.MouseDevice.CreateInputState(axis, deadzone, modifierOperator, modifierKeys);
     }
 
     /// <inheritdoc/>
-    public InputState GetState(InputState prev, ShapeGamepadDevice? gamepad = null)
+    public InputState GetState(InputState prev, GamepadDevice? gamepad = null)
     {
         return ShapeInput.MouseDevice.CreateInputState(axis, prev, deadzone, modifierOperator, modifierKeys);
     }

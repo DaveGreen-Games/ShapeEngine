@@ -21,7 +21,7 @@ public class InputEventHandler
     /// <param name="keyboard">The keyboard device.</param>
     /// <param name="mouse">The mouse device.</param>
     /// <param name="gamepadManager">The gamepad device manager.</param>
-    public InputEventHandler(ShapeKeyboardDevice keyboard, ShapeMouseDevice mouse, ShapeGamepadDeviceManager gamepadManager)
+    public InputEventHandler(KeyboardDevice keyboard, MouseDevice mouse, GamepadDeviceManager gamepadManager)
     {
         keyboard.OnButtonPressed += OnKeyboardButtonPressed;
         keyboard.OnButtonReleased += OnKeyboardButtonReleased;
@@ -86,6 +86,6 @@ public class InputEventHandler
     private void OnKeyboardButtonReleased(ShapeKeyboardButton button) => OnInputEventTriggered(new InputEvent(button));
     private void OnMouseButtonPressed(ShapeMouseButton button) => OnInputEventTriggered(new InputEvent(button));
     private void OnMouseButtonReleased(ShapeMouseButton button) => OnInputEventTriggered(new InputEvent(button));
-    private void OnGamepadButtonPressed(ShapeGamepadDevice gamepad, ShapeGamepadButton button) => OnInputEventTriggered(new InputEvent(gamepad, button));
-    private void OnGamepadButtonReleased(ShapeGamepadDevice gamepad, ShapeGamepadButton button) => OnInputEventTriggered(new InputEvent(gamepad, button));
+    private void OnGamepadButtonPressed(GamepadDevice gamepad, ShapeGamepadButton button) => OnInputEventTriggered(new InputEvent(gamepad, button));
+    private void OnGamepadButtonReleased(GamepadDevice gamepad, ShapeGamepadButton button) => OnInputEventTriggered(new InputEvent(gamepad, button));
 }

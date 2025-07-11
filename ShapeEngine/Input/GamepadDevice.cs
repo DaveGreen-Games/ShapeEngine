@@ -7,7 +7,7 @@ namespace ShapeEngine.Input;
 /// Represents a gamepad input device, providing access to gamepad buttons and axes,
 /// state tracking, calibration, and utility methods for gamepad input.
 /// </summary>
-public sealed class ShapeGamepadDevice : ShapeInputDevice
+public sealed class GamepadDevice : IInputDevice
 {
     /// <summary>
     /// Represents the minimum and maximum values for a gamepad axis, used for calibration.
@@ -71,13 +71,13 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
     /// <summary>
     /// Event triggered when a gamepad button is pressed.
     /// </summary>
-    public event Action<ShapeGamepadDevice, ShapeGamepadButton>? OnButtonPressed;
+    public event Action<GamepadDevice, ShapeGamepadButton>? OnButtonPressed;
     /// <summary>
     /// Event triggered when a gamepad button is released.
     /// </summary>
-    public event Action<ShapeGamepadDevice, ShapeGamepadButton>? OnButtonReleased;
+    public event Action<GamepadDevice, ShapeGamepadButton>? OnButtonReleased;
 
-    internal event Action<ShapeGamepadDevice, InputDeviceUsageDetectionSettings>? OnInputDeviceChangeSettingsChanged;
+    internal event Action<GamepadDevice, InputDeviceUsageDetectionSettings>? OnInputDeviceChangeSettingsChanged;
     
     /// <summary>
     /// The index of this gamepad device.
@@ -132,11 +132,11 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
     private Dictionary<ShapeGamepadAxis, AxisRange> axisRanges = new();
     
     /// <summary>
-    /// Initializes a new instance of the <see cref="ShapeGamepadDevice"/> class.
+    /// Initializes a new instance of the <see cref="GamepadDevice"/> class.
     /// </summary>
     /// <param name="index">The gamepad index.</param>
     /// <param name="connected">Whether the gamepad is initially connected.</param>
-    public ShapeGamepadDevice(int index, bool connected)
+    public GamepadDevice(int index, bool connected)
     {
         Index = index;
         
@@ -215,7 +215,7 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
     /// <summary>
     /// Applies the specified change settings to this gamepad device,
     /// modifying how device usage is detected and processed.
-    /// Also propagates the settings to all other <see cref="ShapeGamepadDevice"/> instances and the <see cref="ShapeGamepadDeviceManager"/>.
+    /// Also propagates the settings to all other <see cref="GamepadDevice"/> instances and the <see cref="GamepadDeviceManager"/>.
     /// </summary>
     /// <param name="settings">The change settings to apply to the input device.</param>
     public void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
@@ -228,10 +228,10 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
         UsageDetectionSettings = settings.Gamepad;
     }
 
-    /// <inheritdoc cref="ShapeInputDevice.WasUsed"/>
+    /// <inheritdoc cref="IInputDevice.WasUsed"/>
     public bool WasUsed() => wasUsed;
     
-    /// <inheritdoc cref="ShapeInputDevice.WasUsedRaw"/>
+    /// <inheritdoc cref="IInputDevice.WasUsedRaw"/>
     public bool WasUsedRaw() => wasUsed;
     
     /// <summary>
@@ -255,7 +255,7 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
         isLocked = false;
     }
 
-    /// <inheritdoc cref="ShapeInputDevice.Update"/>
+    /// <inheritdoc cref="IInputDevice.Update"/>
     public bool Update(float dt, bool wasOtherDeviceUsed)
     {
         UpdateButtonStates();
@@ -802,7 +802,7 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
     {
         var usedButtons = new List<ShapeGamepadButton>();
         if (!Connected || Index < 0 || isLocked) return usedButtons;
-        var values = ShapeGamepadDevice.AllShapeGamepadButtons;// Enum.GetValues<ShapeGamepadButton>();
+        var values = GamepadDevice.AllShapeGamepadButtons;// Enum.GetValues<ShapeGamepadButton>();
         foreach (var b in  values)
         {
             if (IsDown(b, deadzone))

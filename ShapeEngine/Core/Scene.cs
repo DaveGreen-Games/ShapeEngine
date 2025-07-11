@@ -277,11 +277,11 @@ public abstract class Scene
     {
         OnMonitorChanged(newMonitor);   
     }
-    internal void ResolveOnGamepadConnected(ShapeGamepadDevice gamepad)
+    internal void ResolveOnGamepadConnected(GamepadDevice gamepad)
     {
         OnGamepadConnected(gamepad);
     }
-    internal void ResolveOnGamepadDisconnected(ShapeGamepadDevice gamepad)
+    internal void ResolveOnGamepadDisconnected(GamepadDevice gamepad)
     {
         OnGamepadDisconnected(gamepad);
     }
@@ -463,13 +463,13 @@ public abstract class Scene
     /// Called when a gamepad is connected.
     /// </summary>
     /// <param name="gamepad">The gamepad that was connected.</param>
-    protected virtual void OnGamepadConnected(ShapeGamepadDevice gamepad) { }
+    protected virtual void OnGamepadConnected(GamepadDevice gamepad) { }
 
     /// <summary>
     /// Called when a gamepad is disconnected.
     /// </summary>
     /// <param name="gamepad">The gamepad that was disconnected.</param>
-    protected virtual void OnGamepadDisconnected(ShapeGamepadDevice gamepad) { }
+    protected virtual void OnGamepadDisconnected(GamepadDevice gamepad) { }
 
     /// <summary>
     /// Called when the input device type is changed.

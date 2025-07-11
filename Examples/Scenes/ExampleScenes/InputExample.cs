@@ -14,7 +14,7 @@ namespace Examples.Scenes.ExampleScenes
 {
     internal abstract class InputVisualizer
     {
-        public abstract void Update(float dt, ShapeGamepadDevice? gamepad, InputDeviceType inputDeviceType);
+        public abstract void Update(float dt, GamepadDevice? gamepad, InputDeviceType inputDeviceType);
         public abstract void Draw(Rect area, float lineThickness);
     }
     internal class JoystickVisualizer : InputVisualizer
@@ -93,7 +93,7 @@ namespace Examples.Scenes.ExampleScenes
             joystickVertical.AxisSensitivity = 0.5f;
 
         }
-        public override void Update(float dt, ShapeGamepadDevice? gamepad, InputDeviceType inputDeviceType)
+        public override void Update(float dt, GamepadDevice? gamepad, InputDeviceType inputDeviceType)
         {
             if (joystickHorizontal.HasInput(inputDeviceType) || joystickVertical.HasInput(inputDeviceType))
             {
@@ -230,7 +230,7 @@ namespace Examples.Scenes.ExampleScenes
                 trigger.AddInput(triggerRight);
             }
         }
-        public override void Update(float dt, ShapeGamepadDevice? gamepad, InputDeviceType inputDeviceType)
+        public override void Update(float dt, GamepadDevice? gamepad, InputDeviceType inputDeviceType)
         {
             if (trigger.HasInput(inputDeviceType))
             {
@@ -376,7 +376,7 @@ namespace Examples.Scenes.ExampleScenes
                     button = new(space, start, rmb);
                 }
             }
-            public override void Update(float dt, ShapeGamepadDevice? gamepad, InputDeviceType inputDeviceType)
+            public override void Update(float dt, GamepadDevice? gamepad, InputDeviceType inputDeviceType)
             {
                 if (button.HasInput(inputDeviceType))
                 {
@@ -462,7 +462,7 @@ namespace Examples.Scenes.ExampleScenes
             //var rmb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
             button = new(q, x);
         }
-        public override void Update(float dt, ShapeGamepadDevice? gamepad, InputDeviceType inputDeviceType)
+        public override void Update(float dt, GamepadDevice? gamepad, InputDeviceType inputDeviceType)
         {
             if (button.HasInput(inputDeviceType))
             {
@@ -616,7 +616,7 @@ namespace Examples.Scenes.ExampleScenes
             button.MultiTapTarget = 2;
             button.HoldDuration = 1f;
         }
-        public override void Update(float dt, ShapeGamepadDevice? gamepad, InputDeviceType inputDeviceType)
+        public override void Update(float dt, GamepadDevice? gamepad, InputDeviceType inputDeviceType)
         {
             if (button.HasInput(inputDeviceType))
             {

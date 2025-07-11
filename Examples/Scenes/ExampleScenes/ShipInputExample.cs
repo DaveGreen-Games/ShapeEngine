@@ -57,9 +57,9 @@ namespace Examples.Scenes.ExampleScenes
             private readonly InputAction iaMoveHor;
             private readonly InputAction iaMoveVer;
             private readonly ColorScheme colorScheme;
-            public readonly ShapeGamepadDevice Gamepad;
+            public readonly GamepadDevice Gamepad;
 
-            public SpaceShip(Vector2 pos, ShapeGamepadDevice gamepad)
+            public SpaceShip(Vector2 pos, GamepadDevice gamepad)
             {
                 hull = new(pos, Size);
                 movementDir = Rng.Instance.RandVec2();
@@ -162,9 +162,9 @@ namespace Examples.Scenes.ExampleScenes
         {
             public readonly InputAction Add;
             public readonly InputAction Remove;
-            public readonly ShapeGamepadDevice Gamepad;
+            public readonly GamepadDevice Gamepad;
 
-            public InputActionHelper(ShapeGamepadDevice gamepad)
+            public InputActionHelper(GamepadDevice gamepad)
             {
                 this.Gamepad = gamepad;
                 
@@ -198,7 +198,7 @@ namespace Examples.Scenes.ExampleScenes
 
         private readonly List<InputActionHelper> inputActionHelpers = new();
         
-        private readonly ShapeGamepadDeviceManager GamepadManager = new(8);
+        private readonly GamepadDeviceManager GamepadManager = new(8);
 
         public ShipInputExample()
         {
@@ -218,14 +218,14 @@ namespace Examples.Scenes.ExampleScenes
         }
 
        
-        private void AddShip(ShapeGamepadDevice gamepad)
+        private void AddShip(GamepadDevice gamepad)
         {
             gamepad.Claim();
             var ship = new SpaceShip(new(), gamepad);
             spaceShips.Add(ship);
             cameraFollower.AddTarget(ship);
         }
-        private void RemoveShip(ShapeGamepadDevice gamepad)
+        private void RemoveShip(GamepadDevice gamepad)
         {
             gamepad.Free();
             for (int i = spaceShips.Count - 1; i >= 0 ; i--)
@@ -288,7 +288,8 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
-            GamepadManager.Update();
+            bool wasOtherDeviceUsed = ShapeInput.MouseDevice.WasUsed() || ShapeInput.KeyboardDevice.WasUsed();
+            GamepadManager.Update(dt, wasOtherDeviceUsed);
             
             foreach (var inputHelper in inputActionHelpers)
             {
@@ -435,7 +436,7 @@ namespace Examples.Scenes.ExampleScenes
             
         }
 
-        private void OnShapeGamepadDeviceConnectionChanged(ShapeGamepadDevice gamepad, bool connected)
+        private void OnShapeGamepadDeviceConnectionChanged(GamepadDevice gamepad, bool connected)
         {
             if (!connected)
             {

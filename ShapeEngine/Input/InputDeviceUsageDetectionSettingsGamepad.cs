@@ -134,7 +134,7 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// <see cref="RequireSpecialButtonForSelection"/> and <see cref="Detection"/> is set to <c>true</c>.
         /// Other values are disabled because the can not be used together with special buttons.
         /// <see cref="LeftAxisThreshold"/>/<see cref="RightAxisThreshold"/> and <see cref="LeftTriggerThreshold"/>/<see cref="RightTriggerThreshold"/> are set to default values
-        /// for the <see cref="ShapeGamepadDevice.WasUsedRaw"/> system.
+        /// for the <see cref="GamepadDevice.WasUsedRaw"/> system.
         /// </summary>
         /// <param name="selectionButtonPrimary">Specifies the primary gamepad button to be used for device selection.
         /// If not a valid Raylib gamepad button,
@@ -158,8 +158,8 @@ public readonly partial struct InputDeviceUsageDetectionSettings
             MinPressInterval = -1f;
             MinUsedDuration = -1f;
             RequireSpecialButtonForSelection = true;
-            SelectionButtonPrimary = ShapeGamepadDevice.IsValidRaylibGamepadButton(selectionButtonPrimary) ? selectionButtonPrimary : ShapeGamepadButton.NONE;
-            SelectionButtonSecondary = ShapeGamepadDevice.IsValidRaylibGamepadButton(selectionButtonSecondary)
+            SelectionButtonPrimary = GamepadDevice.IsValidRaylibGamepadButton(selectionButtonPrimary) ? selectionButtonPrimary : ShapeGamepadButton.NONE;
+            SelectionButtonSecondary = GamepadDevice.IsValidRaylibGamepadButton(selectionButtonSecondary)
                 ? selectionButtonSecondary
                 : ShapeGamepadButton.NONE;
             SelectionCooldownDuration = selectionCooldownDuration;
@@ -266,7 +266,7 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// </summary>
         /// <remarks>
         /// <c>Default is true</c>
-        /// Does not affect <see cref="ShapeGamepadDevice.WasUsedRaw"/> values. It does affect the automatic system in <see cref="ShapeInput"/> to switch between devices.
+        /// Does not affect <see cref="GamepadDevice.WasUsedRaw"/> values. It does affect the automatic system in <see cref="ShapeInput"/> to switch between devices.
         /// </remarks>
         public readonly bool Detection;
 
@@ -275,7 +275,7 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// </summary>
         /// <remarks>
         /// <c>Default is 0.5f.</c>
-        /// Even if <see cref="Detection"/> is set to <c>false</c>, <see cref="LeftAxisThreshold"/> will still be used for <see cref="ShapeGamepadDevice.WasUsedRaw"/> system.
+        /// Even if <see cref="Detection"/> is set to <c>false</c>, <see cref="LeftAxisThreshold"/> will still be used for <see cref="GamepadDevice.WasUsedRaw"/> system.
         /// </remarks>
         public readonly float LeftAxisThreshold;
 
@@ -284,7 +284,7 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// </summary>
         /// <remarks>
         /// <c>Default is 0.5f.</c>
-        /// Even if <see cref="Detection"/> is set to <c>false</c>, <see cref="RightAxisThreshold"/> will still be used for <see cref="ShapeGamepadDevice.WasUsedRaw"/> system.
+        /// Even if <see cref="Detection"/> is set to <c>false</c>, <see cref="RightAxisThreshold"/> will still be used for <see cref="GamepadDevice.WasUsedRaw"/> system.
         /// </remarks>
         public readonly float RightAxisThreshold;
 
@@ -293,7 +293,7 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// </summary>
         /// <remarks>
         /// <c>Default is 0.5f.</c>
-        /// Even if <see cref="Detection"/> is set to <c>false</c>, <see cref="LeftTriggerThreshold"/> will still be used for <see cref="ShapeGamepadDevice.WasUsedRaw"/> system.
+        /// Even if <see cref="Detection"/> is set to <c>false</c>, <see cref="LeftTriggerThreshold"/> will still be used for <see cref="GamepadDevice.WasUsedRaw"/> system.
         /// </remarks>
         public readonly float LeftTriggerThreshold;
 
@@ -302,7 +302,7 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// </summary>
         /// <remarks>
         /// <c>Default is 0.5f.</c>
-        /// Even if <see cref="Detection"/> is set to <c>false</c>, <see cref="RightTriggerThreshold"/> will still be used for <see cref="ShapeGamepadDevice.WasUsedRaw"/> system.
+        /// Even if <see cref="Detection"/> is set to <c>false</c>, <see cref="RightTriggerThreshold"/> will still be used for <see cref="GamepadDevice.WasUsedRaw"/> system.
         /// </remarks>
         public readonly float RightTriggerThreshold;
 

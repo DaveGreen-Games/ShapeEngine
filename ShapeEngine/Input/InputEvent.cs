@@ -28,7 +28,7 @@ public class InputEvent
     /// <summary>
     /// The gamepad device associated with the event, if applicable.
     /// </summary>
-    public readonly ShapeGamepadDevice? Gamepad;
+    public readonly GamepadDevice? Gamepad;
 
     /// <summary>
     /// Gets a value indicating whether the event is from a keyboard.
@@ -76,7 +76,7 @@ public class InputEvent
     /// </summary>
     /// <param name="gamepad">The gamepad device associated with the event.</param>
     /// <param name="button">The gamepad button associated with the event.</param>
-    public InputEvent(ShapeGamepadDevice gamepad, ShapeGamepadButton button)
+    public InputEvent(GamepadDevice gamepad, ShapeGamepadButton button)
     {
         Type = InputDeviceType.Gamepad;
         KeyboardButton = ShapeKeyboardButton.NONE;

@@ -27,15 +27,15 @@ public static class ShapeInput
     /// <summary>
     /// The global keyboard device instance.
     /// </summary>
-    public static readonly ShapeKeyboardDevice KeyboardDevice = new();
+    public static readonly KeyboardDevice KeyboardDevice = new();
     /// <summary>
     /// The global mouse device instance.
     /// </summary>
-    public static readonly ShapeMouseDevice MouseDevice = new();
+    public static readonly MouseDevice MouseDevice = new();
     /// <summary>
     /// The global gamepad device manager instance.
     /// </summary>
-    public static readonly ShapeGamepadDeviceManager GamepadDeviceManager = new();
+    public static readonly GamepadDeviceManager GamepadDeviceManager = new();
     /// <summary>
     /// The global input event handler instance.
     /// </summary>
@@ -61,7 +61,7 @@ public static class ShapeInput
     /// <remarks>
     /// Settings are applied to <see cref="MouseDevice"/>,
     /// <see cref="KeyboardDevice"/>,
-    /// and <see cref="GamepadDeviceManager"/> that applies the settings to all <see cref="ShapeGamepadDevice"/>s.
+    /// and <see cref="GamepadDeviceManager"/> that applies the settings to all <see cref="GamepadDevice"/>s.
     /// </remarks>
     public static void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
     {

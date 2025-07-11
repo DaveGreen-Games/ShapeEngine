@@ -12,7 +12,7 @@ public interface IModifierKey
     /// </summary>
     /// <param name="gamepad">Optional gamepad device to check against.</param>
     /// <returns>True if the modifier key is active; otherwise, false.</returns>
-    public bool IsActive(ShapeGamepadDevice? gamepad = null);
+    public bool IsActive(GamepadDevice? gamepad = null);
 
     /// <summary>
     /// Gets the display name of the modifier key.
@@ -109,7 +109,7 @@ public interface IModifierKey
     /// <param name="modifierKeys">Array of modifier keys.</param>
     /// <param name="gamepad">Optional gamepad device to check against.</param>
     /// <returns>True if the modifier keys are active according to the operator; otherwise, false.</returns>
-    public static bool IsActive(ModifierKeyOperator modifierOperator, IModifierKey[] modifierKeys, ShapeGamepadDevice? gamepad = null)
+    public static bool IsActive(ModifierKeyOperator modifierOperator, IModifierKey[] modifierKeys, GamepadDevice? gamepad = null)
     {
         if (modifierKeys.Length <= 0) return true;
         

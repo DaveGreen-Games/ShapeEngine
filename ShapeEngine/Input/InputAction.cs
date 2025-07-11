@@ -35,7 +35,7 @@ public class InputAction
     /// <summary>
     /// The associated gamepad device, if any.
     /// </summary>
-    public ShapeGamepadDevice? Gamepad;
+    public GamepadDevice? Gamepad;
     /// <summary>
     /// The display title for this input action.
     /// </summary>
@@ -137,7 +137,7 @@ public class InputAction
     /// </summary>
     /// <param name="accessTag">The access tag for this action.</param>
     /// <param name="gamepad">The associated gamepad device.</param>
-    public InputAction(uint accessTag, ShapeGamepadDevice gamepad)
+    public InputAction(uint accessTag, GamepadDevice gamepad)
     {
         ID = ShapeID.NextID;
         Gamepad = gamepad;
@@ -169,7 +169,7 @@ public class InputAction
     /// <param name="accessTag">The access tag for this action.</param>
     /// <param name="gamepad">The associated gamepad device.</param>
     /// <param name="inputTypes">The input types for this action.</param>
-    public InputAction(uint accessTag, ShapeGamepadDevice gamepad, params IInputType[] inputTypes)
+    public InputAction(uint accessTag, GamepadDevice gamepad, params IInputType[] inputTypes)
     {
         ID = ShapeID.NextID;
         AccessTag = accessTag;
@@ -818,7 +818,7 @@ public class InputAction
     /// <param name="dt">The time delta in seconds.</param>
     /// <param name="gamepad">The gamepad device to use.</param>
     /// <param name="actions">The input actions to update.</param>
-    public static void UpdateActions(float dt, ShapeGamepadDevice? gamepad, params InputAction[] actions)
+    public static void UpdateActions(float dt, GamepadDevice? gamepad, params InputAction[] actions)
     {
         foreach (var action in actions)
         {
@@ -832,7 +832,7 @@ public class InputAction
     /// <param name="dt">The time delta in seconds.</param>
     /// <param name="gamepad">The gamepad device to use.</param>
     /// <param name="actions">The input actions to update.</param>
-    public static void UpdateActions(float dt, ShapeGamepadDevice? gamepad, List<InputAction> actions)
+    public static void UpdateActions(float dt, GamepadDevice? gamepad, List<InputAction> actions)
     {
         foreach (var action in actions)
         {

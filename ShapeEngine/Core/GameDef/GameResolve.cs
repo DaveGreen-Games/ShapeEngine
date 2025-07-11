@@ -20,8 +20,8 @@ public partial class Game
         }
     }
 
-    private void OnGamepadButtonReleased(ShapeGamepadDevice gamepad, ShapeGamepadButton button) => ResolveOnButtonReleased(new(gamepad, button));
-    private void OnGamepadButtonPressed(ShapeGamepadDevice gamepad, ShapeGamepadButton button) => ResolveOnButtonPressed(new(gamepad, button));
+    private void OnGamepadButtonReleased(GamepadDevice gamepad, ShapeGamepadButton button) => ResolveOnButtonReleased(new(gamepad, button));
+    private void OnGamepadButtonPressed(GamepadDevice gamepad, ShapeGamepadButton button) => ResolveOnButtonPressed(new(gamepad, button));
     private void OnMouseButtonReleased(ShapeMouseButton button) => ResolveOnButtonReleased(new(button));
     private void OnMouseButtonPressed(ShapeMouseButton button) => ResolveOnButtonPressed(new(button));
     private void OnKeyboardButtonReleased(ShapeKeyboardButton button) => ResolveOnButtonReleased(new(button));

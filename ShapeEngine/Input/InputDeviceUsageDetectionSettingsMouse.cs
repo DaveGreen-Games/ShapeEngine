@@ -115,7 +115,7 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// minimum used duration, and custom selection buttons for device selection.
         /// <see cref="RequireSpecialButtonForSelection"/> and <see cref="Detection"/> is set to <c>true</c>.
         /// Other values are disabled because the can not be used together with special buttons.
-        /// <see cref="MoveThreshold"/> and <see cref="WheelThreshold"/> are set to default for the <see cref="ShapeMouseDevice.WasUsedRaw"/> system.
+        /// <see cref="MoveThreshold"/> and <see cref="WheelThreshold"/> are set to default for the <see cref="MouseDevice.WasUsedRaw"/> system.
         /// </summary>
         /// <param name="selectionButtonPrimary">Specifies the primary mouse button to be used for device selection.
         /// If not a valid Raylib mouse button,
@@ -137,8 +137,8 @@ public readonly partial struct InputDeviceUsageDetectionSettings
             MinPressInterval = -1f;
             MinUsedDuration = -1f;
             RequireSpecialButtonForSelection = true;
-            SelectionButtonPrimary = ShapeMouseDevice.IsValidRaylibMouseButton(selectionButtonPrimary) ? selectionButtonPrimary : ShapeMouseButton.NONE;
-            SelectionButtonSecondary = ShapeMouseDevice.IsValidRaylibMouseButton(selectionButtonSecondary) ? selectionButtonSecondary : ShapeMouseButton.NONE;
+            SelectionButtonPrimary = MouseDevice.IsValidRaylibMouseButton(selectionButtonPrimary) ? selectionButtonPrimary : ShapeMouseButton.NONE;
+            SelectionButtonSecondary = MouseDevice.IsValidRaylibMouseButton(selectionButtonSecondary) ? selectionButtonSecondary : ShapeMouseButton.NONE;
             SelectionCooldownDuration = selectionCooldownDuration;
         }
 
@@ -233,7 +233,7 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// </summary>
         /// <remarks>
         /// <c>Default is true</c>
-        /// Does not affect <see cref="ShapeMouseDevice.WasUsedRaw"/> values. It does affect the automatic system in <see cref="ShapeInput"/> to switch between devices.
+        /// Does not affect <see cref="MouseDevice.WasUsedRaw"/> values. It does affect the automatic system in <see cref="ShapeInput"/> to switch between devices.
         /// </remarks>
         public readonly bool Detection;
 
@@ -242,7 +242,7 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// </summary>
         /// <remarks>
         /// <c>Default is 0.5f.</c>
-        /// Even if <see cref="Detection"/> is set to <c>false</c>, <see cref="MoveThreshold"/> will still be used for <see cref="ShapeMouseDevice.WasUsedRaw"/> system.
+        /// Even if <see cref="Detection"/> is set to <c>false</c>, <see cref="MoveThreshold"/> will still be used for <see cref="MouseDevice.WasUsedRaw"/> system.
         /// </remarks>
         public readonly float MoveThreshold;
 
@@ -251,7 +251,7 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// </summary>
         /// <remarks>
         /// <c>Default is 0.25f.</c>
-        /// Even if <see cref="Detection"/> is set to <c>false</c>, <see cref="WheelThreshold"/> will still be used for <see cref="ShapeMouseDevice.WasUsedRaw"/> system.
+        /// Even if <see cref="Detection"/> is set to <c>false</c>, <see cref="WheelThreshold"/> will still be used for <see cref="MouseDevice.WasUsedRaw"/> system.
         /// </remarks>
         public readonly float WheelThreshold;
 

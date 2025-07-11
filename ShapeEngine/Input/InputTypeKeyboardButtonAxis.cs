@@ -64,8 +64,8 @@ public class InputTypeKeyboardButtonAxis : IInputType
         StringBuilder sb = new();
         IModifierKey.GetModifierKeyNames(sb, modifierKeys, modifierOperator, shorthand);
         
-        string negName = ShapeKeyboardDevice.GetButtonName(neg, shorthand);
-        string posName = ShapeKeyboardDevice.GetButtonName(pos, shorthand);
+        string negName = KeyboardDevice.GetButtonName(neg, shorthand);
+        string posName = KeyboardDevice.GetButtonName(pos, shorthand);
         sb.Append(negName);
         sb.Append('|');
         sb.Append(posName);
@@ -79,13 +79,13 @@ public class InputTypeKeyboardButtonAxis : IInputType
     public void SetDeadzone(float value) { }
 
     /// <inheritdoc/>
-    public InputState GetState(ShapeGamepadDevice? gamepad = null)
+    public InputState GetState(GamepadDevice? gamepad = null)
     {
         return ShapeInput.KeyboardDevice.CreateInputState(neg, pos, modifierOperator, modifierKeys);
     }
 
     /// <inheritdoc/>
-    public InputState GetState(InputState prev, ShapeGamepadDevice? gamepad = null)
+    public InputState GetState(InputState prev, GamepadDevice? gamepad = null)
     {
         return ShapeInput.KeyboardDevice.CreateInputState(neg, pos, prev, modifierOperator, modifierKeys);
     }

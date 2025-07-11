@@ -136,7 +136,7 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// </summary>
         /// <remarks>
         /// <c>Default is true</c>
-        /// Does not affect <see cref="ShapeKeyboardDevice.WasUsedRaw"/> values. It does affect the automatic system in <see cref="ShapeInput"/> to switch between devices.
+        /// Does not affect <see cref="KeyboardDevice.WasUsedRaw"/> values. It does affect the automatic system in <see cref="ShapeInput"/> to switch between devices.
         /// </remarks>
         public readonly bool Detection;
 

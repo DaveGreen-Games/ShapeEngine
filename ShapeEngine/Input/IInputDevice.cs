@@ -8,7 +8,7 @@ namespace ShapeEngine.Input;
 /// Represents a generic input device interface for the ShapeEngine input system.
 /// Provides methods for device usage tracking, locking, updating, and calibration.
 /// </summary>
-public interface ShapeInputDevice
+public interface IInputDevice
 {
     /// <summary>
     /// Gets the type of this input device.

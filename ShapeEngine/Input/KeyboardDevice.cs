@@ -7,7 +7,7 @@ namespace ShapeEngine.Input;
 /// Represents a keyboard input device, providing access to keyboard buttons, state tracking,
 /// character input, and utility methods for keyboard input.
 /// </summary>
-public sealed class ShapeKeyboardDevice : ShapeInputDevice
+public sealed class KeyboardDevice : IInputDevice
 {
     /// <summary>
     /// All available Raylib keyboard keys.
@@ -56,9 +56,9 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
     public event Action<ShapeKeyboardButton>? OnButtonReleased;
     
     /// <summary>
-    /// Initializes a new instance of the <see cref="ShapeKeyboardDevice"/> class.
+    /// Initializes a new instance of the <see cref="KeyboardDevice"/> class.
     /// </summary>
-    internal ShapeKeyboardDevice()
+    internal KeyboardDevice()
     {
         foreach (var button in AllShapeKeyboardButtons)
         {
@@ -92,16 +92,16 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
         isLocked = false;
     }
     
-    /// <inheritdoc cref="ShapeInputDevice.ApplyInputDeviceChangeSettings"/>
+    /// <inheritdoc cref="IInputDevice.ApplyInputDeviceChangeSettings"/>
     public void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings) => UsageDetectionSettings = settings.Keyboard;
 
-    /// <inheritdoc cref="ShapeInputDevice.WasUsed"/>
+    /// <inheritdoc cref="IInputDevice.WasUsed"/>
     public bool WasUsed() => wasUsed;
     
-    /// <inheritdoc cref="ShapeInputDevice.WasUsedRaw"/>
+    /// <inheritdoc cref="IInputDevice.WasUsedRaw"/>
     public bool WasUsedRaw() => wasUsedRaw;
     
-    /// <inheritdoc cref="ShapeInputDevice.Update"/>
+    /// <inheritdoc cref="IInputDevice.Update"/>
     public bool Update(float dt, bool wasOtherDeviceUsed)
     {
         UpdateButtonStates();

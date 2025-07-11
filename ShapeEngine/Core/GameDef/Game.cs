@@ -631,7 +631,7 @@ public partial class Game
     #endregion
     
     #region Gamepad Connection
-    private void ResolveOnGamepadConnectionChanged(ShapeGamepadDevice gamepad, bool connected)
+    private void ResolveOnGamepadConnectionChanged(GamepadDevice gamepad, bool connected)
     {
         if (connected)
         {

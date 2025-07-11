@@ -29,7 +29,7 @@ public interface IInputType
     /// </summary>
     /// <param name="gamepad">Optional gamepad device to query state from.</param>
     /// <returns>The current <see cref="InputState"/>.</returns>
-    public InputState GetState(ShapeGamepadDevice? gamepad = null);
+    public InputState GetState(GamepadDevice? gamepad = null);
 
     /// <summary>
     /// Gets the current input state for this input type, using a previous state for comparison.
@@ -37,7 +37,7 @@ public interface IInputType
     /// <param name="prev">The previous input state.</param>
     /// <param name="gamepad">Optional gamepad device to query state from.</param>
     /// <returns>The current <see cref="InputState"/>.</returns>
-    public InputState GetState(InputState prev, ShapeGamepadDevice? gamepad = null);
+    public InputState GetState(InputState prev, GamepadDevice? gamepad = null);
 
     /// <summary>
     /// Gets the name of this input type.

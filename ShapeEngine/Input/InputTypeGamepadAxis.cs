@@ -67,7 +67,7 @@ public class InputTypeGamepadAxis : IInputType
     {
         StringBuilder sb = new();
         IModifierKey.GetModifierKeyNames(sb, modifierKeys, modifierOperator, shorthand);
-        sb.Append(ShapeGamepadDevice.GetAxisName(axis, shorthand));// GetGamepadAxisName(axis, shorthand));
+        sb.Append(GamepadDevice.GetAxisName(axis, shorthand));// GetGamepadAxisName(axis, shorthand));
         return sb.ToString();
     }
 
@@ -81,13 +81,13 @@ public class InputTypeGamepadAxis : IInputType
     }
 
     /// <inheritdoc/>
-    public InputState GetState(ShapeGamepadDevice? gamepad)
+    public InputState GetState(GamepadDevice? gamepad)
     {
         return gamepad != null ? gamepad.CreateInputState(axis, deadzone, modifierOperator, modifierKeys) : new();
     }
 
     /// <inheritdoc/>
-    public InputState GetState(InputState prev, ShapeGamepadDevice? gamepad)
+    public InputState GetState(InputState prev, GamepadDevice? gamepad)
     {
         return gamepad != null ? gamepad.CreateInputState(axis, prev, deadzone, modifierOperator, modifierKeys) : new();
     }

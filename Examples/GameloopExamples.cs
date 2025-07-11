@@ -103,7 +103,7 @@ namespace Examples
         private readonly uint alphaCircleID = ShapeID.NextID;
         private uint currentShaderID;
         
-        public ShapeGamepadDevice? CurGamepad = null;
+        public GamepadDevice? CurGamepad = null;
 
         // public RectContainerMain UIRects = new("main");
 
@@ -460,7 +460,7 @@ namespace Examples
             }
         }
 
-        protected override void OnGamepadConnected(ShapeGamepadDevice gamepad)
+        protected override void OnGamepadConnected(GamepadDevice gamepad)
         {
             if (CurGamepad != null) return;
             CurGamepad = ShapeInput.GamepadDeviceManager.RequestGamepad(0);
@@ -474,7 +474,7 @@ namespace Examples
             }
         }
 
-        protected override void OnGamepadDisconnected(ShapeGamepadDevice gamepad)
+        protected override void OnGamepadDisconnected(GamepadDevice gamepad)
         {
             if (CurGamepad == null) return;
             if (CurGamepad.Index == gamepad.Index)
