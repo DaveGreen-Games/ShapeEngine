@@ -7,7 +7,7 @@ namespace ShapeEngine.Input;
 /// Represents a keyboard input device, providing access to keyboard buttons, state tracking,
 /// character input, and utility methods for keyboard input.
 /// </summary>
-public sealed class KeyboardDevice : IInputDevice
+public sealed class KeyboardDevice : InputDevice
 {
     /// <summary>
     /// All available Raylib keyboard keys.
@@ -69,17 +69,17 @@ public sealed class KeyboardDevice : IInputDevice
     /// <summary>
     /// Gets the type of this input device, which is always <see cref="InputDeviceType.Keyboard"/>.
     /// </summary>
-    public InputDeviceType GetDeviceType() => InputDeviceType.Keyboard;
+    public override InputDeviceType GetDeviceType() => InputDeviceType.Keyboard;
     
     /// <summary>
     /// Returns whether the keyboard device is currently locked.
     /// </summary>
-    public bool IsLocked() => isLocked;
+    public override bool IsLocked() => isLocked;
 
     /// <summary>
     /// Locks the keyboard device, preventing input from being registered.
     /// </summary>
-    public void Lock()
+    public override void Lock()
     {
         isLocked = true;
     }
@@ -87,22 +87,22 @@ public sealed class KeyboardDevice : IInputDevice
     /// <summary>
     /// Unlocks the keyboard device, allowing input to be registered.
     /// </summary>
-    public void Unlock()
+    public override void Unlock()
     {
         isLocked = false;
     }
     
-    /// <inheritdoc cref="IInputDevice.ApplyInputDeviceChangeSettings"/>
-    public void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings) => UsageDetectionSettings = settings.Keyboard;
+    /// <inheritdoc cref="InputDevice.ApplyInputDeviceChangeSettings"/>
+    public override void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings) => UsageDetectionSettings = settings.Keyboard;
 
-    /// <inheritdoc cref="IInputDevice.WasUsed"/>
-    public bool WasUsed() => wasUsed;
+    /// <inheritdoc cref="InputDevice.WasUsed"/>
+    public override bool WasUsed() => wasUsed;
     
-    /// <inheritdoc cref="IInputDevice.WasUsedRaw"/>
-    public bool WasUsedRaw() => wasUsedRaw;
+    /// <inheritdoc cref="InputDevice.WasUsedRaw"/>
+    public override bool WasUsedRaw() => wasUsedRaw;
     
-    /// <inheritdoc cref="IInputDevice.Update"/>
-    public bool Update(float dt, bool wasOtherDeviceUsed)
+    /// <inheritdoc cref="InputDevice.Update"/>
+    public override bool Update(float dt, bool wasOtherDeviceUsed)
     {
         UpdateButtonStates();
         
@@ -140,7 +140,7 @@ public sealed class KeyboardDevice : IInputDevice
     /// <summary>
     /// Calibrates the keyboard device. (Currently not implemented.)
     /// </summary>
-    public void Calibrate(){}
+    public override void Calibrate(){}
     
     /// <summary>
     /// Gets the current input state for the specified keyboard button.

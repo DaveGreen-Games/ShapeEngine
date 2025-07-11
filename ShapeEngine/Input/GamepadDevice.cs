@@ -7,7 +7,7 @@ namespace ShapeEngine.Input;
 /// Represents a gamepad input device, providing access to gamepad buttons and axes,
 /// state tracking, calibration, and utility methods for gamepad input.
 /// </summary>
-public sealed class GamepadDevice : IInputDevice
+public sealed class GamepadDevice : InputDevice
 {
     /// <summary>
     /// Represents the minimum and maximum values for a gamepad axis, used for calibration.
@@ -167,7 +167,7 @@ public sealed class GamepadDevice : IInputDevice
     /// <summary>
     /// Gets the type of this input device, which is always <see cref="InputDeviceType.Gamepad"/>.
     /// </summary>
-    public InputDeviceType GetDeviceType() => InputDeviceType.Gamepad;
+    public override InputDeviceType GetDeviceType() => InputDeviceType.Gamepad;
     
     /// <summary>
     /// Gets the current input state for the specified gamepad button.
@@ -218,7 +218,7 @@ public sealed class GamepadDevice : IInputDevice
     /// Also propagates the settings to all other <see cref="GamepadDevice"/> instances and the <see cref="GamepadDeviceManager"/>.
     /// </summary>
     /// <param name="settings">The change settings to apply to the input device.</param>
-    public void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
+    public override void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
     {
         UsageDetectionSettings = settings.Gamepad;
         OnInputDeviceChangeSettingsChanged?.Invoke(this, settings);
@@ -228,21 +228,21 @@ public sealed class GamepadDevice : IInputDevice
         UsageDetectionSettings = settings.Gamepad;
     }
 
-    /// <inheritdoc cref="IInputDevice.WasUsed"/>
-    public bool WasUsed() => wasUsed;
+    /// <inheritdoc cref="InputDevice.WasUsed"/>
+    public override bool WasUsed() => wasUsed;
     
-    /// <inheritdoc cref="IInputDevice.WasUsedRaw"/>
-    public bool WasUsedRaw() => wasUsed;
+    /// <inheritdoc cref="InputDevice.WasUsedRaw"/>
+    public override bool WasUsedRaw() => wasUsed;
     
     /// <summary>
     /// Returns whether the gamepad device is currently locked.
     /// </summary>
-    public bool IsLocked() => isLocked;
+    public override bool IsLocked() => isLocked;
 
     /// <summary>
     /// Locks the gamepad device, preventing input from being registered.
     /// </summary>
-    public void Lock()
+    public override void Lock()
     {
         isLocked = true;
     }
@@ -250,13 +250,13 @@ public sealed class GamepadDevice : IInputDevice
     /// <summary>
     /// Unlocks the gamepad device, allowing input to be registered.
     /// </summary>
-    public void Unlock()
+    public override void Unlock()
     {
         isLocked = false;
     }
 
-    /// <inheritdoc cref="IInputDevice.Update"/>
-    public bool Update(float dt, bool wasOtherDeviceUsed)
+    /// <inheritdoc cref="InputDevice.Update"/>
+    public override bool Update(float dt, bool wasOtherDeviceUsed)
     {
         UpdateButtonStates();
         UpdateAxisStates();
@@ -342,7 +342,7 @@ public sealed class GamepadDevice : IInputDevice
     /// <summary>
     /// Calibrates the gamepad axes by recording their current zero positions.
     /// </summary>
-    public void Calibrate()
+    public override void Calibrate()
     {
         float leftX = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.LeftX);
         float leftY = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.LeftY);

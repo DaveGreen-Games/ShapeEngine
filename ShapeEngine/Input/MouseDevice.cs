@@ -8,7 +8,7 @@ namespace ShapeEngine.Input;
 /// Represents a mouse input device, providing access to mouse buttons, axes, and wheel axes,
 /// as well as state tracking and utility methods for mouse input.
 /// </summary>
-public sealed class MouseDevice : IInputDevice
+public sealed class MouseDevice : InputDevice
 { 
     /// <summary>
     /// All available Raylib mouse buttons.
@@ -65,7 +65,7 @@ public sealed class MouseDevice : IInputDevice
     /// <summary>
     /// Gets the type of this input device, which is always <see cref="InputDeviceType.Mouse"/>.
     /// </summary>
-    public InputDeviceType GetDeviceType() => InputDeviceType.Mouse;
+    public override InputDeviceType GetDeviceType() => InputDeviceType.Mouse;
     
     /// <summary>
     /// Gets the current input state for the specified mouse button.
@@ -132,24 +132,24 @@ public sealed class MouseDevice : IInputDevice
     }
 
     
-    /// <inheritdoc cref="IInputDevice.ApplyInputDeviceChangeSettings"/>
-    public void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings) => UsageDetectionSettings = settings.Mouse;
+    /// <inheritdoc cref="InputDevice.ApplyInputDeviceChangeSettings"/>
+    public override void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings) => UsageDetectionSettings = settings.Mouse;
 
-    /// <inheritdoc cref="IInputDevice.WasUsed"/>
-    public bool WasUsed() => wasUsed;
+    /// <inheritdoc cref="InputDevice.WasUsed"/>
+    public override bool WasUsed() => wasUsed;
     
-    /// <inheritdoc cref="IInputDevice.WasUsedRaw"/>
-    public bool WasUsedRaw() => wasUsedRaw;
+    /// <inheritdoc cref="InputDevice.WasUsedRaw"/>
+    public override bool WasUsedRaw() => wasUsedRaw;
     
     /// <summary>
     /// Returns whether the mouse device is currently locked.
     /// </summary>
-    public bool IsLocked() => isLocked;
+    public override bool IsLocked() => isLocked;
 
     /// <summary>
     /// Locks the mouse device, preventing input from being registered.
     /// </summary>
-    public void Lock()
+    public override void Lock()
     {
         isLocked = true;
     }
@@ -157,13 +157,13 @@ public sealed class MouseDevice : IInputDevice
     /// <summary>
     /// Unlocks the mouse device, allowing input to be registered.
     /// </summary>
-    public void Unlock()
+    public override void Unlock()
     {
         isLocked = false;
     }
 
-    /// <inheritdoc cref="IInputDevice.Update"/>
-    public bool Update(float dt, bool wasOtherDeviceUsed)
+    /// <inheritdoc cref="InputDevice.Update"/>
+    public override bool Update(float dt, bool wasOtherDeviceUsed)
     {
         UpdateStates();
         
@@ -175,7 +175,7 @@ public sealed class MouseDevice : IInputDevice
     /// <summary>
     /// Calibrates the mouse device. (Currently not implemented.)
     /// </summary>
-    public void Calibrate(){ }
+    public override void Calibrate(){ }
 
     /// <summary>
     /// Determines if the mouse was used based on movement or button/wheel activity.
