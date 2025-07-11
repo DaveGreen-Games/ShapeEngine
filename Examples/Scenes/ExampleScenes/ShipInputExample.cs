@@ -263,6 +263,8 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnActivate(Scene oldScene)
         {
+            //TODO: I hope this works
+            ShapeInput.ChangeActiveGamepadDeviceManager(GamepadManager);
             GAMELOOP.Camera = camera;
             BitFlag mask = new(GAMELOOP.SceneAccessTag);
             mask = mask.Add(GAMELOOP.GamepadMouseMovementTag);
@@ -271,6 +273,8 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnDeactivate()
         {
+            //TODO: I hope this works
+            ShapeInput.ChangeActiveGamepadDeviceManager(ShapeInput.DefaultGamepadDeviceManager);
             GAMELOOP.MouseControlEnabled = true;
             GAMELOOP.ResetCamera();
             InputAction.Unlock();
@@ -288,10 +292,6 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
-            // TODO: Use new system in shape input to change active gamepad device manager!
-            bool wasOtherDeviceUsed = ShapeInput.ActiveMouseDevice.WasUsed() || ShapeInput.ActiveKeyboardDevice.WasUsed();
-            GamepadManager.Update(dt, wasOtherDeviceUsed);
-            
             foreach (var inputHelper in inputActionHelpers)
             {
                 var gamepad = inputHelper.Gamepad;
@@ -318,46 +318,6 @@ namespace Examples.Scenes.ExampleScenes
         
         protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
-            // if (Raylib.IsGamepadAvailable(0))
-            // {
-            //     Console.WriteLine($"Gamepad Connected {Raylib.GetGamepadName_(0)} | Axis Count {Raylib.GetGamepadAxisCount(0)}");
-            //     
-            //     foreach (var button in Gamepad.AllGamepadButtons)
-            //     {
-            //         var buttonNumber =Raylib.GetGamepadButtonPressed();
-            //         if (buttonNumber > 0)
-            //         {
-            //             Console.WriteLine($"Gamepad Button Down {buttonNumber}");
-            //         }
-            //         if (Raylib.IsGamepadButtonDown(0, button))
-            //         {
-            //             
-            //             // Console.WriteLine($"Down: {InputTypeGamepadButton.GetGamepadButtonName(button)}");
-            //             Console.WriteLine("Gamepad Button Down");
-            //         }
-            //     }
-            // }
-            
-            // foreach (var gamepad in GamepadManager.LastUsedGamepads)
-            // {
-            //     if (gamepad.Available)
-            //     {
-            //         if (gamepad.UsedButtons.Contains(ShapeGamepadButton.RIGHT_FACE_DOWN))//add
-            //         {
-            //             AddShip(gamepad);
-            //         }
-            //     }
-            //     else
-            //     {
-            //         if (gamepad.UsedButtons.Contains(ShapeGamepadButton.RIGHT_FACE_RIGHT))//remove
-            //         {
-            //             RemoveShip(gamepad);
-            //         }
-            //     }
-            // }
-
-            
-            
             foreach (var ship in spaceShips)
             {
                 ship.Update(time.Delta);
