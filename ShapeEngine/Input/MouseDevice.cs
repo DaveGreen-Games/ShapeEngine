@@ -102,9 +102,7 @@ public sealed class MouseDevice : InputDevice
         wheelAxisStates.Add(ShapeMouseWheelAxis.HORIZONTAL, new());
         wheelAxisStates.Add(ShapeMouseWheelAxis.VERTICAL, new());
     }
-
-    // private Vector2 lastMousePosition;
-    // public Vector2 MouseDelta { get; private set; }
+    
 
     /// <summary>
     /// Gets the type of this input device, which is always <see cref="InputDeviceType.Mouse"/>.
