@@ -128,14 +128,16 @@ public sealed class MouseDevice : InputDevice
     /// Returns the consumed state, or null if already consumed.
     /// </summary>
     /// <param name="button">The mouse button to consume.</param>
+    /// <param name="valid">True if the state was not already consumed; otherwise, false.</param>
     /// <returns>The consumed <see cref="InputState"/> or null if already consumed.</returns>
-    public InputState? ConsumeButtonState(ShapeMouseButton button)
+    public InputState ConsumeButtonState(ShapeMouseButton button, out bool valid)
     {
+        valid = false;
         var state = buttonStates[button];
-        if (state.Consumed) return null;
-    
-        state = state.Consume();
-        buttonStates[button] = state;
+        if (state.Consumed) return state;
+
+        valid = true;
+        buttonStates[button] = state.Consume();
         return state;
     }
     
@@ -145,14 +147,16 @@ public sealed class MouseDevice : InputDevice
     /// Returns the consumed state, or null if already consumed.
     /// </summary>
     /// <param name="axis">The mouse axis to consume.</param>
+    /// <param name="valid">True if the state was not already consumed; otherwise, false.</param>
     /// <returns>The consumed <see cref="InputState"/> or null if already consumed.</returns>
-    public InputState? ConsumeAxisState(ShapeMouseAxis axis)
+    public InputState ConsumeAxisState(ShapeMouseAxis axis, out bool valid)
     {
+        valid = false;
         var state = axisStates[axis];
-        if (state.Consumed) return null;
-    
-        state = state.Consume();
-        axisStates[axis] = state;
+        if (state.Consumed) return state;
+
+        valid = true;
+        axisStates[axis] = state.Consume();
         return state;
     }
     
@@ -162,14 +166,16 @@ public sealed class MouseDevice : InputDevice
     /// Returns the consumed state, or null if already consumed.
     /// </summary>
     /// <param name="axis">The mouse wheel axis to consume.</param>
+    /// <param name="valid">True if the state was not already consumed; otherwise, false.</param>
     /// <returns>The consumed <see cref="InputState"/> or null if already consumed.</returns>
-    public InputState? ConsumeWheelAxisState(ShapeMouseWheelAxis axis)
+    public InputState ConsumeWheelAxisState(ShapeMouseWheelAxis axis, out bool valid)
     {
+        valid = false;
         var state = wheelAxisStates[axis];
-        if (state.Consumed) return null;
-    
-        state = state.Consume();
-        wheelAxisStates[axis] = state;
+        if (state.Consumed) return state;
+
+        valid = true;
+        wheelAxisStates[axis] = state.Consume();
         return state;
     }
     

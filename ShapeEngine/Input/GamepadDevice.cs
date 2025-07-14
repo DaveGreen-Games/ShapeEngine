@@ -209,14 +209,16 @@ public sealed class GamepadDevice : InputDevice
     /// Returns null if the state was already consumed.
     /// </summary>
     /// <param name="button">The gamepad button to consume the state for.</param>
+    /// <param name="valid">True if the state was not already consumed; otherwise, false.</param>
     /// <returns>The consumed <see cref="InputState"/> or null if already consumed.</returns>
-    public InputState? ConsumeButtonState(ShapeGamepadButton button)
+    public InputState? ConsumeButtonState(ShapeGamepadButton button, out bool valid)
     {
+        valid = false;
         var state = buttonStates[button];
-        if (state.Consumed) return null;
-    
-        state = state.Consume();
-        buttonStates[button] = state;
+        if (state.Consumed) return state;
+
+        valid = true;
+        buttonStates[button] = state.Consume();
         return state;
     }
     /// <summary>
@@ -225,14 +227,16 @@ public sealed class GamepadDevice : InputDevice
     /// Returns null if the state was already consumed.
     /// </summary>
     /// <param name="axis">The gamepad axis to consume the state for.</param>
+    /// <param name="valid">True if the state was not already consumed; otherwise, false.</param>
     /// <returns>The consumed <see cref="InputState"/> or null if already consumed.</returns>
-    public InputState? ConsumeAxisState(ShapeGamepadAxis axis)
+    public InputState? ConsumeAxisState(ShapeGamepadAxis axis, out bool valid)
     {
+        valid = false;
         var state = axisStates[axis];
-        if (state.Consumed) return null;
-    
-        state = state.Consume();
-        axisStates[axis] = state;
+        if (state.Consumed) return state;
+
+        valid = true;
+        axisStates[axis] = state.Consume();
         return state;
     }
     

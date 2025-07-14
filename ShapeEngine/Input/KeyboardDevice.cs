@@ -190,13 +190,16 @@ public sealed class KeyboardDevice : InputDevice
     /// Consumes the input state for the specified keyboard button, marking it as consumed.
     /// Returns the consumed state, or null if already consumed.
     /// </summary>
-    public InputState? ConsumeButtonState(ShapeKeyboardButton button)
+    /// <param name="button">The keyboard button to consume.</param>
+    /// <param name="valid">True if the state was not already consumed; otherwise, false.</param>
+    public InputState? ConsumeButtonState(ShapeKeyboardButton button, out bool valid)
     {
+        valid = false;
         var state = buttonStates[button];
-        if (state.Consumed) return null;
-    
-        state = state.Consume();
-        buttonStates[button] = state;
+        if (state.Consumed) return state;
+
+        valid = true;
+        buttonStates[button] = state.Consume();
         return state;
     }
     

@@ -197,9 +197,14 @@ public partial class InputAction
     /// <summary>
     /// Consumes the current input state and marks it as consumed.
     /// </summary>
+    /// <param name="valid">True if the state was not already consumed; otherwise, false.</param>
     /// <returns>The previous input state before consumption.</returns>
-    public InputState Consume()
+    public InputState Consume(out bool valid)
     {
+        valid = false;   
+        if (State.Consumed) return State;
+        
+        valid = true;
         var returnValue = State;
         State = State.Consume();
         return returnValue;
