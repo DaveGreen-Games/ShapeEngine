@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Text;
 using Raylib_cs;
 using ShapeEngine.Core;
+using ShapeEngine.Core.GameDef;
 
 namespace ShapeEngine.Input;
 
@@ -34,6 +35,26 @@ public sealed class MouseDevice : InputDevice
     private float pressedCountDurationTimer;
     private float usedDurationTimer;
 
+    /// <summary>
+    /// Gets the raw mouse wheel movement vector since the last frame.
+    /// </summary>
+    public Vector2 MouseWheelV { get; private set; }
+    
+    /// <summary>
+    /// Gets the mouse wheel movement vector with smoothing applied since the last frame.
+    /// </summary>
+    public Vector2 SmoothedMouseWheelV { get; private set; }
+    
+    /// <summary>
+    /// Gets the raw mouse movement delta since the last frame.
+    /// </summary>
+    public Vector2 MouseDelta { get; private set; }
+    
+    /// <summary>
+    /// Gets the mouse movement delta with the move threshold from <see cref="UsageDetectionSettings"/> applied.
+    /// </summary>
+    public Vector2 SmoothedMouseDelta { get; private set; }
+
     private readonly Dictionary<ShapeMouseButton, InputState> buttonStates = new(AllShapeMouseButtons.Length);
     private readonly Dictionary<ShapeMouseAxis, InputState> axisStates = new(2);
     private readonly Dictionary<ShapeMouseWheelAxis, InputState> wheelAxisStates = new(2);
@@ -42,6 +63,14 @@ public sealed class MouseDevice : InputDevice
     /// List of mouse buttons pressed since the last update.
     /// </summary>
     public readonly List<ShapeMouseButton> PressedButtons = [];
+    
+    
+    
+    /// <summary>
+    /// List of mouse buttons released since the last update.
+    /// </summary>
+    public readonly List<ShapeMouseButton> ReleasedButtons = [];//TODO: Implement for mouse and  for all other devices as well
+    
     
     /// <summary>
     /// List of mouse buttons currently held down.
@@ -123,6 +152,7 @@ public sealed class MouseDevice : InputDevice
         
         PressedButtons.Clear();
         HeldDownButtons.Clear();
+        ReleasedButtons.Clear();
     }
 
     /// <summary>
@@ -137,12 +167,17 @@ public sealed class MouseDevice : InputDevice
     /// <inheritdoc cref="InputDevice.Update"/>
     public override bool Update(float dt, bool wasOtherDeviceUsed)
     {
-        // var mousePostion = Raylib.GetMousePosition();
-        // MouseDelta = mousePostion - lastMousePosition;
-        // lastMousePosition = mousePostion;
-        // Console.WriteLine($"Mouse Delta: {MouseDelta}");
-        var mouseDelta = Raylib.GetMouseDelta();
-        Console.WriteLine($"[0]Mouse Delta: {mouseDelta}");
+        MouseDelta = Raylib.GetMouseDelta();
+        float moveThreshold = UsageDetectionSettings.MoveThreshold;
+        float smoothedX = MathF.Abs(MouseDelta.X) < moveThreshold ? 0f : MouseDelta.X;
+        float smoothedY = MathF.Abs(MouseDelta.Y) < moveThreshold ? 0f : MouseDelta.Y;
+        SmoothedMouseDelta = new(smoothedX, smoothedY);
+        
+        MouseWheelV = Raylib.GetMouseWheelMoveV();
+        float wheelThreshold = UsageDetectionSettings.WheelThreshold;
+        float smoothedWheelX = MathF.Abs(MouseWheelV.X) < wheelThreshold ? 0f : MouseWheelV.X;
+        float smoothedWheelY = MathF.Abs(MouseWheelV.Y) < wheelThreshold ? 0f : MouseWheelV.Y;
+        SmoothedMouseWheelV = new(smoothedWheelX, smoothedWheelY);
         
         UpdateStates();
 
@@ -154,15 +189,14 @@ public sealed class MouseDevice : InputDevice
         }
         
         PressedButtons.Clear();
-        
+        ReleasedButtons.Clear();
+        //TODO: use button states here instead of using IsDown
         foreach (var button in AllShapeMouseButtons)
         {
             if (IsDown(button, UsageDetectionSettings.MoveThreshold, UsageDetectionSettings.WheelThreshold))
             {
-                Console.WriteLine($"{button} is down.");
                 if (!HeldDownButtons.Contains(button))
                 {
-                    Console.WriteLine($"{button} was not previously held down. Adding to held down buttons and pressed buttons.");
                     PressedButtons.Add(button);
                     newHeldDownButtons.Add(button);
                 }
@@ -174,17 +208,13 @@ public sealed class MouseDevice : InputDevice
             var button = HeldDownButtons[i];
             if (!IsDown(button, UsageDetectionSettings.MoveThreshold, UsageDetectionSettings.WheelThreshold))
             {
-                Console.WriteLine($"{button} is not down. Remove from held down buttons.");
                 HeldDownButtons.RemoveAt(i);
+                ReleasedButtons.Add(button);
             }
         }
         
         HeldDownButtons.AddRange(newHeldDownButtons);
         newHeldDownButtons.Clear();
-        
-        string heldButtonsStr = string.Join("/", HeldDownButtons);
-        string pressedButtonsStr = string.Join("/", PressedButtons);
-        Console.WriteLine($"Pressed buttons: {pressedButtonsStr}. Held buttons: {heldButtonsStr}.");
         
         WasMouseUsed(dt, wasOtherDeviceUsed, out wasUsed, out wasUsedRaw);
         
@@ -224,6 +254,7 @@ public sealed class MouseDevice : InputDevice
         
         PressedButtons.Clear();
         HeldDownButtons.Clear();
+        ReleasedButtons.Clear();
     }
     private void WasMouseUsed(float dt, bool wasOtherDeviceUsed, out bool used, out bool usedRaw)
     {
@@ -243,7 +274,6 @@ public sealed class MouseDevice : InputDevice
 
         if (!UsageDetectionSettings.Detection || wasOtherDeviceUsed)
         {
-            // Console.WriteLine("[1] --> Mouse: Other Device Used - Return.");
             return;
         }
             
@@ -268,7 +298,6 @@ public sealed class MouseDevice : InputDevice
                 if (pressedCountDurationTimer >= UsageDetectionSettings.MinPressInterval)
                 {
                     pressedCountDurationTimer -= UsageDetectionSettings.MinPressInterval;
-                    // Console.WriteLine($"[2] --> Mouse: Press Count Timer ran out. Resetting press count to 0 from {pressedCount}");
                     pressedCount = 0;
                 }
             }
@@ -280,8 +309,6 @@ public sealed class MouseDevice : InputDevice
                     usedDurationTimer += dt;
                     if (usedDurationTimer > UsageDetectionSettings.MinUsedDuration)
                     {
-                        // string heldButtonsStr = string.Join("/", HeldDownButtons);
-                        // Console.WriteLine($"[3] --> Mouse: Hold Count Timer finished. Resetting press count to 0 from {pressedCount}. Held Buttons: {heldButtonsStr}");
                         usedDurationTimer -= UsageDetectionSettings.MinUsedDuration;
                         used = true;
                         pressedCount = 0;
@@ -291,7 +318,6 @@ public sealed class MouseDevice : InputDevice
                 }
                 else if(usedDurationTimer > 0f)
                 {
-                    // Console.WriteLine($"[3] --> Mouse. No button is being held down. Hold duration timer reset from {usedDurationTimer} to {0f} ");
                     usedDurationTimer = 0f;
                 }
                 
@@ -300,12 +326,9 @@ public sealed class MouseDevice : InputDevice
             
             if (pressCountEnabled && PressedButtons.Count > 0)
             {
-                // string pressedButtonsStr = string.Join("/", PressedButtons);
-                // Console.WriteLine($"[4] --> Mouse: Press Count incresed from {pressedCount} to {pressedCount + 1}. Pressed Buttons: {pressedButtonsStr}");
                 pressedCount++;
                 if (pressedCount >= UsageDetectionSettings.MinPressCount)
                 {
-                    // Console.WriteLine($"    --> Mouse: Min Press Count of {UsageDetectionSettings.MinPressCount} reached with {pressedCount}. Resetting hold duration timer from {usedDurationTimer} to 0.");
                     used = true;
                     pressedCountDurationTimer = 0f;
                     usedDurationTimer = 0f;
@@ -399,7 +422,7 @@ public sealed class MouseDevice : InputDevice
         if (isLocked) return 0f;
         if (!GameWindow.Instance.MouseOnScreen) return 0f;
 
-        var value = Raylib.GetMouseDelta();
+        var value = MouseDelta; // Raylib.GetMouseDelta();
         float returnValue = axis == ShapeMouseAxis.VERTICAL ? value.Y : value.X;
         if (MathF.Abs(returnValue) < deadzone) return 0f;
         return returnValue;
@@ -471,8 +494,8 @@ public sealed class MouseDevice : InputDevice
     {
         if (isLocked) return 0f;
         if (!GameWindow.Instance.MouseOnScreen) return 0f;
-        
-        var value = Raylib.GetMouseWheelMoveV();
+
+        var value = MouseWheelV; // Raylib.GetMouseWheelMoveV();
         float returnValue = axis == ShapeMouseWheelAxis.VERTICAL ? value.Y : value.X;
         if (MathF.Abs(returnValue) < deadzone) return 0f;
         return returnValue;
@@ -661,7 +684,7 @@ public sealed class MouseDevice : InputDevice
         int id = (int)button;
         if (id is >= 10 and < 20)
         {
-            var value = Raylib.GetMouseWheelMoveV();
+            var value = MouseWheelV; // Raylib.GetMouseWheelMoveV();
             if (button == ShapeMouseButton.MW_LEFT) return value.X < -mouseWheelDeadzone ? MathF.Abs(value.X) : 0f;
             if (button == ShapeMouseButton.MW_RIGHT) return value.X > mouseWheelDeadzone ? value.X : 0f;
             if (button == ShapeMouseButton.MW_UP) return value.Y < -mouseWheelDeadzone ? MathF.Abs(value.Y) : 0f;
@@ -670,7 +693,7 @@ public sealed class MouseDevice : InputDevice
         }
         if (id >= 20)
         {
-            var mouseDelta =  Raylib.GetMouseDelta();
+            var mouseDelta = MouseDelta;
             if (button == ShapeMouseButton.LEFT_AXIS) return mouseDelta.X < -mouseMoveDeadzone ? MathF.Abs(mouseDelta.X) : 0f;
             if(button == ShapeMouseButton.RIGHT_AXIS) return mouseDelta.X > mouseMoveDeadzone ? mouseDelta.X : 0f;
             if(button == ShapeMouseButton.UP_AXIS) return mouseDelta.Y < -mouseMoveDeadzone ? MathF.Abs(mouseDelta.X) : 0f;
