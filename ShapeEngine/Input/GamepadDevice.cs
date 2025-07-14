@@ -120,20 +120,29 @@ public sealed class GamepadDevice : InputDevice
     /// </summary>
     public readonly List<ShapeGamepadButton> PressedButtons = [];
     /// <summary>
-    /// List of gamepad axes used since the last update.
+    /// List of gamepad buttons released since the last update.
     /// </summary>
-    public readonly List<ShapeGamepadAxis> PressedAxis = [];
+    public readonly List<ShapeGamepadButton> ReleasedButtons = [];
     /// <summary>
     /// List of gamepad buttons in use.
     /// </summary>
     public readonly List<ShapeGamepadButton> HeldDownButtons = [];
+    
+    
     /// <summary>
-    /// List of gamepad axes in use.
+    /// List of gamepad axes used this frame, but not being in use last frame.
+    /// </summary>
+    public readonly List<ShapeGamepadAxis> PressedAxis = [];
+    
+    /// <summary>
+    /// List of gamepad axes released since the last update.
+    /// </summary>
+    public readonly List<ShapeGamepadAxis> ReleasedAxis = [];
+
+    /// <summary>
+    /// List of gamepad axes in use since multiple frames.
     /// </summary>
     public readonly List<ShapeGamepadAxis> HeldAxis = [];
-
-    private readonly HashSet<ShapeGamepadButton> newHeldButtons = [];
-    private readonly HashSet<ShapeGamepadAxis> newHeldAxis = [];
     
     /// <summary>
     /// Event triggered when the connection state changes.
@@ -256,8 +265,10 @@ public sealed class GamepadDevice : InputDevice
         pressedCountDurationTimer = 0f;
         
         PressedButtons.Clear();
-        PressedAxis.Clear();
+        ReleasedButtons.Clear();
         HeldDownButtons.Clear();
+        PressedAxis.Clear();
+        ReleasedAxis.Clear();
         HeldAxis.Clear();
     }
 
@@ -297,14 +308,23 @@ public sealed class GamepadDevice : InputDevice
         pressedCountDurationTimer = 0f;
         
         PressedButtons.Clear();
-        PressedAxis.Clear();
+        ReleasedButtons.Clear();
         HeldDownButtons.Clear();
+        PressedAxis.Clear();
+        ReleasedAxis.Clear();
         HeldAxis.Clear();
     }
 
     /// <inheritdoc cref="InputDevice.Update"/>
     public override bool Update(float dt, bool wasOtherDeviceUsed)
     {
+        PressedButtons.Clear();
+        HeldDownButtons.Clear();
+        ReleasedButtons.Clear();
+        PressedAxis.Clear();
+        ReleasedAxis.Clear();
+        HeldAxis.Clear();
+        
         UpdateButtonStates();
         UpdateAxisStates();
         
@@ -314,35 +334,6 @@ public sealed class GamepadDevice : InputDevice
             wasUsedRaw = false;
             return false;
         }
-        
-        PressedButtons.Clear();
-        PressedAxis.Clear();
-        
-        UpdateUsedGamepadButtons(UsageDetectionSettings.AxisThreshold, UsageDetectionSettings.TriggerThreshold);
-        UpdateUsedGamepadAxis(UsageDetectionSettings.AxisThreshold, UsageDetectionSettings.TriggerThreshold);
-        
-        for (int i = HeldDownButtons.Count - 1; i >= 0; i--)
-        {
-            var button = HeldDownButtons[i];
-            if (!IsDown(button, UsageDetectionSettings.AxisThreshold, UsageDetectionSettings.TriggerThreshold))
-            {
-                HeldDownButtons.RemoveAt(i);
-            }
-        }
-        for (int i = HeldAxis.Count - 1; i >= 0; i--)
-        {
-            var axis = HeldAxis[i];
-            if (!IsDown(axis, UsageDetectionSettings.AxisThreshold, UsageDetectionSettings.TriggerThreshold))
-            {
-                HeldAxis.RemoveAt(i);
-            }
-        }
-        
-        HeldDownButtons.AddRange(newHeldButtons);
-        newHeldButtons.Clear();
-        
-        HeldAxis.AddRange(newHeldAxis);
-        newHeldAxis.Clear();
         
         WasGamepadUsed(dt, wasOtherDeviceUsed, out wasUsed, out wasUsedRaw);
         
@@ -453,8 +444,10 @@ public sealed class GamepadDevice : InputDevice
         pressedCountDurationTimer = 0f;
         
         PressedButtons.Clear();
-        PressedAxis.Clear();
+        ReleasedButtons.Clear();
         HeldDownButtons.Clear();
+        PressedAxis.Clear();
+        ReleasedAxis.Clear();
         HeldAxis.Clear();
     }
     /// <summary>
@@ -517,9 +510,19 @@ public sealed class GamepadDevice : InputDevice
             var curState = CreateInputState(button, UsageDetectionSettings.AxisThreshold, UsageDetectionSettings.TriggerThreshold);
             var nextState = new InputState(prevState, curState);
             buttonStates[button] = nextState;
+
+            if(nextState.Down) HeldDownButtons.Add(button);
             
-            if(nextState.Pressed) OnButtonPressed?.Invoke(this, button);
-            else if(nextState.Released) OnButtonReleased?.Invoke(this, button);
+            if (nextState.Pressed)
+            {
+                PressedButtons.Add(button);
+                OnButtonPressed?.Invoke(this, button);
+            }
+            else if (nextState.Released)
+            {
+                ReleasedButtons.Add(button);
+                OnButtonReleased?.Invoke(this, button);
+            }
 
         }
     }
@@ -531,11 +534,15 @@ public sealed class GamepadDevice : InputDevice
     {
         foreach (var state in axisStates)
         {
-            var button = state.Key;
+            var axis = state.Key;
             var prevState = state.Value;
-            var curState = CreateInputState(button, UsageDetectionSettings.AxisThreshold, UsageDetectionSettings.TriggerThreshold);
-            axisStates[button] = new InputState(prevState, curState);
-
+            var curState = CreateInputState(axis, UsageDetectionSettings.AxisThreshold, UsageDetectionSettings.TriggerThreshold);
+            var nextState = new InputState(prevState, curState);
+            axisStates[axis] = nextState;
+            
+            if(nextState.Down) HeldAxis.Add(axis);
+            if(nextState.Pressed) PressedAxis.Add(axis);
+            else if(nextState.Released) ReleasedAxis.Add(axis);
         }
     }
 
@@ -1048,179 +1055,110 @@ public sealed class GamepadDevice : InputDevice
 
     #endregion
 
-    #region Used
-
-    // private bool WasAnyGamepadButtonUsed()
+    // #region Used
+    //
+    // private void UpdateUsedGamepadButtons(float axisDeadzone, float triggerDeadzone)
     // {
-    //     if (!Connected || Index < 0 || isLocked) return false;
-    //     foreach (var b in  AllShapeGamepadButtons)
+    //     if (!Connected || Index < 0 || isLocked) return;
+    //     var values = AllShapeGamepadButtons;
+    //     foreach (var b in  values)
     //     {
-    //         if (IsDown(b, UsageDetectionSettings.AxisThreshold, UsageDetectionSettings.TriggerThreshold)) return true;
+    //         if (HeldDownButtons.Contains(b)) continue;
+    //         
+    //         var id = (int)b;
+    //         var down = false;
+    //         if (b is ShapeGamepadButton.LEFT_STICK_DOWN or ShapeGamepadButton.LEFT_STICK_UP or ShapeGamepadButton.LEFT_STICK_LEFT or ShapeGamepadButton.LEFT_STICK_RIGHT)
+    //         {
+    //             var axis = ToShapeGamepadAxis(b);
+    //             if(axis != null) down = IsDown((ShapeGamepadAxis)axis, axisDeadzone);
+    //         }
+    //         else if (b is ShapeGamepadButton.RIGHT_STICK_DOWN or ShapeGamepadButton.RIGHT_STICK_UP or ShapeGamepadButton.RIGHT_STICK_LEFT or ShapeGamepadButton.RIGHT_STICK_RIGHT)
+    //         {
+    //             var axis = ToShapeGamepadAxis(b);
+    //             if(axis != null) down = IsDown((ShapeGamepadAxis)axis, axisDeadzone);
+    //         }
+    //         else if (b == ShapeGamepadButton.LEFT_TRIGGER_BOTTOM)
+    //         {
+    //             var axis = ToShapeGamepadAxis(b);
+    //             if(axis != null)down = IsDown((ShapeGamepadAxis)axis, triggerDeadzone);
+    //         }
+    //         else if (b == ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM)
+    //         {
+    //             var axis = ToShapeGamepadAxis(b);
+    //             if(axis != null) down = IsDown((ShapeGamepadAxis)axis, triggerDeadzone);
+    //         }
+    //         else
+    //         {
+    //             down = Raylib.IsGamepadButtonDown(Index, (GamepadButton)id);
+    //         }
+    //
+    //         if (down)
+    //         {
+    //             PressedButtons.Add(b);
+    //             newHeldButtons.Add(b);
+    //         }
+    //         
+    //     }
+    // }
+    // private void UpdateUsedGamepadAxis(float axisDeadzone, float triggerDeadzone)
+    // {
+    //     if (!Connected || Index < 0 || isLocked) return;
+    //
+    //     if (GetValue(ShapeGamepadAxis.LEFT_X, axisDeadzone) != 0f)
+    //     {
+    //         if (!HeldAxis.Contains(ShapeGamepadAxis.LEFT_X))
+    //         {
+    //             PressedAxis.Add(ShapeGamepadAxis.LEFT_X);
+    //             newHeldAxis.Add(ShapeGamepadAxis.LEFT_X);
+    //         }
     //     }
     //
-    //     return false;
-    // }
-    // private bool WasAnyGamepadAxisUsed(float deadzone = 0.25f) => WasAnyGamepadAxisUsed(deadzone, deadzone, deadzone, deadzone);
-    // private bool WasAnyGamepadAxisUsed(float leftAxisDeadzone, float rightAxisDeadzone, float leftTriggerDeadzone, float rightTriggerDeadzone)
-    // {
-    //     if (!Connected || Index < 0 || isLocked) return false;
-    //     
-    //     if (WasGamepadAxisUsed(ShapeGamepadAxis.LEFT_X, leftAxisDeadzone)) return true;
-    //     if (WasGamepadAxisUsed(ShapeGamepadAxis.LEFT_Y, leftAxisDeadzone)) return true;
-    //     
-    //     if (WasGamepadAxisUsed(ShapeGamepadAxis.RIGHT_X, rightAxisDeadzone)) return true;
-    //     if (WasGamepadAxisUsed(ShapeGamepadAxis.RIGHT_Y, rightAxisDeadzone)) return true;
-    //     
-    //     if (WasGamepadAxisUsed(ShapeGamepadAxis.LEFT_TRIGGER, leftTriggerDeadzone)) return true;
-    //     if (WasGamepadAxisUsed(ShapeGamepadAxis.RIGHT_TRIGGER, rightTriggerDeadzone)) return true;
+    //     if (GetValue(ShapeGamepadAxis.LEFT_Y, axisDeadzone) != 0f)
+    //     {
+    //         if (!HeldAxis.Contains(ShapeGamepadAxis.LEFT_Y))
+    //         {
+    //             PressedAxis.Add(ShapeGamepadAxis.LEFT_Y);
+    //             newHeldAxis.Add(ShapeGamepadAxis.LEFT_Y);
+    //         }
+    //     }
     //
-    //     return false;
+    //     if (GetValue(ShapeGamepadAxis.RIGHT_X, axisDeadzone) != 0f)
+    //     {
+    //         if (!HeldAxis.Contains(ShapeGamepadAxis.RIGHT_X))
+    //         {
+    //             PressedAxis.Add(ShapeGamepadAxis.RIGHT_X);
+    //             newHeldAxis.Add(ShapeGamepadAxis.RIGHT_X);
+    //         }
+    //     }
+    //
+    //     if (GetValue(ShapeGamepadAxis.RIGHT_Y, axisDeadzone) != 0f)
+    //     {
+    //         if (!HeldAxis.Contains(ShapeGamepadAxis.RIGHT_Y))
+    //         {
+    //             PressedAxis.Add(ShapeGamepadAxis.RIGHT_Y);
+    //             newHeldAxis.Add(ShapeGamepadAxis.RIGHT_Y);
+    //         }
+    //     }
+    //
+    //     if (GetValue(ShapeGamepadAxis.LEFT_TRIGGER, triggerDeadzone) != 0f)
+    //     {
+    //         if (!HeldAxis.Contains(ShapeGamepadAxis.LEFT_TRIGGER))
+    //         {
+    //             PressedAxis.Add(ShapeGamepadAxis.LEFT_TRIGGER);
+    //             newHeldAxis.Add(ShapeGamepadAxis.LEFT_TRIGGER);
+    //         }
+    //     }
+    //
+    //     if (GetValue(ShapeGamepadAxis.RIGHT_TRIGGER, triggerDeadzone) != 0f)
+    //     {
+    //         if (!HeldAxis.Contains(ShapeGamepadAxis.RIGHT_TRIGGER))
+    //         {
+    //             PressedAxis.Add(ShapeGamepadAxis.RIGHT_TRIGGER);
+    //             newHeldAxis.Add(ShapeGamepadAxis.RIGHT_TRIGGER);
+    //         }
+    //     }
+    //     
     // }
-    // private bool WasGamepadAxisUsed(ShapeGamepadAxis axis, float deadzone = 0.25f)
-    // {
-    //     if (!Connected || Index < 0 || isLocked) return false;
-    //     return GetValue(axis, deadzone) != 0f;
-    // }
-    private void UpdateUsedGamepadButtons(float axisDeadzone, float triggerDeadzone)
-    {
-        if (!Connected || Index < 0 || isLocked) return;
-        var values = AllShapeGamepadButtons;
-        foreach (var b in  values)
-        {
-            if (HeldDownButtons.Contains(b)) continue;
-            
-            var id = (int)b;
-            var down = false;
-            if (b is ShapeGamepadButton.LEFT_STICK_DOWN or ShapeGamepadButton.LEFT_STICK_UP or ShapeGamepadButton.LEFT_STICK_LEFT or ShapeGamepadButton.LEFT_STICK_RIGHT)
-            {
-                var axis = ToShapeGamepadAxis(b);
-                if(axis != null) down = IsDown((ShapeGamepadAxis)axis, axisDeadzone);
-            }
-            else if (b is ShapeGamepadButton.RIGHT_STICK_DOWN or ShapeGamepadButton.RIGHT_STICK_UP or ShapeGamepadButton.RIGHT_STICK_LEFT or ShapeGamepadButton.RIGHT_STICK_RIGHT)
-            {
-                var axis = ToShapeGamepadAxis(b);
-                if(axis != null) down = IsDown((ShapeGamepadAxis)axis, axisDeadzone);
-            }
-            else if (b == ShapeGamepadButton.LEFT_TRIGGER_BOTTOM)
-            {
-                var axis = ToShapeGamepadAxis(b);
-                if(axis != null)down = IsDown((ShapeGamepadAxis)axis, triggerDeadzone);
-            }
-            else if (b == ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM)
-            {
-                var axis = ToShapeGamepadAxis(b);
-                if(axis != null) down = IsDown((ShapeGamepadAxis)axis, triggerDeadzone);
-            }
-            else
-            {
-                down = Raylib.IsGamepadButtonDown(Index, (GamepadButton)id);
-            }
-
-            if (down)
-            {
-                PressedButtons.Add(b);
-                newHeldButtons.Add(b);
-            }
-            
-        }
-    }
-    private void UpdateUsedGamepadAxis(float axisDeadzone, float triggerDeadzone)
-    {
-        if (!Connected || Index < 0 || isLocked) return;
-
-        if (GetValue(ShapeGamepadAxis.LEFT_X, axisDeadzone) != 0f)
-        {
-            if (!HeldAxis.Contains(ShapeGamepadAxis.LEFT_X))
-            {
-                PressedAxis.Add(ShapeGamepadAxis.LEFT_X);
-                newHeldAxis.Add(ShapeGamepadAxis.LEFT_X);
-            }
-        }
-
-        if (GetValue(ShapeGamepadAxis.LEFT_Y, axisDeadzone) != 0f)
-        {
-            if (!HeldAxis.Contains(ShapeGamepadAxis.LEFT_Y))
-            {
-                PressedAxis.Add(ShapeGamepadAxis.LEFT_Y);
-                newHeldAxis.Add(ShapeGamepadAxis.LEFT_Y);
-            }
-        }
-
-        if (GetValue(ShapeGamepadAxis.RIGHT_X, axisDeadzone) != 0f)
-        {
-            if (!HeldAxis.Contains(ShapeGamepadAxis.RIGHT_X))
-            {
-                PressedAxis.Add(ShapeGamepadAxis.RIGHT_X);
-                newHeldAxis.Add(ShapeGamepadAxis.RIGHT_X);
-            }
-        }
-
-        if (GetValue(ShapeGamepadAxis.RIGHT_Y, axisDeadzone) != 0f)
-        {
-            if (!HeldAxis.Contains(ShapeGamepadAxis.RIGHT_Y))
-            {
-                PressedAxis.Add(ShapeGamepadAxis.RIGHT_Y);
-                newHeldAxis.Add(ShapeGamepadAxis.RIGHT_Y);
-            }
-        }
-
-        if (GetValue(ShapeGamepadAxis.LEFT_TRIGGER, triggerDeadzone) != 0f)
-        {
-            if (!HeldAxis.Contains(ShapeGamepadAxis.LEFT_TRIGGER))
-            {
-                PressedAxis.Add(ShapeGamepadAxis.LEFT_TRIGGER);
-                newHeldAxis.Add(ShapeGamepadAxis.LEFT_TRIGGER);
-            }
-        }
-
-        if (GetValue(ShapeGamepadAxis.RIGHT_TRIGGER, triggerDeadzone) != 0f)
-        {
-            if (!HeldAxis.Contains(ShapeGamepadAxis.RIGHT_TRIGGER))
-            {
-                PressedAxis.Add(ShapeGamepadAxis.RIGHT_TRIGGER);
-                newHeldAxis.Add(ShapeGamepadAxis.RIGHT_TRIGGER);
-            }
-        }
-        
-    }
-    #endregion
-    
+    // #endregion
+    //
 }
-
-/*
-
-    /// <summary>
-   /// Converts a <see cref="ShapeGamepadButton"/> to the corresponding <see cref="GamepadButton"/> used by Raylib.
-   /// </summary>
-   /// <param name="button">The <see cref="ShapeGamepadButton"/> to convert.</param>
-   /// <returns>The equivalent <see cref="GamepadButton"/> value.</returns>
-   public static GamepadButton ToRaylibGamepadButton(ShapeGamepadButton button)
-   {
-       int id = (int)button;
-       if(id is >= 0 and <= (int)GamepadButton.RightThumb) return (GamepadButton)button;
-       return GamepadButton.Unknown;
-   }
-
-   /// <summary>
-   /// Converts a <see cref="GamepadButton"/> from Raylib to the corresponding <see cref="ShapeGamepadButton"/>.
-   /// </summary>
-   /// <param name="button">The Raylib <see cref="GamepadButton"/> to convert.</param>
-   /// <returns>The equivalent <see cref="ShapeGamepadButton"/> value.</returns>
-   public static ShapeGamepadButton ToShapeGamepadButton(GamepadButton button)
-   {
-       return (ShapeGamepadButton)button;
-   }
-
-   /// <summary>
-   /// Checks if the given <see cref="ShapeGamepadButton"/> value corresponds to a valid Raylib gamepad button.
-   /// </summary>
-   /// <param name="button">The <see cref="ShapeGamepadButton"/> to validate.</param>
-   /// <returns>True if the button is a valid Raylib gamepad button; otherwise, false.</returns>
-   public static bool IsValidRaylibGamepadButton(ShapeGamepadButton button)
-   {
-       int id = (int)button;
-       return id is >= 0 and <= (int)GamepadButton.RightThumb;
-   }
- 
-
-*/

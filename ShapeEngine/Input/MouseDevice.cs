@@ -2,9 +2,9 @@ using System.Numerics;
 using System.Text;
 using Raylib_cs;
 using ShapeEngine.Core;
-using ShapeEngine.Core.GameDef;
 
 namespace ShapeEngine.Input;
+
 
 /// <summary>
 /// Represents a mouse input device, providing access to mouse buttons, axes, and wheel axes,
@@ -69,14 +69,13 @@ public sealed class MouseDevice : InputDevice
     /// <summary>
     /// List of mouse buttons released since the last update.
     /// </summary>
-    public readonly List<ShapeMouseButton> ReleasedButtons = [];//TODO: Implement for mouse and  for all other devices as well
+    public readonly List<ShapeMouseButton> ReleasedButtons = [];
     
     
     /// <summary>
     /// List of mouse buttons currently held down.
     /// </summary>
     public readonly List<ShapeMouseButton> HeldDownButtons = [];
-    private readonly HashSet<ShapeMouseButton> newHeldDownButtons = [];
     
     /// <summary>
     /// Event triggered when a mouse button is pressed.
@@ -179,6 +178,9 @@ public sealed class MouseDevice : InputDevice
         float smoothedWheelY = MathF.Abs(MouseWheelV.Y) < wheelThreshold ? 0f : MouseWheelV.Y;
         SmoothedMouseWheelV = new(smoothedWheelX, smoothedWheelY);
         
+        PressedButtons.Clear();
+        HeldDownButtons.Clear();
+        ReleasedButtons.Clear();
         UpdateStates();
 
         if (isLocked)
@@ -187,34 +189,6 @@ public sealed class MouseDevice : InputDevice
             wasUsedRaw = false;
             return false;
         }
-        
-        PressedButtons.Clear();
-        ReleasedButtons.Clear();
-        //TODO: use button states here instead of using IsDown
-        foreach (var button in AllShapeMouseButtons)
-        {
-            if (IsDown(button, UsageDetectionSettings.MoveThreshold, UsageDetectionSettings.WheelThreshold))
-            {
-                if (!HeldDownButtons.Contains(button))
-                {
-                    PressedButtons.Add(button);
-                    newHeldDownButtons.Add(button);
-                }
-            }
-        }
-        
-        for (int i = HeldDownButtons.Count - 1; i >= 0; i--)
-        {
-            var button = HeldDownButtons[i];
-            if (!IsDown(button, UsageDetectionSettings.MoveThreshold, UsageDetectionSettings.WheelThreshold))
-            {
-                HeldDownButtons.RemoveAt(i);
-                ReleasedButtons.Add(button);
-            }
-        }
-        
-        HeldDownButtons.AddRange(newHeldDownButtons);
-        newHeldDownButtons.Clear();
         
         WasMouseUsed(dt, wasOtherDeviceUsed, out wasUsed, out wasUsedRaw);
         
@@ -350,9 +324,18 @@ public sealed class MouseDevice : InputDevice
             var curState = CreateInputState(button, UsageDetectionSettings.MoveThreshold, UsageDetectionSettings.WheelThreshold);
             var nextState = new InputState(prevState, curState);
             buttonStates[button] = nextState;
-            
-            if(nextState.Pressed) OnButtonPressed?.Invoke(button);
-            else if(nextState.Released) OnButtonReleased?.Invoke(button);
+
+            if(nextState.Down) HeldDownButtons.Add(button);
+            if (nextState.Pressed)
+            {
+                PressedButtons.Add(button);
+                OnButtonPressed?.Invoke(button);
+            }
+            else if (nextState.Released)
+            {
+                ReleasedButtons.Add(button);
+                OnButtonReleased?.Invoke(button);
+            }
         }
         foreach (var state in axisStates)
         {
@@ -876,186 +859,3 @@ public sealed class MouseDevice : InputDevice
 
     #endregion
 }
-
-/*
-
-    /// <summary>
-   /// Converts a <see cref="ShapeMouseButton"/> to the corresponding <see cref="MouseButton"/> used by Raylib.
-   /// </summary>
-   /// <param name="button">The <see cref="ShapeMouseButton"/> to convert.</param>
-   /// <returns>The equivalent <see cref="MouseButton"/> value.</returns>
-   public static MouseButton ToRaylibMouseButton(ShapeMouseButton button)
-   {
-       return button switch
-       {
-           ShapeMouseButton.LEFT => MouseButton.Left,
-           ShapeMouseButton.RIGHT => MouseButton.Right,
-           ShapeMouseButton.MIDDLE => MouseButton.Middle,
-           ShapeMouseButton.SIDE => MouseButton.Side,
-           ShapeMouseButton.EXTRA => MouseButton.Extra,
-           ShapeMouseButton.FORWARD => MouseButton.Forward,
-           ShapeMouseButton.BACK => MouseButton.Back,
-           _ => MouseButton.Left
-       };
-   }
-
-   /// <summary>
-   /// Converts a <see cref="MouseButton"/> from Raylib to the corresponding <see cref="ShapeMouseButton"/>.
-   /// </summary>
-   /// <param name="button">The Raylib <see cref="MouseButton"/> to convert.</param>
-   /// <returns>The equivalent <see cref="ShapeMouseButton"/> value.</returns>
-   public static ShapeMouseButton ToShapeMouseButton(MouseButton button)
-   {
-       return button switch
-       {
-           MouseButton.Left => ShapeMouseButton.LEFT,
-           MouseButton.Right => ShapeMouseButton.RIGHT,
-           MouseButton.Middle => ShapeMouseButton.MIDDLE,
-           MouseButton.Side => ShapeMouseButton.SIDE,
-           MouseButton.Extra => ShapeMouseButton.EXTRA,
-           MouseButton.Forward => ShapeMouseButton.FORWARD,
-           MouseButton.Back => ShapeMouseButton.BACK,
-           _ => ShapeMouseButton.NONE
-       };
-   }
-
-   /// <summary>
-   /// Checks if the given <see cref="ShapeMouseButton"/> value corresponds to a valid Raylib mouse button.
-   /// </summary>
-   /// <param name="button">The <see cref="ShapeMouseButton"/> to validate.</param>
-   /// <returns>True if the button is a valid Raylib mouse button; otherwise, false.</returns>
-   public static bool IsValidRaylibMouseButton(ShapeMouseButton button)
-   {
-       int id = (int)button;
-       return id is >= 0 and <= (int)MouseButton.Back;
-   }
-
-   
- */
-
-// /// <summary>
-    // /// Determines if the mouse was used based on movement or button/wheel activity.
-    // /// </summary>
-    // /// <returns>True if the mouse was used, otherwise false.</returns>
-    // private void WasMouseUsed(float dt, bool wasOtherDeviceUsed, out bool used, out bool usedRaw)
-    // {
-    //    
-    //     used = false;
-    //     usedRaw = false;
-    //     
-    //     if (wasOtherDeviceUsed)
-    //     {
-    //         usedDurationTimer = 0f;
-    //         pressedCount = 0;
-    //         pressedCountDurationTimer = 0f;
-    //     }
-    //     
-    //     if (isLocked) return;
-    //     
-    //     var moveThreshold = UsageDetectionSettings.MoveThreshold;
-    //     var mouseWheelThreshold = UsageDetectionSettings.WheelThreshold;
-    //     var pressCountEnabled = UsageDetectionSettings.PressCountEnabled;
-    //     var usedDurationEnabled = UsageDetectionSettings.UsedDurationEnabled;
-    //     var specialButtonSelectionSystemEnabled = UsageDetectionSettings.SpecialButtonSelectionSystemEnabled;
-    //     
-    //     if (wasOtherDeviceUsed || !UsageDetectionSettings.Detection || specialButtonSelectionSystemEnabled || (!pressCountEnabled && !usedDurationEnabled))
-    //     {
-    //         if (UsageDetectionSettings.MoveThresholdEnabled && Raylib.GetMouseDelta().LengthSquared() > moveThreshold * moveThreshold)
-    //         {
-    //             usedRaw = true;
-    //             if(UsageDetectionSettings.Detection && !specialButtonSelectionSystemEnabled && !wasOtherDeviceUsed) used = true;
-    //             return;
-    //         }
-    //         if (
-    //             (UsageDetectionSettings.WheelThresholdEnabled && Raylib.GetMouseWheelMoveV().LengthSquared() > mouseWheelThreshold * mouseWheelThreshold) || 
-    //             Raylib.IsMouseButtonDown(MouseButton.Left) || 
-    //             Raylib.IsMouseButtonDown(MouseButton.Right) || 
-    //             Raylib.IsMouseButtonDown(MouseButton.Middle) || 
-    //             Raylib.IsMouseButtonDown(MouseButton.Extra) || 
-    //             Raylib.IsMouseButtonDown(MouseButton.Forward) || 
-    //             Raylib.IsMouseButtonDown(MouseButton.Back) || 
-    //             Raylib.IsMouseButtonDown(MouseButton.Side))
-    //         {
-    //             usedRaw = true;
-    //             if(UsageDetectionSettings.Detection && !specialButtonSelectionSystemEnabled && !wasOtherDeviceUsed) used = true;
-    //         }
-    //
-    //         if (specialButtonSelectionSystemEnabled && !wasOtherDeviceUsed)
-    //         {
-    //             if ((
-    //                     UsageDetectionSettings.SelectionButtonPrimary != ShapeMouseButton.NONE && 
-    //                     Raylib.IsMouseButtonDown((MouseButton)UsageDetectionSettings.SelectionButtonPrimary
-    //                 )) || (
-    //                     UsageDetectionSettings.SelectionButtonSecondary != ShapeMouseButton.NONE && 
-    //                     Raylib.IsMouseButtonDown((MouseButton)UsageDetectionSettings.SelectionButtonSecondary
-    //                 )))
-    //             {
-    //                 used = true;
-    //             }
-    //         }
-    //         
-    //         return;
-    //     }
-    //     
-    //     if (pressCountEnabled)
-    //     {
-    //         pressedCountDurationTimer += dt;
-    //         if (pressedCountDurationTimer >= UsageDetectionSettings.MinPressInterval)
-    //         {
-    //             pressedCountDurationTimer -= UsageDetectionSettings.MinPressInterval;
-    //             pressedCount = 0;
-    //         }
-    //     }
-    //     
-    //     bool movement = (UsageDetectionSettings.MoveThresholdEnabled && Raylib.GetMouseDelta().LengthSquared() > moveThreshold * moveThreshold) ||
-    //                     (UsageDetectionSettings.WheelThresholdEnabled && Raylib.GetMouseWheelMoveV().LengthSquared() > mouseWheelThreshold * mouseWheelThreshold);
-    //     
-    //     bool mouseButtonDown = Raylib.IsMouseButtonDown(MouseButton.Left) ||
-    //                            Raylib.IsMouseButtonDown(MouseButton.Right) ||
-    //                            Raylib.IsMouseButtonDown(MouseButton.Middle) ||
-    //                            Raylib.IsMouseButtonDown(MouseButton.Extra) ||
-    //                            Raylib.IsMouseButtonDown(MouseButton.Forward) ||
-    //                            Raylib.IsMouseButtonDown(MouseButton.Back) ||
-    //                            Raylib.IsMouseButtonDown(MouseButton.Side);
-    //     
-    //     if (movement || mouseButtonDown)
-    //     {
-    //         usedRaw = true;
-    //         if (usedDurationEnabled)
-    //         {
-    //             usedDurationTimer += dt;
-    //             if (usedDurationTimer > UsageDetectionSettings.MinUsedDuration)
-    //             {
-    //                 usedDurationTimer -= UsageDetectionSettings.MinUsedDuration;
-    //                 used = true;
-    //                 pressedCount = 0;
-    //                 pressedCountDurationTimer = 0f;
-    //                 return;
-    //             }
-    //         }
-    //
-    //         if (pressCountEnabled)
-    //         {
-    //             bool mouseButtonPressedThisFrame = 
-    //                 Raylib.IsMouseButtonPressed(MouseButton.Left) ||
-    //                 Raylib.IsMouseButtonPressed(MouseButton.Right) ||
-    //                 Raylib.IsMouseButtonPressed(MouseButton.Middle) ||
-    //                 Raylib.IsMouseButtonPressed(MouseButton.Extra) ||
-    //                 Raylib.IsMouseButtonPressed(MouseButton.Forward) ||
-    //                 Raylib.IsMouseButtonPressed(MouseButton.Back) ||
-    //                 Raylib.IsMouseButtonPressed(MouseButton.Side);
-    //
-    //             if (mouseButtonPressedThisFrame)
-    //             {
-    //                 pressedCount++;
-    //                 if (pressedCount >= UsageDetectionSettings.MinPressCount)
-    //                 {
-    //                     used = true;
-    //                     pressedCountDurationTimer = 0f;
-    //                     usedDurationTimer = 0f;
-    //                     pressedCount = 0;
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }

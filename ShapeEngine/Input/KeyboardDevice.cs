@@ -41,6 +41,11 @@ public sealed class KeyboardDevice : InputDevice
     public readonly List<ShapeKeyboardButton> PressedButtons = [];
     
     /// <summary>
+    /// List of keyboard buttons released since the last update.
+    /// </summary>
+    public readonly List<ShapeKeyboardButton> ReleasedButtons = [];
+    
+    /// <summary>
     /// List of keyboard buttons currently held down.
     /// </summary>
     public readonly List<ShapeKeyboardButton> HeldDownButtons = [];
@@ -90,6 +95,7 @@ public sealed class KeyboardDevice : InputDevice
         pressedCountDurationTimer = 0f;
         
         PressedButtons.Clear();
+        ReleasedButtons.Clear();
         HeldDownButtons.Clear();
     }
 
@@ -114,37 +120,19 @@ public sealed class KeyboardDevice : InputDevice
     /// <inheritdoc cref="InputDevice.Update"/>
     public override bool Update(float dt, bool wasOtherDeviceUsed)
     {
+        PressedButtons.Clear();
+        ReleasedButtons.Clear();
+        HeldDownButtons.Clear();
+        UsedCharacters.Clear();
+        
         UpdateButtonStates();
         
         if (isLocked)
         {
             wasUsed = false;
             wasUsedRaw = false;
-            HeldDownButtons.Clear();
             return false;
         }
-        
-        PressedButtons.Clear();
-        UsedCharacters.Clear();
-        
-        for (int i = HeldDownButtons.Count - 1; i >= 0; i--)
-        {
-            var button = HeldDownButtons[i];
-            if (Raylib.IsKeyUp((KeyboardKey)button))
-            {
-                HeldDownButtons.RemoveAt(i);
-            }
-        }
-        
-        var keycode = Raylib.GetKeyPressed();
-        while (keycode > 0)
-        {
-            var button = (ShapeKeyboardButton)keycode;
-            PressedButtons.Add(button);
-            HeldDownButtons.Add(button);
-            keycode = Raylib.GetKeyPressed();
-        }
-        
         
         var unicode = Raylib.GetCharPressed();
         while (unicode > 0)
@@ -189,6 +177,7 @@ public sealed class KeyboardDevice : InputDevice
         pressedCountDurationTimer = 0f;
         
         PressedButtons.Clear();
+        ReleasedButtons.Clear();
         HeldDownButtons.Clear();
     }
     
@@ -340,9 +329,18 @@ public sealed class KeyboardDevice : InputDevice
             var nextState = new InputState(prevState, curState);
             buttonStates[button] = nextState;
             
-            if(nextState.Pressed) OnButtonPressed?.Invoke(button);
-            else if(nextState.Released) OnButtonReleased?.Invoke(button);
+            if(nextState.Down) HeldDownButtons.Add(button);
 
+            if (nextState.Pressed)
+            {
+                PressedButtons.Add(button);
+                OnButtonPressed?.Invoke(button);
+            }
+            else if (nextState.Released)
+            {
+                ReleasedButtons.Add(button);
+                OnButtonReleased?.Invoke(button);
+            }
         }
     }
 
