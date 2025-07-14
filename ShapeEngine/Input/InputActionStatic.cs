@@ -2,6 +2,7 @@ using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.Input;
 
+//TODO: Move the lock system out of the InputAction class and to ShapeInput ? So that all input systems have an access tag and can be locked out of receiving input?
 public partial class InputAction
 {
     #region Members
