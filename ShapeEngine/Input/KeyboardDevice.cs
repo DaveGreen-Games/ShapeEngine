@@ -187,6 +187,20 @@ public sealed class KeyboardDevice : InputDevice
     public InputState GetButtonState(ShapeKeyboardButton button) => buttonStates[button];
     
     /// <summary>
+    /// Consumes the input state for the specified keyboard button, marking it as consumed.
+    /// Returns the consumed state, or null if already consumed.
+    /// </summary>
+    public InputState? ConsumeButtonState(ShapeKeyboardButton button)
+    {
+        var state = buttonStates[button];
+        if (state.Consumed) return null;
+    
+        state = state.Consume();
+        buttonStates[button] = state;
+        return state;
+    }
+    
+    /// <summary>
     /// Gets the list of characters entered since the last update.
     /// </summary>
     /// <returns>List of entered characters.</returns>

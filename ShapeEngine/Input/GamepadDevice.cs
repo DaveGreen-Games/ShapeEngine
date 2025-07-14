@@ -204,6 +204,39 @@ public sealed class GamepadDevice : InputDevice
     public InputState GetAxisState(ShapeGamepadAxis axis) => axisStates[axis];
     
     /// <summary>
+    /// Consumes the input state for the specified gamepad button.
+    /// Marks the state as consumed and updates the dictionary.
+    /// Returns null if the state was already consumed.
+    /// </summary>
+    /// <param name="button">The gamepad button to consume the state for.</param>
+    /// <returns>The consumed <see cref="InputState"/> or null if already consumed.</returns>
+    public InputState? ConsumeButtonState(ShapeGamepadButton button)
+    {
+        var state = buttonStates[button];
+        if (state.Consumed) return null;
+    
+        state = state.Consume();
+        buttonStates[button] = state;
+        return state;
+    }
+    /// <summary>
+    /// Consumes the input state for the specified gamepad axis.
+    /// Marks the state as consumed and updates the dictionary.
+    /// Returns null if the state was already consumed.
+    /// </summary>
+    /// <param name="axis">The gamepad axis to consume the state for.</param>
+    /// <returns>The consumed <see cref="InputState"/> or null if already consumed.</returns>
+    public InputState? ConsumeAxisState(ShapeGamepadAxis axis)
+    {
+        var state = axisStates[axis];
+        if (state.Consumed) return null;
+    
+        state = state.Consume();
+        axisStates[axis] = state;
+        return state;
+    }
+    
+    /// <summary>
     /// Converts a <see cref="ShapeGamepadButton"/> to the corresponding <see cref="ShapeGamepadAxis"/> if applicable.
     /// Returns null if the button does not map to an axis.
     /// </summary>

@@ -124,6 +124,57 @@ public sealed class MouseDevice : InputDevice
     /// </summary>
     public InputState GetWheelAxisState(ShapeMouseWheelAxis axis) => wheelAxisStates[axis];
     
+    /// <summary>
+    /// Consumes the input state for the specified mouse button.
+    /// Marks the state as consumed and updates the button state.
+    /// Returns the consumed state, or null if already consumed.
+    /// </summary>
+    /// <param name="button">The mouse button to consume.</param>
+    /// <returns>The consumed <see cref="InputState"/> or null if already consumed.</returns>
+    public InputState? ConsumeButtonState(ShapeMouseButton button)
+    {
+        var state = buttonStates[button];
+        if (state.Consumed) return null;
+    
+        state = state.Consume();
+        buttonStates[button] = state;
+        return state;
+    }
+    
+    /// <summary>
+    /// Consumes the input state for the specified mouse axis.
+    /// Marks the state as consumed and updates the axis state.
+    /// Returns the consumed state, or null if already consumed.
+    /// </summary>
+    /// <param name="axis">The mouse axis to consume.</param>
+    /// <returns>The consumed <see cref="InputState"/> or null if already consumed.</returns>
+    public InputState? ConsumeAxisState(ShapeMouseAxis axis)
+    {
+        var state = axisStates[axis];
+        if (state.Consumed) return null;
+    
+        state = state.Consume();
+        axisStates[axis] = state;
+        return state;
+    }
+    
+    /// <summary>
+    /// Consumes the input state for the specified mouse wheel axis.
+    /// Marks the state as consumed and updates the wheel axis state.
+    /// Returns the consumed state, or null if already consumed.
+    /// </summary>
+    /// <param name="axis">The mouse wheel axis to consume.</param>
+    /// <returns>The consumed <see cref="InputState"/> or null if already consumed.</returns>
+    public InputState? ConsumeWheelAxisState(ShapeMouseWheelAxis axis)
+    {
+        var state = wheelAxisStates[axis];
+        if (state.Consumed) return null;
+    
+        state = state.Consume();
+        wheelAxisStates[axis] = state;
+        return state;
+    }
+    
     /// <inheritdoc cref="InputDevice.ApplyInputDeviceChangeSettings"/>
     public override void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings) => UsageDetectionSettings = settings.Mouse;
 
