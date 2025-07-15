@@ -76,4 +76,5 @@ public abstract class InputDevice
     /// Called when the input device is being deactivated.
     /// </summary>
     public abstract void Deactivate();
+
 }
