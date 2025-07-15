@@ -222,8 +222,6 @@ public partial class InputAction
     #endregion
 
     #region Basic
-
-    //TODO: ShapeInput should have GetState / ConsumeState for all buttons, axes, and wheel axes as well!
     
     /// <summary>
     /// Gets the input state for a keyboard button.
