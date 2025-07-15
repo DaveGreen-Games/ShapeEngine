@@ -6,7 +6,7 @@ namespace ShapeEngine.Input;
 /// <summary>
 /// Represents an input type for a gamepad axis, supporting deadzone and modifier keys.
 /// </summary>
-public class InputTypeGamepadAxis : IInputType
+public sealed class InputTypeGamepadAxis : IInputType
 {
     private readonly ShapeGamepadAxis axis;
     private float deadzone;
@@ -59,11 +59,11 @@ public class InputTypeGamepadAxis : IInputType
         this.axis = axis; 
         this.deadzone = deadzone;
         this.modifierOperator = modifierOperator;
-        this.modifierKeys = new[]{ modifierKey };
+        this.modifierKeys = [modifierKey];
     }
 
     /// <inheritdoc/>
-    public virtual string GetName(bool shorthand = true)
+    public string GetName(bool shorthand = true)
     {
         StringBuilder sb = new();
         IModifierKey.GetModifierKeyNames(sb, modifierKeys, modifierOperator, shorthand);
@@ -83,13 +83,13 @@ public class InputTypeGamepadAxis : IInputType
     /// <inheritdoc/>
     public InputState GetState(GamepadDevice? gamepad)
     {
-        return gamepad != null ? gamepad.CreateInputState(axis, deadzone, modifierOperator, modifierKeys) : new();
+        return gamepad?.CreateInputState(axis, deadzone, modifierOperator, modifierKeys) ?? new();
     }
 
     /// <inheritdoc/>
     public InputState GetState(InputState prev, GamepadDevice? gamepad)
     {
-        return gamepad != null ? gamepad.CreateInputState(axis, prev, deadzone, modifierOperator, modifierKeys) : new();
+        return gamepad?.CreateInputState(axis, prev, deadzone, modifierOperator, modifierKeys) ?? new();
     }
 
     /// <inheritdoc/>
@@ -97,4 +97,43 @@ public class InputTypeGamepadAxis : IInputType
 
     /// <inheritdoc/>
     public IInputType Copy() => new InputTypeGamepadAxis(axis);
+    
+    private bool Equals(InputTypeGamepadAxis other)
+    {
+        return axis == other.axis && modifierKeys.Equals(other.modifierKeys) && modifierOperator == other.modifierOperator;
+    }
+    
+    /// <summary>
+    /// Determines whether the specified <see cref="IInputType"/> is equal to the current instance.
+    /// </summary>
+    /// <param name="other">The other <see cref="IInputType"/> to compare.</param>
+    /// <returns><c>true</c> if equal; otherwise, <c>false</c>.</returns>
+    public bool Equals(IInputType? other)
+    {
+        if (other is InputTypeGamepadAxis inputType)
+        {
+            return Equals(inputType);       
+        }
+    
+        return false;
+    }
+    
+    /// <summary>
+    /// Determines whether the specified object is equal to the current instance.
+    /// </summary>
+    /// <param name="obj">The object to compare.</param>
+    /// <returns><c>true</c> if equal; otherwise, <c>false</c>.</returns>
+    public override bool Equals(object? obj)
+    {
+        return ReferenceEquals(this, obj) || obj is InputTypeGamepadAxis other && Equals(other);
+    }
+    
+    /// <summary>
+    /// Returns a hash code for the current instance.
+    /// </summary>
+    /// <returns>A hash code for the current instance.</returns>
+    public override int GetHashCode()
+    {
+        return HashCode.Combine((int)axis, modifierKeys, (int)modifierOperator);
+    }
 }

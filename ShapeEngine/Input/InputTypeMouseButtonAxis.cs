@@ -6,7 +6,7 @@ namespace ShapeEngine.Input;
 /// Represents an input type for a mouse button axis (negative and positive buttons),
 /// supporting deadzone and modifier keys.
 /// </summary>
-public class InputTypeMouseButtonAxis : IInputType
+public sealed class InputTypeMouseButtonAxis : IInputType
 {
     private readonly ShapeMouseButton neg;
     private readonly ShapeMouseButton pos;
@@ -26,7 +26,7 @@ public class InputTypeMouseButtonAxis : IInputType
         this.neg = neg;
         this.pos = pos;
         this.deadzone = deadzone;
-        this.modifierKeys = Array.Empty<IModifierKey>();
+        this.modifierKeys = [];
         this.modifierOperator = ModifierKeyOperator.And;
     }
 
@@ -65,7 +65,7 @@ public class InputTypeMouseButtonAxis : IInputType
         this.pos = pos;
         this.deadzone = deadzone;
         this.modifierOperator = modifierOperator;
-        this.modifierKeys = new[]{ modifierKey };
+        this.modifierKeys = [modifierKey];
     }
 
     /// <inheritdoc/>
@@ -75,7 +75,7 @@ public class InputTypeMouseButtonAxis : IInputType
     public void SetDeadzone(float value) => deadzone = value;
 
     /// <inheritdoc/>
-    public virtual string GetName(bool shorthand = true)
+    public string GetName(bool shorthand = true)
     {
         StringBuilder sb = new();
         IModifierKey.GetModifierKeyNames(sb, modifierKeys, modifierOperator, shorthand);
@@ -106,5 +106,44 @@ public class InputTypeMouseButtonAxis : IInputType
 
     /// <inheritdoc/>
     public IInputType Copy() => new InputTypeMouseButtonAxis(neg, pos);
+    
+    private bool Equals(InputTypeMouseButtonAxis other)
+    {
+        return neg == other.neg && pos == other.pos &&  modifierKeys.Equals(other.modifierKeys) && modifierOperator == other.modifierOperator;
+    }
+    
+    /// <summary>
+    /// Determines whether the specified <see cref="IInputType"/> is equal to the current instance.
+    /// </summary>
+    /// <param name="other">The other <see cref="IInputType"/> to compare.</param>
+    /// <returns><c>true</c> if equal; otherwise, <c>false</c>.</returns>
+    public bool Equals(IInputType? other)
+    {
+        if (other is InputTypeMouseButtonAxis inputType)
+        {
+            return Equals(inputType);       
+        }
+    
+        return false;
+    }
+    
+    /// <summary>
+    /// Determines whether the specified object is equal to the current instance.
+    /// </summary>
+    /// <param name="obj">The object to compare.</param>
+    /// <returns><c>true</c> if equal; otherwise, <c>false</c>.</returns>
+    public override bool Equals(object? obj)
+    {
+        return ReferenceEquals(this, obj) || obj is InputTypeMouseButtonAxis other && Equals(other);
+    }
+    
+    /// <summary>
+    /// Returns a hash code for the current instance.
+    /// </summary>
+    /// <returns>A hash code for the current instance.</returns>
+    public override int GetHashCode()
+    {
+        return HashCode.Combine((int)neg, (int)pos,  modifierKeys, (int)modifierOperator);
+    }
 
 }

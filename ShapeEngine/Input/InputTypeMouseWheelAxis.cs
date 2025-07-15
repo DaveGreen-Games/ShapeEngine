@@ -6,7 +6,7 @@ namespace ShapeEngine.Input;
 /// <summary>
 /// Represents an input type for a mouse wheel axis, supporting deadzone and modifier keys.
 /// </summary>
-public class InputTypeMouseWheelAxis : IInputType
+public sealed class InputTypeMouseWheelAxis : IInputType
 {
     private readonly ShapeMouseWheelAxis axis;
     private float deadzone;
@@ -23,7 +23,7 @@ public class InputTypeMouseWheelAxis : IInputType
     {
         this.axis = axis;
         this.deadzone = deadzone;
-        this.modifierKeys = Array.Empty<IModifierKey>();
+        this.modifierKeys = [];
         this.modifierOperator = ModifierKeyOperator.And;
     }
 
@@ -58,7 +58,7 @@ public class InputTypeMouseWheelAxis : IInputType
         this.axis = axis;
         this.deadzone = deadzone;
         this.modifierOperator = modifierOperator;
-        this.modifierKeys = new[]{ modifierKey };
+        this.modifierKeys = [modifierKey];
     }
 
     /// <inheritdoc/>
@@ -71,7 +71,7 @@ public class InputTypeMouseWheelAxis : IInputType
     }
 
     /// <inheritdoc/>
-    public virtual string GetName(bool shorthand = true)
+    public string GetName(bool shorthand = true)
     {
         StringBuilder sb = new();
         IModifierKey.GetModifierKeyNames(sb, modifierKeys, modifierOperator, shorthand);
@@ -96,5 +96,44 @@ public class InputTypeMouseWheelAxis : IInputType
 
     /// <inheritdoc/>
     public IInputType Copy() => new InputTypeMouseWheelAxis(axis);
+    
+    private bool Equals(InputTypeMouseWheelAxis other)
+    {
+        return axis == other.axis && modifierKeys.Equals(other.modifierKeys) && modifierOperator == other.modifierOperator;
+    }
+    
+    /// <summary>
+    /// Determines whether the specified <see cref="IInputType"/> is equal to the current instance.
+    /// </summary>
+    /// <param name="other">The other <see cref="IInputType"/> to compare.</param>
+    /// <returns><c>true</c> if equal; otherwise, <c>false</c>.</returns>
+    public bool Equals(IInputType? other)
+    {
+        if (other is InputTypeMouseWheelAxis inputType)
+        {
+            return Equals(inputType);       
+        }
+    
+        return false;
+    }
+    
+    /// <summary>
+    /// Determines whether the specified object is equal to the current instance.
+    /// </summary>
+    /// <param name="obj">The object to compare.</param>
+    /// <returns><c>true</c> if equal; otherwise, <c>false</c>.</returns>
+    public override bool Equals(object? obj)
+    {
+        return ReferenceEquals(this, obj) || obj is InputTypeMouseWheelAxis other && Equals(other);
+    }
+    
+    /// <summary>
+    /// Returns a hash code for the current instance.
+    /// </summary>
+    /// <returns>A hash code for the current instance.</returns>
+    public override int GetHashCode()
+    {
+        return HashCode.Combine((int)axis, modifierKeys, (int)modifierOperator);
+    }
 
 }

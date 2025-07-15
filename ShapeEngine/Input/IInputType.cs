@@ -4,8 +4,9 @@ namespace ShapeEngine.Input;
 /// Represents an input type abstraction for various input devices (keyboard, mouse, gamepad).
 /// Provides methods for copying, deadzone management, state retrieval, and device identification.
 /// </summary>
-public interface IInputType
+public interface IInputType : IEquatable<IInputType>
 {
+    
     /// <summary>
     /// Creates a copy of this input type.
     /// </summary>

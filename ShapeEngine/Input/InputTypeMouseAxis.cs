@@ -23,7 +23,7 @@ public sealed class InputTypeMouseAxis : IInputType
     {
         this.axis = axis;
         this.deadzone = deadzone;
-        this.modifierKeys = Array.Empty<IModifierKey>();
+        this.modifierKeys = [];
         this.modifierOperator = ModifierKeyOperator.And;
     }
 
@@ -58,7 +58,7 @@ public sealed class InputTypeMouseAxis : IInputType
         this.axis = axis;
         this.deadzone = deadzone;
         this.modifierOperator = modifierOperator;
-        this.modifierKeys = new[]{ modifierKey };
+        this.modifierKeys = [modifierKey];
     }
 
     /// <inheritdoc/>
@@ -96,4 +96,43 @@ public sealed class InputTypeMouseAxis : IInputType
 
     /// <inheritdoc/>
     public IInputType Copy() => new InputTypeMouseAxis(axis);
+    
+    private bool Equals(InputTypeMouseAxis other)
+    {
+        return axis == other.axis && modifierKeys.Equals(other.modifierKeys) && modifierOperator == other.modifierOperator;
+    }
+    
+    /// <summary>
+    /// Determines whether the specified <see cref="IInputType"/> is equal to the current instance.
+    /// </summary>
+    /// <param name="other">The other <see cref="IInputType"/> to compare.</param>
+    /// <returns><c>true</c> if equal; otherwise, <c>false</c>.</returns>
+    public bool Equals(IInputType? other)
+    {
+        if (other is InputTypeMouseAxis inputType)
+        {
+            return Equals(inputType);       
+        }
+    
+        return false;
+    }
+    
+    /// <summary>
+    /// Determines whether the specified object is equal to the current instance.
+    /// </summary>
+    /// <param name="obj">The object to compare.</param>
+    /// <returns><c>true</c> if equal; otherwise, <c>false</c>.</returns>
+    public override bool Equals(object? obj)
+    {
+        return ReferenceEquals(this, obj) || obj is InputTypeMouseAxis other && Equals(other);
+    }
+    
+    /// <summary>
+    /// Returns a hash code for the current instance.
+    /// </summary>
+    /// <returns>A hash code for the current instance.</returns>
+    public override int GetHashCode()
+    {
+        return HashCode.Combine((int)axis, modifierKeys, (int)modifierOperator);
+    }
 }

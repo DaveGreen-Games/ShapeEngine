@@ -5,7 +5,7 @@ namespace ShapeEngine.Input;
 /// <summary>
 /// Represents an input type for a keyboard button axis (negative and positive buttons), supporting modifier keys.
 /// </summary>
-public class InputTypeKeyboardButtonAxis : IInputType
+public sealed class InputTypeKeyboardButtonAxis : IInputType
 {
     private readonly ShapeKeyboardButton neg;
     private readonly ShapeKeyboardButton pos;
@@ -52,14 +52,14 @@ public class InputTypeKeyboardButtonAxis : IInputType
         this.neg = neg;
         this.pos = pos;
         this.modifierOperator = modifierOperator;
-        this.modifierKeys = new[]{ modifierKey };
+        this.modifierKeys = [modifierKey];
     }
 
     /// <inheritdoc/>
     public IInputType Copy() => new InputTypeKeyboardButtonAxis(neg, pos);
 
     /// <inheritdoc/>
-    public virtual string GetName(bool shorthand = true)
+    public string GetName(bool shorthand = true)
     {
         StringBuilder sb = new();
         IModifierKey.GetModifierKeyNames(sb, modifierKeys, modifierOperator, shorthand);
@@ -92,4 +92,43 @@ public class InputTypeKeyboardButtonAxis : IInputType
 
     /// <inheritdoc/>
     public InputDeviceType GetInputDevice() => InputDeviceType.Keyboard;
+    
+    private bool Equals(InputTypeKeyboardButtonAxis other)
+    {
+        return neg == other.neg && pos == other.pos &&  modifierKeys.Equals(other.modifierKeys) && modifierOperator == other.modifierOperator;
+    }
+    
+    /// <summary>
+    /// Determines whether the specified <see cref="IInputType"/> is equal to the current instance.
+    /// </summary>
+    /// <param name="other">The other <see cref="IInputType"/> to compare.</param>
+    /// <returns><c>true</c> if equal; otherwise, <c>false</c>.</returns>
+    public bool Equals(IInputType? other)
+    {
+        if (other is InputTypeKeyboardButtonAxis inputType)
+        {
+            return Equals(inputType);       
+        }
+    
+        return false;
+    }
+    
+    /// <summary>
+    /// Determines whether the specified object is equal to the current instance.
+    /// </summary>
+    /// <param name="obj">The object to compare.</param>
+    /// <returns><c>true</c> if equal; otherwise, <c>false</c>.</returns>
+    public override bool Equals(object? obj)
+    {
+        return ReferenceEquals(this, obj) || obj is InputTypeKeyboardButtonAxis other && Equals(other);
+    }
+    
+    /// <summary>
+    /// Returns a hash code for the current instance.
+    /// </summary>
+    /// <returns>A hash code for the current instance.</returns>
+    public override int GetHashCode()
+    {
+        return HashCode.Combine((int)neg, (int)pos,  modifierKeys, (int)modifierOperator);
+    }
 }
