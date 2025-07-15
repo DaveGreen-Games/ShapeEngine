@@ -567,25 +567,25 @@ namespace Examples
 
             InputAction.UpdateActions(time.Delta, CurGamepad, inputActions);
 
-            var fullscreenState = InputActionFullscreen.Consume();
+            var fullscreenState = InputActionFullscreen.Consume(out _);
             if (fullscreenState is { Consumed: false, Pressed: true })
             {
                 GAMELOOP.Window.ToggleBorderlessFullscreen();
             }
 
-            var maximizeState = InputActionMaximize.Consume();
+            var maximizeState = InputActionMaximize.Consume(out _);
             if (maximizeState is { Consumed: false, Pressed: true })
             {
                 GAMELOOP.Window.ToggleMaximizeWindow();
             }
 
-            var nextMonitorState = InputActionNextMonitor.Consume();
+            var nextMonitorState = InputActionNextMonitor.Consume(out _);
             if (nextMonitorState is { Consumed: false, Pressed: true })
             {
                Window.NextMonitor();
             }
 
-            var screenModeState = GAMELOOP.InputActionCycleScreenMode.Consume();
+            var screenModeState = GAMELOOP.InputActionCycleScreenMode.Consume(out _);
             if (screenModeState is { Consumed: false, Pressed: true })
             {
                 NextGameTexture();
@@ -621,7 +621,7 @@ namespace Examples
 
             
             
-            var paletteState = GAMELOOP.InputActionCyclePalette.Consume();
+            var paletteState = GAMELOOP.InputActionCyclePalette.Consume(out _);
             if (paletteState is { Consumed: false, Pressed: true })
             {
                 Colors.NextColorscheme();
@@ -637,7 +637,7 @@ namespace Examples
             }
             if (ScreenShaders != null)
             {
-                var cycleShaders = InputActionCycleShaders.Consume();
+                var cycleShaders = InputActionCycleShaders.Consume(out _);
                 if (cycleShaders is { Consumed: false, Pressed: true })
                 {
                     var currentShader = ScreenShaders.Get(currentShaderID);
@@ -677,7 +677,7 @@ namespace Examples
         public void DrawFpsBox()
         {
             var fpsRect = UIRects.GetRect("top right top");
-            fpsLabel.Draw(fpsRect, new(1f, 0f), 1f);
+            fpsLabel.Draw(fpsRect, new(1f, 0f));
         }
 
         public int GetFontCount() { return fonts.Count; }

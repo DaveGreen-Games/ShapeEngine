@@ -93,7 +93,7 @@ namespace Examples.Scenes.ExampleScenes
         protected override bool GetPressedState()
         {
             if (!Selected) return false;
-            var acceptState = GAMELOOP.InputActionUIAccept.Consume();
+            var acceptState = GAMELOOP.InputActionUIAccept.Consume(out _);
             return acceptState is { Consumed: false, Pressed: true };
             
             // if (!Selected) return false;
@@ -103,7 +103,7 @@ namespace Examples.Scenes.ExampleScenes
         protected override bool GetMousePressedState()
         {
             if (!MouseInside) return false;
-            var acceptState = GAMELOOP.InputActionUIAcceptMouse.Consume();
+            var acceptState = GAMELOOP.InputActionUIAcceptMouse.Consume(out _);
             return acceptState is { Consumed: false, Pressed: true };
             
             // if (!MouseInside) return false;
@@ -112,10 +112,10 @@ namespace Examples.Scenes.ExampleScenes
 
         public override Direction GetNavigationDirection()
         {
-            var upState = GAMELOOP.InputActionUIUp.Consume();
-            var downState = GAMELOOP.InputActionUIDown.Consume();
-            var rightState = GAMELOOP.InputActionUIRight.Consume();
-            var leftState = GAMELOOP.InputActionUILeft.Consume();
+            var upState = GAMELOOP.InputActionUIUp.Consume(out _);
+            var downState = GAMELOOP.InputActionUIDown.Consume(out _);
+            var rightState = GAMELOOP.InputActionUIRight.Consume(out _);
+            var leftState = GAMELOOP.InputActionUILeft.Consume(out _);
             
             if (inputCooldownTimer > 0f)
             {
