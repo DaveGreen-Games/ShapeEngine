@@ -113,6 +113,16 @@ public partial class InputAction
         
     }
     private readonly List<IInputType> inputs = new();
+    
+    /// <summary>
+    /// Indicates whether the input action is toggled. Changes state on each press.
+    /// </summary>
+    public bool Toggle { get; private set; }
+    
+    /// <summary>
+    /// Resets the toggle state to false.
+    /// </summary>
+    public void ResetToggle() => Toggle = false;
     #endregion
 
     #region Constructors
@@ -289,6 +299,8 @@ public partial class InputAction
         //Calculate New State
         current = new(current, holdF, multiTapF);
         State = new(State, current);
+        
+        if(State.Pressed) Toggle = !Toggle;
         
         //Reset Multitap Count On Successful Multitap
         if (multiTapF >= 1f) multiTapCount = 0;
