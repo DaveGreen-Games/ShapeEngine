@@ -157,52 +157,7 @@ public static class ShapeInput
         ActiveKeyboardDevice.ApplyInputDeviceChangeSettings(settings);
         ActiveGamepadDeviceManager.ApplyInputDeviceChangeSettings(settings);
     }
-    
-    /// <summary>
-    /// Gets the input state for a keyboard button.
-    /// </summary>
-    public static InputState GetInputState(this ShapeKeyboardButton button) => ActiveKeyboardDevice.GetButtonState(button);
-    /// <summary>
-    /// Gets the input state for a mouse button.
-    /// </summary>
-    public static InputState GetInputState(this ShapeMouseButton button) => ActiveMouseDevice.GetButtonState(button);
-    /// <summary>
-    /// Gets the input state for a mouse axis.
-    /// </summary>
-    public static InputState GetInputState(this ShapeMouseAxis axis) => ActiveMouseDevice.GetAxisState(axis);
-    /// <summary>
-    /// Gets the input state for a mouse wheel axis.
-    /// </summary>
-    public static InputState GetInputState(this ShapeMouseWheelAxis axis) => ActiveMouseDevice.GetWheelAxisState(axis);
-    /// <summary>
-    /// Gets the input state for a gamepad button on a specific gamepad.
-    /// </summary>
-    /// <param name="button">The gamepad button.</param>
-    /// <param name="gamepadIndex">The gamepad index.</param>
-    /// <returns>The input state for the button.</returns>
-    public static InputState GetInputState(this ShapeGamepadButton button, int gamepadIndex)
-    {
-        var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
-
-        if (gamepad == null) return new();
-
-        return gamepad.GetButtonState(button);
-    }
-    /// <summary>
-    /// Gets the input state for a gamepad axis on a specific gamepad.
-    /// </summary>
-    /// <param name="axis">The gamepad axis.</param>
-    /// <param name="gamepadIndex">The gamepad index.</param>
-    /// <returns>The input state for the axis.</returns>
-    public static InputState GetInputState(this ShapeGamepadAxis axis, int gamepadIndex)
-    {
-        var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
-
-        if (gamepad == null) return new();
-
-        return gamepad.GetAxisState(axis);
-    }
-
+   
     /// <summary>
     /// Updates all input devices and checks for input device changes.
     /// </summary>
@@ -258,7 +213,199 @@ public static class ShapeInput
             }
         }
     }
+    
+    #region Input State Methods
+    
+    #region Get InputState Methods
+    /// <summary>
+    /// Gets the input state for a keyboard button.
+    /// </summary>
+    public static InputState GetInputState(this ShapeKeyboardButton button) => ActiveKeyboardDevice.GetButtonState(button);
+    /// <summary>
+    /// Gets the input state for a mouse button.
+    /// </summary>
+    public static InputState GetInputState(this ShapeMouseButton button) => ActiveMouseDevice.GetButtonState(button);
+    /// <summary>
+    /// Gets the input state for a mouse axis.
+    /// </summary>
+    public static InputState GetInputState(this ShapeMouseAxis axis) => ActiveMouseDevice.GetAxisState(axis);
+    /// <summary>
+    /// Gets the input state for a mouse wheel axis.
+    /// </summary>
+    public static InputState GetInputState(this ShapeMouseWheelAxis axis) => ActiveMouseDevice.GetWheelAxisState(axis);
+    /// <summary>
+    /// Gets the input state for a gamepad button on a specific gamepad.
+    /// </summary>
+    /// <param name="button">The gamepad button.</param>
+    /// <param name="gamepadIndex">The gamepad index.</param>
+    /// <returns>The input state for the button.</returns>
+    public static InputState GetInputState(this ShapeGamepadButton button, int gamepadIndex)
+    {
+        var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
 
+        return gamepad?.GetButtonState(button) ?? new();
+    }
+    /// <summary>
+    /// Gets the input state for a gamepad axis on a specific gamepad.
+    /// </summary>
+    /// <param name="axis">The gamepad axis.</param>
+    /// <param name="gamepadIndex">The gamepad index.</param>
+    /// <returns>The input state for the axis.</returns>
+    public static InputState GetInputState(this ShapeGamepadAxis axis, int gamepadIndex)
+    {
+        var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
+
+        return gamepad?.GetAxisState(axis) ?? new();
+    }
+    #endregion
+
+    #region Consume InputState Methods
+    
+    /// <summary>
+    /// Consumes the input state for a keyboard button.
+    /// </summary>
+    /// <param name="button">The keyboard button to consume.</param>
+    /// <param name="valid">True if the state was valid and consumed; otherwise, false.</param>
+    /// <returns>The consumed input state.</returns>
+    public static InputState ConsumeInputState(this ShapeKeyboardButton button, out bool valid) => ActiveKeyboardDevice.ConsumeButtonState(button, out valid);
+
+    /// <summary>
+    /// Consumes the input state for a mouse button.
+    /// </summary>
+    /// <param name="button">The mouse button to consume.</param>
+    /// <param name="valid">True if the state was valid and consumed; otherwise, false.</param>
+    /// <returns>The consumed input state.</returns>
+    public static InputState ConsumeInputState(this ShapeMouseButton button, out bool valid) => ActiveMouseDevice.ConsumeButtonState(button, out valid);
+
+    /// <summary>
+    /// Consumes the input state for a mouse axis.
+    /// </summary>
+    /// <param name="axis">The mouse axis to consume.</param>
+    /// <param name="valid">True if the state was valid and consumed; otherwise, false.</param>
+    /// <returns>The consumed input state.</returns>
+    public static InputState ConsumeInputState(this ShapeMouseAxis axis, out bool valid) => ActiveMouseDevice.ConsumeAxisState(axis, out valid);
+
+    /// <summary>
+    /// Consumes the input state for a mouse wheel axis.
+    /// </summary>
+    /// <param name="axis">The mouse wheel axis to consume.</param>
+    /// <param name="valid">True if the state was valid and consumed; otherwise, false.</param>
+    /// <returns>The consumed input state.</returns>
+    public static InputState ConsumeInputState(this ShapeMouseWheelAxis axis, out bool valid) => ActiveMouseDevice.ConsumeWheelAxisState(axis, out valid);
+
+    /// <summary>
+    /// Consumes the input state for a gamepad button on a specific gamepad.
+    /// </summary>
+    /// <param name="button">The gamepad button to consume.</param>
+    /// <param name="gamepadIndex">The index of the gamepad.</param>
+    /// <param name="valid">True if the state was valid and consumed; otherwise, false.</param>
+    /// <returns>The consumed input state.</returns>
+    public static InputState ConsumeInputState(this ShapeGamepadButton button, int gamepadIndex, out bool valid)
+    {
+        var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
+        valid = false;
+        return gamepad == null ? new() : gamepad.ConsumeButtonState(button, out valid);
+    }
+
+    /// <summary>
+    /// Consumes the input state for a gamepad axis on a specific gamepad.
+    /// </summary>
+    /// <param name="axis">The gamepad axis to consume.</param>
+    /// <param name="gamepadIndex">The index of the gamepad.</param>
+    /// <param name="valid">True if the state was valid and consumed; otherwise, false.</param>
+    /// <returns>The consumed input state.</returns>
+    public static InputState ConsumeInputState(this ShapeGamepadAxis axis, int gamepadIndex, out bool valid)
+    {
+        var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
+        valid = false;
+        return gamepad == null ? new() : gamepad.ConsumeAxisState(axis, out valid);
+    }
+    #endregion
+    
+    #region Create InputState Methods
+
+    #region Gamepad
+    public static InputState CreateInputState(ShapeGamepadButton button, int gamepadIndex, float axisDeadzone, float triggerDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys) => ActiveGamepadDeviceManager.GetGamepad(gamepadIndex)?.CreateInputState(button, axisDeadzone, triggerDeadzone, modifierOperator, modifierKeys) ?? new();
+
+    public static InputState CreateInputState(ShapeGamepadButton button, int gamepadIndex, InputState previousState, float axisDeadzone, float triggerDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys) => ActiveGamepadDeviceManager.GetGamepad(gamepadIndex)?.CreateInputState(button, previousState, axisDeadzone, triggerDeadzone, modifierOperator, modifierKeys) ?? new();
+
+    public static InputState CreateInputState(ShapeGamepadButton button, int gamepadIndex, float axisDeadzone = 0.1f, float triggerDeadzone = 0.1f) => ActiveGamepadDeviceManager.GetGamepad(gamepadIndex)?.CreateInputState(button, axisDeadzone, triggerDeadzone) ?? new();
+
+    public static InputState CreateInputState(ShapeGamepadButton button, int gamepadIndex, InputState previousState, float axisDeadzone = 0.1f, float triggerDeadzone = 0.1f) => ActiveGamepadDeviceManager.GetGamepad(gamepadIndex)?.CreateInputState(button, previousState, axisDeadzone, triggerDeadzone) ?? new();
+
+
+    public static InputState CreateInputState(ShapeGamepadAxis axis, int gamepadIndex, float axisDeadzone, float triggerDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys) => ActiveGamepadDeviceManager.GetGamepad(gamepadIndex)?.CreateInputState(axis, axisDeadzone, triggerDeadzone, modifierOperator, modifierKeys) ?? new();
+
+    public static InputState CreateInputState(ShapeGamepadAxis axis, int gamepadIndex, InputState previousState, float axisDeadzone, float triggerDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys) => ActiveGamepadDeviceManager.GetGamepad(gamepadIndex)?.CreateInputState(axis, previousState, axisDeadzone, triggerDeadzone, modifierOperator, modifierKeys) ?? new();
+
+    public static InputState CreateInputState(ShapeGamepadAxis axis, int gamepadIndex, float axisDeadzone = 0.1f, float triggerDeadzone = 0.1f) => ActiveGamepadDeviceManager.GetGamepad(gamepadIndex)?.CreateInputState(axis, axisDeadzone, triggerDeadzone) ?? new();
+
+    public static InputState CreateInputState(ShapeGamepadAxis axis, int gamepadIndex, InputState previousState, float axisDeadzone = 0.1f, float triggerDeadzone = 0.1f) => ActiveGamepadDeviceManager.GetGamepad(gamepadIndex)?.CreateInputState(axis, previousState, axisDeadzone, triggerDeadzone) ?? new();
+
+    public static InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, int gamepadIndex, float axisDeadzone, float triggerDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys) => ActiveGamepadDeviceManager.GetGamepad(gamepadIndex)?.CreateInputState(neg, pos, axisDeadzone, triggerDeadzone, modifierOperator, modifierKeys) ?? new();
+
+    public static InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, int gamepadIndex, InputState previousState, float axisDeadzone, float triggerDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys) => ActiveGamepadDeviceManager.GetGamepad(gamepadIndex)?.CreateInputState(neg, pos, previousState, axisDeadzone, triggerDeadzone, modifierOperator, modifierKeys) ?? new();
+
+    public static InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, int gamepadIndex, float axisDeadzone = 0.1f, float triggerDeadzone = 0.1f) => ActiveGamepadDeviceManager.GetGamepad(gamepadIndex)?.CreateInputState(neg, pos, axisDeadzone, triggerDeadzone) ?? new();
+
+    public static InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, int gamepadIndex, InputState previousState, float axisDeadzone = 0.1f, float triggerDeadzone = 0.1f) => ActiveGamepadDeviceManager.GetGamepad(gamepadIndex)?.CreateInputState(neg, pos, previousState, axisDeadzone, triggerDeadzone) ?? new();
+    #endregion
+
+    #region Keyboard
+    public static InputState CreateInputState(ShapeKeyboardButton button) => ActiveKeyboardDevice.CreateInputState(button);
+
+    public static InputState CreateInputState(ShapeKeyboardButton button, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys) => ActiveKeyboardDevice.CreateInputState(button, modifierOperator, modifierKeys);
+
+    public static InputState CreateInputState(ShapeKeyboardButton button, InputState previousState, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys) => ActiveKeyboardDevice.CreateInputState(button, previousState, modifierOperator, modifierKeys);
+
+    public static InputState CreateInputState(ShapeKeyboardButton button, InputState previousState) => ActiveKeyboardDevice.CreateInputState(button, previousState);
+
+    public static InputState CreateInputState(ShapeKeyboardButton neg, ShapeKeyboardButton pos, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys) => ActiveKeyboardDevice.CreateInputState(neg, pos, modifierOperator, modifierKeys);
+
+    public static InputState CreateInputState(ShapeKeyboardButton neg, ShapeKeyboardButton pos, InputState previousState, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys) => ActiveKeyboardDevice.CreateInputState(neg, pos, previousState, modifierOperator, modifierKeys);
+
+    public static InputState CreateInputState(ShapeKeyboardButton neg, ShapeKeyboardButton pos) => ActiveKeyboardDevice.CreateInputState(neg, pos);
+
+    public static InputState CreateInputState(ShapeKeyboardButton neg, ShapeKeyboardButton pos, InputState previousState) => ActiveKeyboardDevice.CreateInputState(neg, pos, previousState);
+    #endregion
+
+    #region Mouse
+    public static InputState CreateInputState(ShapeMouseAxis axis, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys) => ActiveMouseDevice.CreateInputState(axis, deadzone, modifierOperator, modifierKeys);
+
+    public static InputState CreateInputState(ShapeMouseAxis axis, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys) => ActiveMouseDevice.CreateInputState(axis, previousState, deadzone, modifierOperator, modifierKeys);
+
+    public static InputState CreateInputState(ShapeMouseAxis axis, float deadzone = 0.5f) => ActiveMouseDevice.CreateInputState(axis, deadzone);
+
+    public static InputState CreateInputState(ShapeMouseAxis axis, InputState previousState, float deadzone = 0.5f) => ActiveMouseDevice.CreateInputState(axis, previousState, deadzone);
+
+    public static InputState CreateInputState(ShapeMouseWheelAxis axis, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys) => ActiveMouseDevice.CreateInputState(axis, deadzone, modifierOperator, modifierKeys);
+
+    public static InputState CreateInputState(ShapeMouseWheelAxis axis, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys) => ActiveMouseDevice.CreateInputState(axis, previousState, deadzone, modifierOperator, modifierKeys);
+
+    public static InputState CreateInputState(ShapeMouseWheelAxis axis, float deadzone = 0.2f) => ActiveMouseDevice.CreateInputState(axis, deadzone);
+
+    public static InputState CreateInputState(ShapeMouseWheelAxis axis, InputState previousState, float deadzone = 0.2f) => ActiveMouseDevice.CreateInputState(axis, previousState, deadzone);
+
+    public static InputState CreateInputState(ShapeMouseButton button, float mouseMoveDeadzone, float mouseWheelDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys) => ActiveMouseDevice.CreateInputState(button, mouseMoveDeadzone, mouseWheelDeadzone, modifierOperator, modifierKeys);
+
+    public static InputState CreateInputState(ShapeMouseButton button, InputState previousState, float mouseMoveDeadzone, float mouseWheelDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys) => ActiveMouseDevice.CreateInputState(button, previousState, mouseMoveDeadzone, mouseWheelDeadzone, modifierOperator, modifierKeys);
+
+    public static InputState CreateInputState(ShapeMouseButton button, float mouseMoveDeadzone = 0f, float mouseWheelDeadzone = 0f) => ActiveMouseDevice.CreateInputState(button, mouseMoveDeadzone, mouseWheelDeadzone);
+
+    public static InputState CreateInputState(ShapeMouseButton button, InputState previousState, float mouseMoveDeadzone = 0f, float mouseWheelDeadzone = 0f) => ActiveMouseDevice.CreateInputState(button, previousState, mouseMoveDeadzone, mouseWheelDeadzone);
+
+    public static InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, float mouseMoveDeadzone, float mouseWheelDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys) => ActiveMouseDevice.CreateInputState(neg, pos, mouseMoveDeadzone, mouseWheelDeadzone, modifierOperator, modifierKeys);
+
+    public static InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, InputState previousState, float mouseMoveDeadzone, float mouseWheelDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys) => ActiveMouseDevice.CreateInputState(neg, pos, previousState, mouseMoveDeadzone, mouseWheelDeadzone, modifierOperator, modifierKeys);
+
+    public static InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, float mouseMoveDeadzone = 0f, float mouseWheelDeadzone = 0f) => ActiveMouseDevice.CreateInputState(neg, pos, mouseMoveDeadzone, mouseWheelDeadzone);
+    public static InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, InputState previousState, float mouseMoveDeadzone = 0f, float mouseWheelDeadzone = 0f) => ActiveMouseDevice.CreateInputState(neg, pos, previousState, mouseMoveDeadzone, mouseWheelDeadzone);
+    #endregion
+    
+    #endregion
+    
+    #endregion
+    
     #region InputDeviceType
 
     /// <summary>
@@ -297,46 +444,6 @@ public static class ShapeInput
             deviceType == InputDeviceType.Keyboard ? "Keyboard" : "Mouse";
     }
     
-    // /// <summary>
-    // /// Checks for input device changes based on recent device usage and updates <see cref="CurrentInputDeviceType"/>.
-    // /// Triggers <see cref="OnInputDeviceChanged"/> if the device type changes.
-    // /// </summary>
-    // private static void CheckInputDevice()
-    // {
-    //     var prevInputDevice = CurrentInputDeviceType;
-    //     if (CurrentInputDeviceType == InputDeviceType.Keyboard)
-    //     {
-    //         if (MouseDevice.WasUsed()) CurrentInputDeviceType = InputDeviceType.Mouse;
-    //         else
-    //         {
-    //             if (GamepadDeviceManager.LastUsedGamepads.Count > 0)
-    //             {
-    //                 CurrentInputDeviceType = InputDeviceType.Gamepad;
-    //             }
-    //         }
-    //     }
-    //     else if (CurrentInputDeviceType == InputDeviceType.Mouse)
-    //     {
-    //         if (KeyboardDevice.WasUsed()) CurrentInputDeviceType = InputDeviceType.Keyboard;
-    //         else
-    //         {
-    //             if (GamepadDeviceManager.LastUsedGamepads.Count > 0)
-    //             {
-    //                 CurrentInputDeviceType = InputDeviceType.Gamepad;
-    //             }
-    //         }
-    //     }
-    //     else //gamepad
-    //     {
-    //         if (MouseDevice.WasUsed()) CurrentInputDeviceType = InputDeviceType.Mouse;
-    //         else if (KeyboardDevice.WasUsed()) CurrentInputDeviceType = InputDeviceType.Keyboard;
-    //     }
-    //
-    //     if (CurrentInputDeviceType != prevInputDevice)
-    //     {
-    //         OnInputDeviceChanged?.Invoke(prevInputDevice, CurrentInputDeviceType);
-    //     }
-    // }
     #endregion
 
 }
