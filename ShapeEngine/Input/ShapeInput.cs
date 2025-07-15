@@ -1,13 +1,6 @@
 
 namespace ShapeEngine.Input;
 
-//Q: should this system have lock / access tag system as well?
-// Should it have a blacklist system for input types? Update could reset the blacklist every frame and the CreateInputState methods register the used input type and check if it already exists?
-    
-// !!!: Implement a InputType state class ?
-// Has list of InputTypes and also saves prev state to create new state? Is the same system as InputAction, just way simpler...
-// this is the same as InputAction.... therefore redundant and not necessary.
-
 /// <summary>
 /// Provides static access to input devices (keyboard, mouse, gamepads) and input state queries.
 /// Handles device switching, input state retrieval, and device change events.

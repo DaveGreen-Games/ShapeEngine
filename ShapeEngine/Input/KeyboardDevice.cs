@@ -51,7 +51,7 @@ public sealed class KeyboardDevice : InputDevice
     public readonly List<ShapeKeyboardButton> HeldDownButtons = [];
     
     private readonly Dictionary<ShapeKeyboardButton, InputState> buttonStates = new(AllShapeKeyboardButtons.Length);
-
+    
     /// <summary>
     /// Event triggered when a keyboard button is pressed.
     /// </summary>
@@ -652,3 +652,49 @@ public sealed class KeyboardDevice : InputDevice
 
     #endregion
 }
+
+/*
+    //This system is used to detect if a certain combination of keys and possibly a modifier key was already used this frame
+   private sealed record KeyboardButtonBinding(ShapeKeyboardButton button, ModifierKeyOperator? modifierOperator = null, IModifierKey? modifierKey = null)
+   {
+       private readonly ShapeKeyboardButton button = button;
+       private readonly ModifierKeyOperator? modifierOperator = modifierOperator;
+       private readonly IModifierKey? modifierKey = modifierKey;
+       
+       public bool Equals(KeyboardButtonBinding? other)
+       {
+           if(other == null) return false;
+           return button == other.button &&
+                  modifierOperator == other.modifierOperator &&
+                  modifierKey == other.modifierKey;
+       }
+
+       public override int GetHashCode()
+       {
+           return HashCode.Combine((int)button, modifierOperator, modifierKey);
+       }
+   }
+   private sealed record KeyboardButtonAxisBinding(ShapeKeyboardButton neg, ShapeKeyboardButton pos, ModifierKeyOperator? modifierOperator = null, IModifierKey? modifierKey = null)
+   {
+       private readonly ShapeKeyboardButton neg = neg;
+       private readonly ShapeKeyboardButton pos = pos;
+       private readonly ModifierKeyOperator? modifierOperator = modifierOperator;
+       private readonly IModifierKey? modifierKey = modifierKey;
+
+       public bool Equals(KeyboardButtonAxisBinding? other)
+       {
+           if (other == null) return false;
+           return neg == other.neg &&
+                  pos == other.pos &&
+                  modifierOperator == other.modifierOperator &&
+                  modifierKey == other.modifierKey;
+       }
+
+       public override int GetHashCode()
+       {
+           return HashCode.Combine((int)neg, (int)pos, modifierOperator, modifierKey);
+       }
+   }
+   private readonly HashSet<KeyboardButtonBinding> buttonBindings = [];
+   private readonly HashSet<KeyboardButtonAxisBinding> buttonAxisBindings = [];
+*/
