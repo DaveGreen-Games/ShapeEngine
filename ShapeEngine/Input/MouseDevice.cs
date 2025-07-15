@@ -497,6 +497,7 @@ public sealed class MouseDevice : InputDevice
     {
         return new(previousState, CreateInputState(axis, deadzone));
     }
+    
     #endregion
 
     #region Wheel Axis
@@ -788,6 +789,7 @@ public sealed class MouseDevice : InputDevice
     {
         return new(previousState, CreateInputState(button, deadzone, modifierOperator, modifierKeys));
     }
+    
     #endregion
 
     #region ButtonAxis

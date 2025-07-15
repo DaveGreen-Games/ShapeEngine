@@ -192,7 +192,7 @@ public sealed class KeyboardDevice : InputDevice
     /// </summary>
     /// <param name="button">The keyboard button to consume.</param>
     /// <param name="valid">True if the state was not already consumed; otherwise, false.</param>
-    public InputState? ConsumeButtonState(ShapeKeyboardButton button, out bool valid)
+    public InputState ConsumeButtonState(ShapeKeyboardButton button, out bool valid)
     {
         valid = false;
         var state = buttonStates[button];
