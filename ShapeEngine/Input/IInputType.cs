@@ -1,3 +1,5 @@
+
+
 namespace ShapeEngine.Input;
 
 /// <summary>
@@ -53,48 +55,4 @@ public interface IInputType : IEquatable<IInputType>
     /// <returns>The <see cref="InputDeviceType"/>.</returns>
     public InputDeviceType GetInputDevice();
 
-    /// <summary>
-    /// Creates an input type for a keyboard button.
-    /// </summary>
-    public static IInputType Create(ShapeKeyboardButton button) => new InputTypeKeyboardButton(button);
-
-    /// <summary>
-    /// Creates an input type for a mouse button.
-    /// </summary>
-    public static IInputType Create(ShapeMouseButton button) => new InputTypeMouseButton(button);
-
-    /// <summary>
-    /// Creates an input type for a gamepad button.
-    /// </summary>
-    public static IInputType Create(ShapeGamepadButton button, float deadzone = 0.2f) => new InputTypeGamepadButton(button, deadzone);
-
-    /// <summary>
-    /// Creates an input type for a keyboard button axis (negative and positive).
-    /// </summary>
-    public static IInputType Create(ShapeKeyboardButton neg, ShapeKeyboardButton pos) => new InputTypeKeyboardButtonAxis(neg, pos);
-
-    /// <summary>
-    /// Creates an input type for a mouse button axis (negative and positive).
-    /// </summary>
-    public static IInputType Create(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = 0.2f) => new InputTypeMouseButtonAxis(neg, pos, deadzone);
-
-    /// <summary>
-    /// Creates an input type for a gamepad button axis (negative and positive).
-    /// </summary>
-    public static IInputType Create(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = 0.2f) => new InputTypeGamepadButtonAxis(neg, pos, deadzone);
-
-    /// <summary>
-    /// Creates an input type for a mouse wheel axis.
-    /// </summary>
-    public static IInputType Create(ShapeMouseWheelAxis mouseWheelAxis, float deadzone = 0.2f) => new InputTypeMouseWheelAxis(mouseWheelAxis, deadzone);
-
-    /// <summary>
-    /// Creates an input type for a mouse axis.
-    /// </summary>
-    public static IInputType Create(ShapeMouseAxis mouseAxis, float deadzone = 0.2f) => new InputTypeMouseAxis(mouseAxis, deadzone);
-
-    /// <summary>
-    /// Creates an input type for a gamepad axis.
-    /// </summary>
-    public static IInputType Create(ShapeGamepadAxis gamepadAxis, float deadzone = 0.2f) => new InputTypeGamepadAxis(gamepadAxis, deadzone);
 }

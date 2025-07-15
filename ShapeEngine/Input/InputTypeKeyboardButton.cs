@@ -49,6 +49,7 @@ public sealed class InputTypeKeyboardButton : IInputType
         this.modifierKeys = [modifierKey];
     }
 
+    
     /// <inheritdoc/>
     public float GetDeadzone() => 0f;
 

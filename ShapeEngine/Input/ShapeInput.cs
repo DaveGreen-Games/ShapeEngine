@@ -359,4 +359,142 @@ public static class ShapeInput
     
     #endregion
 
+    #region Input Type Factory
+
+    #region Keyboard
+    /// <summary>
+    /// Creates an input type for a keyboard button.
+    /// </summary>
+    public static IInputType CreateInputType(this ShapeKeyboardButton button, IModifierKey? modifierKey = null, ModifierKeyOperator modifierKeyOperator = ModifierKeyOperator.And)
+    {
+        return modifierKey == null ? new InputTypeKeyboardButton(button) : new InputTypeKeyboardButton(button, modifierKeyOperator, modifierKey);
+    }
+    /// <summary>
+    /// Creates an input type for a keyboard button.
+    /// </summary>
+    public static IInputType CreateInputType(this ShapeKeyboardButton button,  ModifierKeyOperator modifierKeyOperator, params IModifierKey[] modifierKeys)
+    {
+        return  new InputTypeKeyboardButton(button, modifierKeyOperator, modifierKeys);
+    }
+    /// <summary>
+    /// Creates an input type for a keyboard button axis (negative and positive).
+    /// </summary>
+    public static IInputType CreateInputType(this ShapeKeyboardButton neg, ShapeKeyboardButton pos, IModifierKey? modifierKey = null, ModifierKeyOperator modifierKeyOperator = ModifierKeyOperator.And)
+    {
+        return modifierKey == null ? new InputTypeKeyboardButtonAxis(neg, pos) : new InputTypeKeyboardButtonAxis(neg, pos,  modifierKeyOperator, modifierKey);
+    }
+    /// <summary>
+    /// Creates an input type for a keyboard button axis (negative and positive).
+    /// </summary>
+    public static IInputType CreateInputType(this ShapeKeyboardButton neg, ShapeKeyboardButton pos, ModifierKeyOperator modifierKeyOperator, params IModifierKey[] modifierKeys)
+    {
+        return new InputTypeKeyboardButtonAxis(neg, pos,  modifierKeyOperator, modifierKeys);
+    }
+    #endregion
+    
+    #region Mouse
+    /// <summary>
+    /// Creates an input type for a mouse button.
+    /// </summary>
+    public static IInputType CreateInputType(this ShapeMouseButton button, float deadzone = 0.2f, IModifierKey? modifierKey = null, ModifierKeyOperator modifierKeyOperator = ModifierKeyOperator.And)
+    {
+        return modifierKey == null ? new InputTypeMouseButton(button, deadzone) : new InputTypeMouseButton(button, deadzone,  modifierKeyOperator, modifierKey);
+    }
+    /// <summary>
+    /// Creates an input type for a mouse button.
+    /// </summary>
+    public static IInputType CreateInputType(this ShapeMouseButton button, float deadzone,  ModifierKeyOperator modifierKeyOperator, params IModifierKey[] modifierKeys)
+    {
+        return  new InputTypeMouseButton(button, deadzone, modifierKeyOperator, modifierKeys);
+    }
+    /// <summary>
+    /// Creates an input type for a mouse button axis (negative and positive).
+    /// </summary>
+    public static IInputType CreateInputType(this ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = 0.2f, IModifierKey? modifierKey = null, ModifierKeyOperator modifierKeyOperator = ModifierKeyOperator.And)
+    {
+        return modifierKey == null ? new InputTypeMouseButtonAxis(neg, pos, deadzone) : new InputTypeMouseButtonAxis(neg, pos, deadzone,  modifierKeyOperator, modifierKey);
+    }
+    /// <summary>
+    /// Creates an input type for a mouse button axis (negative and positive).
+    /// </summary>
+    public static IInputType CreateInputType(this ShapeMouseButton neg, ShapeMouseButton pos, float deadzone, ModifierKeyOperator modifierKeyOperator, params IModifierKey[] modifierKeys)
+    {
+        return new InputTypeMouseButtonAxis(neg, pos, deadzone, modifierKeyOperator, modifierKeys);
+    }
+    /// <summary>
+    /// Creates an input type for a mouse wheel axis.
+    /// </summary>
+    public static IInputType CreateInputType(this ShapeMouseWheelAxis axis, float deadzone = 0.2f, IModifierKey? modifierKey = null, ModifierKeyOperator modifierKeyOperator = ModifierKeyOperator.And)
+    {
+        return modifierKey == null ? new InputTypeMouseWheelAxis(axis, deadzone) : new InputTypeMouseWheelAxis(axis, deadzone,  modifierKeyOperator, modifierKey);
+    }
+    /// <summary>
+    /// Creates an input type for a mouse axis.
+    /// </summary>
+    public static IInputType CreateInputType(this ShapeMouseAxis axis, float deadzone = 0.2f, IModifierKey? modifierKey = null, ModifierKeyOperator modifierKeyOperator = ModifierKeyOperator.And)
+    {
+        return modifierKey == null ? new InputTypeMouseAxis(axis, deadzone) : new InputTypeMouseAxis(axis, deadzone,  modifierKeyOperator, modifierKey);
+    }
+    /// <summary>
+    /// Creates an input type for a mouse wheel axis.
+    /// </summary>
+    public static IInputType CreateInputType(this ShapeMouseWheelAxis axis, float deadzone, ModifierKeyOperator modifierKeyOperator, params IModifierKey[] modifierKeys)
+    {
+        return new InputTypeMouseWheelAxis(axis, deadzone,  modifierKeyOperator, modifierKeys);
+    }
+    /// <summary>
+    /// Creates an input type for a mouse axis.
+    /// </summary>
+    public static IInputType CreateInputType(this ShapeMouseAxis axis, float deadzone, ModifierKeyOperator modifierKeyOperator, params IModifierKey[] modifierKeys)
+    {
+        return new InputTypeMouseAxis(axis, deadzone,  modifierKeyOperator, modifierKeys);
+    }
+    #endregion
+    
+    #region Gamepad
+    /// <summary>
+    /// Creates an input type for a gamepad button.
+    /// </summary>
+    public static IInputType CreateInputType(this ShapeGamepadButton button, float deadzone = 0.2f, IModifierKey? modifierKey = null, ModifierKeyOperator modifierKeyOperator = ModifierKeyOperator.And)
+    {
+        return modifierKey == null ? new InputTypeGamepadButton(button, deadzone) : new InputTypeGamepadButton(button, deadzone,  modifierKeyOperator, modifierKey);
+    }
+    /// <summary>
+    /// Creates an input type for a gamepad button.
+    /// </summary>
+    public static IInputType CreateInputType(this ShapeGamepadButton button, float deadzone,  ModifierKeyOperator modifierKeyOperator, params IModifierKey[] modifierKeys)
+    {
+        return  new InputTypeGamepadButton(button, deadzone, modifierKeyOperator, modifierKeys);
+    }
+    /// <summary>
+    /// Creates an input type for a gamepad button axis (negative and positive).
+    /// </summary>
+    public static IInputType CreateInputType(this ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = 0.2f, IModifierKey? modifierKey = null, ModifierKeyOperator modifierKeyOperator = ModifierKeyOperator.And)
+    {
+        return modifierKey == null ? new InputTypeGamepadButtonAxis(neg, pos, deadzone) : new InputTypeGamepadButtonAxis(neg, pos, deadzone,  modifierKeyOperator, modifierKey);
+    }
+    /// <summary>
+    /// Creates an input type for a gamepad button axis (negative and positive).
+    /// </summary>
+    public static IInputType CreateInputType(this ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone, ModifierKeyOperator modifierKeyOperator, params IModifierKey[] modifierKeys)
+    {
+        return new InputTypeGamepadButtonAxis(neg, pos, deadzone, modifierKeyOperator, modifierKeys);
+    }
+    /// <summary>
+    /// Creates an input type for a gamepad axis.
+    /// </summary>
+    public static IInputType CreateInputType(this ShapeGamepadAxis axis, float deadzone = 0.2f, IModifierKey? modifierKey = null, ModifierKeyOperator modifierKeyOperator = ModifierKeyOperator.And)
+    {
+        return modifierKey == null ? new InputTypeGamepadAxis(axis, deadzone) : new InputTypeGamepadAxis(axis, deadzone,  modifierKeyOperator, modifierKey);
+    }
+    /// <summary>
+    /// Creates an input type for a gamepad axis.
+    /// </summary>
+    public static IInputType CreateInputType(this ShapeGamepadAxis axis, float deadzone,  ModifierKeyOperator modifierKeyOperator, params IModifierKey[] modifierKeys)
+    {
+        return new InputTypeGamepadAxis(axis, deadzone,  modifierKeyOperator, modifierKeys);
+    }
+    #endregion
+    
+    #endregion
 }
