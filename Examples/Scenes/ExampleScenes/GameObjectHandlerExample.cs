@@ -17,19 +17,19 @@ namespace Examples.Scenes.ExampleScenes
 {
     internal static class SpawnAreaLayers
     {
-        public static readonly uint BoundaryFlag = BitFlag.GetFlagUint(1);
-        public static readonly uint WallFlag = BitFlag.GetFlagUint(2);
-        public static readonly uint ObjectFlag = BitFlag.GetFlagUint(3);
+        public static readonly uint BoundaryFlag = BitFlag.GetPowerOfTwo(1);
+        public static readonly uint WallFlag = BitFlag.GetPowerOfTwo(2);
+        public static readonly uint ObjectFlag = BitFlag.GetPowerOfTwo(3);
     }
     internal static class CollisionFlags
     {
-        public static readonly uint WallFlag = BitFlag.GetFlagUint(1);
-        public static readonly uint RockFlag = BitFlag.GetFlagUint(2);
-        public static readonly uint BirdFlag = BitFlag.GetFlagUint(3);
-        public static readonly uint BallFlag = BitFlag.GetFlagUint(4);
-        public static readonly uint BulletFlag = BitFlag.GetFlagUint(5);
-        public static readonly uint BoundaryFlag = BitFlag.GetFlagUint(6);
-        public static readonly uint OverlapperFlag = BitFlag.GetFlagUint(7);
+        public static readonly uint WallFlag = BitFlag.GetPowerOfTwo(1);
+        public static readonly uint RockFlag = BitFlag.GetPowerOfTwo(2);
+        public static readonly uint BirdFlag = BitFlag.GetPowerOfTwo(3);
+        public static readonly uint BallFlag = BitFlag.GetPowerOfTwo(4);
+        public static readonly uint BulletFlag = BitFlag.GetPowerOfTwo(5);
+        public static readonly uint BoundaryFlag = BitFlag.GetPowerOfTwo(6);
+        public static readonly uint OverlapperFlag = BitFlag.GetPowerOfTwo(7);
     }
     internal class PolyWall : CollisionObject
     {

@@ -726,7 +726,7 @@ public static class ShapeInput
     /// <c>1</c> is reserved for <see cref="AllAccessTag"/>, <c>2</c> is reserved for <see cref="DefaultAccessTag"/>.
     /// Only power of 2 values are used for access tags.
     /// </summary>
-    public static uint NextAccessTag => BitFlag.GetFlagUint(tagPowerCounter++);
+    public static uint NextAccessTag => BitFlag.GetPowerOfTwo(tagPowerCounter++);
     
     /// <summary>
     /// Locks the input system, clearing all whitelists and blacklists.
@@ -737,8 +737,8 @@ public static class ShapeInput
     public static void Lock()
     {
         Locked = true;
-        lockWhitelist = BitFlag.Clear();
-        lockBlacklist = BitFlag.Clear();
+        lockWhitelist = BitFlag.Empty;
+        lockBlacklist = BitFlag.Empty;
     }
 
     /// <summary>
@@ -768,7 +768,7 @@ public static class ShapeInput
     {
         Locked = true;
         lockWhitelist = whitelist;
-        lockBlacklist = BitFlag.Clear();
+        lockBlacklist = BitFlag.Empty;
     }
 
     /// <summary>
@@ -782,7 +782,7 @@ public static class ShapeInput
     {
         Locked = true;
         lockBlacklist = blacklist;
-        lockWhitelist = BitFlag.Clear();
+        lockWhitelist = BitFlag.Empty;
     }
 
     /// <summary>
@@ -791,8 +791,8 @@ public static class ShapeInput
     public static void Unlock()
     {
         Locked = false;
-        lockWhitelist = BitFlag.Clear();
-        lockBlacklist = BitFlag.Clear();
+        lockWhitelist = BitFlag.Empty;
+        lockBlacklist = BitFlag.Empty;
     }
 
     /// <summary>

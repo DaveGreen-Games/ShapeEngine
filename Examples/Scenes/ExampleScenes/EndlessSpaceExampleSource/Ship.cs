@@ -16,7 +16,7 @@ internal class Ship : CollisionObject, ICameraFollowTarget
 
     public event Action? OnKilled;
     
-    public static readonly uint CollisionLayer = BitFlag.GetFlagUint(3);
+    public static readonly uint CollisionLayer = BitFlag.GetPowerOfTwo(3);
     // private Triangle hull;
     private float shipSize;
     // private Vector2 pivot;

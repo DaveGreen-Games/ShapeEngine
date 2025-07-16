@@ -8,23 +8,23 @@ namespace ShapeEngine.Core.Structs;
 /// <remarks>
 /// Provides bitwise operations and utility methods for managing sets of flags. Supports combining multiple flags and checking for their presence.
 /// </remarks>
-public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, IBitwiseOperators<BitFlag, uint, BitFlag>
+public readonly struct BitFlagLong : IBitwiseOperators<BitFlagLong, BitFlagLong, BitFlagLong>, IBitwiseOperators<BitFlagLong, ulong, BitFlagLong>
 {
     /// <summary>
     /// Gets an empty <see cref="BitFlag"/> (all bits cleared).
     /// </summary>
-    public static BitFlag Empty => new (0);
+    public static BitFlagLong Empty => new (0);
     
     /// <summary>
     /// The underlying uint value representing the current set of flags.
     /// </summary>
-    public readonly uint FlagValue;
-    
+    public readonly ulong FlagValue;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="BitFlag"/> struct with a single uint value.
     /// </summary>
     /// <param name="flagValue">The initial flag value.</param>
-    public BitFlag(uint flagValue)
+    public BitFlagLong(ulong flagValue)
     {
         FlagValue = flagValue;
     }
@@ -36,16 +36,20 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// <remarks>
     /// Each value in <paramref name="bitValues"/> is bitwise OR'ed into the flag.
     /// </remarks>
-    public BitFlag(params uint[] bitValues)
+    public BitFlagLong(params ulong[] bitValues)
     {
         foreach (var v in bitValues)
         {
             FlagValue |= v;
         }
     }
-   
-    #region Public Functions
     
+    #region Public Functions
+    /// <summary>
+    /// Returns an empty <see cref="BitFlag"/> (all bits cleared).
+    /// </summary>
+    public static BitFlagLong Clear() => Empty;
+
     /// <summary>
     /// Determines whether the flag is empty (no bits set).
     /// </summary>
@@ -57,10 +61,10 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// </summary>
     /// <param name="bitValue">The flag value to check for. Has to be a power of two value!</param>
     /// <returns><c>true</c> if the flag is present and a power of two; otherwise, <c>false</c>.</returns>
-    public bool Has(uint bitValue)
+    public bool Has(ulong bitValue)
     {
         if (FlagValue == 0) return false;
-        
+
         if (!IsPowerOfTwo(bitValue)) return false;
         
         return (FlagValue & bitValue) != 0;
@@ -69,9 +73,9 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// <summary>
     /// Toggles the specified flag value in the current flag set.
     /// </summary>
-    /// <param name="bitValue">The flag value to toggle. Has to be a power of two value, otherwise a copy if this <see cref="BitFlag"/> will be returned!</param>
+    /// <param name="bitValue">The flag value to toggle. Has to be a power of two value, otherwise a copy if this <see cref="BitFlagLong"/> will be returned!</param>
     /// <returns>A new <see cref="BitFlag"/> instance with the specified flag toggled.</returns>
-    public BitFlag Set(uint bitValue)
+    public BitFlagLong Set(ulong bitValue)
     {
         return !IsPowerOfTwo(bitValue) ? this : new(FlagValue ^ bitValue);
     }
@@ -79,9 +83,9 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// <summary>
     /// Adds the specified flag value to the current flag set.
     /// </summary>
-    /// <param name="bitValue">The flag value to add. Has to be a power of two value, otherwise a copy if this <see cref="BitFlag"/> will be returned!</param>
+    /// <param name="bitValue">The flag value to add. Has to be a power of two value, otherwise a copy if this <see cref="BitFlagLong"/> will be returned!</param>
     /// <returns>A new <see cref="BitFlag"/> instance with the specified flag added.</returns>
-    public BitFlag Add(uint bitValue)
+    public BitFlagLong Add(ulong bitValue)
     {
         return !IsPowerOfTwo(bitValue) ? this : new(FlagValue | bitValue);
     }
@@ -89,9 +93,9 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// <summary>
     /// Removes the specified flag value from the current flag set.
     /// </summary>
-    /// <param name="bitValue">The flag value to remove. Has to be a power of two value, otherwise a copy if this <see cref="BitFlag"/> will be returned!</param>
+    /// <param name="bitValue">The flag value to remove. Has to be a power of two value, otherwise a copy if this <see cref="BitFlagLong"/> will be returned!</param>
     /// <returns>A new <see cref="BitFlag"/> instance with the specified flag removed.</returns>
-    public BitFlag Remove(uint bitValue)
+    public BitFlagLong Remove(ulong bitValue)
     {
         return !IsPowerOfTwo(bitValue) ? this : new(FlagValue & ~bitValue);
     }
@@ -101,12 +105,12 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// </summary>
     /// <param name="bitValues">An array of flag values to add. Have to be a power of two values! Any value that is not a power of two will be skipped!</param>
     /// <returns>A new <see cref="BitFlag"/> instance with the specified flags added.</returns>
-    public BitFlag Add(params uint[] bitValues)
+    public BitFlagLong Add(params ulong[] bitValues)
     {
         var flag = FlagValue;
         foreach (var v in bitValues)
         {
-            if (!IsPowerOfTwo(v)) continue; // Skip values that are not powers of two
+            if (!IsPowerOfTwo(v)) continue; // Skip non-power of two values
             flag |= v;
         }
 
@@ -118,12 +122,12 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// </summary>
     /// <param name="bitValues">An array of flag values to remove. Have to be a power of two values! Any value that is not a power of two will be skipped!</param>
     /// <returns>A new <see cref="BitFlag"/> instance with the specified flags removed.</returns>
-    public BitFlag Remove(params uint[] bitValues)
+    public BitFlagLong Remove(params ulong[] bitValues)
     {
         var flag = FlagValue;
         foreach (var v in bitValues)
         {
-            if (!IsPowerOfTwo(v)) continue; // Skip values that are not powers of two
+            if (!IsPowerOfTwo(v)) continue; // Skip non-power of two values
             flag &= ~v;
         }
 
@@ -133,13 +137,13 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     #endregion
     
     #region Operation
-    //TODO: BitFlag parameters make no sense here. FlagValue can be any value but those functions should only accept powers of two. (bitValues)
+    //TODO: BitFlagLong parameters make no sense here. FlagValue can be any value but those functions should only accept powers of two. (bitValues)
     /// <summary>
     /// Checks if the specified <see cref="BitFlag"/> value is present in the current flag set.
     /// </summary>
     /// <param name="value">The <see cref="BitFlag"/> value to check for.</param>
     /// <returns><c>true</c> if the <see cref="BitFlag"/> is present; otherwise, <c>false</c>.</returns>
-    public bool Has(BitFlag value)
+    public bool Has(BitFlagLong value)
     {
         if (FlagValue == 0) return false;
         return (FlagValue & value.FlagValue) != 0;
@@ -150,7 +154,7 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// </summary>
     /// <param name="value">The <see cref="BitFlag"/> value to toggle.</param>
     /// <returns>A new <see cref="BitFlag"/> instance with the specified <see cref="BitFlag"/> toggled.</returns>
-    public BitFlag Set(BitFlag value)
+    public BitFlagLong Set(BitFlagLong value)
     {
         return new(FlagValue ^ value.FlagValue);
     }
@@ -160,7 +164,7 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// </summary>
     /// <param name="value">The <see cref="BitFlag"/> value to add.</param>
     /// <returns>A new <see cref="BitFlag"/> instance with the specified <see cref="BitFlag"/> added.</returns>
-    public BitFlag Add(BitFlag value)
+    public BitFlagLong Add(BitFlagLong value)
     {
         return new(FlagValue | value.FlagValue);
     }
@@ -170,7 +174,7 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// </summary>
     /// <param name="value">The <see cref="BitFlag"/> value to remove.</param>
     /// <returns>A new <see cref="BitFlag"/> instance with the specified <see cref="BitFlag"/> removed.</returns>
-    public BitFlag Remove(BitFlag value)
+    public BitFlagLong Remove(BitFlagLong value)
     {
         return new(FlagValue & ~value.FlagValue);
     }
@@ -180,7 +184,7 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// </summary>
     /// <param name="values">An array of <see cref="BitFlag"/> values to add.</param>
     /// <returns>A new <see cref="BitFlag"/> instance with the specified <see cref="BitFlag"/>s added.</returns>
-    public BitFlag Add(params BitFlag[] values)
+    public BitFlagLong Add(params BitFlagLong[] values)
     {
         var flag = FlagValue;
         foreach (var v in values)
@@ -196,7 +200,7 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// </summary>
     /// <param name="values">An array of <see cref="BitFlag"/> values to remove.</param>
     /// <returns>A new <see cref="BitFlag"/> instance with the specified <see cref="BitFlag"/>s removed.</returns>
-    public BitFlag Remove(params BitFlag[] values)
+    public BitFlagLong Remove(params BitFlagLong[] values)
     {
         var flag = FlagValue;
         foreach (var v in values)
@@ -215,29 +219,29 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// </summary>
     /// <param name="value">The value to check.</param>
     /// <returns><c>true</c> if the value is a power of two; otherwise, <c>false</c>.</returns>
-    public static bool IsPowerOfTwo(uint value)
+    public static bool IsPowerOfTwo(ulong value)
     {
         if (value == 0 || (value & (value - 1)) != 0) return false;
         return true;
     }
     
-    private static uint flagCounter = 0;
+    private static ulong flagCounter = 0;
     /// <summary>
     /// Gets the next available uint value as a power of two (for unsigned integer flags).
     /// </summary>
-    public static uint NextPowerOfTwo => GetPowerOfTwo(flagCounter++);
+    public static ulong NextPowerOfTwo => GetPowerOfTwo(flagCounter++);
 
     /// <summary>
     /// Gets an empty unsigned integer flag (all bits cleared).
     /// </summary>
-    public static uint EmptyFlag => 0;
-    
+    public static ulong EmptyFlag => 0;
+
     /// <summary>
     /// Generates an unsigned integer value with a single bit set at the specified power of two.
     /// </summary>
     /// <param name="power">The power of two indicating which bit to set.</param>
     /// <returns>An unsigned integer with the specified bit set.</returns>
-    public static uint GetPowerOfTwo(uint power) => (uint)MathF.Pow(2, power);
+    public static ulong GetPowerOfTwo(ulong power) => (ulong)MathF.Pow(2, power);
 
     /// <summary>
     /// Checks if the specified unsigned integer flag value is present in the current flag set.
@@ -245,7 +249,7 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// <param name="flagValue">The current flag set.</param>
     /// <param name="bitValue">The flag value to check for. Has to be a power of two!</param>
     /// <returns><c>true</c> if the flag is present; otherwise, <c>false</c>.</returns>
-    public static bool HasFlag(uint flagValue, uint bitValue)
+    public static bool HasFlag(ulong flagValue, ulong bitValue)
     {
         if (flagValue == 0) return false;
         
@@ -258,7 +262,7 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// <param name="flagValue">The current flag set.</param>
     /// <param name="bitValue">The flag value to toggle. Has to be a power of two!</param>
     /// <returns>The updated flag set with the specified flag toggled.</returns>
-    public static uint SetFlag(uint flagValue, uint bitValue)
+    public static ulong SetFlag(ulong flagValue, ulong bitValue)
     {
         return flagValue ^ bitValue;
     }
@@ -269,7 +273,7 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// <param name="flagValue">The current flag set.</param>
     /// <param name="bitValue">The flag value to add. Has to be a power of two!</param>
     /// <returns>The updated flag set with the specified flag added.</returns>
-    public static uint AddFlag(uint flagValue, uint bitValue)
+    public static ulong AddFlag(ulong flagValue, ulong bitValue)
     {
         return flagValue | bitValue;
     }
@@ -280,7 +284,7 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// <param name="flagValue">The current flag set.</param>
     /// <param name="bitValue">The flag value to remove. Has to be a power of two!</param>
     /// <returns>The updated flag set with the specified flag removed.</returns>
-    public static uint RemoveFlag(uint flagValue, uint bitValue)
+    public static ulong RemoveFlag(ulong flagValue, ulong bitValue)
     {
         return flagValue & ~bitValue;
     }
@@ -291,7 +295,7 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// <param name="flagValue">The current flag set.</param>
     /// <param name="bitValues">An array of unsigned integer flag values to add. Have to be a power of two values!</param>
     /// <returns>The updated flag set with the specified flags added.</returns>
-    public static uint AddFlag(uint flagValue, params uint[] bitValues)
+    public static ulong AddFlag(ulong flagValue, params ulong[] bitValues)
     {
         foreach (var v in bitValues)
         {
@@ -307,7 +311,7 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// <param name="flagValue">The current flag set.</param>
     /// <param name="bitValues">An array of unsigned integer flag values to remove. Have to be a power of two values!</param>
     /// <returns>The updated flag set with the specified flags removed.</returns>
-    public static uint RemoveFlag(uint flagValue, params uint[] bitValues)
+    public static ulong RemoveFlag(ulong flagValue, params ulong[] bitValues)
     {
         foreach (var v in bitValues)
         {
@@ -318,22 +322,22 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     }
     #endregion
     
-    #region Operators
+    #region Operators 
     /// <summary>
     /// Returns the bitwise complement of the specified <see cref="BitFlag"/>.
     /// </summary>
     /// <param name="value">The <see cref="BitFlag"/> to complement.</param>
     /// <returns>A new <see cref="BitFlag"/> instance representing the complement.</returns>
-    public static BitFlag operator ~(BitFlag value) =>new( ~value.FlagValue);
+    public static BitFlagLong operator ~(BitFlagLong value) =>new( ~value.FlagValue);
     
-    //TODO: Have to be changed as well
+    //TODO: have to be changed as well
     /// <summary>
     /// Performs a bitwise AND operation between two <see cref="BitFlag"/> values.
     /// </summary>
     /// <param name="left">The left <see cref="BitFlag"/> operand.</param>
     /// <param name="right">The right <see cref="BitFlag"/> operand.</param>
     /// <returns>A new <see cref="BitFlag"/> instance representing the result of the AND operation.</returns>
-    public static BitFlag operator &(BitFlag left, BitFlag right) => new(left.FlagValue & right.FlagValue);
+    public static BitFlagLong operator &(BitFlagLong left, BitFlagLong right) => new(left.FlagValue & right.FlagValue);
 
     /// <summary>
     /// Performs a bitwise OR operation between two <see cref="BitFlag"/> values.
@@ -341,7 +345,7 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// <param name="left">The left <see cref="BitFlag"/> operand.</param>
     /// <param name="right">The right <see cref="BitFlag"/> operand.</param>
     /// <returns>A new <see cref="BitFlag"/> instance representing the result of the OR operation.</returns>
-    public static BitFlag operator |(BitFlag left, BitFlag right) => new(left.FlagValue | right.FlagValue);
+    public static BitFlagLong operator |(BitFlagLong left, BitFlagLong right) => new(left.FlagValue | right.FlagValue);
 
     /// <summary>
     /// Performs a bitwise XOR operation between two <see cref="BitFlag"/> values.
@@ -349,7 +353,7 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// <param name="left">The left <see cref="BitFlag"/> operand.</param>
     /// <param name="right">The right <see cref="BitFlag"/> operand.</param>
     /// <returns>A new <see cref="BitFlag"/> instance representing the result of the XOR operation.</returns>
-    public static BitFlag operator ^(BitFlag left, BitFlag right) => new(left.FlagValue ^ right.FlagValue);
+    public static BitFlagLong operator ^(BitFlagLong left, BitFlagLong right) => new(left.FlagValue ^ right.FlagValue);
     //---
     
     /// <summary>
@@ -358,7 +362,7 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// <param name="left">The <see cref="BitFlag"/> operand.</param>
     /// <param name="bitValue">The uint value operand. Has to be a power of two, otherwise left will be returned!</param>
     /// <returns>A new <see cref="BitFlag"/> instance representing the result of the AND operation.</returns>
-    public static BitFlag operator &(BitFlag left, uint bitValue) => IsPowerOfTwo(bitValue) ? new(left.FlagValue & bitValue) : left;
+    public static BitFlagLong operator &(BitFlagLong left, ulong bitValue) => IsPowerOfTwo(bitValue) ? new(left.FlagValue & bitValue) : left;
 
     /// <summary>
     /// Performs a bitwise OR operation between a <see cref="BitFlag"/> and a uint value.
@@ -366,7 +370,7 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// <param name="left">The <see cref="BitFlag"/> operand.</param>
     /// <param name="bitValue">The uint value operand. Has to be a power of two, otherwise left will be returned!</param>
     /// <returns>A new <see cref="BitFlag"/> instance representing the result of the OR operation.</returns>
-    public static BitFlag operator |(BitFlag left, uint bitValue) => IsPowerOfTwo(bitValue) ? new(left.FlagValue | bitValue) : left;
+    public static BitFlagLong operator |(BitFlagLong left, ulong bitValue) => IsPowerOfTwo(bitValue) ? new(left.FlagValue | bitValue) : left;
 
     /// <summary>
     /// Performs a bitwise XOR operation between a <see cref="BitFlag"/> and a uint value.
@@ -374,7 +378,7 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// <param name="left">The <see cref="BitFlag"/> operand.</param>
     /// <param name="bitValue">The uint value operand. Has to be a power of two, otherwise left will be returned!</param>
     /// <returns>A new <see cref="BitFlag"/> instance representing the result of the XOR operation.</returns>
-    public static BitFlag operator ^(BitFlag left, uint bitValue) => IsPowerOfTwo(bitValue) ? new(left.FlagValue ^ bitValue) : left;
+    public static BitFlagLong operator ^(BitFlagLong left, ulong bitValue) => IsPowerOfTwo(bitValue) ? new(left.FlagValue ^ bitValue) : left;
     
     /// <summary>
     /// Performs a bitwise AND operation between a uint value and a <see cref="BitFlag"/>.
@@ -382,7 +386,7 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// <param name="bitValue">The uint value operand. Has to be a power of two, otherwise right will be returned!</param>
     /// <param name="right">The <see cref="BitFlag"/> operand.</param>
     /// <returns>A new <see cref="BitFlag"/> instance representing the result of the AND operation.</returns>
-    public static BitFlag operator &(uint bitValue, BitFlag right) => IsPowerOfTwo(bitValue) ? new(bitValue & right.FlagValue) : right;
+    public static BitFlagLong operator &(ulong bitValue, BitFlagLong right) => IsPowerOfTwo(bitValue) ? new(bitValue & right.FlagValue) : right;
 
     /// <summary>
     /// Performs a bitwise OR operation between a uint value and a <see cref="BitFlag"/>.
@@ -390,7 +394,7 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// <param name="bitValue">The uint value operand. Has to be a power of two, otherwise right will be returned!</param>
     /// <param name="right">The <see cref="BitFlag"/> operand.</param>
     /// <returns>A new <see cref="BitFlag"/> instance representing the result of the OR operation.</returns>
-    public static BitFlag operator |(uint bitValue, BitFlag right) => IsPowerOfTwo(bitValue) ? new(bitValue | right.FlagValue) : right;
+    public static BitFlagLong operator |(ulong bitValue, BitFlagLong right) => IsPowerOfTwo(bitValue) ? new(bitValue | right.FlagValue) : right;
 
     /// <summary>
     /// Performs a bitwise XOR operation between a uint value and a <see cref="BitFlag"/>.
@@ -398,6 +402,6 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     /// <param name="bitValue">The uint value operand. Has to be a power of two, otherwise right will be returned!</param>
     /// <param name="right">The <see cref="BitFlag"/> operand.</param>
     /// <returns>A new <see cref="BitFlag"/> instance representing the result of the XOR operation.</returns>
-    public static BitFlag operator ^(uint bitValue, BitFlag right) => IsPowerOfTwo(bitValue) ? new(bitValue ^ right.FlagValue) : right;
+    public static BitFlagLong operator ^(ulong bitValue, BitFlagLong right) => IsPowerOfTwo(bitValue) ? new(bitValue ^ right.FlagValue) : right;
     #endregion
 }
