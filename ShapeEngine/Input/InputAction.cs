@@ -30,6 +30,10 @@ public partial class InputAction
     /// <summary>
     /// Indicates if this input action is enabled.
     /// </summary>
+    /// <remarks>
+    /// If this <see cref="InputAction"/> is disabled, it will still process input and update the <see cref="InputState"/> but <see cref="State"/> will return an empty <see cref="InputState"/>.
+    /// Use <see cref="StateRaw"/> to gain access to the current <see cref="InputState"/> regardless of the enabled state.
+    /// </remarks>
     public bool Enabled = true;
     /// <summary>
     /// The unique identifier for this input action.
@@ -38,11 +42,14 @@ public partial class InputAction
     /// <summary>
     /// The access tag used for locking/unlocking this action.
     /// <remarks>
-    /// Determines access of this action.
-    /// Only used when input actions are locked.
-    /// If this tag is contained in the lock blacklist while the lock is active, the action will not trigger.
-    /// If this tag is contained in the lock whitelist while the lock is active, the action will trigger.
-    /// If <see cref="AllAccessTag"/> is used the action will always trigger.
+    /// <list type="bullet">
+    /// <item>Determines access of this action.</item>
+    /// <item>Only used when input actions are locked.</item>
+    /// <item>If this tag is contained in the lock blacklist while the lock is active, the <see cref="InputState"/> of this <see cref="InputAction"/> will not be available.</item>
+    /// <item>If this tag is contained in the lock whitelist while the lock is active, the <see cref="InputState"/> of this <see cref="InputAction"/> will always be available.</item>
+    /// <item>If <see cref="AllAccessTag"/> is used the <see cref="InputState"/> of this <see cref="InputAction"/> will always be available, regardless of the lock state.</item>
+    /// <item>Use <see cref="StateRaw"/> to always get the current <see cref="InputState"/>.</item>
+    /// </list>
     /// </remarks>
     /// </summary>
     public uint AccessTag { get; private set; } = DefaultAccessTag;
@@ -113,20 +120,27 @@ public partial class InputAction
     
     private InputState state = new();
     /// <summary>
-    /// The current state of this input action.
+    /// The current state of this input action. Taking access and enabled state into account.
     /// </summary>
+    /// <remarks>
+    /// If this <see cref="InputAction"/> is not enabled or does not have access, the <see cref="InputState"/> will be empty.
+    /// </remarks>
     public InputState State
     {
         get
         {
-            if (Locked && !HasAccess(AccessTag)) return new();
-            if (!Enabled) return new();
-
+            if (Locked && !HasAccess(AccessTag) || !Enabled) return new();
             return state;
         }
         private set => state = value;
         
     }
+
+    /// <summary>
+    /// Gets the raw input state for this action, without access or enabled checks.
+    /// </summary>
+    public InputState StateRaw => state;
+    
     private readonly List<IInputType> inputs = [];
 
     /// <summary>
