@@ -7,6 +7,7 @@ namespace ShapeEngine.Input;
 /// </summary>
 public static class ShapeInput
 {
+    #region Members and Properties
     /// <summary>
     /// Gets the current input device type in use.
     /// </summary>
@@ -63,7 +64,9 @@ public static class ShapeInput
     /// </summary>
     public static bool InputDeviceSelectionCooldownActive => inputDeviceSelectionCooldownTimer > 0f;
     private static float inputDeviceSelectionCooldownTimer;
-
+    #endregion
+    
+    #region Constructor
     static ShapeInput()
     {
         CurrentInputDeviceType = InputDeviceType.Keyboard;
@@ -82,7 +85,10 @@ public static class ShapeInput
         
         EventHandler = new(ActiveKeyboardDevice, ActiveMouseDevice, ActiveGamepadDeviceManager);
     }
+    #endregion
     
+    #region Input Device Handling
+
     /// <summary>
     /// Changes the active mouse device.
     /// </summary>
@@ -158,6 +164,42 @@ public static class ShapeInput
     }
    
     /// <summary>
+    /// Returns <paramref name="with"/> if <paramref name="current"/> equals <paramref name="replace"/>, otherwise returns <paramref name="current"/>.
+    /// </summary>
+    /// <param name="current">Current input device type.</param>
+    /// <param name="replace">Device type to replace.</param>
+    /// <param name="with">Device type to use as replacement.</param>
+    /// <returns>The filtered input device type.</returns>
+    public static InputDeviceType FilterInputDevice(InputDeviceType current, InputDeviceType replace, InputDeviceType with)
+    {
+        return current == replace
+            ? with
+            : current;
+    }
+
+    /// <summary>
+    /// Gets the generic name of the current input device type.
+    /// </summary>
+    /// <returns>"Gamepad", "Keyboard", or "Mouse".</returns>
+    public static string GetCurInputDeviceGenericName()
+    {
+        return
+            CurrentInputDeviceType == InputDeviceType.Gamepad ? "Gamepad" :
+            CurrentInputDeviceType == InputDeviceType.Keyboard ? "Keyboard" : "Mouse";
+    }
+    /// <summary>
+    /// Gets the generic name for a specified input device type.
+    /// </summary>
+    /// <param name="deviceType">The input device type.</param>
+    /// <returns>"Gamepad", "Keyboard", or "Mouse".</returns>
+    public static string GetInputDeviceGenericName(InputDeviceType deviceType)
+    {
+        return
+            deviceType == InputDeviceType.Gamepad ? "Gamepad" :
+            deviceType == InputDeviceType.Keyboard ? "Keyboard" : "Mouse";
+    }
+    
+    /// <summary>
     /// Updates all input devices and checks for input device changes.
     /// </summary>
     internal static void Update(float dt)
@@ -212,6 +254,7 @@ public static class ShapeInput
             }
         }
     }
+    #endregion
     
     #region Get InputState Methods
     /// <summary>
@@ -319,46 +362,6 @@ public static class ShapeInput
     }
     #endregion
     
-    #region InputDeviceType
-
-    /// <summary>
-    /// Returns <paramref name="with"/> if <paramref name="current"/> equals <paramref name="replace"/>, otherwise returns <paramref name="current"/>.
-    /// </summary>
-    /// <param name="current">Current input device type.</param>
-    /// <param name="replace">Device type to replace.</param>
-    /// <param name="with">Device type to use as replacement.</param>
-    /// <returns>The filtered input device type.</returns>
-    public static InputDeviceType FilterInputDevice(InputDeviceType current, InputDeviceType replace, InputDeviceType with)
-    {
-        return current == replace
-            ? with
-            : current;
-    }
-
-    /// <summary>
-    /// Gets the generic name of the current input device type.
-    /// </summary>
-    /// <returns>"Gamepad", "Keyboard", or "Mouse".</returns>
-    public static string GetCurInputDeviceGenericName()
-    {
-        return
-            CurrentInputDeviceType == InputDeviceType.Gamepad ? "Gamepad" :
-            CurrentInputDeviceType == InputDeviceType.Keyboard ? "Keyboard" : "Mouse";
-    }
-    /// <summary>
-    /// Gets the generic name for a specified input device type.
-    /// </summary>
-    /// <param name="deviceType">The input device type.</param>
-    /// <returns>"Gamepad", "Keyboard", or "Mouse".</returns>
-    public static string GetInputDeviceGenericName(InputDeviceType deviceType)
-    {
-        return
-            deviceType == InputDeviceType.Gamepad ? "Gamepad" :
-            deviceType == InputDeviceType.Keyboard ? "Keyboard" : "Mouse";
-    }
-    
-    #endregion
-
     #region Input Type Factory
 
     #region Keyboard
