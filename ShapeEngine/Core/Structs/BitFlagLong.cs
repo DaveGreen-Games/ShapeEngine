@@ -8,8 +8,42 @@ namespace ShapeEngine.Core.Structs;
 /// <remarks>
 /// Provides bitwise operations and utility methods for managing sets of flags. Supports combining multiple flags and checking for their presence.
 /// </remarks>
-public readonly struct BitFlagLong : IBitwiseOperators<BitFlagLong, BitFlagLong, BitFlagLong>, IBitwiseOperators<BitFlagLong, ulong, BitFlagLong>
+public readonly struct BitFlagLong : IBitwiseOperators<BitFlagLong, BitFlagLong.BitValue, BitFlagLong>, IBitwiseOperators<BitFlagLong, ulong, BitFlagLong>
 {
+    /// <summary>
+    /// Represents a single bit value as a power of two for use in bitwise flag operations.
+    /// </summary>
+    public readonly struct BitValue
+    {
+        /// <summary>
+        /// The underlying ulong value representing the bit (power of two).
+        /// </summary>
+        public readonly ulong Value;
+    
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BitValue"/> struct with the specified power of two.
+        /// </summary>
+        /// <param name="power">The power of two indicating which bit to set (0 for least significant bit).</param>
+        public BitValue(int power)
+        {
+            if(power < 0) power *= -1; // Ensure power is non-negative
+            Value = 1UL << power;
+        }
+
+        /// <summary>
+        /// Returns the ulong value representing 2 raised to the specified power.
+        /// Ensures the power is non-negative.
+        /// </summary>
+        /// <param name="power">The exponent for the power of two (negative values are converted to positive).</param>
+        /// <returns>The ulong value of 2^power.</returns>
+        public static ulong GetPowerOfTwoValue(int power)
+        {
+            if(power < 0) power *= -1; // Ensure power is non-negative
+            return 1UL << power;
+        }
+    }
+    
+    
     /// <summary>
     /// Gets an empty <see cref="BitFlag"/> (all bits cleared).
     /// </summary>
@@ -28,6 +62,14 @@ public readonly struct BitFlagLong : IBitwiseOperators<BitFlagLong, BitFlagLong,
     {
         FlagValue = flagValue;
     }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BitFlagLong"/> struct using a <see cref="BitValue"/>.
+    /// </summary>
+    /// <param name="bitValue">The <see cref="BitValue"/> to set as the flag.</param>
+    public BitFlagLong(BitValue bitValue)
+    {
+        FlagValue = bitValue.Value;
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BitFlag"/> struct with multiple uint values combined.
@@ -36,14 +78,34 @@ public readonly struct BitFlagLong : IBitwiseOperators<BitFlagLong, BitFlagLong,
     /// <remarks>
     /// Each value in <paramref name="bitValues"/> is bitwise OR'ed into the flag.
     /// </remarks>
+    public BitFlagLong(params BitValue[] bitValues)
+    {
+        foreach (var v in bitValues)
+        {
+            FlagValue |= v.Value;
+        }
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BitFlagLong"/> struct with multiple ulong values combined.
+    /// </summary>
+    /// <param name="bitValues">An array of ulong values to combine as flags. Only values that are powers of two will be included.</param>
     public BitFlagLong(params ulong[] bitValues)
     {
         foreach (var v in bitValues)
         {
+            if(!IsPowerOfTwo(v)) continue;
             FlagValue |= v;
         }
     }
     
+    /// <summary>
+    /// Explicitly converts a <see cref="BitFlagLong"/> to a <see cref="BitFlag"/> by taking the lower 32 bits.
+    /// </summary>
+    /// <param name="flagLong">The <see cref="BitFlagLong"/> instance to convert.</param>
+    /// <returns>A <see cref="BitFlag"/> containing the lower 32 bits of <paramref name="flagLong"/>.</returns>
+    public static explicit operator BitFlag(BitFlagLong flagLong) => new((uint)(flagLong.FlagValue & 0xFFFFFFFF));
+
     #region Public Functions
     /// <summary>
     /// Returns an empty <see cref="BitFlag"/> (all bits cleared).
@@ -137,59 +199,58 @@ public readonly struct BitFlagLong : IBitwiseOperators<BitFlagLong, BitFlagLong,
     #endregion
     
     #region Operation
-    //TODO: BitFlagLong parameters make no sense here. FlagValue can be any value but those functions should only accept powers of two. (bitValues)
     /// <summary>
     /// Checks if the specified <see cref="BitFlag"/> value is present in the current flag set.
     /// </summary>
-    /// <param name="value">The <see cref="BitFlag"/> value to check for.</param>
+    /// <param name="bitValue">The <see cref="BitFlag"/> value to check for.</param>
     /// <returns><c>true</c> if the <see cref="BitFlag"/> is present; otherwise, <c>false</c>.</returns>
-    public bool Has(BitFlagLong value)
+    public bool Has(BitValue bitValue)
     {
         if (FlagValue == 0) return false;
-        return (FlagValue & value.FlagValue) != 0;
+        return (FlagValue & bitValue.Value) != 0;
     }
 
     /// <summary>
     /// Toggles the specified <see cref="BitFlag"/> value in the current flag set.
     /// </summary>
-    /// <param name="value">The <see cref="BitFlag"/> value to toggle.</param>
+    /// <param name="bitValue">The <see cref="BitFlag"/> value to toggle.</param>
     /// <returns>A new <see cref="BitFlag"/> instance with the specified <see cref="BitFlag"/> toggled.</returns>
-    public BitFlagLong Set(BitFlagLong value)
+    public BitFlagLong Set(BitValue bitValue)
     {
-        return new(FlagValue ^ value.FlagValue);
+        return new(FlagValue ^ bitValue.Value);
     }
 
     /// <summary>
     /// Adds the specified <see cref="BitFlag"/> value to the current flag set.
     /// </summary>
-    /// <param name="value">The <see cref="BitFlag"/> value to add.</param>
+    /// <param name="bitValue">The <see cref="BitFlag"/> value to add.</param>
     /// <returns>A new <see cref="BitFlag"/> instance with the specified <see cref="BitFlag"/> added.</returns>
-    public BitFlagLong Add(BitFlagLong value)
+    public BitFlagLong Add(BitValue bitValue)
     {
-        return new(FlagValue | value.FlagValue);
+        return new(FlagValue | bitValue.Value);
     }
 
     /// <summary>
     /// Removes the specified <see cref="BitFlag"/> value from the current flag set.
     /// </summary>
-    /// <param name="value">The <see cref="BitFlag"/> value to remove.</param>
+    /// <param name="bitValue">The <see cref="BitFlag"/> value to remove.</param>
     /// <returns>A new <see cref="BitFlag"/> instance with the specified <see cref="BitFlag"/> removed.</returns>
-    public BitFlagLong Remove(BitFlagLong value)
+    public BitFlagLong Remove(BitValue bitValue)
     {
-        return new(FlagValue & ~value.FlagValue);
+        return new(FlagValue & ~bitValue.Value);
     }
 
     /// <summary>
     /// Adds multiple <see cref="BitFlag"/> values to the current flag set.
     /// </summary>
-    /// <param name="values">An array of <see cref="BitFlag"/> values to add.</param>
+    /// <param name="bitValues">An array of <see cref="BitFlag"/> values to add.</param>
     /// <returns>A new <see cref="BitFlag"/> instance with the specified <see cref="BitFlag"/>s added.</returns>
-    public BitFlagLong Add(params BitFlagLong[] values)
+    public BitFlagLong Add(params BitValue[] bitValues)
     {
         var flag = FlagValue;
-        foreach (var v in values)
+        foreach (var v in bitValues)
         {
-            flag |= v.FlagValue;
+            flag |= v.Value;
         }
 
         return new(flag);
@@ -200,12 +261,12 @@ public readonly struct BitFlagLong : IBitwiseOperators<BitFlagLong, BitFlagLong,
     /// </summary>
     /// <param name="values">An array of <see cref="BitFlag"/> values to remove.</param>
     /// <returns>A new <see cref="BitFlag"/> instance with the specified <see cref="BitFlag"/>s removed.</returns>
-    public BitFlagLong Remove(params BitFlagLong[] values)
+    public BitFlagLong Remove(params BitValue[] values)
     {
         var flag = FlagValue;
         foreach (var v in values)
         {
-            flag &= ~v.FlagValue;
+            flag &= ~v.Value;
         }
 
         return new(flag);
@@ -225,7 +286,7 @@ public readonly struct BitFlagLong : IBitwiseOperators<BitFlagLong, BitFlagLong,
         return true;
     }
     
-    private static ulong flagCounter = 0;
+    private static int flagCounter = 0;
     /// <summary>
     /// Gets the next available uint value as a power of two (for unsigned integer flags).
     /// </summary>
@@ -241,7 +302,7 @@ public readonly struct BitFlagLong : IBitwiseOperators<BitFlagLong, BitFlagLong,
     /// </summary>
     /// <param name="power">The power of two indicating which bit to set.</param>
     /// <returns>An unsigned integer with the specified bit set.</returns>
-    public static ulong GetPowerOfTwo(ulong power) => (ulong)MathF.Pow(2, power);
+    public static ulong GetPowerOfTwo(int power) => BitValue.GetPowerOfTwoValue(power);
 
     /// <summary>
     /// Checks if the specified unsigned integer flag value is present in the current flag set.
@@ -330,31 +391,53 @@ public readonly struct BitFlagLong : IBitwiseOperators<BitFlagLong, BitFlagLong,
     /// <returns>A new <see cref="BitFlag"/> instance representing the complement.</returns>
     public static BitFlagLong operator ~(BitFlagLong value) =>new( ~value.FlagValue);
     
-    //TODO: have to be changed as well
     /// <summary>
-    /// Performs a bitwise AND operation between two <see cref="BitFlag"/> values.
+    /// Performs a bitwise AND operation between a <see cref="BitFlagLong"/> and a <see cref="BitValue"/>.
     /// </summary>
-    /// <param name="left">The left <see cref="BitFlag"/> operand.</param>
-    /// <param name="right">The right <see cref="BitFlag"/> operand.</param>
-    /// <returns>A new <see cref="BitFlag"/> instance representing the result of the AND operation.</returns>
-    public static BitFlagLong operator &(BitFlagLong left, BitFlagLong right) => new(left.FlagValue & right.FlagValue);
-
+    /// <param name="left">The <see cref="BitFlagLong"/> operand.</param>
+    /// <param name="bitValue">The <see cref="BitValue"/> operand.</param>
+    /// <returns>A new <see cref="BitFlagLong"/> instance representing the result of the AND operation.</returns>
+    public static BitFlagLong operator &(BitFlagLong left, BitValue bitValue) => new(left.FlagValue & bitValue.Value);
+    
     /// <summary>
-    /// Performs a bitwise OR operation between two <see cref="BitFlag"/> values.
+    /// Performs a bitwise OR operation between a <see cref="BitFlagLong"/> and a <see cref="BitValue"/>.
     /// </summary>
-    /// <param name="left">The left <see cref="BitFlag"/> operand.</param>
-    /// <param name="right">The right <see cref="BitFlag"/> operand.</param>
-    /// <returns>A new <see cref="BitFlag"/> instance representing the result of the OR operation.</returns>
-    public static BitFlagLong operator |(BitFlagLong left, BitFlagLong right) => new(left.FlagValue | right.FlagValue);
-
+    /// <param name="left">The <see cref="BitFlagLong"/> operand.</param>
+    /// <param name="bitValue">The <see cref="BitValue"/> operand.</param>
+    /// <returns>A new <see cref="BitFlagLong"/> instance representing the result of the OR operation.</returns>
+    public static BitFlagLong operator |(BitFlagLong left, BitValue bitValue) => new(left.FlagValue | bitValue.Value);
+    
     /// <summary>
-    /// Performs a bitwise XOR operation between two <see cref="BitFlag"/> values.
+    /// Performs a bitwise XOR operation between a <see cref="BitFlagLong"/> and a <see cref="BitValue"/>.
     /// </summary>
-    /// <param name="left">The left <see cref="BitFlag"/> operand.</param>
-    /// <param name="right">The right <see cref="BitFlag"/> operand.</param>
-    /// <returns>A new <see cref="BitFlag"/> instance representing the result of the XOR operation.</returns>
-    public static BitFlagLong operator ^(BitFlagLong left, BitFlagLong right) => new(left.FlagValue ^ right.FlagValue);
-    //---
+    /// <param name="left">The <see cref="BitFlagLong"/> operand.</param>
+    /// <param name="bitValue">The <see cref="BitValue"/> operand.</param>
+    /// <returns>A new <see cref="BitFlagLong"/> instance representing the result of the XOR operation.</returns>
+    public static BitFlagLong operator ^(BitFlagLong left, BitValue bitValue) => new(left.FlagValue ^ bitValue.Value);
+    
+    /// <summary>
+    /// Performs a bitwise AND operation between a <see cref="BitValue"/> and a <see cref="BitFlagLong"/>.
+    /// </summary>
+    /// <param name="bitValue">The <see cref="BitValue"/> operand.</param>
+    /// <param name="right">The <see cref="BitFlagLong"/> operand.</param>
+    /// <returns>A new <see cref="BitFlagLong"/> instance representing the result of the AND operation.</returns>
+    public static BitFlagLong operator &(BitValue bitValue, BitFlagLong right) => new(bitValue.Value & right.FlagValue);
+    
+    /// <summary>
+    /// Performs a bitwise OR operation between a <see cref="BitValue"/> and a <see cref="BitFlagLong"/>.
+    /// </summary>
+    /// <param name="bitValue">The <see cref="BitValue"/> operand.</param>
+    /// <param name="right">The <see cref="BitFlagLong"/> operand.</param>
+    /// <returns>A new <see cref="BitFlagLong"/> instance representing the result of the OR operation.</returns>
+    public static BitFlagLong operator |(BitValue bitValue, BitFlagLong right) => new(bitValue.Value | right.FlagValue);
+    
+    /// <summary>
+    /// Performs a bitwise XOR operation between a <see cref="BitValue"/> and a <see cref="BitFlagLong"/>.
+    /// </summary>
+    /// <param name="bitValue">The <see cref="BitValue"/> operand.</param>
+    /// <param name="right">The <see cref="BitFlagLong"/> operand.</param>
+    /// <returns>A new <see cref="BitFlagLong"/> instance representing the result of the XOR operation.</returns>
+    public static BitFlagLong operator ^(BitValue bitValue, BitFlagLong right) => new(bitValue.Value ^ right.FlagValue);
     
     /// <summary>
     /// Performs a bitwise AND operation between a <see cref="BitFlag"/> and a uint value.

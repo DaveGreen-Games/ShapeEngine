@@ -719,7 +719,7 @@ public static class ShapeInput
 
     private static BitFlag lockWhitelist;
     private static BitFlag lockBlacklist;
-    private static uint tagPowerCounter = 2; //0 and 1 are reserved for AllAccessTag and DefaultAccessTag respectively.
+    private static int tagPowerCounter = 2; //0 and 1 are reserved for AllAccessTag and DefaultAccessTag respectively.
 
     /// <summary>
     /// Gets the next available access tag.
