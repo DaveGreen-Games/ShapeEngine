@@ -111,11 +111,11 @@ namespace Examples
 
         public bool DrawCursor = true;
 
-        public readonly uint UIAccessTag = InputAction.NextTag; // BitFlag.GetFlagUint(2);
-        public readonly uint GameloopAccessTag = InputAction.NextTag; // BitFlag.GetFlagUint(3);
-        public readonly uint SceneAccessTag =  InputAction.NextTag; //BitFlag.GetFlagUint(4);
-        public readonly uint GamepadMouseMovementTag = InputAction.NextTag; // BitFlag.GetFlagUint(5);
-        public readonly uint KeyboardMouseMovementTag =  InputAction.NextTag; //BitFlag.GetFlagUint(6);
+        public readonly uint UIAccessTag = ShapeInput.NextTag; // BitFlag.GetFlagUint(2);
+        public readonly uint GameloopAccessTag = ShapeInput.NextTag; // BitFlag.GetFlagUint(3);
+        public readonly uint SceneAccessTag =  ShapeInput.NextTag; //BitFlag.GetFlagUint(4);
+        public readonly uint GamepadMouseMovementTag = ShapeInput.NextTag; // BitFlag.GetFlagUint(5);
+        public readonly uint KeyboardMouseMovementTag =  ShapeInput.NextTag; //BitFlag.GetFlagUint(6);
         //ui
        
         public static IModifierKey  ModifierKeyGamepad = new ModifierKeyGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, false);
@@ -374,8 +374,8 @@ namespace Examples
                 mouseMovementTimer = 0f;
                 float speed = screenArea.Size.Max() * 0.75f * dt;
                 int gamepad = ShapeInput.ActiveGamepadDeviceManager.LastUsedGamepad.Index;
-                var x = InputAction.CreateInputState(ShapeGamepadAxis.LEFT_X, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
-                var y = InputAction.CreateInputState(ShapeGamepadAxis.LEFT_Y, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
+                var x = ShapeInput.CreateInputState(ShapeGamepadAxis.LEFT_X, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
+                var y = ShapeInput.CreateInputState(ShapeGamepadAxis.LEFT_Y, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
 
                 var movement = new Vector2(x, y);
                 float l = movement.Length();
@@ -392,8 +392,8 @@ namespace Examples
                 float t = mouseMovementTimer / mouseMovementDuration; 
                 float f = ShapeMath.LerpFloat(0.2f, 1f, t);
                 float speed = screenArea.Size.Max() * 0.5f * dt * f;
-                var x = InputAction.CreateInputState(ShapeKeyboardButton.LEFT, ShapeKeyboardButton.RIGHT, KeyboardMouseMovementTag).AxisRaw;
-                var y = InputAction.CreateInputState(ShapeKeyboardButton.UP, ShapeKeyboardButton.DOWN, KeyboardMouseMovementTag).AxisRaw;
+                var x = ShapeInput.CreateInputState(ShapeKeyboardButton.LEFT, ShapeKeyboardButton.RIGHT, KeyboardMouseMovementTag).AxisRaw;
+                var y = ShapeInput.CreateInputState(ShapeKeyboardButton.UP, ShapeKeyboardButton.DOWN, KeyboardMouseMovementTag).AxisRaw;
 
                 var movement = new Vector2(x, y);
                 if (movement.LengthSquared() <= 0f) mouseMovementTimer = 0f;
@@ -596,7 +596,7 @@ namespace Examples
             //     NextGameTexture();
             // }
 
-            if (InputAction.IsInputAvailable(GameloopAccessTag))
+            if (ShapeInput.IsInputAvailable(GameloopAccessTag))
             {
                 int keypadNumber = -1;
                 if (ShapeKeyboardButton.KP_1.GetInputState().Pressed) keypadNumber = 1;
@@ -760,7 +760,7 @@ namespace Examples
             //gameloop
             var cancelKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ESCAPE);
             var cancelGB = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_LEFT);
-            InputActionUICancel= new(InputAction.AllAccessTag, cancelKB, cancelGB);
+            InputActionUICancel= new(ShapeInput.AllAccessTag, cancelKB, cancelGB);
             
           
             var fullscreenKB = new InputTypeKeyboardButton(ShapeKeyboardButton.F);

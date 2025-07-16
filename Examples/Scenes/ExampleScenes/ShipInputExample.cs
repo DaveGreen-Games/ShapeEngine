@@ -268,7 +268,7 @@ namespace Examples.Scenes.ExampleScenes
             GAMELOOP.Camera = camera;
             BitFlag mask = new(GAMELOOP.SceneAccessTag);
             mask = mask.Add(GAMELOOP.GamepadMouseMovementTag);
-            InputAction.LockBlacklist(mask);
+            ShapeInput.LockBlacklist(mask);
         }
 
         protected override void OnDeactivate()
@@ -277,7 +277,7 @@ namespace Examples.Scenes.ExampleScenes
             ShapeInput.ChangeActiveGamepadDeviceManager(ShapeInput.DefaultGamepadDeviceManager);
             GAMELOOP.MouseControlEnabled = true;
             GAMELOOP.ResetCamera();
-            InputAction.Unlock();
+            ShapeInput.Unlock();
         }
         public override void Reset()
         {

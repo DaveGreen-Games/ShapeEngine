@@ -1,5 +1,4 @@
 using System.Text;
-using ShapeEngine.Core.Structs;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Input;
@@ -8,7 +7,7 @@ namespace ShapeEngine.Input;
 /// Represents an input action, which can be triggered by various input types and devices.
 /// Handles state, multi-tap, hold, and axis sensitivity/gravity.
 /// </summary>
-public partial class InputAction
+public class InputAction
 {
     /// <summary>
     /// Represents the toggle state for an input action.
@@ -48,12 +47,12 @@ public partial class InputAction
     /// <item>Only used when input actions are locked.</item>
     /// <item>If this tag is contained in the lock blacklist while the lock is active, the <see cref="InputState"/> of this <see cref="InputAction"/> will not be available.</item>
     /// <item>If this tag is contained in the lock whitelist while the lock is active, the <see cref="InputState"/> of this <see cref="InputAction"/> will always be available.</item>
-    /// <item>If <see cref="AllAccessTag"/> is used the <see cref="InputState"/> of this <see cref="InputAction"/> will always be available, regardless of the lock state.</item>
+    /// <item>If <see cref="ShapeInput.AllAccessTag"/> is used the <see cref="InputState"/> of this <see cref="InputAction"/> will always be available, regardless of the lock state.</item>
     /// <item>Use <see cref="StateRaw"/> to always get the current <see cref="InputState"/>.</item>
     /// </list>
     /// </remarks>
     /// </summary>
-    public uint AccessTag { get; private set; } = DefaultAccessTag;
+    public uint AccessTag { get; private set; } = ShapeInput.DefaultAccessTag;
 
     /// <summary>
     /// The associated gamepad device, if any.
@@ -131,7 +130,7 @@ public partial class InputAction
     {
         get
         {
-            if (Locked && !HasAccess(AccessTag) || !Active) return new();
+            if (ShapeInput.Locked && !ShapeInput.HasAccess(AccessTag) || !Active) return new();
             return state;
         }
         private set => state = value;

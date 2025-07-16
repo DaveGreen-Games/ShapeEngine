@@ -737,14 +737,14 @@ namespace Examples.Scenes.ExampleScenes
         protected override void OnActivate(Scene oldScene)
         {
             BitFlag mask = new(GAMELOOP.GameloopAccessTag);
-            mask = mask.Add(InputAction.DefaultAccessTag);
-            InputAction.LockWhitelist(mask);
+            mask = mask.Add(ShapeInput.DefaultAccessTag);
+            ShapeInput.LockWhitelist(mask);
             // InputAction.LockWhitelist(GAMELOOP.GameloopAccessTag, InputAction.DefaultAccessTag);
         }
 
         protected override void OnDeactivate()
         {
-            InputAction.Unlock();
+            ShapeInput.Unlock();
         }
 
         public override void Reset()
