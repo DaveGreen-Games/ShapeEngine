@@ -10,6 +10,21 @@ namespace ShapeEngine.Input;
 /// </summary>
 public partial class InputAction
 {
+    /// <summary>
+    /// Represents the toggle state for an input action.
+    /// </summary>
+    public enum ToggleState
+    {
+        /// <summary>
+        /// The toggle is off.
+        /// </summary>
+        Off,
+        /// <summary>
+        /// The toggle is on.
+        /// </summary>
+        On
+    }
+    
     #region Members
 
     /// <summary>
@@ -112,17 +127,17 @@ public partial class InputAction
         private set => state = value;
         
     }
-    private readonly List<IInputType> inputs = new();
-    
+    private readonly List<IInputType> inputs = [];
+
     /// <summary>
     /// Indicates whether the input action is toggled. Changes state on each press.
     /// </summary>
-    public bool Toggle { get; private set; }
+    public ToggleState Toggle { get; private set; } = ToggleState.Off;
     
     /// <summary>
-    /// Resets the toggle state to false.
+    /// Resets the toggle state to off.
     /// </summary>
-    public void ResetToggle() => Toggle = false;
+    public void ResetToggle() => Toggle = ToggleState.Off;
     #endregion
 
     #region Constructors
@@ -299,8 +314,17 @@ public partial class InputAction
         //Calculate New State
         current = new(current, holdF, multiTapF);
         State = new(State, current);
-        
-        if(State.Pressed) Toggle = !Toggle;
+
+        //switch between off and on
+        if (State.Pressed)
+        {
+            Toggle = Toggle switch
+            {
+                ToggleState.Off => ToggleState.On,
+                _ => ToggleState.Off
+            };
+            // Toggle = (Toggle == ToggleState.Off) ? ToggleState.On : ToggleState.Off;
+        }
         
         //Reset Multitap Count On Successful Multitap
         if (multiTapF >= 1f) multiTapCount = 0;
