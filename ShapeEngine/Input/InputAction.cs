@@ -725,4 +725,80 @@ public partial class InputAction
 
     }
     #endregion
+    
+    #region Static
+
+    /// <summary>
+    /// Updates a set of input actions with the specified gamepad and time delta.
+    /// </summary>
+    /// <param name="dt">The time delta in seconds.</param>
+    /// <param name="gamepad">The gamepad device to use.</param>
+    /// <param name="actions">The input actions to update.</param>
+    public static void UpdateActions(float dt, GamepadDevice? gamepad, params InputAction[] actions)
+    {
+        foreach (var action in actions)
+        {
+            action.Gamepad = gamepad;
+            action.Update(dt);
+        }
+    }
+
+    /// <summary>
+    /// Updates a list of input actions with the specified gamepad and time delta.
+    /// </summary>
+    /// <param name="dt">The time delta in seconds.</param>
+    /// <param name="gamepad">The gamepad device to use.</param>
+    /// <param name="actions">The input actions to update.</param>
+    public static void UpdateActions(float dt, GamepadDevice? gamepad, List<InputAction> actions)
+    {
+        foreach (var action in actions)
+        {
+            action.Gamepad = gamepad;
+            action.Update(dt);
+        }
+    }
+
+    /// <summary>
+    /// Gets descriptions for a list of input actions.
+    /// </summary>
+    /// <param name="inputDeviceType">The device type to filter by.</param>
+    /// <param name="shorthand">Whether to use shorthand names.</param>
+    /// <param name="typesPerActionCount">The number of types per action.</param>
+    /// <param name="actions">The input actions to describe.</param>
+    /// <returns>A list of action descriptions.</returns>
+    public static List<string> GetActionDescriptions(InputDeviceType inputDeviceType, bool shorthand, int typesPerActionCount, List<InputAction> actions)
+    {
+        var final = new List<string>();
+        foreach (var action in actions)
+        {
+            var description = action.GetInputTypeDescription(inputDeviceType, shorthand, typesPerActionCount, true);
+
+            final.Add(description);
+        }
+
+        return final;
+    }
+
+    /// <summary>
+    /// Gets descriptions for a set of input actions.
+    /// </summary>
+    /// <param name="inputDeviceType">The device type to filter by.</param>
+    /// <param name="shorthand">Whether to use shorthand names.</param>
+    /// <param name="typesPerActionCount">The number of types per action.</param>
+    /// <param name="actions">The input actions to describe.</param>
+    /// <returns>A list of action descriptions.</returns>
+    public static List<string> GetActionDescriptions(InputDeviceType inputDeviceType, bool shorthand, int typesPerActionCount, params InputAction[] actions)
+    {
+        var final = new List<string>();
+        foreach (var action in actions)
+        {
+            var description = action.GetInputTypeDescription(inputDeviceType, shorthand, typesPerActionCount, true);
+
+            final.Add(description);
+        }
+
+        return final;
+    }
+
+    #endregion
 }
