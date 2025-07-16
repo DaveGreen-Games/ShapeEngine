@@ -271,46 +271,80 @@ public static class ShapeInput
     #endregion
     
     #region Get InputState Methods
+
     /// <summary>
     /// Gets the input state for a keyboard button.
     /// </summary>
-    public static InputState GetInputState(this ShapeKeyboardButton button) => ActiveKeyboardDevice.GetButtonState(button);
+    /// <param name="button">The keyboard button to query.</param>
+    /// <param name="accessTag">The access tag used to check if the input request has access and can be consumed. Default is <see cref="AllAccessTag"/>.</param>
+    /// <returns>The input state for the specified keyboard button.</returns>
+    public static InputState GetInputState(this ShapeKeyboardButton button, uint accessTag = AllAccessTag)
+    {
+        if (Locked && !HasAccess(accessTag)) return new();
+        return ActiveKeyboardDevice.GetButtonState(button);
+    }
     /// <summary>
     /// Gets the input state for a mouse button.
     /// </summary>
-    public static InputState GetInputState(this ShapeMouseButton button) => ActiveMouseDevice.GetButtonState(button);
+    /// <param name="button">The mouse button to query.</param>
+    /// <param name="accessTag">The access tag used to check if the input request has access and can be consumed. Default is <see cref="AllAccessTag"/>.</param>
+    /// <returns>The input state for the specified mouse button.</returns>
+    public static InputState GetInputState(this ShapeMouseButton button, uint accessTag = AllAccessTag)
+    {
+        if (Locked && !HasAccess(accessTag)) return new();
+        return ActiveMouseDevice.GetButtonState(button);
+    }
     /// <summary>
     /// Gets the input state for a mouse axis.
     /// </summary>
-    public static InputState GetInputState(this ShapeMouseAxis axis) => ActiveMouseDevice.GetAxisState(axis);
+    /// <param name="axis">The mouse axis to query.</param>
+    /// <param name="accessTag">The access tag used to check if the input request has access and can be consumed. Default is <see cref="AllAccessTag"/>.</param>
+    /// <returns>The input state for the specified mouse axis.</returns>
+    public static InputState GetInputState(this ShapeMouseAxis axis, uint accessTag = AllAccessTag)
+    {
+        if (Locked && !HasAccess(accessTag)) return new();
+        return ActiveMouseDevice.GetAxisState(axis);
+    }
     /// <summary>
     /// Gets the input state for a mouse wheel axis.
     /// </summary>
-    public static InputState GetInputState(this ShapeMouseWheelAxis axis) => ActiveMouseDevice.GetWheelAxisState(axis);
+    /// <param name="axis">The mouse wheel axis to query.</param>
+    /// <param name="accessTag">The access tag used to check if the input request has access and can be consumed. Default is <see cref="AllAccessTag"/>.</param>
+    /// <returns>The input state for the specified mouse wheel axis.</returns>
+    public static InputState GetInputState(this ShapeMouseWheelAxis axis, uint accessTag = AllAccessTag)
+    {
+        if (Locked && !HasAccess(accessTag)) return new();
+        return ActiveMouseDevice.GetWheelAxisState(axis);
+    }
     /// <summary>
     /// Gets the input state for a gamepad button on a specific gamepad.
     /// </summary>
     /// <param name="button">The gamepad button.</param>
     /// <param name="gamepadIndex">The gamepad index.</param>
+    /// <param name="accessTag">The access tag used to check if the input request has access and can be consumed.
+    /// Access is only checked when <see cref="Locked"/> is set to <c>true</c>.</param>
     /// <returns>The input state for the button.</returns>
-    public static InputState GetInputState(this ShapeGamepadButton button, int gamepadIndex)
+    public static InputState GetInputState(this ShapeGamepadButton button, int gamepadIndex, uint accessTag = AllAccessTag)
     {
-       var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
-
-       return gamepad?.GetButtonState(button) ?? new();
+        if (Locked && !HasAccess(accessTag)) return new();
+        var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
+        return gamepad?.GetButtonState(button) ?? new();
     }
     /// <summary>
     /// Gets the input state for a gamepad axis on a specific gamepad.
     /// </summary>
     /// <param name="axis">The gamepad axis.</param>
     /// <param name="gamepadIndex">The gamepad index.</param>
+    /// <param name="accessTag">The access tag used to check if the input request has access and can be consumed.
+    /// Access is only checked when <see cref="Locked"/> is set to <c>true</c>.</param>
     /// <returns>The input state for the axis.</returns>
-    public static InputState GetInputState(this ShapeGamepadAxis axis, int gamepadIndex)
+    public static InputState GetInputState(this ShapeGamepadAxis axis, int gamepadIndex, uint accessTag = AllAccessTag)
     {
-       var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
-
-       return gamepad?.GetAxisState(axis) ?? new();
+        if (Locked && !HasAccess(accessTag)) return new();
+        var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
+        return gamepad?.GetAxisState(axis) ?? new();
     }
+    
     #endregion
 
     #region Consume InputState Methods
@@ -320,32 +354,60 @@ public static class ShapeInput
     /// </summary>
     /// <param name="button">The keyboard button to consume.</param>
     /// <param name="valid">True if the state was valid and consumed; otherwise, false.</param>
+    /// <param name="accessTag">The access tag used to check if the input request has access and can be consumed.
+    /// Access is only checked when <see cref="Locked"/> is set to <c>true</c>.</param>
     /// <returns>The consumed input state.</returns>
-    public static InputState ConsumeInputState(this ShapeKeyboardButton button, out bool valid) => ActiveKeyboardDevice.ConsumeButtonState(button, out valid);
+    public static InputState ConsumeInputState(this ShapeKeyboardButton button, out bool valid, uint accessTag = AllAccessTag)
+    {
+        valid = false;
+        if (Locked && !HasAccess(accessTag)) return new();
+        return ActiveKeyboardDevice.ConsumeButtonState(button, out valid);
+    }
 
     /// <summary>
     /// Consumes the input state for a mouse button.
     /// </summary>
     /// <param name="button">The mouse button to consume.</param>
     /// <param name="valid">True if the state was valid and consumed; otherwise, false.</param>
+    /// <param name="accessTag">The access tag used to check if the input request has access and can be consumed.
+    /// Access is only checked when <see cref="Locked"/> is set to <c>true</c>.</param>
     /// <returns>The consumed input state.</returns>
-    public static InputState ConsumeInputState(this ShapeMouseButton button, out bool valid) => ActiveMouseDevice.ConsumeButtonState(button, out valid);
+    public static InputState ConsumeInputState(this ShapeMouseButton button, out bool valid, uint accessTag = AllAccessTag)
+    {
+        valid = false;
+        if (Locked && !HasAccess(accessTag)) return new();
+        return ActiveMouseDevice.ConsumeButtonState(button, out valid);
+    }
 
     /// <summary>
     /// Consumes the input state for a mouse axis.
     /// </summary>
     /// <param name="axis">The mouse axis to consume.</param>
     /// <param name="valid">True if the state was valid and consumed; otherwise, false.</param>
+    /// <param name="accessTag">The access tag used to check if the input request has access and can be consumed.
+    /// Access is only checked when <see cref="Locked"/> is set to <c>true</c>.</param>
     /// <returns>The consumed input state.</returns>
-    public static InputState ConsumeInputState(this ShapeMouseAxis axis, out bool valid) => ActiveMouseDevice.ConsumeAxisState(axis, out valid);
+    public static InputState ConsumeInputState(this ShapeMouseAxis axis, out bool valid, uint accessTag = AllAccessTag)
+    {
+        valid = false;
+        if (Locked && !HasAccess(accessTag)) return new();
+        return ActiveMouseDevice.ConsumeAxisState(axis, out valid);
+    }
 
     /// <summary>
     /// Consumes the input state for a mouse wheel axis.
     /// </summary>
     /// <param name="axis">The mouse wheel axis to consume.</param>
     /// <param name="valid">True if the state was valid and consumed; otherwise, false.</param>
+    /// <param name="accessTag">The access tag used to check if the input request has access and can be consumed.
+    /// Access is only checked when <see cref="Locked"/> is set to <c>true</c>.</param>
     /// <returns>The consumed input state.</returns>
-    public static InputState ConsumeInputState(this ShapeMouseWheelAxis axis, out bool valid) => ActiveMouseDevice.ConsumeWheelAxisState(axis, out valid);
+    public static InputState ConsumeInputState(this ShapeMouseWheelAxis axis, out bool valid, uint accessTag = AllAccessTag)
+    {
+        valid = false;
+        if (Locked && !HasAccess(accessTag)) return new();
+        return ActiveMouseDevice.ConsumeWheelAxisState(axis, out valid);
+    }
 
     /// <summary>
     /// Consumes the input state for a gamepad button on a specific gamepad.
@@ -353,12 +415,15 @@ public static class ShapeInput
     /// <param name="button">The gamepad button to consume.</param>
     /// <param name="gamepadIndex">The index of the gamepad.</param>
     /// <param name="valid">True if the state was valid and consumed; otherwise, false.</param>
+    /// <param name="accessTag">The access tag used to check if the input request has access and can be consumed.
+    /// Access is only checked when <see cref="Locked"/> is set to <c>true</c>.</param>
     /// <returns>The consumed input state.</returns>
-    public static InputState ConsumeInputState(this ShapeGamepadButton button, int gamepadIndex, out bool valid)
+    public static InputState ConsumeInputState(this ShapeGamepadButton button, int gamepadIndex, out bool valid, uint accessTag = AllAccessTag)
     {
-       var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
-       valid = false;
-       return gamepad == null ? new() : gamepad.ConsumeButtonState(button, out valid);
+        valid = false;
+        if (Locked && !HasAccess(accessTag)) return new();
+        var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
+        return gamepad == null ? new() : gamepad.ConsumeButtonState(button, out valid);
     }
 
     /// <summary>
@@ -367,123 +432,127 @@ public static class ShapeInput
     /// <param name="axis">The gamepad axis to consume.</param>
     /// <param name="gamepadIndex">The index of the gamepad.</param>
     /// <param name="valid">True if the state was valid and consumed; otherwise, false.</param>
+    /// <param name="accessTag">The access tag used to check if the input request has access and can be consumed.
+    /// Access is only checked when <see cref="Locked"/> is set to <c>true</c>.</param>
     /// <returns>The consumed input state.</returns>
-    public static InputState ConsumeInputState(this ShapeGamepadAxis axis, int gamepadIndex, out bool valid)
+    public static InputState ConsumeInputState(this ShapeGamepadAxis axis, int gamepadIndex, out bool valid, uint accessTag = AllAccessTag)
     {
-       var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
-       valid = false;
-       return gamepad == null ? new() : gamepad.ConsumeAxisState(axis, out valid);
+        valid = false;
+        if (Locked && !HasAccess(accessTag)) return new();
+        var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
+        return gamepad == null ? new() : gamepad.ConsumeAxisState(axis, out valid);
     }
+    
     #endregion
     
     #region Create InputState Methods
     
     /// <summary>
-    /// Gets the input state for a keyboard button.
+    /// Creates an <see cref="InputState"/> for a keyboard button.
     /// </summary>
     /// <param name="button">The keyboard button.</param>
-    /// <param name="accessTag">The access tag.</param>
-    /// <returns>The input state.</returns>
+    /// <param name="accessTag">The access tag for input access control. See <see cref="Locked"/> system for more info.</param>
+    /// <returns>The created <see cref="InputState"/>.</returns>
     public static InputState CreateInputState(ShapeKeyboardButton button, uint accessTag)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        return ShapeInput.ActiveKeyboardDevice.CreateInputState(button);
+        return ActiveKeyboardDevice.CreateInputState(button);
     }
-
+    
     /// <summary>
-    /// Gets the input state for a mouse button.
+    /// Creates an <see cref="InputState"/> for a mouse button.
     /// </summary>
     /// <param name="button">The mouse button.</param>
-    /// <param name="accessTag">The access tag.</param>
-    /// <returns>The input state.</returns>
+    /// <param name="accessTag">The access tag for input access control. See <see cref="Locked"/> system for more info.</param>
+    /// <returns>The created <see cref="InputState"/>.</returns>
     public static InputState CreateInputState(ShapeMouseButton button, uint accessTag)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        return ShapeInput.ActiveMouseDevice.CreateInputState(button);
+        return ActiveMouseDevice.CreateInputState(button);
     }
-
+    
     /// <summary>
-    /// Gets the input state for a gamepad button.
+    /// Creates an <see cref="InputState"/> for a gamepad button.
     /// </summary>
     /// <param name="button">The gamepad button.</param>
-    /// <param name="accessTag">The access tag.</param>
-    /// <param name="gamepadIndex">The gamepad index.</param>
-    /// <param name="deadzone">The deadzone threshold.</param>
-    /// <returns>The input state.</returns>
+    /// <param name="accessTag">The access tag for input access control. See <see cref="Locked"/> system for more info.</param>
+    /// <param name="gamepadIndex">The index of the gamepad.</param>
+    /// <param name="deadzone">The deadzone value for input sensitivity.</param>
+    /// <returns>The created <see cref="InputState"/>.</returns>
     public static InputState CreateInputState(ShapeGamepadButton button, uint accessTag, int gamepadIndex, float deadzone = 0.2f)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        var gamepad = ShapeInput.ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
+        var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
         return gamepad?.CreateInputState(button, deadzone) ?? new();
     }
-
+    
     /// <summary>
-    /// Gets the input state for a keyboard button axis.
+    /// Creates an <see cref="InputState"/> for a keyboard button axis (negative and positive).
     /// </summary>
-    /// <param name="neg">The negative direction button.</param>
-    /// <param name="pos">The positive direction button.</param>
-    /// <param name="accessTag">The access tag.</param>
-    /// <returns>The input state.</returns>
+    /// <param name="neg">The negative keyboard button.</param>
+    /// <param name="pos">The positive keyboard button.</param>
+    /// <param name="accessTag">The access tag for input access control. See <see cref="Locked"/> system for more info.</param>
+    /// <returns>The created <see cref="InputState"/>.</returns>
     public static InputState CreateInputState(ShapeKeyboardButton neg, ShapeKeyboardButton pos, uint accessTag)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        return ShapeInput.ActiveKeyboardDevice.CreateInputState(neg, pos);
+        return ActiveKeyboardDevice.CreateInputState(neg, pos);
     }
-
+    
     /// <summary>
-    /// Gets the input state for a mouse button axis.
+    /// Creates an <see cref="InputState"/> for a mouse button axis (negative and positive).
     /// </summary>
-    /// <param name="neg">The negative direction button.</param>
-    /// <param name="pos">The positive direction button.</param>
-    /// <param name="accessTag">The access tag.</param>
-    /// <returns>The input state.</returns>
+    /// <param name="neg">The negative mouse button.</param>
+    /// <param name="pos">The positive mouse button.</param>
+    /// <param name="accessTag">The access tag for input access control. See <see cref="Locked"/> system for more info.</param>
+    /// <returns>The created <see cref="InputState"/>.</returns>
     public static InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, uint accessTag)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        return ShapeInput.ActiveMouseDevice.CreateInputState(neg, pos);
+        return ActiveMouseDevice.CreateInputState(neg, pos);
     }
-
+    
     /// <summary>
-    /// Gets the input state for a gamepad button axis.
+    /// Creates an <see cref="InputState"/> for a gamepad button axis (negative and positive).
     /// </summary>
-    /// <param name="neg">The negative direction button.</param>
-    /// <param name="pos">The positive direction button.</param>
-    /// <param name="accessTag">The access tag.</param>
-    /// <param name="gamepadIndex">The gamepad index.</param>
-    /// <param name="deadzone">The deadzone threshold.</param>
-    /// <returns>The input state.</returns>
+    /// <param name="neg">The negative gamepad button.</param>
+    /// <param name="pos">The positive gamepad button.</param>
+    /// <param name="accessTag">The access tag for input access control. See <see cref="Locked"/> system for more info.</param>
+    /// <param name="gamepadIndex">The index of the gamepad.</param>
+    /// <param name="deadzone">The deadzone value for input sensitivity.</param>
+    /// <returns>The created <see cref="InputState"/>.</returns>
     public static InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, uint accessTag, int gamepadIndex, float deadzone = 0.2f)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        var gamepad = ShapeInput.ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
+        var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
         return gamepad?.CreateInputState(neg, pos, deadzone) ?? new();
     }
-
+    
     /// <summary>
-    /// Gets the input state for a mouse wheel axis.
+    /// Creates an <see cref="InputState"/> for a mouse wheel axis.
     /// </summary>
     /// <param name="axis">The mouse wheel axis.</param>
-    /// <param name="accessTag">The access tag.</param>
-    /// <param name="deadzone">The deadzone threshold.</param>
-    /// <returns>The input state.</returns>
+    /// <param name="accessTag">The access tag for input access control. See <see cref="Locked"/> system for more info.</param>
+    /// <param name="deadzone">The deadzone value for input sensitivity.</param>
+    /// <returns>The created <see cref="InputState"/>.</returns>
     public static InputState CreateInputState(ShapeMouseWheelAxis axis, uint accessTag, float deadzone = 1f)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        return ShapeInput.ActiveMouseDevice.CreateInputState(axis, deadzone);
+        return ActiveMouseDevice.CreateInputState(axis, deadzone);
     }
-
+    
     /// <summary>
-    /// Gets the input state for a gamepad axis.
+    /// Creates an <see cref="InputState"/> for a gamepad axis.
     /// </summary>
     /// <param name="axis">The gamepad axis.</param>
-    /// <param name="accessTag">The access tag.</param>
-    /// <param name="gamepadIndex">The gamepad index.</param>
-    /// <param name="deadzone">The deadzone threshold.</param>
-    /// <returns>The input state.</returns>
+    /// <param name="accessTag">The access tag for input access control. See <see cref="Locked"/> system for more info.</param>
+    /// <param name="gamepadIndex">The index of the gamepad.</param>
+    /// <param name="deadzone">The deadzone value for input sensitivity.</param>
+    /// <returns>The created <see cref="InputState"/>.</returns>
     public static InputState CreateInputState(ShapeGamepadAxis axis, uint accessTag, int gamepadIndex, float deadzone = 0.2f)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        var gamepad = ShapeInput.ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
+        var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
         return gamepad?.CreateInputState(axis, deadzone) ?? new();
     }
 
@@ -633,21 +702,24 @@ public static class ShapeInput
     /// <summary>
     /// This access tag grants access regardless of the input system lock.
     /// </summary>
-    public static readonly uint AllAccessTag = NextTag;
+    public const uint AllAccessTag = 1; // 2^0 (2 to the power of 0)
 
     /// <summary>
     /// The default access tag for actions.
     /// </summary>
-    public static readonly uint DefaultAccessTag = NextTag;
+    public const uint DefaultAccessTag = 2; // 2^1 (2 to the power of 1)
 
     /// <summary>
     /// Indicates if the input system is currently locked.
+    /// When set to <c>true</c>, <see cref="InputAction"/>s and other input requests will only be processed
+    /// if they have the <see cref="AllAccessTag"/> or their access tag is contained in the lock whitelist.
+    /// All <see cref="InputAction"/>s and input request with an access tag contained in the lock blacklist will not be processed.
     /// </summary>
     public static bool Locked { get; private set; }
 
     private static BitFlag lockWhitelist;
     private static BitFlag lockBlacklist;
-    private static uint tagPowerCounter = 1;
+    private static uint tagPowerCounter = 2; //0 and 1 are reserved for AllAccessTag and DefaultAccessTag respectively.
 
     /// <summary>
     /// Gets the next available access tag.
@@ -659,7 +731,7 @@ public static class ShapeInput
     /// <summary>
     /// Locks the input system, clearing all whitelists and blacklists.
     /// <remarks>
-    /// Only <see cref="InputAction"/> with <see cref="AllAccessTag"/> will be able to trigger.
+    /// Only <see cref="InputAction"/>s and input requests with <see cref="AllAccessTag"/> will be processed.
     /// </remarks>
     /// </summary>
     public static void Lock()
@@ -672,8 +744,8 @@ public static class ShapeInput
     /// <summary>
     /// Locks the input system with a specific whitelist and blacklist.
     /// <remarks>
-    /// All <see cref="InputAction"/> with a tag contained in the whitelist will be able to trigger.
-    /// All <see cref="InputAction"/> with a tag contained in the blacklist will not be able to trigger.
+    /// All <see cref="InputAction"/>s and other input requests with a tag contained in the whitelist or with the <see cref="AllAccessTag"/> will be processed.
+    /// All <see cref="InputAction"/>s and other input requests with a tag contained in the blacklist will not be processed.
     /// </remarks>
     /// </summary>
     /// <param name="whitelist">The whitelist of access tags.</param>
@@ -688,7 +760,7 @@ public static class ShapeInput
     /// <summary>
     /// Locks the input system with a specific whitelist.
     /// <remarks>
-    /// All <see cref="InputAction"/> with a tag contained in the whitelist will be able to trigger.
+    /// All <see cref="InputAction"/>s and other input requests with a tag contained in the whitelist or with the <see cref="AllAccessTag"/> will be processed.
     /// </remarks>
     /// </summary>
     /// <param name="whitelist">The whitelist of access tags.</param>
@@ -702,7 +774,7 @@ public static class ShapeInput
     /// <summary>
     /// Locks the input system with a specific blacklist.
     /// <remarks>
-    /// All <see cref="InputAction"/> with a tag contained in the blacklist will not be able to trigger.
+    /// All <see cref="InputAction"/>s and other input requests with a tag contained in the blacklist will not be processed.
     /// </remarks>
     /// </summary>
     /// <param name="blacklist">The blacklist of access tags.</param>
