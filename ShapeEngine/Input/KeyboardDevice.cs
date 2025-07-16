@@ -79,6 +79,8 @@ public sealed class KeyboardDevice : InputDevice
     
     /// <summary>
     /// Returns whether the keyboard device is currently locked.
+    /// Locking can be used to temporarily disable input processing.
+    /// This does not affect whether the device is active or not.
     /// </summary>
     public override bool IsLocked() => isLocked;
 
@@ -151,7 +153,8 @@ public sealed class KeyboardDevice : InputDevice
     public override void Calibrate(){}
     
     /// <summary>
-    /// Indicates whether the mouse device is currently active.
+    /// Indicates whether the mouse device is currently active,
+    /// as in being used by the <see cref="ShapeInput"/> class to generate input.
     /// </summary>
     public override bool IsActive() => isActive;
     

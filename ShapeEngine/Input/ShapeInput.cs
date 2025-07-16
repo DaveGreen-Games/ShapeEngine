@@ -90,10 +90,14 @@ public static class ShapeInput
     #region Input Device Handling
 
     /// <summary>
-    /// Changes the active mouse device.
+    /// Changes the active <see cref="MouseDevice"/>.
     /// </summary>
-    /// <param name="device">The new mouse device to set as active.</param>
+    /// <param name="device">The new <see cref="MouseDevice"/> to set as active.</param>
     /// <returns>True if the device was changed; otherwise, false.</returns>
+    /// <remarks>
+    /// This will call <see cref="MouseDevice.Deactivate"/> on the current active <see cref="MouseDevice"/> and it will call <see cref="MouseDevice.Activate"/> on the new <see cref="MouseDevice"/>.
+    /// This will change the active state of both the current and the new <see cref="MouseDevice"/>.
+    /// </remarks>
     public static bool ChangeActiveMouseDevice(MouseDevice device)
     {
         if (device == ActiveMouseDevice) return false;
@@ -109,10 +113,14 @@ public static class ShapeInput
     }
     
     /// <summary>
-    /// Changes the active keyboard device.
+    /// Changes the active <see cref="KeyboardDevice"/>.
     /// </summary>
-    /// <param name="device">The new keyboard device to set as active.</param>
+    /// <param name="device">The new <see cref="KeyboardDevice"/> to set as active.</param>
     /// <returns>True if the device was changed; otherwise, false.</returns>
+    /// <remarks>
+    /// This will call <see cref="KeyboardDevice.Deactivate"/> on the current active <see cref="KeyboardDevice"/> and it will call <see cref="KeyboardDevice.Activate"/> on the new <see cref="KeyboardDevice"/>.
+    /// This will change the active state of both the current and the new <see cref="KeyboardDevice"/>.
+    /// </remarks>
     public static bool ChangeActiveKeybordDevice(KeyboardDevice device)
     {
         if (device == ActiveKeyboardDevice) return false;
@@ -128,10 +136,15 @@ public static class ShapeInput
     }
     
     /// <summary>
-    /// Changes the active gamepad device manager.
+    /// Changes the active <see cref="GamepadDeviceManager"/>.
     /// </summary>
-    /// <param name="deviceManager">The new gamepad device manager to set as active.</param>
+    /// <param name="deviceManager">The new <see cref="GamepadDeviceManager"/> to set as active.</param>
     /// <returns>True if the device manager was changed; otherwise, false.</returns>
+    /// <remarks>
+    /// This will call <see cref="GamepadDeviceManager.Deactivate"/> on the current active <see cref="GamepadDeviceManager"/> and it will call <see cref="GamepadDeviceManager.Activate"/> on the new <see cref="GamepadDeviceManager"/>.
+    /// This will change the active state of both the current and the new <see cref="GamepadDeviceManager"/>.
+    /// This will also deactivate all <see cref="GamepadDevice"/>s in the current <see cref="GamepadDeviceManager"/> and activate all <see cref="GamepadDevice"/>s in the new <see cref="GamepadDeviceManager"/>.
+    /// </remarks>
     public static bool ChangeActiveGamepadDeviceManager(GamepadDeviceManager deviceManager)
     {
         if (deviceManager == ActiveGamepadDeviceManager) return false;
@@ -147,9 +160,9 @@ public static class ShapeInput
     }
     
     /// <summary>
-    /// Applies the <see cref="InputDeviceUsageDetectionSettings"/> to all input devices.
+    /// Applies the <see cref="InputDeviceUsageDetectionSettings"/> to all currently active input devices.
     /// </summary>
-    /// <param name="settings">The new input device change settings to apply.</param>
+    /// <param name="settings">The new <see cref="InputDeviceUsageDetectionSettings"/> to apply.</param>
     /// <remarks>
     /// Settings are applied to <see cref="ActiveMouseDevice"/>,
     /// <see cref="ActiveKeyboardDevice"/>,
