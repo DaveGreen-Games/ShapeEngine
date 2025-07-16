@@ -374,8 +374,8 @@ namespace Examples
                 mouseMovementTimer = 0f;
                 float speed = screenArea.Size.Max() * 0.75f * dt;
                 int gamepad = ShapeInput.ActiveGamepadDeviceManager.LastUsedGamepad.Index;
-                var x = InputAction.GetState(ShapeGamepadAxis.LEFT_X, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
-                var y = InputAction.GetState(ShapeGamepadAxis.LEFT_Y, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
+                var x = InputAction.CreateInputState(ShapeGamepadAxis.LEFT_X, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
+                var y = InputAction.CreateInputState(ShapeGamepadAxis.LEFT_Y, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
 
                 var movement = new Vector2(x, y);
                 float l = movement.Length();
@@ -392,8 +392,8 @@ namespace Examples
                 float t = mouseMovementTimer / mouseMovementDuration; 
                 float f = ShapeMath.LerpFloat(0.2f, 1f, t);
                 float speed = screenArea.Size.Max() * 0.5f * dt * f;
-                var x = InputAction.GetState(ShapeKeyboardButton.LEFT, ShapeKeyboardButton.RIGHT, KeyboardMouseMovementTag).AxisRaw;
-                var y = InputAction.GetState(ShapeKeyboardButton.UP, ShapeKeyboardButton.DOWN, KeyboardMouseMovementTag).AxisRaw;
+                var x = InputAction.CreateInputState(ShapeKeyboardButton.LEFT, ShapeKeyboardButton.RIGHT, KeyboardMouseMovementTag).AxisRaw;
+                var y = InputAction.CreateInputState(ShapeKeyboardButton.UP, ShapeKeyboardButton.DOWN, KeyboardMouseMovementTag).AxisRaw;
 
                 var movement = new Vector2(x, y);
                 if (movement.LengthSquared() <= 0f) mouseMovementTimer = 0f;
