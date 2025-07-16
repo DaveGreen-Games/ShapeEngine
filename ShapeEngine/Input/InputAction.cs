@@ -28,13 +28,14 @@ public partial class InputAction
     #region Members
 
     /// <summary>
-    /// Indicates if this input action is enabled.
+    /// Indicates if this input action is active.
     /// </summary>
     /// <remarks>
-    /// If this <see cref="InputAction"/> is disabled, it will still process input and update the <see cref="InputState"/> but <see cref="State"/> will return an empty <see cref="InputState"/>.
-    /// Use <see cref="StateRaw"/> to gain access to the current <see cref="InputState"/> regardless of the enabled state.
+    /// If this <see cref="InputAction"/> is not active,
+    /// it will still process input and update the current <see cref="InputState"/> but the <see cref="State"/> member will return an empty <see cref="InputState"/>.
+    /// Use <see cref="StateRaw"/> to gain access to the current <see cref="InputState"/> regardless of the acitve state.
     /// </remarks>
-    public bool Enabled = true;
+    public bool Active = true;
     /// <summary>
     /// The unique identifier for this input action.
     /// </summary>
@@ -120,16 +121,17 @@ public partial class InputAction
     
     private InputState state = new();
     /// <summary>
-    /// The current state of this input action. Taking access and enabled state into account.
+    /// The current state of this input action. Taking access and <see cref="Active"/> state into account.
     /// </summary>
     /// <remarks>
-    /// If this <see cref="InputAction"/> is not enabled or does not have access, the <see cref="InputState"/> will be empty.
+    /// If this <see cref="InputAction"/> is not active or does not have access,
+    /// the <see cref="InputState"/> will be empty.
     /// </remarks>
     public InputState State
     {
         get
         {
-            if (Locked && !HasAccess(AccessTag) || !Enabled) return new();
+            if (Locked && !HasAccess(AccessTag) || !Active) return new();
             return state;
         }
         private set => state = value;
@@ -137,7 +139,7 @@ public partial class InputAction
     }
 
     /// <summary>
-    /// Gets the raw input state for this action, without access or enabled checks.
+    /// Gets the raw input state for this action, without access checks and ignoring the <see cref="Active"/> state.
     /// </summary>
     public InputState StateRaw => state;
     
@@ -398,7 +400,7 @@ public partial class InputAction
             {
                 axisSensitivity = axisSensitivity,
                 axisGravitiy = axisGravitiy,
-                Enabled = this.Enabled
+                Active = this.Active
             };
             return copy;
         }
@@ -408,7 +410,7 @@ public partial class InputAction
             {
                 axisSensitivity = axisSensitivity,
                 axisGravitiy = axisGravitiy,
-                Enabled = this.Enabled
+                Active = this.Active
             };
             return copy;
         }
