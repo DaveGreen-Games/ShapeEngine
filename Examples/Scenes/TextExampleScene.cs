@@ -31,7 +31,7 @@ namespace Examples.Scenes
 
         protected readonly TextInputBox TextInputBox = new("Enter Text into this box");
 
-        protected readonly uint accessTagTextBox = ShapeInput.NextTag; // BitFlag.GetFlagUint(12);
+        protected readonly uint accessTagTextBox = ShapeInput.NextAccessTag; // BitFlag.GetFlagUint(12);
         
         private readonly InputAction iaEnterText;
         private readonly InputAction iaCancelText;

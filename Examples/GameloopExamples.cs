@@ -111,11 +111,11 @@ namespace Examples
 
         public bool DrawCursor = true;
 
-        public readonly uint UIAccessTag = ShapeInput.NextTag; // BitFlag.GetFlagUint(2);
-        public readonly uint GameloopAccessTag = ShapeInput.NextTag; // BitFlag.GetFlagUint(3);
-        public readonly uint SceneAccessTag =  ShapeInput.NextTag; //BitFlag.GetFlagUint(4);
-        public readonly uint GamepadMouseMovementTag = ShapeInput.NextTag; // BitFlag.GetFlagUint(5);
-        public readonly uint KeyboardMouseMovementTag =  ShapeInput.NextTag; //BitFlag.GetFlagUint(6);
+        public readonly uint UIAccessTag = ShapeInput.NextAccessTag; // BitFlag.GetFlagUint(2);
+        public readonly uint GameloopAccessTag = ShapeInput.NextAccessTag; // BitFlag.GetFlagUint(3);
+        public readonly uint SceneAccessTag =  ShapeInput.NextAccessTag; //BitFlag.GetFlagUint(4);
+        public readonly uint GamepadMouseMovementTag = ShapeInput.NextAccessTag; // BitFlag.GetFlagUint(5);
+        public readonly uint KeyboardMouseMovementTag =  ShapeInput.NextAccessTag; //BitFlag.GetFlagUint(6);
         //ui
        
         public static IModifierKey  ModifierKeyGamepad = new ModifierKeyGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, false);

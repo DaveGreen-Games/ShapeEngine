@@ -651,8 +651,10 @@ public static class ShapeInput
 
     /// <summary>
     /// Gets the next available access tag.
+    /// <c>1</c> is reserved for <see cref="AllAccessTag"/>, <c>2</c> is reserved for <see cref="DefaultAccessTag"/>.
+    /// Only power of 2 values are used for access tags.
     /// </summary>
-    public static uint NextTag => BitFlag.GetFlagUint(tagPowerCounter++);
+    public static uint NextAccessTag => BitFlag.GetFlagUint(tagPowerCounter++);
     
     /// <summary>
     /// Locks the input system, clearing all whitelists and blacklists.
