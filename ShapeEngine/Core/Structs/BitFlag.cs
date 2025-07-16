@@ -123,6 +123,17 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
 
         return new(flag);
     }
+
+    /// <summary>
+    /// Determines whether the specified value is a power of two.
+    /// </summary>
+    /// <param name="value">The value to check.</param>
+    /// <returns><c>true</c> if the value is a power of two; otherwise, <c>false</c>.</returns>
+    public bool IsPowerOfTwo(uint value)
+    {
+        if (value == 0 || (value & (value - 1)) != 0) return false;
+        return true;
+    }
     #endregion
     
     #region Operation BitFlag
