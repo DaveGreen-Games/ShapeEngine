@@ -268,6 +268,11 @@ public static class ShapeInput
             }
         }
     }
+
+    internal static void EndFrame()
+    {
+        InputAction.ClearInputTypeBlocklist();
+    }
     #endregion
     
     #region Get InputState Methods

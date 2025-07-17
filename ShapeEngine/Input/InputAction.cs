@@ -7,7 +7,7 @@ namespace ShapeEngine.Input;
 /// Represents an input action, which can be triggered by various input types and devices.
 /// Handles state, multi-tap, hold, and axis sensitivity/gravity.
 /// </summary>
-public class InputAction
+public class InputAction : IComparable<InputAction>
 {
     /// <summary>
     /// Represents the toggle state for an input action.
@@ -24,6 +24,17 @@ public class InputAction
         On
     }
     
+    #region Blocking System
+    /// <summary>
+    /// Blacklist for input types used in the current frame.
+    /// <para>Whenever an <see cref="IInputType"/> is used in the <c>Update</c> function of an <see cref="InputAction"/>, it is added to this blacklist.</para>
+    /// <para>Any attempt to use an <see cref="IInputType"/> that is in the blacklist will result in an empty <see cref="InputState"/> for this frame.</para>
+    /// <para>The blacklist is cleared at the end of each frame.</para>
+    /// </summary>
+    private static readonly HashSet<IInputType> inputTypeBlockList = [];
+    internal static void ClearInputTypeBlocklist() => inputTypeBlockList.Clear();
+    #endregion
+    
     #region Members
 
     /// <summary>
@@ -35,6 +46,33 @@ public class InputAction
     /// Use <see cref="StateRaw"/> to gain access to the current <see cref="InputState"/> regardless of the acitve state.
     /// </remarks>
     public bool Active = true;
+    
+    /// <summary>
+    /// Gets or sets whether this input action blocks input types after use.
+    /// <para>
+    /// If set to <c>true</c>, input types used by this action will be added to the block list for the current frame,
+    /// preventing other actions from using the same input types until the next frame.
+    /// </para>
+    /// </summary>
+    /// <remarks>
+    /// Only <see cref="InputAction"/>s with <c>BlocksInput</c> enabled participate in this blocking system.
+    /// If set to <c>false</c>, this action neither blocks input types nor can it be blocked by others.
+    /// </remarks>
+    public bool BlocksInput { get; set; } = false;
+    
+    /// <summary>
+    /// Gets or sets the execution order for this <see cref="InputAction"/>.
+    /// <para>Input actions with a lower <see cref="ExecutionOrder"/> value are processed first.</para>
+    /// <para>This value is automatically assigned when the action is created, but can be set manually if needed.</para>
+    /// </summary>
+    /// <remarks>
+    /// If two <see cref="InputAction"/> have the same <see cref="ExecutionOrder"/>,
+    /// <see cref="ID"/> is used to determine the order.
+    /// A lower <see cref="ID"/> value is processed first.
+    /// </remarks>
+    public int ExecutionOrder { get; set; } = nextExecutionOrder++;
+    private static int nextExecutionOrder = 0;
+    
     /// <summary>
     /// The unique identifier for this input action.
     /// </summary>
@@ -261,12 +299,15 @@ public class InputAction
         foreach (var input in inputs)
         {
             var inputState = input.GetState(Gamepad);
+            
+            //if it can not be added to the input type block list, it was already used this frame before and therefore it is skipped now.
+            if (inputState.Down && BlocksInput && !inputTypeBlockList.Add(input)) continue;
+            
             current = current.Accumulate(inputState);
         }
-
         
         //Multi Tap & Hold System
-        float multiTapF = 0f;
+        var multiTapF = 0f;
         if (multiTapTimer > 0f)
         {
             multiTapTimer -= dt;
@@ -277,7 +318,7 @@ public class InputAction
             }
         }
         
-        float holdF = 0f;
+        var holdF = 0f;
         if (State.Up && current.Down) //pressed
         {
             if (holdDuration > 0)
@@ -802,4 +843,23 @@ public class InputAction
     }
 
     #endregion
+
+    /// <summary>
+    /// Compares this <see cref="InputAction"/> to another for sorting purposes.
+    /// <para>
+    /// First compares <see cref="ExecutionOrder"/>; if equal, compares <see cref="ID"/>.
+    /// </para>
+    /// </summary>
+    /// <param name="other">The other <see cref="InputAction"/> to compare to.</param>
+    /// <returns>
+    /// -1 if this instance precedes <paramref name="other"/>; 1 if it follows; 0 if equal.
+    /// </returns>
+    public int CompareTo(InputAction? other)
+    {
+        if (ReferenceEquals(this, other)) return 0;
+        if (other is null) return 1;
+        int executionOrderComparison = ExecutionOrder.CompareTo(other.ExecutionOrder);
+        if (executionOrderComparison != 0) return executionOrderComparison;
+        return ID.CompareTo(other.ID);
+    }
 }

@@ -80,6 +80,8 @@ public partial class Game
             DrawToScreen();
 
             ResolveDeferred();
+
+            ShapeInput.EndFrame();
         }
     }
 
