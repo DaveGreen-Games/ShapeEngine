@@ -3,6 +3,158 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Input;
 
+
+//TODO: Test if this works good or not.
+//If I like it, blocking system can be moved to this new class, to make InputActions only block other InputActions in the same sorted set.
+//Could have parent tree and child trees?
+
+/// <summary>
+/// Represents a sorted collection of <see cref="InputAction"/> objects, ordered by their execution order and ID.
+/// Provides methods for updating and retrieving input actions based on various criteria.
+/// </summary>
+public class InputActionTree : SortedSet<InputAction>
+{
+    /// <summary>
+    /// Gets or sets the current gamepad device associated with this input action tree.
+    /// If set, all input actions in the tree will use this gamepad for input processing during update.
+    /// </summary>
+    public GamepadDevice? CurrentGamepad { get; set; } = null;
+    
+    /// <summary>
+    /// Updates all <see cref="InputAction"/> instances in the tree.
+    /// If <see cref="CurrentGamepad"/> is set, assigns it to each action before updating.
+    /// </summary>
+    /// <param name="dt">The time delta in seconds.</param>
+    public void Update(float dt)
+    {
+        if (CurrentGamepad != null)
+        {
+            foreach (var action in this)
+            {
+                action.Gamepad = CurrentGamepad;
+                action.Update(dt);
+            }
+        }
+        else
+        {
+            foreach (var action in this)
+            {
+                action.Update(dt);
+            }
+        }
+        
+    }
+    
+    /// <summary>
+    /// Gets the first <see cref="InputAction"/> in the tree with the specified ID.
+    /// </summary>
+    /// <param name="id">The unique identifier of the input action.</param>
+    /// <returns>The matching <see cref="InputAction"/>, or null if not found.</returns>
+    public InputAction? GetById(int id)
+    {
+        foreach (var action in this)
+        {
+            if (action.ID == id) return action;
+        }
+        return null;
+    }
+    
+    /// <summary>
+    /// Gets the first <see cref="InputAction"/> in the tree with the specified execution order.
+    /// </summary>
+    /// <param name="executionOrder">The execution order to search for.</param>
+    /// <returns>The matching <see cref="InputAction"/>, or null if not found.</returns>
+    public InputAction? GetFirstByExecutionOrder(int executionOrder)
+    {
+        foreach (var action in this)
+        {
+            if (action.ExecutionOrder == executionOrder) return action;
+        }
+        return null;
+    }
+    
+    /// <summary>
+    /// Gets the first <see cref="InputAction"/> in the tree with the specified name.
+    /// </summary>
+    /// <param name="name">The title of the input action.</param>
+    /// <returns>The matching <see cref="InputAction"/>, or null if not found.</returns>
+    public InputAction? GetFirstByName(string name)
+    {
+        foreach (var action in this)
+        {
+            if (action.Title == name) return action;
+        }
+        return null;
+    }
+    
+    /// <summary>
+    /// Gets the first <see cref="InputAction"/> in the tree with the specified access tag.
+    /// </summary>
+    /// <param name="accessTag">The access tag to search for.</param>
+    /// <returns>The matching <see cref="InputAction"/>, or null if not found.</returns>
+    public InputAction? GetFirstByAccessTag(uint accessTag)
+    {
+        foreach (var action in this)
+        {
+            if (action.AccessTag == accessTag) return action;
+        }
+        return null;
+        // return this.FirstOrDefault(action => action.AccessTag == accessTag);
+    }
+    
+    /// <summary>
+    /// Gets all <see cref="InputAction"/> instances in the tree with the specified execution order.
+    /// </summary>
+    /// <param name="executionOrder">The execution order to search for.</param>
+    /// <returns>A list of matching <see cref="InputAction"/> instances, or null if none found.</returns>
+    public List<InputAction>? GetAllWithExecutionOrder(int executionOrder)
+    {
+        List<InputAction>? result = null;
+        foreach (var action in this)
+        {
+            if (action.ExecutionOrder != executionOrder) continue;
+            result ??= [];
+            result.Add(action);
+        }
+        return result;
+    }
+    
+    /// <summary>
+    /// Gets all <see cref="InputAction"/> instances in the tree with the specified name.
+    /// </summary>
+    /// <param name="name">The title of the input actions to search for.</param>
+    /// <returns>A list of matching <see cref="InputAction"/> instances, or null if none found.</returns>
+    public List<InputAction>? GetAllWithName(string name)
+    {
+        List<InputAction>? result = null;
+        foreach (var action in this)
+        {
+            if (action.Title != name) continue;
+            result ??= [];
+            result.Add(action);
+        }
+        return result;
+    }
+    
+    /// <summary>
+    /// Gets all <see cref="InputAction"/> instances in the tree with the specified access tag.
+    /// </summary>
+    /// <param name="accessTag">The access tag to search for.</param>
+    /// <returns>A list of matching <see cref="InputAction"/> instances, or null if none found.</returns>
+    public List<InputAction>? GetAllWithAccessTag(uint accessTag)
+    {
+        List<InputAction>? result = null;
+        foreach (var action in this)
+        {
+            if (action.AccessTag != accessTag) continue;
+            result ??= [];
+            result.Add(action);
+        }
+        return result;
+    }
+}
+
+
 /// <summary>
 /// Represents an input action, which can be triggered by various input types and devices.
 /// Handles state, multi-tap, hold, and axis sensitivity/gravity.
@@ -176,10 +328,10 @@ public class InputAction : IComparable<InputAction>
     }
 
     /// <summary>
-    /// Gets the raw input state for this action, without access checks and ignoring the <see cref="Active"/> state.
+    /// Gets the raw input state for this action, without access checks and ignoring the <see cref="Active"/> state. The blocking system still affects this.
     /// </summary>
     public InputState StateRaw => state;
-    
+
     private readonly List<IInputType> inputs = [];
 
     /// <summary>
@@ -274,6 +426,7 @@ public class InputAction : IComparable<InputAction>
 
     /// <summary>
     /// Consumes the current input state and marks it as consumed.
+    /// Does affect <see cref="State"/> and <see cref="StateRaw"/>.
     /// </summary>
     /// <param name="valid">True if the state was not already consumed; otherwise, false.</param>
     /// <returns>The previous input state before consumption.</returns>
@@ -770,6 +923,8 @@ public class InputAction : IComparable<InputAction>
     
     #region Static
 
+    //TODO: Remove UpdateActions functions?
+    
     /// <summary>
     /// Updates a set of input actions with the specified gamepad and time delta.
     /// </summary>
