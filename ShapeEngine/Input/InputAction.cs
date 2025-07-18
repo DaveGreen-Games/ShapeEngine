@@ -152,6 +152,39 @@ public class InputActionTree : SortedSet<InputAction>
         }
         return result;
     }
+
+    /// <summary>
+    /// Sets the <c>Active</c> property for all <see cref="InputAction"/> instances in the tree.
+    /// </summary>
+    /// <param name="active">The value to set for the <c>Active</c> property.</param>
+    public void SetAllActive(bool active)
+    {
+        foreach (var action in this)
+        {
+            action.Active = active;
+        }
+    }
+    
+    /// <summary>
+    /// Sets the <c>Active</c> property for all <see cref="InputAction"/> instances in the tree
+    /// that have the specified <paramref name="accessTag"/>.
+    /// </summary>
+    /// <param name="active">The value to set for the <c>Active</c> property.</param>
+    /// <param name="accessTag">The access tag to filter actions by.</param>
+    /// <returns>The number of actions that were updated.</returns>
+    public int SetAllActive(bool active, int accessTag)
+    {
+        int num = 0;
+        foreach (var action in this)
+        {
+            if (action.AccessTag != accessTag) continue;
+            num++;
+            action.Active = active;
+        }
+    
+        return num;
+    }
+    
 }
 
 
@@ -188,22 +221,34 @@ public class InputAction : IComparable<InputAction>
     #endregion
     
     #region Members
-
-    /// <summary>
-    /// Indicates if this input action is active.
-    /// </summary>
-    /// <remarks>
-    /// If this <see cref="InputAction"/> is not active,
-    /// it will still process input and update the current <see cref="InputState"/> but the <see cref="State"/> member will return an empty <see cref="InputState"/>.
-    /// Use <see cref="StateRaw"/> to gain access to the current <see cref="InputState"/> regardless of the acitve state.
-    /// </remarks>
-    public bool Active = true;
     
+    /// <summary>
+    /// Indicates if this input action is active. If set to <c>false</c>, the action will not process input or update its state.
+    /// </summary>
+    public bool Active
+    {
+        get => active;
+        set
+        {
+            if(active == value) return;
+            
+            active = value;
+            if (active) return;
+            Reset();
+        }
+    }
+
+    private bool active = true;
     /// <summary>
     /// Gets or sets whether this input action blocks input types after use.
     /// <para>
     /// If set to <c>true</c>, input types used by this action will be added to the block list for the current frame,
     /// preventing other actions from using the same input types until the next frame.
+    /// </para>
+    /// <para>
+    /// If <see cref="Active"/> is set to <c>false</c>,
+    /// or if <see cref="AccessTag"/> does not have access,
+    /// this action will not block input types.
     /// </para>
     /// </summary>
     /// <remarks>
@@ -216,11 +261,17 @@ public class InputAction : IComparable<InputAction>
     /// Gets or sets the execution order for this <see cref="InputAction"/>.
     /// <para>Input actions with a lower <see cref="ExecutionOrder"/> value are processed first.</para>
     /// <para>This value is automatically assigned when the action is created, but can be set manually if needed.</para>
+    /// <para>This only has an effect when used with <see cref="InputActionTree"/> or in other sorted collections
+    /// that use <see cref="CompareTo"/> for determining order.</para>
     /// </summary>
     /// <remarks>
     /// If two <see cref="InputAction"/> have the same <see cref="ExecutionOrder"/>,
     /// <see cref="ID"/> is used to determine the order.
     /// A lower <see cref="ID"/> value is processed first.
+    /// <para>
+    /// This is especially useful when combined with <see cref="BlocksInput"/>,
+    /// as it allows precise control over which <see cref="InputAction"/> instances can block others based on their execution order.
+    /// </para>
     /// </remarks>
     public int ExecutionOrder { get; set; } = nextExecutionOrder++;
     private static int nextExecutionOrder = 0;
@@ -238,7 +289,6 @@ public class InputAction : IComparable<InputAction>
     /// <item>If this tag is contained in the lock blacklist while the lock is active, the <see cref="InputState"/> of this <see cref="InputAction"/> will not be available.</item>
     /// <item>If this tag is contained in the lock whitelist while the lock is active, the <see cref="InputState"/> of this <see cref="InputAction"/> will always be available.</item>
     /// <item>If <see cref="ShapeInput.AllAccessTag"/> is used the <see cref="InputState"/> of this <see cref="InputAction"/> will always be available, regardless of the lock state.</item>
-    /// <item>Use <see cref="StateRaw"/> to always get the current <see cref="InputState"/>.</item>
     /// </list>
     /// </remarks>
     /// </summary>
@@ -308,29 +358,12 @@ public class InputAction : IComparable<InputAction>
         set => axisGravitiy = MathF.Max(0f, value);
     }
     
-    private InputState state = new();
     /// <summary>
-    /// The current state of this input action. Taking access and <see cref="Active"/> state into account.
+    /// Gets the current input state for this action.
+    /// This property is updated each frame by the <see cref="Update(float)"/> method,
+    /// reflecting the accumulated state from all associated input types.
     /// </summary>
-    /// <remarks>
-    /// If this <see cref="InputAction"/> is not active or does not have access,
-    /// the <see cref="InputState"/> will be empty.
-    /// </remarks>
-    public InputState State
-    {
-        get
-        {
-            if (ShapeInput.Locked && !ShapeInput.HasAccess(AccessTag) || !Active) return new();
-            return state;
-        }
-        private set => state = value;
-        
-    }
-
-    /// <summary>
-    /// Gets the raw input state for this action, without access checks and ignoring the <see cref="Active"/> state. The blocking system still affects this.
-    /// </summary>
-    public InputState StateRaw => state;
+    public InputState State { get; private set; }
 
     private readonly List<IInputType> inputs = [];
 
@@ -422,11 +455,23 @@ public class InputAction : IComparable<InputAction>
     public void ClearState()
     {
         State = new InputState(false, true, 0f, GetGamepadIndex(), InputDeviceType.Keyboard);
+        Toggle = ToggleState.Off;
+        
     }
 
     /// <summary>
-    /// Consumes the current input state and marks it as consumed.
-    /// Does affect <see cref="State"/> and <see cref="StateRaw"/>.
+    /// Resets the input action to its initial state, clearing the current input state,
+    /// hold timer, multi-tap timer, and multi-tap count.
+    /// </summary>
+    public void Reset()
+    {
+        ClearState();
+        holdTimer = 0f;
+        multiTapTimer = 0f;
+        multiTapCount = 0;
+    }
+    /// <summary>
+    /// Consumes the current input <see cref="State"/> and marks it as consumed.
     /// </summary>
     /// <param name="valid">True if the state was not already consumed; otherwise, false.</param>
     /// <returns>The previous input state before consumption.</returns>
@@ -445,8 +490,20 @@ public class InputAction : IComparable<InputAction>
     /// Updates the input action state based on the current input and time delta.
     /// </summary>
     /// <param name="dt">The time delta in seconds.</param>
+    /// <remarks>
+    /// <see cref="InputAction"/> is not updated when <see cref="Active"/> is set to <c>false</c>
+    /// or <see cref="ShapeInput.Locked"/> is set to <c>true</c>
+    /// and the <see cref="AccessTag"/> does not allow access.
+    /// </remarks>
     public void Update(float dt)
     {
+        if (!Active) return;
+        if (ShapeInput.Locked && !ShapeInput.HasAccess(AccessTag))
+        {
+            Reset();//Good idea? It does not update anything, therefore, it should be reset.
+            return;
+        }
+        
         //Accumulate All Input States From All Input Types
         InputState current = new();
         foreach (var input in inputs)
@@ -532,7 +589,6 @@ public class InputAction : IComparable<InputAction>
                 ToggleState.Off => ToggleState.On,
                 _ => ToggleState.Off
             };
-            // Toggle = (Toggle == ToggleState.Off) ? ToggleState.On : ToggleState.Off;
         }
         
         //Reset Multitap Count On Successful Multitap
