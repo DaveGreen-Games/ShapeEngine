@@ -210,14 +210,18 @@ public class InputAction : IComparable<InputAction>
     }
     
     #region Blocking System
-    /// <summary>
-    /// Blacklist for input types used in the current frame.
-    /// <para>Whenever an <see cref="IInputType"/> is used in the <c>Update</c> function of an <see cref="InputAction"/>, it is added to this blacklist.</para>
-    /// <para>Any attempt to use an <see cref="IInputType"/> that is in the blacklist will result in an empty <see cref="InputState"/> for this frame.</para>
-    /// <para>The blacklist is cleared at the end of each frame.</para>
-    /// </summary>
-    private static readonly HashSet<IInputType> inputTypeBlockList = [];
-    internal static void ClearInputTypeBlocklist() => inputTypeBlockList.Clear();
+    private static readonly Dictionary<GamepadDevice, HashSet<IInputType>> gamepadInputTypeBlockLists = [];
+    private static readonly  HashSet<IInputType> noGamepadInputTypeBlockList = [];
+    internal static void ClearInputTypeBlocklist()
+    {
+        //HashSets for specific gamepads should stay intact once added to the dictionary.
+        //Therefore, I only clear the lists contained in the dictionary and not the dictionary itself.
+        foreach (var list in gamepadInputTypeBlockLists.Values)
+        {
+            list.Clear();
+        }
+        noGamepadInputTypeBlockList.Clear();
+    }
     #endregion
     
     #region Members
@@ -511,7 +515,22 @@ public class InputAction : IComparable<InputAction>
             var inputState = input.GetState(Gamepad);
             
             //if it can not be added to the input type block list, it was already used this frame before and therefore it is skipped now.
-            if (inputState.Down && BlocksInput && !inputTypeBlockList.Add(input)) continue;
+            // if (inputState.Down && BlocksInput && !inputTypeBlockList.Add(input)) continue;
+            if (inputState.Down && BlocksInput)
+            {
+                if (Gamepad == null)
+                {
+                    if (!noGamepadInputTypeBlockList.Add(input)) continue;
+                }
+                else if (gamepadInputTypeBlockLists.TryGetValue(Gamepad, out var list))
+                {
+                    if(!list.Add(input)) continue;
+                }
+                else
+                {
+                    gamepadInputTypeBlockLists.Add(Gamepad, [input]);
+                }
+            }
             
             current = current.Accumulate(inputState);
         }
