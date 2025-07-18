@@ -1409,6 +1409,8 @@ public class ShapeIntersectionExample : ExampleScene
     private InputAction toggleProjection;
     private InputAction rotateMovingShape;
     private InputAction rotateStaticShape;
+    private readonly InputActionTree inputActionTree;
+    
     private const float rotationSpeedRad = 90 * ShapeMath.DEGTORAD;
     private Shape staticShape;
     private Shape movingShape;
@@ -1453,6 +1455,15 @@ public class ShapeIntersectionExample : ExampleScene
         var rotateStaticShapeGp = new InputTypeGamepadButtonAxis(ShapeGamepadButton.RIGHT_FACE_LEFT, ShapeGamepadButton.RIGHT_FACE_RIGHT);
         rotateStaticShape = new(rotateStaticShapeKb, rotateStaticShapeGp);
         
+        inputActionTree = [
+            nextStaticShape,
+            nextMovingShape,
+            changeMode,
+            toggleProjection,
+            rotateMovingShape,
+            rotateStaticShape
+        ];
+        
         textFont.FontSpacing = 1f;
         textFont.ColorRgba = Colors.Light;
 
@@ -1469,23 +1480,8 @@ public class ShapeIntersectionExample : ExampleScene
         base.HandleInput(dt, mousePosGame, mousePosGameUi, mousePosUI);
         var gamepad = GAMELOOP.CurGamepad;
         
-        nextStaticShape.Gamepad = gamepad;
-        nextStaticShape.Update(dt);
-        
-        nextMovingShape.Gamepad = gamepad;
-        nextMovingShape.Update(dt);
-        
-        changeMode.Gamepad = gamepad;
-        changeMode.Update(dt);
-        
-        toggleProjection.Gamepad = gamepad;
-        toggleProjection.Update(dt);
-        
-        rotateMovingShape.Gamepad = gamepad;
-        rotateMovingShape.Update(dt);
-        
-        rotateStaticShape.Gamepad = gamepad;
-        rotateStaticShape.Update(dt);
+        inputActionTree.CurrentGamepad = gamepad;
+        inputActionTree.Update(dt);
 
         if (!automatedTestingEnabled)
         {

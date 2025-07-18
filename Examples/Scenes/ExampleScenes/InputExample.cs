@@ -21,6 +21,7 @@ namespace Examples.Scenes.ExampleScenes
     {
         private InputAction joystickHorizontal;
         private InputAction joystickVertical;
+        private readonly InputActionTree inputActionTree;
         private string title;
         private TextFont textFont;
         private float flashTimer = 0f;
@@ -56,6 +57,11 @@ namespace Examples.Scenes.ExampleScenes
                 joystickHorizontal = new(keyboardHorizontal, gamepadHorizontal );
                 joystickVertical = new(keyboardVertical, gamepadVertical );
             }
+            
+            inputActionTree = [
+                joystickHorizontal,
+                joystickVertical
+            ];
 
             joystickHorizontal.AxisGravity = 0.25f;
             joystickHorizontal.AxisSensitivity = 0.5f;
@@ -69,12 +75,9 @@ namespace Examples.Scenes.ExampleScenes
             {
                 curInputDeviceType = inputDeviceType;
             }
-            
-            joystickHorizontal.Gamepad = gamepad;
-            joystickVertical.Gamepad = gamepad;
-            
-            joystickHorizontal.Update(dt);
-            joystickVertical.Update(dt);
+
+            inputActionTree.CurrentGamepad = gamepad;
+            inputActionTree.Update(dt);
             
             float deadzone = 0.1f;
             if (MathF.Abs(joystickHorizontal.State.AxisRaw) < deadzone &&
@@ -179,6 +182,7 @@ namespace Examples.Scenes.ExampleScenes
         private InputDeviceType curInputDeviceType = InputDeviceType.Keyboard;
 
         private InputAction trigger;
+        private readonly InputActionTree inputActionTree;
         
         public TriggerVisualizer(bool left, Font font)
         {
@@ -199,6 +203,8 @@ namespace Examples.Scenes.ExampleScenes
                 trigger = new();
                 trigger.AddInput(triggerRight);
             }
+
+            inputActionTree = [trigger];
         }
         public override void Update(float dt, GamepadDevice? gamepad, InputDeviceType inputDeviceType)
         {
@@ -207,8 +213,8 @@ namespace Examples.Scenes.ExampleScenes
                 curInputDeviceType = inputDeviceType;
             }
             
-            trigger.Gamepad = gamepad;
-            trigger.Update(dt);
+            inputActionTree.CurrentGamepad = gamepad;
+            inputActionTree.Update(dt);
             
 
             if (trigger.State.Down)
@@ -324,6 +330,7 @@ namespace Examples.Scenes.ExampleScenes
             private InputDeviceType curInputDeviceType = InputDeviceType.Keyboard;
     
             private InputAction button;
+            private readonly InputActionTree inputActionTree;
             public ButtonVisualizer(bool left, Font font)
             {
                 this.textFont = new(font, 1f, Colors.Medium);
@@ -345,6 +352,8 @@ namespace Examples.Scenes.ExampleScenes
                     var rmb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
                     button = new(space, start, rmb);
                 }
+                
+                inputActionTree = [button];
             }
             public override void Update(float dt, GamepadDevice? gamepad, InputDeviceType inputDeviceType)
             {
@@ -353,8 +362,8 @@ namespace Examples.Scenes.ExampleScenes
                     curInputDeviceType = inputDeviceType;
                 }
                 
-                button.Gamepad = gamepad;
-                button.Update(dt);
+                inputActionTree.CurrentGamepad = gamepad;
+                inputActionTree.Update(dt);
                 
     
                 if (button.State.Down)
@@ -422,6 +431,7 @@ namespace Examples.Scenes.ExampleScenes
         private InputDeviceType curInputDeviceType = InputDeviceType.Keyboard;
 
         private InputAction button;
+        private readonly InputActionTree inputActionTree;
         public ButtonHoldVisualizer(Font font)
         {
             this.textFont = new(font, 1f, Colors.Medium);
@@ -431,6 +441,7 @@ namespace Examples.Scenes.ExampleScenes
             var x = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
             //var rmb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
             button = new(q, x);
+            inputActionTree = [button];
         }
         public override void Update(float dt, GamepadDevice? gamepad, InputDeviceType inputDeviceType)
         {
@@ -439,8 +450,8 @@ namespace Examples.Scenes.ExampleScenes
                 curInputDeviceType = inputDeviceType;
             }
             
-            button.Gamepad = gamepad;
-            button.Update(dt);
+            inputActionTree.CurrentGamepad = gamepad;
+            inputActionTree.Update(dt);
             
 
             if (button.State.Down)
@@ -570,9 +581,7 @@ namespace Examples.Scenes.ExampleScenes
         private InputDeviceType curInputDeviceType = InputDeviceType.Keyboard;
 
         private InputAction button;
-        // private string lastAction = string.Empty;
-        // private float lastActionTimer = 0f;
-        // private float lastActionDuration = 1f;
+        private readonly InputActionTree inputActionTree;
         public ButtonDoubleTapVisualizer(Font font)
         {
             this.textFont = new(font, 1f, Colors.Medium);
@@ -580,8 +589,10 @@ namespace Examples.Scenes.ExampleScenes
             this.title = "Double Tap";
             var q = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
             var x = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
-            //var rmb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
             button = new(q, x);
+            
+            inputActionTree = [button];
+            
             button.MultiTapDuration = 0.25f;
             button.MultiTapTarget = 2;
             button.HoldDuration = 1f;
@@ -593,9 +604,8 @@ namespace Examples.Scenes.ExampleScenes
                 curInputDeviceType = inputDeviceType;
             }
             
-            button.Gamepad = gamepad;
-            button.Update(dt);
-            
+            inputActionTree.CurrentGamepad = gamepad;
+            inputActionTree.Update(dt);
 
             if (button.State.Down)
             {

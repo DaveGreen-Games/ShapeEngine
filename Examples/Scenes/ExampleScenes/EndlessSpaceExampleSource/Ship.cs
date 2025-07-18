@@ -41,23 +41,13 @@ internal class Ship : CollisionObject, ICameraFollowTarget
 
     private InputAction iaMoveHor;
     private InputAction iaMoveVer;
+    private readonly InputActionTree inputActionTree;
     public int Health;
     public float HealthF => (float)Health / (float)MaxHp;
     public const int MaxHp = 3;
     private LaserBeam laserBeam;
     public CollisionHandler? collisionHandler;
-    private void SetupInput()
-    {
-        var moveHorKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
-        var moveHor2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-        var moveHorMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-        iaMoveHor = new(moveHorKB, moveHor2GP, moveHorMW);
-        
-        var moveVerKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
-        var moveVer2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-        var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-        iaMoveVer = new(moveVerKB, moveVer2GP, moveVerMW);
-    }
+    
     public Ship(Vector2 pos, float shipSize)
     {
         this.shipSize = shipSize;
@@ -73,7 +63,22 @@ internal class Ship : CollisionObject, ICameraFollowTarget
         // collider.OnCollisionEnded += OnColliderCollisionEnded;
         AddCollider(collider);
         hull = collider.GetTriangleShape();
-        SetupInput();
+        
+        var moveHorKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
+        var moveHor2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+        var moveHorMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
+        iaMoveHor = new(moveHorKB, moveHor2GP, moveHorMW);
+        
+        var moveVerKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
+        var moveVer2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+        var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
+        iaMoveVer = new(moveVerKB, moveVer2GP, moveVerMW);
+        
+        inputActionTree =
+        [
+            iaMoveHor,
+            iaMoveVer
+        ];
 
         Health = MaxHp;
         laserBeam = new(new ValueRange(6, 18), Colors.PcWarm, new BitFlag(AsteroidObstacle.CollisionLayer), 10, 2000);
@@ -205,11 +210,14 @@ internal class Ship : CollisionObject, ICameraFollowTarget
         
         
         float dt = time.Delta;
-        iaMoveHor.Gamepad = GAMELOOP.CurGamepad;
-        iaMoveHor.Update(dt);
+        inputActionTree.CurrentGamepad = GAMELOOP.CurGamepad;
+        inputActionTree.Update(dt);
         
-        iaMoveVer.Gamepad = GAMELOOP.CurGamepad;
-        iaMoveVer.Update(dt);
+        // iaMoveHor.Gamepad = GAMELOOP.CurGamepad;
+        // iaMoveHor.Update(dt);
+        //
+        // iaMoveVer.Gamepad = GAMELOOP.CurGamepad;
+        // iaMoveVer.Update(dt);
         
         Vector2 dir = new(iaMoveHor.State.AxisRaw, iaMoveVer.State.AxisRaw);
 

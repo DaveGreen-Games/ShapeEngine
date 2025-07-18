@@ -10,6 +10,13 @@ public static class ShapeInput
 {
     #region Members and Properties
     /// <summary>
+    /// A global collection of <see cref="InputActionTree"/> instances.
+    /// Each tree manages a hierarchy of input actions and their bindings.
+    /// </summary>
+    public static readonly InputActionTrees InputActionTrees = [];
+    
+    
+    /// <summary>
     /// Gets the current input device type in use.
     /// </summary>
     public static InputDeviceType CurrentInputDeviceType { get; private set; }
@@ -267,11 +274,17 @@ public static class ShapeInput
                 }
             }
         }
+
+
+        foreach (var tree in InputActionTrees)
+        {
+            tree.Update(dt);
+        }
     }
 
     internal static void EndFrame()
     {
-        InputAction.ClearInputTypeBlocklist();
+        // InputAction.ClearInputTypeBlocklist();
     }
     #endregion
     

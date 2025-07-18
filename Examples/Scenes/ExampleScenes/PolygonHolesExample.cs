@@ -88,22 +88,14 @@ public class PolygonHolesExample : ExampleScene
         
     }
 
-    
-
-    // private List<PolygonWithHoles> polygons = new(256);
-
-
-    // private PathsD difference = new();
-    // private PathsD intersection = new();
-    
     private Vector2 curPolygonPosition;
     private Polygon curPolygon;
     private Polygon main;
     private Triangulation triangulation;
     private readonly Polygons holes = new();
-    // private readonly Triangulation holeTriangles = new();
     
     private InputAction iaAddPolygon;
+    private readonly InputActionTree inputActionTree;
     
     public PolygonHolesExample()
     {
@@ -113,6 +105,8 @@ public class PolygonHolesExample : ExampleScene
         var addPolygonGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
         var addPolygonMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
         iaAddPolygon = new(addPolygonKB, addPolygonGP, addPolygonMB);
+
+        inputActionTree = [iaAddPolygon];
         
         textFont.FontSpacing = 1f;
         textFont.ColorRgba = Colors.Light;
@@ -121,7 +115,6 @@ public class PolygonHolesExample : ExampleScene
         var mainRect = new Rect(new Vector2(0f), new Size(1000), new AnchorPoint(0.5f));
         main = mainRect.ToPolygon();
         triangulation = main.Triangulate();
-        // polygons.Add(new(mainRect.ToPolygon()));
     }
     public override void Reset()
     {
@@ -135,8 +128,8 @@ public class PolygonHolesExample : ExampleScene
     protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi,  Vector2 mousePosUI)
     {
         var gamepad = GAMELOOP.CurGamepad;
-        iaAddPolygon.Gamepad = gamepad;
-        iaAddPolygon.Update(dt);
+        inputActionTree.CurrentGamepad = gamepad;
+        inputActionTree.Update(dt);
 
         if (iaAddPolygon.State.Pressed)
         {

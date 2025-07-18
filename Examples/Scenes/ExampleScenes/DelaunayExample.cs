@@ -33,6 +33,7 @@ namespace Examples.Scenes.ExampleScenes
 
         private readonly InputAction iaAddPoint;
         private readonly InputAction iaAddMultiplePoints;
+        private readonly InputActionTree inputActionTree;
 
         private float lineThickness = 0f;
         private float lineThicknessBig = 0f;
@@ -55,6 +56,8 @@ namespace Examples.Scenes.ExampleScenes
             iaAddMultiplePoints = new(addMultiplePointsKB, addMultiplePointsGP, addMultiplePointsMB);
             textFont.FontSpacing = 1f;
             textFont.ColorRgba = Colors.Light;
+            
+            inputActionTree = [iaAddPoint, iaAddMultiplePoints];
         }
         public override void Reset()
         {
@@ -84,11 +87,8 @@ namespace Examples.Scenes.ExampleScenes
             
             // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
             var gamepad = GAMELOOP.CurGamepad;
-            iaAddPoint.Gamepad = gamepad;
-            iaAddPoint.Update(dt);
-            
-            iaAddMultiplePoints.Gamepad = gamepad;
-            iaAddMultiplePoints.Update(dt);
+            inputActionTree.CurrentGamepad = gamepad;
+            inputActionTree.Update(dt);
             
             float pointDistanceSquared = vertexSizeBig * vertexSizeBig;
 

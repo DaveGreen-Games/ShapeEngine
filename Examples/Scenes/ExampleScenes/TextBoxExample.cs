@@ -34,9 +34,9 @@ namespace Examples.Scenes.ExampleScenes
             var increaseFontSpacingGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP);
             iaIncreaseFontSpacing = new(accessTagTextBox,increaseFontSpacingKB, increaseFontSpacingGP);
             
-            inputActions.Add(iaNextAlignement);
-            inputActions.Add(iaDeacreaseFontSpacing);
-            inputActions.Add(iaIncreaseFontSpacing);
+            inputActionTree.Add(iaNextAlignement);
+            inputActionTree.Add(iaDeacreaseFontSpacing);
+            inputActionTree.Add(iaIncreaseFontSpacing);
         }
 
         protected override void HandleInputTextEntryInactive(float dt, Vector2 mousePosGame, Vector2 mousePosUI)

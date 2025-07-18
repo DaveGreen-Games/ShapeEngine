@@ -56,6 +56,7 @@ namespace Examples.Scenes.ExampleScenes
             
             private readonly InputAction iaMoveHor;
             private readonly InputAction iaMoveVer;
+            private readonly InputActionTree inputActionTree;
             private readonly ColorScheme colorScheme;
             public readonly GamepadDevice Gamepad;
 
@@ -78,6 +79,13 @@ namespace Examples.Scenes.ExampleScenes
 
                 Gamepad = gamepad;
                 colorScheme = ColorSchemes[gamepad.Index];
+                
+                inputActionTree = new InputActionTree
+                {
+                    CurrentGamepad = gamepad
+                };
+                inputActionTree.Add(iaMoveHor);
+                inputActionTree.Add(iaMoveVer);
             }
 
             public bool Overlap(SpaceShip other)
@@ -99,9 +107,9 @@ namespace Examples.Scenes.ExampleScenes
             }
             public void Update(float dt)
             {
-                iaMoveHor.Update(dt);
-                iaMoveVer.Update(dt);
-                    
+                // iaMoveHor.Update(dt);
+                // iaMoveVer.Update(dt);
+                inputActionTree.Update(dt);
                 Vector2 dir = new(iaMoveHor.State.AxisRaw, iaMoveVer.State.AxisRaw);
                     
                 float lsq = dir.LengthSquared();
@@ -163,6 +171,7 @@ namespace Examples.Scenes.ExampleScenes
             public readonly InputAction Add;
             public readonly InputAction Remove;
             public readonly GamepadDevice Gamepad;
+            public readonly InputActionTree inputActionTree;
 
             public InputActionHelper(GamepadDevice gamepad)
             {
@@ -179,12 +188,20 @@ namespace Examples.Scenes.ExampleScenes
                 {
                     Gamepad = gamepad
                 };
+
+                inputActionTree = new InputActionTree
+                {
+                    CurrentGamepad = gamepad
+                };
+                inputActionTree.Add(Add);
+                inputActionTree.Add(Remove);
             }
 
             public void Update(float dt)
             {
-                Add.Update(dt);
-                Remove.Update(dt);
+                inputActionTree.Update(dt);
+                // Add.Update(dt);
+                // Remove.Update(dt);
             }
         }
         

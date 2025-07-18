@@ -3,7 +3,6 @@ using System.Numerics;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
 using Raylib_cs;
-using ShapeEngine.Color;
 using ShapeEngine.Core;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.CircleDef;
@@ -11,7 +10,6 @@ using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
-using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -27,7 +25,8 @@ namespace Examples.Scenes.ExampleScenes
         private InputAction createPoint;
         private InputAction deletePoint;
         private InputAction changeOffset;
-
+        private readonly InputActionTree inputActionTree;
+        
         private bool collisionSegmentValid = false;
         private Segment collisionSegment = new(); // new(new(-192, -450), new(466, 750));
         
@@ -51,6 +50,12 @@ namespace Examples.Scenes.ExampleScenes
             var offsetKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.S, ShapeKeyboardButton.W);
             var offsetGP = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_DOWN, ShapeGamepadButton.LEFT_FACE_UP, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
             changeOffset = new(offsetMW, offsetGP, offsetKB);
+            
+            inputActionTree = [ 
+                createPoint,
+                deletePoint,
+                changeOffset
+            ];
             
             textFont.FontSpacing = 1f;
             textFont.ColorRgba = Colors.Light;
@@ -81,14 +86,9 @@ namespace Examples.Scenes.ExampleScenes
             base.HandleInput(dt, mousePosGame, mousePosGameUi, mousePosUI);
             // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
             var gamepad = GAMELOOP.CurGamepad;
-            createPoint.Gamepad = gamepad;
-            createPoint.Update(dt);
             
-            deletePoint.Gamepad = gamepad;
-            deletePoint.Update(dt);
-            
-            changeOffset.Gamepad = gamepad;
-            changeOffset.Update(dt);
+            inputActionTree.CurrentGamepad = gamepad;
+            inputActionTree.Update(dt);
 
             var offsetState = changeOffset.State;
             offsetDelta += offsetState.AxisRaw * dt * 250f;

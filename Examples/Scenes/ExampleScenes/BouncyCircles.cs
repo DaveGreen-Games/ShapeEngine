@@ -94,7 +94,7 @@ namespace Examples.Scenes.ExampleScenes
 
         private InputAction iaAdd;
         private InputAction iaToggleConvexHull;
-        private List<InputAction> inputActions;
+        private readonly InputActionTree inputActionTree;
 
         private bool showConvexHull = false;
         private readonly List<GameObject> circles = new(65536);
@@ -121,7 +121,7 @@ namespace Examples.Scenes.ExampleScenes
             var toggleConvexHullMb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
             iaToggleConvexHull = new(toggleConvexHullKB, toggleConvexHullGP, toggleConvexHullMb);
             
-            inputActions = new() { iaAdd, iaToggleConvexHull };
+            inputActionTree = [iaAdd, iaToggleConvexHull];
 
         }
         public override void Reset()
@@ -144,8 +144,8 @@ namespace Examples.Scenes.ExampleScenes
             if (GAMELOOP.Paused) return;
             
             var gamepad = GAMELOOP.CurGamepad;
-            InputAction.UpdateActions(time.Delta, gamepad, inputActions);
-            
+            inputActionTree.CurrentGamepad = gamepad;
+            inputActionTree.Update(time.Delta);
         }
 
 

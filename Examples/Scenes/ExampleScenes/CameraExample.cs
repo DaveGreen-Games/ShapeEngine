@@ -37,7 +37,7 @@ namespace Examples.Scenes.ExampleScenes
         private readonly InputAction iaMoveCameraH;
         private readonly InputAction iaMoveCameraV;
         private readonly InputAction iaRotateCamera;
-        private readonly List<InputAction> inputActions;
+        private readonly InputActionTree inputActionTree;
         
         public CameraExample()
         {
@@ -61,7 +61,7 @@ namespace Examples.Scenes.ExampleScenes
                 //new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouse);
             iaRotateCamera = new(rotateCameraKB, rotateCameraGP, rotateCameraMb);
 
-            inputActions = new() { iaMoveCameraH, iaMoveCameraV, iaRotateCamera };
+            inputActionTree = [iaMoveCameraH, iaMoveCameraV, iaRotateCamera];
             
             camera = GAMELOOP.Camera;
             //boundaryRect = new(new Vector2(0, -45), new Vector2(1800, 810), new Vector2(0.5f));
@@ -87,13 +87,8 @@ namespace Examples.Scenes.ExampleScenes
         {
             var gamepad = GAMELOOP.CurGamepad;
             GAMELOOP.MouseControlEnabled = gamepad?.IsDown(ShapeGamepadAxis.RIGHT_TRIGGER, 0.1f) ?? true;
-            InputAction.UpdateActions(dt, gamepad, inputActions);
-            // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
-            // foreach (var ia in inputActions)
-            // {
-            //     ia.Gamepad = gamepadIndex;
-            //     ia.Update(dt);
-            // }
+            inputActionTree.CurrentGamepad = gamepad;
+            inputActionTree.Update(dt);
             HandleCameraPosition(dt);
             HandleCameraRotation(dt);
         }

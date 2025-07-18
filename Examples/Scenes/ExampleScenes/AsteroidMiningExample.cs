@@ -329,7 +329,7 @@ namespace Examples.Scenes.ExampleScenes
         // private SpawnAreaCollision spawnArea;
         private CollisionHandler? collisionHandler;
         public InputAction iaShootLaser;
-        public LaserDevice(Vector2 pos, float size, CollisionHandler? collisionHandler) 
+        public LaserDevice(Vector2 pos, float size, CollisionHandler? collisionHandler, InputAction shootLaser) 
         {
             this.collisionHandler = collisionHandler;
             this.pos = pos;
@@ -337,10 +337,8 @@ namespace Examples.Scenes.ExampleScenes
             this.rotRad = 0f;
             UpdateTriangle();
 
-            var shootKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
-            var shootGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
-            var shootMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
-            iaShootLaser = new(shootKB, shootGP, shootMB);
+            iaShootLaser = shootLaser;
+            
             //this.laserEndPoint = tip;
         }
         public void SetHybernate(bool enabled)
@@ -378,10 +376,6 @@ namespace Examples.Scenes.ExampleScenes
             laserPoints.Clear();
             laserEnabled = false;
             if (hybernate) return;
-            
-            // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
-            iaShootLaser.Gamepad = GAMELOOP.CurGamepad;
-            iaShootLaser.Update(time.Delta);
             
             if (aimingMode)
             {
@@ -557,22 +551,21 @@ namespace Examples.Scenes.ExampleScenes
         private readonly InputAction iaPickRectangleShape;
         private readonly InputAction iaPickPolygonShape;
         private readonly InputAction iaDragLaser;
-        private readonly List<InputAction> inputActions;
+        private readonly InputAction iaShootLaser;
+        private readonly InputActionTree inputActionTree;
         
         public AsteroidMiningExample()
         {
             Title = "Asteroid Mining Example";
-            // font = GAMELOOP.GetFont(FontIDs.JetBrains);
             UpdateBoundaryRect(GAMELOOP.GameScreenInfo.Area);
-            // spawnArea = new SpawnAreaCollision(boundaryRect, 4, 4);
             InitSpawnArea(boundaryRect);
             InitCollisionHandler(boundaryRect, 4, 4);
             
-            // if (InitSpawnArea(boundaryRect)) SpawnArea?.InitCollisionHandler(4, 4);
-
-            laserDevice = new(new Vector2(0f), 100, CollisionHandler);
-            SpawnArea?.AddGameObject(laserDevice);
-
+            var shootKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
+            var shootGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
+            var shootMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
+            iaShootLaser = new(shootKB, shootGP, shootMB);
+            
             var modeChangeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.TAB);
             var modeChangeGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
             iaModeChange = new(modeChangeKB, modeChangeGP);
@@ -616,8 +609,8 @@ namespace Examples.Scenes.ExampleScenes
             var dragLaserMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
             iaDragLaser = new(dragLaserMB, dragLaserKB, dragLaserGP);
             
-            inputActions = new()
-            {
+            inputActionTree =
+            [
                 iaModeChange,
                 iaAddShape,
                 iaCutShape,
@@ -627,8 +620,12 @@ namespace Examples.Scenes.ExampleScenes
                 iaPickTriangleShape,
                 iaPickRectangleShape,
                 iaPickPolygonShape,
-                iaDragLaser
-            };
+                iaDragLaser,
+                iaShootLaser
+            ];
+            
+            laserDevice = new(new Vector2(0f), 100, CollisionHandler, iaShootLaser);
+            SpawnArea?.AddGameObject(laserDevice);
             
             textFont.FontSpacing = 1f;
             
@@ -642,7 +639,7 @@ namespace Examples.Scenes.ExampleScenes
             curSize = 50f;
             curShapeType = ShapeType.Triangle;
             RegenerateShape();
-            laserDevice = new(new Vector2(0), 100, CollisionHandler);
+            laserDevice = new(new Vector2(0), 100, CollisionHandler, iaShootLaser);
             SpawnArea?.AddGameObject(laserDevice);
         }
 
@@ -801,7 +798,8 @@ namespace Examples.Scenes.ExampleScenes
             if (CollisionHandler == null) return;
 
             var gamepad = GAMELOOP.CurGamepad;
-            InputAction.UpdateActions(dt, gamepad, inputActions);
+            inputActionTree.CurrentGamepad = gamepad;
+            inputActionTree.Update(dt);
             
             
             if (iaModeChange.State.Pressed)

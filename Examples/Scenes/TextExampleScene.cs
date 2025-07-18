@@ -45,7 +45,8 @@ namespace Examples.Scenes
         private readonly InputAction iaNextFont;
         private readonly InputAction iaDrag;
         
-        protected readonly List<InputAction> inputActions;
+        // protected readonly List<InputAction> inputActions;
+        protected readonly InputActionTree inputActionTree;
         #endregion
         
         public TextExampleScene()
@@ -103,11 +104,11 @@ namespace Examples.Scenes
             var nextFontGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
             iaNextFont = new(accessTagTextBox,nextFontKB, nextFontGP);
             
-            inputActions = new()
-            {
+            inputActionTree =
+            [
                 iaEnterText, iaCancelText, iaFinishText, iaClear, iaDelete, iaBackspace, iaCaretPrev, iaCaretNext,
                 iaDrag, iaNextFont
-            };
+            ];
         }
         
         #region Virtual
@@ -145,11 +146,13 @@ namespace Examples.Scenes
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
             var gamepad = GAMELOOP.CurGamepad;
-            foreach (var action in inputActions)
-            {
-                action.Gamepad = gamepad;
-                action.Update(dt);
-            }
+            inputActionTree.CurrentGamepad = gamepad;
+            inputActionTree.Update(dt);
+            // foreach (var action in inputActions)
+            // {
+                // action.Gamepad = gamepad;
+                // action.Update(dt);
+            // }
             TextInputBox.Update(dt);
             
             if (!textEntryActive)

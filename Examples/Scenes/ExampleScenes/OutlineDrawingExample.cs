@@ -95,6 +95,7 @@ public class OutlineDrawingExample : ExampleScene
 
     private InputAction nextShape;
     private InputAction changeDrawingMode;
+    private readonly InputActionTree inputActionTree;
     private bool gappedMode = true;
     private int shapeIndex = 0;
     private const int MaxShapes = 7;
@@ -141,6 +142,8 @@ public class OutlineDrawingExample : ExampleScene
         var changeModeGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
         var changeModeKb = new InputTypeKeyboardButton(ShapeKeyboardButton.TAB);
         changeDrawingMode = new(changeModeMB, changeModeGp, changeModeKb);
+
+        inputActionTree = [nextShape, changeDrawingMode];
         
         textFont.FontSpacing = 1f;
         textFont.ColorRgba = Colors.Light;
@@ -265,11 +268,8 @@ public class OutlineDrawingExample : ExampleScene
         base.HandleInput(dt, mousePosGame, mousePosGameUi, mousePosUI);
         var gamepad = GAMELOOP.CurGamepad;
         
-        nextShape.Gamepad = gamepad;
-        nextShape.Update(dt);
-        
-        changeDrawingMode.Gamepad = gamepad;
-        changeDrawingMode.Update(dt);
+        inputActionTree.CurrentGamepad = gamepad;
+        inputActionTree.Update(dt);
         
         
         if (nextShape.State.Pressed)

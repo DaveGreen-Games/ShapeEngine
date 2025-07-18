@@ -46,29 +46,24 @@ public class PathfinderExample2 : ExampleScene
     
         private InputAction iaMoveHor;
         private InputAction iaMoveVer;
+        private readonly InputActionTree inputActionTree;
         
-        
-        private void SetupInput()
-        {
-            var moveHorKb = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
-            var moveHorGp = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-            // var moveHorMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-            // var moveHorM = new InputTypeMouseAxis(ShapeMouseAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-            iaMoveHor = new(moveHorKb, moveHorGp);
-            
-            var moveVerKb = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
-            var moveVerGp = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-            // var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-            // var moveVerM = new InputTypeMouseAxis(ShapeMouseAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-            iaMoveVer = new(moveVerKb, moveVerGp);
-        }
         public Ship(Vector2 pos, float shipSize, Pathfinder pathfinder)
         {
             this.pathfinder = pathfinder;
             this.shipSize = shipSize;
             CreateHull(pos, shipSize);
             chasePosition = hull.A;
-            SetupInput();
+            
+            var moveHorKb = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
+            var moveHorGp = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+            iaMoveHor = new(moveHorKb, moveHorGp);
+            
+            var moveVerKb = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
+            var moveVerGp = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+            iaMoveVer = new(moveVerKb, moveVerGp);
+
+            inputActionTree = [iaMoveHor, iaMoveVer];
         }
 
         public Polygon? GetCutShape(float minSize)
@@ -129,31 +124,12 @@ public class PathfinderExample2 : ExampleScene
         }
         public void Update(float dt)
         {
-            iaMoveHor.Gamepad = GAMELOOP.CurGamepad;
-            iaMoveHor.Update(dt);
-            
-            iaMoveVer.Gamepad = GAMELOOP.CurGamepad;
-            iaMoveVer.Update(dt);
+            inputActionTree.CurrentGamepad = GAMELOOP.CurGamepad;
+            inputActionTree.Update(dt);
             
             
             if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Mouse)
             {
-                // var mousePos = GAMELOOP.GameScreenInfo.MousePos;
-                // var camera = GAMELOOP.Camera;
-                // var dir = mousePos - camera.BasePosition;// hull.GetCentroid();
-                //
-                // float minDis = 100 * camera.ZoomFactor;
-                // float maxDis = 350 * camera.ZoomFactor;
-                // float minDisSq = minDis * minDis;
-                // float maxDisSq = maxDis * maxDis;
-                // var lsq = dir.LengthSquared();
-                // if (lsq <= minDisSq) dir = new();
-                // else if (lsq >= maxDisSq) dir = dir.Normalize();
-                // else
-                // {
-                //     var f = (lsq - minDisSq) / (maxDisSq - minDisSq);
-                //     dir = dir.Normalize() * f;
-                // }
 
                 var dir = CalculateMouseMovementDirection(GAMELOOP.GameScreenInfo.MousePos, GAMELOOP.Camera);
                 if (dir.LengthSquared() > 0f)
@@ -630,6 +606,7 @@ public class PathfinderExample2 : ExampleScene
     private readonly ShapeCamera camera;
     private readonly InputAction iaDrawDebug;
     private readonly InputAction iaAddChasers;
+    private readonly InputActionTree inputActionTree;
     
     private bool drawDebug = false;
 
@@ -680,6 +657,8 @@ public class PathfinderExample2 : ExampleScene
         var addChasersGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
         var addChasersMb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
         iaAddChasers = new(addChasersKb, addChasersGp, addChasersMb);
+
+        inputActionTree = [iaDrawDebug, iaAddChasers];
         
         AddAsteroids(AsteroidCount);
         AddChasers(250);
@@ -819,40 +798,6 @@ public class PathfinderExample2 : ExampleScene
         }
     }
 
-    // private Polygon CombineAsteroids(Polygon newShape)
-    // {
-    //     var overlapped = new List<AsteroidObstacle>();
-    //
-    //     var cellSize = pathfinder.CellSize.Min();
-    //     var cellSizeSq = cellSize * cellSize;
-    //     foreach (var a in asteroids)
-    //     {
-    //         var otherShape = a.GetShape();
-    //         if(newShape.OverlapShape(otherShape)) overlapped.Add(a);
-    //         else
-    //         {
-    //             var cd = newShape.GetClosestDistanceTo(otherShape);
-    //             if(cd.DistanceSquared < cellSizeSq) overlapped.Add(a);
-    //         }
-    //     }
-    //
-    //     if (overlapped.Count > 0)
-    //     {
-    //         var result = new Polygon();
-    //         foreach (var a in overlapped)
-    //         {
-    //             pathfinder.RemoveObstacle(a);
-    //             asteroids.Remove(a);
-    //             result.AddRange(a.GetShape());
-    //         }
-    //
-    //         return result.ToConvex();
-    //     }
-    //
-    //     return newShape;
-    //
-    // } 
-    //
     private void AddAsteroid(Vector2 position)
     {
         var asteroidShape = AsteroidObstacle.GenerateShape(position);
@@ -983,17 +928,9 @@ public class PathfinderExample2 : ExampleScene
         
         GAMELOOP.MouseControlEnabled = gamepad?.IsDown(ShapeGamepadAxis.RIGHT_TRIGGER, 0.1f) ?? true;
         
-        iaDrawDebug.Gamepad = gamepad;
-        iaDrawDebug.Update(dt);
+        inputActionTree.CurrentGamepad = gamepad;
+        inputActionTree.Update(dt);
         
-        iaAddChasers.Gamepad = gamepad;
-        iaAddChasers.Update(dt);
-
-        // if (ShapeMouseButton.LEFT.GetInputState().Pressed)
-        // {
-        //     AddAsteroid(mousePosGame);
-        // }
-        //
         if (iaAddChasers.State.Pressed)
         {
             AddChasers(100, mousePosGame);

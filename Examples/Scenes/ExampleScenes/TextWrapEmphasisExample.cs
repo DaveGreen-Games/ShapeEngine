@@ -112,11 +112,9 @@ namespace Examples.Scenes.ExampleScenes
             var toggleWrapModeGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
             iaToggleWrapMode = new(accessTagTextBox,toggleWrapModeKB, toggleWrapModeGP);
             
-            inputActions.Add(iaChangeFontSpacing);
-            inputActions.Add(iaChangeLineSpacing);
-            // inputActions.Add(iaChangeFontSize);
-            // inputActions.Add(iaToggleAutoSize);
-            inputActions.Add(iaToggleWrapMode);
+            inputActionTree.Add(iaChangeFontSpacing);
+            inputActionTree.Add(iaChangeLineSpacing);
+            inputActionTree.Add(iaToggleWrapMode);
 
             // var tf = new TextFont(textFont.Font, 0f, 0f, WHITE);
             textEmphasisBox = new(textFont);

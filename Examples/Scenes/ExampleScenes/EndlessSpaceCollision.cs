@@ -80,6 +80,7 @@ public class EndlessSpaceCollision : ExampleScene
     private readonly InputAction iaPayloadCallinDown;
     private readonly InputAction iaPayloadCallinLeft;
     private readonly InputAction iaPayloadCallinRight;
+    private readonly InputActionTree inputActionTree;
     
     private bool drawDebug = false;
 
@@ -191,6 +192,14 @@ public class EndlessSpaceCollision : ExampleScene
         var callInRightKb = new InputTypeKeyboardButton(ShapeKeyboardButton.RIGHT);
         var callInRightGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT);
         iaPayloadCallinRight = new(callInRightKb, callInRightGp);
+        
+        inputActionTree = [
+            iaDrawDebug,
+            iaPayloadCallinUp,
+            iaPayloadCallinDown,
+            iaPayloadCallinLeft,
+            iaPayloadCallinRight
+        ];
         
         AddAsteroids(AsteroidCount);
 
@@ -394,20 +403,8 @@ public class EndlessSpaceCollision : ExampleScene
         }
         
         var gamepad = GAMELOOP.CurGamepad;
-        iaDrawDebug.Gamepad = gamepad;
-        iaDrawDebug.Update(dt);
-        
-        iaPayloadCallinUp.Gamepad = gamepad;
-        iaPayloadCallinUp.Update(dt);
-        
-        iaPayloadCallinDown.Gamepad = gamepad;
-        iaPayloadCallinDown.Update(dt);
-        
-        iaPayloadCallinLeft.Gamepad = gamepad;
-        iaPayloadCallinLeft.Update(dt);
-        
-        iaPayloadCallinRight.Gamepad = gamepad;
-        iaPayloadCallinRight.Update(dt);
+        inputActionTree.CurrentGamepad = gamepad;
+        inputActionTree.Update(dt);
         
         if (iaDrawDebug.State.Pressed)
         {

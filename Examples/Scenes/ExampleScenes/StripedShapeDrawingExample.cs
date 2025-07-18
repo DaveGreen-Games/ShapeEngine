@@ -99,6 +99,7 @@ public class StripedShapeDrawingExample : ExampleScene
     private readonly InputAction regenerateOutsideShape;
     private readonly InputAction regenerateInsideShape;
     private readonly InputAction toggleCrissCrossPattern;
+    private readonly InputActionTree inputActionTree;
     
     private bool insideShapeMode = false;
     private int outsideShapeIndex = 0;
@@ -160,18 +161,23 @@ public class StripedShapeDrawingExample : ExampleScene
         var changeModeKb = new InputTypeKeyboardButton(ShapeKeyboardButton.TAB);
         changeDrawingMode = new(changeModeMB, changeModeGp, changeModeKb);
         
-        
-        // var regenOutsideShapeGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
         var regenOutsideShapeKb = new InputTypeKeyboardButton(ShapeKeyboardButton.ONE);
         regenerateOutsideShape = new(regenOutsideShapeKb);
         
-        // var regenInsideShapeGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
         var regenInsideShapeKb = new InputTypeKeyboardButton(ShapeKeyboardButton.TWO);
         regenerateInsideShape = new(regenInsideShapeKb);
         
-        // var toggleCrissCrossGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
         var toggleCrissCrossKb = new InputTypeKeyboardButton(ShapeKeyboardButton.THREE);
         toggleCrissCrossPattern = new(toggleCrissCrossKb);
+
+        inputActionTree =
+        [
+            nextShape,
+            changeDrawingMode,
+            regenerateOutsideShape,
+            regenerateInsideShape,
+            toggleCrissCrossPattern
+        ];
         
         textFont.FontSpacing = 1f;
         textFont.ColorRgba = Colors.Light;
@@ -372,20 +378,8 @@ public class StripedShapeDrawingExample : ExampleScene
         base.HandleInput(dt, mousePosGame, mousePosGameUi, mousePosUI);
         var gamepad = GAMELOOP.CurGamepad;
         
-        nextShape.Gamepad = gamepad;
-        nextShape.Update(dt);
-        
-        changeDrawingMode.Gamepad = gamepad;
-        changeDrawingMode.Update(dt);
-        
-        regenerateOutsideShape.Gamepad = gamepad;
-        regenerateOutsideShape.Update(dt);
-        
-        regenerateInsideShape.Gamepad = gamepad;
-        regenerateInsideShape.Update(dt);
-        
-        toggleCrissCrossPattern.Gamepad = gamepad;
-        toggleCrissCrossPattern.Update(dt);
+        inputActionTree.CurrentGamepad = gamepad;
+        inputActionTree.Update(dt);
         
         
         if (regenerateOutsideShape.State.Pressed)

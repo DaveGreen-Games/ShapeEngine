@@ -28,8 +28,8 @@ namespace Examples.Scenes.ExampleScenes
             var increaseFontSpacingGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP);
             iaIncreaseFontSpacing = new(accessTagTextBox,increaseFontSpacingKB, increaseFontSpacingGP);
             
-            inputActions.Add(iaDeacreaseFontSpacing);
-            inputActions.Add(iaIncreaseFontSpacing);
+            inputActionTree.Add(iaDeacreaseFontSpacing);
+            inputActionTree.Add(iaIncreaseFontSpacing);
             
             topLeftRelative = new Vector2(0.025f, 0.2f);
             bottomRightRelative = new Vector2(0.975f, 0.35f);

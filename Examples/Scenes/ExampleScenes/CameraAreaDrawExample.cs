@@ -1,9 +1,7 @@
 using Raylib_cs;
 using ShapeEngine.Core;
-using ShapeEngine.StaticLib;
 using ShapeEngine.Screen;
 using System.Numerics;
-using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Input;
@@ -23,6 +21,7 @@ namespace Examples.Scenes.ExampleScenes
         private Ship currentShip;
         private uint prevCameraTweenID = 0;
         private InputAction iaChangeCameraTarget;
+        private readonly InputActionTree inputActionTree;
 
         private readonly ShapeCamera camera;
         private readonly CameraFollowerSingle follower;
@@ -44,7 +43,7 @@ namespace Examples.Scenes.ExampleScenes
             var changeCameraTargetGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
             var changeCameraTargetMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
             iaChangeCameraTarget = new(changeCameraTargetKB, changeCameraTargetGP, changeCameraTargetMB);
-
+            inputActionTree = [iaChangeCameraTarget];
         }
 
         private void UpdateFollower(float size)
@@ -119,26 +118,14 @@ namespace Examples.Scenes.ExampleScenes
             }
 
         }
-        // private void HandleZoom(float dt)
-        // {
-        //     float zoomSpeed = 1f;
-        //     int zoomDir = 0;
-        //     if (IsKeyDown(KeyboardKey.KEY_Z)) zoomDir = -1;
-        //     else if (IsKeyDown(KeyboardKey.KEY_X)) zoomDir = 1;
-        //
-        //     if (zoomDir != 0)
-        //     {
-        //         camera.Zoom(zoomDir * zoomSpeed * dt);
-        //     }
-        // }
+
         protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
             UpdateFollower(ui.Area.Size.Min());
             
             GAMELOOP.MouseControlEnabled = GAMELOOP.CurGamepad?.IsDown(ShapeGamepadAxis.RIGHT_TRIGGER, 0.1f) ?? true;
-            
-            iaChangeCameraTarget.Gamepad = GAMELOOP.CurGamepad;
-            iaChangeCameraTarget.Update(time.Delta);
+            inputActionTree.CurrentGamepad = GAMELOOP.CurGamepad;
+            inputActionTree.Update(time.Delta);
             
             currentShip.Update(time.Delta, camera.RotationDeg);
 
@@ -164,11 +151,6 @@ namespace Examples.Scenes.ExampleScenes
             // Circle cameraBoundaryMax = new(camera.Position, camera.Follower.BoundaryDis.Max);
             // cameraBoundaryMax.DrawLines(2f, ColorHighlight2);
         }
-        // protected override void DrawGameUIExample(ScreenInfo ui)
-        // {
-        //     // var infoRect = GAMELOOP.UIRects.GetRect("center").ApplyMargins(0.025f, 0.025f, 0.01f, 0.95f);
-        //     // DrawStarInfo(infoRect);
-        // }
 
         protected override void OnDrawUIExample(ScreenInfo ui)
         {

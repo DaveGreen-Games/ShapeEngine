@@ -94,7 +94,7 @@ internal class PathfinderFlag
         private readonly InputAction iaPositionEndFlag;
         private readonly InputAction iaPortal;
         
-        private readonly List<InputAction> inputActions;
+        private readonly InputActionTree inputActionTree;
 
         private readonly Pathfinder pathfinder;
 
@@ -164,12 +164,12 @@ internal class PathfinderFlag
             // var portalMb = new InputTypeMouseButton(ShapeMouseButton.SIDE);
             iaPortal = new(portalKb, portalGp);
             
-            inputActions = new()
-            {
+            inputActionTree =
+            [
                 iaMoveCameraH, iaMoveCameraV,
-                
+
                 iaCycleTerrainType, iaZoning, iaCalculatePath, iaPositionStartFlag, iaPositionEndFlag, iaPortal
-            };
+            ];
 
             Rect bounds = new(new(0f), new(8000, 8000), new(0.5f));
             pathfinder = new(bounds, 100, 100);
@@ -204,7 +204,8 @@ internal class PathfinderFlag
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi,  Vector2 mousePosUI)
         {
             var gamepad = GAMELOOP.CurGamepad;
-            InputAction.UpdateActions(dt, gamepad, inputActions);
+            inputActionTree.CurrentGamepad = gamepad;
+            inputActionTree.Update(dt);
 
             if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Mouse)
             {

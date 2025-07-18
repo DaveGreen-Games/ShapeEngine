@@ -3,17 +3,125 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Input;
 
-
 //TODO: Test if this works good or not.
-//If I like it, blocking system can be moved to this new class, to make InputActions only block other InputActions in the same sorted set.
-//Could have parent tree and child trees?
+
+//Q: InputActionTree could also be a Dictionary<GamepadDevice, SortedSet<InputAction>> to allow multiple gamepads to be used at the same time?
+//NOTE: Currently a different InputActionTree is used for each gamepad.
+
+
+/// <summary>
+/// Represents a sorted collection of <see cref="InputActionTree"/> objects.
+/// Provides methods for updating and retrieving input action trees based on various criteria.
+/// </summary>
+public class InputActionTrees : SortedSet<InputActionTree>
+{
+    /// <summary>
+    /// Updates all <see cref="InputActionTree"/> instances in this collection by calling their <c>Update</c> method with the specified time delta.
+    /// </summary>
+    /// <param name="dt">The time delta in seconds.</param>
+    public void Update(float dt)
+    {
+        foreach (var tree in this)
+        {
+            tree.Update(dt);
+        }
+    }
+    
+        
+    #region Get Input Action Trees
+    
+    /// <summary>
+    /// Gets the first <see cref="InputActionTree"/> in the collection with the specified ID.
+    /// </summary>
+    /// <param name="id">The unique identifier of the input action tree.</param>
+    /// <returns>The matching <see cref="InputActionTree"/>, or null if not found.</returns>
+    public InputActionTree? GetById(int id)
+    {
+       foreach (var action in this)
+       {
+           if (action.Id == id) return action;
+       }
+       return null;
+    }
+
+    /// <summary>
+    /// Gets the first <see cref="InputActionTree"/> in the collection with the specified execution order.
+    /// </summary>
+    /// <param name="executionOrder">The execution order to search for.</param>
+    /// <returns>The matching <see cref="InputActionTree"/>, or null if not found.</returns>
+    public InputActionTree? GetFirstByExecutionOrder(int executionOrder)
+    {
+       foreach (var action in this)
+       {
+           if (action.ExecutionOrder == executionOrder) return action;
+       }
+       return null;
+    }
+
+    /// <summary>
+    /// Gets all <see cref="InputActionTree"/> instances in the collection with the specified execution order.
+    /// </summary>
+    /// <param name="executionOrder">The execution order to search for.</param>
+    /// <returns>A list of matching <see cref="InputActionTree"/> instances, or null if none found.</returns>
+    public List<InputActionTree>? GetAllWithExecutionOrder(int executionOrder)
+    {
+       List<InputActionTree>? result = null;
+       foreach (var action in this)
+       {
+           if (action.ExecutionOrder != executionOrder) continue;
+           result ??= [];
+           result.Add(action);
+       }
+       return result;
+    }
+    #endregion
+    
+}
+
 
 /// <summary>
 /// Represents a sorted collection of <see cref="InputAction"/> objects, ordered by their execution order and ID.
 /// Provides methods for updating and retrieving input actions based on various criteria.
+/// <para>
+/// Implements a blocking system for <see cref="IInputType"/>s.
+/// When an <see cref="InputAction"/> in this tree is processed and its <see cref="InputAction.BlocksInput"/> property is set to <c>true</c>,
+/// it blocks the associated <see cref="IInputType"/>s from being used by subsequent <see cref="InputAction"/>s in the same update cycle.
+/// This ensures that input types are only handled by the first eligible action, preventing conflicts or duplicate processing.
+/// </para>
 /// </summary>
-public class InputActionTree : SortedSet<InputAction>
+/// <remarks>
+/// A different tree for each used gamepad is recommended.
+/// </remarks>
+public class InputActionTree : SortedSet<InputAction>, IComparable<InputActionTree>
 {
+    #region Blocking System
+
+    private HashSet<IInputType> inputTypeBlockSet = [];
+    private void ClearInputTypeBlockSet()
+    {
+        inputTypeBlockSet.Clear();
+    }
+    #endregion
+    
+    private static int executionOrderCounter = 0;
+    /// <summary>
+    /// Gets or sets the execution order for this <see cref="InputActionTree"/> instance.
+    /// Lower values are processed first. This value is automatically assigned when the instance is created,
+    /// but can be set manually if needed. Used for sorting and determining update order like in a SortedSet.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="ShapeInput.InputActionTrees"/> uses this to determine the order in which input action trees are processed.
+    /// </remarks>
+    public int ExecutionOrder = executionOrderCounter++;
+    
+    private static uint idCounter = 0;
+    /// <summary>
+    /// The unique identifier for this <see cref="InputActionTree"/> instance.
+    /// </summary>
+    public readonly uint Id = idCounter++;
+    
+    #region Class
+    
     /// <summary>
     /// Gets or sets the current gamepad device associated with this input action tree.
     /// If set, all input actions in the tree will use this gamepad for input processing during update.
@@ -27,24 +135,17 @@ public class InputActionTree : SortedSet<InputAction>
     /// <param name="dt">The time delta in seconds.</param>
     public void Update(float dt)
     {
-        if (CurrentGamepad != null)
-        {
-            foreach (var action in this)
-            {
-                action.Gamepad = CurrentGamepad;
-                action.Update(dt);
-            }
-        }
-        else
-        {
-            foreach (var action in this)
-            {
-                action.Update(dt);
-            }
-        }
+        ClearInputTypeBlockSet();
         
+        foreach (var action in this)
+        {
+            action.Gamepad = CurrentGamepad;
+            action.Update(dt, ref inputTypeBlockSet);
+        }
     }
+    #endregion
     
+    #region Get Input Actions
     /// <summary>
     /// Gets the first <see cref="InputAction"/> in the tree with the specified ID.
     /// </summary>
@@ -153,6 +254,9 @@ public class InputActionTree : SortedSet<InputAction>
         return result;
     }
 
+    #endregion
+    
+    #region Set Active
     /// <summary>
     /// Sets the <c>Active</c> property for all <see cref="InputAction"/> instances in the tree.
     /// </summary>
@@ -184,7 +288,24 @@ public class InputActionTree : SortedSet<InputAction>
     
         return num;
     }
+    #endregion
     
+    /// <summary>
+    /// Compares this <see cref="InputActionTree"/> to another for sorting purposes.
+    /// First compares <see cref="ExecutionOrder"/>; if equal, compares <see cref="Id"/>.
+    /// </summary>
+    /// <param name="other">The other <see cref="InputActionTree"/> to compare to.</param>
+    /// <returns>
+    /// -1 if this instance precedes <paramref name="other"/>; 1 if it follows; 0 if equal.
+    /// </returns>
+    public int CompareTo(InputActionTree? other)
+    {
+        if (ReferenceEquals(this, other)) return 0;
+        if (other is null) return 1;
+        int executionOrderComparison = ExecutionOrder.CompareTo(other.ExecutionOrder);
+        if (executionOrderComparison != 0) return executionOrderComparison;
+        return Id.CompareTo(other.Id);
+    }
 }
 
 
@@ -209,21 +330,6 @@ public class InputAction : IComparable<InputAction>
         On
     }
     
-    #region Blocking System
-    private static readonly Dictionary<GamepadDevice, HashSet<IInputType>> gamepadInputTypeBlockLists = [];
-    private static readonly  HashSet<IInputType> noGamepadInputTypeBlockList = [];
-    internal static void ClearInputTypeBlocklist()
-    {
-        //HashSets for specific gamepads should stay intact once added to the dictionary.
-        //Therefore, I only clear the lists contained in the dictionary and not the dictionary itself.
-        foreach (var list in gamepadInputTypeBlockLists.Values)
-        {
-            list.Clear();
-        }
-        noGamepadInputTypeBlockList.Clear();
-    }
-    #endregion
-    
     #region Members
     
     /// <summary>
@@ -245,6 +351,7 @@ public class InputAction : IComparable<InputAction>
     private bool active = true;
     /// <summary>
     /// Gets or sets whether this input action blocks input types after use.
+    /// <see cref="InputAction"/> has to be part of an <see cref="InputActionTree"/> to participate in the blocking system.
     /// <para>
     /// If set to <c>true</c>, input types used by this action will be added to the block list for the current frame,
     /// preventing other actions from using the same input types until the next frame.
@@ -364,7 +471,7 @@ public class InputAction : IComparable<InputAction>
     
     /// <summary>
     /// Gets the current input state for this action.
-    /// This property is updated each frame by the <see cref="Update(float)"/> method,
+    /// This property is updated each frame,
     /// reflecting the accumulated state from all associated input types.
     /// </summary>
     public InputState State { get; private set; }
@@ -490,16 +597,25 @@ public class InputAction : IComparable<InputAction>
         return returnValue;
     }
 
+    //Todo: needs to know if input action is currently in a InputActionTree. Only works when not in a tree.
+    
+    // public void Update(float dt)
+    // {
+    //     if (IsInInputActionTree) return;
+    //     Update(dt, null);
+    // }
+    
     /// <summary>
     /// Updates the input action state based on the current input and time delta.
     /// </summary>
     /// <param name="dt">The time delta in seconds.</param>
+    /// <param name="blocklist">A reference to the set of input types blocked for this frame.</param>
     /// <remarks>
     /// <see cref="InputAction"/> is not updated when <see cref="Active"/> is set to <c>false</c>
     /// or <see cref="ShapeInput.Locked"/> is set to <c>true</c>
     /// and the <see cref="AccessTag"/> does not allow access.
     /// </remarks>
-    public void Update(float dt)
+    internal void Update(float dt, ref HashSet<IInputType> blocklist)
     {
         if (!Active) return;
         if (ShapeInput.Locked && !ShapeInput.HasAccess(AccessTag))
@@ -515,22 +631,7 @@ public class InputAction : IComparable<InputAction>
             var inputState = input.GetState(Gamepad);
             
             //if it can not be added to the input type block list, it was already used this frame before and therefore it is skipped now.
-            // if (inputState.Down && BlocksInput && !inputTypeBlockList.Add(input)) continue;
-            if (inputState.Down && BlocksInput)
-            {
-                if (Gamepad == null)
-                {
-                    if (!noGamepadInputTypeBlockList.Add(input)) continue;
-                }
-                else if (gamepadInputTypeBlockLists.TryGetValue(Gamepad, out var list))
-                {
-                    if(!list.Add(input)) continue;
-                }
-                else
-                {
-                    gamepadInputTypeBlockLists.Add(Gamepad, [input]);
-                }
-            }
+            if (inputState.Down && BlocksInput && !blocklist.Add(input)) continue;
             
             current = current.Accumulate(inputState);
         }
@@ -844,7 +945,6 @@ public class InputAction : IComparable<InputAction>
 
         return false;
     }
-
     
     /// <summary>
     /// Generate a description for this action based on the parameters. Layout-> "Title: [type a][type b][type c] ..."
@@ -997,38 +1097,6 @@ public class InputAction : IComparable<InputAction>
     #endregion
     
     #region Static
-
-    //TODO: Remove UpdateActions functions?
-    
-    /// <summary>
-    /// Updates a set of input actions with the specified gamepad and time delta.
-    /// </summary>
-    /// <param name="dt">The time delta in seconds.</param>
-    /// <param name="gamepad">The gamepad device to use.</param>
-    /// <param name="actions">The input actions to update.</param>
-    public static void UpdateActions(float dt, GamepadDevice? gamepad, params InputAction[] actions)
-    {
-        foreach (var action in actions)
-        {
-            action.Gamepad = gamepad;
-            action.Update(dt);
-        }
-    }
-
-    /// <summary>
-    /// Updates a list of input actions with the specified gamepad and time delta.
-    /// </summary>
-    /// <param name="dt">The time delta in seconds.</param>
-    /// <param name="gamepad">The gamepad device to use.</param>
-    /// <param name="actions">The input actions to update.</param>
-    public static void UpdateActions(float dt, GamepadDevice? gamepad, List<InputAction> actions)
-    {
-        foreach (var action in actions)
-        {
-            action.Gamepad = gamepad;
-            action.Update(dt);
-        }
-    }
 
     /// <summary>
     /// Gets descriptions for a list of input actions.

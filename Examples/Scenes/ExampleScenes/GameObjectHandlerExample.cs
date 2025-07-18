@@ -650,8 +650,6 @@ namespace Examples.Scenes.ExampleScenes
         private readonly InputAction iaSpawnBullet;
         private readonly InputAction iaSpawnOverlapper;
         private readonly InputAction iaStartClearArea;
-        // private readonly InputAction iaSpawnBox;
-        // private readonly InputAction iaSpawnAura;
         private readonly InputAction iaToggleDebug;
         private readonly InputAction iaPlaceWall;
         private readonly InputAction iaCancelWall;
@@ -659,9 +657,8 @@ namespace Examples.Scenes.ExampleScenes
         private readonly InputAction iaMoveCameraH;
         private readonly InputAction iaMoveCameraV;
         
-        private readonly List<InputAction> inputActions;
+        private readonly InputActionTree inputActionTree;
 
-        // private Rect clearArea = new();
         private Vector2 clearAreaStartPoint = new();
         private bool clearAreaActive = false;
         private readonly BitFlag clearAreaMask;
@@ -684,10 +681,6 @@ namespace Examples.Scenes.ExampleScenes
             var spawnRockKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ONE);
             var spawnRockGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
             iaSpawnRock = new(spawnRockKB, spawnRockGB);
-            
-            // var spawnBoxKB = new InputTypeKeyboardButton(ShapeKeyboardButton.TWO);
-            // var spawnBoxGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-            // iaSpawnBox = new(spawnBoxKB, spawnBoxGB);
             
             var spawnBallKB = new InputTypeKeyboardButton(ShapeKeyboardButton.THREE);
             var spawnBallGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
@@ -715,24 +708,22 @@ namespace Examples.Scenes.ExampleScenes
             var cameraHorizontalKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
             var cameraHorizontalGP =
                 new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad);
-            // var cameraHorizontalGP2 = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad2);
             var cameraHorizontalMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
             iaMoveCameraH = new(cameraHorizontalKB, cameraHorizontalGP, cameraHorizontalMW);
             
             var cameraVerticalKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
             var cameraVerticalGP =
                 new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad);
-            // var cameraVerticalGP2 = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_UP, ShapeGamepadButton.LEFT_FACE_DOWN, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad2);
             var cameraVerticalMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
             iaMoveCameraV = new(cameraVerticalKB, cameraVerticalGP, cameraVerticalMW);
 
-            inputActions = new()
-            {
+            inputActionTree =
+            [
                 iaPlaceWall, iaCancelWall,
                 iaSpawnRock, iaSpawnBall, iaSpawnBird, iaSpawnBullet, iaSpawnOverlapper,
                 iaToggleDebug, iaStartClearArea,
                 iaMoveCameraH, iaMoveCameraV
-            };
+            ];
             
             boundaryRect = new(new(0f), new(5000,5000), new(0.5f));
             InitSpawnArea(boundaryRect);
@@ -741,11 +732,6 @@ namespace Examples.Scenes.ExampleScenes
                 SpawnArea.OnGameObjectRemoved += OnGameObjectDied;
             }
             InitCollisionHandler(boundaryRect, 50, 50);
-            // if (InitSpawnArea(boundaryRect))
-            // {
-            //     SpawnArea?.InitCollisionHandler(50, 50);
-            // }
-            
             SetupBoundary();
 
             clearAreaMask = new BitFlag(CollisionFlags.RockFlag);
@@ -789,7 +775,8 @@ namespace Examples.Scenes.ExampleScenes
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
             var gamepad = GAMELOOP.CurGamepad;
-            InputAction.UpdateActions(dt, gamepad, inputActions);
+            inputActionTree.CurrentGamepad = gamepad;
+            inputActionTree.Update(dt);
             
             if (iaStartClearArea.State.Pressed)
             {

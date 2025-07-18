@@ -156,7 +156,8 @@ namespace Examples
         public InputAction InputActionCyclePalette {get; private set;}
         public InputAction InputActionReset {get; private set;}
 
-        private readonly List<InputAction> inputActions = new();
+        // private readonly List<InputAction> inputActions = nw();
+        private readonly InputActionTree inputActionTree = [];
         
         private FPSLabel fpsLabel;// = new(GetFontDefault(), ExampleScene.ColorHighlight3);
 
@@ -418,14 +419,15 @@ namespace Examples
         {
             SetupInput();
 
-            CurGamepad = ShapeInput.ActiveGamepadDeviceManager.RequestGamepad(0); // Input.RequestGamepad(0);
-            if (CurGamepad != null)
-            {
-                foreach (var action in inputActions)
-                {
-                    action.Gamepad = CurGamepad;
-                }
-            }
+            CurGamepad = ShapeInput.ActiveGamepadDeviceManager.RequestGamepad(0);
+            inputActionTree.CurrentGamepad = CurGamepad;
+            // if (CurGamepad != null)
+            // {
+                //foreach (var action in inputActions)
+                //{
+                //    action.Gamepad = CurGamepad;
+                //}
+            // }
             
             mainScene = new MainScene();
             GoToScene(mainScene);
@@ -468,14 +470,14 @@ namespace Examples
         {
             if (CurGamepad != null) return;
             CurGamepad = ShapeInput.ActiveGamepadDeviceManager.RequestGamepad(0);
-            
-            if (CurGamepad != null)
-            {
-                foreach (var action in inputActions)
-                {
-                    action.Gamepad = CurGamepad;
-                }
-            }
+            inputActionTree.CurrentGamepad = CurGamepad;
+            // if (CurGamepad != null)
+            // {
+                // foreach (var action in inputActions)
+                // {
+                //     action.Gamepad = CurGamepad;
+                // }
+            // }
         }
 
         protected override void OnGamepadDisconnected(GamepadDevice gamepad)
@@ -484,11 +486,11 @@ namespace Examples
             if (CurGamepad.Index == gamepad.Index)
             {
                 CurGamepad = ShapeInput.ActiveGamepadDeviceManager.RequestGamepad(0);
-
-                foreach (var action in inputActions)
-                {
-                    action.Gamepad = CurGamepad;
-                }
+                inputActionTree.CurrentGamepad = CurGamepad;
+                // foreach (var action in inputActions)
+                // {
+                //     action.Gamepad = CurGamepad;
+                // }
             }
         }
 
@@ -565,7 +567,9 @@ namespace Examples
             UIRects.UpdateRect(ui.Area);
             UIRects.Update(time.Delta, ui.MousePos);
 
-            InputAction.UpdateActions(time.Delta, CurGamepad, inputActions);
+            // InputAction.UpdateActions(time.Delta, CurGamepad, inputActions);
+            
+            inputActionTree.Update(time.Delta);
 
             var fullscreenState = InputActionFullscreen.Consume(out _);
             if (fullscreenState is { Consumed: false, Pressed: true })
@@ -848,27 +852,27 @@ namespace Examples
             var resetGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_THUMB);
             InputActionReset = new(SceneAccessTag, resetKB, resetGB);
             
-            inputActions.Add(InputActionUICancel);
-            inputActions.Add(InputActionUIBack);
-            inputActions.Add(InputActionUIAccept);
-            inputActions.Add(InputActionUIAcceptMouse);
-            inputActions.Add(InputActionUILeft);
-            inputActions.Add(InputActionUIRight);
-            inputActions.Add(InputActionUIUp);
-            inputActions.Add(InputActionUIDown);
-            inputActions.Add(InputActionUIPrevTab);
-            inputActions.Add(InputActionUINextTab);
-            inputActions.Add(InputActionUIPrevPage);
-            inputActions.Add(InputActionUINextPage);
-            inputActions.Add(InputActionFullscreen);
-            inputActions.Add(InputActionMaximize);
-            inputActions.Add(InputActionMinimize);
-            inputActions.Add(InputActionNextMonitor);
-            inputActions.Add(InputActionCycleShaders);
-            inputActions.Add(InputActionCycleScreenMode);
-            inputActions.Add(InputActionZoom);
-            inputActions.Add(InputActionCyclePalette);
-            inputActions.Add(InputActionReset);
+            inputActionTree.Add(InputActionUICancel);
+            inputActionTree.Add(InputActionUIBack);
+            inputActionTree.Add(InputActionUIAccept);
+            inputActionTree.Add(InputActionUIAcceptMouse);
+            inputActionTree.Add(InputActionUILeft);
+            inputActionTree.Add(InputActionUIRight);
+            inputActionTree.Add(InputActionUIUp);
+            inputActionTree.Add(InputActionUIDown);
+            inputActionTree.Add(InputActionUIPrevTab);
+            inputActionTree.Add(InputActionUINextTab);
+            inputActionTree.Add(InputActionUIPrevPage);
+            inputActionTree.Add(InputActionUINextPage);
+            inputActionTree.Add(InputActionFullscreen);
+            inputActionTree.Add(InputActionMaximize);
+            inputActionTree.Add(InputActionMinimize);
+            inputActionTree.Add(InputActionNextMonitor);
+            inputActionTree.Add(InputActionCycleShaders);
+            inputActionTree.Add(InputActionCycleScreenMode);
+            inputActionTree.Add(InputActionZoom);
+            inputActionTree.Add(InputActionCyclePalette);
+            inputActionTree.Add(InputActionReset);
         }
     }
 
