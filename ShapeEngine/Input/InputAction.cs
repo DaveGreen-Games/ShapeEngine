@@ -3,10 +3,6 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Input;
 
-//TODO: Should it stay a SortedSet or should it be a dictionary with the ID as key?
-//NOTE: Dictionary would give me fast access to trees, but is that needed?
-//NOTE: SortedSet allows me to keep the trees sorted by execution order and ID, which is useful for processing order. But is the processing order important for tress?
-
 
 /// <summary>
 /// Represents a sorted collection of <see cref="InputActionTree"/> objects.
@@ -26,7 +22,6 @@ public class InputActionTrees : SortedSet<InputActionTree>
         }
     }
     
-        
     #region Get Input Action Trees
     
     /// <summary>
@@ -42,37 +37,7 @@ public class InputActionTrees : SortedSet<InputActionTree>
        }
        return null;
     }
-
-    /// <summary>
-    /// Gets the first <see cref="InputActionTree"/> in the collection with the specified execution order.
-    /// </summary>
-    /// <param name="executionOrder">The execution order to search for.</param>
-    /// <returns>The matching <see cref="InputActionTree"/>, or null if not found.</returns>
-    public InputActionTree? GetFirstByExecutionOrder(int executionOrder)
-    {
-       foreach (var action in this)
-       {
-           if (action.ExecutionOrder == executionOrder) return action;
-       }
-       return null;
-    }
-
-    /// <summary>
-    /// Gets all <see cref="InputActionTree"/> instances in the collection with the specified execution order.
-    /// </summary>
-    /// <param name="executionOrder">The execution order to search for.</param>
-    /// <returns>A list of matching <see cref="InputActionTree"/> instances, or null if none found.</returns>
-    public List<InputActionTree>? GetAllWithExecutionOrder(int executionOrder)
-    {
-       List<InputActionTree>? result = null;
-       foreach (var action in this)
-       {
-           if (action.ExecutionOrder != executionOrder) continue;
-           result ??= [];
-           result.Add(action);
-       }
-       return result;
-    }
+    
     #endregion
     
 }
@@ -100,17 +65,8 @@ public class InputActionTree : SortedSet<InputAction>, IComparable<InputActionTr
         inputTypeBlockSet.Clear();
     }
     #endregion
-    
-    private static int executionOrderCounter = 0;
-    /// <summary>
-    /// Gets or sets the execution order for this <see cref="InputActionTree"/> instance.
-    /// Lower values are processed first. This value is automatically assigned when the instance is created,
-    /// but can be set manually if needed. Used for sorting and determining update order like in a SortedSet.
-    /// </summary>
-    /// <remarks>
-    /// <see cref="ShapeInput.InputActionTrees"/> uses this to determine the order in which input action trees are processed.
-    /// </remarks>
-    public int ExecutionOrder = executionOrderCounter++;
+
+    #region Class
     
     private static uint idCounter = 0;
     /// <summary>
@@ -118,7 +74,13 @@ public class InputActionTree : SortedSet<InputAction>, IComparable<InputActionTr
     /// </summary>
     public readonly uint Id = idCounter++;
 
-
+    
+    /// <summary>
+    /// Gets or sets the current gamepad device associated with this input action tree.
+    /// If set, all input actions in the tree will use this gamepad for input processing during update.
+    /// </summary>
+    public GamepadDevice? CurrentGamepad { get; set; } = null;
+    
     /// <summary>
     /// Adds an <see cref="InputAction"/> to the tree.
     /// If the action is added successfully, it is associated with this tree by calling <see cref="InputAction.EnterTree"/>.
@@ -154,15 +116,7 @@ public class InputActionTree : SortedSet<InputAction>, IComparable<InputActionTr
         
         return removed;
     }
-    
-    
-    #region Class
-    
-    /// <summary>
-    /// Gets or sets the current gamepad device associated with this input action tree.
-    /// If set, all input actions in the tree will use this gamepad for input processing during update.
-    /// </summary>
-    public GamepadDevice? CurrentGamepad { get; set; } = null;
+
     
     /// <summary>
     /// Updates all <see cref="InputAction"/> instances in the tree.
@@ -325,21 +279,40 @@ public class InputActionTree : SortedSet<InputAction>, IComparable<InputActionTr
         return num;
     }
     #endregion
+
+    #region Copying
+
+    //TODO: functions for copying the tree and its actions (deep and shallow copy)
+    //NOTE: InputAction might need the same functions for copying its properties and inputs.
+    // CopyShallow() and CopyDeep()
+    // Look into interfaces for this
+    /*
+        There is no standard built-in interface in C# specifically for shallow and deep copying. However, the most common conventions are:
+       For shallow copy: implement the ICloneable interface and its Clone() method. Note that ICloneable does not specify whether the clone is deep or shallow, so you should document the behavior.
+       For deep copy: there is no standard interface. You can define your own, such as IDeepCloneable<T> with a DeepClone() method.
+       
+       public interface IDeepCloneable<T>
+       {
+           T DeepClone();
+       }
+    */
+    
+
+    #endregion
     
     /// <summary>
     /// Compares this <see cref="InputActionTree"/> to another for sorting purposes.
-    /// First compares <see cref="ExecutionOrder"/>; if equal, compares <see cref="Id"/>.
+    /// Comparison is based on the unique <see cref="Id"/> of each tree.
     /// </summary>
     /// <param name="other">The other <see cref="InputActionTree"/> to compare to.</param>
     /// <returns>
-    /// -1 if this instance precedes <paramref name="other"/>; 1 if it follows; 0 if equal.
+    /// 0 if both instances are the same; 1 if <paramref name="other"/> is null; 
+    /// otherwise, the result of comparing <see cref="Id"/> values.
     /// </returns>
     public int CompareTo(InputActionTree? other)
     {
         if (ReferenceEquals(this, other)) return 0;
         if (other is null) return 1;
-        int executionOrderComparison = ExecutionOrder.CompareTo(other.ExecutionOrder);
-        if (executionOrderComparison != 0) return executionOrderComparison;
         return Id.CompareTo(other.Id);
     }
 }

@@ -275,11 +275,7 @@ public static class ShapeInput
             }
         }
 
-
-        foreach (var tree in InputActionTrees)
-        {
-            tree.Update(dt);
-        }
+        InputActionTrees.Update(dt);
     }
 
     internal static void EndFrame()
