@@ -3,10 +3,9 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Input;
 
-//TODO: Test if this works good or not.
-
-//Q: InputActionTree could also be a Dictionary<GamepadDevice, SortedSet<InputAction>> to allow multiple gamepads to be used at the same time?
-//NOTE: Currently a different InputActionTree is used for each gamepad.
+//TODO: Should it stay a SortedSet or should it be a dictionary with the ID as key?
+//NOTE: Dictionary would give me fast access to trees, but is that needed?
+//NOTE: SortedSet allows me to keep the trees sorted by execution order and ID, which is useful for processing order. But is the processing order important for tress?
 
 
 /// <summary>
@@ -78,7 +77,6 @@ public class InputActionTrees : SortedSet<InputActionTree>
     
 }
 
-
 /// <summary>
 /// Represents a sorted collection of <see cref="InputAction"/> objects, ordered by their execution order and ID.
 /// Provides methods for updating and retrieving input actions based on various criteria.
@@ -119,6 +117,44 @@ public class InputActionTree : SortedSet<InputAction>, IComparable<InputActionTr
     /// The unique identifier for this <see cref="InputActionTree"/> instance.
     /// </summary>
     public readonly uint Id = idCounter++;
+
+
+    /// <summary>
+    /// Adds an <see cref="InputAction"/> to the tree.
+    /// If the action is added successfully, it is associated with this tree by calling <see cref="InputAction.EnterTree"/>.
+    /// </summary>
+    /// <param name="action">The input action to add.</param>
+    /// <returns>True if the action was added; otherwise, false.</returns>
+    public new bool Add(InputAction action)
+    {
+        var added = base.Add(action);
+        
+        if (added)
+        {
+            action.EnterTree(this);
+        }
+    
+        return added;
+    }
+    
+    /// <summary>
+    /// Removes an <see cref="InputAction"/> from the tree.
+    /// If the action is removed successfully, it is disassociated from this tree by calling <see cref="InputAction.ExitTree"/>.
+    /// </summary>
+    /// <param name="action">The input action to remove.</param>
+    /// <returns>True if the action was removed; otherwise, false.</returns>
+    public new bool Remove(InputAction action)
+    {
+        var removed = base.Remove(action);
+    
+        if (removed)
+        {
+            action.ExitTree();
+        }
+        
+        return removed;
+    }
+    
     
     #region Class
     
@@ -140,7 +176,7 @@ public class InputActionTree : SortedSet<InputAction>, IComparable<InputActionTr
         foreach (var action in this)
         {
             action.Gamepad = CurrentGamepad;
-            action.Update(dt, ref inputTypeBlockSet);
+            action.Update(dt, inputTypeBlockSet);
         }
     }
     #endregion
@@ -308,11 +344,13 @@ public class InputActionTree : SortedSet<InputAction>, IComparable<InputActionTr
     }
 }
 
-
 /// <summary>
 /// Represents an input action, which can be triggered by various input types and devices.
 /// Handles state, multi-tap, hold, and axis sensitivity/gravity.
 /// </summary>
+/// <remarks>
+/// Use <see cref="InputActionTree"/> for updating and managing multiple <see cref="InputAction"/> instances.
+/// </remarks>
 public class InputAction : IComparable<InputAction>
 {
     /// <summary>
@@ -330,8 +368,45 @@ public class InputAction : IComparable<InputAction>
         On
     }
     
-    #region Members
+    #region Input Action Tree Management
+    /// <summary>
+    /// Gets the parent <see cref="InputActionTree"/> of this action, if any.
+    /// </summary>
+    public InputActionTree? Parent { get; private set; } = null;
     
+    /// <summary>
+    /// Indicates whether this action is currently part of an <see cref="InputActionTree"/>.
+    /// </summary>
+    public bool IsInTree => Parent != null;
+    
+    /// <summary>
+    /// Adds this action to the specified <see cref="InputActionTree"/>.
+    /// If already in a different tree, removes it from the previous tree first.
+    /// </summary>
+    /// <param name="tree">The tree to add this action to.</param>
+    internal void EnterTree(InputActionTree tree)
+    {
+        if (Parent != null)
+        {
+            if (Parent == tree) return;
+            Parent.Remove(this);
+        }
+        Parent = tree;
+    }
+    
+    /// <summary>
+    /// Removes this action from its parent <see cref="InputActionTree"/>, if any.
+    /// </summary>
+    internal void ExitTree()
+    {
+        if(Parent == null) return;
+        Parent = null;
+    }
+    #endregion
+    
+    #region Members
+
+   
     /// <summary>
     /// Indicates if this input action is active. If set to <c>false</c>, the action will not process input or update its state.
     /// </summary>
@@ -596,14 +671,25 @@ public class InputAction : IComparable<InputAction>
         State = State.Consume();
         return returnValue;
     }
-
-    //Todo: needs to know if input action is currently in a InputActionTree. Only works when not in a tree.
     
-    // public void Update(float dt)
-    // {
-    //     if (IsInInputActionTree) return;
-    //     Update(dt, null);
-    // }
+    /// <summary>
+    /// Updates the input action state when it is not part of an <see cref="InputActionTree"/>.
+    /// This method should only be used for standalone actions.
+    /// If the action is in a tree, the update is skipped, because the <see cref="InputActionTree"/> will handle the update automatically.
+    /// </summary>
+    /// <param name="dt">The time delta in seconds.</param>
+    /// <returns><c>true</c> if the action was updated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// Because the <see cref="InputAction"/> is not part of an <see cref="InputActionTree"/>,
+    /// the <see cref="IInputType"/> Block system is not used.
+    /// </remarks>
+    public bool Update(float dt)
+    {
+        if (IsInTree) return false;
+        
+        Update(dt, null);
+        return true;
+    }
     
     /// <summary>
     /// Updates the input action state based on the current input and time delta.
@@ -615,7 +701,7 @@ public class InputAction : IComparable<InputAction>
     /// or <see cref="ShapeInput.Locked"/> is set to <c>true</c>
     /// and the <see cref="AccessTag"/> does not allow access.
     /// </remarks>
-    internal void Update(float dt, ref HashSet<IInputType> blocklist)
+    internal void Update(float dt, HashSet<IInputType>? blocklist)
     {
         if (!Active) return;
         if (ShapeInput.Locked && !ShapeInput.HasAccess(AccessTag))
@@ -631,7 +717,7 @@ public class InputAction : IComparable<InputAction>
             var inputState = input.GetState(Gamepad);
             
             //if it can not be added to the input type block list, it was already used this frame before and therefore it is skipped now.
-            if (inputState.Down && BlocksInput && !blocklist.Add(input)) continue;
+            if (blocklist != null && inputState.Down && BlocksInput && !blocklist.Add(input)) continue;
             
             current = current.Accumulate(inputState);
         }
