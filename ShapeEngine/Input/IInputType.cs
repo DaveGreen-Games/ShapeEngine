@@ -6,14 +6,14 @@ namespace ShapeEngine.Input;
 /// Represents an input type abstraction for various input devices (keyboard, mouse, gamepad).
 /// Provides methods for copying, deadzone management, state retrieval, and device identification.
 /// </summary>
-public interface IInputType : IEquatable<IInputType>
+public interface IInputType : IEquatable<IInputType>, ICopyable<IInputType>
 {
     
-    /// <summary>
-    /// Creates a copy of this input type.
-    /// </summary>
-    /// <returns>A new instance of <see cref="IInputType"/> with the same configuration.</returns>
-    public IInputType Copy();
+    // /// <summary>
+    // /// Creates a copy of this input type.
+    // /// </summary>
+    // /// <returns>A new instance of <see cref="IInputType"/> with the same configuration.</returns>
+    // public IInputType Copy();
 
     /// <summary>
     /// Gets the deadzone value for this input type.

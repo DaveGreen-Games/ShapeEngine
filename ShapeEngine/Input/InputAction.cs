@@ -3,6 +3,17 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Input;
 
+/// <summary>
+/// Defines a method for creating a copy of the current instance.
+/// </summary>
+public interface ICopyable<out T>
+{
+    /// <summary>
+    /// Creates a copy of the current instance.
+    /// </summary>
+    /// <returns>A new instance of type <typeparamref name="T"/> that is a copy of this instance.</returns>
+    T Copy();
+}
 
 /// <summary>
 /// Represents a sorted collection of <see cref="InputActionTree"/> objects.
@@ -55,11 +66,11 @@ public class InputActionTrees : SortedSet<InputActionTree>
 /// <remarks>
 /// A different tree for each used gamepad is recommended.
 /// </remarks>
-public class InputActionTree : SortedSet<InputAction>, IComparable<InputActionTree>
+public class InputActionTree : SortedSet<InputAction>, IComparable<InputActionTree>, ICopyable<InputActionTree>
 {
     #region Blocking System
 
-    private HashSet<IInputType> inputTypeBlockSet = [];
+    private readonly HashSet<IInputType> inputTypeBlockSet = [];
     private void ClearInputTypeBlockSet()
     {
         inputTypeBlockSet.Clear();
@@ -281,22 +292,22 @@ public class InputActionTree : SortedSet<InputAction>, IComparable<InputActionTr
     #endregion
 
     #region Copying
-
-    //TODO: functions for copying the tree and its actions (deep and shallow copy)
-    //NOTE: InputAction might need the same functions for copying its properties and inputs.
-    // CopyShallow() and CopyDeep()
-    // Look into interfaces for this
-    /*
-        There is no standard built-in interface in C# specifically for shallow and deep copying. However, the most common conventions are:
-       For shallow copy: implement the ICloneable interface and its Clone() method. Note that ICloneable does not specify whether the clone is deep or shallow, so you should document the behavior.
-       For deep copy: there is no standard interface. You can define your own, such as IDeepCloneable<T> with a DeepClone() method.
-       
-       public interface IDeepCloneable<T>
-       {
-           T DeepClone();
-       }
-    */
     
+    /// <summary>
+    /// Creates a deep copy of this <see cref="InputActionTree"/>, including all contained <see cref="InputAction"/> instances.
+    /// The copied tree will have the same <see cref="CurrentGamepad"/> reference and new copies of all actions.
+    /// </summary>
+    /// <returns>A new <see cref="InputActionTree"/> instance with copied actions.</returns>
+    public InputActionTree Copy()
+    {
+        var copy = new InputActionTree
+        {
+            CurrentGamepad = CurrentGamepad
+        };
+        foreach (var action in this) copy.Add(action.Copy());
+        
+        return copy;
+    }
 
     #endregion
     
@@ -315,6 +326,8 @@ public class InputActionTree : SortedSet<InputAction>, IComparable<InputActionTr
         if (other is null) return 1;
         return Id.CompareTo(other.Id);
     }
+
+    
 }
 
 /// <summary>
@@ -324,7 +337,7 @@ public class InputActionTree : SortedSet<InputAction>, IComparable<InputActionTr
 /// <remarks>
 /// Use <see cref="InputActionTree"/> for updating and managing multiple <see cref="InputAction"/> instances.
 /// </remarks>
-public class InputAction : IComparable<InputAction>
+public class InputAction : IComparable<InputAction>, ICopyable<InputAction>
 {
     /// <summary>
     /// Represents the toggle state for an input action.
@@ -821,6 +834,7 @@ public class InputAction : IComparable<InputAction>
     /// <returns>A new <see cref="InputAction"/> copy.</returns>
     public InputAction Copy()
     {
+        
         var copied = GetInputsCopied().ToArray();
         if (Gamepad == null)
         {
@@ -828,7 +842,18 @@ public class InputAction : IComparable<InputAction>
             {
                 axisSensitivity = axisSensitivity,
                 axisGravitiy = axisGravitiy,
-                Active = this.Active
+                Active = Active,
+                ExecutionOrder = ExecutionOrder,
+                Title = Title,
+                BlocksInput = BlocksInput,
+                Toggle = Toggle,
+                State = State,
+                holdTimer = holdTimer,
+                multiTapTimer = multiTapTimer,
+                holdDuration = holdDuration,
+                multiTapDuration = multiTapDuration,
+                multiTapCount = multiTapCount,
+                multiTapTarget = multiTapTarget
             };
             return copy;
         }
@@ -838,7 +863,18 @@ public class InputAction : IComparable<InputAction>
             {
                 axisSensitivity = axisSensitivity,
                 axisGravitiy = axisGravitiy,
-                Active = this.Active
+                Active = Active,
+                ExecutionOrder = ExecutionOrder,
+                Title = Title,
+                BlocksInput = BlocksInput,
+                Toggle = Toggle,
+                State = State,
+                holdTimer = holdTimer,
+                multiTapTimer = multiTapTimer,
+                holdDuration = holdDuration,
+                multiTapDuration = multiTapDuration,
+                multiTapCount = multiTapCount,
+                multiTapTarget = multiTapTarget
             };
             return copy;
         }
