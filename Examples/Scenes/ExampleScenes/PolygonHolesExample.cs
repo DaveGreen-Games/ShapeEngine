@@ -101,10 +101,11 @@ public class PolygonHolesExample : ExampleScene
     {
         Title = "Polygon Holes Example";
 
+        InputActionSettings defaultSettings = new();
         var addPolygonKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
         var addPolygonGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
         var addPolygonMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
-        iaAddPolygon = new(addPolygonKB, addPolygonGP, addPolygonMB);
+        iaAddPolygon = new(defaultSettings,addPolygonKB, addPolygonGP, addPolygonMB);
 
         inputActionTree = [iaAddPolygon];
         

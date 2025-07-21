@@ -63,16 +63,16 @@ internal class Ship : CollisionObject, ICameraFollowTarget
         // collider.OnCollisionEnded += OnColliderCollisionEnded;
         AddCollider(collider);
         hull = collider.GetTriangleShape();
-        
+        InputActionSettings defaultSettings = new();        
         var moveHorKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
         var moveHor2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
         var moveHorMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-        iaMoveHor = new(moveHorKB, moveHor2GP, moveHorMW);
+        iaMoveHor = new(defaultSettings,moveHorKB, moveHor2GP, moveHorMW);
         
         var moveVerKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
         var moveVer2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
         var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-        iaMoveVer = new(moveVerKB, moveVer2GP, moveVerMW);
+        iaMoveVer = new(defaultSettings,moveVerKB, moveVer2GP, moveVerMW);
         
         inputActionTree =
         [

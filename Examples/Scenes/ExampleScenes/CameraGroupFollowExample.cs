@@ -64,15 +64,17 @@ namespace Examples.Scenes.ExampleScenes
                 movementDir = Rng.Instance.RandVec2();
                 invisibleTimer = 2f;
                 
+                InputActionSettings defaultSettings = new();
+                
                 var moveHorKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
                 var moveHorGP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
                 // var moveHorMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-                iaMoveHor = new(moveHorKB, moveHorGP);
+                iaMoveHor = new(defaultSettings,moveHorKB, moveHorGP);
                 
                 var moveVerKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
                 var moveVerGP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
                 // var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-                iaMoveVer = new(moveVerKB, moveVerGP);
+                iaMoveVer = new(defaultSettings,moveVerKB, moveVerGP);
 
                 inputActionTree = [iaMoveHor, iaMoveVer];
             }
@@ -270,19 +272,21 @@ namespace Examples.Scenes.ExampleScenes
 
             AddShip();
             
+            InputActionSettings defaultSettings = new();
+            
             var addShipKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
             var addShipGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
             var addshipMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
-            iaAddShip = new(addShipKB, addshipMB, addShipGP);
+            iaAddShip = new(defaultSettings,addShipKB, addshipMB, addShipGP);
                 
             var nextShipKB = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
             var nextShipGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
             var nextShipMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
-            iaNextShip = new(nextShipKB, nextShipMB, nextShipGP);
+            iaNextShip = new(defaultSettings,nextShipKB, nextShipMB, nextShipGP);
             
             var centerTargetKB = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
             var centerTargetGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
-            iaCenterTarget = new(centerTargetKB, centerTargetGP);
+            iaCenterTarget = new(defaultSettings,centerTargetKB, centerTargetGP);
             
             inputActionTree = [iaAddShip, iaNextShip, iaCenterTarget];
         }

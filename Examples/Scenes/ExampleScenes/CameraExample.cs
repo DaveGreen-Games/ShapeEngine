@@ -43,23 +43,25 @@ namespace Examples.Scenes.ExampleScenes
         {
             Title = "Camera Example";
 
+            InputActionSettings defaultSettings = new();
+            
             var cameraHorizontalKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
             var cameraHorizontalGP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
             // var cameraHorizontalGP2 = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad2);
             // var cameraHorizontalMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-            iaMoveCameraH = new(cameraHorizontalKB, cameraHorizontalGP);
+            iaMoveCameraH = new(defaultSettings,cameraHorizontalKB, cameraHorizontalGP);
             
             var cameraVerticalKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
             var cameraVerticalGP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
             // var cameraVerticalGP2 = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_UP, ShapeGamepadButton.LEFT_FACE_DOWN, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad2);
             // var cameraVerticalMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-            iaMoveCameraV = new(cameraVerticalKB, cameraVerticalGP);
+            iaMoveCameraV = new(defaultSettings,cameraVerticalKB, cameraVerticalGP);
 
             var rotateCameraKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.Q, ShapeKeyboardButton.E);
             var rotateCameraGP = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad);
             var rotateCameraMb = new InputTypeMouseButtonAxis(ShapeMouseButton.LEFT, ShapeMouseButton.RIGHT, 0f);
                 //new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouse);
-            iaRotateCamera = new(rotateCameraKB, rotateCameraGP, rotateCameraMb);
+            iaRotateCamera = new(defaultSettings,rotateCameraKB, rotateCameraGP, rotateCameraMb);
 
             inputActionTree = [iaMoveCameraH, iaMoveCameraV, iaRotateCamera];
             

@@ -561,53 +561,55 @@ namespace Examples.Scenes.ExampleScenes
             InitSpawnArea(boundaryRect);
             InitCollisionHandler(boundaryRect, 4, 4);
             
+            InputActionSettings defaultSettings = new();
+            
             var shootKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
             var shootGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
             var shootMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
-            iaShootLaser = new(shootKB, shootGP, shootMB);
+            iaShootLaser = new(defaultSettings,shootKB, shootGP, shootMB);
             
             var modeChangeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.TAB);
             var modeChangeGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
-            iaModeChange = new(modeChangeKB, modeChangeGP);
+            iaModeChange = new(defaultSettings,modeChangeKB, modeChangeGP);
 
             var addShapeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
             var addShapeMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
             var addShapeGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
-            iaAddShape = new(addShapeKB, addShapeMB, addShapeGP);
+            iaAddShape = new(defaultSettings,addShapeKB, addShapeMB, addShapeGP);
 
             var cutShapeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.C);
             var cutShapeMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
             var cutShapeGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
-            iaCutShape = new(cutShapeKB, cutShapeMB, cutShapeGP);
+            iaCutShape = new(defaultSettings,cutShapeKB, cutShapeMB, cutShapeGP);
             
             var regenShapeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
             var regenShapeGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP);
-            iaRegenerateShape = new(regenShapeKB, regenShapeGP);
+            iaRegenerateShape = new(defaultSettings,regenShapeKB, regenShapeGP);
             
             var rotateShapeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
             var rotateShapeGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
-            iaRotateShape = new(rotateShapeKB, rotateShapeGP);
+            iaRotateShape = new(defaultSettings,rotateShapeKB, rotateShapeGP);
             
             var scaleShapeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.X);
             var scaleShapeGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
-            iaScaleShape = new(scaleShapeKB, scaleShapeGP);
+            iaScaleShape = new(defaultSettings,scaleShapeKB, scaleShapeGP);
             
             var pickTriangleKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ONE);
             var pickTriangleGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT);
-            iaPickTriangleShape = new(pickTriangleKB, pickTriangleGP);
+            iaPickTriangleShape = new(defaultSettings,pickTriangleKB, pickTriangleGP);
             
             var pickRectangleKB = new InputTypeKeyboardButton(ShapeKeyboardButton.TWO);
             var pickRectangleGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT);
-            iaPickRectangleShape = new(pickRectangleKB, pickRectangleGP);
+            iaPickRectangleShape = new(defaultSettings,pickRectangleKB, pickRectangleGP);
             
             var pickPolygonKB = new InputTypeKeyboardButton(ShapeKeyboardButton.THREE);
             var pickPolygonGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN);
-            iaPickPolygonShape = new(pickPolygonKB, pickPolygonGP);
+            iaPickPolygonShape = new(defaultSettings,pickPolygonKB, pickPolygonGP);
 
             var dragLaserKB = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
             var dragLaserGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_BOTTOM);
             var dragLaserMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
-            iaDragLaser = new(dragLaserMB, dragLaserKB, dragLaserGP);
+            iaDragLaser = new(defaultSettings,dragLaserMB, dragLaserKB, dragLaserGP);
             
             inputActionTree =
             [

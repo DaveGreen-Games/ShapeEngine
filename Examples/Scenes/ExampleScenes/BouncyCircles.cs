@@ -107,19 +107,18 @@ namespace Examples.Scenes.ExampleScenes
             UpdateBoundaryRect(GAMELOOP.GameScreenInfo.Area);
 
             InitSpawnArea(boundaryRect);
-            // InitCollisionHandler(boundaryRect, 2, 2);
             
-            // if(InitSpawnArea(boundaryRect)) SpawnArea?.InitCollisionHandler(2, 2);
-
+            InputActionSettings defaultSettings = new();
+            
             var addKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
             var addMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
             var addGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
-            iaAdd = new(addKB, addMB, addGP);
+            iaAdd = new(defaultSettings,addKB, addMB, addGP);
 
             var toggleConvexHullKB = new InputTypeKeyboardButton(ShapeKeyboardButton.C);
             var toggleConvexHullGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
             var toggleConvexHullMb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
-            iaToggleConvexHull = new(toggleConvexHullKB, toggleConvexHullGP, toggleConvexHullMb);
+            iaToggleConvexHull = new(defaultSettings,toggleConvexHullKB, toggleConvexHullGP, toggleConvexHullMb);
             
             inputActionTree = [iaAdd, iaToggleConvexHull];
 

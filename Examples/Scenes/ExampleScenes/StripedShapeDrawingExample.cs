@@ -151,24 +151,26 @@ public class StripedShapeDrawingExample : ExampleScene
     {
         Title = "Shape Striped Drawing";
 
+        InputActionSettings defaultSettings = new();
+        
         var nextStaticShapeMb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
         var nextStaticShapeGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
         var nextStaticShapeKb = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
-        nextShape = new(nextStaticShapeMb, nextStaticShapeGp, nextStaticShapeKb);
+        nextShape = new(defaultSettings,nextStaticShapeMb, nextStaticShapeGp, nextStaticShapeKb);
         
         var changeModeMB = new InputTypeMouseButton(ShapeMouseButton.MIDDLE);
         var changeModeGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
         var changeModeKb = new InputTypeKeyboardButton(ShapeKeyboardButton.TAB);
-        changeDrawingMode = new(changeModeMB, changeModeGp, changeModeKb);
+        changeDrawingMode = new(defaultSettings,changeModeMB, changeModeGp, changeModeKb);
         
         var regenOutsideShapeKb = new InputTypeKeyboardButton(ShapeKeyboardButton.ONE);
-        regenerateOutsideShape = new(regenOutsideShapeKb);
+        regenerateOutsideShape = new(defaultSettings,regenOutsideShapeKb);
         
         var regenInsideShapeKb = new InputTypeKeyboardButton(ShapeKeyboardButton.TWO);
-        regenerateInsideShape = new(regenInsideShapeKb);
+        regenerateInsideShape = new(defaultSettings,regenInsideShapeKb);
         
         var toggleCrissCrossKb = new InputTypeKeyboardButton(ShapeKeyboardButton.THREE);
-        toggleCrissCrossPattern = new(toggleCrissCrossKb);
+        toggleCrissCrossPattern = new(defaultSettings,toggleCrissCrossKb);
 
         inputActionTree =
         [

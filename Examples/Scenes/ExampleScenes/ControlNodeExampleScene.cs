@@ -278,14 +278,15 @@ namespace Examples.Scenes.ExampleScenes
             
             resetButton.OnPressedChanged += OnResetButtonPressedChanged;
 
-
+            InputActionSettings defaultSettings = new();
+            
             var cycleGridStylesKB = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
             var cycleGridStylesGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
-            cycleGridStyles = new InputAction(cycleGridStylesKB, cycleGridStylesGp);
+            cycleGridStyles = new InputAction(defaultSettings,cycleGridStylesKB, cycleGridStylesGp);
             
             var resetGridStylesKB = new InputTypeKeyboardButton(ShapeKeyboardButton.R);
             var resetGridStylesGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
-            resetGridStyles = new InputAction(resetGridStylesKB, resetGridStylesGp);
+            resetGridStyles = new InputAction(defaultSettings,resetGridStylesKB, resetGridStylesGp);
             
             inputActionTree = [
                 cycleGridStyles,

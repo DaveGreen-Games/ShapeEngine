@@ -60,49 +60,49 @@ namespace Examples.Scenes
             bottomRight = bottomRightRelative * s;
             
             //font =  new(GAMELOOP.GetFont(fontIndex),1f, ExampleScene.ColorLight);
-
+            InputActionSettings defaultSettings = new();
             var enterTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ENTER);
             var enterTextGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
-            iaEnterText = new(accessTagTextBox,enterTextKB, enterTextGP);
+            iaEnterText = new(accessTagTextBox,defaultSettings,enterTextKB, enterTextGP);
             
             var cancelTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ESCAPE);
             var cancelTextGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
-            iaCancelText = new(accessTagTextBox,cancelTextKB, cancelTextGP);
+            iaCancelText = new(accessTagTextBox,defaultSettings,cancelTextKB, cancelTextGP);
             
             var finishTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ENTER);
             var finishTextGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
-            iaFinishText = new(accessTagTextBox,finishTextKB, finishTextGP);
+            iaFinishText = new(accessTagTextBox,defaultSettings,finishTextKB, finishTextGP);
 
             var modifierKB = new ModifierKeyKeyboardButton(ShapeKeyboardButton.LEFT_SHIFT);
             var modifierGP = new ModifierKeyGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_BOTTOM);
             var clearTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.BACKSPACE, ModifierKeyOperator.Or, modifierKB);
             var clearTextGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP, 0.1f, ModifierKeyOperator.Or, modifierGP);
-            iaClear = new(accessTagTextBox,clearTextKB, clearTextGP);
+            iaClear = new(accessTagTextBox,defaultSettings,clearTextKB, clearTextGP);
             
             var deleteTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.DELETE);
             var deleteTextGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
-            iaDelete = new(accessTagTextBox,deleteTextKB, deleteTextGP);
+            iaDelete = new(accessTagTextBox,defaultSettings,deleteTextKB, deleteTextGP);
             
             var backspaceTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.BACKSPACE);
             var backspaceTextGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
-            iaBackspace = new(accessTagTextBox,backspaceTextKB, backspaceTextGP);
+            iaBackspace = new(accessTagTextBox,defaultSettings,backspaceTextKB, backspaceTextGP);
             
             var caretLeftKB = new InputTypeKeyboardButton(ShapeKeyboardButton.LEFT);
             var caretLeftGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT);
-            iaCaretPrev = new(accessTagTextBox,caretLeftKB, caretLeftGP);
+            iaCaretPrev = new(accessTagTextBox,defaultSettings,caretLeftKB, caretLeftGP);
 
             var caretRightKB = new InputTypeKeyboardButton(ShapeKeyboardButton.RIGHT);
             var caretRightGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT);
-            iaCaretNext = new(accessTagTextBox,caretRightKB, caretRightGP);
+            iaCaretNext = new(accessTagTextBox,defaultSettings,caretRightKB, caretRightGP);
             
             var dragMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
             var dragKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
             var dragGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
-            iaDrag = new(accessTagTextBox,dragGP, dragKB, dragMB);
+            iaDrag = new(accessTagTextBox,defaultSettings,dragGP, dragKB, dragMB);
 
             var nextFontKB = new InputTypeKeyboardButton(ShapeKeyboardButton.A);
             var nextFontGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
-            iaNextFont = new(accessTagTextBox,nextFontKB, nextFontGP);
+            iaNextFont = new(accessTagTextBox,defaultSettings,nextFontKB, nextFontGP);
             
             inputActionTree =
             [

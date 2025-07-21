@@ -55,13 +55,15 @@ public class PathfinderExample2 : ExampleScene
             CreateHull(pos, shipSize);
             chasePosition = hull.A;
             
+            InputActionSettings defaultSettings = new();
+            
             var moveHorKb = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
             var moveHorGp = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-            iaMoveHor = new(moveHorKb, moveHorGp);
+            iaMoveHor = new(defaultSettings,moveHorKb, moveHorGp);
             
             var moveVerKb = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
             var moveVerGp = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-            iaMoveVer = new(moveVerKb, moveVerGp);
+            iaMoveVer = new(defaultSettings,moveVerKb, moveVerGp);
 
             inputActionTree = [iaMoveHor, iaMoveVer];
         }
@@ -648,15 +650,17 @@ public class PathfinderExample2 : ExampleScene
         ship = new(new Vector2(0f), 45f, pathfinder);
         UpdateFollower(camera.BaseSize.Min());
         
+        InputActionSettings defaultSettings = new();
+        
         var toggleDrawKB = new InputTypeKeyboardButton(ShapeKeyboardButton.T);
         var toggleDrawGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
         var toggleDrawMb = new InputTypeMouseButton(ShapeMouseButton.MIDDLE);
-        iaDrawDebug = new(toggleDrawKB, toggleDrawGP, toggleDrawMb);
+        iaDrawDebug = new(defaultSettings,toggleDrawKB, toggleDrawGP, toggleDrawMb);
         
         var addChasersKb = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
         var addChasersGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
         var addChasersMb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
-        iaAddChasers = new(addChasersKb, addChasersGp, addChasersMb);
+        iaAddChasers = new(defaultSettings,addChasersKb, addChasersGp, addChasersMb);
 
         inputActionTree = [iaDrawDebug, iaAddChasers];
         

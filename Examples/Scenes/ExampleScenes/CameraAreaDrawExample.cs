@@ -39,10 +39,12 @@ namespace Examples.Scenes.ExampleScenes
             
             currentShip = ship;
 
+            InputActionSettings defaultSettings = new();
+            
             var changeCameraTargetKB = new InputTypeKeyboardButton(ShapeKeyboardButton.B);
             var changeCameraTargetGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
             var changeCameraTargetMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
-            iaChangeCameraTarget = new(changeCameraTargetKB, changeCameraTargetGP, changeCameraTargetMB);
+            iaChangeCameraTarget = new(defaultSettings,changeCameraTargetKB, changeCameraTargetGP, changeCameraTargetMB);
             inputActionTree = [iaChangeCameraTarget];
         }
 

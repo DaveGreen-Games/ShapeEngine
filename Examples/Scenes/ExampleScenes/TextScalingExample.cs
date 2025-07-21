@@ -20,13 +20,15 @@ namespace Examples.Scenes.ExampleScenes
             Title = "Text Scaling Example";
             var s = GAMELOOP.UIScreenInfo.Area.Size;
             TextInputBox.EmptyText = "Longer Test Text";
+            InputActionSettings defaultSettings = new();
+            
             var decreaseFontSpacingKB = new InputTypeKeyboardButton(ShapeKeyboardButton.S);
             var decreaseFontSpacingGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN);
-            iaDeacreaseFontSpacing = new(accessTagTextBox,decreaseFontSpacingKB, decreaseFontSpacingGP);
+            iaDeacreaseFontSpacing = new(accessTagTextBox,defaultSettings,decreaseFontSpacingKB, decreaseFontSpacingGP);
             
             var increaseFontSpacingKB = new InputTypeKeyboardButton(ShapeKeyboardButton.W);
             var increaseFontSpacingGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP);
-            iaIncreaseFontSpacing = new(accessTagTextBox,increaseFontSpacingKB, increaseFontSpacingGP);
+            iaIncreaseFontSpacing = new(accessTagTextBox,defaultSettings,increaseFontSpacingKB, increaseFontSpacingGP);
             
             inputActionTree.Add(iaDeacreaseFontSpacing);
             inputActionTree.Add(iaIncreaseFontSpacing);

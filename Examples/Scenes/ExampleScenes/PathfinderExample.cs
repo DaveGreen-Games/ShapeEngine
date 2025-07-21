@@ -118,51 +118,53 @@ internal class PathfinderFlag
         {
             Title = "Pathfinder Example";
 
+            InputActionSettings defaultSettings = new();
+            
             var cameraHorizontalKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
             var cameraHorizontalGP =
                 new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad);
             // var cameraHorizontalGP2 = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad2);
             // var cameraHorizontalMW = new InputTypeMouseAxis(ShapeMouseAxis.HORIZONTAL, 0.05f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouse); // new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-            iaMoveCameraH = new(cameraHorizontalKB, cameraHorizontalGP);
+            iaMoveCameraH = new(defaultSettings,cameraHorizontalKB, cameraHorizontalGP);
             
             var cameraVerticalKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
             var cameraVerticalGP =
                 new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad);
             // var cameraVerticalGP2 = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_UP, ShapeGamepadButton.LEFT_FACE_DOWN, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad2);
             // var cameraVerticalMW  = new InputTypeMouseAxis(ShapeMouseAxis.VERTICAL, 0.05f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouse); // = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-            iaMoveCameraV = new(cameraVerticalKB, cameraVerticalGP);
+            iaMoveCameraV = new(defaultSettings,cameraVerticalKB, cameraVerticalGP);
 
 
             var cycleTerrainTypeKb = new InputTypeKeyboardButton(ShapeKeyboardButton.TAB);
             var cycleTerrainTypeGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
             var cycleTerrainTypeMb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
-            iaCycleTerrainType = new(cycleTerrainTypeKb, cycleTerrainTypeGp, cycleTerrainTypeMb);
+            iaCycleTerrainType = new(defaultSettings,cycleTerrainTypeKb, cycleTerrainTypeGp, cycleTerrainTypeMb);
 
             var zoningKb = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
             var zoningGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
             var zoningMb = new InputTypeMouseButton(ShapeMouseButton.LEFT);
-            iaZoning = new(zoningKb, zoningGp, zoningMb);
+            iaZoning = new(defaultSettings,zoningKb, zoningGp, zoningMb);
 
             var calculatePathKb = new InputTypeKeyboardButton(ShapeKeyboardButton.C);
             var calculatePathGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
             var calculatePathMb = new InputTypeMouseButton(ShapeMouseButton.MIDDLE);
-            iaCalculatePath = new(calculatePathKb, calculatePathGp, calculatePathMb);
+            iaCalculatePath = new(defaultSettings,calculatePathKb, calculatePathGp, calculatePathMb);
 
 
             var positionStartFlagKb = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
             var positionStartFlagGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
             // var positionStartFlagMb = new InputTypeMouseButton(ShapeMouseButton.MW_UP, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-            iaPositionStartFlag = new(positionStartFlagKb, positionStartFlagGp);
+            iaPositionStartFlag = new(defaultSettings,positionStartFlagKb, positionStartFlagGp);
             
             var positionEndFlagKb = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
             var positionEndFlagGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
             // var positionEndFlagMb = new InputTypeMouseButton(ShapeMouseButton.MW_DOWN, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-            iaPositionEndFlag = new(positionEndFlagKb, positionEndFlagGp);
+            iaPositionEndFlag = new(defaultSettings,positionEndFlagKb, positionEndFlagGp);
             
             var portalKb = new InputTypeKeyboardButton(ShapeKeyboardButton.G);
             var portalGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
             // var portalMb = new InputTypeMouseButton(ShapeMouseButton.SIDE);
-            iaPortal = new(portalKb, portalGp);
+            iaPortal = new(defaultSettings,portalKb, portalGp);
             
             inputActionTree =
             [

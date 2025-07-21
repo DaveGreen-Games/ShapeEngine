@@ -22,17 +22,19 @@ namespace Examples.Scenes.ExampleScenes
         {
             Title = "Text Box Example";
             
+            InputActionSettings defaultSettings = new();
+            
             var nextAlignementKB = new InputTypeKeyboardButton(ShapeKeyboardButton.D);
             var nextAlignementGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT);
-            iaNextAlignement = new(accessTagTextBox,nextAlignementKB, nextAlignementGP);
+            iaNextAlignement = new(accessTagTextBox,defaultSettings,nextAlignementKB, nextAlignementGP);
             
             var decreaseFontSpacingKB = new InputTypeKeyboardButton(ShapeKeyboardButton.S);
             var decreaseFontSpacingGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN);
-            iaDeacreaseFontSpacing = new(accessTagTextBox,decreaseFontSpacingKB, decreaseFontSpacingGP);
+            iaDeacreaseFontSpacing = new(accessTagTextBox,defaultSettings,decreaseFontSpacingKB, decreaseFontSpacingGP);
             
             var increaseFontSpacingKB = new InputTypeKeyboardButton(ShapeKeyboardButton.W);
             var increaseFontSpacingGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP);
-            iaIncreaseFontSpacing = new(accessTagTextBox,increaseFontSpacingKB, increaseFontSpacingGP);
+            iaIncreaseFontSpacing = new(accessTagTextBox,defaultSettings,increaseFontSpacingKB, increaseFontSpacingGP);
             
             inputActionTree.Add(iaNextAlignement);
             inputActionTree.Add(iaDeacreaseFontSpacing);

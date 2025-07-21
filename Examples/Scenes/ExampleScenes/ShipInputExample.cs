@@ -65,17 +65,23 @@ namespace Examples.Scenes.ExampleScenes
                 hull = new(pos, Size);
                 movementDir = Rng.Instance.RandVec2();
                 
+                InputActionSettings defaultSettings = new();
+                
                 // var moveHorKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
                 var moveHorGP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f);
                 // var moveHorMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-                iaMoveHor = new(moveHorGP);
-                iaMoveHor.Gamepad = gamepad;
-                
+                iaMoveHor = new(defaultSettings,moveHorGP)
+                {
+                    Gamepad = gamepad
+                };
+
                 // var moveVerKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
                 var moveVerGP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y, 0.1f);
                 // var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-                iaMoveVer = new(moveVerGP);
-                iaMoveVer.Gamepad = gamepad;
+                iaMoveVer = new(defaultSettings,moveVerGP)
+                {
+                    Gamepad = gamepad
+                };
 
                 Gamepad = gamepad;
                 colorScheme = ColorSchemes[gamepad.Index];
@@ -177,14 +183,16 @@ namespace Examples.Scenes.ExampleScenes
             {
                 this.Gamepad = gamepad;
                 
+                InputActionSettings defaultSettings = new();
+                
                 var addShipInputType = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
-                Add = new(addShipInputType)
+                Add = new(defaultSettings,addShipInputType)
                 {
                     Gamepad = gamepad
                 };
                 
                 var removeShipInputType = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
-                Remove = new(removeShipInputType)
+                Remove = new(defaultSettings,removeShipInputType)
                 {
                     Gamepad = gamepad
                 };

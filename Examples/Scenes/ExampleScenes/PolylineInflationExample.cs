@@ -35,21 +35,22 @@ namespace Examples.Scenes.ExampleScenes
             Title = "Polyline Inflation Example";
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
 
+            InputActionSettings defaultSettings = new();
 
             var createMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
             var createGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
             var createKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
-            createPoint = new(createMB, createGP, createKB);
+            createPoint = new(defaultSettings,createMB, createGP, createKB);
 
             var deleteMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
             var deleteGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
             var deleteKB = new InputTypeKeyboardButton(ShapeKeyboardButton.C);
-            deletePoint = new(deleteMB, deleteGP, deleteKB);
+            deletePoint = new(defaultSettings,deleteMB, deleteGP, deleteKB);
 
             var offsetMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f);
             var offsetKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.S, ShapeKeyboardButton.W);
             var offsetGP = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_DOWN, ShapeGamepadButton.LEFT_FACE_UP, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-            changeOffset = new(offsetMW, offsetGP, offsetKB);
+            changeOffset = new(defaultSettings,offsetMW, offsetGP, offsetKB);
             
             inputActionTree = [ 
                 createPoint,

@@ -1428,32 +1428,34 @@ public class ShapeIntersectionExample : ExampleScene
     {
         Title = "Shape Intersection ";
 
+        InputActionSettings defaultSettings = new();
+        
         var nextStaticShapeMb = new InputTypeMouseButton(ShapeMouseButton.LEFT);
         var nextStaticShapeGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
         var nextStaticShapeKb = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
-        nextStaticShape = new(nextStaticShapeMb, nextStaticShapeGp, nextStaticShapeKb);
+        nextStaticShape = new(defaultSettings,nextStaticShapeMb, nextStaticShapeGp, nextStaticShapeKb);
         
         var nextMovingShapeMb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
         var nextMovingShapeGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
         var nextMovingShapeKb = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
-        nextMovingShape = new(nextMovingShapeMb, nextMovingShapeGp, nextMovingShapeKb);
+        nextMovingShape = new(defaultSettings,nextMovingShapeMb, nextMovingShapeGp, nextMovingShapeKb);
         
         var changeModeMB = new InputTypeMouseButton(ShapeMouseButton.MIDDLE);
         var changeModeGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
         var changeModeKb = new InputTypeKeyboardButton(ShapeKeyboardButton.TAB);
-        changeMode = new(changeModeMB, changeModeGp, changeModeKb);
+        changeMode = new(defaultSettings,changeModeMB, changeModeGp, changeModeKb);
         
         var toggleProjectionGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
         var toggleProjectionKb = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
-        toggleProjection = new(toggleProjectionGp, toggleProjectionKb);
+        toggleProjection = new(defaultSettings,toggleProjectionGp, toggleProjectionKb);
 
         var rotateMovingShapeKb = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.FIVE, ShapeKeyboardButton.SIX);
         var rotateMovingShapeGp = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT);
-        rotateMovingShape = new(rotateMovingShapeKb, rotateMovingShapeGp);
+        rotateMovingShape = new(defaultSettings,rotateMovingShapeKb, rotateMovingShapeGp);
         
         var rotateStaticShapeKb = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.SEVEN, ShapeKeyboardButton.EIGHT); 
         var rotateStaticShapeGp = new InputTypeGamepadButtonAxis(ShapeGamepadButton.RIGHT_FACE_LEFT, ShapeGamepadButton.RIGHT_FACE_RIGHT);
-        rotateStaticShape = new(rotateStaticShapeKb, rotateStaticShapeGp);
+        rotateStaticShape = new(defaultSettings,rotateStaticShapeKb, rotateStaticShapeGp);
         
         inputActionTree = [
             nextStaticShape,

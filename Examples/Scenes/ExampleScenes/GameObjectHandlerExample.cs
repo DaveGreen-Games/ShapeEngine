@@ -668,54 +668,56 @@ namespace Examples.Scenes.ExampleScenes
 
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
 
+            InputActionSettings defaultSettings = new();
+            
             var placeWallKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
             var placeWallGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
             var placeWallMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
-            iaPlaceWall = new(placeWallKB, placeWallGP, placeWallMB);
+            iaPlaceWall = new(defaultSettings,placeWallKB, placeWallGP, placeWallMB);
             
             var cancelWallKB = new InputTypeKeyboardButton(ShapeKeyboardButton.C);
             var cancelWallGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
             var cancelWallMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
-            iaCancelWall = new(cancelWallKB, cancelWallGP, cancelWallMB);
+            iaCancelWall = new(defaultSettings,cancelWallKB, cancelWallGP, cancelWallMB);
             
             var spawnRockKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ONE);
             var spawnRockGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-            iaSpawnRock = new(spawnRockKB, spawnRockGB);
+            iaSpawnRock = new(defaultSettings,spawnRockKB, spawnRockGB);
             
             var spawnBallKB = new InputTypeKeyboardButton(ShapeKeyboardButton.THREE);
             var spawnBallGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-            iaSpawnBall = new(spawnBallKB, spawnBallGB);
+            iaSpawnBall = new(defaultSettings,spawnBallKB, spawnBallGB);
             
             var spawnBirdKB = new InputTypeKeyboardButton(ShapeKeyboardButton.TWO);
             var spawnBirdGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-            iaSpawnBird = new(spawnBirdKB, spawnBirdGp);
+            iaSpawnBird = new(defaultSettings,spawnBirdKB, spawnBirdGp);
             
             var spawnBulletKb = new InputTypeKeyboardButton(ShapeKeyboardButton.FOUR);
             var spawnBulletGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP , 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-            iaSpawnBullet = new(spawnBulletKb, spawnBulletGp);
+            iaSpawnBullet = new(defaultSettings,spawnBulletKb, spawnBulletGp);
             
             var spawnOverlapperKb = new InputTypeKeyboardButton(ShapeKeyboardButton.FIVE);
-            iaSpawnOverlapper = new(spawnOverlapperKb);
+            iaSpawnOverlapper = new(defaultSettings,spawnOverlapperKb);
             
             var toggleDebugKB = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
             var toggleDebugGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
-            iaToggleDebug = new(toggleDebugKB, toggleDebugGP);
+            iaToggleDebug = new(defaultSettings,toggleDebugKB, toggleDebugGP);
             
             var clearAreaKb = new InputTypeKeyboardButton(ShapeKeyboardButton.X);
             var clearAreaGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
-            iaStartClearArea = new(clearAreaKb, clearAreaGp);
+            iaStartClearArea = new(defaultSettings,clearAreaKb, clearAreaGp);
 
             var cameraHorizontalKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
             var cameraHorizontalGP =
                 new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad);
             var cameraHorizontalMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-            iaMoveCameraH = new(cameraHorizontalKB, cameraHorizontalGP, cameraHorizontalMW);
+            iaMoveCameraH = new(defaultSettings,cameraHorizontalKB, cameraHorizontalGP, cameraHorizontalMW);
             
             var cameraVerticalKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
             var cameraVerticalGP =
                 new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad);
             var cameraVerticalMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-            iaMoveCameraV = new(cameraVerticalKB, cameraVerticalGP, cameraVerticalMW);
+            iaMoveCameraV = new(defaultSettings,cameraVerticalKB, cameraVerticalGP, cameraVerticalMW);
 
             inputActionTree =
             [
