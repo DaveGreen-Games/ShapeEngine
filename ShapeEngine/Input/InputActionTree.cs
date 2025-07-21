@@ -39,7 +39,7 @@ public class InputActionTree : SortedSet<InputAction>, IComparable<InputActionTr
     /// Gets or sets the current gamepad device associated with this input action tree.
     /// If set, all input actions in the tree will use this gamepad for input processing during update.
     /// </summary>
-    public GamepadDevice? CurrentGamepad { get; set; } = null;
+    public GamepadDevice? CurrentGamepad { get; set; }
     
     /// <summary>
     /// Adds an <see cref="InputAction"/> to the tree.
@@ -271,8 +271,8 @@ public class InputActionTree : SortedSet<InputAction>, IComparable<InputActionTr
     /// </returns>
     public int CompareTo(InputActionTree? other)
     {
-        if (ReferenceEquals(this, other)) return 0;
         if (other is null) return 1;
+        if (ReferenceEquals(this, other)) return 0;
         return Id.CompareTo(other.Id);
     }
 
