@@ -4,6 +4,7 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Input;
 
+
 /// <summary>
 /// Represents an input action, which can be triggered by various input types and devices.
 /// Handles state, multi-tap, hold, and axis sensitivity/gravity.
@@ -509,7 +510,7 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>
     /// <returns>A new <see cref="InputAction"/> copy.</returns>
     public InputAction Copy()
     {
-        var copied = GetInputsCopied().ToArray();
+        var copied = GetInputsCopiedArray();
         var copy = new InputAction(AccessTag, copied)
         {
             Gamepad = Gamepad,
@@ -542,10 +543,10 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>
         return list;
     }
 
+
     /// <summary>
-    /// Gets a list of all input types associated with this action, as copies.
+    /// Returns a new list containing deep copies of all input types associated with this action.
     /// </summary>
-    /// <returns>A list of copied input types.</returns>
     public List<IInputType> GetInputsCopied()
     {
         var list = new List<IInputType>();
@@ -554,6 +555,20 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>
             list.Add(input.Copy());
         }
         return list;
+    }
+    
+    /// <summary>
+    /// Returns a new array containing deep copies of all input types associated with this action.
+    /// </summary>
+    public IInputType[] GetInputsCopiedArray()
+    {
+        var arr = new IInputType[inputs.Count];
+        for (int i = 0; i < inputs.Count; i++)
+        {
+            arr[i] = inputs[i].Copy();
+        }
+
+        return arr;
     }
 
     /// <summary>
@@ -574,10 +589,10 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>
     }
 
     /// <summary>
-    /// Gets a list of copied input types filtered by device type.
+    /// Returns a new list containing deep copies of all input types of the specified device type associated with this action.
     /// </summary>
     /// <param name="filter">The device type to filter by.</param>
-    /// <returns>A list of filtered, copied input types.</returns>
+    /// <returns>A list of copied input types matching the specified device type.</returns>
     public List<IInputType> GetInputsCopied(InputDeviceType filter)
     {
         if (inputs.Count <= 0) return new();
@@ -641,15 +656,16 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>
     /// </summary>
     /// <param name="filter">The device type to filter by.</param>
     /// <returns>A list of removed input types.</returns>
-    public List<IInputType> RemoveInputs(InputDeviceType filter)
+    public List<IInputType>? RemoveInputs(InputDeviceType filter)
     {
-        if (inputs.Count <= 0) return new();
-        var removed = new List<IInputType>();
+        if (inputs.Count <= 0) return null;
+        List<IInputType>? removed = null;
         for (int i = inputs.Count - 1; i >= 0; i--)
         {
             var input = inputs[i];
             if (input.GetInputDevice() == filter)
             {
+                removed ??= [];
                 removed.Add(input);
                 inputs.RemoveAt(i);
             }
@@ -899,8 +915,8 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>
     /// </returns>
     public int CompareTo(InputAction? other)
     {
-        if (ReferenceEquals(this, other)) return 0;
         if (other is null) return 1;
+        if (ReferenceEquals(this, other)) return 0;
         int executionOrderComparison = ExecutionOrder.CompareTo(other.ExecutionOrder);
         if (executionOrderComparison != 0) return executionOrderComparison;
         return ID.CompareTo(other.ID);
