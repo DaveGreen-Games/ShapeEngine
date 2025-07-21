@@ -1,11 +1,6 @@
-
-
 using ShapeEngine.Core;
 
 namespace ShapeEngine.Input;
-
-//TODO: Look at all InputType copy implementations and see if they create a deep copy.
-
 
 /// <summary>
 /// Represents an input type abstraction for various input devices (keyboard, mouse, gamepad).
@@ -13,12 +8,6 @@ namespace ShapeEngine.Input;
 /// </summary>
 public interface IInputType : IEquatable<IInputType>, ICopyable<IInputType>
 {
-    
-    // /// <summary>
-    // /// Creates a copy of this input type.
-    // /// </summary>
-    // /// <returns>A new instance of <see cref="IInputType"/> with the same configuration.</returns>
-    // public IInputType Copy();
 
     /// <summary>
     /// Gets the deadzone value for this input type.
