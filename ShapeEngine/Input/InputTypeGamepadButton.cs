@@ -108,7 +108,8 @@ public sealed class InputTypeGamepadButton : IInputType
     
     private bool Equals(InputTypeGamepadButton other)
     {
-        return button == other.button && modifierKeys.Equals(other.modifierKeys) && modifierOperator == other.modifierOperator;
+        return button == other.button && modifierOperator == other.modifierOperator&& 
+               modifierKeys.SequenceEqual(other.modifierKeys); //uses IEquatable implementation of IModifierKey;
     }
     
     /// <summary>

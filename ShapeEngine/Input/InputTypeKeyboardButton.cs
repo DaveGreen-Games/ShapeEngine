@@ -95,7 +95,8 @@ public sealed class InputTypeKeyboardButton : IInputType
 
     private bool Equals(InputTypeKeyboardButton other)
     {
-        return button == other.button && modifierKeys.Equals(other.modifierKeys) && modifierOperator == other.modifierOperator;
+        return button == other.button  && modifierOperator == other.modifierOperator&& 
+               modifierKeys.SequenceEqual(other.modifierKeys); //uses IEquatable implementation of IModifierKey;
     }
     
     /// <summary>

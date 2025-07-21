@@ -108,7 +108,8 @@ public sealed class InputTypeGamepadAxis : IInputType
     
     private bool Equals(InputTypeGamepadAxis other)
     {
-        return axis == other.axis && modifierKeys.Equals(other.modifierKeys) && modifierOperator == other.modifierOperator;
+        return axis == other.axis  && modifierOperator == other.modifierOperator && 
+               modifierKeys.SequenceEqual(other.modifierKeys); //uses IEquatable implementation of IModifierKey
     }
     
     /// <summary>

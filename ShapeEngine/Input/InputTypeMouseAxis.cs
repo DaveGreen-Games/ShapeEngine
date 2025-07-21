@@ -107,7 +107,8 @@ public sealed class InputTypeMouseAxis : IInputType
     
     private bool Equals(InputTypeMouseAxis other)
     {
-        return axis == other.axis && modifierKeys.Equals(other.modifierKeys) && modifierOperator == other.modifierOperator;
+        return axis == other.axis  && modifierOperator == other.modifierOperator&& 
+               modifierKeys.SequenceEqual(other.modifierKeys); //uses IEquatable implementation of IModifierKey;
     }
     
     /// <summary>
