@@ -251,8 +251,8 @@ namespace Examples
             mainBottomRight.AddChild(mainBottomRightBottom);
 
             
-            var mouseSettings = new InputDeviceUsageDetectionSettings.MouseSettings(25, 3, 2, 0.5f, 0.5f, 0.25f);
-            var keyboardSettings = new InputDeviceUsageDetectionSettings.KeyboardSettings();
+            var mouseSettings = new InputDeviceUsageDetectionSettings.MouseSettings(25, 3, 2, 0.5f, 1f, 0.25f);
+            var keyboardSettings = new InputDeviceUsageDetectionSettings.KeyboardSettings(true, 2, 0.5f, 1f, 2f);
             var gamepadSettings = new InputDeviceUsageDetectionSettings.GamepadSettings();
             var settings = new InputDeviceUsageDetectionSettings(mouseSettings, keyboardSettings, gamepadSettings);
             ShapeInput.ApplyInputDeviceChangeSettings(settings);
