@@ -81,7 +81,15 @@ public sealed class InputTypeKeyboardButton : IInputType
     public InputDeviceType GetInputDevice() => InputDeviceType.Keyboard;
 
     /// <inheritdoc/>
-    public IInputType Copy() => new InputTypeKeyboardButton(button);
+    public IInputType Copy()
+    { 
+        var modifierKeyCopy = new IModifierKey[modifierKeys.Length];
+        for (int i = 0; i < modifierKeys.Length; i++)
+        {
+            modifierKeyCopy[i] = modifierKeys[i].Copy();
+        }
+        return  new InputTypeKeyboardButton(button, modifierOperator, modifierKeyCopy);
+    }
 
 
 

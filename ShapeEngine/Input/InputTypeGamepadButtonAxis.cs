@@ -107,7 +107,15 @@ public sealed class InputTypeGamepadButtonAxis : IInputType
     public InputDeviceType GetInputDevice() => InputDeviceType.Gamepad;
 
     /// <inheritdoc/>
-    public IInputType Copy() => new InputTypeGamepadButtonAxis(neg, pos, deadzone);
+    public IInputType Copy()
+    { 
+        var modifierKeyCopy = new IModifierKey[modifierKeys.Length];
+        for (int i = 0; i < modifierKeys.Length; i++)
+        {
+            modifierKeyCopy[i] = modifierKeys[i].Copy();
+        }
+        return  new InputTypeGamepadButtonAxis(neg, pos, deadzone, modifierOperator, modifierKeyCopy);
+    }
     
     private bool Equals(InputTypeGamepadButtonAxis other)
     {

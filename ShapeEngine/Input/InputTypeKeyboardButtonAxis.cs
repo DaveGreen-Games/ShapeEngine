@@ -56,7 +56,15 @@ public sealed class InputTypeKeyboardButtonAxis : IInputType
     }
 
     /// <inheritdoc/>
-    public IInputType Copy() => new InputTypeKeyboardButtonAxis(neg, pos);
+    public IInputType Copy()
+    { 
+        var modifierKeyCopy = new IModifierKey[modifierKeys.Length];
+        for (int i = 0; i < modifierKeys.Length; i++)
+        {
+            modifierKeyCopy[i] = modifierKeys[i].Copy();
+        }
+        return  new InputTypeKeyboardButtonAxis(neg, pos, modifierOperator, modifierKeyCopy);
+    }
 
     /// <inheritdoc/>
     public string GetName(bool shorthand = true)

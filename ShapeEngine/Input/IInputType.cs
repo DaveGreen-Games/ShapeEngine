@@ -4,6 +4,9 @@ using ShapeEngine.Core;
 
 namespace ShapeEngine.Input;
 
+//TODO: Look at all InputType copy implementations and see if they create a deep copy.
+
+
 /// <summary>
 /// Represents an input type abstraction for various input devices (keyboard, mouse, gamepad).
 /// Provides methods for copying, deadzone management, state retrieval, and device identification.

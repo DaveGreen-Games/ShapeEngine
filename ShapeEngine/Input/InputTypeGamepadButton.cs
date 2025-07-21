@@ -63,7 +63,15 @@ public sealed class InputTypeGamepadButton : IInputType
     }
 
     /// <inheritdoc/>
-    public IInputType Copy() => new InputTypeGamepadButton(button, deadzone);
+    public IInputType Copy()
+    {
+        var modifierKeyCopy = new IModifierKey[modifierKeys.Length];
+        for (int i = 0; i < modifierKeys.Length; i++)
+        {
+            modifierKeyCopy[i] = modifierKeys[i].Copy();
+        }
+        return  new InputTypeGamepadButton(button, deadzone, modifierOperator, modifierKeyCopy);
+    }
 
     /// <inheritdoc/>
     public string GetName(bool shorthand = true)

@@ -105,7 +105,15 @@ public sealed class InputTypeMouseButtonAxis : IInputType
     public InputDeviceType GetInputDevice() => InputDeviceType.Mouse;
 
     /// <inheritdoc/>
-    public IInputType Copy() => new InputTypeMouseButtonAxis(neg, pos);
+    public IInputType Copy()
+    { 
+        var modifierKeyCopy = new IModifierKey[modifierKeys.Length];
+        for (int i = 0; i < modifierKeys.Length; i++)
+        {
+            modifierKeyCopy[i] = modifierKeys[i].Copy();
+        }
+        return  new InputTypeMouseButtonAxis(neg, pos, deadzone, modifierOperator, modifierKeyCopy);
+    }
     
     private bool Equals(InputTypeMouseButtonAxis other)
     {
