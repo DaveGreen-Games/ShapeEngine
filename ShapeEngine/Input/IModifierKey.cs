@@ -6,7 +6,7 @@ namespace ShapeEngine.Input;
 /// <summary>
 /// Represents a modifier key (such as Shift, Ctrl, Alt) for input handling.
 /// </summary>
-public interface IModifierKey : ICopyable<IModifierKey>
+public interface IModifierKey : ICopyable<IModifierKey>, IEquatable<IModifierKey>
 {
     /// <summary>
     /// Determines if the modifier key is currently active.

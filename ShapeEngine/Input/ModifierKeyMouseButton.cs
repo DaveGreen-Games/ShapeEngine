@@ -48,4 +48,49 @@ public class ModifierKeyMouseButton : IModifierKey
     /// </summary>
     /// <returns>A new <see cref="IModifierKey"/> with the same modifier and reverseModifier values.</returns>
     public IModifierKey Copy() => new ModifierKeyMouseButton(modifier, reverseModifier);
+    
+        /// <summary>
+    /// Determines whether the specified <see cref="ModifierKeyMouseButton"/> is equal to the current instance.
+    /// </summary>
+    /// <param name="other">The <see cref="ModifierKeyMouseButton"/> to compare with the current instance.</param>
+    /// <returns><c>true</c> if the specified object is equal to the current instance; otherwise, <c>false</c>.</returns>
+    protected bool Equals(ModifierKeyMouseButton other)
+    {
+        return modifier == other.modifier && reverseModifier == other.reverseModifier;
+    }
+
+    /// <summary>
+    /// Determines whether the specified <see cref="IModifierKey"/> is equal to the current instance.
+    /// </summary>
+    /// <param name="other">The <see cref="IModifierKey"/> to compare with the current instance.</param>
+    /// <returns><c>true</c> if the specified object is equal to the current instance; otherwise, <c>false</c>.</returns>
+    public bool Equals(IModifierKey? other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+        if (other.GetType() != GetType()) return false;
+        return Equals((ModifierKeyGamepadButton)other);
+    }
+
+    /// <summary>
+    /// Determines whether the specified object is equal to the current instance.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current instance.</param>
+    /// <returns><c>true</c> if the specified object is equal to the current instance; otherwise, <c>false</c>.</returns>
+    public override bool Equals(object? obj)
+    {
+        if (obj is null) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        if (obj.GetType() != GetType()) return false;
+        return Equals((ModifierKeyGamepadButton)obj);
+    }
+    
+    /// <summary>
+    /// Returns a hash code for the current instance.
+    /// </summary>
+    /// <returns>A hash code for the current instance.</returns>
+    public override int GetHashCode()
+    {
+        return HashCode.Combine((int)modifier, reverseModifier);
+    }
 }
