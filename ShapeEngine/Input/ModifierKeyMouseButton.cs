@@ -42,4 +42,10 @@ public class ModifierKeyMouseButton : IModifierKey
     /// <param name="shorthand">If set to <c>true</c>, returns the shorthand name.</param>
     /// <returns>The name of the modifier key, or an empty string if <c>reverseModifier</c> is <c>true</c>.</returns>
     public string GetName(bool shorthand = true) => reverseModifier ? "" : MouseDevice.GetButtonName(modifier, shorthand);
+
+    /// <summary>
+    /// Creates a copy of this <see cref="ModifierKeyMouseButton"/> instance.
+    /// </summary>
+    /// <returns>A new <see cref="IModifierKey"/> with the same modifier and reverseModifier values.</returns>
+    public IModifierKey Copy() => new ModifierKeyMouseButton(modifier, reverseModifier);
 }

@@ -1,11 +1,12 @@
 using System.Text;
+using ShapeEngine.Core;
 
 namespace ShapeEngine.Input;
 
 /// <summary>
 /// Represents a modifier key (such as Shift, Ctrl, Alt) for input handling.
 /// </summary>
-public interface IModifierKey
+public interface IModifierKey : ICopyable<IModifierKey>
 {
     /// <summary>
     /// Determines if the modifier key is currently active.
