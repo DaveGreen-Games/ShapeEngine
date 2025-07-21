@@ -4,7 +4,6 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Input;
 
-
 /// <summary>
 /// Represents an input action, which can be triggered by various input types and devices.
 /// Handles state, multi-tap, hold, and axis sensitivity/gravity.
@@ -12,7 +11,7 @@ namespace ShapeEngine.Input;
 /// <remarks>
 /// Use <see cref="InputActionTree"/> for updating and managing multiple <see cref="InputAction"/> instances.
 /// </remarks>
-public class InputAction : IComparable<InputAction>, ICopyable<InputAction>
+public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEquatable<InputAction>
 {
     /// <summary>
     /// Represents the toggle state for an input action.
@@ -49,7 +48,9 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>
     {
         if (Parent != null)
         {
-            if (Parent == tree) return;
+            //reference equals is enough here
+            //duplicates can not be added to the same tree, therefore, EnterTree will not be called for an InputAction that is already in the tree.
+            if (ReferenceEquals(Parent, tree)) return;
             Parent.Remove(this);
         }
         Parent = tree;
@@ -102,7 +103,7 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>
     /// Only <see cref="InputAction"/>s with <c>BlocksInput</c> enabled participate in this blocking system.
     /// If set to <c>false</c>, this action neither blocks input types nor can it be blocked by others.
     /// </remarks>
-    public bool BlocksInput { get; set; } = false;
+    public bool BlocksInput { get; set; }
     
     /// <summary>
     /// Gets or sets the execution order for this <see cref="InputAction"/>.
@@ -113,8 +114,8 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>
     /// </summary>
     /// <remarks>
     /// If two <see cref="InputAction"/> have the same <see cref="ExecutionOrder"/>,
-    /// <see cref="ID"/> is used to determine the order.
-    /// A lower <see cref="ID"/> value is processed first.
+    /// <see cref="Id"/> is used to determine the order.
+    /// A lower <see cref="Id"/> value is processed first.
     /// <para>
     /// This is especially useful when combined with <see cref="BlocksInput"/>,
     /// as it allows precise control over which <see cref="InputAction"/> instances can block others based on their execution order.
@@ -126,7 +127,7 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>
     /// <summary>
     /// The unique identifier for this input action.
     /// </summary>
-    public uint ID { get; private set; }
+    public uint Id { get; }
     /// <summary>
     /// The access tag used for locking/unlocking this action.
     /// <remarks>
@@ -152,58 +153,12 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>
 
     private float holdTimer;
     private float multiTapTimer;
-    private float holdDuration = 1f;
-    private float multiTapDuration = 0.25f;
     private int multiTapCount;
-    private int multiTapTarget;
 
     /// <summary>
-    /// The number of taps required for a multi-tap action.
+    /// The settings that define the behavior and configuration of this input action.
     /// </summary>
-    public int MultiTapTarget
-    {
-        get => multiTapTarget;
-        set => multiTapTarget = ShapeMath.MaxInt(0, value);
-    }
-    /// <summary>
-    /// The duration required to trigger a hold action (in seconds).
-    /// Default is 1 second.
-    /// </summary>
-    public float HoldDuration
-    {
-        get => holdDuration;
-        set => holdDuration = MathF.Max(0f, value);
-    }
-    /// <summary>
-    /// The duration allowed between taps for a multi-tap action (in seconds).
-    /// Default is 0.25 seconds.
-    /// </summary>
-    public float MultiTapDuration
-    {
-        get => multiTapDuration;
-        set => multiTapDuration = MathF.Max(0f, value);
-    }
-    
-    private float axisSensitivity = 1f;
-    private float axisGravitiy = 1f;
-    /// <summary>
-    /// How fast an axis moves towards the max value (1 / -1) in seconds.
-    /// Used for calculating InputState.Axis values.
-    /// </summary>
-    public float AxisSensitivity 
-    {
-        get => axisSensitivity;
-        set => axisSensitivity = MathF.Max(0f, value);
-    }
-    /// <summary>
-    /// How fast an axis moves towards 0 after no input is detected.
-    /// Used for calculating InputState.Axis values.
-    /// </summary>
-    public float AxisGravity 
-    {
-        get => axisGravitiy;
-        set => axisGravitiy = MathF.Max(0f, value);
-    }
+    public readonly InputActionSettings Settings;
     
     /// <summary>
     /// Gets the current input state for this action.
@@ -228,63 +183,80 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>
     #region Constructors
     /// <summary>
     /// Initializes a new instance of <see cref="InputAction"/> with a unique ID.
+    /// <see cref="Settings"/> are set to default values.
     /// </summary>
     public InputAction()
     {
-        ID = ShapeID.NextID;
+        Id = ShapeID.NextID;
+        Settings = new InputActionSettings();
     }
+
     /// <summary>
-    /// Initializes a new instance of <see cref="InputAction"/> with a specific access tag.
+    /// Initializes a new instance of <see cref="InputAction"/> with the specified access tag and settings.
     /// </summary>
     /// <param name="accessTag">The access tag for this action.</param>
-    public InputAction(uint accessTag)
+    /// <param name="settings">The settings for this action.</param>
+    public InputAction(uint accessTag, InputActionSettings settings)
     {
-        ID = ShapeID.NextID;
+        Id = ShapeID.NextID;
         AccessTag = accessTag;
+        Settings = settings;
     }
+    
     /// <summary>
-    /// Initializes a new instance of <see cref="InputAction"/> with a specific access tag and gamepad.
-    /// </summary>
-    /// <param name="accessTag">The access tag for this action.</param>
-    /// <param name="gamepad">The associated gamepad device.</param>
-    public InputAction(uint accessTag, GamepadDevice gamepad)
-    {
-        ID = ShapeID.NextID;
-        Gamepad = gamepad;
-        AccessTag = accessTag;
-    }
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputAction"/> with input types.
-    /// </summary>
-    /// <param name="inputTypes">The input types for this action.</param>
-    public InputAction(params IInputType[] inputTypes)
-    {
-        ID = ShapeID.NextID;
-        inputs.AddRange(inputTypes);
-    }
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputAction"/> with a specific access tag and input types.
-    /// </summary>
-    /// <param name="accessTag">The access tag for this action.</param>
-    /// <param name="inputTypes">The input types for this action.</param>
-    public InputAction(uint accessTag, params IInputType[] inputTypes)
-    {
-        ID = ShapeID.NextID;
-        AccessTag = accessTag;
-        inputs.AddRange(inputTypes);
-    }
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputAction"/> with a specific access tag, gamepad, and input types.
+    /// Initializes a new instance of <see cref="InputAction"/> with the specified access tag, gamepad, and settings.
     /// </summary>
     /// <param name="accessTag">The access tag for this action.</param>
     /// <param name="gamepad">The associated gamepad device.</param>
-    /// <param name="inputTypes">The input types for this action.</param>
-    public InputAction(uint accessTag, GamepadDevice gamepad, params IInputType[] inputTypes)
+    /// <param name="settings">The settings for this action.</param>
+    public InputAction(uint accessTag, GamepadDevice gamepad, InputActionSettings settings)
     {
-        ID = ShapeID.NextID;
+        Id = ShapeID.NextID;
+        Gamepad = gamepad;
+        AccessTag = accessTag;
+        Settings = settings;
+    }
+    
+    /// <summary>
+    /// Initializes a new instance of <see cref="InputAction"/> with the specified settings and input types.
+    /// </summary>
+    /// <param name="settings">The settings for this action.</param>
+    /// <param name="inputTypes">The input types to associate with this action.</param>
+    public InputAction(InputActionSettings settings, params IInputType[] inputTypes)
+    {
+        Id = ShapeID.NextID;
+        inputs.AddRange(inputTypes);
+        Settings = settings;
+    }
+    
+    /// <summary>
+    /// Initializes a new instance of <see cref="InputAction"/> with the specified access tag, settings, and input types.
+    /// </summary>
+    /// <param name="accessTag">The access tag for this action.</param>
+    /// <param name="settings">The settings for this action.</param>
+    /// <param name="inputTypes">The input types to associate with this action.</param>
+    public InputAction(uint accessTag, InputActionSettings settings, params IInputType[] inputTypes)
+    {
+        Id = ShapeID.NextID;
+        AccessTag = accessTag;
+        inputs.AddRange(inputTypes);
+        Settings = settings;
+    }
+    
+    /// <summary>
+    /// Initializes a new instance of <see cref="InputAction"/> with the specified access tag, gamepad, settings, and input types.
+    /// </summary>
+    /// <param name="accessTag">The access tag for this action.</param>
+    /// <param name="gamepad">The associated gamepad device.</param>
+    /// <param name="settings">The settings for this action.</param>
+    /// <param name="inputTypes">The input types to associate with this action.</param>
+    public InputAction(uint accessTag, GamepadDevice gamepad, InputActionSettings settings, params IInputType[] inputTypes)
+    {
+        Id = ShapeID.NextID;
         AccessTag = accessTag;
         Gamepad = gamepad;
         inputs.AddRange(inputTypes);
+        Settings = settings;
     }
     #endregion
 
@@ -398,13 +370,13 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>
         var holdF = 0f;
         if (State.Up && current.Down) //pressed
         {
-            if (holdDuration > 0)
+            if (Settings.HoldDuration > 0)
             {
-                holdTimer = holdDuration;
+                holdTimer = Settings.HoldDuration;
             }
-            if (multiTapDuration > 0f && multiTapTarget > 1)
+            if (Settings.MultiTapDuration > 0f && Settings.MultiTapTarget > 1)
             {
-                if (multiTapTimer <= 0f) multiTapTimer = multiTapDuration;
+                if (multiTapTimer <= 0f) multiTapTimer = Settings.MultiTapDuration;
                 multiTapCount++;
             }
 
@@ -427,12 +399,12 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>
                 holdTimer = 0f;
                 holdF = 1f;
             }
-            else holdF = 1f - (holdTimer / holdDuration);
+            else holdF = 1f - (holdTimer / Settings.HoldDuration);
         }
         
         if (multiTapTimer > 0f)
         {
-            if (multiTapCount >= multiTapTarget)
+            if (multiTapCount >= Settings.MultiTapTarget)
             {
                 multiTapF = 1f;
                 if (holdTimer > 0f)
@@ -441,7 +413,7 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>
                     holdF = 0f;
                 }
             }
-            else multiTapF = multiTapCount / (float)multiTapTarget;
+            else multiTapF = multiTapCount / (float)Settings.MultiTapTarget;
         }
         
         //Calculate New State
@@ -462,7 +434,7 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>
         if (multiTapF >= 1f) multiTapCount = 0;
         
         //Axis Sensitivity & Gravity
-        if (axisSensitivity > 0 || axisGravitiy > 0)
+        if (Settings.AxisSensitivity > 0 || Settings.AxisGravitiy > 0)
         {
             int raw = MathF.Sign(State.AxisRaw);
             float dif = State.AxisRaw - State.Axis;
@@ -472,8 +444,8 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>
             {
                 var axisChange = 0f;
                 //var snapValue = 0f;
-                float gravity = axisGravitiy <= 0f ? 0f : 1f / axisGravitiy;
-                float sensitivity = axisSensitivity <= 0f ? 0f : 1f / axisSensitivity;
+                float gravity = Settings.AxisGravitiy <= 0f ? 0f : 1f / Settings.AxisGravitiy;
+                float sensitivity = Settings.AxisSensitivity <= 0f ? 0f : 1f / Settings.AxisSensitivity;
                 if (dif is > 1 or < -1) //snap
                 {
                     axisChange += -State.Axis;//snapping to 0
@@ -511,11 +483,9 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>
     public InputAction Copy()
     {
         var copied = GetInputsCopiedArray();
-        var copy = new InputAction(AccessTag, copied)
+        var copy = new InputAction(AccessTag, Settings, copied)
         {
             Gamepad = Gamepad,
-            axisSensitivity = axisSensitivity,
-            axisGravitiy = axisGravitiy,
             Active = Active,
             ExecutionOrder = ExecutionOrder,
             Title = Title,
@@ -524,10 +494,7 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>
             State = State,
             holdTimer = holdTimer,
             multiTapTimer = multiTapTimer,
-            holdDuration = holdDuration,
-            multiTapDuration = multiTapDuration,
             multiTapCount = multiTapCount,
-            multiTapTarget = multiTapTarget
         };
         return copy;
     }
@@ -906,7 +873,7 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>
     /// <summary>
     /// Compares this <see cref="InputAction"/> to another for sorting purposes.
     /// <para>
-    /// First compares <see cref="ExecutionOrder"/>; if equal, compares <see cref="ID"/>.
+    /// First compares <see cref="ExecutionOrder"/>; if equal, compares <see cref="Id"/>.
     /// </para>
     /// </summary>
     /// <param name="other">The other <see cref="InputAction"/> to compare to.</param>
@@ -919,6 +886,47 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>
         if (ReferenceEquals(this, other)) return 0;
         int executionOrderComparison = ExecutionOrder.CompareTo(other.ExecutionOrder);
         if (executionOrderComparison != 0) return executionOrderComparison;
-        return ID.CompareTo(other.ID);
+        return Id.CompareTo(other.Id);
+    }
+    
+    /// <summary>
+    /// Determines whether the specified <see cref="InputAction"/> is equal to the current <see cref="InputAction"/>.
+    /// Compares the <see cref="Settings"/> and the sequence of input types.
+    /// </summary>
+    /// <param name="other">The <see cref="InputAction"/> to compare with the current instance.</param>
+    /// <returns><c>true</c> if the specified <see cref="InputAction"/> is equal to the current instance; otherwise, <c>false</c>.</returns>
+    public bool Equals(InputAction? other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return 
+            Settings.Equals(other.Settings) &&
+            inputs.SequenceEqual(other.inputs);
+    }
+
+    /// <summary>
+    /// Determines whether the specified object is equal to the current <see cref="InputAction"/>.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current instance.</param>
+    /// <returns><c>true</c> if the specified object is equal to the current instance; otherwise, <c>false</c>.</returns>
+    public override bool Equals(object? obj)
+    {
+        if (obj is null) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        if (obj.GetType() != GetType()) return false;
+        return Equals((InputAction)obj);
+    }
+
+    /// <summary>
+    /// Serves as the default hash function for <see cref="InputAction"/>.
+    /// Combines the hash codes of the input types and settings.
+    /// </summary>
+    /// <returns>A hash code for the current object.</returns>
+    public override int GetHashCode()
+    {
+        var hashCode = new HashCode();
+        hashCode.Add(inputs);
+        hashCode.Add(Settings);
+        return hashCode.ToHashCode();
     }
 }
