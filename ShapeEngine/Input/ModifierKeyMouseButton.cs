@@ -69,7 +69,7 @@ public class ModifierKeyMouseButton : IModifierKey
         if (other is null) return false;
         if (ReferenceEquals(this, other)) return true;
         if (other.GetType() != GetType()) return false;
-        return Equals((ModifierKeyGamepadButton)other);
+        return Equals((ModifierKeyMouseButton)other);
     }
 
     /// <summary>
