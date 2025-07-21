@@ -15,7 +15,7 @@ namespace ShapeEngine.Input;
 /// <remarks>
 /// A different tree for each used gamepad is recommended.
 /// </remarks>
-public class InputActionTree : SortedSet<InputAction>, IComparable<InputActionTree>, ICopyable<InputActionTree>
+public class InputActionTree : SortedSet<InputAction>, IComparable<InputActionTree>, ICopyable<InputActionTree>, IEquatable<InputActionTree>
 {
     #region Blocking System
 
@@ -276,5 +276,48 @@ public class InputActionTree : SortedSet<InputAction>, IComparable<InputActionTr
         return Id.CompareTo(other.Id);
     }
 
+
+    /// <summary>
+    /// Determines whether the specified <see cref="InputActionTree"/> is equal to the current <see cref="InputActionTree"/>.
+    /// Equality is based on reference, count, and sequence equality of contained <see cref="InputAction"/> instances.
+    /// </summary>
+    /// <param name="other">The <see cref="InputActionTree"/> to compare with the current tree.</param>
+    /// <returns><c>true</c> if the specified tree is equal to the current tree; otherwise, <c>false</c>.</returns>
+    public bool Equals(InputActionTree? other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+        if (Count != other.Count) return false;
+        return this.SequenceEqual(other);
+    }
     
+    /// <summary>
+    /// Determines whether the specified object is equal to the current <see cref="InputActionTree"/>.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current tree.</param>
+    /// <returns><c>true</c> if the specified object is equal to the current tree; otherwise, <c>false</c>.</returns>
+    public override bool Equals(object? obj)
+    {
+        if (obj is null) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        if (obj.GetType() != GetType()) return false;
+        return Equals((InputActionTree)obj);
+    }
+    
+    /// <summary>
+    /// Returns a hash code for the current <see cref="InputActionTree"/>.
+    /// The hash code is computed based on all contained <see cref="InputAction"/> instances.
+    /// </summary>
+    /// <returns>A hash code for the current tree.</returns>
+    public override int GetHashCode()
+    {
+        var hashCode = new HashCode();
+    
+        foreach (var action in this)
+        {
+            hashCode.Add(action);
+        }
+        
+        return hashCode.ToHashCode();
+    }
 }

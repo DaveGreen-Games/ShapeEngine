@@ -7,7 +7,7 @@ namespace ShapeEngine.Input;
 /// Represents a sorted collection of <see cref="InputActionTree"/> objects.
 /// Provides methods for updating and retrieving input action trees based on various criteria.
 /// </summary>
-public class InputActionTrees : SortedSet<InputActionTree>, ICopyable<InputActionTrees>, IComparable<InputActionTrees>
+public class InputActionTrees : SortedSet<InputActionTree>, ICopyable<InputActionTrees>, IComparable<InputActionTrees>, IEquatable<InputActionTrees>
 {
     /// <summary>
     /// Updates all <see cref="InputActionTree"/> instances in this collection by calling their <c>Update</c> method with the specified time delta.
@@ -71,5 +71,50 @@ public class InputActionTrees : SortedSet<InputActionTree>, ICopyable<InputActio
         if (ReferenceEquals(this, other)) return 0; // Same instance
         // Compare by the count of input action trees
         return Count.CompareTo(other.Count);
+    }
+
+
+    /// <summary>
+    /// Determines whether the specified <see cref="InputActionTrees"/> is equal to the current instance.
+    /// Equality is based on reference, count, and sequence equality of contained <see cref="InputActionTree"/> objects.
+    /// </summary>
+    /// <param name="other">The <see cref="InputActionTrees"/> to compare with the current instance.</param>
+    /// <returns><c>true</c> if the specified object is equal to the current instance; otherwise, <c>false</c>.</returns>
+    public bool Equals(InputActionTrees? other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+        if (Count != other.Count) return false;
+        return this.SequenceEqual(other);
+    }
+    
+    /// <summary>
+    /// Determines whether the specified object is equal to the current <see cref="InputActionTrees"/> instance.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current instance.</param>
+    /// <returns><c>true</c> if the specified object is equal to the current instance; otherwise, <c>false</c>.</returns>
+    public override bool Equals(object? obj)
+    {
+        if (obj is null) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        if (obj.GetType() != GetType()) return false;
+        return Equals((InputActionTrees)obj);
+    }
+    
+    /// <summary>
+    /// Returns a hash code for the current <see cref="InputActionTrees"/> instance,
+    /// based on the hash codes of the contained <see cref="InputActionTree"/> objects.
+    /// </summary>
+    /// <returns>A hash code for the current object.</returns>
+    public override int GetHashCode()
+    {
+        var hashCode = new HashCode();
+    
+        foreach (var action in this)
+        {
+            hashCode.Add(action);
+        }
+        
+        return hashCode.ToHashCode();
     }
 }
