@@ -15,7 +15,11 @@ public class ModifierKeySet : IEquatable<ModifierKeySet>, ICopyable<ModifierKeyS
         ModifierKeys = modifierKeys;
         Operator = keyOperator;
     }
-    
+    public ModifierKeySet(ModifierKeyOperator keyOperator, IModifierKey modifierKey)
+    {
+        ModifierKeys = [modifierKey];
+        Operator = keyOperator;
+    }
     public bool Equals(ModifierKeySet? other)
     {
         if (other is null) return false;
