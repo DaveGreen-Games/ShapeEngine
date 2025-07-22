@@ -499,9 +499,9 @@ public sealed class KeyboardDevice : InputDevice
     /// <summary>
     /// Determines if the specified keyboard button is "down" with modifier keys.
     /// </summary>
-    public bool IsDown(ShapeKeyboardButton button, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public bool IsDown(ShapeKeyboardButton button, ModifierKeySet modifierKeySet)
     {
-        return GetValue(button, modifierOperator, modifierKeys) != 0f;
+        return GetValue(button, modifierKeySet) != 0f;
     }
     /// <summary>
     /// Determines if the specified keyboard button is "down".
@@ -513,10 +513,10 @@ public sealed class KeyboardDevice : InputDevice
     /// <summary>
     /// Gets the value of the specified keyboard button, considering modifier keys.
     /// </summary>
-    public float GetValue(ShapeKeyboardButton button, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public float GetValue(ShapeKeyboardButton button, ModifierKeySet modifierKeySet)
     {
         if (isLocked) return 0f;
-        bool modifierActive = IModifierKey.IsActive(modifierOperator, modifierKeys);
+        bool modifierActive = modifierKeySet.IsActive();//  IModifierKey.IsActive(modifierKeySet);
         return (modifierActive && Raylib.IsKeyDown((KeyboardKey)button)) ? 1f : 0f;
     }
     /// <summary>
@@ -538,17 +538,17 @@ public sealed class KeyboardDevice : InputDevice
     /// <summary>
     /// Creates an <see cref="InputState"/> for the specified keyboard button with modifier keys.
     /// </summary>
-    public InputState CreateInputState(ShapeKeyboardButton button, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeKeyboardButton button, ModifierKeySet modifierKeySet)
     {
-        bool down = IsDown(button, modifierOperator, modifierKeys);
+        bool down = IsDown(button, modifierKeySet);
         return new(down, !down, down ? 1f : 0f, -1, InputDeviceType.Keyboard);
     }
     /// <summary>
     /// Creates an <see cref="InputState"/> for the specified keyboard button, using a previous state and modifier keys.
     /// </summary>
-    public InputState CreateInputState(ShapeKeyboardButton button, InputState previousState, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeKeyboardButton button, InputState previousState, ModifierKeySet modifierKeySet)
     {
-        return new(previousState, CreateInputState(button, modifierOperator, modifierKeys));
+        return new(previousState, CreateInputState(button, modifierKeySet));
     }
     /// <summary>
     /// Creates an <see cref="InputState"/> for the specified keyboard button, using a previous state.
@@ -586,9 +586,9 @@ public sealed class KeyboardDevice : InputDevice
     /// <summary>
     /// Determines if the button axis (negative/positive) is "down" with modifier keys.
     /// </summary>
-    public bool IsDown(ShapeKeyboardButton neg, ShapeKeyboardButton pos, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public bool IsDown(ShapeKeyboardButton neg, ShapeKeyboardButton pos, ModifierKeySet modifierKeySet)
     {
-        return GetValue(neg, pos, modifierOperator, modifierKeys) != 0f;
+        return GetValue(neg, pos, modifierKeySet) != 0f;
     }
     /// <summary>
     /// Determines if the button axis (negative/positive) is "down".
@@ -601,11 +601,10 @@ public sealed class KeyboardDevice : InputDevice
     /// <summary>
     /// Gets the value of the button axis (negative/positive), considering modifier keys.
     /// </summary>
-    public float GetValue(ShapeKeyboardButton neg, ShapeKeyboardButton pos, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public float GetValue(ShapeKeyboardButton neg, ShapeKeyboardButton pos, ModifierKeySet modifierKeySet)
     {
         if (isLocked) return 0f;
-        if (!IModifierKey.IsActive(modifierOperator, modifierKeys)) return 0f;
-        
+        if (!modifierKeySet.IsActive()) return 0f;
         return GetValue(neg, pos);
     }
     /// <summary>
@@ -622,9 +621,9 @@ public sealed class KeyboardDevice : InputDevice
     /// <summary>
     /// Creates an <see cref="InputState"/> for the button axis (negative/positive) with modifier keys.
     /// </summary>
-    public InputState CreateInputState(ShapeKeyboardButton neg, ShapeKeyboardButton pos, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeKeyboardButton neg, ShapeKeyboardButton pos, ModifierKeySet modifierKeySet)
     {
-        float axis = GetValue(neg, pos, modifierOperator, modifierKeys);
+        float axis = GetValue(neg, pos, modifierKeySet);
         bool down = axis != 0f;
         return new(down, !down, axis, -1, InputDeviceType.Keyboard);
     }
@@ -632,9 +631,9 @@ public sealed class KeyboardDevice : InputDevice
     /// Creates an <see cref="InputState"/> for the button axis (negative/positive), using a previous state and modifier keys.
     /// </summary>
     public InputState CreateInputState(ShapeKeyboardButton neg, ShapeKeyboardButton pos,
-        InputState previousState, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+        InputState previousState, ModifierKeySet modifierKeySet)
     {
-        return new(previousState, CreateInputState(neg, pos, modifierOperator, modifierKeys));
+        return new(previousState, CreateInputState(neg, pos, modifierKeySet));
     }
     /// <summary>
     /// Creates an <see cref="InputState"/> for the button axis (negative/positive).

@@ -597,35 +597,36 @@ public sealed class GamepadDevice : InputDevice
     /// <summary>
     /// Determines if the specified gamepad button is "down" with deadzone and modifier keys.
     /// </summary>
-    public bool IsDown(ShapeGamepadButton button, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public bool IsDown(ShapeGamepadButton button, float deadzone, ModifierKeySet modifierKeySet)
     {
-        return GetValue(button, deadzone, modifierOperator, modifierKeys) != 0f;
+        return GetValue(button, deadzone, modifierKeySet) != 0f;
     }
 
     /// <summary>
     /// Gets the value of the specified gamepad button, considering deadzone and modifier keys.
     /// </summary>
-    public float GetValue(ShapeGamepadButton button, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public float GetValue(ShapeGamepadButton button, float deadzone, ModifierKeySet modifierKeySet)
     {
         if (Index < 0 || isLocked || !Connected) return 0f;
-        if (!IModifierKey.IsActive(modifierOperator, modifierKeys, this)) return 0f;
+        // if (!IModifierKey.IsActive(modifierOperator, modifierKeys, this)) return 0f;
+        if (!modifierKeySet.IsActive(this)) return 0f;
         return GetValue(button, deadzone);
     }
     
     /// <summary>
     /// Creates an <see cref="InputState"/> for the specified gamepad button.
     /// </summary>
-    public InputState CreateInputState(ShapeGamepadButton button, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeGamepadButton button, float deadzone, ModifierKeySet modifierKeySet)
     {
-        bool down = IsDown(button, deadzone, modifierOperator, modifierKeys);
+        bool down = IsDown(button, deadzone, modifierKeySet);
         return new(down, !down, down ? 1f : 0f, Index, InputDeviceType.Gamepad);
     }
     /// <summary>
     /// Creates an <see cref="InputState"/> for the specified gamepad button, using a previous state.
     /// </summary>
-    public InputState CreateInputState(ShapeGamepadButton button, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeGamepadButton button, InputState previousState, float deadzone, ModifierKeySet modifierKeySet)
     {
-        return new(previousState, CreateInputState(button, deadzone, modifierOperator, modifierKeys));
+        return new(previousState, CreateInputState(button, deadzone, modifierKeySet));
     }
     
     /// <summary>
@@ -635,12 +636,11 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="button">The gamepad button to check.</param>
     /// <param name="axisDeadzone">Deadzone threshold for stick axes.</param>
     /// <param name="triggerDeadzone">Deadzone threshold for triggers.</param>
-    /// <param name="modifierOperator">Operator for modifier key logic.</param>
-    /// <param name="modifierKeys">Optional modifier keys to consider.</param>
+    /// <param name="modifierKeySet">The set of modifier keys to consider.</param>
     /// <returns>True if the button is considered "down"; otherwise, false.</returns>
-    public bool IsDown(ShapeGamepadButton button, float axisDeadzone, float triggerDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public bool IsDown(ShapeGamepadButton button, float axisDeadzone, float triggerDeadzone, ModifierKeySet modifierKeySet)
     {
-        return GetValue(button, axisDeadzone, triggerDeadzone, modifierOperator, modifierKeys) != 0f;
+        return GetValue(button, axisDeadzone, triggerDeadzone, modifierKeySet) != 0f;
     }
     /// <summary>
     /// Determines if the specified gamepad button is "down".
@@ -653,10 +653,11 @@ public sealed class GamepadDevice : InputDevice
     /// <summary>
     /// Gets the value of the specified gamepad button, considering deadzone and modifier keys.
     /// </summary>
-    public float GetValue(ShapeGamepadButton button, float axisDeadzone, float triggerDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public float GetValue(ShapeGamepadButton button, float axisDeadzone, float triggerDeadzone, ModifierKeySet modifierKeySet)
     {
         if (Index < 0 || isLocked || !Connected) return 0f;
-        if (!IModifierKey.IsActive(modifierOperator, modifierKeys, this)) return 0f;
+        // if (!IModifierKey.IsActive(modifierOperator, modifierKeys, this)) return 0f;
+        if(!modifierKeySet.IsActive(this)) return 0f;
         return GetValue(button, axisDeadzone, triggerDeadzone);
     }
     /// <summary>
@@ -703,17 +704,17 @@ public sealed class GamepadDevice : InputDevice
     /// <summary>
     /// Creates an <see cref="InputState"/> for the specified gamepad button.
     /// </summary>
-    public InputState CreateInputState(ShapeGamepadButton button, float axisDeadzone, float triggerDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeGamepadButton button, float axisDeadzone, float triggerDeadzone, ModifierKeySet modifierKeySet)
     {
-        bool down = IsDown(button, axisDeadzone, triggerDeadzone, modifierOperator, modifierKeys);
+        bool down = IsDown(button, axisDeadzone, triggerDeadzone, modifierKeySet);
         return new(down, !down, down ? 1f : 0f, Index, InputDeviceType.Gamepad);
     }
     /// <summary>
     /// Creates an <see cref="InputState"/> for the specified gamepad button, using a previous state.
     /// </summary>
-    public InputState CreateInputState(ShapeGamepadButton button, InputState previousState, float axisDeadzone, float triggerDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeGamepadButton button, InputState previousState, float axisDeadzone, float triggerDeadzone, ModifierKeySet modifierKeySet)
     {
-        return new(previousState, CreateInputState(button, axisDeadzone, triggerDeadzone, modifierOperator, modifierKeys));
+        return new(previousState, CreateInputState(button, axisDeadzone, triggerDeadzone, modifierKeySet));
     }
     /// <summary>
     /// Creates an <see cref="InputState"/> for the specified gamepad button.
@@ -779,9 +780,9 @@ public sealed class GamepadDevice : InputDevice
     /// <summary>
     /// Determines if the specified gamepad axis is "down" with deadzone and modifier keys.
     /// </summary>
-    public bool IsDown(ShapeGamepadAxis axis, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public bool IsDown(ShapeGamepadAxis axis, float deadzone, ModifierKeySet modifierKeySet)
     {
-        return GetValue(axis, deadzone, modifierOperator, modifierKeys) != 0f;
+        return GetValue(axis, deadzone, modifierKeySet) != 0f;
     }
     /// <summary>
     /// Determines if the specified gamepad axis is "down".
@@ -794,11 +795,11 @@ public sealed class GamepadDevice : InputDevice
     /// <summary>
     /// Gets the value of the specified gamepad axis, considering deadzone and modifier keys.
     /// </summary>
-    public float GetValue(ShapeGamepadAxis axis, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public float GetValue(ShapeGamepadAxis axis, float deadzone, ModifierKeySet modifierKeySet)
     {
         if (Index < 0 || isLocked || !Connected) return 0f;
-        if (!IModifierKey.IsActive(modifierOperator, modifierKeys, this)) return 0f;
-
+        // if (!IModifierKey.IsActive(modifierOperator, modifierKeys, this)) return 0f;
+        if(!modifierKeySet.IsActive(this)) return 0f;
         return GetValue(axis, deadzone);
     }
     /// <summary>
@@ -829,26 +830,26 @@ public sealed class GamepadDevice : InputDevice
     /// <summary>
     /// Creates an <see cref="InputState"/> for the specified gamepad axis.
     /// </summary>
-    public InputState CreateInputState(ShapeGamepadAxis axis, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeGamepadAxis axis, float deadzone, ModifierKeySet modifierKeySet)
     {
-        float axisValue = GetValue(axis, deadzone, modifierOperator, modifierKeys);
+        float axisValue = GetValue(axis, deadzone, modifierKeySet);
         bool down = axisValue != 0f;
         return new(down, !down, axisValue, Index, InputDeviceType.Gamepad);
     }
     /// <summary>
     /// Creates an <see cref="InputState"/> for the specified gamepad axis, using a previous state.
     /// </summary>
-    public InputState CreateInputState(ShapeGamepadAxis axis, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeGamepadAxis axis, InputState previousState, float deadzone, ModifierKeySet modifierKeySet)
     {
-        return new(previousState, CreateInputState(axis, deadzone, modifierOperator, modifierKeys));
+        return new(previousState, CreateInputState(axis, deadzone, modifierKeySet));
     }
     
     /// <summary>
     /// Determines if the specified gamepad axis is "down" with deadzone and modifier keys.
     /// </summary>
-    public bool IsDown(ShapeGamepadAxis axis, float axisDeadzone, float triggerDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public bool IsDown(ShapeGamepadAxis axis, float axisDeadzone, float triggerDeadzone, ModifierKeySet modifierKeySet)
     {
-        return GetValue(axis, axisDeadzone, triggerDeadzone, modifierOperator, modifierKeys) != 0f;
+        return GetValue(axis, axisDeadzone, triggerDeadzone, modifierKeySet) != 0f;
     }
     /// <summary>
     /// Determines if the specified gamepad axis is "down".
@@ -861,11 +862,11 @@ public sealed class GamepadDevice : InputDevice
     /// <summary>
     /// Gets the value of the specified gamepad axis, considering deadzone and modifier keys.
     /// </summary>
-    public float GetValue(ShapeGamepadAxis axis, float axisDeadzone, float triggerDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public float GetValue(ShapeGamepadAxis axis, float axisDeadzone, float triggerDeadzone, ModifierKeySet modifierKeySet)
     {
         if (Index < 0 || isLocked || !Connected) return 0f;
-        if (!IModifierKey.IsActive(modifierOperator, modifierKeys, this)) return 0f;
-
+        // if (!IModifierKey.IsActive(modifierOperator, modifierKeys, this)) return 0f;
+        if(!modifierKeySet.IsActive(this)) return 0f;
         return GetValue(axis, axisDeadzone, triggerDeadzone);
     }
     /// <summary>
@@ -882,18 +883,18 @@ public sealed class GamepadDevice : InputDevice
     /// <summary>
     /// Creates an <see cref="InputState"/> for the specified gamepad axis.
     /// </summary>
-    public InputState CreateInputState(ShapeGamepadAxis axis, float axisDeadzone, float triggerDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeGamepadAxis axis, float axisDeadzone, float triggerDeadzone, ModifierKeySet modifierKeySet)
     {
-        float axisValue = GetValue(axis, axisDeadzone, triggerDeadzone, modifierOperator, modifierKeys);
+        float axisValue = GetValue(axis, axisDeadzone, triggerDeadzone, modifierKeySet);
         bool down = axisValue != 0f;
         return new(down, !down, axisValue, Index, InputDeviceType.Gamepad);
     }
     /// <summary>
     /// Creates an <see cref="InputState"/> for the specified gamepad axis, using a previous state.
     /// </summary>
-    public InputState CreateInputState(ShapeGamepadAxis axis, InputState previousState, float axisDeadzone, float triggerDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeGamepadAxis axis, InputState previousState, float axisDeadzone, float triggerDeadzone, ModifierKeySet modifierKeySet)
     {
-        return new(previousState, CreateInputState(axis, axisDeadzone, triggerDeadzone, modifierOperator, modifierKeys));
+        return new(previousState, CreateInputState(axis, axisDeadzone, triggerDeadzone, modifierKeySet));
     }
     /// <summary>
     /// Creates an <see cref="InputState"/> for the specified gamepad axis.
@@ -988,36 +989,37 @@ public sealed class GamepadDevice : InputDevice
     /// <summary>
     /// Determines if the button axis (negative/positive) is "down" with deadzone and modifier keys.
     /// </summary>
-    public bool IsDown(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public bool IsDown(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone, ModifierKeySet modifierKeySet)
     {
-        return GetValue(neg, pos, deadzone, modifierOperator, modifierKeys) != 0f;
+        return GetValue(neg, pos, deadzone, modifierKeySet) != 0f;
     }
 
     /// <summary>
     /// Gets the value of the button axis (negative/positive), considering deadzone and modifier keys.
     /// </summary>
-    public float GetValue(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public float GetValue(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone, ModifierKeySet modifierKeySet)
     {
         if (Index < 0 || isLocked || !Connected) return 0f;
-        if (!IModifierKey.IsActive(modifierOperator, modifierKeys, this)) return 0f;
+        // if (!IModifierKey.IsActive(modifierOperator, modifierKeys, this)) return 0f;
+        if(!modifierKeySet.IsActive(this)) return 0f;
         return GetValue(neg, pos, deadzone);
     }
     
     /// <summary>
     /// Creates an <see cref="InputState"/> for the button axis (negative/positive).
     /// </summary>
-    public InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone, ModifierKeySet modifierKeySet)
     {
-        float axis = GetValue(neg, pos, deadzone, modifierOperator, modifierKeys);
+        float axis = GetValue(neg, pos, deadzone, modifierKeySet);
         bool down = axis != 0f;
         return new(down, !down, axis, Index, InputDeviceType.Gamepad);
     }
     /// <summary>
     /// Creates an <see cref="InputState"/> for the button axis (negative/positive), using a previous state.
     /// </summary>
-    public InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, InputState previousState, float deadzone, ModifierKeySet modifierKeySet)
     {
-        return new(previousState, CreateInputState(neg, pos, deadzone, modifierOperator, modifierKeys));
+        return new(previousState, CreateInputState(neg, pos, deadzone, modifierKeySet));
     }
 
     
@@ -1026,9 +1028,9 @@ public sealed class GamepadDevice : InputDevice
     /// <summary>
     /// Determines if the button axis (negative/positive) is "down" with deadzone and modifier keys.
     /// </summary>
-    public bool IsDown(ShapeGamepadButton neg, ShapeGamepadButton pos, float axisDeadzone, float triggerDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public bool IsDown(ShapeGamepadButton neg, ShapeGamepadButton pos, float axisDeadzone, float triggerDeadzone, ModifierKeySet modifierKeySet)
     {
-        return GetValue(neg, pos, axisDeadzone, triggerDeadzone, modifierOperator, modifierKeys) != 0f;
+        return GetValue(neg, pos, axisDeadzone, triggerDeadzone, modifierKeySet) != 0f;
     }
     /// <summary>
     /// Determines if the button axis (negative/positive) is "down".
@@ -1041,10 +1043,11 @@ public sealed class GamepadDevice : InputDevice
     /// <summary>
     /// Gets the value of the button axis (negative/positive), considering deadzone and modifier keys.
     /// </summary>
-    public float GetValue(ShapeGamepadButton neg, ShapeGamepadButton pos, float axisDeadzone, float triggerDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public float GetValue(ShapeGamepadButton neg, ShapeGamepadButton pos, float axisDeadzone, float triggerDeadzone, ModifierKeySet modifierKeySet)
     {
         if (Index < 0 || isLocked || !Connected) return 0f;
-        if (!IModifierKey.IsActive(modifierOperator, modifierKeys, this)) return 0f;
+        // if (!IModifierKey.IsActive(modifierOperator, modifierKeys, this)) return 0f;
+        if(!modifierKeySet.IsActive(this)) return 0f;
         return GetValue(neg, pos, axisDeadzone, triggerDeadzone);
     }
     /// <summary>
@@ -1061,18 +1064,18 @@ public sealed class GamepadDevice : InputDevice
     /// <summary>
     /// Creates an <see cref="InputState"/> for the button axis (negative/positive).
     /// </summary>
-    public InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, float axisDeadzone, float triggerDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, float axisDeadzone, float triggerDeadzone, ModifierKeySet modifierKeySet)
     {
-        float axis = GetValue(neg, pos, axisDeadzone, triggerDeadzone, modifierOperator, modifierKeys);
+        float axis = GetValue(neg, pos, axisDeadzone, triggerDeadzone, modifierKeySet);
         bool down = axis != 0f;
         return new(down, !down, axis, Index, InputDeviceType.Gamepad);
     }
     /// <summary>
     /// Creates an <see cref="InputState"/> for the button axis (negative/positive), using a previous state.
     /// </summary>
-    public InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, InputState previousState, float axisDeadzone, float triggerDeadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, InputState previousState, float axisDeadzone, float triggerDeadzone, ModifierKeySet modifierKeySet)
     {
-        return new(previousState, CreateInputState(neg, pos, axisDeadzone, triggerDeadzone, modifierOperator, modifierKeys));
+        return new(previousState, CreateInputState(neg, pos, axisDeadzone, triggerDeadzone, modifierKeySet));
     }
     /// <summary>
     /// Creates an <see cref="InputState"/> for the button axis (negative/positive).
