@@ -49,7 +49,7 @@ public class ModifierKeyKeyboardButton : IModifierKey
     /// <returns>A new <see cref="IModifierKey"/> with the same modifier and reverseModifier values.</returns>
     public IModifierKey Copy() => new ModifierKeyKeyboardButton(modifier, reverseModifier);
     
-        /// <summary>
+    /// <summary>
     /// Determines whether the specified <see cref="ModifierKeyKeyboardButton"/> is equal to the current instance.
     /// </summary>
     /// <param name="other">The <see cref="ModifierKeyKeyboardButton"/> to compare with the current instance.</param>
