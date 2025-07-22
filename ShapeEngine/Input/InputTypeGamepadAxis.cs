@@ -10,8 +10,7 @@ public sealed class InputTypeGamepadAxis : IInputType
 {
     private readonly ShapeGamepadAxis axis;
     private float deadzone;
-    private readonly IModifierKey[] modifierKeys;
-    private readonly ModifierKeyOperator modifierOperator;
+    private readonly ModifierKeySet? modifierKeySet;
 
     /// <summary>
     /// Initializes a new instance of <see cref="InputTypeGamepadAxis"/> with the specified axis and deadzone.
@@ -20,53 +19,18 @@ public sealed class InputTypeGamepadAxis : IInputType
     /// <param name="deadzone">
     /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value.
     /// </param>
-    public InputTypeGamepadAxis(ShapeGamepadAxis axis, float deadzone = 0.1f)
+    public InputTypeGamepadAxis(ShapeGamepadAxis axis, float deadzone = 0.1f,  ModifierKeySet? modifierKeySet = null)
     {
         this.axis = axis; 
         this.deadzone = deadzone;
-        this.modifierKeys = [];
-        this.modifierOperator = ModifierKeyOperator.And;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputTypeGamepadAxis"/> with axis, deadzone, modifier operator, and modifier keys.
-    /// </summary>
-    /// <param name="axis">The gamepad axis.</param>
-    /// <param name="deadzone">
-    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value.
-    /// </param>
-    /// <param name="modifierOperator">The modifier key operator.</param>
-    /// <param name="modifierKeys">The modifier keys.</param>
-    public InputTypeGamepadAxis(ShapeGamepadAxis axis, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
-    {
-        this.axis = axis; 
-        this.deadzone = deadzone;
-        this.modifierOperator = modifierOperator;
-        this.modifierKeys = modifierKeys;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputTypeGamepadAxis"/> with axis, deadzone, modifier operator, and a single modifier key.
-    /// </summary>
-    /// <param name="axis">The gamepad axis.</param>
-    /// <param name="deadzone">
-    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value.
-    /// </param>
-    /// <param name="modifierOperator">The modifier key operator.</param>
-    /// <param name="modifierKey">The modifier key.</param>
-    public InputTypeGamepadAxis(ShapeGamepadAxis axis, float deadzone, ModifierKeyOperator modifierOperator, IModifierKey modifierKey)
-    {
-        this.axis = axis; 
-        this.deadzone = deadzone;
-        this.modifierOperator = modifierOperator;
-        this.modifierKeys = [modifierKey];
+        this.modifierKeySet = modifierKeySet;
     }
 
     /// <inheritdoc/>
     public string GetName(bool shorthand = true)
     {
         StringBuilder sb = new();
-        IModifierKey.GetModifierKeyNames(sb, modifierKeys, modifierOperator, shorthand);
+        modifierKeySet?.GetModifierKeyNames(sb, shorthand);
         sb.Append(GamepadDevice.GetAxisName(axis, shorthand));// GetGamepadAxisName(axis, shorthand));
         return sb.ToString();
     }
@@ -83,13 +47,15 @@ public sealed class InputTypeGamepadAxis : IInputType
     /// <inheritdoc/>
     public InputState GetState(GamepadDevice? gamepad)
     {
-        return gamepad?.CreateInputState(axis, deadzone, modifierOperator, modifierKeys) ?? new();
+        if (gamepad == null) return new();
+        return modifierKeySet == null ? gamepad.CreateInputState(axis, deadzone) : gamepad.CreateInputState(axis, deadzone, modifierKeySet);
     }
 
     /// <inheritdoc/>
     public InputState GetState(InputState prev, GamepadDevice? gamepad)
     {
-        return gamepad?.CreateInputState(axis, prev, deadzone, modifierOperator, modifierKeys) ?? new();
+        if (gamepad == null) return new();
+        return modifierKeySet == null ? gamepad.CreateInputState(axis, prev, deadzone) : gamepad.CreateInputState(axis, prev, deadzone, modifierKeySet);
     }
 
     /// <inheritdoc/>
@@ -98,18 +64,18 @@ public sealed class InputTypeGamepadAxis : IInputType
     /// <inheritdoc/>
     public IInputType Copy()
     {
-        var modifierKeyCopy = new IModifierKey[modifierKeys.Length];
-        for (int i = 0; i < modifierKeys.Length; i++)
+        if (modifierKeySet == null)
         {
-            modifierKeyCopy[i] = modifierKeys[i].Copy();
+            return new InputTypeGamepadAxis(axis, deadzone);
         }
-        return  new InputTypeGamepadAxis(axis, deadzone, modifierOperator, modifierKeyCopy);
+        return new InputTypeGamepadAxis(axis, deadzone, modifierKeySet.Copy());
     }
     
     private bool Equals(InputTypeGamepadAxis other)
     {
-        return axis == other.axis  && modifierOperator == other.modifierOperator && 
-               modifierKeys.SequenceEqual(other.modifierKeys); //uses IEquatable implementation of IModifierKey
+        return axis == other.axis &&
+               (modifierKeySet == null && other.modifierKeySet == null ||
+                modifierKeySet != null && modifierKeySet.Equals(other.modifierKeySet));
     }
     
     /// <summary>
@@ -143,6 +109,6 @@ public sealed class InputTypeGamepadAxis : IInputType
     /// <returns>A hash code for the current instance.</returns>
     public override int GetHashCode()
     {
-        return HashCode.Combine((int)axis, modifierKeys, (int)modifierOperator);
+        return HashCode.Combine((int)axis, modifierKeySet?.GetHashCode() ?? 0);
     }
 }
