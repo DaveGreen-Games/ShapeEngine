@@ -465,109 +465,137 @@ public static class ShapeInput
     /// Creates an <see cref="InputState"/> for a keyboard button.
     /// </summary>
     /// <param name="button">The keyboard button.</param>
-    /// <param name="accessTag">The access tag for input access control. See <see cref="Locked"/> system for more info.</param>
+    /// <param name="accessTag">The access tag for input access control.</param>
+    /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
     /// <returns>The created <see cref="InputState"/>.</returns>
-    public static InputState CreateInputState(ShapeKeyboardButton button, uint accessTag)
+    public static InputState CreateInputState(ShapeKeyboardButton button, uint accessTag, ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        return ActiveKeyboardDevice.CreateInputState(button);
+        return modifierKeySet == null ? ActiveKeyboardDevice.CreateInputState(button) : ActiveKeyboardDevice.CreateInputState(button, modifierKeySet);
     }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for a keyboard button axis (negative and positive).
+    /// </summary>
+    /// <param name="neg">The negative keyboard button.</param>
+    /// <param name="pos">The positive keyboard button.</param>
+    /// <param name="accessTag">The access tag for input access control.</param>
+    /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
+    /// <returns>The created <see cref="InputState"/>.</returns>
+    public static InputState CreateInputState(ShapeKeyboardButton neg, ShapeKeyboardButton pos, uint accessTag, ModifierKeySet? modifierKeySet = null)
+    {
+        if (Locked && !HasAccess(accessTag)) return new();
+        return modifierKeySet == null ? ActiveKeyboardDevice.CreateInputState(neg, pos) : ActiveKeyboardDevice.CreateInputState(neg, pos, modifierKeySet);
+    }
+    
     
     /// <summary>
     /// Creates an <see cref="InputState"/> for a mouse button.
     /// </summary>
     /// <param name="button">The mouse button.</param>
-    /// <param name="accessTag">The access tag for input access control. See <see cref="Locked"/> system for more info.</param>
+    /// <param name="accessTag">The access tag for input access control.</param>
+    /// <param name="deadzone">The deadzone value for input sensitivity. Default is 0f.</param>
+    /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
     /// <returns>The created <see cref="InputState"/>.</returns>
-    public static InputState CreateInputState(ShapeMouseButton button, uint accessTag)
+    public static InputState CreateInputState(ShapeMouseButton button, uint accessTag, float deadzone = 0f,  ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        return ActiveMouseDevice.CreateInputState(button);
+        return modifierKeySet == null ? ActiveMouseDevice.CreateInputState(button, deadzone, deadzone) : ActiveMouseDevice.CreateInputState(button, deadzone, modifierKeySet);
+    }
+
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for a mouse button axis (negative and positive).
+    /// </summary>
+    /// <param name="neg">The negative mouse button.</param>
+    /// <param name="pos">The positive mouse button.</param>
+    /// <param name="accessTag">The access tag for input access control.</param>
+    /// <param name="deadzone">The deadzone value for input sensitivity. Default is 0f.</param>
+    /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
+    /// <returns>The created <see cref="InputState"/>.</returns>
+    public static InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, uint accessTag, float deadzone = 0f, ModifierKeySet? modifierKeySet = null)
+    {
+        if (Locked && !HasAccess(accessTag)) return new();
+        return modifierKeySet == null ? ActiveMouseDevice.CreateInputState(neg, pos, deadzone, deadzone) : ActiveMouseDevice.CreateInputState(neg, pos, deadzone, modifierKeySet);
+    }
+
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for a mouse wheel axis.
+    /// </summary>
+    /// <param name="axis">The mouse wheel axis.</param>
+    /// <param name="accessTag">The access tag for input access control.</param>
+    /// <param name="deadzone">The deadzone value for input sensitivity. Default is 1f.</param>
+    /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
+    /// <returns>The created <see cref="InputState"/>.</returns>
+    public static InputState CreateInputState(ShapeMouseWheelAxis axis, uint accessTag, float deadzone = 1f, ModifierKeySet? modifierKeySet = null)
+    {
+        if (Locked && !HasAccess(accessTag)) return new();
+        return modifierKeySet == null ? ActiveMouseDevice.CreateInputState(axis, deadzone) : ActiveMouseDevice.CreateInputState(axis, deadzone, modifierKeySet);
+    }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for a mouse axis.
+    /// </summary>
+    /// <param name="axis">The mouse axis.</param>
+    /// <param name="accessTag">The access tag for input access control. See <see cref="Locked"/> system for more info.</param>
+    /// <param name="deadzone">The deadzone value for input sensitivity. Default is 1f.</param>
+    /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
+    /// <returns>The created <see cref="InputState"/>.</returns>
+    public static InputState CreateInputState(ShapeMouseAxis axis, uint accessTag, float deadzone = 1f, ModifierKeySet? modifierKeySet = null)
+    {
+        if (Locked && !HasAccess(accessTag)) return new();
+        return modifierKeySet == null ? ActiveMouseDevice.CreateInputState(axis, deadzone) : ActiveMouseDevice.CreateInputState(axis, deadzone, modifierKeySet);
     }
     
     /// <summary>
     /// Creates an <see cref="InputState"/> for a gamepad button.
     /// </summary>
     /// <param name="button">The gamepad button.</param>
-    /// <param name="accessTag">The access tag for input access control. See <see cref="Locked"/> system for more info.</param>
+    /// <param name="accessTag">The access tag for input access control.</param>
     /// <param name="gamepadIndex">The index of the gamepad.</param>
-    /// <param name="deadzone">The deadzone value for input sensitivity.</param>
+    /// <param name="deadzone">The deadzone value for input sensitivity. Default is 0.2f.</param>
+    /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
     /// <returns>The created <see cref="InputState"/>.</returns>
-    public static InputState CreateInputState(ShapeGamepadButton button, uint accessTag, int gamepadIndex, float deadzone = 0.2f)
+    public static InputState CreateInputState(ShapeGamepadButton button, uint accessTag, int gamepadIndex, float deadzone = 0.2f, ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
         var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
-        return gamepad?.CreateInputState(button, deadzone) ?? new();
+        if (gamepad == null) return new();
+        return modifierKeySet == null ? gamepad.CreateInputState(button, deadzone) : gamepad.CreateInputState(button, deadzone, modifierKeySet);
     }
-    
-    /// <summary>
-    /// Creates an <see cref="InputState"/> for a keyboard button axis (negative and positive).
-    /// </summary>
-    /// <param name="neg">The negative keyboard button.</param>
-    /// <param name="pos">The positive keyboard button.</param>
-    /// <param name="accessTag">The access tag for input access control. See <see cref="Locked"/> system for more info.</param>
-    /// <returns>The created <see cref="InputState"/>.</returns>
-    public static InputState CreateInputState(ShapeKeyboardButton neg, ShapeKeyboardButton pos, uint accessTag)
-    {
-        if (Locked && !HasAccess(accessTag)) return new();
-        return ActiveKeyboardDevice.CreateInputState(neg, pos);
-    }
-    
-    /// <summary>
-    /// Creates an <see cref="InputState"/> for a mouse button axis (negative and positive).
-    /// </summary>
-    /// <param name="neg">The negative mouse button.</param>
-    /// <param name="pos">The positive mouse button.</param>
-    /// <param name="accessTag">The access tag for input access control. See <see cref="Locked"/> system for more info.</param>
-    /// <returns>The created <see cref="InputState"/>.</returns>
-    public static InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, uint accessTag)
-    {
-        if (Locked && !HasAccess(accessTag)) return new();
-        return ActiveMouseDevice.CreateInputState(neg, pos);
-    }
-    
+
     /// <summary>
     /// Creates an <see cref="InputState"/> for a gamepad button axis (negative and positive).
     /// </summary>
     /// <param name="neg">The negative gamepad button.</param>
     /// <param name="pos">The positive gamepad button.</param>
-    /// <param name="accessTag">The access tag for input access control. See <see cref="Locked"/> system for more info.</param>
+    /// <param name="accessTag">The access tag for input access control.</param>
     /// <param name="gamepadIndex">The index of the gamepad.</param>
-    /// <param name="deadzone">The deadzone value for input sensitivity.</param>
+    /// <param name="deadzone">The deadzone value for input sensitivity. Default is 0.2f.</param>
+    /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
     /// <returns>The created <see cref="InputState"/>.</returns>
-    public static InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, uint accessTag, int gamepadIndex, float deadzone = 0.2f)
+    public static InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, uint accessTag, int gamepadIndex, float deadzone = 0.2f, ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
         var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
-        return gamepad?.CreateInputState(neg, pos, deadzone) ?? new();
+        
+        if (gamepad == null) return new();
+        return modifierKeySet == null ? gamepad.CreateInputState(neg, pos, deadzone) : gamepad.CreateInputState(neg, pos, deadzone, modifierKeySet);
     }
-    
-    /// <summary>
-    /// Creates an <see cref="InputState"/> for a mouse wheel axis.
-    /// </summary>
-    /// <param name="axis">The mouse wheel axis.</param>
-    /// <param name="accessTag">The access tag for input access control. See <see cref="Locked"/> system for more info.</param>
-    /// <param name="deadzone">The deadzone value for input sensitivity.</param>
-    /// <returns>The created <see cref="InputState"/>.</returns>
-    public static InputState CreateInputState(ShapeMouseWheelAxis axis, uint accessTag, float deadzone = 1f)
-    {
-        if (Locked && !HasAccess(accessTag)) return new();
-        return ActiveMouseDevice.CreateInputState(axis, deadzone);
-    }
-    
+
     /// <summary>
     /// Creates an <see cref="InputState"/> for a gamepad axis.
     /// </summary>
     /// <param name="axis">The gamepad axis.</param>
-    /// <param name="accessTag">The access tag for input access control. See <see cref="Locked"/> system for more info.</param>
+    /// <param name="accessTag">The access tag for input access control.</param>
     /// <param name="gamepadIndex">The index of the gamepad.</param>
-    /// <param name="deadzone">The deadzone value for input sensitivity.</param>
+    /// <param name="deadzone">The deadzone value for input sensitivity. Default is 0.2f.</param>
+    /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
     /// <returns>The created <see cref="InputState"/>.</returns>
-    public static InputState CreateInputState(ShapeGamepadAxis axis, uint accessTag, int gamepadIndex, float deadzone = 0.2f)
+    public static InputState CreateInputState(ShapeGamepadAxis axis, uint accessTag, int gamepadIndex, float deadzone = 0.2f, ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
         var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
-        return gamepad?.CreateInputState(axis, deadzone) ?? new();
+        
+        if (gamepad == null) return new();
+        return modifierKeySet == null ? gamepad.CreateInputState(axis, deadzone) : gamepad.CreateInputState(axis, deadzone, modifierKeySet);
     }
 
     #endregion
@@ -578,135 +606,54 @@ public static class ShapeInput
     /// <summary>
     /// Creates an input type for a keyboard button.
     /// </summary>
-    public static IInputType CreateInputType(this ShapeKeyboardButton button, IModifierKey? modifierKey = null, ModifierKeyOperator modifierKeyOperator = ModifierKeyOperator.And)
-    {
-        return modifierKey == null ? new InputTypeKeyboardButton(button) : new InputTypeKeyboardButton(button, modifierKeyOperator, modifierKey);
-    }
-    /// <summary>
-    /// Creates an input type for a keyboard button.
-    /// </summary>
-    public static IInputType CreateInputType(this ShapeKeyboardButton button,  ModifierKeyOperator modifierKeyOperator, params IModifierKey[] modifierKeys)
-    {
-        return  new InputTypeKeyboardButton(button, modifierKeyOperator, modifierKeys);
-    }
+    public static IInputType CreateInputType(this ShapeKeyboardButton button, ModifierKeySet? modifierKeySet = null) => new InputTypeKeyboardButton(button, modifierKeySet);
+
     /// <summary>
     /// Creates an input type for a keyboard button axis (negative and positive).
     /// </summary>
-    public static IInputType CreateInputType(this ShapeKeyboardButton neg, ShapeKeyboardButton pos, IModifierKey? modifierKey = null, ModifierKeyOperator modifierKeyOperator = ModifierKeyOperator.And)
-    {
-        return modifierKey == null ? new InputTypeKeyboardButtonAxis(neg, pos) : new InputTypeKeyboardButtonAxis(neg, pos,  modifierKeyOperator, modifierKey);
-    }
-    /// <summary>
-    /// Creates an input type for a keyboard button axis (negative and positive).
-    /// </summary>
-    public static IInputType CreateInputType(this ShapeKeyboardButton neg, ShapeKeyboardButton pos, ModifierKeyOperator modifierKeyOperator, params IModifierKey[] modifierKeys)
-    {
-        return new InputTypeKeyboardButtonAxis(neg, pos,  modifierKeyOperator, modifierKeys);
-    }
+    public static IInputType CreateInputType(this ShapeKeyboardButton neg, ShapeKeyboardButton pos, ModifierKeySet? modifierKeySet = null) => new InputTypeKeyboardButtonAxis(neg, pos,  modifierKeySet);
+
     #endregion
     
     #region Mouse
     /// <summary>
     /// Creates an input type for a mouse button.
     /// </summary>
-    public static IInputType CreateInputType(this ShapeMouseButton button, float deadzone = 0.2f, IModifierKey? modifierKey = null, ModifierKeyOperator modifierKeyOperator = ModifierKeyOperator.And)
-    {
-        return modifierKey == null ? new InputTypeMouseButton(button, deadzone) : new InputTypeMouseButton(button, deadzone,  modifierKeyOperator, modifierKey);
-    }
-    /// <summary>
-    /// Creates an input type for a mouse button.
-    /// </summary>
-    public static IInputType CreateInputType(this ShapeMouseButton button, float deadzone,  ModifierKeyOperator modifierKeyOperator, params IModifierKey[] modifierKeys)
-    {
-        return  new InputTypeMouseButton(button, deadzone, modifierKeyOperator, modifierKeys);
-    }
+    public static IInputType CreateInputType(this ShapeMouseButton button, float deadzone = 0.2f, ModifierKeySet? modifierKeySet = null) => new InputTypeMouseButton(button, deadzone,  modifierKeySet);
+
     /// <summary>
     /// Creates an input type for a mouse button axis (negative and positive).
     /// </summary>
-    public static IInputType CreateInputType(this ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = 0.2f, IModifierKey? modifierKey = null, ModifierKeyOperator modifierKeyOperator = ModifierKeyOperator.And)
-    {
-        return modifierKey == null ? new InputTypeMouseButtonAxis(neg, pos, deadzone) : new InputTypeMouseButtonAxis(neg, pos, deadzone,  modifierKeyOperator, modifierKey);
-    }
-    /// <summary>
-    /// Creates an input type for a mouse button axis (negative and positive).
-    /// </summary>
-    public static IInputType CreateInputType(this ShapeMouseButton neg, ShapeMouseButton pos, float deadzone, ModifierKeyOperator modifierKeyOperator, params IModifierKey[] modifierKeys)
-    {
-        return new InputTypeMouseButtonAxis(neg, pos, deadzone, modifierKeyOperator, modifierKeys);
-    }
+    public static IInputType CreateInputType(this ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = 0.2f, ModifierKeySet? modifierKeySet = null) => new InputTypeMouseButtonAxis(neg, pos, deadzone,  modifierKeySet);
+
     /// <summary>
     /// Creates an input type for a mouse wheel axis.
     /// </summary>
-    public static IInputType CreateInputType(this ShapeMouseWheelAxis axis, float deadzone = 0.2f, IModifierKey? modifierKey = null, ModifierKeyOperator modifierKeyOperator = ModifierKeyOperator.And)
-    {
-        return modifierKey == null ? new InputTypeMouseWheelAxis(axis, deadzone) : new InputTypeMouseWheelAxis(axis, deadzone,  modifierKeyOperator, modifierKey);
-    }
+    public static IInputType CreateInputType(this ShapeMouseWheelAxis axis, float deadzone = 0.2f, ModifierKeySet? modifierKeySet = null) => new InputTypeMouseWheelAxis(axis, deadzone,  modifierKeySet);
+
     /// <summary>
     /// Creates an input type for a mouse axis.
     /// </summary>
-    public static IInputType CreateInputType(this ShapeMouseAxis axis, float deadzone = 0.2f, IModifierKey? modifierKey = null, ModifierKeyOperator modifierKeyOperator = ModifierKeyOperator.And)
-    {
-        return modifierKey == null ? new InputTypeMouseAxis(axis, deadzone) : new InputTypeMouseAxis(axis, deadzone,  modifierKeyOperator, modifierKey);
-    }
-    /// <summary>
-    /// Creates an input type for a mouse wheel axis.
-    /// </summary>
-    public static IInputType CreateInputType(this ShapeMouseWheelAxis axis, float deadzone, ModifierKeyOperator modifierKeyOperator, params IModifierKey[] modifierKeys)
-    {
-        return new InputTypeMouseWheelAxis(axis, deadzone,  modifierKeyOperator, modifierKeys);
-    }
-    /// <summary>
-    /// Creates an input type for a mouse axis.
-    /// </summary>
-    public static IInputType CreateInputType(this ShapeMouseAxis axis, float deadzone, ModifierKeyOperator modifierKeyOperator, params IModifierKey[] modifierKeys)
-    {
-        return new InputTypeMouseAxis(axis, deadzone,  modifierKeyOperator, modifierKeys);
-    }
+    public static IInputType CreateInputType(this ShapeMouseAxis axis, float deadzone = 0.2f, ModifierKeySet? modifierKeySet = null) => new InputTypeMouseAxis(axis, deadzone,  modifierKeySet);
+
     #endregion
     
     #region Gamepad
     /// <summary>
     /// Creates an input type for a gamepad button.
     /// </summary>
-    public static IInputType CreateInputType(this ShapeGamepadButton button, float deadzone = 0.2f, IModifierKey? modifierKey = null, ModifierKeyOperator modifierKeyOperator = ModifierKeyOperator.And)
-    {
-        return modifierKey == null ? new InputTypeGamepadButton(button, deadzone) : new InputTypeGamepadButton(button, deadzone,  modifierKeyOperator, modifierKey);
-    }
-    /// <summary>
-    /// Creates an input type for a gamepad button.
-    /// </summary>
-    public static IInputType CreateInputType(this ShapeGamepadButton button, float deadzone,  ModifierKeyOperator modifierKeyOperator, params IModifierKey[] modifierKeys)
-    {
-        return  new InputTypeGamepadButton(button, deadzone, modifierKeyOperator, modifierKeys);
-    }
+    public static IInputType CreateInputType(this ShapeGamepadButton button, float deadzone = 0.2f, ModifierKeySet? modifierKeySet = null) => new InputTypeGamepadButton(button, deadzone,  modifierKeySet);
+
     /// <summary>
     /// Creates an input type for a gamepad button axis (negative and positive).
     /// </summary>
-    public static IInputType CreateInputType(this ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = 0.2f, IModifierKey? modifierKey = null, ModifierKeyOperator modifierKeyOperator = ModifierKeyOperator.And)
-    {
-        return modifierKey == null ? new InputTypeGamepadButtonAxis(neg, pos, deadzone) : new InputTypeGamepadButtonAxis(neg, pos, deadzone,  modifierKeyOperator, modifierKey);
-    }
-    /// <summary>
-    /// Creates an input type for a gamepad button axis (negative and positive).
-    /// </summary>
-    public static IInputType CreateInputType(this ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone, ModifierKeyOperator modifierKeyOperator, params IModifierKey[] modifierKeys)
-    {
-        return new InputTypeGamepadButtonAxis(neg, pos, deadzone, modifierKeyOperator, modifierKeys);
-    }
+    public static IInputType CreateInputType(this ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = 0.2f, ModifierKeySet? modifierKeySet = null) => new InputTypeGamepadButtonAxis(neg, pos, deadzone,  modifierKeySet);
+
     /// <summary>
     /// Creates an input type for a gamepad axis.
     /// </summary>
-    public static IInputType CreateInputType(this ShapeGamepadAxis axis, float deadzone = 0.2f, IModifierKey? modifierKey = null, ModifierKeyOperator modifierKeyOperator = ModifierKeyOperator.And)
-    {
-        return modifierKey == null ? new InputTypeGamepadAxis(axis, deadzone) : new InputTypeGamepadAxis(axis, deadzone,  modifierKeyOperator, modifierKey);
-    }
-    /// <summary>
-    /// Creates an input type for a gamepad axis.
-    /// </summary>
-    public static IInputType CreateInputType(this ShapeGamepadAxis axis, float deadzone,  ModifierKeyOperator modifierKeyOperator, params IModifierKey[] modifierKeys)
-    {
-        return new InputTypeGamepadAxis(axis, deadzone,  modifierKeyOperator, modifierKeys);
-    }
+    public static IInputType CreateInputType(this ShapeGamepadAxis axis, float deadzone = 0.2f, ModifierKeySet? modifierKeySet = null) => new InputTypeGamepadAxis(axis, deadzone,  modifierKeySet);
+
     #endregion
     
     #endregion
