@@ -9,44 +9,17 @@ namespace ShapeEngine.Input;
 public sealed class InputTypeKeyboardButton : IInputType
 {
     private readonly ShapeKeyboardButton button;
-    private readonly IModifierKey[] modifierKeys;
-    private readonly ModifierKeyOperator modifierOperator;
+    private readonly ModifierKeySet? modifierKeySet;
 
     /// <summary>
-    /// Initializes a new instance of <see cref="InputTypeKeyboardButton"/> with the specified button.
+    /// Initializes a new instance of the <see cref="InputTypeKeyboardButton"/> class.
     /// </summary>
-    /// <param name="button">The keyboard button.</param>
-    public InputTypeKeyboardButton(ShapeKeyboardButton button)
+    /// <param name="button">The keyboard button to represent.</param>
+    /// <param name="modifierKeySet">An optional set of modifier keys.</param>
+    public InputTypeKeyboardButton(ShapeKeyboardButton button, ModifierKeySet? modifierKeySet = null)
     {
         this.button = button;
-        this.modifierKeys = [];
-        this.modifierOperator = ModifierKeyOperator.And;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputTypeKeyboardButton"/> with button, modifier operator, and modifier keys.
-    /// </summary>
-    /// <param name="button">The keyboard button.</param>
-    /// <param name="modifierOperator">The modifier key operator.</param>
-    /// <param name="modifierKeys">The modifier keys.</param>
-    public InputTypeKeyboardButton(ShapeKeyboardButton button, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
-    {
-        this.button = button;
-        this.modifierOperator = modifierOperator;
-        this.modifierKeys = modifierKeys;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputTypeKeyboardButton"/> with button, modifier operator, and a single modifier key.
-    /// </summary>
-    /// <param name="button">The keyboard button.</param>
-    /// <param name="modifierOperator">The modifier key operator.</param>
-    /// <param name="modifierKey">The modifier key.</param>
-    public InputTypeKeyboardButton(ShapeKeyboardButton button, ModifierKeyOperator modifierOperator, IModifierKey modifierKey)
-    {
-        this.button = button;
-        this.modifierOperator = modifierOperator;
-        this.modifierKeys = [modifierKey];
+        this.modifierKeySet = modifierKeySet;
     }
 
     
@@ -59,20 +32,24 @@ public sealed class InputTypeKeyboardButton : IInputType
     /// <inheritdoc/>
     public InputState GetState(GamepadDevice? gamepad = null)
     {
-        return ShapeInput.ActiveKeyboardDevice.CreateInputState(button, modifierOperator, modifierKeys);
+        return modifierKeySet == null ? 
+            ShapeInput.ActiveKeyboardDevice.CreateInputState(button) : 
+            ShapeInput.ActiveKeyboardDevice.CreateInputState(button, modifierKeySet);
     }
 
     /// <inheritdoc/>
     public InputState GetState(InputState prev, GamepadDevice? gamepad = null)
     {
-        return ShapeInput.ActiveKeyboardDevice.CreateInputState(button, prev, modifierOperator, modifierKeys);
+        return modifierKeySet == null ? 
+            ShapeInput.ActiveKeyboardDevice.CreateInputState(button, prev) : 
+            ShapeInput.ActiveKeyboardDevice.CreateInputState(button, prev, modifierKeySet);
     }
 
     /// <inheritdoc/>
     public string GetName(bool shorthand = true)
     {
         StringBuilder sb = new();
-        IModifierKey.GetModifierKeyNames(sb, modifierKeys, modifierOperator, shorthand);
+        modifierKeySet?.AppendModifierKeyNames(sb, shorthand);
         sb.Append(KeyboardDevice.GetButtonName(button, shorthand));
         return sb.ToString();
     }
@@ -81,22 +58,14 @@ public sealed class InputTypeKeyboardButton : IInputType
     public InputDeviceType GetInputDevice() => InputDeviceType.Keyboard;
 
     /// <inheritdoc/>
-    public IInputType Copy()
-    { 
-        var modifierKeyCopy = new IModifierKey[modifierKeys.Length];
-        for (int i = 0; i < modifierKeys.Length; i++)
-        {
-            modifierKeyCopy[i] = modifierKeys[i].Copy();
-        }
-        return  new InputTypeKeyboardButton(button, modifierOperator, modifierKeyCopy);
-    }
-
+    public IInputType Copy() => new InputTypeKeyboardButton(button, modifierKeySet?.Copy());
 
 
     private bool Equals(InputTypeKeyboardButton other)
     {
-        return button == other.button  && modifierOperator == other.modifierOperator&& 
-               modifierKeys.SequenceEqual(other.modifierKeys); //uses IEquatable implementation of IModifierKey;
+        return button == other.button  &&
+               (modifierKeySet == null && other.modifierKeySet == null ||
+                modifierKeySet != null && modifierKeySet.Equals(other.modifierKeySet));
     }
     
     /// <summary>
@@ -130,6 +99,6 @@ public sealed class InputTypeKeyboardButton : IInputType
     /// <returns>A hash code for the current instance.</returns>
     public override int GetHashCode()
     {
-        return HashCode.Combine((int)button, modifierKeys, (int)modifierOperator);
+        return HashCode.Combine((int)button, modifierKeySet?.GetHashCode() ?? 0);
     }
 }

@@ -13,12 +13,13 @@ public sealed class InputTypeGamepadAxis : IInputType
     private readonly ModifierKeySet? modifierKeySet;
 
     /// <summary>
-    /// Initializes a new instance of <see cref="InputTypeGamepadAxis"/> with the specified axis and deadzone.
+    /// Initializes a new instance of <see cref="InputTypeGamepadAxis"/> with the specified axis, deadzone, and modifier key set.
     /// </summary>
     /// <param name="axis">The gamepad axis.</param>
     /// <param name="deadzone">
     /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value.
     /// </param>
+    /// <param name="modifierKeySet">The set of modifier keys to apply to this input type. Optional.</param>
     public InputTypeGamepadAxis(ShapeGamepadAxis axis, float deadzone = 0.1f,  ModifierKeySet? modifierKeySet = null)
     {
         this.axis = axis; 
@@ -30,7 +31,7 @@ public sealed class InputTypeGamepadAxis : IInputType
     public string GetName(bool shorthand = true)
     {
         StringBuilder sb = new();
-        modifierKeySet?.GetModifierKeyNames(sb, shorthand);
+        modifierKeySet?.AppendModifierKeyNames(sb, shorthand);
         sb.Append(GamepadDevice.GetAxisName(axis, shorthand));// GetGamepadAxisName(axis, shorthand));
         return sb.ToString();
     }
@@ -62,14 +63,7 @@ public sealed class InputTypeGamepadAxis : IInputType
     public InputDeviceType GetInputDevice() => InputDeviceType.Gamepad;
 
     /// <inheritdoc/>
-    public IInputType Copy()
-    {
-        if (modifierKeySet == null)
-        {
-            return new InputTypeGamepadAxis(axis, deadzone);
-        }
-        return new InputTypeGamepadAxis(axis, deadzone, modifierKeySet.Copy());
-    }
+    public IInputType Copy() => new InputTypeGamepadAxis(axis, deadzone, modifierKeySet?.Copy());
     
     private bool Equals(InputTypeGamepadAxis other)
     {

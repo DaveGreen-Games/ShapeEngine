@@ -11,62 +11,24 @@ public sealed class InputTypeMouseButtonAxis : IInputType
     private readonly ShapeMouseButton neg;
     private readonly ShapeMouseButton pos;
     private float deadzone;
-    private readonly IModifierKey[] modifierKeys;
-    private readonly ModifierKeyOperator modifierOperator;
+    private readonly ModifierKeySet? modifierKeySet;
+
+    
     /// <summary>
-    /// Initializes a new instance of <see cref="InputTypeMouseButtonAxis"/> with specified negative and positive buttons and deadzone.
+    /// Initializes a new instance of the <see cref="InputTypeMouseButtonAxis"/> class.
     /// </summary>
-    /// <param name="neg">The negative mouse button.</param>
-    /// <param name="pos">The positive mouse button.</param>
-    /// <param name="deadzone">
-    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value. MouseButtons ignore deadzone (deadzone works only with axis input types).
-    /// </param>
-    public InputTypeMouseButtonAxis(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = 0f)
+    /// <param name="neg">The mouse button representing the negative axis.</param>
+    /// <param name="pos">The mouse button representing the positive axis.</param>
+    /// <param name="deadzone">The deadzone value for axis input. Default is 0.</param>
+    /// <param name="modifierKeySet">Optional set of modifier keys required for activation.</param>
+    public InputTypeMouseButtonAxis(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = 0f, ModifierKeySet? modifierKeySet = null)
     {
         this.neg = neg;
         this.pos = pos;
         this.deadzone = deadzone;
-        this.modifierKeys = [];
-        this.modifierOperator = ModifierKeyOperator.And;
+        this.modifierKeySet = modifierKeySet;
     }
 
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputTypeMouseButtonAxis"/> with buttons, deadzone, modifier operator, and modifier keys.
-    /// </summary>
-    /// <param name="neg">The negative mouse button.</param>
-    /// <param name="pos">The positive mouse button.</param>
-    /// <param name="deadzone">
-    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value. MouseButtons ignore deadzone (deadzone works only with axis input types).
-    /// </param>
-    /// <param name="modifierOperator">The modifier key operator.</param>
-    /// <param name="modifierKeys">The modifier keys.</param>
-    public InputTypeMouseButtonAxis(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
-    {
-        this.neg = neg;
-        this.pos = pos;
-        this.deadzone = deadzone;
-        this.modifierOperator = modifierOperator;
-        this.modifierKeys = modifierKeys;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputTypeMouseButtonAxis"/> with buttons, deadzone, modifier operator, and a single modifier key.
-    /// </summary>
-    /// <param name="neg">The negative mouse button.</param>
-    /// <param name="pos">The positive mouse button.</param>
-    /// <param name="deadzone">
-    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value. MouseButtons ignore deadzone (deadzone works only with axis input types).
-    /// </param>
-    /// <param name="modifierOperator">The modifier key operator.</param>
-    /// <param name="modifierKey">The modifier key.</param>
-    public InputTypeMouseButtonAxis(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone, ModifierKeyOperator modifierOperator, IModifierKey modifierKey)
-    {
-        this.neg = neg;
-        this.pos = pos;
-        this.deadzone = deadzone;
-        this.modifierOperator = modifierOperator;
-        this.modifierKeys = [modifierKey];
-    }
 
     /// <inheritdoc/>
     public float GetDeadzone() => deadzone;
@@ -78,7 +40,7 @@ public sealed class InputTypeMouseButtonAxis : IInputType
     public string GetName(bool shorthand = true)
     {
         StringBuilder sb = new();
-        IModifierKey.GetModifierKeyNames(sb, modifierKeys, modifierOperator, shorthand);
+        modifierKeySet?.AppendModifierKeyNames(sb, shorthand);
         string negName = MouseDevice.GetButtonName(neg, shorthand);
         string posName = MouseDevice.GetButtonName(pos, shorthand);
         sb.Append(negName);
@@ -92,33 +54,31 @@ public sealed class InputTypeMouseButtonAxis : IInputType
     /// <inheritdoc/>
     public InputState GetState(GamepadDevice? gamepad = null)
     {
-        return ShapeInput.ActiveMouseDevice.CreateInputState(neg, pos, deadzone, modifierOperator, modifierKeys);
+        
+        return modifierKeySet == null ? 
+            ShapeInput.ActiveMouseDevice.CreateInputState(neg, pos, deadzone) : 
+            ShapeInput.ActiveMouseDevice.CreateInputState(neg, pos, deadzone, modifierKeySet);
     }
 
     /// <inheritdoc/>
     public InputState GetState(InputState prev, GamepadDevice? gamepad = null)
     {
-        return ShapeInput.ActiveMouseDevice.CreateInputState(neg, pos, prev, deadzone, modifierOperator, modifierKeys);
+        return modifierKeySet == null ? 
+            ShapeInput.ActiveMouseDevice.CreateInputState(neg, pos, prev, deadzone) : 
+            ShapeInput.ActiveMouseDevice.CreateInputState(neg, pos, prev, deadzone, modifierKeySet);
     }
 
     /// <inheritdoc/>
     public InputDeviceType GetInputDevice() => InputDeviceType.Mouse;
 
     /// <inheritdoc/>
-    public IInputType Copy()
-    { 
-        var modifierKeyCopy = new IModifierKey[modifierKeys.Length];
-        for (int i = 0; i < modifierKeys.Length; i++)
-        {
-            modifierKeyCopy[i] = modifierKeys[i].Copy();
-        }
-        return  new InputTypeMouseButtonAxis(neg, pos, deadzone, modifierOperator, modifierKeyCopy);
-    }
+    public IInputType Copy() => new InputTypeMouseButtonAxis(neg, pos, deadzone, modifierKeySet?.Copy());
     
     private bool Equals(InputTypeMouseButtonAxis other)
     {
-        return neg == other.neg && pos == other.pos && modifierOperator == other.modifierOperator&& 
-               modifierKeys.SequenceEqual(other.modifierKeys); //uses IEquatable implementation of IModifierKey;
+        return neg == other.neg && pos == other.pos &&
+               (modifierKeySet == null && other.modifierKeySet == null ||
+                modifierKeySet != null && modifierKeySet.Equals(other.modifierKeySet));
     }
     
     /// <summary>
@@ -152,7 +112,7 @@ public sealed class InputTypeMouseButtonAxis : IInputType
     /// <returns>A hash code for the current instance.</returns>
     public override int GetHashCode()
     {
-        return HashCode.Combine((int)neg, (int)pos,  modifierKeys, (int)modifierOperator);
+        return HashCode.Combine((int)neg, (int)pos,  modifierKeySet?.GetHashCode() ?? 0);
     }
 
 }

@@ -10,56 +10,22 @@ public sealed class InputTypeMouseAxis : IInputType
 {
     private readonly ShapeMouseAxis axis;
     private float deadzone;
-    private readonly IModifierKey[] modifierKeys;
-    private readonly ModifierKeyOperator modifierOperator;
+    private readonly ModifierKeySet? modifierKeySet;
+
+    
     /// <summary>
-    /// Initializes a new instance of <see cref="InputTypeMouseAxis"/> with the specified axis and deadzone.
+    /// Initializes a new instance of the <see cref="InputTypeMouseAxis"/> class.
     /// </summary>
-    /// <param name="axis">The mouse axis.</param>
-    /// <param name="deadzone">
-    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value.
-    /// </param>
-    public InputTypeMouseAxis(ShapeMouseAxis axis, float deadzone = 0.5f)
+    /// <param name="axis">The mouse axis to track.</param>
+    /// <param name="deadzone">The deadzone threshold for axis input. Default is 0.5f.</param>
+    /// <param name="modifierKeySet">Optional set of modifier keys required for activation.</param>
+    public InputTypeMouseAxis(ShapeMouseAxis axis, float deadzone = 0.5f, ModifierKeySet? modifierKeySet = null)
     {
         this.axis = axis;
         this.deadzone = deadzone;
-        this.modifierKeys = [];
-        this.modifierOperator = ModifierKeyOperator.And;
+        this.modifierKeySet = modifierKeySet;
     }
 
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputTypeMouseAxis"/> with axis, deadzone, modifier operator, and modifier keys.
-    /// </summary>
-    /// <param name="axis">The mouse axis.</param>
-    /// <param name="deadzone">
-    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value.
-    /// </param>
-    /// <param name="modifierOperator">The modifier key operator.</param>
-    /// <param name="modifierKeys">The modifier keys.</param>
-    public InputTypeMouseAxis(ShapeMouseAxis axis, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
-    {
-        this.axis = axis;
-        this.deadzone = deadzone;
-        this.modifierOperator = modifierOperator;
-        this.modifierKeys = modifierKeys;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputTypeMouseAxis"/> with axis, deadzone, modifier operator, and a single modifier key.
-    /// </summary>
-    /// <param name="axis">The mouse axis.</param>
-    /// <param name="deadzone">
-    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value.
-    /// </param>
-    /// <param name="modifierOperator">The modifier key operator.</param>
-    /// <param name="modifierKey">The modifier key.</param>
-    public InputTypeMouseAxis(ShapeMouseAxis axis, float deadzone, ModifierKeyOperator modifierOperator, IModifierKey modifierKey)
-    {
-        this.axis = axis;
-        this.deadzone = deadzone;
-        this.modifierOperator = modifierOperator;
-        this.modifierKeys = [modifierKey];
-    }
 
     /// <inheritdoc/>
     public float GetDeadzone() => deadzone;
@@ -74,7 +40,7 @@ public sealed class InputTypeMouseAxis : IInputType
     public string GetName(bool shorthand = true)
     {
         StringBuilder sb = new();
-        IModifierKey.GetModifierKeyNames(sb, modifierKeys, modifierOperator, shorthand);
+        modifierKeySet?.AppendModifierKeyNames(sb, shorthand);
         sb.Append(MouseDevice.GetAxisName(axis, shorthand));
         return sb.ToString();
     }
@@ -82,33 +48,30 @@ public sealed class InputTypeMouseAxis : IInputType
     /// <inheritdoc/>
     public InputState GetState(GamepadDevice? gamepad = null)
     {
-        return ShapeInput.ActiveMouseDevice.CreateInputState(axis, deadzone, modifierOperator, modifierKeys);
+        return modifierKeySet == null ? 
+            ShapeInput.ActiveMouseDevice.CreateInputState(axis, deadzone) : 
+            ShapeInput.ActiveMouseDevice.CreateInputState(axis, deadzone, modifierKeySet);
     }
 
     /// <inheritdoc/>
     public InputState GetState(InputState prev, GamepadDevice? gamepad = null)
     {
-        return ShapeInput.ActiveMouseDevice.CreateInputState(axis, prev, deadzone, modifierOperator, modifierKeys);
+        return modifierKeySet == null ? 
+            ShapeInput.ActiveMouseDevice.CreateInputState(axis, prev, deadzone) : 
+            ShapeInput.ActiveMouseDevice.CreateInputState(axis, prev, deadzone, modifierKeySet);
     }
 
     /// <inheritdoc/>
     public InputDeviceType GetInputDevice() => InputDeviceType.Mouse;
 
     /// <inheritdoc/>
-    public IInputType Copy()
-    { 
-        var modifierKeyCopy = new IModifierKey[modifierKeys.Length];
-        for (int i = 0; i < modifierKeys.Length; i++)
-        {
-            modifierKeyCopy[i] = modifierKeys[i].Copy();
-        }
-        return  new InputTypeMouseAxis(axis, deadzone, modifierOperator, modifierKeyCopy);
-    }
+    public IInputType Copy() => new InputTypeMouseAxis(axis, deadzone, modifierKeySet?.Copy());
     
     private bool Equals(InputTypeMouseAxis other)
     {
-        return axis == other.axis  && modifierOperator == other.modifierOperator&& 
-               modifierKeys.SequenceEqual(other.modifierKeys); //uses IEquatable implementation of IModifierKey;
+        return axis == other.axis  &&
+               (modifierKeySet == null && other.modifierKeySet == null ||
+                modifierKeySet != null && modifierKeySet.Equals(other.modifierKeySet));
     }
     
     /// <summary>
@@ -142,6 +105,6 @@ public sealed class InputTypeMouseAxis : IInputType
     /// <returns>A hash code for the current instance.</returns>
     public override int GetHashCode()
     {
-        return HashCode.Combine((int)axis, modifierKeys, (int)modifierOperator);
+        return HashCode.Combine((int)axis, modifierKeySet?.GetHashCode() ?? 0);
     }
 }

@@ -10,74 +10,31 @@ public sealed class InputTypeGamepadButton : IInputType
 {
     private readonly ShapeGamepadButton button;
     private float deadzone;
-    private readonly IModifierKey[] modifierKeys;
-    private readonly ModifierKeyOperator modifierOperator;
-
+    private readonly ModifierKeySet? modifierKeySet;
+    
     /// <summary>
-    /// Initializes a new instance of <see cref="InputTypeGamepadButton"/> with the specified button and deadzone.
+    /// Initializes a new instance of <see cref="InputTypeGamepadButton"/> with the specified button, deadzone, and modifier key set.
     /// </summary>
     /// <param name="button">The gamepad button.</param>
     /// <param name="deadzone">
-    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value. Gamepad buttons ignore deadzone (deadzone works only with axis input types).
+    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value. Gamepad buttons ignore deadzone (deadzone works only with axis/trigger input types).
     /// </param>
-    public InputTypeGamepadButton(ShapeGamepadButton button, float deadzone = 0.1f)
+    /// <param name="modifierKeySet">The set of modifier keys associated with this input type.</param>
+    public InputTypeGamepadButton(ShapeGamepadButton button, float deadzone = 0.1f, ModifierKeySet? modifierKeySet = null)
     {
         this.button = button; 
         this.deadzone = deadzone;
-        this.modifierKeys = [];
-        this.modifierOperator = ModifierKeyOperator.And;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputTypeGamepadButton"/> with button, deadzone, modifier operator, and modifier keys.
-    /// </summary>
-    /// <param name="button">The gamepad button.</param>
-    /// <param name="deadzone">
-    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value. Gamepad buttons ignore deadzone (deadzone works only with axis input types).
-    /// </param>
-    /// <param name="modifierOperator">The modifier key operator.</param>
-    /// <param name="modifierKeys">The modifier keys.</param>
-    public InputTypeGamepadButton(ShapeGamepadButton button, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
-    {
-        this.button = button; 
-        this.deadzone = deadzone;
-        this.modifierKeys = modifierKeys;
-        this.modifierOperator = modifierOperator;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputTypeGamepadButton"/> with button, deadzone, modifier operator, and a single modifier key.
-    /// </summary>
-    /// <param name="button">The gamepad button.</param>
-    /// <param name="deadzone">
-    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value. Gamepad buttons ignore deadzone (deadzone works only with axis input types).
-    /// </param>
-    /// <param name="modifierOperator">The modifier key operator.</param>
-    /// <param name="modifierKey">The modifier key.</param>
-    public InputTypeGamepadButton(ShapeGamepadButton button, float deadzone, ModifierKeyOperator modifierOperator, IModifierKey modifierKey)
-    {
-        this.button = button; 
-        this.deadzone = deadzone;
-        this.modifierOperator = modifierOperator;
-        this.modifierKeys = [modifierKey];
+        this.modifierKeySet = modifierKeySet;
     }
 
     /// <inheritdoc/>
-    public IInputType Copy()
-    {
-        var modifierKeyCopy = new IModifierKey[modifierKeys.Length];
-        for (int i = 0; i < modifierKeys.Length; i++)
-        {
-            modifierKeyCopy[i] = modifierKeys[i].Copy();
-        }
-        return  new InputTypeGamepadButton(button, deadzone, modifierOperator, modifierKeyCopy);
-    }
+    public IInputType Copy() => new InputTypeGamepadButton(button, deadzone, modifierKeySet?.Copy());
 
     /// <inheritdoc/>
     public string GetName(bool shorthand = true)
     {
         StringBuilder sb = new();
-        IModifierKey.GetModifierKeyNames(sb, modifierKeys, modifierOperator, shorthand);
+        modifierKeySet?.AppendModifierKeyNames(sb, shorthand);
         sb.Append(GamepadDevice.GetButtonName(button, shorthand));
         return sb.ToString();
     }
@@ -94,13 +51,15 @@ public sealed class InputTypeGamepadButton : IInputType
     /// <inheritdoc/>
     public InputState GetState(GamepadDevice? gamepad)
     {
-        return gamepad?.CreateInputState(button, deadzone, modifierOperator, modifierKeys) ?? new();
+        if (gamepad == null) return new();
+        return modifierKeySet == null ? gamepad.CreateInputState(button, deadzone) : gamepad.CreateInputState(button, deadzone, modifierKeySet);
     }
 
     /// <inheritdoc/>
     public InputState GetState(InputState prev, GamepadDevice? gamepad)
     {
-        return gamepad?.CreateInputState(button, prev, deadzone, modifierOperator, modifierKeys) ?? new();
+        if (gamepad == null) return new();
+        return modifierKeySet == null ? gamepad.CreateInputState(button, prev, deadzone) : gamepad.CreateInputState(button, prev, deadzone, modifierKeySet);
     }
 
     /// <inheritdoc/>
@@ -108,8 +67,9 @@ public sealed class InputTypeGamepadButton : IInputType
     
     private bool Equals(InputTypeGamepadButton other)
     {
-        return button == other.button && modifierOperator == other.modifierOperator&& 
-               modifierKeys.SequenceEqual(other.modifierKeys); //uses IEquatable implementation of IModifierKey;
+        return button == other.button &&
+               (modifierKeySet == null && other.modifierKeySet == null ||
+                modifierKeySet != null && modifierKeySet.Equals(other.modifierKeySet));
     }
     
     /// <summary>
@@ -143,6 +103,6 @@ public sealed class InputTypeGamepadButton : IInputType
     /// <returns>A hash code for the current instance.</returns>
     public override int GetHashCode()
     {
-        return HashCode.Combine((int)button, modifierKeys, (int)modifierOperator);
+        return HashCode.Combine((int)button, modifierKeySet?.GetHashCode() ?? 0);
     }
 }

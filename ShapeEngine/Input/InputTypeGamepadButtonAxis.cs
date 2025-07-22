@@ -11,69 +11,28 @@ public sealed class InputTypeGamepadButtonAxis : IInputType
     private readonly ShapeGamepadButton neg;
     private readonly ShapeGamepadButton pos;
     private float deadzone;
-    private readonly IModifierKey[] modifierKeys;
-    private readonly ModifierKeyOperator modifierOperator;
+    private readonly ModifierKeySet? modifierKeySet;
 
     /// <summary>
-    /// Initializes a new instance of <see cref="InputTypeGamepadButtonAxis"/> with specified negative and positive buttons and deadzone.
+    /// Initializes a new instance of the <see cref="InputTypeGamepadButtonAxis"/> class.
     /// </summary>
-    /// <param name="neg">The negative gamepad button.</param>
-    /// <param name="pos">The positive gamepad button.</param>
-    /// <param name="deadzone">
-    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value. Gamepad buttons ignore deadzone (deadzone works only with axis input types).
-    /// </param>
-    public InputTypeGamepadButtonAxis(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = 0.1f)
+    /// <param name="neg">The negative direction gamepad button.</param>
+    /// <param name="pos">The positive direction gamepad button.</param>
+    /// <param name="deadzone">The deadzone threshold for axis input. Default is 0.1f.</param>
+    /// <param name="modifierKeySet">Optional set of modifier keys.</param>
+    public InputTypeGamepadButtonAxis(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = 0.1f, ModifierKeySet? modifierKeySet = null)
     {
         this.neg = neg;
         this.pos = pos;
         this.deadzone = deadzone;
-        this.modifierKeys = [];
-        this.modifierOperator = ModifierKeyOperator.And;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputTypeGamepadButtonAxis"/> with buttons, deadzone, modifier operator, and modifier keys.
-    /// </summary>
-    /// <param name="neg">The negative gamepad button.</param>
-    /// <param name="pos">The positive gamepad button.</param>
-    /// <param name="deadzone">
-    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value. Gamepad buttons ignore deadzone (deadzone works only with axis input types).
-    /// </param>
-    /// <param name="modifierOperator">The modifier key operator.</param>
-    /// <param name="modifierKeys">The modifier keys.</param>
-    public InputTypeGamepadButtonAxis(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
-    {
-        this.neg = neg;
-        this.pos = pos;
-        this.deadzone = deadzone;
-        this.modifierOperator = modifierOperator;
-        this.modifierKeys = modifierKeys;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputTypeGamepadButtonAxis"/> with buttons, deadzone, modifier operator, and a single modifier key.
-    /// </summary>
-    /// <param name="neg">The negative gamepad button.</param>
-    /// <param name="pos">The positive gamepad button.</param>
-    /// <param name="deadzone">
-    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value. Gamepad buttons ignore deadzone (deadzone works only with axis input types).
-    /// </param>
-    /// <param name="modifierOperator">The modifier key operator.</param>
-    /// <param name="modifierKey">The modifier key.</param>
-    public InputTypeGamepadButtonAxis(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone, ModifierKeyOperator modifierOperator, IModifierKey modifierKey)
-    {
-        this.neg = neg;
-        this.pos = pos;
-        this.deadzone = deadzone;
-        this.modifierOperator = modifierOperator;
-        this.modifierKeys = [modifierKey];
+        this.modifierKeySet = modifierKeySet;
     }
 
     /// <inheritdoc/>
     public string GetName(bool shorthand = true)
     {
         StringBuilder sb = new();
-        IModifierKey.GetModifierKeyNames(sb, modifierKeys, modifierOperator, shorthand);
+        modifierKeySet?.AppendModifierKeyNames(sb, shorthand);
         string negName = GamepadDevice.GetButtonName(neg, shorthand);
         string posName = GamepadDevice.GetButtonName(pos, shorthand);
         sb.Append(negName);
@@ -94,33 +53,28 @@ public sealed class InputTypeGamepadButtonAxis : IInputType
     /// <inheritdoc/>
     public InputState GetState(GamepadDevice? gamepad)
     {
-        return gamepad?.CreateInputState(neg, pos, deadzone, modifierOperator, modifierKeys) ?? new();
+        if (gamepad == null) return new();
+        return modifierKeySet == null ? gamepad.CreateInputState(neg, pos, deadzone) : gamepad.CreateInputState(neg, pos, deadzone, modifierKeySet);
     }
 
     /// <inheritdoc/>
     public InputState GetState(InputState prev, GamepadDevice? gamepad)
     {
-        return gamepad?.CreateInputState(neg, pos, prev, deadzone, modifierOperator, modifierKeys) ?? new();
+        if (gamepad == null) return new();
+        return modifierKeySet == null ? gamepad.CreateInputState(neg, pos, prev, deadzone) : gamepad.CreateInputState(neg, pos, prev, deadzone, modifierKeySet);
     }
 
     /// <inheritdoc/>
     public InputDeviceType GetInputDevice() => InputDeviceType.Gamepad;
 
     /// <inheritdoc/>
-    public IInputType Copy()
-    { 
-        var modifierKeyCopy = new IModifierKey[modifierKeys.Length];
-        for (int i = 0; i < modifierKeys.Length; i++)
-        {
-            modifierKeyCopy[i] = modifierKeys[i].Copy();
-        }
-        return  new InputTypeGamepadButtonAxis(neg, pos, deadzone, modifierOperator, modifierKeyCopy);
-    }
+    public IInputType Copy() => new InputTypeGamepadButtonAxis(neg, pos, deadzone, modifierKeySet?.Copy());
     
     private bool Equals(InputTypeGamepadButtonAxis other)
     {
-        return neg == other.neg && pos == other.pos  && modifierOperator == other.modifierOperator&& 
-               modifierKeys.SequenceEqual(other.modifierKeys); //uses IEquatable implementation of IModifierKey;
+        return neg == other.neg && pos == other.pos  &&
+               (modifierKeySet == null && other.modifierKeySet == null ||
+                modifierKeySet != null && modifierKeySet.Equals(other.modifierKeySet));
     }
     
     /// <summary>
@@ -154,6 +108,6 @@ public sealed class InputTypeGamepadButtonAxis : IInputType
     /// <returns>A hash code for the current instance.</returns>
     public override int GetHashCode()
     {
-        return HashCode.Combine((int)neg, (int)pos,  modifierKeys, (int)modifierOperator);
+        return HashCode.Combine((int)neg, (int)pos, modifierKeySet?.GetHashCode() ?? 0);
     }
 }
