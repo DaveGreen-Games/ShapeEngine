@@ -37,6 +37,8 @@ namespace Examples.Scenes.ExampleScenes
 
             InputActionSettings defaultSettings = new();
 
+            var modifierKeySetGpReversed = new ModifierKeySet(ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+            
             var createMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
             var createGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
             var createKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
@@ -49,7 +51,7 @@ namespace Examples.Scenes.ExampleScenes
 
             var offsetMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f);
             var offsetKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.S, ShapeKeyboardButton.W);
-            var offsetGP = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_DOWN, ShapeGamepadButton.LEFT_FACE_UP, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+            var offsetGP = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_DOWN, ShapeGamepadButton.LEFT_FACE_UP, 0.1f, modifierKeySetGpReversed);
             changeOffset = new(defaultSettings,offsetMW, offsetGP, offsetKB);
             
             inputActionTree = [ 

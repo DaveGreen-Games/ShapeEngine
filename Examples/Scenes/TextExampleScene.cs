@@ -75,8 +75,11 @@ namespace Examples.Scenes
 
             var modifierKB = new ModifierKeyKeyboardButton(ShapeKeyboardButton.LEFT_SHIFT);
             var modifierGP = new ModifierKeyGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_BOTTOM);
-            var clearTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.BACKSPACE, ModifierKeyOperator.Or, modifierKB);
-            var clearTextGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP, 0.1f, ModifierKeyOperator.Or, modifierGP);
+            
+            var modifierKeySetKb = new ModifierKeySet(ModifierKeyOperator.Or, modifierKB);
+            var modifierKeySetGp = new ModifierKeySet(ModifierKeyOperator.Or, modifierGP);
+            var clearTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.BACKSPACE, modifierKeySetKb);
+            var clearTextGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP, 0.1f, modifierKeySetGp);
             iaClear = new(accessTagTextBox,defaultSettings,clearTextKB, clearTextGP);
             
             var deleteTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.DELETE);

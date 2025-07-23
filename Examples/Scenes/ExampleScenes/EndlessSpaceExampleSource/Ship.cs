@@ -64,14 +64,18 @@ internal class Ship : CollisionObject, ICameraFollowTarget
         AddCollider(collider);
         hull = collider.GetTriangleShape();
         InputActionSettings defaultSettings = new();        
+        
+        var modifierKeySetGpReversed = new ModifierKeySet(ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+        var modifierKeySetMouseReversed = new ModifierKeySet(ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
+        
         var moveHorKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
-        var moveHor2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-        var moveHorMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
+        var moveHor2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f, modifierKeySetGpReversed);
+        var moveHorMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, modifierKeySetMouseReversed);
         iaMoveHor = new(defaultSettings,moveHorKB, moveHor2GP, moveHorMW);
         
         var moveVerKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
-        var moveVer2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-        var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
+        var moveVer2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y, 0.1f, modifierKeySetGpReversed);
+        var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, modifierKeySetMouseReversed);
         iaMoveVer = new(defaultSettings,moveVerKB, moveVer2GP, moveVerMW);
         
         inputActionTree =

@@ -144,19 +144,17 @@ namespace Examples.Scenes.ExampleScenes
         private void SetupInput()
         {
             InputActionSettings defaultSettings = new();
+            var modifierKeySetGpReversed = new ModifierKeySet(ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+            var modifierKeySetMouseReversed = new ModifierKeySet(ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
             
             var moveHorKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
-            // var moveHorGP =
-                // new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT);//reverse modifier
-            var moveHor2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-            var moveHorMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
+            var moveHor2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f, modifierKeySetGpReversed);
+            var moveHorMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, modifierKeySetMouseReversed);
             iaMoveHor = new(defaultSettings,moveHorKB, moveHor2GP, moveHorMW);
             
             var moveVerKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
-            // var moveVerGP =
-                // new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_UP, ShapeGamepadButton.LEFT_FACE_DOWN);//reverse modifier
-            var moveVer2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-            var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
+            var moveVer2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y, 0.1f, modifierKeySetGpReversed);
+            var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, modifierKeySetMouseReversed);
             iaMoveVer = new(defaultSettings,moveVerKB, moveVer2GP, moveVerMW);
             
         }
@@ -295,6 +293,8 @@ namespace Examples.Scenes.ExampleScenes
             SetSliderValues();
 
             InputActionSettings defaultSettings = new();
+            var modifierKeySetGp = new ModifierKeySet(ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad);
+            var modifierKeySetMouse = new ModifierKeySet(ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouse);
             
             var shakeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.G);
             var shakeGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
@@ -302,8 +302,8 @@ namespace Examples.Scenes.ExampleScenes
             iaShakeCamera = new(defaultSettings,shakeKB, shakeGP, shakeMB);
 
             var rotateKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.Q, ShapeKeyboardButton.E);
-            var rotateGB = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad);
-            var rotateMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouse);
+            var rotateGB = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT, 0.1f, modifierKeySetGp);
+            var rotateMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, modifierKeySetMouse);
             iaRotateCamera = new(defaultSettings,rotateKB, rotateGB, rotateMW);
 
             var toggleDrawKB = new InputTypeKeyboardButton(ShapeKeyboardButton.T);

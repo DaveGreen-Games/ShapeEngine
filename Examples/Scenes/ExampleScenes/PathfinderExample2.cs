@@ -57,12 +57,14 @@ public class PathfinderExample2 : ExampleScene
             
             InputActionSettings defaultSettings = new();
             
+            var modifierKeySetGpReversed = new ModifierKeySet(ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+            
             var moveHorKb = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
-            var moveHorGp = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+            var moveHorGp = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f, modifierKeySetGpReversed);
             iaMoveHor = new(defaultSettings,moveHorKb, moveHorGp);
             
             var moveVerKb = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
-            var moveVerGp = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+            var moveVerGp = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y, 0.1f, modifierKeySetGpReversed);
             iaMoveVer = new(defaultSettings,moveVerKb, moveVerGp);
 
             inputActionTree = [iaMoveHor, iaMoveVer];

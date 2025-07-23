@@ -801,20 +801,22 @@ namespace Examples
             var acceptMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
             InputActionUIAcceptMouse = new(UIAccessTag, defaultSettings,acceptMB);
 
+            var modifierKeySetGamepadReversed = new ModifierKeySet(ModifierKeyOperator.Or, ModifierKeyGamepadReversed);
+            var modifierKeySetGamepad = new ModifierKeySet(ModifierKeyOperator.Or, ModifierKeyGamepad);
             var leftKB = new InputTypeKeyboardButton(ShapeKeyboardButton.A);
-            var leftGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT, 0.1f, ModifierKeyOperator.Or, ModifierKeyGamepadReversed);
+            var leftGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT, 0.1f, modifierKeySetGamepadReversed);
             InputActionUILeft = new(UIAccessTag, defaultSettings,leftKB, leftGB);
             
             var rightKB = new InputTypeKeyboardButton(ShapeKeyboardButton.D);
-            var rightGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT, 0.1f, ModifierKeyOperator.Or, ModifierKeyGamepadReversed);
+            var rightGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT, 0.1f, modifierKeySetGamepadReversed);
             InputActionUIRight = new(UIAccessTag, defaultSettings,rightKB, rightGB);
             
             var upKB = new InputTypeKeyboardButton(ShapeKeyboardButton.W);
-            var upGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP, 0.1f, ModifierKeyOperator.Or, ModifierKeyGamepadReversed);
+            var upGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP, 0.1f, modifierKeySetGamepadReversed);
             InputActionUIUp = new(UIAccessTag, defaultSettings,upKB, upGB);
             
             var downKB = new InputTypeKeyboardButton(ShapeKeyboardButton.S);
-            var downGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN, 0.1f, ModifierKeyOperator.Or, ModifierKeyGamepadReversed);
+            var downGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN, 0.1f, modifierKeySetGamepadReversed);
             InputActionUIDown = new(UIAccessTag, defaultSettings,downKB, downGB);
             
             var nextTabKB = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
@@ -828,17 +830,17 @@ namespace Examples
             InputActionUIPrevTab = new(UIAccessTag, defaultSettings,prevTabKB, prevTabGB, prevTabMW);
             
             var nextPageKB = new InputTypeKeyboardButton(ShapeKeyboardButton.C);
-            var nextPageGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP, 0.1f, ModifierKeyOperator.Or, ModifierKeyGamepad);
+            var nextPageGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP, 0.1f, modifierKeySetGamepad);
             InputActionUINextPage = new(UIAccessTag, defaultSettings,nextPageKB, nextPageGB);
             
             var prevPageKB = new InputTypeKeyboardButton(ShapeKeyboardButton.X);
-            var prevPageGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, 0.1f, ModifierKeyOperator.Or, ModifierKeyGamepad);
+            var prevPageGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, 0.1f, modifierKeySetGamepad);
             InputActionUIPrevPage = new(UIAccessTag, defaultSettings,prevPageKB, prevPageGB);
             
             //example scene only
             var zoomKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.NINE, ShapeKeyboardButton.ZERO);
             // var zoomGP = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_Y, 0.2f, ModifierKeyOperator.Or, ModifierKeyGamepad);
-            var zoomGP = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_DOWN, ShapeGamepadButton.LEFT_FACE_UP, 0.2f, ModifierKeyOperator.Or, ModifierKeyGamepad);
+            var zoomGP = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_DOWN, ShapeGamepadButton.LEFT_FACE_UP, 0.2f, modifierKeySetGamepad);
             var zoomMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f); //, ModifierKeyOperator.Or, ModifierKeyMouse);
             InputActionZoom = new(SceneAccessTag, defaultSettings,zoomKB, zoomGP, zoomMW);
             
