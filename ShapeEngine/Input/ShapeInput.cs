@@ -72,6 +72,8 @@ public static class ShapeInput
     /// </summary>
     public static bool InputDeviceSelectionCooldownActive => inputDeviceSelectionCooldownTimer > 0f;
     private static float inputDeviceSelectionCooldownTimer;
+
+    private static readonly SortedSet<InputDeviceBase> sortedInputDevices = [];
     #endregion
     
     #region Constructor
@@ -233,27 +235,41 @@ public static class ShapeInput
                 inputDeviceSelectionCooldownTimer = 0f;
             }
         }
-        
-        var selectionCooldownActive = InputDeviceSelectionCooldownActive;
-        var usedInputDevice = InputDeviceType.None;
-        // Prevents input device switching if another device was already used this frame.
-        // For example, keyboard usage can block gamepad and mouse from becoming the active device.
-        var wasOtherDeviceUsed = ActiveKeyboardDevice.Update(dt, false);
-        if (wasOtherDeviceUsed)
-        {
-            usedInputDevice = InputDeviceType.Keyboard;   
-        }
-        wasOtherDeviceUsed = ActiveGamepadDeviceManager.Update(dt, wasOtherDeviceUsed);
-        if (usedInputDevice == InputDeviceType.None && wasOtherDeviceUsed)
-        {
-            usedInputDevice = InputDeviceType.Gamepad;
-        }
-        wasOtherDeviceUsed = ActiveMouseDevice.Update(dt, wasOtherDeviceUsed);
-        if (usedInputDevice == InputDeviceType.None && wasOtherDeviceUsed)
-        {
-            usedInputDevice = InputDeviceType.Mouse;
-        }
 
+        // Re-add active devices to the set each frame to reflect any changes in device instances or their priority.
+        sortedInputDevices.Clear(); 
+        sortedInputDevices.Add(ActiveKeyboardDevice);
+        sortedInputDevices.Add(ActiveMouseDevice);
+        sortedInputDevices.Add(ActiveGamepadDeviceManager);
+        
+        var usedInputDevice = InputDeviceType.None;
+        var wasOtherDeviceUsed = false;
+        foreach (var inputDevice in sortedInputDevices)
+        {
+            var prevUsed = wasOtherDeviceUsed;
+            wasOtherDeviceUsed = inputDevice.Update(dt, wasOtherDeviceUsed);
+            if(wasOtherDeviceUsed && !prevUsed) usedInputDevice = inputDevice.GetDeviceType();
+        }
+        
+        // // Prevents input device switching if another device was already used this frame.
+        // // For example, keyboard usage can block gamepad and mouse from becoming the active device.
+        // var wasOtherDeviceUsed = ActiveKeyboardDevice.Update(dt, false);
+        // if (wasOtherDeviceUsed)
+        // {
+        //     usedInputDevice = InputDeviceType.Keyboard;   
+        // }
+        // wasOtherDeviceUsed = ActiveGamepadDeviceManager.Update(dt, wasOtherDeviceUsed);
+        // if (usedInputDevice == InputDeviceType.None && wasOtherDeviceUsed)
+        // {
+        //     usedInputDevice = InputDeviceType.Gamepad;
+        // }
+        // wasOtherDeviceUsed = ActiveMouseDevice.Update(dt, wasOtherDeviceUsed);
+        // if (usedInputDevice == InputDeviceType.None && wasOtherDeviceUsed)
+        // {
+        //     usedInputDevice = InputDeviceType.Mouse;
+        // }
+
+        var selectionCooldownActive = InputDeviceSelectionCooldownActive;
         if (usedInputDevice != InputDeviceType.None)
         {
             if(!selectionCooldownActive && usedInputDevice != CurrentInputDeviceType)

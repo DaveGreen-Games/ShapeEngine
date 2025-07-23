@@ -23,6 +23,20 @@ public sealed class KeyboardDevice : InputDevice
     /// </summary>
     public InputDeviceUsageDetectionSettings.KeyboardSettings UsageDetectionSettings { get; private set; } = new();
     
+    /// <summary>
+    /// <para>
+    /// The process priority of this keyboard device instance.
+    /// </para>
+    /// <para>
+    /// Change this value to change the order in which this device is processed in <see cref="ShapeInput"/>.
+    /// Lower priorities are processed first.
+    /// </para>
+    /// </summary>
+    /// <remarks>
+    /// A unique value based on the order of instantiation is assigned per default.
+    /// </remarks>
+    public uint DeviceProcessPriority = processPriorityCounter++;
+    
     private bool wasUsed;
     private bool wasUsedRaw;
     private bool isLocked;
@@ -71,7 +85,10 @@ public sealed class KeyboardDevice : InputDevice
             buttonStates.Add(button, new());
         }
     }
-    
+
+    /// <inheritdoc cref="InputDevice.GetDeviceProcessPriority"/>
+    public override uint GetDeviceProcessPriority() => DeviceProcessPriority;
+
     /// <summary>
     /// Gets the type of this input device, which is always <see cref="InputDeviceType.Keyboard"/>.
     /// </summary>

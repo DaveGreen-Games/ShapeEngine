@@ -107,6 +107,20 @@ public sealed class GamepadDevice : InputDevice
     /// </summary>
     public InputDeviceUsageDetectionSettings.GamepadSettings UsageDetectionSettings { get; private set; } = new();
 
+    /// <summary>
+    /// <para>
+    /// The process priority of this gamepad device instance.
+    /// </para>
+    /// <para>
+    /// Change this value to change the order in which this device is processed in <see cref="ShapeInput"/>.
+    /// Lower priorities are processed first.
+    /// </para>
+    /// </summary>
+    /// <remarks>
+    /// A unique value based on the order of instantiation is assigned per default.
+    /// </remarks>
+    public uint DeviceProcessPriority = processPriorityCounter++;
+    
     private bool isActive;
     private bool isLocked;
     private bool wasUsed;
@@ -189,6 +203,9 @@ public sealed class GamepadDevice : InputDevice
         
     }
 
+    /// <inheritdoc cref="InputDevice.GetDeviceProcessPriority"/>
+    public override uint GetDeviceProcessPriority() => DeviceProcessPriority;
+    
     /// <summary>
     /// Gets the type of this input device, which is always <see cref="InputDeviceType.Gamepad"/>.
     /// </summary>

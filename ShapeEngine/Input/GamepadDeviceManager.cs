@@ -6,8 +6,9 @@ namespace ShapeEngine.Input;
 /// Manages multiple <see cref="GamepadDevice"/> instances, handling connection state,
 /// device claiming, releasing, and tracking last used gamepads.
 /// </summary>
-public sealed class GamepadDeviceManager
+public sealed class GamepadDeviceManager : InputDeviceBase
 {
+    
     /// <summary>
     /// Event triggered when a gamepad's connection state changes.
     /// </summary>
@@ -18,6 +19,20 @@ public sealed class GamepadDeviceManager
     public int MaxGamepads => gamepads.Length;
     
     private bool isActive;
+    
+    /// <summary>
+    /// <para>
+    /// The process priority of this gamepad device manager instance.
+    /// </para>
+    /// <para>
+    /// Change this value to change the order in which this device manager is processed in <see cref="ShapeInput"/>.
+    /// Lower priorities are processed first.
+    /// </para>
+    /// </summary>
+    /// <remarks>
+    /// A unique value based on the order of instantiation is assigned per default.
+    /// </remarks>
+    public uint DeviceProcessPriority = processPriorityCounter++;
     
     private readonly GamepadDevice[] gamepads;
     /// <summary>
@@ -72,10 +87,18 @@ public sealed class GamepadDeviceManager
         GamepadSetup();
     }
 
+    /// <inheritdoc cref="InputDeviceBase.GetDeviceProcessPriority"/>
+    public override uint GetDeviceProcessPriority() => DeviceProcessPriority;
+    
+    /// <summary>
+    /// Gets the type of input device managed by this manager.
+    /// </summary>
+    public override InputDeviceType GetDeviceType() => InputDeviceType.Gamepad;
+
     /// <summary>
     /// Updates the state of all managed gamepads and checks for connection changes.
     /// </summary>
-    public bool Update(float dt, bool wasOtherDeviceUsed)
+    public override bool Update(float dt, bool wasOtherDeviceUsed)
     {
         return CheckGamepadConnections(dt, wasOtherDeviceUsed);
     }
@@ -83,12 +106,12 @@ public sealed class GamepadDeviceManager
     /// <summary>
     /// Indicates whether the gamepad manager is currently active.
     /// </summary>
-    public bool IsActive() => isActive;
+    public override bool IsActive() => isActive;
 
     /// <summary>
     /// Activates all managed gamepads by calling their <c>Activate()</c> method.
     /// </summary>
-    public void Activate()
+    public override void Activate()
     {
         if (isActive) return;
         isActive = true;
@@ -101,7 +124,7 @@ public sealed class GamepadDeviceManager
     /// <summary>
     /// Deactivates all managed gamepads by calling their <c>Deactivate()</c> method.
     /// </summary>
-    public void Deactivate()
+    public override void Deactivate()
     {
         if (!isActive) return;
         isActive = false;
@@ -110,8 +133,13 @@ public sealed class GamepadDeviceManager
             gamepad.Deactivate();
         }
     }
-    
-    internal void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
+
+    /// <summary>
+    /// Applies new input device usage detection settings to all managed gamepads.
+    /// Updates the <see cref="UsageDetectionSettings"/> property and propagates the settings to each gamepad.
+    /// </summary>
+    /// <param name="settings">The new input device usage detection settings to apply.</param>
+    public override void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
     {
         UsageDetectionSettings = settings.Gamepad;
         foreach (var gamepad in gamepads)
