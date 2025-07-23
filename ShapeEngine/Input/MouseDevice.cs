@@ -324,14 +324,30 @@ public sealed class MouseDevice : InputDevice
             return;
         }
             
-        if (UsageDetectionSettings.SpecialButtonSelectionSystemEnabled)
+        if (UsageDetectionSettings.SelectionButtons is { Count: > 0 })
         {
-            if (
-                IsDown(UsageDetectionSettings.SelectionButtonPrimary, UsageDetectionSettings.MoveThreshold, UsageDetectionSettings.WheelThreshold) ||
-                IsDown(UsageDetectionSettings.SelectionButtonSecondary, UsageDetectionSettings.MoveThreshold, UsageDetectionSettings.WheelThreshold)
-            )
+            if (UsageDetectionSettings.ExceptionButtons is { Count: > 0 })
             {
-                used = true;
+                foreach (var button in UsageDetectionSettings.SelectionButtons)
+                {
+                    if (UsageDetectionSettings.ExceptionButtons.Contains(button)) continue;
+                    if (IsDown(button, UsageDetectionSettings.MoveThreshold, UsageDetectionSettings.WheelThreshold))
+                    {
+                        used = true;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                foreach (var button in UsageDetectionSettings.SelectionButtons)
+                {
+                    if (IsDown(button, UsageDetectionSettings.MoveThreshold, UsageDetectionSettings.WheelThreshold))
+                    {
+                        used = true;
+                        break;
+                    }
+                }
             }
         }
         else
@@ -351,7 +367,9 @@ public sealed class MouseDevice : InputDevice
             
             if (usedDurationEnabled)
             {
-                if(HeldDownButtons.Count > 0)
+                // Checks if any held down button is not in the exception list (or if the exception list is null)
+                if(HeldDownButtons.Any(b => UsageDetectionSettings.ExceptionButtons == null || !UsageDetectionSettings.ExceptionButtons.Contains(b)))
+                // if(HeldDownButtons.Count > 0)
                 {
                     usedDurationTimer += dt;
                     if (usedDurationTimer > UsageDetectionSettings.MinUsedDuration)
@@ -363,15 +381,11 @@ public sealed class MouseDevice : InputDevice
                         return;
                     }
                 }
-                else if(usedDurationTimer > 0f)
-                {
-                    usedDurationTimer = 0f;
-                }
-                
-               
+                else if(usedDurationTimer > 0f) usedDurationTimer = 0f;
             }
             
-            if (pressCountEnabled && PressedButtons.Count > 0)
+            if (pressCountEnabled && PressedButtons.Any(b => UsageDetectionSettings.ExceptionButtons == null || !UsageDetectionSettings.ExceptionButtons.Contains(b)))
+            // if (pressCountEnabled && PressedButtons.Count > 0)
             {
                 pressedCount++;
                 if (pressedCount >= UsageDetectionSettings.MinPressCount)

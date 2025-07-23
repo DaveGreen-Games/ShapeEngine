@@ -4,7 +4,7 @@ namespace ShapeEngine.Input;
 /// <summary>
 /// Represents the settings for detecting input device usage, including mouse, keyboard, and gamepad.
 /// </summary>
-public readonly partial struct InputDeviceUsageDetectionSettings
+public partial class InputDeviceUsageDetectionSettings
 {
     /// <summary>
     /// Gets the default <see cref="InputDeviceUsageDetectionSettings"/> instance with preset values for mouse, keyboard, and gamepad.

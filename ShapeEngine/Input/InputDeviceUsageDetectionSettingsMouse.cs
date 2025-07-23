@@ -1,26 +1,25 @@
 namespace ShapeEngine.Input;
 
-public readonly partial struct InputDeviceUsageDetectionSettings
+public partial class InputDeviceUsageDetectionSettings
 {
     /// <summary>
     /// Represents the settings used for detecting mouse input device usage,
     /// including thresholds and detection options.
     /// </summary>
-    public readonly struct MouseSettings
+    public class MouseSettings
     {
         /// <summary>
         /// Gets the default <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.MouseSettings"/> instance with preset values.
         /// </summary>
         /// <code>
         /// Detection = true;
-        /// MoveThreshold = 0.5f;
-        /// WheelThreshold = 0.25f;
+        /// MoveThreshold = 25f;
+        /// WheelThreshold = 3f;
         /// MinPressCount = 2;
         /// MinPressInterval = 1f;
         /// MinUsedDuration = 0.5f;
-        /// RequireSpecialButtonForSelection = false;
-        /// SelectionButtonPrimary = ShapeMouseButton.LEFT;
-        /// SelectionButtonSecondary = ShapeMouseButton.RIGHT;
+        /// SelectionButtons = null;
+        /// ExceptionButtons = null;
         /// SelectionCooldownDuration = 2f;
         /// </code>
         public static readonly MouseSettings Default = new();
@@ -30,27 +29,25 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// </summary>
         /// <code>
         /// Detection = true;
-        /// MoveThreshold = 0.5f;
-        /// WheelThreshold = 0.25f;
+        /// MoveThreshold = 25f;
+        /// WheelThreshold = 3f;
         /// MinPressCount = 2;
         /// MinPressInterval = 1f;
         /// MinUsedDuration = 0.5f;
-        /// RequireSpecialButtonForSelection = false;
-        /// SelectionButtonPrimary = ShapeMouseButton.LEFT;
-        /// SelectionButtonSecondary = ShapeMouseButton.RIGHT;
+        /// SelectionButtons = null;
+        /// ExceptionButtons = null;
         /// SelectionCooldownDuration = 2f;
         /// </code>
         public MouseSettings()
         {
             Detection = true;
-            MoveThreshold = 0.5f;
-            WheelThreshold = 0.25f;
+            MoveThreshold = 25f;
+            WheelThreshold = 3f;
             MinPressCount = 2;
             MinPressInterval = 1f;
             MinUsedDuration = 0.5f;
-            RequireSpecialButtonForSelection = false;
-            SelectionButtonPrimary = ShapeMouseButton.LEFT;
-            SelectionButtonSecondary = ShapeMouseButton.RIGHT;
+            SelectionButtons = null;
+            ExceptionButtons = null;
             SelectionCooldownDuration = 2f;
         }
 
@@ -66,7 +63,10 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// during which no other input device can be selected.
         /// <c>Default is 2 seconds.</c>
         /// </param>
-        public MouseSettings(bool detection, float moveThreshold, float wheelThreshold, float selectionCooldownDuration = 2f)
+        /// <param name="exceptionButtons">
+        /// The set of mouse buttons that will never select this device, even if pressed.
+        /// </param>
+        public MouseSettings(bool detection, float moveThreshold, float wheelThreshold, float selectionCooldownDuration = 2f, HashSet<ShapeMouseButton>? exceptionButtons = null)
         {
             Detection = detection;
             MoveThreshold = moveThreshold;
@@ -74,9 +74,8 @@ public readonly partial struct InputDeviceUsageDetectionSettings
             MinPressCount = 2;
             MinPressInterval = 1f;
             MinUsedDuration = 0.5f;
-            RequireSpecialButtonForSelection = false;
-            SelectionButtonPrimary = ShapeMouseButton.LEFT;
-            SelectionButtonSecondary = ShapeMouseButton.RIGHT;
+            SelectionButtons = null;
+            ExceptionButtons = null;
             SelectionCooldownDuration = selectionCooldownDuration;
         }
 
@@ -94,8 +93,11 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// during which no other input device can be selected.
         /// <c>Default is 2 seconds.</c>
         /// </param>
+        /// <param name="exceptionButtons">
+        /// The set of mouse buttons that will never select this device, even if pressed.
+        /// </param>
         public MouseSettings(float moveThreshold, float wheelThreshold, int minPressCount, float minPressInterval, float minUsedDuration,
-            float selectionCooldownDuration = 2f)
+            float selectionCooldownDuration = 2f, HashSet<ShapeMouseButton>? exceptionButtons = null)
         {
             Detection = true;
             MoveThreshold = moveThreshold;
@@ -103,28 +105,142 @@ public readonly partial struct InputDeviceUsageDetectionSettings
             MinPressCount = minPressCount;
             MinPressInterval = minPressInterval;
             MinUsedDuration = minUsedDuration;
-            RequireSpecialButtonForSelection = false;
-            SelectionButtonPrimary = ShapeMouseButton.LEFT;
-            SelectionButtonSecondary = ShapeMouseButton.RIGHT;
+            SelectionButtons = null;
+            ExceptionButtons = exceptionButtons;
             SelectionCooldownDuration = selectionCooldownDuration;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.MouseSettings"/> struct with custom values,
-        /// including detection, move threshold, wheel threshold, minimum press count, minimum press interval,
-        /// minimum used duration, and custom selection buttons for device selection.
-        /// <see cref="RequireSpecialButtonForSelection"/> and <see cref="Detection"/> is set to <c>true</c>.
-        /// Other values are disabled because the can not be used together with special buttons.
-        /// <see cref="MoveThreshold"/> and <see cref="WheelThreshold"/> are set to default for the <see cref="MouseDevice.WasUsedRaw"/> system.
+        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.MouseSettings"/> class
+        /// with custom move and wheel thresholds, press count, and press interval.
+        /// <see cref="Detection"/> is set to <c>true</c>.
+        /// <see cref="MinUsedDuration"/> is disabled (set to -1).
         /// </summary>
-        /// <param name="selectionButtonPrimary">Specifies the primary mouse button to be used for device selection.</param>
-        /// <param name="selectionButtonSecondary">Specifies the secondary mouse button to be used for device selection.</param>
+        /// <param name="moveThreshold">The minimum movement threshold to consider the mouse as "used".</param>
+        /// <param name="wheelThreshold">The minimum mouse wheel movement threshold to consider the mouse as "used".</param>
+        /// <param name="minPressCount">The minimum number of mouse button presses required within the specified interval.</param>
+        /// <param name="minPressInterval">The time interval (in seconds) from the first mouse button press within which <paramref name="minPressCount"/> must be reached.</param>
         /// <param name="selectionCooldownDuration">
         /// Specifies the cooldown duration (in seconds) after this device is selected
-        /// during which no other input device can be selected.
-        /// <c>Default is 2 seconds.</c>
+        /// during which no other input device can be selected. Default is 2 seconds.
         /// </param>
-        public MouseSettings(ShapeMouseButton selectionButtonPrimary, ShapeMouseButton selectionButtonSecondary, float selectionCooldownDuration = 2f)
+        /// <param name="exceptionButtons">
+        /// The set of mouse buttons that will never select this device, even if pressed.
+        /// </param>
+        public MouseSettings(float moveThreshold, float wheelThreshold, int minPressCount, float minPressInterval, float selectionCooldownDuration = 2f, HashSet<ShapeMouseButton>? exceptionButtons = null)
+        {
+            Detection = true;
+            MoveThreshold = moveThreshold;
+            WheelThreshold = wheelThreshold;
+            MinPressCount = minPressCount;
+            MinPressInterval = minPressInterval;
+            MinUsedDuration = -1;
+            SelectionButtons = null;
+            ExceptionButtons = exceptionButtons;
+            SelectionCooldownDuration = selectionCooldownDuration;
+        }
+        
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.MouseSettings"/> class
+        /// with custom move and wheel thresholds and used duration.
+        /// <see cref="Detection"/> is set to <c>true</c>.
+        /// <see cref="MinPressCount"/> and <see cref="MinPressInterval"/> are disabled (set to -1).
+        /// </summary>
+        /// <param name="moveThreshold">The minimum movement threshold to consider the mouse as "used".</param>
+        /// <param name="wheelThreshold">The minimum mouse wheel movement threshold to consider the mouse as "used".</param>
+        /// <param name="minUsedDuration">The minimum duration (in seconds) of consecutive mouse use required to consider the mouse device as "used".</param>
+        /// <param name="selectionCooldownDuration">
+        /// Specifies the cooldown duration (in seconds) after this device is selected
+        /// during which no other input device can be selected. Default is 2 seconds.
+        /// </param>
+        /// <param name="exceptionButtons">
+        /// The set of mouse buttons that will never select this device, even if pressed.
+        /// </param>
+        public MouseSettings(float moveThreshold, float wheelThreshold,  float minUsedDuration, float selectionCooldownDuration = 2f, HashSet<ShapeMouseButton>? exceptionButtons = null)
+        {
+            Detection = true;
+            MoveThreshold = moveThreshold;
+            WheelThreshold = wheelThreshold;
+            MinPressCount = -1;
+            MinPressInterval = -1f;
+            MinUsedDuration = minUsedDuration;
+            SelectionButtons = null;
+            ExceptionButtons = exceptionButtons;
+            SelectionCooldownDuration = selectionCooldownDuration;
+        }
+        
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.MouseSettings"/> class
+        /// with custom used duration. Move and wheel thresholds are set to defaults (25f, 3f).
+        /// <see cref="Detection"/> is set to <c>true</c>.
+        /// <see cref="MinPressCount"/> and <see cref="MinPressInterval"/> are disabled (set to -1).
+        /// </summary>
+        /// <param name="minUsedDuration">The minimum duration (in seconds) of consecutive mouse use required to consider the mouse device as "used".</param>
+        /// <param name="selectionCooldownDuration">
+        /// Specifies the cooldown duration (in seconds) after this device is selected
+        /// during which no other input device can be selected. Default is 2 seconds.
+        /// </param>
+        /// <param name="exceptionButtons">
+        /// The set of mouse buttons that will never select this device, even if pressed.
+        /// </param>
+        public MouseSettings(float minUsedDuration, float selectionCooldownDuration = 2f, HashSet<ShapeMouseButton>? exceptionButtons = null)
+        {
+            Detection = true;
+            MoveThreshold = 25f;
+            WheelThreshold = 3f;
+            MinPressCount = -1;
+            MinPressInterval = -1f;
+            MinUsedDuration = minUsedDuration;
+            SelectionButtons = null;
+            ExceptionButtons = exceptionButtons;
+            SelectionCooldownDuration = selectionCooldownDuration;
+        }
+        
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.MouseSettings"/> class
+        /// with custom press count and interval. Move and wheel thresholds are set to defaults (25f, 3f).
+        /// <see cref="Detection"/> is set to <c>true</c>.
+        /// <see cref="MinUsedDuration"/> is disabled (set to -1).
+        /// </summary>
+        /// <param name="minPressCount">The minimum number of mouse button presses required within the specified interval.</param>
+        /// <param name="minPressInterval">The time interval (in seconds) from the first mouse button press within which <paramref name="minPressCount"/> must be reached.</param>
+        /// <param name="selectionCooldownDuration">
+        /// Specifies the cooldown duration (in seconds) after this device is selected
+        /// during which no other input device can be selected. Default is 2 seconds.
+        /// </param>
+        /// <param name="exceptionButtons">
+        /// The set of mouse buttons that will never select this device, even if pressed.
+        /// </param>
+        public MouseSettings(int minPressCount, float minPressInterval, float selectionCooldownDuration = 2f, HashSet<ShapeMouseButton>? exceptionButtons = null)
+        {
+            Detection = true;
+            MoveThreshold = 25f;
+            WheelThreshold = 3f;
+            MinPressCount = minPressCount;
+            MinPressInterval = minPressInterval;
+            MinUsedDuration = -1f;
+            SelectionButtons = null;
+            ExceptionButtons = exceptionButtons;
+            SelectionCooldownDuration = selectionCooldownDuration;
+        }
+        
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.MouseSettings"/> class
+        /// with a set of selection buttons. Move and wheel thresholds are set to 0.5f and 0.25f.
+        /// All other detection options are disabled.
+        /// <see cref="Detection"/> is set to <c>true</c>.
+        /// </summary>
+        /// <param name="selectionButtons">
+        /// The set of mouse buttons that can be used to select this device. When set and not empty, all other means of selection are disabled.
+        /// </param>
+        /// <param name="selectionCooldownDuration">
+        /// Specifies the cooldown duration (in seconds) after this device is selected
+        /// during which no other input device can be selected. Default is 2 seconds.
+        /// </param>
+        /// <param name="exceptionButtons">
+        /// The set of mouse buttons that will never select this device, even if pressed.
+        /// </param>
+        public MouseSettings(HashSet<ShapeMouseButton> selectionButtons, float selectionCooldownDuration = 2f, HashSet<ShapeMouseButton>? exceptionButtons = null)
         {
             Detection = true;
             MoveThreshold = 0.5f;
@@ -132,29 +248,12 @@ public readonly partial struct InputDeviceUsageDetectionSettings
             MinPressCount = -1;
             MinPressInterval = -1f;
             MinUsedDuration = -1f;
-            RequireSpecialButtonForSelection = true;
-            SelectionButtonPrimary = selectionButtonPrimary;
-            SelectionButtonSecondary = selectionButtonSecondary;
+            SelectionButtons = selectionButtons;
+            ExceptionButtons = exceptionButtons;
             SelectionCooldownDuration = selectionCooldownDuration;
         }
 
-        private MouseSettings(
-            bool detection, float moveThreshold, float wheelThreshold,
-            int minPressCount, float minPressInterval, float minUsedDuration,
-            bool requireSpecialButtonForSelection, ShapeMouseButton selectionButtonPrimary, ShapeMouseButton selectionButtonSecondary,
-            float selectionCooldownDuration)
-        {
-            Detection = detection;
-            MoveThreshold = moveThreshold;
-            WheelThreshold = wheelThreshold;
-            MinPressCount = minPressCount;
-            MinPressInterval = minPressInterval;
-            MinUsedDuration = minUsedDuration;
-            RequireSpecialButtonForSelection = requireSpecialButtonForSelection;
-            SelectionButtonPrimary = selectionButtonPrimary;
-            SelectionButtonSecondary = selectionButtonSecondary;
-            SelectionCooldownDuration = selectionCooldownDuration;
-        }
+
 
         /// <summary>
         /// Gets a value indicating whether press count detection is enabled for the mouse.
@@ -178,57 +277,13 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         public bool WheelThresholdEnabled => WheelThreshold > 0f;
 
         /// <summary>
-        /// Gets a value indicating whether selection button detection is enabled for the mouse.
-        /// Returns <c>true</c> if <see cref="RequireSpecialButtonForSelection"/> is enabled.
-        /// </summary>
-        public bool SpecialButtonSelectionSystemEnabled => RequireSpecialButtonForSelection;
-
-        /// <summary>
-        /// Returns a new MouseSettings with the specified MoveThreshold, keeping all other values the same.
-        /// </summary>
-        public MouseSettings SetMoveThreshold(float moveThreshold)
-        {
-            return new MouseSettings(
-                Detection,
-                moveThreshold,
-                WheelThreshold,
-                MinPressCount,
-                MinPressInterval,
-                MinUsedDuration,
-                RequireSpecialButtonForSelection,
-                SelectionButtonPrimary,
-                SelectionButtonSecondary,
-                SelectionCooldownDuration
-            );
-        }
-
-        /// <summary>
-        /// Returns a new MouseSettings with the specified WheelThreshold, keeping all other values the same.
-        /// </summary>
-        public MouseSettings SetWheelThreshold(float wheelThreshold)
-        {
-            return new MouseSettings(
-                Detection,
-                MoveThreshold,
-                wheelThreshold,
-                MinPressCount,
-                MinPressInterval,
-                MinUsedDuration,
-                RequireSpecialButtonForSelection,
-                SelectionButtonPrimary,
-                SelectionButtonSecondary,
-                SelectionCooldownDuration
-            );
-        }
-
-        /// <summary>
         /// Indicates whether the input device can be changed to mouse.
         /// </summary>
         /// <remarks>
         /// <c>Default is true</c>
         /// Does not affect <see cref="MouseDevice.WasUsedRaw"/> values. It does affect the automatic system in <see cref="ShapeInput"/> to switch between devices.
         /// </remarks>
-        public readonly bool Detection;
+        public bool Detection;
 
         /// <summary>
         /// The minimum movement threshold to consider the mouse as "used".
@@ -237,7 +292,7 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// <c>Default is 0.5f.</c>
         /// Even if <see cref="Detection"/> is set to <c>false</c>, <see cref="MoveThreshold"/> will still be used for <see cref="MouseDevice.WasUsedRaw"/> system.
         /// </remarks>
-        public readonly float MoveThreshold;
+        public float MoveThreshold;
 
         /// <summary>
         /// The minimum mouse wheel movement threshold to consider the mouse as "used".
@@ -246,7 +301,7 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// <c>Default is 0.25f.</c>
         /// Even if <see cref="Detection"/> is set to <c>false</c>, <see cref="WheelThreshold"/> will still be used for <see cref="MouseDevice.WasUsedRaw"/> system.
         /// </remarks>
-        public readonly float WheelThreshold;
+        public float WheelThreshold;
 
         /// <summary>
         /// The minimum number of mouse button presses required, within the specified interval, 
@@ -258,7 +313,7 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// <see cref="MinUsedDuration"/> system will be checked first and if it triggers,
         /// <see cref="MinPressCount"/> / <see cref="MinPressInterval"/> system will be reset as well and not checked in the same frame.
         /// </remarks>
-        public readonly int MinPressCount;
+        public int MinPressCount;
 
         /// <summary>
         /// The time interval (in seconds) from the first mouse button press within which 
@@ -270,7 +325,7 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// <see cref="MinUsedDuration"/> system will be checked first and if it triggers,
         /// <see cref="MinPressCount"/> / <see cref="MinPressInterval"/> system will be reset as well and not checked in the same frame.
         /// </remarks>
-        public readonly float MinPressInterval;
+        public float MinPressInterval;
 
         /// <summary>
         /// The minimum duration (in seconds) of consecutive mouse use (movement or holding at least one button down)
@@ -282,36 +337,32 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// <see cref="MinUsedDuration"/> system will be checked first and if it triggers,
         /// <see cref="MinPressCount"/> / <see cref="MinPressInterval"/> system will be reset as well and not checked in the same frame.
         /// </remarks>
-        public readonly float MinUsedDuration;
+        public float MinUsedDuration;
 
         /// <summary>
-        /// When enabled, and at least one selection button is set to a value other than <c>ShapeMouseButton.NONE</c>,
-        /// the input device can only be selected if any of the specified special buttons is pressed.
+        /// Gets a value indicating whether selection buttons are enabled for this device.
+        /// Returns <c>true</c> if <see cref="SelectionButtons"/> is not null and contains at least one button.
+        /// When enabled, the device can only be selected with the specified special buttons.
         /// </summary>
-        /// <remarks>
-        /// <c>Default is true.</c>
-        /// This system automatically disables all other systems
-        /// and only the 3 specified <c>SelectionButtons</c> will be checked for input!
-        /// </remarks>
-        public readonly bool RequireSpecialButtonForSelection;
-
+        public bool SelectionButtonsEnabled => SelectionButtons is { Count: > 0 };
+        
         /// <summary>
-        /// The primary mouse button used for device selection (e.g., Left Mouse Button).
+        /// Gets a value indicating whether exception buttons are enabled for this device.
+        /// Returns <c>true</c> if <see cref="ExceptionButtons"/> is not null and contains at least one button.
+        /// These buttons will never select this device, even if pressed.
         /// </summary>
-        /// <remarks>
-        /// <see cref="RequireSpecialButtonForSelection"/> needs to be <c>true</c> for this button to be considered.
-        /// <c>Default is ShapeMouseButton.NONE.</c>
-        /// </remarks>
-        public readonly ShapeMouseButton SelectionButtonPrimary;
-
+        public bool ExceptionButtonsEnabled => ExceptionButtons is { Count: > 0 };
+        
         /// <summary>
-        /// The secondary keyboard button used for device selection (e.g., Middle Mouse Button).
+        /// The set of gamepad buttons that can be used to select this device.
+        /// When set and not empty, all other means of selection are disabled.
         /// </summary>
-        /// <remarks>
-        /// <see cref="RequireSpecialButtonForSelection"/> needs to be <c>true</c> for this button to be considered.
-        /// <c>Default is ShapeMouseButton.NONE.</c>
-        /// </remarks>
-        public readonly ShapeMouseButton SelectionButtonSecondary;
+        public readonly HashSet<ShapeMouseButton>? SelectionButtons;
+        
+        /// <summary>
+        /// The set of gamepad buttons that will never select this device, even if pressed.
+        /// </summary>
+        public readonly HashSet<ShapeMouseButton>? ExceptionButtons;
 
         /// <summary>
         /// Specifies the duration (in seconds) after this device is selected during which no other input device can be selected.
@@ -321,6 +372,6 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// <c>Default is 2 seconds</c>.
         /// Zero and negative values disable the cooldown.
         /// </remarks>
-        public readonly float SelectionCooldownDuration;
+        public float SelectionCooldownDuration;
     }
 }

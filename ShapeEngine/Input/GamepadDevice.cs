@@ -414,15 +414,30 @@ public sealed class GamepadDevice : InputDevice
 
         if (!UsageDetectionSettings.Detection || wasOtherDeviceUsed) return;
             
-        if (UsageDetectionSettings.SpecialButtonSelectionSystemEnabled)
+        if (UsageDetectionSettings.SelectionButtons is { Count: > 0 })
         {
-            if 
-            (
-                IsDown(UsageDetectionSettings.SelectionButtonPrimary, UsageDetectionSettings.AxisThreshold, UsageDetectionSettings.TriggerThreshold) ||
-                IsDown(UsageDetectionSettings.SelectionButtonSecondary, UsageDetectionSettings.AxisThreshold, UsageDetectionSettings.TriggerThreshold)
-            )
+            if (UsageDetectionSettings.ExceptionButtons is { Count: > 0 })
             {
-                used = true;
+                foreach (var button in UsageDetectionSettings.SelectionButtons)
+                {
+                    if (UsageDetectionSettings.ExceptionButtons.Contains(button)) continue;
+                    if (IsDown(button, UsageDetectionSettings.AxisThreshold, UsageDetectionSettings.TriggerThreshold))
+                    {
+                        used = true;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                foreach (var button in UsageDetectionSettings.SelectionButtons)
+                {
+                    if (IsDown(button, UsageDetectionSettings.AxisThreshold, UsageDetectionSettings.TriggerThreshold))
+                    {
+                        used = true;
+                        break;
+                    }
+                }
             }
         }
         else
@@ -439,21 +454,29 @@ public sealed class GamepadDevice : InputDevice
                     pressedCount = 0;
                 }
             }
-            
-            if (usedDurationEnabled && HeldDownButtons.Count > 0)
+
+            if (usedDurationEnabled)
             {
-                usedDurationTimer += dt;
-                if (usedDurationTimer > UsageDetectionSettings.MinUsedDuration)
+                // Checks if any held down button is not in the exception list (or if the exception list is null)
+                if (HeldDownButtons.Any(b => UsageDetectionSettings.ExceptionButtons == null || !UsageDetectionSettings.ExceptionButtons.Contains(b)))
+                // if (usedDurationEnabled && HeldDownButtons.Count > 0)
                 {
-                    usedDurationTimer -= UsageDetectionSettings.MinUsedDuration;
-                    used = true;
-                    pressedCount = 0;
-                    pressedCountDurationTimer = 0f;
-                    return;
+                    usedDurationTimer += dt;
+                    if (usedDurationTimer > UsageDetectionSettings.MinUsedDuration)
+                    {
+                        usedDurationTimer -= UsageDetectionSettings.MinUsedDuration;
+                        used = true;
+                        pressedCount = 0;
+                        pressedCountDurationTimer = 0f;
+                        return;
+                    }
                 }
+                else if (usedDurationTimer > 0f) usedDurationTimer = 0f;
             }
             
-            if (pressCountEnabled && PressedButtons.Count > 0)
+            
+            if (pressCountEnabled && PressedButtons.Any(b => UsageDetectionSettings.ExceptionButtons == null || !UsageDetectionSettings.ExceptionButtons.Contains(b)))
+            // if (pressCountEnabled && PressedButtons.Count > 0)
             {
                 pressedCount++;
                 if (pressedCount >= UsageDetectionSettings.MinPressCount)

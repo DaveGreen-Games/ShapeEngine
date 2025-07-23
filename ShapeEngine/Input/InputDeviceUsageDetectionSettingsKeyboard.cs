@@ -1,12 +1,12 @@
 namespace ShapeEngine.Input;
 
-public readonly partial struct InputDeviceUsageDetectionSettings
+public partial class InputDeviceUsageDetectionSettings
 {
     /// <summary>
     /// Represents the settings used for detecting keyboard input device usage,
     /// including thresholds and detection options.
     /// </summary>
-    public readonly struct KeyboardSettings
+    public class KeyboardSettings
     {
         /// <summary>
         /// Gets the default <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.KeyboardSettings"/> instance with preset values.
@@ -16,10 +16,8 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// MinPressCount = 2;
         /// MinPressInterval = 1f;
         /// MinUsedDuration = 0.5f;
-        /// RequireSpecialButtonForSelection = false;
-        /// SelectionButtonPrimary = ShapeKeyboardButton.ESCAPE;
-        /// SelectionButtonSecondary = ShapeKeyboardButton.ENTER;
-        /// SelectionButtonTertiary = ShapeKeyboardButton.SPACE;
+        /// SelectionButtons = null;
+        /// ExceptionButtons = null;
         /// SelectionCooldownDuration = 2f;
         /// </code>
         public static readonly KeyboardSettings Default = new();
@@ -32,10 +30,8 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// MinPressCount = 2;
         /// MinPressInterval = 1f;
         /// MinUsedDuration = 0.5f;
-        /// RequireSpecialButtonForSelection = false;
-        /// SelectionButtonPrimary = ShapeKeyboardButton.ESCAPE;
-        /// SelectionButtonSecondary = ShapeKeyboardButton.ENTER;
-        /// SelectionButtonTertiary = ShapeKeyboardButton.SPACE;
+        /// SelectionButtons = null;
+        /// ExceptionButtons = null;
         /// SelectionCooldownDuration = 2f;
         /// </code>
         public KeyboardSettings()
@@ -45,10 +41,8 @@ public readonly partial struct InputDeviceUsageDetectionSettings
             MinPressInterval = 1f;
             MinUsedDuration = 0.5f;
 
-            RequireSpecialButtonForSelection = false;
-            SelectionButtonPrimary = ShapeKeyboardButton.ESCAPE;
-            SelectionButtonSecondary = ShapeKeyboardButton.ENTER;
-            SelectionButtonTertiary = ShapeKeyboardButton.SPACE;
+            SelectionButtons = null;
+            ExceptionButtons = null;
 
             SelectionCooldownDuration = 2f;
         }
@@ -66,46 +60,99 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// during which no other input device can be selected.
         /// <c>Default is 2 seconds.</c>
         /// </param>
-        public KeyboardSettings(bool detection, int minPressCount = 2, float minPressInterval = 1f, float minUsedDuration = 0.5f,
-            float selectionCooldownDuration = 2f)
+        /// <param name="exceptionButtons">
+        /// The set of keyboard buttons that will never select this device, even if pressed. Optional.
+        /// </param>
+        public KeyboardSettings(bool detection, int minPressCount = 2, float minPressInterval = 1f, 
+            float minUsedDuration = 0.5f, float selectionCooldownDuration = 2f, HashSet<ShapeKeyboardButton>? exceptionButtons = null)
         {
             Detection = detection;
             MinPressCount = minPressCount;
             MinPressInterval = minPressInterval;
             MinUsedDuration = minUsedDuration;
-            RequireSpecialButtonForSelection = false;
-            SelectionButtonPrimary = ShapeKeyboardButton.ESCAPE;
-            SelectionButtonSecondary = ShapeKeyboardButton.ENTER;
-            SelectionButtonTertiary = ShapeKeyboardButton.SPACE;
+            SelectionButtons = null;
+            ExceptionButtons = exceptionButtons;
             SelectionCooldownDuration = selectionCooldownDuration;
+        }
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.KeyboardSettings"/> class
+        /// with custom minimum press count, press interval, and used duration values. Other values are set to their defaults.
+        /// </summary>
+        /// <param name="minPressCount">The minimum number of keyboard button presses required within the specified interval.</param>
+        /// <param name="minPressInterval">The time interval (in seconds) from the first keyboard button press within which <paramref name="minPressCount"/> must be reached.</param>
+        /// <param name="minUsedDuration">The minimum duration (in seconds) of consecutive keyboard use required to consider the keyboard device as "used".</param>
+        /// <param name="selectionCooldownDuration">Specifies the cooldown duration (in seconds) after this device is selected during which no other input device can be selected. Default is 2 seconds.</param>
+        /// <param name="exceptionButtons">The set of keyboard buttons that will never select this device, even if pressed. Optional.</param>
+        public KeyboardSettings(int minPressCount, float minPressInterval, float minUsedDuration, 
+           float selectionCooldownDuration = 2f, HashSet<ShapeKeyboardButton>? exceptionButtons = null)
+        {
+           Detection = true;
+           MinPressCount = minPressCount;
+           MinPressInterval = minPressInterval;
+           MinUsedDuration = minUsedDuration;
+           SelectionButtons = null;
+           ExceptionButtons = exceptionButtons;
+           SelectionCooldownDuration = selectionCooldownDuration;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.KeyboardSettings"/> struct with custom values,
-        /// including detection, minimum press count, minimum press interval, minimum used duration,
-        /// and custom selection buttons for device selection.
-        /// <see cref="RequireSpecialButtonForSelection"/> and <see cref="Detection"/> is set to <c>true</c>.
-        /// Other values are disabled because they do not work with special button selection.
+        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.KeyboardSettings"/> class
+        /// with a custom minimum used duration. Other values are set to their defaults.
         /// </summary>
-        /// <param name="selectionButtonPrimary">The primary keyboard button used for device selection.</param>
-        /// <param name="selectionButtonSecondary">The secondary keyboard button used for device selection.</param>
-        /// <param name="selectionButtonTertiary">The tertiary keyboard button used for device selection.</param>
-        /// <param name="selectionCooldownDuration">
-        /// Specifies the cooldown duration (in seconds) after this device is selected
-        /// during which no other input device can be selected.
-        /// <c>Default is 2 seconds.</c>
+        /// <param name="minUsedDuration">The minimum duration (in seconds) of consecutive keyboard use required to consider the keyboard device as "used".</param>
+        /// <param name="selectionCooldownDuration">Specifies the cooldown duration (in seconds) after this device is selected during which no other input device can be selected. Default is 2 seconds.</param>
+        /// <param name="exceptionButtons">The set of keyboard buttons that will never select this device, even if pressed. Optional.</param>
+        public KeyboardSettings(float minUsedDuration, float selectionCooldownDuration = 2f, HashSet<ShapeKeyboardButton>? exceptionButtons = null)
+        {
+           Detection = true;
+           MinPressCount = -1;
+           MinPressInterval = -1f;
+           MinUsedDuration = minUsedDuration;
+           SelectionButtons = null;
+           ExceptionButtons = exceptionButtons;
+           SelectionCooldownDuration = selectionCooldownDuration;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.KeyboardSettings"/> class
+        /// with custom minimum press count and press interval. Used duration is disabled. Other values are set to their defaults.
+        /// </summary>
+        /// <param name="minPressCount">The minimum number of keyboard button presses required within the specified interval.</param>
+        /// <param name="minPressInterval">The time interval (in seconds) from the first keyboard button press within which <paramref name="minPressCount"/> must be reached.</param>
+        /// <param name="selectionCooldownDuration">Specifies the cooldown duration (in seconds) after this device is selected during which no other input device can be selected. Default is 2 seconds.</param>
+        /// <param name="exceptionButtons">The set of keyboard buttons that will never select this device, even if pressed. Optional.</param>
+        public KeyboardSettings(int minPressCount, float minPressInterval, float selectionCooldownDuration = 2f, HashSet<ShapeKeyboardButton>? exceptionButtons = null)
+        {
+           Detection = true;
+           MinPressCount = minPressCount;
+           MinPressInterval = minPressInterval;
+           MinUsedDuration = -1f;
+           SelectionButtons = null;
+           ExceptionButtons = exceptionButtons;
+           SelectionCooldownDuration = selectionCooldownDuration;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.KeyboardSettings"/> class
+        /// with custom selection and exception buttons, and an optional selection cooldown duration.
+        /// </summary>
+        /// <param name="selectionButtons">
+        /// The set of keyboard buttons that can be used to select this device. When set and not empty, all other means of selection are disabled.
         /// </param>
-        public KeyboardSettings(ShapeKeyboardButton selectionButtonPrimary, ShapeKeyboardButton selectionButtonSecondary,
-            ShapeKeyboardButton selectionButtonTertiary, float selectionCooldownDuration = 2f)
+        /// <param name="selectionCooldownDuration">
+        /// The cooldown duration (in seconds) after this device is selected, during which no other input device can be selected. Default is 2 seconds.
+        /// </param>
+        /// <param name="exceptionButtons">
+        /// The set of keyboard buttons that will never select this device, even if pressed. Optional.
+        /// </param>
+        public KeyboardSettings(HashSet<ShapeKeyboardButton> selectionButtons, float selectionCooldownDuration = 2f, HashSet<ShapeKeyboardButton>? exceptionButtons = null)
         {
             Detection = true;
             MinPressCount = -1;
             MinPressInterval = -1f;
             MinUsedDuration = -1f;
-            RequireSpecialButtonForSelection = true;
-            SelectionButtonPrimary = selectionButtonPrimary;
-            SelectionButtonSecondary = selectionButtonSecondary;
-            SelectionButtonTertiary = selectionButtonTertiary;
+            SelectionButtons = selectionButtons;
+            ExceptionButtons = exceptionButtons;
             SelectionCooldownDuration = selectionCooldownDuration;
         }
 
@@ -119,13 +166,7 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// Indicates whether used duration detection is enabled (requires <c>MinUsedDuration</c> to be greater than zero).
         /// </summary>
         public bool UsedDurationEnabled => MinUsedDuration > 0f;
-
-        /// <summary>
-        /// Gets a value indicating whether special button detection is enabled for the keyboard.
-        /// Returns <c>true</c> if <see cref="RequireSpecialButtonForSelection"/> is enabled.
-        /// </summary>
-        public bool SpecialButtonSelectionSystemEnabled => RequireSpecialButtonForSelection;
-
+        
         /// <summary>
         /// Indicates whether the input device can be changed to keyboard.
         /// </summary>
@@ -133,7 +174,7 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// <c>Default is true</c>
         /// Does not affect <see cref="KeyboardDevice.WasUsedRaw"/> values. It does affect the automatic system in <see cref="ShapeInput"/> to switch between devices.
         /// </remarks>
-        public readonly bool Detection;
+        public bool Detection;
 
         /// <summary>
         /// The minimum number of keyboard button presses required, within the specified interval, 
@@ -145,7 +186,7 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// <see cref="MinUsedDuration"/> system will be checked first and if it triggers,
         /// <see cref="MinPressCount"/> / <see cref="MinPressInterval"/> system will be reset as well and not checked in the same frame.
         /// </remarks>
-        public readonly int MinPressCount;
+        public int MinPressCount;
 
         /// <summary>
         /// The time interval (in seconds) from the first keyboard button press within which 
@@ -157,7 +198,7 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// <see cref="MinUsedDuration"/> system will be checked first and if it triggers,
         /// <see cref="MinPressCount"/> / <see cref="MinPressInterval"/> system will be reset as well and not checked in the same frame.
         /// </remarks>
-        public readonly float MinPressInterval;
+        public float MinPressInterval;
 
         /// <summary>
         /// The minimum duration (in seconds) of consecutive keyboard use (movement or holding at least one button down)
@@ -169,45 +210,32 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// <see cref="MinUsedDuration"/> system will be checked first and if it triggers,
         /// <see cref="MinPressCount"/> / <see cref="MinPressInterval"/> system will be reset as well and not checked in the same frame.
         /// </remarks>
-        public readonly float MinUsedDuration;
+        public float MinUsedDuration;
 
         /// <summary>
-        /// When enabled, and at least one selection button is set to a value other than <c>ShapeKeyboardButton.NONE</c>,
-        /// the input device can only be selected if any of the specified special buttons is pressed.
+        /// Gets a value indicating whether selection buttons are enabled for this device.
+        /// Returns <c>true</c> if <see cref="SelectionButtons"/> is not null and contains at least one button.
+        /// When enabled, the device can only be selected with the specified special buttons.
         /// </summary>
-        /// <remarks>
-        /// <c>Default is true.</c>
-        /// This system automatically disables all other systems
-        /// and only the 3 specified <c>SelectionButtons</c> will be checked for input!
-        /// </remarks>
-        public readonly bool RequireSpecialButtonForSelection;
-
+        public bool SelectionButtonsEnabled => SelectionButtons is { Count: > 0 };
+        
         /// <summary>
-        /// The primary keyboard button used for device selection (e.g., ESCAPE).
+        /// Gets a value indicating whether exception buttons are enabled for this device.
+        /// Returns <c>true</c> if <see cref="ExceptionButtons"/> is not null and contains at least one button.
+        /// These buttons will never select this device, even if pressed.
         /// </summary>
-        /// <remarks>
-        /// <see cref="RequireSpecialButtonForSelection"/> needs to be <c>true</c> for this button to be considered.
-        /// <c>Default is ShapeKeyboardButton.ESCAPE.</c>
-        /// </remarks>
-        public readonly ShapeKeyboardButton SelectionButtonPrimary;
-
+        public bool ExceptionButtonsEnabled => ExceptionButtons is { Count: > 0 };
+        
         /// <summary>
-        /// The secondary keyboard button used for device selection (e.g., ENTER).
+        /// The set of gamepad buttons that can be used to select this device.
+        /// When set and not empty, all other means of selection are disabled.
         /// </summary>
-        /// <remarks>
-        /// <see cref="RequireSpecialButtonForSelection"/> needs to be <c>true</c> for this button to be considered.
-        /// <c>Default is ShapeKeyboardButton.ENTER.</c>
-        /// </remarks>
-        public readonly ShapeKeyboardButton SelectionButtonSecondary;
-
+        public readonly HashSet<ShapeKeyboardButton>? SelectionButtons;
+        
         /// <summary>
-        /// The tertiary keyboard button used for device selection (e.g., SPACE).
+        /// The set of gamepad buttons that will never select this device, even if pressed.
         /// </summary>
-        /// <remarks>
-        /// <see cref="RequireSpecialButtonForSelection"/> needs to be <c>true</c> for this button to be considered.
-        /// <c>Default is ShapeKeyboardButton.SPACE.</c>
-        /// </remarks>
-        public readonly ShapeKeyboardButton SelectionButtonTertiary;
+        public readonly HashSet<ShapeKeyboardButton>? ExceptionButtons;
 
         /// <summary>
         /// Specifies the duration (in seconds) after this device is selected during which no other input device can be selected.
@@ -217,6 +245,6 @@ public readonly partial struct InputDeviceUsageDetectionSettings
         /// <c>Default is 2 seconds</c>.
         /// Zero and negative values disable the cooldown.
         /// </remarks>
-        public readonly float SelectionCooldownDuration;
+        public float SelectionCooldownDuration;
     }
 }
