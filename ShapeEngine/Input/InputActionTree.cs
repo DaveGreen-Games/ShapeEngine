@@ -34,6 +34,35 @@ public class InputActionTree : SortedSet<InputAction>, IComparable<InputActionTr
     /// </summary>
     public readonly uint Id = idCounter++;
 
+    private static int excecutionOrderCounter = 0;
+    /// <summary>
+    /// The execution order of this <see cref="InputActionTree"/> instance.
+    /// Used to determine the order in which input action trees are processed in the <see cref="InputActionTrees"/> class.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The <c>ExecutionOrder</c> property is assigned during construction using a static counter,
+    /// guaranteeing each tree a unique and incrementing execution order.
+    /// Set the <c>ExecutionOrder</c> property to a specific value if you need to control the order of processing manually.
+    /// </para>
+    /// <para>
+    /// The <see cref="CompareTo"/> method sorts trees by <c>ExecutionOrder</c> first, and by <c>Id</c> if execution orders are equal.
+    /// </para>
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// var tree5 = new InputActionTree();
+    /// var tree1 = new InputActionTree();
+    /// var tree2 = new InputActionTree();
+    /// var tree3 = new InputActionTree();
+    /// var tree4 = new InputActionTree();
+    /// tree4.ExecutionOrder = -10;
+    /// InputActionTrees trees = [tree1, tree2, tree3, tree4, tree5];
+    /// trees.Update(dt);// The update function will process tree4 first, then tree5, then tree1, tree2, and tree3.
+    /// </code>
+    /// </example>
+    public readonly int ExecutionOrder = excecutionOrderCounter++;
+    
     
     /// <summary>
     /// Gets or sets the current gamepad device associated with this input action tree.
@@ -261,23 +290,6 @@ public class InputActionTree : SortedSet<InputAction>, IComparable<InputActionTr
     #endregion
     
     /// <summary>
-    /// Compares this <see cref="InputActionTree"/> to another for sorting purposes.
-    /// Comparison is based on the unique <see cref="Id"/> of each tree.
-    /// </summary>
-    /// <param name="other">The other <see cref="InputActionTree"/> to compare to.</param>
-    /// <returns>
-    /// 0 if both instances are the same; 1 if <paramref name="other"/> is null; 
-    /// otherwise, the result of comparing <see cref="Id"/> values.
-    /// </returns>
-    public int CompareTo(InputActionTree? other)
-    {
-        if (other is null) return 1;
-        if (ReferenceEquals(this, other)) return 0;
-        return Id.CompareTo(other.Id);
-    }
-
-
-    /// <summary>
     /// Determines whether the specified <see cref="InputActionTree"/> is equal to the current <see cref="InputActionTree"/>.
     /// Equality is based on reference, count, and sequence equality of contained <see cref="InputAction"/> instances.
     /// </summary>
@@ -319,5 +331,21 @@ public class InputActionTree : SortedSet<InputAction>, IComparable<InputActionTr
         }
         
         return hashCode.ToHashCode();
+    }
+
+    /// <summary>
+    /// Compares this <see cref="InputActionTree"/> to another for sorting purposes.
+    /// Comparison is based on <see cref="ExecutionOrder"/> first, then <see cref="Id"/> if execution orders are equal.
+    /// </summary>
+    /// <param name="other">The other <see cref="InputActionTree"/> to compare to.</param>
+    /// <returns>
+    /// 0 if equal, -1 if this is less than other, 1 if greater.
+    /// </returns>
+    public int CompareTo(InputActionTree? other)
+    {
+        if (ReferenceEquals(this, other)) return 0;
+        if (other is null) return 1;
+        int executionOrderComparison = ExecutionOrder.CompareTo(other.ExecutionOrder);
+        return executionOrderComparison != 0 ? executionOrderComparison : Id.CompareTo(other.Id);
     }
 }
