@@ -13,7 +13,7 @@ namespace ShapeEngine.Input;
 /// </para>
 /// </summary>
 /// <remarks>
-/// A different tree for each used gamepad is recommended.
+/// A different tree for each used gamepad is recommended. Multiple trees can be grouped together using <see cref="InputActionTreeGroup"/>.
 /// </remarks>
 public class InputActionTree : SortedSet<InputAction>, IComparable<InputActionTree>, ICopyable<InputActionTree>, IEquatable<InputActionTree>
 {
@@ -25,8 +25,80 @@ public class InputActionTree : SortedSet<InputAction>, IComparable<InputActionTr
         inputTypeBlockSet.Clear();
     }
     #endregion
+    
+    #region Group System
+    
+    /// <summary>
+    /// Gets the group this <see cref="InputActionTree"/> belongs to, if any.
+    /// </summary>
+    public InputActionTreeGroup? Group { get; private set; }
+    
+    /// <summary>
+    /// Indicates whether this <see cref="InputActionTree"/> is part of a group.
+    /// </summary>
+    public bool IsInGroup => Group != null;
+    
+    /// <summary>
+    /// Adds this <see cref="InputActionTree"/> to the specified <see cref="InputActionTreeGroup"/>.
+    /// If already in a group, removes it from the current group before joining the new one.
+    /// </summary>
+    /// <param name="treeGroup">The group to join.</param>
+    internal void EnterGroup(InputActionTreeGroup treeGroup)
+    {
+        if (Group != null)
+        {
+            if (ReferenceEquals(Group, treeGroup)) return;
+            Group.Remove(this);
+        }
+        Group = treeGroup;
+    }
+    
+    /// <summary>
+    /// Removes this <see cref="InputActionTree"/> from its current group, if any.
+    /// </summary>
+    internal void ExitGroup()
+    {
+        if(Group == null) return;
+        Group = null;
+    }
 
+    #endregion
+
+    #region Active System
+
+    /// <summary>
+    /// Gets a value indicating whether this <see cref="InputActionTree"/> is active.
+    /// When inactive, all contained input actions are reset and tree can not be updated until reactivated.
+    /// </summary>
+    public bool Active { get; private set; } = true;
+    
+    /// <summary>
+    /// Sets the active state of the tree.
+    /// If deactivated, resets all contained input actions.
+    /// Returns true if the state changed, false otherwise.
+    /// Inactive trees can not be updated until reactivated.
+    /// </summary>
+    /// <param name="active">The desired active state.</param>
+    /// <returns>True if the state was changed; otherwise, false.</returns>
+    public bool SetActive(bool active)
+    {
+        if (Active == active) return false;
+        Active = active;
+        if (!Active)
+        {
+            foreach (var input in this)
+            {
+                input.Reset();
+            }
+        }
+        return true;
+    }
+
+    #endregion
+    
     #region Class
+
+    public readonly HashSet<IInputType> UsedInputs = [];
     
     private static uint idCounter = 0;
     /// <summary>
@@ -37,7 +109,7 @@ public class InputActionTree : SortedSet<InputAction>, IComparable<InputActionTr
     private static int excecutionOrderCounter = 0;
     /// <summary>
     /// The execution order of this <see cref="InputActionTree"/> instance.
-    /// Used to determine the order in which input action trees are processed in the <see cref="InputActionTrees"/> class.
+    /// Used to determine the order in which input action trees are processed in the <see cref="InputActionTreeGroup"/> class.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -61,7 +133,7 @@ public class InputActionTree : SortedSet<InputAction>, IComparable<InputActionTr
     /// trees.Update(dt);// The update function will process tree4 first, then tree5, then tree1, tree2, and tree3.
     /// </code>
     /// </example>
-    public readonly int ExecutionOrder = excecutionOrderCounter++;
+    public int ExecutionOrder = excecutionOrderCounter++;
     
     
     /// <summary>
@@ -105,23 +177,59 @@ public class InputActionTree : SortedSet<InputAction>, IComparable<InputActionTr
         
         return removed;
     }
-
     
     /// <summary>
-    /// Updates all <see cref="InputAction"/> instances in the tree.
-    /// If <see cref="CurrentGamepad"/> is set, assigns it to each action before updating.
+    /// Updates all <see cref="InputAction"/> instances in the tree for the current frame.
+    /// Skips update if the tree is part of a group or inactive.
+    /// Clears the input type block set before processing.
+    /// Assigns the current gamepad to each action and calls their internal update.
     /// </summary>
-    /// <param name="dt">The time delta in seconds.</param>
-    public void Update(float dt)
+    /// <param name="dt">Delta time since last update.</param>
+    /// <returns>True if the update was performed; otherwise, false.</returns>
+    public bool Update(float dt)
     {
+        UsedInputs.Clear();
+        if (IsInGroup || !Active) return false;
         ClearInputTypeBlockSet();
         
         foreach (var action in this)
         {
             action.Gamepad = CurrentGamepad;
-            action.Update(dt, inputTypeBlockSet);
+            action.UpdateInternal(dt, inputTypeBlockSet, out _);
+            UsedInputs.UnionWith(action.UsedInputs);
         }
+
+        return true;
     }
+
+    /// <summary>
+    /// Updates all <see cref="InputAction"/> instances in the tree for the current frame and determines the used input device type.
+    /// Only updates if the tree is in a group and active.
+    /// Clears the input type block set before processing.
+    /// Assigns the current gamepad to each action and calls their internal update.
+    /// Sets <paramref name="usedDeviceType"/> to the first non-None device type used by an action.
+    /// </summary>
+    /// <param name="dt">Delta time since last update.</param>
+    /// <param name="usedDeviceType">The input device type used during this update cycle.</param>
+    /// <returns>True if the update was performed; otherwise, false.</returns>
+    internal bool UpdateInternal(float dt, out InputDeviceType usedDeviceType)
+    {
+        UsedInputs.Clear();
+        usedDeviceType = InputDeviceType.None;
+        if (!IsInGroup || !Active) return false;
+        ClearInputTypeBlockSet();
+        
+        foreach (var action in this)
+        {
+            action.Gamepad = CurrentGamepad;
+            var updated = action.UpdateInternal(dt, inputTypeBlockSet, out var deviceType);
+            UsedInputs.UnionWith(action.UsedInputs);
+            if(!updated || deviceType == InputDeviceType.None || usedDeviceType != InputDeviceType.None) continue;
+            usedDeviceType = deviceType;
+        }
+        return true;
+    }
+    
     #endregion
     
     #region Get Input Actions
@@ -280,7 +388,9 @@ public class InputActionTree : SortedSet<InputAction>, IComparable<InputActionTr
     {
         var copy = new InputActionTree
         {
-            CurrentGamepad = CurrentGamepad
+            CurrentGamepad = CurrentGamepad,
+            ExecutionOrder = ExecutionOrder,
+            Active = Active,
         };
         foreach (var action in this) copy.Add(action.Copy());
         

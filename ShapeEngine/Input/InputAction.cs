@@ -169,6 +169,7 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
 
     private readonly List<IInputType> inputs = [];
 
+    public readonly HashSet<IInputType> UsedInputs = [];
     /// <summary>
     /// Indicates whether the input action is toggled. Changes state on each press.
     /// </summary>
@@ -288,6 +289,7 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
         holdTimer = 0f;
         multiTapTimer = 0f;
         multiTapCount = 0;
+        UsedInputs.Clear();
     }
     /// <summary>
     /// Consumes the current input <see cref="State"/> and marks it as consumed.
@@ -318,29 +320,35 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
     /// </remarks>
     public bool Update(float dt)
     {
+        UsedInputs.Clear();
         if (IsInTree) return false;
-        
-        Update(dt, null);
-        return true;
+        return UpdateAction(dt, null, out _);
     }
-    
+
     /// <summary>
-    /// Updates the input action state based on the current input and time delta.
+    /// Updates the input action state when it is part of an <see cref="InputActionTree"/>.
+    /// Uses the provided blocklist to manage input type blocking for this frame.
     /// </summary>
     /// <param name="dt">The time delta in seconds.</param>
-    /// <param name="blocklist">A reference to the set of input types blocked for this frame.</param>
-    /// <remarks>
-    /// <see cref="InputAction"/> is not updated when <see cref="Active"/> is set to <c>false</c>
-    /// or <see cref="ShapeInput.Locked"/> is set to <c>true</c>
-    /// and the <see cref="AccessTag"/> does not allow access.
-    /// </remarks>
-    internal void Update(float dt, HashSet<IInputType>? blocklist)
+    /// <param name="blocklist">A set of input types that are blocked for this frame.</param>
+    /// <param name="inputDeviceType">Outputs the detected input device type.</param>
+    /// <returns><c>true</c> if the action was updated; otherwise, <c>false</c>.</returns>
+    internal bool UpdateInternal(float dt, HashSet<IInputType>? blocklist, out InputDeviceType inputDeviceType)
     {
-        if (!Active) return;
+        UsedInputs.Clear();
+        inputDeviceType = InputDeviceType.None;
+        if (!IsInTree) return false;
+        return UpdateAction(dt, blocklist, out inputDeviceType);
+    }
+    
+    private bool UpdateAction(float dt, HashSet<IInputType>? blocklist, out InputDeviceType inputDeviceType)
+    {
+        inputDeviceType = InputDeviceType.None;
+        if (!Active) return false;
         if (ShapeInput.Locked && !ShapeInput.HasAccess(AccessTag))
         {
             Reset();//Good idea? It does not update anything, therefore, it should be reset.
-            return;
+            return false;
         }
         
         //Accumulate All Input States From All Input Types
@@ -351,6 +359,16 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
             
             //if it can not be added to the input type block list, it was already used this frame before and therefore it is skipped now.
             if (blocklist != null && inputState.Down && BlocksInput && !blocklist.Add(input)) continue;
+
+            //if input was used and no input device type was set yet, set it to the input type of this input.
+            if (inputState.Down)
+            {
+                UsedInputs.Add(input);
+                if (inputDeviceType == InputDeviceType.None)
+                {
+                    inputDeviceType = input.GetInputDevice();
+                }
+            }
             
             current = current.Accumulate(inputState);
         }
@@ -473,6 +491,8 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
                 }
             }
         }
+
+        return true;
     }
 
     /// <summary>

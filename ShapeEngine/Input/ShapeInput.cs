@@ -13,7 +13,7 @@ public static class ShapeInput
     /// A global collection of <see cref="InputActionTree"/> instances.
     /// Each tree manages a hierarchy of input actions and their bindings.
     /// </summary>
-    public static readonly InputActionTrees InputActionTrees = [];
+    public static readonly InputActionTreeGroup ActiveInputActionTreeGroup = [];
     
     
     /// <summary>
@@ -30,6 +30,31 @@ public static class ShapeInput
     /// Event triggered when the input device type changes.
     /// </summary>
     public static event Action<InputDeviceType, InputDeviceType>? OnInputDeviceChanged;
+    
+    
+    /// <summary>
+    /// Current <see cref="InputAction"/> based device type detected by <see cref="ActiveInputActionTreeGroup"/>.
+    /// The first non-None <see cref="InputDeviceType"/> detected during the update of the <see cref="ActiveInputActionTreeGroup"/> is used.
+    /// </summary>
+    /// <remarks>
+    /// For an <see cref="InputAction"/>s <see cref="IInputType"/>s <see cref="InputDeviceType"/> to be considered the following conditions must be met:
+    /// <list type="bullet">
+    /// <item>The <see cref="InputAction"/> must be part of an <see cref="InputActionTree"/> within the <see cref="ActiveInputActionTreeGroup"/>.</item>
+    /// <item>The <see cref="InputAction"/> must be active.</item>
+    /// <item>The <see cref="IInputType"/>'s <see cref="InputState"/> must be down.</item>
+    /// <item>The <see cref="IInputType"/> must not be blocked (when <see cref="InputAction.BlocksInput"/> is <c>true</c>).</item>
+    /// </list>
+    /// </remarks>
+    public static InputDeviceType CurrentInputActionDeviceType { get; private set; }
+    
+    /// <summary>
+    /// Event triggered when <see cref="CurrentInputActionDeviceType"/> changes.
+    /// </summary>
+    /// <remarks>
+    /// The event provides the previous and new input action device types as parameters.
+    /// </remarks>
+    public static event Action<InputDeviceType, InputDeviceType>? OnInputActionDeviceTypeChanged;
+    
     
     /// <summary>
     /// The default global keyboard device instance.
@@ -72,7 +97,13 @@ public static class ShapeInput
     /// </summary>
     public static bool InputDeviceSelectionCooldownActive => inputDeviceSelectionCooldownTimer > 0f;
     private static float inputDeviceSelectionCooldownTimer;
-
+    
+    /// <summary>
+    /// Indicates whether the input action device selection cooldown is currently active.
+    /// Returns true if the cooldown timer is greater than zero.
+    /// </summary>
+    public static bool InputActionDeviceSelectionCooldownActive => inputActionDeviceSelectionCooldownTimer > 0f;
+    private static float inputActionDeviceSelectionCooldownTimer;
     private static readonly SortedSet<InputDeviceBase> sortedInputDevices = [];
     #endregion
     
@@ -80,18 +111,18 @@ public static class ShapeInput
     static ShapeInput()
     {
         CurrentInputDeviceType = InputDeviceType.Keyboard;
-        
+        CurrentInputActionDeviceType = InputDeviceType.None;
         DefaultKeyboardDevice = new();
-        DefaultMouseDevice = new();
         DefaultGamepadDeviceManager = new();
+        DefaultMouseDevice = new();
         
         ActiveKeyboardDevice = DefaultKeyboardDevice;
-        ActiveMouseDevice = DefaultMouseDevice;
         ActiveGamepadDeviceManager = DefaultGamepadDeviceManager;
+        ActiveMouseDevice = DefaultMouseDevice;
         
         ActiveKeyboardDevice.Activate();
-        ActiveMouseDevice.Activate();
         ActiveGamepadDeviceManager.Activate();
+        ActiveMouseDevice.Activate();
         
         EventHandler = new(ActiveKeyboardDevice, ActiveMouseDevice, ActiveGamepadDeviceManager);
     }
@@ -199,27 +230,23 @@ public static class ShapeInput
             ? with
             : current;
     }
-
+    
     /// <summary>
-    /// Gets the generic name of the current input device type.
+    /// Returns the generic name for the specified <see cref="InputDeviceType"/>.
+    /// Returns "None" for <see cref="InputDeviceType.None"/>, "Gamepad" for <see cref="InputDeviceType.Gamepad"/>,
+    /// "Keyboard" for <see cref="InputDeviceType.Keyboard"/>, and "Mouse" for all other types.
     /// </summary>
-    /// <returns>"Gamepad", "Keyboard", or "Mouse".</returns>
-    public static string GetCurInputDeviceGenericName()
+    /// <param name="inputDeviceType">The input device type to get the generic name for.</param>
+    /// <returns>The generic name as a string.</returns>
+    public static string GetInputDeviceTypeGenericName(this InputDeviceType inputDeviceType)
     {
-        return
-            CurrentInputDeviceType == InputDeviceType.Gamepad ? "Gamepad" :
-            CurrentInputDeviceType == InputDeviceType.Keyboard ? "Keyboard" : "Mouse";
-    }
-    /// <summary>
-    /// Gets the generic name for a specified input device type.
-    /// </summary>
-    /// <param name="deviceType">The input device type.</param>
-    /// <returns>"Gamepad", "Keyboard", or "Mouse".</returns>
-    public static string GetInputDeviceGenericName(InputDeviceType deviceType)
-    {
-        return
-            deviceType == InputDeviceType.Gamepad ? "Gamepad" :
-            deviceType == InputDeviceType.Keyboard ? "Keyboard" : "Mouse";
+        if (inputDeviceType == InputDeviceType.None) return "None";
+        return inputDeviceType switch
+        {
+            InputDeviceType.Gamepad => "Gamepad",
+            InputDeviceType.Keyboard => "Keyboard",
+            _ => "Mouse"
+        };
     }
     
     /// <summary>
@@ -233,6 +260,15 @@ public static class ShapeInput
             if (inputDeviceSelectionCooldownTimer <= 0f)
             {
                 inputDeviceSelectionCooldownTimer = 0f;
+            }
+        }
+        
+        if (InputActionDeviceSelectionCooldownActive)
+        {
+            inputActionDeviceSelectionCooldownTimer -= dt;
+            if (inputActionDeviceSelectionCooldownTimer <= 0f)
+            {
+                inputActionDeviceSelectionCooldownTimer = 0f;
             }
         }
 
@@ -251,28 +287,9 @@ public static class ShapeInput
             if(wasOtherDeviceUsed && !prevUsed) usedInputDevice = inputDevice.GetDeviceType();
         }
         
-        // // Prevents input device switching if another device was already used this frame.
-        // // For example, keyboard usage can block gamepad and mouse from becoming the active device.
-        // var wasOtherDeviceUsed = ActiveKeyboardDevice.Update(dt, false);
-        // if (wasOtherDeviceUsed)
-        // {
-        //     usedInputDevice = InputDeviceType.Keyboard;   
-        // }
-        // wasOtherDeviceUsed = ActiveGamepadDeviceManager.Update(dt, wasOtherDeviceUsed);
-        // if (usedInputDevice == InputDeviceType.None && wasOtherDeviceUsed)
-        // {
-        //     usedInputDevice = InputDeviceType.Gamepad;
-        // }
-        // wasOtherDeviceUsed = ActiveMouseDevice.Update(dt, wasOtherDeviceUsed);
-        // if (usedInputDevice == InputDeviceType.None && wasOtherDeviceUsed)
-        // {
-        //     usedInputDevice = InputDeviceType.Mouse;
-        // }
-
-        var selectionCooldownActive = InputDeviceSelectionCooldownActive;
         if (usedInputDevice != InputDeviceType.None)
         {
-            if(!selectionCooldownActive && usedInputDevice != CurrentInputDeviceType)
+            if(!InputDeviceSelectionCooldownActive && usedInputDevice != CurrentInputDeviceType)
             {
                 var prevInputDevice = CurrentInputDeviceType;
                 CurrentInputDeviceType = usedInputDevice;
@@ -290,8 +307,30 @@ public static class ShapeInput
                 }
             }
         }
+        
+        var usedInputActionDevice = ActiveInputActionTreeGroup.Update(dt);
+        if (usedInputActionDevice != InputDeviceType.None)
+        {
+            if(!InputActionDeviceSelectionCooldownActive && usedInputActionDevice != CurrentInputActionDeviceType)
+            {
+                var prevInputActionDevice = CurrentInputActionDeviceType;
+                CurrentInputActionDeviceType = usedInputActionDevice;
+                OnInputActionDeviceTypeChanged?.Invoke(prevInputActionDevice, CurrentInputActionDeviceType);
+                
+                float deviceCooldown;
+                
+                if (usedInputActionDevice == InputDeviceType.Keyboard) deviceCooldown = ActiveKeyboardDevice.UsageDetectionSettings.SelectionCooldownDuration;
+                else if (usedInputActionDevice == InputDeviceType.Gamepad) deviceCooldown = ActiveGamepadDeviceManager.UsageDetectionSettings.SelectionCooldownDuration;
+                else deviceCooldown = ActiveMouseDevice.UsageDetectionSettings.SelectionCooldownDuration;
+                
+                if (deviceCooldown > 0f)
+                {
+                    inputActionDeviceSelectionCooldownTimer = deviceCooldown;
+                }
+            }
+        }
 
-        InputActionTrees.Update(dt);
+        
     }
 
     internal static void EndFrame()
