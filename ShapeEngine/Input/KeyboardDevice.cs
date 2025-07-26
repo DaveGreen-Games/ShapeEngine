@@ -343,7 +343,7 @@ public sealed class KeyboardDevice : InputDevice
             if (usedDurationEnabled)
             {
                 // Checks if any held down button is not in the exception list (or if the exception list is null)
-                if (HeldDownButtons.Any(b => UsageDetectionSettings.ExceptionButtons == null || !UsageDetectionSettings.ExceptionButtons.Contains(b)))
+                if (HeldDownButtons.Any(b => !UsageDetectionSettings.ExceptionButtons.Contains(b)))
                 // if (usedDurationEnabled && HeldDownButtons.Count > 0)
                 {
                     usedDurationTimer += dt;
@@ -360,7 +360,7 @@ public sealed class KeyboardDevice : InputDevice
             }
             
             
-            if (pressCountEnabled && PressedButtons.Any(b => UsageDetectionSettings.ExceptionButtons == null || !UsageDetectionSettings.ExceptionButtons.Contains(b)))
+            if (pressCountEnabled && PressedButtons.Any(b => !UsageDetectionSettings.ExceptionButtons.Contains(b)))
             // if (pressCountEnabled && PressedButtons.Count > 0)
             {
                 pressedCount++;
