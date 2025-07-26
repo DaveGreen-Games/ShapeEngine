@@ -498,12 +498,12 @@ public sealed class MouseDevice : InputDevice
     /// <param name="threshold">The minimum movement required to register a value.</param>
     /// <param name="modifierKeySet">The set of modifier keys that must be active.</param>
     /// <returns>The axis value if above the threshold and modifiers are active; otherwise, 0.</returns>
-    public float GetValue(ShapeMouseAxis axis, Vector2 targetPosition, float threshold, ModifierKeySet modifierKeySet)
+    public float GetValue(ShapeMouseAxis axis, Vector2 targetPosition, float threshold, ModifierKeySet? modifierKeySet = null)
     {
         if (isLocked) return 0f;
         if (!GameWindow.Instance.MouseOnScreen) return 0f;
-        if (!modifierKeySet.IsActive()) return 0f;
-        var delta = targetPosition - MousePosition;
+        if (modifierKeySet != null && !modifierKeySet.IsActive()) return 0f;
+        var delta = MousePosition - targetPosition;
         var value = axis == ShapeMouseAxis.VERTICAL ? delta.Y : delta.X;
         if (MathF.Abs(value) < threshold) return 0f;
         return value;
@@ -539,7 +539,7 @@ public sealed class MouseDevice : InputDevice
     /// <param name="deadzone">The minimum movement required to register a value.</param>
     /// <param name="modifierKeySet">The set of modifier keys that must be active.</param>
     /// <returns>An <see cref="InputState"/> representing the axis state.</returns>
-    public InputState CreateInputState(ShapeMouseAxis axis, Vector2 targetPosition,  float deadzone, ModifierKeySet modifierKeySet)
+    public InputState CreateInputState(ShapeMouseAxis axis, Vector2 targetPosition,  float deadzone, ModifierKeySet? modifierKeySet = null)
     {
         float axisValue = GetValue(axis, targetPosition, deadzone, modifierKeySet);
         bool down = axisValue != 0f;
@@ -562,7 +562,7 @@ public sealed class MouseDevice : InputDevice
     /// <param name="deadzone">The minimum movement required to register a value.</param>
     /// <param name="modifierKeySet">The set of modifier keys that must be active.</param>
     /// <returns>An <see cref="InputState"/> representing the axis state.</returns>
-    public InputState CreateInputState(ShapeMouseAxis axis, Vector2 targetPosition,  InputState previousState, float deadzone, ModifierKeySet modifierKeySet)
+    public InputState CreateInputState(ShapeMouseAxis axis, Vector2 targetPosition,  InputState previousState, float deadzone, ModifierKeySet? modifierKeySet = null)
     {
         return new(previousState, CreateInputState(axis, targetPosition, deadzone, modifierKeySet));
     }
