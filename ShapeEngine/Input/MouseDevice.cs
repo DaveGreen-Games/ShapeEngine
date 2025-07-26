@@ -49,6 +49,7 @@ public sealed class MouseDevice : InputDevice
     private float pressedCountDurationTimer;
     private float usedDurationTimer;
 
+    public Vector2 MousePosition { get; private set; }
     /// <summary>
     /// Gets the raw mouse wheel movement vector since the last frame.
     /// </summary>
@@ -115,6 +116,8 @@ public sealed class MouseDevice : InputDevice
         
         wheelAxisStates.Add(ShapeMouseWheelAxis.HORIZONTAL, new());
         wheelAxisStates.Add(ShapeMouseWheelAxis.VERTICAL, new());
+        
+        MousePosition = Raylib.GetMousePosition();
     }
     
     /// <inheritdoc cref="InputDevice.GetDeviceProcessPriority"/>
@@ -239,6 +242,8 @@ public sealed class MouseDevice : InputDevice
     /// <inheritdoc cref="InputDevice.Update"/>
     public override bool Update(float dt, bool wasOtherDeviceUsed)
     {
+        MousePosition = Raylib.GetMousePosition();
+        
         MouseDelta = Raylib.GetMouseDelta();
         float moveThreshold = UsageDetectionSettings.MoveThreshold;
         float smoothedX = MathF.Abs(MouseDelta.X) < moveThreshold ? 0f : MouseDelta.X;
@@ -484,6 +489,26 @@ public sealed class MouseDevice : InputDevice
         return GetValue(axis, deadzone);
     }
     /// <summary>
+    /// Gets the value of the specified mouse axis based on the difference between the target position and the current mouse position,
+    /// considering a threshold and modifier keys.
+    /// Returns 0 if the device is locked, mouse is not on screen, or the modifier key set is not active.
+    /// </summary>
+    /// <param name="axis">The mouse axis to evaluate.</param>
+    /// <param name="targetPosition">The target position to compare against the current mouse position.</param>
+    /// <param name="threshold">The minimum movement required to register a value.</param>
+    /// <param name="modifierKeySet">The set of modifier keys that must be active.</param>
+    /// <returns>The axis value if above the threshold and modifiers are active; otherwise, 0.</returns>
+    public float GetValue(ShapeMouseAxis axis, Vector2 targetPosition, float threshold, ModifierKeySet modifierKeySet)
+    {
+        if (isLocked) return 0f;
+        if (!GameWindow.Instance.MouseOnScreen) return 0f;
+        if (!modifierKeySet.IsActive()) return 0f;
+        var delta = targetPosition - MousePosition;
+        var value = axis == ShapeMouseAxis.VERTICAL ? delta.Y : delta.X;
+        if (MathF.Abs(value) < threshold) return 0f;
+        return value;
+    }
+    /// <summary>
     /// Gets the value of the specified mouse axis, considering deadzone.
     /// </summary>
     public float GetValue(ShapeMouseAxis axis, float deadzone = 0.5f)
@@ -506,11 +531,40 @@ public sealed class MouseDevice : InputDevice
         return new(down, !down, axisValue, -1, InputDeviceType.Mouse);
     }
     /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified mouse axis based on the difference between the target position and the current mouse position,
+    /// considering a deadzone and modifier keys.
+    /// </summary>
+    /// <param name="axis">The mouse axis to evaluate.</param>
+    /// <param name="targetPosition">The target position to compare against the current mouse position.</param>
+    /// <param name="deadzone">The minimum movement required to register a value.</param>
+    /// <param name="modifierKeySet">The set of modifier keys that must be active.</param>
+    /// <returns>An <see cref="InputState"/> representing the axis state.</returns>
+    public InputState CreateInputState(ShapeMouseAxis axis, Vector2 targetPosition,  float deadzone, ModifierKeySet modifierKeySet)
+    {
+        float axisValue = GetValue(axis, targetPosition, deadzone, modifierKeySet);
+        bool down = axisValue != 0f;
+        return new(down, !down, axisValue, -1, InputDeviceType.Mouse);
+    }
+    /// <summary>
     /// Creates an <see cref="InputState"/> for the specified mouse axis, using a previous state.
     /// </summary>
     public InputState CreateInputState(ShapeMouseAxis axis, InputState previousState, float deadzone, ModifierKeySet modifierKeySet)
     {
         return new(previousState, CreateInputState(axis, deadzone, modifierKeySet));
+    }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified mouse axis based on the difference between the target position and the current mouse position,
+    /// using a previous state, considering a deadzone and modifier keys.
+    /// </summary>
+    /// <param name="axis">The mouse axis to evaluate.</param>
+    /// <param name="targetPosition">The target position to compare against the current mouse position.</param>
+    /// <param name="previousState">The previous input state.</param>
+    /// <param name="deadzone">The minimum movement required to register a value.</param>
+    /// <param name="modifierKeySet">The set of modifier keys that must be active.</param>
+    /// <returns>An <see cref="InputState"/> representing the axis state.</returns>
+    public InputState CreateInputState(ShapeMouseAxis axis, Vector2 targetPosition,  InputState previousState, float deadzone, ModifierKeySet modifierKeySet)
+    {
+        return new(previousState, CreateInputState(axis, targetPosition, deadzone, modifierKeySet));
     }
     /// <summary>
     /// Creates an <see cref="InputState"/> for the specified mouse axis.
