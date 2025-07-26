@@ -46,8 +46,8 @@ public partial class InputDeviceUsageDetectionSettings
             MinPressCount = 2;
             MinPressInterval = 1f;
             MinUsedDuration = 0.5f;
-            SelectionButtons = null;
-            ExceptionButtons = null;
+            SelectionButtons = [];
+            ExceptionButtons = [];
             SelectionCooldownDuration = 2f;
         }
 
@@ -74,8 +74,8 @@ public partial class InputDeviceUsageDetectionSettings
             MinPressCount = 2;
             MinPressInterval = 1f;
             MinUsedDuration = 0.5f;
-            SelectionButtons = null;
-            ExceptionButtons = null;
+            SelectionButtons = [];
+            ExceptionButtons = exceptionButtons ?? [];
             SelectionCooldownDuration = selectionCooldownDuration;
         }
 
@@ -105,8 +105,8 @@ public partial class InputDeviceUsageDetectionSettings
             MinPressCount = minPressCount;
             MinPressInterval = minPressInterval;
             MinUsedDuration = minUsedDuration;
-            SelectionButtons = null;
-            ExceptionButtons = exceptionButtons;
+            SelectionButtons = [];
+            ExceptionButtons = exceptionButtons ?? [];
             SelectionCooldownDuration = selectionCooldownDuration;
         }
 
@@ -135,8 +135,8 @@ public partial class InputDeviceUsageDetectionSettings
             MinPressCount = minPressCount;
             MinPressInterval = minPressInterval;
             MinUsedDuration = -1;
-            SelectionButtons = null;
-            ExceptionButtons = exceptionButtons;
+            SelectionButtons = [];
+            ExceptionButtons = exceptionButtons ?? [];
             SelectionCooldownDuration = selectionCooldownDuration;
         }
         
@@ -164,8 +164,8 @@ public partial class InputDeviceUsageDetectionSettings
             MinPressCount = -1;
             MinPressInterval = -1f;
             MinUsedDuration = minUsedDuration;
-            SelectionButtons = null;
-            ExceptionButtons = exceptionButtons;
+            SelectionButtons = [];
+            ExceptionButtons = exceptionButtons ?? [];
             SelectionCooldownDuration = selectionCooldownDuration;
         }
         
@@ -191,8 +191,8 @@ public partial class InputDeviceUsageDetectionSettings
             MinPressCount = -1;
             MinPressInterval = -1f;
             MinUsedDuration = minUsedDuration;
-            SelectionButtons = null;
-            ExceptionButtons = exceptionButtons;
+            SelectionButtons = [];
+            ExceptionButtons = exceptionButtons ?? [];
             SelectionCooldownDuration = selectionCooldownDuration;
         }
         
@@ -219,8 +219,8 @@ public partial class InputDeviceUsageDetectionSettings
             MinPressCount = minPressCount;
             MinPressInterval = minPressInterval;
             MinUsedDuration = -1f;
-            SelectionButtons = null;
-            ExceptionButtons = exceptionButtons;
+            SelectionButtons = [];
+            ExceptionButtons = exceptionButtons ?? [];
             SelectionCooldownDuration = selectionCooldownDuration;
         }
         
@@ -249,7 +249,7 @@ public partial class InputDeviceUsageDetectionSettings
             MinPressInterval = -1f;
             MinUsedDuration = -1f;
             SelectionButtons = selectionButtons;
-            ExceptionButtons = exceptionButtons;
+            ExceptionButtons = exceptionButtons ?? [];
             SelectionCooldownDuration = selectionCooldownDuration;
         }
 
@@ -357,12 +357,12 @@ public partial class InputDeviceUsageDetectionSettings
         /// The set of gamepad buttons that can be used to select this device.
         /// When set and not empty, all other means of selection are disabled.
         /// </summary>
-        public readonly HashSet<ShapeMouseButton>? SelectionButtons;
+        public readonly HashSet<ShapeMouseButton> SelectionButtons;
         
         /// <summary>
         /// The set of gamepad buttons that will never select this device, even if pressed.
         /// </summary>
-        public readonly HashSet<ShapeMouseButton>? ExceptionButtons;
+        public readonly HashSet<ShapeMouseButton> ExceptionButtons;
 
         /// <summary>
         /// Specifies the duration (in seconds) after this device is selected during which no other input device can be selected.
