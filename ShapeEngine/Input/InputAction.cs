@@ -171,6 +171,10 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
 
     private readonly List<IInputType> inputs = [];
 
+    /// <summary>
+    /// Stores the set of input types that were used to trigger this action in the current frame.
+    /// Cleared and updated during each update cycle.
+    /// </summary>
     public readonly HashSet<IInputType> UsedInputs = [];
     /// <summary>
     /// Indicates whether the input action is toggled. Changes state on each press.
@@ -181,6 +185,11 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
     /// Resets the toggle state to off.
     /// </summary>
     public void ResetToggle() => Toggle = ToggleState.Off;
+
+    /// <summary>
+    /// Gets the type of the input device that was last used to trigger this action.
+    /// </summary>
+    public InputDeviceType CurrentDeviceType { get; private set; } = InputDeviceType.None;
     #endregion
 
     #region Constructors
@@ -278,7 +287,7 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
     {
         State = new InputState(false, true, 0f, GetGamepadIndex(), InputDeviceType.Keyboard);
         Toggle = ToggleState.Off;
-        
+        CurrentDeviceType = InputDeviceType.None;
     }
 
     /// <summary>
@@ -381,6 +390,8 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
             
             current = current.Accumulate(inputState);
         }
+        
+        if(inputDeviceType != InputDeviceType.None) CurrentDeviceType = inputDeviceType;
         
         //Multi Tap & Hold System
         var multiTapF = 0f;
