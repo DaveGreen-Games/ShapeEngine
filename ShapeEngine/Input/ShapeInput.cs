@@ -1,3 +1,4 @@
+using System.Text;
 using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.Input;
@@ -542,7 +543,6 @@ public static class ShapeInput
         return modifierKeySet == null ? ActiveKeyboardDevice.CreateInputState(neg, pos) : ActiveKeyboardDevice.CreateInputState(neg, pos, modifierKeySet);
     }
     
-    
     /// <summary>
     /// Creates an <see cref="InputState"/> for a mouse button.
     /// </summary>
@@ -598,59 +598,65 @@ public static class ShapeInput
         if (Locked && !HasAccess(accessTag)) return new();
         return modifierKeySet == null ? ActiveMouseDevice.CreateInputState(axis, deadzone) : ActiveMouseDevice.CreateInputState(axis, deadzone, modifierKeySet);
     }
-    
+
     /// <summary>
-    /// Creates an <see cref="InputState"/> for a gamepad button.
+    /// Creates an <see cref="InputState"/> for a gamepad button on a specific gamepad.
     /// </summary>
-    /// <param name="button">The gamepad button.</param>
+    /// <param name="button">The gamepad button to create the input state for.</param>
     /// <param name="accessTag">The access tag for input access control.</param>
     /// <param name="gamepadIndex">The index of the gamepad.</param>
-    /// <param name="deadzone">The deadzone value for input sensitivity. Default is 0.2f.</param>
+    /// <param name="axisDeadzone">The deadzone value for axis sensitivity. Default is 0.1f.</param>
+    /// <param name="triggerDeadzone">The deadzone value for trigger sensitivity. Default is 0.1f.</param>
     /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
     /// <returns>The created <see cref="InputState"/>.</returns>
-    public static InputState CreateInputState(ShapeGamepadButton button, uint accessTag, int gamepadIndex, float deadzone = 0.2f, ModifierKeySet? modifierKeySet = null)
+    public static InputState CreateInputState(ShapeGamepadButton button, uint accessTag, int gamepadIndex, 
+        float axisDeadzone = 0.1f, float triggerDeadzone = 0.1f, ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
         var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
         if (gamepad == null) return new();
-        return modifierKeySet == null ? gamepad.CreateInputState(button, deadzone) : gamepad.CreateInputState(button, deadzone, modifierKeySet);
+        return  gamepad.CreateInputState(button, axisDeadzone, triggerDeadzone, modifierKeySet);
     }
 
     /// <summary>
-    /// Creates an <see cref="InputState"/> for a gamepad button axis (negative and positive).
+    /// Creates an <see cref="InputState"/> for a gamepad button axis (negative and positive) on a specific gamepad.
     /// </summary>
-    /// <param name="neg">The negative gamepad button.</param>
-    /// <param name="pos">The positive gamepad button.</param>
+    /// <param name="neg">The negative direction gamepad button.</param>
+    /// <param name="pos">The positive direction gamepad button.</param>
     /// <param name="accessTag">The access tag for input access control.</param>
     /// <param name="gamepadIndex">The index of the gamepad.</param>
-    /// <param name="deadzone">The deadzone value for input sensitivity. Default is 0.2f.</param>
+    /// <param name="axisDeadzone">The deadzone value for axis sensitivity. Default is 0.1f.</param>
+    /// <param name="triggerDeadzone">The deadzone value for trigger sensitivity. Default is 0.1f.</param>
     /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
     /// <returns>The created <see cref="InputState"/>.</returns>
-    public static InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, uint accessTag, int gamepadIndex, float deadzone = 0.2f, ModifierKeySet? modifierKeySet = null)
+    public static InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, uint accessTag, int gamepadIndex, 
+        float axisDeadzone = 0.1f, float triggerDeadzone = 0.1f, ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
         var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
         
         if (gamepad == null) return new();
-        return modifierKeySet == null ? gamepad.CreateInputState(neg, pos, deadzone) : gamepad.CreateInputState(neg, pos, deadzone, modifierKeySet);
+        return  gamepad.CreateInputState(neg, pos, axisDeadzone, triggerDeadzone, modifierKeySet);
     }
 
     /// <summary>
-    /// Creates an <see cref="InputState"/> for a gamepad axis.
+    /// Creates an <see cref="InputState"/> for a gamepad axis on a specific gamepad.
     /// </summary>
-    /// <param name="axis">The gamepad axis.</param>
+    /// <param name="axis">The gamepad axis to create the input state for.</param>
     /// <param name="accessTag">The access tag for input access control.</param>
     /// <param name="gamepadIndex">The index of the gamepad.</param>
-    /// <param name="deadzone">The deadzone value for input sensitivity. Default is 0.2f.</param>
+    /// <param name="axisDeadzone">The deadzone value for axis sensitivity. Default is 0.1f.</param>
+    /// <param name="triggerDeadzone">The deadzone value for trigger sensitivity. Default is 0.1f.</param>
     /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
     /// <returns>The created <see cref="InputState"/>.</returns>
-    public static InputState CreateInputState(ShapeGamepadAxis axis, uint accessTag, int gamepadIndex, float deadzone = 0.2f, ModifierKeySet? modifierKeySet = null)
+    public static InputState CreateInputState(ShapeGamepadAxis axis, uint accessTag, int gamepadIndex, 
+        float axisDeadzone = 0.1f, float triggerDeadzone = 0.1f, ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
         var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
         
         if (gamepad == null) return new();
-        return modifierKeySet == null ? gamepad.CreateInputState(axis, deadzone) : gamepad.CreateInputState(axis, deadzone, modifierKeySet);
+        return  gamepad.CreateInputState(axis, axisDeadzone, triggerDeadzone, modifierKeySet);
     }
 
     #endregion
@@ -697,17 +703,17 @@ public static class ShapeInput
     /// <summary>
     /// Creates an input type for a gamepad button.
     /// </summary>
-    public static IInputType CreateInputType(this ShapeGamepadButton button, float deadzone = 0.2f, ModifierKeySet? modifierKeySet = null) => new InputTypeGamepadButton(button, deadzone,  modifierKeySet);
+    public static IInputType CreateInputType(this ShapeGamepadButton button, float deadzone = 0.1f, ModifierKeySet? modifierKeySet = null) => new InputTypeGamepadButton(button, deadzone,  modifierKeySet);
 
     /// <summary>
     /// Creates an input type for a gamepad button axis (negative and positive).
     /// </summary>
-    public static IInputType CreateInputType(this ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = 0.2f, ModifierKeySet? modifierKeySet = null) => new InputTypeGamepadButtonAxis(neg, pos, deadzone,  modifierKeySet);
+    public static IInputType CreateInputType(this ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = 0.1f, ModifierKeySet? modifierKeySet = null) => new InputTypeGamepadButtonAxis(neg, pos, deadzone,  modifierKeySet);
 
     /// <summary>
     /// Creates an input type for a gamepad axis.
     /// </summary>
-    public static IInputType CreateInputType(this ShapeGamepadAxis axis, float deadzone = 0.2f, ModifierKeySet? modifierKeySet = null) => new InputTypeGamepadAxis(axis, deadzone,  modifierKeySet);
+    public static IInputType CreateInputType(this ShapeGamepadAxis axis, float deadzone = 0.1f, ModifierKeySet? modifierKeySet = null) => new InputTypeGamepadAxis(axis, deadzone,  modifierKeySet);
 
     #endregion
     
@@ -852,5 +858,90 @@ public static class ShapeInput
     /// <returns>True if access is granted; otherwise, false.</returns>
     public static bool HasAccess(InputAction action) => HasAccess(action.AccessTag);
 
+    #endregion
+    
+    
+    #region Gamepad Button / Axis Names
+    /// <summary>
+    /// Gets the display name for a gamepad button.
+    /// </summary>
+    /// <param name="button">The gamepad button.</param>
+    /// <param name="shortHand">Whether to use shorthand notation.</param>
+    /// <returns>The button name.</returns>
+    public static string GetButtonName(this ShapeGamepadButton button, bool shortHand = true)
+    {
+        switch (button)
+        {
+            case ShapeGamepadButton.UNKNOWN: return shortHand ? "Unknown" : "GP Button Unknown";
+            case ShapeGamepadButton.LEFT_FACE_UP: return shortHand ? "Up" : "GP Button Up";
+            case ShapeGamepadButton.LEFT_FACE_RIGHT: return shortHand ? "Right" : "GP Button Right";
+            case ShapeGamepadButton.LEFT_FACE_DOWN: return shortHand ? "Down" : "GP Button Down";
+            case ShapeGamepadButton.LEFT_FACE_LEFT: return shortHand ? "Left" : "GP Button Left";
+            case ShapeGamepadButton.RIGHT_FACE_UP: return shortHand ? "Y" : "GP Button Y";
+            case ShapeGamepadButton.RIGHT_FACE_RIGHT: return shortHand ? "B" : "GP Button B";
+            case ShapeGamepadButton.RIGHT_FACE_DOWN: return shortHand ? "A" : "GP Button A";
+            case ShapeGamepadButton.RIGHT_FACE_LEFT: return shortHand ? "X" : "GP Button X";
+            case ShapeGamepadButton.LEFT_TRIGGER_TOP: return shortHand ? "LB" : "GP Button Left Bumper";
+            case ShapeGamepadButton.LEFT_TRIGGER_BOTTOM: return shortHand ? "LT" : "GP Button Left Trigger";
+            case ShapeGamepadButton.RIGHT_TRIGGER_TOP: return shortHand ? "RB" : "GP Button Right Bumper";
+            case ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM: return shortHand ? "RT" : "GP Button Right Trigger";
+            case ShapeGamepadButton.MIDDLE_LEFT: return shortHand ? "Select" : "GP Button Select";
+            case ShapeGamepadButton.MIDDLE: return shortHand ? "Home" : "GP Button Home";
+            case ShapeGamepadButton.MIDDLE_RIGHT: return shortHand ? "Start" : "GP Button Start";
+            case ShapeGamepadButton.LEFT_THUMB: return shortHand ? "LClick" : "GP Button Left Stick Click";
+            case ShapeGamepadButton.RIGHT_THUMB: return shortHand ? "RClick" : "GP Button Right Stick Click";
+            case ShapeGamepadButton.LEFT_STICK_RIGHT: return shortHand ? "LS R" : "Left Stick Right";
+            case ShapeGamepadButton.LEFT_STICK_LEFT: return shortHand ? "LS L" : "Left Stick Left";
+            case ShapeGamepadButton.LEFT_STICK_DOWN: return shortHand ? "LS D" : "Left Stick Down";
+            case ShapeGamepadButton.LEFT_STICK_UP: return shortHand ? "LS U" : "Left Stick Up";
+            case ShapeGamepadButton.RIGHT_STICK_RIGHT: return shortHand ? "RS R" : "Right Stick Right";
+            case ShapeGamepadButton.RIGHT_STICK_LEFT: return shortHand ? "RS L" : "Right Stick Left";
+            case ShapeGamepadButton.RIGHT_STICK_DOWN: return shortHand ? "RS D" : "Right Stick Down";
+            case ShapeGamepadButton.RIGHT_STICK_UP: return shortHand ? "RS U" : "Right Stick Up";
+            default: return "No Key";
+        }
+    }
+    
+    /// <summary>
+    /// Gets the display name for a gamepad axis.
+    /// </summary>
+    /// <param name="axis">The gamepad axis.</param>
+    /// <param name="shortHand">Whether to use shorthand notation.</param>
+    /// <returns>The axis name.</returns>
+    public static string GetAxisName(this ShapeGamepadAxis axis, bool shortHand = true)
+    {
+        switch (axis)
+        {
+            case ShapeGamepadAxis.LEFT_X: return shortHand ? "LSx" : "GP Axis Left X";
+            case ShapeGamepadAxis.LEFT_Y: return shortHand ? "LSy" : "GP Axis Left Y";
+            case ShapeGamepadAxis.RIGHT_X: return shortHand ? "RSx" : "GP Axis Right X";
+            case ShapeGamepadAxis.RIGHT_Y: return shortHand ? "RSy" : "GP Axis Right Y";
+            case ShapeGamepadAxis.RIGHT_TRIGGER: return shortHand ? "RT" : "GP Axis Right Trigger";
+            case ShapeGamepadAxis.LEFT_TRIGGER: return shortHand ? "LT" : "GP Axis Left Trigger";
+            default: return "No Key";
+        }
+    }
+
+    /// <summary>
+    /// Gets the display name for a button axis (negative and positive button pair).
+    /// </summary>
+    /// /// <remarks>
+    /// Format: "NegButtonName|PosButtonName" (e\.g\., "A|D" or "Left|Right"\)
+    /// </remarks>
+    /// <param name="neg">Negative direction button.</param>
+    /// <param name="pos">Positive direction button.</param>
+    /// <param name="shorthand">Whether to use shorthand notation.</param>
+    /// <returns>The button axis name.</returns>
+    public static string GetButtonAxisName(this ShapeGamepadButton neg, ShapeGamepadButton pos, bool shorthand = true)
+    {
+        StringBuilder sb = new();
+        
+        string negName = GetButtonName(neg, shorthand);
+        string posName = GetButtonName(pos, shorthand);
+        sb.Append(negName);
+        sb.Append('|');
+        sb.Append(posName);
+        return sb.ToString();
+    }
     #endregion
 }

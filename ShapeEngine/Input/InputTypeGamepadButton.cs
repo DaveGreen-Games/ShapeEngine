@@ -35,7 +35,7 @@ public sealed class InputTypeGamepadButton : IInputType
     {
         StringBuilder sb = new();
         modifierKeySet?.AppendModifierKeyNames(sb, shorthand);
-        sb.Append(GamepadDevice.GetButtonName(button, shorthand));
+        sb.Append(button.GetButtonName(shorthand)); // GamepadDevice.GetButtonName(button, shorthand));
         return sb.ToString();
     }
 
@@ -49,17 +49,12 @@ public sealed class InputTypeGamepadButton : IInputType
     }
 
     /// <inheritdoc/>
-    public InputState GetState(GamepadDevice? gamepad)
-    {
-        if (gamepad == null) return new();
-        return modifierKeySet == null ? gamepad.CreateInputState(button, deadzone) : gamepad.CreateInputState(button, deadzone, modifierKeySet);
-    }
+    public InputState GetState(GamepadDevice? gamepad) => gamepad?.CreateInputState(button, deadzone, deadzone,  modifierKeySet) ?? new();
 
     /// <inheritdoc/>
     public InputState GetState(InputState prev, GamepadDevice? gamepad)
     {
-        if (gamepad == null) return new();
-        return modifierKeySet == null ? gamepad.CreateInputState(button, prev, deadzone) : gamepad.CreateInputState(button, prev, deadzone, modifierKeySet);
+        return gamepad?.CreateInputState(button, prev, deadzone, deadzone,  modifierKeySet) ?? new();
     }
 
     /// <inheritdoc/>
