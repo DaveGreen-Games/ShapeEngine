@@ -7,15 +7,18 @@ namespace ShapeEngine.Input;
 /// Represents an input type that tracks the delta of the mouse position relative to a target position.
 /// Supports deadzone threshold and optional modifier keys.
 /// </summary>
+/// <remarks>
+/// The System uses screen coordinates for the mouse position (ui mouse position).
+/// </remarks>
 public sealed class InputTypeMousePositionDelta : IInputType
 {
     /// <summary>
-    /// Gets the current target position, including any offset applied.
+    /// Gets the current target position, including any offset applied. In screen coordinates (ui coordinates).
     /// </summary>
     public Vector2 CurTargetPosition => targetPosition + TargetPositionOffset;
     
     /// <summary>
-    /// Gets the base target position without any offset.
+    /// Gets the base target position without any offset. In screen coordinates (ui corrdinates).
     /// </summary>
     public Vector2 BaseTargetPosition => targetPosition;
     
@@ -25,6 +28,7 @@ public sealed class InputTypeMousePositionDelta : IInputType
     /// <remarks>
     /// Change this value to adjust the target position.
     /// The target position itself can not be changed after initialization.
+    /// In screen coordinates (ui coordinates).
     /// </remarks>
     public Vector2 TargetPositionOffset;
     private readonly Vector2 targetPosition;
@@ -36,7 +40,8 @@ public sealed class InputTypeMousePositionDelta : IInputType
     /// Initializes a new instance of the <see cref="InputTypeMousePositionDelta"/> class.
     /// </summary>
     /// <param name="axis">The mouse axis to track.</param>
-    /// <param name="targetPosition">The base target position for the mouse input.</param>
+    /// <param name="targetPosition">The base target position for the mouse input.
+    /// The System uses screen coordinates for the mouse position (ui mouse position).</param>
     /// <param name="deadzone">The threshold value for the mouse position delta.</param>
     /// <param name="modifierKeySet">Optional set of modifier keys required for activation.</param>
     public InputTypeMousePositionDelta(ShapeMouseAxis axis, Vector2 targetPosition, float deadzone, ModifierKeySet? modifierKeySet = null)
@@ -68,7 +73,9 @@ public sealed class InputTypeMousePositionDelta : IInputType
     /// <summary>
     /// Updates the target position offset based on the new target position.
     /// </summary>
-    /// <param name="newTargetPosition">The new target position to set.</param>
+    /// <param name="newTargetPosition">The new target position to set.
+    /// The System uses screen coordinates for the mouse position (ui mouse position).
+    /// </param>
     /// <remarks>
     /// Does not change the base target position, but updates the offset instead!
     /// </remarks>
