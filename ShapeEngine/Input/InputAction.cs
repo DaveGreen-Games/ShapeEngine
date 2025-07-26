@@ -4,6 +4,8 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Input;
 
+
+
 /// <summary>
 /// Represents an input action, which can be triggered by various input types and devices.
 /// Handles state, multi-tap, hold, and axis sensitivity/gravity.
@@ -296,6 +298,11 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
     /// </summary>
     /// <param name="valid">True if the state was not already consumed; otherwise, false.</param>
     /// <returns>The previous input state before consumption.</returns>
+    /// <remarks>
+    /// Useful for <see cref="InputAction"/> instances that may be referenced in multiple places, but should only be consumed once per frame.
+    /// For example, a "menu accept" action might be used in several contexts, but should only trigger in the first context that processes it.
+    /// If your system ensures single-use per frame by design, this method is unnecessary. <see cref="InputActionTree"/>s are helpful for isolating input actions, allowing only one tree to be active at a time.
+    /// </remarks>
     public InputState Consume(out bool valid)
     {
         valid = false;   
@@ -313,16 +320,18 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
     /// If the action is in a tree, the update is skipped, because the <see cref="InputActionTree"/> will handle the update automatically.
     /// </summary>
     /// <param name="dt">The time delta in seconds.</param>
+    /// <param name="inputDeviceType">Outputs the detected input device type.</param>
     /// <returns><c>true</c> if the action was updated; otherwise, <c>false</c>.</returns>
     /// <remarks>
     /// Because the <see cref="InputAction"/> is not part of an <see cref="InputActionTree"/>,
     /// the <see cref="IInputType"/> Block system is not used.
     /// </remarks>
-    public bool Update(float dt)
+    public bool Update(float dt, out InputDeviceType inputDeviceType)
     {
         UsedInputs.Clear();
+        inputDeviceType = InputDeviceType.None;
         if (IsInTree) return false;
-        return UpdateAction(dt, null, out _);
+        return UpdateAction(dt, null, out inputDeviceType);
     }
 
     /// <summary>

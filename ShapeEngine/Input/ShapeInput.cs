@@ -224,7 +224,7 @@ public static class ShapeInput
     /// <param name="replace">Device type to replace.</param>
     /// <param name="with">Device type to use as replacement.</param>
     /// <returns>The filtered input device type.</returns>
-    public static InputDeviceType FilterInputDevice(InputDeviceType current, InputDeviceType replace, InputDeviceType with)
+    public static InputDeviceType FilterInputDevice(this InputDeviceType current, InputDeviceType replace, InputDeviceType with)
     {
         return current == replace
             ? with

@@ -191,7 +191,7 @@ namespace Examples.Scenes
             var deviceRect = split[0];
             var gamepadRect = split[1];
 
-            var deviceText = ShapeInput.GetCurInputDeviceGenericName();
+            var deviceText = ShapeInput.CurrentInputDeviceType.GetInputDeviceTypeGenericName();
             titleFont.LineSpacing = 1f;
             titleFont.ColorRgba = Colors.Medium;
             titleFont.DrawTextWrapNone(deviceText, deviceRect, new AnchorPoint(0.01f, 0.5f));

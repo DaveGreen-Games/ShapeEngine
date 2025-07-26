@@ -27,7 +27,7 @@ public class InputActionTreeGroup : SortedSet<InputActionTree>, ICopyable<InputA
         var usedDeviceType = InputDeviceType.None;
         foreach (var tree in this)
         {
-            var updated = tree.UpdateInternal(dt, out var deviceType);
+            var updated = tree.Update(dt, out var deviceType);
             UsedInputs.UnionWith(tree.UsedInputs);
             if (!updated || deviceType == InputDeviceType.None || usedDeviceType != InputDeviceType.None) continue;
             usedDeviceType = deviceType;

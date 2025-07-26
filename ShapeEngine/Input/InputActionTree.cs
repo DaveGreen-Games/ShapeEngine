@@ -185,38 +185,13 @@ public class InputActionTree : SortedSet<InputAction>, IComparable<InputActionTr
     /// Assigns the current gamepad to each action and calls their internal update.
     /// </summary>
     /// <param name="dt">Delta time since last update.</param>
+    /// <param name="usedDeviceType">The first input device type used by an InputAction during this update cycle.</param>
     /// <returns>True if the update was performed; otherwise, false.</returns>
-    public bool Update(float dt)
-    {
-        UsedInputs.Clear();
-        if (IsInGroup || !Active) return false;
-        ClearInputTypeBlockSet();
-        
-        foreach (var action in this)
-        {
-            action.Gamepad = CurrentGamepad;
-            action.UpdateInternal(dt, inputTypeBlockSet, out _);
-            UsedInputs.UnionWith(action.UsedInputs);
-        }
-
-        return true;
-    }
-
-    /// <summary>
-    /// Updates all <see cref="InputAction"/> instances in the tree for the current frame and determines the used input device type.
-    /// Only updates if the tree is in a group and active.
-    /// Clears the input type block set before processing.
-    /// Assigns the current gamepad to each action and calls their internal update.
-    /// Sets <paramref name="usedDeviceType"/> to the first non-None device type used by an action.
-    /// </summary>
-    /// <param name="dt">Delta time since last update.</param>
-    /// <param name="usedDeviceType">The input device type used during this update cycle.</param>
-    /// <returns>True if the update was performed; otherwise, false.</returns>
-    internal bool UpdateInternal(float dt, out InputDeviceType usedDeviceType)
+    public bool Update(float dt, out InputDeviceType usedDeviceType)
     {
         UsedInputs.Clear();
         usedDeviceType = InputDeviceType.None;
-        if (!IsInGroup || !Active) return false;
+        if (IsInGroup || !Active) return false;
         ClearInputTypeBlockSet();
         
         foreach (var action in this)
@@ -227,8 +202,59 @@ public class InputActionTree : SortedSet<InputAction>, IComparable<InputActionTr
             if(!updated || deviceType == InputDeviceType.None || usedDeviceType != InputDeviceType.None) continue;
             usedDeviceType = deviceType;
         }
+
         return true;
     }
+    /// <summary>
+    /// Updates all <see cref="InputAction"/> instances in the tree for the current frame.
+    /// Skips update if the tree is part of a group or inactive.
+    /// Clears the input type block set before processing.
+    /// Assigns the current gamepad to each action and calls their internal update.
+    /// </summary>
+    /// <param name="dt">Delta time since last update.</param>
+    /// <returns>True if the update was performed; otherwise, false.</returns>
+    public bool Update(float dt)
+    {
+        UsedInputs.Clear();
+        if (IsInGroup || !Active) return false;
+        ClearInputTypeBlockSet();
+        
+        foreach (var action in this)
+        {
+            action.Gamepad = CurrentGamepad;
+            action.UpdateInternal(dt, inputTypeBlockSet, out var deviceType);
+            UsedInputs.UnionWith(action.UsedInputs);
+        }
+
+        return true;
+    }
+    // /// <summary>
+    // /// Updates all <see cref="InputAction"/> instances in the tree for the current frame and determines the used input device type.
+    // /// Only updates if the tree is in a group and active.
+    // /// Clears the input type block set before processing.
+    // /// Assigns the current gamepad to each action and calls their internal update.
+    // /// Sets <paramref name="usedDeviceType"/> to the first non-None device type used by an action.
+    // /// </summary>
+    // /// <param name="dt">Delta time since last update.</param>
+    // /// <param name="usedDeviceType">The first input device type used by an InputAction during this update cycle.</param>
+    // /// <returns>True if the update was performed; otherwise, false.</returns>
+    // internal bool UpdateInternal(float dt, out InputDeviceType usedDeviceType)
+    // {
+    //     UsedInputs.Clear();
+    //     usedDeviceType = InputDeviceType.None;
+    //     if (!IsInGroup || !Active) return false;
+    //     ClearInputTypeBlockSet();
+    //     
+    //     foreach (var action in this)
+    //     {
+    //         action.Gamepad = CurrentGamepad;
+    //         var updated = action.UpdateInternal(dt, inputTypeBlockSet, out var deviceType);
+    //         UsedInputs.UnionWith(action.UsedInputs);
+    //         if(!updated || deviceType == InputDeviceType.None || usedDeviceType != InputDeviceType.None) continue;
+    //         usedDeviceType = deviceType;
+    //     }
+    //     return true;
+    // }
     
     #endregion
     
