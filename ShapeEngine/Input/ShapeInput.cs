@@ -671,42 +671,6 @@ public static class ShapeInput
         
         return gamepad?.CreateInputState(neg, pos, axisDeadzone, triggerDeadzone, modifierKeySet) ?? new();
     }
-    /// <summary>
-    /// Creates an <see cref="InputState"/> for a gamepad button on a specific gamepad,
-    /// with a specified deadzone and optional modifier key set.
-    /// </summary>
-    /// <param name="button">The gamepad button to create the input state for.</param>
-    /// <param name="accessTag">The access tag for input access control.</param>
-    /// <param name="gamepadIndex">The index of the gamepad.</param>
-    /// <param name="deadzone">The deadzone value for button sensitivity. Default is 0.1f.</param>
-    /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
-    /// <returns>The created <see cref="InputState"/>.</returns>
-    public static InputState CreateInputState(ShapeGamepadButton button, uint accessTag, int gamepadIndex, float deadzone = 0.1f, ModifierKeySet? modifierKeySet = null)
-    {
-        if (Locked && !HasAccess(accessTag)) return new();
-        var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
-        return gamepad?.CreateInputState(button, deadzone, modifierKeySet) ?? new();
-    }
-
-    /// <summary>
-    /// Creates an <see cref="InputState"/> for a gamepad button axis (negative and positive) on a specific gamepad,
-    /// with a specified deadzone and optional modifier key set.
-    /// </summary>
-    /// <param name="neg">The negative direction gamepad button.</param>
-    /// <param name="pos">The positive direction gamepad button.</param>
-    /// <param name="accessTag">The access tag for input access control.</param>
-    /// <param name="gamepadIndex">The index of the gamepad.</param>
-    /// <param name="deadzone">The deadzone value for button sensitivity. Default is 0.1f.</param>
-    /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
-    /// <returns>The created <see cref="InputState"/>.</returns>
-    public static InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, uint accessTag, int gamepadIndex, float deadzone = 0.1f, ModifierKeySet? modifierKeySet = null)
-    {
-        if (Locked && !HasAccess(accessTag)) return new();
-        var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
-        
-        return gamepad?.CreateInputState(neg, pos, deadzone, deadzone, modifierKeySet) ?? new();
-    }
-
     
     /// <summary>
     /// Creates an <see cref="InputState"/> for a gamepad joystick axis on a specific gamepad.

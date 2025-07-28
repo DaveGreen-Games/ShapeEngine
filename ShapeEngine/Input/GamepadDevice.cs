@@ -788,52 +788,6 @@ public sealed class GamepadDevice : InputDevice
     {
         return new(previousState, CreateInputState(button, axisDeadzone, triggerDeadzone, modifierKeySet));
     }
-    
-    /// <summary>
-    /// Gets the value of the specified gamepad button, using the same value for both axis and trigger deadzones.
-    /// </summary>
-    /// <param name="button">The gamepad button to query.</param>
-    /// <param name="deadzone">Deadzone value for both axis and trigger input. Default is 0.1f.</param>
-    /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
-    /// <returns>The value of the button as a float.</returns>
-    public float GetValue(ShapeGamepadButton button, float deadzone, ModifierKeySet? modifierKeySet = null) => GetValue(button, deadzone, deadzone, modifierKeySet);
-
-    /// <summary>
-    /// Determines if the specified gamepad button is "down" using the same value for both axis and trigger deadzones.
-    /// </summary>
-    /// <param name="button">The gamepad button.</param>
-    /// <param name="deadzone">Deadzone for both axis and trigger input. Default is 0.1f.</param>
-    /// <param name="modifierKeySet">Optional modifier key set.</param>
-    /// <returns>True if the button is down; otherwise, false.</returns>
-    public bool IsDown(ShapeGamepadButton button, float deadzone, ModifierKeySet? modifierKeySet = null) => GetValue(button, deadzone, deadzone, modifierKeySet) != 0f;
-    /// <summary>
-    /// Creates an <see cref="InputState"/> for the specified gamepad button,
-    /// using the same value for both axis and trigger deadzones and an optional modifier key set.
-    /// </summary>
-    /// <param name="button">The gamepad button.</param>
-    /// <param name="deadzone">Deadzone for both axis and trigger input. Default is 0.1f.</param>
-    /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
-    /// <returns>The created <see cref="InputState"/> for the button.</returns>
-    public InputState CreateInputState(ShapeGamepadButton button, float deadzone, ModifierKeySet? modifierKeySet = null)
-    {
-        bool down = IsDown(button, deadzone, deadzone, modifierKeySet);
-        return new(down, !down, down ? 1f : 0f, Index, InputDeviceType.Gamepad);
-    }
-    /// <summary>
-    /// Creates an <see cref="InputState"/> for the specified gamepad button,
-    /// using a previous state and the same value for both axis and trigger deadzones,
-    /// and an optional modifier key set.
-    /// </summary>
-    /// <param name="button">The gamepad button.</param>
-    /// <param name="previousState">The previous input state.</param>
-    /// <param name="deadzone">Deadzone for both axis and trigger input. Default is 0.1f.</param>
-    /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
-    /// <returns>The created <see cref="InputState"/> for the button.</returns>
-    public InputState CreateInputState(ShapeGamepadButton button, InputState previousState, float deadzone, ModifierKeySet? modifierKeySet = null)
-    {
-        return new(previousState, CreateInputState(button, deadzone, deadzone, modifierKeySet));
-    }
-    
     #endregion
     
     #region Joy Axis

@@ -1,5 +1,6 @@
 namespace ShapeEngine.Input;
 
+
 /// <summary>
 /// Represents the various buttons available on a gamepad.
 /// </summary>
