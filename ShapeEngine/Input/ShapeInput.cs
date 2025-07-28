@@ -915,8 +915,163 @@ public static class ShapeInput
     public static bool HasAccess(InputAction action) => HasAccess(action.AccessTag);
 
     #endregion
+
+    #region Button / Axis Names
+
+    #region Keyboard
+    /// <summary>
+    /// Gets the display name for a keyboard button.
+    /// </summary>
+    /// <param name="button">The keyboard button to get the name for.</param>
+    /// <param name="shortHand">Whether to use shorthand notation for the button name.</param>
+    /// <returns>The button name as a string.</returns>
+    public static string GetButtonName(this ShapeKeyboardButton button, bool shortHand = true)
+    {
+        return button switch
+        {
+            ShapeKeyboardButton.APOSTROPHE => shortHand ? "´" : "Apostrophe",
+            ShapeKeyboardButton.COMMA => shortHand ? "," : "Comma",
+            ShapeKeyboardButton.MINUS => shortHand ? "-" : "Minus",
+            ShapeKeyboardButton.PERIOD => shortHand ? "." : "Period",
+            ShapeKeyboardButton.SLASH => shortHand ? "/" : "Slash",
+            ShapeKeyboardButton.ZERO => shortHand ? "0" : "Zero",
+            ShapeKeyboardButton.ONE => shortHand ? "1" : "One",
+            ShapeKeyboardButton.TWO => shortHand ? "2" : "Two",
+            ShapeKeyboardButton.THREE => shortHand ? "3" : "Three",
+            ShapeKeyboardButton.FOUR => shortHand ? "4" : "Four",
+            ShapeKeyboardButton.FIVE => shortHand ? "5" : "Five",
+            ShapeKeyboardButton.SIX => shortHand ? "6" : "Six",
+            ShapeKeyboardButton.SEVEN => shortHand ? "7" : "Seven",
+            ShapeKeyboardButton.EIGHT => shortHand ? "8" : "Eight",
+            ShapeKeyboardButton.NINE => shortHand ? "9" : "Nine",
+            ShapeKeyboardButton.SEMICOLON => shortHand ? ";" : "Semi Colon",
+            ShapeKeyboardButton.EQUAL => shortHand ? "=" : "Equal",
+            ShapeKeyboardButton.A => "A",
+            ShapeKeyboardButton.B => "B",
+            ShapeKeyboardButton.C => "C",
+            ShapeKeyboardButton.D => "D",
+            ShapeKeyboardButton.E => "E",
+            ShapeKeyboardButton.F => "F",
+            ShapeKeyboardButton.G => "G",
+            ShapeKeyboardButton.H => "H",
+            ShapeKeyboardButton.I => "I",
+            ShapeKeyboardButton.J => "J",
+            ShapeKeyboardButton.K => "K",
+            ShapeKeyboardButton.L => "L",
+            ShapeKeyboardButton.M => "M",
+            ShapeKeyboardButton.N => "N",
+            ShapeKeyboardButton.O => "O",
+            ShapeKeyboardButton.P => "P",
+            ShapeKeyboardButton.Q => "Q",
+            ShapeKeyboardButton.R => "R",
+            ShapeKeyboardButton.S => "S",
+            ShapeKeyboardButton.T => "T",
+            ShapeKeyboardButton.U => "U",
+            ShapeKeyboardButton.V => "V",
+            ShapeKeyboardButton.W => "W",
+            ShapeKeyboardButton.X => "X",
+            ShapeKeyboardButton.Y => "Y",
+            ShapeKeyboardButton.Z => "Z",
+            ShapeKeyboardButton.LEFT_BRACKET => shortHand ? "[" : "Left Bracket",
+            ShapeKeyboardButton.BACKSLASH => shortHand ? "\\" : "Backslash",
+            ShapeKeyboardButton.RIGHT_BRACKET => shortHand ? "]" : "Right Bracket",
+            ShapeKeyboardButton.GRAVE => shortHand ? "`" : "Grave",
+            ShapeKeyboardButton.SPACE => shortHand ? "Spc" : "Space",
+            ShapeKeyboardButton.ESCAPE => shortHand ? "Esc" : "Escape",
+            ShapeKeyboardButton.ENTER => shortHand ? "Ent" : "Enter",
+            ShapeKeyboardButton.TAB => shortHand ? "Tab" : "Tabulator",
+            ShapeKeyboardButton.BACKSPACE => shortHand ? "BSpc" : "Backspace",
+            ShapeKeyboardButton.INSERT => shortHand ? "Ins" : "Insert",
+            ShapeKeyboardButton.DELETE => shortHand ? "Del" : "Delete",
+            ShapeKeyboardButton.RIGHT => shortHand ? "Rgt" : "Right",
+            ShapeKeyboardButton.LEFT => shortHand ? "Lft" : "Left",
+            ShapeKeyboardButton.DOWN => shortHand ? "Dwn" : "Down",
+            ShapeKeyboardButton.UP => "Up",
+            ShapeKeyboardButton.PAGE_UP => shortHand ? "PUp" : "Page Up",
+            ShapeKeyboardButton.PAGE_DOWN => shortHand ? "PDwn" : "Page Down",
+            ShapeKeyboardButton.HOME => shortHand ? "Hom" : "Home",
+            ShapeKeyboardButton.END => shortHand ? "End" : "End Key",
+            ShapeKeyboardButton.CAPS_LOCK => shortHand ? "CpsL" : "Caps Lock",
+            ShapeKeyboardButton.SCROLL_LOCK => shortHand ? "ScrL" : "Scroll Lock",
+            ShapeKeyboardButton.NUM_LOCK => shortHand ? "NumL" : "Num Lock",
+            ShapeKeyboardButton.PRINT_SCREEN => shortHand ? "Prnt" : "Print Screen",
+            ShapeKeyboardButton.PAUSE => shortHand ? "Pse" : "Pause",
+            ShapeKeyboardButton.F1 => shortHand ? "F1" : "Function 1",
+            ShapeKeyboardButton.F2 => shortHand ? "F2" : "Function 2",
+            ShapeKeyboardButton.F3 => shortHand ? "F3" : "Function 3",
+            ShapeKeyboardButton.F4 => shortHand ? "F4" : "Function 4",
+            ShapeKeyboardButton.F5 => shortHand ? "F5" : "Function 5",
+            ShapeKeyboardButton.F6 => shortHand ? "F6" : "Function 6",
+            ShapeKeyboardButton.F7 => shortHand ? "F7" : "Function 7",
+            ShapeKeyboardButton.F8 => shortHand ? "F8" : "Function 8",
+            ShapeKeyboardButton.F9 => shortHand ? "F9" : "Function 9",
+            ShapeKeyboardButton.F10 => shortHand ? "F10" : "Function 10",
+            ShapeKeyboardButton.F11 => shortHand ? "F11" : "Function 11",
+            ShapeKeyboardButton.F12 => shortHand ? "F12" : "Function 12",
+            ShapeKeyboardButton.LEFT_SHIFT => shortHand ? "LShift" : "Left Shift",
+            ShapeKeyboardButton.LEFT_CONTROL => shortHand ? "LCtrl" : "Left Control",
+            ShapeKeyboardButton.LEFT_ALT => shortHand ? "LAlt" : "Left Alt",
+            ShapeKeyboardButton.LEFT_SUPER => shortHand ? "LSuper" : "Left Super",
+            ShapeKeyboardButton.RIGHT_SHIFT => shortHand ? "RShift" : "Right Shift",
+            ShapeKeyboardButton.RIGHT_CONTROL => shortHand ? "RCtrl" : "Right Control",
+            ShapeKeyboardButton.RIGHT_ALT => shortHand ? "RAlt" : "Right Alt",
+            ShapeKeyboardButton.RIGHT_SUPER => shortHand ? "RSuper" : "Right Super",
+            ShapeKeyboardButton.KB_MENU => shortHand ? "KBMenu" : "KB Menu",
+            ShapeKeyboardButton.KP_0 => shortHand ? "KP0" : "Keypad 0",
+            ShapeKeyboardButton.KP_1 => shortHand ? "KP1" : "Keypad 1",
+            ShapeKeyboardButton.KP_2 => shortHand ? "KP2" : "Keypad 2",
+            ShapeKeyboardButton.KP_3 => shortHand ? "KP3" : "Keypad 3",
+            ShapeKeyboardButton.KP_4 => shortHand ? "KP4" : "Keypad 4",
+            ShapeKeyboardButton.KP_5 => shortHand ? "KP5" : "Keypad 5",
+            ShapeKeyboardButton.KP_6 => shortHand ? "KP6" : "Keypad 6",
+            ShapeKeyboardButton.KP_7 => shortHand ? "KP7" : "Keypad 7",
+            ShapeKeyboardButton.KP_8 => shortHand ? "KP8" : "Keypad 8",
+            ShapeKeyboardButton.KP_9 => shortHand ? "KP9" : "Keypad 9",
+            ShapeKeyboardButton.KP_DECIMAL => shortHand ? "KPDec" : "Keypad Decimal",
+            ShapeKeyboardButton.KP_DIVIDE => shortHand ? "KPDiv" : "Keypad Divide",
+            ShapeKeyboardButton.KP_MULTIPLY => shortHand ? "KPMul" : "Keypad Multiply",
+            ShapeKeyboardButton.KP_SUBTRACT => shortHand ? "KPSub" : "Keypad Subtract",
+            ShapeKeyboardButton.KP_ADD => shortHand ? "KPAdd" : "Keypad Add",
+            ShapeKeyboardButton.KP_ENTER => shortHand ? "KPEnt" : "Keypad Enter",
+            ShapeKeyboardButton.KP_EQUAL => shortHand ? "KPEqual" : "Keypad Equal",
+            ShapeKeyboardButton.VOLUME_UP => shortHand ? "Vol+" : "Volume Up",
+            ShapeKeyboardButton.VOLUME_DOWN => shortHand ? "Vol-" : "Volume Down",
+            ShapeKeyboardButton.BACK => shortHand ? "Bck" : "Back",
+            ShapeKeyboardButton.NULL => shortHand ? "Nll" : "Null",
+            ShapeKeyboardButton.MENU => shortHand ? "Mnu" : "Menu",
+            _ => "No Key"
+        };
+    }
     
-    #region Gamepad Button / Axis Names
+    /// <summary>
+    /// Gets the display name for a button axis (negative and positive button pair).
+    /// </summary>
+    /// <remarks>
+    /// Format: "NegButtonName|PosButtonName" (e\.g\., "A|D" or "Left|Right"\)
+    /// </remarks>
+    /// <param name="neg">Negative direction button.</param>
+    /// <param name="pos">Positive direction button.</param>
+    /// <param name="shorthand">Whether to use shorthand notation.</param>
+    /// <returns>The button axis name.</returns>
+    public static string GetButtonAxisName(this ShapeKeyboardButton neg, ShapeKeyboardButton pos, bool shorthand = true)
+    {
+        StringBuilder sb = new();
+        
+        string negName = neg.GetButtonName(shorthand);
+        string posName = pos.GetButtonName(shorthand);
+        sb.Append(negName);
+        sb.Append('|');
+        sb.Append(posName);
+        return sb.ToString();
+    }
+    #endregion
+
+    #region Mouse
+    
+
+    #endregion
+    
+    #region Gamepad
     /// <summary>
     /// Gets the display name for a gamepad button.
     /// </summary>
@@ -1011,5 +1166,7 @@ public static class ShapeInput
         sb.Append(posName);
         return sb.ToString();
     }
+    #endregion
+
     #endregion
 }
