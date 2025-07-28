@@ -9,6 +9,16 @@ public partial class InputDeviceUsageDetectionSettings
     public class MouseSettings
     {
         /// <summary>
+        /// The default minimum movement threshold to consider the mouse as "used".
+        /// </summary>
+        public const float DefaultMouseMoveThreshold = 25f;
+    
+        /// <summary>
+        /// The default minimum mouse wheel movement threshold to consider the mouse as "used".
+        /// </summary>
+        public const float DefaultMouseWheelThreshold = 3f;
+        
+        /// <summary>
         /// Gets the default <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.MouseSettings"/> instance with preset values.
         /// </summary>
         /// <code>
@@ -41,8 +51,8 @@ public partial class InputDeviceUsageDetectionSettings
         public MouseSettings()
         {
             Detection = true;
-            MoveThreshold = 25f;
-            WheelThreshold = 3f;
+            MoveThreshold = DefaultMouseMoveThreshold;
+            WheelThreshold = DefaultMouseWheelThreshold;
             MinPressCount = 2;
             MinPressInterval = 1f;
             MinUsedDuration = 0.5f;
@@ -186,8 +196,8 @@ public partial class InputDeviceUsageDetectionSettings
         public MouseSettings(float minUsedDuration, float selectionCooldownDuration = 2f, HashSet<ShapeMouseButton>? exceptionButtons = null)
         {
             Detection = true;
-            MoveThreshold = 25f;
-            WheelThreshold = 3f;
+            MoveThreshold = DefaultMouseMoveThreshold;
+            WheelThreshold = DefaultMouseWheelThreshold;
             MinPressCount = -1;
             MinPressInterval = -1f;
             MinUsedDuration = minUsedDuration;
@@ -214,8 +224,8 @@ public partial class InputDeviceUsageDetectionSettings
         public MouseSettings(int minPressCount, float minPressInterval, float selectionCooldownDuration = 2f, HashSet<ShapeMouseButton>? exceptionButtons = null)
         {
             Detection = true;
-            MoveThreshold = 25f;
-            WheelThreshold = 3f;
+            MoveThreshold = DefaultMouseMoveThreshold;
+            WheelThreshold = DefaultMouseWheelThreshold;
             MinPressCount = minPressCount;
             MinPressInterval = minPressInterval;
             MinUsedDuration = -1f;
@@ -243,8 +253,8 @@ public partial class InputDeviceUsageDetectionSettings
         public MouseSettings(HashSet<ShapeMouseButton> selectionButtons, float selectionCooldownDuration = 2f, HashSet<ShapeMouseButton>? exceptionButtons = null)
         {
             Detection = true;
-            MoveThreshold = 0.5f;
-            WheelThreshold = 0.25f;
+            MoveThreshold = DefaultMouseMoveThreshold;
+            WheelThreshold = DefaultMouseWheelThreshold;
             MinPressCount = -1;
             MinPressInterval = -1f;
             MinUsedDuration = -1f;

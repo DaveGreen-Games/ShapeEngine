@@ -551,7 +551,7 @@ public static class ShapeInput
     #endregion
     
     #region Create InputState Methods
-    
+    #region Keyboard
     /// <summary>
     /// Creates an <see cref="InputState"/> for a keyboard button.
     /// </summary>
@@ -577,61 +577,74 @@ public static class ShapeInput
         if (Locked && !HasAccess(accessTag)) return new();
         return modifierKeySet == null ? ActiveKeyboardDevice.CreateInputState(neg, pos) : ActiveKeyboardDevice.CreateInputState(neg, pos, modifierKeySet);
     }
-    
+    #endregion
+
+    #region Mouse
     /// <summary>
     /// Creates an <see cref="InputState"/> for a mouse button.
     /// </summary>
     /// <param name="button">The mouse button.</param>
     /// <param name="accessTag">The access tag for input access control.</param>
-    /// <param name="deadzone">The deadzone value for input sensitivity. Default is 0f.</param>
+    /// <param name="moveDeadzone">Optional deadzone for mouse movement detection.</param>
+    /// <param name="wheelDeadzone">Optional deadzone for mouse wheel detection.</param>
     /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
     /// <returns>The created <see cref="InputState"/>.</returns>
-    public static InputState CreateInputState(ShapeMouseButton button, uint accessTag, float deadzone = 0f,  ModifierKeySet? modifierKeySet = null)
+    public static InputState CreateInputState(ShapeMouseButton button, uint accessTag, 
+        float moveDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold,  
+        float wheelDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseWheelThreshold,  
+        ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        return modifierKeySet == null ? ActiveMouseDevice.CreateInputState(button, deadzone, deadzone) : ActiveMouseDevice.CreateInputState(button, deadzone, modifierKeySet);
+        return ActiveMouseDevice.CreateInputState(button, moveDeadzone, wheelDeadzone, modifierKeySet);
     }
-
+    
     /// <summary>
     /// Creates an <see cref="InputState"/> for a mouse button axis (negative and positive).
     /// </summary>
     /// <param name="neg">The negative mouse button.</param>
     /// <param name="pos">The positive mouse button.</param>
     /// <param name="accessTag">The access tag for input access control.</param>
-    /// <param name="deadzone">The deadzone value for input sensitivity. Default is 0f.</param>
+    /// <param name="moveDeadzone">Optional deadzone for mouse movement detection.</param>
+    /// <param name="wheelDeadzone">Optional deadzone for mouse wheel detection.</param>
     /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
     /// <returns>The created <see cref="InputState"/>.</returns>
-    public static InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, uint accessTag, float deadzone = 0f, ModifierKeySet? modifierKeySet = null)
+    public static InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, uint accessTag, 
+        float moveDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold,  
+        float wheelDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseWheelThreshold,  
+        ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        return modifierKeySet == null ? ActiveMouseDevice.CreateInputState(neg, pos, deadzone, deadzone) : ActiveMouseDevice.CreateInputState(neg, pos, deadzone, modifierKeySet);
+        return ActiveMouseDevice.CreateInputState(neg, pos, moveDeadzone, wheelDeadzone, modifierKeySet);
     }
-
+    
     /// <summary>
     /// Creates an <see cref="InputState"/> for a mouse wheel axis.
     /// </summary>
     /// <param name="axis">The mouse wheel axis.</param>
     /// <param name="accessTag">The access tag for input access control.</param>
-    /// <param name="deadzone">The deadzone value for input sensitivity. Default is 1f.</param>
+    /// <param name="deadzone">Optional deadzone for mouse wheel detection.</param>
     /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
     /// <returns>The created <see cref="InputState"/>.</returns>
-    public static InputState CreateInputState(ShapeMouseWheelAxis axis, uint accessTag, float deadzone = 1f, ModifierKeySet? modifierKeySet = null)
+    public static InputState CreateInputState(ShapeMouseWheelAxis axis, uint accessTag, 
+        float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseWheelThreshold, ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        return modifierKeySet == null ? ActiveMouseDevice.CreateInputState(axis, deadzone) : ActiveMouseDevice.CreateInputState(axis, deadzone, modifierKeySet);
+        return ActiveMouseDevice.CreateInputState(axis, deadzone, modifierKeySet);
     }
+    
     /// <summary>
     /// Creates an <see cref="InputState"/> for a mouse axis.
     /// </summary>
     /// <param name="axis">The mouse axis.</param>
-    /// <param name="accessTag">The access tag for input access control. See <see cref="Locked"/> system for more info.</param>
-    /// <param name="deadzone">The deadzone value for input sensitivity. Default is 1f.</param>
+    /// <param name="accessTag">The access tag for input access control.</param>
+    /// <param name="deadzone">Optional deadzone for mouse movement detection.</param>
     /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
     /// <returns>The created <see cref="InputState"/>.</returns>
-    public static InputState CreateInputState(ShapeMouseAxis axis, uint accessTag, float deadzone = 1f, ModifierKeySet? modifierKeySet = null)
+    public static InputState CreateInputState(ShapeMouseAxis axis, uint accessTag, 
+        float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        return modifierKeySet == null ? ActiveMouseDevice.CreateInputState(axis, deadzone) : ActiveMouseDevice.CreateInputState(axis, deadzone, modifierKeySet);
+        return ActiveMouseDevice.CreateInputState(axis, deadzone, modifierKeySet);
     }
 
     /// <summary>
@@ -645,7 +658,9 @@ public static class ShapeInput
     /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
     /// <returns>The created <see cref="InputState"/>.</returns>
     public static InputState CreateInputState(ShapeGamepadButton button, uint accessTag, int gamepadIndex, 
-        float axisDeadzone = 0.1f, float triggerDeadzone = 0.1f, ModifierKeySet? modifierKeySet = null)
+        float axisDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, 
+        float triggerDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
+        ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
         var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
@@ -1079,6 +1094,82 @@ public static class ShapeInput
 
     #region Mouse
     
+    /// <summary>
+    /// Gets the display name for a mouse axis.
+    /// </summary>
+    /// <param name="axis">The axis.</param>
+    /// <param name="shortHand">Whether to use shorthand notation.</param>
+    /// <returns>The axis name.</returns>
+    public static string GetAxisName(this ShapeMouseAxis axis, bool shortHand = true)
+    {
+        switch (axis)
+        {
+            case ShapeMouseAxis.HORIZONTAL: return shortHand ? "Mx" : "Mouse Horizontal";
+            case ShapeMouseAxis.VERTICAL: return shortHand ? "My" : "Mouse Vertical";
+            default: return "No Key";
+        }
+    }
+    /// <summary>
+    /// Gets the display name for a mouse wheel axis.
+    /// </summary>
+    /// <param name="axis">The wheel axis.</param>
+    /// <param name="shortHand">Whether to use shorthand notation.</param>
+    /// <returns>The wheel axis name.</returns>
+    public static string GetWheelAxisName(this ShapeMouseWheelAxis axis, bool shortHand = true)
+    {
+        return axis switch
+        {
+            ShapeMouseWheelAxis.HORIZONTAL => shortHand ? "MWx" : "Mouse Wheel Horizontal",
+            ShapeMouseWheelAxis.VERTICAL => shortHand ? "MWy" : "Mouse Wheel Vertical",
+            _ => "No Key"
+        };
+    }
+    /// <summary>
+    /// Gets the display name for a mouse button.
+    /// </summary>
+    /// <param name="button">The mouse button.</param>
+    /// <param name="shortHand">Whether to use shorthand notation.</param>
+    /// <returns>The button name.</returns>
+    public static string GetButtonName(this ShapeMouseButton button, bool shortHand = true)
+    {
+        return button switch
+        {
+            ShapeMouseButton.LEFT => shortHand ? "LMB" : "Left Mouse Button",
+            ShapeMouseButton.RIGHT => shortHand ? "RMB" : "Right Mouse Button",
+            ShapeMouseButton.MIDDLE => shortHand ? "MMB" : "Middle Mouse Button",
+            ShapeMouseButton.SIDE => shortHand ? "SMB" : "Side Mouse Button",
+            ShapeMouseButton.EXTRA => shortHand ? "EMB" : "Extra Mouse Button",
+            ShapeMouseButton.FORWARD => shortHand ? "FMB" : "Forward Mouse Button",
+            ShapeMouseButton.BACK => shortHand ? "BMB" : "Back Mouse Button",
+            ShapeMouseButton.MW_UP => shortHand ? "MW U" : "Mouse Wheel Up",
+            ShapeMouseButton.MW_DOWN => shortHand ? "MW D" : "Mouse Wheel Down",
+            ShapeMouseButton.MW_LEFT => shortHand ? "MW L" : "Mouse Wheel Left",
+            ShapeMouseButton.MW_RIGHT => shortHand ? "MW R" : "Mouse Wheel Right",
+            ShapeMouseButton.UP_AXIS => shortHand ? "M Up" : "Mouse Up",
+            ShapeMouseButton.DOWN_AXIS => shortHand ? "M Dwn" : "Mouse Down",
+            ShapeMouseButton.LEFT_AXIS => shortHand ? "M Lft" : "Mouse Left",
+            ShapeMouseButton.RIGHT_AXIS => shortHand ? "M Rgt" : "Mouse Right",
+            _ => "No Key"
+        };
+    }
+    /// <summary>
+    /// Gets the display name for a mouse button axis (negative and positive button pair).
+    /// </summary>
+    /// <param name="neg">Negative direction mouse button.</param>
+    /// <param name="pos">Positive direction mouse button.</param>
+    /// <param name="shorthand">Whether to use shorthand notation.</param>
+    /// <returns>The button axis name as a string.</returns>
+    public static string GetButtonAxisName(ShapeMouseButton neg, ShapeMouseButton pos, bool shorthand = true)
+    {
+        StringBuilder sb = new();
+        
+        string negName = neg.GetButtonName(shorthand);
+        string posName = pos.GetButtonName(shorthand);
+        sb.Append(negName);
+        sb.Append('|');
+        sb.Append(posName);
+        return sb.ToString();
+    }
 
     #endregion
     

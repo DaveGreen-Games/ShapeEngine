@@ -34,14 +34,14 @@ public class ModifierKeyMouseButton : IModifierKey
     /// </summary>
     /// <param name="gamepad">Unused. Present for interface compatibility.</param>
     /// <returns><c>true</c> if the modifier is active; otherwise, <c>false</c>.</returns>
-    public bool IsActive(GamepadDevice? gamepad = null) => ShapeInput.ActiveMouseDevice.IsModifierActive(modifier, reverseModifier);
+    public bool IsActive(GamepadDevice? gamepad = null) => ShapeInput.ActiveMouseDevice.IsDown(modifier) && !reverseModifier; //   ShapeInput.ActiveMouseDevice.IsModifierActive(modifier, reverseModifier);
 
     /// <summary>
     /// Gets the display name of the modifier key.
     /// </summary>
     /// <param name="shorthand">If set to <c>true</c>, returns the shorthand name.</param>
     /// <returns>The name of the modifier key, or an empty string if <c>reverseModifier</c> is <c>true</c>.</returns>
-    public string GetName(bool shorthand = true) => reverseModifier ? "" : MouseDevice.GetButtonName(modifier, shorthand);
+    public string GetName(bool shorthand = true) => reverseModifier ? "" : modifier.GetButtonName(shorthand);
 
     /// <summary>
     /// Creates a copy of this <see cref="ModifierKeyMouseButton"/> instance.

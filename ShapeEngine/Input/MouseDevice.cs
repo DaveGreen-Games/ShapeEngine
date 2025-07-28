@@ -447,60 +447,37 @@ public sealed class MouseDevice : InputDevice
             wheelAxisStates[axis] = new InputState(prevState, curState);
         }
     }
-   
+    
     #region Axis
     /// <summary>
-    /// Gets the display name for a mouse axis.
+    /// Gets the value of the specified mouse axis (horizontal or vertical) based on the current mouse delta,
+    /// applying a deadzone threshold and optional modifier key set.
+    /// Returns 0 if the device is locked, the mouse is not on screen, or the modifier key set is not active.
     /// </summary>
-    /// <param name="axis">The axis.</param>
-    /// <param name="shortHand">Whether to use shorthand notation.</param>
-    /// <returns>The axis name.</returns>
-    public static string GetAxisName(ShapeMouseAxis axis, bool shortHand = true)
-    {
-        switch (axis)
-        {
-            case ShapeMouseAxis.HORIZONTAL: return shortHand ? "Mx" : "Mouse Horizontal";
-            case ShapeMouseAxis.VERTICAL: return shortHand ? "My" : "Mouse Vertical";
-            default: return "No Key";
-        }
-    }
-
-    /// <summary>
-    /// Determines if the specified mouse axis is considered "down" (moved past deadzone).
-    /// </summary>
-    public bool IsDown(ShapeMouseAxis axis, float deadzone = 0.5f)
-    {
-        return GetValue(axis, deadzone) != 0f;
-    }
-
-    /// <summary>
-    /// Determines if the specified mouse axis is "down" with modifier keys.
-    /// </summary>
-    public bool IsDown(ShapeMouseAxis axis, float deadzone, ModifierKeySet modifierKeySet)
-    {
-        return GetValue(axis, deadzone, modifierKeySet) != 0;
-    }
-    
-    /// <summary>
-    /// Gets the value of the specified mouse axis, considering deadzone and modifier keys.
-    /// </summary>
-    public float GetValue(ShapeMouseAxis axis, float deadzone, ModifierKeySet modifierKeySet)
+    /// <param name="axis">The mouse axis to query (horizontal or vertical).</param>
+    /// <param name="deadzone">The minimum movement required to register a value (default is the configured move threshold).</param>
+    /// <param name="modifierKeySet">Optional modifier key set that must be active for the value to be returned.</param>
+    /// <returns>The axis value, or 0 if below the deadzone or input is not valid.</returns>
+    public float GetValue(ShapeMouseAxis axis, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, ModifierKeySet? modifierKeySet = null)
     {
         if (isLocked) return 0f;
         if (!GameWindow.Instance.MouseOnScreen) return 0f;
-        if (!modifierKeySet.IsActive()) return 0f;
-        return GetValue(axis, deadzone);
+        if (modifierKeySet != null && !modifierKeySet.IsActive()) return 0f;
+        
+        var value = MouseDelta;
+        float returnValue = axis == ShapeMouseAxis.VERTICAL ? value.Y : value.X;
+        return MathF.Abs(returnValue) < deadzone ? 0f : returnValue;
     }
     /// <summary>
-    /// Gets the value of the specified mouse axis based on the difference between the target position and the current mouse position,
-    /// considering a threshold and modifier keys.
-    /// Returns 0 if the device is locked, mouse is not on screen, or the modifier key set is not active.
+    /// Gets the value of the specified mouse axis (horizontal or vertical) based on the difference between the current mouse position and a target position,
+    /// applying a threshold and optional modifier key set.
+    /// Returns 0 if the device is locked, the mouse is not on screen, or the modifier key set is not active.
     /// </summary>
-    /// <param name="axis">The mouse axis to evaluate.</param>
-    /// <param name="targetPosition">The target position to compare against the current mouse position.</param>
+    /// <param name="axis">The mouse axis to query (horizontal or vertical).</param>
+    /// <param name="targetPosition">The position to compare the current mouse position against.</param>
     /// <param name="threshold">The minimum movement required to register a value.</param>
-    /// <param name="modifierKeySet">The set of modifier keys that must be active.</param>
-    /// <returns>The axis value if above the threshold and modifiers are active; otherwise, 0.</returns>
+    /// <param name="modifierKeySet">Optional modifier key set that must be active for the value to be returned.</param>
+    /// <returns>The axis value, or 0 if below the threshold or input is not valid.</returns>
     public float GetValue(ShapeMouseAxis axis, Vector2 targetPosition, float threshold, ModifierKeySet? modifierKeySet = null)
     {
         if (isLocked) return 0f;
@@ -508,82 +485,103 @@ public sealed class MouseDevice : InputDevice
         if (modifierKeySet != null && !modifierKeySet.IsActive()) return 0f;
         var delta = MousePosition - targetPosition;
         var value = axis == ShapeMouseAxis.VERTICAL ? delta.Y : delta.X;
-        if (MathF.Abs(value) < threshold) return 0f;
-        return value;
+        return MathF.Abs(value) < threshold ? 0f : value;
     }
     /// <summary>
-    /// Gets the value of the specified mouse axis, considering deadzone.
+    /// Determines whether the specified mouse axis is considered "down" (i.e., has moved beyond the given deadzone threshold).
+    /// Returns true if the axis value is not zero, otherwise false.
     /// </summary>
-    public float GetValue(ShapeMouseAxis axis, float deadzone = 0.5f)
+    /// <param name="axis">The mouse axis to check (horizontal or vertical).</param>
+    /// <param name="deadzone">The minimum movement required to register as "down" (default is the configured move threshold).</param>
+    /// <param name="modifierKeySet">Optional modifier key set that must be active for the axis to be considered "down".</param>
+    /// <returns>True if the axis is down, otherwise false.</returns>
+    public bool IsDown(ShapeMouseAxis axis, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, ModifierKeySet? modifierKeySet = null)
     {
-        if (isLocked) return 0f;
-        if (!GameWindow.Instance.MouseOnScreen) return 0f;
-
-        var value = MouseDelta; // Raylib.GetMouseDelta();
-        float returnValue = axis == ShapeMouseAxis.VERTICAL ? value.Y : value.X;
-        if (MathF.Abs(returnValue) < deadzone) return 0f;
-        return returnValue;
+        return GetValue(axis, deadzone, modifierKeySet) != 0;
     }
     /// <summary>
-    /// Creates an <see cref="InputState"/> for the specified mouse axis.
+    /// Determines whether the specified mouse axis is considered "down" (i.e., has moved beyond the given threshold)
+    /// relative to a target position. Returns true if the axis value is not zero, otherwise false.
     /// </summary>
-    public InputState CreateInputState(ShapeMouseAxis axis, float deadzone, ModifierKeySet modifierKeySet)
+    /// <param name="axis">The mouse axis to check (horizontal or vertical).</param>
+    /// <param name="targetPosition">The position to compare the current mouse position against.</param>
+    /// <param name="threshold">The minimum movement required to register as "down".</param>
+    /// <param name="modifierKeySet">Optional modifier key set that must be active for the axis to be considered "down".</param>
+    /// <returns>True if the axis is down, otherwise false.</returns>
+    public bool IsDown(ShapeMouseAxis axis, Vector2 targetPosition, float threshold, ModifierKeySet? modifierKeySet = null)
+    {
+        return GetValue(axis, targetPosition, threshold, modifierKeySet) != 0;
+    }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified mouse axis,
+    /// using the current axis value, a deadzone threshold, and an optional modifier key set.
+    /// </summary>
+    /// <param name="axis">The mouse axis to evaluate (horizontal or vertical).</param>
+    /// <param name="deadzone">The minimum movement required to register as "down" (default is the configured move threshold).</param>
+    /// <param name="modifierKeySet">Optional modifier key set that must be active for the axis to be considered "down".</param>
+    /// <returns>
+    /// An <see cref="InputState"/> representing the current state of the axis,
+    /// including whether it is down, up, and its value.
+    /// </returns>
+    public InputState CreateInputState(ShapeMouseAxis axis, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, ModifierKeySet? modifierKeySet = null)
     {
         float axisValue = GetValue(axis, deadzone, modifierKeySet);
         bool down = axisValue != 0f;
         return new(down, !down, axisValue, -1, InputDeviceType.Mouse);
     }
     /// <summary>
-    /// Creates an <see cref="InputState"/> for the specified mouse axis based on the difference between the target position and the current mouse position,
-    /// considering a deadzone and modifier keys.
+    /// Creates an <see cref="InputState"/> for the specified mouse axis,
+    /// using the difference between the current mouse position and a target position,
+    /// a deadzone threshold, and an optional modifier key set.
     /// </summary>
-    /// <param name="axis">The mouse axis to evaluate.</param>
-    /// <param name="targetPosition">The target position to compare against the current mouse position.</param>
-    /// <param name="deadzone">The minimum movement required to register a value.</param>
-    /// <param name="modifierKeySet">The set of modifier keys that must be active.</param>
-    /// <returns>An <see cref="InputState"/> representing the axis state.</returns>
-    public InputState CreateInputState(ShapeMouseAxis axis, Vector2 targetPosition,  float deadzone, ModifierKeySet? modifierKeySet = null)
+    /// <param name="axis">The mouse axis to evaluate (horizontal or vertical).</param>
+    /// <param name="targetPosition">The position to compare the current mouse position against.</param>
+    /// <param name="deadzone">The minimum movement required to register as "down" (default is the configured move threshold).</param>
+    /// <param name="modifierKeySet">Optional modifier key set that must be active for the axis to be considered "down".</param>
+    /// <returns>
+    /// An <see cref="InputState"/> representing the current state of the axis,
+    /// including whether it is down, up, and its value.
+    /// </returns>
+    public InputState CreateInputState(ShapeMouseAxis axis, Vector2 targetPosition,  float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, ModifierKeySet? modifierKeySet = null)
     {
         float axisValue = GetValue(axis, targetPosition, deadzone, modifierKeySet);
         bool down = axisValue != 0f;
         return new(down, !down, axisValue, -1, InputDeviceType.Mouse);
     }
     /// <summary>
-    /// Creates an <see cref="InputState"/> for the specified mouse axis, using a previous state.
+    /// Creates an <see cref="InputState"/> for the specified mouse axis,
+    /// using the difference between the current mouse position and a target position,
+    /// a deadzone threshold, an optional modifier key set, and the previous input state.
     /// </summary>
-    public InputState CreateInputState(ShapeMouseAxis axis, InputState previousState, float deadzone, ModifierKeySet modifierKeySet)
-    {
-        return new(previousState, CreateInputState(axis, deadzone, modifierKeySet));
-    }
-    /// <summary>
-    /// Creates an <see cref="InputState"/> for the specified mouse axis based on the difference between the target position and the current mouse position,
-    /// using a previous state, considering a deadzone and modifier keys.
-    /// </summary>
-    /// <param name="axis">The mouse axis to evaluate.</param>
-    /// <param name="targetPosition">The target position to compare against the current mouse position.</param>
-    /// <param name="previousState">The previous input state.</param>
-    /// <param name="deadzone">The minimum movement required to register a value.</param>
-    /// <param name="modifierKeySet">The set of modifier keys that must be active.</param>
-    /// <returns>An <see cref="InputState"/> representing the axis state.</returns>
-    public InputState CreateInputState(ShapeMouseAxis axis, Vector2 targetPosition,  InputState previousState, float deadzone, ModifierKeySet? modifierKeySet = null)
+    /// <param name="axis">The mouse axis to evaluate (horizontal or vertical).</param>
+    /// <param name="targetPosition">The position to compare the current mouse position against.</param>
+    /// <param name="previousState">The previous input state to base the new state on.</param>
+    /// <param name="deadzone">The minimum movement required to register as "down" (default is the configured move threshold).</param>
+    /// <param name="modifierKeySet">Optional modifier key set that must be active for the axis to be considered "down".</param>
+    /// <returns>
+    /// An <see cref="InputState"/> representing the current state of the axis,
+    /// including whether it is down, up, and its value, based on the previous state.
+    /// </returns>
+    public InputState CreateInputState(ShapeMouseAxis axis, Vector2 targetPosition,  InputState previousState, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, ModifierKeySet? modifierKeySet = null)
     {
         return new(previousState, CreateInputState(axis, targetPosition, deadzone, modifierKeySet));
     }
     /// <summary>
-    /// Creates an <see cref="InputState"/> for the specified mouse axis.
+    /// Creates an <see cref="InputState"/> for the specified mouse axis,
+    /// using the current axis value, a deadzone threshold, an optional modifier key set,
+    /// and the previous input state to base the new state on.
     /// </summary>
-    public InputState CreateInputState(ShapeMouseAxis axis, float deadzone = 0.5f)
+    /// <param name="axis">The mouse axis to evaluate (horizontal or vertical).</param>
+    /// <param name="previousState">The previous input state to base the new state on.</param>
+    /// <param name="deadzone">The minimum movement required to register as "down" (default is the configured move threshold).</param>
+    /// <param name="modifierKeySet">Optional modifier key set that must be active for the axis to be considered "down".</param>
+    /// <returns>
+    /// An <see cref="InputState"/> representing the current state of the axis,
+    /// including whether it is down, up, and its value, based on the previous state.
+    /// </returns>
+    public InputState CreateInputState(ShapeMouseAxis axis, InputState previousState, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, ModifierKeySet? modifierKeySet = null)
     {
-        float axisValue = GetValue(axis, deadzone);
-        bool down = axisValue != 0f;
-        return new(down, !down, axisValue, -1, InputDeviceType.Mouse);
-    }
-    /// <summary>
-    /// Creates an <see cref="InputState"/> for the specified mouse axis, using a previous state.
-    /// </summary>
-    public InputState CreateInputState(ShapeMouseAxis axis, InputState previousState, float deadzone = 0.5f)
-    {
-        return new(previousState, CreateInputState(axis, deadzone));
+        return new(previousState, CreateInputState(axis, deadzone, modifierKeySet));
     }
     
     #endregion
@@ -591,219 +589,95 @@ public sealed class MouseDevice : InputDevice
     #region Wheel Axis
 
     /// <summary>
-    /// Determines if the specified mouse wheel axis is "down" with modifier keys.
+    /// Gets the value of the specified mouse wheel axis (horizontal or vertical) based on the current mouse wheel movement,
+    /// applying a deadzone threshold and optional modifier key set.
+    /// Returns 0 if the device is locked, the mouse is not on screen, or the modifier key set is not active.
     /// </summary>
-    public bool IsDown(ShapeMouseWheelAxis axis, float deadzone, ModifierKeySet modifierKeySet)
+    /// <param name="axis">The mouse wheel axis to query (horizontal or vertical).</param>
+    /// <param name="deadzone">The minimum movement required to register a value (default is the configured wheel threshold).</param>
+    /// <param name="modifierKeySet">Optional modifier key set that must be active for the value to be returned.</param>
+    /// <returns>The axis value, or 0 if below the deadzone or input is not valid.</returns>
+    public float GetValue(ShapeMouseWheelAxis axis, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseWheelThreshold, ModifierKeySet? modifierKeySet = null)
+    {
+        if (isLocked) return 0f;
+        if (!GameWindow.Instance.MouseOnScreen) return 0f;
+        if (modifierKeySet != null && !modifierKeySet.IsActive()) return 0f;
+        var value = MouseWheelV;
+        float returnValue = axis == ShapeMouseWheelAxis.VERTICAL ? value.Y : value.X;
+        return MathF.Abs(returnValue) < deadzone ? 0f : returnValue;
+    }
+
+    /// <summary>
+    /// Determines whether the specified mouse wheel axis is considered "down" (i.e., has moved beyond the given deadzone threshold).
+    /// Returns true if the axis value is not zero, otherwise false.
+    /// </summary>
+    /// <param name="axis">The mouse wheel axis to check (horizontal or vertical).</param>
+    /// <param name="deadzone">The minimum movement required to register as "down" (default is the configured wheel threshold).</param>
+    /// <param name="modifierKeySet">Optional modifier key set that must be active for the axis to be considered "down".</param>
+    /// <returns>True if the axis is down, otherwise false.</returns>
+    public bool IsDown(ShapeMouseWheelAxis axis, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseWheelThreshold, ModifierKeySet? modifierKeySet = null)
     {
         return GetValue(axis, deadzone, modifierKeySet) != 0f;
     }
-    /// <summary>
-    /// Determines if the specified mouse wheel axis is "down".
-    /// </summary>
-    public bool IsDown(ShapeMouseWheelAxis axis, float deadzone = 0.2f)
-    {
-        return GetValue(axis, deadzone) != 0f;
-    }
-    /// <summary>
-    /// Gets the value of the specified mouse wheel axis, considering deadzone and modifier keys.
-    /// </summary>
-    public float GetValue(ShapeMouseWheelAxis axis, float deadzone, ModifierKeySet modifierKeySet)
-    {
-        if (isLocked) return 0f;
-        if (!GameWindow.Instance.MouseOnScreen) return 0f;
-        if (!modifierKeySet.IsActive()) return 0f;
-        return GetValue(axis, deadzone);
-    }
-    /// <summary>
-    /// Gets the value of the specified mouse wheel axis, considering deadzone.
-    /// </summary>
-    public float GetValue(ShapeMouseWheelAxis axis, float deadzone = 0.2f)
-    {
-        if (isLocked) return 0f;
-        if (!GameWindow.Instance.MouseOnScreen) return 0f;
 
-        var value = MouseWheelV; // Raylib.GetMouseWheelMoveV();
-        float returnValue = axis == ShapeMouseWheelAxis.VERTICAL ? value.Y : value.X;
-        if (MathF.Abs(returnValue) < deadzone) return 0f;
-        return returnValue;
-    }
     /// <summary>
-    /// Creates an <see cref="InputState"/> for the specified mouse wheel axis.
+    /// Creates an <see cref="InputState"/> for the specified mouse wheel axis,
+    /// using the current axis value, a deadzone threshold, and an optional modifier key set.
     /// </summary>
-    public InputState CreateInputState(ShapeMouseWheelAxis axis, float deadzone, ModifierKeySet modifierKeySet)
+    /// <param name="axis">The mouse wheel axis to evaluate (horizontal or vertical).</param>
+    /// <param name="deadzone">The minimum movement required to register as "down" (default is the configured wheel threshold).</param>
+    /// <param name="modifierKeySet">Optional modifier key set that must be active for the axis to be considered "down".</param>
+    /// <returns>
+    /// An <see cref="InputState"/> representing the current state of the wheel axis,
+    /// including whether it is down, up, and its value.
+    /// </returns>
+    public InputState CreateInputState(ShapeMouseWheelAxis axis, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseWheelThreshold, ModifierKeySet? modifierKeySet = null)
     {
-        
         float axisValue = GetValue(axis, deadzone, modifierKeySet);
         bool down = axisValue != 0f;
         return new(down, !down, axisValue, -1, InputDeviceType.Mouse);
     }
+
     /// <summary>
-    /// Creates an <see cref="InputState"/> for the specified mouse wheel axis, using a previous state.
+    /// Creates an <see cref="InputState"/> for the specified mouse wheel axis,
+    /// using the current axis value, a deadzone threshold, an optional modifier key set,
+    /// and the previous input state to base the new state on.
     /// </summary>
-    public InputState CreateInputState(ShapeMouseWheelAxis axis, InputState previousState, float deadzone, ModifierKeySet modifierKeySet)
+    /// <param name="axis">The mouse wheel axis to evaluate (horizontal or vertical).</param>
+    /// <param name="previousState">The previous input state to base the new state on.</param>
+    /// <param name="deadzone">The minimum movement required to register as "down" (default is the configured wheel threshold).</param>
+    /// <param name="modifierKeySet">Optional modifier key set that must be active for the axis to be considered "down".</param>
+    /// <returns>
+    /// An <see cref="InputState"/> representing the current state of the wheel axis,
+    /// including whether it is down, up, and its value, based on the previous state.
+    /// </returns>
+    public InputState CreateInputState(ShapeMouseWheelAxis axis, InputState previousState, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseWheelThreshold, ModifierKeySet? modifierKeySet = null)
     {
         return new(previousState, CreateInputState(axis, deadzone, modifierKeySet));
     }
-    /// <summary>
-    /// Creates an <see cref="InputState"/> for the specified mouse wheel axis.
-    /// </summary>
-    public InputState CreateInputState(ShapeMouseWheelAxis axis, float deadzone = 0.2f)
-    {
-        
-        float axisValue = GetValue(axis, deadzone);
-        bool down = axisValue != 0f;
-        return new(down, !down, axisValue, -1, InputDeviceType.Mouse);
-    }
-    /// <summary>
-    /// Creates an <see cref="InputState"/> for the specified mouse wheel axis, using a previous state.
-    /// </summary>
-    public InputState CreateInputState(ShapeMouseWheelAxis axis, InputState previousState, float deadzone = 0.2f)
-    {
-        return new(previousState, CreateInputState(axis, deadzone));
-    }
-    
-    /// <summary>
-    /// Gets the display name for a mouse wheel axis.
-    /// </summary>
-    /// <param name="axis">The wheel axis.</param>
-    /// <param name="shortHand">Whether to use shorthand notation.</param>
-    /// <returns>The wheel axis name.</returns>
-    public static string GetWheelAxisName(ShapeMouseWheelAxis axis, bool shortHand = true)
-    {
-        switch (axis)
-        {
-            case ShapeMouseWheelAxis.HORIZONTAL: return shortHand ? "MWx" : "Mouse Wheel Horizontal";
-            case ShapeMouseWheelAxis.VERTICAL: return shortHand ? "MWy" : "Mouse Wheel Vertical";
-            default: return "No Key";
-        }
-    }
-
     #endregion
     
     #region Button
+    
     /// <summary>
-    /// Gets the display name for a mouse button.
+    /// Gets the value of the specified mouse button, mouse wheel, or mouse axis button.
+    /// Returns 1 for pressed buttons, or the axis/wheel value if applicable, otherwise 0.
+    /// Returns 0 if the device is locked, the mouse is not on screen, or the modifier key set is not active.
     /// </summary>
-    /// <param name="button">The mouse button.</param>
-    /// <param name="shortHand">Whether to use shorthand notation.</param>
-    /// <returns>The button name.</returns>
-    public static string GetButtonName(ShapeMouseButton button, bool shortHand = true)
+    /// <param name="button">The mouse button to query.</param>
+    /// <param name="mouseMoveDeadzone">The minimum movement required to register a value for axis buttons (default is the configured move threshold).</param>
+    /// <param name="mouseWheelDeadzone">The minimum movement required to register a value for wheel buttons (default is the configured wheel threshold).</param>
+    /// <param name="modifierKeySet">Optional modifier key set that must be active for the value to be returned.</param>
+    /// <returns>The button value, axis/wheel value, or 0 if not active or below threshold.</returns>
+    public float GetValue(
+        ShapeMouseButton button, 
+        float mouseMoveDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, 
+        float mouseWheelDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold,
+        ModifierKeySet? modifierKeySet = null)
     {
-        switch (button)
-        {
-            case ShapeMouseButton.LEFT: return shortHand ? "LMB" : "Left Mouse Button";
-            case ShapeMouseButton.RIGHT: return shortHand ? "RMB" : "Right Mouse Button";
-            case ShapeMouseButton.MIDDLE: return shortHand ? "MMB" : "Middle Mouse Button";
-            case ShapeMouseButton.SIDE: return shortHand ? "SMB" : "Side Mouse Button";
-            case ShapeMouseButton.EXTRA: return shortHand ? "EMB" : "Extra Mouse Button";
-            case ShapeMouseButton.FORWARD: return shortHand ? "FMB" : "Forward Mouse Button";
-            case ShapeMouseButton.BACK: return shortHand ? "BMB" : "Back Mouse Button";
-            case ShapeMouseButton.MW_UP: return shortHand ? "MW U" : "Mouse Wheel Up";
-            case ShapeMouseButton.MW_DOWN: return shortHand ? "MW D" : "Mouse Wheel Down";
-            case ShapeMouseButton.MW_LEFT: return shortHand ? "MW L" : "Mouse Wheel Left";
-            case ShapeMouseButton.MW_RIGHT: return shortHand ? "MW R" : "Mouse Wheel Right";
-            case ShapeMouseButton.UP_AXIS: return shortHand ? "M Up" : "Mouse Up";
-            case ShapeMouseButton.DOWN_AXIS: return shortHand ? "M Dwn" : "Mouse Down";
-            case ShapeMouseButton.LEFT_AXIS: return shortHand ? "M Lft" : "Mouse Left";
-            case ShapeMouseButton.RIGHT_AXIS: return shortHand ? "M Rgt" : "Mouse Right";
-            default: return "No Key";
-        }
-    }
-
-    /// <summary>
-    /// Checks if a modifier key is active, optionally reversing the logic.
-    /// </summary>
-    /// <param name="modifierKey">The modifier key to check.</param>
-    /// <param name="reverseModifier">If true, reverses the modifier logic.</param>
-    /// <returns>True if the modifier is active (or inactive if reversed).</returns>
-    public bool IsModifierActive(ShapeMouseButton modifierKey, bool reverseModifier) => IsDown(modifierKey) != reverseModifier;
-
-    /// <summary>
-    /// Determines if the specified mouse button is down, considering move and wheel deadzones.
-    /// </summary>
-    /// <param name="button">The mouse button to check.</param>
-    /// <param name="mouseMoveDeadzone">Deadzone for mouse movement axis buttons.</param>
-    /// <param name="mouseWheelDeadzone">Deadzone for mouse wheel axis buttons.</param>
-    /// <returns>True if the button is down.</returns>
-    public bool IsDown(ShapeMouseButton button, float mouseMoveDeadzone = 0f, float mouseWheelDeadzone = 0f)
-    {
-       return GetValue(button, mouseMoveDeadzone, mouseWheelDeadzone) != 0;
-    }
-
-    /// <summary>
-    /// Determines if the specified mouse button is down, considering deadzone and modifier keys.
-    /// </summary>
-    /// <param name="button">The mouse button to check.</param>
-    /// <param name="deadzone">Deadzone threshold.</param>
-    /// <param name="modifierKeySet">Modifier keys to check.</param>
-    /// <returns>True if the button is down.</returns>
-    public bool IsDown(ShapeMouseButton button, float deadzone, ModifierKeySet modifierKeySet)
-    {
-       return GetValue(button, deadzone, modifierKeySet) != 0f;
-    }
-
-    /// <summary>
-    /// Determines if the specified mouse button is down, considering move/wheel deadzones and modifier keys.
-    /// </summary>
-    /// <param name="button">The mouse button to check.</param>
-    /// <param name="mouseMoveDeadzone">Deadzone for mouse movement axis buttons.</param>
-    /// <param name="mouseWheelDeadzone">Deadzone for mouse wheel axis buttons.</param>
-    /// <param name="modifierKeySet">Modifier keys to check.</param>
-    /// <returns>True if the button is down.</returns>
-    public bool IsDown(ShapeMouseButton button, float mouseMoveDeadzone, float mouseWheelDeadzone, ModifierKeySet modifierKeySet)
-    {
-       return GetValue(button, mouseMoveDeadzone, mouseWheelDeadzone, modifierKeySet) != 0f;
-    }
-
-    /// <summary>
-    /// Gets the value of the specified mouse button, considering deadzone and modifier keys.
-    /// </summary>
-    /// <param name="button">The mouse button to check.</param>
-    /// <param name="deadzone">Deadzone threshold.</param>
-    /// <param name="modifierKeySet">Modifier keys to check.</param>
-    /// <returns>The button value.</returns>
-    public float GetValue(ShapeMouseButton button, float deadzone, ModifierKeySet modifierKeySet)
-    {
-       if (isLocked) return 0f;
-       if (!GameWindow.Instance.MouseOnScreen) return 0f;
-       if (!modifierKeySet.IsActive()) return 0f;
-       return GetValue(button, deadzone, deadzone);
-    }
-
-    /// <summary>
-    /// Gets the value of the specified mouse button, considering move/wheel deadzones and modifier keys.
-    /// </summary>
-    /// <param name="button">The mouse button to check.</param>
-    /// <param name="mouseMoveDeadzone">Deadzone for mouse movement axis buttons.</param>
-    /// <param name="mouseWheelDeadzone">Deadzone for mouse wheel axis buttons.</param>
-    /// <param name="modifierKeySet">Modifier keys to check.</param>
-    /// <returns>The button value.</returns>
-    public float GetValue(ShapeMouseButton button, float mouseMoveDeadzone, float mouseWheelDeadzone, ModifierKeySet modifierKeySet)
-    {
-       if (isLocked) return 0f;
-       if (!GameWindow.Instance.MouseOnScreen) return 0f;
-       if (!modifierKeySet.IsActive()) return 0f;
-       return GetValue(button, mouseMoveDeadzone, mouseWheelDeadzone);
-    }
-
-    /// <summary>
-    /// Gets the value of the specified <see cref="ShapeMouseButton"/>.
-    /// For wheel and axis buttons, applies the respective deadzone thresholds.
-    /// For standard buttons, returns 1f if pressed, otherwise 0f.
-    /// </summary>
-    /// <param name="button">The mouse button to check.</param>
-    /// <param name="mouseMoveDeadzone">Deadzone threshold for mouse movement axis buttons.</param>
-    /// <param name="mouseWheelDeadzone">Deadzone threshold for mouse wheel axis buttons.</param>
-    /// <returns>
-    /// A float representing the button value:
-    /// - For wheel/axis buttons: the movement value if above deadzone, otherwise 0f.
-    /// - For standard buttons: 1f if pressed, otherwise 0f.
-    /// </returns>
-    public float GetValue(ShapeMouseButton button, float mouseMoveDeadzone = 0f, float mouseWheelDeadzone = 0f)
-    {
-        // if (button == ShapeMouseButton.NONE) return 0f;
         if (isLocked) return 0f;
         if (!GameWindow.Instance.MouseOnScreen) return 0f;
+        if (modifierKeySet != null && !modifierKeySet.IsActive()) return 0f;
         int id = (int)button;
         if (id is >= 10 and < 20)
         {
@@ -825,176 +699,155 @@ public sealed class MouseDevice : InputDevice
         }
         return Raylib.IsMouseButtonDown((MouseButton)id) ? 1f : 0f;
     }
+    
     /// <summary>
-    /// Creates an <see cref="InputState"/> for the specified mouse button.
+    /// Determines whether the specified mouse button is currently considered "down".
+    /// Returns true if the button or associated axis/wheel is active, otherwise false.
     /// </summary>
-    public InputState CreateInputState(ShapeMouseButton button, float mouseMoveDeadzone, float mouseWheelDeadzone, ModifierKeySet modifierKeySet)
+    /// <param name="button">The mouse button to check.</param>
+    /// <param name="mouseMoveDeadzone">The minimum movement required to register as "down" for axis buttons (default is the configured move threshold).</param>
+    /// <param name="mouseWheelDeadzone">The minimum movement required to register as "down" for wheel buttons (default is the configured wheel threshold).</param>
+    /// <param name="modifierKeySet">Optional modifier key set that must be active for the button to be considered "down".</param>
+    /// <returns>True if the button is down, otherwise false.</returns>
+    public bool IsDown(ShapeMouseButton button, 
+        float mouseMoveDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, 
+        float mouseWheelDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold,
+        ModifierKeySet? modifierKeySet = null)
+    {
+       return GetValue(button, mouseMoveDeadzone, mouseWheelDeadzone, modifierKeySet) != 0f;
+    }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified mouse button,
+    /// using the current button value, mouse move deadzone, mouse wheel deadzone,
+    /// and an optional modifier key set.
+    /// </summary>
+    /// <param name="button">The mouse button to evaluate.</param>
+    /// <param name="mouseMoveDeadzone">The minimum movement required to register as "down" for axis buttons (default is the configured move threshold).</param>
+    /// <param name="mouseWheelDeadzone">The minimum movement required to register as "down" for wheel buttons (default is the configured wheel threshold).</param>
+    /// <param name="modifierKeySet">Optional modifier key set that must be active for the button to be considered "down".</param>
+    /// <returns>
+    /// An <see cref="InputState"/> representing the current state of the button,
+    /// including whether it is down, up, and its value.
+    /// </returns>
+    public InputState CreateInputState(ShapeMouseButton button, 
+        float mouseMoveDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, 
+        float mouseWheelDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold,
+        ModifierKeySet? modifierKeySet = null)
     {
         var value = GetValue(button, mouseMoveDeadzone, mouseWheelDeadzone, modifierKeySet);
         bool down = value != 0f;
         return new(down, !down, down ? 1f : 0f, -1, InputDeviceType.Mouse);
     }
     /// <summary>
-    /// Creates an <see cref="InputState"/> for the specified mouse button, using a previous state.
+    /// Creates an <see cref="InputState"/> for the specified mouse button,
+    /// using the previous input state, mouse move deadzone, mouse wheel deadzone,
+    /// and an optional modifier key set.
     /// </summary>
-    public InputState CreateInputState(ShapeMouseButton button, InputState previousState, float mouseMoveDeadzone, float mouseWheelDeadzone, ModifierKeySet modifierKeySet)
+    /// <param name="button">The mouse button to evaluate.</param>
+    /// <param name="previousState">The previous input state to base the new state on.</param>
+    /// <param name="mouseMoveDeadzone">The minimum movement required to register as "down" for axis buttons (default is the configured move threshold).</param>
+    /// <param name="mouseWheelDeadzone">The minimum movement required to register as "down" for wheel buttons (default is the configured wheel threshold).</param>
+    /// <param name="modifierKeySet">Optional modifier key set that must be active for the button to be considered "down".</param>
+    /// <returns>
+    /// An <see cref="InputState"/> representing the current state of the button,
+    /// including whether it is down, up, and its value, based on the previous state.
+    /// </returns>
+    public InputState CreateInputState(ShapeMouseButton button, InputState previousState, 
+        float mouseMoveDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, 
+        float mouseWheelDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold,
+        ModifierKeySet? modifierKeySet = null)
     {
         return new(previousState, CreateInputState(button, mouseMoveDeadzone, mouseWheelDeadzone, modifierKeySet));
-    }
-    /// <summary>
-    /// Creates an <see cref="InputState"/> for the specified mouse button.
-    /// </summary>
-    public InputState CreateInputState(ShapeMouseButton button, float mouseMoveDeadzone = 0f, float mouseWheelDeadzone = 0f)
-    {
-        var value = GetValue(button, mouseMoveDeadzone, mouseWheelDeadzone);
-        bool down = value != 0f;
-        return new(down, !down, down ? 1f : 0f, -1, InputDeviceType.Mouse);
-    }
-    /// <summary>
-    /// Creates an <see cref="InputState"/> for the specified mouse button, using a previous state.
-    /// </summary>
-    public InputState CreateInputState(ShapeMouseButton button, InputState previousState, float mouseMoveDeadzone = 0f, float mouseWheelDeadzone = 0f)
-    {
-        return new(previousState, CreateInputState(button, mouseMoveDeadzone, mouseWheelDeadzone));
-    }
-    /// <summary>
-    /// Creates an <see cref="InputState"/> for the specified mouse button.
-    /// </summary>
-    public InputState CreateInputState(ShapeMouseButton button, float deadzone, ModifierKeySet modifierKeySet)
-    {
-        var value = GetValue(button, deadzone, modifierKeySet);
-        bool down = value != 0f;
-        return new(down, !down, down ? 1f : 0f, -1, InputDeviceType.Mouse);
-    }
-    /// <summary>
-    /// Creates an <see cref="InputState"/> for the specified mouse button, using a previous state.
-    /// </summary>
-    public InputState CreateInputState(ShapeMouseButton button, InputState previousState, float deadzone, ModifierKeySet modifierKeySet)
-    {
-        return new(previousState, CreateInputState(button, deadzone, modifierKeySet));
     }
     
     #endregion
 
     #region ButtonAxis
+    /// <summary>
+    /// Gets the value of a virtual axis defined by two mouse buttons (negative and positive).
+    /// Returns the difference between the positive and negative button values.
+    /// Returns 0 if the device is locked or the modifier key set is not active.
+    /// </summary>
+    /// <param name="neg">The button representing the negative direction.</param>
+    /// <param name="pos">The button representing the positive direction.</param>
+    /// <param name="mouseMoveDeadzone">The minimum movement required to register a value for axis buttons (default is the configured move threshold).</param>
+    /// <param name="mouseWheelDeadzone">The minimum movement required to register a value for wheel buttons (default is the configured wheel threshold).</param>
+    /// <param name="modifierKeySet">Optional modifier key set that must be active for the value to be returned.</param>
+    /// <returns>The axis value, or 0 if not active or below threshold.</returns>
+    public float GetValue(ShapeMouseButton neg, ShapeMouseButton pos, 
+        float mouseMoveDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, 
+        float mouseWheelDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold,
+        ModifierKeySet? modifierKeySet = null)
+   {
+       if (isLocked) return 0f;
+       if (modifierKeySet != null && !modifierKeySet.IsActive()) return 0f;
+       float vNegative = GetValue(neg, mouseMoveDeadzone, mouseWheelDeadzone);
+       float vPositive = GetValue(pos, mouseMoveDeadzone, mouseWheelDeadzone);
+       return vPositive - vNegative;
+   }
 
     /// <summary>
-    /// Gets the display name for a button axis (negative and positive button pair).
+    /// Determines whether a virtual axis, defined by two mouse buttons (negative and positive), is currently considered "down".
+    /// Returns true if either button is active (i.e., the axis value is not zero), otherwise false.
     /// </summary>
-    /// <param name="neg">Negative direction button.</param>
-    /// <param name="pos">Positive direction button.</param>
-    /// <param name="shorthand">Whether to use shorthand notation.</param>
-    /// <returns>The button axis name.</returns>
-    public static string GetButtonAxisName(ShapeMouseButton neg, ShapeMouseButton pos, bool shorthand = true)
-    {
-        StringBuilder sb = new();
-        
-        string negName = GetButtonName(neg, shorthand);
-        string posName = GetButtonName(pos, shorthand);
-        sb.Append(negName);
-        sb.Append('|');
-        sb.Append(posName);
-        return sb.ToString();
-    }
-
-    /// <summary>
-    /// Determines if the button axis (negative/positive) is "down" with modifier keys.
-    /// </summary>
-    public bool IsDown(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone, ModifierKeySet modifierKeySet)
-    {
-        return GetValue(neg, pos, deadzone, modifierKeySet) != 0f;
-    }
-    /// <summary>
-    /// Gets the value of the button axis (negative/positive), considering deadzone and modifier keys.
-    /// </summary>
-    public float GetValue(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone, ModifierKeySet modifierKeySet)
-    {
-        if (isLocked) return 0f;
-        if (!modifierKeySet.IsActive()) return 0f;
-        return GetValue(neg, pos, deadzone);
-    }
-   
-    /// <summary>
-    /// Creates an <see cref="InputState"/> for the button axis (negative/positive).
-    /// </summary>
-    public InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone, ModifierKeySet modifierKeySet)
-    {
-        float axis = GetValue(neg, pos, deadzone, modifierKeySet);
-        bool down = axis != 0f;
-        return new(down, !down, axis, -1, InputDeviceType.Mouse);
-    }
-    /// <summary>
-    /// Creates an <see cref="InputState"/> for the button axis (negative/positive), using a previous state.
-    /// </summary>
-    public InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, InputState previousState, float deadzone, ModifierKeySet modifierKeySet)
-    {
-        return new(previousState, CreateInputState(neg, pos, deadzone, modifierKeySet));
-    }
-    /// <summary>
-    /// Determines if the button axis (negative/positive) is "down" with modifier keys.
-    /// </summary>
-    public bool IsDown(ShapeMouseButton neg, ShapeMouseButton pos, float mouseMoveDeadzone, float mouseWheelDeadzone, ModifierKeySet modifierKeySet)
+    /// <param name="neg">The button representing the negative direction.</param>
+    /// <param name="pos">The button representing the positive direction.</param>
+    /// <param name="mouseMoveDeadzone">The minimum movement required to register as "down" for axis buttons (default is the configured move threshold).</param>
+    /// <param name="mouseWheelDeadzone">The minimum movement required to register as "down" for wheel buttons (default is the configured wheel threshold).</param>
+    /// <param name="modifierKeySet">Optional modifier key set that must be active for the axis to be considered "down".</param>
+    /// <returns>True if the virtual axis is down, otherwise false.</returns>
+    public bool IsDown(ShapeMouseButton neg, ShapeMouseButton pos, 
+        float mouseMoveDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, 
+        float mouseWheelDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold,
+        ModifierKeySet? modifierKeySet = null)
     {
         return GetValue(neg, pos, mouseMoveDeadzone, mouseWheelDeadzone, modifierKeySet) != 0f;
     }
 
     /// <summary>
-    /// Determines if the button axis (negative/positive) is "down".
+    /// Creates an <see cref="InputState"/> for a virtual axis defined by two mouse buttons (negative and positive).
+    /// Uses the current values of the negative and positive buttons, mouse move deadzone, mouse wheel deadzone,
+    /// and an optional modifier key set.
     /// </summary>
-    public bool IsDown(ShapeMouseButton neg, ShapeMouseButton pos, float mouseMoveDeadzone = 0f, float mouseWheelDeadzone = 0f)
-    {
-        return GetValue(neg, pos, mouseMoveDeadzone, mouseWheelDeadzone) != 0f;
-    }
-    /// <summary>
-    /// Gets the value of the button axis (negative/positive), considering deadzone and modifier keys.
-    /// </summary>
-    public float GetValue(ShapeMouseButton neg, ShapeMouseButton pos, float mouseMoveDeadzone, float mouseWheelDeadzone, ModifierKeySet modifierKeySet)
-    {
-        if (isLocked) return 0f;
-        if (!modifierKeySet.IsActive()) return 0f;
-        return GetValue(neg, pos, mouseMoveDeadzone, mouseWheelDeadzone);
-    }
-    /// <summary>
-    /// Gets the value of the button axis (negative/positive), considering deadzone.
-    /// </summary>
-    public float GetValue(ShapeMouseButton neg, ShapeMouseButton pos, float mouseMoveDeadzone = 0f, float mouseWheelDeadzone = 0f)
-    {
-        if (isLocked) return 0f;
-        float vNegative = GetValue(neg, mouseMoveDeadzone, mouseWheelDeadzone);
-        float vPositive = GetValue(pos, mouseMoveDeadzone, mouseWheelDeadzone);
-        return vPositive - vNegative;
-    }
-    /// <summary>
-    /// Creates an <see cref="InputState"/> for the button axis (negative/positive).
-    /// </summary>
-    public InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, float mouseMoveDeadzone, float mouseWheelDeadzone, ModifierKeySet modifierKeySet)
+    /// <param name="neg">The button representing the negative direction.</param>
+    /// <param name="pos">The button representing the positive direction.</param>
+    /// <param name="mouseMoveDeadzone">The minimum movement required to register as "down" for axis buttons (default is the configured move threshold).</param>
+    /// <param name="mouseWheelDeadzone">The minimum movement required to register as "down" for wheel buttons (default is the configured wheel threshold).</param>
+    /// <param name="modifierKeySet">Optional modifier key set that must be active for the axis to be considered "down".</param>
+    /// <returns>
+    /// An <see cref="InputState"/> representing the current state of the virtual axis,
+    /// including whether it is down, up, and its value.
+    /// </returns>
+    public InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, 
+        float mouseMoveDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, 
+        float mouseWheelDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold,
+        ModifierKeySet? modifierKeySet = null)
     {
         float axis = GetValue(neg, pos, mouseMoveDeadzone, mouseWheelDeadzone, modifierKeySet);
         bool down = axis != 0f;
         return new(down, !down, axis, -1, InputDeviceType.Mouse);
     }
+
     /// <summary>
-    /// Creates an <see cref="InputState"/> for the button axis (negative/positive), using a previous state.
+    /// Creates an <see cref="InputState"/> for a virtual axis defined by two mouse buttons (negative and positive),
+    /// using the previous input state, mouse move deadzone, mouse wheel deadzone, and an optional modifier key set.
     /// </summary>
-    public InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, InputState previousState, float mouseMoveDeadzone, float mouseWheelDeadzone, ModifierKeySet modifierKeySet)
+    /// <param name="neg">The button representing the negative direction.</param>
+    /// <param name="pos">The button representing the positive direction.</param>
+    /// <param name="previousState">The previous input state to base the new state on.</param>
+    /// <param name="mouseMoveDeadzone">The minimum movement required to register as "down" for axis buttons (default is the configured move threshold).</param>
+    /// <param name="mouseWheelDeadzone">The minimum movement required to register as "down" for wheel buttons (default is the configured wheel threshold).</param>
+    /// <param name="modifierKeySet">Optional modifier key set that must be active for the axis to be considered "down".</param>
+    /// <returns>
+    /// An <see cref="InputState"/> representing the current state of the virtual axis,
+    /// including whether it is down, up, and its value, based on the previous state.
+    /// </returns>
+    public InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, InputState previousState, 
+        float mouseMoveDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, 
+        float mouseWheelDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold,
+        ModifierKeySet? modifierKeySet = null)
     {
         return new(previousState, CreateInputState(neg, pos, mouseMoveDeadzone, mouseWheelDeadzone, modifierKeySet));
-    }
-    /// <summary>
-    /// Creates an <see cref="InputState"/> for the button axis (negative/positive).
-    /// </summary>
-    public InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, float mouseMoveDeadzone = 0f, float mouseWheelDeadzone = 0f)
-    {
-        float axis = GetValue(neg, pos, mouseMoveDeadzone, mouseWheelDeadzone);
-        bool down = axis != 0f;
-        return new(down, !down, axis, -1, InputDeviceType.Mouse);
-    }
-    /// <summary>
-    /// Creates an <see cref="InputState"/> for the button axis (negative/positive), using a previous state.
-    /// </summary>
-    public InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, InputState previousState, float mouseMoveDeadzone = 0f, float mouseWheelDeadzone = 0f)
-    {
-        return new(previousState, CreateInputState(neg, pos, mouseMoveDeadzone, mouseWheelDeadzone));
     }
     
 
