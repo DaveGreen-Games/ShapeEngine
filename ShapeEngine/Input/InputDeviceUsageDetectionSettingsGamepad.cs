@@ -9,6 +9,17 @@ public partial class InputDeviceUsageDetectionSettings
     public class GamepadSettings
     {
         /// <summary>
+        /// The default axis threshold value for detecting analog stick movement.
+        /// </summary>
+        public const float DefaultJoyAxisThreshold = 0.15f;
+        
+        /// <summary>
+        /// The default trigger threshold value for detecting trigger input.
+        /// </summary>
+        public const float DefaultTriggerAxisThreshold = 0.15f;
+        
+        
+        /// <summary>
         /// Gets the default <see cref="MouseSettings"/> instance with preset values.
         /// </summary>
         /// <code>
@@ -41,8 +52,8 @@ public partial class InputDeviceUsageDetectionSettings
         public GamepadSettings()
         {
             Detection = true;
-            AxisThreshold = 0.5f;
-            TriggerThreshold = 0.5f;
+            AxisThreshold = DefaultJoyAxisThreshold;
+            TriggerThreshold = DefaultTriggerAxisThreshold;
             MinPressCount = 2;
             MinPressInterval = 1f;
             MinUsedDuration = 0.5f;
@@ -123,8 +134,8 @@ public partial class InputDeviceUsageDetectionSettings
         public GamepadSettings(int minPressCount, float minPressInterval, float selectionCooldownDuration = 2f, HashSet<ShapeGamepadButton>? exceptionButtons = null)
         {
             Detection = true;
-            AxisThreshold = 0.5f;
-            TriggerThreshold = 0.5f;
+            AxisThreshold = DefaultJoyAxisThreshold;
+            TriggerThreshold = DefaultTriggerAxisThreshold;
             MinPressCount = minPressCount;
             MinPressInterval = minPressInterval;
             MinUsedDuration = -1f;
@@ -147,8 +158,8 @@ public partial class InputDeviceUsageDetectionSettings
         public GamepadSettings(float minUsedDuration, float selectionCooldownDuration = 2f, HashSet<ShapeGamepadButton>? exceptionButtons = null)
         {
             Detection = true;
-            AxisThreshold = 0.5f;
-            TriggerThreshold = 0.5f;
+            AxisThreshold = DefaultJoyAxisThreshold;
+            TriggerThreshold = DefaultTriggerAxisThreshold;
             MinPressCount = -1;
             MinPressInterval = -1f;
             MinUsedDuration = minUsedDuration;
@@ -179,8 +190,8 @@ public partial class InputDeviceUsageDetectionSettings
         public GamepadSettings(HashSet<ShapeGamepadButton> selectionButtons, float selectionCooldownDuration = 2f, HashSet<ShapeGamepadButton>? exceptionButtons = null)
         {
             Detection = true;
-            TriggerThreshold = 0.5f;
-            AxisThreshold = 0.5f;
+            TriggerThreshold = DefaultJoyAxisThreshold;
+            AxisThreshold = DefaultTriggerAxisThreshold;
             MinPressCount = -1;
             MinPressInterval = -1f;
             MinUsedDuration = -1f;
