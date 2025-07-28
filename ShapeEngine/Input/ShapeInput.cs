@@ -647,6 +647,10 @@ public static class ShapeInput
         return ActiveMouseDevice.CreateInputState(axis, deadzone, modifierKeySet);
     }
 
+
+    #endregion
+
+    #region Gamepad
     /// <summary>
     /// Creates an <see cref="InputState"/> for a gamepad button on a specific gamepad.
     /// </summary>
@@ -666,9 +670,6 @@ public static class ShapeInput
         var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
         return gamepad?.CreateInputState(button, axisDeadzone, triggerDeadzone, modifierKeySet) ?? new();
     }
-    #endregion
-
-    #region Gamepad
     
     /// <summary>
     /// Creates an <see cref="InputState"/> for a gamepad button axis (negative and positive) on a specific gamepad.
@@ -729,7 +730,6 @@ public static class ShapeInput
         return gamepad?.CreateInputState(axis, deadzone, modifierKeySet) ?? new();
     }
     #endregion
-    
     #endregion
     
     #region Input Type Factory
