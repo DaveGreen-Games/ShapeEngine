@@ -90,7 +90,7 @@ public sealed class InputTypeMousePositionDelta : IInputType
         StringBuilder sb = new();
         modifierKeySet?.AppendModifierKeyNames(sb, shorthand);
         sb.Append("[Position Delta]");
-        sb.Append(MouseDevice.GetAxisName(axis, shorthand));
+        sb.Append(axis.GetAxisName(shorthand));
         return sb.ToString();
     }
 

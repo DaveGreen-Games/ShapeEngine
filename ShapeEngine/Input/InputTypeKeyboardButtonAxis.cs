@@ -34,8 +34,8 @@ public sealed class InputTypeKeyboardButtonAxis : IInputType
         StringBuilder sb = new();
         modifierKeySet?.AppendModifierKeyNames(sb, shorthand);
         
-        string negName = KeyboardDevice.GetButtonName(neg, shorthand);
-        string posName = KeyboardDevice.GetButtonName(pos, shorthand);
+        string negName = neg.GetButtonName(shorthand);
+        string posName = pos.GetButtonName(shorthand);
         sb.Append(negName);
         sb.Append('|');
         sb.Append(posName);

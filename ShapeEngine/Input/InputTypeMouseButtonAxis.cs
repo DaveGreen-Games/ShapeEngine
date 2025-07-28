@@ -41,8 +41,8 @@ public sealed class InputTypeMouseButtonAxis : IInputType
     {
         StringBuilder sb = new();
         modifierKeySet?.AppendModifierKeyNames(sb, shorthand);
-        string negName = MouseDevice.GetButtonName(neg, shorthand);
-        string posName = MouseDevice.GetButtonName(pos, shorthand);
+        string negName = neg.GetButtonName(shorthand);
+        string posName = pos.GetButtonName(shorthand);
         sb.Append(negName);
         sb.Append('|');
         sb.Append(posName);
@@ -52,21 +52,10 @@ public sealed class InputTypeMouseButtonAxis : IInputType
     }
 
     /// <inheritdoc/>
-    public InputState GetState(GamepadDevice? gamepad = null)
-    {
-        
-        return modifierKeySet == null ? 
-            ShapeInput.ActiveMouseDevice.CreateInputState(neg, pos, deadzone) : 
-            ShapeInput.ActiveMouseDevice.CreateInputState(neg, pos, deadzone, modifierKeySet);
-    }
+    public InputState GetState(GamepadDevice? gamepad = null) => ShapeInput.ActiveMouseDevice.CreateInputState(neg, pos, deadzone, deadzone, modifierKeySet);
 
     /// <inheritdoc/>
-    public InputState GetState(InputState prev, GamepadDevice? gamepad = null)
-    {
-        return modifierKeySet == null ? 
-            ShapeInput.ActiveMouseDevice.CreateInputState(neg, pos, prev, deadzone) : 
-            ShapeInput.ActiveMouseDevice.CreateInputState(neg, pos, prev, deadzone, modifierKeySet);
-    }
+    public InputState GetState(InputState prev, GamepadDevice? gamepad = null) => ShapeInput.ActiveMouseDevice.CreateInputState(neg, pos, prev, deadzone, deadzone, modifierKeySet);
 
     /// <inheritdoc/>
     public InputDeviceType GetInputDevice() => InputDeviceType.Mouse;

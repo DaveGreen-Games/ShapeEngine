@@ -32,27 +32,16 @@ public sealed class InputTypeMouseButton : IInputType
     public void SetDeadzone(float value) { deadzone = value; }
 
     /// <inheritdoc/>
-    public InputState GetState(GamepadDevice? gamepad = null)
-    {
-        return modifierKeySet == null ? 
-            ShapeInput.ActiveMouseDevice.CreateInputState(button, deadzone) : 
-            ShapeInput.ActiveMouseDevice.CreateInputState(button, deadzone, modifierKeySet);
-    }
+    public InputState GetState(GamepadDevice? gamepad = null) => ShapeInput.ActiveMouseDevice.CreateInputState(button, deadzone, deadzone,  modifierKeySet);
 
     /// <inheritdoc/>
-    public InputState GetState(InputState prev, GamepadDevice? gamepad = null)
-    {
-        return modifierKeySet == null ? 
-            ShapeInput.ActiveMouseDevice.CreateInputState(button, prev,  deadzone) : 
-            ShapeInput.ActiveMouseDevice.CreateInputState(button, prev,  deadzone, modifierKeySet);
-    }
-
+    public InputState GetState(InputState prev, GamepadDevice? gamepad = null) => ShapeInput.ActiveMouseDevice.CreateInputState(button, prev, deadzone,  deadzone, modifierKeySet);
     /// <inheritdoc/>
     public string GetName(bool shorthand = true)
     {
         StringBuilder sb = new();
         modifierKeySet?.AppendModifierKeyNames(sb, shorthand);
-        sb.Append(MouseDevice.GetButtonName(button, shorthand));
+        sb.Append(button.GetButtonName(shorthand));
         return sb.ToString();
     }
 

@@ -50,7 +50,7 @@ public sealed class InputTypeKeyboardButton : IInputType
     {
         StringBuilder sb = new();
         modifierKeySet?.AppendModifierKeyNames(sb, shorthand);
-        sb.Append(KeyboardDevice.GetButtonName(button, shorthand));
+        sb.Append(button.GetButtonName(shorthand));
         return sb.ToString();
     }
 

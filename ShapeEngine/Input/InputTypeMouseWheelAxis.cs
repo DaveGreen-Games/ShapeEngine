@@ -40,7 +40,7 @@ public sealed class InputTypeMouseWheelAxis : IInputType
     {
         StringBuilder sb = new();
         modifierKeySet?.AppendModifierKeyNames(sb, shorthand);
-        sb.Append(MouseDevice.GetWheelAxisName(axis, shorthand));
+        sb.Append(axis.GetWheelAxisName(shorthand));
         return sb.ToString();
     }
 
