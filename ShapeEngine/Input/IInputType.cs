@@ -8,7 +8,7 @@ namespace ShapeEngine.Input;
 /// </summary>
 public interface IInputType : IEquatable<IInputType>, ICopyable<IInputType>
 {
-
+    
     /// <summary>
     /// Gets the deadzone value for this input type.
     /// </summary>

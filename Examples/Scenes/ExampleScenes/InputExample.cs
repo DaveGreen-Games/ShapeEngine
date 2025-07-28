@@ -1,7 +1,6 @@
 using Raylib_cs;
 using ShapeEngine.Core;
 using System.Numerics;
-using System.Reflection;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.RectDef;
@@ -41,8 +40,8 @@ namespace Examples.Scenes.ExampleScenes
                 var gamepadButtonHorizontal = ShapeGamepadButton.LEFT_FACE_LEFT.CreateInputType(ShapeGamepadButton.LEFT_FACE_RIGHT, 0f);
                 var gamepadButtonVertical = ShapeGamepadButton.LEFT_FACE_UP.CreateInputType(ShapeGamepadButton.LEFT_FACE_DOWN, 0f);
 
-                var gamepadHorizontal = ShapeGamepadAxis.LEFT_X.CreateInputType(0f);
-                var gamepadVertical = ShapeGamepadAxis.LEFT_Y.CreateInputType(0f);
+                var gamepadHorizontal = ShapeGamepadJoyAxis.LEFT_X.CreateInputType(0f);
+                var gamepadVertical = ShapeGamepadJoyAxis.LEFT_Y.CreateInputType(0f);
                 
                 joystickHorizontal = new(settings, keyboardHorizontal, gamepadButtonHorizontal, gamepadHorizontal);
                 joystickVertical = new(settings, keyboardVertical, gamepadButtonVertical, gamepadVertical);
@@ -53,8 +52,8 @@ namespace Examples.Scenes.ExampleScenes
                 var keyboardHorizontal = ShapeKeyboardButton.LEFT.CreateInputType(ShapeKeyboardButton.RIGHT);
                 var keyboardVertical = ShapeKeyboardButton.UP.CreateInputType(ShapeKeyboardButton.DOWN);
 
-                var gamepadHorizontal = ShapeGamepadAxis.RIGHT_X.CreateInputType(0f);
-                var gamepadVertical = ShapeGamepadAxis.RIGHT_Y.CreateInputType(0f);
+                var gamepadHorizontal = ShapeGamepadJoyAxis.RIGHT_X.CreateInputType(0f);
+                var gamepadVertical = ShapeGamepadJoyAxis.RIGHT_Y.CreateInputType(0f);
 
                 joystickHorizontal = new(settings, keyboardHorizontal, gamepadHorizontal );
                 joystickVertical = new(settings, keyboardVertical, gamepadVertical );
@@ -189,14 +188,14 @@ namespace Examples.Scenes.ExampleScenes
             if (left)
             {
                 this.title = "LT";
-                var triggerLeft = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_TRIGGER, 0.05f);
+                var triggerLeft = new InputTypeGamepadTriggerAxis(ShapeGamepadTriggerAxis.LEFT, 0.05f);
                 trigger = new(settings);
                 trigger.AddInput(triggerLeft);
             }
             else
             {
                 this.title = "RT";
-                var triggerRight = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_TRIGGER, 0.05f);
+                var triggerRight = new InputTypeGamepadTriggerAxis(ShapeGamepadTriggerAxis.RIGHT, 0.05f);
                 trigger = new(settings);
                 trigger.AddInput(triggerRight);
             }

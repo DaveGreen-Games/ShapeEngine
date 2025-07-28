@@ -124,14 +124,14 @@ internal class PathfinderFlag
             
             var cameraHorizontalKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
             var cameraHorizontalGP =
-                new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X, 0.1f, modifierKeySetGp);
+                new InputTypeGamepadJoyAxis(ShapeGamepadJoyAxis.RIGHT_X, 0.1f, modifierKeySetGp);
             // var cameraHorizontalGP2 = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad2);
             // var cameraHorizontalMW = new InputTypeMouseAxis(ShapeMouseAxis.HORIZONTAL, 0.05f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouse); // new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
             iaMoveCameraH = new(defaultSettings,cameraHorizontalKB, cameraHorizontalGP);
             
             var cameraVerticalKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
             var cameraVerticalGP =
-                new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_Y, 0.1f, modifierKeySetGp);
+                new InputTypeGamepadJoyAxis(ShapeGamepadJoyAxis.RIGHT_Y, 0.1f, modifierKeySetGp);
             // var cameraVerticalGP2 = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_UP, ShapeGamepadButton.LEFT_FACE_DOWN, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad2);
             // var cameraVerticalMW  = new InputTypeMouseAxis(ShapeMouseAxis.VERTICAL, 0.05f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouse); // = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
             iaMoveCameraV = new(defaultSettings,cameraVerticalKB, cameraVerticalGP);

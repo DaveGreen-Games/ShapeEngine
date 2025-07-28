@@ -1,4 +1,3 @@
-using System.Text;
 using Raylib_cs;
 
 namespace ShapeEngine.Input;
@@ -61,13 +60,17 @@ public sealed class GamepadDevice : InputDevice
     /// </summary>
     public static readonly ShapeGamepadButton[] AllShapeGamepadButtons = Enum.GetValues<ShapeGamepadButton>();
     /// <summary>
-    /// All available Shape gamepad axes.
+    /// All available Shape gamepad joystick axes.
     /// </summary>
-    public static readonly ShapeGamepadAxis[] AllShapeGamepadAxis = Enum.GetValues<ShapeGamepadAxis>();
+    public static readonly ShapeGamepadJoyAxis[] AllShapeGamepadJoyAxis = Enum.GetValues<ShapeGamepadJoyAxis>();
+    /// <summary>
+    /// All available Shape gamepad trigger axes.
+    /// </summary>
+    public static readonly ShapeGamepadTriggerAxis[] AllShapeGamepadTriggerAxis = Enum.GetValues<ShapeGamepadTriggerAxis>();
     
     private readonly Dictionary<ShapeGamepadButton, InputState> buttonStates = new (AllShapeGamepadButtons.Length);
-    private readonly Dictionary<ShapeGamepadAxis, InputState> axisStates = new (AllShapeGamepadAxis.Length);
-
+    private readonly Dictionary<ShapeGamepadJoyAxis, InputState> joyAxisStates = new (AllShapeGamepadJoyAxis.Length);
+    private readonly Dictionary<ShapeGamepadTriggerAxis, InputState> triggerAxisStates = new (AllShapeGamepadTriggerAxis.Length);
     /// <summary>
     /// Event triggered when a gamepad button is pressed.
     /// </summary>
@@ -146,17 +149,33 @@ public sealed class GamepadDevice : InputDevice
     /// <summary>
     /// List of gamepad axes used this frame, but not being in use last frame.
     /// </summary>
-    public readonly List<ShapeGamepadAxis> PressedAxis = [];
+    public readonly List<ShapeGamepadJoyAxis> PressedJoyAxis = [];
     
     /// <summary>
     /// List of gamepad axes released since the last update.
     /// </summary>
-    public readonly List<ShapeGamepadAxis> ReleasedAxis = [];
+    public readonly List<ShapeGamepadJoyAxis> ReleasedJoyAxis = [];
 
     /// <summary>
     /// List of gamepad axes in use since multiple frames.
     /// </summary>
-    public readonly List<ShapeGamepadAxis> HeldAxis = [];
+    public readonly List<ShapeGamepadJoyAxis> HeldJoyAxis = [];
+ 
+    
+    /// <summary>
+    /// List of trigger axes pressed since the last update.
+    /// </summary>
+    public readonly List<ShapeGamepadTriggerAxis> PressedTriggerAxis = [];
+    
+    /// <summary>
+    /// List of trigger axes released since the last update.
+    /// </summary>
+    public readonly List<ShapeGamepadTriggerAxis> ReleasedTriggerAxis = [];
+    
+    /// <summary>
+    /// List of trigger axes held down (in use) since multiple frames.
+    /// </summary>
+    public readonly List<ShapeGamepadTriggerAxis> HeldTriggerAxis = [];
     
     /// <summary>
     /// Event triggered when the connection state changes.
@@ -167,8 +186,10 @@ public sealed class GamepadDevice : InputDevice
     /// </summary>
     public event Action? OnAvailabilityChanged;
 
-    private readonly Dictionary<ShapeGamepadAxis, float> axisZeroCalibration = new();
-    private Dictionary<ShapeGamepadAxis, AxisRange> axisRanges = new();
+    private readonly Dictionary<ShapeGamepadJoyAxis, float> joyAxisZeroCalibration = new();
+    private readonly Dictionary<ShapeGamepadTriggerAxis, float> triggerZeroCalibration = new();
+    private Dictionary<ShapeGamepadJoyAxis, AxisRange> joyAxisRanges = new();
+    private Dictionary<ShapeGamepadTriggerAxis, AxisRange> triggerAxisRanges = new();
     
     /// <summary>
     /// Initializes a new instance of the <see cref="GamepadDevice"/> class.
@@ -196,11 +217,14 @@ public sealed class GamepadDevice : InputDevice
         {
             buttonStates.Add(button, new());
         }
-        foreach (var axis in AllShapeGamepadAxis)
+        foreach (var axis in AllShapeGamepadJoyAxis)
         {
-            axisStates.Add(axis, new());
+            joyAxisStates.Add(axis, new());
         }
-        
+        foreach (var axis in AllShapeGamepadTriggerAxis)
+        {
+            triggerAxisStates.Add(axis, new());
+        }
     }
 
     /// <inheritdoc cref="InputDevice.GetDeviceProcessPriority"/>
@@ -218,8 +242,13 @@ public sealed class GamepadDevice : InputDevice
     /// <summary>
     /// Gets the current input state for the specified gamepad axis.
     /// </summary>
-    public InputState GetAxisState(ShapeGamepadAxis axis) => axisStates[axis];
-    
+    public InputState GetAxisState(ShapeGamepadJoyAxis axis) => joyAxisStates[axis];
+    /// <summary>
+    /// Gets the current input state for the specified gamepad trigger axis.
+    /// </summary>
+    /// <param name="axis">The gamepad trigger axis.</param>
+    /// <returns>The current <see cref="InputState"/> for the specified trigger axis.</returns>
+    public InputState GetAxisState(ShapeGamepadTriggerAxis axis) => triggerAxisStates[axis];
     /// <summary>
     /// Consumes the input state for the specified gamepad button.
     /// Marks the state as consumed and updates the dictionary.
@@ -246,37 +275,59 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="axis">The gamepad axis to consume the state for.</param>
     /// <param name="valid">True if the state was not already consumed; otherwise, false.</param>
     /// <returns>The consumed <see cref="InputState"/> or null if already consumed.</returns>
-    public InputState ConsumeAxisState(ShapeGamepadAxis axis, out bool valid)
+    public InputState ConsumeAxisState(ShapeGamepadJoyAxis axis, out bool valid)
     {
         valid = false;
-        var state = axisStates[axis];
+        var state = joyAxisStates[axis];
         if (state.Consumed) return state;
 
         valid = true;
-        axisStates[axis] = state.Consume();
+        joyAxisStates[axis] = state.Consume();
         return state;
     }
-    
     /// <summary>
-    /// Converts a <see cref="ShapeGamepadButton"/> to the corresponding <see cref="ShapeGamepadAxis"/> if applicable.
-    /// Returns null if the button does not map to an axis.
+    /// Consumes the input state for the specified gamepad trigger axis.
+    /// Marks the state as consumed and updates the dictionary.
+    /// Returns the consumed <see cref="InputState"/> or the current state if already consumed.
     /// </summary>
-    public static ShapeGamepadAxis? ToShapeGamepadAxis(ShapeGamepadButton button)
+    /// <param name="axis">The gamepad trigger axis to consume the state for.</param>
+    /// <param name="valid">True if the state was not already consumed; otherwise, false.</param>
+    /// <returns>The consumed <see cref="InputState"/> or the current state if already consumed.</returns>
+    public InputState ConsumeAxisState(ShapeGamepadTriggerAxis axis, out bool valid)
     {
-        switch (button)
+        valid = false;
+        var state = triggerAxisStates[axis];
+        if (state.Consumed) return state;
+
+        valid = true;
+        triggerAxisStates[axis] = state.Consume();
+        return state;
+    }
+    /// <summary>
+    /// Maps a <see cref="ShapeGamepadButton"/> to its corresponding <see cref="ShapeGamepadJoyAxis"/> or <see cref="ShapeGamepadTriggerAxis"/>.
+    /// Returns a tuple where only one of the axes is set, depending on the button.
+    /// </summary>
+    /// <param name="button">The gamepad button to map.</param>
+    /// <returns>
+    /// A tuple containing the corresponding <see cref="ShapeGamepadJoyAxis"/> or <see cref="ShapeGamepadTriggerAxis"/>.
+    /// If the button does not map to an axis, both values are null.
+    /// </returns>
+    public static (ShapeGamepadJoyAxis? joyAxis, ShapeGamepadTriggerAxis? triggerAxis) ToShapeGamepadAxis(ShapeGamepadButton button)
+    {
+        return button switch
         {
-            case ShapeGamepadButton.LEFT_STICK_RIGHT: return ShapeGamepadAxis.LEFT_X;
-            case ShapeGamepadButton.LEFT_STICK_LEFT: return ShapeGamepadAxis.LEFT_X;
-            case ShapeGamepadButton.LEFT_STICK_UP: return ShapeGamepadAxis.LEFT_Y;
-            case ShapeGamepadButton.LEFT_STICK_DOWN: return ShapeGamepadAxis.LEFT_Y;
-            case ShapeGamepadButton.RIGHT_STICK_RIGHT: return ShapeGamepadAxis.RIGHT_X;
-            case ShapeGamepadButton.RIGHT_STICK_LEFT: return ShapeGamepadAxis.RIGHT_X;
-            case ShapeGamepadButton.RIGHT_STICK_UP: return ShapeGamepadAxis.RIGHT_Y;
-            case ShapeGamepadButton.RIGHT_STICK_DOWN: return ShapeGamepadAxis.RIGHT_Y;
-            case ShapeGamepadButton.LEFT_TRIGGER_BOTTOM: return ShapeGamepadAxis.LEFT_TRIGGER;
-            case ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM: return ShapeGamepadAxis.RIGHT_TRIGGER;
-            default: return null;
-        }
+            ShapeGamepadButton.LEFT_STICK_RIGHT =>  (ShapeGamepadJoyAxis.LEFT_X, null),
+            ShapeGamepadButton.LEFT_STICK_LEFT =>   (ShapeGamepadJoyAxis.LEFT_X, null),
+            ShapeGamepadButton.LEFT_STICK_UP =>     (ShapeGamepadJoyAxis.LEFT_Y, null),
+            ShapeGamepadButton.LEFT_STICK_DOWN =>   (ShapeGamepadJoyAxis.LEFT_Y, null),
+            ShapeGamepadButton.RIGHT_STICK_RIGHT => (ShapeGamepadJoyAxis.RIGHT_X, null),
+            ShapeGamepadButton.RIGHT_STICK_LEFT =>  (ShapeGamepadJoyAxis.RIGHT_X, null),
+            ShapeGamepadButton.RIGHT_STICK_UP =>    (ShapeGamepadJoyAxis.RIGHT_Y, null),
+            ShapeGamepadButton.RIGHT_STICK_DOWN =>  (ShapeGamepadJoyAxis.RIGHT_Y, null),
+            ShapeGamepadButton.LEFT_TRIGGER_BOTTOM =>  (null, ShapeGamepadTriggerAxis.LEFT),
+            ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM => (null, ShapeGamepadTriggerAxis.RIGHT),
+            _ => (null, null)
+        };
     }
     
     /// <summary>
@@ -323,9 +374,12 @@ public sealed class GamepadDevice : InputDevice
         PressedButtons.Clear();
         ReleasedButtons.Clear();
         HeldDownButtons.Clear();
-        PressedAxis.Clear();
-        ReleasedAxis.Clear();
-        HeldAxis.Clear();
+        PressedJoyAxis.Clear();
+        ReleasedJoyAxis.Clear();
+        HeldJoyAxis.Clear();
+        PressedTriggerAxis.Clear();
+        ReleasedTriggerAxis.Clear();
+        HeldTriggerAxis.Clear();
     }
 
     /// <summary>
@@ -366,23 +420,30 @@ public sealed class GamepadDevice : InputDevice
         PressedButtons.Clear();
         ReleasedButtons.Clear();
         HeldDownButtons.Clear();
-        PressedAxis.Clear();
-        ReleasedAxis.Clear();
-        HeldAxis.Clear();
+        PressedJoyAxis.Clear();
+        ReleasedJoyAxis.Clear();
+        HeldJoyAxis.Clear();
+        PressedTriggerAxis.Clear();
+        ReleasedTriggerAxis.Clear();
+        HeldTriggerAxis.Clear();
     }
 
     /// <inheritdoc cref="InputDevice.Update"/>
     public override bool Update(float dt, bool wasOtherDeviceUsed)
     {
         PressedButtons.Clear();
-        HeldDownButtons.Clear();
         ReleasedButtons.Clear();
-        PressedAxis.Clear();
-        ReleasedAxis.Clear();
-        HeldAxis.Clear();
+        HeldDownButtons.Clear();
+        PressedJoyAxis.Clear();
+        ReleasedJoyAxis.Clear();
+        HeldJoyAxis.Clear();
+        PressedTriggerAxis.Clear();
+        ReleasedTriggerAxis.Clear();
+        HeldTriggerAxis.Clear();
         
         UpdateButtonStates();
-        UpdateAxisStates();
+        UpdateJoyAxisStates();
+        UpdateTriggerAxisStates();
         
         if (!Connected || isLocked)
         {
@@ -505,7 +566,7 @@ public sealed class GamepadDevice : InputDevice
         AxisCount = Raylib.GetGamepadAxisCount(Index);
         OnConnectionChanged?.Invoke();
         
-        axisRanges.Clear();
+        joyAxisRanges.Clear();
         
         Calibrate();
     }
@@ -525,9 +586,12 @@ public sealed class GamepadDevice : InputDevice
         PressedButtons.Clear();
         ReleasedButtons.Clear();
         HeldDownButtons.Clear();
-        PressedAxis.Clear();
-        ReleasedAxis.Clear();
-        HeldAxis.Clear();
+        PressedJoyAxis.Clear();
+        ReleasedJoyAxis.Clear();
+        HeldJoyAxis.Clear();
+        PressedTriggerAxis.Clear();
+        ReleasedTriggerAxis.Clear();
+        HeldTriggerAxis.Clear();
     }
     /// <summary>
     /// Claims the gamepad for use, marking it as unavailable.
@@ -566,14 +630,13 @@ public sealed class GamepadDevice : InputDevice
         float triggerRight = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.LeftTrigger);
         float triggerLeft = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.RightTrigger);
 
-        axisZeroCalibration[ShapeGamepadAxis.LEFT_X] = leftX;
-        axisZeroCalibration[ShapeGamepadAxis.LEFT_Y] = leftY;
+        joyAxisZeroCalibration[ShapeGamepadJoyAxis.LEFT_X] = leftX;
+        joyAxisZeroCalibration[ShapeGamepadJoyAxis.LEFT_Y] = leftY;
+        joyAxisZeroCalibration[ShapeGamepadJoyAxis.RIGHT_X] = rightX;
+        joyAxisZeroCalibration[ShapeGamepadJoyAxis.RIGHT_Y] = rightY;
         
-        axisZeroCalibration[ShapeGamepadAxis.RIGHT_X] = rightX;
-        axisZeroCalibration[ShapeGamepadAxis.RIGHT_Y] = rightY;
-        
-        axisZeroCalibration[ShapeGamepadAxis.RIGHT_TRIGGER] = triggerRight;
-        axisZeroCalibration[ShapeGamepadAxis.LEFT_TRIGGER] = triggerLeft;
+        triggerZeroCalibration[ShapeGamepadTriggerAxis.RIGHT] = triggerRight;
+        triggerZeroCalibration[ShapeGamepadTriggerAxis.LEFT] = triggerLeft;
 
     }
     
@@ -609,22 +672,36 @@ public sealed class GamepadDevice : InputDevice
     /// <summary>
     /// Updates the states of all gamepad axes.
     /// </summary>
-    private void UpdateAxisStates()
+    private void UpdateJoyAxisStates()
     {
-        foreach (var state in axisStates)
+        foreach (var state in joyAxisStates)
         {
             var axis = state.Key;
             var prevState = state.Value;
-            var curState = CreateInputState(axis, UsageDetectionSettings.AxisThreshold, UsageDetectionSettings.TriggerThreshold);
+            var curState = CreateInputState(axis, UsageDetectionSettings.AxisThreshold);
             var nextState = new InputState(prevState, curState);
-            axisStates[axis] = nextState;
+            joyAxisStates[axis] = nextState;
             
-            if(nextState.Down) HeldAxis.Add(axis);
-            if(nextState.Pressed) PressedAxis.Add(axis);
-            else if(nextState.Released) ReleasedAxis.Add(axis);
+            if(nextState.Down) HeldJoyAxis.Add(axis);
+            if(nextState.Pressed) PressedJoyAxis.Add(axis);
+            else if(nextState.Released) ReleasedJoyAxis.Add(axis);
         }
     }
-    
+    private void UpdateTriggerAxisStates()
+    {
+        foreach (var state in triggerAxisStates)
+        {
+            var axis = state.Key;
+            var prevState = state.Value;
+            var curState = CreateInputState(axis, UsageDetectionSettings.TriggerThreshold);
+            var nextState = new InputState(prevState, curState);
+            triggerAxisStates[axis] = nextState;
+            
+            if(nextState.Down) HeldTriggerAxis.Add(axis);
+            if(nextState.Pressed) PressedTriggerAxis.Add(axis);
+            else if(nextState.Released) ReleasedTriggerAxis.Add(axis);
+        }
+    }
     
     #region Button
     /// <summary>
@@ -642,14 +719,14 @@ public sealed class GamepadDevice : InputDevice
         if (modifierKeySet != null && !modifierKeySet.IsActive(this)) return 0f;
         if (button == ShapeGamepadButton.LEFT_TRIGGER_BOTTOM)
         {
-            float value = GetValue(ShapeGamepadAxis.LEFT_TRIGGER, triggerDeadzone);
+            float value = GetValue(ShapeGamepadTriggerAxis.LEFT, triggerDeadzone);
             if (MathF.Abs(value) < triggerDeadzone) value = 0f;
             return value;
         }
         
         if (button == ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM)
         {
-            float value = GetValue(ShapeGamepadAxis.RIGHT_TRIGGER, triggerDeadzone);
+            float value = GetValue(ShapeGamepadTriggerAxis.RIGHT, triggerDeadzone);
             if (MathF.Abs(value) < triggerDeadzone) value = 0f;
             return value;
         }
@@ -658,7 +735,7 @@ public sealed class GamepadDevice : InputDevice
         if (id >= 30 && id <= 33)
         {
             id -= 30;
-            float value = GetValue((ShapeGamepadAxis)id, axisDeadzone);
+            float value = GetValue((ShapeGamepadJoyAxis)id, axisDeadzone);
             if (MathF.Abs(value) < axisDeadzone) value = 0f;
             return value;
         }
@@ -666,7 +743,7 @@ public sealed class GamepadDevice : InputDevice
         if (id >= 40 && id <= 43)
         {
             id -= 40;
-            float value = GetValue((ShapeGamepadAxis)id, axisDeadzone);
+            float value = GetValue((ShapeGamepadJoyAxis)id, axisDeadzone);
             if (MathF.Abs(value) < axisDeadzone) value = 0f;
             return value;
         }
@@ -711,101 +788,129 @@ public sealed class GamepadDevice : InputDevice
     {
         return new(previousState, CreateInputState(button, axisDeadzone, triggerDeadzone, modifierKeySet));
     }
-    #endregion
-    
-    #region Axis
     
     /// <summary>
-    /// Gets the value of the specified gamepad axis, applying calibration and deadzone thresholds.
-    /// Returns a float representing the axis value, normalized and adjusted for deadzone and optional modifier keys.
+    /// Gets the value of the specified gamepad button, using the same value for both axis and trigger deadzones.
     /// </summary>
-    /// <param name="axis">The gamepad axis to query.</param>
-    /// <param name="axisDeadzone">Deadzone value for axis input. Default is 0.1f.</param>
-    /// <param name="triggerDeadzone">Deadzone value for trigger input. Default is 0.1f.</param>
+    /// <param name="button">The gamepad button to query.</param>
+    /// <param name="deadzone">Deadzone value for both axis and trigger input. Default is 0.1f.</param>
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
-    /// <returns>The value of the axis as a float.</returns>
-    public float GetValue(ShapeGamepadAxis axis, float axisDeadzone = 0.1f, float triggerDeadzone = 0.1f, ModifierKeySet? modifierKeySet = null)
+    /// <returns>The value of the button as a float.</returns>
+    public float GetValue(ShapeGamepadButton button, float deadzone, ModifierKeySet? modifierKeySet = null) => GetValue(button, deadzone, deadzone, modifierKeySet);
+
+    /// <summary>
+    /// Determines if the specified gamepad button is "down" using the same value for both axis and trigger deadzones.
+    /// </summary>
+    /// <param name="button">The gamepad button.</param>
+    /// <param name="deadzone">Deadzone for both axis and trigger input. Default is 0.1f.</param>
+    /// <param name="modifierKeySet">Optional modifier key set.</param>
+    /// <returns>True if the button is down; otherwise, false.</returns>
+    public bool IsDown(ShapeGamepadButton button, float deadzone, ModifierKeySet? modifierKeySet = null) => GetValue(button, deadzone, deadzone, modifierKeySet) != 0f;
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified gamepad button,
+    /// using the same value for both axis and trigger deadzones and an optional modifier key set.
+    /// </summary>
+    /// <param name="button">The gamepad button.</param>
+    /// <param name="deadzone">Deadzone for both axis and trigger input. Default is 0.1f.</param>
+    /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
+    /// <returns>The created <see cref="InputState"/> for the button.</returns>
+    public InputState CreateInputState(ShapeGamepadButton button, float deadzone, ModifierKeySet? modifierKeySet = null)
+    {
+        bool down = IsDown(button, deadzone, deadzone, modifierKeySet);
+        return new(down, !down, down ? 1f : 0f, Index, InputDeviceType.Gamepad);
+    }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified gamepad button,
+    /// using a previous state and the same value for both axis and trigger deadzones,
+    /// and an optional modifier key set.
+    /// </summary>
+    /// <param name="button">The gamepad button.</param>
+    /// <param name="previousState">The previous input state.</param>
+    /// <param name="deadzone">Deadzone for both axis and trigger input. Default is 0.1f.</param>
+    /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
+    /// <returns>The created <see cref="InputState"/> for the button.</returns>
+    public InputState CreateInputState(ShapeGamepadButton button, InputState previousState, float deadzone, ModifierKeySet? modifierKeySet = null)
+    {
+        return new(previousState, CreateInputState(button, deadzone, deadzone, modifierKeySet));
+    }
+    
+    #endregion
+    
+    #region Joy Axis
+
+    /// <summary>
+    /// Gets the value of the specified gamepad joystick axis.
+    /// Applies deadzone and optional modifier key set.
+    /// Returns the calibrated and normalized axis value.
+    /// </summary>
+    /// <param name="axis">The joystick axis to query.</param>
+    /// <param name="deadzone">Deadzone value for axis input. Default is 0.1f.</param>
+    /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
+    /// <returns>The value of the joystick axis as a float.</returns>
+    public float GetValue(ShapeGamepadJoyAxis axis, float deadzone = 0.1f, ModifierKeySet? modifierKeySet = null)
     {
         if (Index < 0 || isLocked || !Connected) return 0f;
         if(modifierKeySet != null &&  !modifierKeySet.IsActive(this)) return 0f;
-        var deadzone = axis is ShapeGamepadAxis.LEFT_TRIGGER or ShapeGamepadAxis.RIGHT_TRIGGER ? triggerDeadzone : axisDeadzone;
         float value = Raylib.GetGamepadAxisMovement(Index, (GamepadAxis)axis);
         if(MathF.Abs(value) < deadzone) return 0f;
         
-        var calibrationValue = axisZeroCalibration[axis];
+        var calibrationValue = joyAxisZeroCalibration[axis];
         value -= calibrationValue;
         value = CalibrateAxis(value, axis);
         return value;
     }
-    
     /// <summary>
-    /// Determines if the specified gamepad axis is "down", using axis and trigger deadzone values and an optional modifier key set.
-    /// Returns true if the axis value is outside the deadzone and the modifier key set (if provided) is active.
+    /// Determines if the specified joystick axis is "down", i.e., its value exceeds the given deadzone.
+    /// Optionally checks if a modifier key set is active.
     /// </summary>
-    /// <param name="axis">The gamepad axis to check.</param>
-    /// <param name="axisDeadzone">Deadzone for axis input. Default is 0.1f.</param>
-    /// <param name="triggerDeadzone">Deadzone for trigger input. Default is 0.1f.</param>
+    /// <param name="axis">The joystick axis to check.</param>
+    /// <param name="deadzone">The deadzone threshold for the axis. Default is 0.1f.</param>
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
-    /// <returns>True if the axis is down; otherwise, false.</returns>
-    public bool IsDown(ShapeGamepadAxis axis, float axisDeadzone = 0.1f, float triggerDeadzone = 0.1f, ModifierKeySet? modifierKeySet = null)
-    {
-        return GetValue(axis, axisDeadzone, triggerDeadzone, modifierKeySet) != 0f;
-    }
+    /// <returns>True if the axis value is outside the deadzone; otherwise, false.</returns>
+    public bool IsDown(ShapeGamepadJoyAxis axis, float deadzone = 0.1f, ModifierKeySet? modifierKeySet = null) => GetValue(axis, deadzone, modifierKeySet) != 0f;
+
     /// <summary>
-    /// Creates an <see cref="InputState"/> for the specified gamepad axis,
-    /// applying axis and trigger deadzone values and an optional modifier key set.
+    /// Creates an <see cref="InputState"/> for the specified gamepad joystick axis,
+    /// applying the given deadzone and optional modifier key set.
     /// </summary>
-    /// <param name="axis">The gamepad axis.</param>
-    /// <param name="axisDeadzone">Deadzone for axis input. Default is 0.1f.</param>
-    /// <param name="triggerDeadzone">Deadzone for trigger input. Default is 0.1f.</param>
+    /// <param name="axis">The joystick axis to create the input state for.</param>
+    /// <param name="deadzone">The deadzone threshold for the axis. Default is 0.1f.</param>
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
-    /// <returns>The created <see cref="InputState"/>.</returns>
-    public InputState CreateInputState(ShapeGamepadAxis axis, float axisDeadzone = 0.1f, float triggerDeadzone = 0.1f, ModifierKeySet? modifierKeySet = null)
+    /// <returns>The created <see cref="InputState"/> for the joystick axis.</returns>
+    public InputState CreateInputState(ShapeGamepadJoyAxis axis, float deadzone = 0.1f, ModifierKeySet? modifierKeySet = null)
     {
-        float axisValue = GetValue(axis, axisDeadzone, triggerDeadzone, modifierKeySet);
+        float axisValue = GetValue(axis, deadzone, modifierKeySet);
         bool down = axisValue != 0f;
         return new(down, !down, axisValue, Index, InputDeviceType.Gamepad);
     }
-
+    
     /// <summary>
-    /// Creates an <see cref="InputState"/> for the specified gamepad axis,
-    /// using a previous state and applying axis and trigger deadzone values,
-    /// as well as an optional modifier key set.
+    /// Creates an <see cref="InputState"/> for the specified gamepad joystick axis,
+    /// using a previous state and applying the given deadzone and optional modifier key set.
     /// </summary>
-    /// <param name="axis">The gamepad axis.</param>
+    /// <param name="axis">The joystick axis to create the input state for.</param>
     /// <param name="previousState">The previous input state.</param>
-    /// <param name="axisDeadzone">Deadzone for axis input. Default is 0.1f.</param>
-    /// <param name="triggerDeadzone">Deadzone for trigger input. Default is 0.1f.</param>
+    /// <param name="deadzone">The deadzone threshold for the axis. Default is 0.1f.</param>
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
-    /// <returns>The created <see cref="InputState"/>.</returns>
-    public InputState CreateInputState(ShapeGamepadAxis axis, InputState previousState, float axisDeadzone = 0.1f, float triggerDeadzone = 0.1f, ModifierKeySet? modifierKeySet = null)
+    /// <returns>The created <see cref="InputState"/> for the joystick axis.</returns>
+    public InputState CreateInputState(ShapeGamepadJoyAxis axis, InputState previousState, float deadzone = 0.1f, ModifierKeySet? modifierKeySet = null)
     {
-        return new(previousState, CreateInputState(axis, axisDeadzone, triggerDeadzone, modifierKeySet));
+        return new(previousState, CreateInputState(axis, deadzone, modifierKeySet));
     }
     
     
     /// <summary>
     /// Calibrates and normalizes the axis value based on its range.
     /// </summary>
-    private float CalibrateAxis(float value, ShapeGamepadAxis axis)
+    private float CalibrateAxis(float value, ShapeGamepadJoyAxis axis)
     {
-        if (axisRanges.TryGetValue(axis, out var range))
+        if (joyAxisRanges.TryGetValue(axis, out var range))
         {
-            axisRanges[axis] = range.UpdateRange(value);
+            joyAxisRanges[axis] = range.UpdateRange(value);
         }
         else
         {
-            axisRanges[axis] = new(value, value);
-        }
-        
-        if (axis is ShapeGamepadAxis.LEFT_TRIGGER or ShapeGamepadAxis.RIGHT_TRIGGER)
-        {
-            var axisRange = axisRanges[axis];
-            if (axisRange.TotalRange > 1)
-            {
-                value /= axisRange.TotalRange;
-            }
-            
+            joyAxisRanges[axis] = new(value, value);
         }
         
         return value;
@@ -813,6 +918,87 @@ public sealed class GamepadDevice : InputDevice
     
     #endregion
 
+    #region Trigger Axis
+    /// <summary>
+    /// Gets the value of the specified gamepad trigger axis.
+    /// Applies the given deadzone and optionally checks if a modifier key set is active.
+    /// Returns the calibrated and normalized trigger axis value.
+    /// </summary>
+    /// <param name="axis">The trigger axis to query.</param>
+    /// <param name="deadzone">Deadzone value for trigger input. Default is 0.1f.</param>
+    /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
+    /// <returns>The value of the trigger axis as a float.</returns>
+    public float GetValue(ShapeGamepadTriggerAxis axis, float deadzone = 0.1f, ModifierKeySet? modifierKeySet = null)
+    {
+        if (Index < 0 || isLocked || !Connected) return 0f;
+        if(modifierKeySet != null &&  !modifierKeySet.IsActive(this)) return 0f;
+        float value = Raylib.GetGamepadAxisMovement(Index, (GamepadAxis)axis);
+        if(MathF.Abs(value) < deadzone) return 0f;
+        
+        var calibrationValue = triggerZeroCalibration[axis];
+        value -= calibrationValue;
+        value = CalibrateAxis(value, axis);
+        return value;
+    }
+    /// <summary>
+    /// Determines if the specified trigger axis is "down", i.e., its value exceeds the given deadzone.
+    /// Optionally checks if a modifier key set is active.
+    /// </summary>
+    /// <param name="axis">The trigger axis to check.</param>
+    /// <param name="deadzone">The deadzone threshold for the trigger axis. Default is 0.1f.</param>
+    /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
+    /// <returns>True if the trigger axis value is outside the deadzone; otherwise, false.</returns>
+    public bool IsDown(ShapeGamepadTriggerAxis axis, float deadzone = 0.1f, ModifierKeySet? modifierKeySet = null) => GetValue(axis, deadzone, modifierKeySet) != 0f;
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified gamepad trigger axis,
+    /// applying the given deadzone and optional modifier key set.
+    /// </summary>
+    /// <param name="axis">The trigger axis to create the input state for.</param>
+    /// <param name="deadzone">The deadzone threshold for the trigger axis. Default is 0.1f.</param>
+    /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
+    /// <returns>The created <see cref="InputState"/> for the trigger axis.</returns>
+    public InputState CreateInputState(ShapeGamepadTriggerAxis axis, float deadzone = 0.1f, ModifierKeySet? modifierKeySet = null)
+    {
+        float axisValue = GetValue(axis, deadzone, modifierKeySet);
+        bool down = axisValue != 0f;
+        return new(down, !down, axisValue, Index, InputDeviceType.Gamepad);
+    }
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified gamepad trigger axis,
+    /// using a previous state and applying the given deadzone and optional modifier key set.
+    /// </summary>
+    /// <param name="axis">The trigger axis to create the input state for.</param>
+    /// <param name="previousState">The previous input state.</param>
+    /// <param name="deadzone">The deadzone threshold for the trigger axis. Default is 0.1f.</param>
+    /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
+    /// <returns>The created <see cref="InputState"/> for the trigger axis.</returns>
+    public InputState CreateInputState(ShapeGamepadTriggerAxis axis, InputState previousState, float deadzone = 0.1f, ModifierKeySet? modifierKeySet = null)
+    {
+        return new(previousState, CreateInputState(axis, deadzone, modifierKeySet));
+    }
+    
+    private float CalibrateAxis(float value, ShapeGamepadTriggerAxis axis)
+    {
+        if (triggerAxisRanges.TryGetValue(axis, out var range))
+        {
+            triggerAxisRanges[axis] = range.UpdateRange(value);
+        }
+        else
+        {
+            triggerAxisRanges[axis] = new(value, value);
+        }
+        
+        var axisRange = triggerAxisRanges[axis];
+        if (axisRange.TotalRange > 1)
+        {
+            value /= axisRange.TotalRange;
+        }
+        
+        return value;
+    }
+    
+    #endregion
+    
     #region Button Axis
     /// <summary>
     /// Gets the combined value of two gamepad buttons as a single axis.

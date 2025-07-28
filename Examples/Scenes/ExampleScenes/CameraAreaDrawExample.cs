@@ -125,7 +125,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             UpdateFollower(ui.Area.Size.Min());
             
-            GAMELOOP.MouseControlEnabled = GAMELOOP.CurGamepad?.IsDown(ShapeGamepadAxis.RIGHT_TRIGGER, 0.1f) ?? true;
+            GAMELOOP.MouseControlEnabled = GAMELOOP.CurGamepad?.IsDown(ShapeGamepadTriggerAxis.RIGHT, 0.1f) ?? true;
             inputActionTree.CurrentGamepad = GAMELOOP.CurGamepad;
             inputActionTree.Update(time.Delta);
             

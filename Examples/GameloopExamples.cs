@@ -376,8 +376,8 @@ namespace Examples
                 mouseMovementTimer = 0f;
                 float speed = screenArea.Size.Max() * 0.75f * dt;
                 int gamepad = ShapeInput.ActiveGamepadDeviceManager.LastUsedGamepad.Index;
-                var x = ShapeInput.CreateInputState(ShapeGamepadAxis.LEFT_X, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
-                var y = ShapeInput.CreateInputState(ShapeGamepadAxis.LEFT_Y, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
+                var x = ShapeInput.CreateInputState(ShapeGamepadJoyAxis.LEFT_X, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
+                var y = ShapeInput.CreateInputState(ShapeGamepadJoyAxis.LEFT_Y, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
 
                 var movement = new Vector2(x, y);
                 float l = movement.Length();
