@@ -7,19 +7,28 @@ public class ModifierKeyMouseButton : IModifierKey
 {
     private readonly ShapeMouseButton modifier;
     private readonly bool reverseModifier;
+    private readonly float mouseMoveDeadzone;
+    private readonly float mouseWheelDeadzone;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ModifierKeyMouseButton"/> class.
     /// </summary>
+    /// <param name="modifierKey">The mouse button to use as a modifier.</param>
+    /// <param name="mouseMoveDeadzone">The deadzone threshold for mouse movement detection.</param>
+    /// <param name="mouseWheelDeadzone">The deadzone threshold for mouse wheel movement detection.</param>
+    /// <param name="reverseModifier">If set to <c>true</c>, the modifier is considered active when the button is not pressed.</param>
     /// <remarks>
     /// The <paramref name="reverseModifier"/> parameter is used to prevent an input from being triggered when a modifier combination is pressed.
     /// For example, if you have two inputs: LMB + Space and Space, configuring input Space with LMB as a reverse modifier ensures that pressing LMB + Space will not also trigger Space.
     /// </remarks>
-    /// <param name="modifierKey">The mouse button to use as a modifier.</param>
-    /// <param name="reverseModifier">If set to <c>true</c>, the modifier is considered active when the button is not pressed.</param>
-    public ModifierKeyMouseButton(ShapeMouseButton modifierKey, bool reverseModifier = false)
+    public ModifierKeyMouseButton(ShapeMouseButton modifierKey,
+        float mouseMoveDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold,
+        float mouseWheelDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseWheelThreshold,
+        bool reverseModifier = false)
     {
         this.modifier = modifierKey;
+        this.mouseMoveDeadzone = mouseMoveDeadzone;
+        this.mouseWheelDeadzone = mouseWheelDeadzone;
         this.reverseModifier = reverseModifier;
     }
 
@@ -34,7 +43,7 @@ public class ModifierKeyMouseButton : IModifierKey
     /// </summary>
     /// <param name="gamepad">Unused. Present for interface compatibility.</param>
     /// <returns><c>true</c> if the modifier is active; otherwise, <c>false</c>.</returns>
-    public bool IsActive(GamepadDevice? gamepad = null) => ShapeInput.ActiveMouseDevice.IsDown(modifier) && !reverseModifier; //   ShapeInput.ActiveMouseDevice.IsModifierActive(modifier, reverseModifier);
+    public bool IsActive(GamepadDevice? gamepad = null) => ShapeInput.ActiveMouseDevice.IsDown(modifier) && !reverseModifier;
 
     /// <summary>
     /// Gets the display name of the modifier key.
@@ -47,7 +56,7 @@ public class ModifierKeyMouseButton : IModifierKey
     /// Creates a copy of this <see cref="ModifierKeyMouseButton"/> instance.
     /// </summary>
     /// <returns>A new <see cref="IModifierKey"/> with the same modifier and reverseModifier values.</returns>
-    public IModifierKey Copy() => new ModifierKeyMouseButton(modifier, reverseModifier);
+    public IModifierKey Copy() => new ModifierKeyMouseButton(modifier, mouseMoveDeadzone, mouseWheelDeadzone, reverseModifier);
     
         /// <summary>
     /// Determines whether the specified <see cref="ModifierKeyMouseButton"/> is equal to the current instance.

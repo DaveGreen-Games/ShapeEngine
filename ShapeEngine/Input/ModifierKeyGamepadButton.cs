@@ -7,19 +7,30 @@ public class ModifierKeyGamepadButton : IModifierKey
 {
     private readonly ShapeGamepadButton modifier;
     private readonly bool reverseModifier;
+    private readonly float joyAxisDeadzone;
+    private readonly float triggerAxisDeadzone;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ModifierKeyGamepadButton"/> class.
     /// </summary>
+    /// <param name="modifierKey">The gamepad button to use as a modifier.</param>
+    /// <param name="joyAxisDeadzone">The deadzone threshold for joystick axes,
+    /// used to ignore minor input noise.</param>
+    /// <param name="triggerAxisDeadzone">The deadzone threshold for trigger axes,
+    /// used to ignore minor input noise.</param>
+    /// <param name="reverseModifier">If set to <c>true</c>, the modifier is considered active when the button is not pressed.</param>
     /// <remarks>
     /// The <paramref name="reverseModifier"/> parameter is used to prevent an input from being triggered when a modifier combination is pressed.
     /// For example, if you have two inputs: RB + A and A, configuring input A with RB as a reverse modifier ensures that pressing RB + A will not also trigger A.
     /// </remarks>
-    /// <param name="modifierKey">The gamepad button to use as a modifier.</param>
-    /// <param name="reverseModifier">If set to <c>true</c>, the modifier is considered active when the button is not pressed.</param>
-    public ModifierKeyGamepadButton(ShapeGamepadButton modifierKey, bool reverseModifier = false)
+    public ModifierKeyGamepadButton(ShapeGamepadButton modifierKey, 
+        float joyAxisDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold,
+        float triggerAxisDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold,
+        bool reverseModifier = false)
     {
         this.modifier = modifierKey;
+        this.joyAxisDeadzone = joyAxisDeadzone;
+        this.triggerAxisDeadzone = triggerAxisDeadzone;
         this.reverseModifier = reverseModifier;
     }
 
@@ -34,7 +45,7 @@ public class ModifierKeyGamepadButton : IModifierKey
     /// </summary>
     /// <param name="gamepad">The gamepad device to check.</param>
     /// <returns><c>true</c> if the modifier is active; otherwise, <c>false</c>.</returns>
-    public bool IsActive(GamepadDevice? gamepad) => gamepad != null && gamepad.IsDown(modifier) && !reverseModifier;
+    public bool IsActive(GamepadDevice? gamepad) => gamepad != null && gamepad.IsDown(modifier, joyAxisDeadzone, triggerAxisDeadzone) && !reverseModifier;
 
     /// <summary>
     /// Gets the display name of the modifier key.
@@ -47,7 +58,7 @@ public class ModifierKeyGamepadButton : IModifierKey
     /// Creates a copy of this <see cref="ModifierKeyGamepadButton"/> instance.
     /// </summary>
     /// <returns>A new <see cref="IModifierKey"/> with the same modifier and reverseModifier values.</returns>
-    public IModifierKey Copy() => new  ModifierKeyGamepadButton(modifier, reverseModifier);
+    public IModifierKey Copy() => new  ModifierKeyGamepadButton(modifier, joyAxisDeadzone, triggerAxisDeadzone, reverseModifier);
 
     /// <summary>
     /// Determines whether the specified <see cref="ModifierKeyGamepadButton"/> is equal to the current instance.
