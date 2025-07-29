@@ -453,8 +453,8 @@ public sealed class GamepadDevice : InputDevice
         }
         
         WasGamepadUsed(dt, wasOtherDeviceUsed, out wasUsed, out wasUsedRaw);
-        
-        return wasUsed && !wasOtherDeviceUsed;//safety precaution
+
+        return wasUsed;
     }
 
     private void WasGamepadUsed(float dt, bool wasOtherDeviceUsed, out bool used, out bool usedRaw)

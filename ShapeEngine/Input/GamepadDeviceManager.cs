@@ -8,6 +8,10 @@ namespace ShapeEngine.Input;
 /// </summary>
 public sealed class GamepadDeviceManager : InputDeviceBase
 {
+    /// <summary>
+    /// The default maximum number of gamepads supported by the manager.
+    /// </summary>
+    public const int DefaultMaxGamepads = 8;
     
     /// <summary>
     /// Event triggered when a gamepad's connection state changes.
@@ -80,7 +84,7 @@ public sealed class GamepadDeviceManager : InputDeviceBase
     /// Initializes a new instance of the <see cref="GamepadDeviceManager"/> class.
     /// </summary>
     /// <param name="maxGamepads">Maximum number of gamepads to manage.</param>
-    public GamepadDeviceManager(int maxGamepads = 8)
+    public GamepadDeviceManager(int maxGamepads = DefaultMaxGamepads)
     {
         if (maxGamepads <= 0) maxGamepads = 1;
         gamepads = new GamepadDevice[maxGamepads];
@@ -259,19 +263,24 @@ public sealed class GamepadDeviceManager : InputDeviceBase
                     gamepad.Connect();
                     OnGamepadConnectionChanged?.Invoke(gamepad, true);
                 }
-               
-                used = gamepad.Update(dt, wasOtherDeviceUsed);
-                if(gamepad.WasUsed()) 
+
+                if (gamepad.Update(dt, wasOtherDeviceUsed))
+                {
                     LastUsedGamepads.Add(gamepad);
+                    used = true;
+                }
+            }
+            else
+            {
+                if (gamepad.Connected)
+                {
+                    if (gamepad == LastUsedGamepad) LastUsedGamepad = null;
+                        
+                    gamepad.Disconnect();
+                    OnGamepadConnectionChanged?.Invoke(gamepad, false);
+                }
             }
             
-            if (gamepad.Connected)
-            {
-                if (gamepad == LastUsedGamepad) LastUsedGamepad = null;
-                    
-                gamepad.Disconnect();
-                OnGamepadConnectionChanged?.Invoke(gamepad, false);
-            }
         }
 
 
@@ -311,11 +320,11 @@ public sealed class GamepadDeviceManager : InputDeviceBase
     /// <summary>
     /// Handler for when a gamepad button is released.
     /// </summary>
-    private void GamepadButtonWasReleased(GamepadDevice gamepad, ShapeGamepadButton button) => OnGamepadButtonPressed?.Invoke(gamepad, button);
+    private void GamepadButtonWasReleased(GamepadDevice gamepad, ShapeGamepadButton button) => OnGamepadButtonReleased?.Invoke(gamepad, button);
     /// <summary>
     /// Handler for when a gamepad button is pressed.
     /// </summary>
-    private void GamepadButtonWasPressed(GamepadDevice gamepad, ShapeGamepadButton button) => OnGamepadButtonReleased?.Invoke(gamepad, button);
+    private void GamepadButtonWasPressed(GamepadDevice gamepad, ShapeGamepadButton button) => OnGamepadButtonPressed?.Invoke(gamepad, button);
 
     #endregion
     
