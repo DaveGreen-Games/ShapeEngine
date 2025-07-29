@@ -52,8 +52,11 @@ public class ModifierKeyGamepadButton : IModifierKey
     /// </summary>
     /// <param name="shorthand">If set to <c>true</c>, returns the shorthand name.</param>
     /// <returns>The name of the modifier key, or an empty string if <c>reverseModifier</c> is <c>true</c>.</returns>
-    public string GetName(bool shorthand = true) => reverseModifier ? "" : modifier.GetButtonName(shorthand);// GamepadDevice.GetButtonName(modifier, shorthand);
-    
+    public string GetName(bool shorthand = true)
+    {
+        return reverseModifier ? $"Not-{modifier.GetButtonName(shorthand)}" : modifier.GetButtonName(shorthand);
+    }
+
     /// <summary>
     /// Creates a copy of this <see cref="ModifierKeyGamepadButton"/> instance.
     /// </summary>
