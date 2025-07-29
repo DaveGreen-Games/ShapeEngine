@@ -19,6 +19,12 @@ public partial class InputDeviceUsageDetectionSettings
         public const float DefaultMouseWheelThreshold = 3f;
         
         /// <summary>
+        /// The default threshold for all axis inputs, including mouse wheel.
+        /// Use this value when only one threshold can be supplied for both mouse movement and wheel movement.
+        /// </summary>
+        public const float DefaultMouseThreshold = 0.15f;
+        
+        /// <summary>
         /// Gets the default <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.MouseSettings"/> instance with preset values.
         /// </summary>
         /// <code>

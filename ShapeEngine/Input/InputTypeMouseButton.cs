@@ -18,7 +18,7 @@ public sealed class InputTypeMouseButton : IInputType
     /// <param name="button">The mouse button to represent.</param>
     /// <param name="deadzone">The deadzone threshold for input detection.</param>
     /// <param name="modifierKeySet">Optional set of modifier keys required for activation.</param>
-    public InputTypeMouseButton(ShapeMouseButton button, float deadzone = 0f, ModifierKeySet? modifierKeySet = null)
+    public InputTypeMouseButton(ShapeMouseButton button, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseThreshold, ModifierKeySet? modifierKeySet = null)
     {
         this.button = button; 
         this.deadzone = deadzone;

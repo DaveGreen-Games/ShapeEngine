@@ -19,7 +19,7 @@ public sealed class InputTypeMouseWheelAxis : IInputType
     /// <param name="axis">The mouse wheel axis to use.</param>
     /// <param name="deadzone">The deadzone value. Input values below this threshold are ignored.</param>
     /// <param name="modifierKeySet">An optional set of modifier keys required for activation.</param>
-    public InputTypeMouseWheelAxis(ShapeMouseWheelAxis axis, float deadzone = 0.2f, ModifierKeySet? modifierKeySet = null)
+    public InputTypeMouseWheelAxis(ShapeMouseWheelAxis axis, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseWheelThreshold, ModifierKeySet? modifierKeySet = null)
     {
         this.axis = axis;
         this.deadzone = deadzone;

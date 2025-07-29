@@ -753,22 +753,26 @@ public static class ShapeInput
     /// <summary>
     /// Creates an input type for a mouse button.
     /// </summary>
-    public static IInputType CreateInputType(this ShapeMouseButton button, float deadzone = 0.2f, ModifierKeySet? modifierKeySet = null) => new InputTypeMouseButton(button, deadzone,  modifierKeySet);
+    public static IInputType CreateInputType(this ShapeMouseButton button, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseThreshold, 
+        ModifierKeySet? modifierKeySet = null) => new InputTypeMouseButton(button, deadzone,  modifierKeySet);
 
     /// <summary>
     /// Creates an input type for a mouse button axis (negative and positive).
     /// </summary>
-    public static IInputType CreateInputType(this ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = 0.2f, ModifierKeySet? modifierKeySet = null) => new InputTypeMouseButtonAxis(neg, pos, deadzone,  modifierKeySet);
+    public static IInputType CreateInputType(this ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseThreshold, 
+        ModifierKeySet? modifierKeySet = null) => new InputTypeMouseButtonAxis(neg, pos, deadzone,  modifierKeySet);
 
     /// <summary>
     /// Creates an input type for a mouse wheel axis.
     /// </summary>
-    public static IInputType CreateInputType(this ShapeMouseWheelAxis axis, float deadzone = 0.2f, ModifierKeySet? modifierKeySet = null) => new InputTypeMouseWheelAxis(axis, deadzone,  modifierKeySet);
+    public static IInputType CreateInputType(this ShapeMouseWheelAxis axis, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseWheelThreshold, 
+        ModifierKeySet? modifierKeySet = null) => new InputTypeMouseWheelAxis(axis, deadzone,  modifierKeySet);
 
     /// <summary>
     /// Creates an input type for a mouse axis.
     /// </summary>
-    public static IInputType CreateInputType(this ShapeMouseAxis axis, float deadzone = 0.2f, ModifierKeySet? modifierKeySet = null) => new InputTypeMouseAxis(axis, deadzone,  modifierKeySet);
+    public static IInputType CreateInputType(this ShapeMouseAxis axis, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, 
+        ModifierKeySet? modifierKeySet = null) => new InputTypeMouseAxis(axis, deadzone,  modifierKeySet);
 
     #endregion
     
