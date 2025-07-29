@@ -18,6 +18,12 @@ public partial class InputDeviceUsageDetectionSettings
         /// </summary>
         public const float DefaultTriggerAxisThreshold = 0.15f;
         
+        /// <summary>
+        /// The default threshold for all axis inputs, including triggers.
+        /// Use this value when only one threshold can be supplied for both joystick and trigger axes.
+        /// </summary>
+        public const float DefaultAxisThreshold = 0.15f;
+        
         
         /// <summary>
         /// Gets the default <see cref="MouseSettings"/> instance with preset values.

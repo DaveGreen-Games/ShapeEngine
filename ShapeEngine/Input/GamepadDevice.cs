@@ -814,10 +814,11 @@ public sealed class GamepadDevice : InputDevice
     /// </summary>
     /// <param name="axis">The joystick axis to query.</param>
     /// <param name="deadzone">Deadzone value for axis input. Default is 0.1f.</param>
+    /// <param name="inverted">Whether to invert the axis value. Default is false.</param>
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The value of the joystick axis as a float.</returns>
     public float GetValue(ShapeGamepadJoyAxis axis, 
-        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, ModifierKeySet? modifierKeySet = null)
+        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, bool inverted = false,  ModifierKeySet? modifierKeySet = null)
     {
         if (Index < 0 || isLocked || !Connected) return 0f;
         if(modifierKeySet != null &&  !modifierKeySet.IsActive(this)) return 0f;
@@ -827,20 +828,23 @@ public sealed class GamepadDevice : InputDevice
         var calibrationValue = joyAxisZeroCalibration[axis];
         value -= calibrationValue;
         value = CalibrateAxis(value, axis);
+        if(inverted) value *= -1f;
         return value;
     }
+
     /// <summary>
     /// Determines if the specified joystick axis is "down", i.e., its value exceeds the given deadzone.
     /// Optionally checks if a modifier key set is active.
     /// </summary>
     /// <param name="axis">The joystick axis to check.</param>
     /// <param name="deadzone">The deadzone threshold for the axis. Default is 0.1f.</param>
+    /// <param name="inverted">Whether to invert the axis value. Default is false.</param>
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>True if the axis value is outside the deadzone; otherwise, false.</returns>
     public bool IsDown(ShapeGamepadJoyAxis axis, 
-        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, ModifierKeySet? modifierKeySet = null)
+        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
     {
-        return GetValue(axis, deadzone, modifierKeySet) != 0f;
+        return GetValue(axis, deadzone, inverted, modifierKeySet) != 0f;
     }
 
     /// <summary>
@@ -849,12 +853,13 @@ public sealed class GamepadDevice : InputDevice
     /// </summary>
     /// <param name="axis">The joystick axis to create the input state for.</param>
     /// <param name="deadzone">The deadzone threshold for the axis. Default is 0.1f.</param>
+    /// <param name="inverted">Whether to invert the axis value. Default is false.</param>
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The created <see cref="InputState"/> for the joystick axis.</returns>
     public InputState CreateInputState(ShapeGamepadJoyAxis axis, 
-        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, ModifierKeySet? modifierKeySet = null)
+        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
     {
-        float axisValue = GetValue(axis, deadzone, modifierKeySet);
+        float axisValue = GetValue(axis, deadzone, inverted, modifierKeySet);
         bool down = axisValue != 0f;
         return new(down, !down, axisValue, Index, InputDeviceType.Gamepad);
     }
@@ -866,12 +871,13 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="axis">The joystick axis to create the input state for.</param>
     /// <param name="previousState">The previous input state.</param>
     /// <param name="deadzone">The deadzone threshold for the axis. Default is 0.1f.</param>
+    /// <param name="inverted">Whether to invert the axis value. Default is false.</param>
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The created <see cref="InputState"/> for the joystick axis.</returns>
     public InputState CreateInputState(ShapeGamepadJoyAxis axis, InputState previousState, 
-        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, ModifierKeySet? modifierKeySet = null)
+        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
     {
-        return new(previousState, CreateInputState(axis, deadzone, modifierKeySet));
+        return new(previousState, CreateInputState(axis, deadzone, inverted, modifierKeySet));
     }
     
     

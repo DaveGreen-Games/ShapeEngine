@@ -18,9 +18,12 @@ public sealed class InputTypeGamepadButtonAxis : IInputType
     /// </summary>
     /// <param name="neg">The negative direction gamepad button.</param>
     /// <param name="pos">The positive direction gamepad button.</param>
-    /// <param name="deadzone">The deadzone threshold for axis input. Default is 0.1f.</param>
+    /// <param name="deadzone">
+    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value.
+    /// Gamepad buttons ignore deadzone (deadzone works only with axis/trigger input types).
+    /// </param>
     /// <param name="modifierKeySet">Optional set of modifier keys.</param>
-    public InputTypeGamepadButtonAxis(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = 0.1f, ModifierKeySet? modifierKeySet = null)
+    public InputTypeGamepadButtonAxis(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultAxisThreshold, ModifierKeySet? modifierKeySet = null)
     {
         this.neg = neg;
         this.pos = pos;

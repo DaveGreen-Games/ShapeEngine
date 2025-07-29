@@ -657,8 +657,8 @@ public static class ShapeInput
     /// <param name="button">The gamepad button to create the input state for.</param>
     /// <param name="accessTag">The access tag for input access control.</param>
     /// <param name="gamepadIndex">The index of the gamepad.</param>
-    /// <param name="axisDeadzone">The deadzone value for axis sensitivity. Default is 0.1f.</param>
-    /// <param name="triggerDeadzone">The deadzone value for trigger sensitivity. Default is 0.1f.</param>
+    /// <param name="axisDeadzone">The deadzone value for axis sensitivity.</param>
+    /// <param name="triggerDeadzone">The deadzone value for trigger sensitivity.</param>
     /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
     /// <returns>The created <see cref="InputState"/>.</returns>
     public static InputState CreateInputState(ShapeGamepadButton button, uint accessTag, int gamepadIndex, 
@@ -678,8 +678,8 @@ public static class ShapeInput
     /// <param name="pos">The positive direction gamepad button.</param>
     /// <param name="accessTag">The access tag for input access control.</param>
     /// <param name="gamepadIndex">The index of the gamepad.</param>
-    /// <param name="axisDeadzone">The deadzone value for axis sensitivity. Default is 0.1f.</param>
-    /// <param name="triggerDeadzone">The deadzone value for trigger sensitivity. Default is 0.1f.</param>
+    /// <param name="axisDeadzone">The deadzone value for axis sensitivity.</param>
+    /// <param name="triggerDeadzone">The deadzone value for trigger sensitivity.</param>
     /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
     /// <returns>The created <see cref="InputState"/>.</returns>
     public static InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, uint accessTag, int gamepadIndex, 
@@ -699,17 +699,19 @@ public static class ShapeInput
     /// <param name="axis">The joystick axis to create the input state for.</param>
     /// <param name="accessTag">The access tag for input access control.</param>
     /// <param name="gamepadIndex">The index of the gamepad.</param>
-    /// <param name="deadzone">The deadzone value for axis sensitivity. Default is 0.1f.</param>
+    /// <param name="deadzone">The deadzone value for axis sensitivity.</param>
+    /// <param name="inverted">Whether to invert the axis value. Default is false.</param>
     /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
     /// <returns>The created <see cref="InputState"/>.</returns>
     public static InputState CreateInputState(ShapeGamepadJoyAxis axis, uint accessTag, int gamepadIndex, 
         float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, 
+        bool inverted = false,
         ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
         var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
         
-        return gamepad?.CreateInputState(axis, deadzone, modifierKeySet) ?? new();
+        return gamepad?.CreateInputState(axis, deadzone, inverted, modifierKeySet) ?? new();
     }
     /// <summary>
     /// Creates an <see cref="InputState"/> for a gamepad trigger axis (left or right trigger) on a specific gamepad.
@@ -717,7 +719,7 @@ public static class ShapeInput
     /// <param name="axis">The trigger axis to create the input state for (e.g., left or right trigger).</param>
     /// <param name="accessTag">The access tag for input access control.</param>
     /// <param name="gamepadIndex">The index of the gamepad.</param>
-    /// <param name="deadzone">The deadzone value for trigger sensitivity. Default is 0.1f.</param>
+    /// <param name="deadzone">The deadzone value for trigger sensitivity.</param>
     /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
     /// <returns>The created <see cref="InputState"/>.</returns>
     public static InputState CreateInputState(ShapeGamepadTriggerAxis axis, uint accessTag, int gamepadIndex, 
@@ -774,28 +776,33 @@ public static class ShapeInput
     /// <summary>
     /// Creates an input type for a gamepad button.
     /// </summary>
-    public static IInputType CreateInputType(this ShapeGamepadButton button, float deadzone = 0.1f, ModifierKeySet? modifierKeySet = null) => new InputTypeGamepadButton(button, deadzone,  modifierKeySet);
+    public static IInputType CreateInputType(this ShapeGamepadButton button, float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultAxisThreshold, 
+        ModifierKeySet? modifierKeySet = null) => new InputTypeGamepadButton(button, deadzone,  modifierKeySet);
 
     /// <summary>
     /// Creates an input type for a gamepad button axis (negative and positive).
     /// </summary>
-    public static IInputType CreateInputType(this ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = 0.1f, ModifierKeySet? modifierKeySet = null) => new InputTypeGamepadButtonAxis(neg, pos, deadzone,  modifierKeySet);
+    public static IInputType CreateInputType(this ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultAxisThreshold, 
+        ModifierKeySet? modifierKeySet = null) => new InputTypeGamepadButtonAxis(neg, pos, deadzone,  modifierKeySet);
     /// <summary>
     /// Creates an input type for a gamepad joystick axis.
     /// </summary>
     /// <param name="axis">The gamepad joystick axis.</param>
-    /// <param name="deadzone">The deadzone value for axis sensitivity. Default is 0.1f.</param>
+    /// <param name="deadzone">The deadzone value for axis sensitivity.</param>
+    /// <param name="inverted">Whether to invert the axis value. Default is false.</param>
     /// <param name="modifierKeySet">Optional modifier key set for input type creation.</param>
     /// <returns>An <see cref="IInputType"/> representing the gamepad joystick axis input.</returns>
-    public static IInputType CreateInputType(this ShapeGamepadJoyAxis axis, float deadzone = 0.1f, ModifierKeySet? modifierKeySet = null) => new InputTypeGamepadJoyAxis(axis, deadzone,  modifierKeySet);
+    public static IInputType CreateInputType(this ShapeGamepadJoyAxis axis, float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, 
+        bool inverted = false, ModifierKeySet? modifierKeySet = null) => new InputTypeGamepadJoyAxis(axis, deadzone, inverted, modifierKeySet);
     /// <summary>
     /// Creates an input type for a gamepad trigger axis (left or right trigger).
     /// </summary>
     /// <param name="axis">The gamepad trigger axis (e.g., left or right trigger).</param>
-    /// <param name="deadzone">The deadzone value for trigger sensitivity. Default is 0.1f.</param>
+    /// <param name="deadzone">The deadzone value for trigger sensitivity.</param>
     /// <param name="modifierKeySet">Optional modifier key set for input type creation.</param>
     /// <returns>An <see cref="IInputType"/> representing the gamepad trigger axis input.</returns>
-    public static IInputType CreateInputType(this ShapeGamepadTriggerAxis axis, float deadzone = 0.1f, ModifierKeySet? modifierKeySet = null) => new InputTypeGamepadTriggerAxis(axis, deadzone,  modifierKeySet);
+    public static IInputType CreateInputType(this ShapeGamepadTriggerAxis axis, float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
+        ModifierKeySet? modifierKeySet = null) => new InputTypeGamepadTriggerAxis(axis, deadzone, modifierKeySet);
 
     #endregion
     

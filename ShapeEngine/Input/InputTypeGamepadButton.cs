@@ -17,10 +17,11 @@ public sealed class InputTypeGamepadButton : IInputType
     /// </summary>
     /// <param name="button">The gamepad button.</param>
     /// <param name="deadzone">
-    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value. Gamepad buttons ignore deadzone (deadzone works only with axis/trigger input types).
+    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value.
+    /// Gamepad buttons ignore deadzone (deadzone works only with axis/trigger input types).
     /// </param>
     /// <param name="modifierKeySet">The set of modifier keys associated with this input type.</param>
-    public InputTypeGamepadButton(ShapeGamepadButton button, float deadzone = 0.1f, ModifierKeySet? modifierKeySet = null)
+    public InputTypeGamepadButton(ShapeGamepadButton button, float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultAxisThreshold, ModifierKeySet? modifierKeySet = null)
     {
         this.button = button; 
         this.deadzone = deadzone;
