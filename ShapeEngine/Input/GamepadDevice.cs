@@ -709,8 +709,8 @@ public sealed class GamepadDevice : InputDevice
     /// Returns a float representing the button's value, considering axis and trigger deadzones and an optional modifier key set.
     /// </summary>
     /// <param name="button">The gamepad button to query.</param>
-    /// <param name="axisDeadzone">Deadzone value for axis input. Default is 0.1f.</param>
-    /// <param name="triggerDeadzone">Deadzone value for trigger input. Default is 0.1f.</param>
+    /// <param name="axisDeadzone">Deadzone value for axis input. </param>
+    /// <param name="triggerDeadzone">Deadzone value for trigger input. </param>
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The value of the button as a float.</returns>
     public float GetValue(ShapeGamepadButton button, 
@@ -813,7 +813,7 @@ public sealed class GamepadDevice : InputDevice
     /// Returns the calibrated and normalized axis value.
     /// </summary>
     /// <param name="axis">The joystick axis to query.</param>
-    /// <param name="deadzone">Deadzone value for axis input. Default is 0.1f.</param>
+    /// <param name="deadzone">Deadzone value for axis input. </param>
     /// <param name="inverted">Whether to invert the axis value. Default is false.</param>
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The value of the joystick axis as a float.</returns>
@@ -837,7 +837,7 @@ public sealed class GamepadDevice : InputDevice
     /// Optionally checks if a modifier key set is active.
     /// </summary>
     /// <param name="axis">The joystick axis to check.</param>
-    /// <param name="deadzone">The deadzone threshold for the axis. Default is 0.1f.</param>
+    /// <param name="deadzone">The deadzone threshold for the axis. </param>
     /// <param name="inverted">Whether to invert the axis value. Default is false.</param>
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>True if the axis value is outside the deadzone; otherwise, false.</returns>
@@ -852,7 +852,7 @@ public sealed class GamepadDevice : InputDevice
     /// applying the given deadzone and optional modifier key set.
     /// </summary>
     /// <param name="axis">The joystick axis to create the input state for.</param>
-    /// <param name="deadzone">The deadzone threshold for the axis. Default is 0.1f.</param>
+    /// <param name="deadzone">The deadzone threshold for the axis. </param>
     /// <param name="inverted">Whether to invert the axis value. Default is false.</param>
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The created <see cref="InputState"/> for the joystick axis.</returns>
@@ -870,7 +870,7 @@ public sealed class GamepadDevice : InputDevice
     /// </summary>
     /// <param name="axis">The joystick axis to create the input state for.</param>
     /// <param name="previousState">The previous input state.</param>
-    /// <param name="deadzone">The deadzone threshold for the axis. Default is 0.1f.</param>
+    /// <param name="deadzone">The deadzone threshold for the axis. </param>
     /// <param name="inverted">Whether to invert the axis value. Default is false.</param>
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The created <see cref="InputState"/> for the joystick axis.</returns>
@@ -907,7 +907,7 @@ public sealed class GamepadDevice : InputDevice
     /// Returns the calibrated and normalized trigger axis value.
     /// </summary>
     /// <param name="axis">The trigger axis to query.</param>
-    /// <param name="deadzone">Deadzone value for trigger input. Default is 0.1f.</param>
+    /// <param name="deadzone">Deadzone value for trigger input. </param>
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The value of the trigger axis as a float.</returns>
     public float GetValue(ShapeGamepadTriggerAxis axis, 
@@ -928,7 +928,7 @@ public sealed class GamepadDevice : InputDevice
     /// Optionally checks if a modifier key set is active.
     /// </summary>
     /// <param name="axis">The trigger axis to check.</param>
-    /// <param name="deadzone">The deadzone threshold for the trigger axis. Default is 0.1f.</param>
+    /// <param name="deadzone">The deadzone threshold for the trigger axis. </param>
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>True if the trigger axis value is outside the deadzone; otherwise, false.</returns>
     public bool IsDown(ShapeGamepadTriggerAxis axis, 
@@ -942,7 +942,7 @@ public sealed class GamepadDevice : InputDevice
     /// applying the given deadzone and optional modifier key set.
     /// </summary>
     /// <param name="axis">The trigger axis to create the input state for.</param>
-    /// <param name="deadzone">The deadzone threshold for the trigger axis. Default is 0.1f.</param>
+    /// <param name="deadzone">The deadzone threshold for the trigger axis. </param>
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The created <see cref="InputState"/> for the trigger axis.</returns>
     public InputState CreateInputState(ShapeGamepadTriggerAxis axis, 
@@ -958,7 +958,7 @@ public sealed class GamepadDevice : InputDevice
     /// </summary>
     /// <param name="axis">The trigger axis to create the input state for.</param>
     /// <param name="previousState">The previous input state.</param>
-    /// <param name="deadzone">The deadzone threshold for the trigger axis. Default is 0.1f.</param>
+    /// <param name="deadzone">The deadzone threshold for the trigger axis. </param>
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The created <see cref="InputState"/> for the trigger axis.</returns>
     public InputState CreateInputState(ShapeGamepadTriggerAxis axis, InputState previousState, 
@@ -998,8 +998,8 @@ public sealed class GamepadDevice : InputDevice
     /// </summary>
     /// <param name="neg">The button representing the negative direction.</param>
     /// <param name="pos">The button representing the positive direction.</param>
-    /// <param name="axisDeadzone">Deadzone for axis input. Default is 0.1f.</param>
-    /// <param name="triggerDeadzone">Deadzone for trigger input. Default is 0.1f.</param>
+    /// <param name="axisDeadzone">Deadzone for axis input. </param>
+    /// <param name="triggerDeadzone">Deadzone for trigger input. </param>
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The axis value as a float.</returns>
     public float GetValue(ShapeGamepadButton neg, ShapeGamepadButton pos, 
@@ -1020,8 +1020,8 @@ public sealed class GamepadDevice : InputDevice
     /// </summary>
     /// <param name="neg">The button representing the negative direction.</param>
     /// <param name="pos">The button representing the positive direction.</param>
-    /// <param name="axisDeadzone">Deadzone for axis input. Default is 0.1f.</param>
-    /// <param name="triggerDeadzone">Deadzone for trigger input. Default is 0.1f.</param>
+    /// <param name="axisDeadzone">Deadzone for axis input. </param>
+    /// <param name="triggerDeadzone">Deadzone for trigger input. </param>
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>True if the axis is down; otherwise, false.</returns>
     public bool IsDown(ShapeGamepadButton neg, ShapeGamepadButton pos, 
@@ -1038,8 +1038,8 @@ public sealed class GamepadDevice : InputDevice
     /// </summary>
     /// <param name="neg">The button representing the negative direction.</param>
     /// <param name="pos">The button representing the positive direction.</param>
-    /// <param name="axisDeadzone">Deadzone for axis input. Default is 0.1f.</param>
-    /// <param name="triggerDeadzone">Deadzone for trigger input. Default is 0.1f.</param>
+    /// <param name="axisDeadzone">Deadzone for axis input. </param>
+    /// <param name="triggerDeadzone">Deadzone for trigger input. </param>
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The created <see cref="InputState"/> for the button axis.</returns>
     public InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, 
@@ -1058,8 +1058,8 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="neg">The button representing the negative direction.</param>
     /// <param name="pos">The button representing the positive direction.</param>
     /// <param name="previousState">The previous input state.</param>
-    /// <param name="axisDeadzone">Deadzone for axis input. Default is 0.1f.</param>
-    /// <param name="triggerDeadzone">Deadzone for trigger input. Default is 0.1f.</param>
+    /// <param name="axisDeadzone">Deadzone for axis input. </param>
+    /// <param name="triggerDeadzone">Deadzone for trigger input. </param>
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The created <see cref="InputState"/> for the button axis.</returns>
     public InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, InputState previousState, 

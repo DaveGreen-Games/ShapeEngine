@@ -30,8 +30,8 @@ public partial class InputDeviceUsageDetectionSettings
         /// </summary>
         /// <code>
         /// Detection = true;
-        /// AxisThreshold = 0.5f;
-        /// TriggerThreshold = 0.5f;
+        /// AxisThreshold = DefaultJoyAxisThreshold;
+        /// TriggerThreshold = DefaultTriggerAxisThreshold;
         /// MinPressCount = 2;
         /// MinPressInterval = 1f;
         /// MinUsedDuration = 0.5f;
@@ -46,8 +46,8 @@ public partial class InputDeviceUsageDetectionSettings
         /// </summary>
         /// <code>
         /// Detection = true;
-        /// AxisThreshold = 0.5f;
-        /// TriggerThreshold = 0.5f;
+        /// AxisThreshold = DefaultJoyAxisThreshold;
+        /// TriggerThreshold = DefaultTriggerAxisThreshold;
         /// MinPressCount = 2;
         /// MinPressInterval = 1f;
         /// MinUsedDuration = 0.5f;
@@ -129,7 +129,8 @@ public partial class InputDeviceUsageDetectionSettings
         /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.GamepadSettings"/> class
         /// with custom minimum press count and interval, optional cooldown duration, and optional exception buttons.
         /// <para>
-        /// <see cref="Detection"/> is set to <c>true</c>, <see cref="AxisThreshold"/> and <see cref="TriggerThreshold"/> are set to 0.5f,
+        /// <see cref="Detection"/> is set to <c>true</c>,
+        /// <see cref="TriggerThreshold"/> is set to <see cref="DefaultTriggerAxisThreshold"/>, and <see cref="AxisThreshold"/> is set to <see cref="DefaultJoyAxisThreshold"/>,
         /// <see cref="MinUsedDuration"/> is disabled (-1).
         /// </para>
         /// </summary>
@@ -154,7 +155,8 @@ public partial class InputDeviceUsageDetectionSettings
         /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.GamepadSettings"/> class
         /// with custom minimum used duration, optional cooldown duration, and optional exception buttons.
         /// <para>
-        /// <see cref="Detection"/> is set to <c>true</c>, <see cref="AxisThreshold"/> and <see cref="TriggerThreshold"/> are set to 0.5f,
+        /// <see cref="Detection"/> is set to <c>true</c>,
+        /// <see cref="TriggerThreshold"/> is set to <see cref="DefaultTriggerAxisThreshold"/>, and <see cref="AxisThreshold"/> is set to <see cref="DefaultJoyAxisThreshold"/>,
         /// <see cref="MinPressCount"/> and <see cref="MinPressInterval"/> are disabled (-1).
         /// </para>
         /// </summary>
@@ -174,12 +176,17 @@ public partial class InputDeviceUsageDetectionSettings
             SelectionCooldownDuration = selectionCooldownDuration;
         }
         /// <summary>
+        /// <para>
         /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.GamepadSettings"/> class
         /// with a set of selection buttons, an optional cooldown duration, and optional exception buttons.
+        /// </para>
         /// <para>
         /// This constructor enables selection button mode, where only the specified <paramref name="selectionButtons"/> can be used
         /// to select this device. All other detection methods are disabled by setting <c>MinPressCount</c>, <c>MinPressInterval</c>,
         /// and <c>MinUsedDuration</c> to -1.
+        /// </para>
+        /// <para>
+        /// <see cref="TriggerThreshold"/> is set to <see cref="DefaultTriggerAxisThreshold"/>, and <see cref="AxisThreshold"/> is set to <see cref="DefaultJoyAxisThreshold"/>.
         /// </para>
         /// </summary>
         /// <param name="selectionButtons">
@@ -246,7 +253,7 @@ public partial class InputDeviceUsageDetectionSettings
         /// <c>Value Range 0-1</c>
         /// </summary>
         /// <remarks>
-        /// <c>Default is 0.5f.</c>
+        /// Default is <see cref="DefaultAxisThreshold"/>
         /// Even if <see cref="Detection"/> is set to <c>false</c>, <see cref="AxisThreshold"/> will still be used for <see cref="GamepadDevice.WasUsedRaw"/> system.
         /// </remarks>
         public float AxisThreshold;
@@ -257,7 +264,7 @@ public partial class InputDeviceUsageDetectionSettings
         /// <c>Value Range 0-1</c>
         /// </summary>
         /// <remarks>
-        /// <c>Default is 0.5f.</c>
+        /// Default is <see cref="DefaultTriggerAxisThreshold"/>
         /// Even if <see cref="Detection"/> is set to <c>false</c>, <see cref="TriggerThreshold"/> will still be used for <see cref="GamepadDevice.WasUsedRaw"/> system.
         /// </remarks>
         public float TriggerThreshold;

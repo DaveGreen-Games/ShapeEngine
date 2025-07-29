@@ -29,8 +29,8 @@ public partial class InputDeviceUsageDetectionSettings
         /// </summary>
         /// <code>
         /// Detection = true;
-        /// MoveThreshold = 25f;
-        /// WheelThreshold = 3f;
+        /// MoveThreshold = DefaultMouseMoveThreshold;
+        /// WheelThreshold = DefaultMouseWheelThreshold;
         /// MinPressCount = 2;
         /// MinPressInterval = 1f;
         /// MinUsedDuration = 0.5f;
@@ -45,8 +45,8 @@ public partial class InputDeviceUsageDetectionSettings
         /// </summary>
         /// <code>
         /// Detection = true;
-        /// MoveThreshold = 25f;
-        /// WheelThreshold = 3f;
+        /// MoveThreshold = DefaultMouseMoveThreshold;
+        /// WheelThreshold = DefaultMouseWheelThreshold;
         /// MinPressCount = 2;
         /// MinPressInterval = 1f;
         /// MinUsedDuration = 0.5f;
@@ -305,7 +305,7 @@ public partial class InputDeviceUsageDetectionSettings
         /// The minimum movement threshold to consider the mouse as "used".
         /// </summary>
         /// <remarks>
-        /// <c>Default is 0.5f.</c>
+        /// Default is <see cref="DefaultMouseMoveThreshold"/>
         /// Even if <see cref="Detection"/> is set to <c>false</c>, <see cref="MoveThreshold"/> will still be used for <see cref="MouseDevice.WasUsedRaw"/> system.
         /// </remarks>
         public float MoveThreshold;
@@ -314,7 +314,7 @@ public partial class InputDeviceUsageDetectionSettings
         /// The minimum mouse wheel movement threshold to consider the mouse as "used".
         /// </summary>
         /// <remarks>
-        /// <c>Default is 0.25f.</c>
+        /// Default is <see cref="DefaultMouseWheelThreshold"/>
         /// Even if <see cref="Detection"/> is set to <c>false</c>, <see cref="WheelThreshold"/> will still be used for <see cref="MouseDevice.WasUsedRaw"/> system.
         /// </remarks>
         public float WheelThreshold;
