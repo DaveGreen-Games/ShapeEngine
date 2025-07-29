@@ -606,7 +606,7 @@ namespace Examples.Scenes.ExampleScenes
             iaStartClearArea = new(defaultSettings,clearAreaKb, clearAreaGp);
 
             var cameraHorizontalKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
-            var cameraHorizontalGP = new InputTypeGamepadJoyAxis(ShapeGamepadJoyAxis.RIGHT_X, 0.1f, modifierKeySetGp);
+            var cameraHorizontalGP = new InputTypeGamepadJoyAxis(ShapeGamepadJoyAxis.RIGHT_X, 0.15f, false, modifierKeySetGp);
             // var cameraHorizontalMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, modifierKeySetMouse);
             // var cameraHorizontalMouse = new InputTypeMouseAxis(ShapeMouseAxis.HORIZONTAL, 15, modifierKeySetMouse);
             cameraHorizontalMouse = new InputTypeMousePositionDelta(ShapeMouseAxis.HORIZONTAL, Vector2.Zero, 25, modifierKeySetMouse);
@@ -614,7 +614,7 @@ namespace Examples.Scenes.ExampleScenes
             
             var cameraVerticalKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
             var cameraVerticalGP =
-                new InputTypeGamepadJoyAxis(ShapeGamepadJoyAxis.RIGHT_Y, 0.1f, modifierKeySetGp);
+                new InputTypeGamepadJoyAxis(ShapeGamepadJoyAxis.RIGHT_Y, 0.15f, false, modifierKeySetGp);
             // var cameraVerticalMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, modifierKeySetMouse);
             // var cameraVerticalMouse = new InputTypeMouseAxis(ShapeMouseAxis.VERTICAL, 15, modifierKeySetMouse);
             cameraVerticalMouse = new InputTypeMousePositionDelta(ShapeMouseAxis.VERTICAL, Vector2.Zero, 25, modifierKeySetMouse);
