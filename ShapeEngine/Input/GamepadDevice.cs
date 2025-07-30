@@ -1,4 +1,5 @@
 using Raylib_cs;
+using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.Input;
 
@@ -161,8 +162,8 @@ public sealed class GamepadDevice : InputDevice
     /// </summary>
     public event Action? OnAvailabilityChanged;
     
-    private readonly Dictionary<ShapeGamepadJoyAxis, AxisRange> joyAxisRanges = new();
-    private readonly Dictionary<ShapeGamepadTriggerAxis, AxisRange> triggerAxisRanges = new();
+    private readonly Dictionary<ShapeGamepadJoyAxis, ValueRange> joyAxisRanges = new();
+    private readonly Dictionary<ShapeGamepadTriggerAxis, ValueRange> triggerAxisRanges = new();
 
     
     /// <summary>
@@ -328,7 +329,7 @@ public sealed class GamepadDevice : InputDevice
     /// Axis ranges are updated whenever the axis is used.
     /// Therefore, the current reported range may not be the absolute minimum and maximum of the axis, just the minimum and maximum range used until now.
     /// </remarks>
-    public AxisRange? GetAxisRange(ShapeGamepadJoyAxis axis) => joyAxisRanges.TryGetValue(axis, out var range) ? range : null;
+    public ValueRange? GetAxisRange(ShapeGamepadJoyAxis axis) => joyAxisRanges.TryGetValue(axis, out var range) ? range : null;
 
     /// <summary>
     /// Gets the currently range (minimum and maximum) for the specified trigger axis.
@@ -338,7 +339,7 @@ public sealed class GamepadDevice : InputDevice
     /// Axis ranges are updated whenever the axis is used.
     /// Therefore, the current reported range may not be the absolute minimum and maximum of the axis, just the minimum and maximum range used until now.
     /// </remarks>
-    public AxisRange? GetAxisRange(ShapeGamepadTriggerAxis axis) => triggerAxisRanges.TryGetValue(axis, out var range) ? range : null;
+    public ValueRange? GetAxisRange(ShapeGamepadTriggerAxis axis) => triggerAxisRanges.TryGetValue(axis, out var range) ? range : null;
     
     /// <inheritdoc cref="InputDevice.WasUsed"/>
     public override bool WasUsed() => wasUsed;
