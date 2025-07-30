@@ -24,6 +24,14 @@ public readonly struct ValueRange : IEquatable<ValueRange>, IComparable<ValueRan
     /// Gets the absolute difference between Max and Min, representing the total span of the range.
     /// </summary>
     public float TotalRange => MathF.Abs(Max- Min);
+    /// <summary>
+    /// Gets the center value of the range, calculated as the average of Min and Max.
+    /// </summary>
+    public float Center => (Min + Max) * 0.5f;
+    /// <summary>
+    /// Gets the absolute value of the center of the range.
+    /// </summary>
+    public float AbsoluteCenter => MathF.Abs(Center);
     #region Constructors
 
     /// <summary>
