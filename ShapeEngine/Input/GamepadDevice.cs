@@ -6,6 +6,20 @@ namespace ShapeEngine.Input;
 /// Represents a gamepad input device, providing access to gamepad buttons and axes,
 /// state tracking, calibration, and utility methods for gamepad input.
 /// </summary>
+/// <remarks>
+/// Joystick axes report values in the range [-1.0, 1.0]:
+/// <list type="bullet">
+///   <item>X axis: -1.0 is left, 1.0 is right</item>
+///   <item>Y axis: -1.0 is up, 1.0 is down</item>
+/// </list>
+/// Trigger axes report values in the range [-1.0, 1.0]:
+/// <list type="bullet">
+///   <item>-1.0f means not pressed</item>
+///   <item>0.0 is half pressed</item>
+///   <item>1.0 is fully pressed</item>
+/// </list>
+/// This depends on the gamepad and its configuration!
+/// </remarks>
 public sealed class GamepadDevice : InputDevice
 {
     /// <summary>
@@ -932,14 +946,6 @@ public sealed class GamepadDevice : InputDevice
         {
             triggerAxisRanges[axis] = new(value, value);
         }
-        
-        // var axisRange = triggerAxisRanges[axis];
-        // if (axisRange.TotalRange > 1)
-        // {
-        //     value /= axisRange.TotalRange;
-        // }
-        //
-        // return value;
     }
     
     #endregion
