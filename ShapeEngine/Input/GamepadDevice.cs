@@ -417,6 +417,9 @@ public sealed class GamepadDevice : InputDevice
         pressedCount = 0;
         pressedCountDurationTimer = 0f;
         
+        wasUsed = false;
+        wasUsedRaw = false;
+        
         PressedButtons.Clear();
         ReleasedButtons.Clear();
         HeldDownButtons.Clear();
@@ -445,7 +448,7 @@ public sealed class GamepadDevice : InputDevice
         UpdateJoyAxisStates();
         UpdateTriggerAxisStates();
         
-        if (!Connected || isLocked)
+        if (!Connected || isLocked || !isActive)
         {
             wasUsed = false;
             wasUsedRaw = false;

@@ -146,7 +146,7 @@ public sealed class KeyboardDevice : InputDevice
         
         UpdateButtonStates();
         
-        if (isLocked)
+        if (isLocked || !isActive)
         {
             wasUsed = false;
             wasUsedRaw = false;
@@ -195,6 +195,9 @@ public sealed class KeyboardDevice : InputDevice
         usedDurationTimer = 0f;
         pressedCount = 0;
         pressedCountDurationTimer = 0f;
+        
+        wasUsed = false;
+        wasUsedRaw = false;
         
         PressedButtons.Clear();
         ReleasedButtons.Clear();

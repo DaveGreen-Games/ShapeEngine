@@ -104,6 +104,7 @@ public sealed class GamepadDeviceManager : InputDeviceBase
     /// </summary>
     public override bool Update(float dt, bool wasOtherDeviceUsed)
     {
+        if (!isActive) return false;
         return CheckGamepadConnections(dt, wasOtherDeviceUsed);
     }
 
@@ -132,6 +133,9 @@ public sealed class GamepadDeviceManager : InputDeviceBase
     {
         if (!isActive) return;
         isActive = false;
+        
+        LastUsedGamepads.Clear();
+        
         foreach (var gamepad in gamepads)
         {
             gamepad.Deactivate();

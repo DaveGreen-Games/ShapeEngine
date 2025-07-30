@@ -264,7 +264,7 @@ public sealed class MouseDevice : InputDevice
         ReleasedButtons.Clear();
         UpdateStates();
 
-        if (isLocked)
+        if (isLocked || !isActive)
         {
             wasUsed = false;
             wasUsedRaw = false;
@@ -306,6 +306,9 @@ public sealed class MouseDevice : InputDevice
         usedDurationTimer = 0f;
         pressedCount = 0;
         pressedCountDurationTimer = 0f;
+        
+        wasUsed = false;
+        wasUsedRaw = false;
         
         PressedButtons.Clear();
         HeldDownButtons.Clear();
