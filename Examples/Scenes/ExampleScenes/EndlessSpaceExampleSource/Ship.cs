@@ -209,8 +209,8 @@ internal class Ship : CollisionObject, ICameraFollowTarget
             }
         }
 
-        var gamepad = GAMELOOP.CurGamepad;
-        GAMELOOP.MouseControlEnabled = gamepad?.IsDown(ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, 0.1f, 0.1f, null) ?? true;
+        // var gamepad = GAMELOOP.CurGamepad;
+        // GAMELOOP.MouseControlEnabled = gamepad?.IsDown(ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, 0.1f, 0.1f, null) ?? true;
         
         
         float dt = time.Delta;

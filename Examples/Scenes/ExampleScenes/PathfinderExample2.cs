@@ -932,7 +932,7 @@ public class PathfinderExample2 : ExampleScene
     {
         var gamepad = GAMELOOP.CurGamepad;
         
-        GAMELOOP.MouseControlEnabled = gamepad?.IsDown(ShapeGamepadTriggerAxis.RIGHT, 0.1f) ?? true;
+        //GAMELOOP.MouseControlEnabled = gamepad?.IsDown(ShapeGamepadTriggerAxis.RIGHT, 0.1f) ?? true;
         
         inputActionTree.CurrentGamepad = gamepad;
         inputActionTree.Update(dt);
