@@ -36,9 +36,11 @@ public abstract class InputDevice : InputDeviceBase
     /// Unlocks the device, allowing input to be registered.
     /// </summary>
     public abstract void Unlock();
-
-    /// <summary>
-    /// Calibrates the device, if supported.
-    /// </summary>
-    public abstract void Calibrate();
+    
 }
+
+//deprecated
+// /// <summary>
+// /// Calibrates the device, if supported.
+// /// </summary>
+// public abstract void Calibrate();

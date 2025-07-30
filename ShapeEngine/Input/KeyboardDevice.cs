@@ -165,11 +165,6 @@ public sealed class KeyboardDevice : InputDevice
     }
     
     /// <summary>
-    /// Calibrates the keyboard device. (Currently not implemented.)
-    /// </summary>
-    public override void Calibrate(){}
-    
-    /// <summary>
     /// Indicates whether the mouse device is currently active,
     /// as in being used by the <see cref="ShapeInput"/> class to generate input.
     /// </summary>

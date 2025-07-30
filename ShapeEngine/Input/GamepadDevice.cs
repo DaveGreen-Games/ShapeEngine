@@ -11,7 +11,7 @@ public sealed class GamepadDevice : InputDevice
     /// <summary>
     /// Represents the minimum and maximum values for a gamepad axis, used for calibration.
     /// </summary>
-    private readonly struct AxisRange
+    public readonly struct AxisRange
     {
         /// <summary>
         /// The minimum value recorded for the axis.
@@ -185,11 +185,10 @@ public sealed class GamepadDevice : InputDevice
     /// Event triggered when the availability state changes.
     /// </summary>
     public event Action? OnAvailabilityChanged;
+    
+    private readonly Dictionary<ShapeGamepadJoyAxis, AxisRange> joyAxisRanges = new();
+    private readonly Dictionary<ShapeGamepadTriggerAxis, AxisRange> triggerAxisRanges = new();
 
-    private readonly Dictionary<ShapeGamepadJoyAxis, float> joyAxisZeroCalibration = new();
-    private readonly Dictionary<ShapeGamepadTriggerAxis, float> triggerZeroCalibration = new();
-    private Dictionary<ShapeGamepadJoyAxis, AxisRange> joyAxisRanges = new();
-    private Dictionary<ShapeGamepadTriggerAxis, AxisRange> triggerAxisRanges = new();
     
     /// <summary>
     /// Initializes a new instance of the <see cref="GamepadDevice"/> class.
@@ -210,7 +209,7 @@ public sealed class GamepadDevice : InputDevice
 
             AxisCount = Raylib.GetGamepadAxisCount(index);
             
-            Calibrate();
+            // Calibrate();
         }
         
         foreach (var button in AllShapeGamepadButtons)
@@ -346,6 +345,26 @@ public sealed class GamepadDevice : InputDevice
         UsageDetectionSettings = settings.Gamepad;
     }
 
+    /// <summary>
+    /// Gets the currently used  range (minimum and maximum) for the specified joystick axis.
+    /// Returns null if no range has been recorded for the axis.
+    /// </summary>
+    /// <remarks>
+    /// Axis ranges are updated whenever the axis is used.
+    /// Therefore, the current reported range may not be the absolute minimum and maximum of the axis, just the minimum and maximum range used until now.
+    /// </remarks>
+    public AxisRange? GetAxisRange(ShapeGamepadJoyAxis axis) => joyAxisRanges.TryGetValue(axis, out var range) ? range : null;
+
+    /// <summary>
+    /// Gets the currently range (minimum and maximum) for the specified trigger axis.
+    /// Returns null if no range has been recorded for the axis.
+    /// </summary>
+    /// /// <remarks>
+    /// Axis ranges are updated whenever the axis is used.
+    /// Therefore, the current reported range may not be the absolute minimum and maximum of the axis, just the minimum and maximum range used until now.
+    /// </remarks>
+    public AxisRange? GetAxisRange(ShapeGamepadTriggerAxis axis) => triggerAxisRanges.TryGetValue(axis, out var range) ? range : null;
+    
     /// <inheritdoc cref="InputDevice.WasUsed"/>
     public override bool WasUsed() => wasUsed;
     
@@ -569,9 +588,9 @@ public sealed class GamepadDevice : InputDevice
         AxisCount = Raylib.GetGamepadAxisCount(Index);
         OnConnectionChanged?.Invoke();
         
-        joyAxisRanges.Clear();
+        // joyAxisRanges.Clear();
         
-        Calibrate();
+        // Calibrate();
     }
     /// <summary>
     /// Marks the gamepad as disconnected.
@@ -619,29 +638,7 @@ public sealed class GamepadDevice : InputDevice
         return true;
     }
 
-    /// <summary>
-    /// Calibrates the gamepad axes by recording their current zero positions.
-    /// </summary>
-    public override void Calibrate()
-    {
-        float leftX = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.LeftX);
-        float leftY = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.LeftY);
-        
-        float rightX = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.RightX);
-        float rightY = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.RightY);
-        
-        float triggerRight = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.LeftTrigger);
-        float triggerLeft = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.RightTrigger);
-
-        joyAxisZeroCalibration[ShapeGamepadJoyAxis.LEFT_X] = leftX;
-        joyAxisZeroCalibration[ShapeGamepadJoyAxis.LEFT_Y] = leftY;
-        joyAxisZeroCalibration[ShapeGamepadJoyAxis.RIGHT_X] = rightX;
-        joyAxisZeroCalibration[ShapeGamepadJoyAxis.RIGHT_Y] = rightY;
-        
-        triggerZeroCalibration[ShapeGamepadTriggerAxis.RIGHT] = triggerRight;
-        triggerZeroCalibration[ShapeGamepadTriggerAxis.LEFT] = triggerLeft;
-
-    }
+    
     
     /// <summary>
     /// Updates the states of all gamepad buttons.
@@ -826,11 +823,8 @@ public sealed class GamepadDevice : InputDevice
         if (Index < 0 || isLocked || !Connected) return 0f;
         if(modifierKeySet != null && !modifierKeySet.IsActive(this)) return 0f;
         float value = Raylib.GetGamepadAxisMovement(Index, (GamepadAxis)axis);
+        UpdateAxisRange(value, axis);
         if(MathF.Abs(value) < deadzone) return 0f;
-        
-        var calibrationValue = joyAxisZeroCalibration[axis];
-        value -= calibrationValue;
-        value = CalibrateAxis(value, axis);
         if(inverted) value *= -1f;
         return value;
     }
@@ -887,7 +881,7 @@ public sealed class GamepadDevice : InputDevice
     /// <summary>
     /// Calibrates and normalizes the axis value based on its range.
     /// </summary>
-    private float CalibrateAxis(float value, ShapeGamepadJoyAxis axis)
+    private void UpdateAxisRange(float value, ShapeGamepadJoyAxis axis)
     {
         if (joyAxisRanges.TryGetValue(axis, out var range))
         {
@@ -898,7 +892,7 @@ public sealed class GamepadDevice : InputDevice
             joyAxisRanges[axis] = new(value, value);
         }
         
-        return value;
+        // return value;
     }
     
     #endregion
@@ -919,12 +913,9 @@ public sealed class GamepadDevice : InputDevice
         if (Index < 0 || isLocked || !Connected) return 0f;
         if(modifierKeySet != null &&  !modifierKeySet.IsActive(this)) return 0f;
         float value = Raylib.GetGamepadAxisMovement(Index, (GamepadAxis)axis);
-        if(MathF.Abs(value) < deadzone) return 0f;
-        
-        var calibrationValue = triggerZeroCalibration[axis];
-        value -= calibrationValue;
-        value = CalibrateAxis(value, axis);
-        return value;
+        UpdateAxisRange(value, axis);
+        return MathF.Abs(value) < deadzone ? 0f : value;
+            
     }
     /// <summary>
     /// Determines if the specified trigger axis is "down", i.e., its value exceeds the given deadzone.
@@ -970,7 +961,7 @@ public sealed class GamepadDevice : InputDevice
         return new(previousState, CreateInputState(axis, deadzone, modifierKeySet));
     }
     
-    private float CalibrateAxis(float value, ShapeGamepadTriggerAxis axis)
+    private void UpdateAxisRange(float value, ShapeGamepadTriggerAxis axis)
     {
         if (triggerAxisRanges.TryGetValue(axis, out var range))
         {
@@ -981,13 +972,13 @@ public sealed class GamepadDevice : InputDevice
             triggerAxisRanges[axis] = new(value, value);
         }
         
-        var axisRange = triggerAxisRanges[axis];
-        if (axisRange.TotalRange > 1)
-        {
-            value /= axisRange.TotalRange;
-        }
-        
-        return value;
+        // var axisRange = triggerAxisRanges[axis];
+        // if (axisRange.TotalRange > 1)
+        // {
+        //     value /= axisRange.TotalRange;
+        // }
+        //
+        // return value;
     }
     
     #endregion
@@ -1075,3 +1066,36 @@ public sealed class GamepadDevice : InputDevice
     #endregion
 
 }
+
+
+//The problem with calibration is that it changes the total range of the axis ...
+//deadzones are there to take care of joysticks that are not 100% centered anymore.
+//If a joystick reports 0.12 when it is not used,
+//the calibration system would subtract 0.12 from the axis value,
+//which would mean the new range of the axis is now [-1.12, 0.88] instead of [-1.0, 1.0].
+
+// private readonly Dictionary<ShapeGamepadJoyAxis, float> joyAxisZeroCalibration = new();
+// private readonly Dictionary<ShapeGamepadTriggerAxis, float> triggerZeroCalibration = new();
+// /// <summary>
+// /// Calibrates the gamepad axes by recording their current zero positions.
+// /// </summary>
+// public override void Calibrate()
+// {
+//     float leftX = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.LeftX);
+//     float leftY = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.LeftY);
+//         
+//     float rightX = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.RightX);
+//     float rightY = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.RightY);
+//         
+//     float triggerRight = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.LeftTrigger);
+//     float triggerLeft = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.RightTrigger);
+//
+//     joyAxisZeroCalibration[ShapeGamepadJoyAxis.LEFT_X] = leftX;
+//     joyAxisZeroCalibration[ShapeGamepadJoyAxis.LEFT_Y] = leftY;
+//     joyAxisZeroCalibration[ShapeGamepadJoyAxis.RIGHT_X] = rightX;
+//     joyAxisZeroCalibration[ShapeGamepadJoyAxis.RIGHT_Y] = rightY;
+//         
+//     triggerZeroCalibration[ShapeGamepadTriggerAxis.RIGHT] = triggerRight;
+//     triggerZeroCalibration[ShapeGamepadTriggerAxis.LEFT] = triggerLeft;
+//
+// }
