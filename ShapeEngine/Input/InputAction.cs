@@ -88,6 +88,7 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
     }
 
     private bool active = true;
+
     /// <summary>
     /// Gets or sets whether this input action blocks input types after use.
     /// <see cref="InputAction"/> has to be part of an <see cref="InputActionTree"/> to participate in the blocking system.
@@ -105,7 +106,7 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
     /// Only <see cref="InputAction"/>s with <c>BlocksInput</c> enabled participate in this blocking system.
     /// If set to <c>false</c>, this action neither blocks input types nor can it be blocked by others.
     /// </remarks>
-    public bool BlocksInput { get; set; }
+    public bool BlocksInput;
     
     /// <summary>
     /// Gets or sets the execution order for this <see cref="InputAction"/>.

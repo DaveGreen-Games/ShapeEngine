@@ -371,7 +371,8 @@ namespace Examples
             if (!MouseControlEnabled) return mousePos;
             
             //&& ShapeInput.GamepadDeviceManager.LastUsedGamepad.IsDown(ShapeGamepadAxis.RIGHT_TRIGGER, 0.1f)
-            if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Gamepad && ShapeInput.ActiveGamepadDeviceManager.LastUsedGamepad != null)
+            if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Gamepad && ShapeInput.ActiveGamepadDeviceManager.LastUsedGamepad != null && 
+                ShapeInput.ActiveGamepadDeviceManager.LastUsedGamepad.IsDown(ShapeGamepadTriggerAxis.RIGHT))
             {
                 mouseMovementTimer = 0f;
                 float speed = screenArea.Size.Max() * 0.75f * dt;

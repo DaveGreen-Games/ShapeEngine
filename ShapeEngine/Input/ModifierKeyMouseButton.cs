@@ -43,7 +43,9 @@ public class ModifierKeyMouseButton : IModifierKey
     /// </summary>
     /// <param name="gamepad">Unused. Present for interface compatibility.</param>
     /// <returns><c>true</c> if the modifier is active; otherwise, <c>false</c>.</returns>
-    public bool IsActive(GamepadDevice? gamepad = null) => ShapeInput.ActiveMouseDevice.IsDown(modifier) && !reverseModifier;
+    public bool IsActive(GamepadDevice? gamepad = null) => 
+        reverseModifier ? !ShapeInput.ActiveMouseDevice.IsDown(modifier) : ShapeInput.ActiveMouseDevice.IsDown(modifier);
+
 
     /// <summary>
     /// Gets the display name of the modifier key.

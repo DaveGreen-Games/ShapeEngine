@@ -821,7 +821,7 @@ public sealed class GamepadDevice : InputDevice
         float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, bool inverted = false,  ModifierKeySet? modifierKeySet = null)
     {
         if (Index < 0 || isLocked || !Connected) return 0f;
-        if(modifierKeySet != null &&  !modifierKeySet.IsActive(this)) return 0f;
+        if(modifierKeySet != null && !modifierKeySet.IsActive(this)) return 0f;
         float value = Raylib.GetGamepadAxisMovement(Index, (GamepadAxis)axis);
         if(MathF.Abs(value) < deadzone) return 0f;
         

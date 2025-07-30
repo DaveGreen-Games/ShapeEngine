@@ -45,7 +45,8 @@ public class ModifierKeyGamepadButton : IModifierKey
     /// </summary>
     /// <param name="gamepad">The gamepad device to check.</param>
     /// <returns><c>true</c> if the modifier is active; otherwise, <c>false</c>.</returns>
-    public bool IsActive(GamepadDevice? gamepad) => gamepad != null && gamepad.IsDown(modifier, joyAxisDeadzone, triggerAxisDeadzone) && !reverseModifier;
+    public bool IsActive(GamepadDevice? gamepad) =>
+        gamepad != null && (reverseModifier ? !gamepad.IsDown(modifier, joyAxisDeadzone, triggerAxisDeadzone) : gamepad.IsDown(modifier, joyAxisDeadzone, triggerAxisDeadzone));
 
     /// <summary>
     /// Gets the display name of the modifier key.

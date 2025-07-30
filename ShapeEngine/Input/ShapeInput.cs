@@ -1211,8 +1211,8 @@ public static class ShapeInput
             case ShapeGamepadButton.MIDDLE_LEFT: return shortHand ? "Select" : "GP Button Select";
             case ShapeGamepadButton.MIDDLE: return shortHand ? "Home" : "GP Button Home";
             case ShapeGamepadButton.MIDDLE_RIGHT: return shortHand ? "Start" : "GP Button Start";
-            case ShapeGamepadButton.LEFT_THUMB: return shortHand ? "LClick" : "GP Button Left Stick Click";
-            case ShapeGamepadButton.RIGHT_THUMB: return shortHand ? "RClick" : "GP Button Right Stick Click";
+            case ShapeGamepadButton.LEFT_THUMB: return shortHand ? "LsClick" : "GP Button Left Stick Click";
+            case ShapeGamepadButton.RIGHT_THUMB: return shortHand ? "RsClick" : "GP Button Right Stick Click";
             case ShapeGamepadButton.LEFT_STICK_RIGHT: return shortHand ? "LS R" : "Left Stick Right";
             case ShapeGamepadButton.LEFT_STICK_LEFT: return shortHand ? "LS L" : "Left Stick Left";
             case ShapeGamepadButton.LEFT_STICK_DOWN: return shortHand ? "LS D" : "Left Stick Down";
