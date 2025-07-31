@@ -698,15 +698,13 @@ public sealed class GamepadDevice : InputDevice
         if (modifierKeySet != null && !modifierKeySet.IsActive(this)) return 0f;
         if (button == ShapeGamepadButton.LEFT_TRIGGER_BOTTOM)
         {
-            float value = GetValue(ShapeGamepadTriggerAxis.LEFT, triggerDeadzone);
-            if (MathF.Abs(value) < triggerDeadzone) value = 0f;
+            float value = GetValue(ShapeGamepadTriggerAxis.LEFT, triggerDeadzone); //Trigger axis should already return values in the range [0,1]; no change needed.
             return value;
         }
         
         if (button == ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM)
         {
-            float value = GetValue(ShapeGamepadTriggerAxis.RIGHT, triggerDeadzone);
-            if (MathF.Abs(value) < triggerDeadzone) value = 0f;
+            float value = GetValue(ShapeGamepadTriggerAxis.RIGHT, triggerDeadzone); //Trigger axis should already return values in the range [0,1]; no change needed.
             return value;
         }
         
@@ -715,16 +713,21 @@ public sealed class GamepadDevice : InputDevice
         {
             id -= 30;
             float value = GetValue((ShapeGamepadJoyAxis)id, axisDeadzone);
-            if (MathF.Abs(value) < axisDeadzone) value = 0f;
-            return value;
+            //Sticks with id between 43 and 33 are right/down on the right/left stick.
+            //Those represent positive axis values.
+            //If the returned value is positive, the correct axis was used and the value is returned.
+            return value > 0f ? value : 0f;
         }
         
         if (id >= 40 && id <= 43)
         {
             id -= 40;
             float value = GetValue((ShapeGamepadJoyAxis)id, axisDeadzone);
-            if (MathF.Abs(value) < axisDeadzone) value = 0f;
-            return value;
+            //Sticks with id between 40 and 43 are left/up on the right/left stick.
+            //Those represent negative axis values.
+            //If the returned value is negative, the correct axis was used and absolute value is returned,
+            //because the GetValue method for buttons only returns positive values.
+            return value < 0f ? MathF.Abs(value) : 0f;
         }
         
         return Raylib.IsGamepadButtonDown(Index, (GamepadButton)id) ? 1f : 0f;
