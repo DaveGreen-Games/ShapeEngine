@@ -4,8 +4,6 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Input;
 
-
-
 /// <summary>
 /// Represents an input action, which can be triggered by various input types and devices.
 /// Handles state, multi-tap, hold, and axis sensitivity/gravity.
@@ -971,3 +969,78 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
         return hashCode.ToHashCode();
     }
 }
+
+
+/* Idea for later
+//Press -> triggered on the first frame the input is pressed down.
+//Hold -> triggered every frame the input is held down, until released.
+//Release -> triggered on the first frame the input is released.
+//Long Press -> triggered when the input is held down (pressed) for longer than the long press duration. (current hold implementation)
+//Long Release -> triggered when the input is released after the long release duration.
+//Tap -> triggered when the input is pressed and released within tap duration
+//Double Tap -> triggered when the input is pressed and released twice within the double tap duration.
+//Multi Tap -> triggered when the input is pressed and released multi tap count times within the multi tap duration.
+
+//This system could potentionally replace current system -> new implementation would have to be simpler and less complex than the current one.
+public enum TypeState //!!! better name
+{
+    None = 0,
+    InProgress = 1,
+    Completed = 2,
+    Failed = 3
+}
+
+//TODO: could handle everyting, and it is just updated in input action and passed to InputState?
+//Update(), TypeState CurrentState, Reset();  if failed or completed it will be reset next frame?
+public readonly struct InputActionTypeSettings//!!! better name
+{
+    public readonly InputActionType Type;
+    public readonly float Duration;
+    public readonly int TargetCount;
+    
+    public InputActionTypeSettings()
+    {
+        Type = InputActionType.None;
+        Duration = -1f;
+        TargetCount = -1;
+    }
+
+    private InputActionTypeSettings(InputActionType type, float duration, int targetCount)
+    {
+        Type = type;
+        Duration = duration;
+        TargetCount = targetCount;
+    }
+    
+    public static InputActionTypeSettings LongPress(float duration)
+    {
+        return new InputActionTypeSettings(InputActionType.LongPress, duration, -1);
+    }
+    public static InputActionTypeSettings LongRelease(float duration)
+    {
+        return new InputActionTypeSettings(InputActionType.LongRelease, duration, -1);
+    }
+    public static InputActionTypeSettings Tap(float duration)
+    {
+        return new InputActionTypeSettings(InputActionType.Tap, duration, -1);
+    }
+    public static InputActionTypeSettings DoubleTap(float duration)
+    {
+        return new InputActionTypeSettings(InputActionType.MultiTap, duration, 2);
+    }
+    public static InputActionTypeSettings MultiTap(float duration, int targetCount)
+    {
+        return new InputActionTypeSettings(InputActionType.MultiTap, duration, targetCount);
+    }
+
+}
+
+public enum InputActionType //!!! better name
+{ 
+    None = 0,
+    LongPress = 1,
+    LongRelease = 2,
+    Tap = 3,
+    MultiTap = 4
+}*/
+
