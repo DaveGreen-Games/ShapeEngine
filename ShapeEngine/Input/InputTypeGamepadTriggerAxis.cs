@@ -3,24 +3,6 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Input;
 
-/// <summary>
-/// Specifies the polarity of a joystick axis.
-/// </summary>
-public enum AxisPolarity
-{
-    /// <summary>
-    /// The axis operates in its normal direction.
-    /// </summary>
-    Normal,
-    /// <summary>
-    /// The axis is inverted.
-    /// </summary>
-    Inverted,
-    /// <summary>
-    /// The axis is centered (neutral position).
-    /// </summary>
-    Centered
-}
 
 /// <summary>
 /// Represents an input type for a gamepad trigger axis, supporting deadzone and modifier keys.
@@ -31,35 +13,40 @@ public sealed class InputTypeGamepadTriggerAxis : IInputType
     /// Creates an <see cref="InputTypeGamepadTriggerAxis"/> for the left trigger.
     /// </summary>
     /// <param name="deadzone">The deadzone value. Input values below this threshold are ignored.</param>
+    /// <param name="inverted">Whether the trigger axis input should be inverted. (From <c>[0 - 1]</c> to <c>[1 - 0]</c></param>
     /// <param name="modifierKeySet">An optional set of modifier keys to apply to this input type.</param>
     /// <returns>A new <see cref="InputTypeGamepadTriggerAxis"/> for the left trigger.</returns>
     public static InputTypeGamepadTriggerAxis CreateLeftTrigger(float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold,  
-        ModifierKeySet? modifierKeySet = null) => new (ShapeGamepadTriggerAxis.LEFT, deadzone, modifierKeySet);
+        bool inverted = false, ModifierKeySet? modifierKeySet = null) => new (ShapeGamepadTriggerAxis.LEFT, deadzone, inverted, modifierKeySet);
 
     /// <summary>
     /// Creates an <see cref="InputTypeGamepadTriggerAxis"/> for the right trigger.
     /// </summary>
     /// <param name="deadzone">The deadzone value. Input values below this threshold are ignored.</param>
+    /// <param name="inverted">Whether the trigger axis input should be inverted. (From <c>[0 - 1]</c> to <c>[1 - 0]</c></param>
     /// <param name="modifierKeySet">An optional set of modifier keys to apply to this input type.</param>
     /// <returns>A new <see cref="InputTypeGamepadTriggerAxis"/> for the right trigger.</returns>
     public static InputTypeGamepadTriggerAxis CreateRightTrigger(float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold,  
-        ModifierKeySet? modifierKeySet = null) => new (ShapeGamepadTriggerAxis.RIGHT, deadzone, modifierKeySet);
+        bool inverted = false, ModifierKeySet? modifierKeySet = null) => new (ShapeGamepadTriggerAxis.RIGHT, deadzone, inverted, modifierKeySet);
     
     
     private readonly ShapeGamepadTriggerAxis axis;
     private float deadzone;
     private readonly ModifierKeySet? modifierKeySet;
+    private readonly bool inverted;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="InputTypeGamepadTriggerAxis"/> class with the specified trigger axis, deadzone, and optional modifier key set.
     /// </summary>
     /// <param name="axis">The gamepad trigger axis to use for input.</param>
     /// <param name="deadzone">The deadzone value. Input values below this threshold are ignored.</param>
+    /// <param name="inverted">Whether the trigger axis input should be inverted. (From <c>[0 - 1]</c> to <c>[1 - 0]</c></param>
     /// <param name="modifierKeySet">An optional set of modifier keys to apply to this input type.</param>
-    public InputTypeGamepadTriggerAxis(ShapeGamepadTriggerAxis axis, float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold,  ModifierKeySet? modifierKeySet = null)
+    public InputTypeGamepadTriggerAxis(ShapeGamepadTriggerAxis axis, float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, bool inverted = false,  ModifierKeySet? modifierKeySet = null)
     {
         this.axis = axis; 
         this.deadzone = deadzone;
+        this.inverted = inverted;
         this.modifierKeySet = modifierKeySet;
     }
 
@@ -82,20 +69,20 @@ public sealed class InputTypeGamepadTriggerAxis : IInputType
     }
 
     /// <inheritdoc/>
-    public InputState GetState(GamepadDevice? gamepad) => gamepad?.CreateInputState(axis, deadzone, modifierKeySet) ?? new();
+    public InputState GetState(GamepadDevice? gamepad) => gamepad?.CreateInputState(axis, deadzone, inverted, modifierKeySet) ?? new();
 
     /// <inheritdoc/>
-    public InputState GetState(InputState prev, GamepadDevice? gamepad) => gamepad?.CreateInputState(axis, prev, deadzone, modifierKeySet) ?? new();
+    public InputState GetState(InputState prev, GamepadDevice? gamepad) => gamepad?.CreateInputState(axis, prev, deadzone, inverted, modifierKeySet) ?? new();
 
     /// <inheritdoc/>
     public InputDeviceType GetInputDevice() => InputDeviceType.Gamepad;
 
     /// <inheritdoc/>
-    public IInputType Copy() => new InputTypeGamepadTriggerAxis(axis, deadzone, modifierKeySet?.Copy());
+    public IInputType Copy() => new InputTypeGamepadTriggerAxis(axis, deadzone, inverted, modifierKeySet?.Copy());
     
     private bool Equals(InputTypeGamepadTriggerAxis other)
     {
-        return axis == other.axis &&
+        return axis == other.axis && inverted == other.inverted &&
                (modifierKeySet == null && other.modifierKeySet == null ||
                 modifierKeySet != null && modifierKeySet.Equals(other.modifierKeySet));
     }
@@ -131,6 +118,6 @@ public sealed class InputTypeGamepadTriggerAxis : IInputType
     /// <returns>A hash code for the current instance.</returns>
     public override int GetHashCode()
     {
-        return HashCode.Combine((int)axis, modifierKeySet?.GetHashCode() ?? 0);
+        return HashCode.Combine((int)axis, inverted, modifierKeySet?.GetHashCode() ?? 0);
     }
 }

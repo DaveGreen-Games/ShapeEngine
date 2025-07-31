@@ -13,10 +13,10 @@ namespace ShapeEngine.Input;
 ///   <item>X axis: -1.0 is left, 1.0 is right</item>
 ///   <item>Y axis: -1.0 is up, 1.0 is down</item>
 /// </list>
-/// Trigger axes report values in the range [-1.0, 1.0]:
+/// Trigger axes report values in the range [0, 1.0]:
 /// <list type="bullet">
-///   <item>-1.0f means not pressed</item>
-///   <item>0.0 is half pressed</item>
+///   <item>0 means not pressed</item>
+///   <item>0.5 is half pressed</item>
 ///   <item>1.0 is fully pressed</item>
 /// </list>
 /// This depends on the gamepad and its configuration!
@@ -164,7 +164,7 @@ public sealed class GamepadDevice : InputDevice
     
     private readonly Dictionary<ShapeGamepadJoyAxis, ValueRange> joyAxisRanges = new();
     private readonly Dictionary<ShapeGamepadTriggerAxis, ValueRange> triggerAxisRanges = new();
-
+    
     
     /// <summary>
     /// Initializes a new instance of the <see cref="GamepadDevice"/> class.
@@ -613,8 +613,6 @@ public sealed class GamepadDevice : InputDevice
         OnAvailabilityChanged?.Invoke();
         return true;
     }
-
-    
     
     /// <summary>
     /// Updates the states of all gamepad buttons.
@@ -787,21 +785,20 @@ public sealed class GamepadDevice : InputDevice
     #region Joy Axis
 
     /// <summary>
-    /// Gets the value of the specified gamepad joystick axis.
-    /// Applies deadzone and optional modifier key set.
-    /// Returns the calibrated and normalized axis value.
+    /// Gets the value of the specified joystick axis.
+    /// Returns a float in the range [-1, 1], applying the given deadzone and optional inversion/modifier.
     /// </summary>
     /// <param name="axis">The joystick axis to query.</param>
-    /// <param name="deadzone">Deadzone value for axis input. </param>
-    /// <param name="inverted">Whether to invert the axis value. Default is false.</param>
+    /// <param name="deadzone">Deadzone value for axis input.</param>
+    /// <param name="inverted">If true, inverts the axis value.</param>
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
-    /// <returns>The value of the joystick axis as a float.</returns>
+    /// <returns>The normalized value of the joystick axis as a float.</returns>
     public float GetValue(ShapeGamepadJoyAxis axis, 
         float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, bool inverted = false,  ModifierKeySet? modifierKeySet = null)
     {
         if (Index < 0 || isLocked || !Connected) return 0f;
         if(modifierKeySet != null && !modifierKeySet.IsActive(this)) return 0f;
-        float value = Raylib.GetGamepadAxisMovement(Index, (GamepadAxis)axis);
+        float value = Raylib.GetGamepadAxisMovement(Index, (GamepadAxis)axis); //Range is [-1, 1]
         UpdateAxisRange(value, axis);
         if(MathF.Abs(value) < deadzone) return 0f;
         if(inverted) value *= -1f;
@@ -809,14 +806,14 @@ public sealed class GamepadDevice : InputDevice
     }
 
     /// <summary>
-    /// Determines if the specified joystick axis is "down", i.e., its value exceeds the given deadzone.
-    /// Optionally checks if a modifier key set is active.
+    /// Determines if the specified joystick axis is "down".
+    /// Returns true if the axis value is not zero, considering deadzone, optional inversion, and modifier key set.
     /// </summary>
     /// <param name="axis">The joystick axis to check.</param>
-    /// <param name="deadzone">The deadzone threshold for the axis. </param>
-    /// <param name="inverted">Whether to invert the axis value. Default is false.</param>
+    /// <param name="deadzone">Deadzone value for axis input.</param>
+    /// <param name="inverted">If true, inverts the axis value.</param>
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
-    /// <returns>True if the axis value is outside the deadzone; otherwise, false.</returns>
+    /// <returns>True if the axis is down; otherwise, false.</returns>
     public bool IsDown(ShapeGamepadJoyAxis axis, 
         float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
     {
@@ -824,12 +821,12 @@ public sealed class GamepadDevice : InputDevice
     }
 
     /// <summary>
-    /// Creates an <see cref="InputState"/> for the specified gamepad joystick axis,
-    /// applying the given deadzone and optional modifier key set.
+    /// Creates an <see cref="InputState"/> for the specified joystick axis,
+    /// applying the given deadzone, optional inversion, and modifier key set.
     /// </summary>
-    /// <param name="axis">The joystick axis to create the input state for.</param>
-    /// <param name="deadzone">The deadzone threshold for the axis. </param>
-    /// <param name="inverted">Whether to invert the axis value. Default is false.</param>
+    /// <param name="axis">The joystick axis to query.</param>
+    /// <param name="deadzone">Deadzone value for axis input.</param>
+    /// <param name="inverted">If true, inverts the axis value.</param>
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The created <see cref="InputState"/> for the joystick axis.</returns>
     public InputState CreateInputState(ShapeGamepadJoyAxis axis, 
@@ -837,17 +834,17 @@ public sealed class GamepadDevice : InputDevice
     {
         float axisValue = GetValue(axis, deadzone, inverted, modifierKeySet);
         bool down = axisValue != 0f;
-        return new(down, !down, axisValue, Index, InputDeviceType.Gamepad);
+        return new(down, !down, axisValue, Index, InputDeviceType.Gamepad, inverted);
     }
     
     /// <summary>
-    /// Creates an <see cref="InputState"/> for the specified gamepad joystick axis,
-    /// using a previous state and applying the given deadzone and optional modifier key set.
+    /// Creates an <see cref="InputState"/> for the specified joystick axis,
+    /// using a previous state and applying the given deadzone, optional inversion, and modifier key set.
     /// </summary>
-    /// <param name="axis">The joystick axis to create the input state for.</param>
+    /// <param name="axis">The joystick axis to query.</param>
     /// <param name="previousState">The previous input state.</param>
-    /// <param name="deadzone">The deadzone threshold for the axis. </param>
-    /// <param name="inverted">Whether to invert the axis value. Default is false.</param>
+    /// <param name="deadzone">Deadzone value for axis input.</param>
+    /// <param name="inverted">If true, inverts the axis value.</param>
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The created <see cref="InputState"/> for the joystick axis.</returns>
     public InputState CreateInputState(ShapeGamepadJoyAxis axis, InputState previousState, 
@@ -878,66 +875,79 @@ public sealed class GamepadDevice : InputDevice
 
     #region Trigger Axis
     /// <summary>
-    /// Gets the value of the specified gamepad trigger axis.
-    /// Applies the given deadzone and optionally checks if a modifier key set is active.
-    /// Returns the calibrated and normalized trigger axis value.
+    /// Gets the value of the specified trigger axis.
+    /// Returns a float in the range <c>[0, 1]</c>,
+    /// applying the given deadzone and optionally checking a modifier key set.
     /// </summary>
     /// <param name="axis">The trigger axis to query.</param>
-    /// <param name="deadzone">Deadzone value for trigger input. </param>
+    /// <param name="deadzone">Deadzone value for the trigger input.</param>
+    /// <param name="inverted">If true, inverts the axis value. From <c>[0, 1]</c> to <c>[1, 0]</c>.
+    /// If inverted, reports 1 when not pressed and 0 when fully pressed.</param>
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
-    /// <returns>The value of the trigger axis as a float.</returns>
+    /// <returns>The normalized value of the trigger axis as a float.</returns>
     public float GetValue(ShapeGamepadTriggerAxis axis, 
-        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, ModifierKeySet? modifierKeySet = null)
+        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
     {
         if (Index < 0 || isLocked || !Connected) return 0f;
         if(modifierKeySet != null &&  !modifierKeySet.IsActive(this)) return 0f;
-        float value = Raylib.GetGamepadAxisMovement(Index, (GamepadAxis)axis);
+        float value = Raylib.GetGamepadAxisMovement(Index, (GamepadAxis)axis); //Range is [-1, 1]
+        value = (value + 1f) * 0.5f; // Normalize to [0, 1] range
         UpdateAxisRange(value, axis);
-        return MathF.Abs(value) < deadzone ? 0f : value;
+        if(MathF.Abs(value) < deadzone) return 0f;
+        if(inverted) value *= -1f;
+        return value;
             
-    }
-    /// <summary>
-    /// Determines if the specified trigger axis is "down", i.e., its value exceeds the given deadzone.
-    /// Optionally checks if a modifier key set is active.
-    /// </summary>
-    /// <param name="axis">The trigger axis to check.</param>
-    /// <param name="deadzone">The deadzone threshold for the trigger axis. </param>
-    /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
-    /// <returns>True if the trigger axis value is outside the deadzone; otherwise, false.</returns>
-    public bool IsDown(ShapeGamepadTriggerAxis axis, 
-        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, ModifierKeySet? modifierKeySet = null)
-    {
-        return GetValue(axis, deadzone, modifierKeySet) != 0f;
     }
 
     /// <summary>
-    /// Creates an <see cref="InputState"/> for the specified gamepad trigger axis,
-    /// applying the given deadzone and optional modifier key set.
+    /// Determines if the specified trigger axis is "down", using the given deadzone and optional inversion/modifier.
+    /// Returns true if the axis value is greater than zero.
     /// </summary>
-    /// <param name="axis">The trigger axis to create the input state for.</param>
-    /// <param name="deadzone">The deadzone threshold for the trigger axis. </param>
+    /// <param name="axis">The trigger axis to check.</param>
+    /// <param name="deadzone">Deadzone value for the trigger input.</param>
+    /// <param name="inverted">If true, inverts the axis value. From <c>[0, 1]</c> to <c>[1, 0]</c>.
+    /// If inverted, reports 1 when not pressed and 0 when fully pressed.</param>
+    /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
+    /// <returns>True if the trigger axis is down; otherwise, false.</returns>
+    public bool IsDown(ShapeGamepadTriggerAxis axis, 
+        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
+    {
+        var value = GetValue(axis, deadzone, inverted, modifierKeySet);
+        return inverted ? value < 1f : value > 0f;
+    }
+
+    /// <summary>
+    /// Creates an <see cref="InputState"/> for the specified trigger axis,
+    /// applying the given deadzone, optional inversion, and modifier key set.
+    /// </summary>
+    /// <param name="axis">The trigger axis to query.</param>
+    /// <param name="deadzone">Deadzone value for the trigger input.</param>
+    /// <param name="inverted">If true, inverts the axis value. From <c>[0, 1]</c> to <c>[1, 0]</c>.
+    /// If inverted, reports 1 when not pressed and 0 when fully pressed.</param>
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The created <see cref="InputState"/> for the trigger axis.</returns>
     public InputState CreateInputState(ShapeGamepadTriggerAxis axis, 
-        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, ModifierKeySet? modifierKeySet = null)
+        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
     {
-        float axisValue = GetValue(axis, deadzone, modifierKeySet);
-        bool down = axisValue != 0f;
-        return new(down, !down, axisValue, Index, InputDeviceType.Gamepad);
+        float axisValue = GetValue(axis, deadzone, inverted, modifierKeySet);
+        bool down = inverted ? axisValue < 1f : axisValue > 0f;
+        return new(down, !down, axisValue, Index, InputDeviceType.Gamepad, inverted);
     }
     /// <summary>
-    /// Creates an <see cref="InputState"/> for the specified gamepad trigger axis,
-    /// using a previous state and applying the given deadzone and optional modifier key set.
+    /// Creates an <see cref="InputState"/> for the specified trigger axis,
+    /// using a previous state and applying the given deadzone, optional inversion, and modifier key set.
     /// </summary>
-    /// <param name="axis">The trigger axis to create the input state for.</param>
+    /// <param name="axis">The trigger axis to query.</param>
     /// <param name="previousState">The previous input state.</param>
-    /// <param name="deadzone">The deadzone threshold for the trigger axis. </param>
+    /// <param name="deadzone">Deadzone value for the trigger input.</param>
+    /// <param name="inverted">If true, inverts the axis value. From <c>[0, 1]</c> to <c>[1, 0]</c>.
+    /// If inverted, reports 1 when not pressed and 0 when fully pressed.</param>
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The created <see cref="InputState"/> for the trigger axis.</returns>
     public InputState CreateInputState(ShapeGamepadTriggerAxis axis, InputState previousState, 
-        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, ModifierKeySet? modifierKeySet = null)
+        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
     {
-        return new(previousState, CreateInputState(axis, deadzone, modifierKeySet));
+        return new(previousState, CreateInputState(axis, deadzone, inverted, modifierKeySet));
     }
     
     private void UpdateAxisRange(float value, ShapeGamepadTriggerAxis axis)
@@ -959,7 +969,7 @@ public sealed class GamepadDevice : InputDevice
     /// Gets the combined value of two gamepad buttons as a single axis.
     /// The negative button decreases the value, the positive button increases it.
     /// Applies axis and trigger deadzones, and optionally checks a modifier key set.
-    /// Returns a float in the range \[-1, 1\].
+    /// Returns a float in the range [-1, 1].
     /// </summary>
     /// <param name="neg">The button representing the negative direction.</param>
     /// <param name="pos">The button representing the positive direction.</param>
@@ -1038,35 +1048,3 @@ public sealed class GamepadDevice : InputDevice
 
 }
 
-
-//The problem with calibration is that it changes the total range of the axis ...
-//deadzones are there to take care of joysticks that are not 100% centered anymore.
-//If a joystick reports 0.12 when it is not used,
-//the calibration system would subtract 0.12 from the axis value,
-//which would mean the new range of the axis is now [-1.12, 0.88] instead of [-1.0, 1.0].
-
-// private readonly Dictionary<ShapeGamepadJoyAxis, float> joyAxisZeroCalibration = new();
-// private readonly Dictionary<ShapeGamepadTriggerAxis, float> triggerZeroCalibration = new();
-// /// <summary>
-// /// Calibrates the gamepad axes by recording their current zero positions.
-// /// </summary>
-// public override void Calibrate()
-// {
-//     float leftX = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.LeftX);
-//     float leftY = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.LeftY);
-//         
-//     float rightX = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.RightX);
-//     float rightY = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.RightY);
-//         
-//     float triggerRight = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.LeftTrigger);
-//     float triggerLeft = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.RightTrigger);
-//
-//     joyAxisZeroCalibration[ShapeGamepadJoyAxis.LEFT_X] = leftX;
-//     joyAxisZeroCalibration[ShapeGamepadJoyAxis.LEFT_Y] = leftY;
-//     joyAxisZeroCalibration[ShapeGamepadJoyAxis.RIGHT_X] = rightX;
-//     joyAxisZeroCalibration[ShapeGamepadJoyAxis.RIGHT_Y] = rightY;
-//         
-//     triggerZeroCalibration[ShapeGamepadTriggerAxis.RIGHT] = triggerRight;
-//     triggerZeroCalibration[ShapeGamepadTriggerAxis.LEFT] = triggerLeft;
-//
-// }
