@@ -163,7 +163,7 @@ public static class ShapeInput
     /// This will call <see cref="KeyboardDevice.Deactivate"/> on the current active <see cref="KeyboardDevice"/> and it will call <see cref="KeyboardDevice.Activate"/> on the new <see cref="KeyboardDevice"/>.
     /// This will change the active state of both the current and the new <see cref="KeyboardDevice"/>.
     /// </remarks>
-    public static bool ChangeActiveKeybordDevice(KeyboardDevice device)
+    public static bool ChangeActiveKeyboardDevice(KeyboardDevice device)
     {
         if (device == ActiveKeyboardDevice) return false;
         
