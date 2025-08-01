@@ -370,15 +370,14 @@ namespace Examples
         {
             if (!MouseControlEnabled) return mousePos;
             
-            //&& ShapeInput.GamepadDeviceManager.LastUsedGamepad.IsDown(ShapeGamepadAxis.RIGHT_TRIGGER, 0.1f)
             if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Gamepad && ShapeInput.ActiveGamepadDeviceManager.LastUsedGamepad != null && 
                 ShapeInput.ActiveGamepadDeviceManager.LastUsedGamepad.IsDown(ShapeGamepadTriggerAxis.RIGHT))
             {
                 mouseMovementTimer = 0f;
                 float speed = screenArea.Size.Max() * 0.75f * dt;
                 int gamepad = ShapeInput.ActiveGamepadDeviceManager.LastUsedGamepad.Index;
-                var x = ShapeInput.CreateInputState(ShapeGamepadJoyAxis.LEFT_X, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
-                var y = ShapeInput.CreateInputState(ShapeGamepadJoyAxis.LEFT_Y, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
+                var x = ShapeInput.CreateInputState(ShapeGamepadJoyAxis.LEFT_X, GamepadMouseMovementTag, gamepad, 0.2f).AxisRaw;
+                var y = ShapeInput.CreateInputState(ShapeGamepadJoyAxis.LEFT_Y, GamepadMouseMovementTag, gamepad, 0.2f).AxisRaw;
 
                 var movement = new Vector2(x, y);
                 float l = movement.Length();
