@@ -691,7 +691,7 @@ public sealed class MouseDevice : InputDevice
             var mouseDelta = MouseDelta;
             if (button == ShapeMouseButton.LEFT_AXIS) return mouseDelta.X < -mouseMoveDeadzone ? MathF.Abs(mouseDelta.X) : 0f;
             if(button == ShapeMouseButton.RIGHT_AXIS) return mouseDelta.X > mouseMoveDeadzone ? mouseDelta.X : 0f;
-            if(button == ShapeMouseButton.UP_AXIS) return mouseDelta.Y < -mouseMoveDeadzone ? MathF.Abs(mouseDelta.X) : 0f;
+            if(button == ShapeMouseButton.UP_AXIS) return mouseDelta.Y < -mouseMoveDeadzone ? MathF.Abs(mouseDelta.Y) : 0f;
             if(button == ShapeMouseButton.DOWN_AXIS) return mouseDelta.Y > mouseMoveDeadzone ? mouseDelta.Y : 0f;
             return 0f;
         }
