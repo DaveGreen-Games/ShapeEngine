@@ -178,11 +178,7 @@ public sealed class GamepadDevice : InputDevice
         Connected = connected;
         if (Connected)
         {
-            unsafe
-            {
-                Name = Raylib.GetGamepadName(index)->ToString();
-            }
-
+            Name = Raylib.GetGamepadName_(index);
             AxisCount = Raylib.GetGamepadAxisCount(index);
             
             // Calibrate();
@@ -556,11 +552,7 @@ public sealed class GamepadDevice : InputDevice
     {
         if (Connected) return;
         Connected = true;
-        unsafe
-        {
-            Name = Raylib.GetGamepadName(Index)->ToString();
-        }
-
+        Name = Raylib.GetGamepadName_(Index);
         AxisCount = Raylib.GetGamepadAxisCount(Index);
         OnConnectionChanged?.Invoke();
         
