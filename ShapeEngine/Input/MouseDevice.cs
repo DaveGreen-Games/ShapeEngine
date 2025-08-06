@@ -297,7 +297,7 @@ public sealed class MouseDevice : InputDevice
         return wasUsed && !wasOtherDeviceUsed;//safety precaution
     }
 
-    public void ResetState()
+    private void ResetState()
     {
         usedDurationTimer = 0f;
         pressedCount = 0;
