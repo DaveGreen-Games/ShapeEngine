@@ -151,7 +151,7 @@ public partial class Game
     /// Called when a gamepad is connected to the system.
     /// </summary>
     /// <param name="gamepad">The gamepad device that was connected.</param>
-    protected virtual void OnGamepadConnected(ShapeGamepadDevice gamepad)
+    protected virtual void OnGamepadConnected(GamepadDevice gamepad)
     {
     }
 
@@ -159,7 +159,7 @@ public partial class Game
     /// Called when a gamepad is disconnected from the system.
     /// </summary>
     /// <param name="gamepad">The gamepad device that was disconnected.</param>
-    protected virtual void OnGamepadDisconnected(ShapeGamepadDevice gamepad)
+    protected virtual void OnGamepadDisconnected(GamepadDevice gamepad)
     {
     }
 

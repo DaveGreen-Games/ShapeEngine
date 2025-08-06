@@ -37,31 +37,36 @@ namespace Examples.Scenes.ExampleScenes
         private readonly InputAction iaMoveCameraH;
         private readonly InputAction iaMoveCameraV;
         private readonly InputAction iaRotateCamera;
-        private readonly List<InputAction> inputActions;
+        private readonly InputActionTree inputActionTree;
         
         public CameraExample()
         {
             Title = "Camera Example";
 
+            InputActionSettings defaultSettings = new();
+            
+            var modifierKeySetGp = new ModifierKeySet(ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad);
+            var modifierKeySetGpReversed = new ModifierKeySet(ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+            
             var cameraHorizontalKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
-            var cameraHorizontalGP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+            var cameraHorizontalGP = new InputTypeGamepadJoyAxis(ShapeGamepadJoyAxis.LEFT_X, 0.1f, false,  modifierKeySetGpReversed);
             // var cameraHorizontalGP2 = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad2);
             // var cameraHorizontalMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-            iaMoveCameraH = new(cameraHorizontalKB, cameraHorizontalGP);
+            iaMoveCameraH = new(defaultSettings,cameraHorizontalKB, cameraHorizontalGP);
             
             var cameraVerticalKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
-            var cameraVerticalGP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+            var cameraVerticalGP = new InputTypeGamepadJoyAxis(ShapeGamepadJoyAxis.LEFT_Y, 0.1f, false, modifierKeySetGpReversed);
             // var cameraVerticalGP2 = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_UP, ShapeGamepadButton.LEFT_FACE_DOWN, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad2);
             // var cameraVerticalMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-            iaMoveCameraV = new(cameraVerticalKB, cameraVerticalGP);
+            iaMoveCameraV = new(defaultSettings,cameraVerticalKB, cameraVerticalGP);
 
             var rotateCameraKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.Q, ShapeKeyboardButton.E);
-            var rotateCameraGP = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad);
+            var rotateCameraGP = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT, 0.1f, modifierKeySetGp);
             var rotateCameraMb = new InputTypeMouseButtonAxis(ShapeMouseButton.LEFT, ShapeMouseButton.RIGHT, 0f);
                 //new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouse);
-            iaRotateCamera = new(rotateCameraKB, rotateCameraGP, rotateCameraMb);
+            iaRotateCamera = new(defaultSettings,rotateCameraKB, rotateCameraGP, rotateCameraMb);
 
-            inputActions = new() { iaMoveCameraH, iaMoveCameraV, iaRotateCamera };
+            inputActionTree = [iaMoveCameraH, iaMoveCameraV, iaRotateCamera];
             
             camera = GAMELOOP.Camera;
             //boundaryRect = new(new Vector2(0, -45), new Vector2(1800, 810), new Vector2(0.5f));
@@ -86,14 +91,9 @@ namespace Examples.Scenes.ExampleScenes
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
             var gamepad = GAMELOOP.CurGamepad;
-            GAMELOOP.MouseControlEnabled = gamepad?.IsDown(ShapeGamepadAxis.RIGHT_TRIGGER, 0.1f) ?? true;
-            InputAction.UpdateActions(dt, gamepad, inputActions);
-            // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
-            // foreach (var ia in inputActions)
-            // {
-            //     ia.Gamepad = gamepadIndex;
-            //     ia.Update(dt);
-            // }
+            // GAMELOOP.MouseControlEnabled = gamepad?.IsDown(ShapeGamepadTriggerAxis.RIGHT, 0.1f) ?? true;
+            inputActionTree.CurrentGamepad = gamepad;
+            inputActionTree.Update(dt);
             HandleCameraPosition(dt);
             HandleCameraRotation(dt);
         }

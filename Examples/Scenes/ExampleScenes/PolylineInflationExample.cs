@@ -3,7 +3,6 @@ using System.Numerics;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
 using Raylib_cs;
-using ShapeEngine.Color;
 using ShapeEngine.Core;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.CircleDef;
@@ -11,7 +10,6 @@ using ShapeEngine.Geometry.PolygonDef;
 using ShapeEngine.Geometry.PolylineDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
-using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -27,7 +25,8 @@ namespace Examples.Scenes.ExampleScenes
         private InputAction createPoint;
         private InputAction deletePoint;
         private InputAction changeOffset;
-
+        private readonly InputActionTree inputActionTree;
+        
         private bool collisionSegmentValid = false;
         private Segment collisionSegment = new(); // new(new(-192, -450), new(466, 750));
         
@@ -36,21 +35,30 @@ namespace Examples.Scenes.ExampleScenes
             Title = "Polyline Inflation Example";
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
 
+            InputActionSettings defaultSettings = new();
 
+            var modifierKeySetGpReversed = new ModifierKeySet(ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+            
             var createMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
             var createGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
             var createKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
-            createPoint = new(createMB, createGP, createKB);
+            createPoint = new(defaultSettings,createMB, createGP, createKB);
 
             var deleteMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
             var deleteGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
             var deleteKB = new InputTypeKeyboardButton(ShapeKeyboardButton.C);
-            deletePoint = new(deleteMB, deleteGP, deleteKB);
+            deletePoint = new(defaultSettings,deleteMB, deleteGP, deleteKB);
 
             var offsetMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f);
             var offsetKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.S, ShapeKeyboardButton.W);
-            var offsetGP = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_DOWN, ShapeGamepadButton.LEFT_FACE_UP, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-            changeOffset = new(offsetMW, offsetGP, offsetKB);
+            var offsetGP = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_DOWN, ShapeGamepadButton.LEFT_FACE_UP, 0.1f, modifierKeySetGpReversed);
+            changeOffset = new(defaultSettings,offsetMW, offsetGP, offsetKB);
+            
+            inputActionTree = [ 
+                createPoint,
+                deletePoint,
+                changeOffset
+            ];
             
             textFont.FontSpacing = 1f;
             textFont.ColorRgba = Colors.Light;
@@ -59,12 +67,12 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnActivate(Scene oldScene)
         {
-            GAMELOOP.InputActionZoom.Enabled = false;
+            GAMELOOP.InputActionZoom.Active = false;
         }
 
         protected override void OnDeactivate()
         {
-            GAMELOOP.InputActionZoom.Enabled = true;
+            GAMELOOP.InputActionZoom.Active = true;
         }
 
         public override void Reset()
@@ -81,14 +89,9 @@ namespace Examples.Scenes.ExampleScenes
             base.HandleInput(dt, mousePosGame, mousePosGameUi, mousePosUI);
             // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
             var gamepad = GAMELOOP.CurGamepad;
-            createPoint.Gamepad = gamepad;
-            createPoint.Update(dt);
             
-            deletePoint.Gamepad = gamepad;
-            deletePoint.Update(dt);
-            
-            changeOffset.Gamepad = gamepad;
-            changeOffset.Update(dt);
+            inputActionTree.CurrentGamepad = gamepad;
+            inputActionTree.Update(dt);
 
             var offsetState = changeOffset.State;
             offsetDelta += offsetState.AxisRaw * dt * 250f;
@@ -98,13 +101,13 @@ namespace Examples.Scenes.ExampleScenes
             offsetDelta = ShapeMath.Clamp(offsetDelta, 0f, MaxOffset);
 
 
-            if (ShapeInput.KeyboardDevice.IsDown(ShapeKeyboardButton.H))
+            if (ShapeInput.ActiveKeyboardDevice.IsDown(ShapeKeyboardButton.H))
             {
                 collisionSegmentValid = true;
                 collisionSegment = collisionSegment.SetStart(mousePosGame);
             }
 
-            if (ShapeInput.KeyboardDevice.IsDown(ShapeKeyboardButton.G))
+            if (ShapeInput.ActiveKeyboardDevice.IsDown(ShapeKeyboardButton.G))
             {
                 collisionSegmentValid = true;
                 collisionSegment = collisionSegment.SetEnd(mousePosGame);

@@ -92,13 +92,15 @@ namespace Examples.Scenes.ExampleScenes
             TextInputBox.EmptyText = "Enter Text...";
             TextInputBox.SetEnteredText("Damaging an enemy with Rupture creates a pool that does Bleed damage over 6 seconds. Enemies in the pool take 10% increased Bleed damage. ( Keywords: CAPS increased added 25% 5sec !a ?b _c d: )");
             
+            InputActionSettings defaultSettings = new();
+            
             var changeFontSpacingKB = new InputTypeKeyboardButton(ShapeKeyboardButton.S);
             var changeFontSpacingGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN);
-            iaChangeFontSpacing = new(accessTagTextBox,changeFontSpacingGP, changeFontSpacingKB);
+            iaChangeFontSpacing = new(accessTagTextBox,defaultSettings,changeFontSpacingGP, changeFontSpacingKB);
             
             var changeLineSpacingKB = new InputTypeKeyboardButton(ShapeKeyboardButton.W);
             var changeLineSpacingGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP);
-            iaChangeLineSpacing = new(accessTagTextBox,changeLineSpacingGP, changeLineSpacingKB);
+            iaChangeLineSpacing = new(accessTagTextBox,defaultSettings,changeLineSpacingGP, changeLineSpacingKB);
             
             // var changeFontSizeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.D);
             // var changeFontSizeGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT);
@@ -110,13 +112,11 @@ namespace Examples.Scenes.ExampleScenes
             
             var toggleWrapModeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
             var toggleWrapModeGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
-            iaToggleWrapMode = new(accessTagTextBox,toggleWrapModeKB, toggleWrapModeGP);
+            iaToggleWrapMode = new(accessTagTextBox,defaultSettings,toggleWrapModeKB, toggleWrapModeGP);
             
-            inputActions.Add(iaChangeFontSpacing);
-            inputActions.Add(iaChangeLineSpacing);
-            // inputActions.Add(iaChangeFontSize);
-            // inputActions.Add(iaToggleAutoSize);
-            inputActions.Add(iaToggleWrapMode);
+            inputActionTree.Add(iaChangeFontSpacing);
+            inputActionTree.Add(iaChangeLineSpacing);
+            inputActionTree.Add(iaToggleWrapMode);
 
             // var tf = new TextFont(textFont.Font, 0f, 0f, WHITE);
             textEmphasisBox = new(textFont);

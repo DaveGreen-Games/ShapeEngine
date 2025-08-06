@@ -329,7 +329,7 @@ namespace Examples.Scenes.ExampleScenes
         // private SpawnAreaCollision spawnArea;
         private CollisionHandler? collisionHandler;
         public InputAction iaShootLaser;
-        public LaserDevice(Vector2 pos, float size, CollisionHandler? collisionHandler) 
+        public LaserDevice(Vector2 pos, float size, CollisionHandler? collisionHandler, InputAction shootLaser) 
         {
             this.collisionHandler = collisionHandler;
             this.pos = pos;
@@ -337,10 +337,8 @@ namespace Examples.Scenes.ExampleScenes
             this.rotRad = 0f;
             UpdateTriangle();
 
-            var shootKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
-            var shootGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
-            var shootMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
-            iaShootLaser = new(shootKB, shootGP, shootMB);
+            iaShootLaser = shootLaser;
+            
             //this.laserEndPoint = tip;
         }
         public void SetHybernate(bool enabled)
@@ -378,10 +376,6 @@ namespace Examples.Scenes.ExampleScenes
             laserPoints.Clear();
             laserEnabled = false;
             if (hybernate) return;
-            
-            // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
-            iaShootLaser.Gamepad = GAMELOOP.CurGamepad;
-            iaShootLaser.Update(time.Delta);
             
             if (aimingMode)
             {
@@ -557,67 +551,68 @@ namespace Examples.Scenes.ExampleScenes
         private readonly InputAction iaPickRectangleShape;
         private readonly InputAction iaPickPolygonShape;
         private readonly InputAction iaDragLaser;
-        private readonly List<InputAction> inputActions;
+        private readonly InputAction iaShootLaser;
+        private readonly InputActionTree inputActionTree;
         
         public AsteroidMiningExample()
         {
             Title = "Asteroid Mining Example";
-            // font = GAMELOOP.GetFont(FontIDs.JetBrains);
             UpdateBoundaryRect(GAMELOOP.GameScreenInfo.Area);
-            // spawnArea = new SpawnAreaCollision(boundaryRect, 4, 4);
             InitSpawnArea(boundaryRect);
             InitCollisionHandler(boundaryRect, 4, 4);
             
-            // if (InitSpawnArea(boundaryRect)) SpawnArea?.InitCollisionHandler(4, 4);
-
-            laserDevice = new(new Vector2(0f), 100, CollisionHandler);
-            SpawnArea?.AddGameObject(laserDevice);
-
+            InputActionSettings defaultSettings = new();
+            
+            var shootKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
+            var shootGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
+            var shootMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
+            iaShootLaser = new(defaultSettings,shootKB, shootGP, shootMB);
+            
             var modeChangeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.TAB);
             var modeChangeGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
-            iaModeChange = new(modeChangeKB, modeChangeGP);
+            iaModeChange = new(defaultSettings,modeChangeKB, modeChangeGP);
 
             var addShapeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
             var addShapeMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
             var addShapeGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
-            iaAddShape = new(addShapeKB, addShapeMB, addShapeGP);
+            iaAddShape = new(defaultSettings,addShapeKB, addShapeMB, addShapeGP);
 
             var cutShapeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.C);
             var cutShapeMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
             var cutShapeGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
-            iaCutShape = new(cutShapeKB, cutShapeMB, cutShapeGP);
+            iaCutShape = new(defaultSettings,cutShapeKB, cutShapeMB, cutShapeGP);
             
             var regenShapeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
             var regenShapeGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP);
-            iaRegenerateShape = new(regenShapeKB, regenShapeGP);
+            iaRegenerateShape = new(defaultSettings,regenShapeKB, regenShapeGP);
             
             var rotateShapeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
             var rotateShapeGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
-            iaRotateShape = new(rotateShapeKB, rotateShapeGP);
+            iaRotateShape = new(defaultSettings,rotateShapeKB, rotateShapeGP);
             
             var scaleShapeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.X);
             var scaleShapeGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
-            iaScaleShape = new(scaleShapeKB, scaleShapeGP);
+            iaScaleShape = new(defaultSettings,scaleShapeKB, scaleShapeGP);
             
             var pickTriangleKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ONE);
             var pickTriangleGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT);
-            iaPickTriangleShape = new(pickTriangleKB, pickTriangleGP);
+            iaPickTriangleShape = new(defaultSettings,pickTriangleKB, pickTriangleGP);
             
             var pickRectangleKB = new InputTypeKeyboardButton(ShapeKeyboardButton.TWO);
             var pickRectangleGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT);
-            iaPickRectangleShape = new(pickRectangleKB, pickRectangleGP);
+            iaPickRectangleShape = new(defaultSettings,pickRectangleKB, pickRectangleGP);
             
             var pickPolygonKB = new InputTypeKeyboardButton(ShapeKeyboardButton.THREE);
             var pickPolygonGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN);
-            iaPickPolygonShape = new(pickPolygonKB, pickPolygonGP);
+            iaPickPolygonShape = new(defaultSettings,pickPolygonKB, pickPolygonGP);
 
             var dragLaserKB = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
             var dragLaserGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_BOTTOM);
             var dragLaserMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
-            iaDragLaser = new(dragLaserMB, dragLaserKB, dragLaserGP);
+            iaDragLaser = new(defaultSettings,dragLaserMB, dragLaserKB, dragLaserGP);
             
-            inputActions = new()
-            {
+            inputActionTree =
+            [
                 iaModeChange,
                 iaAddShape,
                 iaCutShape,
@@ -627,8 +622,12 @@ namespace Examples.Scenes.ExampleScenes
                 iaPickTriangleShape,
                 iaPickRectangleShape,
                 iaPickPolygonShape,
-                iaDragLaser
-            };
+                iaDragLaser,
+                iaShootLaser
+            ];
+            
+            laserDevice = new(new Vector2(0f), 100, CollisionHandler, iaShootLaser);
+            SpawnArea?.AddGameObject(laserDevice);
             
             textFont.FontSpacing = 1f;
             
@@ -642,7 +641,7 @@ namespace Examples.Scenes.ExampleScenes
             curSize = 50f;
             curShapeType = ShapeType.Triangle;
             RegenerateShape();
-            laserDevice = new(new Vector2(0), 100, CollisionHandler);
+            laserDevice = new(new Vector2(0), 100, CollisionHandler, iaShootLaser);
             SpawnArea?.AddGameObject(laserDevice);
         }
 
@@ -801,7 +800,8 @@ namespace Examples.Scenes.ExampleScenes
             if (CollisionHandler == null) return;
 
             var gamepad = GAMELOOP.CurGamepad;
-            InputAction.UpdateActions(dt, gamepad, inputActions);
+            inputActionTree.CurrentGamepad = gamepad;
+            inputActionTree.Update(dt);
             
             
             if (iaModeChange.State.Pressed)

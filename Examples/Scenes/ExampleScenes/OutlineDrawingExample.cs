@@ -95,6 +95,7 @@ public class OutlineDrawingExample : ExampleScene
 
     private InputAction nextShape;
     private InputAction changeDrawingMode;
+    private readonly InputActionTree inputActionTree;
     private bool gappedMode = true;
     private int shapeIndex = 0;
     private const int MaxShapes = 7;
@@ -132,15 +133,19 @@ public class OutlineDrawingExample : ExampleScene
     {
         Title = "Shape Outline Drawing";
 
+        
+        InputActionSettings defaultSettings = new();
         var nextStaticShapeMb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
         var nextStaticShapeGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
         var nextStaticShapeKb = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
-        nextShape = new(nextStaticShapeMb, nextStaticShapeGp, nextStaticShapeKb);
+        nextShape = new(defaultSettings,nextStaticShapeMb, nextStaticShapeGp, nextStaticShapeKb);
         
         var changeModeMB = new InputTypeMouseButton(ShapeMouseButton.MIDDLE);
         var changeModeGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
         var changeModeKb = new InputTypeKeyboardButton(ShapeKeyboardButton.TAB);
-        changeDrawingMode = new(changeModeMB, changeModeGp, changeModeKb);
+        changeDrawingMode = new(defaultSettings,changeModeMB, changeModeGp, changeModeKb);
+
+        inputActionTree = [nextShape, changeDrawingMode];
         
         textFont.FontSpacing = 1f;
         textFont.ColorRgba = Colors.Light;
@@ -265,11 +270,8 @@ public class OutlineDrawingExample : ExampleScene
         base.HandleInput(dt, mousePosGame, mousePosGameUi, mousePosUI);
         var gamepad = GAMELOOP.CurGamepad;
         
-        nextShape.Gamepad = gamepad;
-        nextShape.Update(dt);
-        
-        changeDrawingMode.Gamepad = gamepad;
-        changeDrawingMode.Update(dt);
+        inputActionTree.CurrentGamepad = gamepad;
+        inputActionTree.Update(dt);
         
         
         if (nextShape.State.Pressed)

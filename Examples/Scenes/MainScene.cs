@@ -105,13 +105,13 @@ namespace Examples.Scenes
         
         private void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            var cancelState = GAMELOOP.InputActionUICancel.Consume();
+            var cancelState = GAMELOOP.InputActionUICancel.Consume(out _);
             if (cancelState is { Consumed: false, Pressed: true })
             {
                 GAMELOOP.Quit();
             }
 
-            var resetState = GAMELOOP.InputActionReset.Consume();
+            var resetState = GAMELOOP.InputActionReset.Consume(out _);
             if (resetState is { Consumed: false, Pressed: true })
             {
                 for (int i = 0; i < examples.Count; i++)
@@ -122,23 +122,23 @@ namespace Examples.Scenes
                 GAMELOOP.ResetCamera();
             }
 
-            var maximizedState = GAMELOOP.InputActionMaximize.Consume();
+            var maximizedState = GAMELOOP.InputActionMaximize.Consume(out _);
             if (maximizedState is { Consumed: false, Pressed: true })
             { 
                 GAMELOOP.Window.ToggleMaximizeWindow();
             }
-            var minimizeState = GAMELOOP.InputActionMinimize.Consume();
+            var minimizeState = GAMELOOP.InputActionMinimize.Consume(out _);
             if (minimizeState is { Consumed: false, Pressed: true })
             { 
                 GAMELOOP.Window.ToggleMinimizeWindow();
             }
-            var fullscreenState = GAMELOOP.InputActionFullscreen.Consume();
+            var fullscreenState = GAMELOOP.InputActionFullscreen.Consume(out _);
             if (fullscreenState is { Consumed: false, Pressed: true })
             { 
                 GAMELOOP.Window.ToggleBorderlessFullscreen();
             }
 
-            var prevTabState = GAMELOOP.InputActionUIPrevTab.Consume();
+            var prevTabState = GAMELOOP.InputActionUIPrevTab.Consume(out _);
             if (prevTabState is { Consumed: false, Pressed: true })
             {
                 if (prevTabState.InputDeviceType == InputDeviceType.Mouse)
@@ -157,7 +157,7 @@ namespace Examples.Scenes
                 //PrevPage();
             }
 
-            var nextTabState = GAMELOOP.InputActionUINextTab.Consume();
+            var nextTabState = GAMELOOP.InputActionUINextTab.Consume(out _);
             if (nextTabState is { Consumed: false, Pressed: true })
             { 
                 if (nextTabState.InputDeviceType == InputDeviceType.Mouse)
@@ -188,7 +188,7 @@ namespace Examples.Scenes
             //     // PrevButton();
             // }
 
-            var nextMonitorState = GAMELOOP.InputActionNextMonitor.Consume();
+            var nextMonitorState = GAMELOOP.InputActionNextMonitor.Consume(out _);
             if (nextMonitorState is { Consumed: false, Pressed: true })
             { 
                 GAMELOOP.Window.NextMonitor();

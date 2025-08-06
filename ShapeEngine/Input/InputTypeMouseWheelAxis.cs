@@ -6,59 +6,24 @@ namespace ShapeEngine.Input;
 /// <summary>
 /// Represents an input type for a mouse wheel axis, supporting deadzone and modifier keys.
 /// </summary>
-public class InputTypeMouseWheelAxis : IInputType
+public sealed class InputTypeMouseWheelAxis : IInputType
 {
     private readonly ShapeMouseWheelAxis axis;
     private float deadzone;
-    private readonly IModifierKey[] modifierKeys;
-    private readonly ModifierKeyOperator modifierOperator;
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputTypeMouseWheelAxis"/> with the specified axis and deadzone.
-    /// </summary>
-    /// <param name="axis">The mouse wheel axis.</param>
-    /// <param name="deadzone">
-    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value.
-    /// </param>
-    public InputTypeMouseWheelAxis(ShapeMouseWheelAxis axis, float deadzone = 0.2f)
-    {
-        this.axis = axis;
-        this.deadzone = deadzone;
-        this.modifierKeys = Array.Empty<IModifierKey>();
-        this.modifierOperator = ModifierKeyOperator.And;
-    }
+    private readonly ModifierKeySet? modifierKeySet;
+    
 
     /// <summary>
-    /// Initializes a new instance of <see cref="InputTypeMouseWheelAxis"/> with axis, deadzone, modifier operator, and modifier keys.
+    /// Initializes a new instance of <see cref="InputTypeMouseWheelAxis"/> with the specified axis, deadzone, and optional modifier key set.
     /// </summary>
-    /// <param name="axis">The mouse wheel axis.</param>
-    /// <param name="deadzone">
-    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value.
-    /// </param>
-    /// <param name="modifierOperator">The modifier key operator.</param>
-    /// <param name="modifierKeys">The modifier keys.</param>
-    public InputTypeMouseWheelAxis(ShapeMouseWheelAxis axis, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    /// <param name="axis">The mouse wheel axis to use.</param>
+    /// <param name="deadzone">The deadzone value. Input values below this threshold are ignored.</param>
+    /// <param name="modifierKeySet">An optional set of modifier keys required for activation.</param>
+    public InputTypeMouseWheelAxis(ShapeMouseWheelAxis axis, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseWheelThreshold, ModifierKeySet? modifierKeySet = null)
     {
         this.axis = axis;
         this.deadzone = deadzone;
-        this.modifierOperator = modifierOperator;
-        this.modifierKeys = modifierKeys;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputTypeMouseWheelAxis"/> with axis, deadzone, modifier operator, and a single modifier key.
-    /// </summary>
-    /// <param name="axis">The mouse wheel axis.</param>
-    /// <param name="deadzone">
-    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value.
-    /// </param>
-    /// <param name="modifierOperator">The modifier key operator.</param>
-    /// <param name="modifierKey">The modifier key.</param>
-    public InputTypeMouseWheelAxis(ShapeMouseWheelAxis axis, float deadzone, ModifierKeyOperator modifierOperator, IModifierKey modifierKey)
-    {
-        this.axis = axis;
-        this.deadzone = deadzone;
-        this.modifierOperator = modifierOperator;
-        this.modifierKeys = new[]{ modifierKey };
+        this.modifierKeySet = modifierKeySet;
     }
 
     /// <inheritdoc/>
@@ -71,30 +36,75 @@ public class InputTypeMouseWheelAxis : IInputType
     }
 
     /// <inheritdoc/>
-    public virtual string GetName(bool shorthand = true)
+    public string GetName(bool shorthand = true)
     {
         StringBuilder sb = new();
-        IModifierKey.GetModifierKeyNames(sb, modifierKeys, modifierOperator, shorthand);
-        sb.Append(ShapeMouseDevice.GetWheelAxisName(axis, shorthand));
+        modifierKeySet?.AppendModifierKeyNames(sb, shorthand);
+        sb.Append(axis.GetWheelAxisName(shorthand));
         return sb.ToString();
     }
 
     /// <inheritdoc/>
-    public InputState GetState(ShapeGamepadDevice? gamepad = null)
+    public InputState GetState(GamepadDevice? gamepad = null)
     {
-        return ShapeInput.MouseDevice.CreateInputState(axis, deadzone, modifierOperator, modifierKeys);
+        return modifierKeySet == null ? 
+            ShapeInput.ActiveMouseDevice.CreateInputState(axis, deadzone) : 
+            ShapeInput.ActiveMouseDevice.CreateInputState(axis, deadzone, modifierKeySet);
     }
 
     /// <inheritdoc/>
-    public InputState GetState(InputState prev, ShapeGamepadDevice? gamepad = null)
+    public InputState GetState(InputState prev, GamepadDevice? gamepad = null)
     {
-        return ShapeInput.MouseDevice.CreateInputState(axis, prev, deadzone, modifierOperator, modifierKeys);
+        return modifierKeySet == null ? 
+            ShapeInput.ActiveMouseDevice.CreateInputState(axis, prev, deadzone) : 
+            ShapeInput.ActiveMouseDevice.CreateInputState(axis, prev, deadzone, modifierKeySet);
     }
 
     /// <inheritdoc/>
     public InputDeviceType GetInputDevice() => InputDeviceType.Mouse;
 
     /// <inheritdoc/>
-    public IInputType Copy() => new InputTypeMouseWheelAxis(axis);
+    public IInputType Copy() => new InputTypeMouseWheelAxis(axis, deadzone, modifierKeySet?.Copy());
+    
+    private bool Equals(InputTypeMouseWheelAxis other)
+    {
+        return axis == other.axis &&
+               (modifierKeySet == null && other.modifierKeySet == null ||
+                modifierKeySet != null && modifierKeySet.Equals(other.modifierKeySet));
+    }
+    
+    /// <summary>
+    /// Determines whether the specified <see cref="IInputType"/> is equal to the current instance.
+    /// </summary>
+    /// <param name="other">The other <see cref="IInputType"/> to compare.</param>
+    /// <returns><c>true</c> if equal; otherwise, <c>false</c>.</returns>
+    public bool Equals(IInputType? other)
+    {
+        if (other is InputTypeMouseWheelAxis inputType)
+        {
+            return Equals(inputType);       
+        }
+    
+        return false;
+    }
+    
+    /// <summary>
+    /// Determines whether the specified object is equal to the current instance.
+    /// </summary>
+    /// <param name="obj">The object to compare.</param>
+    /// <returns><c>true</c> if equal; otherwise, <c>false</c>.</returns>
+    public override bool Equals(object? obj)
+    {
+        return ReferenceEquals(this, obj) || obj is InputTypeMouseWheelAxis other && Equals(other);
+    }
+    
+    /// <summary>
+    /// Returns a hash code for the current instance.
+    /// </summary>
+    /// <returns>A hash code for the current instance.</returns>
+    public override int GetHashCode()
+    {
+        return HashCode.Combine((int)axis, modifierKeySet?.GetHashCode() ?? 0);
+    }
 
 }

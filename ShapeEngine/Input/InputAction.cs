@@ -1,5 +1,5 @@
 using System.Text;
-using ShapeEngine.Core.Structs;
+using ShapeEngine.Core;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Input;
@@ -8,34 +8,145 @@ namespace ShapeEngine.Input;
 /// Represents an input action, which can be triggered by various input types and devices.
 /// Handles state, multi-tap, hold, and axis sensitivity/gravity.
 /// </summary>
-public class InputAction
+/// <remarks>
+/// Use <see cref="InputActionTree"/> for updating and managing multiple <see cref="InputAction"/> instances.
+/// </remarks>
+public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEquatable<InputAction>
 {
+    /// <summary>
+    /// Represents the toggle state for an input action.
+    /// </summary>
+    public enum ToggleState
+    {
+        /// <summary>
+        /// The toggle is off.
+        /// </summary>
+        Off,
+        /// <summary>
+        /// The toggle is on.
+        /// </summary>
+        On
+    }
+    
+    #region Input Action Tree Management
+    /// <summary>
+    /// Gets the parent <see cref="InputActionTree"/> of this action, if any.
+    /// </summary>
+    public InputActionTree? Parent { get; private set; }
+    
+    /// <summary>
+    /// Indicates whether this action is currently part of an <see cref="InputActionTree"/>.
+    /// </summary>
+    public bool IsInTree => Parent != null;
+    
+    /// <summary>
+    /// Adds this action to the specified <see cref="InputActionTree"/>.
+    /// If already in a different tree, removes it from the previous tree first.
+    /// </summary>
+    /// <param name="tree">The tree to add this action to.</param>
+    internal void EnterTree(InputActionTree tree)
+    {
+        if (Parent != null)
+        {
+            //reference equals is enough here
+            //duplicates can not be added to the same tree, therefore, EnterTree will not be called for an InputAction that is already in the tree.
+            if (ReferenceEquals(Parent, tree)) return;
+            Parent.Remove(this);
+        }
+        Parent = tree;
+    }
+    
+    /// <summary>
+    /// Removes this action from its parent <see cref="InputActionTree"/>, if any.
+    /// </summary>
+    internal void ExitTree()
+    {
+        if(Parent == null) return;
+        Parent = null;
+    }
+    #endregion
+    
     #region Members
 
+   
     /// <summary>
-    /// Indicates if this input action is enabled.
+    /// Indicates if this input action is active. If set to <c>false</c>, the action will not process input or update its state.
     /// </summary>
-    public bool Enabled = true;
+    public bool Active
+    {
+        get => active;
+        set
+        {
+            if(active == value) return;
+            
+            active = value;
+            if (active) return;
+            Reset();
+        }
+    }
+
+    private bool active = true;
+
+    /// <summary>
+    /// Gets or sets whether this input action blocks input types after use.
+    /// <see cref="InputAction"/> has to be part of an <see cref="InputActionTree"/> to participate in the blocking system.
+    /// <para>
+    /// If set to <c>true</c>, input types used by this action will be added to the block list for the current frame,
+    /// preventing other actions from using the same input types until the next frame.
+    /// </para>
+    /// <para>
+    /// If <see cref="Active"/> is set to <c>false</c>,
+    /// or if <see cref="AccessTag"/> does not have access,
+    /// this action will not block input types.
+    /// </para>
+    /// </summary>
+    /// <remarks>
+    /// Only <see cref="InputAction"/>s with <c>BlocksInput</c> enabled participate in this blocking system.
+    /// If set to <c>false</c>, this action neither blocks input types nor can it be blocked by others.
+    /// </remarks>
+    public bool BlocksInput;
+    
+    /// <summary>
+    /// Gets or sets the execution order for this <see cref="InputAction"/>.
+    /// <para>Input actions with a lower <see cref="ExecutionOrder"/> value are processed first.</para>
+    /// <para>This value is automatically assigned when the action is created, but can be set manually if needed.</para>
+    /// <para>This only has an effect when used with <see cref="InputActionTree"/> or in other sorted collections
+    /// that use <see cref="CompareTo"/> for determining order.</para>
+    /// </summary>
+    /// <remarks>
+    /// If two <see cref="InputAction"/> have the same <see cref="ExecutionOrder"/>,
+    /// <see cref="Id"/> is used to determine the order.
+    /// A lower <see cref="Id"/> value is processed first.
+    /// <para>
+    /// This is especially useful when combined with <see cref="BlocksInput"/>,
+    /// as it allows precise control over which <see cref="InputAction"/> instances can block others based on their execution order.
+    /// </para>
+    /// </remarks>
+    public int ExecutionOrder { get; set; } = nextExecutionOrder++;
+    private static int nextExecutionOrder = 0;
+    
     /// <summary>
     /// The unique identifier for this input action.
     /// </summary>
-    public uint ID { get; private set; }
+    public uint Id { get; }
     /// <summary>
     /// The access tag used for locking/unlocking this action.
     /// <remarks>
-    /// Determines access of this action.
-    /// Only used when input actions are locked.
-    /// If this tag is contained in the lock blacklist while the lock is active, the action will not trigger.
-    /// If this tag is contained in the lock whitelist while the lock is active, the action will trigger.
-    /// If <see cref="AllAccessTag"/> is used the action will always trigger.
+    /// <list type="bullet">
+    /// <item>Determines access of this action.</item>
+    /// <item>Only used when input actions are locked.</item>
+    /// <item>If this tag is contained in the lock blacklist while the lock is active, the <see cref="InputState"/> of this <see cref="InputAction"/> will not be available.</item>
+    /// <item>If this tag is contained in the lock whitelist while the lock is active, the <see cref="InputState"/> of this <see cref="InputAction"/> will always be available.</item>
+    /// <item>If <see cref="ShapeInput.AllAccessTag"/> is used the <see cref="InputState"/> of this <see cref="InputAction"/> will always be available, regardless of the lock state.</item>
+    /// </list>
     /// </remarks>
     /// </summary>
-    public uint AccessTag { get; private set; } = DefaultAccessTag;
+    public uint AccessTag { get; private set; } = ShapeInput.DefaultAccessTag;
 
     /// <summary>
     /// The associated gamepad device, if any.
     /// </summary>
-    public ShapeGamepadDevice? Gamepad;
+    public GamepadDevice? Gamepad;
     /// <summary>
     /// The display title for this input action.
     /// </summary>
@@ -43,138 +154,120 @@ public class InputAction
 
     private float holdTimer;
     private float multiTapTimer;
-    private float holdDuration = 1f;
-    private float multiTapDuration = 0.25f;
     private int multiTapCount;
-    private int multiTapTarget;
 
     /// <summary>
-    /// The number of taps required for a multi-tap action.
+    /// The settings that define the behavior and configuration of this input action.
     /// </summary>
-    public int MultiTapTarget
-    {
-        get => multiTapTarget;
-        set => multiTapTarget = ShapeMath.MaxInt(0, value);
-    }
-    /// <summary>
-    /// The duration required to trigger a hold action (in seconds).
-    /// Default is 1 second.
-    /// </summary>
-    public float HoldDuration
-    {
-        get => holdDuration;
-        set => holdDuration = MathF.Max(0f, value);
-    }
-    /// <summary>
-    /// The duration allowed between taps for a multi-tap action (in seconds).
-    /// Default is 0.25 seconds.
-    /// </summary>
-    public float MultiTapDuration
-    {
-        get => multiTapDuration;
-        set => multiTapDuration = MathF.Max(0f, value);
-    }
+    public readonly InputActionSettings Settings;
     
-    private float axisSensitivity = 1f;
-    private float axisGravitiy = 1f;
     /// <summary>
-    /// How fast an axis moves towards the max value (1 / -1) in seconds.
-    /// Used for calculating InputState.Axis values.
+    /// Gets the current input state for this action.
+    /// This property is updated each frame,
+    /// reflecting the accumulated state from all associated input types.
     /// </summary>
-    public float AxisSensitivity 
-    {
-        get => axisSensitivity;
-        set => axisSensitivity = MathF.Max(0f, value);
-    }
-    /// <summary>
-    /// How fast an axis moves towards 0 after no input is detected.
-    /// Used for calculating InputState.Axis values.
-    /// </summary>
-    public float AxisGravity 
-    {
-        get => axisGravitiy;
-        set => axisGravitiy = MathF.Max(0f, value);
-    }
-    
-    private InputState state = new();
-    /// <summary>
-    /// The current state of this input action.
-    /// </summary>
-    public InputState State
-    {
-        get
-        {
-            if (Locked && !HasAccess(AccessTag)) return new();
-            if (!Enabled) return new();
+    public InputState State { get; private set; }
 
-            return state;
-        }
-        private set => state = value;
-        
-    }
-    private readonly List<IInputType> inputs = new();
+    private readonly List<IInputType> inputs = [];
+
+    /// <summary>
+    /// Stores the set of input types that were used to trigger this action in the current frame.
+    /// Cleared and updated during each update cycle.
+    /// </summary>
+    public readonly HashSet<IInputType> UsedInputs = [];
+    /// <summary>
+    /// Indicates whether the input action is toggled. Changes state on each press.
+    /// </summary>
+    public ToggleState Toggle { get; private set; } = ToggleState.Off;
+    
+    /// <summary>
+    /// Resets the toggle state to off.
+    /// </summary>
+    public void ResetToggle() => Toggle = ToggleState.Off;
+
+    /// <summary>
+    /// Gets the type of the input device that was last used to trigger this action.
+    /// </summary>
+    public InputDeviceType CurrentDeviceType { get; private set; } = InputDeviceType.None;
     #endregion
 
     #region Constructors
     /// <summary>
     /// Initializes a new instance of <see cref="InputAction"/> with a unique ID.
+    /// <see cref="Settings"/> are set to default values.
     /// </summary>
     public InputAction()
     {
-        ID = ShapeID.NextID;
+        Id = ShapeID.NextID;
+        Settings = new InputActionSettings();
     }
+
     /// <summary>
-    /// Initializes a new instance of <see cref="InputAction"/> with a specific access tag.
+    /// Initializes a new instance of <see cref="InputAction"/> with the specified access tag and settings.
     /// </summary>
     /// <param name="accessTag">The access tag for this action.</param>
-    public InputAction(uint accessTag)
+    /// <param name="settings">The settings for this action.</param>
+    public InputAction(uint accessTag, InputActionSettings settings)
     {
-        ID = ShapeID.NextID;
+        Id = ShapeID.NextID;
         AccessTag = accessTag;
+        Settings = settings;
     }
+    
     /// <summary>
-    /// Initializes a new instance of <see cref="InputAction"/> with a specific access tag and gamepad.
-    /// </summary>
-    /// <param name="accessTag">The access tag for this action.</param>
-    /// <param name="gamepad">The associated gamepad device.</param>
-    public InputAction(uint accessTag, ShapeGamepadDevice gamepad)
-    {
-        ID = ShapeID.NextID;
-        Gamepad = gamepad;
-        AccessTag = accessTag;
-    }
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputAction"/> with input types.
-    /// </summary>
-    /// <param name="inputTypes">The input types for this action.</param>
-    public InputAction(params IInputType[] inputTypes)
-    {
-        ID = ShapeID.NextID;
-        inputs.AddRange(inputTypes);
-    }
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputAction"/> with a specific access tag and input types.
-    /// </summary>
-    /// <param name="accessTag">The access tag for this action.</param>
-    /// <param name="inputTypes">The input types for this action.</param>
-    public InputAction(uint accessTag, params IInputType[] inputTypes)
-    {
-        ID = ShapeID.NextID;
-        AccessTag = accessTag;
-        inputs.AddRange(inputTypes);
-    }
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputAction"/> with a specific access tag, gamepad, and input types.
+    /// Initializes a new instance of <see cref="InputAction"/> with the specified access tag, gamepad, and settings.
     /// </summary>
     /// <param name="accessTag">The access tag for this action.</param>
     /// <param name="gamepad">The associated gamepad device.</param>
-    /// <param name="inputTypes">The input types for this action.</param>
-    public InputAction(uint accessTag, ShapeGamepadDevice gamepad, params IInputType[] inputTypes)
+    /// <param name="settings">The settings for this action.</param>
+    public InputAction(uint accessTag, GamepadDevice gamepad, InputActionSettings settings)
     {
-        ID = ShapeID.NextID;
+        Id = ShapeID.NextID;
+        Gamepad = gamepad;
+        AccessTag = accessTag;
+        Settings = settings;
+    }
+    
+    /// <summary>
+    /// Initializes a new instance of <see cref="InputAction"/> with the specified settings and input types.
+    /// </summary>
+    /// <param name="settings">The settings for this action.</param>
+    /// <param name="inputTypes">The input types to associate with this action.</param>
+    public InputAction(InputActionSettings settings, params IInputType[] inputTypes)
+    {
+        Id = ShapeID.NextID;
+        inputs.AddRange(inputTypes);
+        Settings = settings;
+    }
+    
+    /// <summary>
+    /// Initializes a new instance of <see cref="InputAction"/> with the specified access tag, settings, and input types.
+    /// </summary>
+    /// <param name="accessTag">The access tag for this action.</param>
+    /// <param name="settings">The settings for this action.</param>
+    /// <param name="inputTypes">The input types to associate with this action.</param>
+    public InputAction(uint accessTag, InputActionSettings settings, params IInputType[] inputTypes)
+    {
+        Id = ShapeID.NextID;
+        AccessTag = accessTag;
+        inputs.AddRange(inputTypes);
+        Settings = settings;
+    }
+    
+    /// <summary>
+    /// Initializes a new instance of <see cref="InputAction"/> with the specified access tag, gamepad, settings, and input types.
+    /// </summary>
+    /// <param name="accessTag">The access tag for this action.</param>
+    /// <param name="gamepad">The associated gamepad device.</param>
+    /// <param name="settings">The settings for this action.</param>
+    /// <param name="inputTypes">The input types to associate with this action.</param>
+    public InputAction(uint accessTag, GamepadDevice gamepad, InputActionSettings settings, params IInputType[] inputTypes)
+    {
+        Id = ShapeID.NextID;
         AccessTag = accessTag;
         Gamepad = gamepad;
         inputs.AddRange(inputTypes);
+        Settings = settings;
     }
     #endregion
 
@@ -192,36 +285,115 @@ public class InputAction
     public void ClearState()
     {
         State = new InputState(false, true, 0f, GetGamepadIndex(), InputDeviceType.Keyboard);
+        Toggle = ToggleState.Off;
+        CurrentDeviceType = InputDeviceType.None;
     }
 
     /// <summary>
-    /// Consumes the current input state and marks it as consumed.
+    /// Resets the input action to its initial state, clearing the current input state,
+    /// hold timer, multi-tap timer, and multi-tap count.
     /// </summary>
-    /// <returns>The previous input state before consumption.</returns>
-    public InputState Consume()
+    public void Reset()
     {
+        ClearState();
+        holdTimer = 0f;
+        multiTapTimer = 0f;
+        multiTapCount = 0;
+        UsedInputs.Clear();
+    }
+    /// <summary>
+    /// Consumes the current input <see cref="State"/> and marks it as consumed.
+    /// </summary>
+    /// <param name="valid">True if the state was not already consumed; otherwise, false.</param>
+    /// <returns>The previous input state before consumption.</returns>
+    /// <remarks>
+    /// Useful for <see cref="InputAction"/> instances that may be referenced in multiple places, but should only be consumed once per frame.
+    /// For example, a "menu accept" action might be used in several contexts, but should only trigger in the first context that processes it.
+    /// If your system ensures single-use per frame by design, this method is unnecessary. <see cref="InputActionTree"/>s are helpful for isolating input actions, allowing only one tree to be active at a time.
+    /// </remarks>
+    public InputState Consume(out bool valid)
+    {
+        valid = false;   
+        if (State.Consumed) return State;
+        
+        valid = true;
         var returnValue = State;
         State = State.Consume();
         return returnValue;
     }
-
+    
     /// <summary>
-    /// Updates the input action state based on the current input and time delta.
+    /// Updates the input action state when it is not part of an <see cref="InputActionTree"/>.
+    /// This method should only be used for standalone actions.
+    /// If the action is in a tree, the update is skipped, because the <see cref="InputActionTree"/> will handle the update automatically.
     /// </summary>
     /// <param name="dt">The time delta in seconds.</param>
-    public void Update(float dt)
+    /// <param name="inputDeviceType">Outputs the detected input device type.</param>
+    /// <returns><c>true</c> if the action was updated; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// Because the <see cref="InputAction"/> is not part of an <see cref="InputActionTree"/>,
+    /// the <see cref="IInputType"/> Block system is not used.
+    /// </remarks>
+    public bool Update(float dt, out InputDeviceType inputDeviceType)
     {
+        UsedInputs.Clear();
+        inputDeviceType = InputDeviceType.None;
+        if (IsInTree) return false;
+        return UpdateAction(dt, null, out inputDeviceType);
+    }
+
+    /// <summary>
+    /// Updates the input action state when it is part of an <see cref="InputActionTree"/>.
+    /// Uses the provided blocklist to manage input type blocking for this frame.
+    /// </summary>
+    /// <param name="dt">The time delta in seconds.</param>
+    /// <param name="blocklist">A set of input types that are blocked for this frame.</param>
+    /// <param name="inputDeviceType">Outputs the detected input device type.</param>
+    /// <returns><c>true</c> if the action was updated; otherwise, <c>false</c>.</returns>
+    internal bool UpdateInternal(float dt, HashSet<IInputType>? blocklist, out InputDeviceType inputDeviceType)
+    {
+        UsedInputs.Clear();
+        inputDeviceType = InputDeviceType.None;
+        if (!IsInTree) return false;
+        return UpdateAction(dt, blocklist, out inputDeviceType);
+    }
+    
+    private bool UpdateAction(float dt, HashSet<IInputType>? blocklist, out InputDeviceType inputDeviceType)
+    {
+        inputDeviceType = InputDeviceType.None;
+        if (!Active) return false;
+        if (ShapeInput.Locked && !ShapeInput.HasAccess(AccessTag))
+        {
+            Reset();//Good idea? It does not update anything, therefore, it should be reset.
+            return false;
+        }
+        
         //Accumulate All Input States From All Input Types
         InputState current = new();
         foreach (var input in inputs)
         {
             var inputState = input.GetState(Gamepad);
+            
+            //if it can not be added to the input type block list, it was already used this frame before and therefore it is skipped now.
+            if (blocklist != null && inputState.Down && BlocksInput && !blocklist.Add(input)) continue;
+
+            //if input was used and no input device type was set yet, set it to the input type of this input.
+            if (inputState.Down)
+            {
+                UsedInputs.Add(input);
+                if (inputDeviceType == InputDeviceType.None)
+                {
+                    inputDeviceType = input.GetInputDevice();
+                }
+            }
+            
             current = current.Accumulate(inputState);
         }
-
+        
+        if(inputDeviceType != InputDeviceType.None) CurrentDeviceType = inputDeviceType;
         
         //Multi Tap & Hold System
-        float multiTapF = 0f;
+        var multiTapF = 0f;
         if (multiTapTimer > 0f)
         {
             multiTapTimer -= dt;
@@ -232,16 +404,16 @@ public class InputAction
             }
         }
         
-        float holdF = 0f;
+        var holdF = 0f;
         if (State.Up && current.Down) //pressed
         {
-            if (holdDuration > 0)
+            if (Settings.HoldDuration > 0)
             {
-                holdTimer = holdDuration;
+                holdTimer = Settings.HoldDuration;
             }
-            if (multiTapDuration > 0f && multiTapTarget > 1)
+            if (Settings.MultiTapDuration > 0f && Settings.MultiTapTarget > 1)
             {
-                if (multiTapTimer <= 0f) multiTapTimer = multiTapDuration;
+                if (multiTapTimer <= 0f) multiTapTimer = Settings.MultiTapDuration;
                 multiTapCount++;
             }
 
@@ -264,12 +436,12 @@ public class InputAction
                 holdTimer = 0f;
                 holdF = 1f;
             }
-            else holdF = 1f - (holdTimer / holdDuration);
+            else holdF = 1f - (holdTimer / Settings.HoldDuration);
         }
         
         if (multiTapTimer > 0f)
         {
-            if (multiTapCount >= multiTapTarget)
+            if (multiTapCount >= Settings.MultiTapTarget)
             {
                 multiTapF = 1f;
                 if (holdTimer > 0f)
@@ -278,18 +450,28 @@ public class InputAction
                     holdF = 0f;
                 }
             }
-            else multiTapF = multiTapCount / (float)multiTapTarget;
+            else multiTapF = multiTapCount / (float)Settings.MultiTapTarget;
         }
         
         //Calculate New State
         current = new(current, holdF, multiTapF);
         State = new(State, current);
+
+        //switch between off and on
+        if (State.Pressed)
+        {
+            Toggle = Toggle switch
+            {
+                ToggleState.Off => ToggleState.On,
+                _ => ToggleState.Off
+            };
+        }
         
         //Reset Multitap Count On Successful Multitap
         if (multiTapF >= 1f) multiTapCount = 0;
         
         //Axis Sensitivity & Gravity
-        if (axisSensitivity > 0 || axisGravitiy > 0)
+        if (Settings.AxisSensitivity > 0 || Settings.AxisGravitiy > 0)
         {
             int raw = MathF.Sign(State.AxisRaw);
             float dif = State.AxisRaw - State.Axis;
@@ -299,8 +481,8 @@ public class InputAction
             {
                 var axisChange = 0f;
                 //var snapValue = 0f;
-                float gravity = axisGravitiy <= 0f ? 0f : 1f / axisGravitiy;
-                float sensitivity = axisSensitivity <= 0f ? 0f : 1f / axisSensitivity;
+                float gravity = Settings.AxisGravitiy <= 0f ? 0f : 1f / Settings.AxisGravitiy;
+                float sensitivity = Settings.AxisSensitivity <= 0f ? 0f : 1f / Settings.AxisSensitivity;
                 if (dif is > 1 or < -1) //snap
                 {
                     axisChange += -State.Axis;//snapping to 0
@@ -328,36 +510,32 @@ public class InputAction
                 }
             }
         }
+
+        return true;
     }
 
     /// <summary>
-    /// Copies this instance and all inputs contained. A new ID is generated for the copy.
+    /// Creates a deep of copy of this <see cref="InputAction"/>, including deep copies of all associated <see cref="IInputType"/>s.
+    ///  A new ID is generated for the copy and the <see cref="Parent"/> is not set, as the copy should not be part of the same tree as the original.
     /// </summary>
     /// <returns>A new <see cref="InputAction"/> copy.</returns>
     public InputAction Copy()
     {
-        var copied = GetInputsCopied().ToArray();
-        if (Gamepad == null)
+        var copied = GetInputsCopiedArray();
+        var copy = new InputAction(AccessTag, Settings, copied)
         {
-            var copy = new InputAction(AccessTag, copied)
-            {
-                axisSensitivity = axisSensitivity,
-                axisGravitiy = axisGravitiy,
-                Enabled = this.Enabled
-            };
-            return copy;
-        }
-        else
-        {
-            var copy = new InputAction(AccessTag, Gamepad, copied)
-            {
-                axisSensitivity = axisSensitivity,
-                axisGravitiy = axisGravitiy,
-                Enabled = this.Enabled
-            };
-            return copy;
-        }
-        
+            Gamepad = Gamepad,
+            Active = Active,
+            ExecutionOrder = ExecutionOrder,
+            Title = Title,
+            BlocksInput = BlocksInput,
+            Toggle = Toggle,
+            State = State,
+            holdTimer = holdTimer,
+            multiTapTimer = multiTapTimer,
+            multiTapCount = multiTapCount,
+        };
+        return copy;
     }
 
     /// <summary>
@@ -371,10 +549,10 @@ public class InputAction
         return list;
     }
 
+
     /// <summary>
-    /// Gets a list of all input types associated with this action, as copies.
+    /// Returns a new list containing deep copies of all input types associated with this action.
     /// </summary>
-    /// <returns>A list of copied input types.</returns>
     public List<IInputType> GetInputsCopied()
     {
         var list = new List<IInputType>();
@@ -383,6 +561,20 @@ public class InputAction
             list.Add(input.Copy());
         }
         return list;
+    }
+    
+    /// <summary>
+    /// Returns a new array containing deep copies of all input types associated with this action.
+    /// </summary>
+    public IInputType[] GetInputsCopiedArray()
+    {
+        var arr = new IInputType[inputs.Count];
+        for (int i = 0; i < inputs.Count; i++)
+        {
+            arr[i] = inputs[i].Copy();
+        }
+
+        return arr;
     }
 
     /// <summary>
@@ -403,10 +595,10 @@ public class InputAction
     }
 
     /// <summary>
-    /// Gets a list of copied input types filtered by device type.
+    /// Returns a new list containing deep copies of all input types of the specified device type associated with this action.
     /// </summary>
     /// <param name="filter">The device type to filter by.</param>
-    /// <returns>A list of filtered, copied input types.</returns>
+    /// <returns>A list of copied input types matching the specified device type.</returns>
     public List<IInputType> GetInputsCopied(InputDeviceType filter)
     {
         if (inputs.Count <= 0) return new();
@@ -470,15 +662,16 @@ public class InputAction
     /// </summary>
     /// <param name="filter">The device type to filter by.</param>
     /// <returns>A list of removed input types.</returns>
-    public List<IInputType> RemoveInputs(InputDeviceType filter)
+    public List<IInputType>? RemoveInputs(InputDeviceType filter)
     {
-        if (inputs.Count <= 0) return new();
-        var removed = new List<IInputType>();
+        if (inputs.Count <= 0) return null;
+        List<IInputType>? removed = null;
         for (int i = inputs.Count - 1; i >= 0; i--)
         {
             var input = inputs[i];
             if (input.GetInputDevice() == filter)
             {
+                removed ??= [];
                 removed.Add(input);
                 inputs.RemoveAt(i);
             }
@@ -519,7 +712,6 @@ public class InputAction
 
         return false;
     }
-
     
     /// <summary>
     /// Generate a description for this action based on the parameters. Layout-> "Title: [type a][type b][type c] ..."
@@ -670,176 +862,9 @@ public class InputAction
 
     }
     #endregion
-
+    
     #region Static
 
-    #region Members
-
-    /// <summary>
-    /// This access tag grants access regardless of the input system lock.
-    /// </summary>
-    public static readonly uint AllAccessTag = NextTag;
-    /// <summary>
-    /// The default access tag for actions.
-    /// </summary>
-    public static readonly uint DefaultAccessTag = NextTag;
-    /// <summary>
-    /// Indicates if the input system is currently locked.
-    /// </summary>
-    public static bool Locked { get; private set; }
-    private static BitFlag lockWhitelist;
-    private static BitFlag lockBlacklist;
-    private static uint tagPowerCounter = 1;
-    /// <summary>
-    /// Gets the next available access tag.
-    /// </summary>
-    public static uint NextTag => BitFlag.GetFlagUint(tagPowerCounter++);
-    #endregion
-    
-    
-    #region Lock System
-    /// <summary>
-    /// Locks the input system, clearing all whitelists and blacklists.
-    /// <remarks>
-    /// Only <see cref="InputAction"/> with <see cref="AllAccessTag"/> will be able to trigger.
-    /// </remarks>
-    /// </summary>
-    public static void Lock()
-    {
-        Locked = true;
-        lockWhitelist = BitFlag.Clear();
-        lockBlacklist = BitFlag.Clear();
-    }
-
-    /// <summary>
-    /// Locks the input system with a specific whitelist and blacklist.
-    /// <remarks>
-    /// All <see cref="InputAction"/> with a tag contained in the whitelist will be able to trigger.
-    /// All <see cref="InputAction"/> with a tag contained in the blacklist will not be able to trigger.
-    /// </remarks>
-    /// </summary>
-    /// <param name="whitelist">The whitelist of access tags.</param>
-    /// <param name="blacklist">The blacklist of access tags.</param>
-    public static void Lock(BitFlag whitelist, BitFlag blacklist)
-    {
-        Locked = true;
-        lockWhitelist = whitelist;
-        lockBlacklist = blacklist;
-        // lockWhitelist.Clear();
-        // lockBlacklist.Clear();
-        // if(whitelist.Length > 0) lockWhitelist.AddRange(whitelist);
-        // if(blacklist.Length > 0) lockWhitelist.AddRange(blacklist);
-    }
-    /// <summary>
-    /// Locks the input system with a specific whitelist.
-    /// <remarks>
-    /// All <see cref="InputAction"/> with a tag contained in the whitelist will be able to trigger.
-    /// </remarks>
-    /// </summary>
-    /// <param name="whitelist">The whitelist of access tags.</param>
-    public static void LockWhitelist(BitFlag whitelist)
-    {
-        Locked = true;
-        lockWhitelist = whitelist;
-        lockBlacklist = BitFlag.Clear();
-        // lockWhitelist.Clear();
-        // lockBlacklist.Clear();
-        // if(whitelist.Length > 0) lockWhitelist.AddRange(whitelist);
-
-    }
-    /// <summary>
-    /// Locks the input system with a specific blacklist.
-    /// <remarks>
-    /// All <see cref="InputAction"/> with a tag contained in the blacklist will not be able to trigger.
-    /// </remarks>
-    /// </summary>
-    /// <param name="blacklist">The blacklist of access tags.</param>
-    public static void LockBlacklist(BitFlag blacklist)
-    {
-        Locked = true;
-        lockBlacklist = blacklist;
-        lockWhitelist = BitFlag.Clear();
-    }
-    /// <summary>
-    /// Unlocks the input system, clearing all whitelists and blacklists.
-    /// </summary>
-    public static void Unlock()
-    {
-        Locked = false;
-        lockWhitelist = BitFlag.Clear();
-        lockBlacklist = BitFlag.Clear();
-    }
-    /// <summary>
-    /// Determines if the specified access tag has access.
-    /// <remarks>
-    /// <see cref="AllAccessTag"/> always returns true (has access).
-    /// <list type="bullet">
-    /// <item>If <c>tag</c> is contained in the current blacklist, this function will return false (no access).</item>
-    /// <item>If <c>tag</c> is not contained in the current blacklist and <c>tag</c> is contained in the current whitelist,
-    /// or the current whitelist is empty, this function will return true (has access).</item>
-    /// </list>
-    /// </remarks>
-    /// </summary>
-    /// <param name="tag">The access tag to check.</param>
-    /// <returns>True if access is granted; otherwise, false.</returns>
-    public static bool HasAccess(uint tag)
-    {
-        if (tag == AllAccessTag) return true;
-        return (lockWhitelist.IsEmpty() || lockWhitelist.Has(tag)) && !lockBlacklist.Has(tag);
-    }
-
-    /// <summary>
-    /// Determines if input is available for the specified access tag.
-    /// <remarks>
-    /// Always returns true if <see cref="Locked"/> is false.
-    /// Otherwise returns <see cref="HasAccess(uint)"/> with the <c>tag</c> parameter.
-    /// </remarks>
-    /// </summary>
-    /// <param name="tag">The access tag to check.</param>
-    /// <returns>True if input is available; otherwise, false.</returns>
-    public static bool IsInputAvailable(uint tag)
-    {
-        if (!Locked) return true;
-        return HasAccess(tag);
-    }
-
-    /// <summary>
-    /// Determines if the specified action has access.
-    /// </summary>
-    /// <param name="action">The input action to check.</param>
-    /// <returns>True if access is granted; otherwise, false.</returns>
-    public static bool HasAccess(InputAction action) => HasAccess(action.AccessTag);
-    #endregion
-    
-    #region Input Actions
-    /// <summary>
-    /// Updates a set of input actions with the specified gamepad and time delta.
-    /// </summary>
-    /// <param name="dt">The time delta in seconds.</param>
-    /// <param name="gamepad">The gamepad device to use.</param>
-    /// <param name="actions">The input actions to update.</param>
-    public static void UpdateActions(float dt, ShapeGamepadDevice? gamepad, params InputAction[] actions)
-    {
-        foreach (var action in actions)
-        {
-            action.Gamepad = gamepad;
-            action.Update(dt);
-        }
-    }
-    /// <summary>
-    /// Updates a list of input actions with the specified gamepad and time delta.
-    /// </summary>
-    /// <param name="dt">The time delta in seconds.</param>
-    /// <param name="gamepad">The gamepad device to use.</param>
-    /// <param name="actions">The input actions to update.</param>
-    public static void UpdateActions(float dt, ShapeGamepadDevice? gamepad, List<InputAction> actions)
-    {
-        foreach (var action in actions)
-        {
-            action.Gamepad = gamepad;
-            action.Update(dt);
-        }
-    }
     /// <summary>
     /// Gets descriptions for a list of input actions.
     /// </summary>
@@ -854,12 +879,13 @@ public class InputAction
         foreach (var action in actions)
         {
             var description = action.GetInputTypeDescription(inputDeviceType, shorthand, typesPerActionCount, true);
-            
+
             final.Add(description);
         }
 
         return final;
     }
+
     /// <summary>
     /// Gets descriptions for a set of input actions.
     /// </summary>
@@ -874,7 +900,7 @@ public class InputAction
         foreach (var action in actions)
         {
             var description = action.GetInputTypeDescription(inputDeviceType, shorthand, typesPerActionCount, true);
-            
+
             final.Add(description);
         }
 
@@ -882,113 +908,139 @@ public class InputAction
     }
 
     #endregion
-   
-    #region Basic
+
     /// <summary>
-    /// Gets the input state for a keyboard button.
+    /// Compares this <see cref="InputAction"/> to another for sorting purposes.
+    /// <para>
+    /// First compares <see cref="ExecutionOrder"/>; if equal, compares <see cref="Id"/>.
+    /// </para>
     /// </summary>
-    /// <param name="button">The keyboard button.</param>
-    /// <param name="accessTag">The access tag.</param>
-    /// <returns>The input state.</returns>
-    public static InputState GetState(ShapeKeyboardButton button, uint accessTag)
+    /// <param name="other">The other <see cref="InputAction"/> to compare to.</param>
+    /// <returns>
+    /// -1 if this instance precedes <paramref name="other"/>; 1 if it follows; 0 if equal.
+    /// </returns>
+    public int CompareTo(InputAction? other)
     {
-        if (Locked && !HasAccess(accessTag)) return new();
-        return ShapeInput.KeyboardDevice.CreateInputState(button);// InputTypeKeyboardButton.GetState(button);
-    }
-    /// <summary>
-    /// Gets the input state for a mouse button.
-    /// </summary>
-    /// <param name="button">The mouse button.</param>
-    /// <param name="accessTag">The access tag.</param>
-    /// <returns>The input state.</returns>
-    public static InputState GetState(ShapeMouseButton button, uint accessTag)
-    {
-        if (Locked && !HasAccess(accessTag)) return new();
-        return ShapeInput.MouseDevice.CreateInputState(button); // InputTypeMouseButton.GetState(button);
-    }
-    /// <summary>
-    /// Gets the input state for a gamepad button.
-    /// </summary>
-    /// <param name="button">The gamepad button.</param>
-    /// <param name="accessTag">The access tag.</param>
-    /// <param name="gamepadIndex">The gamepad index.</param>
-    /// <param name="deadzone">The deadzone threshold.</param>
-    /// <returns>The input state.</returns>
-    public static InputState GetState(ShapeGamepadButton button, uint accessTag, int gamepadIndex, float deadzone = 0.2f)
-    {
-        if (Locked && !HasAccess(accessTag)) return new();
-        var gamepad = ShapeInput.GamepadDeviceManager.GetGamepad(gamepadIndex);
-        return gamepad == null ? new() : gamepad.CreateInputState(button, deadzone); //  InputTypeGamepadButton.GetState(button, gamepad, deadzone);
-    }
-    /// <summary>
-    /// Gets the input state for a keyboard button axis.
-    /// </summary>
-    /// <param name="neg">The negative direction button.</param>
-    /// <param name="pos">The positive direction button.</param>
-    /// <param name="accessTag">The access tag.</param>
-    /// <returns>The input state.</returns>
-    public static InputState GetState(ShapeKeyboardButton neg, ShapeKeyboardButton pos, uint accessTag)
-    {
-        if (Locked && !HasAccess(accessTag)) return new();
-        return ShapeInput.KeyboardDevice.CreateInputState(neg, pos); // InputTypeKeyboardButtonAxis.GetState(neg, pos);
-    }
-    /// <summary>
-    /// Gets the input state for a mouse button axis.
-    /// </summary>
-    /// <param name="neg">The negative direction button.</param>
-    /// <param name="pos">The positive direction button.</param>
-    /// <param name="accessTag">The access tag.</param>
-    /// <returns>The input state.</returns>
-    public static InputState GetState(ShapeMouseButton neg, ShapeMouseButton pos, uint accessTag)
-    {
-        if (Locked && !HasAccess(accessTag)) return new();
-        return ShapeInput.MouseDevice.CreateInputState(neg, pos); // InputTypeMouseButtonAxis.GetState(neg, pos);
-    }
-    /// <summary>
-    /// Gets the input state for a gamepad button axis.
-    /// </summary>
-    /// <param name="neg">The negative direction button.</param>
-    /// <param name="pos">The positive direction button.</param>
-    /// <param name="accessTag">The access tag.</param>
-    /// <param name="gamepadIndex">The gamepad index.</param>
-    /// <param name="deadzone">The deadzone threshold.</param>
-    /// <returns>The input state.</returns>
-    public static InputState GetState(ShapeGamepadButton neg, ShapeGamepadButton pos, uint accessTag, int gamepadIndex, float deadzone = 0.2f)
-    {
-        if (Locked && !HasAccess(accessTag)) return new();
-        var gamepad = ShapeInput.GamepadDeviceManager.GetGamepad(gamepadIndex);
-        return gamepad == null ? new() : gamepad.CreateInputState(neg, pos, deadzone);
-        // return InputTypeGamepadButtonAxis.GetState(neg, pos, gamepad, deadzone);
-    }
-    /// <summary>
-    /// Gets the input state for a mouse wheel axis.
-    /// </summary>
-    /// <param name="axis">The mouse wheel axis.</param>
-    /// <param name="accessTag">The access tag.</param>
-    /// <param name="deadzone">The deadzone threshold.</param>
-    /// <returns>The input state.</returns>
-    public static InputState GetState(ShapeMouseWheelAxis axis, uint accessTag, float deadzone = 1f)
-    {
-        if (Locked && !HasAccess(accessTag)) return new();
-        return ShapeInput.MouseDevice.CreateInputState(axis, deadzone); // InputTypeMouseWheelAxis.GetState(axis);
-    }
-    /// <summary>
-    /// Gets the input state for a gamepad axis.
-    /// </summary>
-    /// <param name="axis">The gamepad axis.</param>
-    /// <param name="accessTag">The access tag.</param>
-    /// <param name="gamepadIndex">The gamepad index.</param>
-    /// <param name="deadzone">The deadzone threshold.</param>
-    /// <returns>The input state.</returns>
-    public static InputState GetState(ShapeGamepadAxis axis, uint accessTag, int gamepadIndex, float deadzone = 0.2f)
-    {
-        if (Locked && !HasAccess(accessTag)) return new();
-        var gamepad = ShapeInput.GamepadDeviceManager.GetGamepad(gamepadIndex);
-        return gamepad == null ? new() : gamepad.CreateInputState(axis, deadzone);
-        // return InputTypeGamepadAxis.GetState(axis, gamepad, deadzone);
+        if (other is null) return 1;
+        if (ReferenceEquals(this, other)) return 0;
+        int executionOrderComparison = ExecutionOrder.CompareTo(other.ExecutionOrder);
+        if (executionOrderComparison != 0) return executionOrderComparison;
+        return Id.CompareTo(other.Id);
     }
     
-    #endregion
-    
-    #endregion
+    /// <summary>
+    /// Determines whether the specified <see cref="InputAction"/> is equal to the current <see cref="InputAction"/>.
+    /// Compares the <see cref="Settings"/> and the sequence of input types.
+    /// </summary>
+    /// <param name="other">The <see cref="InputAction"/> to compare with the current instance.</param>
+    /// <returns><c>true</c> if the specified <see cref="InputAction"/> is equal to the current instance; otherwise, <c>false</c>.</returns>
+    public bool Equals(InputAction? other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return 
+            Settings.Equals(other.Settings) &&
+            inputs.SequenceEqual(other.inputs);
+    }
+
+    /// <summary>
+    /// Determines whether the specified object is equal to the current <see cref="InputAction"/>.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current instance.</param>
+    /// <returns><c>true</c> if the specified object is equal to the current instance; otherwise, <c>false</c>.</returns>
+    public override bool Equals(object? obj)
+    {
+        if (obj is null) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        if (obj.GetType() != GetType()) return false;
+        return Equals((InputAction)obj);
+    }
+
+    /// <summary>
+    /// Serves as the default hash function for <see cref="InputAction"/>.
+    /// Combines the hash codes of the input types and settings.
+    /// </summary>
+    /// <returns>A hash code for the current object.</returns>
+    public override int GetHashCode()
+    {
+        var hashCode = new HashCode();
+        hashCode.Add(inputs);
+        hashCode.Add(Settings);
+        return hashCode.ToHashCode();
+    }
 }
+
+
+/* Idea for later
+//Press -> triggered on the first frame the input is pressed down.
+//Hold -> triggered every frame the input is held down, until released.
+//Release -> triggered on the first frame the input is released.
+//Long Press -> triggered when the input is held down (pressed) for longer than the long press duration. (current hold implementation)
+//Long Release -> triggered when the input is released after the long release duration.
+//Tap -> triggered when the input is pressed and released within tap duration
+//Double Tap -> triggered when the input is pressed and released twice within the double tap duration.
+//Multi Tap -> triggered when the input is pressed and released multi tap count times within the multi tap duration.
+
+//This system could potentionally replace current system -> new implementation would have to be simpler and less complex than the current one.
+public enum TypeState //!!! better name
+{
+    None = 0,
+    InProgress = 1,
+    Completed = 2,
+    Failed = 3
+}
+
+//TODO: could handle everyting, and it is just updated in input action and passed to InputState?
+//Update(), TypeState CurrentState, Reset();  if failed or completed it will be reset next frame?
+public readonly struct InputActionTypeSettings//!!! better name
+{
+    public readonly InputActionType Type;
+    public readonly float Duration;
+    public readonly int TargetCount;
+    
+    public InputActionTypeSettings()
+    {
+        Type = InputActionType.None;
+        Duration = -1f;
+        TargetCount = -1;
+    }
+
+    private InputActionTypeSettings(InputActionType type, float duration, int targetCount)
+    {
+        Type = type;
+        Duration = duration;
+        TargetCount = targetCount;
+    }
+    
+    public static InputActionTypeSettings LongPress(float duration)
+    {
+        return new InputActionTypeSettings(InputActionType.LongPress, duration, -1);
+    }
+    public static InputActionTypeSettings LongRelease(float duration)
+    {
+        return new InputActionTypeSettings(InputActionType.LongRelease, duration, -1);
+    }
+    public static InputActionTypeSettings Tap(float duration)
+    {
+        return new InputActionTypeSettings(InputActionType.Tap, duration, -1);
+    }
+    public static InputActionTypeSettings DoubleTap(float duration)
+    {
+        return new InputActionTypeSettings(InputActionType.MultiTap, duration, 2);
+    }
+    public static InputActionTypeSettings MultiTap(float duration, int targetCount)
+    {
+        return new InputActionTypeSettings(InputActionType.MultiTap, duration, targetCount);
+    }
+
+}
+
+public enum InputActionType //!!! better name
+{ 
+    None = 0,
+    LongPress = 1,
+    LongRelease = 2,
+    Tap = 3,
+    MultiTap = 4
+}*/
+

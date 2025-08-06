@@ -6,8 +6,6 @@ namespace ShapeEngine.Input;
 /// </summary>
 public enum ShapeKeyboardButton
 {
-    /// <summary>No key or unassigned.</summary>
-    NONE = -1,
     /// <summary>Single quote / apostrophe key (').</summary>
     APOSTROPHE = 39,
     /// <summary>Comma (,).</summary>

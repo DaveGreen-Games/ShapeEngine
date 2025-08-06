@@ -10,7 +10,7 @@ namespace Examples.Scenes.ExampleScenes.EndlessSpaceExampleSource;
 
 internal class Bullet : CollisionObject
 {
-    public static uint CollisionLayer = BitFlag.GetFlagUint(4);
+    public static uint CollisionLayer = BitFlag.GetPowerOfTwo(4);
     private CircleCollider collider;
 
     private float effectTimer = 0f;

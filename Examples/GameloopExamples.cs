@@ -103,7 +103,7 @@ namespace Examples
         private readonly uint alphaCircleID = ShapeID.NextID;
         private uint currentShaderID;
         
-        public ShapeGamepadDevice? CurGamepad = null;
+        public GamepadDevice? CurGamepad = null;
 
         // public RectContainerMain UIRects = new("main");
 
@@ -111,20 +111,20 @@ namespace Examples
 
         public bool DrawCursor = true;
 
-        public readonly uint UIAccessTag = InputAction.NextTag; // BitFlag.GetFlagUint(2);
-        public readonly uint GameloopAccessTag = InputAction.NextTag; // BitFlag.GetFlagUint(3);
-        public readonly uint SceneAccessTag =  InputAction.NextTag; //BitFlag.GetFlagUint(4);
-        public readonly uint GamepadMouseMovementTag = InputAction.NextTag; // BitFlag.GetFlagUint(5);
-        public readonly uint KeyboardMouseMovementTag =  InputAction.NextTag; //BitFlag.GetFlagUint(6);
+        public readonly uint UIAccessTag = ShapeInput.NextAccessTag; // BitFlag.GetFlagUint(2);
+        public readonly uint GameloopAccessTag = ShapeInput.NextAccessTag; // BitFlag.GetFlagUint(3);
+        public readonly uint SceneAccessTag =  ShapeInput.NextAccessTag; //BitFlag.GetFlagUint(4);
+        public readonly uint GamepadMouseMovementTag = ShapeInput.NextAccessTag; // BitFlag.GetFlagUint(5);
+        public readonly uint KeyboardMouseMovementTag =  ShapeInput.NextAccessTag; //BitFlag.GetFlagUint(6);
         //ui
        
-        public static IModifierKey  ModifierKeyGamepad = new ModifierKeyGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, false);
-        public static IModifierKey  ModifierKeyGamepadReversed = new ModifierKeyGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, true);
-        public static IModifierKey  ModifierKeyGamepad2 = new ModifierKeyGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_BOTTOM, false);
-        public static IModifierKey  ModifierKeyGamepad2Reversed = new ModifierKeyGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_BOTTOM, true);
-        public static IModifierKey  ModifierKeyKeyboard = new ModifierKeyKeyboardButton(ShapeKeyboardButton.LEFT_SHIFT, false);
+        public static IModifierKey  ModifierKeyGamepad = new ModifierKeyGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM);
+        public static IModifierKey  ModifierKeyGamepadReversed = new ModifierKeyGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, 0.15f, 0.15f, true);
+        public static IModifierKey  ModifierKeyGamepad2 = new ModifierKeyGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_BOTTOM);
+        public static IModifierKey  ModifierKeyGamepad2Reversed = new ModifierKeyGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_BOTTOM, 0.15f, 0.15f, true);
+        public static IModifierKey  ModifierKeyKeyboard = new ModifierKeyKeyboardButton(ShapeKeyboardButton.LEFT_SHIFT);
         public static IModifierKey  ModifierKeyKeyboardReversed = new ModifierKeyKeyboardButton(ShapeKeyboardButton.LEFT_SHIFT, true);
-        public static IModifierKey  ModifierKeyMouse = new ModifierKeyKeyboardButton(ShapeKeyboardButton.LEFT_SHIFT, false);
+        public static IModifierKey  ModifierKeyMouse = new ModifierKeyKeyboardButton(ShapeKeyboardButton.LEFT_SHIFT);
         public static IModifierKey  ModifierKeyMouseReversed = new ModifierKeyKeyboardButton(ShapeKeyboardButton.LEFT_SHIFT, true);
         
         public InputAction InputActionUICancel   {get; private set;}
@@ -156,7 +156,8 @@ namespace Examples
         public InputAction InputActionCyclePalette {get; private set;}
         public InputAction InputActionReset {get; private set;}
 
-        private readonly List<InputAction> inputActions = new();
+        // private readonly List<InputAction> inputActions = nw();
+        private readonly InputActionTree inputActionTree = [];
         
         private FPSLabel fpsLabel;// = new(GetFontDefault(), ExampleScene.ColorHighlight3);
 
@@ -250,7 +251,12 @@ namespace Examples
             mainBottomRight.AddChild(mainBottomRightBottom);
 
             
-
+            var mouseSettings = new InputDeviceUsageDetectionSettings.MouseSettings(25, 3, 2, 0.5f, 1f, 0.25f);
+            var keyboardSettings = new InputDeviceUsageDetectionSettings.KeyboardSettings(2, 0.5f, 1f, 2f);
+            // var keyboardSettings = new InputDeviceUsageDetectionSettings.KeyboardSettings(2, 0.5f, 1f, 2f, [ShapeKeyboardButton.LEFT_SHIFT]);
+            var gamepadSettings = new InputDeviceUsageDetectionSettings.GamepadSettings();
+            var settings = new InputDeviceUsageDetectionSettings(mouseSettings, keyboardSettings, gamepadSettings);
+            ShapeInput.ApplyInputDeviceChangeSettings(settings);
         }
 
         protected override void LoadContent()
@@ -364,14 +370,14 @@ namespace Examples
         {
             if (!MouseControlEnabled) return mousePos;
             
-            //&& ShapeInput.GamepadDeviceManager.LastUsedGamepad.IsDown(ShapeGamepadAxis.RIGHT_TRIGGER, 0.1f)
-            if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Gamepad && ShapeInput.GamepadDeviceManager.LastUsedGamepad != null)
+            if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Gamepad && ShapeInput.ActiveGamepadDeviceManager.LastUsedGamepad != null && 
+                ShapeInput.ActiveGamepadDeviceManager.LastUsedGamepad.IsDown(ShapeGamepadTriggerAxis.RIGHT))
             {
                 mouseMovementTimer = 0f;
                 float speed = screenArea.Size.Max() * 0.75f * dt;
-                int gamepad = ShapeInput.GamepadDeviceManager.LastUsedGamepad.Index;
-                var x = InputAction.GetState(ShapeGamepadAxis.LEFT_X, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
-                var y = InputAction.GetState(ShapeGamepadAxis.LEFT_Y, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
+                int gamepad = ShapeInput.ActiveGamepadDeviceManager.LastUsedGamepad.Index;
+                var x = ShapeInput.CreateInputState(ShapeGamepadJoyAxis.LEFT_X, GamepadMouseMovementTag, gamepad, 0.2f).AxisRaw;
+                var y = ShapeInput.CreateInputState(ShapeGamepadJoyAxis.LEFT_Y, GamepadMouseMovementTag, gamepad, 0.2f).AxisRaw;
 
                 var movement = new Vector2(x, y);
                 float l = movement.Length();
@@ -388,8 +394,8 @@ namespace Examples
                 float t = mouseMovementTimer / mouseMovementDuration; 
                 float f = ShapeMath.LerpFloat(0.2f, 1f, t);
                 float speed = screenArea.Size.Max() * 0.5f * dt * f;
-                var x = InputAction.GetState(ShapeKeyboardButton.LEFT, ShapeKeyboardButton.RIGHT, KeyboardMouseMovementTag).AxisRaw;
-                var y = InputAction.GetState(ShapeKeyboardButton.UP, ShapeKeyboardButton.DOWN, KeyboardMouseMovementTag).AxisRaw;
+                var x = ShapeInput.CreateInputState(ShapeKeyboardButton.LEFT, ShapeKeyboardButton.RIGHT, KeyboardMouseMovementTag).AxisRaw;
+                var y = ShapeInput.CreateInputState(ShapeKeyboardButton.UP, ShapeKeyboardButton.DOWN, KeyboardMouseMovementTag).AxisRaw;
 
                 var movement = new Vector2(x, y);
                 if (movement.LengthSquared() <= 0f) mouseMovementTimer = 0f;
@@ -414,14 +420,15 @@ namespace Examples
         {
             SetupInput();
 
-            CurGamepad = ShapeInput.GamepadDeviceManager.RequestGamepad(0); // Input.RequestGamepad(0);
-            if (CurGamepad != null)
-            {
-                foreach (var action in inputActions)
-                {
-                    action.Gamepad = CurGamepad;
-                }
-            }
+            CurGamepad = ShapeInput.ActiveGamepadDeviceManager.RequestGamepad(0);
+            inputActionTree.CurrentGamepad = CurGamepad;
+            // if (CurGamepad != null)
+            // {
+                //foreach (var action in inputActions)
+                //{
+                //    action.Gamepad = CurGamepad;
+                //}
+            // }
             
             mainScene = new MainScene();
             GoToScene(mainScene);
@@ -460,31 +467,31 @@ namespace Examples
             }
         }
 
-        protected override void OnGamepadConnected(ShapeGamepadDevice gamepad)
+        protected override void OnGamepadConnected(GamepadDevice gamepad)
         {
             if (CurGamepad != null) return;
-            CurGamepad = ShapeInput.GamepadDeviceManager.RequestGamepad(0);
-            
-            if (CurGamepad != null)
-            {
-                foreach (var action in inputActions)
-                {
-                    action.Gamepad = CurGamepad;
-                }
-            }
+            CurGamepad = ShapeInput.ActiveGamepadDeviceManager.RequestGamepad(0);
+            inputActionTree.CurrentGamepad = CurGamepad;
+            // if (CurGamepad != null)
+            // {
+                // foreach (var action in inputActions)
+                // {
+                //     action.Gamepad = CurGamepad;
+                // }
+            // }
         }
 
-        protected override void OnGamepadDisconnected(ShapeGamepadDevice gamepad)
+        protected override void OnGamepadDisconnected(GamepadDevice gamepad)
         {
             if (CurGamepad == null) return;
             if (CurGamepad.Index == gamepad.Index)
             {
-                CurGamepad = ShapeInput.GamepadDeviceManager.RequestGamepad(0);
-
-                foreach (var action in inputActions)
-                {
-                    action.Gamepad = CurGamepad;
-                }
+                CurGamepad = ShapeInput.ActiveGamepadDeviceManager.RequestGamepad(0);
+                inputActionTree.CurrentGamepad = CurGamepad;
+                // foreach (var action in inputActions)
+                // {
+                //     action.Gamepad = CurGamepad;
+                // }
             }
         }
 
@@ -561,27 +568,29 @@ namespace Examples
             UIRects.UpdateRect(ui.Area);
             UIRects.Update(time.Delta, ui.MousePos);
 
-            InputAction.UpdateActions(time.Delta, CurGamepad, inputActions);
+            // InputAction.UpdateActions(time.Delta, CurGamepad, inputActions);
+            
+            inputActionTree.Update(time.Delta);
 
-            var fullscreenState = InputActionFullscreen.Consume();
+            var fullscreenState = InputActionFullscreen.Consume(out _);
             if (fullscreenState is { Consumed: false, Pressed: true })
             {
                 GAMELOOP.Window.ToggleBorderlessFullscreen();
             }
 
-            var maximizeState = InputActionMaximize.Consume();
+            var maximizeState = InputActionMaximize.Consume(out _);
             if (maximizeState is { Consumed: false, Pressed: true })
             {
                 GAMELOOP.Window.ToggleMaximizeWindow();
             }
 
-            var nextMonitorState = InputActionNextMonitor.Consume();
+            var nextMonitorState = InputActionNextMonitor.Consume(out _);
             if (nextMonitorState is { Consumed: false, Pressed: true })
             {
                Window.NextMonitor();
             }
 
-            var screenModeState = GAMELOOP.InputActionCycleScreenMode.Consume();
+            var screenModeState = GAMELOOP.InputActionCycleScreenMode.Consume(out _);
             if (screenModeState is { Consumed: false, Pressed: true })
             {
                 NextGameTexture();
@@ -592,7 +601,7 @@ namespace Examples
             //     NextGameTexture();
             // }
 
-            if (InputAction.IsInputAvailable(GameloopAccessTag))
+            if (ShapeInput.IsInputAvailable(GameloopAccessTag))
             {
                 int keypadNumber = -1;
                 if (ShapeKeyboardButton.KP_1.GetInputState().Pressed) keypadNumber = 1;
@@ -617,7 +626,7 @@ namespace Examples
 
             
             
-            var paletteState = GAMELOOP.InputActionCyclePalette.Consume();
+            var paletteState = GAMELOOP.InputActionCyclePalette.Consume(out _);
             if (paletteState is { Consumed: false, Pressed: true })
             {
                 Colors.NextColorscheme();
@@ -633,7 +642,7 @@ namespace Examples
             }
             if (ScreenShaders != null)
             {
-                var cycleShaders = InputActionCycleShaders.Consume();
+                var cycleShaders = InputActionCycleShaders.Consume(out _);
                 if (cycleShaders is { Consumed: false, Pressed: true })
                 {
                     var currentShader = ScreenShaders.Get(currentShaderID);
@@ -673,7 +682,7 @@ namespace Examples
         public void DrawFpsBox()
         {
             var fpsRect = UIRects.GetRect("top right top");
-            fpsLabel.Draw(fpsRect, new(1f, 0f), 1f);
+            fpsLabel.Draw(fpsRect, new(1f, 0f));
         }
 
         public int GetFontCount() { return fonts.Count; }
@@ -746,125 +755,121 @@ namespace Examples
         
         private void SetupInput()
         {
-            // ModifierKeyGamepad = new ModifierKeyGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, false);
-            // ModifierKeyGamepadReversed = new ModifierKeyGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, true);
-            // ModifierKeyKeyboard = new ModifierKeyKeyboardButton(ShapeKeyboardButton.LEFT_SHIFT, false);
-            // ModifierKeyKeyboardReversed = new ModifierKeyKeyboardButton(ShapeKeyboardButton.LEFT_SHIFT, true);
-            // ModifierKeyMouse = new ModifierKeyKeyboardButton(ShapeKeyboardButton.LEFT_SHIFT, false);
-            // ModifierKeyMouseReversed = new ModifierKeyKeyboardButton(ShapeKeyboardButton.LEFT_SHIFT, true);
+            InputActionSettings defaultSettings = new();
             
-            //gameloop
             var cancelKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ESCAPE);
             var cancelGB = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_LEFT);
-            InputActionUICancel= new(InputAction.AllAccessTag, cancelKB, cancelGB);
+            InputActionUICancel= new(ShapeInput.AllAccessTag, defaultSettings, cancelKB, cancelGB);
             
           
             var fullscreenKB = new InputTypeKeyboardButton(ShapeKeyboardButton.F);
             var fullscreenGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_THUMB);
-            InputActionFullscreen = new(GameloopAccessTag, fullscreenKB, fullscreenGB);
+            InputActionFullscreen = new(GameloopAccessTag, defaultSettings,fullscreenKB, fullscreenGB);
             
             var maximizeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.M);
             // var maximizeGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_THUMB);
-            InputActionMaximize = new(GameloopAccessTag, maximizeKB);
+            InputActionMaximize = new(GameloopAccessTag, defaultSettings,maximizeKB);
             
             var minimizeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.N);
-            InputActionMinimize = new(GameloopAccessTag, minimizeKB);
+            InputActionMinimize = new(GameloopAccessTag, defaultSettings,minimizeKB);
             
             var nextMonitorKB = new InputTypeKeyboardButton(ShapeKeyboardButton.B);
             //var nextMonitorGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_THUMB);
-            InputActionNextMonitor = new(GameloopAccessTag, nextMonitorKB);
+            InputActionNextMonitor = new(GameloopAccessTag, defaultSettings,nextMonitorKB);
 
             var cycleShaderKB = new InputTypeKeyboardButton(ShapeKeyboardButton.J);
-            InputActionCycleShaders = new InputAction(GameloopAccessTag, cycleShaderKB);
+            InputActionCycleShaders = new InputAction(GameloopAccessTag, defaultSettings,cycleShaderKB);
             
             var cycleScreenMode = new InputTypeKeyboardButton(ShapeKeyboardButton.H);
-            InputActionCycleScreenMode = new InputAction(GameloopAccessTag, cycleScreenMode);
+            InputActionCycleScreenMode = new InputAction(GameloopAccessTag, defaultSettings,cycleScreenMode);
             
             var paletteKb = new InputTypeKeyboardButton(ShapeKeyboardButton.P);
             var paletteGp = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_RIGHT);
             var paletteMb = new InputTypeMouseButton(ShapeMouseButton.SIDE);
-            InputActionCyclePalette = new(SceneAccessTag, paletteKb, paletteGp, paletteMb);
+            InputActionCyclePalette = new(SceneAccessTag, defaultSettings,paletteKb, paletteGp, paletteMb);
             
             //main scene
             var backKB = new InputTypeKeyboardButton(ShapeKeyboardButton.TAB);
             var backGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
             var backMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
-            InputActionUIBack = new(UIAccessTag, backKB, backGB, backMB);
+            InputActionUIBack = new(UIAccessTag, defaultSettings,backKB, backGB, backMB);
 
             var acceptKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
             var acceptKB2 = new InputTypeKeyboardButton(ShapeKeyboardButton.ENTER);
             var acceptGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
-            InputActionUIAccept = new(UIAccessTag, acceptKB, acceptKB2, acceptGB);
+            InputActionUIAccept = new(UIAccessTag, defaultSettings,acceptKB, acceptKB2, acceptGB);
             
             var acceptMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
-            InputActionUIAcceptMouse = new(UIAccessTag, acceptMB);
+            InputActionUIAcceptMouse = new(UIAccessTag, defaultSettings,acceptMB);
 
+            var modifierKeySetGamepadReversed = new ModifierKeySet(ModifierKeyOperator.Or, ModifierKeyGamepadReversed);
+            var modifierKeySetGamepad = new ModifierKeySet(ModifierKeyOperator.Or, ModifierKeyGamepad);
             var leftKB = new InputTypeKeyboardButton(ShapeKeyboardButton.A);
-            var leftGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT, 0.1f, ModifierKeyOperator.Or, ModifierKeyGamepadReversed);
-            InputActionUILeft = new(UIAccessTag, leftKB, leftGB);
+            var leftGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT, 0.1f, modifierKeySetGamepadReversed);
+            InputActionUILeft = new(UIAccessTag, defaultSettings,leftKB, leftGB);
             
             var rightKB = new InputTypeKeyboardButton(ShapeKeyboardButton.D);
-            var rightGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT, 0.1f, ModifierKeyOperator.Or, ModifierKeyGamepadReversed);
-            InputActionUIRight = new(UIAccessTag, rightKB, rightGB);
+            var rightGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT, 0.1f, modifierKeySetGamepadReversed);
+            InputActionUIRight = new(UIAccessTag, defaultSettings,rightKB, rightGB);
             
             var upKB = new InputTypeKeyboardButton(ShapeKeyboardButton.W);
-            var upGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP, 0.1f, ModifierKeyOperator.Or, ModifierKeyGamepadReversed);
-            InputActionUIUp = new(UIAccessTag, upKB, upGB);
+            var upGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP, 0.1f, modifierKeySetGamepadReversed);
+            InputActionUIUp = new(UIAccessTag, defaultSettings,upKB, upGB);
             
             var downKB = new InputTypeKeyboardButton(ShapeKeyboardButton.S);
-            var downGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN, 0.1f, ModifierKeyOperator.Or, ModifierKeyGamepadReversed);
-            InputActionUIDown = new(UIAccessTag, downKB, downGB);
+            var downGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN, 0.1f, modifierKeySetGamepadReversed);
+            InputActionUIDown = new(UIAccessTag, defaultSettings,downKB, downGB);
             
             var nextTabKB = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
             var nextTabGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
             var nextTabMW = new InputTypeMouseButton(ShapeMouseButton.MW_DOWN, 2f);
-            InputActionUINextTab = new(UIAccessTag, nextTabKB, nextTabGB, nextTabMW);
+            InputActionUINextTab = new(UIAccessTag, defaultSettings,nextTabKB, nextTabGB, nextTabMW);
             
             var prevTabKB = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
             var prevTabGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
             var prevTabMW = new InputTypeMouseButton(ShapeMouseButton.MW_UP, 2f);
-            InputActionUIPrevTab = new(UIAccessTag, prevTabKB, prevTabGB, prevTabMW);
+            InputActionUIPrevTab = new(UIAccessTag, defaultSettings,prevTabKB, prevTabGB, prevTabMW);
             
             var nextPageKB = new InputTypeKeyboardButton(ShapeKeyboardButton.C);
-            var nextPageGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP, 0.1f, ModifierKeyOperator.Or, ModifierKeyGamepad);
-            InputActionUINextPage = new(UIAccessTag, nextPageKB, nextPageGB);
+            var nextPageGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP, 0.1f, modifierKeySetGamepad);
+            InputActionUINextPage = new(UIAccessTag, defaultSettings,nextPageKB, nextPageGB);
             
             var prevPageKB = new InputTypeKeyboardButton(ShapeKeyboardButton.X);
-            var prevPageGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, 0.1f, ModifierKeyOperator.Or, ModifierKeyGamepad);
-            InputActionUIPrevPage = new(UIAccessTag, prevPageKB, prevPageGB);
+            var prevPageGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, 0.1f, modifierKeySetGamepad);
+            InputActionUIPrevPage = new(UIAccessTag, defaultSettings,prevPageKB, prevPageGB);
             
             //example scene only
             var zoomKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.NINE, ShapeKeyboardButton.ZERO);
             // var zoomGP = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_Y, 0.2f, ModifierKeyOperator.Or, ModifierKeyGamepad);
-            var zoomGP = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_DOWN, ShapeGamepadButton.LEFT_FACE_UP, 0.2f, ModifierKeyOperator.Or, ModifierKeyGamepad);
+            var zoomGP = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_DOWN, ShapeGamepadButton.LEFT_FACE_UP, 0.2f, modifierKeySetGamepad);
             var zoomMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f); //, ModifierKeyOperator.Or, ModifierKeyMouse);
-            InputActionZoom = new(SceneAccessTag, zoomKB, zoomGP, zoomMW);
+            InputActionZoom = new(SceneAccessTag, defaultSettings,zoomKB, zoomGP, zoomMW);
             
             var resetKB = new InputTypeKeyboardButton(ShapeKeyboardButton.R);
             var resetGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_THUMB);
-            InputActionReset = new(SceneAccessTag, resetKB, resetGB);
+            InputActionReset = new(SceneAccessTag, defaultSettings,resetKB, resetGB);
             
-            inputActions.Add(InputActionUICancel);
-            inputActions.Add(InputActionUIBack);
-            inputActions.Add(InputActionUIAccept);
-            inputActions.Add(InputActionUIAcceptMouse);
-            inputActions.Add(InputActionUILeft);
-            inputActions.Add(InputActionUIRight);
-            inputActions.Add(InputActionUIUp);
-            inputActions.Add(InputActionUIDown);
-            inputActions.Add(InputActionUIPrevTab);
-            inputActions.Add(InputActionUINextTab);
-            inputActions.Add(InputActionUIPrevPage);
-            inputActions.Add(InputActionUINextPage);
-            inputActions.Add(InputActionFullscreen);
-            inputActions.Add(InputActionMaximize);
-            inputActions.Add(InputActionMinimize);
-            inputActions.Add(InputActionNextMonitor);
-            inputActions.Add(InputActionCycleShaders);
-            inputActions.Add(InputActionCycleScreenMode);
-            inputActions.Add(InputActionZoom);
-            inputActions.Add(InputActionCyclePalette);
-            inputActions.Add(InputActionReset);
+            inputActionTree.Add(InputActionUICancel);
+            inputActionTree.Add(InputActionUIBack);
+            inputActionTree.Add(InputActionUIAccept);
+            inputActionTree.Add(InputActionUIAcceptMouse);
+            inputActionTree.Add(InputActionUILeft);
+            inputActionTree.Add(InputActionUIRight);
+            inputActionTree.Add(InputActionUIUp);
+            inputActionTree.Add(InputActionUIDown);
+            inputActionTree.Add(InputActionUIPrevTab);
+            inputActionTree.Add(InputActionUINextTab);
+            inputActionTree.Add(InputActionUIPrevPage);
+            inputActionTree.Add(InputActionUINextPage);
+            inputActionTree.Add(InputActionFullscreen);
+            inputActionTree.Add(InputActionMaximize);
+            inputActionTree.Add(InputActionMinimize);
+            inputActionTree.Add(InputActionNextMonitor);
+            inputActionTree.Add(InputActionCycleShaders);
+            inputActionTree.Add(InputActionCycleScreenMode);
+            inputActionTree.Add(InputActionZoom);
+            inputActionTree.Add(InputActionCyclePalette);
+            inputActionTree.Add(InputActionReset);
         }
     }
 

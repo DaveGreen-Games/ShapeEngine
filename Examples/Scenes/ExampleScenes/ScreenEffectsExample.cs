@@ -139,27 +139,30 @@ namespace Examples.Scenes.ExampleScenes
 
         private InputAction iaMoveHor;
         private InputAction iaMoveVer;
+        private readonly InputActionTree inputActionTree;
         
         private void SetupInput()
         {
+            InputActionSettings defaultSettings = new();
+            var modifierKeySetGpReversed = new ModifierKeySet(ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+            var modifierKeySetMouseReversed = new ModifierKeySet(ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
+            
             var moveHorKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
-            // var moveHorGP =
-                // new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT);//reverse modifier
-            var moveHor2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-            var moveHorMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-            iaMoveHor = new(moveHorKB, moveHor2GP, moveHorMW);
+            var moveHor2GP = new InputTypeGamepadJoyAxis(ShapeGamepadJoyAxis.LEFT_X, 0.15f, false, modifierKeySetGpReversed);
+            var moveHorMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, modifierKeySetMouseReversed);
+            iaMoveHor = new(defaultSettings,moveHorKB, moveHor2GP, moveHorMW);
             
             var moveVerKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
-            // var moveVerGP =
-                // new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_UP, ShapeGamepadButton.LEFT_FACE_DOWN);//reverse modifier
-            var moveVer2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-            var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-            iaMoveVer = new(moveVerKB, moveVer2GP, moveVerMW);
+            var moveVer2GP = new InputTypeGamepadJoyAxis(ShapeGamepadJoyAxis.LEFT_Y, 0.15f, false, modifierKeySetGpReversed);
+            var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, modifierKeySetMouseReversed);
+            iaMoveVer = new(defaultSettings,moveVerKB, moveVer2GP, moveVerMW);
+            
         }
         public Ship(Vector2 pos, float r)
         {
             Hull = new(pos, r);
             SetupInput();
+            inputActionTree = [iaMoveHor, iaMoveVer];
         }
         public Ship(Vector2 pos, float r, PaletteColor hullColor, PaletteColor cockpitColor, PaletteColor outlineColor)
         {
@@ -168,6 +171,7 @@ namespace Examples.Scenes.ExampleScenes
             this.cockpitColor = cockpitColor;
             this.outlineColor = outlineColor;
             SetupInput();
+            inputActionTree = [iaMoveHor, iaMoveVer];
         }
 
         public string GetInputDescription(InputDeviceType inputDeviceType)
@@ -188,12 +192,8 @@ namespace Examples.Scenes.ExampleScenes
         
         public void Update(float dt, float cameraRotationDeg)
         {
-            
-            iaMoveHor.Gamepad = GAMELOOP.CurGamepad;
-            iaMoveHor.Update(dt);
-            
-            iaMoveVer.Gamepad = GAMELOOP.CurGamepad;
-            iaMoveVer.Update(dt);
+            inputActionTree.CurrentGamepad = GAMELOOP.CurGamepad;
+            inputActionTree.Update(dt);
 
 
             if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Mouse)
@@ -269,6 +269,7 @@ namespace Examples.Scenes.ExampleScenes
         private readonly InputAction iaShakeCamera;
         private readonly InputAction iaRotateCamera;
         private readonly InputAction iaToggleDrawCameraFollowBoundary;
+        private readonly InputActionTree inputActionTree;
         private bool drawCameraFollowBoundary = false;
 
         private readonly CameraFollowerSingle follower;
@@ -291,21 +292,25 @@ namespace Examples.Scenes.ExampleScenes
             UpdateFollower(GAMELOOP.UIScreenInfo.Area.Size.Min());
             SetSliderValues();
 
+            InputActionSettings defaultSettings = new();
+            var modifierKeySetGp = new ModifierKeySet(ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad);
+            var modifierKeySetMouse = new ModifierKeySet(ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouse);
+            
             var shakeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.G);
             var shakeGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
             var shakeMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
-            iaShakeCamera = new(shakeKB, shakeGP, shakeMB);
-
+            iaShakeCamera = new(defaultSettings,shakeKB, shakeGP, shakeMB);
 
             var rotateKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.Q, ShapeKeyboardButton.E);
-            // var rotateGB = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad);
-            var rotateGB = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad);
-            var rotateMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouse);
-            iaRotateCamera = new(rotateKB, rotateGB, rotateMW);
+            var rotateGB = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT, 0.1f, modifierKeySetGp);
+            var rotateMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, modifierKeySetMouse);
+            iaRotateCamera = new(defaultSettings,rotateKB, rotateGB, rotateMW);
 
             var toggleDrawKB = new InputTypeKeyboardButton(ShapeKeyboardButton.T);
             var toggleDrawGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
-            iaToggleDrawCameraFollowBoundary = new(toggleDrawKB, toggleDrawGP);
+            iaToggleDrawCameraFollowBoundary = new(defaultSettings,toggleDrawKB, toggleDrawGP);
+            
+            inputActionTree = [iaShakeCamera, iaRotateCamera, iaToggleDrawCameraFollowBoundary];
         }
 
         private void SetSliderValues()
@@ -392,20 +397,12 @@ namespace Examples.Scenes.ExampleScenes
         
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
-            // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
             var gamepad = GAMELOOP.CurGamepad;
 
-            GAMELOOP.MouseControlEnabled = gamepad?.IsDown(ShapeGamepadAxis.RIGHT_TRIGGER, 0.1f) ?? true;
+            // GAMELOOP.MouseControlEnabled = gamepad?.IsDown(ShapeGamepadTriggerAxis.RIGHT, 0.1f) ?? true;
             
-            
-            iaShakeCamera.Gamepad = gamepad;
-            iaShakeCamera.Update(dt);
-            
-            iaRotateCamera.Gamepad = gamepad;
-            iaRotateCamera.Update(dt);
-
-            iaToggleDrawCameraFollowBoundary.Gamepad = gamepad;
-            iaToggleDrawCameraFollowBoundary.Update(dt);
+            inputActionTree.CurrentGamepad = gamepad;
+            inputActionTree.Update(dt);
 
             if (iaToggleDrawCameraFollowBoundary.State.Pressed)
             {

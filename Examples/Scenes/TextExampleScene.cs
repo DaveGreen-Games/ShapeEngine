@@ -31,7 +31,7 @@ namespace Examples.Scenes
 
         protected readonly TextInputBox TextInputBox = new("Enter Text into this box");
 
-        protected readonly uint accessTagTextBox = InputAction.NextTag; // BitFlag.GetFlagUint(12);
+        protected readonly uint accessTagTextBox = ShapeInput.NextAccessTag; // BitFlag.GetFlagUint(12);
         
         private readonly InputAction iaEnterText;
         private readonly InputAction iaCancelText;
@@ -45,7 +45,8 @@ namespace Examples.Scenes
         private readonly InputAction iaNextFont;
         private readonly InputAction iaDrag;
         
-        protected readonly List<InputAction> inputActions;
+        // protected readonly List<InputAction> inputActions;
+        protected readonly InputActionTree inputActionTree;
         #endregion
         
         public TextExampleScene()
@@ -59,55 +60,58 @@ namespace Examples.Scenes
             bottomRight = bottomRightRelative * s;
             
             //font =  new(GAMELOOP.GetFont(fontIndex),1f, ExampleScene.ColorLight);
-
+            InputActionSettings defaultSettings = new();
             var enterTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ENTER);
             var enterTextGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
-            iaEnterText = new(accessTagTextBox,enterTextKB, enterTextGP);
+            iaEnterText = new(accessTagTextBox,defaultSettings,enterTextKB, enterTextGP);
             
             var cancelTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ESCAPE);
             var cancelTextGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
-            iaCancelText = new(accessTagTextBox,cancelTextKB, cancelTextGP);
+            iaCancelText = new(accessTagTextBox,defaultSettings,cancelTextKB, cancelTextGP);
             
             var finishTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ENTER);
             var finishTextGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
-            iaFinishText = new(accessTagTextBox,finishTextKB, finishTextGP);
+            iaFinishText = new(accessTagTextBox,defaultSettings,finishTextKB, finishTextGP);
 
             var modifierKB = new ModifierKeyKeyboardButton(ShapeKeyboardButton.LEFT_SHIFT);
             var modifierGP = new ModifierKeyGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_BOTTOM);
-            var clearTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.BACKSPACE, ModifierKeyOperator.Or, modifierKB);
-            var clearTextGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP, 0.1f, ModifierKeyOperator.Or, modifierGP);
-            iaClear = new(accessTagTextBox,clearTextKB, clearTextGP);
+            
+            var modifierKeySetKb = new ModifierKeySet(ModifierKeyOperator.Or, modifierKB);
+            var modifierKeySetGp = new ModifierKeySet(ModifierKeyOperator.Or, modifierGP);
+            var clearTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.BACKSPACE, modifierKeySetKb);
+            var clearTextGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP, 0.1f, modifierKeySetGp);
+            iaClear = new(accessTagTextBox,defaultSettings,clearTextKB, clearTextGP);
             
             var deleteTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.DELETE);
             var deleteTextGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
-            iaDelete = new(accessTagTextBox,deleteTextKB, deleteTextGP);
+            iaDelete = new(accessTagTextBox,defaultSettings,deleteTextKB, deleteTextGP);
             
             var backspaceTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.BACKSPACE);
             var backspaceTextGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
-            iaBackspace = new(accessTagTextBox,backspaceTextKB, backspaceTextGP);
+            iaBackspace = new(accessTagTextBox,defaultSettings,backspaceTextKB, backspaceTextGP);
             
             var caretLeftKB = new InputTypeKeyboardButton(ShapeKeyboardButton.LEFT);
             var caretLeftGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT);
-            iaCaretPrev = new(accessTagTextBox,caretLeftKB, caretLeftGP);
+            iaCaretPrev = new(accessTagTextBox,defaultSettings,caretLeftKB, caretLeftGP);
 
             var caretRightKB = new InputTypeKeyboardButton(ShapeKeyboardButton.RIGHT);
             var caretRightGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT);
-            iaCaretNext = new(accessTagTextBox,caretRightKB, caretRightGP);
+            iaCaretNext = new(accessTagTextBox,defaultSettings,caretRightKB, caretRightGP);
             
             var dragMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
             var dragKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
             var dragGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
-            iaDrag = new(accessTagTextBox,dragGP, dragKB, dragMB);
+            iaDrag = new(accessTagTextBox,defaultSettings,dragGP, dragKB, dragMB);
 
             var nextFontKB = new InputTypeKeyboardButton(ShapeKeyboardButton.A);
             var nextFontGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
-            iaNextFont = new(accessTagTextBox,nextFontKB, nextFontGP);
+            iaNextFont = new(accessTagTextBox,defaultSettings,nextFontKB, nextFontGP);
             
-            inputActions = new()
-            {
+            inputActionTree =
+            [
                 iaEnterText, iaCancelText, iaFinishText, iaClear, iaDelete, iaBackspace, iaCaretPrev, iaCaretNext,
                 iaDrag, iaNextFont
-            };
+            ];
         }
         
         #region Virtual
@@ -145,11 +149,13 @@ namespace Examples.Scenes
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
             var gamepad = GAMELOOP.CurGamepad;
-            foreach (var action in inputActions)
-            {
-                action.Gamepad = gamepad;
-                action.Update(dt);
-            }
+            inputActionTree.CurrentGamepad = gamepad;
+            inputActionTree.Update(dt);
+            // foreach (var action in inputActions)
+            // {
+                // action.Gamepad = gamepad;
+                // action.Update(dt);
+            // }
             TextInputBox.Update(dt);
             
             if (!textEntryActive)
@@ -157,7 +163,7 @@ namespace Examples.Scenes
                 if (iaEnterText.State.Pressed)
                 {
                     BitFlag mask = new(accessTagTextBox);
-                    InputAction.LockWhitelist(mask);
+                    ShapeInput.LockWhitelist(mask);
                     TextInputBox.StartEntry();
                     // InputAction.LockWhitelist(accessTagTextBox);
                     draggingBottomRight = false;
@@ -199,12 +205,12 @@ namespace Examples.Scenes
                 if (iaFinishText.State.Pressed)
                 {
                     TextInputBox.FinishEntry();
-                    InputAction.Unlock();
+                    ShapeInput.Unlock();
                 }
                 else if (iaCancelText.State.Pressed)
                 {
                     TextInputBox.CancelEntry();
-                    InputAction.Unlock();
+                    ShapeInput.Unlock();
                 }
                 else if (iaClear.State.Pressed)
                 {
@@ -230,7 +236,7 @@ namespace Examples.Scenes
                 }
                 else
                 {
-                    TextInputBox.AddCharacters(ShapeInput.KeyboardDevice.GetStreamChar());
+                    TextInputBox.AddCharacters(ShapeInput.ActiveKeyboardDevice.GetStreamChar());
                 }
 
                 

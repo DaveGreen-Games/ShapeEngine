@@ -1,9 +1,9 @@
 namespace ShapeEngine.Input;
 
 /// <summary>
-/// Represents the axes and triggers of a gamepad.
+/// Represents the joystick axes (left and right sticks) of a gamepad.
 /// </summary>
-public enum ShapeGamepadAxis
+public enum ShapeGamepadJoyAxis
 {
     /// <summary>
     /// Left stick horizontal axis.
@@ -20,13 +20,5 @@ public enum ShapeGamepadAxis
     /// <summary>
     /// Right stick vertical axis.
     /// </summary>
-    RIGHT_Y = 3,
-    /// <summary>
-    /// Left trigger axis.
-    /// </summary>
-    LEFT_TRIGGER = 4,
-    /// <summary>
-    /// Right trigger axis.
-    /// </summary>
-    RIGHT_TRIGGER = 5,
+    RIGHT_Y = 3
 }

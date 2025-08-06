@@ -54,6 +54,7 @@ namespace Examples.Scenes.ExampleScenes
             
             private readonly InputAction iaMoveHor;
             private readonly InputAction iaMoveVer;
+            private readonly InputActionTree inputActionTree;
             private float outOfBoundsTimer = 0f;
             private float invisibleTimer;
 
@@ -63,17 +64,21 @@ namespace Examples.Scenes.ExampleScenes
                 movementDir = Rng.Instance.RandVec2();
                 invisibleTimer = 2f;
                 
+                InputActionSettings defaultSettings = new();
+                
+                var modifierKeySetGpReversed = new ModifierKeySet(ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+                
                 var moveHorKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
-                var moveHorGP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+                var moveHorGP = new InputTypeGamepadJoyAxis(ShapeGamepadJoyAxis.LEFT_X, 0.15f, false, modifierKeySetGpReversed);
                 // var moveHorMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-                iaMoveHor = new(moveHorKB, moveHorGP);
+                iaMoveHor = new(defaultSettings,moveHorKB, moveHorGP);
                 
                 var moveVerKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
-                var moveVerGP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+                var moveVerGP = new InputTypeGamepadJoyAxis(ShapeGamepadJoyAxis.LEFT_Y, 0.15f, false, modifierKeySetGpReversed);
                 // var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-                iaMoveVer = new(moveVerKB, moveVerGP);
-                
-                
+                iaMoveVer = new(defaultSettings,moveVerKB, moveVerGP);
+
+                inputActionTree = [iaMoveHor, iaMoveVer];
             }
 
             public bool Overlap(SpaceShip other)
@@ -115,12 +120,8 @@ namespace Examples.Scenes.ExampleScenes
                 float radius = Size * (Selected ? 1f : 0.75f);
                 if (Selected)
                 {
-                    // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
-                    iaMoveHor.Gamepad = GAMELOOP.CurGamepad;
-                    iaMoveVer.Gamepad = GAMELOOP.CurGamepad;
-                
-                    iaMoveHor.Update(dt);
-                    iaMoveVer.Update(dt);
+                    inputActionTree.CurrentGamepad = GAMELOOP.CurGamepad;
+                    inputActionTree.Update(dt);
                     
                     if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Mouse)
                     {
@@ -245,108 +246,6 @@ namespace Examples.Scenes.ExampleScenes
                 return GetPosition();
             }
         }
-
-        // internal interface IFollowTarget
-        // {
-        //     public Vector2 GetPosition();
-        // }
-        // internal class CameraFollower : ICameraFollowTarget
-        // {
-        //     private readonly List<IFollowTarget> targets = new();
-        //     private readonly ShapeCamera camera;
-        //     private Vector2 followPosition = new();
-        //     // public CameraFollower()
-        //     // {
-        //     //     camera = new()
-        //     //     {
-        //     //         Follower =
-        //     //         {
-        //     //             FollowSpeed = SpaceShip.Speed * 2f
-        //     //         }
-        //     //     };
-        //     // }
-        //     public Vector2 GetRandomPosition()
-        //     {
-        //         return camera.Area.GetRandomPointInside();
-        //     }
-        //     
-        //     public void Reset()
-        //     {
-        //         camera.Reset();
-        //         // camera.Follower.SetTarget(this);
-        //         SetCameraValues();
-        //     }
-        //     public void Activate()
-        //     {
-        //         GAMELOOP.Camera = camera;
-        //         // camera.Follower.SetTarget(this);
-        //         SetCameraValues();
-        //     }
-        //     public void Deactivate()
-        //     {
-        //         GAMELOOP.ResetCamera();
-        //     }
-        //     
-        //     
-        //     public bool AddTarget(IFollowTarget newTarget)
-        //     {
-        //         if (targets.Contains(newTarget)) return false;
-        //         targets.Add(newTarget);
-        //         return true;
-        //     }
-        //
-        //     public bool RemoveTarget(IFollowTarget target)
-        //     {
-        //         return targets.Remove(target);
-        //     }
-        //
-        //     public void Update(float dt)
-        //     {
-        //         SetCameraValues();
-        //     }
-        //     public void FollowStarted()
-        //     {
-        //         
-        //     }
-        //     public void FollowEnded()
-        //     {
-        //         
-        //     }
-        //     public Vector2 GetCameraFollowPosition()
-        //     {
-        //         return followPosition;
-        //     }
-        //     private void UpdateCameraFollowBoundary()
-        //     {
-        //         var rect = camera.Area;
-        //         float size = rect.Size.Min();
-        //         var boundary = new Vector2(size * 0.15f, size * 0.4f);
-        //         // camera.Follower.BoundaryDis = new(boundary);
-        //     }
-        //
-        //     private void SetCameraValues()
-        //     {
-        //         var cameraArea = camera.Area;
-        //         var totalPosition = new Vector2();
-        //         var newCameraRect = new Rect(cameraArea.Center, new(), new(0.5f));
-        //         
-        //         foreach (var target in targets)
-        //         {
-        //             var pos = target.GetPosition();
-        //             totalPosition += pos;
-        //             newCameraRect = newCameraRect.Enlarge(pos);
-        //         }
-        //
-        //         var curSize = cameraArea.Size;
-        //         var newSize = newCameraRect.Size;
-        //         float f = 1f - (newSize.GetArea() / curSize.GetArea());
-        //         camera.SetZoom(f);
-        //         followPosition = totalPosition / targets.Count;
-        //         
-        //         UpdateCameraFollowBoundary();
-        //     }
-        // }
-        //
         
         private readonly Font font;
         private readonly Rect universe = new(new Vector2(0f), new Size(10000f), new AnchorPoint(0.5f));
@@ -360,6 +259,7 @@ namespace Examples.Scenes.ExampleScenes
         private readonly InputAction iaAddShip;
         private readonly InputAction iaNextShip;
         private readonly InputAction iaCenterTarget;
+        private readonly InputActionTree inputActionTree;
         private bool centerTargetActive = false;
         
         
@@ -374,19 +274,23 @@ namespace Examples.Scenes.ExampleScenes
 
             AddShip();
             
+            InputActionSettings defaultSettings = new();
+            
             var addShipKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
             var addShipGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
             var addshipMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
-            iaAddShip = new(addShipKB, addshipMB, addShipGP);
+            iaAddShip = new(defaultSettings,addShipKB, addshipMB, addShipGP);
                 
             var nextShipKB = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
             var nextShipGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
             var nextShipMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
-            iaNextShip = new(nextShipKB, nextShipMB, nextShipGP);
+            iaNextShip = new(defaultSettings,nextShipKB, nextShipMB, nextShipGP);
             
             var centerTargetKB = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
             var centerTargetGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
-            iaCenterTarget = new(centerTargetKB, centerTargetGP);
+            iaCenterTarget = new(defaultSettings,centerTargetKB, centerTargetGP);
+            
+            inputActionTree = [iaAddShip, iaNextShip, iaCenterTarget];
         }
 
        
@@ -517,15 +421,10 @@ namespace Examples.Scenes.ExampleScenes
             // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
             var gamepad = GAMELOOP.CurGamepad;
             
-            GAMELOOP.MouseControlEnabled = gamepad?.IsDown(ShapeGamepadAxis.RIGHT_TRIGGER, 0.1f) ?? true;
+            // GAMELOOP.MouseControlEnabled = gamepad?.IsDown(ShapeGamepadTriggerAxis.RIGHT, 0.1f) ?? true;
             
-            iaAddShip.Gamepad = gamepad;
-            iaNextShip.Gamepad = gamepad;
-            iaCenterTarget.Gamepad = gamepad;
-                
-            iaAddShip.Update(dt);
-            iaNextShip.Update(dt);
-            iaCenterTarget.Update(dt);
+            inputActionTree.CurrentGamepad = gamepad;
+            inputActionTree.Update(dt);
 
             if (iaCenterTarget.State.Pressed)
             {

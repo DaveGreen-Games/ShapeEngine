@@ -56,28 +56,42 @@ namespace Examples.Scenes.ExampleScenes
             
             private readonly InputAction iaMoveHor;
             private readonly InputAction iaMoveVer;
+            private readonly InputActionTree inputActionTree;
             private readonly ColorScheme colorScheme;
-            public readonly ShapeGamepadDevice Gamepad;
+            public readonly GamepadDevice Gamepad;
 
-            public SpaceShip(Vector2 pos, ShapeGamepadDevice gamepad)
+            public SpaceShip(Vector2 pos, GamepadDevice gamepad)
             {
                 hull = new(pos, Size);
                 movementDir = Rng.Instance.RandVec2();
                 
-                // var moveHorKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
-                var moveHorGP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f);
-                // var moveHorMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-                iaMoveHor = new(moveHorGP);
-                iaMoveHor.Gamepad = gamepad;
+                InputActionSettings defaultSettings = new();
                 
+                // var moveHorKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
+                var moveHorGP = new InputTypeGamepadJoyAxis(ShapeGamepadJoyAxis.LEFT_X, 0.1f);
+                // var moveHorMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
+                iaMoveHor = new(defaultSettings,moveHorGP)
+                {
+                    Gamepad = gamepad
+                };
+
                 // var moveVerKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
-                var moveVerGP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y, 0.1f);
+                var moveVerGP = new InputTypeGamepadJoyAxis(ShapeGamepadJoyAxis.LEFT_Y, 0.1f);
                 // var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-                iaMoveVer = new(moveVerGP);
-                iaMoveVer.Gamepad = gamepad;
+                iaMoveVer = new(defaultSettings,moveVerGP)
+                {
+                    Gamepad = gamepad
+                };
 
                 Gamepad = gamepad;
                 colorScheme = ColorSchemes[gamepad.Index];
+                
+                inputActionTree = new InputActionTree
+                {
+                    CurrentGamepad = gamepad
+                };
+                inputActionTree.Add(iaMoveHor);
+                inputActionTree.Add(iaMoveVer);
             }
 
             public bool Overlap(SpaceShip other)
@@ -99,9 +113,9 @@ namespace Examples.Scenes.ExampleScenes
             }
             public void Update(float dt)
             {
-                iaMoveHor.Update(dt);
-                iaMoveVer.Update(dt);
-                    
+                // iaMoveHor.Update(dt);
+                // iaMoveVer.Update(dt);
+                inputActionTree.Update(dt);
                 Vector2 dir = new(iaMoveHor.State.AxisRaw, iaMoveVer.State.AxisRaw);
                     
                 float lsq = dir.LengthSquared();
@@ -162,29 +176,40 @@ namespace Examples.Scenes.ExampleScenes
         {
             public readonly InputAction Add;
             public readonly InputAction Remove;
-            public readonly ShapeGamepadDevice Gamepad;
+            public readonly GamepadDevice Gamepad;
+            public readonly InputActionTree inputActionTree;
 
-            public InputActionHelper(ShapeGamepadDevice gamepad)
+            public InputActionHelper(GamepadDevice gamepad)
             {
                 this.Gamepad = gamepad;
                 
+                InputActionSettings defaultSettings = new();
+                
                 var addShipInputType = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
-                Add = new(addShipInputType)
+                Add = new(defaultSettings,addShipInputType)
                 {
                     Gamepad = gamepad
                 };
                 
                 var removeShipInputType = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
-                Remove = new(removeShipInputType)
+                Remove = new(defaultSettings,removeShipInputType)
                 {
                     Gamepad = gamepad
                 };
+
+                inputActionTree = new InputActionTree
+                {
+                    CurrentGamepad = gamepad
+                };
+                inputActionTree.Add(Add);
+                inputActionTree.Add(Remove);
             }
 
             public void Update(float dt)
             {
-                Add.Update(dt);
-                Remove.Update(dt);
+                inputActionTree.Update(dt);
+                // Add.Update(dt);
+                // Remove.Update(dt);
             }
         }
         
@@ -198,7 +223,7 @@ namespace Examples.Scenes.ExampleScenes
 
         private readonly List<InputActionHelper> inputActionHelpers = new();
         
-        private readonly ShapeGamepadDeviceManager GamepadManager = new(8);
+        private readonly GamepadDeviceManager GamepadManager = new(8);
 
         public ShipInputExample()
         {
@@ -218,14 +243,14 @@ namespace Examples.Scenes.ExampleScenes
         }
 
        
-        private void AddShip(ShapeGamepadDevice gamepad)
+        private void AddShip(GamepadDevice gamepad)
         {
             gamepad.Claim();
             var ship = new SpaceShip(new(), gamepad);
             spaceShips.Add(ship);
             cameraFollower.AddTarget(ship);
         }
-        private void RemoveShip(ShapeGamepadDevice gamepad)
+        private void RemoveShip(GamepadDevice gamepad)
         {
             gamepad.Free();
             for (int i = spaceShips.Count - 1; i >= 0 ; i--)
@@ -263,17 +288,21 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnActivate(Scene oldScene)
         {
+            //TODO: I hope this works
+            ShapeInput.ChangeActiveGamepadDeviceManager(GamepadManager);
             GAMELOOP.Camera = camera;
             BitFlag mask = new(GAMELOOP.SceneAccessTag);
             mask = mask.Add(GAMELOOP.GamepadMouseMovementTag);
-            InputAction.LockBlacklist(mask);
+            ShapeInput.LockBlacklist(mask);
         }
 
         protected override void OnDeactivate()
         {
+            //TODO: I hope this works
+            ShapeInput.ChangeActiveGamepadDeviceManager(ShapeInput.DefaultGamepadDeviceManager);
             GAMELOOP.MouseControlEnabled = true;
             GAMELOOP.ResetCamera();
-            InputAction.Unlock();
+            ShapeInput.Unlock();
         }
         public override void Reset()
         {
@@ -288,8 +317,6 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
-            GamepadManager.Update();
-            
             foreach (var inputHelper in inputActionHelpers)
             {
                 var gamepad = inputHelper.Gamepad;
@@ -316,46 +343,6 @@ namespace Examples.Scenes.ExampleScenes
         
         protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
-            // if (Raylib.IsGamepadAvailable(0))
-            // {
-            //     Console.WriteLine($"Gamepad Connected {Raylib.GetGamepadName_(0)} | Axis Count {Raylib.GetGamepadAxisCount(0)}");
-            //     
-            //     foreach (var button in Gamepad.AllGamepadButtons)
-            //     {
-            //         var buttonNumber =Raylib.GetGamepadButtonPressed();
-            //         if (buttonNumber > 0)
-            //         {
-            //             Console.WriteLine($"Gamepad Button Down {buttonNumber}");
-            //         }
-            //         if (Raylib.IsGamepadButtonDown(0, button))
-            //         {
-            //             
-            //             // Console.WriteLine($"Down: {InputTypeGamepadButton.GetGamepadButtonName(button)}");
-            //             Console.WriteLine("Gamepad Button Down");
-            //         }
-            //     }
-            // }
-            
-            // foreach (var gamepad in GamepadManager.LastUsedGamepads)
-            // {
-            //     if (gamepad.Available)
-            //     {
-            //         if (gamepad.UsedButtons.Contains(ShapeGamepadButton.RIGHT_FACE_DOWN))//add
-            //         {
-            //             AddShip(gamepad);
-            //         }
-            //     }
-            //     else
-            //     {
-            //         if (gamepad.UsedButtons.Contains(ShapeGamepadButton.RIGHT_FACE_RIGHT))//remove
-            //         {
-            //             RemoveShip(gamepad);
-            //         }
-            //     }
-            // }
-
-            
-            
             foreach (var ship in spaceShips)
             {
                 ship.Update(time.Delta);
@@ -435,7 +422,7 @@ namespace Examples.Scenes.ExampleScenes
             
         }
 
-        private void OnShapeGamepadDeviceConnectionChanged(ShapeGamepadDevice gamepad, bool connected)
+        private void OnShapeGamepadDeviceConnectionChanged(GamepadDevice gamepad, bool connected)
         {
             if (!connected)
             {

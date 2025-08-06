@@ -6,71 +6,37 @@ namespace ShapeEngine.Input;
 /// <summary>
 /// Represents an input type for a gamepad button, supporting deadzone and modifier keys.
 /// </summary>
-public class InputTypeGamepadButton : IInputType
+public sealed class InputTypeGamepadButton : IInputType
 {
     private readonly ShapeGamepadButton button;
     private float deadzone;
-    private readonly IModifierKey[] modifierKeys;
-    private readonly ModifierKeyOperator modifierOperator;
-
+    private readonly ModifierKeySet? modifierKeySet;
+    
     /// <summary>
-    /// Initializes a new instance of <see cref="InputTypeGamepadButton"/> with the specified button and deadzone.
+    /// Initializes a new instance of <see cref="InputTypeGamepadButton"/> with the specified button, deadzone, and modifier key set.
     /// </summary>
     /// <param name="button">The gamepad button.</param>
     /// <param name="deadzone">
-    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value. Gamepad buttons ignore deadzone (deadzone works only with axis input types).
+    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value.
+    /// Gamepad buttons ignore deadzone (deadzone works only with axis/trigger input types).
     /// </param>
-    public InputTypeGamepadButton(ShapeGamepadButton button, float deadzone = 0.1f)
+    /// <param name="modifierKeySet">The set of modifier keys associated with this input type.</param>
+    public InputTypeGamepadButton(ShapeGamepadButton button, float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultAxisThreshold, ModifierKeySet? modifierKeySet = null)
     {
         this.button = button; 
         this.deadzone = deadzone;
-        this.modifierKeys = [];
-        this.modifierOperator = ModifierKeyOperator.And;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputTypeGamepadButton"/> with button, deadzone, modifier operator, and modifier keys.
-    /// </summary>
-    /// <param name="button">The gamepad button.</param>
-    /// <param name="deadzone">
-    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value. Gamepad buttons ignore deadzone (deadzone works only with axis input types).
-    /// </param>
-    /// <param name="modifierOperator">The modifier key operator.</param>
-    /// <param name="modifierKeys">The modifier keys.</param>
-    public InputTypeGamepadButton(ShapeGamepadButton button, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
-    {
-        this.button = button; 
-        this.deadzone = deadzone;
-        this.modifierKeys = modifierKeys;
-        this.modifierOperator = modifierOperator;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputTypeGamepadButton"/> with button, deadzone, modifier operator, and a single modifier key.
-    /// </summary>
-    /// <param name="button">The gamepad button.</param>
-    /// <param name="deadzone">
-    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value. Gamepad buttons ignore deadzone (deadzone works only with axis input types).
-    /// </param>
-    /// <param name="modifierOperator">The modifier key operator.</param>
-    /// <param name="modifierKey">The modifier key.</param>
-    public InputTypeGamepadButton(ShapeGamepadButton button, float deadzone, ModifierKeyOperator modifierOperator, IModifierKey modifierKey)
-    {
-        this.button = button; 
-        this.deadzone = deadzone;
-        this.modifierOperator = modifierOperator;
-        this.modifierKeys = new[]{ modifierKey };
+        this.modifierKeySet = modifierKeySet;
     }
 
     /// <inheritdoc/>
-    public IInputType Copy() => new InputTypeGamepadButton(button, deadzone);
+    public IInputType Copy() => new InputTypeGamepadButton(button, deadzone, modifierKeySet?.Copy());
 
     /// <inheritdoc/>
-    public virtual string GetName(bool shorthand = true)
+    public string GetName(bool shorthand = true)
     {
         StringBuilder sb = new();
-        IModifierKey.GetModifierKeyNames(sb, modifierKeys, modifierOperator, shorthand);
-        sb.Append(ShapeGamepadDevice.GetButtonName(button, shorthand));
+        modifierKeySet?.AppendModifierKeyNames(sb, shorthand);
+        sb.Append(button.GetButtonName(shorthand)); // GamepadDevice.GetButtonName(button, shorthand));
         return sb.ToString();
     }
 
@@ -84,17 +50,55 @@ public class InputTypeGamepadButton : IInputType
     }
 
     /// <inheritdoc/>
-    public InputState GetState(ShapeGamepadDevice? gamepad)
-    {
-        return gamepad != null ? gamepad.CreateInputState(button, deadzone, modifierOperator, modifierKeys) : new();
-    }
+    public InputState GetState(GamepadDevice? gamepad) => gamepad?.CreateInputState(button, deadzone, deadzone,  modifierKeySet) ?? new();
 
     /// <inheritdoc/>
-    public InputState GetState(InputState prev, ShapeGamepadDevice? gamepad)
+    public InputState GetState(InputState prev, GamepadDevice? gamepad)
     {
-        return gamepad != null ? gamepad.CreateInputState(button, prev, deadzone, modifierOperator, modifierKeys) : new();
+        return gamepad?.CreateInputState(button, prev, deadzone, deadzone,  modifierKeySet) ?? new();
     }
 
     /// <inheritdoc/>
     public InputDeviceType GetInputDevice() => InputDeviceType.Gamepad;
+    
+    private bool Equals(InputTypeGamepadButton other)
+    {
+        return button == other.button &&
+               (modifierKeySet == null && other.modifierKeySet == null ||
+                modifierKeySet != null && modifierKeySet.Equals(other.modifierKeySet));
+    }
+    
+    /// <summary>
+    /// Determines whether the specified <see cref="IInputType"/> is equal to the current instance.
+    /// </summary>
+    /// <param name="other">The other <see cref="IInputType"/> to compare.</param>
+    /// <returns><c>true</c> if equal; otherwise, <c>false</c>.</returns>
+    public bool Equals(IInputType? other)
+    {
+        if (other is InputTypeGamepadButton inputType)
+        {
+            return Equals(inputType);       
+        }
+    
+        return false;
+    }
+    
+    /// <summary>
+    /// Determines whether the specified object is equal to the current instance.
+    /// </summary>
+    /// <param name="obj">The object to compare.</param>
+    /// <returns><c>true</c> if equal; otherwise, <c>false</c>.</returns>
+    public override bool Equals(object? obj)
+    {
+        return ReferenceEquals(this, obj) || obj is InputTypeGamepadButton other && Equals(other);
+    }
+    
+    /// <summary>
+    /// Returns a hash code for the current instance.
+    /// </summary>
+    /// <returns>A hash code for the current instance.</returns>
+    public override int GetHashCode()
+    {
+        return HashCode.Combine((int)button, modifierKeySet?.GetHashCode() ?? 0);
+    }
 }

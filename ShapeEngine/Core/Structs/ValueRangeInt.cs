@@ -10,7 +10,7 @@ namespace ShapeEngine.Core.Structs;
 /// <remarks>
 /// Provides utility methods for range operations, random value generation, clamping, remapping, and arithmetic operations.
 /// </remarks>
-public readonly struct ValueRangeInt
+public readonly struct ValueRangeInt : IEquatable<ValueRangeInt>, IComparable<ValueRangeInt>
 {
     /// <summary>
     /// The minimum value of the range.
@@ -20,7 +20,20 @@ public readonly struct ValueRangeInt
     /// The maximum value of the range.
     /// </summary>
     public readonly int Max;
-
+    /// <summary>
+    /// Gets the absolute difference between <see cref="Min"/> and <see cref="Max"/>,
+    /// representing the total span of the range.
+    /// </summary>
+    public int TotalRange => ShapeMath.AbsInt(Max- Min);
+    /// <summary>
+    /// Gets the center value of the range, calculated as the average of Min and Max.
+    /// </summary>
+    public float Center => (Min + Max) * 0.5f;
+    /// <summary>
+    /// Gets the absolute value of the center of the range.
+    /// </summary>
+    public float AbsoluteCenter => MathF.Abs(Center);
+    
     #region Constructors
     
     /// <summary>
@@ -103,6 +116,40 @@ public readonly struct ValueRangeInt
     #endregion
     
     #region Public Functions
+    /// <summary>
+    /// Returns a new <see cref="ValueRangeInt"/> updated to include <paramref name="newValue"/>.
+    /// If <paramref name="newValue"/> is less than Min, sets Min to <paramref name="newValue"/>.
+    /// If <paramref name="newValue"/> is greater than Max, sets Max to <paramref name="newValue"/>.
+    /// Otherwise, returns the current range unchanged.
+    /// </summary>
+    /// <param name="newValue">The value to include in the range.</param>
+    /// <returns>A new <see cref="ValueRangeInt"/> that includes <paramref name="newValue"/>.</returns>
+    public ValueRangeInt UpdateRange(float newValue)
+    {
+        if (newValue < Min) return new(newValue, Max);
+        if (newValue > Max) return new(Min, newValue);
+        return new(Min, Max);
+    }
+    /// <summary>
+    /// Determines whether the range has a non-zero span (Min and Max are not equal).
+    /// </summary>
+    /// <returns>True if Min and Max are not equal; otherwise, false.</returns>
+    public bool HasRange() => TotalRange > 0.00000001f;
+    /// <summary>
+    /// Determines whether the range is positive and has a non-zero span.
+    /// </summary>
+    /// <returns>True if Min and Max are not equal and both are positive; otherwise, false.</returns>
+    public bool HasPositiveRange() => Min >= 0.0f && Max >= 0.0f && HasRange();
+    /// <summary>
+    /// Gets the normalized factor (0-1) of a value within the range.
+    /// </summary>
+    /// <param name="value">The value to evaluate.</param>
+    /// <returns>The factor representing the value's position between Min and Max.</returns>
+    public float GetFactor(int value)
+    {
+        if(value < Min) return 0.0f;
+        return (float)(value - Min) / (Max - Min);
+    }
     /// <summary>
     /// Converts this range to a <see cref="ValueRange"/> by casting Min and Max to float.
     /// </summary>
@@ -374,6 +421,75 @@ public readonly struct ValueRangeInt
         return new(
             left.Min / right, 
             left.Max / right);
+    }
+    #endregion
+    
+    #region Equality & Comparison
+    /// <summary>
+    /// Determines whether the current <see cref="ValueRangeInt"/> is equal to another <see cref="ValueRangeInt"/>.
+    /// </summary>
+    /// <param name="other">The other <see cref="ValueRangeInt"/> to compare with.</param>
+    /// <returns>True if both Min and Max are equal; otherwise, false.</returns>
+    public bool Equals(ValueRangeInt other)
+    {
+        return Min.Equals(other.Min) && Max.Equals(other.Max);
+    }
+    
+    /// <summary>
+    /// Determines whether the current <see cref="ValueRangeInt"/> is equal to another object.
+    /// </summary>
+    /// <param name="obj">The object to compare with.</param>
+    /// <returns>True if the object is a <see cref="ValueRangeInt"/> and both Min and Max are equal; otherwise, false.</returns>
+    public override bool Equals(object? obj)
+    {
+        return obj is ValueRangeInt other && Equals(other);
+    }
+    
+    /// <summary>
+    /// Returns a hash code for the current <see cref="ValueRangeInt"/>.
+    /// </summary>
+    /// <returns>A hash code for the current <see cref="ValueRangeInt"/>.</returns>
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Min, Max);
+    }
+    
+    /// <summary>
+    /// Compares the current <see cref="ValueRangeInt"/> with another <see cref="ValueRangeInt"/>.
+    /// </summary>
+    /// <param name="other">The other <see cref="ValueRangeInt"/> to compare with.</param>
+    /// <returns>
+    /// A value less than zero if this instance is less than <paramref name="other"/>.
+    /// Zero if this instance is equal to <paramref name="other"/>.
+    /// A value greater than zero if this instance is greater than <paramref name="other"/>.
+    /// </returns>
+    public int CompareTo(ValueRangeInt other)
+    {
+        int minComparison = Min.CompareTo(other.Min);
+        if (minComparison != 0) return minComparison;
+        return Max.CompareTo(other.Max);
+    }
+
+    /// <summary>
+    /// Determines whether two <see cref="ValueRangeInt"/> instances are equal.
+    /// </summary>
+    /// <param name="left">The first <see cref="ValueRangeInt"/> to compare.</param>
+    /// <param name="right">The second <see cref="ValueRangeInt"/> to compare.</param>
+    /// <returns>True if both instances are equal; otherwise, false.</returns>
+    public static bool operator ==(ValueRangeInt left, ValueRangeInt right)
+    {
+        return left.Equals(right);
+    }
+    
+    /// <summary>
+    /// Determines whether two <see cref="ValueRangeInt"/> instances are not equal.
+    /// </summary>
+    /// <param name="left">The first <see cref="ValueRangeInt"/> to compare.</param>
+    /// <param name="right">The second <see cref="ValueRangeInt"/> to compare.</param>
+    /// <returns>True if the instances are not equal; otherwise, false.</returns>
+    public static bool operator !=(ValueRangeInt left, ValueRangeInt right)
+    {
+        return !(left == right);
     }
     #endregion
 }

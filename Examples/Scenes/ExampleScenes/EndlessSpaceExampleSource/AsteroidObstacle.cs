@@ -16,7 +16,7 @@ namespace Examples.Scenes.ExampleScenes.EndlessSpaceExampleSource;
 
 internal class AsteroidObstacle : CollisionObject
 {
-    public static readonly uint CollisionLayer = BitFlag.GetFlagUint(2);
+    public static readonly uint CollisionLayer = BitFlag.GetPowerOfTwo(2);
     
     private static readonly LineDrawingInfo GappedLineInfo = new(EndlessSpaceCollision.AsteroidLineThickness, Colors.Special, LineCapType.CappedExtended, 4);
     private static readonly GappedOutlineDrawingInfo BigAsteroidGappedOutlineInfo = new GappedOutlineDrawingInfo(6, 0f, 0.35f);

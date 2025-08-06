@@ -25,6 +25,11 @@ public readonly struct InputState
     public readonly bool Pressed;
 
     /// <summary>
+    /// Indicates if the input axis is inverted.
+    /// </summary>
+    public readonly bool Inverted;
+    
+    /// <summary>
     /// The processed axis value, typically smoothed or filtered.
     /// <remarks>
     /// Use <see cref="AxisRaw"/> if you want the raw axis value recorded from the device without any modification or changes to it.
@@ -129,7 +134,9 @@ public readonly struct InputState
     /// <param name="axisRaw">The raw axis value.</param>
     /// <param name="gamepad">The gamepad index.</param>
     /// <param name="inputDeviceType">The input device type.</param>
-    public InputState(bool down, bool up, float axisRaw, int gamepad, InputDeviceType inputDeviceType)
+    /// <param name="inverted"> Indicates if the axis value is inverted.
+    /// (Only used by <see cref="GamepadDevice"/> for <see cref="ShapeGamepadJoyAxis"/> and <see cref="ShapeGamepadTriggerAxis"/>.</param>
+    public InputState(bool down, bool up, float axisRaw, int gamepad, InputDeviceType inputDeviceType, bool inverted = false)
     {
         Down = down;
         Up = up;
@@ -140,9 +147,9 @@ public readonly struct InputState
         Gamepad = gamepad;
         Consumed = false;
         InputDeviceType = inputDeviceType;
+        Inverted = inverted;
         HoldF = 0f;
         HoldState = MultiTapState.None;
-        // HoldFinished = false;
         MultiTapF = 0f;
         MultiTapState = MultiTapState.None;
     }

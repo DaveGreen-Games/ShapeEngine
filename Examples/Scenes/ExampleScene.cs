@@ -38,7 +38,7 @@ namespace Examples.Scenes
             float zoomSpeed = 1f;
             float zoomDir = 0;
 
-            var zoomState = GAMELOOP.InputActionZoom.Consume();
+            var zoomState = GAMELOOP.InputActionZoom.Consume(out _);
             if (!zoomState.Consumed)
             {
                 zoomDir = -zoomState.AxisRaw;
@@ -53,7 +53,7 @@ namespace Examples.Scenes
         protected virtual bool IsCancelAllowed() => true;
         protected void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
-            var cancelState = GAMELOOP.InputActionUICancel.Consume();
+            var cancelState = GAMELOOP.InputActionUICancel.Consume(out _);
             if (cancelState is { Consumed: false, Pressed: true })
             {
                 if (IsCancelAllowed())
@@ -73,7 +73,7 @@ namespace Examples.Scenes
             if (GAMELOOP.Paused) return;
 
 
-            var resetState = GAMELOOP.InputActionReset.Consume();
+            var resetState = GAMELOOP.InputActionReset.Consume(out _);
             if (resetState is { Consumed: false, Pressed: true })
             {
                 Reset();
@@ -140,8 +140,8 @@ namespace Examples.Scenes
                 {
                     backLabelRect.DrawLines(2f, Colors.Medium);
                     
-                    var acceptState = GAMELOOP.InputActionUIAccept.Consume();
-                    var acceptMouseState = GAMELOOP.InputActionUIAcceptMouse.Consume();
+                    var acceptState = GAMELOOP.InputActionUIAccept.Consume(out _);
+                    var acceptMouseState = GAMELOOP.InputActionUIAcceptMouse.Consume(out _);
                     
                     // if (GAMELOOP.InputActionUIAccept.State.Pressed || GAMELOOP.InputActionUIAcceptMouse.State.Pressed)// ShapeInput.MouseDevice.GetButtonState(ShapeMouseButton.LEFT).Pressed)
                     if (acceptState is {Consumed:false, Pressed:true} || acceptMouseState is {Consumed:false, Pressed:true})// ShapeInput.MouseDevice.GetButtonState(ShapeMouseButton.LEFT).Pressed)
@@ -191,7 +191,7 @@ namespace Examples.Scenes
             var deviceRect = split[0];
             var gamepadRect = split[1];
 
-            var deviceText = ShapeInput.GetCurInputDeviceGenericName();
+            var deviceText = ShapeInput.CurrentInputDeviceType.GetInputDeviceTypeGenericName();
             titleFont.LineSpacing = 1f;
             titleFont.ColorRgba = Colors.Medium;
             titleFont.DrawTextWrapNone(deviceText, deviceRect, new AnchorPoint(0.01f, 0.5f));

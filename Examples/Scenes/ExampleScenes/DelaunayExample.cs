@@ -33,6 +33,7 @@ namespace Examples.Scenes.ExampleScenes
 
         private readonly InputAction iaAddPoint;
         private readonly InputAction iaAddMultiplePoints;
+        private readonly InputActionTree inputActionTree;
 
         private float lineThickness = 0f;
         private float lineThicknessBig = 0f;
@@ -44,17 +45,21 @@ namespace Examples.Scenes.ExampleScenes
             Title = "Delaunay Triangulation Example";
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
 
+            InputActionSettings defaultSettings = new();
+            
             var addPointKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
             var addPointGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
             var addPointMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
-            iaAddPoint = new(addPointKB, addPointGP, addPointMB);
+            iaAddPoint = new(defaultSettings,addPointKB, addPointGP, addPointMB);
             
             var addMultiplePointsKB = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
             var addMultiplePointsGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
             var addMultiplePointsMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
-            iaAddMultiplePoints = new(addMultiplePointsKB, addMultiplePointsGP, addMultiplePointsMB);
+            iaAddMultiplePoints = new(defaultSettings,addMultiplePointsKB, addMultiplePointsGP, addMultiplePointsMB);
             textFont.FontSpacing = 1f;
             textFont.ColorRgba = Colors.Light;
+            
+            inputActionTree = [iaAddPoint, iaAddMultiplePoints];
         }
         public override void Reset()
         {
@@ -84,11 +89,8 @@ namespace Examples.Scenes.ExampleScenes
             
             // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
             var gamepad = GAMELOOP.CurGamepad;
-            iaAddPoint.Gamepad = gamepad;
-            iaAddPoint.Update(dt);
-            
-            iaAddMultiplePoints.Gamepad = gamepad;
-            iaAddMultiplePoints.Update(dt);
+            inputActionTree.CurrentGamepad = gamepad;
+            inputActionTree.Update(dt);
             
             float pointDistanceSquared = vertexSizeBig * vertexSizeBig;
 

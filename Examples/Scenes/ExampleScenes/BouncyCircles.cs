@@ -94,7 +94,7 @@ namespace Examples.Scenes.ExampleScenes
 
         private InputAction iaAdd;
         private InputAction iaToggleConvexHull;
-        private List<InputAction> inputActions;
+        private readonly InputActionTree inputActionTree;
 
         private bool showConvexHull = false;
         private readonly List<GameObject> circles = new(65536);
@@ -107,21 +107,20 @@ namespace Examples.Scenes.ExampleScenes
             UpdateBoundaryRect(GAMELOOP.GameScreenInfo.Area);
 
             InitSpawnArea(boundaryRect);
-            // InitCollisionHandler(boundaryRect, 2, 2);
             
-            // if(InitSpawnArea(boundaryRect)) SpawnArea?.InitCollisionHandler(2, 2);
-
+            InputActionSettings defaultSettings = new();
+            
             var addKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
             var addMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
             var addGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
-            iaAdd = new(addKB, addMB, addGP);
+            iaAdd = new(defaultSettings,addKB, addMB, addGP);
 
             var toggleConvexHullKB = new InputTypeKeyboardButton(ShapeKeyboardButton.C);
             var toggleConvexHullGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
             var toggleConvexHullMb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
-            iaToggleConvexHull = new(toggleConvexHullKB, toggleConvexHullGP, toggleConvexHullMb);
+            iaToggleConvexHull = new(defaultSettings,toggleConvexHullKB, toggleConvexHullGP, toggleConvexHullMb);
             
-            inputActions = new() { iaAdd, iaToggleConvexHull };
+            inputActionTree = [iaAdd, iaToggleConvexHull];
 
         }
         public override void Reset()
@@ -144,8 +143,8 @@ namespace Examples.Scenes.ExampleScenes
             if (GAMELOOP.Paused) return;
             
             var gamepad = GAMELOOP.CurGamepad;
-            InputAction.UpdateActions(time.Delta, gamepad, inputActions);
-            
+            inputActionTree.CurrentGamepad = gamepad;
+            inputActionTree.Update(time.Delta);
         }
 
 

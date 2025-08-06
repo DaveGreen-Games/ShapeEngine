@@ -43,7 +43,7 @@ namespace Examples.UIElements
         {
             if (!MouseInside) return false;
             if (Scene == null) return false;
-            var acceptState = GAMELOOP.InputActionUIAcceptMouse.Consume();
+            var acceptState = GAMELOOP.InputActionUIAcceptMouse.Consume(out _);
             return acceptState is { Consumed: false, Released: true };
         }
 
@@ -51,7 +51,7 @@ namespace Examples.UIElements
         {
             if (!Selected) return false;
             if (Scene == null) return false;
-            var acceptState = GAMELOOP.InputActionUIAccept.Consume();
+            var acceptState = GAMELOOP.InputActionUIAccept.Consume(out _);
             return acceptState is { Consumed: false, Released: true };
         }
 
@@ -60,8 +60,8 @@ namespace Examples.UIElements
             if (!Selected) return new();
             if (Scene == null) return new();
             
-            var downState = GAMELOOP.InputActionUIDown.Consume();
-            var upState = GAMELOOP.InputActionUIUp.Consume();
+            var downState = GAMELOOP.InputActionUIDown.Consume(out _);
+            var upState = GAMELOOP.InputActionUIUp.Consume(out _);
             // var leftState = GAMELOOP.InputActionUILeft.Consume();
             // var rightState = GAMELOOP.InputActionUIRight.Consume();
             // Console.WriteLine($"Button {Scene.Title} - Down: {downState.Consumed}, Up: {upState.Consumed}, Left: {leftState.Consumed}, Right: {rightState.Consumed}");

@@ -17,19 +17,19 @@ namespace Examples.Scenes.ExampleScenes
 {
     internal static class SpawnAreaLayers
     {
-        public static readonly uint BoundaryFlag = BitFlag.GetFlagUint(1);
-        public static readonly uint WallFlag = BitFlag.GetFlagUint(2);
-        public static readonly uint ObjectFlag = BitFlag.GetFlagUint(3);
+        public static readonly uint BoundaryFlag = BitFlag.GetPowerOfTwo(1);
+        public static readonly uint WallFlag = BitFlag.GetPowerOfTwo(2);
+        public static readonly uint ObjectFlag = BitFlag.GetPowerOfTwo(3);
     }
     internal static class CollisionFlags
     {
-        public static readonly uint WallFlag = BitFlag.GetFlagUint(1);
-        public static readonly uint RockFlag = BitFlag.GetFlagUint(2);
-        public static readonly uint BirdFlag = BitFlag.GetFlagUint(3);
-        public static readonly uint BallFlag = BitFlag.GetFlagUint(4);
-        public static readonly uint BulletFlag = BitFlag.GetFlagUint(5);
-        public static readonly uint BoundaryFlag = BitFlag.GetFlagUint(6);
-        public static readonly uint OverlapperFlag = BitFlag.GetFlagUint(7);
+        public static readonly uint WallFlag = BitFlag.GetPowerOfTwo(1);
+        public static readonly uint RockFlag = BitFlag.GetPowerOfTwo(2);
+        public static readonly uint BirdFlag = BitFlag.GetPowerOfTwo(3);
+        public static readonly uint BallFlag = BitFlag.GetPowerOfTwo(4);
+        public static readonly uint BulletFlag = BitFlag.GetPowerOfTwo(5);
+        public static readonly uint BoundaryFlag = BitFlag.GetPowerOfTwo(6);
+        public static readonly uint OverlapperFlag = BitFlag.GetPowerOfTwo(7);
     }
     internal class PolyWall : CollisionObject
     {
@@ -228,19 +228,6 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void Collision(CollisionInformation info)
         {
-            // IntersectionPoint p = new();
-            // if (info.Count > 0)
-            // {
-            //     foreach (var collision in info)
-            //     {
-            //         if(!collision.FirstContact) continue;
-            //         if(collision.Points == null) continue;
-            //         if (collision.Validate(out IntersectionPoint combined))
-            //         {
-            //             if (combined.Valid) p = p.Combine(combined);
-            //         }
-            //     }
-            // }
 
             if(!info.FirstContact) return;
             
@@ -256,14 +243,7 @@ namespace Examples.Scenes.ExampleScenes
         public override void DrawGame(ScreenInfo game)
         {
             var c = circleCollider.GetCircleShape();
-            //
-            // if (game.Area.OverlapShape(c))
-            // {
-            //     c.DrawLines(4f, Colors.Warm);
-            // }
-            
             c.DrawLines(4f, Colors.Warm);
-            // GetBoundingBox().DrawLines(4f, Colors.Cold);
         }
 
         public override bool HasLeftBounds(Rect bounds) => !bounds.OverlapShape(circleCollider.GetCircleShape());
@@ -280,11 +260,9 @@ namespace Examples.Scenes.ExampleScenes
     {
         private CircleCollider circleCollider;
         private float deadTimer = 0f;
-        // private Segment lastVelocitySegment;
-        // private CollisionSurface collisionSurface = new();
         public Bullet(Vector2 pos) : base(new Transform2D(pos, 0f, new Size(8f, 0f), 1f))
         {
-            var col = new CircleCollider(new()); //(new(0f), 8f);
+            var col = new CircleCollider(new()); 
             col.ComputeCollision = true;
             col.ComputeIntersections = true;
             col.Enabled = true;
@@ -297,19 +275,11 @@ namespace Examples.Scenes.ExampleScenes
             AddCollider(col);
 
             circleCollider = col;
-            // circleCollider.OnIntersected += Overlap;
-            
             Layer = SpawnAreaLayers.ObjectFlag;
-
-            // lastVelocitySegment = new(pos, pos);
         }
 
         public override void Update(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
-            // if (Velocity.LengthSquared() > 0)
-            // {
-            //     lastVelocitySegment = new(Transform.Position, Transform.Position + Velocity * time.Delta);
-            // }
             base.Update(time, game, gameUi, ui);
             if (deadTimer > 0f)
             {
@@ -347,35 +317,6 @@ namespace Examples.Scenes.ExampleScenes
                 Velocity = Velocity.Reflect(p.Normal);
             }
         }
-        
-        // private void Overlap(Collider col, CollisionInformation info)
-        // {
-        //     if (info.Collisions.Count > 0)
-        //     {
-        //         
-        //         var minDisSq = float.PositiveInfinity;
-        //         Vector2 p = new();
-        //         foreach (var collision in info.Collisions)
-        //         {
-        //             if(!collision.Intersection.Valid || !collision.Intersection.CollisionSurface.Valid) continue;
-        //             var disSq = (Transform.Position - collision.Intersection.CollisionSurface.Point).LengthSquared();
-        //             if (disSq < minDisSq)
-        //             {
-        //                 minDisSq = disSq;
-        //                 p = collision.Intersection.CollisionSurface.Point;
-        //             }
-        //         }
-        //         Transform = Transform.SetPosition(p);
-        //         Velocity = new();
-        //         Enabled = false;
-        //         deadTimer = 2f;
-        //     }
-        //     // if (info.CollisionSurface.Valid)
-        //     // {
-        //     //     // timer = 0.25f;
-        //     //     body.Velocity = body.Velocity.Reflect(info.CollisionSurface.Normal);
-        //     // }
-        // }
         public override void DrawGame(ScreenInfo game)
         {
             // lastVelocitySegment.Draw(3f, Colors.Medium);
@@ -505,24 +446,9 @@ namespace Examples.Scenes.ExampleScenes
                 Velocity = Velocity.Reflect(p.Normal);
             }
         }
-        
-        // private void Overlap(Collider col, CollisionInformation info)
-        // {
-        //     if (info.CollisionSurface.Valid)
-        //     {
-        //         // body.Transform = body.Transform.ScaleBy(ShapeRandom.RandF(0.1f, 0.2f));
-        //         // body.Transform = body.Transform.SetScale(ShapeRandom.RandF(0.5f, 4f));
-        //         // timer = 0.25f;
-        //         Velocity = Velocity.Reflect(info.CollisionSurface.Normal);
-        //     }
-        // }
         public override void DrawGame(ScreenInfo game)
         {
             polyCollider.GetPolygonShape().DrawLines(4f, Colors.Warm);
-            // GetBoundingBox().DrawLines(4f, Colors.Cold);
-            // Circle c = new(body.Transform.Position, 5f);
-            // c.Draw(Colors.Cold);
-            // polyCollider.GetPolygonShape().DrawLines(4f, Colors.Highlight);
         }
 
         public override void DrawGameUI(ScreenInfo gameUi)
@@ -564,10 +490,7 @@ namespace Examples.Scenes.ExampleScenes
             AddCollider(tCol);
 
             circleCollider = cCol;
-            // circleCollider.OnIntersected += Overlap;
-
             triangleCollider = tCol;
-            // triangleCollider.OnIntersected += Overlap;
             
             Layer = SpawnAreaLayers.ObjectFlag;
             FilterCollisionPoints = true;
@@ -576,20 +499,6 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void Collision(CollisionInformation info)
         {
-            // IntersectionPoint p = new();
-            // if (info.Count > 0)
-            // {
-            //     foreach (var collision in info)
-            //     {
-            //         if(!collision.FirstContact) continue;
-            //         if(collision.Points == null) continue;
-            //         if (collision.Validate(out IntersectionPoint combined))
-            //         {
-            //             // var cp = collision.Points.GetAverageCollisionPoint();
-            //             if (combined.Valid) p = p.Combine(combined);
-            //         }
-            //     }
-            // }
 
             if(!info.FirstContact) return;
             var p = info.FilteredIntersectionPoint;
@@ -599,29 +508,10 @@ namespace Examples.Scenes.ExampleScenes
                 Transform = Transform.SetRotationRad(Velocity.AngleRad());
             }
         }
-        
-
-        // private void Overlap(Collider col, CollisionInformation info)
-        // {
-        //     if (info.CollisionSurface.Valid)
-        //     {
-        //         // timer = 0.25f;
-        //         Velocity = Velocity.Reflect(info.CollisionSurface.Normal);
-        //         Transform = Transform.SetRotationRad(Velocity.AngleRad());
-        //     }
-        // }
         public override void DrawGame(ScreenInfo game)
         {
             circleCollider.GetCircleShape().DrawLines(4f, Colors.Warm);
             triangleCollider.GetTriangleShape().DrawLines(2f, Colors.Warm);
-            // GetBoundingBox().DrawLines(4f, Colors.Cold);
-            // var vel = body.Velocity;
-            // Segment s = new(body.Transform.Position, body.Transform.Position + vel);
-            // s.Draw(2f, Colors.Cold);
-
-            // var trianglePos = triangleCollider.CurTransform.Position;
-            // var trianglePosCircle = new Circle(trianglePos, 6f);
-            // trianglePosCircle.Draw(Colors.Cold);
         }
 
         public override void DrawGameUI(ScreenInfo gameUi)
@@ -644,24 +534,25 @@ namespace Examples.Scenes.ExampleScenes
         private bool segmentStarted = false;
         private bool drawDebug = false;
 
+        // private InputDeviceType currentInputActionDeviceType = InputDeviceType.None;
+        
         private readonly InputAction iaSpawnRock;
         private readonly InputAction iaSpawnBall;
         private readonly InputAction iaSpawnBird;
         private readonly InputAction iaSpawnBullet;
         private readonly InputAction iaSpawnOverlapper;
         private readonly InputAction iaStartClearArea;
-        // private readonly InputAction iaSpawnBox;
-        // private readonly InputAction iaSpawnAura;
         private readonly InputAction iaToggleDebug;
         private readonly InputAction iaPlaceWall;
         private readonly InputAction iaCancelWall;
         
         private readonly InputAction iaMoveCameraH;
         private readonly InputAction iaMoveCameraV;
+        private readonly InputTypeMousePositionDelta cameraHorizontalMouse;
+        private readonly InputTypeMousePositionDelta cameraVerticalMouse;
         
-        private readonly List<InputAction> inputActions;
+        private readonly InputActionTree inputActionTree;
 
-        // private Rect clearArea = new();
         private Vector2 clearAreaStartPoint = new();
         private bool clearAreaActive = false;
         private readonly BitFlag clearAreaMask;
@@ -671,68 +562,71 @@ namespace Examples.Scenes.ExampleScenes
 
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
 
+            InputActionSettings defaultSettings = new();
+            
+            var modifierKeySetGp = new ModifierKeySet(ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad);
+            var modifierKeySetGpReversed = new ModifierKeySet(ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+            var modifierKeySetMouse = new ModifierKeySet(ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouse);
+            
             var placeWallKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
             var placeWallGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
             var placeWallMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
-            iaPlaceWall = new(placeWallKB, placeWallGP, placeWallMB);
+            iaPlaceWall = new(defaultSettings,placeWallKB, placeWallGP, placeWallMB);
             
             var cancelWallKB = new InputTypeKeyboardButton(ShapeKeyboardButton.C);
             var cancelWallGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
             var cancelWallMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
-            iaCancelWall = new(cancelWallKB, cancelWallGP, cancelWallMB);
+            iaCancelWall = new(defaultSettings,cancelWallKB, cancelWallGP, cancelWallMB);
             
             var spawnRockKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ONE);
-            var spawnRockGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-            iaSpawnRock = new(spawnRockKB, spawnRockGB);
-            
-            // var spawnBoxKB = new InputTypeKeyboardButton(ShapeKeyboardButton.TWO);
-            // var spawnBoxGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-            // iaSpawnBox = new(spawnBoxKB, spawnBoxGB);
+            var spawnRockGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN, 0f, modifierKeySetGpReversed);
+            iaSpawnRock = new(defaultSettings,spawnRockKB, spawnRockGB);
             
             var spawnBallKB = new InputTypeKeyboardButton(ShapeKeyboardButton.THREE);
-            var spawnBallGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-            iaSpawnBall = new(spawnBallKB, spawnBallGB);
+            var spawnBallGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT, 0f, modifierKeySetGpReversed);
+            iaSpawnBall = new(defaultSettings,spawnBallKB, spawnBallGB);
             
             var spawnBirdKB = new InputTypeKeyboardButton(ShapeKeyboardButton.TWO);
-            var spawnBirdGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-            iaSpawnBird = new(spawnBirdKB, spawnBirdGp);
+            var spawnBirdGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN, 0f, modifierKeySetGpReversed);
+            iaSpawnBird = new(defaultSettings,spawnBirdKB, spawnBirdGp);
             
             var spawnBulletKb = new InputTypeKeyboardButton(ShapeKeyboardButton.FOUR);
-            var spawnBulletGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP , 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-            iaSpawnBullet = new(spawnBulletKb, spawnBulletGp);
+            var spawnBulletGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP , 0f, modifierKeySetGpReversed);
+            iaSpawnBullet = new(defaultSettings,spawnBulletKb, spawnBulletGp);
             
             var spawnOverlapperKb = new InputTypeKeyboardButton(ShapeKeyboardButton.FIVE);
-            iaSpawnOverlapper = new(spawnOverlapperKb);
+            iaSpawnOverlapper = new(defaultSettings,spawnOverlapperKb);
             
             var toggleDebugKB = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
             var toggleDebugGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
-            iaToggleDebug = new(toggleDebugKB, toggleDebugGP);
+            iaToggleDebug = new(defaultSettings,toggleDebugKB, toggleDebugGP);
             
             var clearAreaKb = new InputTypeKeyboardButton(ShapeKeyboardButton.X);
             var clearAreaGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
-            iaStartClearArea = new(clearAreaKb, clearAreaGp);
+            iaStartClearArea = new(defaultSettings,clearAreaKb, clearAreaGp);
 
             var cameraHorizontalKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
-            var cameraHorizontalGP =
-                new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad);
-            // var cameraHorizontalGP2 = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad2);
-            var cameraHorizontalMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-            iaMoveCameraH = new(cameraHorizontalKB, cameraHorizontalGP, cameraHorizontalMW);
+            var cameraHorizontalGP = new InputTypeGamepadJoyAxis(ShapeGamepadJoyAxis.RIGHT_X, 0.15f, false, modifierKeySetGp);
+            // var cameraHorizontalMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, modifierKeySetMouse);
+            // var cameraHorizontalMouse = new InputTypeMouseAxis(ShapeMouseAxis.HORIZONTAL, 15, modifierKeySetMouse);
+            cameraHorizontalMouse = new InputTypeMousePositionDelta(ShapeMouseAxis.HORIZONTAL, Vector2.Zero, 25, modifierKeySetMouse);
+            iaMoveCameraH = new(defaultSettings,cameraHorizontalKB, cameraHorizontalGP, cameraHorizontalMouse);
             
             var cameraVerticalKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
             var cameraVerticalGP =
-                new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad);
-            // var cameraVerticalGP2 = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_UP, ShapeGamepadButton.LEFT_FACE_DOWN, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad2);
-            var cameraVerticalMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-            iaMoveCameraV = new(cameraVerticalKB, cameraVerticalGP, cameraVerticalMW);
+                new InputTypeGamepadJoyAxis(ShapeGamepadJoyAxis.RIGHT_Y, 0.15f, false, modifierKeySetGp);
+            // var cameraVerticalMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, modifierKeySetMouse);
+            // var cameraVerticalMouse = new InputTypeMouseAxis(ShapeMouseAxis.VERTICAL, 15, modifierKeySetMouse);
+            cameraVerticalMouse = new InputTypeMousePositionDelta(ShapeMouseAxis.VERTICAL, Vector2.Zero, 25, modifierKeySetMouse);
+            iaMoveCameraV = new(defaultSettings,cameraVerticalKB, cameraVerticalGP, cameraVerticalMouse);
 
-            inputActions = new()
-            {
+            inputActionTree =
+            [
                 iaPlaceWall, iaCancelWall,
                 iaSpawnRock, iaSpawnBall, iaSpawnBird, iaSpawnBullet, iaSpawnOverlapper,
                 iaToggleDebug, iaStartClearArea,
                 iaMoveCameraH, iaMoveCameraV
-            };
+            ];
             
             boundaryRect = new(new(0f), new(5000,5000), new(0.5f));
             InitSpawnArea(boundaryRect);
@@ -741,11 +635,6 @@ namespace Examples.Scenes.ExampleScenes
                 SpawnArea.OnGameObjectRemoved += OnGameObjectDied;
             }
             InitCollisionHandler(boundaryRect, 50, 50);
-            // if (InitSpawnArea(boundaryRect))
-            // {
-            //     SpawnArea?.InitCollisionHandler(50, 50);
-            // }
-            
             SetupBoundary();
 
             clearAreaMask = new BitFlag(CollisionFlags.RockFlag);
@@ -769,6 +658,16 @@ namespace Examples.Scenes.ExampleScenes
             drawDebug = false;
         }
 
+        protected override void OnActivate(Scene oldScene)
+        {
+            ShapeInput.ActiveKeyboardDevice.UsageDetectionSettings.ExceptionButtons.Add(ShapeKeyboardButton.LEFT_SHIFT);
+        }
+
+        protected override void OnDeactivate()
+        {
+            ShapeInput.ActiveKeyboardDevice.UsageDetectionSettings.ExceptionButtons.Remove(ShapeKeyboardButton.LEFT_SHIFT);
+        }
+
         private void ClearAreaCollisionObjects(Rect area, BitFlag collisionLayerMask)
         {
             if (CollisionHandler == null) return;
@@ -784,12 +683,21 @@ namespace Examples.Scenes.ExampleScenes
                 CollisionHandler?.Remove(colObject);
             }
         }
-        
+
+        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
+        {
+            base.OnUpdateExample(time, game, gameUi, ui);
+            var newCameraMouseTarget = ui.Area.Center;
+            cameraHorizontalMouse.ChangeTargetPosition(newCameraMouseTarget);
+            cameraVerticalMouse.ChangeTargetPosition(newCameraMouseTarget);
+        }
 
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
             var gamepad = GAMELOOP.CurGamepad;
-            InputAction.UpdateActions(dt, gamepad, inputActions);
+            inputActionTree.CurrentGamepad = gamepad;
+            inputActionTree.Update(dt, out _);
+            // if(updated && inputDeviceType != InputDeviceType.None) currentInputActionDeviceType = inputDeviceType;
             
             if (iaStartClearArea.State.Pressed)
             {
@@ -857,28 +765,14 @@ namespace Examples.Scenes.ExampleScenes
             if (iaToggleDebug.State.Pressed) { drawDebug = !drawDebug; }
 
             
-            
-
-            if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Mouse)
-            {
-                if (ShapeKeyboardButton.LEFT_SHIFT.GetInputState().Down)
-                {
-                    var dir = ExampleScene.CalculateMouseMovementDirection(GAMELOOP.GameScreenInfo.MousePos, GAMELOOP.Camera);
-                    var cam = GAMELOOP.Camera;
-                    var f = cam.ZoomFactor;
-                    cam.BasePosition += dir * 500 * dt * f;
-                }
-                
-            }
-            else
-            {
-                var moveCameraH = iaMoveCameraH.State.AxisRaw;
-                var moveCameraV = iaMoveCameraV.State.AxisRaw;
-                var moveCameraDir = new Vector2(moveCameraH, moveCameraV);
-                var cam = GAMELOOP.Camera;
-                var f = cam.ZoomFactor;
-                cam.BasePosition += moveCameraDir * 500 * dt * f;
-            }
+            //camera movement
+            var moveCameraH = iaMoveCameraH.State.AxisRaw;
+            var moveCameraV = iaMoveCameraV.State.AxisRaw;
+            var moveCameraDir = new Vector2(moveCameraH, moveCameraV);
+            if (iaMoveCameraH.CurrentDeviceType == InputDeviceType.Mouse) moveCameraDir = moveCameraDir.Normalize();
+            var cam = GAMELOOP.Camera;
+            var f = cam.ZoomFactor;
+            cam.BasePosition += moveCameraDir * 500 * dt * f;
             
             HandleWalls(mousePosGame);
         }
@@ -907,8 +801,6 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
 
-        
-
         protected override void OnDrawUIExample(ScreenInfo ui)
         {
             // Vector2 uiSize = ui.Area.Size;
@@ -930,6 +822,8 @@ namespace Examples.Scenes.ExampleScenes
             textFont.DrawTextWrapNone($"{CollisionHandler?.Count ?? 0}", rects.bottom, new(0.5f));
             // font.DrawText("Object Count", rects.top, 1f, new Vector2(0.5f, 0f), ColorHighlight3);
             // font.DrawText(, rects.bottom, 1f, new Vector2(0.5f, 0.5f), ColorHighlight3);
+            
+            // cameraVerticalMouse.CurTargetPosition.Draw(5, ColorRgba.White);
         }
 
         private void DrawInputText(Rect rect)
@@ -939,8 +833,8 @@ namespace Examples.Scenes.ExampleScenes
             
             var sb = new StringBuilder();
             var sbCamera = new StringBuilder();
-            var curInputDeviceAll = ShapeInput.CurrentInputDeviceType;
-            var curInputDeviceNoMouse = ShapeInput.CurrentInputDeviceTypeNoMouse;
+            var curInputDeviceAll = ShapeInput.CurrentInputDeviceType; //currentInputActionDeviceType;
+            var curInputDeviceNoMouse = ShapeInput.CurrentInputDeviceTypeNoMouse; // currentInputActionDeviceType.FilterInputDevice(InputDeviceType.Mouse, InputDeviceType.Keyboard);
             
             string placeWallText = iaPlaceWall.GetInputTypeDescription(curInputDeviceAll, true, 1, false, false);
             string cancelWallText = iaCancelWall.GetInputTypeDescription(curInputDeviceAll, true, 1, false, false);

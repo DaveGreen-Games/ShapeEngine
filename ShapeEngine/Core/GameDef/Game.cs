@@ -27,7 +27,7 @@ namespace ShapeEngine.Core.GameDef;
 /// <list type="bullet">
 /// <item><see cref="LoadContent"/> - Called once.</item>
 /// <item><see cref="BeginRun"/> - Called once.</item>
-/// <item><see cref="PreFixedUpdate"/> - Called every frame with variable timing.</item>
+/// <item><see cref="Update"/> - Called every frame with variable timing.</item>
 /// <item><see cref="FixedUpdate"/> - Called in a fixed interval with fixed timing.</item>
 /// <item><see cref="InterpolateFixedUpdate"/> - Called every frame with variable timing.</item>
 /// <item><see cref="DrawGame"/> - Called every frame.</item>
@@ -56,7 +56,7 @@ public partial class Game
     /// When true, the fixed update functions will be called at the FixedPhysicsFramerate.
     /// Fixed Update call order:
     /// <list type="bullet">
-    /// <item><see cref="PreFixedUpdate"/> with variable timing.</item>
+    /// <item><see cref="Update"/> with variable timing.</item>
     /// <item><see cref="FixedUpdate"/> with fixed timing.</item>
     /// <item><see cref="InterpolateFixedUpdate"/> with variable timing.</item>
     /// <item><see cref="DrawGame"/></item>
@@ -353,7 +353,7 @@ public partial class Game
         UIScreenInfo = new(Window.ScreenArea, mousePosUI);
 
         ShapeInput.OnInputDeviceChanged += ResolveOnInputDeviceChanged;
-        ShapeInput.GamepadDeviceManager.OnGamepadConnectionChanged += ResolveOnGamepadConnectionChanged;
+        ShapeInput.ActiveGamepadDeviceManager.OnGamepadConnectionChanged += ResolveOnActiveGamepadConnectionChanged;
         
         //This sets the current directory to the executable's folder, enabling double-click launches.
         //without this, the executable has to be launched from the command line
@@ -631,7 +631,7 @@ public partial class Game
     #endregion
     
     #region Gamepad Connection
-    private void ResolveOnGamepadConnectionChanged(ShapeGamepadDevice gamepad, bool connected)
+    private void ResolveOnActiveGamepadConnectionChanged(GamepadDevice gamepad, bool connected)
     {
         if (connected)
         {

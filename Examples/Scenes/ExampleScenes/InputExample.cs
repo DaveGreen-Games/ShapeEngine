@@ -1,7 +1,6 @@
 using Raylib_cs;
 using ShapeEngine.Core;
 using System.Numerics;
-using System.Reflection;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.RectDef;
@@ -14,13 +13,14 @@ namespace Examples.Scenes.ExampleScenes
 {
     internal abstract class InputVisualizer
     {
-        public abstract void Update(float dt, ShapeGamepadDevice? gamepad, InputDeviceType inputDeviceType);
+        public abstract void Update(float dt, GamepadDevice? gamepad, InputDeviceType inputDeviceType);
         public abstract void Draw(Rect area, float lineThickness);
     }
     internal class JoystickVisualizer : InputVisualizer
     {
         private InputAction joystickHorizontal;
         private InputAction joystickVertical;
+        private readonly InputActionTree inputActionTree;
         private string title;
         private TextFont textFont;
         private float flashTimer = 0f;
@@ -28,83 +28,52 @@ namespace Examples.Scenes.ExampleScenes
         private InputDeviceType curInputDeviceType = InputDeviceType.Keyboard;
         public JoystickVisualizer(bool left, Font font)
         {
+            
+            var settings = InputActionSettings.CreateAxis(0.5f, 0.25f);
             this.textFont = new(font, 1f, Colors.Medium);
             if (left)
             {
                 title = "AXIS LEFT";
-                var keyboardHorizontal = IInputType.Create(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
-                var keyboardVertical = IInputType.Create(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
+                var keyboardHorizontal = ShapeKeyboardButton.A.CreateInputType(ShapeKeyboardButton.D);
+                var keyboardVertical = ShapeKeyboardButton.W.CreateInputType(ShapeKeyboardButton.S);
             
-                var gamepadButtonHorizontal = 
-                    IInputType.Create(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT, 0f);
-                var gamepadButtonVertical = 
-                    IInputType.Create(ShapeGamepadButton.LEFT_FACE_UP, ShapeGamepadButton.LEFT_FACE_DOWN, 0f);
+                var gamepadButtonHorizontal = ShapeGamepadButton.LEFT_FACE_LEFT.CreateInputType(ShapeGamepadButton.LEFT_FACE_RIGHT, 0f);
+                var gamepadButtonVertical = ShapeGamepadButton.LEFT_FACE_UP.CreateInputType(ShapeGamepadButton.LEFT_FACE_DOWN, 0f);
 
-                var gamepadHorizontal = IInputType.Create(ShapeGamepadAxis.LEFT_X, 0f);
-                var gamepadVertical = IInputType.Create(ShapeGamepadAxis.LEFT_Y, 0f);
-
+                var gamepadHorizontal = ShapeGamepadJoyAxis.LEFT_X.CreateInputType(0f);
+                var gamepadVertical = ShapeGamepadJoyAxis.LEFT_Y.CreateInputType(0f);
                 
-                // var mouseWheelHorizontal = InputAction.CreateInputType(ShapeMouseWheelAxis.HORIZONTAL);
-                // var mouseWheelVertical = InputAction.CreateInputType(ShapeMouseWheelAxis.VERTICAL);
-
-                // var mouseHorizontal = InputAction.CreateInputType(ShapeMouseAxis.HORIZONTAL);
-                // var mouseVertical = InputAction.CreateInputType(ShapeMouseAxis.VERTICAL);
-
-                // var mouseButtonAxisHorizontal =
-                //     InputAction.CreateInputType(ShapeMouseButton.LEFT_AXIS, ShapeMouseButton.RIGHT_AXIS);
-                // var mouseButtonAxisVertical =
-                //     InputAction.CreateInputType(ShapeMouseButton.UP_AXIS, ShapeMouseButton.DOWN_AXIS);
-                
-                joystickHorizontal = new(keyboardHorizontal, gamepadButtonHorizontal, gamepadHorizontal);//, mouseButtonAxisHorizontal );//, mouseWheelHorizontal, mouseHorizontal);
-                joystickVertical = new(keyboardVertical, gamepadButtonVertical, gamepadVertical);//, mouseButtonAxisVertical );//, mouseWheelVertical, mouseVertical);
+                joystickHorizontal = new(settings, keyboardHorizontal, gamepadButtonHorizontal, gamepadHorizontal);
+                joystickVertical = new(settings, keyboardVertical, gamepadButtonVertical, gamepadVertical);
             }
             else
             {
                 title = "AXIS RIGHT";
-                var keyboardHorizontal = IInputType.Create(ShapeKeyboardButton.LEFT, ShapeKeyboardButton.RIGHT);
-                var keyboardVertical = IInputType.Create(ShapeKeyboardButton.UP, ShapeKeyboardButton.DOWN);
-            
-                //var gamepadButtonHorizontal = 
-                //    IInputType.Create(ShapeGamepadButton.RIGHT_FACE_LEFT, ShapeGamepadButton.RIGHT_FACE_RIGHT, 0f);
-                //var gamepadButtonVertical = 
-                //    IInputType.Create(ShapeGamepadButton.RIGHT_FACE_UP, ShapeGamepadButton.RIGHT_FACE_DOWN, 0f);
+                var keyboardHorizontal = ShapeKeyboardButton.LEFT.CreateInputType(ShapeKeyboardButton.RIGHT);
+                var keyboardVertical = ShapeKeyboardButton.UP.CreateInputType(ShapeKeyboardButton.DOWN);
 
-                var gamepadHorizontal = IInputType.Create(ShapeGamepadAxis.RIGHT_X, 0f);
-                var gamepadVertical = IInputType.Create(ShapeGamepadAxis.RIGHT_Y, 0f);
+                var gamepadHorizontal = ShapeGamepadJoyAxis.RIGHT_X.CreateInputType(0f);
+                var gamepadVertical = ShapeGamepadJoyAxis.RIGHT_Y.CreateInputType(0f);
 
-                // var mouseWheelButtonAxisHorizontal =
-                //     InputAction.CreateInputType(ShapeMouseButton.MW_LEFT, ShapeMouseButton.MW_RIGHT);
-                // var mouseWheelButtonAxisVertical =
-                //     InputAction.CreateInputType(ShapeMouseButton.MW_UP, ShapeMouseButton.MW_DOWN);
-                //
-                // var mouseWheelHorizontal = InputAction.CreateInputType(ShapeMouseWheelAxis.HORIZONTAL);
-                // var mouseWheelVertical = InputAction.CreateInputType(ShapeMouseWheelAxis.VERTICAL);
-
-                // var mouseHorizontal = InputAction.CreateInputType(ShapeMouseAxis.HORIZONTAL);
-                // var mouseVertical = InputAction.CreateInputType(ShapeMouseAxis.VERTICAL);
-            
-                joystickHorizontal = new(keyboardHorizontal, gamepadHorizontal );//, mouseWheelButtonAxisHorizontal ); //, mouseWheelHorizontal, mouseHorizontal);
-                joystickVertical = new(keyboardVertical, gamepadVertical );//, mouseWheelButtonAxisVertical );//, mouseWheelVertical, mouseVertical);
+                joystickHorizontal = new(settings, keyboardHorizontal, gamepadHorizontal );
+                joystickVertical = new(settings, keyboardVertical, gamepadVertical );
             }
-
-            joystickHorizontal.AxisGravity = 0.25f;
-            joystickHorizontal.AxisSensitivity = 0.5f;
-            joystickVertical.AxisGravity = 0.25f;
-            joystickVertical.AxisSensitivity = 0.5f;
+            
+            inputActionTree = [
+                joystickHorizontal,
+                joystickVertical
+            ];
 
         }
-        public override void Update(float dt, ShapeGamepadDevice? gamepad, InputDeviceType inputDeviceType)
+        public override void Update(float dt, GamepadDevice? gamepad, InputDeviceType inputDeviceType)
         {
             if (joystickHorizontal.HasInput(inputDeviceType) || joystickVertical.HasInput(inputDeviceType))
             {
                 curInputDeviceType = inputDeviceType;
             }
-            
-            joystickHorizontal.Gamepad = gamepad;
-            joystickVertical.Gamepad = gamepad;
-            
-            joystickHorizontal.Update(dt);
-            joystickVertical.Update(dt);
+
+            inputActionTree.CurrentGamepad = gamepad;
+            inputActionTree.Update(dt);
             
             float deadzone = 0.1f;
             if (MathF.Abs(joystickHorizontal.State.AxisRaw) < deadzone &&
@@ -209,36 +178,39 @@ namespace Examples.Scenes.ExampleScenes
         private InputDeviceType curInputDeviceType = InputDeviceType.Keyboard;
 
         private InputAction trigger;
+        private readonly InputActionTree inputActionTree;
         
         public TriggerVisualizer(bool left, Font font)
         {
             this.textFont = new(font, 1f, Colors.Medium);
             
-
+            var settings = InputActionSettings.CreateAxis(0.25f, 0.25f);
             if (left)
             {
                 this.title = "LT";
-                var triggerLeft = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_TRIGGER, 0.05f);
-                trigger = new();
+                var triggerLeft = new InputTypeGamepadTriggerAxis(ShapeGamepadTriggerAxis.LEFT, 0.05f);
+                trigger = new(settings);
                 trigger.AddInput(triggerLeft);
             }
             else
             {
                 this.title = "RT";
-                var triggerRight = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_TRIGGER, 0.05f);
-                trigger = new();
+                var triggerRight = new InputTypeGamepadTriggerAxis(ShapeGamepadTriggerAxis.RIGHT, 0.05f);
+                trigger = new(settings);
                 trigger.AddInput(triggerRight);
             }
+
+            inputActionTree = [trigger];
         }
-        public override void Update(float dt, ShapeGamepadDevice? gamepad, InputDeviceType inputDeviceType)
+        public override void Update(float dt, GamepadDevice? gamepad, InputDeviceType inputDeviceType)
         {
             if (trigger.HasInput(inputDeviceType))
             {
                 curInputDeviceType = inputDeviceType;
             }
             
-            trigger.Gamepad = gamepad;
-            trigger.Update(dt);
+            inputActionTree.CurrentGamepad = gamepad;
+            inputActionTree.Update(dt);
             
 
             if (trigger.State.Down)
@@ -251,9 +223,6 @@ namespace Examples.Scenes.ExampleScenes
                 flashTimer -= dt;
                 if (flashTimer <= 0) flashTimer = 0f;
             }
-
-            trigger.AxisGravity = 0.25f;
-            trigger.AxisSensitivity = 0.25f;
         }
 
         public override void Draw(Rect area, float lineThickness)
@@ -354,18 +323,19 @@ namespace Examples.Scenes.ExampleScenes
             private InputDeviceType curInputDeviceType = InputDeviceType.Keyboard;
     
             private InputAction button;
+            private readonly InputActionTree inputActionTree;
             public ButtonVisualizer(bool left, Font font)
             {
                 this.textFont = new(font, 1f, Colors.Medium);
                 
-    
+                InputActionSettings defaultSettings = new();
                 if (left)
                 {
                     this.title = "BUTTON LEFT";
                     var tab = new InputTypeKeyboardButton(ShapeKeyboardButton.TAB);
                     var select = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
                     var lmb = new InputTypeMouseButton(ShapeMouseButton.LEFT);
-                    button = new(tab, select, lmb);
+                    button = new(defaultSettings,tab, select, lmb);
                 }
                 else
                 {
@@ -373,18 +343,20 @@ namespace Examples.Scenes.ExampleScenes
                     var space = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
                     var start = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
                     var rmb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
-                    button = new(space, start, rmb);
+                    button = new(defaultSettings,space, start, rmb);
                 }
+                
+                inputActionTree = [button];
             }
-            public override void Update(float dt, ShapeGamepadDevice? gamepad, InputDeviceType inputDeviceType)
+            public override void Update(float dt, GamepadDevice? gamepad, InputDeviceType inputDeviceType)
             {
                 if (button.HasInput(inputDeviceType))
                 {
                     curInputDeviceType = inputDeviceType;
                 }
                 
-                button.Gamepad = gamepad;
-                button.Update(dt);
+                inputActionTree.CurrentGamepad = gamepad;
+                inputActionTree.Update(dt);
                 
     
                 if (button.State.Down)
@@ -452,25 +424,28 @@ namespace Examples.Scenes.ExampleScenes
         private InputDeviceType curInputDeviceType = InputDeviceType.Keyboard;
 
         private InputAction button;
+        private readonly InputActionTree inputActionTree;
         public ButtonHoldVisualizer(Font font)
         {
             this.textFont = new(font, 1f, Colors.Medium);
             
             this.title = "HOLD";
+            InputActionSettings defaultSettings = new();
             var q = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
             var x = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
             //var rmb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
-            button = new(q, x);
+            button = new(defaultSettings,q, x);
+            inputActionTree = [button];
         }
-        public override void Update(float dt, ShapeGamepadDevice? gamepad, InputDeviceType inputDeviceType)
+        public override void Update(float dt, GamepadDevice? gamepad, InputDeviceType inputDeviceType)
         {
             if (button.HasInput(inputDeviceType))
             {
                 curInputDeviceType = inputDeviceType;
             }
             
-            button.Gamepad = gamepad;
-            button.Update(dt);
+            inputActionTree.CurrentGamepad = gamepad;
+            inputActionTree.Update(dt);
             
 
             if (button.State.Down)
@@ -600,32 +575,29 @@ namespace Examples.Scenes.ExampleScenes
         private InputDeviceType curInputDeviceType = InputDeviceType.Keyboard;
 
         private InputAction button;
-        // private string lastAction = string.Empty;
-        // private float lastActionTimer = 0f;
-        // private float lastActionDuration = 1f;
+        private readonly InputActionTree inputActionTree;
         public ButtonDoubleTapVisualizer(Font font)
         {
             this.textFont = new(font, 1f, Colors.Medium);
             
+            var settings = InputActionSettings.CreateHoldAndMultiTap(1f, 0.25f, 2);
+            
             this.title = "Double Tap";
             var q = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
             var x = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
-            //var rmb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
-            button = new(q, x);
-            button.MultiTapDuration = 0.25f;
-            button.MultiTapTarget = 2;
-            button.HoldDuration = 1f;
+            button = new(settings, q, x);
+            
+            inputActionTree = [button];
         }
-        public override void Update(float dt, ShapeGamepadDevice? gamepad, InputDeviceType inputDeviceType)
+        public override void Update(float dt, GamepadDevice? gamepad, InputDeviceType inputDeviceType)
         {
             if (button.HasInput(inputDeviceType))
             {
                 curInputDeviceType = inputDeviceType;
             }
             
-            button.Gamepad = gamepad;
-            button.Update(dt);
-            
+            inputActionTree.CurrentGamepad = gamepad;
+            inputActionTree.Update(dt);
 
             if (button.State.Down)
             {
@@ -767,14 +739,14 @@ namespace Examples.Scenes.ExampleScenes
         protected override void OnActivate(Scene oldScene)
         {
             BitFlag mask = new(GAMELOOP.GameloopAccessTag);
-            mask = mask.Add(InputAction.DefaultAccessTag);
-            InputAction.LockWhitelist(mask);
+            mask = mask.Add(ShapeInput.DefaultAccessTag);
+            ShapeInput.LockWhitelist(mask);
             // InputAction.LockWhitelist(GAMELOOP.GameloopAccessTag, InputAction.DefaultAccessTag);
         }
 
         protected override void OnDeactivate()
         {
-            InputAction.Unlock();
+            ShapeInput.Unlock();
         }
 
         public override void Reset()

@@ -5,60 +5,24 @@ namespace ShapeEngine.Input;
 /// <summary>
 /// Represents an input type for a mouse button, supporting deadzone and modifier keys.
 /// </summary>
-public class InputTypeMouseButton : IInputType
+public sealed class InputTypeMouseButton : IInputType
 {
     private readonly ShapeMouseButton button;
     private float deadzone;
-    private readonly IModifierKey[] modifierKeys;
-    private readonly ModifierKeyOperator modifierOperator;
+    private readonly ModifierKeySet? modifierKeySet;
 
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputTypeMouseButton"/> with the specified button and deadzone.
+
+/// <summary>
+    /// Initializes a new instance of the <see cref="InputTypeMouseButton"/> class.
     /// </summary>
-    /// <param name="button">The mouse button.</param>
-    /// <param name="deadzone">
-    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value. MouseButtons ignore deadzone (deadzone works only with axis input types).
-    /// </param>
-    public InputTypeMouseButton(ShapeMouseButton button, float deadzone = 0f)
+    /// <param name="button">The mouse button to represent.</param>
+    /// <param name="deadzone">The deadzone threshold for input detection.</param>
+    /// <param name="modifierKeySet">Optional set of modifier keys required for activation.</param>
+    public InputTypeMouseButton(ShapeMouseButton button, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseThreshold, ModifierKeySet? modifierKeySet = null)
     {
         this.button = button; 
         this.deadzone = deadzone;
-        this.modifierKeys = [];
-        this.modifierOperator = ModifierKeyOperator.And;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputTypeMouseButton"/> with button, deadzone, modifier operator, and modifier keys.
-    /// </summary>
-    /// <param name="button">The mouse button.</param>
-    /// <param name="deadzone">
-    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value. MouseButtons ignore deadzone (deadzone works only with axis input types).
-    /// </param>
-    /// <param name="modifierOperator">The modifier key operator.</param>
-    /// <param name="modifierKeys">The modifier keys.</param>
-    public InputTypeMouseButton(ShapeMouseButton button, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
-    {
-        this.button = button; 
-        this.deadzone = deadzone;
-        this.modifierOperator = modifierOperator;
-        this.modifierKeys = modifierKeys;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputTypeMouseButton"/> with button, deadzone, modifier operator, and a single modifier key.
-    /// </summary>
-    /// <param name="button">The mouse button.</param>
-    /// <param name="deadzone">
-    /// The deadzone value. Deadzone is a setting that discards input values that are below the deadzone value. MouseButtons ignore deadzone (deadzone works only with axis input types).
-    /// </param>
-    /// <param name="modifierOperator">The modifier key operator.</param>
-    /// <param name="modifierKey">The modifier key.</param>
-    public InputTypeMouseButton(ShapeMouseButton button, float deadzone, ModifierKeyOperator modifierOperator, IModifierKey modifierKey)
-    {
-        this.button = button; 
-        this.deadzone = deadzone;
-        this.modifierOperator = modifierOperator;
-        this.modifierKeys = new[]{ modifierKey };
+        this.modifierKeySet = modifierKeySet;
     }
 
     /// <inheritdoc/>
@@ -68,23 +32,16 @@ public class InputTypeMouseButton : IInputType
     public void SetDeadzone(float value) { deadzone = value; }
 
     /// <inheritdoc/>
-    public InputState GetState(ShapeGamepadDevice? gamepad = null)
-    {
-        return ShapeInput.MouseDevice.CreateInputState(button, deadzone, modifierOperator, modifierKeys);
-    }
+    public InputState GetState(GamepadDevice? gamepad = null) => ShapeInput.ActiveMouseDevice.CreateInputState(button, deadzone, deadzone,  modifierKeySet);
 
     /// <inheritdoc/>
-    public InputState GetState(InputState prev, ShapeGamepadDevice? gamepad = null)
-    {
-        return ShapeInput.MouseDevice.CreateInputState(button, prev, deadzone, modifierOperator, modifierKeys);
-    }
-
+    public InputState GetState(InputState prev, GamepadDevice? gamepad = null) => ShapeInput.ActiveMouseDevice.CreateInputState(button, prev, deadzone,  deadzone, modifierKeySet);
     /// <inheritdoc/>
-    public virtual string GetName(bool shorthand = true)
+    public string GetName(bool shorthand = true)
     {
         StringBuilder sb = new();
-        IModifierKey.GetModifierKeyNames(sb, modifierKeys, modifierOperator, shorthand);
-        sb.Append(ShapeMouseDevice.GetButtonName(button, shorthand));
+        modifierKeySet?.AppendModifierKeyNames(sb, shorthand);
+        sb.Append(button.GetButtonName(shorthand));
         return sb.ToString();
     }
 
@@ -92,5 +49,46 @@ public class InputTypeMouseButton : IInputType
     public InputDeviceType GetInputDevice() => InputDeviceType.Mouse;
 
     /// <inheritdoc/>
-    public IInputType Copy() => new InputTypeMouseButton(button);
+    public IInputType Copy() => new InputTypeMouseButton(button, deadzone, modifierKeySet?.Copy());
+    
+    private bool Equals(InputTypeMouseButton other)
+    {
+        return button == other.button  &&
+               (modifierKeySet == null && other.modifierKeySet == null ||
+                modifierKeySet != null && modifierKeySet.Equals(other.modifierKeySet));
+    }
+    
+    /// <summary>
+    /// Determines whether the specified <see cref="IInputType"/> is equal to the current instance.
+    /// </summary>
+    /// <param name="other">The other <see cref="IInputType"/> to compare.</param>
+    /// <returns><c>true</c> if equal; otherwise, <c>false</c>.</returns>
+    public bool Equals(IInputType? other)
+    {
+        if (other is InputTypeMouseButton inputType)
+        {
+            return Equals(inputType);       
+        }
+    
+        return false;
+    }
+    
+    /// <summary>
+    /// Determines whether the specified object is equal to the current instance.
+    /// </summary>
+    /// <param name="obj">The object to compare.</param>
+    /// <returns><c>true</c> if equal; otherwise, <c>false</c>.</returns>
+    public override bool Equals(object? obj)
+    {
+        return ReferenceEquals(this, obj) || obj is InputTypeMouseButton other && Equals(other);
+    }
+    
+    /// <summary>
+    /// Returns a hash code for the current instance.
+    /// </summary>
+    /// <returns>A hash code for the current instance.</returns>
+    public override int GetHashCode()
+    {
+        return HashCode.Combine((int)button, modifierKeySet?.GetHashCode() ?? 0);
+    }
 }

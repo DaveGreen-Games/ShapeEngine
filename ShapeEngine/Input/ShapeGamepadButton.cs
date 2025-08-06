@@ -1,12 +1,11 @@
 namespace ShapeEngine.Input;
 
+
 /// <summary>
 /// Represents the various buttons available on a gamepad.
 /// </summary>
 public enum ShapeGamepadButton
 {
-    /// <summary>No button pressed.</summary>
-    NONE = -1,
     /// <summary>Unknown button.</summary>
     UNKNOWN = 0,
 

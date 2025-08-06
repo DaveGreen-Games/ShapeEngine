@@ -10,7 +10,7 @@ namespace ShapeEngine.Core.Structs;
 /// <remarks>
 /// Provides utility methods for range operations, random value generation, clamping, remapping, and arithmetic operations.
 /// </remarks>
-public readonly struct ValueRange
+public readonly struct ValueRange : IEquatable<ValueRange>, IComparable<ValueRange>
 {
     /// <summary>
     /// The minimum value of the range.
@@ -20,7 +20,18 @@ public readonly struct ValueRange
     /// The maximum value of the range.
     /// </summary>
     public readonly float Max;
-
+    /// <summary>
+    /// Gets the absolute difference between Max and Min, representing the total span of the range.
+    /// </summary>
+    public float TotalRange => MathF.Abs(Max- Min);
+    /// <summary>
+    /// Gets the center value of the range, calculated as the average of Min and Max.
+    /// </summary>
+    public float Center => (Min + Max) * 0.5f;
+    /// <summary>
+    /// Gets the absolute value of the center of the range.
+    /// </summary>
+    public float AbsoluteCenter => MathF.Abs(Center);
     #region Constructors
 
     /// <summary>
@@ -103,11 +114,28 @@ public readonly struct ValueRange
     #endregion
 
     #region Public Functions
+
+    /// <summary>
+    /// Returns a new <see cref="ValueRange"/> updated to include <paramref name="newValue"/>.
+    /// If <paramref name="newValue"/> is less than Min, sets Min to <paramref name="newValue"/>.
+    /// If <paramref name="newValue"/> is greater than Max, sets Max to <paramref name="newValue"/>.
+    /// Otherwise, returns the current range unchanged.
+    /// </summary>
+    /// <param name="newValue">The value to include in the range.</param>
+    /// <returns>A new <see cref="ValueRange"/> that includes <paramref name="newValue"/>.</returns>
+    public ValueRange UpdateRange(float newValue)
+    {
+        if (newValue < Min) return new(newValue, Max);
+        if (newValue > Max) return new(Min, newValue);
+        return new(Min, Max);
+    }
+    
+    
     /// <summary>
     /// Determines whether the range has a non-zero span (Min and Max are not equal).
     /// </summary>
     /// <returns>True if Min and Max are not equal; otherwise, false.</returns>
-    public bool HasRange() => Math.Abs(Max - Min) > 0.00000001f;
+    public bool HasRange() => TotalRange > 0.00000001f;
     /// <summary>
     /// Determines whether the range is positive and has a non-zero span.
     /// </summary>
@@ -410,6 +438,75 @@ public readonly struct ValueRange
         return new(
             left.Min / right, 
             left.Max / right);
+    }
+    #endregion
+    
+    #region Equality & Comparison
+    /// <summary>
+    /// Determines whether the current <see cref="ValueRange"/> is equal to another <see cref="ValueRange"/>.
+    /// </summary>
+    /// <param name="other">The other <see cref="ValueRange"/> to compare with.</param>
+    /// <returns>True if both Min and Max are equal; otherwise, false.</returns>
+    public bool Equals(ValueRange other)
+    {
+        return Min.Equals(other.Min) && Max.Equals(other.Max);
+    }
+    
+    /// <summary>
+    /// Determines whether the current <see cref="ValueRange"/> is equal to another object.
+    /// </summary>
+    /// <param name="obj">The object to compare with.</param>
+    /// <returns>True if the object is a <see cref="ValueRange"/> and both Min and Max are equal; otherwise, false.</returns>
+    public override bool Equals(object? obj)
+    {
+        return obj is ValueRange other && Equals(other);
+    }
+    
+    /// <summary>
+    /// Returns a hash code for the current <see cref="ValueRange"/>.
+    /// </summary>
+    /// <returns>A hash code for the current <see cref="ValueRange"/>.</returns>
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Min, Max);
+    }
+    
+    /// <summary>
+    /// Compares the current <see cref="ValueRange"/> with another <see cref="ValueRange"/>.
+    /// </summary>
+    /// <param name="other">The other <see cref="ValueRange"/> to compare with.</param>
+    /// <returns>
+    /// A value less than zero if this instance is less than <paramref name="other"/>.
+    /// Zero if this instance is equal to <paramref name="other"/>.
+    /// A value greater than zero if this instance is greater than <paramref name="other"/>.
+    /// </returns>
+    public int CompareTo(ValueRange other)
+    {
+        int minComparison = Min.CompareTo(other.Min);
+        if (minComparison != 0) return minComparison;
+        return Max.CompareTo(other.Max);
+    }
+
+    /// <summary>
+    /// Determines whether two <see cref="ValueRange"/> instances are equal.
+    /// </summary>
+    /// <param name="left">The first <see cref="ValueRange"/> to compare.</param>
+    /// <param name="right">The second <see cref="ValueRange"/> to compare.</param>
+    /// <returns>True if both instances are equal; otherwise, false.</returns>
+    public static bool operator ==(ValueRange left, ValueRange right)
+    {
+        return left.Equals(right);
+    }
+    
+    /// <summary>
+    /// Determines whether two <see cref="ValueRange"/> instances are not equal.
+    /// </summary>
+    /// <param name="left">The first <see cref="ValueRange"/> to compare.</param>
+    /// <param name="right">The second <see cref="ValueRange"/> to compare.</param>
+    /// <returns>True if the instances are not equal; otherwise, false.</returns>
+    public static bool operator !=(ValueRange left, ValueRange right)
+    {
+        return !(left == right);
     }
     #endregion
 }

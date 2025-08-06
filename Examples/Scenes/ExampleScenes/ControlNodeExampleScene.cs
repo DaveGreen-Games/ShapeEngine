@@ -93,7 +93,7 @@ namespace Examples.Scenes.ExampleScenes
         protected override bool GetPressedState()
         {
             if (!Selected) return false;
-            var acceptState = GAMELOOP.InputActionUIAccept.Consume();
+            var acceptState = GAMELOOP.InputActionUIAccept.Consume(out _);
             return acceptState is { Consumed: false, Pressed: true };
             
             // if (!Selected) return false;
@@ -103,7 +103,7 @@ namespace Examples.Scenes.ExampleScenes
         protected override bool GetMousePressedState()
         {
             if (!MouseInside) return false;
-            var acceptState = GAMELOOP.InputActionUIAcceptMouse.Consume();
+            var acceptState = GAMELOOP.InputActionUIAcceptMouse.Consume(out _);
             return acceptState is { Consumed: false, Pressed: true };
             
             // if (!MouseInside) return false;
@@ -112,10 +112,10 @@ namespace Examples.Scenes.ExampleScenes
 
         public override Direction GetNavigationDirection()
         {
-            var upState = GAMELOOP.InputActionUIUp.Consume();
-            var downState = GAMELOOP.InputActionUIDown.Consume();
-            var rightState = GAMELOOP.InputActionUIRight.Consume();
-            var leftState = GAMELOOP.InputActionUILeft.Consume();
+            var upState = GAMELOOP.InputActionUIUp.Consume(out _);
+            var downState = GAMELOOP.InputActionUIDown.Consume(out _);
+            var rightState = GAMELOOP.InputActionUIRight.Consume(out _);
+            var leftState = GAMELOOP.InputActionUILeft.Consume(out _);
             
             if (inputCooldownTimer > 0f)
             {
@@ -206,6 +206,7 @@ namespace Examples.Scenes.ExampleScenes
 
         private readonly InputAction cycleGridStyles;
         private readonly InputAction resetGridStyles;
+        private readonly InputActionTree inputActionTree;
 
         private int curGridStyle = 0;
 
@@ -244,14 +245,6 @@ namespace Examples.Scenes.ExampleScenes
                 Stretch = new Vector2(0.8f, 0.6f)
             };
             
-            // var startButton = new ControlNodeButton("Nav Start", new(0.5f, 0.5f), new Vector2(0.98f, 0.95f));
-            // optionButton = new ControlNodeButton("Active Test", new(0.5f, 0.5f), new Vector2(0.98f, 0.95f));
-            // var quitButton = new ControlNodeButton("Nav End", new(0.5f, 0.5f), new Vector2(0.98f, 0.95f));
-
-            // buttonContainer.AddChild(startButton);
-            // buttonContainer.AddChild(optionButton);
-            // buttonContainer.AddChild(quitButton);
-            
             for (var i = 0; i < 64; i++)
             {
                 var button = new ControlNodeButton($"B{i+1}", new(0.5f, 0.5f), new Vector2(0.98f, 0.95f));
@@ -282,36 +275,25 @@ namespace Examples.Scenes.ExampleScenes
             
             navigator.AddNode(container);
             navigator.StartNavigation();
-
             
-            // startButton.OnPressedChanged += OnStartButtonPressedChanged;
-            // optionButton.OnPressedChanged += OnOptionButtonPressedChanged;
-            // quitButton.OnPressedChanged += OnQuitButtonPressedChanged;
             resetButton.OnPressedChanged += OnResetButtonPressedChanged;
 
-
+            InputActionSettings defaultSettings = new();
+            
             var cycleGridStylesKB = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
             var cycleGridStylesGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
-            cycleGridStyles = new InputAction(cycleGridStylesKB, cycleGridStylesGp);
+            cycleGridStyles = new InputAction(defaultSettings,cycleGridStylesKB, cycleGridStylesGp);
             
             var resetGridStylesKB = new InputTypeKeyboardButton(ShapeKeyboardButton.R);
             var resetGridStylesGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
-            resetGridStyles = new InputAction(resetGridStylesKB, resetGridStylesGp);
+            resetGridStyles = new InputAction(defaultSettings,resetGridStylesKB, resetGridStylesGp);
+            
+            inputActionTree = [
+                cycleGridStyles,
+                resetGridStyles
+            ];
         }
-
-        // private void OnStartButtonPressedChanged(ControlNode node, bool value)
-        // {
-        //     if(!value) navigator.StartNavigation();
-        // }
-        // private void OnOptionButtonPressedChanged(ControlNode node, bool value)
-        // {
-        //     // if (!value) node.Visible = false;
-        //     if (!value) node.Active = false;
-        // }
-        // private void OnQuitButtonPressedChanged(ControlNode node, bool value)
-        // {
-        //     if(!value) navigator.EndNavigation();
-        // }
+        
 
         private void OnGenericButtonPressed(ControlNode node, bool value)
         {
@@ -365,11 +347,8 @@ namespace Examples.Scenes.ExampleScenes
             
             var gamepad = GAMELOOP.CurGamepad;
             
-            cycleGridStyles.Gamepad = gamepad;
-            cycleGridStyles.Update(time.Delta);
-            
-            resetGridStyles.Gamepad = gamepad;
-            resetGridStyles.Update(time.Delta);
+            inputActionTree.CurrentGamepad = gamepad;
+            inputActionTree.Update(time.Delta);
 
             if (cycleGridStyles.State.Pressed)
             {
@@ -383,12 +362,6 @@ namespace Examples.Scenes.ExampleScenes
                 curGridStyle = 0;
                 buttonContainer.Grid = GridStyles[curGridStyle]();
             }
-            
-            // buttonContainer.Grid = new(5, 5, false, false, false);
-            // buttonContainer.Grid = new(5, 1, true, false, false);
-            // buttonContainer.Grid = new(1, 7, false, false, false);
-            // buttonContainer.Grid = new(5, 8, false, true, false);
-            // buttonContainer.Grid = new(3, 3, true, true, true);
             
             
             container.UpdateRect(ui.Area);
