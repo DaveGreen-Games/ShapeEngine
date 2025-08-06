@@ -289,7 +289,7 @@ namespace Examples.Scenes.ExampleScenes
         protected override void OnActivate(Scene oldScene)
         {
             //TODO: I hope this works
-            ShapeInput.ChangeActiveGamepadDeviceManager(GamepadManager);
+            ShapeInput.AttachNewGamepadDeviceManager(GamepadManager);
             GAMELOOP.Camera = camera;
             BitFlag mask = new(GAMELOOP.SceneAccessTag);
             mask = mask.Add(GAMELOOP.GamepadMouseMovementTag);
@@ -299,7 +299,7 @@ namespace Examples.Scenes.ExampleScenes
         protected override void OnDeactivate()
         {
             //TODO: I hope this works
-            ShapeInput.ChangeActiveGamepadDeviceManager(ShapeInput.DefaultGamepadDeviceManager);
+            ShapeInput.AttachNewGamepadDeviceManager(ShapeInput.DefaultGamepadDeviceManager);
             GAMELOOP.MouseControlEnabled = true;
             GAMELOOP.ResetCamera();
             ShapeInput.Unlock();

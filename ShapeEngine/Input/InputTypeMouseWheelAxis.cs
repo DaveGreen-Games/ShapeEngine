@@ -48,16 +48,16 @@ public sealed class InputTypeMouseWheelAxis : IInputType
     public InputState GetState(GamepadDevice? gamepad = null)
     {
         return modifierKeySet == null ? 
-            ShapeInput.ActiveMouseDevice.CreateInputState(axis, deadzone) : 
-            ShapeInput.ActiveMouseDevice.CreateInputState(axis, deadzone, modifierKeySet);
+            ShapeInput.AttachedMouseDevice.CreateInputState(axis, deadzone) : 
+            ShapeInput.AttachedMouseDevice.CreateInputState(axis, deadzone, modifierKeySet);
     }
 
     /// <inheritdoc/>
     public InputState GetState(InputState prev, GamepadDevice? gamepad = null)
     {
         return modifierKeySet == null ? 
-            ShapeInput.ActiveMouseDevice.CreateInputState(axis, prev, deadzone) : 
-            ShapeInput.ActiveMouseDevice.CreateInputState(axis, prev, deadzone, modifierKeySet);
+            ShapeInput.AttachedMouseDevice.CreateInputState(axis, prev, deadzone) : 
+            ShapeInput.AttachedMouseDevice.CreateInputState(axis, prev, deadzone, modifierKeySet);
     }
 
     /// <inheritdoc/>

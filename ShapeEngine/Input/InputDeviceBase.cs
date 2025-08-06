@@ -40,19 +40,24 @@ public abstract class InputDeviceBase : IComparable<InputDeviceBase>
     /// </returns>
     public abstract bool Update(float dt, bool otherDeviceUsed);
     
-    /// <summary>
-    /// Indicates whether the input device is currently active and able to process input.
-    /// </summary>
-    public abstract bool IsActive();
-    /// <summary>
-    /// Called when the input device is being activated.
-    /// </summary>
-    public abstract void Activate();
 
     /// <summary>
-    /// Called when the input device is being deactivated.
+    /// Indicates whether the input device is currently attached to <see cref="ShapeInput"/> making it available for input processing.
     /// </summary>
-    public abstract void Deactivate();
+    public abstract bool IsAttached();
+    
+    /// <summary>
+    /// Attaches the input device, making it available for input processing.
+    /// This function is called by <see cref="ShapeInput"/> when a new device is attached.
+    /// </summary>
+    internal abstract void Attach();
+    
+    /// <summary>
+    /// Detaches the input device, making it unavailable for input processing.
+    /// This functions is called by <see cref="ShapeInput"/> when a currently attached device has to be detached,
+    /// because a new device has been attached.
+    /// </summary>
+    internal abstract void Detach();
     
     /// <summary>
     /// Compares this input device with another based on priority and unique ID.

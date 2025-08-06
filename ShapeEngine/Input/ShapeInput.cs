@@ -75,17 +75,17 @@ public static class ShapeInput
     /// <summary>
     /// The global keyboard device instance.
     /// </summary>
-    public static KeyboardDevice ActiveKeyboardDevice { get; private set; }
+    public static KeyboardDevice AttachedKeyboardDevice { get; private set; }
     
     /// <summary>
     /// The global mouse device instance.
     /// </summary>
-    public static MouseDevice ActiveMouseDevice { get; private set; }
+    public static MouseDevice AttachedMouseDevice { get; private set; }
     
     /// <summary>
     /// The global gamepad device manager instance.
     /// </summary>
-    public static GamepadDeviceManager ActiveGamepadDeviceManager { get; private set; }
+    public static GamepadDeviceManager AttachedGamepadDeviceManager { get; private set; }
     
     /// <summary>
     /// The global input event handler instance.
@@ -117,86 +117,77 @@ public static class ShapeInput
         DefaultGamepadDeviceManager = new();
         DefaultMouseDevice = new();
         
-        ActiveKeyboardDevice = DefaultKeyboardDevice;
-        ActiveGamepadDeviceManager = DefaultGamepadDeviceManager;
-        ActiveMouseDevice = DefaultMouseDevice;
+        AttachedKeyboardDevice = DefaultKeyboardDevice;
+        AttachedGamepadDeviceManager = DefaultGamepadDeviceManager;
+        AttachedMouseDevice = DefaultMouseDevice;
         
-        ActiveKeyboardDevice.Activate();
-        ActiveGamepadDeviceManager.Activate();
-        ActiveMouseDevice.Activate();
+        AttachedKeyboardDevice.Attach();
+        AttachedGamepadDeviceManager.Attach();
+        AttachedMouseDevice.Attach();
         
-        EventHandler = new(ActiveKeyboardDevice, ActiveMouseDevice, ActiveGamepadDeviceManager);
+        EventHandler = new(AttachedKeyboardDevice, AttachedMouseDevice, AttachedGamepadDeviceManager);
     }
     #endregion
     
     #region Input Device Handling
 
+
+
     /// <summary>
-    /// Changes the active <see cref="MouseDevice"/>.
+    /// Attaches a new mouse device as the active mouse device.
+    /// Detaches the currently attached mouse device and attaches the new one.
     /// </summary>
-    /// <param name="device">The new <see cref="MouseDevice"/> to set as active.</param>
-    /// <returns>True if the device was changed; otherwise, false.</returns>
-    /// <remarks>
-    /// This will call <see cref="MouseDevice.Deactivate"/> on the current active <see cref="MouseDevice"/> and it will call <see cref="MouseDevice.Activate"/> on the new <see cref="MouseDevice"/>.
-    /// This will change the active state of both the current and the new <see cref="MouseDevice"/>.
-    /// </remarks>
-    public static bool ChangeActiveMouseDevice(MouseDevice device)
+    /// <param name="device">The new <see cref="MouseDevice"/> to attach.</param>
+    /// <returns>True if the device was changed and attached; otherwise, false.</returns>
+    public static bool AttachNewMouseDevice(MouseDevice device)
     {
-        if (device == ActiveMouseDevice) return false;
+        if (device == AttachedMouseDevice) return false;
         
         bool changed = EventHandler.ChangeActiveMouseDevice(device);
         if (!changed) return false;
         
-        ActiveMouseDevice.Deactivate();
-        ActiveMouseDevice = device;
-        ActiveMouseDevice.Activate();
+        AttachedMouseDevice.Detach();
+        AttachedMouseDevice = device;
+        AttachedMouseDevice.Attach();
         
         return true;
     }
-    
     /// <summary>
-    /// Changes the active <see cref="KeyboardDevice"/>.
+    /// Attaches a new keyboard device as the active keyboard device.
+    /// Detaches the currently attached keyboard device and attaches the new one.
     /// </summary>
-    /// <param name="device">The new <see cref="KeyboardDevice"/> to set as active.</param>
-    /// <returns>True if the device was changed; otherwise, false.</returns>
-    /// <remarks>
-    /// This will call <see cref="KeyboardDevice.Deactivate"/> on the current active <see cref="KeyboardDevice"/> and it will call <see cref="KeyboardDevice.Activate"/> on the new <see cref="KeyboardDevice"/>.
-    /// This will change the active state of both the current and the new <see cref="KeyboardDevice"/>.
-    /// </remarks>
-    public static bool ChangeActiveKeyboardDevice(KeyboardDevice device)
+    /// <param name="device">The new <see cref="KeyboardDevice"/> to attach.</param>
+    /// <returns>True if the device was changed and attached; otherwise, false.</returns>
+    public static bool AttachNewKeyboardDevice(KeyboardDevice device)
     {
-        if (device == ActiveKeyboardDevice) return false;
+        if (device == AttachedKeyboardDevice) return false;
         
         bool changed = EventHandler.ChangeActiveKeyboardDevice(device);
         if (!changed) return false;
         
-        ActiveKeyboardDevice.Deactivate();
-        ActiveKeyboardDevice = device;
-        ActiveKeyboardDevice.Activate();
+        AttachedKeyboardDevice.Detach();
+        AttachedKeyboardDevice = device;
+        AttachedKeyboardDevice.Attach();
         
         return true;
     }
     
     /// <summary>
-    /// Changes the active <see cref="GamepadDeviceManager"/>.
+    /// Attaches a new gamepad device manager as the active gamepad device manager.
+    /// Detaches the currently attached gamepad device manager and attaches the new one.
     /// </summary>
-    /// <param name="deviceManager">The new <see cref="GamepadDeviceManager"/> to set as active.</param>
-    /// <returns>True if the device manager was changed; otherwise, false.</returns>
-    /// <remarks>
-    /// This will call <see cref="GamepadDeviceManager.Deactivate"/> on the current active <see cref="GamepadDeviceManager"/> and it will call <see cref="GamepadDeviceManager.Activate"/> on the new <see cref="GamepadDeviceManager"/>.
-    /// This will change the active state of both the current and the new <see cref="GamepadDeviceManager"/>.
-    /// This will also deactivate all <see cref="GamepadDevice"/>s in the current <see cref="GamepadDeviceManager"/> and activate all <see cref="GamepadDevice"/>s in the new <see cref="GamepadDeviceManager"/>.
-    /// </remarks>
-    public static bool ChangeActiveGamepadDeviceManager(GamepadDeviceManager deviceManager)
+    /// <param name="deviceManager">The new <see cref="GamepadDeviceManager"/> to attach.</param>
+    /// <returns>True if the device manager was changed and attached; otherwise, false.</returns>
+    public static bool AttachNewGamepadDeviceManager(GamepadDeviceManager deviceManager)
     {
-        if (deviceManager == ActiveGamepadDeviceManager) return false;
+        if (deviceManager == AttachedGamepadDeviceManager) return false;
         
         bool changed = EventHandler.ChangeActiveGamepadDeviceManager(deviceManager);
         if (!changed) return false;
         
-        ActiveGamepadDeviceManager.Deactivate();
-        ActiveGamepadDeviceManager = deviceManager;
-        ActiveGamepadDeviceManager.Activate();
+        AttachedGamepadDeviceManager.Detach();
+        AttachedGamepadDeviceManager = deviceManager;
+        AttachedGamepadDeviceManager.Attach();
         
         return true;
     }
@@ -206,16 +197,16 @@ public static class ShapeInput
     /// </summary>
     /// <param name="settings">The new <see cref="InputDeviceUsageDetectionSettings"/> to apply.</param>
     /// <remarks>
-    /// Settings are applied to <see cref="ActiveMouseDevice"/>,
-    /// <see cref="ActiveKeyboardDevice"/>,
-    /// and <see cref="ActiveGamepadDeviceManager"/> that applies the settings to all <see cref="GamepadDevice"/>s.
+    /// Settings are applied to <see cref="AttachedMouseDevice"/>,
+    /// <see cref="AttachedKeyboardDevice"/>,
+    /// and <see cref="AttachedGamepadDeviceManager"/> that applies the settings to all <see cref="GamepadDevice"/>s.
     /// </remarks>
     public static void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
     {
         // InputDeviceUsageDetectionSettings = settings;
-        ActiveMouseDevice.ApplyInputDeviceChangeSettings(settings);
-        ActiveKeyboardDevice.ApplyInputDeviceChangeSettings(settings);
-        ActiveGamepadDeviceManager.ApplyInputDeviceChangeSettings(settings);
+        AttachedMouseDevice.ApplyInputDeviceChangeSettings(settings);
+        AttachedKeyboardDevice.ApplyInputDeviceChangeSettings(settings);
+        AttachedGamepadDeviceManager.ApplyInputDeviceChangeSettings(settings);
     }
    
     /// <summary>
@@ -275,9 +266,9 @@ public static class ShapeInput
 
         // Re-add active devices to the set each frame to reflect any changes in device instances or their priority.
         sortedInputDevices.Clear(); 
-        sortedInputDevices.Add(ActiveKeyboardDevice);
-        sortedInputDevices.Add(ActiveMouseDevice);
-        sortedInputDevices.Add(ActiveGamepadDeviceManager);
+        sortedInputDevices.Add(AttachedKeyboardDevice);
+        sortedInputDevices.Add(AttachedMouseDevice);
+        sortedInputDevices.Add(AttachedGamepadDeviceManager);
         
         var usedInputDevice = InputDeviceType.None;
         var wasOtherDeviceUsed = false;
@@ -298,9 +289,9 @@ public static class ShapeInput
                 
                 float deviceCooldown;
                 
-                if (usedInputDevice == InputDeviceType.Keyboard) deviceCooldown = ActiveKeyboardDevice.UsageDetectionSettings.SelectionCooldownDuration;
-                else if (usedInputDevice == InputDeviceType.Gamepad) deviceCooldown = ActiveGamepadDeviceManager.UsageDetectionSettings.SelectionCooldownDuration;
-                else deviceCooldown = ActiveMouseDevice.UsageDetectionSettings.SelectionCooldownDuration;
+                if (usedInputDevice == InputDeviceType.Keyboard) deviceCooldown = AttachedKeyboardDevice.UsageDetectionSettings.SelectionCooldownDuration;
+                else if (usedInputDevice == InputDeviceType.Gamepad) deviceCooldown = AttachedGamepadDeviceManager.UsageDetectionSettings.SelectionCooldownDuration;
+                else deviceCooldown = AttachedMouseDevice.UsageDetectionSettings.SelectionCooldownDuration;
                 
                 if (deviceCooldown > 0f)
                 {
@@ -320,9 +311,9 @@ public static class ShapeInput
                 
                 float deviceCooldown;
                 
-                if (usedInputActionDevice == InputDeviceType.Keyboard) deviceCooldown = ActiveKeyboardDevice.UsageDetectionSettings.SelectionCooldownDuration;
-                else if (usedInputActionDevice == InputDeviceType.Gamepad) deviceCooldown = ActiveGamepadDeviceManager.UsageDetectionSettings.SelectionCooldownDuration;
-                else deviceCooldown = ActiveMouseDevice.UsageDetectionSettings.SelectionCooldownDuration;
+                if (usedInputActionDevice == InputDeviceType.Keyboard) deviceCooldown = AttachedKeyboardDevice.UsageDetectionSettings.SelectionCooldownDuration;
+                else if (usedInputActionDevice == InputDeviceType.Gamepad) deviceCooldown = AttachedGamepadDeviceManager.UsageDetectionSettings.SelectionCooldownDuration;
+                else deviceCooldown = AttachedMouseDevice.UsageDetectionSettings.SelectionCooldownDuration;
                 
                 if (deviceCooldown > 0f)
                 {
@@ -351,7 +342,7 @@ public static class ShapeInput
     public static InputState GetInputState(this ShapeKeyboardButton button, uint accessTag = AllAccessTag)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        return ActiveKeyboardDevice.GetButtonState(button);
+        return AttachedKeyboardDevice.GetButtonState(button);
     }
     /// <summary>
     /// Gets the input state for a mouse button.
@@ -362,7 +353,7 @@ public static class ShapeInput
     public static InputState GetInputState(this ShapeMouseButton button, uint accessTag = AllAccessTag)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        return ActiveMouseDevice.GetButtonState(button);
+        return AttachedMouseDevice.GetButtonState(button);
     }
     /// <summary>
     /// Gets the input state for a mouse axis.
@@ -373,7 +364,7 @@ public static class ShapeInput
     public static InputState GetInputState(this ShapeMouseAxis axis, uint accessTag = AllAccessTag)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        return ActiveMouseDevice.GetAxisState(axis);
+        return AttachedMouseDevice.GetAxisState(axis);
     }
     /// <summary>
     /// Gets the input state for a mouse wheel axis.
@@ -384,7 +375,7 @@ public static class ShapeInput
     public static InputState GetInputState(this ShapeMouseWheelAxis axis, uint accessTag = AllAccessTag)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        return ActiveMouseDevice.GetWheelAxisState(axis);
+        return AttachedMouseDevice.GetWheelAxisState(axis);
     }
     /// <summary>
     /// Gets the input state for a gamepad button on a specific gamepad.
@@ -397,7 +388,7 @@ public static class ShapeInput
     public static InputState GetInputState(this ShapeGamepadButton button, int gamepadIndex, uint accessTag = AllAccessTag)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
+        var gamepad = AttachedGamepadDeviceManager.GetGamepad(gamepadIndex);
         return gamepad?.GetButtonState(button) ?? new();
     }
     /// <summary>
@@ -413,7 +404,7 @@ public static class ShapeInput
     public static InputState GetInputState(this ShapeGamepadJoyAxis axis, int gamepadIndex, uint accessTag = AllAccessTag)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
+        var gamepad = AttachedGamepadDeviceManager.GetGamepad(gamepadIndex);
         return gamepad?.GetAxisState(axis) ?? new();
     }
     /// <summary>
@@ -429,7 +420,7 @@ public static class ShapeInput
     public static InputState GetInputState(this ShapeGamepadTriggerAxis axis, int gamepadIndex, uint accessTag = AllAccessTag)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
+        var gamepad = AttachedGamepadDeviceManager.GetGamepad(gamepadIndex);
         return gamepad?.GetAxisState(axis) ?? new();
     }
     #endregion
@@ -448,7 +439,7 @@ public static class ShapeInput
     {
         valid = false;
         if (Locked && !HasAccess(accessTag)) return new();
-        return ActiveKeyboardDevice.ConsumeButtonState(button, out valid);
+        return AttachedKeyboardDevice.ConsumeButtonState(button, out valid);
     }
 
     /// <summary>
@@ -463,7 +454,7 @@ public static class ShapeInput
     {
         valid = false;
         if (Locked && !HasAccess(accessTag)) return new();
-        return ActiveMouseDevice.ConsumeButtonState(button, out valid);
+        return AttachedMouseDevice.ConsumeButtonState(button, out valid);
     }
 
     /// <summary>
@@ -478,7 +469,7 @@ public static class ShapeInput
     {
         valid = false;
         if (Locked && !HasAccess(accessTag)) return new();
-        return ActiveMouseDevice.ConsumeAxisState(axis, out valid);
+        return AttachedMouseDevice.ConsumeAxisState(axis, out valid);
     }
 
     /// <summary>
@@ -493,7 +484,7 @@ public static class ShapeInput
     {
         valid = false;
         if (Locked && !HasAccess(accessTag)) return new();
-        return ActiveMouseDevice.ConsumeWheelAxisState(axis, out valid);
+        return AttachedMouseDevice.ConsumeWheelAxisState(axis, out valid);
     }
 
     /// <summary>
@@ -509,7 +500,7 @@ public static class ShapeInput
     {
         valid = false;
         if (Locked && !HasAccess(accessTag)) return new();
-        var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
+        var gamepad = AttachedGamepadDeviceManager.GetGamepad(gamepadIndex);
         return gamepad == null ? new() : gamepad.ConsumeButtonState(button, out valid);
     }
     /// <summary>
@@ -527,7 +518,7 @@ public static class ShapeInput
     {
         valid = false;
         if (Locked && !HasAccess(accessTag)) return new();
-        var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
+        var gamepad = AttachedGamepadDeviceManager.GetGamepad(gamepadIndex);
         return gamepad == null ? new() : gamepad.ConsumeAxisState(axis, out valid);
     }
     /// <summary>
@@ -545,7 +536,7 @@ public static class ShapeInput
     {
         valid = false;
         if (Locked && !HasAccess(accessTag)) return new();
-        var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
+        var gamepad = AttachedGamepadDeviceManager.GetGamepad(gamepadIndex);
         return gamepad == null ? new() : gamepad.ConsumeAxisState(axis, out valid);
     }
     #endregion
@@ -562,7 +553,7 @@ public static class ShapeInput
     public static InputState CreateInputState(ShapeKeyboardButton button, uint accessTag, ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        return modifierKeySet == null ? ActiveKeyboardDevice.CreateInputState(button) : ActiveKeyboardDevice.CreateInputState(button, modifierKeySet);
+        return modifierKeySet == null ? AttachedKeyboardDevice.CreateInputState(button) : AttachedKeyboardDevice.CreateInputState(button, modifierKeySet);
     }
     /// <summary>
     /// Creates an <see cref="InputState"/> for a keyboard button axis (negative and positive).
@@ -575,7 +566,7 @@ public static class ShapeInput
     public static InputState CreateInputState(ShapeKeyboardButton neg, ShapeKeyboardButton pos, uint accessTag, ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        return modifierKeySet == null ? ActiveKeyboardDevice.CreateInputState(neg, pos) : ActiveKeyboardDevice.CreateInputState(neg, pos, modifierKeySet);
+        return modifierKeySet == null ? AttachedKeyboardDevice.CreateInputState(neg, pos) : AttachedKeyboardDevice.CreateInputState(neg, pos, modifierKeySet);
     }
     #endregion
 
@@ -595,7 +586,7 @@ public static class ShapeInput
         ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        return ActiveMouseDevice.CreateInputState(button, moveDeadzone, wheelDeadzone, modifierKeySet);
+        return AttachedMouseDevice.CreateInputState(button, moveDeadzone, wheelDeadzone, modifierKeySet);
     }
     
     /// <summary>
@@ -614,7 +605,7 @@ public static class ShapeInput
         ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        return ActiveMouseDevice.CreateInputState(neg, pos, moveDeadzone, wheelDeadzone, modifierKeySet);
+        return AttachedMouseDevice.CreateInputState(neg, pos, moveDeadzone, wheelDeadzone, modifierKeySet);
     }
     
     /// <summary>
@@ -629,7 +620,7 @@ public static class ShapeInput
         float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseWheelThreshold, ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        return ActiveMouseDevice.CreateInputState(axis, deadzone, modifierKeySet);
+        return AttachedMouseDevice.CreateInputState(axis, deadzone, modifierKeySet);
     }
     
     /// <summary>
@@ -644,7 +635,7 @@ public static class ShapeInput
         float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        return ActiveMouseDevice.CreateInputState(axis, deadzone, modifierKeySet);
+        return AttachedMouseDevice.CreateInputState(axis, deadzone, modifierKeySet);
     }
 
 
@@ -667,7 +658,7 @@ public static class ShapeInput
         ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
+        var gamepad = AttachedGamepadDeviceManager.GetGamepad(gamepadIndex);
         return gamepad?.CreateInputState(button, axisDeadzone, triggerDeadzone, modifierKeySet) ?? new();
     }
     
@@ -688,7 +679,7 @@ public static class ShapeInput
         ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
+        var gamepad = AttachedGamepadDeviceManager.GetGamepad(gamepadIndex);
         
         return gamepad?.CreateInputState(neg, pos, axisDeadzone, triggerDeadzone, modifierKeySet) ?? new();
     }
@@ -709,7 +700,7 @@ public static class ShapeInput
         ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
+        var gamepad = AttachedGamepadDeviceManager.GetGamepad(gamepadIndex);
         
         return gamepad?.CreateInputState(axis, deadzone, inverted, modifierKeySet) ?? new();
     }
@@ -728,7 +719,7 @@ public static class ShapeInput
         ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        var gamepad = ActiveGamepadDeviceManager.GetGamepad(gamepadIndex);
+        var gamepad = AttachedGamepadDeviceManager.GetGamepad(gamepadIndex);
         
         return gamepad?.CreateInputState(axis, deadzone, inverted, modifierKeySet) ?? new();
     }

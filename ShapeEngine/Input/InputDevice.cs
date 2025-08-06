@@ -38,9 +38,3 @@ public abstract class InputDevice : InputDeviceBase
     public abstract void Unlock();
     
 }
-
-//deprecated
-// /// <summary>
-// /// Calibrates the device, if supported.
-// /// </summary>
-// public abstract void Calibrate();

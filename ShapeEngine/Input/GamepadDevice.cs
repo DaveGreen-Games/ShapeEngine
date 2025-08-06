@@ -99,8 +99,8 @@ public sealed class GamepadDevice : InputDevice
     /// A unique value based on the order of instantiation is assigned per default.
     /// </remarks>
     public uint DeviceProcessPriority = processPriorityCounter++;
-    
-    private bool isActive;
+
+    private bool isAttached;
     private bool isLocked;
     private bool wasUsed;
     private bool wasUsedRaw;
@@ -358,19 +358,7 @@ public sealed class GamepadDevice : InputDevice
         if (isLocked) return;
         isLocked = true;
         
-        usedDurationTimer = 0f;
-        pressedCount = 0;
-        pressedCountDurationTimer = 0f;
-        
-        PressedButtons.Clear();
-        ReleasedButtons.Clear();
-        HeldDownButtons.Clear();
-        PressedJoyAxis.Clear();
-        ReleasedJoyAxis.Clear();
-        HeldJoyAxis.Clear();
-        PressedTriggerAxis.Clear();
-        ReleasedTriggerAxis.Clear();
-        HeldTriggerAxis.Clear();
+        ResetState();
     }
 
     /// <summary>
@@ -382,28 +370,8 @@ public sealed class GamepadDevice : InputDevice
         isLocked = false;
     }
     
-    /// <summary>
-    /// Indicates whether the mouse device is currently active, as in being used by the <see cref="ShapeInput"/> class to generate input.
-    /// </summary>
-    public override bool IsActive() => isActive;
-    
-    /// <summary>
-    /// Activates the mouse device, enabling input processing.
-    /// </summary>
-    public override void Activate()
+    private void ResetState()
     {
-        if (isActive) return;
-        isActive = true;
-    }
-    
-    /// <summary>
-    /// Deactivates the mouse device, disabling input processing and resetting state.
-    /// </summary>
-    public override void Deactivate()
-    {
-        if (!isActive) return;
-        isActive = false;
-        
         usedDurationTimer = 0f;
         pressedCount = 0;
         pressedCountDurationTimer = 0f;
@@ -421,10 +389,37 @@ public sealed class GamepadDevice : InputDevice
         ReleasedTriggerAxis.Clear();
         HeldTriggerAxis.Clear();
     }
+    /// <summary>
+    /// Indicates whether the device is currently attached.
+    /// </summary>
+    public override bool IsAttached() => isAttached;
+    
+    /// <summary>
+    /// Attaches the device, marking it as attached.
+    /// </summary>
+    internal override void Attach()
+    {
+        if (isAttached) return;
+        isAttached = true;
+    }
+    
+    /// <summary>
+    /// Detaches the  device, marking it as detached and resetting its state.
+    /// </summary>
+    internal override void Detach()
+    {
+        if (!isAttached) return;
+        isAttached = false;
+        
+        ResetState();
+    }
+
 
     /// <inheritdoc cref="InputDevice.Update"/>
     public override bool Update(float dt, bool wasOtherDeviceUsed)
     {
+        if (!isAttached) return false;
+        
         PressedButtons.Clear();
         ReleasedButtons.Clear();
         HeldDownButtons.Clear();
@@ -439,7 +434,7 @@ public sealed class GamepadDevice : InputDevice
         UpdateJoyAxisStates();
         UpdateTriggerAxisStates();
         
-        if (!Connected || isLocked || !isActive)
+        if (!Connected || isLocked)
         {
             wasUsed = false;
             wasUsedRaw = false;
@@ -1039,4 +1034,3 @@ public sealed class GamepadDevice : InputDevice
     #endregion
 
 }
-

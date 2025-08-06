@@ -660,12 +660,12 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnActivate(Scene oldScene)
         {
-            ShapeInput.ActiveKeyboardDevice.UsageDetectionSettings.ExceptionButtons.Add(ShapeKeyboardButton.LEFT_SHIFT);
+            ShapeInput.AttachedKeyboardDevice.UsageDetectionSettings.ExceptionButtons.Add(ShapeKeyboardButton.LEFT_SHIFT);
         }
 
         protected override void OnDeactivate()
         {
-            ShapeInput.ActiveKeyboardDevice.UsageDetectionSettings.ExceptionButtons.Remove(ShapeKeyboardButton.LEFT_SHIFT);
+            ShapeInput.AttachedKeyboardDevice.UsageDetectionSettings.ExceptionButtons.Remove(ShapeKeyboardButton.LEFT_SHIFT);
         }
 
         private void ClearAreaCollisionObjects(Rect area, BitFlag collisionLayerMask)

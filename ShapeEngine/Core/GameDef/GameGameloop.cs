@@ -12,12 +12,12 @@ public partial class Game
     
     private void StartGameloop()
     {
-        ShapeInput.ActiveKeyboardDevice.OnButtonPressed += ActiveKeyboardButtonPressed;
-        ShapeInput.ActiveKeyboardDevice.OnButtonReleased += ActiveKeyboardButtonReleased;
-        ShapeInput.ActiveMouseDevice.OnButtonPressed += ActiveMouseButtonPressed;
-        ShapeInput.ActiveMouseDevice.OnButtonReleased += ActiveMouseButtonReleased;
-        ShapeInput.ActiveGamepadDeviceManager.OnGamepadButtonPressed += ActiveGamepadButtonPressed;
-        ShapeInput.ActiveGamepadDeviceManager.OnGamepadButtonReleased += ActiveGamepadButtonReleased;
+        ShapeInput.AttachedKeyboardDevice.OnButtonPressed += AttachedKeyboardButtonPressed;
+        ShapeInput.AttachedKeyboardDevice.OnButtonReleased += AttachedKeyboardButtonReleased;
+        ShapeInput.AttachedMouseDevice.OnButtonPressed += AttachedMouseButtonPressed;
+        ShapeInput.AttachedMouseDevice.OnButtonReleased += AttachedMouseButtonReleased;
+        ShapeInput.AttachedGamepadDeviceManager.OnGamepadButtonPressed += AttachedGamepadButtonPressed;
+        ShapeInput.AttachedGamepadDeviceManager.OnGamepadButtonReleased += AttachedGamepadButtonReleased;
 
         LoadContent();
         BeginRun();

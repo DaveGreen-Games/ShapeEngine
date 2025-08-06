@@ -370,12 +370,12 @@ namespace Examples
         {
             if (!MouseControlEnabled) return mousePos;
             
-            if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Gamepad && ShapeInput.ActiveGamepadDeviceManager.LastUsedGamepad != null && 
-                ShapeInput.ActiveGamepadDeviceManager.LastUsedGamepad.IsDown(ShapeGamepadTriggerAxis.RIGHT))
+            if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Gamepad && ShapeInput.AttachedGamepadDeviceManager.LastUsedGamepad != null && 
+                ShapeInput.AttachedGamepadDeviceManager.LastUsedGamepad.IsDown(ShapeGamepadTriggerAxis.RIGHT))
             {
                 mouseMovementTimer = 0f;
                 float speed = screenArea.Size.Max() * 0.75f * dt;
-                int gamepad = ShapeInput.ActiveGamepadDeviceManager.LastUsedGamepad.Index;
+                int gamepad = ShapeInput.AttachedGamepadDeviceManager.LastUsedGamepad.Index;
                 var x = ShapeInput.CreateInputState(ShapeGamepadJoyAxis.LEFT_X, GamepadMouseMovementTag, gamepad, 0.2f).AxisRaw;
                 var y = ShapeInput.CreateInputState(ShapeGamepadJoyAxis.LEFT_Y, GamepadMouseMovementTag, gamepad, 0.2f).AxisRaw;
 
@@ -420,7 +420,7 @@ namespace Examples
         {
             SetupInput();
 
-            CurGamepad = ShapeInput.ActiveGamepadDeviceManager.RequestGamepad(0);
+            CurGamepad = ShapeInput.AttachedGamepadDeviceManager.RequestGamepad(0);
             inputActionTree.CurrentGamepad = CurGamepad;
             // if (CurGamepad != null)
             // {
@@ -470,7 +470,7 @@ namespace Examples
         protected override void OnGamepadConnected(GamepadDevice gamepad)
         {
             if (CurGamepad != null) return;
-            CurGamepad = ShapeInput.ActiveGamepadDeviceManager.RequestGamepad(0);
+            CurGamepad = ShapeInput.AttachedGamepadDeviceManager.RequestGamepad(0);
             inputActionTree.CurrentGamepad = CurGamepad;
             // if (CurGamepad != null)
             // {
@@ -486,7 +486,7 @@ namespace Examples
             if (CurGamepad == null) return;
             if (CurGamepad.Index == gamepad.Index)
             {
-                CurGamepad = ShapeInput.ActiveGamepadDeviceManager.RequestGamepad(0);
+                CurGamepad = ShapeInput.AttachedGamepadDeviceManager.RequestGamepad(0);
                 inputActionTree.CurrentGamepad = CurGamepad;
                 // foreach (var action in inputActions)
                 // {

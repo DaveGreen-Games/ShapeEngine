@@ -52,10 +52,10 @@ public sealed class InputTypeMouseButtonAxis : IInputType
     }
 
     /// <inheritdoc/>
-    public InputState GetState(GamepadDevice? gamepad = null) => ShapeInput.ActiveMouseDevice.CreateInputState(neg, pos, deadzone, deadzone, modifierKeySet);
+    public InputState GetState(GamepadDevice? gamepad = null) => ShapeInput.AttachedMouseDevice.CreateInputState(neg, pos, deadzone, deadzone, modifierKeySet);
 
     /// <inheritdoc/>
-    public InputState GetState(InputState prev, GamepadDevice? gamepad = null) => ShapeInput.ActiveMouseDevice.CreateInputState(neg, pos, prev, deadzone, deadzone, modifierKeySet);
+    public InputState GetState(InputState prev, GamepadDevice? gamepad = null) => ShapeInput.AttachedMouseDevice.CreateInputState(neg, pos, prev, deadzone, deadzone, modifierKeySet);
 
     /// <inheritdoc/>
     public InputDeviceType GetInputDevice() => InputDeviceType.Mouse;

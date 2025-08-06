@@ -40,7 +40,7 @@ public sealed class KeyboardDevice : InputDevice
     private bool wasUsed;
     private bool wasUsedRaw;
     private bool isLocked;
-    private bool isActive;
+    private bool isAttached;
     
     private int pressedCount;
     private float pressedCountDurationTimer;
@@ -109,13 +109,7 @@ public sealed class KeyboardDevice : InputDevice
         if (isLocked) return;
         isLocked = true;
         
-        usedDurationTimer = 0f;
-        pressedCount = 0;
-        pressedCountDurationTimer = 0f;
-        
-        PressedButtons.Clear();
-        ReleasedButtons.Clear();
-        HeldDownButtons.Clear();
+        ResetState();
     }
 
     /// <summary>
@@ -139,6 +133,8 @@ public sealed class KeyboardDevice : InputDevice
     /// <inheritdoc cref="InputDevice.Update"/>
     public override bool Update(float dt, bool wasOtherDeviceUsed)
     {
+        if(!isAttached) return false;
+        
         PressedButtons.Clear();
         ReleasedButtons.Clear();
         HeldDownButtons.Clear();
@@ -146,7 +142,7 @@ public sealed class KeyboardDevice : InputDevice
         
         UpdateButtonStates();
         
-        if (isLocked || !isActive)
+        if (isLocked)
         {
             wasUsed = false;
             wasUsedRaw = false;
@@ -163,30 +159,34 @@ public sealed class KeyboardDevice : InputDevice
         WasKeyboardUsed(dt, wasOtherDeviceUsed, out wasUsed, out wasUsedRaw);
         return wasUsed && !wasOtherDeviceUsed;//safety precaution
     }
+
+    /// <summary>
+    /// Indicates whether the device is currently attached.
+    /// </summary>
+    public override bool IsAttached() => isAttached;
     
     /// <summary>
-    /// Indicates whether the mouse device is currently active,
-    /// as in being used by the <see cref="ShapeInput"/> class to generate input.
+    /// Attaches the device, marking it as attached.
     /// </summary>
-    public override bool IsActive() => isActive;
-    
-    /// <summary>
-    /// Activates the mouse device, enabling input processing.
-    /// </summary>
-    public override void Activate()
+    internal override void Attach()
     {
-        if (isActive) return;
-        isActive = true;
+        if (isAttached) return;
+        isAttached = true;
     }
     
     /// <summary>
-    /// Deactivates the mouse device, disabling input processing and resetting state.
+    /// Detaches the  device, marking it as detached and resetting its state.
     /// </summary>
-    public override void Deactivate()
+    internal override void Detach()
     {
-        if (!isActive) return;
-        isActive = false;
+        if (!isAttached) return;
+        isAttached = false;
         
+        ResetState();
+    }
+
+    private void ResetState()
+    {
         usedDurationTimer = 0f;
         pressedCount = 0;
         pressedCountDurationTimer = 0f;

@@ -22,8 +22,6 @@ public sealed class GamepadDeviceManager : InputDeviceBase
     /// </summary>
     public int MaxGamepads => gamepads.Length;
     
-    private bool isActive;
-    
     /// <summary>
     /// <para>
     /// The process priority of this gamepad device manager instance.
@@ -37,6 +35,21 @@ public sealed class GamepadDeviceManager : InputDeviceBase
     /// A unique value based on the order of instantiation is assigned per default.
     /// </remarks>
     public uint DeviceProcessPriority = processPriorityCounter++;
+
+    private bool isAttached;
+    
+    //all connected gamepads
+    private readonly HashSet<GamepadDevice> connectedGamepads = [];
+    
+    //all gamepads that are connected and that were activated.
+    //-> updated each frame
+    private readonly HashSet<GamepadDevice> activeGamepads = [];
+    
+    //all gamepads that are connected, activated and claimed by a specific user.
+    //-> can change input device type
+    //-> can be LastUsedGamepad and can be added to LastUsedGamepads
+    private readonly HashSet<GamepadDevice> claimedGamepads = [];
+    
     
     private readonly GamepadDevice[] gamepads;
     /// <summary>
@@ -104,41 +117,46 @@ public sealed class GamepadDeviceManager : InputDeviceBase
     /// </summary>
     public override bool Update(float dt, bool wasOtherDeviceUsed)
     {
-        if (!isActive) return false;
+        if(!isAttached) return false;
         return CheckGamepadConnections(dt, wasOtherDeviceUsed);
     }
 
-    /// <summary>
-    /// Indicates whether the gamepad manager is currently active.
-    /// </summary>
-    public override bool IsActive() => isActive;
+    private void ResetState()
+    {
+        LastUsedGamepads.Clear();
+    }
 
     /// <summary>
-    /// Activates all managed gamepads by calling their <c>Activate()</c> method.
+    /// Indicates whether the device is currently attached.
     /// </summary>
-    public override void Activate()
+    public override bool IsAttached() => isAttached;
+    
+    /// <summary>
+    /// Attaches the device, marking it as attached.
+    /// </summary>
+    internal override void Attach()
     {
-        if (isActive) return;
-        isActive = true;
+        if (isAttached) return;
+        isAttached = true;
         foreach (var gamepad in gamepads)
         {
-            gamepad.Activate();
+            gamepad.Attach();
         }
     }
     
     /// <summary>
-    /// Deactivates all managed gamepads by calling their <c>Deactivate()</c> method.
+    /// Detaches the  device, marking it as detached and resetting its state.
     /// </summary>
-    public override void Deactivate()
+    internal override void Detach()
     {
-        if (!isActive) return;
-        isActive = false;
+        if (!isAttached) return;
+        isAttached = false;
         
-        LastUsedGamepads.Clear();
-        
+        ResetState();
+
         foreach (var gamepad in gamepads)
         {
-            gamepad.Deactivate();
+            gamepad.Detach();
         }
     }
 

@@ -95,10 +95,10 @@ public sealed class InputTypeMousePositionDelta : IInputType
     }
 
     /// <inheritdoc/>
-    public InputState GetState(GamepadDevice? gamepad = null) => ShapeInput.ActiveMouseDevice.CreateInputState(axis, CurTargetPosition, deadzone, modifierKeySet);
+    public InputState GetState(GamepadDevice? gamepad = null) => ShapeInput.AttachedMouseDevice.CreateInputState(axis, CurTargetPosition, deadzone, modifierKeySet);
 
     /// <inheritdoc/>
-    public InputState GetState(InputState prev, GamepadDevice? gamepad = null) => ShapeInput.ActiveMouseDevice.CreateInputState(axis, CurTargetPosition, prev, deadzone, modifierKeySet);
+    public InputState GetState(InputState prev, GamepadDevice? gamepad = null) => ShapeInput.AttachedMouseDevice.CreateInputState(axis, CurTargetPosition, prev, deadzone, modifierKeySet);
 
     /// <inheritdoc/>
     public InputDeviceType GetInputDevice() => InputDeviceType.Mouse;
