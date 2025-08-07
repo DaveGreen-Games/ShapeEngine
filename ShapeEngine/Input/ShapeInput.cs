@@ -272,16 +272,30 @@ public static class ShapeInput
         
         var usedInputDevice = InputDeviceType.None;
         var wasOtherDeviceUsed = false;
+        var deviceTypeLocked = false;
         foreach (var inputDevice in sortedInputDevices)
         {
-            var prevUsed = wasOtherDeviceUsed;
-            wasOtherDeviceUsed = inputDevice.Update(dt, wasOtherDeviceUsed);
-            if(wasOtherDeviceUsed && !prevUsed) usedInputDevice = inputDevice.GetDeviceType();
+            if (inputDevice.GetDeviceType() == CurrentInputDeviceType)
+            {
+                if (inputDevice.Update(dt, false))
+                {
+                    usedInputDevice = CurrentInputDeviceType;
+                    deviceTypeLocked = true;
+                    wasOtherDeviceUsed = true;
+                }
+            }
+            else
+            {
+                var prevUsed = wasOtherDeviceUsed;
+                wasOtherDeviceUsed = inputDevice.Update(dt, wasOtherDeviceUsed);
+                if(!deviceTypeLocked && wasOtherDeviceUsed && !prevUsed) usedInputDevice = inputDevice.GetDeviceType();
+            }
+            
         }
         
-        if (usedInputDevice != InputDeviceType.None)
+        if (usedInputDevice != InputDeviceType.None && usedInputDevice != CurrentInputDeviceType)
         {
-            if(!InputDeviceSelectionCooldownActive && usedInputDevice != CurrentInputDeviceType)
+            if(!InputDeviceSelectionCooldownActive)
             {
                 var prevInputDevice = CurrentInputDeviceType;
                 CurrentInputDeviceType = usedInputDevice;

@@ -47,6 +47,14 @@ public sealed class MouseDevice : InputDevice
     private int pressedCount;
     private float pressedCountDurationTimer;
     private float usedDurationTimer;
+    
+    /// <summary>
+    /// Tracks whether the device was selected in the previous update cycle.
+    /// Used for input usage detection logic.
+    /// If a device was selected in the previous update cycle,
+    /// the device stays the current selected device as long as at least one button is held down.
+    /// </summary>
+    private bool wasSelected = false;
 
     /// <summary>
     /// Gets the current mouse position in screen coordinates.
@@ -305,6 +313,7 @@ public sealed class MouseDevice : InputDevice
         
         wasUsed = false;
         wasUsedRaw = false;
+        wasUsedRaw = false;
         
         PressedButtons.Clear();
         HeldDownButtons.Clear();
@@ -316,20 +325,32 @@ public sealed class MouseDevice : InputDevice
         used = false;
         usedRaw = false;
         
+        if (isLocked) return;
+        
+        usedRaw = PressedButtons.Count > 0;
+        
         if (wasOtherDeviceUsed)
         {
             usedDurationTimer = 0f;
             pressedCount = 0;
             pressedCountDurationTimer = 0f;
-        }
-        
-        if (isLocked) return;
-
-        usedRaw = PressedButtons.Count > 0;
-
-        if (!UsageDetectionSettings.Detection || wasOtherDeviceUsed)
-        {
+            wasSelected = false;
             return;
+        }
+
+        if (!UsageDetectionSettings.Detection) return;
+        
+        //if device was selected in the previous update cycle, it will be automatically considered used if at least one button is held down
+        if (wasSelected)
+        {
+            if (HeldDownButtons.Count > 0)
+            {
+                used = true;
+                return;
+            }
+            
+            //no button was held down
+            wasSelected = false;
         }
             
         if (UsageDetectionSettings.SelectionButtons is { Count: > 0 })
@@ -377,7 +398,6 @@ public sealed class MouseDevice : InputDevice
             {
                 // Checks if any held down button is not in the exception list (or if the exception list is null)
                 if(HeldDownButtons.Any(b => !UsageDetectionSettings.ExceptionButtons.Contains(b)))
-                // if(HeldDownButtons.Count > 0)
                 {
                     usedDurationTimer += dt;
                     if (usedDurationTimer > UsageDetectionSettings.MinUsedDuration)
@@ -386,14 +406,12 @@ public sealed class MouseDevice : InputDevice
                         used = true;
                         pressedCount = 0;
                         pressedCountDurationTimer = 0f;
-                        return;
                     }
                 }
                 else if(usedDurationTimer > 0f) usedDurationTimer = 0f;
             }
             
-            if (pressCountEnabled && PressedButtons.Any(b => !UsageDetectionSettings.ExceptionButtons.Contains(b)))
-            // if (pressCountEnabled && PressedButtons.Count > 0)
+            if (!used && pressCountEnabled && PressedButtons.Any(b => !UsageDetectionSettings.ExceptionButtons.Contains(b)))
             {
                 pressedCount++;
                 if (pressedCount >= UsageDetectionSettings.MinPressCount)
@@ -405,6 +423,9 @@ public sealed class MouseDevice : InputDevice
                 }
             }
         }
+
+        // if the device was used this frame it will be pre-selected for the next frame
+        if (used) wasSelected = true;
     } 
     
     /// <summary>
