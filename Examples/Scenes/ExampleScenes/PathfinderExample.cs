@@ -207,7 +207,7 @@ internal class PathfinderFlag
 
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi,  Vector2 mousePosUI)
         {
-            var gamepad = GAMELOOP.CurGamepad;
+            var gamepad = ShapeInput.GamepadManager.LastUsedGamepad;
             inputActionTree.CurrentGamepad = gamepad;
             inputActionTree.Update(dt);
 

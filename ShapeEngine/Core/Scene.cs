@@ -285,6 +285,14 @@ public abstract class Scene
     {
         OnGamepadDisconnected(gamepad);
     }
+    internal void ResolveOnGamepadClaimed(GamepadDevice gamepad)
+    {
+        OnGamepadClaimed(gamepad);
+    }
+    internal void ResolveOnGamepadFreed(GamepadDevice gamepad)
+    {
+        OnGamepadFreed(gamepad);
+    }
     internal void ResolveOnInputDeviceChanged(InputDeviceType prevDeviceType, InputDeviceType curDeviceType)
     {
         OnInputDeviceChanged(prevDeviceType, curDeviceType);
@@ -470,6 +478,17 @@ public abstract class Scene
     /// </summary>
     /// <param name="gamepad">The gamepad that was disconnected.</param>
     protected virtual void OnGamepadDisconnected(GamepadDevice gamepad) { }
+    /// <summary>
+    /// Called when a gamepad is claimed by the scene (e.g., assigned to a player or reserved for use).
+    /// </summary>
+    /// <param name="gamepad">The gamepad that was claimed.</param>
+    protected virtual void OnGamepadClaimed(GamepadDevice gamepad) { }
+
+    /// <summary>
+    /// Called when a gamepad is freed by the scene (e.g., unassigned from a player or released for general use).
+    /// </summary>
+    /// <param name="gamepad">The gamepad that was freed.</param>
+    protected virtual void OnGamepadFreed(GamepadDevice gamepad) { }
 
     /// <summary>
     /// Called when the input device type is changed.

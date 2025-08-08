@@ -22,6 +22,7 @@ public sealed class KeyboardDevice : InputDevice
     /// Gets the usage detection settings for the keyboard input device.
     /// </summary>
     public InputDeviceUsageDetectionSettings.KeyboardSettings UsageDetectionSettings { get; private set; } = new();
+    // internal event Action<InputDevice, InputDeviceUsageDetectionSettings>? OnInputDeviceChangeSettingsChanged;
     
     /// <summary>
     /// <para>
@@ -40,7 +41,6 @@ public sealed class KeyboardDevice : InputDevice
     private bool wasUsed;
     private bool wasUsedRaw;
     private bool isLocked;
-    private bool isAttached;
     
     private int pressedCount;
     private float pressedCountDurationTimer;
@@ -132,8 +132,15 @@ public sealed class KeyboardDevice : InputDevice
     }
     
     /// <inheritdoc cref="InputDevice.ApplyInputDeviceChangeSettings"/>
-    public override void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings) => UsageDetectionSettings = settings.Keyboard;
-
+    internal override void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
+    {
+        UsageDetectionSettings = settings.Keyboard;
+        // OnInputDeviceChangeSettingsChanged?.Invoke(this, settings);
+    }
+    // internal void OverrideInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
+    // {
+    //     UsageDetectionSettings = settings.Keyboard;
+    // }
     /// <inheritdoc cref="InputDevice.WasUsed"/>
     public override bool WasUsed() => wasUsed;
     
@@ -143,8 +150,6 @@ public sealed class KeyboardDevice : InputDevice
     /// <inheritdoc cref="InputDevice.Update"/>
     public override bool Update(float dt, bool wasOtherDeviceUsed)
     {
-        if(!isAttached) return false;
-        
         PressedButtons.Clear();
         ReleasedButtons.Clear();
         HeldDownButtons.Clear();
@@ -168,31 +173,6 @@ public sealed class KeyboardDevice : InputDevice
         
         WasKeyboardUsed(dt, wasOtherDeviceUsed, out wasUsed, out wasUsedRaw);
         return wasUsed && !wasOtherDeviceUsed;//safety precaution
-    }
-
-    /// <summary>
-    /// Indicates whether the device is currently attached.
-    /// </summary>
-    public override bool IsAttached() => isAttached;
-    
-    /// <summary>
-    /// Attaches the device, marking it as attached.
-    /// </summary>
-    internal override void Attach()
-    {
-        if (isAttached) return;
-        isAttached = true;
-    }
-    
-    /// <summary>
-    /// Detaches the  device, marking it as detached and resetting its state.
-    /// </summary>
-    internal override void Detach()
-    {
-        if (!isAttached) return;
-        isAttached = false;
-        
-        ResetState();
     }
 
     private void ResetState()

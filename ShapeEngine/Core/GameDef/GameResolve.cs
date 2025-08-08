@@ -20,12 +20,12 @@ public partial class Game
         }
     }
 
-    private void AttachedGamepadButtonReleased(GamepadDevice gamepad, ShapeGamepadButton button) => ResolveOnButtonReleased(new(gamepad, button));
-    private void AttachedGamepadButtonPressed(GamepadDevice gamepad, ShapeGamepadButton button) => ResolveOnButtonPressed(new(gamepad, button));
-    private void AttachedMouseButtonReleased(ShapeMouseButton button) => ResolveOnButtonReleased(new(button));
-    private void AttachedMouseButtonPressed(ShapeMouseButton button) => ResolveOnButtonPressed(new(button));
-    private void AttachedKeyboardButtonReleased(ShapeKeyboardButton button) => ResolveOnButtonReleased(new(button));
-    private void AttachedKeyboardButtonPressed(ShapeKeyboardButton button) => ResolveOnButtonPressed(new(button));
+    private void GamepadButtonReleased(GamepadDevice gamepad, ShapeGamepadButton button) => ResolveOnButtonReleased(new(gamepad, button));
+    private void GamepadButtonPressed(GamepadDevice gamepad, ShapeGamepadButton button) => ResolveOnButtonPressed(new(gamepad, button));
+    private void MouseButtonReleased(ShapeMouseButton button) => ResolveOnButtonReleased(new(button));
+    private void MouseButtonPressed(ShapeMouseButton button) => ResolveOnButtonPressed(new(button));
+    private void KeyboardButtonReleased(ShapeKeyboardButton button) => ResolveOnButtonReleased(new(button));
+    private void KeyboardButtonPressed(ShapeKeyboardButton button) => ResolveOnButtonPressed(new(button));
 
     private void ResolveOnButtonPressed(InputEvent e)
     {

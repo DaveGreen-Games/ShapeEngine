@@ -148,14 +148,9 @@ namespace Examples.Scenes
         #region Base Class
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
-            var gamepad = GAMELOOP.CurGamepad;
+            var gamepad = ShapeInput.GamepadManager.LastUsedGamepad;
             inputActionTree.CurrentGamepad = gamepad;
             inputActionTree.Update(dt);
-            // foreach (var action in inputActions)
-            // {
-                // action.Gamepad = gamepad;
-                // action.Update(dt);
-            // }
             TextInputBox.Update(dt);
             
             if (!textEntryActive)
@@ -236,7 +231,7 @@ namespace Examples.Scenes
                 }
                 else
                 {
-                    TextInputBox.AddCharacters(ShapeInput.AttachedKeyboardDevice.GetStreamChar());
+                    TextInputBox.AddCharacters(ShapeInput.Keyboard.GetStreamChar());
                 }
 
                 

@@ -35,7 +35,7 @@ public class ModifierKeyKeyboardButton : IModifierKey
     /// <param name="gamepad">Unused. Present for interface compatibility.</param>
     /// <returns><c>true</c> if the modifier is active; otherwise, <c>false</c>.</returns>
     public bool IsActive(GamepadDevice? gamepad = null) =>
-        reverseModifier ? !ShapeInput.AttachedKeyboardDevice.IsDown(modifier) : ShapeInput.AttachedKeyboardDevice.IsDown(modifier);
+        reverseModifier ? !ShapeInput.Keyboard.IsDown(modifier) : ShapeInput.Keyboard.IsDown(modifier);
 
     /// <summary>
     /// Gets the display name of the modifier key.

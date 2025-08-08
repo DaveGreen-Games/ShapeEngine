@@ -1,4 +1,4 @@
-namespace ShapeEngine.Input;
+/*namespace ShapeEngine.Input;
 
 /// <summary>
 /// Abstract base class for all input devices in the ShapeEngine input system.
@@ -71,4 +71,4 @@ public abstract class InputDeviceBase : IComparable<InputDeviceBase>
         int priorityComparison = GetDeviceProcessPriority().CompareTo(other.GetDeviceProcessPriority());
         return priorityComparison != 0 ? priorityComparison : id.CompareTo(other.id);
     }
-}
+}*/

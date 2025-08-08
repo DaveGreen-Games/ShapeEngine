@@ -25,6 +25,7 @@ public sealed class MouseDevice : InputDevice
     /// Gets the usage detection settings for the mouse input device.
     /// </summary>
     public InputDeviceUsageDetectionSettings.MouseSettings UsageDetectionSettings { get; private set; } = new();
+    // internal event Action<InputDevice, InputDeviceUsageDetectionSettings>? OnInputDeviceChangeSettingsChanged;
     
     /// <summary>
     /// <para>
@@ -43,7 +44,6 @@ public sealed class MouseDevice : InputDevice
     private bool wasUsed;
     private bool wasUsedRaw;
     private bool isLocked;
-    private bool isAttached;
     private int pressedCount;
     private float pressedCountDurationTimer;
     private float usedDurationTimer;
@@ -209,8 +209,16 @@ public sealed class MouseDevice : InputDevice
     }
     
     /// <inheritdoc cref="InputDevice.ApplyInputDeviceChangeSettings"/>
-    public override void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings) => UsageDetectionSettings = settings.Mouse;
-
+    internal override void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
+    {
+        UsageDetectionSettings = settings.Mouse;
+        // OnInputDeviceChangeSettingsChanged?.Invoke(this, settings);
+        
+    }
+    // internal void OverrideInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
+    // {
+    //     UsageDetectionSettings = settings.Mouse;
+    // }
     /// <inheritdoc cref="InputDevice.WasUsed"/>
     public override bool WasUsed() => wasUsed;
     
@@ -244,36 +252,10 @@ public sealed class MouseDevice : InputDevice
         isLocked = false;
     }
     
-    /// <summary>
-    /// Indicates whether the device is currently attached.
-    /// </summary>
-    public override bool IsAttached() => isAttached;
-    
-    /// <summary>
-    /// Attaches the device, marking it as attached.
-    /// </summary>
-    internal override void Attach()
-    {
-        if (isAttached) return;
-        isAttached = true;
-    }
-    
-    /// <summary>
-    /// Detaches the  device, marking it as detached and resetting its state.
-    /// </summary>
-    internal override void Detach()
-    {
-        if (!isAttached) return;
-        isAttached = false;
-        
-        ResetState();
-    }
-    
 
     /// <inheritdoc cref="InputDevice.Update"/>
     public override bool Update(float dt, bool wasOtherDeviceUsed)
     {
-        if (!isAttached) return false;
         MousePosition = Raylib.GetMousePosition();
         
         MouseDelta = Raylib.GetMouseDelta();

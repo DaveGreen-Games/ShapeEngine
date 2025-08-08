@@ -7,6 +7,9 @@ using ShapeEngine.Screen;
 
 namespace ShapeEngine.Core.GameDef;
 
+//TODO: Move ShapeInput to instance class and add a instance here
+// ShapeInput stays an extension static class for anything input related that needs static functions/extensions
+
 /// <summary>
 /// The core game class.
 /// Inherit this class, create a new instance of this class and call Run() to start the game.
@@ -265,6 +268,7 @@ public partial class Game
     private List<ScreenTexture>? customScreenTextures;
     #endregion
     
+    //TODO: also change minimal project setup code in readme and nuget readme!
     #region Constructor
     /// <summary>
     /// Initializes a new instance of the Game class with the specified game settings and window settings.
@@ -277,6 +281,7 @@ public partial class Game
     /// <param name="windowSettings">The settings for the window, including size, position, and display properties.</param>
     public Game(GameSettings gameSettings, WindowSettings windowSettings)
     {
+        
         CurrentGameInstance = this;
         
         #if DEBUG
@@ -353,7 +358,9 @@ public partial class Game
         UIScreenInfo = new(Window.ScreenArea, mousePosUI);
 
         ShapeInput.OnInputDeviceChanged += ResolveOnInputDeviceChanged;
-        ShapeInput.AttachedGamepadDeviceManager.OnGamepadConnectionChanged += ResolveOnGamepadConnectionChanged;
+        ShapeInput.GamepadManager.OnGamepadConnectionChanged += ResolveOnGamepadConnectionChanged;
+        ShapeInput.GamepadManager.OnGamepadClaimed += ResolveOnGamepadClaimed;
+        ShapeInput.GamepadManager.OnGamepadFreed += ResolveOnGamepadFreed;
         
         //This sets the current directory to the executable's folder, enabling double-click launches.
         //without this, the executable has to be launched from the command line
@@ -631,6 +638,18 @@ public partial class Game
     #endregion
     
     #region Gamepad Connection
+
+    private void ResolveOnGamepadClaimed(GamepadDevice gamepad)
+    {
+        OnGamepadClaimed(gamepad);
+        CurScene.ResolveOnGamepadClaimed(gamepad);
+    }
+
+    private void ResolveOnGamepadFreed(GamepadDevice gamepad)
+    {
+        OnGamepadFreed(gamepad);
+        CurScene.ResolveOnGamepadFreed(gamepad);
+    }
     private void ResolveOnGamepadConnectionChanged(GamepadDevice gamepad, bool connected)
     {
         if (connected)

@@ -52,16 +52,16 @@ public sealed class InputTypeKeyboardButtonAxis : IInputType
     public InputState GetState(GamepadDevice? gamepad = null)
     {
         return modifierKeySet == null ? 
-            ShapeInput.AttachedKeyboardDevice.CreateInputState(neg, pos) : 
-            ShapeInput.AttachedKeyboardDevice.CreateInputState(neg, pos, modifierKeySet);
+            ShapeInput.Keyboard.CreateInputState(neg, pos) : 
+            ShapeInput.Keyboard.CreateInputState(neg, pos, modifierKeySet);
     }
 
     /// <inheritdoc/>
     public InputState GetState(InputState prev, GamepadDevice? gamepad = null)
     {
         return modifierKeySet == null ? 
-            ShapeInput.AttachedKeyboardDevice.CreateInputState(neg, pos, prev) : 
-            ShapeInput.AttachedKeyboardDevice.CreateInputState(neg, pos, prev, modifierKeySet);
+            ShapeInput.Keyboard.CreateInputState(neg, pos, prev) : 
+            ShapeInput.Keyboard.CreateInputState(neg, pos, prev, modifierKeySet);
     }
 
     /// <inheritdoc/>

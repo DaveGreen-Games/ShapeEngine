@@ -126,7 +126,7 @@ namespace Examples.Scenes.ExampleScenes
             UpdateFollower(ui.Area.Size.Min());
             
             // GAMELOOP.MouseControlEnabled = GAMELOOP.CurGamepad?.IsDown(ShapeGamepadTriggerAxis.RIGHT, 0.1f) ?? true;
-            inputActionTree.CurrentGamepad = GAMELOOP.CurGamepad;
+            inputActionTree.CurrentGamepad = ShapeInput.GamepadManager.LastUsedGamepad;
             inputActionTree.Update(time.Delta);
             
             currentShip.Update(time.Delta, camera.RotationDeg);

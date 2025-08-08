@@ -103,9 +103,8 @@ namespace Examples
         private readonly uint alphaCircleID = ShapeID.NextID;
         private uint currentShaderID;
         
-        public GamepadDevice? CurGamepad = null;
+       
 
-        // public RectContainerMain UIRects = new("main");
 
         public RectNode UIRects;
 
@@ -167,11 +166,9 @@ namespace Examples
         public bool MouseControlEnabled = true;
 
         private PaletteInfoBox paletteInfoBox;
-
-
+        
         private List<ScreenTexture> gameTextures = new(5);
         private int curGameTextureIndex = 0;
-
         
         public GameloopExamples() : base
             (
@@ -258,7 +255,7 @@ namespace Examples
             var settings = new InputDeviceUsageDetectionSettings(mouseSettings, keyboardSettings, gamepadSettings);
             ShapeInput.ApplyInputDeviceChangeSettings(settings);
         }
-
+        
         protected override void LoadContent()
         {
             BackgroundColorRgba = Colors.Background; // ExampleScene.ColorDark;
@@ -370,12 +367,12 @@ namespace Examples
         {
             if (!MouseControlEnabled) return mousePos;
             
-            if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Gamepad && ShapeInput.AttachedGamepadDeviceManager.LastUsedGamepad != null && 
-                ShapeInput.AttachedGamepadDeviceManager.LastUsedGamepad.IsDown(ShapeGamepadTriggerAxis.RIGHT))
+            if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Gamepad && ShapeInput.GamepadManager.LastUsedGamepad != null && 
+                ShapeInput.GamepadManager.LastUsedGamepad.IsDown(ShapeGamepadTriggerAxis.RIGHT))
             {
                 mouseMovementTimer = 0f;
                 float speed = screenArea.Size.Max() * 0.75f * dt;
-                int gamepad = ShapeInput.AttachedGamepadDeviceManager.LastUsedGamepad.Index;
+                int gamepad = ShapeInput.GamepadManager.LastUsedGamepad.Index;
                 var x = ShapeInput.CreateInputState(ShapeGamepadJoyAxis.LEFT_X, GamepadMouseMovementTag, gamepad, 0.2f).AxisRaw;
                 var y = ShapeInput.CreateInputState(ShapeGamepadJoyAxis.LEFT_Y, GamepadMouseMovementTag, gamepad, 0.2f).AxisRaw;
 
@@ -420,15 +417,7 @@ namespace Examples
         {
             SetupInput();
 
-            CurGamepad = ShapeInput.AttachedGamepadDeviceManager.RequestGamepad(0);
-            inputActionTree.CurrentGamepad = CurGamepad;
-            // if (CurGamepad != null)
-            // {
-                //foreach (var action in inputActions)
-                //{
-                //    action.Gamepad = CurGamepad;
-                //}
-            // }
+            inputActionTree.CurrentGamepad = null;
             
             mainScene = new MainScene();
             GoToScene(mainScene);
@@ -467,34 +456,7 @@ namespace Examples
             }
         }
 
-        protected override void OnGamepadConnected(GamepadDevice gamepad)
-        {
-            if (CurGamepad != null) return;
-            CurGamepad = ShapeInput.AttachedGamepadDeviceManager.RequestGamepad(0);
-            inputActionTree.CurrentGamepad = CurGamepad;
-            // if (CurGamepad != null)
-            // {
-                // foreach (var action in inputActions)
-                // {
-                //     action.Gamepad = CurGamepad;
-                // }
-            // }
-        }
-
-        protected override void OnGamepadDisconnected(GamepadDevice gamepad)
-        {
-            if (CurGamepad == null) return;
-            if (CurGamepad.Index == gamepad.Index)
-            {
-                CurGamepad = ShapeInput.AttachedGamepadDeviceManager.RequestGamepad(0);
-                inputActionTree.CurrentGamepad = CurGamepad;
-                // foreach (var action in inputActions)
-                // {
-                //     action.Gamepad = CurGamepad;
-                // }
-            }
-        }
-
+        
 
         protected override void UpdateCursor(float dt, ScreenInfo gameInfo, ScreenInfo gameUiInfo, ScreenInfo uiInfo)
         {
@@ -568,10 +530,9 @@ namespace Examples
             UIRects.UpdateRect(ui.Area);
             UIRects.Update(time.Delta, ui.MousePos);
 
-            // InputAction.UpdateActions(time.Delta, CurGamepad, inputActions);
-            
+            inputActionTree.CurrentGamepad = ShapeInput.GamepadManager.LastUsedGamepad;
             inputActionTree.Update(time.Delta);
-
+            
             var fullscreenState = InputActionFullscreen.Consume(out _);
             if (fullscreenState is { Consumed: false, Pressed: true })
             {
@@ -670,6 +631,7 @@ namespace Examples
             paletteInfoBox.Update(time.Delta);
         }
 
+        
 
         protected override void DrawUI(ScreenInfo ui)
         {

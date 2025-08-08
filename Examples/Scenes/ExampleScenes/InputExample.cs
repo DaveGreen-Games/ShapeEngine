@@ -763,13 +763,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
-            // int gamepadIndex = -1;
-            // if (GAMELOOP.CurGamepad != null)
-            // {
-            //     gamepadIndex = GAMELOOP.CurGamepad.Index;
-            // }
-
-            var gamepad = GAMELOOP.CurGamepad;
+            var gamepad = ShapeInput.GamepadManager.LastUsedGamepad;
             var curDevice = ShapeInput.CurrentInputDeviceType;
             joystickLeft.Update(time.Delta, gamepad, curDevice);
             joystickRight.Update(time.Delta, gamepad, curDevice);

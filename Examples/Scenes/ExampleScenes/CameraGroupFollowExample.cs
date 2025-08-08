@@ -120,7 +120,7 @@ namespace Examples.Scenes.ExampleScenes
                 float radius = Size * (Selected ? 1f : 0.75f);
                 if (Selected)
                 {
-                    inputActionTree.CurrentGamepad = GAMELOOP.CurGamepad;
+                    inputActionTree.CurrentGamepad = ShapeInput.GamepadManager.LastUsedGamepad;
                     inputActionTree.Update(dt);
                     
                     if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Mouse)
@@ -418,10 +418,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
-            // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
-            var gamepad = GAMELOOP.CurGamepad;
-            
-            // GAMELOOP.MouseControlEnabled = gamepad?.IsDown(ShapeGamepadTriggerAxis.RIGHT, 0.1f) ?? true;
+            var gamepad = ShapeInput.GamepadManager.LastUsedGamepad;
             
             inputActionTree.CurrentGamepad = gamepad;
             inputActionTree.Update(dt);

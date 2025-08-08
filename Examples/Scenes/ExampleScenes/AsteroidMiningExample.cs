@@ -799,7 +799,7 @@ namespace Examples.Scenes.ExampleScenes
 
             if (CollisionHandler == null) return;
 
-            var gamepad = GAMELOOP.CurGamepad;
+            var gamepad = ShapeInput.GamepadManager.LastUsedGamepad;
             inputActionTree.CurrentGamepad = gamepad;
             inputActionTree.Update(dt);
             

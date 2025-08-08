@@ -345,7 +345,7 @@ namespace Examples.Scenes.ExampleScenes
                 }
             }
             
-            var gamepad = GAMELOOP.CurGamepad;
+            var gamepad = ShapeInput.GamepadManager.LastUsedGamepad;
             
             inputActionTree.CurrentGamepad = gamepad;
             inputActionTree.Update(time.Delta);

@@ -198,14 +198,15 @@ namespace Examples.Scenes
             // titleFont.DrawText(deviceText, deviceRect, 1f, new Vector2(0.01f, 0.5f), ColorHighlight3);
             
             string gamepadText = "No Gamepad Connected";
-            if (GAMELOOP.CurGamepad != null)
+            var gamepad = ShapeInput.GamepadManager.LastUsedGamepad;
+            if (gamepad != null)
             {
-                var gamepadIndex = GAMELOOP.CurGamepad.Index;
+                var gamepadIndex = gamepad.Index;
                 gamepadText = $"Gamepad [{gamepadIndex}] Connected";
             }
             
             titleFont.LineSpacing = 1f;
-            titleFont.ColorRgba = GAMELOOP.CurGamepad != null ? Colors.Highlight : Colors.Medium;
+            titleFont.ColorRgba = gamepad != null ? Colors.Highlight : Colors.Medium;
             titleFont.DrawTextWrapNone(gamepadText, gamepadRect, new AnchorPoint(0.01f, 0.5f));
             // titleFont.DrawText(gamepadText, gamepadRect, 1f, new Vector2(0.01f, 0.5f), GAMELOOP.CurGamepad != null ? ColorHighlight3 : ColorMedium);
         }

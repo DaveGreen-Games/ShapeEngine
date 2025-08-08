@@ -142,7 +142,7 @@ namespace Examples.Scenes.ExampleScenes
             
             if (GAMELOOP.Paused) return;
             
-            var gamepad = GAMELOOP.CurGamepad;
+            var gamepad = ShapeInput.GamepadManager.LastUsedGamepad;
             inputActionTree.CurrentGamepad = gamepad;
             inputActionTree.Update(time.Delta);
         }

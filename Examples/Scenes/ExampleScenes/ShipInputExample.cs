@@ -174,7 +174,7 @@ namespace Examples.Scenes.ExampleScenes
 
         internal class InputActionHelper
         {
-            public readonly InputAction Add;
+            // public readonly InputAction Add;
             public readonly InputAction Remove;
             public readonly GamepadDevice Gamepad;
             public readonly InputActionTree inputActionTree;
@@ -185,11 +185,11 @@ namespace Examples.Scenes.ExampleScenes
                 
                 InputActionSettings defaultSettings = new();
                 
-                var addShipInputType = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
-                Add = new(defaultSettings,addShipInputType)
-                {
-                    Gamepad = gamepad
-                };
+                // var addShipInputType = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
+                // Add = new(defaultSettings,addShipInputType)
+                // {
+                //     Gamepad = gamepad
+                // };
                 
                 var removeShipInputType = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
                 Remove = new(defaultSettings,removeShipInputType)
@@ -201,15 +201,13 @@ namespace Examples.Scenes.ExampleScenes
                 {
                     CurrentGamepad = gamepad
                 };
-                inputActionTree.Add(Add);
+                // inputActionTree.Add(Add);
                 inputActionTree.Add(Remove);
             }
 
             public void Update(float dt)
             {
                 inputActionTree.Update(dt);
-                // Add.Update(dt);
-                // Remove.Update(dt);
             }
         }
         
@@ -223,7 +221,7 @@ namespace Examples.Scenes.ExampleScenes
 
         private readonly List<InputActionHelper> inputActionHelpers = new();
         
-        private readonly GamepadDeviceManager GamepadManager = new(8);
+        // private readonly GamepadDeviceManager GamepadManager = new(8);
 
         public ShipInputExample()
         {
@@ -234,18 +232,18 @@ namespace Examples.Scenes.ExampleScenes
             GenerateStars(2500);
             camera.Follower = cameraFollower;
             
-            GamepadManager.OnGamepadConnectionChanged += OnShapeGamepadDeviceConnectionChanged;
-            foreach (var gamepad in GamepadManager.GetAllGamepads())
-            {
-                var inputHelper = new InputActionHelper(gamepad);
-                inputActionHelpers.Add(inputHelper);
-            }
+            // GamepadManager.OnGamepadConnectionChanged += OnShapeGamepadDeviceConnectionChanged;
+            // foreach (var gamepad in GamepadManager.GetAllGamepads())
+            // {
+                // var inputHelper = new InputActionHelper(gamepad);
+                // inputActionHelpers.Add(inputHelper);
+            // }
         }
 
        
         private void AddShip(GamepadDevice gamepad)
         {
-            gamepad.Claim();
+            // gamepad.Claim();
             var ship = new SpaceShip(new(), gamepad);
             spaceShips.Add(ship);
             cameraFollower.AddTarget(ship);
@@ -288,8 +286,6 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnActivate(Scene oldScene)
         {
-            //TODO: I hope this works
-            ShapeInput.AttachNewGamepadDeviceManager(GamepadManager);
             GAMELOOP.Camera = camera;
             BitFlag mask = new(GAMELOOP.SceneAccessTag);
             mask = mask.Add(GAMELOOP.GamepadMouseMovementTag);
@@ -298,8 +294,6 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnDeactivate()
         {
-            //TODO: I hope this works
-            ShapeInput.AttachNewGamepadDeviceManager(ShapeInput.DefaultGamepadDeviceManager);
             GAMELOOP.MouseControlEnabled = true;
             GAMELOOP.ResetCamera();
             ShapeInput.Unlock();
@@ -315,6 +309,16 @@ namespace Examples.Scenes.ExampleScenes
             
         }
 
+        protected override void OnGamepadClaimed(GamepadDevice gamepad)
+        {
+            AddShip(gamepad);
+        }
+
+        protected override void OnGamepadDisconnected(GamepadDevice gamepad)
+        {
+            RemoveShip(gamepad);
+        }
+
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
             foreach (var inputHelper in inputActionHelpers)
@@ -323,14 +327,7 @@ namespace Examples.Scenes.ExampleScenes
                 if (gamepad.Connected)
                 {
                     inputHelper.Update(dt);
-                    if (gamepad.Available)
-                    {
-                        if (inputHelper.Add.State.Pressed)
-                        {
-                            AddShip(gamepad);
-                        }
-                    }
-                    else
+                    if (!gamepad.Available)
                     {
                         if (inputHelper.Remove.State.Pressed)
                         {
@@ -378,7 +375,8 @@ namespace Examples.Scenes.ExampleScenes
 
         private void DrawGamepadInfo(Rect rect)
         {
-            var text = $"Connected {GamepadManager.GetConnectedGamepads().Count} | Available {GamepadManager.GetAvailableGamepads().Count}";
+            var gamepadManger = ShapeInput.GamepadManager;
+            var text = $"Connected {gamepadManger.GetConnectedGamepads().Count} | Available {gamepadManger.GetAvailableGamepads().Count}";
             
             textFont.FontSpacing = 1f;
             textFont.ColorRgba = Colors.Warm;
@@ -400,9 +398,9 @@ namespace Examples.Scenes.ExampleScenes
             var helper = GetActiveInputActionHelper();
             if (helper != null)
             {
-                string addShipText = helper.Add.GetInputTypeDescription(InputDeviceType.Gamepad, true, 1, false);
+                // string addShipText = helper.Add.GetInputTypeDescription(InputDeviceType.Gamepad, true, 1, false);
                 string removeShipText = helper.Remove.GetInputTypeDescription(InputDeviceType.Gamepad, true, 1, false);
-                string textBottom = $"Remove Ship {removeShipText} | Add Ship {addShipText}";
+                string textBottom = $"Remove Ship [{removeShipText}] | Add Ship [A]";
 
                 if(GAMELOOP.MouseControlEnabled) GAMELOOP.MouseControlEnabled = false;
                 GAMELOOP.DrawCursor = false;
@@ -420,17 +418,6 @@ namespace Examples.Scenes.ExampleScenes
                 // font.DrawText("No gamepads connected.", rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
             }
             
-        }
-
-        private void OnShapeGamepadDeviceConnectionChanged(GamepadDevice gamepad, bool connected)
-        {
-            if (!connected)
-            {
-                if (!gamepad.Available)
-                {
-                    RemoveShip(gamepad);
-                }
-            }
         }
         
     }

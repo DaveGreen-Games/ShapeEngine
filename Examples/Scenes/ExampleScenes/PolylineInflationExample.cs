@@ -87,8 +87,7 @@ namespace Examples.Scenes.ExampleScenes
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame,Vector2 mousePosGameUi,  Vector2 mousePosUI)
         {
             base.HandleInput(dt, mousePosGame, mousePosGameUi, mousePosUI);
-            // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
-            var gamepad = GAMELOOP.CurGamepad;
+            var gamepad = ShapeInput.GamepadManager.LastUsedGamepad;
             
             inputActionTree.CurrentGamepad = gamepad;
             inputActionTree.Update(dt);
@@ -101,13 +100,13 @@ namespace Examples.Scenes.ExampleScenes
             offsetDelta = ShapeMath.Clamp(offsetDelta, 0f, MaxOffset);
 
 
-            if (ShapeInput.AttachedKeyboardDevice.IsDown(ShapeKeyboardButton.H))
+            if (ShapeInput.Keyboard.IsDown(ShapeKeyboardButton.H))
             {
                 collisionSegmentValid = true;
                 collisionSegment = collisionSegment.SetStart(mousePosGame);
             }
 
-            if (ShapeInput.AttachedKeyboardDevice.IsDown(ShapeKeyboardButton.G))
+            if (ShapeInput.Keyboard.IsDown(ShapeKeyboardButton.G))
             {
                 collisionSegmentValid = true;
                 collisionSegment = collisionSegment.SetEnd(mousePosGame);

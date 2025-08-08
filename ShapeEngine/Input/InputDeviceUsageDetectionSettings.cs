@@ -1,6 +1,10 @@
 
 namespace ShapeEngine.Input;
 
+//TODO: Rename to InputSettings
+// - Add max gamepads int
+// - Add it to game constructor as third settings
+
 /// <summary>
 /// Represents the settings for detecting input device usage, including mouse, keyboard, and gamepad.
 /// </summary>

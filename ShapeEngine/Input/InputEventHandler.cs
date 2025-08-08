@@ -15,11 +15,6 @@ public class InputEventHandler
     private readonly Dictionary<InputEventCallback, uint> listeners = new();
     private readonly List<InputEventCallback> sortedListeners = new();
     
-    
-    private KeyboardDevice curActiveKeyboardDevice;
-    private MouseDevice curActiveMouseDevice;
-    private GamepadDeviceManager curActiveGamepadDeviceDeviceManager;
-    
     /// <summary>
     /// Initializes a new instance of <see cref="InputEventHandler"/> and subscribes to device events.
     /// </summary>
@@ -28,57 +23,14 @@ public class InputEventHandler
     /// <param name="gamepadDeviceManager">The gamepad device manager.</param>
     public InputEventHandler(KeyboardDevice keyboard, MouseDevice mouse, GamepadDeviceManager gamepadDeviceManager)
     {
-        curActiveKeyboardDevice = keyboard;
         keyboard.OnButtonPressed += OnKeyboardButtonPressed;
         keyboard.OnButtonReleased += OnKeyboardButtonReleased;
         
-        curActiveMouseDevice = mouse;
         mouse.OnButtonPressed += OnMouseButtonPressed;
         mouse.OnButtonReleased += OnMouseButtonReleased;
         
-        curActiveGamepadDeviceDeviceManager = gamepadDeviceManager;
         gamepadDeviceManager.OnGamepadButtonPressed += OnGamepadButtonPressed;
         gamepadDeviceManager.OnGamepadButtonReleased += OnGamepadButtonReleased;
-    }
-
-    internal bool ChangeActiveKeyboardDevice(KeyboardDevice device)
-    {
-        if (device == curActiveKeyboardDevice) return false;
-
-        curActiveKeyboardDevice.OnButtonPressed -= OnKeyboardButtonPressed;
-        curActiveKeyboardDevice.OnButtonReleased -= OnKeyboardButtonReleased;
-        
-        curActiveKeyboardDevice = device;
-        curActiveKeyboardDevice.OnButtonPressed += OnKeyboardButtonPressed;
-        curActiveKeyboardDevice.OnButtonReleased += OnKeyboardButtonReleased;
-        
-        return true;
-    }
-    internal bool ChangeActiveMouseDevice(MouseDevice device)
-    {
-        if (device == curActiveMouseDevice) return false;
-
-        curActiveMouseDevice.OnButtonPressed -= OnMouseButtonPressed;
-        curActiveMouseDevice.OnButtonReleased -= OnMouseButtonReleased;
-        
-        curActiveMouseDevice = device;
-        curActiveMouseDevice.OnButtonPressed += OnMouseButtonPressed;
-        curActiveMouseDevice.OnButtonReleased += OnMouseButtonReleased;
-        
-        return true;
-    }
-    internal bool ChangeActiveGamepadDeviceManager(GamepadDeviceManager device)
-    {
-        if (device == curActiveGamepadDeviceDeviceManager) return false;
-
-        curActiveGamepadDeviceDeviceManager.OnGamepadButtonPressed -= OnGamepadButtonPressed;
-        curActiveGamepadDeviceDeviceManager.OnGamepadButtonReleased -= OnGamepadButtonReleased;
-        
-        curActiveGamepadDeviceDeviceManager = device;
-        curActiveGamepadDeviceDeviceManager.OnGamepadButtonPressed += OnGamepadButtonPressed;
-        curActiveGamepadDeviceDeviceManager.OnGamepadButtonReleased += OnGamepadButtonReleased;
-        
-        return true;
     }
 
     /// <summary>

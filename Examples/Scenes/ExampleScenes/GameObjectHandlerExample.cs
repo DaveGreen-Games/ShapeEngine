@@ -660,12 +660,12 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnActivate(Scene oldScene)
         {
-            ShapeInput.AttachedKeyboardDevice.UsageDetectionSettings.ExceptionButtons.Add(ShapeKeyboardButton.LEFT_SHIFT);
+            ShapeInput.Keyboard.UsageDetectionSettings.ExceptionButtons.Add(ShapeKeyboardButton.LEFT_SHIFT);
         }
 
         protected override void OnDeactivate()
         {
-            ShapeInput.AttachedKeyboardDevice.UsageDetectionSettings.ExceptionButtons.Remove(ShapeKeyboardButton.LEFT_SHIFT);
+            ShapeInput.Keyboard.UsageDetectionSettings.ExceptionButtons.Remove(ShapeKeyboardButton.LEFT_SHIFT);
         }
 
         private void ClearAreaCollisionObjects(Rect area, BitFlag collisionLayerMask)
@@ -694,10 +694,9 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
-            var gamepad = GAMELOOP.CurGamepad;
+            var gamepad = ShapeInput.GamepadManager.LastUsedGamepad;
             inputActionTree.CurrentGamepad = gamepad;
             inputActionTree.Update(dt, out _);
-            // if(updated && inputDeviceType != InputDeviceType.None) currentInputActionDeviceType = inputDeviceType;
             
             if (iaStartClearArea.State.Pressed)
             {

@@ -56,7 +56,7 @@ public sealed class GamepadDevice : InputDevice
     /// </summary>
     public event Action<GamepadDevice, ShapeGamepadButton>? OnButtonReleased;
 
-    internal event Action<GamepadDevice, InputDeviceUsageDetectionSettings>? OnInputDeviceChangeSettingsChanged;
+    // internal event Action<InputDevice, InputDeviceUsageDetectionSettings>? OnInputDeviceChangeSettingsChanged;
     
     /// <summary>
     /// The index of this gamepad device.
@@ -100,7 +100,6 @@ public sealed class GamepadDevice : InputDevice
     /// </remarks>
     public uint DeviceProcessPriority = processPriorityCounter++;
 
-    private bool isAttached;
     private bool isLocked;
     private bool wasUsed;
     private bool wasUsedRaw;
@@ -164,11 +163,17 @@ public sealed class GamepadDevice : InputDevice
     /// <summary>
     /// Event triggered when the connection state changes.
     /// </summary>
-    public event Action? OnConnectionChanged;
+    public event Action<GamepadDevice, bool>? OnConnectionChanged;
+
     /// <summary>
-    /// Event triggered when the availability state changes.
+    /// Event triggered when the gamepad is claimed for use.
     /// </summary>
-    public event Action? OnAvailabilityChanged;
+    public event Action<GamepadDevice>? OnClaimed;
+    
+    /// <summary>
+    /// Event triggered when the gamepad is freed and becomes available.
+    /// </summary>
+    public event Action<GamepadDevice>? OnFreed;
     
     private readonly Dictionary<ShapeGamepadJoyAxis, ValueRange> joyAxisRanges = new();
     private readonly Dictionary<ShapeGamepadTriggerAxis, ValueRange> triggerAxisRanges = new();
@@ -315,15 +320,15 @@ public sealed class GamepadDevice : InputDevice
     /// Also propagates the settings to all other <see cref="GamepadDevice"/> instances and the <see cref="GamepadDeviceManager"/>.
     /// </summary>
     /// <param name="settings">The change settings to apply to the input device.</param>
-    public override void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
+    internal override void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
     {
         UsageDetectionSettings = settings.Gamepad;
-        OnInputDeviceChangeSettingsChanged?.Invoke(this, settings);
+        // OnInputDeviceChangeSettingsChanged?.Invoke(this, settings);
     }
-    internal void OverrideInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
-    {
-        UsageDetectionSettings = settings.Gamepad;
-    }
+    // internal void OverrideInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
+    // {
+    //     UsageDetectionSettings = settings.Gamepad;
+    // }
 
     /// <summary>
     /// Gets the currently used  range (minimum and maximum) for the specified joystick axis.
@@ -398,37 +403,11 @@ public sealed class GamepadDevice : InputDevice
         ReleasedTriggerAxis.Clear();
         HeldTriggerAxis.Clear();
     }
-    /// <summary>
-    /// Indicates whether the device is currently attached.
-    /// </summary>
-    public override bool IsAttached() => isAttached;
-    
-    /// <summary>
-    /// Attaches the device, marking it as attached.
-    /// </summary>
-    internal override void Attach()
-    {
-        if (isAttached) return;
-        isAttached = true;
-    }
-    
-    /// <summary>
-    /// Detaches the  device, marking it as detached and resetting its state.
-    /// </summary>
-    internal override void Detach()
-    {
-        if (!isAttached) return;
-        isAttached = false;
-        
-        ResetState();
-    }
 
 
     /// <inheritdoc cref="InputDevice.Update"/>
     public override bool Update(float dt, bool wasOtherDeviceUsed)
     {
-        if (!isAttached) return false;
-        
         PressedButtons.Clear();
         ReleasedButtons.Clear();
         HeldDownButtons.Clear();
@@ -438,12 +417,29 @@ public sealed class GamepadDevice : InputDevice
         PressedTriggerAxis.Clear();
         ReleasedTriggerAxis.Clear();
         HeldTriggerAxis.Clear();
+
+        if (Raylib.IsGamepadAvailable(Index))
+        {
+            if (!Connected) Connect();
+        }
+        else
+        {
+            if(Connected) Disconnect();
+        }
+        
+        
+        if (!Connected)
+        {
+            wasUsed = false;
+            wasUsedRaw = false;
+            return false;
+        }
         
         UpdateButtonStates();
         UpdateJoyAxisStates();
         UpdateTriggerAxisStates();
         
-        if (!Connected || isLocked)
+        if (isLocked || Available)//Only claimed gamepads can change current input device type (Available gamepads have not been claimed!)
         {
             wasUsed = false;
             wasUsedRaw = false;
@@ -458,10 +454,6 @@ public sealed class GamepadDevice : InputDevice
     private void WasGamepadUsed(float dt, bool wasOtherDeviceUsed, out bool used, out bool usedRaw)
     {
         used = false;
-        usedRaw = false;
-        
-        if (isLocked) return;
-        
         usedRaw = PressedButtons.Count > 0;
         
         if (wasOtherDeviceUsed)
@@ -571,13 +563,10 @@ public sealed class GamepadDevice : InputDevice
     {
         if (Connected) return;
         Connected = true;
+        Available = true;
         Name = Raylib.GetGamepadName_(Index);
         AxisCount = Raylib.GetGamepadAxisCount(Index);
-        OnConnectionChanged?.Invoke();
-        
-        // joyAxisRanges.Clear();
-        
-        // Calibrate();
+        OnConnectionChanged?.Invoke(this, Connected);
     }
     /// <summary>
     /// Marks the gamepad as disconnected.
@@ -586,21 +575,9 @@ public sealed class GamepadDevice : InputDevice
     {
         if (!Connected) return;
         Connected = false;
-        OnConnectionChanged?.Invoke();
+        OnConnectionChanged?.Invoke(this, Connected);
         
-        usedDurationTimer = 0f;
-        pressedCount = 0;
-        pressedCountDurationTimer = 0f;
-        
-        PressedButtons.Clear();
-        ReleasedButtons.Clear();
-        HeldDownButtons.Clear();
-        PressedJoyAxis.Clear();
-        ReleasedJoyAxis.Clear();
-        HeldJoyAxis.Clear();
-        PressedTriggerAxis.Clear();
-        ReleasedTriggerAxis.Clear();
-        HeldTriggerAxis.Clear();
+        ResetState();
     }
     /// <summary>
     /// Claims the gamepad for use, marking it as unavailable.
@@ -610,7 +587,7 @@ public sealed class GamepadDevice : InputDevice
     {
         if (!Connected || !Available) return false;
         Available = false;
-        OnAvailabilityChanged?.Invoke();
+        OnClaimed?.Invoke(this);
         return true;
     }
     /// <summary>
@@ -621,7 +598,7 @@ public sealed class GamepadDevice : InputDevice
     {
         if (Available) return false;
         Available = true;
-        OnAvailabilityChanged?.Invoke();
+        OnFreed?.Invoke(this);
         return true;
     }
     

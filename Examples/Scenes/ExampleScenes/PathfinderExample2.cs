@@ -128,7 +128,7 @@ public class PathfinderExample2 : ExampleScene
         }
         public void Update(float dt)
         {
-            inputActionTree.CurrentGamepad = GAMELOOP.CurGamepad;
+            inputActionTree.CurrentGamepad = ShapeInput.GamepadManager.LastUsedGamepad;
             inputActionTree.Update(dt);
             
             
@@ -930,9 +930,7 @@ public class PathfinderExample2 : ExampleScene
     }
     protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
     {
-        var gamepad = GAMELOOP.CurGamepad;
-        
-        //GAMELOOP.MouseControlEnabled = gamepad?.IsDown(ShapeGamepadTriggerAxis.RIGHT, 0.1f) ?? true;
+        var gamepad = ShapeInput.GamepadManager.LastUsedGamepad;
         
         inputActionTree.CurrentGamepad = gamepad;
         inputActionTree.Update(dt);

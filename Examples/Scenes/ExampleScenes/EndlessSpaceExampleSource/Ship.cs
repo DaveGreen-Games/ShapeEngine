@@ -209,19 +209,9 @@ internal class Ship : CollisionObject, ICameraFollowTarget
             }
         }
 
-        // var gamepad = GAMELOOP.CurGamepad;
-        // GAMELOOP.MouseControlEnabled = gamepad?.IsDown(ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, 0.1f, 0.1f, null) ?? true;
-        
-        
         float dt = time.Delta;
-        inputActionTree.CurrentGamepad = GAMELOOP.CurGamepad;
+        inputActionTree.CurrentGamepad = ShapeInput.GamepadManager.LastUsedGamepad;
         inputActionTree.Update(dt);
-        
-        // iaMoveHor.Gamepad = GAMELOOP.CurGamepad;
-        // iaMoveHor.Update(dt);
-        //
-        // iaMoveVer.Gamepad = GAMELOOP.CurGamepad;
-        // iaMoveVer.Update(dt);
         
         Vector2 dir = new(iaMoveHor.State.AxisRaw, iaMoveVer.State.AxisRaw);
 
