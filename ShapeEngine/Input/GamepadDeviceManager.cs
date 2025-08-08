@@ -9,25 +9,20 @@ namespace ShapeEngine.Input;
 public sealed class GamepadDeviceManager
 {
     /// <summary>
-    /// The default maximum number of gamepads supported by the manager.
-    /// </summary>
-    public const int DefaultMaxGamepads = 8;
-    
-    /// <summary>
     /// Gets the maximum number of gamepads supported by this manager.
     /// </summary>
     public int MaxGamepads => gamepads.Length;
     
-    private readonly GamepadDevice[] gamepads;
+    private GamepadDevice[] gamepads;
     /// <summary>
     /// List of <see cref="GamepadDevice"/> instances that registered input during the last update cycle,
-    /// considering any filters or settings applied via <see cref="InputDeviceUsageDetectionSettings"/>.
+    /// considering any filters or settings applied via <see cref="InputSettings"/>.
     /// This list is cleared and repopulated on each update.
     /// </summary>
     public readonly List<GamepadDevice> LastUsedGamepads = [];
     /// <summary>
     /// The most recently used gamepad that registered input during the last update cycle,
-    /// considering any filters or settings applied via <see cref="InputDeviceUsageDetectionSettings"/>.
+    /// considering any filters or settings applied via <see cref="InputSettings"/>.
     /// This is <c>null</c> if no gamepad was used.
     /// </summary>
     public GamepadDevice? LastUsedGamepad { get; private set; } = null;
@@ -75,16 +70,56 @@ public sealed class GamepadDeviceManager
     /// <summary>
     /// Initializes a new instance of the <see cref="GamepadDeviceManager"/> class.
     /// </summary>
-    /// <param name="maxGamepads">Maximum number of gamepads to manage.</param>
-    public GamepadDeviceManager(int maxGamepads = DefaultMaxGamepads)
+    /// <param name="maxGamepadCount">Maximum number of gamepads to manage.</param>
+    public GamepadDeviceManager(int maxGamepadCount = InputSettings.DefaultMaxGamepadCount)
     {
-        if (maxGamepads <= 0) maxGamepads = 1;
-        gamepads = new GamepadDevice[maxGamepads];
-        GamepadSetup();
+        gamepads = new GamepadDevice[maxGamepadCount];
+        if(maxGamepadCount > 0) GamepadSetup();
     }
 
-    //TODO: Change max gamepads -> if number increases add new gamepads, if number decreases remove gamepads
+    /// <summary>
+    /// Changes the number of managed gamepads to the specified value.
+    /// Disconnects and removes gamepads if the new count is lower, or adds new gamepads if higher.
+    /// Returns 0 if unchanged, -1 if reduced, 1 if increased.
+    /// </summary>
+    /// <param name="newGamepadCount">The new number of gamepads to manage.</param>
+    /// <returns>
+    /// 0 if the count is unchanged, -1 if the count was reduced, 1 if increased.
+    /// </returns>
+    public int ChangedGamepadCount(int newGamepadCount)
+    {
+        if(newGamepadCount == gamepads.Length) return 0;
 
+        if (newGamepadCount <= 0)
+        {
+            foreach(var gamepad in gamepads) gamepad.Disconnect();
+            gamepads = [];
+            return -1;
+        }
+        
+        if (newGamepadCount < gamepads.Length)
+        {
+            for (int i = gamepads.Length - 1; i >= newGamepadCount; i--)
+            {
+                gamepads[i].Disconnect();
+            }
+            var newGamepads = new GamepadDevice[newGamepadCount];
+            Array.Copy(gamepads, newGamepads, newGamepadCount);
+            gamepads = newGamepads;
+            return -1;
+        }
+        else //bigger
+        {
+            var newGamepads = new GamepadDevice[newGamepadCount];
+            Array.Copy(gamepads, newGamepads, gamepads.Length);
+            for (int i = gamepads.Length; i < newGamepadCount; i++)
+            {
+                newGamepads[i] = CreateGamepad(i);
+            }
+            gamepads = newGamepads;
+            return 1;
+        }
+    }
 
     #region Gamepad
 
@@ -213,14 +248,19 @@ public sealed class GamepadDeviceManager
     {
         for (var i = 0; i < gamepads.Length; i++)
         {
-            var gamepad =  new GamepadDevice(i, Raylib.IsGamepadAvailable(i));
-            gamepads[i] = gamepad;
-            gamepad.OnButtonPressed += GamepadButtonWasPressed;
-            gamepad.OnButtonReleased += GamepadButtonWasReleased;
-            gamepad.OnConnectionChanged += GamepadConnectionHasChanged;
-            gamepad.OnClaimed += GamepadWasClaimed;
-            gamepad.OnFreed += GamepadWasFreed;
+            gamepads[i] = CreateGamepad(i);
         }
+    }
+    
+    private GamepadDevice CreateGamepad(int index)
+    {
+        var gamepad = new GamepadDevice(index);
+        gamepad.OnButtonPressed += GamepadButtonWasPressed;
+        gamepad.OnButtonReleased += GamepadButtonWasReleased;
+        gamepad.OnConnectionChanged += GamepadConnectionHasChanged;
+        gamepad.OnClaimed += GamepadWasClaimed;
+        gamepad.OnFreed += GamepadWasFreed;
+        return gamepad;
     }
 
     private void GamepadWasFreed(GamepadDevice gamepad)
@@ -244,7 +284,7 @@ public sealed class GamepadDeviceManager
     /// Propagates the settings to each gamepad.
     /// </summary>
     /// <param name="settings">The new input device usage detection settings to apply.</param>
-    internal void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
+    internal void ApplyInputDeviceChangeSettings(InputSettings settings)
     {
         foreach (var gamepad in gamepads)
         {

@@ -183,18 +183,15 @@ public sealed class GamepadDevice : InputDevice
     /// Initializes a new instance of the <see cref="GamepadDevice"/> class.
     /// </summary>
     /// <param name="index">The gamepad index.</param>
-    /// <param name="connected">Whether the gamepad is initially connected.</param>
-    public GamepadDevice(int index, bool connected)
+    public GamepadDevice(int index)
     {
         Index = index;
         
-        Connected = connected;
-        if (Connected)
+        if (Raylib.IsGamepadAvailable(index))
         {
-            Name = Raylib.GetGamepadName_(index);
-            AxisCount = Raylib.GetGamepadAxisCount(index);
-            
-            // Calibrate();
+            // Name = Raylib.GetGamepadName_(index);
+            // AxisCount = Raylib.GetGamepadAxisCount(index);
+            Connect();
         }
         
         foreach (var button in AllShapeGamepadButtons)
@@ -676,8 +673,8 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The value of the button as a float.</returns>
     public float GetValue(ShapeGamepadButton button, 
-        float axisDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, 
-        float triggerDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
+        float axisDeadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, 
+        float triggerDeadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
         ModifierKeySet? modifierKeySet = null)
     {
         if (Index < 0 || isLocked || !Connected) return 0f;
@@ -727,8 +724,8 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set.</param>
     /// <returns>True if the button is down; otherwise, false.</returns>
     public bool IsDown(ShapeGamepadButton button, 
-        float axisDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, 
-        float triggerDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
+        float axisDeadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, 
+        float triggerDeadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
         ModifierKeySet? modifierKeySet = null)
     {
         return GetValue(button, axisDeadzone, triggerDeadzone, modifierKeySet) != 0f;
@@ -744,8 +741,8 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set.</param>
     /// <returns>The created <see cref="InputState"/>.</returns>
     public InputState CreateInputState(ShapeGamepadButton button, 
-        float axisDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, 
-        float triggerDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
+        float axisDeadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, 
+        float triggerDeadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
         ModifierKeySet? modifierKeySet = null)
     {
         bool down = IsDown(button, axisDeadzone, triggerDeadzone, modifierKeySet);
@@ -762,8 +759,8 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set.</param>
     /// <returns>The created <see cref="InputState"/>.</returns>
     public InputState CreateInputState(ShapeGamepadButton button, InputState previousState, 
-        float axisDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, 
-        float triggerDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
+        float axisDeadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, 
+        float triggerDeadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
         ModifierKeySet? modifierKeySet = null)
     {
         return new(previousState, CreateInputState(button, axisDeadzone, triggerDeadzone, modifierKeySet));
@@ -782,7 +779,7 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The normalized value of the joystick axis as a float.</returns>
     public float GetValue(ShapeGamepadJoyAxis axis, 
-        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, bool inverted = false,  ModifierKeySet? modifierKeySet = null)
+        float deadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, bool inverted = false,  ModifierKeySet? modifierKeySet = null)
     {
         if (Index < 0 || isLocked || !Connected) return 0f;
         if(modifierKeySet != null && !modifierKeySet.IsActive(this)) return 0f;
@@ -803,7 +800,7 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>True if the axis is down; otherwise, false.</returns>
     public bool IsDown(ShapeGamepadJoyAxis axis, 
-        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
+        float deadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
     {
         return GetValue(axis, deadzone, inverted, modifierKeySet) != 0f;
     }
@@ -818,7 +815,7 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The created <see cref="InputState"/> for the joystick axis.</returns>
     public InputState CreateInputState(ShapeGamepadJoyAxis axis, 
-        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
+        float deadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
     {
         float axisValue = GetValue(axis, deadzone, inverted, modifierKeySet);
         bool down = axisValue != 0f;
@@ -836,7 +833,7 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The created <see cref="InputState"/> for the joystick axis.</returns>
     public InputState CreateInputState(ShapeGamepadJoyAxis axis, InputState previousState, 
-        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
+        float deadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
     {
         return new(previousState, CreateInputState(axis, deadzone, inverted, modifierKeySet));
     }
@@ -874,7 +871,7 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The normalized value of the trigger axis as a float.</returns>
     public float GetValue(ShapeGamepadTriggerAxis axis, 
-        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
+        float deadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
     {
         if (Index < 0 || isLocked || !Connected) return 0f;
         if(modifierKeySet != null &&  !modifierKeySet.IsActive(this)) return 0f;
@@ -898,7 +895,7 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>True if the trigger axis is down; otherwise, false.</returns>
     public bool IsDown(ShapeGamepadTriggerAxis axis, 
-        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
+        float deadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
     {
         var value = GetValue(axis, deadzone, inverted, modifierKeySet);
         return inverted ? value < 1f : value > 0f;
@@ -915,7 +912,7 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The created <see cref="InputState"/> for the trigger axis.</returns>
     public InputState CreateInputState(ShapeGamepadTriggerAxis axis, 
-        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
+        float deadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
     {
         float axisValue = GetValue(axis, deadzone, inverted, modifierKeySet);
         bool down = inverted ? axisValue < 1f : axisValue > 0f;
@@ -933,7 +930,7 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The created <see cref="InputState"/> for the trigger axis.</returns>
     public InputState CreateInputState(ShapeGamepadTriggerAxis axis, InputState previousState, 
-        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
+        float deadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
     {
         return new(previousState, CreateInputState(axis, deadzone, inverted, modifierKeySet));
     }
@@ -966,8 +963,8 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The axis value as a float.</returns>
     public float GetValue(ShapeGamepadButton neg, ShapeGamepadButton pos, 
-        float axisDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, 
-        float triggerDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
+        float axisDeadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, 
+        float triggerDeadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
         ModifierKeySet? modifierKeySet = null)
     {
         if (Index < 0 || isLocked || !Connected) return 0f;
@@ -988,8 +985,8 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>True if the axis is down; otherwise, false.</returns>
     public bool IsDown(ShapeGamepadButton neg, ShapeGamepadButton pos, 
-        float axisDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, 
-        float triggerDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
+        float axisDeadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, 
+        float triggerDeadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
         ModifierKeySet? modifierKeySet = null)
     {
         return GetValue(neg, pos, axisDeadzone, triggerDeadzone, modifierKeySet) != 0f;
@@ -1006,8 +1003,8 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The created <see cref="InputState"/> for the button axis.</returns>
     public InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, 
-        float axisDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, 
-        float triggerDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
+        float axisDeadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, 
+        float triggerDeadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
         ModifierKeySet? modifierKeySet = null)
     {
         float axis = GetValue(neg, pos, axisDeadzone, triggerDeadzone, modifierKeySet);
@@ -1026,8 +1023,8 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The created <see cref="InputState"/> for the button axis.</returns>
     public InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, InputState previousState, 
-        float axisDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, 
-        float triggerDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
+        float axisDeadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, 
+        float triggerDeadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
         ModifierKeySet? modifierKeySet = null)
     {
         return new(previousState, CreateInputState(neg, pos, axisDeadzone, triggerDeadzone, modifierKeySet));
