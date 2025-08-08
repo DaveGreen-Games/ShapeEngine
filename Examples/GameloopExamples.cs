@@ -192,8 +192,8 @@ namespace Examples
                     Msaa4x = true,
                     HighDPI = false,
                     FramebufferTransparent = false
-                }
-                // WindowSettings.Default
+                },
+                InputSettings.Default
             )
         {
 
@@ -248,11 +248,11 @@ namespace Examples
             mainBottomRight.AddChild(mainBottomRightBottom);
 
             
-            var mouseSettings = new InputDeviceUsageDetectionSettings.MouseSettings(25, 3, 2, 0.5f, 1f, 0.25f);
-            var keyboardSettings = new InputDeviceUsageDetectionSettings.KeyboardSettings(2, 0.5f, 1f, 2f);
+            var mouseSettings = new InputSettings.MouseSettings(25, 3, 2, 0.5f, 1f, 0.25f);
+            var keyboardSettings = new InputSettings.KeyboardSettings(2, 0.5f, 1f, 2f);
             // var keyboardSettings = new InputDeviceUsageDetectionSettings.KeyboardSettings(2, 0.5f, 1f, 2f, [ShapeKeyboardButton.LEFT_SHIFT]);
-            var gamepadSettings = new InputDeviceUsageDetectionSettings.GamepadSettings();
-            var settings = new InputDeviceUsageDetectionSettings(mouseSettings, keyboardSettings, gamepadSettings);
+            var gamepadSettings = new InputSettings.GamepadSettings();
+            var settings = new InputSettings(mouseSettings, keyboardSettings, gamepadSettings);
             ShapeInput.ApplyInputDeviceChangeSettings(settings);
         }
         

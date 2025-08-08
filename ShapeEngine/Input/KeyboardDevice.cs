@@ -21,7 +21,7 @@ public sealed class KeyboardDevice : InputDevice
     /// <summary>
     /// Gets the usage detection settings for the keyboard input device.
     /// </summary>
-    public InputDeviceUsageDetectionSettings.KeyboardSettings UsageDetectionSettings { get; private set; } = new();
+    public InputSettings.KeyboardSettings UsageDetectionSettings { get; private set; } = new();
     // internal event Action<InputDevice, InputDeviceUsageDetectionSettings>? OnInputDeviceChangeSettingsChanged;
     
     /// <summary>
@@ -132,7 +132,7 @@ public sealed class KeyboardDevice : InputDevice
     }
     
     /// <inheritdoc cref="InputDevice.ApplyInputDeviceChangeSettings"/>
-    internal override void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
+    internal override void ApplyInputDeviceChangeSettings(InputSettings settings)
     {
         UsageDetectionSettings = settings.Keyboard;
         // OnInputDeviceChangeSettingsChanged?.Invoke(this, settings);

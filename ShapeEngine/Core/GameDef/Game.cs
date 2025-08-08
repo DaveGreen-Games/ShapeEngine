@@ -268,7 +268,6 @@ public partial class Game
     private List<ScreenTexture>? customScreenTextures;
     #endregion
     
-    //TODO: also change minimal project setup code in readme and nuget readme!
     #region Constructor
     /// <summary>
     /// Initializes a new instance of the Game class with the specified game settings and window settings.
@@ -279,7 +278,8 @@ public partial class Game
     /// </remarks>
     /// <param name="gameSettings">The settings for the game, including fixed framerate, screen texture mode, and rendering options.</param>
     /// <param name="windowSettings">The settings for the window, including size, position, and display properties.</param>
-    public Game(GameSettings gameSettings, WindowSettings windowSettings)
+    /// <param name="inputSettings">The settings for input devices, including keyboard, mouse, and gamepad configurations.</param>
+    public Game(GameSettings gameSettings, WindowSettings windowSettings, InputSettings inputSettings)
     {
         
         CurrentGameInstance = this;
@@ -357,6 +357,7 @@ public partial class Game
         GameUiScreenInfo = gameTexture.GameUiScreenInfo;
         UIScreenInfo = new(Window.ScreenArea, mousePosUI);
 
+        //Input = new Input(inputSettings);
         ShapeInput.OnInputDeviceChanged += ResolveOnInputDeviceChanged;
         ShapeInput.GamepadManager.OnGamepadConnectionChanged += ResolveOnGamepadConnectionChanged;
         ShapeInput.GamepadManager.OnGamepadClaimed += ResolveOnGamepadClaimed;

@@ -12,14 +12,14 @@ public abstract class InputDevice : IComparable<InputDevice>
     
     /// <summary>
     /// Indicates whether the device registered any input during the last update cycle,
-    /// taking into account any filters or settings applied to the device with <see cref="InputDeviceUsageDetectionSettings"/>.
+    /// taking into account any filters or settings applied to the device with <see cref="InputSettings"/>.
     /// </summary>
     /// <returns><c>true</c> if the device was used in the last update; otherwise, <c>false</c>.</returns>
     public abstract bool WasUsed();
 
     /// <summary>
     /// Determines if the device registered any input during the last update cycle,
-    /// ignoring any filters or settings specified by <see cref="InputDeviceUsageDetectionSettings"/>.
+    /// ignoring any filters or settings specified by <see cref="InputSettings"/>.
     /// Useful for detecting raw device activity.
     /// </summary>
     /// <returns><c>true</c> if the device was used in the last update; otherwise, <c>false</c>.</returns>
@@ -59,14 +59,14 @@ public abstract class InputDevice : IComparable<InputDevice>
     /// modifying how device usage is detected and processed.
     /// </summary>
     /// <param name="settings">The change settings to apply to the input device.</param>
-    internal abstract void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings);
+    internal abstract void ApplyInputDeviceChangeSettings(InputSettings settings);
     
     /// <summary>
     /// Updates the device state.
     /// Receives input if another device was used as well in this frame.
     /// </summary>
     /// <returns>
-    /// If this device was used this frame. Takes <see cref="InputDeviceUsageDetectionSettings"/> into account.
+    /// If this device was used this frame. Takes <see cref="InputSettings"/> into account.
     /// </returns>
     public abstract bool Update(float dt, bool otherDeviceUsed);
     

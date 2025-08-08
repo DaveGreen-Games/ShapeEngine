@@ -15,8 +15,10 @@ public static class ShapeInput
     /// Each tree manages a hierarchy of input actions and their bindings.
     /// </summary>
     public static readonly InputActionTreeGroup ActiveInputActionTreeGroup = [];
-
-    public static InputDeviceUsageDetectionSettings InputDeviceUsageDetectionSettings { get; private set; } = new();
+    /// <summary>
+    /// Gets the current input settings.
+    /// </summary>
+    public static InputSettings InputSettings { get; private set; } = new();
     /// <summary>
     /// Gets the current input device type in use.
     /// </summary>
@@ -101,24 +103,24 @@ public static class ShapeInput
         Keyboard = new();
         GamepadManager = new();
         Mouse = new();
-        ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings);
+        ApplyInputDeviceChangeSettings(InputSettings);
         EventHandler = new(Keyboard, Mouse, GamepadManager);
     }
     #endregion
     
     #region Input Device Handling
     /// <summary>
-    /// Applies the <see cref="InputDeviceUsageDetectionSettings"/> to all attached input devices.
+    /// Applies the <see cref="InputSettings"/> to all attached input devices.
     /// </summary>
-    /// <param name="settings">The new <see cref="InputDeviceUsageDetectionSettings"/> to apply.</param>
+    /// <param name="settings">The new <see cref="InputSettings"/> to apply.</param>
     /// <remarks>
     /// Settings are applied to <see cref="Mouse"/>,
     /// <see cref="Keyboard"/>,
     /// and <see cref="GamepadManager"/> that applies the settings to all <see cref="GamepadDevice"/>s.
     /// </remarks>
-    public static void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
+    public static void ApplyInputDeviceChangeSettings(InputSettings settings)
     {
-        InputDeviceUsageDetectionSettings = settings;
+        InputSettings = settings;
         Mouse.ApplyInputDeviceChangeSettings(settings);
         Keyboard.ApplyInputDeviceChangeSettings(settings);
         GamepadManager.ApplyInputDeviceChangeSettings(settings);
@@ -231,9 +233,9 @@ public static class ShapeInput
                 
                 float deviceCooldown;
                 
-                if (usedInputDevice == InputDeviceType.Keyboard) deviceCooldown = InputDeviceUsageDetectionSettings.Keyboard.SelectionCooldownDuration;
-                else if (usedInputDevice == InputDeviceType.Gamepad) deviceCooldown = InputDeviceUsageDetectionSettings.Gamepad.SelectionCooldownDuration;
-                else deviceCooldown = InputDeviceUsageDetectionSettings.Mouse.SelectionCooldownDuration;
+                if (usedInputDevice == InputDeviceType.Keyboard) deviceCooldown = InputSettings.Keyboard.SelectionCooldownDuration;
+                else if (usedInputDevice == InputDeviceType.Gamepad) deviceCooldown = InputSettings.Gamepad.SelectionCooldownDuration;
+                else deviceCooldown = InputSettings.Mouse.SelectionCooldownDuration;
                 
                 if (deviceCooldown > 0f)
                 {
@@ -253,9 +255,9 @@ public static class ShapeInput
                 
                 float deviceCooldown;
                 
-                if (usedInputActionDevice == InputDeviceType.Keyboard) deviceCooldown = InputDeviceUsageDetectionSettings.Keyboard.SelectionCooldownDuration;
-                else if (usedInputActionDevice == InputDeviceType.Gamepad) deviceCooldown = InputDeviceUsageDetectionSettings.Gamepad.SelectionCooldownDuration;
-                else deviceCooldown = InputDeviceUsageDetectionSettings.Mouse.SelectionCooldownDuration;
+                if (usedInputActionDevice == InputDeviceType.Keyboard) deviceCooldown = InputSettings.Keyboard.SelectionCooldownDuration;
+                else if (usedInputActionDevice == InputDeviceType.Gamepad) deviceCooldown = InputSettings.Gamepad.SelectionCooldownDuration;
+                else deviceCooldown = InputSettings.Mouse.SelectionCooldownDuration;
                 
                 if (deviceCooldown > 0f)
                 {
@@ -523,8 +525,8 @@ public static class ShapeInput
     /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
     /// <returns>The created <see cref="InputState"/>.</returns>
     public static InputState CreateInputState(ShapeMouseButton button, uint accessTag, 
-        float moveDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold,  
-        float wheelDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseWheelThreshold,  
+        float moveDeadzone = InputSettings.MouseSettings.DefaultMouseMoveThreshold,  
+        float wheelDeadzone = InputSettings.MouseSettings.DefaultMouseWheelThreshold,  
         ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
@@ -542,8 +544,8 @@ public static class ShapeInput
     /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
     /// <returns>The created <see cref="InputState"/>.</returns>
     public static InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, uint accessTag, 
-        float moveDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold,  
-        float wheelDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseWheelThreshold,  
+        float moveDeadzone = InputSettings.MouseSettings.DefaultMouseMoveThreshold,  
+        float wheelDeadzone = InputSettings.MouseSettings.DefaultMouseWheelThreshold,  
         ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
@@ -559,7 +561,7 @@ public static class ShapeInput
     /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
     /// <returns>The created <see cref="InputState"/>.</returns>
     public static InputState CreateInputState(ShapeMouseWheelAxis axis, uint accessTag, 
-        float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseWheelThreshold, ModifierKeySet? modifierKeySet = null)
+        float deadzone = InputSettings.MouseSettings.DefaultMouseWheelThreshold, ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
         return Mouse.CreateInputState(axis, deadzone, modifierKeySet);
@@ -574,7 +576,7 @@ public static class ShapeInput
     /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
     /// <returns>The created <see cref="InputState"/>.</returns>
     public static InputState CreateInputState(ShapeMouseAxis axis, uint accessTag, 
-        float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, ModifierKeySet? modifierKeySet = null)
+        float deadzone = InputSettings.MouseSettings.DefaultMouseMoveThreshold, ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
         return Mouse.CreateInputState(axis, deadzone, modifierKeySet);
@@ -595,8 +597,8 @@ public static class ShapeInput
     /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
     /// <returns>The created <see cref="InputState"/>.</returns>
     public static InputState CreateInputState(ShapeGamepadButton button, uint accessTag, int gamepadIndex, 
-        float axisDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, 
-        float triggerDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
+        float axisDeadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, 
+        float triggerDeadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
         ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
@@ -616,8 +618,8 @@ public static class ShapeInput
     /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
     /// <returns>The created <see cref="InputState"/>.</returns>
     public static InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, uint accessTag, int gamepadIndex, 
-        float axisDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, 
-        float triggerDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
+        float axisDeadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, 
+        float triggerDeadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
         ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
@@ -637,7 +639,7 @@ public static class ShapeInput
     /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
     /// <returns>The created <see cref="InputState"/>.</returns>
     public static InputState CreateInputState(ShapeGamepadJoyAxis axis, uint accessTag, int gamepadIndex, 
-        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, 
+        float deadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, 
         bool inverted = false,
         ModifierKeySet? modifierKeySet = null)
     {
@@ -657,7 +659,7 @@ public static class ShapeInput
     /// <param name="modifierKeySet">Optional modifier key set for input state creation.</param>
     /// <returns>The created <see cref="InputState"/>.</returns>
     public static InputState CreateInputState(ShapeGamepadTriggerAxis axis, uint accessTag, int gamepadIndex, 
-        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, bool inverted = false,
+        float deadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold, bool inverted = false,
         ModifierKeySet? modifierKeySet = null)
     {
         if (Locked && !HasAccess(accessTag)) return new();
@@ -687,25 +689,25 @@ public static class ShapeInput
     /// <summary>
     /// Creates an input type for a mouse button.
     /// </summary>
-    public static IInputType CreateInputType(this ShapeMouseButton button, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseThreshold, 
+    public static IInputType CreateInputType(this ShapeMouseButton button, float deadzone = InputSettings.MouseSettings.DefaultMouseThreshold, 
         ModifierKeySet? modifierKeySet = null) => new InputTypeMouseButton(button, deadzone,  modifierKeySet);
 
     /// <summary>
     /// Creates an input type for a mouse button axis (negative and positive).
     /// </summary>
-    public static IInputType CreateInputType(this ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseThreshold, 
+    public static IInputType CreateInputType(this ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = InputSettings.MouseSettings.DefaultMouseThreshold, 
         ModifierKeySet? modifierKeySet = null) => new InputTypeMouseButtonAxis(neg, pos, deadzone,  modifierKeySet);
 
     /// <summary>
     /// Creates an input type for a mouse wheel axis.
     /// </summary>
-    public static IInputType CreateInputType(this ShapeMouseWheelAxis axis, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseWheelThreshold, 
+    public static IInputType CreateInputType(this ShapeMouseWheelAxis axis, float deadzone = InputSettings.MouseSettings.DefaultMouseWheelThreshold, 
         ModifierKeySet? modifierKeySet = null) => new InputTypeMouseWheelAxis(axis, deadzone,  modifierKeySet);
 
     /// <summary>
     /// Creates an input type for a mouse axis.
     /// </summary>
-    public static IInputType CreateInputType(this ShapeMouseAxis axis, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, 
+    public static IInputType CreateInputType(this ShapeMouseAxis axis, float deadzone = InputSettings.MouseSettings.DefaultMouseMoveThreshold, 
         ModifierKeySet? modifierKeySet = null) => new InputTypeMouseAxis(axis, deadzone,  modifierKeySet);
 
     #endregion
@@ -714,13 +716,13 @@ public static class ShapeInput
     /// <summary>
     /// Creates an input type for a gamepad button.
     /// </summary>
-    public static IInputType CreateInputType(this ShapeGamepadButton button, float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultAxisThreshold, 
+    public static IInputType CreateInputType(this ShapeGamepadButton button, float deadzone = InputSettings.GamepadSettings.DefaultAxisThreshold, 
         ModifierKeySet? modifierKeySet = null) => new InputTypeGamepadButton(button, deadzone,  modifierKeySet);
 
     /// <summary>
     /// Creates an input type for a gamepad button axis (negative and positive).
     /// </summary>
-    public static IInputType CreateInputType(this ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultAxisThreshold, 
+    public static IInputType CreateInputType(this ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = InputSettings.GamepadSettings.DefaultAxisThreshold, 
         ModifierKeySet? modifierKeySet = null) => new InputTypeGamepadButtonAxis(neg, pos, deadzone,  modifierKeySet);
     /// <summary>
     /// Creates an input type for a gamepad joystick axis.
@@ -730,7 +732,7 @@ public static class ShapeInput
     /// <param name="inverted">Whether to invert the axis value. Default is false.</param>
     /// <param name="modifierKeySet">Optional modifier key set for input type creation.</param>
     /// <returns>An <see cref="IInputType"/> representing the gamepad joystick axis input.</returns>
-    public static IInputType CreateInputType(this ShapeGamepadJoyAxis axis, float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, 
+    public static IInputType CreateInputType(this ShapeGamepadJoyAxis axis, float deadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, 
         bool inverted = false, ModifierKeySet? modifierKeySet = null) => new InputTypeGamepadJoyAxis(axis, deadzone, inverted, modifierKeySet);
     /// <summary>
     /// Creates an input type for a gamepad trigger axis (left or right trigger).
@@ -740,7 +742,7 @@ public static class ShapeInput
     /// <param name="inverted">Whether the trigger axis input should be inverted. (From <c>[0 - 1]</c> to <c>[1 - 0]</c></param>
     /// <param name="modifierKeySet">Optional modifier key set for input type creation.</param>
     /// <returns>An <see cref="IInputType"/> representing the gamepad trigger axis input.</returns>
-    public static IInputType CreateInputType(this ShapeGamepadTriggerAxis axis, float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
+    public static IInputType CreateInputType(this ShapeGamepadTriggerAxis axis, float deadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
         bool inverted = false, ModifierKeySet? modifierKeySet = null) => new InputTypeGamepadTriggerAxis(axis, deadzone, inverted, modifierKeySet);
 
     #endregion

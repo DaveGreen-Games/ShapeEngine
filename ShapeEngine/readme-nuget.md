@@ -50,7 +50,7 @@ dotnet add package DaveGreen.ShapeEngine
 
 ## Minimal Project Setup
 
-``` 
+```c#
 using System.Drawing;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
@@ -64,14 +64,14 @@ public static class Program
 {     
     public static void Main(string[] args)     
     {         
-        var game = new MyGameClass(GameSettings.StretchMode, WindowSettings.Default);
+        var game = new MyGameClass(GameSettings.StretchMode, WindowSettings.Default, InputSettings.Default);
 		game.Run();    
     } 
 } 
 
 public class MyGameClass : Game 
 {     
-    public MyGameClass(GameSettings gameSettings, WindowSettings windowSettings) : base(gameSettings, windowSettings) { }     
+    public MyGameClass(GameSettings gameSettings, WindowSettings windowSettings, InputSettings inputSettings) : base(gameSettings, windowSettings, inputSettings) { }     
     
     protected override void DrawGame(ScreenInfo game)     
     {         

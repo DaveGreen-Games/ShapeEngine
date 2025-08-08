@@ -22,8 +22,8 @@ public class ModifierKeyMouseButton : IModifierKey
     /// For example, if you have two inputs: LMB + Space and Space, configuring input Space with LMB as a reverse modifier ensures that pressing LMB + Space will not also trigger Space.
     /// </remarks>
     public ModifierKeyMouseButton(ShapeMouseButton modifierKey,
-        float mouseMoveDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold,
-        float mouseWheelDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseWheelThreshold,
+        float mouseMoveDeadzone = InputSettings.MouseSettings.DefaultMouseMoveThreshold,
+        float mouseWheelDeadzone = InputSettings.MouseSettings.DefaultMouseWheelThreshold,
         bool reverseModifier = false)
     {
         this.modifier = modifierKey;

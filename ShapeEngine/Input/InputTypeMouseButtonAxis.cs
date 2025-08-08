@@ -21,7 +21,7 @@ public sealed class InputTypeMouseButtonAxis : IInputType
     /// <param name="pos">The mouse button representing the positive axis.</param>
     /// <param name="deadzone">The deadzone value for axis input.</param>
     /// <param name="modifierKeySet">Optional set of modifier keys required for activation.</param>
-    public InputTypeMouseButtonAxis(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseThreshold, ModifierKeySet? modifierKeySet = null)
+    public InputTypeMouseButtonAxis(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = InputSettings.MouseSettings.DefaultMouseThreshold, ModifierKeySet? modifierKeySet = null)
     {
         this.neg = neg;
         this.pos = pos;

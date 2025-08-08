@@ -23,7 +23,7 @@ public sealed class InputTypeGamepadButtonAxis : IInputType
     /// Gamepad buttons ignore deadzone (deadzone works only with axis/trigger input types).
     /// </param>
     /// <param name="modifierKeySet">Optional set of modifier keys.</param>
-    public InputTypeGamepadButtonAxis(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultAxisThreshold, ModifierKeySet? modifierKeySet = null)
+    public InputTypeGamepadButtonAxis(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = InputSettings.GamepadSettings.DefaultAxisThreshold, ModifierKeySet? modifierKeySet = null)
     {
         this.neg = neg;
         this.pos = pos;

@@ -84,7 +84,7 @@ public sealed class GamepadDevice : InputDevice
     /// <summary>
     /// Gets the usage detection settings for the gamepad input device.
     /// </summary>
-    public InputDeviceUsageDetectionSettings.GamepadSettings UsageDetectionSettings { get; private set; } = new();
+    public InputSettings.GamepadSettings UsageDetectionSettings { get; private set; } = new();
 
     /// <summary>
     /// <para>
@@ -320,7 +320,7 @@ public sealed class GamepadDevice : InputDevice
     /// Also propagates the settings to all other <see cref="GamepadDevice"/> instances and the <see cref="GamepadDeviceManager"/>.
     /// </summary>
     /// <param name="settings">The change settings to apply to the input device.</param>
-    internal override void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
+    internal override void ApplyInputDeviceChangeSettings(InputSettings settings)
     {
         UsageDetectionSettings = settings.Gamepad;
         // OnInputDeviceChangeSettingsChanged?.Invoke(this, settings);

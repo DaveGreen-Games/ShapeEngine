@@ -19,7 +19,7 @@ public sealed class InputTypeMouseAxis : IInputType
     /// <param name="axis">The mouse axis to track.</param>
     /// <param name="deadzone">The deadzone threshold for axis input.</param>
     /// <param name="modifierKeySet">Optional set of modifier keys required for activation.</param>
-    public InputTypeMouseAxis(ShapeMouseAxis axis, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, ModifierKeySet? modifierKeySet = null)
+    public InputTypeMouseAxis(ShapeMouseAxis axis, float deadzone = InputSettings.MouseSettings.DefaultMouseMoveThreshold, ModifierKeySet? modifierKeySet = null)
     {
         this.axis = axis;
         this.deadzone = deadzone;

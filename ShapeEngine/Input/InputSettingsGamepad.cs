@@ -1,6 +1,6 @@
 namespace ShapeEngine.Input;
 
-public partial class InputDeviceUsageDetectionSettings
+public partial class InputSettings
 {
     /// <summary>
     /// Represents the settings used for detecting gamepad input device usage,
@@ -42,7 +42,7 @@ public partial class InputDeviceUsageDetectionSettings
         public static readonly GamepadSettings Default = new();
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.GamepadSettings"/> struct with default values.
+        /// Initializes a new instance of the <see cref="InputSettings.GamepadSettings"/> struct with default values.
         /// </summary>
         /// <code>
         /// Detection = true;
@@ -69,7 +69,7 @@ public partial class InputDeviceUsageDetectionSettings
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.GamepadSettings"/> struct with custom detection, axis, and trigger threshold values.
+        /// Initializes a new instance of the <see cref="InputSettings.GamepadSettings"/> struct with custom detection, axis, and trigger threshold values.
         /// Other values are set to their defaults: MinPressCount = 2, MinPressInterval = 1f, MinUsedDuration = 0.5f.
         /// </summary>
         /// <param name="detection">Indicates whether gamepad detection is enabled.</param>
@@ -96,7 +96,7 @@ public partial class InputDeviceUsageDetectionSettings
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.GamepadSettings"/> struct with custom axis and trigger thresholds,
+        /// Initializes a new instance of the <see cref="InputSettings.GamepadSettings"/> struct with custom axis and trigger thresholds,
         /// minimum press count, minimum press interval, minimum used duration, and selection cooldown duration.
         /// <see cref="Detection"/> is set to <c>true</c>.
         /// </summary>
@@ -126,7 +126,7 @@ public partial class InputDeviceUsageDetectionSettings
             SelectionCooldownDuration = selectionCooldownDuration;
         }
         /// <summary>
-        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.GamepadSettings"/> class
+        /// Initializes a new instance of the <see cref="InputSettings.GamepadSettings"/> class
         /// with custom minimum press count and interval, optional cooldown duration, and optional exception buttons.
         /// <para>
         /// <see cref="Detection"/> is set to <c>true</c>,
@@ -152,7 +152,7 @@ public partial class InputDeviceUsageDetectionSettings
         }
         
         /// <summary>
-        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.GamepadSettings"/> class
+        /// Initializes a new instance of the <see cref="InputSettings.GamepadSettings"/> class
         /// with custom minimum used duration, optional cooldown duration, and optional exception buttons.
         /// <para>
         /// <see cref="Detection"/> is set to <c>true</c>,
@@ -177,7 +177,7 @@ public partial class InputDeviceUsageDetectionSettings
         }
         /// <summary>
         /// <para>
-        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.GamepadSettings"/> class
+        /// Initializes a new instance of the <see cref="InputSettings.GamepadSettings"/> class
         /// with a set of selection buttons, an optional cooldown duration, and optional exception buttons.
         /// </para>
         /// <para>
