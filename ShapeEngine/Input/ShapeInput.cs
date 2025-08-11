@@ -74,11 +74,6 @@ public static class ShapeInput
     public static GamepadDeviceManager GamepadManager { get; private set; }
     
     /// <summary>
-    /// The global input event handler instance.
-    /// </summary>
-    public static readonly InputEventHandler EventHandler;
-    
-    /// <summary>
     /// Indicates whether the input device selection cooldown is currently active.
     /// Returns true if the cooldown timer is greater than zero.
     /// </summary>
@@ -104,7 +99,6 @@ public static class ShapeInput
         GamepadManager = new();
         Mouse = new();
         ApplyInputDeviceChangeSettings(InputSettings);
-        EventHandler = new(Keyboard, Mouse, GamepadManager);
     }
     #endregion
     
