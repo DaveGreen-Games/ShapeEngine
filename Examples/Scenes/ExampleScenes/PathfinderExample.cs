@@ -207,16 +207,16 @@ internal class PathfinderFlag
 
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi,  Vector2 mousePosUI)
         {
-            var gamepad = ShapeInput.GamepadManager.LastUsedGamepad;
+            var gamepad = Input.GamepadManager.LastUsedGamepad;
             inputActionTree.CurrentGamepad = gamepad;
             inputActionTree.Update(dt);
 
-            if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Mouse)
+            if (Input.CurrentInputDeviceType == InputDeviceType.Mouse)
             {
                 if (ShapeKeyboardButton.LEFT_SHIFT.GetInputState().Down)
                 {
-                    var dir = ExampleScene.CalculateMouseMovementDirection(GAMELOOP.GameScreenInfo.MousePos, GAMELOOP.Camera);
-                    var cam = GAMELOOP.Camera;
+                    var dir = CalculateMouseMovementDirection(GameloopExamples.Instance.GameScreenInfo.MousePos, GameloopExamples.Instance.Camera);
+                    var cam = GameloopExamples.Instance.Camera;
                     var f = cam.ZoomFactor;
                     cam.BasePosition += dir * 500 * dt * f;
                 }
@@ -227,28 +227,14 @@ internal class PathfinderFlag
                 var moveCameraH = iaMoveCameraH.State.AxisRaw;
                 var moveCameraV = iaMoveCameraV.State.AxisRaw;
                 var moveCameraDir = new Vector2(moveCameraH, moveCameraV);
-                var cam = GAMELOOP.Camera;
+                var cam = GameloopExamples.Instance.Camera;
                 var f = cam.ZoomFactor;
                 cam.BasePosition += moveCameraDir * 500 * dt * f;
             }
-            
-            
-
 
             if (iaPositionStartFlag.State.Pressed) startFlag.Position = mousePosGame;
             if (iaPositionEndFlag.State.Pressed) endFlag.Position = mousePosGame;
             
-            
-            
-            // startFlag.Update(dt, mousePosGame);
-            // endFlag.Update(dt, mousePosGame);
-            // bool dragging = startFlag.IsDragging;
-            // foreach (var flag in endFlags)
-            // {
-            //     flag.Update(dt, mousePosGame);
-            //     dragging |= flag.IsDragging;
-            // }
-
             if (iaCycleTerrainType.State.Pressed)
             {
                 CycleTerrainType();
@@ -409,10 +395,10 @@ internal class PathfinderFlag
         protected override void OnDrawUIExample(ScreenInfo ui)
         {
             
-            var bottomCenter = GAMELOOP.UIRects.GetRect("bottom center");
+            var bottomCenter = GameloopExamples.Instance.UIRects.GetRect("bottom center");
             DrawInputText(bottomCenter);
             
-            var bottomRight = GAMELOOP.UIRects.GetRect("bottom right");
+            var bottomRight = GameloopExamples.Instance.UIRects.GetRect("bottom right");
             var rects = bottomRight.SplitV(0.5f);
             
             textFont.FontSpacing = 1f;
@@ -426,19 +412,12 @@ internal class PathfinderFlag
         {
 
             var split = rect.SplitV(0.35f);
-            var curInputDeviceAll = ShapeInput.CurrentInputDeviceType;
-            var curInputDeviceNoMouse = ShapeInput.CurrentInputDeviceTypeNoMouse;
+            var curInputDeviceAll = Input.CurrentInputDeviceType;
+            var curInputDeviceNoMouse = Input.CurrentInputDeviceTypeNoMouse;
             
             string moveCameraH = curInputDeviceAll == InputDeviceType.Mouse ? "[LShift + Mx]" : iaMoveCameraH.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
             string moveCameraV = curInputDeviceAll == InputDeviceType.Mouse ? "[LShift + My]" : iaMoveCameraV.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
-            string zoomCamera = GAMELOOP.InputActionZoom.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
-
-        // private readonly InputAction iaCycleTerrainType;
-        // private readonly InputAction iaZoning;
-        // private readonly InputAction iaCalculatePath;
-        //
-        // private readonly InputAction iaPositionStartFlag;
-        // private readonly InputAction iaPositionEndFlag;
+            string zoomCamera = GameloopExamples.Instance.InputActionZoom.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
             
             string cycleText = iaCycleTerrainType.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
             string zoningText = iaZoning.GetInputTypeDescription(curInputDeviceAll, true, 1, false);

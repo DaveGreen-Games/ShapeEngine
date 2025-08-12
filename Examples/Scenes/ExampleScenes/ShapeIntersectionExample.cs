@@ -1,7 +1,6 @@
 
 using System.Drawing;
 using System.Numerics;
-using System.Reflection.Metadata.Ecma335;
 using ShapeEngine.Color;
 using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
@@ -23,9 +22,6 @@ using ShapeEngine.Random;
 using Size = ShapeEngine.Core.Structs.Size;
 
 namespace Examples.Scenes.ExampleScenes;
-
-
-
 
 public class ShapeIntersectionExample : ExampleScene
 {
@@ -718,7 +714,7 @@ public class ShapeIntersectionExample : ExampleScene
         {
             if (stripedSpacing > 0f)
             {
-                var dt = Game.CurrentGameInstance.Time.Delta;
+                var dt = Game.Instance.Time.Delta;
                 
                 // stripedRotDeg -= StripedRotSpeedDeg * dt;
                 stripedSpacingOffset += dt * 2;
@@ -854,7 +850,7 @@ public class ShapeIntersectionExample : ExampleScene
         {
             if (stripedSpacing > 0f)
             {
-                var dt = Game.CurrentGameInstance.Time.Delta;
+                var dt = Game.Instance.Time.Delta;
                 
                 stripedRotDeg += StripedRotSpeedDeg * dt;
                 
@@ -992,7 +988,7 @@ public class ShapeIntersectionExample : ExampleScene
 
             if (stripedSpacing > 0f)
             {
-                var dt = Game.CurrentGameInstance.Time.Delta;
+                var dt = Game.Instance.Time.Delta;
                 
                 stripedRotDeg += StripedRotSpeedDeg * dt;
                 
@@ -1136,7 +1132,7 @@ public class ShapeIntersectionExample : ExampleScene
         {
             if (stripedSpacing > 0f)
             {
-                var dt = Game.CurrentGameInstance.Time.Delta;
+                var dt = Game.Instance.Time.Delta;
                 
                 stripedRotDeg += StripedRotSpeedDeg * dt;
                 
@@ -1480,7 +1476,7 @@ public class ShapeIntersectionExample : ExampleScene
     protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
     {
         base.HandleInput(dt, mousePosGame, mousePosGameUi, mousePosUI);
-        var gamepad = ShapeInput.GamepadManager.LastUsedGamepad;
+        var gamepad = Input.GamepadManager.LastUsedGamepad;
         
         inputActionTree.CurrentGamepad = gamepad;
         inputActionTree.Update(dt);
@@ -1708,17 +1704,16 @@ public class ShapeIntersectionExample : ExampleScene
             return;
         }
         
-        var curDevice = ShapeInput.CurrentInputDeviceType;
-        var curDeviceNoMouse = ShapeInput.CurrentInputDeviceTypeNoMouse;
+        var curDevice = Input.CurrentInputDeviceType;
+        var curDeviceNoMouse = Input.CurrentInputDeviceTypeNoMouse;
         var nextStaticText = nextStaticShape.GetInputTypeDescription( curDevice, true, 1, false); 
         var nextMovingText = nextMovingShape.GetInputTypeDescription( curDevice, true, 1, false); 
         var changeModeText = changeMode.GetInputTypeDescription( curDevice, true, 1, false); 
         var toggleProjectionText = toggleProjection.GetInputTypeDescription(curDeviceNoMouse, true, 1, false); 
         var rotateStaticText = rotateStaticShape.GetInputTypeDescription(curDeviceNoMouse, true, 1, false); 
         var rotateMovingText = rotateStaticShape.GetInputTypeDescription(curDeviceNoMouse, true, 1, false); 
-        // var offset = changeOffset.GetInputTypeDescription( curDevice , true, 1, false);
 
-        var topCenter = GAMELOOP.UIRects.GetRect("center").ApplyMargins(0,0,0.05f,0.9f);
+        var topCenter = GameloopExamples.Instance.UIRects.GetRect("center").ApplyMargins(0,0,0.05f,0.9f);
         textFont.ColorRgba = Colors.Light;
         var mode = 
             shapeMode == ShapeMode.Overlap ? "Overlap" :
@@ -1728,7 +1723,7 @@ public class ShapeIntersectionExample : ExampleScene
         
         textFont.DrawTextWrapNone($"{changeModeText} Mode: {mode} | {toggleProjectionText} Projection {projectionActive}", topCenter, new(0.5f, 0.5f));
         
-        var bottomCenter = GAMELOOP.UIRects.GetRect("bottom center");
+        var bottomCenter = GameloopExamples.Instance.UIRects.GetRect("bottom center");
         var hSplit = bottomCenter.SplitH(0.45f, 0.1f, 0.45f);
         var margin = bottomCenter.Height * 0.05f;
         var leftRect = hSplit[0];
@@ -1737,7 +1732,6 @@ public class ShapeIntersectionExample : ExampleScene
         
         leftRect.DrawLines(2f, Colors.Highlight);
         rightRect.DrawLines(2f, Colors.Warm);
-        // string infoText = $"Add Point {create} | Remove Point {delete} | Inflate {offset} {MathF.Round(offsetDelta * 100) / 100}";
 
             
         var textStatic = $"{nextStaticText} {staticShape.GetName()}";
@@ -1751,7 +1745,7 @@ public class ShapeIntersectionExample : ExampleScene
         textFont.ColorRgba = Colors.Warm;
         textFont.DrawTextWrapNone(textMoving, rightRect.ApplyMarginsAbsolute(margin, margin, margin, margin), new(1f, 0.5f));
 
-        var testingTagRect = GAMELOOP.UIRects.GetRect("bottom right");
+        var testingTagRect = GameloopExamples.Instance.UIRects.GetRect("bottom right");
         var testingTagSplit = testingTagRect.SplitV(0.5f);
         if (automatedTestingEnabled)
         {
@@ -1765,46 +1759,6 @@ public class ShapeIntersectionExample : ExampleScene
             textFont.DrawTextWrapNone("Press T to Start Testing", testingTagSplit.top, new(0.5f, 0.5f));
             textFont.DrawTextWrapNone("Press U to Load Test", testingTagSplit.bottom, new(0.5f, 0.5f));
         }
-        
-        
-        
-        // var curDevice = ShapeInput.CurrentInputDeviceType;
-        // var nextStaticText = nextStaticShape. GetInputTypeDescription( curDevice, true, 1, false); 
-        // var nextMovingText = nextMovingShape. GetInputTypeDescription( curDevice, true, 1, false); 
-        // var changeModeText = changeMode. GetInputTypeDescription( curDevice, true, 1, false); 
-        // // var offset = changeOffset.GetInputTypeDescription( curDevice , true, 1, false);
-        //
-        // var topCenter = GAMELOOP.UIRects.GetRect("center").ApplyMargins(0,0,0.05f,0.9f);
-        // textFont.ColorRgba = Colors.Light;
-        // var mode = 
-        //     shapeMode == ShapeMode.Overlap ? "Overlap" :
-        //     shapeMode == ShapeMode.Intersection ? "Intersection" : 
-        //     "Closest Distance";
-        //
-        // textFont.DrawTextWrapNone($"{changeModeText} Mode: {mode}", topCenter, new(0.5f, 0.5f));
-        //
-        // var bottomCenter = GAMELOOP.UIRects.GetRect("bottom center");
-        // var hSplit = bottomCenter.SplitH(0.45f, 0.1f, 0.45f);
-        // var margin = bottomCenter.Height * 0.05f;
-        // var leftRect = hSplit[0];
-        // var middleRect = hSplit[1];
-        // var rightRect = hSplit[2];
-        //
-        // leftRect.DrawLines(2f, Colors.Highlight);
-        // rightRect.DrawLines(2f, Colors.Warm);
-        // // string infoText = $"Add Point {create} | Remove Point {delete} | Inflate {offset} {MathF.Round(offsetDelta * 100) / 100}";
-        //
-        //     
-        // var textStatic = $"{nextStaticText} {staticShape.GetName()}";
-        // var textMiddle = " vs ";
-        // var textMoving = $"{movingShape.GetName()} {nextMovingText}";
-        //
-        // textFont.ColorRgba = Colors.Highlight;
-        // textFont.DrawTextWrapNone(textStatic, leftRect.ApplyMarginsAbsolute(margin, margin, margin, margin), new(0f, 0.5f));
-        // textFont.ColorRgba = Colors.Light;
-        // textFont.DrawTextWrapNone(textMiddle, middleRect, new(0.5f));
-        // textFont.ColorRgba = Colors.Warm;
-        // textFont.DrawTextWrapNone(textMoving, rightRect.ApplyMarginsAbsolute(margin, margin, margin, margin), new(1f, 0.5f));
     }
 
     private void NextStaticShape(float size = 300f)

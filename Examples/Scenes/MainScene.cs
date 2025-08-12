@@ -90,9 +90,9 @@ namespace Examples.Scenes
             navigator = new ControlNodeNavigator();
             navigator.AddNode(buttonContainer);
             
-            titleFont = new(GAMELOOP.FontDefault, 10f, Colors.Text);
-            var action = GAMELOOP.InputActionUICancel;
-            quitLabel = new(action, "Quit", GAMELOOP.FontDefault, Colors.PcWarm);
+            titleFont = new(GameloopExamples.Instance.FontDefault, 10f, Colors.Text);
+            var action = GameloopExamples.Instance.InputActionUICancel;
+            quitLabel = new(action, "Quit", GameloopExamples.Instance.FontDefault, Colors.PcWarm);
             
             textureSurface = new TextureSurface(2048, 2048);
             textureSurface.SetTextureFilter(TextureFilter.Trilinear);
@@ -105,40 +105,40 @@ namespace Examples.Scenes
         
         private void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            var cancelState = GAMELOOP.InputActionUICancel.Consume(out _);
+            var cancelState = GameloopExamples.Instance.InputActionUICancel.Consume(out _);
             if (cancelState is { Consumed: false, Pressed: true })
             {
-                GAMELOOP.Quit();
+                GameloopExamples.Instance.Quit();
             }
 
-            var resetState = GAMELOOP.InputActionReset.Consume(out _);
+            var resetState = GameloopExamples.Instance.InputActionReset.Consume(out _);
             if (resetState is { Consumed: false, Pressed: true })
             {
                 for (int i = 0; i < examples.Count; i++)
                 {
                     examples[i].Reset();
                 }
-                GAMELOOP.Camera.Reset();
-                GAMELOOP.ResetCamera();
+                GameloopExamples.Instance.Camera.Reset();
+                GameloopExamples.Instance.ResetCamera();
             }
 
-            var maximizedState = GAMELOOP.InputActionMaximize.Consume(out _);
+            var maximizedState = GameloopExamples.Instance.InputActionMaximize.Consume(out _);
             if (maximizedState is { Consumed: false, Pressed: true })
             { 
-                GAMELOOP.Window.ToggleMaximizeWindow();
+                GameloopExamples.Instance.Window.ToggleMaximizeWindow();
             }
-            var minimizeState = GAMELOOP.InputActionMinimize.Consume(out _);
+            var minimizeState = GameloopExamples.Instance.InputActionMinimize.Consume(out _);
             if (minimizeState is { Consumed: false, Pressed: true })
             { 
-                GAMELOOP.Window.ToggleMinimizeWindow();
+                GameloopExamples.Instance.Window.ToggleMinimizeWindow();
             }
-            var fullscreenState = GAMELOOP.InputActionFullscreen.Consume(out _);
+            var fullscreenState = GameloopExamples.Instance.InputActionFullscreen.Consume(out _);
             if (fullscreenState is { Consumed: false, Pressed: true })
             { 
-                GAMELOOP.Window.ToggleBorderlessFullscreen();
+                GameloopExamples.Instance.Window.ToggleBorderlessFullscreen();
             }
 
-            var prevTabState = GAMELOOP.InputActionUIPrevTab.Consume(out _);
+            var prevTabState = GameloopExamples.Instance.InputActionUIPrevTab.Consume(out _);
             if (prevTabState is { Consumed: false, Pressed: true })
             {
                 if (prevTabState.InputDeviceType == InputDeviceType.Mouse)
@@ -157,7 +157,7 @@ namespace Examples.Scenes
                 //PrevPage();
             }
 
-            var nextTabState = GAMELOOP.InputActionUINextTab.Consume(out _);
+            var nextTabState = GameloopExamples.Instance.InputActionUINextTab.Consume(out _);
             if (nextTabState is { Consumed: false, Pressed: true })
             { 
                 if (nextTabState.InputDeviceType == InputDeviceType.Mouse)
@@ -188,10 +188,10 @@ namespace Examples.Scenes
             //     // PrevButton();
             // }
 
-            var nextMonitorState = GAMELOOP.InputActionNextMonitor.Consume(out _);
+            var nextMonitorState = GameloopExamples.Instance.InputActionNextMonitor.Consume(out _);
             if (nextMonitorState is { Consumed: false, Pressed: true })
             { 
-                GAMELOOP.Window.NextMonitor();
+                GameloopExamples.Instance.Window.NextMonitor();
             }
         }
         protected override void OnUpdate(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
@@ -217,7 +217,7 @@ namespace Examples.Scenes
             var destination = ui.Area.ScaleSize(new Vector2(1f, 0.22f), AnchorPoint.TopCenter);
             textureSurface.Draw(source, destination, Colors.Dark);
             
-            GAMELOOP.DrawFpsBox();
+            GameloopExamples.Instance.DrawFpsBox();
             
             var uiSize = ui.Area.Size.ToVector2();
             buttonContainer.Draw();
@@ -229,8 +229,8 @@ namespace Examples.Scenes
             titleFont.DrawTextWrapNone(text, titleRect, new(0.5f));
             int pages = buttonContainer.MaxPages; // GetMaxPages();
             int curPage = buttonContainer.CurPage;
-            string prevName = GAMELOOP.InputActionUIPrevTab.GetInputTypeDescription(ShapeInput.CurrentInputDeviceType, true, 1, false);
-            string nextName = GAMELOOP.InputActionUINextTab.GetInputTypeDescription(ShapeInput.CurrentInputDeviceType, true, 1, false);
+            string prevName = GameloopExamples.Instance.InputActionUIPrevTab.GetInputTypeDescription(Input.CurrentInputDeviceType, true, 1, false);
+            string nextName = GameloopExamples.Instance.InputActionUINextTab.GetInputTypeDescription(Input.CurrentInputDeviceType, true, 1, false);
             
             string pagesText = $"{prevName} <- Page #{curPage}/{pages} -> {nextName}";
             var pageRect = new Rect(uiSize * new Vector2(0.01f, 0.12f), uiSize.ToSize() * new Vector2(0.3f, 0.06f), new AnchorPoint(0f, 0f));
@@ -243,13 +243,13 @@ namespace Examples.Scenes
             s.Draw(thickness, Colors.Light);
 
             var backRect = new Rect(uiSize * new Vector2(0.01f, 0.17f), uiSize.ToSize() * new Size(0.2f, 0.04f), new AnchorPoint(0f, 0f));
-            var curInputDevice = ShapeInput.CurrentInputDeviceTypeNoMouse;
+            var curInputDevice = Input.CurrentInputDeviceTypeNoMouse;
             
             quitLabel.Draw(backRect, new AnchorPoint(0f), curInputDevice);
 
             var infoArea = ui.Area.ApplyMargins(0.7f, 0.025f, 0.14f, 0.79f);
             var infoAreaRects = infoArea.SplitV(0.5f);
-            float p = GAMELOOP.Window.GetScreenPercentage();
+            float p = GameloopExamples.Instance.Window.GetScreenPercentage();
             int pi = (int)MathF.Round(p * 100);
             
             titleFont.FontSpacing = 1f;
@@ -307,28 +307,28 @@ namespace Examples.Scenes
             var margin = area.Size.Min() * 0.025f;
             area = area.ApplyMarginsAbsolute(margin, margin, margin, margin);
             
-            var curInputDevice = ShapeInput.CurrentInputDeviceType;
+            var curInputDevice = Input.CurrentInputDeviceType;
             if (curInputDevice == InputDeviceType.Mouse) curInputDevice = InputDeviceType.Keyboard;
 
-            string fullscreenInputTypeName = GAMELOOP.InputActionFullscreen.GetInputTypeDescription(curInputDevice, true, 1, false);
+            string fullscreenInputTypeName = GameloopExamples.Instance.InputActionFullscreen.GetInputTypeDescription(curInputDevice, true, 1, false);
             var fullscreenInfo = $"Fullscreen {fullscreenInputTypeName}";
 
-            string cycleShaderInputTypeDescription = GAMELOOP.InputActionCycleShaders.GetInputTypeDescription(InputDeviceType.Keyboard, true, 1, false);
+            string cycleShaderInputTypeDescription = GameloopExamples.Instance.InputActionCycleShaders.GetInputTypeDescription(InputDeviceType.Keyboard, true, 1, false);
             var cycleShaderInfo = $"Cycle Shaders {cycleShaderInputTypeDescription}";
             
             // string crtInputTypeNamesPlus = GAMELOOP.InputActionCRTPlus.GetInputTypeDescription(InputDeviceType.Keyboard, true, 1, false, false);
             // string crtInputTypeNamesMinus = GAMELOOP.InputActionCRTMinus.GetInputTypeDescription(InputDeviceType.Keyboard, true, 1, false, false);
             // var crtInfo = $"Shader [{crtInputTypeNamesPlus}|{crtInputTypeNamesMinus}]";
             
-            string zoomInputTypeName = GAMELOOP.InputActionZoom.GetInputTypeDescription(ShapeInput.CurrentInputDeviceType, true, 1, false);
+            string zoomInputTypeName = GameloopExamples.Instance.InputActionZoom.GetInputTypeDescription(Input.CurrentInputDeviceType, true, 1, false);
             var zoomInfo = $"Zoom {zoomInputTypeName}";
             
             // string pauseInputTypeName = GAMELOOP.InputActionPause.GetInputTypeDescription(curInputDevice, true, 1, false);
             // var pauseInfo = $"Pause {pauseInputTypeName}";
-            string palleteInputTypeName = GAMELOOP.InputActionCyclePalette.GetInputTypeDescription(curInputDevice, true, 1, false);
+            string palleteInputTypeName = GameloopExamples.Instance.InputActionCyclePalette.GetInputTypeDescription(curInputDevice, true, 1, false);
             var pauseInfo = $"Palette {palleteInputTypeName}";
             
-            string resetInputTypeName = GAMELOOP.InputActionReset.GetInputTypeDescription(curInputDevice, true, 1, false);
+            string resetInputTypeName = GameloopExamples.Instance.InputActionReset.GetInputTypeDescription(curInputDevice, true, 1, false);
             var resetInfo = $"Reset {resetInputTypeName}";
 
             var rects = curInputDevice == InputDeviceType.Gamepad ? area.SplitV(6) : area.SplitV(5);

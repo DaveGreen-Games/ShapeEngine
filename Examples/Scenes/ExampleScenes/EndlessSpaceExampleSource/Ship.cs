@@ -1,6 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
+using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.PolygonDef;
@@ -14,7 +15,7 @@ namespace Examples.Scenes.ExampleScenes.EndlessSpaceExampleSource;
 internal class Ship : CollisionObject, ICameraFollowTarget
 {
 
-    public event Action? OnKilled;
+    public new event Action? OnKilled;
     
     public static readonly uint CollisionLayer = BitFlag.GetPowerOfTwo(3);
     // private Triangle hull;
@@ -210,7 +211,7 @@ internal class Ship : CollisionObject, ICameraFollowTarget
         }
 
         float dt = time.Delta;
-        inputActionTree.CurrentGamepad = ShapeInput.GamepadManager.LastUsedGamepad;
+        inputActionTree.CurrentGamepad = Game.Instance.Input.GamepadManager.LastUsedGamepad;
         inputActionTree.Update(dt);
         
         Vector2 dir = new(iaMoveHor.State.AxisRaw, iaMoveVer.State.AxisRaw);

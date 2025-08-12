@@ -68,7 +68,7 @@ namespace Examples.Scenes.ExampleScenes
 
             inputActionTree = [iaMoveCameraH, iaMoveCameraV, iaRotateCamera];
             
-            camera = GAMELOOP.Camera;
+            camera = GameloopExamples.Instance.Camera;
             //boundaryRect = new(new Vector2(0, -45), new Vector2(1800, 810), new Vector2(0.5f));
 
             for (int i = 0; i < 250; i++)
@@ -90,7 +90,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
-            var gamepad = ShapeInput.GamepadManager.LastUsedGamepad;
+            var gamepad = Input.GamepadManager.LastUsedGamepad;
             // GAMELOOP.MouseControlEnabled = gamepad?.IsDown(ShapeGamepadTriggerAxis.RIGHT, 0.1f) ?? true;
             inputActionTree.CurrentGamepad = gamepad;
             inputActionTree.Update(dt);
@@ -113,9 +113,9 @@ namespace Examples.Scenes.ExampleScenes
         private void HandleCameraPosition(float dt)
         {
             float speed = 500;
-            if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Mouse)
+            if (Input.CurrentInputDeviceType == InputDeviceType.Mouse)
             {
-                var dir = ExampleScene.CalculateMouseMovementDirection(GAMELOOP.GameScreenInfo.MousePos, GAMELOOP.Camera);
+                var dir = ExampleScene.CalculateMouseMovementDirection(GameloopExamples.Instance.GameScreenInfo.MousePos, GameloopExamples.Instance.Camera);
                 if (dir.X != 0 || dir.Y != 0)
                 {
                     var movement = dir * speed * dt * camera.ZoomFactor;
@@ -164,7 +164,7 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnDrawUIExample(ScreenInfo ui)
         {
-            var bottomCenter = GAMELOOP.UIRects.GetRect("bottom center");
+            var bottomCenter = GameloopExamples.Instance.UIRects.GetRect("bottom center");
             DrawInputText(bottomCenter);
         }
         
@@ -175,7 +175,7 @@ namespace Examples.Scenes.ExampleScenes
             
             var sbCamera = new StringBuilder();
             var sbInfo = new StringBuilder();
-            var curInputDeviceAll = ShapeInput.CurrentInputDeviceType;
+            var curInputDeviceAll = Input.CurrentInputDeviceType;
             //var curInputDeviceNoMouse = ShapeLoop.Input.CurrentInputDeviceNoMouse;
             
             var pos = camera.BasePosition;
@@ -189,7 +189,7 @@ namespace Examples.Scenes.ExampleScenes
             sbInfo.Append($"Zoom {zoom}");
             string moveCameraH = curInputDeviceAll == InputDeviceType.Mouse ? "Mx" : iaMoveCameraH.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
             string moveCameraV = curInputDeviceAll == InputDeviceType.Mouse ? "My" : iaMoveCameraV.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
-            string zoomCamera = GAMELOOP.InputActionZoom.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
+            string zoomCamera = GameloopExamples.Instance.InputActionZoom.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
             string rotateCamera = iaRotateCamera.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
             sbCamera.Append($"Move {moveCameraH} {moveCameraV} | ");
             sbCamera.Append($"Zoom {zoomCamera} | ");

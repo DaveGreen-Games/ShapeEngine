@@ -1,3 +1,5 @@
+using ShapeEngine.Core.GameDef;
+
 namespace ShapeEngine.Input;
 
 /// <summary>
@@ -44,7 +46,7 @@ public class ModifierKeyMouseButton : IModifierKey
     /// <param name="gamepad">Unused. Present for interface compatibility.</param>
     /// <returns><c>true</c> if the modifier is active; otherwise, <c>false</c>.</returns>
     public bool IsActive(GamepadDevice? gamepad = null) => 
-        reverseModifier ? !ShapeInput.Mouse.IsDown(modifier) : ShapeInput.Mouse.IsDown(modifier);
+        reverseModifier ? !Game.Instance.Input.Mouse.IsDown(modifier) : Game.Instance.Input.Mouse.IsDown(modifier);
 
 
     /// <summary>

@@ -128,7 +128,7 @@ public class PolygonHolesExample : ExampleScene
     
     protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi,  Vector2 mousePosUI)
     {
-        var gamepad = ShapeInput.GamepadManager.LastUsedGamepad;
+        var gamepad = Input.GamepadManager.LastUsedGamepad;
         inputActionTree.CurrentGamepad = gamepad;
         inputActionTree.Update(dt);
 
@@ -212,7 +212,7 @@ public class PolygonHolesExample : ExampleScene
 
     protected override void OnDrawUIExample(ScreenInfo ui)
     {
-        var bottomCenter = GAMELOOP.UIRects.GetRect("bottom center");
+        var bottomCenter = GameloopExamples.Instance.UIRects.GetRect("bottom center");
         DrawInputText(bottomCenter);
     }
 
@@ -270,7 +270,7 @@ public class PolygonHolesExample : ExampleScene
     private void DrawInputText(Rect rect)
     {
         var sb = new StringBuilder();
-        var curInputDeviceAll = ShapeInput.CurrentInputDeviceType;
+        var curInputDeviceAll = Input.CurrentInputDeviceType;
         
         string addPointText = iaAddPolygon.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
 

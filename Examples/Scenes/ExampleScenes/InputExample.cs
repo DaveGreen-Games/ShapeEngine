@@ -18,11 +18,11 @@ namespace Examples.Scenes.ExampleScenes
     }
     internal class JoystickVisualizer : InputVisualizer
     {
-        private InputAction joystickHorizontal;
-        private InputAction joystickVertical;
+        private readonly InputAction joystickHorizontal;
+        private readonly InputAction joystickVertical;
         private readonly InputActionTree inputActionTree;
-        private string title;
-        private TextFont textFont;
+        private readonly string title;
+        private readonly TextFont textFont;
         private float flashTimer = 0f;
         private const float flashDuration = 1f;
         private InputDeviceType curInputDeviceType = InputDeviceType.Keyboard;
@@ -103,24 +103,21 @@ namespace Examples.Scenes.ExampleScenes
             var flashColor3 = Colors.Medium.Lerp(Colors.Warm, flashF);
             
             
-            Rect top = area.ApplyMargins(0, 0, 0, 0.8f);
-            Rect bottom = area.ApplyMargins(0, 0, 0.2f, 0);
+            var top = area.ApplyMargins(0, 0, 0, 0.8f);
+            var bottom = area.ApplyMargins(0, 0, 0.2f, 0);
             float marginSize = bottom.Size.Max() * 0.025f;
-            Rect insideBottom = bottom.ApplyMarginsAbsolute(marginSize, marginSize, marginSize, marginSize);//  bottom.ApplyMargins(0.025f, 0.025f, 0.025f, 0.025f);
-            
-            
+            var insideBottom = bottom.ApplyMarginsAbsolute(marginSize, marginSize, marginSize, marginSize);
             
             var inputs = joystickHorizontal.GetInputs(curInputDeviceType);
             inputs.AddRange(joystickVertical.GetInputs(curInputDeviceType));
             var inputNamesRect = insideBottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
-            var rects = inputNamesRect.SplitV(inputs.Count); // inputNamesRect.GetAlignedRectsVertical(inputs.Count, 0f, 1f);
+            var rects = inputNamesRect.SplitV(inputs.Count); 
             
             
             textFont.ColorRgba = Colors.Medium;
             for (var i = 0; i < inputs.Count; i++)
             {
                 textFont.DrawTextWrapNone(inputs[i].GetName(true), rects[i], new(0.5f, 0f));
-                // font.DrawText(, rects[i], 1f, new Vector2(0.5f, 0f), ExampleScene.ColorMedium);
             }
             
             insideBottom.DrawLines(lineThickness / 2, flashColor1);
@@ -165,19 +162,17 @@ namespace Examples.Scenes.ExampleScenes
 
             textFont.ColorRgba = flashColor1;
             textFont.DrawTextWrapNone(title, top, new(0.5f, 0f));
-            
-            // font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), flashColor1);
         }
     }
     internal class TriggerVisualizer : InputVisualizer
     {
-        private string title;
-        private TextFont textFont;
-        private float flashTimer = 0f;
+        private readonly string title;
+        private readonly TextFont textFont;
+        private float flashTimer;
         private const float flashDuration = 1f;
         private InputDeviceType curInputDeviceType = InputDeviceType.Keyboard;
 
-        private InputAction trigger;
+        private readonly InputAction trigger;
         private readonly InputActionTree inputActionTree;
         
         public TriggerVisualizer(bool left, Font font)
@@ -316,13 +311,13 @@ namespace Examples.Scenes.ExampleScenes
     }
     internal class ButtonVisualizer : InputVisualizer
         {
-            private string title;
-            private TextFont textFont;
+            private readonly string title;
+            private readonly TextFont textFont;
             private float flashTimer = 0f;
             private const float flashDuration = 1f;
             private InputDeviceType curInputDeviceType = InputDeviceType.Keyboard;
     
-            private InputAction button;
+            private readonly InputAction button;
             private readonly InputActionTree inputActionTree;
             public ButtonVisualizer(bool left, Font font)
             {
@@ -377,13 +372,11 @@ namespace Examples.Scenes.ExampleScenes
                 float flashF = flashTimer / flashDuration;
                 var flashColor1 = Colors.Medium.Lerp(Colors.Highlight, flashF);
                 var flashColor2 = Colors.Medium.Lerp(Colors.Special, flashF);
-                var flashColor3 = Colors.Medium.Lerp(Colors.Warm, flashF);
                 
-                
-                Rect top = area.ApplyMargins(0, 0, 0, 0.8f);
-                Rect bottom = area.ApplyMargins(0, 0, 0.2f, 0);
+                var top = area.ApplyMargins(0, 0, 0, 0.8f);
+                var bottom = area.ApplyMargins(0, 0, 0.2f, 0);
                 float marginSize = bottom.Size.Max() * 0.025f;
-                Rect insideBottom = bottom.ApplyMarginsAbsolute(marginSize, marginSize, marginSize, marginSize);//  bottom.ApplyMargins(0.025f, 0.025f, 0.025f, 0.025f);
+                var insideBottom = bottom.ApplyMarginsAbsolute(marginSize, marginSize, marginSize, marginSize);
                 
                 insideBottom.DrawLines(lineThickness / 2, flashColor1);
     
@@ -392,16 +385,13 @@ namespace Examples.Scenes.ExampleScenes
                 
                 var inputs = button.GetInputs(curInputDeviceType);
                 var inputNamesRect = insideBottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
-                var rects = inputNamesRect.SplitV(inputs.Count); // inputNamesRect.GetAlignedRectsVertical(inputs.Count, 0f, 1f);
+                var rects = inputNamesRect.SplitV(inputs.Count);
                 textFont.ColorRgba = Colors.Medium;
                 for (var i = 0; i < inputs.Count; i++)
                 {
                     textFont.DrawTextWrapNone(inputs[i].GetName(true), rects[i], new(0.5f, 0f));
-                    // font.DrawText(, rects[i], 1f, new Vector2(0.5f, 0f), ExampleScene.ColorMedium);
                 }
                 
-                
-    
                 if (button.State.Down)
                 {
                     bottom.DrawLines(lineThickness, Colors.Special);
@@ -409,13 +399,12 @@ namespace Examples.Scenes.ExampleScenes
     
                 textFont.ColorRgba = flashColor1;
                 textFont.DrawTextWrapNone(title, top, new(0.5f, 0f));
-                // font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), flashColor1);
             }
         }
     internal class ButtonHoldVisualizer : InputVisualizer
     {
-        private string title;
-        private TextFont textFont;
+        private readonly string title;
+        private readonly TextFont textFont;
         private float flashTimer = 0f;
         private float holdFinishedTimer = 0f;
         private const float holdFinishedDuration = 1f;
@@ -423,7 +412,7 @@ namespace Examples.Scenes.ExampleScenes
         private const float flashDuration = 1f;
         private InputDeviceType curInputDeviceType = InputDeviceType.Keyboard;
 
-        private InputAction button;
+        private readonly InputAction button;
         private readonly InputActionTree inputActionTree;
         public ButtonHoldVisualizer(Font font)
         {
@@ -565,8 +554,8 @@ namespace Examples.Scenes.ExampleScenes
     }
     internal class ButtonDoubleTapVisualizer : InputVisualizer
     {
-        private string title;
-        private TextFont textFont;
+        private readonly string title;
+        private readonly TextFont textFont;
         private float flashTimer = 0f;
         private float doubleTapFinishedTimer = 0f;
         private const float doubleTapFinishedDuration = 1f;
@@ -574,7 +563,7 @@ namespace Examples.Scenes.ExampleScenes
         private const float flashDuration = 1f;
         private InputDeviceType curInputDeviceType = InputDeviceType.Keyboard;
 
-        private InputAction button;
+        private readonly InputAction button;
         private readonly InputActionTree inputActionTree;
         public ButtonDoubleTapVisualizer(Font font)
         {
@@ -711,19 +700,19 @@ namespace Examples.Scenes.ExampleScenes
       
     public class InputExample : ExampleScene
     {
-        private JoystickVisualizer joystickLeft;
-        private JoystickVisualizer joystickRight;
-        private ButtonVisualizer buttonLeft;
-        private ButtonVisualizer buttonRight;
-        private TriggerVisualizer triggerLeft;
-        private TriggerVisualizer triggerRight;
-        private ButtonHoldVisualizer buttonHold;
-        private ButtonDoubleTapVisualizer buttonDoubleTap;
+        private readonly JoystickVisualizer joystickLeft;
+        private readonly JoystickVisualizer joystickRight;
+        private readonly ButtonVisualizer buttonLeft;
+        private readonly ButtonVisualizer buttonRight;
+        private readonly TriggerVisualizer triggerLeft;
+        private readonly TriggerVisualizer triggerRight;
+        private readonly ButtonHoldVisualizer buttonHold;
+        private readonly ButtonDoubleTapVisualizer buttonDoubleTap;
         public InputExample()
         {
             Title = "Input Example";
 
-            var font = GAMELOOP.GetFont(FontIDs.JetBrains);
+            var font = GameloopExamples.Instance.GetFont(FontIDs.JetBrains);
             joystickLeft = new(true, font);
             joystickRight = new(false, font);
             buttonLeft = new(true, font);
@@ -738,15 +727,14 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnActivate(Scene oldScene)
         {
-            BitFlag mask = new(GAMELOOP.GameloopAccessTag);
-            mask = mask.Add(ShapeInput.DefaultAccessTag);
-            ShapeInput.LockWhitelist(mask);
-            // InputAction.LockWhitelist(GAMELOOP.GameloopAccessTag, InputAction.DefaultAccessTag);
+            BitFlag mask = new(GameloopExamples.Instance.GameloopAccessTag);
+            mask = mask.Add(InputSystem.DefaultAccessTag);
+            InputSystem.LockWhitelist(mask);
         }
 
         protected override void OnDeactivate()
         {
-            ShapeInput.Unlock();
+            InputSystem.Unlock();
         }
 
         public override void Reset()
@@ -763,8 +751,8 @@ namespace Examples.Scenes.ExampleScenes
         }
         protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
-            var gamepad = ShapeInput.GamepadManager.LastUsedGamepad;
-            var curDevice = ShapeInput.CurrentInputDeviceType;
+            var gamepad = Input.GamepadManager.LastUsedGamepad;
+            var curDevice = Input.CurrentInputDeviceType;
             joystickLeft.Update(time.Delta, gamepad, curDevice);
             joystickRight.Update(time.Delta, gamepad, curDevice);
             
@@ -784,7 +772,7 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnDrawUIExample(ScreenInfo ui)
         {
-            var screenArea = GAMELOOP.UIRects.GetRect("center");
+            var screenArea = GameloopExamples.Instance.UIRects.GetRect("center");
             
             float lineThickness = MathF.Max(screenArea.Size.Max() * 0.005f, 2f);
             

@@ -4,6 +4,7 @@ using ShapeEngine.Screen;
 using System.Numerics;
 using Clipper2Lib;
 using ShapeEngine.Color;
+using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.CircleDef;
@@ -19,15 +20,11 @@ using Path = ShapeEngine.Pathfinding.Path;
 using ShapeEngine.Random;
 namespace Examples.Scenes.ExampleScenes;
 
-     
-    
 public class PathfinderExample2 : ExampleScene
 {
-    
     private class Ship : ICameraFollowTarget
     {
-        // public Circle Hull { get; private set; }
-        private Pathfinder pathfinder;
+        private readonly Pathfinder pathfinder;
         private Vector2 chasePosition;
         private int lastTraversableNodeIndex = -1;
         private Triangle hull;
@@ -44,8 +41,8 @@ public class PathfinderExample2 : ExampleScene
         
         private readonly PaletteColor hullColor = Colors.PcCold;
     
-        private InputAction iaMoveHor;
-        private InputAction iaMoveVer;
+        private readonly InputAction iaMoveHor;
+        private readonly InputAction iaMoveVer;
         private readonly InputActionTree inputActionTree;
         
         public Ship(Vector2 pos, float shipSize, Pathfinder pathfinder)
@@ -128,14 +125,14 @@ public class PathfinderExample2 : ExampleScene
         }
         public void Update(float dt)
         {
-            inputActionTree.CurrentGamepad = ShapeInput.GamepadManager.LastUsedGamepad;
+            inputActionTree.CurrentGamepad = Game.Instance.Input.GamepadManager.LastUsedGamepad;
             inputActionTree.Update(dt);
             
             
-            if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Mouse)
+            if (Game.Instance.Input.CurrentInputDeviceType == InputDeviceType.Mouse)
             {
 
-                var dir = CalculateMouseMovementDirection(GAMELOOP.GameScreenInfo.MousePos, GAMELOOP.Camera);
+                var dir = CalculateMouseMovementDirection(GameloopExamples.Instance.GameScreenInfo.MousePos, GameloopExamples.Instance.Camera);
                 if (dir.LengthSquared() > 0f)
                 {
                     stopTimer = 0f;
@@ -677,7 +674,7 @@ public class PathfinderExample2 : ExampleScene
 
     protected override void OnActivate(Scene oldScene)
     {
-        GAMELOOP.Camera = camera;
+        GameloopExamples.Instance.Camera = camera;
         UpdateFollower(camera.BaseSize.Min());
         camera.SetZoom(0.6f);
         follower.SetTarget(ship);
@@ -685,7 +682,7 @@ public class PathfinderExample2 : ExampleScene
 
     protected override void OnDeactivate()
     {
-        GAMELOOP.ResetCamera();
+        GameloopExamples.Instance.ResetCamera();
     }
     public override void Reset()
     {
@@ -930,7 +927,7 @@ public class PathfinderExample2 : ExampleScene
     }
     protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
     {
-        var gamepad = ShapeInput.GamepadManager.LastUsedGamepad;
+        var gamepad = Input.GamepadManager.LastUsedGamepad;
         
         inputActionTree.CurrentGamepad = gamepad;
         inputActionTree.Update(dt);
@@ -1124,11 +1121,9 @@ public class PathfinderExample2 : ExampleScene
     }
     protected override void OnDrawUIExample(ScreenInfo ui)
     {
-        DrawInputDescription(GAMELOOP.UIRects.GetRect("bottom center"));
-        DrawCameraInfo(GAMELOOP.UIRects.GetRect("bottom right"));
-
+        DrawInputDescription(GameloopExamples.Instance.UIRects.GetRect("bottom center"));
+        DrawCameraInfo(GameloopExamples.Instance.UIRects.GetRect("bottom right"));
     }
-
     private void DrawCameraInfo(Rect rect)
     {
         var pos = camera.BasePosition;
@@ -1157,7 +1152,7 @@ public class PathfinderExample2 : ExampleScene
     private void DrawInputDescription(Rect rect)
     {
         var rects = rect.SplitV(0.35f);
-        var curDevice = ShapeInput.CurrentInputDeviceType;
+        var curDevice = Input.CurrentInputDeviceType;
         string toggleDrawDebugText = iaDrawDebug.GetInputTypeDescription(curDevice, true, 1, false);
         string addChasersText = iaAddChasers.GetInputTypeDescription(curDevice, true, 1, false);
         string moveText = ship.GetInputDescription(curDevice);

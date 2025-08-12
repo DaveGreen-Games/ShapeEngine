@@ -297,7 +297,7 @@ public partial class InputSettings
         /// </summary>
         /// <remarks>
         /// <c>Default is true</c>
-        /// Does not affect <see cref="MouseDevice.WasUsedRaw"/> values. It does affect the automatic system in <see cref="ShapeInput"/> to switch between devices.
+        /// Does not affect <see cref="MouseDevice.WasUsedRaw"/> values. It does affect the automatic system in <see cref="InputSystem"/> to switch between devices.
         /// </remarks>
         public bool Detection;
 

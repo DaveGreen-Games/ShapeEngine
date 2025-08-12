@@ -1,4 +1,5 @@
 using System.Text;
+using ShapeEngine.Core.GameDef;
 
 namespace ShapeEngine.Input;
 
@@ -32,10 +33,10 @@ public sealed class InputTypeMouseButton : IInputType
     public void SetDeadzone(float value) { deadzone = value; }
 
     /// <inheritdoc/>
-    public InputState GetState(GamepadDevice? gamepad = null) => ShapeInput.Mouse.CreateInputState(button, deadzone, deadzone,  modifierKeySet);
+    public InputState GetState(GamepadDevice? gamepad = null) => Game.Instance.Input.Mouse.CreateInputState(button, deadzone, deadzone,  modifierKeySet);
 
     /// <inheritdoc/>
-    public InputState GetState(InputState prev, GamepadDevice? gamepad = null) => ShapeInput.Mouse.CreateInputState(button, prev, deadzone,  deadzone, modifierKeySet);
+    public InputState GetState(InputState prev, GamepadDevice? gamepad = null) => Game.Instance.Input.Mouse.CreateInputState(button, prev, deadzone,  deadzone, modifierKeySet);
     /// <inheritdoc/>
     public string GetName(bool shorthand = true)
     {

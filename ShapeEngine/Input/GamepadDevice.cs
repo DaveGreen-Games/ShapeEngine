@@ -84,14 +84,14 @@ public sealed class GamepadDevice : InputDevice
     /// <summary>
     /// Gets the usage detection settings for the gamepad input device.
     /// </summary>
-    public InputSettings.GamepadSettings UsageDetectionSettings { get; private set; } = new();
+    public InputSettings.GamepadSettings Settings { get; private set; }
 
     /// <summary>
     /// <para>
     /// The process priority of this gamepad device instance.
     /// </para>
     /// <para>
-    /// Change this value to change the order in which this device is processed in <see cref="ShapeInput"/>.
+    /// Change this value to change the order in which this device is processed in <see cref="InputSystem"/>.
     /// Lower priorities are processed first.
     /// </para>
     /// </summary>
@@ -183,14 +183,15 @@ public sealed class GamepadDevice : InputDevice
     /// Initializes a new instance of the <see cref="GamepadDevice"/> class.
     /// </summary>
     /// <param name="index">The gamepad index.</param>
-    public GamepadDevice(int index)
+    /// <param name="settings">The gamepad usage detection settings.</param>
+    internal GamepadDevice(int index, InputSettings.GamepadSettings settings)
     {
         Index = index;
+     
+        Settings = settings;
         
         if (Raylib.IsGamepadAvailable(index))
         {
-            // Name = Raylib.GetGamepadName_(index);
-            // AxisCount = Raylib.GetGamepadAxisCount(index);
             Connect();
         }
         
@@ -319,7 +320,7 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="settings">The change settings to apply to the input device.</param>
     internal override void ApplyInputDeviceChangeSettings(InputSettings settings)
     {
-        UsageDetectionSettings = settings.Gamepad;
+        Settings = settings.Gamepad;
         // OnInputDeviceChangeSettingsChanged?.Invoke(this, settings);
     }
     // internal void OverrideInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
@@ -462,7 +463,7 @@ public sealed class GamepadDevice : InputDevice
             return;
         }
         
-        if (!UsageDetectionSettings.Detection) return;
+        if (!Settings.Detection) return;
             
         //if device was selected in the previous update cycle, it will be automatically considered used if at least one button is held down
         if (wasSelected)
@@ -477,14 +478,14 @@ public sealed class GamepadDevice : InputDevice
             wasSelected = false;
         }
         
-        if (UsageDetectionSettings.SelectionButtons is { Count: > 0 })
+        if (Settings.SelectionButtons is { Count: > 0 })
         {
-            if (UsageDetectionSettings.ExceptionButtons is { Count: > 0 })
+            if (Settings.ExceptionButtons is { Count: > 0 })
             {
-                foreach (var button in UsageDetectionSettings.SelectionButtons)
+                foreach (var button in Settings.SelectionButtons)
                 {
-                    if (UsageDetectionSettings.ExceptionButtons.Contains(button)) continue;
-                    if (IsDown(button, UsageDetectionSettings.AxisThreshold, UsageDetectionSettings.TriggerThreshold))
+                    if (Settings.ExceptionButtons.Contains(button)) continue;
+                    if (IsDown(button, Settings.AxisThreshold, Settings.TriggerThreshold))
                     {
                         used = true;
                         break;
@@ -493,9 +494,9 @@ public sealed class GamepadDevice : InputDevice
             }
             else
             {
-                foreach (var button in UsageDetectionSettings.SelectionButtons)
+                foreach (var button in Settings.SelectionButtons)
                 {
-                    if (IsDown(button, UsageDetectionSettings.AxisThreshold, UsageDetectionSettings.TriggerThreshold))
+                    if (IsDown(button, Settings.AxisThreshold, Settings.TriggerThreshold))
                     {
                         used = true;
                         break;
@@ -505,15 +506,15 @@ public sealed class GamepadDevice : InputDevice
         }
         else
         {
-            var pressCountEnabled = UsageDetectionSettings.PressCountEnabled;
-            var usedDurationEnabled = UsageDetectionSettings.UsedDurationEnabled;
+            var pressCountEnabled = Settings.PressCountEnabled;
+            var usedDurationEnabled = Settings.UsedDurationEnabled;
             
             if (pressCountEnabled)
             {
                 pressedCountDurationTimer += dt;
-                if (pressedCountDurationTimer >= UsageDetectionSettings.MinPressInterval)
+                if (pressedCountDurationTimer >= Settings.MinPressInterval)
                 {
-                    pressedCountDurationTimer -= UsageDetectionSettings.MinPressInterval;
+                    pressedCountDurationTimer -= Settings.MinPressInterval;
                     pressedCount = 0;
                 }
             }
@@ -521,12 +522,12 @@ public sealed class GamepadDevice : InputDevice
             if (usedDurationEnabled)
             {
                 // Checks if any held down button is not in the exception list (or if the exception list is null)
-                if (HeldDownButtons.Any(b => !UsageDetectionSettings.ExceptionButtons.Contains(b)))
+                if (HeldDownButtons.Any(b => !Settings.ExceptionButtons.Contains(b)))
                 {
                     usedDurationTimer += dt;
-                    if (usedDurationTimer > UsageDetectionSettings.MinUsedDuration)
+                    if (usedDurationTimer > Settings.MinUsedDuration)
                     {
-                        usedDurationTimer -= UsageDetectionSettings.MinUsedDuration;
+                        usedDurationTimer -= Settings.MinUsedDuration;
                         used = true;
                         pressedCount = 0;
                         pressedCountDurationTimer = 0f;
@@ -536,10 +537,10 @@ public sealed class GamepadDevice : InputDevice
             }
             
             
-            if (!used && pressCountEnabled && PressedButtons.Any(b => !UsageDetectionSettings.ExceptionButtons.Contains(b)))
+            if (!used && pressCountEnabled && PressedButtons.Any(b => !Settings.ExceptionButtons.Contains(b)))
             {
                 pressedCount++;
-                if (pressedCount >= UsageDetectionSettings.MinPressCount)
+                if (pressedCount >= Settings.MinPressCount)
                 {
                     used = true;
                     pressedCountDurationTimer = 0f;
@@ -608,7 +609,7 @@ public sealed class GamepadDevice : InputDevice
         {
             var button = state.Key;
             var prevState = state.Value;
-            var curState = CreateInputState(button, UsageDetectionSettings.AxisThreshold, UsageDetectionSettings.TriggerThreshold);
+            var curState = CreateInputState(button, Settings.AxisThreshold, Settings.TriggerThreshold);
             var nextState = new InputState(prevState, curState);
             buttonStates[button] = nextState;
 
@@ -637,7 +638,7 @@ public sealed class GamepadDevice : InputDevice
         {
             var axis = state.Key;
             var prevState = state.Value;
-            var curState = CreateInputState(axis, UsageDetectionSettings.AxisThreshold);
+            var curState = CreateInputState(axis, Settings.AxisThreshold);
             var nextState = new InputState(prevState, curState);
             joyAxisStates[axis] = nextState;
             
@@ -652,7 +653,7 @@ public sealed class GamepadDevice : InputDevice
         {
             var axis = state.Key;
             var prevState = state.Value;
-            var curState = CreateInputState(axis, UsageDetectionSettings.TriggerThreshold);
+            var curState = CreateInputState(axis, Settings.TriggerThreshold);
             var nextState = new InputState(prevState, curState);
             triggerAxisStates[axis] = nextState;
             

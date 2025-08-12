@@ -5,6 +5,7 @@ using ShapeEngine.StaticLib;
 using ShapeEngine.Random;
 using ShapeEngine.Screen;
 using ShapeEngine.Color;
+using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.RectDef;
@@ -102,11 +103,11 @@ namespace Examples.Scenes.ExampleScenes
         }
         public void Update(float dt, Rect r, Vector2 mousePos)
         {
-            background = r; // ui.Area.ApplyMargins(0.025f, 0.6f, 0.1f, 0.85f);
+            background = r; 
             mouseInside = background.ContainsPoint(mousePos);
             if (mouseInside)
             {
-                if (GAMELOOP.InputActionUIAccept.State.Down || GAMELOOP.InputActionUIAcceptMouse.State.Down)
+                if (GameloopExamples.Instance.InputActionUIAccept.State.Down || GameloopExamples.Instance.InputActionUIAcceptMouse.State.Down)
                 {
                     float intensity = background.GetWidthFactor(mousePos.X);
                     CurValue = intensity;
@@ -133,9 +134,9 @@ namespace Examples.Scenes.ExampleScenes
         private Vector2 movementDir;
         public float Speed = 500;
 
-        private PaletteColor hullColor = Colors.PcCold; // new(System.Drawing.Color.SteelBlue);
-        private PaletteColor outlineColor = Colors.PcLight; //new(System.Drawing.Color.IndianRed);
-        private PaletteColor cockpitColor = Colors.PcWarm; // new(System.Drawing.Color.DodgerBlue);
+        private readonly PaletteColor hullColor = Colors.PcCold; 
+        private readonly PaletteColor outlineColor = Colors.PcLight; 
+        private readonly PaletteColor cockpitColor = Colors.PcWarm; 
 
         private InputAction iaMoveHor;
         private InputAction iaMoveVer;
@@ -192,18 +193,17 @@ namespace Examples.Scenes.ExampleScenes
         
         public void Update(float dt, float cameraRotationDeg)
         {
-            inputActionTree.CurrentGamepad = ShapeInput.GamepadManager.LastUsedGamepad;
+            inputActionTree.CurrentGamepad = Game.Instance.Input.GamepadManager.LastUsedGamepad;
             inputActionTree.Update(dt);
 
 
-            if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Mouse)
+            if (Game.Instance.Input.CurrentInputDeviceType == InputDeviceType.Mouse)
             {
-                var dir = ExampleScene.CalculateMouseMovementDirection(GAMELOOP.GameScreenInfo.MousePos, GAMELOOP.Camera);
+                var dir = ExampleScene.CalculateMouseMovementDirection(GameloopExamples.Instance.GameScreenInfo.MousePos, GameloopExamples.Instance.Camera);
                 float lsq = dir.LengthSquared();
                 if (lsq > 0f)
                 {
                     movementDir = dir;
-                    // movementDir = movementDir.RotateDeg(-cameraRotationDeg); //with this enabled the ship does not follow the mouse correctly when camera is rotated.
                     var movement = movementDir * Speed * dt;
                     Hull = new Circle(Hull.Center + movement, Hull.Radius);
                 }
@@ -278,7 +278,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             Title = "Screen Effects Example";
 
-            font = GAMELOOP.GetFont(FontIDs.JetBrains);
+            font = GameloopExamples.Instance.GetFont(FontIDs.JetBrains);
                 
             GenerateStars(2500);
             GenerateComets(200);
@@ -289,7 +289,7 @@ namespace Examples.Scenes.ExampleScenes
             follower = new(0, 100, 500);
             camera.Follower = follower;
             
-            UpdateFollower(GAMELOOP.UIScreenInfo.Area.Size.Min());
+            UpdateFollower(GameloopExamples.Instance.UIScreenInfo.Area.Size.Min());
             SetSliderValues();
 
             InputActionSettings defaultSettings = new();
@@ -316,7 +316,7 @@ namespace Examples.Scenes.ExampleScenes
         private void SetSliderValues()
         {
             float intensity = intensitySlider.CurValue;
-            GAMELOOP.ScreenEffectIntensity = intensity;
+            GameloopExamples.Instance.ScreenEffectIntensity = intensity;
             camera.Intensity = intensity;
         }
         private void GenerateStars(int amount)
@@ -343,27 +343,25 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnActivate(Scene oldScene)
         {
-            GAMELOOP.Camera = camera;
-            UpdateFollower(GAMELOOP.UIScreenInfo.Area.Size.Min());
+            GameloopExamples.Instance.Camera = camera;
+            UpdateFollower(GameloopExamples.Instance.UIScreenInfo.Area.Size.Min());
             
             follower.SetTarget(ship);
 
-            GAMELOOP.MouseControlEnabled = false;
-            // follower.Activate();
+            GameloopExamples.Instance.MouseControlEnabled = false;
         }
 
         protected override void OnDeactivate()
         {
-            GAMELOOP.ResetCamera();
-            GAMELOOP.MouseControlEnabled = true;
-            // follower.Deactivate();
+            GameloopExamples.Instance.ResetCamera();
+            GameloopExamples.Instance.MouseControlEnabled = true;
         }
         public override void Reset()
         {
             intensitySlider.SetValue(0.5f);
             cameraFollowSlider.SetValue(0.5f);
             SetSliderValues();
-            GAMELOOP.ScreenEffectIntensity = 1f;
+            GameloopExamples.Instance.ScreenEffectIntensity = 1f;
             camera.Reset();
             
             ship.Reset(new Vector2(0), 30f);
@@ -371,7 +369,7 @@ namespace Examples.Scenes.ExampleScenes
             follower.Reset();
             follower.SetTarget(ship);
             
-            UpdateFollower(GAMELOOP.UIScreenInfo.Area.Size.Min());
+            UpdateFollower(GameloopExamples.Instance.UIScreenInfo.Area.Size.Min());
             
             stars.Clear();
             comets.Clear();
@@ -397,7 +395,7 @@ namespace Examples.Scenes.ExampleScenes
         
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
-            var gamepad = ShapeInput.GamepadManager.LastUsedGamepad;
+            var gamepad = Input.GamepadManager.LastUsedGamepad;
             
             inputActionTree.CurrentGamepad = gamepad;
             inputActionTree.Update(dt);
@@ -425,9 +423,8 @@ namespace Examples.Scenes.ExampleScenes
         protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
             UpdateFollower(ui.Area.Size.Min());
-            //follower.Update(dt,camera);
             
-            var slider = GAMELOOP.UIRects.GetRect("center").ApplyMargins(0.025f, 0.025f, 0.02f, 0.93f);
+            var slider = GameloopExamples.Instance.UIRects.GetRect("center").ApplyMargins(0.025f, 0.025f, 0.02f, 0.93f);
             var sliderLeft = slider.ApplyMargins(0f, 0.55f, 0f, 0f);
             var sliderRight = slider.ApplyMargins(0.55f, 0f, 0f, 0f);
             intensitySlider.Update(time.Delta, sliderLeft, ui.MousePos);
@@ -447,7 +444,7 @@ namespace Examples.Scenes.ExampleScenes
                     camera.Shake(Rng.Instance.RandF(0.4f, 0.6f), new Vector2(150, 150) * f, 0, 10, 0.75f);
                     comets.RemoveAt(i);
 
-                    GAMELOOP.Flash(0.25f, new(255, 255, 255, 150), new(0,0,0,0));
+                    GameloopExamples.Instance.Flash(0.25f, new(255, 255, 255, 150), new(0,0,0,0));
                 }
             }
         }
@@ -492,9 +489,8 @@ namespace Examples.Scenes.ExampleScenes
         {
             intensitySlider.Draw();
             cameraFollowSlider.Draw();
-            DrawInputDescription(GAMELOOP.UIRects.GetRect("bottom center"));
-            DrawCameraInfo(GAMELOOP.UIRects.GetRect("bottom right"));
-
+            DrawInputDescription(GameloopExamples.Instance.UIRects.GetRect("bottom center"));
+            DrawCameraInfo(GameloopExamples.Instance.UIRects.GetRect("bottom right"));
         }
 
         private void DrawCameraInfo(Rect rect)
@@ -515,10 +511,10 @@ namespace Examples.Scenes.ExampleScenes
         private void DrawInputDescription(Rect rect)
         {
             var rects = rect.SplitV(0.35f);
-            var curDevice = ShapeInput.CurrentInputDeviceType;
+            var curDevice = Input.CurrentInputDeviceType;
             string shakeCameraText = iaShakeCamera.GetInputTypeDescription(curDevice, true, 1, false);
             string rotateCameraText = iaRotateCamera.GetInputTypeDescription(curDevice, true, 1, false);
-            string toggleDrawText = iaToggleDrawCameraFollowBoundary.GetInputTypeDescription(ShapeInput.CurrentInputDeviceTypeNoMouse, true, 1, false);
+            string toggleDrawText = iaToggleDrawCameraFollowBoundary.GetInputTypeDescription(Input.CurrentInputDeviceTypeNoMouse, true, 1, false);
             string moveText = ship.GetInputDescription(curDevice);
             string onText = drawCameraFollowBoundary ? "ON" : "OFF";
             string textTop = $"Draw Camera Follow Boundary {onText} - Toggle {toggleDrawText}";

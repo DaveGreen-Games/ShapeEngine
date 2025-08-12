@@ -6,18 +6,6 @@ namespace ShapeEngine.Core.GameDef;
 public partial class Game
 {
     /// <summary>
-    /// Gets the singleton instance of the current game.
-    /// </summary>
-    /// <remarks>
-    /// This property is initialized automatically in the constructor.
-    /// You need to create a game instance before accessing this property.
-    /// If it is accessed before being set, a NullReferenceException will be thrown.
-    /// You should only ever create one game instance per application,
-    /// but in case you create multiple, this property will always point to the last created game instance.
-    /// </remarks>
-    public static Game CurrentGameInstance { get; private set; } = null!;
-    
-    /// <summary>
     /// Gets the current directory where the application is running.
     /// </summary>
     /// <remarks>

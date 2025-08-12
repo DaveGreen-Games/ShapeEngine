@@ -18,7 +18,6 @@ namespace Examples.Scenes.ExampleScenes
         public TextScalingExample() : base()
         {
             Title = "Text Scaling Example";
-            var s = GAMELOOP.UIScreenInfo.Area.Size;
             TextInputBox.EmptyText = "Longer Test Text";
             InputActionSettings defaultSettings = new();
             
@@ -58,16 +57,11 @@ namespace Examples.Scenes.ExampleScenes
             textFont.FontSpacing = fontSpacing;
             textFont.ColorRgba = Colors.Light;
             textFont.DrawTextWrapNone(TextInputBox.Text, rect, new(0.5f), caret);
-            
-            // font.DrawText(textBox.Text, rect, fontSpacing, new Vector2(0.5f, 0.5f), ColorLight);
-            
-            // if(textBox.CaretVisible)
-                // font.DrawCaret(textBox.Text, rect, fontSpacing, new Vector2(0.5f, 0.5f), textBox.CaretIndex, 5f, ColorHighlight2);
         }
 
         protected override void DrawInputDescriptionBottom(Rect rect)
         {
-            var curInputDeviceNoMouse = ShapeInput.CurrentInputDeviceTypeNoMouse;
+            var curInputDeviceNoMouse = Input.CurrentInputDeviceTypeNoMouse;
             string decreaseFontSpacingText = iaDeacreaseFontSpacing.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
             string increaseFontSpacingText = iaIncreaseFontSpacing.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
             string alignmentInfo = $"Font Spacing [{decreaseFontSpacingText}/{increaseFontSpacingText}] ({fontSpacing})";

@@ -43,7 +43,7 @@ namespace Examples.Scenes.ExampleScenes
         public DelaunayExample()
         {
             Title = "Delaunay Triangulation Example";
-            font = GAMELOOP.GetFont(FontIDs.JetBrains);
+            font = GameloopExamples.Instance.GetFont(FontIDs.JetBrains);
 
             InputActionSettings defaultSettings = new();
             
@@ -82,12 +82,12 @@ namespace Examples.Scenes.ExampleScenes
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
             
-            lineThickness = 2f * GAMELOOP.Camera.ZoomFactor;
+            lineThickness = 2f * GameloopExamples.Instance.Camera.ZoomFactor;
             lineThicknessBig = lineThickness * 2f;
             vertexSize = lineThickness * 3f;
             vertexSizeBig = vertexSize * 2f;
             
-            var gamepad = ShapeInput.GamepadManager.LastUsedGamepad;
+            var gamepad = Input.GamepadManager.LastUsedGamepad;
             inputActionTree.CurrentGamepad = gamepad;
             inputActionTree.Update(dt);
             
@@ -184,14 +184,14 @@ namespace Examples.Scenes.ExampleScenes
         
         protected override void OnDrawUIExample(ScreenInfo ui)
         {
-            var bottomCenter = GAMELOOP.UIRects.GetRect("bottom center");
+            var bottomCenter = GameloopExamples.Instance.UIRects.GetRect("bottom center");
             DrawInputText(bottomCenter);
         }
 
         private void DrawInputText(Rect rect)
         {
             var sb = new StringBuilder();
-            var curInputDeviceAll = ShapeInput.CurrentInputDeviceType;
+            var curInputDeviceAll = Input.CurrentInputDeviceType;
             
             string addPointText = iaAddPoint.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
             string addMultiplePointsText = iaAddMultiplePoints.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
@@ -210,8 +210,6 @@ namespace Examples.Scenes.ExampleScenes
             
             textFont.ColorRgba = Colors.Light;
             textFont.DrawTextWrapNone(sb.ToString(), rect, new(0.5f));
-            
-            // font.DrawText(sb.ToString(), rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
     }
 

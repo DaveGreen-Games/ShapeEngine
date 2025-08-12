@@ -24,15 +24,14 @@ public sealed class MouseDevice : InputDevice
     /// <summary>
     /// Gets the usage detection settings for the mouse input device.
     /// </summary>
-    public InputSettings.MouseSettings UsageDetectionSettings { get; private set; } = new();
-    // internal event Action<InputDevice, InputDeviceUsageDetectionSettings>? OnInputDeviceChangeSettingsChanged;
+    public InputSettings.MouseSettings Settings { get; private set; }
     
     /// <summary>
     /// <para>
     /// The process priority of this mouse device instance.
     /// </para>
     /// <para>
-    /// Change this value to change the order in which this device is processed in <see cref="ShapeInput"/>.
+    /// Change this value to change the order in which this device is processed in <see cref="InputSystem"/>.
     /// Lower priorities are processed first.
     /// </para>
     /// </summary>
@@ -76,7 +75,7 @@ public sealed class MouseDevice : InputDevice
     public Vector2 MouseDelta { get; private set; }
     
     /// <summary>
-    /// Gets the mouse movement delta with the move threshold from <see cref="UsageDetectionSettings"/> applied.
+    /// Gets the mouse movement delta with the move threshold from <see cref="Settings"/> applied.
     /// </summary>
     public Vector2 SmoothedMouseDelta { get; private set; }
 
@@ -114,8 +113,10 @@ public sealed class MouseDevice : InputDevice
     /// <summary>
     /// Initializes a new instance of the <see cref="MouseDevice"/> class.
     /// </summary>
-    internal MouseDevice()
+    internal MouseDevice(InputSettings.MouseSettings settings)
     {
+        Settings = settings;
+        
         foreach (var button in AllShapeMouseButtons)
         {
             buttonStates.Add(button, new());
@@ -211,14 +212,9 @@ public sealed class MouseDevice : InputDevice
     /// <inheritdoc cref="InputDevice.ApplyInputDeviceChangeSettings"/>
     internal override void ApplyInputDeviceChangeSettings(InputSettings settings)
     {
-        UsageDetectionSettings = settings.Mouse;
-        // OnInputDeviceChangeSettingsChanged?.Invoke(this, settings);
+        Settings = settings.Mouse;
         
     }
-    // internal void OverrideInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
-    // {
-    //     UsageDetectionSettings = settings.Mouse;
-    // }
     /// <inheritdoc cref="InputDevice.WasUsed"/>
     public override bool WasUsed() => wasUsed;
     
@@ -259,13 +255,13 @@ public sealed class MouseDevice : InputDevice
         MousePosition = Raylib.GetMousePosition();
         
         MouseDelta = Raylib.GetMouseDelta();
-        float moveThreshold = UsageDetectionSettings.MoveThreshold;
+        float moveThreshold = Settings.MoveThreshold;
         float smoothedX = MathF.Abs(MouseDelta.X) < moveThreshold ? 0f : MouseDelta.X;
         float smoothedY = MathF.Abs(MouseDelta.Y) < moveThreshold ? 0f : MouseDelta.Y;
         SmoothedMouseDelta = new(smoothedX, smoothedY);
         
         MouseWheelV = Raylib.GetMouseWheelMoveV();
-        float wheelThreshold = UsageDetectionSettings.WheelThreshold;
+        float wheelThreshold = Settings.WheelThreshold;
         float smoothedWheelX = MathF.Abs(MouseWheelV.X) < wheelThreshold ? 0f : MouseWheelV.X;
         float smoothedWheelY = MathF.Abs(MouseWheelV.Y) < wheelThreshold ? 0f : MouseWheelV.Y;
         SmoothedMouseWheelV = new(smoothedWheelX, smoothedWheelY);
@@ -320,7 +316,7 @@ public sealed class MouseDevice : InputDevice
             return;
         }
 
-        if (!UsageDetectionSettings.Detection) return;
+        if (!Settings.Detection) return;
         
         //if device was selected in the previous update cycle, it will be automatically considered used if at least one button is held down
         if (wasSelected)
@@ -335,14 +331,14 @@ public sealed class MouseDevice : InputDevice
             wasSelected = false;
         }
             
-        if (UsageDetectionSettings.SelectionButtons is { Count: > 0 })
+        if (Settings.SelectionButtons is { Count: > 0 })
         {
-            if (UsageDetectionSettings.ExceptionButtons is { Count: > 0 })
+            if (Settings.ExceptionButtons is { Count: > 0 })
             {
-                foreach (var button in UsageDetectionSettings.SelectionButtons)
+                foreach (var button in Settings.SelectionButtons)
                 {
-                    if (UsageDetectionSettings.ExceptionButtons.Contains(button)) continue;
-                    if (IsDown(button, UsageDetectionSettings.MoveThreshold, UsageDetectionSettings.WheelThreshold))
+                    if (Settings.ExceptionButtons.Contains(button)) continue;
+                    if (IsDown(button, Settings.MoveThreshold, Settings.WheelThreshold))
                     {
                         used = true;
                         break;
@@ -351,9 +347,9 @@ public sealed class MouseDevice : InputDevice
             }
             else
             {
-                foreach (var button in UsageDetectionSettings.SelectionButtons)
+                foreach (var button in Settings.SelectionButtons)
                 {
-                    if (IsDown(button, UsageDetectionSettings.MoveThreshold, UsageDetectionSettings.WheelThreshold))
+                    if (IsDown(button, Settings.MoveThreshold, Settings.WheelThreshold))
                     {
                         used = true;
                         break;
@@ -363,15 +359,15 @@ public sealed class MouseDevice : InputDevice
         }
         else
         {
-            var pressCountEnabled = UsageDetectionSettings.PressCountEnabled;
-            var usedDurationEnabled = UsageDetectionSettings.UsedDurationEnabled;
+            var pressCountEnabled = Settings.PressCountEnabled;
+            var usedDurationEnabled = Settings.UsedDurationEnabled;
             
             if (pressCountEnabled)
             {
                 pressedCountDurationTimer += dt;
-                if (pressedCountDurationTimer >= UsageDetectionSettings.MinPressInterval)
+                if (pressedCountDurationTimer >= Settings.MinPressInterval)
                 {
-                    pressedCountDurationTimer -= UsageDetectionSettings.MinPressInterval;
+                    pressedCountDurationTimer -= Settings.MinPressInterval;
                     pressedCount = 0;
                 }
             }
@@ -379,12 +375,12 @@ public sealed class MouseDevice : InputDevice
             if (usedDurationEnabled)
             {
                 // Checks if any held down button is not in the exception list (or if the exception list is null)
-                if(HeldDownButtons.Any(b => !UsageDetectionSettings.ExceptionButtons.Contains(b)))
+                if(HeldDownButtons.Any(b => !Settings.ExceptionButtons.Contains(b)))
                 {
                     usedDurationTimer += dt;
-                    if (usedDurationTimer > UsageDetectionSettings.MinUsedDuration)
+                    if (usedDurationTimer > Settings.MinUsedDuration)
                     {
-                        usedDurationTimer -= UsageDetectionSettings.MinUsedDuration;
+                        usedDurationTimer -= Settings.MinUsedDuration;
                         used = true;
                         pressedCount = 0;
                         pressedCountDurationTimer = 0f;
@@ -393,10 +389,10 @@ public sealed class MouseDevice : InputDevice
                 else if(usedDurationTimer > 0f) usedDurationTimer = 0f;
             }
             
-            if (!used && pressCountEnabled && PressedButtons.Any(b => !UsageDetectionSettings.ExceptionButtons.Contains(b)))
+            if (!used && pressCountEnabled && PressedButtons.Any(b => !Settings.ExceptionButtons.Contains(b)))
             {
                 pressedCount++;
-                if (pressedCount >= UsageDetectionSettings.MinPressCount)
+                if (pressedCount >= Settings.MinPressCount)
                 {
                     used = true;
                     pressedCountDurationTimer = 0f;
@@ -419,7 +415,7 @@ public sealed class MouseDevice : InputDevice
         {
             var button = state.Key;
             var prevState = state.Value;
-            var curState = CreateInputState(button, UsageDetectionSettings.MoveThreshold, UsageDetectionSettings.WheelThreshold);
+            var curState = CreateInputState(button, Settings.MoveThreshold, Settings.WheelThreshold);
             var nextState = new InputState(prevState, curState);
             buttonStates[button] = nextState;
 
@@ -439,14 +435,14 @@ public sealed class MouseDevice : InputDevice
         {
             var axis = state.Key;
             var prevState = state.Value;
-            var curState = CreateInputState(axis, UsageDetectionSettings.MoveThreshold);
+            var curState = CreateInputState(axis, Settings.MoveThreshold);
             axisStates[axis] = new InputState(prevState, curState);
         }
         foreach (var state in wheelAxisStates)
         {
             var axis = state.Key;
             var prevState = state.Value;
-            var curState = CreateInputState(axis, UsageDetectionSettings.WheelThreshold);
+            var curState = CreateInputState(axis, Settings.WheelThreshold);
             wheelAxisStates[axis] = new InputState(prevState, curState);
         }
     }

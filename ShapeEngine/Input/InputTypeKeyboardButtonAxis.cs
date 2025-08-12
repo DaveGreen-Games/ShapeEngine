@@ -1,4 +1,5 @@
 using System.Text;
+using ShapeEngine.Core.GameDef;
 
 namespace ShapeEngine.Input;
 
@@ -52,16 +53,16 @@ public sealed class InputTypeKeyboardButtonAxis : IInputType
     public InputState GetState(GamepadDevice? gamepad = null)
     {
         return modifierKeySet == null ? 
-            ShapeInput.Keyboard.CreateInputState(neg, pos) : 
-            ShapeInput.Keyboard.CreateInputState(neg, pos, modifierKeySet);
+            Game.Instance.Input.Keyboard.CreateInputState(neg, pos) : 
+            Game.Instance.Input.Keyboard.CreateInputState(neg, pos, modifierKeySet);
     }
 
     /// <inheritdoc/>
     public InputState GetState(InputState prev, GamepadDevice? gamepad = null)
     {
         return modifierKeySet == null ? 
-            ShapeInput.Keyboard.CreateInputState(neg, pos, prev) : 
-            ShapeInput.Keyboard.CreateInputState(neg, pos, prev, modifierKeySet);
+            Game.Instance.Input.Keyboard.CreateInputState(neg, pos, prev) : 
+            Game.Instance.Input.Keyboard.CreateInputState(neg, pos, prev, modifierKeySet);
     }
 
     /// <inheritdoc/>

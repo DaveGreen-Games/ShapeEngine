@@ -31,7 +31,7 @@ namespace Examples.Scenes
 
         protected readonly TextInputBox TextInputBox = new("Enter Text into this box");
 
-        protected readonly uint accessTagTextBox = ShapeInput.NextAccessTag; // BitFlag.GetFlagUint(12);
+        protected readonly uint accessTagTextBox = InputSystem.NextAccessTag; // BitFlag.GetFlagUint(12);
         
         private readonly InputAction iaEnterText;
         private readonly InputAction iaCancelText;
@@ -53,7 +53,7 @@ namespace Examples.Scenes
         {
             Title = "Text Example Scene";
             
-            var s = GAMELOOP.UIScreenInfo.Area.Size;
+            var s = GameloopExamples.Instance.UIScreenInfo.Area.Size;
             topLeftRelative = new Vector2(0.1f, 0.2f);
             bottomRightRelative = new Vector2(0.9f, 0.8f);
             topLeft = topLeftRelative * s;
@@ -148,7 +148,7 @@ namespace Examples.Scenes
         #region Base Class
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
-            var gamepad = ShapeInput.GamepadManager.LastUsedGamepad;
+            var gamepad = Input.GamepadManager.LastUsedGamepad;
             inputActionTree.CurrentGamepad = gamepad;
             inputActionTree.Update(dt);
             TextInputBox.Update(dt);
@@ -158,7 +158,7 @@ namespace Examples.Scenes
                 if (iaEnterText.State.Pressed)
                 {
                     BitFlag mask = new(accessTagTextBox);
-                    ShapeInput.LockWhitelist(mask);
+                    InputSystem.LockWhitelist(mask);
                     TextInputBox.StartEntry();
                     // InputAction.LockWhitelist(accessTagTextBox);
                     draggingBottomRight = false;
@@ -200,12 +200,12 @@ namespace Examples.Scenes
                 if (iaFinishText.State.Pressed)
                 {
                     TextInputBox.FinishEntry();
-                    ShapeInput.Unlock();
+                    InputSystem.Unlock();
                 }
                 else if (iaCancelText.State.Pressed)
                 {
                     TextInputBox.CancelEntry();
-                    ShapeInput.Unlock();
+                    InputSystem.Unlock();
                 }
                 else if (iaClear.State.Pressed)
                 {
@@ -231,7 +231,7 @@ namespace Examples.Scenes
                 }
                 else
                 {
-                    TextInputBox.AddCharacters(ShapeInput.Keyboard.GetStreamChar());
+                    TextInputBox.AddCharacters(Input.Keyboard.GetStreamChar());
                 }
 
                 
@@ -357,7 +357,7 @@ namespace Examples.Scenes
                 DrawTextEntry(r);
             }
             
-            var rects = GAMELOOP.UIRects.GetRect("bottom center").SplitV(0.35f);
+            var rects = GameloopExamples.Instance.UIRects.GetRect("bottom center").SplitV(0.35f);
             DrawDescription(rects.top, rects.bottom);
            
         }
@@ -373,8 +373,8 @@ namespace Examples.Scenes
 
         private void DrawDescription(Rect top, Rect bottom)
         {
-            var curInputDeviceAll = ShapeInput.CurrentInputDeviceType;
-            var curInputDeviceNoMouse = ShapeInput.CurrentInputDeviceTypeNoMouse;
+            var curInputDeviceAll = Input.CurrentInputDeviceType;
+            var curInputDeviceNoMouse = Input.CurrentInputDeviceTypeNoMouse;
 
             
             string dragText = iaDrag.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
@@ -392,7 +392,7 @@ namespace Examples.Scenes
             if (!textEntryActive)
             {
                 string info =
-                    $"Write Custom Text {enterText} | Drag Rect Corners {dragText} | Change Font {nextFontText} ({GAMELOOP.GetFontName(fontIndex)})";
+                    $"Write Custom Text {enterText} | Drag Rect Corners {dragText} | Change Font {nextFontText} ({GameloopExamples.Instance.GetFontName(fontIndex)})";
 
                 textFont.FontSpacing = 4f;
                 textFont.ColorRgba = Colors.Light;
@@ -421,10 +421,10 @@ namespace Examples.Scenes
         }
         private void NextFont()
         {
-            int fontCount = GAMELOOP.GetFontCount();
+            int fontCount = GameloopExamples.Instance.GetFontCount();
             fontIndex++;
             if (fontIndex >= fontCount) fontIndex = 0;
-            textFont.Font = GAMELOOP.GetFont(fontIndex);
+            textFont.Font = GameloopExamples.Instance.GetFont(fontIndex);
         }
         #endregion
     }

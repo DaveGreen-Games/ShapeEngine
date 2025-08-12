@@ -29,13 +29,13 @@ namespace Examples.Scenes.ExampleScenes
         {
             Title = "Camera Area Draw Example";
 
-            font = GAMELOOP.GetFont(FontIDs.JetBrains);
+            font = GameloopExamples.Instance.GetFont(FontIDs.JetBrains);
 
             camera = new();
             GenerateStars(Rng.Instance.RandI(15000, 30000));
             follower = new(ship.Speed * 1.1f, 200, 400);
             camera.Follower = follower;
-            UpdateFollower(GAMELOOP.UIScreenInfo.Area.Size.Min());
+            UpdateFollower(GameloopExamples.Instance.UIScreenInfo.Area.Size.Min());
             
             currentShip = ship;
 
@@ -71,28 +71,28 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnActivate(Scene oldScene)
         {
-            GAMELOOP.Camera = camera;
+            GameloopExamples.Instance.Camera = camera;
             follower.SetTarget(ship);
             currentShip = ship;
-            UpdateFollower(GAMELOOP.UIScreenInfo.Area.Size.Min());
+            UpdateFollower(GameloopExamples.Instance.UIScreenInfo.Area.Size.Min());
             // GAMELOOP.UseMouseMovement = false;
         }
 
         protected override void OnDeactivate()
         {
-            GAMELOOP.ResetCamera();
+            GameloopExamples.Instance.ResetCamera();
             // GAMELOOP.UseMouseMovement = true;
         }
         
         public override void Reset()
         {
-            GAMELOOP.ScreenEffectIntensity = 1f;
+            GameloopExamples.Instance.ScreenEffectIntensity = 1f;
             camera.Reset();
             ship.Reset(new Vector2(0), 30f);
             ship2.Reset(new Vector2(100, 0), 30f);
             follower.SetTarget(ship);
             currentShip = ship;
-            UpdateFollower(GAMELOOP.UIScreenInfo.Area.Size.Min());
+            UpdateFollower(GameloopExamples.Instance.UIScreenInfo.Area.Size.Min());
             stars.Clear();
             GenerateStars(Rng.Instance.RandI(15000, 30000));
 
@@ -126,7 +126,7 @@ namespace Examples.Scenes.ExampleScenes
             UpdateFollower(ui.Area.Size.Min());
             
             // GAMELOOP.MouseControlEnabled = GAMELOOP.CurGamepad?.IsDown(ShapeGamepadTriggerAxis.RIGHT, 0.1f) ?? true;
-            inputActionTree.CurrentGamepad = ShapeInput.GamepadManager.LastUsedGamepad;
+            inputActionTree.CurrentGamepad = Input.GamepadManager.LastUsedGamepad;
             inputActionTree.Update(time.Delta);
             
             currentShip.Update(time.Delta, camera.RotationDeg);
@@ -156,7 +156,7 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnDrawUIExample(ScreenInfo ui)
         {
-            var rects = GAMELOOP.UIRects.GetRect("bottom center").SplitV(0.5f);
+            var rects = GameloopExamples.Instance.UIRects.GetRect("bottom center").SplitV(0.5f);
             DrawStarInfo(rects.top);
             DrawInputDescription(rects.bottom);
 
@@ -174,7 +174,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         private void DrawInputDescription(Rect rect)
         {
-            var curDevice = ShapeInput.CurrentInputDeviceType;
+            var curDevice = Input.CurrentInputDeviceType;
             // var curDeviceNoMouse = Input.CurrentInputDeviceNoMouse;
             string changeTargetText = iaChangeCameraTarget.GetInputTypeDescription(curDevice, true, 1, false);
             string moveText = ship.GetInputDescription(curDevice);

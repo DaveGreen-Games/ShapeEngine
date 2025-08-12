@@ -560,7 +560,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             Title = "Gameobject Handler Example";
 
-            font = GAMELOOP.GetFont(FontIDs.JetBrains);
+            font = GameloopExamples.Instance.GetFont(FontIDs.JetBrains);
 
             InputActionSettings defaultSettings = new();
             
@@ -660,12 +660,12 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnActivate(Scene oldScene)
         {
-            ShapeInput.Keyboard.UsageDetectionSettings.ExceptionButtons.Add(ShapeKeyboardButton.LEFT_SHIFT);
+            Input.Keyboard.Settings.ExceptionButtons.Add(ShapeKeyboardButton.LEFT_SHIFT);
         }
 
         protected override void OnDeactivate()
         {
-            ShapeInput.Keyboard.UsageDetectionSettings.ExceptionButtons.Remove(ShapeKeyboardButton.LEFT_SHIFT);
+            Input.Keyboard.Settings.ExceptionButtons.Remove(ShapeKeyboardButton.LEFT_SHIFT);
         }
 
         private void ClearAreaCollisionObjects(Rect area, BitFlag collisionLayerMask)
@@ -694,7 +694,7 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
-            var gamepad = ShapeInput.GamepadManager.LastUsedGamepad;
+            var gamepad = Input.GamepadManager.LastUsedGamepad;
             inputActionTree.CurrentGamepad = gamepad;
             inputActionTree.Update(dt, out _);
             
@@ -769,7 +769,7 @@ namespace Examples.Scenes.ExampleScenes
             var moveCameraV = iaMoveCameraV.State.AxisRaw;
             var moveCameraDir = new Vector2(moveCameraH, moveCameraV);
             if (iaMoveCameraH.CurrentDeviceType == InputDeviceType.Mouse) moveCameraDir = moveCameraDir.Normalize();
-            var cam = GAMELOOP.Camera;
+            var cam = GameloopExamples.Instance.Camera;
             var f = cam.ZoomFactor;
             cam.BasePosition += moveCameraDir * 500 * dt * f;
             
@@ -802,16 +802,10 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnDrawUIExample(ScreenInfo ui)
         {
-            // Vector2 uiSize = ui.Area.Size;
-            // Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
-            // string infoText =
-            //     $"[LMB] Add Segment | [RMB] Cancel Segment | [Space] Shoot | Objs: {gameObjectHandler.GetCollisionHandler().Count}";
-            // font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
-            
-            var bottomCenter = GAMELOOP.UIRects.GetRect("bottom center");
+            var bottomCenter = GameloopExamples.Instance.UIRects.GetRect("bottom center");
             DrawInputText(bottomCenter);
             
-            var bottomRight = GAMELOOP.UIRects.GetRect("bottom right");
+            var bottomRight = GameloopExamples.Instance.UIRects.GetRect("bottom right");
             var rects = bottomRight.SplitV(0.5f);
             
             textFont.FontSpacing = 1f;
@@ -819,10 +813,6 @@ namespace Examples.Scenes.ExampleScenes
             textFont.DrawTextWrapNone("Object Count", rects.top, new(0.5f, 0f));
             
             textFont.DrawTextWrapNone($"{CollisionHandler?.Count ?? 0}", rects.bottom, new(0.5f));
-            // font.DrawText("Object Count", rects.top, 1f, new Vector2(0.5f, 0f), ColorHighlight3);
-            // font.DrawText(, rects.bottom, 1f, new Vector2(0.5f, 0.5f), ColorHighlight3);
-            
-            // cameraVerticalMouse.CurTargetPosition.Draw(5, ColorRgba.White);
         }
 
         private void DrawInputText(Rect rect)
@@ -832,24 +822,21 @@ namespace Examples.Scenes.ExampleScenes
             
             var sb = new StringBuilder();
             var sbCamera = new StringBuilder();
-            var curInputDeviceAll = ShapeInput.CurrentInputDeviceType; //currentInputActionDeviceType;
-            var curInputDeviceNoMouse = ShapeInput.CurrentInputDeviceTypeNoMouse; // currentInputActionDeviceType.FilterInputDevice(InputDeviceType.Mouse, InputDeviceType.Keyboard);
+            var curInputDeviceAll = Input.CurrentInputDeviceType; //currentInputActionDeviceType;
+            var curInputDeviceNoMouse = Input.CurrentInputDeviceTypeNoMouse; // currentInputActionDeviceType.FilterInputDevice(InputDeviceType.Mouse, InputDeviceType.Keyboard);
             
             string placeWallText = iaPlaceWall.GetInputTypeDescription(curInputDeviceAll, true, 1, false, false);
             string cancelWallText = iaCancelWall.GetInputTypeDescription(curInputDeviceAll, true, 1, false, false);
             string spawnRockText = iaSpawnRock.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
-            // string spawnBoxText = iaSpawnBox.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
             string spawnBirdText = iaSpawnBird.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
             string spawnBallText = iaSpawnBall.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
             string spawnBulletText = iaSpawnBullet.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
-            // string spawnAuraText = iaSpawnAura.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
-            //string spawnTrapText = iaSpawnTrap.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
             string toggleDebugText = iaToggleDebug.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
             string clearAreaText = iaStartClearArea.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
             
             string moveCameraH = curInputDeviceAll == InputDeviceType.Mouse ? "[LShift + Mx]" :  iaMoveCameraH.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
             string moveCameraV = curInputDeviceAll == InputDeviceType.Mouse ? "[LShift + My]" : iaMoveCameraV.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
-            string zoomCamera = GAMELOOP.InputActionZoom.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
+            string zoomCamera = GameloopExamples.Instance.InputActionZoom.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
             sbCamera.Append($"Zoom Camera {zoomCamera} | ");
             sbCamera.Append($"Move Camera {moveCameraH} {moveCameraV} | ");
 
@@ -858,14 +845,11 @@ namespace Examples.Scenes.ExampleScenes
             sbCamera.Append($"Clear Zone {clearAreaText} + {clearMouseText}");
             
             sb.Append($"Add/Cancel Wall [{placeWallText}/{cancelWallText}] | ");
-            //sb.Append($"Spawn: Rock/Box/Ball/Aura [{spawnRockText}/{spawnBoxText}/{spawnBallText}/{spawnAuraText}] | ");
             sb.Append($"Spawn: ");
             sb.Append($"Rock {spawnRockText} - ");
             sb.Append($"Bird {spawnBirdText} - ");
-            // sb.Append($"Box {spawnBoxText} - ");
             sb.Append($"Ball {spawnBallText} - ");
             sb.Append($"Bullet {spawnBulletText} | ");
-            // sb.Append($"Aura {spawnAuraText} | ");
             if(drawDebug) sb.Append($"Normal Mode {toggleDebugText}");
             else sb.Append($"Debug Mode {toggleDebugText}");
             
@@ -873,8 +857,6 @@ namespace Examples.Scenes.ExampleScenes
             textFont.ColorRgba = Colors.Light;
             textFont.DrawTextWrapNone(sbCamera.ToString(), top, new(0.5f));
             textFont.DrawTextWrapNone(sb.ToString(), bottom, new(0.5f));
-            // font.DrawText(sbCamera.ToString(), top, 1f, new Vector2(0.5f, 0.5f), ColorLight);
-            // font.DrawText(sb.ToString(), bottom, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
         private void SetupBoundary()
         {

@@ -17,8 +17,8 @@ namespace Examples.Scenes
         public string Title { get; protected set; } = "Title Goes Here";
         public string Description { get; protected set; } = "No Description Yet.";
 
-        protected TextFont titleFont = new(GAMELOOP.FontDefault, 1f, Colors.Highlight);
-        protected TextFont textFont = new(GAMELOOP.GetFont(FontIDs.JetBrains), 1f, Colors.Text);
+        protected TextFont titleFont = new(GameloopExamples.Instance.FontDefault, 1f, Colors.Highlight);
+        protected TextFont textFont = new(GameloopExamples.Instance.GetFont(FontIDs.JetBrains), 1f, Colors.Text);
 
         protected bool drawInputDeviceInfo = true;
         protected bool drawTitle = true;
@@ -27,8 +27,8 @@ namespace Examples.Scenes
 
         public ExampleScene()
         {
-            var action = GAMELOOP.InputActionUICancel;
-            backLabel = new(action, "BACK", GAMELOOP.FontDefault, Colors.PcWarm, 4f);
+            var action = GameloopExamples.Instance.InputActionUICancel;
+            backLabel = new(action, "BACK", GameloopExamples.Instance.FontDefault, Colors.PcWarm, 4f);
         }
         public virtual void Reset() { }
 
@@ -38,7 +38,7 @@ namespace Examples.Scenes
             float zoomSpeed = 1f;
             float zoomDir = 0;
 
-            var zoomState = GAMELOOP.InputActionZoom.Consume(out _);
+            var zoomState = GameloopExamples.Instance.InputActionZoom.Consume(out _);
             if (!zoomState.Consumed)
             {
                 zoomDir = -zoomState.AxisRaw;
@@ -46,20 +46,20 @@ namespace Examples.Scenes
             
             if (zoomDir != 0)
             {
-                GAMELOOP.Camera.Zoom(zoomDir * zoomSpeed * dt);
+                GameloopExamples.Instance.Camera.Zoom(zoomDir * zoomSpeed * dt);
             }
         }
 
         protected virtual bool IsCancelAllowed() => true;
         protected void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
-            var cancelState = GAMELOOP.InputActionUICancel.Consume(out _);
+            var cancelState = GameloopExamples.Instance.InputActionUICancel.Consume(out _);
             if (cancelState is { Consumed: false, Pressed: true })
             {
                 if (IsCancelAllowed())
                 {
-                    if(GAMELOOP.Paused) GAMELOOP.Paused = false;
-                    GAMELOOP.GoToMainScene();
+                    if(GameloopExamples.Instance.Paused) GameloopExamples.Instance.Paused = false;
+                    GameloopExamples.Instance.GoToMainScene();
                 }
                 
             }
@@ -70,10 +70,10 @@ namespace Examples.Scenes
             // }
             
 
-            if (GAMELOOP.Paused) return;
+            if (GameloopExamples.Instance.Paused) return;
 
 
-            var resetState = GAMELOOP.InputActionReset.Consume(out _);
+            var resetState = GameloopExamples.Instance.InputActionReset.Consume(out _);
             if (resetState is { Consumed: false, Pressed: true })
             {
                 Reset();
@@ -98,7 +98,7 @@ namespace Examples.Scenes
         {
             HandleInput(time.Delta, game.MousePos, gameUi.MousePos, ui.MousePos);
 
-            if (GAMELOOP.Paused) return;
+            if (GameloopExamples.Instance.Paused) return;
             OnHandleInputExample(time.Delta, game.MousePos, gameUi.MousePos, ui.MousePos);
             OnUpdateExample(time, game, gameUi, ui);
         }
@@ -108,7 +108,7 @@ namespace Examples.Scenes
         }
         protected override void OnDrawGameUI(ScreenInfo gameUi)
         {
-            if (GAMELOOP.Paused)
+            if (GameloopExamples.Instance.Paused)
             {
                 // ui.Area.Draw(ColorDark.ChangeAlpha((byte)150));
                 gameUi.Area.Draw(Colors.Dark);
@@ -130,9 +130,9 @@ namespace Examples.Scenes
         protected override void OnDrawUI(ScreenInfo ui)
         {
             // var backRect = ui.Area.ApplyMargins(0.012f, 0.85f, 0.012f, 0.95f);
-            var curInputDevice = ShapeInput.CurrentInputDeviceTypeNoMouse;
+            var curInputDevice = Input.CurrentInputDeviceTypeNoMouse;
 
-            var rectNode = GAMELOOP.UIRects.GetChild("top left");
+            var rectNode = GameloopExamples.Instance.UIRects.GetChild("top left");
             if (rectNode != null)
             {
                 var backLabelRect = rectNode.Rect;
@@ -140,16 +140,16 @@ namespace Examples.Scenes
                 {
                     backLabelRect.DrawLines(2f, Colors.Medium);
                     
-                    var acceptState = GAMELOOP.InputActionUIAccept.Consume(out _);
-                    var acceptMouseState = GAMELOOP.InputActionUIAcceptMouse.Consume(out _);
+                    var acceptState = GameloopExamples.Instance.InputActionUIAccept.Consume(out _);
+                    var acceptMouseState = GameloopExamples.Instance.InputActionUIAcceptMouse.Consume(out _);
                     
                     // if (GAMELOOP.InputActionUIAccept.State.Pressed || GAMELOOP.InputActionUIAcceptMouse.State.Pressed)// ShapeInput.MouseDevice.GetButtonState(ShapeMouseButton.LEFT).Pressed)
                     if (acceptState is {Consumed:false, Pressed:true} || acceptMouseState is {Consumed:false, Pressed:true})// ShapeInput.MouseDevice.GetButtonState(ShapeMouseButton.LEFT).Pressed)
                     {
                         if (IsCancelAllowed())
                         {
-                            if(GAMELOOP.Paused) GAMELOOP.Paused = false;
-                            GAMELOOP.GoToMainScene();
+                            if(GameloopExamples.Instance.Paused) GameloopExamples.Instance.Paused = false;
+                            GameloopExamples.Instance.GoToMainScene();
                         }
                     }
                 }
@@ -157,20 +157,20 @@ namespace Examples.Scenes
                 backLabel.Draw(backLabelRect, new(0f, 0f), curInputDevice);
             }
             
-            if (GAMELOOP.Paused) return;
+            if (GameloopExamples.Instance.Paused) return;
             
             if (drawTitle)
             {
-                var topLine = GAMELOOP.UIRects.GetRect("top").BottomSegment;
+                var topLine = GameloopExamples.Instance.UIRects.GetRect("top").BottomSegment;
                 topLine.Draw(2f, Colors.Light);
 
-                var topCenterRect = GAMELOOP.UIRects.GetRect("top center"); // Get("top").Get("center").GetRect();
+                var topCenterRect = GameloopExamples.Instance.UIRects.GetRect("top center"); // Get("top").Get("center").GetRect();
                 titleFont.LineSpacing = 10f;
                 titleFont.ColorRgba = Colors.Highlight;
                 titleFont.DrawTextWrapNone(Title, topCenterRect, new(0.5f));
             }
 
-            var deviceRect = GAMELOOP.UIRects.GetRect("bottom left"); // GetRect("bottom", "left"); // Get("bottom").Get("left").GetRect();
+            var deviceRect = GameloopExamples.Instance.UIRects.GetRect("bottom left"); // GetRect("bottom", "left"); // Get("bottom").Get("left").GetRect();
             DrawInputDeviceInfo(deviceRect);
             
             OnDrawUIExample(ui);
@@ -191,14 +191,14 @@ namespace Examples.Scenes
             var deviceRect = split[0];
             var gamepadRect = split[1];
 
-            var deviceText = ShapeInput.CurrentInputDeviceType.GetInputDeviceTypeGenericName();
+            var deviceText = Input.CurrentInputDeviceType.GetInputDeviceTypeGenericName();
             titleFont.LineSpacing = 1f;
             titleFont.ColorRgba = Colors.Medium;
             titleFont.DrawTextWrapNone(deviceText, deviceRect, new AnchorPoint(0.01f, 0.5f));
             // titleFont.DrawText(deviceText, deviceRect, 1f, new Vector2(0.01f, 0.5f), ColorHighlight3);
             
             string gamepadText = "No Gamepad Connected";
-            var gamepad = ShapeInput.GamepadManager.LastUsedGamepad;
+            var gamepad = Input.GamepadManager.LastUsedGamepad;
             if (gamepad != null)
             {
                 var gamepadIndex = gamepad.Index;
@@ -213,13 +213,13 @@ namespace Examples.Scenes
 
         protected override void OnActivate(Scene oldScene)
         {
-            GAMELOOP.Camera.Reset();
+            GameloopExamples.Instance.Camera.Reset();
         }
 
         protected override void OnDeactivate()
         {
-            GAMELOOP.Camera.Reset();
-            GAMELOOP.ResetCamera();
+            GameloopExamples.Instance.Camera.Reset();
+            GameloopExamples.Instance.ResetCamera();
         }
 
 

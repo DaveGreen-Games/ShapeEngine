@@ -1,4 +1,5 @@
 using System.Text;
+using ShapeEngine.Core.GameDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Input;
@@ -49,16 +50,16 @@ public sealed class InputTypeMouseAxis : IInputType
     public InputState GetState(GamepadDevice? gamepad = null)
     {
         return modifierKeySet == null ? 
-            ShapeInput.Mouse.CreateInputState(axis, deadzone) : 
-            ShapeInput.Mouse.CreateInputState(axis, deadzone, modifierKeySet);
+            Game.Instance.Input.Mouse.CreateInputState(axis, deadzone) : 
+            Game.Instance.Input.Mouse.CreateInputState(axis, deadzone, modifierKeySet);
     }
 
     /// <inheritdoc/>
     public InputState GetState(InputState prev, GamepadDevice? gamepad = null)
     {
         return modifierKeySet == null ? 
-            ShapeInput.Mouse.CreateInputState(axis, prev, deadzone) : 
-            ShapeInput.Mouse.CreateInputState(axis, prev, deadzone, modifierKeySet);
+            Game.Instance.Input.Mouse.CreateInputState(axis, prev, deadzone) : 
+            Game.Instance.Input.Mouse.CreateInputState(axis, prev, deadzone, modifierKeySet);
     }
 
     /// <inheritdoc/>

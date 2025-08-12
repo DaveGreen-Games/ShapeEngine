@@ -21,15 +21,14 @@ public sealed class KeyboardDevice : InputDevice
     /// <summary>
     /// Gets the usage detection settings for the keyboard input device.
     /// </summary>
-    public InputSettings.KeyboardSettings UsageDetectionSettings { get; private set; } = new();
-    // internal event Action<InputDevice, InputDeviceUsageDetectionSettings>? OnInputDeviceChangeSettingsChanged;
+    public InputSettings.KeyboardSettings Settings { get; private set; }
     
     /// <summary>
     /// <para>
     /// The process priority of this keyboard device instance.
     /// </para>
     /// <para>
-    /// Change this value to change the order in which this device is processed in <see cref="ShapeInput"/>.
+    /// Change this value to change the order in which this device is processed in <see cref="InputSystem"/>.
     /// Lower priorities are processed first.
     /// </para>
     /// </summary>
@@ -88,8 +87,9 @@ public sealed class KeyboardDevice : InputDevice
     /// <summary>
     /// Initializes a new instance of the <see cref="KeyboardDevice"/> class.
     /// </summary>
-    internal KeyboardDevice()
+    internal KeyboardDevice(InputSettings.KeyboardSettings settings)
     {
+        Settings = settings;
         foreach (var button in AllShapeKeyboardButtons)
         {
             buttonStates.Add(button, new());
@@ -134,13 +134,8 @@ public sealed class KeyboardDevice : InputDevice
     /// <inheritdoc cref="InputDevice.ApplyInputDeviceChangeSettings"/>
     internal override void ApplyInputDeviceChangeSettings(InputSettings settings)
     {
-        UsageDetectionSettings = settings.Keyboard;
-        // OnInputDeviceChangeSettingsChanged?.Invoke(this, settings);
+        Settings = settings.Keyboard;
     }
-    // internal void OverrideInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
-    // {
-    //     UsageDetectionSettings = settings.Keyboard;
-    // }
     /// <inheritdoc cref="InputDevice.WasUsed"/>
     public override bool WasUsed() => wasUsed;
     
@@ -289,7 +284,7 @@ public sealed class KeyboardDevice : InputDevice
             return;
         }
         
-        if (!UsageDetectionSettings.Detection) return;
+        if (!Settings.Detection) return;
         
         //if device was selected in the previous update cycle, it will be automatically considered used if at least one button is held down
         if (wasSelected)
@@ -304,13 +299,13 @@ public sealed class KeyboardDevice : InputDevice
             wasSelected = false;
         }
             
-        if (UsageDetectionSettings.SelectionButtons is { Count: > 0 })
+        if (Settings.SelectionButtons is { Count: > 0 })
         {
-            if (UsageDetectionSettings.ExceptionButtons is { Count: > 0 })
+            if (Settings.ExceptionButtons is { Count: > 0 })
             {
-                foreach (var button in UsageDetectionSettings.SelectionButtons)
+                foreach (var button in Settings.SelectionButtons)
                 {
-                    if (UsageDetectionSettings.ExceptionButtons.Contains(button)) continue;
+                    if (Settings.ExceptionButtons.Contains(button)) continue;
                     if (Raylib.IsKeyDown((KeyboardKey)button)) //shortcut -> IsDown would call the same thing
                     {
                         used = true;
@@ -320,7 +315,7 @@ public sealed class KeyboardDevice : InputDevice
             }
             else
             {
-                foreach (var button in UsageDetectionSettings.SelectionButtons)
+                foreach (var button in Settings.SelectionButtons)
                 {
                     if (Raylib.IsKeyDown((KeyboardKey)button)) //shortcut -> IsDown would call the same thing
                     {
@@ -332,15 +327,15 @@ public sealed class KeyboardDevice : InputDevice
         }
         else
         {
-            var pressCountEnabled = UsageDetectionSettings.PressCountEnabled;
-            var usedDurationEnabled = UsageDetectionSettings.UsedDurationEnabled;
+            var pressCountEnabled = Settings.PressCountEnabled;
+            var usedDurationEnabled = Settings.UsedDurationEnabled;
             
             if (pressCountEnabled)
             {
                 pressedCountDurationTimer += dt;
-                if (pressedCountDurationTimer >= UsageDetectionSettings.MinPressInterval)
+                if (pressedCountDurationTimer >= Settings.MinPressInterval)
                 {
-                    pressedCountDurationTimer -= UsageDetectionSettings.MinPressInterval;
+                    pressedCountDurationTimer -= Settings.MinPressInterval;
                     pressedCount = 0;
                 }
             }
@@ -348,13 +343,13 @@ public sealed class KeyboardDevice : InputDevice
             if (usedDurationEnabled)
             {
                 // Checks if any held down button is not in the exception list (or if the exception list is null)
-                if (HeldDownButtons.Any(b => !UsageDetectionSettings.ExceptionButtons.Contains(b)))
+                if (HeldDownButtons.Any(b => !Settings.ExceptionButtons.Contains(b)))
                 {
                     usedDurationTimer += dt;
-                    if (usedDurationTimer > UsageDetectionSettings.MinUsedDuration)
+                    if (usedDurationTimer > Settings.MinUsedDuration)
                     {
                         used = true;
-                        usedDurationTimer -= UsageDetectionSettings.MinUsedDuration;
+                        usedDurationTimer -= Settings.MinUsedDuration;
                         pressedCount = 0;
                         pressedCountDurationTimer = 0f;
                     }
@@ -363,10 +358,10 @@ public sealed class KeyboardDevice : InputDevice
             }
             
             //if used is true, it means that used duration timer has been triggered and pressed count state was reset and it should not be checked this frame again
-            if (!used && pressCountEnabled && PressedButtons.Any(b => !UsageDetectionSettings.ExceptionButtons.Contains(b)))
+            if (!used && pressCountEnabled && PressedButtons.Any(b => !Settings.ExceptionButtons.Contains(b)))
             {
                 pressedCount++;
-                if (pressedCount >= UsageDetectionSettings.MinPressCount)
+                if (pressedCount >= Settings.MinPressCount)
                 {
                     used = true;
                     pressedCountDurationTimer = 0f;

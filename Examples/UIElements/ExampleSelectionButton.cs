@@ -24,7 +24,7 @@ namespace Examples.UIElements
         {
             // Hidden = true;
             // DisabledSelection = true;
-            textFont = new TextFont(GAMELOOP.FontDefault, 5f, Colors.Text);
+            textFont = new TextFont(GameloopExamples.Instance.FontDefault, 5f, Colors.Text);
             MouseFilter = MouseFilter.Stop;
             SelectionFilter = SelectFilter.All;
             InputFilter = InputFilter.All;
@@ -43,7 +43,7 @@ namespace Examples.UIElements
         {
             if (!MouseInside) return false;
             if (Scene == null) return false;
-            var acceptState = GAMELOOP.InputActionUIAcceptMouse.Consume(out _);
+            var acceptState = GameloopExamples.Instance.InputActionUIAcceptMouse.Consume(out _);
             return acceptState is { Consumed: false, Released: true };
         }
 
@@ -51,7 +51,7 @@ namespace Examples.UIElements
         {
             if (!Selected) return false;
             if (Scene == null) return false;
-            var acceptState = GAMELOOP.InputActionUIAccept.Consume(out _);
+            var acceptState = GameloopExamples.Instance.InputActionUIAccept.Consume(out _);
             return acceptState is { Consumed: false, Released: true };
         }
 
@@ -60,8 +60,8 @@ namespace Examples.UIElements
             if (!Selected) return new();
             if (Scene == null) return new();
             
-            var downState = GAMELOOP.InputActionUIDown.Consume(out _);
-            var upState = GAMELOOP.InputActionUIUp.Consume(out _);
+            var downState = GameloopExamples.Instance.InputActionUIDown.Consume(out _);
+            var upState = GameloopExamples.Instance.InputActionUIUp.Consume(out _);
             // var leftState = GAMELOOP.InputActionUILeft.Consume();
             // var rightState = GAMELOOP.InputActionUIRight.Consume();
             // Console.WriteLine($"Button {Scene.Title} - Down: {downState.Consumed}, Up: {upState.Consumed}, Left: {leftState.Consumed}, Right: {rightState.Consumed}");
@@ -110,7 +110,7 @@ namespace Examples.UIElements
                 }
                 else
                 {
-                    GAMELOOP.GoToScene(Scene);
+                    GameloopExamples.Instance.GoToScene(Scene);
                 }
                 
             }
@@ -129,7 +129,7 @@ namespace Examples.UIElements
                 pressDelayTimer -= dt;
                 if (pressDelayTimer <= 0f)
                 {
-                    if (Scene != null) GAMELOOP.GoToScene(Scene);
+                    if (Scene != null) GameloopExamples.Instance.GoToScene(Scene);
                     pressDelayTimer = 0f;
                 }
             }

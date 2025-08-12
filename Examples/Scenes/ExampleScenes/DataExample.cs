@@ -1,12 +1,9 @@
 using System.Numerics;
-using Raylib_cs;
-using ShapeEngine.Color;
 using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.RectDef;
-using ShapeEngine.Input;
 using ShapeEngine.StaticLib;
 using ShapeEngine.Random;
 using ShapeEngine.Screen;
@@ -229,13 +226,13 @@ public class DataExample : ExampleScene
 
     protected override void OnActivate(Scene oldScene)
     {
-        GAMELOOP.Camera = camera;
+        GameloopExamples.Instance.Camera = camera;
         camera.SetZoom(CameraBaseZoom);
     }
 
     protected override void OnDeactivate()
     {
-        GAMELOOP.ResetCamera();
+        GameloopExamples.Instance.ResetCamera();
     }
     public override void Reset()
     {
@@ -284,7 +281,7 @@ public class DataExample : ExampleScene
     }
     protected override void OnDrawUIExample(ScreenInfo ui)
     {
-        var r = GAMELOOP.UIRects.GetRect("bottom center");
+        var r = GameloopExamples.Instance.UIRects.GetRect("bottom center");
         DrawDescription(r);
     }
 

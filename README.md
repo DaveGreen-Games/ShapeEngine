@@ -59,14 +59,22 @@ public static class Program
 {
     public static void Main(string[] args)
     {
-	var game = new MyGameClass(GameSettings.StretchMode, WindowSettings.Default, InputSettings.Default);
-	game.Run();
+	    var game = new MyGameClass(GameSettings.StretchMode, WindowSettings.Default, InputSettings.Default);
+	    game.Run();
     }
 }
 
 public class MyGameClass : Game
 {
-    public MyGameClass(GameSettings gameSettings, WindowSettings windowSettings, InputSettings inputSettings) : base(gameSettings, windowSettings, inputSettings) { }
+    //Gives you static access to the instance of MyGameClass - If you do not need/want this, you can remove it.
+    public new static MyGameClass Instance  => myInstance?? throw new NullReferenceException("Instance is not initialized! You need to create a MyGameClass instance before accessing this property!");
+    private static MyGameClass? myInstance;
+    
+    public MyGameClass(GameSettings gameSettings, WindowSettings windowSettings, InputSettings inputSettings) : base(gameSettings, windowSettings, inputSettings) 
+    {
+        //Game.Instance is already checked to never be instantiated twice, so this is safe
+        myInstance = GetInstanceAs<MyGameClass>();
+    }
     
     protected override void DrawGame(ScreenInfo game)
     {

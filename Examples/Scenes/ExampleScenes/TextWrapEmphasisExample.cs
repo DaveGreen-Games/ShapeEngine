@@ -16,20 +16,20 @@ namespace Examples.Scenes.ExampleScenes
         private class MouseDetection : IMouseDetection
         {
             public Vector2 MousePos = new();
-            private Emphasis mouseEmphasisBleed = new(new ED_Block(), Colors.Special2, new (System.Drawing.Color.Black));
-            private Emphasis mouseEmphasisRupture = new(new ED_Block(), Colors.Special2, new (System.Drawing.Color.Black));
-            private Emphasis mouseEmphasisIncreased = new(new ED_Block(), Colors.Special2, new (System.Drawing.Color.Black));
-            private Emphasis mouseEmphasisAdded = new(new ED_Block(), Colors.Special2, new (System.Drawing.Color.Black));
-            private Emphasis mouseEmphasisTime = new(new ED_Block(), Colors.Highlight, new (System.Drawing.Color.Black));
-            private Emphasis mouseEmphasisCaps = new(new ED_Block(), Colors.Special, new (System.Drawing.Color.Black));
-            private Emphasis mouseEmphasisSpecial = new(new ED_Block(), Colors.Special, new (System.Drawing.Color.Black));
-            private Regex specialRegex = new("[\" _ : ! ?]");
-            private Regex ruptureRegex = new("(rupture)|(Rupture)");
-            private Regex bleedRegex = new("(bleed)|(Bleed)");
-            private Regex increaseRegex = new("(increased)|(Increased)");
-            private Regex addedRegex = new("(added)|(Added)");
-            private Regex timeRegex = new("(\\d)|(sec)|(seconds)");
-            private Regex capsRegex = new("[A-Z]+$");
+            private readonly Emphasis mouseEmphasisBleed = new(new ED_Block(), Colors.Special2, new (System.Drawing.Color.Black));
+            private readonly Emphasis mouseEmphasisRupture = new(new ED_Block(), Colors.Special2, new (System.Drawing.Color.Black));
+            private readonly Emphasis mouseEmphasisIncreased = new(new ED_Block(), Colors.Special2, new (System.Drawing.Color.Black));
+            private readonly Emphasis mouseEmphasisAdded = new(new ED_Block(), Colors.Special2, new (System.Drawing.Color.Black));
+            private readonly Emphasis mouseEmphasisTime = new(new ED_Block(), Colors.Highlight, new (System.Drawing.Color.Black));
+            private readonly Emphasis mouseEmphasisCaps = new(new ED_Block(), Colors.Special, new (System.Drawing.Color.Black));
+            private readonly Emphasis mouseEmphasisSpecial = new(new ED_Block(), Colors.Special, new (System.Drawing.Color.Black));
+            private readonly Regex specialRegex = new("[\" _ : ! ?]");
+            private readonly Regex ruptureRegex = new("(rupture)|(Rupture)");
+            private readonly Regex bleedRegex = new("(bleed)|(Bleed)");
+            private readonly Regex increaseRegex = new("(increased)|(Increased)");
+            private readonly Regex addedRegex = new("(added)|(Added)");
+            private readonly Regex timeRegex = new("(\\d)|(sec)|(seconds)");
+            private readonly Regex capsRegex = new("[A-Z]+$");
             public Vector2 GetMousePosition() => MousePos;
             public Emphasis? OnMouseEntered(string curWord, string completeWord, Rect rect)
             {
@@ -55,32 +55,20 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
 
-        //string text = "Damaging an enemy with Rupture creates a pool that does Bleed damage over 6 seconds. Enemies in the pool take 10% increased Bleed damage.";
-        int lineSpacing = 0;
+        int lineSpacing;
         private const int lineSpacingIncrement = 1;
         private const int maxLineSpacing = 15;
 
         int fontSpacing = 0;
         private const int fontSpacingIncrement = 1;
         private const int maxFontSpacing = 15;
-
-        // private const int fontSizeBase = 30;
-        // private const int fontSizeIncrement = 5;
-        // private const int maxFontSize = 90;
-        // int fontSize = fontSizeBase + ((maxFontSize - fontSizeBase) / 2);
-        
-        
         bool wrapModeChar = true;
-        // bool autoSize = false;
 
         private TextEmphasisBox textEmphasisBox;
         private MouseDetection mouseDetection = new();
         
         private readonly InputAction iaChangeFontSpacing;
         private readonly InputAction iaChangeLineSpacing;
-        // private readonly InputAction iaChangeFontSize;
-        
-        // private readonly InputAction iaToggleAutoSize;
         private readonly InputAction iaToggleWrapMode;
         private readonly TextEmphasis textEmphasis1;
         private readonly TextEmphasis textEmphasis2;
@@ -142,9 +130,7 @@ namespace Examples.Scenes.ExampleScenes
             // TextBlock.FontSizeModifier = 2f;
 
         }
-
         
-
         protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
             mouseDetection.MousePos = ui.MousePos;
@@ -190,67 +176,16 @@ namespace Examples.Scenes.ExampleScenes
         protected override void DrawText(Rect rect)
         {
             var text = TextInputBox.Text;
-            textEmphasisBox.Draw(text, rect, new(0), GAMELOOP.UIScreenInfo.MousePos, wrapModeChar ? TextWrapType.Char : TextWrapType.Word);
-            // if (autoSize)
-            // {
-            //     if (wrapModeChar)
-            //     {
-            //         
-            //         font.DrawTextWrappedChar(text, rect, fontSpacing, baseEmphasis, skill, bleed, numbers);
-            //     }
-            //     else
-            //     {
-            //         font.DrawTextWrappedWord(text, rect, fontSpacing, baseEmphasis, skill, bleed, numbers);
-            //     }
-            // }
-            // else
-            // {
-            //     if (wrapModeChar)
-            //     {
-            //         font.DrawTextWrappedChar(text, rect, fontSize, fontSpacing, lineSpacing, baseEmphasis, skill, bleed, numbers);
-            //     }
-            //     else
-            //     {
-            //         font.DrawTextWrappedWord(text, rect, fontSize, fontSpacing, lineSpacing, baseEmphasis, skill, bleed, numbers);
-            //     }
-            // }
+            textEmphasisBox.Draw(text, rect, new(0), GameloopExamples.Instance.UIScreenInfo.MousePos, wrapModeChar ? TextWrapType.Char : TextWrapType.Word);
         }
-
         protected override void DrawTextEntry(Rect rect)
         {
             var text = TextInputBox.Text;
-            textEmphasisBox.Draw(text, rect, new(0.5f, 0.5f),GAMELOOP.UIScreenInfo.MousePos, wrapModeChar ? TextWrapType.Char : TextWrapType.Word);
-            // if (autoSize)
-            // {
-            //     if (wrapModeChar)
-            //     {
-            //         
-            //         font.DrawTextWrappedChar(text, rect, fontSpacing, baseEmphasis, skill, bleed, numbers);
-            //     }
-            //     else
-            //     {
-            //         font.DrawTextWrappedWord(text, rect, fontSpacing, baseEmphasis, skill, bleed, numbers);
-            //     }
-            // }
-            // else
-            // {
-            //     if (wrapModeChar)
-            //     {
-            //         font.DrawTextWrappedChar(text, rect, fontSize, fontSpacing, lineSpacing, baseEmphasis, skill, bleed, numbers);
-            //     }
-            //     else
-            //     {
-            //         font.DrawTextWrappedWord(text, rect, fontSize, fontSpacing, lineSpacing, baseEmphasis, skill, bleed, numbers);
-            //     }
-            // }
-            
-            // if(textBox.CaretVisible)
-                // font.DrawCaret(textBox.Text, rect, fontSize, fontSpacing, new(), textBox.CaretIndex, 5f, ColorHighlight2);
+            textEmphasisBox.Draw(text, rect, new(0.5f, 0.5f),GameloopExamples.Instance.UIScreenInfo.MousePos, wrapModeChar ? TextWrapType.Char : TextWrapType.Word);
         }
-
         protected override void DrawInputDescriptionBottom(Rect rect)
         {
-            var curInputDeviceNoMouse = ShapeInput.CurrentInputDeviceTypeNoMouse;
+            var curInputDeviceNoMouse = Input.CurrentInputDeviceTypeNoMouse;
             
             string fontSpacingText = iaChangeFontSpacing.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
             string lineSpacingText = iaChangeLineSpacing.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
@@ -264,9 +199,6 @@ namespace Examples.Scenes.ExampleScenes
             textFont.DrawTextWrapNone(text, rect, new(0.5f));
             // font.DrawText(text, rect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
         }
-
-        
-       
         private void ChangeLineSpacing()
         {
             lineSpacing += lineSpacingIncrement;
@@ -281,14 +213,6 @@ namespace Examples.Scenes.ExampleScenes
             else if (fontSpacing > maxFontSpacing) fontSpacing = 0;
             textEmphasisBox.TextFont.FontSpacing = fontSpacing;
         }
-        // private void ChangeFontSize()
-        // {
-        //     fontSize += fontSizeIncrement;
-        //     if (fontSize < fontSizeBase) fontSize = maxFontSize;
-        //     else if (fontSize > maxFontSize) fontSize = fontSizeBase;
-        // }
-
         
     }
-
 }

@@ -12,12 +12,12 @@ public partial class Game
     
     private void StartGameloop()
     {
-        ShapeInput.Keyboard.OnButtonPressed += KeyboardButtonPressed;
-        ShapeInput.Keyboard.OnButtonReleased += KeyboardButtonReleased;
-        ShapeInput.Mouse.OnButtonPressed += MouseButtonPressed;
-        ShapeInput.Mouse.OnButtonReleased += MouseButtonReleased;
-        ShapeInput.GamepadManager.OnGamepadButtonPressed += GamepadButtonPressed;
-        ShapeInput.GamepadManager.OnGamepadButtonReleased += GamepadButtonReleased;
+        Input.Keyboard.OnButtonPressed += KeyboardButtonPressed;
+        Input.Keyboard.OnButtonReleased += KeyboardButtonReleased;
+        Input.Mouse.OnButtonPressed += MouseButtonPressed;
+        Input.Mouse.OnButtonReleased += MouseButtonReleased;
+        Input.GamepadManager.OnGamepadButtonPressed += GamepadButtonPressed;
+        Input.GamepadManager.OnGamepadButtonReleased += GamepadButtonReleased;
 
         LoadContent();
         BeginRun();
@@ -38,11 +38,11 @@ public partial class Game
 
             Window.Update(dt);
             AudioDevice.Update(dt, curCamera);
-            ShapeInput.Update(dt);
+            Input.Update(dt);
 
             if (Window.MouseOnScreen)
             {
-                if (ShapeInput.CurrentInputDeviceType is InputDeviceType.Keyboard or InputDeviceType.Gamepad)
+                if (Input.CurrentInputDeviceType is InputDeviceType.Keyboard or InputDeviceType.Gamepad)
                 {
                     Window.MoveMouse(ChangeMousePos(dt, Window.MousePosition, Window.ScreenArea));
                 }
@@ -81,7 +81,7 @@ public partial class Game
 
             ResolveDeferred();
 
-            ShapeInput.EndFrame();
+            Input.EndFrame();
         }
     }
 
