@@ -2,6 +2,9 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Input;
 
+
+//TODO: Cleanup / remove the hold and multitap state system 
+
 /// <summary>
 /// Represents the state of an input, including button states, axis values, device type, and multi-tap/hold information.
 /// </summary>
@@ -167,7 +170,6 @@ public readonly struct InputState
         Released = state.Released;
         Pressed = state.Pressed;
         
-        
         Gamepad = state.Gamepad;
         AxisRaw = state.AxisRaw;
         Axis = state.Axis;
@@ -176,7 +178,6 @@ public readonly struct InputState
 
         HoldF = holdF;
         HoldState = MultiTapState.None;
-        // HoldFinished = false;
         MultiTapF = multiTapF;
         MultiTapState = MultiTapState.None; 
         

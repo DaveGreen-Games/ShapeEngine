@@ -971,35 +971,27 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
 }
 
 
+
+
+//NOTE: InputAction can have one InputActionActivation
+// if it has one, InputAction will first check and update the internal state, then pass the new input state to the activation update function.
+// the activation update function will return a result that is added to the input state.
+// Therefore an input state with an active activation can either have:
+// - a failed activation -> which should trigger the normal action
+// - a successful activation -> which should trigger the alternative activation based action
+// - a activation in progress -> which should not trigger any action, user should wait for the activation to complete or fail
+// - activation not started/ waiting/ none -> which should do nothing
+// this system is cleaner and easier than the old one but having more than one activation per input type is tricky and not recommended.
+
+//TODO: InputState multitape / hold system can be removed completely
+// InputState just has an InputActionActivation.Result member
+// InputAction has a InputActionActivation? nullable member
+
 public class InputActionActivation
 {
-    //Q: Use TargetType and CurType instead of state?
-    // CurType would tell the user the current type of activation it is in, for instance:
-    // TargetType: LongPress
-    // CurType:
-    // -> None (until button pressed)
-    // -> Press (first frame)
-    // -> Hold (next frames until long press duration)
-    // -> Long Press(until released) Would trigger because CurType == TargetType
-    // -> Long Release(One frame)
-    // -> None (until button pressed again)
-    // TargetType would tell when it triggers basically...
-    // CurType None is the same as State.None
-    // CurType != None is the same as State.InProgress
-    // Trigger = true is the same as State.Completed
-    // Failed would not exist?
-    // The good thing about this system is that it goes through all activation states
-    // If TargetType is a list instead, multiple activations can be set up for the same input?
-    //Note: How would tap wait for a long press to finish?
-    //Note: How would tap trigger when long press fails?
-    
-    //Note: The other way would be to have list of InputActionActivation, which would also allow multiple activations per input.
-    //Note: How would tap wait for a long press to finish?
-    //Note: How would tap trigger when long press fails?
- 
     public enum State
     {
-        None = 0,
+        None = 0,//Q: rename to Idle or Waiting
         InProgress = 1,
         Completed = 2,
         Failed = 3
@@ -1010,36 +1002,58 @@ public class InputActionActivation
         Press = 1,
         Hold = 2,
         Release = 3,
-        LongPress = 4,
-        LongRelease = 5,
-        Tap = 6,
-        MultiTap = 7
+        Tap = 4,
+        MultiTap = 5,
+        LongPress = 6,
+        LongRelease = 7
+    }
+    public readonly struct Result
+    {
+        public readonly Type ActivationType;
+        public readonly State CurState;
+        public readonly float NormalizedProgress;
+
+        public Result()
+        {
+            ActivationType = Type.None;
+            CurState = State.None;
+            NormalizedProgress = 0f;
+        }
+        public Result(Type activationType, State curState, float normalizedProgress)
+        {
+            ActivationType = activationType;
+            CurState = curState;
+            NormalizedProgress = ShapeMath.Clamp(normalizedProgress, 0f, 1f);
+        }
     }
     
+    
+    // public readonly Type CurActivationType;
     public readonly Type ActivationType;
     public readonly float Duration;
     public readonly int TargetCount;
     public State CurState { get; private set; }
-    public float DurationF { get; private set; }
-    public int TargetCountF { get; private set; }
+    public float NormalizedProgress { get; private set; }
 
     private int count;
     private float timer;
     
     public InputActionActivation()
     {
+        // CurActivationType = Type.None;
         ActivationType = Type.None;
         CurState = State.None;
         Duration = -1f;
         TargetCount = -1;
-        DurationF = 0f;
-        TargetCountF = 0;
+        NormalizedProgress = 0f;
         timer = 0f;
         count = 0;
     }
 
     private InputActionActivation(Type type, float duration, int targetCount)
     {
+        
+        // CurActivationType = Type.None;
         ActivationType = type;
         
         Duration = duration;
@@ -1049,16 +1063,17 @@ public class InputActionActivation
         count = 0;
         timer = 0f;
 
-        DurationF = 0f;
-        TargetCountF = 0;
+        NormalizedProgress = 0f;
     }
 
-    internal void Update(float dt, InputState prev, InputState cur)
+    internal Result Update(float dt, InputState cur)
     {
-        if (ActivationType == Type.None) return;
+        if (ActivationType == Type.None) return new();
         
         if(CurState is State.Failed or State.Completed) ResetState();
 
+        //TODO: Implement
+        
         if (CurState is State.InProgress)
         {
             
@@ -1070,16 +1085,16 @@ public class InputActionActivation
                 timer += dt;
             }
         }
-        
+
+        return new();
     }
 
     private void ResetState()
     {
-        CurState = State.InProgress;
+        CurState = State.None;
         timer = 0f;
         count = 0;
-        DurationF = 0f;
-        TargetCountF = 0;
+        NormalizedProgress = 0f;
     }
     
     //None -> no activation, used for actions that do not require any special activation.
