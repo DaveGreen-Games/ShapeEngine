@@ -971,25 +971,32 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
 }
 
 
-//Idea for later
-//Press -> triggered on the first frame the input is pressed down.
-//Hold -> triggered every frame the input is held down, until released.
-//Release -> triggered on the first frame the input is released.
-//Long Press -> triggered when the input is held down (pressed) for longer than the long press duration. (current hold implementation)
-//Long Release -> triggered when the input is released after the long release duration.
-//Tap -> triggered when the input is pressed and released within tap duration
-//Double Tap -> triggered when the input is pressed and released twice within the double tap duration.
-//Multi Tap -> triggered when the input is pressed and released multi tap count times within the multi tap duration.
-
-//This system could potentionally replace current system -> new implementation would have to be simpler and less complex than the current one.
-//TODO: could handle everyting, and it is just updated in input action and passed to InputState?
-//Update(), TypeState CurrentState, Reset();  if failed or completed it will be reset next frame?
-
-
-
-
 public class InputActionActivation
 {
+    //Q: Use TargetType and CurType instead of state?
+    // CurType would tell the user the current type of activation it is in, for instance:
+    // TargetType: LongPress
+    // CurType:
+    // -> None (until button pressed)
+    // -> Press (first frame)
+    // -> Hold (next frames until long press duration)
+    // -> Long Press(until released) Would trigger because CurType == TargetType
+    // -> Long Release(One frame)
+    // -> None (until button pressed again)
+    // TargetType would tell when it triggers basically...
+    // CurType None is the same as State.None
+    // CurType != None is the same as State.InProgress
+    // Trigger = true is the same as State.Completed
+    // Failed would not exist?
+    // The good thing about this system is that it goes through all activation states
+    // If TargetType is a list instead, multiple activations can be set up for the same input?
+    //Note: How would tap wait for a long press to finish?
+    //Note: How would tap trigger when long press fails?
+    
+    //Note: The other way would be to have list of InputActionActivation, which would also allow multiple activations per input.
+    //Note: How would tap wait for a long press to finish?
+    //Note: How would tap trigger when long press fails?
+ 
     public enum State
     {
         None = 0,
@@ -1000,44 +1007,106 @@ public class InputActionActivation
     public enum Type
     { 
         None = 0,
-        LongPress = 1,
-        LongRelease = 2,
-        Tap = 3,
-        MultiTap = 4
+        Press = 1,
+        Hold = 2,
+        Release = 3,
+        LongPress = 4,
+        LongRelease = 5,
+        Tap = 6,
+        MultiTap = 7
     }
     
     public readonly Type ActivationType;
     public readonly float Duration;
     public readonly int TargetCount;
-    public State CurState { get; private set; } = State.None;
+    public State CurState { get; private set; }
+    public float DurationF { get; private set; }
+    public int TargetCountF { get; private set; }
+
+    private int count;
+    private float timer;
     
     public InputActionActivation()
     {
         ActivationType = Type.None;
+        CurState = State.None;
         Duration = -1f;
         TargetCount = -1;
+        DurationF = 0f;
+        TargetCountF = 0;
+        timer = 0f;
+        count = 0;
     }
 
     private InputActionActivation(Type type, float duration, int targetCount)
     {
         ActivationType = type;
+        
         Duration = duration;
+        
         TargetCount = targetCount;
+        
+        count = 0;
+        timer = 0f;
+
+        DurationF = 0f;
+        TargetCountF = 0;
     }
 
     internal void Update(float dt, InputState prev, InputState cur)
     {
+        if (ActivationType == Type.None) return;
+        
+        if(CurState is State.Failed or State.Completed) ResetState();
+
+        if (CurState is State.InProgress)
+        {
+            
+            
+            
+            
+            if (Duration > 0f)
+            {
+                timer += dt;
+            }
+        }
         
     }
+
+    private void ResetState()
+    {
+        CurState = State.InProgress;
+        timer = 0f;
+        count = 0;
+        DurationF = 0f;
+        TargetCountF = 0;
+    }
     
-    public static InputActionActivation LongPress(float duration) => new(Type.LongPress, duration, -1);
-
-    public static InputActionActivation LongRelease(float duration) => new(Type.LongRelease, duration, -1);
-
-    public static InputActionActivation Tap(float duration) => new(Type.Tap, duration, -1);
-
+    //None -> no activation, used for actions that do not require any special activation.
+    public static InputActionActivation None() => new();
+    
+    //Press -> triggered on the first frame the input is pressed down.
+    public static InputActionActivation Press() => new(Type.Press, 0f, 0);
+    
+    //Hold -> triggered every frame the input is held down, until released.
+    public static InputActionActivation Hold() => new(Type.Hold, 0f, 0);
+    
+    //Release -> triggered on the first frame the input is released.
+    public static InputActionActivation Release() => new(Type.Release, 0f, 0);
+    
+    //Long Press -> triggered when the input is held down (pressed) for longer than the long press duration. (current hold implementation)
+    public static InputActionActivation LongPress(float duration) => new(Type.LongPress, duration, 0);
+    
+    //Long Release -> triggered when the input is released after the long release duration.
+    public static InputActionActivation LongRelease(float duration) => new(Type.LongRelease, duration, 0);
+    
+    //Tap -> triggered when the input is pressed and released within tap duration
+    public static InputActionActivation Tap(float duration) => new(Type.Tap, duration, 0);
+    
+    //Double Tap -> triggered when the input is pressed and released twice within the double tap duration.
     public static InputActionActivation DoubleTap(float duration) => new(Type.MultiTap, duration, 2);
-
+    
+    //Multi Tap -> triggered when the input is pressed and released multi tap count times within the multi tap duration.
     public static InputActionActivation MultiTap(float duration, int targetCount) => new(Type.MultiTap, duration, targetCount);
 }
 
