@@ -291,7 +291,6 @@ public sealed class MouseDevice : InputDevice
         
         wasUsed = false;
         wasUsedRaw = false;
-        wasUsedRaw = false;
         
         PressedButtons.Clear();
         HeldDownButtons.Clear();
