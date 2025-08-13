@@ -1,3 +1,5 @@
+using ShapeEngine.Core.GameDef;
+
 namespace ShapeEngine.Input;
 
 /// <summary>
@@ -35,7 +37,7 @@ public class ModifierKeyKeyboardButton : IModifierKey
     /// <param name="gamepad">Unused. Present for interface compatibility.</param>
     /// <returns><c>true</c> if the modifier is active; otherwise, <c>false</c>.</returns>
     public bool IsActive(GamepadDevice? gamepad = null) =>
-        reverseModifier ? !ShapeInput.ActiveKeyboardDevice.IsDown(modifier) : ShapeInput.ActiveKeyboardDevice.IsDown(modifier);
+        reverseModifier ? !Game.Instance.Input.Keyboard.IsDown(modifier) : Game.Instance.Input.Keyboard.IsDown(modifier);
 
     /// <summary>
     /// Gets the display name of the modifier key.

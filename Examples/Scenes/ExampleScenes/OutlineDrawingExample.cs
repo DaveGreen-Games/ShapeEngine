@@ -29,7 +29,7 @@ public class OutlineDrawingExample : ExampleScene
         public ValueSlider(string title, float startValue, float minValue, float maxValue, bool horizontal = true) :
             base(startValue, minValue, maxValue, horizontal)
         {
-            this.font = new(GAMELOOP.GetFont(FontIDs.JetBrains), 1f, ColorRgba.White);
+            this.font = new(GameloopExamples.Instance.GetFont(FontIDs.JetBrains), 1f, ColorRgba.White);
             this.title = title;
         }
 
@@ -167,15 +167,18 @@ public class OutlineDrawingExample : ExampleScene
         poly = generatedPolygon ?? []; 
         polyline = generatedPolyline ?? [];
 
-        var font = GAMELOOP.GetFont(FontIDs.JetBrains);
         sideScalingFactorSlider = new("Scaling", 0.5f, 0f, 1f, true); // new(0.5f, "Scaling", font);
         sideScalingOriginFactorSlider = new("Origin", 0.5f, 0f, 1f, true);
         
         startOffsetSlider = new("Offset", 0f, 0f, 1f, true);
-        gapsSlider = new( "Gaps", 4, 1, MaxGaps, true);
-        gapsSlider.Percentage = false;
-        circleSideSlider = new( "Sides", 18, 3, 120, true);
-        circleSideSlider.Percentage = false;
+        gapsSlider = new( "Gaps", 4, 1, MaxGaps, true)
+        {
+            Percentage = false
+        };
+        circleSideSlider = new( "Sides", 18, 3, 120, true)
+        {
+            Percentage = false
+        };
         gapPerimeterPercentageSlider = new("Perimeter", 0.5f, 0f, 1f, true);
 
     }
@@ -268,7 +271,7 @@ public class OutlineDrawingExample : ExampleScene
     protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
     {
         base.HandleInput(dt, mousePosGame, mousePosGameUi, mousePosUI);
-        var gamepad = GAMELOOP.CurGamepad;
+        var gamepad = Input.GamepadManager.LastUsedGamepad;
         
         inputActionTree.CurrentGamepad = gamepad;
         inputActionTree.Update(dt);
@@ -401,17 +404,17 @@ public class OutlineDrawingExample : ExampleScene
             gapsSlider.Draw();
             gapPerimeterPercentageSlider.Draw();
         }
-        var curDevice = ShapeInput.CurrentInputDeviceType;
+        var curDevice = Input.CurrentInputDeviceType;
         var nextShapeText = nextShape. GetInputTypeDescription( curDevice, true, 1, false); 
         var changeDrawingModeText = changeDrawingMode. GetInputTypeDescription( curDevice, true, 1, false); 
 
-        var topCenter = GAMELOOP.UIRects.GetRect("center").ApplyMargins(0,0,0.05f,0.9f);
+        var topCenter = GameloopExamples.Instance.UIRects.GetRect("center").ApplyMargins(0,0,0.05f,0.9f);
         textFont.ColorRgba = Colors.Light;
         var mode = gappedMode ? "Gapped Outline" : "Scaled Lines";
         
         textFont.DrawTextWrapNone($"{changeDrawingModeText} Mode: {mode}", topCenter, new(0.5f, 0.5f));
         
-        var bottomCenter = GAMELOOP.UIRects.GetRect("bottom center").ApplyMargins(0.1f, 0.1f, 0.15f, 0.15f);
+        var bottomCenter = GameloopExamples.Instance.UIRects.GetRect("bottom center").ApplyMargins(0.1f, 0.1f, 0.15f, 0.15f);
         var margin = bottomCenter.Height * 0.05f;
         bottomCenter.DrawLines(2f, Colors.Highlight);
         var textStatic = $"{nextShapeText} {GetCurShapeName()}";

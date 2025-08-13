@@ -33,7 +33,7 @@ namespace Examples.Scenes.ExampleScenes
         public PolylineInflationExample()
         {
             Title = "Polyline Inflation Example";
-            font = GAMELOOP.GetFont(FontIDs.JetBrains);
+            font = GameloopExamples.Instance.GetFont(FontIDs.JetBrains);
 
             InputActionSettings defaultSettings = new();
 
@@ -67,12 +67,12 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnActivate(Scene oldScene)
         {
-            GAMELOOP.InputActionZoom.Active = false;
+            GameloopExamples.Instance.InputActionZoom.Active = false;
         }
 
         protected override void OnDeactivate()
         {
-            GAMELOOP.InputActionZoom.Active = true;
+            GameloopExamples.Instance.InputActionZoom.Active = true;
         }
 
         public override void Reset()
@@ -87,8 +87,7 @@ namespace Examples.Scenes.ExampleScenes
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame,Vector2 mousePosGameUi,  Vector2 mousePosUI)
         {
             base.HandleInput(dt, mousePosGame, mousePosGameUi, mousePosUI);
-            // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
-            var gamepad = GAMELOOP.CurGamepad;
+            var gamepad = Input.GamepadManager.LastUsedGamepad;
             
             inputActionTree.CurrentGamepad = gamepad;
             inputActionTree.Update(dt);
@@ -101,13 +100,13 @@ namespace Examples.Scenes.ExampleScenes
             offsetDelta = ShapeMath.Clamp(offsetDelta, 0f, MaxOffset);
 
 
-            if (ShapeInput.ActiveKeyboardDevice.IsDown(ShapeKeyboardButton.H))
+            if (Input.Keyboard.IsDown(ShapeKeyboardButton.H))
             {
                 collisionSegmentValid = true;
                 collisionSegment = collisionSegment.SetStart(mousePosGame);
             }
 
-            if (ShapeInput.ActiveKeyboardDevice.IsDown(ShapeKeyboardButton.G))
+            if (Input.Keyboard.IsDown(ShapeKeyboardButton.G))
             {
                 collisionSegmentValid = true;
                 collisionSegment = collisionSegment.SetEnd(mousePosGame);
@@ -283,25 +282,17 @@ namespace Examples.Scenes.ExampleScenes
         }
         protected override void OnDrawUIExample(ScreenInfo ui)
         {
-            // Vector2 uiSize = ui.Area.Size;
-
-            // var device = input.CurrentInputDevice == InputDevice.Keyboard
-                // ? InputDevice.Mouse
-                // : input.CurrentInputDevice;
-            var curDevice = ShapeInput.CurrentInputDeviceType;
+            var curDevice = Input.CurrentInputDeviceType;
             var create = createPoint. GetInputTypeDescription( curDevice, true, 1, false); 
             var delete = deletePoint. GetInputTypeDescription( curDevice, true, 1, false); 
             var offset = changeOffset.GetInputTypeDescription( curDevice , true, 1, false);
-            
-            //Rect infoRect = ui.Area.ApplyMargins(0.05f, 0.05f, 0.9f, 0.05f);
-            // var bottomCenter = GAMELOOP.UIZones.BottomCenter;
-            Rect bottomCenter = GAMELOOP.UIRects.GetRect("bottom center"); // Get("bottom").Get("center").GetRect(); // GAMELOOP.UIRects.GetChild("bottom").GetChild("center").Rect;
+           
+            Rect bottomCenter = GameloopExamples.Instance.UIRects.GetRect("bottom center");
             string infoText =
                 $"Add Point {create} | Remove Point {delete} | Inflate {offset} {MathF.Round(offsetDelta * 100) / 100}";
 
             textFont.ColorRgba = Colors.Light;
             textFont.DrawTextWrapNone(infoText, bottomCenter, new(0.5f));
-            // font.DrawText(infoText, bottomCenter, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
     }
 

@@ -3,6 +3,7 @@ using ShapeEngine.StaticLib;
 using System.Numerics;
 using System.Text;
 using ShapeEngine.Color;
+using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.CircleDef;
@@ -557,7 +558,7 @@ namespace Examples.Scenes.ExampleScenes
         public AsteroidMiningExample()
         {
             Title = "Asteroid Mining Example";
-            UpdateBoundaryRect(GAMELOOP.GameScreenInfo.Area);
+            UpdateBoundaryRect(Game.Instance.GameScreenInfo.Area);
             InitSpawnArea(boundaryRect);
             InitCollisionHandler(boundaryRect, 4, 4);
             
@@ -799,7 +800,7 @@ namespace Examples.Scenes.ExampleScenes
 
             if (CollisionHandler == null) return;
 
-            var gamepad = GAMELOOP.CurGamepad;
+            var gamepad = Input.GamepadManager.LastUsedGamepad;
             inputActionTree.CurrentGamepad = gamepad;
             inputActionTree.Update(dt);
             
@@ -983,7 +984,7 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnDrawUIExample(ScreenInfo ui)
         {
-            var infoRect = GAMELOOP.UIRects.GetRect("bottom center");
+            var infoRect = GameloopExamples.Instance.UIRects.GetRect("bottom center");
             DrawInputText(infoRect);
             
             // var polymodeText = "[Tab] Polymode | [LMB] Place/Merge | [RMB] Cut | [1] Triangle | [2] Rect | [3] Poly | [Q] Regenerate | [X] Rotate | [C] Scale";
@@ -999,10 +1000,10 @@ namespace Examples.Scenes.ExampleScenes
             var sbBottom = new StringBuilder();
             var sbTop = new StringBuilder();
             
-            var curInputDeviceAll = ShapeInput.CurrentInputDeviceType;
-            var curInputDeviceNoMouse = ShapeInput.CurrentInputDeviceTypeNoMouse;
+            var curInputDeviceAll = Input.CurrentInputDeviceType;
+            var curInputDeviceNoMouse = Input.CurrentInputDeviceTypeNoMouse;
             string changeModeText = iaModeChange.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
-            string zoomCamera = GAMELOOP.InputActionZoom.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
+            string zoomCamera = GameloopExamples.Instance.InputActionZoom.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
             sbTop.Append($"Mode {changeModeText} | ");
             
             if (polyModeActive)

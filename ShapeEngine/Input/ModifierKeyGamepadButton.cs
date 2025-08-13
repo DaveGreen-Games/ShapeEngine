@@ -24,8 +24,8 @@ public class ModifierKeyGamepadButton : IModifierKey
     /// For example, if you have two inputs: RB + A and A, configuring input A with RB as a reverse modifier ensures that pressing RB + A will not also trigger A.
     /// </remarks>
     public ModifierKeyGamepadButton(ShapeGamepadButton modifierKey, 
-        float joyAxisDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold,
-        float triggerAxisDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold,
+        float joyAxisDeadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold,
+        float triggerAxisDeadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold,
         bool reverseModifier = false)
     {
         this.modifier = modifierKey;

@@ -1,6 +1,6 @@
 namespace ShapeEngine.Input;
 
-public partial class InputDeviceUsageDetectionSettings
+public partial class InputSettings
 {
     /// <summary>
     /// Represents the settings used for detecting mouse input device usage,
@@ -25,7 +25,7 @@ public partial class InputDeviceUsageDetectionSettings
         public const float DefaultMouseThreshold = 0.15f;
         
         /// <summary>
-        /// Gets the default <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.MouseSettings"/> instance with preset values.
+        /// Gets the default <see cref="InputSettings.MouseSettings"/> instance with preset values.
         /// </summary>
         /// <code>
         /// Detection = true;
@@ -41,7 +41,7 @@ public partial class InputDeviceUsageDetectionSettings
         public static readonly MouseSettings Default = new();
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.MouseSettings"/> struct with default values.
+        /// Initializes a new instance of the <see cref="InputSettings.MouseSettings"/> struct with default values.
         /// </summary>
         /// <code>
         /// Detection = true;
@@ -68,7 +68,7 @@ public partial class InputDeviceUsageDetectionSettings
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.MouseSettings"/> struct with custom detection, move threshold, and wheel threshold values.
+        /// Initializes a new instance of the <see cref="InputSettings.MouseSettings"/> struct with custom detection, move threshold, and wheel threshold values.
         /// Other values are set to their defaults: MinPressCount = 2, MinPressInterval = 1f, MinUsedDuration = 0.5f.
         /// </summary>
         /// <param name="detection">Indicates whether mouse detection is enabled.</param>
@@ -96,7 +96,7 @@ public partial class InputDeviceUsageDetectionSettings
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.MouseSettings"/> struct with custom values.
+        /// Initializes a new instance of the <see cref="InputSettings.MouseSettings"/> struct with custom values.
         /// <see cref="Detection"/> is set to <c>true</c>.
         /// </summary>
         /// <param name="moveThreshold">The minimum movement threshold to consider the mouse as "used".</param>
@@ -127,7 +127,7 @@ public partial class InputDeviceUsageDetectionSettings
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.MouseSettings"/> class
+        /// Initializes a new instance of the <see cref="InputSettings.MouseSettings"/> class
         /// with custom move and wheel thresholds, press count, and press interval.
         /// <see cref="Detection"/> is set to <c>true</c>.
         /// <see cref="MinUsedDuration"/> is disabled (set to -1).
@@ -157,7 +157,7 @@ public partial class InputDeviceUsageDetectionSettings
         }
         
         /// <summary>
-        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.MouseSettings"/> class
+        /// Initializes a new instance of the <see cref="InputSettings.MouseSettings"/> class
         /// with custom move and wheel thresholds and used duration.
         /// <see cref="Detection"/> is set to <c>true</c>.
         /// <see cref="MinPressCount"/> and <see cref="MinPressInterval"/> are disabled (set to -1).
@@ -186,7 +186,7 @@ public partial class InputDeviceUsageDetectionSettings
         }
         
         /// <summary>
-        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.MouseSettings"/> class
+        /// Initializes a new instance of the <see cref="InputSettings.MouseSettings"/> class
         /// with custom used duration. Move and wheel thresholds are set to defaults (25f, 3f).
         /// <see cref="Detection"/> is set to <c>true</c>.
         /// <see cref="MinPressCount"/> and <see cref="MinPressInterval"/> are disabled (set to -1).
@@ -213,7 +213,7 @@ public partial class InputDeviceUsageDetectionSettings
         }
         
         /// <summary>
-        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.MouseSettings"/> class
+        /// Initializes a new instance of the <see cref="InputSettings.MouseSettings"/> class
         /// with custom press count and interval. Move and wheel thresholds are set to defaults (25f, 3f).
         /// <see cref="Detection"/> is set to <c>true</c>.
         /// <see cref="MinUsedDuration"/> is disabled (set to -1).
@@ -241,7 +241,7 @@ public partial class InputDeviceUsageDetectionSettings
         }
         
         /// <summary>
-        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.MouseSettings"/> class
+        /// Initializes a new instance of the <see cref="InputSettings.MouseSettings"/> class
         /// with a set of selection buttons. Move and wheel thresholds are set to 0.5f and 0.25f.
         /// All other detection options are disabled.
         /// <see cref="Detection"/> is set to <c>true</c>.
@@ -297,7 +297,7 @@ public partial class InputDeviceUsageDetectionSettings
         /// </summary>
         /// <remarks>
         /// <c>Default is true</c>
-        /// Does not affect <see cref="MouseDevice.WasUsedRaw"/> values. It does affect the automatic system in <see cref="ShapeInput"/> to switch between devices.
+        /// Does not affect <see cref="MouseDevice.WasUsedRaw"/> values. It does affect the automatic system in <see cref="InputSystem"/> to switch between devices.
         /// </remarks>
         public bool Detection;
 

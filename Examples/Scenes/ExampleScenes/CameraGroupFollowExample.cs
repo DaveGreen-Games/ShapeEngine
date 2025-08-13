@@ -5,6 +5,7 @@ using ShapeEngine.Random;
 using ShapeEngine.Screen;
 using System.Numerics;
 using ShapeEngine.Color;
+using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.RectDef;
@@ -120,12 +121,12 @@ namespace Examples.Scenes.ExampleScenes
                 float radius = Size * (Selected ? 1f : 0.75f);
                 if (Selected)
                 {
-                    inputActionTree.CurrentGamepad = GAMELOOP.CurGamepad;
+                    inputActionTree.CurrentGamepad = Game.Instance.Input.GamepadManager.LastUsedGamepad;
                     inputActionTree.Update(dt);
                     
-                    if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Mouse)
+                    if (Game.Instance.Input.CurrentInputDeviceType == InputDeviceType.Mouse)
                     {
-                        var dir = ExampleScene.CalculateMouseMovementDirection(GAMELOOP.GameScreenInfo.MousePos, GAMELOOP.Camera);
+                        var dir = ExampleScene.CalculateMouseMovementDirection(GameloopExamples.Instance.GameScreenInfo.MousePos, GameloopExamples.Instance.Camera);
                         float lsq = dir.LengthSquared();
                         if (lsq > 0f)
                         {
@@ -267,7 +268,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             Title = "Camera Group Follow Example";
 
-            font = GAMELOOP.GetFont(FontIDs.JetBrains);
+            font = GameloopExamples.Instance.GetFont(FontIDs.JetBrains);
                 
             GenerateStars(2500);
             camera.Follower = cameraFollower;
@@ -358,18 +359,18 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnActivate(Scene oldScene)
         {
-            GAMELOOP.Camera = camera;
+            GameloopExamples.Instance.Camera = camera;
             
         }
 
         protected override void OnDeactivate()
         {
-            GAMELOOP.ResetCamera();
+            GameloopExamples.Instance.ResetCamera();
         }
         
         public override void Reset()
         {
-            GAMELOOP.ScreenEffectIntensity = 1f;
+            GameloopExamples.Instance.ScreenEffectIntensity = 1f;
             DestroyShips();
             stars.Clear();
             GenerateStars(2500);
@@ -418,10 +419,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
         {
-            // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
-            var gamepad = GAMELOOP.CurGamepad;
-            
-            // GAMELOOP.MouseControlEnabled = gamepad?.IsDown(ShapeGamepadTriggerAxis.RIGHT, 0.1f) ?? true;
+            var gamepad = Input.GamepadManager.LastUsedGamepad;
             
             inputActionTree.CurrentGamepad = gamepad;
             inputActionTree.Update(dt);
@@ -494,7 +492,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         protected override void OnDrawUIExample(ScreenInfo ui)
         {
-            var rects = GAMELOOP.UIRects.GetRect("bottom center").SplitV(0.35f);
+            var rects = GameloopExamples.Instance.UIRects.GetRect("bottom center").SplitV(0.35f);
             DrawDescription(rects.top);
             DrawInputDescription(rects.bottom);
            
@@ -509,8 +507,8 @@ namespace Examples.Scenes.ExampleScenes
         }
         private void DrawInputDescription(Rect rect)
         {
-            var curDevice = ShapeInput.CurrentInputDeviceType;
-            var curDeviceNoMouse = ShapeInput.CurrentInputDeviceTypeNoMouse;
+            var curDevice = Input.CurrentInputDeviceType;
+            var curDeviceNoMouse = Input.CurrentInputDeviceTypeNoMouse;
             string addShipText = iaAddShip.GetInputTypeDescription(curDevice, true, 1, false);
             string nextShipText = iaNextShip.GetInputTypeDescription(curDevice, true, 1, false);
             string centerTargetText = iaCenterTarget.GetInputTypeDescription(curDeviceNoMouse, true, 1, false);

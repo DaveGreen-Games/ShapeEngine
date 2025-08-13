@@ -212,7 +212,7 @@ public class EndlessSpaceCollision : ExampleScene
             var texture = new ScreenTexture(new Dimensions(2000, 2000), textureHandler, ShaderSupportType.None, TextureFilter.Point);
             texture.DrawToScreenOrder = -100 + i;
             texture.OnDrawGame += OnDrawStarTexture;
-            texture.Initialize(GAMELOOP.Window.CurScreenSize, GAMELOOP.Window.MousePosition, null);
+            texture.Initialize(GameloopExamples.Instance.Window.CurScreenSize, GameloopExamples.Instance.Window.MousePosition, null);
             starTextures.Add(texture);
             starTextureHandlers.Add(textureHandler);
             
@@ -265,11 +265,11 @@ public class EndlessSpaceCollision : ExampleScene
         foreach (var t in starTextures)
         {
             t.DrawToTextureEnabled = true; // in case color palette has changed
-            GAMELOOP.AddScreenTexture(t);
+            GameloopExamples.Instance.AddScreenTexture(t);
         }
         
         
-        GAMELOOP.Camera = camera;
+        GameloopExamples.Instance.Camera = camera;
         UpdateFollower(camera.BaseSize.Min());
         camera.SetZoom(0.35f);
         follower.SetTarget(ship);
@@ -279,9 +279,9 @@ public class EndlessSpaceCollision : ExampleScene
         Colors.OnColorPaletteChanged -= OnColorPaletteChanged;
         foreach (var t in starTextures)
         {
-            GAMELOOP.RemoveScreenTexture(t);
+            GameloopExamples.Instance.RemoveScreenTexture(t);
         }
-        GAMELOOP.ResetCamera();
+        GameloopExamples.Instance.ResetCamera();
     }
     private void OnColorPaletteChanged()
     {
@@ -404,7 +404,7 @@ public class EndlessSpaceCollision : ExampleScene
             return;
         }
         
-        var gamepad = GAMELOOP.CurGamepad;
+        var gamepad = Input.GamepadManager.LastUsedGamepad;
         inputActionTree.CurrentGamepad = gamepad;
         inputActionTree.Update(dt);
         
@@ -930,14 +930,11 @@ public class EndlessSpaceCollision : ExampleScene
             return;
         }
         
-        // DrawInputDescription(GAMELOOP.UIRects.GetRect("bottom center"));
-        // DrawCameraInfo(GAMELOOP.UIRects.GetRect("bottom right"));
-        
-        if(drawTitle) DrawGameInfo(GAMELOOP.UIRects.GetRect("center"));
-        else DrawGameInfoNoTitle(GAMELOOP.UIRects.GetRect("top center"));
+        if(drawTitle) DrawGameInfo(GameloopExamples.Instance.UIRects.GetRect("center"));
+        else DrawGameInfoNoTitle(GameloopExamples.Instance.UIRects.GetRect("top center"));
 
 
-        var bottomUiZone = GAMELOOP.UIRects.GetRect("bottom");
+        var bottomUiZone = GameloopExamples.Instance.UIRects.GetRect("bottom");
         var bottomUiSplit = bottomUiZone.SplitV(0.3f);
         var destructorZone = bottomUiSplit.top.ApplyMargins(0.25f, 0.25f, 0f, 0f);
         var destructorZoneSplit = destructorZone.SplitH(0.4f, 0.2f);
@@ -959,15 +956,12 @@ public class EndlessSpaceCollision : ExampleScene
         singleDestructorStripedBarRect.DrawStriped(singleDestructorRectBar.Width * 0.015f, -15, stripedBarInfo);
 
         
-        // singleDestructorRectBar.DrawBar(singleDestructorF, Colors.Warm, Colors.Medium, 0.5f, 0.5f, 0f, 0f);
-        
         multiDestructorRect.DrawCorners(new LineDrawingInfo(thickness, Colors.Warm, LineCapType.Capped, 4), cornerLength);
         multiDestructorRectBar.Draw(Colors.Medium);
         multiDestructorStripedBarRect.DrawStriped(multiDestructorRectBar.Width * 0.015f, 15, stripedBarInfo);
-        // multiDestructorRectBar.DrawBar(multiDestructorF, Colors.Warm, Colors.Medium, 0.5f, 0.5f, 0f, 0f);
 
-        var strategemZone = bottomUiSplit.bottom.ApplyMargins(0f, 0f, 0.1f, 0f);//  GAMELOOP.UIRects.GetRect("bottom").ApplyMargins(0f, 0f, 0.25f, 0f); // topBottomRect.top.ApplyMargins(0f, 0f, 0f, 0.25f); // ui.Area.ApplyMargins(0.2f, 0.2f, 0.91f, 0.06f);
-        var splitStrategem = strategemZone.SplitH(pdsList.Count);// strategemZone.SplitH(0.225f,0.033f,0.225f,0.033f,0.225f,0.033f);
+        var strategemZone = bottomUiSplit.bottom.ApplyMargins(0f, 0f, 0.1f, 0f);
+        var splitStrategem = strategemZone.SplitH(pdsList.Count);
         
         for (int i = 0; i < pdsList.Count; i++)
         {
@@ -975,53 +969,8 @@ public class EndlessSpaceCollision : ExampleScene
             var pdsRect = splitStrategem[i].ApplyMargins(0.025f, 0.025f, 0f, 0f);
             pds.DrawUI(pdsRect);
         }
-        // var gunRect = GAMELOOP.UIRects.GetRect("center right");// GAMELOOP.UIRects.GetRect("bottom right").Union(GAMELOOP.UIRects.GetRect("center right"));
-        // gunRect = gunRect.ApplyMargins(0.65f, 0f, 0f, 0.5f);
-        // var gunSplit = gunRect.SplitH(0.2f, 0.35f);
-        // minigun.DrawUI(gunSplit[2].ApplyMargins(0.15f, 0f, 0f, 0));
-        // cannon.DrawUI(gunSplit[1].ApplyMargins(0.15f, 0f, 0f, 0));
-        //
-        // var count = Ship.MaxHp;
-        // var hpRects = gunSplit[0].ApplyMargins(0f, 0f, 0f, 0.5f).SplitV(count);
-        // for (int i = 0; i < count; i++)
-        // {
-        //     var hpRect = hpRects[i].ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
-        //     if (i < ship.Health)
-        //     {
-        //         hpRect.Draw(Colors.Cold);
-        //     }
-        //     else
-        //     {
-        //         hpRect.Draw(Colors.Medium);
-        //     }
-        // }
     }
 
-    // private void DrawCameraInfo(Rect rect)
-    // {
-    //     var pos = camera.BasePosition;
-    //     var x = (int)pos.X;
-    //     var y = (int)pos.Y;
-    //     var rot = (int)camera.RotationDeg;
-    //     var zoom = (int)(ShapeMath.GetFactor(camera.ZoomLevel, 0.1f, 5f) * 100f);
-    //     
-    //     // string text = $"Pos {x}/{y} | Rot {rot} | Zoom {zoom}";
-    //     // string text = $"Path requests {pathfinder.DEBUG_PATH_REQUEST_COUNT}";
-    //
-    //     var count = 0;
-    //     foreach (var asteroid in asteroids)
-    //     {
-    //         count += asteroid.GetShape().Count;
-    //     }
-    //     
-    //     textFont.FontSpacing = 1f;
-    //     textFont.ColorRgba = Colors.Warm;
-    //     var rects = rect.SplitV(0.33f, 0.33f);
-    //     textFont.DrawTextWrapNone($"Asteroids {asteroids.Count} | V{count}", rects[0], new(0.5f));
-    //     textFont.DrawTextWrapNone($"Bullets {bullets.Count}", rects[1], new(0.5f));
-    //     // textFont.DrawTextWrapNone($"Ship Transform {ship.Transform.Position},{ship.Transform.RotationRad},{ship.Transform.Size}", rects[1], new(0.5f));
-    //     
-    // }
     private void DrawGameInfo(Rect rect)
     {
         rect = rect.ApplyMargins(0.2f, 0.2f, 0.025f, 0.92f);

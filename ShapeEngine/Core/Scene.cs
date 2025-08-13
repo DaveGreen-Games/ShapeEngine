@@ -1,4 +1,5 @@
 using System.Numerics;
+using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.RectDef;
@@ -27,9 +28,14 @@ public abstract class Scene
     /// </summary>
     public bool Active { get; private set; }
     /// <summary>
-    /// If the scene is Active Game will be set.
+    /// Is set to the current game instance.
     /// </summary>
-    public GameDef.Game? Game { get; private set; }
+    public Game Parent => Game.Instance;
+    
+    /// <summary>
+    /// Provides access to the <see cref="InputSystem"/> instance from the parent <see cref="Game"/>.
+    /// </summary>
+    public InputSystem Input => Parent.Input;
     
     /// <summary>
     /// The current SpawnArea of this scene.
@@ -195,7 +201,7 @@ public abstract class Scene
     
     #region Internal
 
-    internal void SetGameReference(GameDef.Game? game) => Game = game;
+    // internal void SetGameReference(GameDef.Game? game) => Parent = game;
 
     internal void ResolveActivate(Scene oldScene)
     {
@@ -284,6 +290,14 @@ public abstract class Scene
     internal void ResolveOnGamepadDisconnected(GamepadDevice gamepad)
     {
         OnGamepadDisconnected(gamepad);
+    }
+    internal void ResolveOnGamepadClaimed(GamepadDevice gamepad)
+    {
+        OnGamepadClaimed(gamepad);
+    }
+    internal void ResolveOnGamepadFreed(GamepadDevice gamepad)
+    {
+        OnGamepadFreed(gamepad);
     }
     internal void ResolveOnInputDeviceChanged(InputDeviceType prevDeviceType, InputDeviceType curDeviceType)
     {
@@ -470,6 +484,17 @@ public abstract class Scene
     /// </summary>
     /// <param name="gamepad">The gamepad that was disconnected.</param>
     protected virtual void OnGamepadDisconnected(GamepadDevice gamepad) { }
+    /// <summary>
+    /// Called when a gamepad is claimed by the scene (e.g., assigned to a player or reserved for use).
+    /// </summary>
+    /// <param name="gamepad">The gamepad that was claimed.</param>
+    protected virtual void OnGamepadClaimed(GamepadDevice gamepad) { }
+
+    /// <summary>
+    /// Called when a gamepad is freed by the scene (e.g., unassigned from a player or released for general use).
+    /// </summary>
+    /// <param name="gamepad">The gamepad that was freed.</param>
+    protected virtual void OnGamepadFreed(GamepadDevice gamepad) { }
 
     /// <summary>
     /// Called when the input device type is changed.

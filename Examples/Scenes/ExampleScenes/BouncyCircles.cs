@@ -1,5 +1,6 @@
 ﻿using ShapeEngine.Core;
 using System.Numerics;
+using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.PolygonDef;
@@ -104,7 +105,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             Title = "Bouncy Circles";
 
-            UpdateBoundaryRect(GAMELOOP.GameScreenInfo.Area);
+            UpdateBoundaryRect(Game.Instance.GameScreenInfo.Area);
 
             InitSpawnArea(boundaryRect);
             
@@ -140,9 +141,9 @@ namespace Examples.Scenes.ExampleScenes
             SpawnArea?.ResizeBounds(boundaryRect);
             // CollisionHandler?.ResizeBounds(boundaryRect);
             
-            if (GAMELOOP.Paused) return;
+            if (Game.Instance.Paused) return;
             
-            var gamepad = GAMELOOP.CurGamepad;
+            var gamepad = Input.GamepadManager.LastUsedGamepad;
             inputActionTree.CurrentGamepad = gamepad;
             inputActionTree.Update(time.Delta);
         }
@@ -191,18 +192,18 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnDrawUIExample(ScreenInfo ui)
         {
-            DrawInputDescription(GAMELOOP.UIRects.GetRect("bottom center"));
+            DrawInputDescription(GameloopExamples.Instance.UIRects.GetRect("bottom center"));
 
             var objectCountText = $"Object Count: {SpawnArea?.Count ?? 0}";
             
             textFont.FontSpacing = 1f;
             textFont.ColorRgba = Colors.Warm;
-            textFont.DrawTextWrapNone(objectCountText, GAMELOOP.UIRects.GetRect("bottom right"), new AnchorPoint(0.98f, 0.98f));
+            textFont.DrawTextWrapNone(objectCountText, GameloopExamples.Instance.UIRects.GetRect("bottom right"), new AnchorPoint(0.98f, 0.98f));
         }
 
         private void DrawInputDescription(Rect rect)
         {
-            var curInputDeviceAll = ShapeInput.CurrentInputDeviceType;
+            var curInputDeviceAll = Input.CurrentInputDeviceType;
             
             string addText = iaAdd.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
             string toggleConvexHullText = iaToggleConvexHull.GetInputTypeDescription(curInputDeviceAll, true, 1, false, false);

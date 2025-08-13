@@ -24,14 +24,14 @@ public sealed class MouseDevice : InputDevice
     /// <summary>
     /// Gets the usage detection settings for the mouse input device.
     /// </summary>
-    public InputDeviceUsageDetectionSettings.MouseSettings UsageDetectionSettings { get; private set; } = new();
+    public InputSettings.MouseSettings Settings { get; private set; }
     
     /// <summary>
     /// <para>
     /// The process priority of this mouse device instance.
     /// </para>
     /// <para>
-    /// Change this value to change the order in which this device is processed in <see cref="ShapeInput"/>.
+    /// Change this value to change the order in which this device is processed in <see cref="InputSystem"/>.
     /// Lower priorities are processed first.
     /// </para>
     /// </summary>
@@ -43,11 +43,17 @@ public sealed class MouseDevice : InputDevice
     private bool wasUsed;
     private bool wasUsedRaw;
     private bool isLocked;
-    private bool isActive;
-
     private int pressedCount;
     private float pressedCountDurationTimer;
     private float usedDurationTimer;
+    
+    /// <summary>
+    /// Tracks whether the device was selected in the previous update cycle.
+    /// Used for input usage detection logic.
+    /// If a device was selected in the previous update cycle,
+    /// the device stays the current selected device as long as at least one button is held down.
+    /// </summary>
+    private bool wasSelected = false;
 
     /// <summary>
     /// Gets the current mouse position in screen coordinates.
@@ -69,7 +75,7 @@ public sealed class MouseDevice : InputDevice
     public Vector2 MouseDelta { get; private set; }
     
     /// <summary>
-    /// Gets the mouse movement delta with the move threshold from <see cref="UsageDetectionSettings"/> applied.
+    /// Gets the mouse movement delta with the move threshold from <see cref="Settings"/> applied.
     /// </summary>
     public Vector2 SmoothedMouseDelta { get; private set; }
 
@@ -107,8 +113,10 @@ public sealed class MouseDevice : InputDevice
     /// <summary>
     /// Initializes a new instance of the <see cref="MouseDevice"/> class.
     /// </summary>
-    internal MouseDevice()
+    internal MouseDevice(InputSettings.MouseSettings settings)
     {
+        Settings = settings;
+        
         foreach (var button in AllShapeMouseButtons)
         {
             buttonStates.Add(button, new());
@@ -202,8 +210,11 @@ public sealed class MouseDevice : InputDevice
     }
     
     /// <inheritdoc cref="InputDevice.ApplyInputDeviceChangeSettings"/>
-    public override void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings) => UsageDetectionSettings = settings.Mouse;
-
+    internal override void ApplyInputDeviceChangeSettings(InputSettings settings)
+    {
+        Settings = settings.Mouse;
+        
+    }
     /// <inheritdoc cref="InputDevice.WasUsed"/>
     public override bool WasUsed() => wasUsed;
     
@@ -224,13 +235,8 @@ public sealed class MouseDevice : InputDevice
     {
         if(isLocked) return;
         isLocked = true;
-        usedDurationTimer = 0f;
-        pressedCount = 0;
-        pressedCountDurationTimer = 0f;
         
-        PressedButtons.Clear();
-        HeldDownButtons.Clear();
-        ReleasedButtons.Clear();
+        ResetState();
     }
 
     /// <summary>
@@ -241,6 +247,7 @@ public sealed class MouseDevice : InputDevice
         if(!isLocked) return;
         isLocked = false;
     }
+    
 
     /// <inheritdoc cref="InputDevice.Update"/>
     public override bool Update(float dt, bool wasOtherDeviceUsed)
@@ -248,13 +255,13 @@ public sealed class MouseDevice : InputDevice
         MousePosition = Raylib.GetMousePosition();
         
         MouseDelta = Raylib.GetMouseDelta();
-        float moveThreshold = UsageDetectionSettings.MoveThreshold;
+        float moveThreshold = Settings.MoveThreshold;
         float smoothedX = MathF.Abs(MouseDelta.X) < moveThreshold ? 0f : MouseDelta.X;
         float smoothedY = MathF.Abs(MouseDelta.Y) < moveThreshold ? 0f : MouseDelta.Y;
         SmoothedMouseDelta = new(smoothedX, smoothedY);
         
         MouseWheelV = Raylib.GetMouseWheelMoveV();
-        float wheelThreshold = UsageDetectionSettings.WheelThreshold;
+        float wheelThreshold = Settings.WheelThreshold;
         float smoothedWheelX = MathF.Abs(MouseWheelV.X) < wheelThreshold ? 0f : MouseWheelV.X;
         float smoothedWheelY = MathF.Abs(MouseWheelV.Y) < wheelThreshold ? 0f : MouseWheelV.Y;
         SmoothedMouseWheelV = new(smoothedWheelX, smoothedWheelY);
@@ -264,7 +271,7 @@ public sealed class MouseDevice : InputDevice
         ReleasedButtons.Clear();
         UpdateStates();
 
-        if (isLocked || !isActive)
+        if (isLocked)
         {
             wasUsed = false;
             wasUsedRaw = false;
@@ -276,28 +283,8 @@ public sealed class MouseDevice : InputDevice
         return wasUsed && !wasOtherDeviceUsed;//safety precaution
     }
 
-    /// <summary>
-    /// Indicates whether the mouse device is currently active, as in being used by the <see cref="ShapeInput"/> class to generate input.
-    /// </summary>
-    public override bool IsActive() => isActive;
-    
-    /// <summary>
-    /// Activates the mouse device, enabling input processing.
-    /// </summary>
-    public override void Activate()
+    private void ResetState()
     {
-        if (isActive) return;
-        isActive = true;
-    }
-    
-    /// <summary>
-    /// Deactivates the mouse device, disabling input processing and resetting state.
-    /// </summary>
-    public override void Deactivate()
-    {
-        if (!isActive) return;
-        isActive = false;
-        
         usedDurationTimer = 0f;
         pressedCount = 0;
         pressedCountDurationTimer = 0f;
@@ -309,35 +296,48 @@ public sealed class MouseDevice : InputDevice
         HeldDownButtons.Clear();
         ReleasedButtons.Clear();
     }
+
     private void WasMouseUsed(float dt, bool wasOtherDeviceUsed, out bool used, out bool usedRaw)
     {
         used = false;
         usedRaw = false;
+        
+        if (isLocked) return;
+        
+        usedRaw = PressedButtons.Count > 0;
         
         if (wasOtherDeviceUsed)
         {
             usedDurationTimer = 0f;
             pressedCount = 0;
             pressedCountDurationTimer = 0f;
-        }
-        
-        if (isLocked) return;
-
-        usedRaw = PressedButtons.Count > 0;
-
-        if (!UsageDetectionSettings.Detection || wasOtherDeviceUsed)
-        {
+            wasSelected = false;
             return;
         }
-            
-        if (UsageDetectionSettings.SelectionButtons is { Count: > 0 })
+
+        if (!Settings.Detection) return;
+        
+        //if device was selected in the previous update cycle, it will be automatically considered used if at least one button is held down
+        if (wasSelected)
         {
-            if (UsageDetectionSettings.ExceptionButtons is { Count: > 0 })
+            if (HeldDownButtons.Count > 0)
             {
-                foreach (var button in UsageDetectionSettings.SelectionButtons)
+                used = true;
+                return;
+            }
+            
+            //no button was held down
+            wasSelected = false;
+        }
+            
+        if (Settings.SelectionButtons is { Count: > 0 })
+        {
+            if (Settings.ExceptionButtons is { Count: > 0 })
+            {
+                foreach (var button in Settings.SelectionButtons)
                 {
-                    if (UsageDetectionSettings.ExceptionButtons.Contains(button)) continue;
-                    if (IsDown(button, UsageDetectionSettings.MoveThreshold, UsageDetectionSettings.WheelThreshold))
+                    if (Settings.ExceptionButtons.Contains(button)) continue;
+                    if (IsDown(button, Settings.MoveThreshold, Settings.WheelThreshold))
                     {
                         used = true;
                         break;
@@ -346,9 +346,9 @@ public sealed class MouseDevice : InputDevice
             }
             else
             {
-                foreach (var button in UsageDetectionSettings.SelectionButtons)
+                foreach (var button in Settings.SelectionButtons)
                 {
-                    if (IsDown(button, UsageDetectionSettings.MoveThreshold, UsageDetectionSettings.WheelThreshold))
+                    if (IsDown(button, Settings.MoveThreshold, Settings.WheelThreshold))
                     {
                         used = true;
                         break;
@@ -358,15 +358,15 @@ public sealed class MouseDevice : InputDevice
         }
         else
         {
-            var pressCountEnabled = UsageDetectionSettings.PressCountEnabled;
-            var usedDurationEnabled = UsageDetectionSettings.UsedDurationEnabled;
+            var pressCountEnabled = Settings.PressCountEnabled;
+            var usedDurationEnabled = Settings.UsedDurationEnabled;
             
             if (pressCountEnabled)
             {
                 pressedCountDurationTimer += dt;
-                if (pressedCountDurationTimer >= UsageDetectionSettings.MinPressInterval)
+                if (pressedCountDurationTimer >= Settings.MinPressInterval)
                 {
-                    pressedCountDurationTimer -= UsageDetectionSettings.MinPressInterval;
+                    pressedCountDurationTimer -= Settings.MinPressInterval;
                     pressedCount = 0;
                 }
             }
@@ -374,27 +374,24 @@ public sealed class MouseDevice : InputDevice
             if (usedDurationEnabled)
             {
                 // Checks if any held down button is not in the exception list (or if the exception list is null)
-                if(HeldDownButtons.Any(b => !UsageDetectionSettings.ExceptionButtons.Contains(b)))
-                // if(HeldDownButtons.Count > 0)
+                if(HeldDownButtons.Any(b => !Settings.ExceptionButtons.Contains(b)))
                 {
                     usedDurationTimer += dt;
-                    if (usedDurationTimer > UsageDetectionSettings.MinUsedDuration)
+                    if (usedDurationTimer > Settings.MinUsedDuration)
                     {
-                        usedDurationTimer -= UsageDetectionSettings.MinUsedDuration;
+                        usedDurationTimer -= Settings.MinUsedDuration;
                         used = true;
                         pressedCount = 0;
                         pressedCountDurationTimer = 0f;
-                        return;
                     }
                 }
                 else if(usedDurationTimer > 0f) usedDurationTimer = 0f;
             }
             
-            if (pressCountEnabled && PressedButtons.Any(b => !UsageDetectionSettings.ExceptionButtons.Contains(b)))
-            // if (pressCountEnabled && PressedButtons.Count > 0)
+            if (!used && pressCountEnabled && PressedButtons.Any(b => !Settings.ExceptionButtons.Contains(b)))
             {
                 pressedCount++;
-                if (pressedCount >= UsageDetectionSettings.MinPressCount)
+                if (pressedCount >= Settings.MinPressCount)
                 {
                     used = true;
                     pressedCountDurationTimer = 0f;
@@ -403,6 +400,9 @@ public sealed class MouseDevice : InputDevice
                 }
             }
         }
+
+        // if the device was used this frame it will be pre-selected for the next frame
+        if (used) wasSelected = true;
     } 
     
     /// <summary>
@@ -414,7 +414,7 @@ public sealed class MouseDevice : InputDevice
         {
             var button = state.Key;
             var prevState = state.Value;
-            var curState = CreateInputState(button, UsageDetectionSettings.MoveThreshold, UsageDetectionSettings.WheelThreshold);
+            var curState = CreateInputState(button, Settings.MoveThreshold, Settings.WheelThreshold);
             var nextState = new InputState(prevState, curState);
             buttonStates[button] = nextState;
 
@@ -434,14 +434,14 @@ public sealed class MouseDevice : InputDevice
         {
             var axis = state.Key;
             var prevState = state.Value;
-            var curState = CreateInputState(axis, UsageDetectionSettings.MoveThreshold);
+            var curState = CreateInputState(axis, Settings.MoveThreshold);
             axisStates[axis] = new InputState(prevState, curState);
         }
         foreach (var state in wheelAxisStates)
         {
             var axis = state.Key;
             var prevState = state.Value;
-            var curState = CreateInputState(axis, UsageDetectionSettings.WheelThreshold);
+            var curState = CreateInputState(axis, Settings.WheelThreshold);
             wheelAxisStates[axis] = new InputState(prevState, curState);
         }
     }
@@ -456,7 +456,7 @@ public sealed class MouseDevice : InputDevice
     /// <param name="deadzone">The minimum movement required to register a value (default is the configured move threshold).</param>
     /// <param name="modifierKeySet">Optional modifier key set that must be active for the value to be returned.</param>
     /// <returns>The axis value, or 0 if below the deadzone or input is not valid.</returns>
-    public float GetValue(ShapeMouseAxis axis, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, ModifierKeySet? modifierKeySet = null)
+    public float GetValue(ShapeMouseAxis axis, float deadzone = InputSettings.MouseSettings.DefaultMouseMoveThreshold, ModifierKeySet? modifierKeySet = null)
     {
         if (isLocked) return 0f;
         if (!GameWindow.Instance.MouseOnScreen) return 0f;
@@ -493,7 +493,7 @@ public sealed class MouseDevice : InputDevice
     /// <param name="deadzone">The minimum movement required to register as "down" (default is the configured move threshold).</param>
     /// <param name="modifierKeySet">Optional modifier key set that must be active for the axis to be considered "down".</param>
     /// <returns>True if the axis is down, otherwise false.</returns>
-    public bool IsDown(ShapeMouseAxis axis, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, ModifierKeySet? modifierKeySet = null)
+    public bool IsDown(ShapeMouseAxis axis, float deadzone = InputSettings.MouseSettings.DefaultMouseMoveThreshold, ModifierKeySet? modifierKeySet = null)
     {
         return GetValue(axis, deadzone, modifierKeySet) != 0;
     }
@@ -521,7 +521,7 @@ public sealed class MouseDevice : InputDevice
     /// An <see cref="InputState"/> representing the current state of the axis,
     /// including whether it is down, up, and its value.
     /// </returns>
-    public InputState CreateInputState(ShapeMouseAxis axis, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, ModifierKeySet? modifierKeySet = null)
+    public InputState CreateInputState(ShapeMouseAxis axis, float deadzone = InputSettings.MouseSettings.DefaultMouseMoveThreshold, ModifierKeySet? modifierKeySet = null)
     {
         float axisValue = GetValue(axis, deadzone, modifierKeySet);
         bool down = axisValue != 0f;
@@ -540,7 +540,7 @@ public sealed class MouseDevice : InputDevice
     /// An <see cref="InputState"/> representing the current state of the axis,
     /// including whether it is down, up, and its value.
     /// </returns>
-    public InputState CreateInputState(ShapeMouseAxis axis, Vector2 targetPosition,  float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, ModifierKeySet? modifierKeySet = null)
+    public InputState CreateInputState(ShapeMouseAxis axis, Vector2 targetPosition,  float deadzone = InputSettings.MouseSettings.DefaultMouseMoveThreshold, ModifierKeySet? modifierKeySet = null)
     {
         float axisValue = GetValue(axis, targetPosition, deadzone, modifierKeySet);
         bool down = axisValue != 0f;
@@ -560,7 +560,7 @@ public sealed class MouseDevice : InputDevice
     /// An <see cref="InputState"/> representing the current state of the axis,
     /// including whether it is down, up, and its value, based on the previous state.
     /// </returns>
-    public InputState CreateInputState(ShapeMouseAxis axis, Vector2 targetPosition,  InputState previousState, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, ModifierKeySet? modifierKeySet = null)
+    public InputState CreateInputState(ShapeMouseAxis axis, Vector2 targetPosition,  InputState previousState, float deadzone = InputSettings.MouseSettings.DefaultMouseMoveThreshold, ModifierKeySet? modifierKeySet = null)
     {
         return new(previousState, CreateInputState(axis, targetPosition, deadzone, modifierKeySet));
     }
@@ -577,7 +577,7 @@ public sealed class MouseDevice : InputDevice
     /// An <see cref="InputState"/> representing the current state of the axis,
     /// including whether it is down, up, and its value, based on the previous state.
     /// </returns>
-    public InputState CreateInputState(ShapeMouseAxis axis, InputState previousState, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, ModifierKeySet? modifierKeySet = null)
+    public InputState CreateInputState(ShapeMouseAxis axis, InputState previousState, float deadzone = InputSettings.MouseSettings.DefaultMouseMoveThreshold, ModifierKeySet? modifierKeySet = null)
     {
         return new(previousState, CreateInputState(axis, deadzone, modifierKeySet));
     }
@@ -595,7 +595,7 @@ public sealed class MouseDevice : InputDevice
     /// <param name="deadzone">The minimum movement required to register a value (default is the configured wheel threshold).</param>
     /// <param name="modifierKeySet">Optional modifier key set that must be active for the value to be returned.</param>
     /// <returns>The axis value, or 0 if below the deadzone or input is not valid.</returns>
-    public float GetValue(ShapeMouseWheelAxis axis, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseWheelThreshold, ModifierKeySet? modifierKeySet = null)
+    public float GetValue(ShapeMouseWheelAxis axis, float deadzone = InputSettings.MouseSettings.DefaultMouseWheelThreshold, ModifierKeySet? modifierKeySet = null)
     {
         if (isLocked) return 0f;
         if (!GameWindow.Instance.MouseOnScreen) return 0f;
@@ -613,7 +613,7 @@ public sealed class MouseDevice : InputDevice
     /// <param name="deadzone">The minimum movement required to register as "down" (default is the configured wheel threshold).</param>
     /// <param name="modifierKeySet">Optional modifier key set that must be active for the axis to be considered "down".</param>
     /// <returns>True if the axis is down, otherwise false.</returns>
-    public bool IsDown(ShapeMouseWheelAxis axis, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseWheelThreshold, ModifierKeySet? modifierKeySet = null)
+    public bool IsDown(ShapeMouseWheelAxis axis, float deadzone = InputSettings.MouseSettings.DefaultMouseWheelThreshold, ModifierKeySet? modifierKeySet = null)
     {
         return GetValue(axis, deadzone, modifierKeySet) != 0f;
     }
@@ -629,7 +629,7 @@ public sealed class MouseDevice : InputDevice
     /// An <see cref="InputState"/> representing the current state of the wheel axis,
     /// including whether it is down, up, and its value.
     /// </returns>
-    public InputState CreateInputState(ShapeMouseWheelAxis axis, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseWheelThreshold, ModifierKeySet? modifierKeySet = null)
+    public InputState CreateInputState(ShapeMouseWheelAxis axis, float deadzone = InputSettings.MouseSettings.DefaultMouseWheelThreshold, ModifierKeySet? modifierKeySet = null)
     {
         float axisValue = GetValue(axis, deadzone, modifierKeySet);
         bool down = axisValue != 0f;
@@ -649,7 +649,7 @@ public sealed class MouseDevice : InputDevice
     /// An <see cref="InputState"/> representing the current state of the wheel axis,
     /// including whether it is down, up, and its value, based on the previous state.
     /// </returns>
-    public InputState CreateInputState(ShapeMouseWheelAxis axis, InputState previousState, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseWheelThreshold, ModifierKeySet? modifierKeySet = null)
+    public InputState CreateInputState(ShapeMouseWheelAxis axis, InputState previousState, float deadzone = InputSettings.MouseSettings.DefaultMouseWheelThreshold, ModifierKeySet? modifierKeySet = null)
     {
         return new(previousState, CreateInputState(axis, deadzone, modifierKeySet));
     }
@@ -669,8 +669,8 @@ public sealed class MouseDevice : InputDevice
     /// <returns>The button value, axis/wheel value, or 0 if not active or below threshold.</returns>
     public float GetValue(
         ShapeMouseButton button, 
-        float mouseMoveDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, 
-        float mouseWheelDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold,
+        float mouseMoveDeadzone = InputSettings.MouseSettings.DefaultMouseMoveThreshold, 
+        float mouseWheelDeadzone = InputSettings.MouseSettings.DefaultMouseMoveThreshold,
         ModifierKeySet? modifierKeySet = null)
     {
         if (isLocked) return 0f;
@@ -708,8 +708,8 @@ public sealed class MouseDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set that must be active for the button to be considered "down".</param>
     /// <returns>True if the button is down, otherwise false.</returns>
     public bool IsDown(ShapeMouseButton button, 
-        float mouseMoveDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, 
-        float mouseWheelDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold,
+        float mouseMoveDeadzone = InputSettings.MouseSettings.DefaultMouseMoveThreshold, 
+        float mouseWheelDeadzone = InputSettings.MouseSettings.DefaultMouseMoveThreshold,
         ModifierKeySet? modifierKeySet = null)
     {
        return GetValue(button, mouseMoveDeadzone, mouseWheelDeadzone, modifierKeySet) != 0f;
@@ -728,8 +728,8 @@ public sealed class MouseDevice : InputDevice
     /// including whether it is down, up, and its value.
     /// </returns>
     public InputState CreateInputState(ShapeMouseButton button, 
-        float mouseMoveDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, 
-        float mouseWheelDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold,
+        float mouseMoveDeadzone = InputSettings.MouseSettings.DefaultMouseMoveThreshold, 
+        float mouseWheelDeadzone = InputSettings.MouseSettings.DefaultMouseMoveThreshold,
         ModifierKeySet? modifierKeySet = null)
     {
         var value = GetValue(button, mouseMoveDeadzone, mouseWheelDeadzone, modifierKeySet);
@@ -751,8 +751,8 @@ public sealed class MouseDevice : InputDevice
     /// including whether it is down, up, and its value, based on the previous state.
     /// </returns>
     public InputState CreateInputState(ShapeMouseButton button, InputState previousState, 
-        float mouseMoveDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, 
-        float mouseWheelDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold,
+        float mouseMoveDeadzone = InputSettings.MouseSettings.DefaultMouseMoveThreshold, 
+        float mouseWheelDeadzone = InputSettings.MouseSettings.DefaultMouseMoveThreshold,
         ModifierKeySet? modifierKeySet = null)
     {
         return new(previousState, CreateInputState(button, mouseMoveDeadzone, mouseWheelDeadzone, modifierKeySet));
@@ -773,8 +773,8 @@ public sealed class MouseDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set that must be active for the value to be returned.</param>
     /// <returns>The axis value, or 0 if not active or below threshold.</returns>
     public float GetValue(ShapeMouseButton neg, ShapeMouseButton pos, 
-        float mouseMoveDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, 
-        float mouseWheelDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold,
+        float mouseMoveDeadzone = InputSettings.MouseSettings.DefaultMouseMoveThreshold, 
+        float mouseWheelDeadzone = InputSettings.MouseSettings.DefaultMouseMoveThreshold,
         ModifierKeySet? modifierKeySet = null)
    {
        if (isLocked) return 0f;
@@ -795,8 +795,8 @@ public sealed class MouseDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set that must be active for the axis to be considered "down".</param>
     /// <returns>True if the virtual axis is down, otherwise false.</returns>
     public bool IsDown(ShapeMouseButton neg, ShapeMouseButton pos, 
-        float mouseMoveDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, 
-        float mouseWheelDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold,
+        float mouseMoveDeadzone = InputSettings.MouseSettings.DefaultMouseMoveThreshold, 
+        float mouseWheelDeadzone = InputSettings.MouseSettings.DefaultMouseMoveThreshold,
         ModifierKeySet? modifierKeySet = null)
     {
         return GetValue(neg, pos, mouseMoveDeadzone, mouseWheelDeadzone, modifierKeySet) != 0f;
@@ -817,8 +817,8 @@ public sealed class MouseDevice : InputDevice
     /// including whether it is down, up, and its value.
     /// </returns>
     public InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, 
-        float mouseMoveDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, 
-        float mouseWheelDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold,
+        float mouseMoveDeadzone = InputSettings.MouseSettings.DefaultMouseMoveThreshold, 
+        float mouseWheelDeadzone = InputSettings.MouseSettings.DefaultMouseMoveThreshold,
         ModifierKeySet? modifierKeySet = null)
     {
         float axis = GetValue(neg, pos, mouseMoveDeadzone, mouseWheelDeadzone, modifierKeySet);
@@ -841,8 +841,8 @@ public sealed class MouseDevice : InputDevice
     /// including whether it is down, up, and its value, based on the previous state.
     /// </returns>
     public InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, InputState previousState, 
-        float mouseMoveDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold, 
-        float mouseWheelDeadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseMoveThreshold,
+        float mouseMoveDeadzone = InputSettings.MouseSettings.DefaultMouseMoveThreshold, 
+        float mouseWheelDeadzone = InputSettings.MouseSettings.DefaultMouseMoveThreshold,
         ModifierKeySet? modifierKeySet = null)
     {
         return new(previousState, CreateInputState(neg, pos, mouseMoveDeadzone, mouseWheelDeadzone, modifierKeySet));

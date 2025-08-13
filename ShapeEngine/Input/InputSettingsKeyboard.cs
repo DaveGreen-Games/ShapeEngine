@@ -1,6 +1,6 @@
 namespace ShapeEngine.Input;
 
-public partial class InputDeviceUsageDetectionSettings
+public partial class InputSettings
 {
     /// <summary>
     /// Represents the settings used for detecting keyboard input device usage,
@@ -9,7 +9,7 @@ public partial class InputDeviceUsageDetectionSettings
     public class KeyboardSettings
     {
         /// <summary>
-        /// Gets the default <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.KeyboardSettings"/> instance with preset values.
+        /// Gets the default <see cref="InputSettings.KeyboardSettings"/> instance with preset values.
         /// </summary>
         /// <code>
         /// Detection = true;
@@ -23,7 +23,7 @@ public partial class InputDeviceUsageDetectionSettings
         public static readonly KeyboardSettings Default = new();
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.KeyboardSettings"/> struct with default values.
+        /// Initializes a new instance of the <see cref="InputSettings.KeyboardSettings"/> struct with default values.
         /// </summary>
         /// <code>
         /// Detection = true;
@@ -48,7 +48,7 @@ public partial class InputDeviceUsageDetectionSettings
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.KeyboardSettings"/> struct with custom detection, minimum press count,
+        /// Initializes a new instance of the <see cref="InputSettings.KeyboardSettings"/> struct with custom detection, minimum press count,
         /// minimum press interval, and minimum used duration values. Other values are set to their defaults.
         /// </summary>
         /// <param name="detection">Indicates whether keyboard detection is enabled.</param>
@@ -75,7 +75,7 @@ public partial class InputDeviceUsageDetectionSettings
             SelectionCooldownDuration = selectionCooldownDuration;
         }
         /// <summary>
-        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.KeyboardSettings"/> class
+        /// Initializes a new instance of the <see cref="InputSettings.KeyboardSettings"/> class
         /// with custom minimum press count, press interval, and used duration values. Other values are set to their defaults.
         /// </summary>
         /// <param name="minPressCount">The minimum number of keyboard button presses required within the specified interval.</param>
@@ -96,7 +96,7 @@ public partial class InputDeviceUsageDetectionSettings
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.KeyboardSettings"/> class
+        /// Initializes a new instance of the <see cref="InputSettings.KeyboardSettings"/> class
         /// with a custom minimum used duration. Other values are set to their defaults.
         /// </summary>
         /// <param name="minUsedDuration">The minimum duration (in seconds) of consecutive keyboard use required to consider the keyboard device as "used".</param>
@@ -114,7 +114,7 @@ public partial class InputDeviceUsageDetectionSettings
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.KeyboardSettings"/> class
+        /// Initializes a new instance of the <see cref="InputSettings.KeyboardSettings"/> class
         /// with custom minimum press count and press interval. Used duration is disabled. Other values are set to their defaults.
         /// </summary>
         /// <param name="minPressCount">The minimum number of keyboard button presses required within the specified interval.</param>
@@ -133,7 +133,7 @@ public partial class InputDeviceUsageDetectionSettings
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ShapeEngine.Input.InputDeviceUsageDetectionSettings.KeyboardSettings"/> class
+        /// Initializes a new instance of the <see cref="InputSettings.KeyboardSettings"/> class
         /// with custom selection and exception buttons, and an optional selection cooldown duration.
         /// </summary>
         /// <param name="selectionButtons">
@@ -172,7 +172,7 @@ public partial class InputDeviceUsageDetectionSettings
         /// </summary>
         /// <remarks>
         /// <c>Default is true</c>
-        /// Does not affect <see cref="KeyboardDevice.WasUsedRaw"/> values. It does affect the automatic system in <see cref="ShapeInput"/> to switch between devices.
+        /// Does not affect <see cref="KeyboardDevice.WasUsedRaw"/> values. It does affect the automatic system in <see cref="InputSystem"/> to switch between devices.
         /// </remarks>
         public bool Detection;
 

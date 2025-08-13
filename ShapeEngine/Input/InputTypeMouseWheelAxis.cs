@@ -1,4 +1,5 @@
 using System.Text;
+using ShapeEngine.Core.GameDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Input;
@@ -19,7 +20,7 @@ public sealed class InputTypeMouseWheelAxis : IInputType
     /// <param name="axis">The mouse wheel axis to use.</param>
     /// <param name="deadzone">The deadzone value. Input values below this threshold are ignored.</param>
     /// <param name="modifierKeySet">An optional set of modifier keys required for activation.</param>
-    public InputTypeMouseWheelAxis(ShapeMouseWheelAxis axis, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseWheelThreshold, ModifierKeySet? modifierKeySet = null)
+    public InputTypeMouseWheelAxis(ShapeMouseWheelAxis axis, float deadzone = InputSettings.MouseSettings.DefaultMouseWheelThreshold, ModifierKeySet? modifierKeySet = null)
     {
         this.axis = axis;
         this.deadzone = deadzone;
@@ -48,16 +49,16 @@ public sealed class InputTypeMouseWheelAxis : IInputType
     public InputState GetState(GamepadDevice? gamepad = null)
     {
         return modifierKeySet == null ? 
-            ShapeInput.ActiveMouseDevice.CreateInputState(axis, deadzone) : 
-            ShapeInput.ActiveMouseDevice.CreateInputState(axis, deadzone, modifierKeySet);
+            Game.Instance.Input.Mouse.CreateInputState(axis, deadzone) : 
+            Game.Instance.Input.Mouse.CreateInputState(axis, deadzone, modifierKeySet);
     }
 
     /// <inheritdoc/>
     public InputState GetState(InputState prev, GamepadDevice? gamepad = null)
     {
         return modifierKeySet == null ? 
-            ShapeInput.ActiveMouseDevice.CreateInputState(axis, prev, deadzone) : 
-            ShapeInput.ActiveMouseDevice.CreateInputState(axis, prev, deadzone, modifierKeySet);
+            Game.Instance.Input.Mouse.CreateInputState(axis, prev, deadzone) : 
+            Game.Instance.Input.Mouse.CreateInputState(axis, prev, deadzone, modifierKeySet);
     }
 
     /// <inheritdoc/>

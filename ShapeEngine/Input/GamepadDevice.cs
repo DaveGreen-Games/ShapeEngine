@@ -56,7 +56,7 @@ public sealed class GamepadDevice : InputDevice
     /// </summary>
     public event Action<GamepadDevice, ShapeGamepadButton>? OnButtonReleased;
 
-    internal event Action<GamepadDevice, InputDeviceUsageDetectionSettings>? OnInputDeviceChangeSettingsChanged;
+    // internal event Action<InputDevice, InputDeviceUsageDetectionSettings>? OnInputDeviceChangeSettingsChanged;
     
     /// <summary>
     /// The index of this gamepad device.
@@ -84,14 +84,14 @@ public sealed class GamepadDevice : InputDevice
     /// <summary>
     /// Gets the usage detection settings for the gamepad input device.
     /// </summary>
-    public InputDeviceUsageDetectionSettings.GamepadSettings UsageDetectionSettings { get; private set; } = new();
+    public InputSettings.GamepadSettings Settings { get; private set; }
 
     /// <summary>
     /// <para>
     /// The process priority of this gamepad device instance.
     /// </para>
     /// <para>
-    /// Change this value to change the order in which this device is processed in <see cref="ShapeInput"/>.
+    /// Change this value to change the order in which this device is processed in <see cref="InputSystem"/>.
     /// Lower priorities are processed first.
     /// </para>
     /// </summary>
@@ -99,14 +99,21 @@ public sealed class GamepadDevice : InputDevice
     /// A unique value based on the order of instantiation is assigned per default.
     /// </remarks>
     public uint DeviceProcessPriority = processPriorityCounter++;
-    
-    private bool isActive;
+
     private bool isLocked;
     private bool wasUsed;
     private bool wasUsedRaw;
     private int pressedCount;
     private float pressedCountDurationTimer;
     private float usedDurationTimer;
+    
+    /// <summary>
+    /// Tracks whether the device was selected in the previous update cycle.
+    /// Used for input usage detection logic.
+    /// If a device was selected in the previous update cycle,
+    /// the device stays the current selected device as long as at least one button is held down.
+    /// </summary>
+    private bool wasSelected = false;
     
     /// <summary>
     /// List of gamepad buttons pressed  since the last update.
@@ -156,11 +163,17 @@ public sealed class GamepadDevice : InputDevice
     /// <summary>
     /// Event triggered when the connection state changes.
     /// </summary>
-    public event Action? OnConnectionChanged;
+    public event Action<GamepadDevice, bool>? OnConnectionChanged;
+
     /// <summary>
-    /// Event triggered when the availability state changes.
+    /// Event triggered when the gamepad is claimed for use.
     /// </summary>
-    public event Action? OnAvailabilityChanged;
+    public event Action<GamepadDevice>? OnClaimed;
+    
+    /// <summary>
+    /// Event triggered when the gamepad is freed and becomes available.
+    /// </summary>
+    public event Action<GamepadDevice>? OnFreed;
     
     private readonly Dictionary<ShapeGamepadJoyAxis, ValueRange> joyAxisRanges = new();
     private readonly Dictionary<ShapeGamepadTriggerAxis, ValueRange> triggerAxisRanges = new();
@@ -170,22 +183,16 @@ public sealed class GamepadDevice : InputDevice
     /// Initializes a new instance of the <see cref="GamepadDevice"/> class.
     /// </summary>
     /// <param name="index">The gamepad index.</param>
-    /// <param name="connected">Whether the gamepad is initially connected.</param>
-    public GamepadDevice(int index, bool connected)
+    /// <param name="settings">The gamepad usage detection settings.</param>
+    internal GamepadDevice(int index, InputSettings.GamepadSettings settings)
     {
         Index = index;
+     
+        Settings = settings;
         
-        Connected = connected;
-        if (Connected)
+        if (Raylib.IsGamepadAvailable(index))
         {
-            unsafe
-            {
-                Name = Raylib.GetGamepadName(index)->ToString();
-            }
-
-            AxisCount = Raylib.GetGamepadAxisCount(index);
-            
-            // Calibrate();
+            Connect();
         }
         
         foreach (var button in AllShapeGamepadButtons)
@@ -311,15 +318,15 @@ public sealed class GamepadDevice : InputDevice
     /// Also propagates the settings to all other <see cref="GamepadDevice"/> instances and the <see cref="GamepadDeviceManager"/>.
     /// </summary>
     /// <param name="settings">The change settings to apply to the input device.</param>
-    public override void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
+    internal override void ApplyInputDeviceChangeSettings(InputSettings settings)
     {
-        UsageDetectionSettings = settings.Gamepad;
-        OnInputDeviceChangeSettingsChanged?.Invoke(this, settings);
+        Settings = settings.Gamepad;
+        // OnInputDeviceChangeSettingsChanged?.Invoke(this, settings);
     }
-    internal void OverrideInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
-    {
-        UsageDetectionSettings = settings.Gamepad;
-    }
+    // internal void OverrideInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
+    // {
+    //     UsageDetectionSettings = settings.Gamepad;
+    // }
 
     /// <summary>
     /// Gets the currently used  range (minimum and maximum) for the specified joystick axis.
@@ -362,19 +369,7 @@ public sealed class GamepadDevice : InputDevice
         if (isLocked) return;
         isLocked = true;
         
-        usedDurationTimer = 0f;
-        pressedCount = 0;
-        pressedCountDurationTimer = 0f;
-        
-        PressedButtons.Clear();
-        ReleasedButtons.Clear();
-        HeldDownButtons.Clear();
-        PressedJoyAxis.Clear();
-        ReleasedJoyAxis.Clear();
-        HeldJoyAxis.Clear();
-        PressedTriggerAxis.Clear();
-        ReleasedTriggerAxis.Clear();
-        HeldTriggerAxis.Clear();
+        ResetState();
     }
 
     /// <summary>
@@ -386,28 +381,8 @@ public sealed class GamepadDevice : InputDevice
         isLocked = false;
     }
     
-    /// <summary>
-    /// Indicates whether the mouse device is currently active, as in being used by the <see cref="ShapeInput"/> class to generate input.
-    /// </summary>
-    public override bool IsActive() => isActive;
-    
-    /// <summary>
-    /// Activates the mouse device, enabling input processing.
-    /// </summary>
-    public override void Activate()
+    private void ResetState()
     {
-        if (isActive) return;
-        isActive = true;
-    }
-    
-    /// <summary>
-    /// Deactivates the mouse device, disabling input processing and resetting state.
-    /// </summary>
-    public override void Deactivate()
-    {
-        if (!isActive) return;
-        isActive = false;
-        
         usedDurationTimer = 0f;
         pressedCount = 0;
         pressedCountDurationTimer = 0f;
@@ -426,6 +401,7 @@ public sealed class GamepadDevice : InputDevice
         HeldTriggerAxis.Clear();
     }
 
+
     /// <inheritdoc cref="InputDevice.Update"/>
     public override bool Update(float dt, bool wasOtherDeviceUsed)
     {
@@ -438,12 +414,29 @@ public sealed class GamepadDevice : InputDevice
         PressedTriggerAxis.Clear();
         ReleasedTriggerAxis.Clear();
         HeldTriggerAxis.Clear();
+
+        if (Raylib.IsGamepadAvailable(Index))
+        {
+            if (!Connected) Connect();
+        }
+        else
+        {
+            if(Connected) Disconnect();
+        }
+        
+        
+        if (!Connected)
+        {
+            wasUsed = false;
+            wasUsedRaw = false;
+            return false;
+        }
         
         UpdateButtonStates();
         UpdateJoyAxisStates();
         UpdateTriggerAxisStates();
         
-        if (!Connected || isLocked || !isActive)
+        if (isLocked || Available)//Only claimed gamepads can change current input device type (Available gamepads have not been claimed!)
         {
             wasUsed = false;
             wasUsedRaw = false;
@@ -458,29 +451,40 @@ public sealed class GamepadDevice : InputDevice
     private void WasGamepadUsed(float dt, bool wasOtherDeviceUsed, out bool used, out bool usedRaw)
     {
         used = false;
-        usedRaw = false;
+        usedRaw = PressedButtons.Count > 0;
         
         if (wasOtherDeviceUsed)
         {
             usedDurationTimer = 0f;
             pressedCount = 0;
             pressedCountDurationTimer = 0f;
+            wasSelected = false;
+            return;
         }
         
-        if (isLocked) return;
-
-        usedRaw = PressedButtons.Count > 0;
-
-        if (!UsageDetectionSettings.Detection || wasOtherDeviceUsed) return;
+        if (!Settings.Detection) return;
             
-        if (UsageDetectionSettings.SelectionButtons is { Count: > 0 })
+        //if device was selected in the previous update cycle, it will be automatically considered used if at least one button is held down
+        if (wasSelected)
         {
-            if (UsageDetectionSettings.ExceptionButtons is { Count: > 0 })
+            if (HeldDownButtons.Count > 0 || HeldJoyAxis.Count > 0 || HeldTriggerAxis.Count > 0)
             {
-                foreach (var button in UsageDetectionSettings.SelectionButtons)
+                used = true;
+                return;
+            }
+            
+            //no button was held down
+            wasSelected = false;
+        }
+        
+        if (Settings.SelectionButtons is { Count: > 0 })
+        {
+            if (Settings.ExceptionButtons is { Count: > 0 })
+            {
+                foreach (var button in Settings.SelectionButtons)
                 {
-                    if (UsageDetectionSettings.ExceptionButtons.Contains(button)) continue;
-                    if (IsDown(button, UsageDetectionSettings.AxisThreshold, UsageDetectionSettings.TriggerThreshold))
+                    if (Settings.ExceptionButtons.Contains(button)) continue;
+                    if (IsDown(button, Settings.AxisThreshold, Settings.TriggerThreshold))
                     {
                         used = true;
                         break;
@@ -489,9 +493,9 @@ public sealed class GamepadDevice : InputDevice
             }
             else
             {
-                foreach (var button in UsageDetectionSettings.SelectionButtons)
+                foreach (var button in Settings.SelectionButtons)
                 {
-                    if (IsDown(button, UsageDetectionSettings.AxisThreshold, UsageDetectionSettings.TriggerThreshold))
+                    if (IsDown(button, Settings.AxisThreshold, Settings.TriggerThreshold))
                     {
                         used = true;
                         break;
@@ -501,15 +505,15 @@ public sealed class GamepadDevice : InputDevice
         }
         else
         {
-            var pressCountEnabled = UsageDetectionSettings.PressCountEnabled;
-            var usedDurationEnabled = UsageDetectionSettings.UsedDurationEnabled;
+            var pressCountEnabled = Settings.PressCountEnabled;
+            var usedDurationEnabled = Settings.UsedDurationEnabled;
             
             if (pressCountEnabled)
             {
                 pressedCountDurationTimer += dt;
-                if (pressedCountDurationTimer >= UsageDetectionSettings.MinPressInterval)
+                if (pressedCountDurationTimer >= Settings.MinPressInterval)
                 {
-                    pressedCountDurationTimer -= UsageDetectionSettings.MinPressInterval;
+                    pressedCountDurationTimer -= Settings.MinPressInterval;
                     pressedCount = 0;
                 }
             }
@@ -517,28 +521,25 @@ public sealed class GamepadDevice : InputDevice
             if (usedDurationEnabled)
             {
                 // Checks if any held down button is not in the exception list (or if the exception list is null)
-                if (HeldDownButtons.Any(b => !UsageDetectionSettings.ExceptionButtons.Contains(b)))
-                // if (usedDurationEnabled && HeldDownButtons.Count > 0)
+                if (HeldDownButtons.Any(b => !Settings.ExceptionButtons.Contains(b)))
                 {
                     usedDurationTimer += dt;
-                    if (usedDurationTimer > UsageDetectionSettings.MinUsedDuration)
+                    if (usedDurationTimer > Settings.MinUsedDuration)
                     {
-                        usedDurationTimer -= UsageDetectionSettings.MinUsedDuration;
+                        usedDurationTimer -= Settings.MinUsedDuration;
                         used = true;
                         pressedCount = 0;
                         pressedCountDurationTimer = 0f;
-                        return;
                     }
                 }
                 else if (usedDurationTimer > 0f) usedDurationTimer = 0f;
             }
             
             
-            if (pressCountEnabled && PressedButtons.Any(b => !UsageDetectionSettings.ExceptionButtons.Contains(b)))
-            // if (pressCountEnabled && PressedButtons.Count > 0)
+            if (!used && pressCountEnabled && PressedButtons.Any(b => !Settings.ExceptionButtons.Contains(b)))
             {
                 pressedCount++;
-                if (pressedCount >= UsageDetectionSettings.MinPressCount)
+                if (pressedCount >= Settings.MinPressCount)
                 {
                     used = true;
                     pressedCountDurationTimer = 0f;
@@ -547,6 +548,9 @@ public sealed class GamepadDevice : InputDevice
                 }
             }
         }
+
+        // if the device was used this frame it will be pre-selected for the next frame
+        if (used) wasSelected = true;
     }
     
     /// <summary>
@@ -556,17 +560,10 @@ public sealed class GamepadDevice : InputDevice
     {
         if (Connected) return;
         Connected = true;
-        unsafe
-        {
-            Name = Raylib.GetGamepadName(Index)->ToString();
-        }
-
+        Available = true;
+        Name = Raylib.GetGamepadName_(Index);
         AxisCount = Raylib.GetGamepadAxisCount(Index);
-        OnConnectionChanged?.Invoke();
-        
-        // joyAxisRanges.Clear();
-        
-        // Calibrate();
+        OnConnectionChanged?.Invoke(this, Connected);
     }
     /// <summary>
     /// Marks the gamepad as disconnected.
@@ -575,21 +572,9 @@ public sealed class GamepadDevice : InputDevice
     {
         if (!Connected) return;
         Connected = false;
-        OnConnectionChanged?.Invoke();
+        OnConnectionChanged?.Invoke(this, Connected);
         
-        usedDurationTimer = 0f;
-        pressedCount = 0;
-        pressedCountDurationTimer = 0f;
-        
-        PressedButtons.Clear();
-        ReleasedButtons.Clear();
-        HeldDownButtons.Clear();
-        PressedJoyAxis.Clear();
-        ReleasedJoyAxis.Clear();
-        HeldJoyAxis.Clear();
-        PressedTriggerAxis.Clear();
-        ReleasedTriggerAxis.Clear();
-        HeldTriggerAxis.Clear();
+        ResetState();
     }
     /// <summary>
     /// Claims the gamepad for use, marking it as unavailable.
@@ -599,7 +584,7 @@ public sealed class GamepadDevice : InputDevice
     {
         if (!Connected || !Available) return false;
         Available = false;
-        OnAvailabilityChanged?.Invoke();
+        OnClaimed?.Invoke(this);
         return true;
     }
     /// <summary>
@@ -610,7 +595,7 @@ public sealed class GamepadDevice : InputDevice
     {
         if (Available) return false;
         Available = true;
-        OnAvailabilityChanged?.Invoke();
+        OnFreed?.Invoke(this);
         return true;
     }
     
@@ -623,7 +608,7 @@ public sealed class GamepadDevice : InputDevice
         {
             var button = state.Key;
             var prevState = state.Value;
-            var curState = CreateInputState(button, UsageDetectionSettings.AxisThreshold, UsageDetectionSettings.TriggerThreshold);
+            var curState = CreateInputState(button, Settings.AxisThreshold, Settings.TriggerThreshold);
             var nextState = new InputState(prevState, curState);
             buttonStates[button] = nextState;
 
@@ -652,7 +637,7 @@ public sealed class GamepadDevice : InputDevice
         {
             var axis = state.Key;
             var prevState = state.Value;
-            var curState = CreateInputState(axis, UsageDetectionSettings.AxisThreshold);
+            var curState = CreateInputState(axis, Settings.AxisThreshold);
             var nextState = new InputState(prevState, curState);
             joyAxisStates[axis] = nextState;
             
@@ -667,7 +652,7 @@ public sealed class GamepadDevice : InputDevice
         {
             var axis = state.Key;
             var prevState = state.Value;
-            var curState = CreateInputState(axis, UsageDetectionSettings.TriggerThreshold);
+            var curState = CreateInputState(axis, Settings.TriggerThreshold);
             var nextState = new InputState(prevState, curState);
             triggerAxisStates[axis] = nextState;
             
@@ -688,8 +673,8 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The value of the button as a float.</returns>
     public float GetValue(ShapeGamepadButton button, 
-        float axisDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, 
-        float triggerDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
+        float axisDeadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, 
+        float triggerDeadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
         ModifierKeySet? modifierKeySet = null)
     {
         if (Index < 0 || isLocked || !Connected) return 0f;
@@ -739,8 +724,8 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set.</param>
     /// <returns>True if the button is down; otherwise, false.</returns>
     public bool IsDown(ShapeGamepadButton button, 
-        float axisDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, 
-        float triggerDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
+        float axisDeadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, 
+        float triggerDeadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
         ModifierKeySet? modifierKeySet = null)
     {
         return GetValue(button, axisDeadzone, triggerDeadzone, modifierKeySet) != 0f;
@@ -756,8 +741,8 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set.</param>
     /// <returns>The created <see cref="InputState"/>.</returns>
     public InputState CreateInputState(ShapeGamepadButton button, 
-        float axisDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, 
-        float triggerDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
+        float axisDeadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, 
+        float triggerDeadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
         ModifierKeySet? modifierKeySet = null)
     {
         bool down = IsDown(button, axisDeadzone, triggerDeadzone, modifierKeySet);
@@ -774,8 +759,8 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set.</param>
     /// <returns>The created <see cref="InputState"/>.</returns>
     public InputState CreateInputState(ShapeGamepadButton button, InputState previousState, 
-        float axisDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, 
-        float triggerDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
+        float axisDeadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, 
+        float triggerDeadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
         ModifierKeySet? modifierKeySet = null)
     {
         return new(previousState, CreateInputState(button, axisDeadzone, triggerDeadzone, modifierKeySet));
@@ -794,7 +779,7 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The normalized value of the joystick axis as a float.</returns>
     public float GetValue(ShapeGamepadJoyAxis axis, 
-        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, bool inverted = false,  ModifierKeySet? modifierKeySet = null)
+        float deadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, bool inverted = false,  ModifierKeySet? modifierKeySet = null)
     {
         if (Index < 0 || isLocked || !Connected) return 0f;
         if(modifierKeySet != null && !modifierKeySet.IsActive(this)) return 0f;
@@ -815,7 +800,7 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>True if the axis is down; otherwise, false.</returns>
     public bool IsDown(ShapeGamepadJoyAxis axis, 
-        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
+        float deadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
     {
         return GetValue(axis, deadzone, inverted, modifierKeySet) != 0f;
     }
@@ -830,7 +815,7 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The created <see cref="InputState"/> for the joystick axis.</returns>
     public InputState CreateInputState(ShapeGamepadJoyAxis axis, 
-        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
+        float deadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
     {
         float axisValue = GetValue(axis, deadzone, inverted, modifierKeySet);
         bool down = axisValue != 0f;
@@ -848,7 +833,7 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The created <see cref="InputState"/> for the joystick axis.</returns>
     public InputState CreateInputState(ShapeGamepadJoyAxis axis, InputState previousState, 
-        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
+        float deadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
     {
         return new(previousState, CreateInputState(axis, deadzone, inverted, modifierKeySet));
     }
@@ -886,7 +871,7 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The normalized value of the trigger axis as a float.</returns>
     public float GetValue(ShapeGamepadTriggerAxis axis, 
-        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
+        float deadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
     {
         if (Index < 0 || isLocked || !Connected) return 0f;
         if(modifierKeySet != null &&  !modifierKeySet.IsActive(this)) return 0f;
@@ -910,7 +895,7 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>True if the trigger axis is down; otherwise, false.</returns>
     public bool IsDown(ShapeGamepadTriggerAxis axis, 
-        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
+        float deadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
     {
         var value = GetValue(axis, deadzone, inverted, modifierKeySet);
         return inverted ? value < 1f : value > 0f;
@@ -927,7 +912,7 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The created <see cref="InputState"/> for the trigger axis.</returns>
     public InputState CreateInputState(ShapeGamepadTriggerAxis axis, 
-        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
+        float deadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
     {
         float axisValue = GetValue(axis, deadzone, inverted, modifierKeySet);
         bool down = inverted ? axisValue < 1f : axisValue > 0f;
@@ -945,7 +930,7 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The created <see cref="InputState"/> for the trigger axis.</returns>
     public InputState CreateInputState(ShapeGamepadTriggerAxis axis, InputState previousState, 
-        float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
+        float deadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold, bool inverted = false, ModifierKeySet? modifierKeySet = null)
     {
         return new(previousState, CreateInputState(axis, deadzone, inverted, modifierKeySet));
     }
@@ -978,8 +963,8 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The axis value as a float.</returns>
     public float GetValue(ShapeGamepadButton neg, ShapeGamepadButton pos, 
-        float axisDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, 
-        float triggerDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
+        float axisDeadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, 
+        float triggerDeadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
         ModifierKeySet? modifierKeySet = null)
     {
         if (Index < 0 || isLocked || !Connected) return 0f;
@@ -1000,8 +985,8 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>True if the axis is down; otherwise, false.</returns>
     public bool IsDown(ShapeGamepadButton neg, ShapeGamepadButton pos, 
-        float axisDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, 
-        float triggerDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
+        float axisDeadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, 
+        float triggerDeadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
         ModifierKeySet? modifierKeySet = null)
     {
         return GetValue(neg, pos, axisDeadzone, triggerDeadzone, modifierKeySet) != 0f;
@@ -1018,8 +1003,8 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The created <see cref="InputState"/> for the button axis.</returns>
     public InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, 
-        float axisDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, 
-        float triggerDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
+        float axisDeadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, 
+        float triggerDeadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
         ModifierKeySet? modifierKeySet = null)
     {
         float axis = GetValue(neg, pos, axisDeadzone, triggerDeadzone, modifierKeySet);
@@ -1038,8 +1023,8 @@ public sealed class GamepadDevice : InputDevice
     /// <param name="modifierKeySet">Optional modifier key set to check if active.</param>
     /// <returns>The created <see cref="InputState"/> for the button axis.</returns>
     public InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, InputState previousState, 
-        float axisDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, 
-        float triggerDeadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
+        float axisDeadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, 
+        float triggerDeadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold, 
         ModifierKeySet? modifierKeySet = null)
     {
         return new(previousState, CreateInputState(neg, pos, axisDeadzone, triggerDeadzone, modifierKeySet));
@@ -1047,4 +1032,3 @@ public sealed class GamepadDevice : InputDevice
     #endregion
 
 }
-

@@ -159,10 +159,19 @@ public partial class Game
     /// Called when a gamepad is disconnected from the system.
     /// </summary>
     /// <param name="gamepad">The gamepad device that was disconnected.</param>
-    protected virtual void OnGamepadDisconnected(GamepadDevice gamepad)
-    {
-    }
+    protected virtual void OnGamepadDisconnected(GamepadDevice gamepad) { }
 
+    /// <summary>
+    /// Called when a gamepad is claimed (assigned for exclusive use) by the game.
+    /// </summary>
+    /// <param name="gamepad">The gamepad device that was claimed.</param>
+    protected virtual void OnGamepadClaimed(GamepadDevice gamepad) { }
+
+    /// <summary>
+    /// Called when a gamepad is freed (released from exclusive use) by the game.
+    /// </summary>
+    /// <param name="gamepad">The gamepad device that was freed.</param>
+    protected virtual void OnGamepadFreed(GamepadDevice gamepad) { }
     /// <summary>
     /// Called when the mouse cursor enters the game window.
     /// </summary>

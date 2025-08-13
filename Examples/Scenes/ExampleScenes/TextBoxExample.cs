@@ -81,7 +81,7 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void DrawInputDescriptionBottom(Rect rect)
         {
-            var curInputDeviceNoMouse = ShapeInput.CurrentInputDeviceTypeNoMouse;
+            var curInputDeviceNoMouse = Input.CurrentInputDeviceTypeNoMouse;
             string nextAlignementText = iaNextAlignement.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
             string decreaseFontSpacingText = iaDeacreaseFontSpacing.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
             string increaseFontSpacingText = iaIncreaseFontSpacing.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);

@@ -11,13 +11,6 @@ namespace Examples.Scenes.ExampleScenes
 {
     internal class ControlNodeTestContainer : ControlNodeContainer
     {
-        // public ControlNodeContainer()
-        // {
-        //     MouseFilter = MouseFilter.Pass;
-        // }
-
-        
-
         protected override void OnDraw()
         {
             Rect.DrawLines(2f, Colors.Light);
@@ -25,7 +18,7 @@ namespace Examples.Scenes.ExampleScenes
     }
     internal class ControlNodeLabel : ControlNode
     {
-        private static TextFont textFont = new(GAMELOOP.GetFont(FontIDs.JetBrains), 1f, Colors.Text);
+        private static TextFont textFont = new(GameloopExamples.Instance.GetFont(FontIDs.JetBrains), 1f, Colors.Text);
         public string Text { get; set; }
         public ControlNodeLabel(string text, AnchorPoint anchor, Vector2 stretch)
         {
@@ -33,16 +26,6 @@ namespace Examples.Scenes.ExampleScenes
             this.Anchor = anchor;
             this.Stretch = stretch;
         }
-
-        // protected override void ActiveWasChanged(bool value)
-        // {
-        //     Console.WriteLine($"Active was changed to {value} / Active In Hierarchy: {IsActiveInHierarchy}");
-        // }
-        //
-        // protected override void ParentActiveWasChanged(bool value)
-        // {
-        //     Console.WriteLine($"Parent Active was changed to {value} / Active In Hierarchy: {IsActiveInHierarchy}");
-        // }
 
         protected override void OnDraw()
         {
@@ -60,7 +43,7 @@ namespace Examples.Scenes.ExampleScenes
     }
     internal class ControlNodeTexBox : ControlNode
     {
-        private static TextFont textFont = new(GAMELOOP.GetFont(FontIDs.JetBrains), 1f, Colors.Text);
+        private static TextFont textFont = new(GameloopExamples.Instance.GetFont(FontIDs.JetBrains), 1f, Colors.Text);
         public string Text { get; set; }
         public ControlNodeTexBox(string text, AnchorPoint anchor, Vector2 stretch)
         {
@@ -93,7 +76,7 @@ namespace Examples.Scenes.ExampleScenes
         protected override bool GetPressedState()
         {
             if (!Selected) return false;
-            var acceptState = GAMELOOP.InputActionUIAccept.Consume(out _);
+            var acceptState = GameloopExamples.Instance.InputActionUIAccept.Consume(out _);
             return acceptState is { Consumed: false, Pressed: true };
             
             // if (!Selected) return false;
@@ -103,7 +86,7 @@ namespace Examples.Scenes.ExampleScenes
         protected override bool GetMousePressedState()
         {
             if (!MouseInside) return false;
-            var acceptState = GAMELOOP.InputActionUIAcceptMouse.Consume(out _);
+            var acceptState = GameloopExamples.Instance.InputActionUIAcceptMouse.Consume(out _);
             return acceptState is { Consumed: false, Pressed: true };
             
             // if (!MouseInside) return false;
@@ -112,10 +95,10 @@ namespace Examples.Scenes.ExampleScenes
 
         public override Direction GetNavigationDirection()
         {
-            var upState = GAMELOOP.InputActionUIUp.Consume(out _);
-            var downState = GAMELOOP.InputActionUIDown.Consume(out _);
-            var rightState = GAMELOOP.InputActionUIRight.Consume(out _);
-            var leftState = GAMELOOP.InputActionUILeft.Consume(out _);
+            var upState = GameloopExamples.Instance.InputActionUIUp.Consume(out _);
+            var downState = GameloopExamples.Instance.InputActionUIDown.Consume(out _);
+            var rightState = GameloopExamples.Instance.InputActionUIRight.Consume(out _);
+            var leftState = GameloopExamples.Instance.InputActionUILeft.Consume(out _);
             
             if (inputCooldownTimer > 0f)
             {
@@ -345,7 +328,7 @@ namespace Examples.Scenes.ExampleScenes
                 }
             }
             
-            var gamepad = GAMELOOP.CurGamepad;
+            var gamepad = Input.GamepadManager.LastUsedGamepad;
             
             inputActionTree.CurrentGamepad = gamepad;
             inputActionTree.Update(time.Delta);
@@ -371,14 +354,14 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnDrawUIExample(ScreenInfo ui)
         {
-            DrawInputDescription(GAMELOOP.UIRects.GetRect("bottom center"));
+            DrawInputDescription(GameloopExamples.Instance.UIRects.GetRect("bottom center"));
             container.Draw();
         }
         
         private void DrawInputDescription(Rect rect)
         {
             var rects = rect.SplitV(0.35f);
-            var curDevice = ShapeInput.CurrentInputDeviceTypeNoMouse;
+            var curDevice = Input.CurrentInputDeviceTypeNoMouse;
             string cycleText = cycleGridStyles.GetInputTypeDescription(curDevice, true, 1, false);
             string resetText = resetGridStyles.GetInputTypeDescription(curDevice, true, 1, false);
             string styleText = GridStyleNames[curGridStyle];

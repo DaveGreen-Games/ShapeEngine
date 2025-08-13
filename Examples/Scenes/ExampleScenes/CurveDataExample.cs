@@ -1,15 +1,11 @@
 using System.Numerics;
-using Examples.Scenes.ExampleScenes.PhysicsExampleSource;
-using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
-using ShapeEngine.Input;
 using ShapeEngine.StaticLib;
-using ShapeEngine.Random;
 using ShapeEngine.Screen;
 using ShapeEngine.Text;
 
@@ -18,7 +14,7 @@ namespace Examples.Scenes.ExampleScenes;
 public class CurveDataExample : ExampleScene
 {
     
-    private TextFont gameFont = new(GAMELOOP.GetFont(FontIDs.JetBrainsLarge), 15f, Colors.Warm);
+    private TextFont gameFont = new(GameloopExamples.Instance.GetFont(FontIDs.JetBrainsLarge), 15f, Colors.Warm);
     private readonly ShapeCamera camera;
     
     public CurveFloat testCurve = new(10)
@@ -71,13 +67,13 @@ public class CurveDataExample : ExampleScene
     }
     protected override void OnActivate(Scene oldScene)
     {
-        GAMELOOP.Camera = camera;
+        GameloopExamples.Instance.Camera = camera;
         camera.SetZoom(0.5f);
         FontDimensions.FontSizeRange = new(10, 500);
     }
     protected override void OnDeactivate()
     {
-        GAMELOOP.ResetCamera();
+        GameloopExamples.Instance.ResetCamera();
         FontDimensions.FontSizeRange = FontDimensions.FontSizeRangeDefault;
     }
     

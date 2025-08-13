@@ -30,7 +30,7 @@ public class PhysicsExample : ExampleScene
     
     private readonly List<TextureSurface> starSurfaces = new();
     
-    private readonly TextFont gameFont = new(GAMELOOP.GetFont(FontIDs.JetBrainsLarge), 15f, Colors.Warm);
+    private readonly TextFont gameFont = new(GameloopExamples.Instance.GetFont(FontIDs.JetBrainsLarge), 15f, Colors.Warm);
 
     private readonly PhysicsExampleSource.Ship ship;
     
@@ -105,7 +105,7 @@ public class PhysicsExample : ExampleScene
         
         Colors.OnColorPaletteChanged += OnColorPaletteChanged;
         
-        GAMELOOP.Camera = camera;
+        GameloopExamples.Instance.Camera = camera;
         camera.SetZoom(0.65f);
         ship.Spawn(sectorRect.Center, Rng.Instance.RandAngleDeg());
         follower.SetTarget(ship);
@@ -118,7 +118,7 @@ public class PhysicsExample : ExampleScene
         
         Colors.OnColorPaletteChanged -= OnColorPaletteChanged;
         
-        GAMELOOP.ResetCamera();
+        GameloopExamples.Instance.ResetCamera();
     }
     private void OnColorPaletteChanged()
     {

@@ -19,7 +19,7 @@ public sealed class InputTypeGamepadJoyAxis : IInputType
     /// <param name="inverted">Whether to invert the axis value. Default is false.</param>
     /// <param name="modifierKeySet">An optional set of modifier keys to apply to this input type.</param>
     /// <returns>A new <see cref="InputTypeGamepadJoyAxis"/> instance for the left X axis.</returns>
-    public static InputTypeGamepadJoyAxis CreateLeftX(float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, 
+    public static InputTypeGamepadJoyAxis CreateLeftX(float deadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, 
         bool inverted = false,  ModifierKeySet? modifierKeySet = null) => new (ShapeGamepadJoyAxis.LEFT_X, deadzone, inverted, modifierKeySet);
 
     /// <summary>
@@ -29,7 +29,7 @@ public sealed class InputTypeGamepadJoyAxis : IInputType
     /// <param name="inverted">Whether to invert the axis value. Default is false.</param>
     /// <param name="modifierKeySet">An optional set of modifier keys to apply to this input type.</param>
     /// <returns>A new <see cref="InputTypeGamepadJoyAxis"/> instance for the left Y axis.</returns>
-    public static InputTypeGamepadJoyAxis CreateLeftY(float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, 
+    public static InputTypeGamepadJoyAxis CreateLeftY(float deadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, 
         bool inverted = false, ModifierKeySet? modifierKeySet = null) => new (ShapeGamepadJoyAxis.LEFT_Y, deadzone, inverted, modifierKeySet);
 
     /// <summary>
@@ -39,7 +39,7 @@ public sealed class InputTypeGamepadJoyAxis : IInputType
     /// <param name="inverted">Whether to invert the axis value. Default is false.</param>
     /// <param name="modifierKeySet">An optional set of modifier keys to apply to this input type.</param>
     /// <returns>A new <see cref="InputTypeGamepadJoyAxis"/> instance for the right X axis.</returns>
-    public static InputTypeGamepadJoyAxis CreateRightX(float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, 
+    public static InputTypeGamepadJoyAxis CreateRightX(float deadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, 
         bool inverted = false, ModifierKeySet? modifierKeySet = null) => new (ShapeGamepadJoyAxis.RIGHT_X, deadzone, inverted, modifierKeySet);
 
     /// <summary>
@@ -49,7 +49,7 @@ public sealed class InputTypeGamepadJoyAxis : IInputType
     /// <param name="inverted">Whether to invert the axis value. Default is false.</param>
     /// <param name="modifierKeySet">An optional set of modifier keys to apply to this input type.</param>
     /// <returns>A new <see cref="InputTypeGamepadJoyAxis"/> instance for the right Y axis.</returns>
-    public static InputTypeGamepadJoyAxis CreateRightY(float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, 
+    public static InputTypeGamepadJoyAxis CreateRightY(float deadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, 
         bool inverted = false, ModifierKeySet? modifierKeySet = null) => new (ShapeGamepadJoyAxis.RIGHT_Y, deadzone, inverted, modifierKeySet);
     
     
@@ -65,7 +65,7 @@ public sealed class InputTypeGamepadJoyAxis : IInputType
     /// <param name="deadzone">The deadzone value. Input values below this threshold are ignored.</param>
     /// <param name="inverted">Whether the axis input is inverted. Default is false.</param>
     /// <param name="modifierKeySet">An optional set of modifier keys to apply to this input type.</param>
-    public InputTypeGamepadJoyAxis(ShapeGamepadJoyAxis axis, float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultJoyAxisThreshold, bool inverted = false,  ModifierKeySet? modifierKeySet = null)
+    public InputTypeGamepadJoyAxis(ShapeGamepadJoyAxis axis, float deadzone = InputSettings.GamepadSettings.DefaultJoyAxisThreshold, bool inverted = false,  ModifierKeySet? modifierKeySet = null)
     {
         this.axis = axis; 
         this.deadzone = deadzone;

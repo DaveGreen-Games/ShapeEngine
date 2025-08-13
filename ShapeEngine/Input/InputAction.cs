@@ -137,11 +137,11 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
     /// <item>Only used when input actions are locked.</item>
     /// <item>If this tag is contained in the lock blacklist while the lock is active, the <see cref="InputState"/> of this <see cref="InputAction"/> will not be available.</item>
     /// <item>If this tag is contained in the lock whitelist while the lock is active, the <see cref="InputState"/> of this <see cref="InputAction"/> will always be available.</item>
-    /// <item>If <see cref="ShapeInput.AllAccessTag"/> is used the <see cref="InputState"/> of this <see cref="InputAction"/> will always be available, regardless of the lock state.</item>
+    /// <item>If <see cref="InputSystem.AllAccessTag"/> is used the <see cref="InputState"/> of this <see cref="InputAction"/> will always be available, regardless of the lock state.</item>
     /// </list>
     /// </remarks>
     /// </summary>
-    public uint AccessTag { get; private set; } = ShapeInput.DefaultAccessTag;
+    public uint AccessTag { get; private set; } = InputSystem.DefaultAccessTag;
 
     /// <summary>
     /// The associated gamepad device, if any.
@@ -362,7 +362,7 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
     {
         inputDeviceType = InputDeviceType.None;
         if (!Active) return false;
-        if (ShapeInput.Locked && !ShapeInput.HasAccess(AccessTag))
+        if (InputSystem.Locked && !InputSystem.HasAccess(AccessTag))
         {
             Reset();//Good idea? It does not update anything, therefore, it should be reset.
             return false;

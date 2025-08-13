@@ -1,6 +1,7 @@
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
+using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.StaticLib;
@@ -26,7 +27,7 @@ public class FPSLabel
     public void Draw(Rect r, AnchorPoint textAlignement, float fontSpacing = 1f)
     {
         int fps = Raylib.GetFPS();
-        float f = (float)fps / (float)GAMELOOP.Window.FpsLimit; //FrameRateLimit;
+        float f = (float)fps / (float)Game.Instance.Window.FpsLimit; //FrameRateLimit;
         var c = normal.ColorRgba;
         if (fps < 28 || f < 0.5f) c = critical.ColorRgba;
         else if (f < 0.75f) c = slow.ColorRgba;

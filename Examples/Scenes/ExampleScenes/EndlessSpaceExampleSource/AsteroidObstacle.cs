@@ -1,5 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Core;
+using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.CircleDef;
@@ -225,13 +226,13 @@ internal class AsteroidObstacle : CollisionObject
 
                 shape.ScaleSize(1.25f);
                 perimeter = shape.DrawGappedOutline(perimeter, GappedLineInfo, gappedOutlineInfo);
-                gappedOutlineInfo = gappedOutlineInfo.MoveStartOffset(GAMELOOP.Time.Delta * 0.1f);
+                gappedOutlineInfo = gappedOutlineInfo.MoveStartOffset(Game.Instance.Time.Delta * 0.1f);
             }
             else
             {
                 shape.ScaleSize(1.5f);
                 perimeter = shape.DrawGappedOutline(perimeter, GappedLineInfo, gappedOutlineInfo);
-                gappedOutlineInfo = gappedOutlineInfo.MoveStartOffset(GAMELOOP.Time.Delta * 0.25f);
+                gappedOutlineInfo = gappedOutlineInfo.MoveStartOffset(Game.Instance.Time.Delta * 0.25f);
             }
 
         }

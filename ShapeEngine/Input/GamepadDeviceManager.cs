@@ -6,65 +6,43 @@ namespace ShapeEngine.Input;
 /// Manages multiple <see cref="GamepadDevice"/> instances, handling connection state,
 /// device claiming, releasing, and tracking last used gamepads.
 /// </summary>
-public sealed class GamepadDeviceManager : InputDeviceBase
+public sealed class GamepadDeviceManager
 {
-    /// <summary>
-    /// The default maximum number of gamepads supported by the manager.
-    /// </summary>
-    public const int DefaultMaxGamepads = 8;
-    
-    /// <summary>
-    /// Event triggered when a gamepad's connection state changes.
-    /// </summary>
-    public event Action<GamepadDevice, bool>? OnGamepadConnectionChanged;
     /// <summary>
     /// Gets the maximum number of gamepads supported by this manager.
     /// </summary>
     public int MaxGamepads => gamepads.Length;
-    
-    private bool isActive;
-    
-    /// <summary>
-    /// <para>
-    /// The process priority of this gamepad device manager instance.
-    /// </para>
-    /// <para>
-    /// Change this value to change the order in which this device manager is processed in <see cref="ShapeInput"/>.
-    /// Lower priorities are processed first.
-    /// </para>
-    /// </summary>
-    /// <remarks>
-    /// A unique value based on the order of instantiation is assigned per default.
-    /// </remarks>
-    public uint DeviceProcessPriority = processPriorityCounter++;
-    
-    private readonly GamepadDevice[] gamepads;
+
+    private InputSettings.GamepadSettings gamepadSettings;
+    private GamepadDevice[] gamepads;
     /// <summary>
     /// List of <see cref="GamepadDevice"/> instances that registered input during the last update cycle,
-    /// considering any filters or settings applied via <see cref="InputDeviceUsageDetectionSettings"/>.
+    /// considering any filters or settings applied via <see cref="InputSettings"/>.
     /// This list is cleared and repopulated on each update.
     /// </summary>
     public readonly List<GamepadDevice> LastUsedGamepads = [];
     /// <summary>
-    /// List of <see cref="GamepadDevice"/> instances that registered input during the last update cycle,
-    /// ignoring any filters or settings from <see cref="InputDeviceUsageDetectionSettings"/>.
-    /// This provides a raw view of all input activity per update.
-    /// </summary>
-    public readonly List<GamepadDevice> LastUsedGamepadsRaw = [];
-
-    /// <summary>
     /// The most recently used gamepad that registered input during the last update cycle,
-    /// considering any filters or settings applied via <see cref="InputDeviceUsageDetectionSettings"/>.
+    /// considering any filters or settings applied via <see cref="InputSettings"/>.
     /// This is <c>null</c> if no gamepad was used.
     /// </summary>
-    public GamepadDevice? LastUsedGamepad;
+    public GamepadDevice? LastUsedGamepad { get; private set; } = null;
     
-    /// <summary>
-    /// The most recently used gamepad that registered input during the last update cycle,
-    /// ignoring any filters or settings from <see cref="InputDeviceUsageDetectionSettings"/>.
-    /// This is <c>null</c> if no gamepad was used.
-    /// </summary>
-    public GamepadDevice? LastUsedGamepadRaw;
+    private readonly List<GamepadDevice> claimedGamepads = [];
+   /// <summary>
+   /// The most recently claimed gamepad, or <c>null</c> if none is claimed.
+   /// </summary>
+   public GamepadDevice? LastClaimedGamepad { get; private set; } = null;
+   
+   /// <summary>
+   /// Gets the number of currently claimed gamepads.
+   /// </summary>
+   public int ClaimedGamepadsCount => claimedGamepads.Count;
+   
+   /// <summary>
+   /// The button that, when pressed, will automatically claim a gamepad if available.
+   /// </summary>
+   public ShapeGamepadButton AutomaticGamepadClaimButton = ShapeGamepadButton.RIGHT_FACE_DOWN;
     
     /// <summary>
     /// Event triggered when a gamepad button is pressed.
@@ -74,88 +52,78 @@ public sealed class GamepadDeviceManager : InputDeviceBase
     /// Event triggered when a gamepad button is released.
     /// </summary>
     public event Action<GamepadDevice, ShapeGamepadButton>? OnGamepadButtonReleased;
-
     /// <summary>
-    /// Gets the usage detection settings for all the gamepad input devices.
+    /// Event triggered when a gamepad's connection state changes.
+    /// The <c>bool</c> parameter indicates whether the gamepad is connected (<c>true</c>) or disconnected (<c>false</c>).
     /// </summary>
-    public InputDeviceUsageDetectionSettings.GamepadSettings UsageDetectionSettings { get; private set; } = new();
+    public event Action<GamepadDevice, bool>? OnGamepadConnectionChanged;
+    
+    /// <summary>
+    /// Event triggered when a gamepad is claimed (reserved for use).
+    /// </summary>
+    public event Action<GamepadDevice>? OnGamepadClaimed;
+    
+    /// <summary>
+    /// Event triggered when a gamepad is freed (released from being claimed).
+    /// </summary>
+    public event Action<GamepadDevice>? OnGamepadFreed;
     
     /// <summary>
     /// Initializes a new instance of the <see cref="GamepadDeviceManager"/> class.
     /// </summary>
-    /// <param name="maxGamepads">Maximum number of gamepads to manage.</param>
-    public GamepadDeviceManager(int maxGamepads = DefaultMaxGamepads)
+    /// <param name="maxGamepadCount">Maximum number of gamepads to manage.</param>
+    /// <param name="settings">The input settings to use for gamepad configuration.</param>
+    internal GamepadDeviceManager(int maxGamepadCount, InputSettings.GamepadSettings settings)
     {
-        if (maxGamepads <= 0) maxGamepads = 1;
-        gamepads = new GamepadDevice[maxGamepads];
-        GamepadSetup();
-    }
-
-    /// <inheritdoc cref="InputDeviceBase.GetDeviceProcessPriority"/>
-    public override uint GetDeviceProcessPriority() => DeviceProcessPriority;
-    
-    /// <summary>
-    /// Gets the type of input device managed by this manager.
-    /// </summary>
-    public override InputDeviceType GetDeviceType() => InputDeviceType.Gamepad;
-
-    /// <summary>
-    /// Updates the state of all managed gamepads and checks for connection changes.
-    /// </summary>
-    public override bool Update(float dt, bool wasOtherDeviceUsed)
-    {
-        if (!isActive) return false;
-        return CheckGamepadConnections(dt, wasOtherDeviceUsed);
+        gamepadSettings = settings;
+        gamepads = new GamepadDevice[maxGamepadCount];
+        if(maxGamepadCount > 0) GamepadSetup();
     }
 
     /// <summary>
-    /// Indicates whether the gamepad manager is currently active.
+    /// Changes the number of managed gamepads to the specified value.
+    /// Disconnects and removes gamepads if the new count is lower, or adds new gamepads if higher.
+    /// Returns 0 if unchanged, -1 if reduced, 1 if increased.
     /// </summary>
-    public override bool IsActive() => isActive;
-
-    /// <summary>
-    /// Activates all managed gamepads by calling their <c>Activate()</c> method.
-    /// </summary>
-    public override void Activate()
+    /// <param name="newGamepadCount">The new number of gamepads to manage.</param>
+    /// <returns>
+    /// 0 if the count is unchanged, -1 if the count was reduced, 1 if increased.
+    /// </returns>
+    public int ChangedGamepadCount(int newGamepadCount)
     {
-        if (isActive) return;
-        isActive = true;
-        foreach (var gamepad in gamepads)
+        if(newGamepadCount == gamepads.Length) return 0;
+
+        if (newGamepadCount <= 0)
         {
-            gamepad.Activate();
+            foreach(var gamepad in gamepads) gamepad.Disconnect();
+            gamepads = [];
+            return -1;
         }
-    }
-    
-    /// <summary>
-    /// Deactivates all managed gamepads by calling their <c>Deactivate()</c> method.
-    /// </summary>
-    public override void Deactivate()
-    {
-        if (!isActive) return;
-        isActive = false;
         
-        LastUsedGamepads.Clear();
-        
-        foreach (var gamepad in gamepads)
+        if (newGamepadCount < gamepads.Length)
         {
-            gamepad.Deactivate();
+            for (int i = gamepads.Length - 1; i >= newGamepadCount; i--)
+            {
+                gamepads[i].Disconnect();
+            }
+            var newGamepads = new GamepadDevice[newGamepadCount];
+            Array.Copy(gamepads, newGamepads, newGamepadCount);
+            gamepads = newGamepads;
+            return -1;
+        }
+        else //bigger
+        {
+            var newGamepads = new GamepadDevice[newGamepadCount];
+            Array.Copy(gamepads, newGamepads, gamepads.Length);
+            for (int i = gamepads.Length; i < newGamepadCount; i++)
+            {
+                newGamepads[i] = CreateGamepad(i);
+            }
+            gamepads = newGamepads;
+            return 1;
         }
     }
 
-    /// <summary>
-    /// Applies new input device usage detection settings to all managed gamepads.
-    /// Updates the <see cref="UsageDetectionSettings"/> property and propagates the settings to each gamepad.
-    /// </summary>
-    /// <param name="settings">The new input device usage detection settings to apply.</param>
-    public override void ApplyInputDeviceChangeSettings(InputDeviceUsageDetectionSettings settings)
-    {
-        UsageDetectionSettings = settings.Gamepad;
-        foreach (var gamepad in gamepads)
-        {
-            gamepad.OverrideInputDeviceChangeSettings(settings);
-        }
-    }
-    
     #region Gamepad
 
     /// <summary>
@@ -195,6 +163,14 @@ public sealed class GamepadDeviceManager : InputDeviceBase
 
         return result;
     }
+    /// <summary>
+    /// Gets a list of all claimed gamepads (connected but not available).
+    /// </summary>
+    public List<GamepadDevice> GetClaimedGamepads()
+    {
+        var copy = new List<GamepadDevice>(claimedGamepads);
+        return copy;
+    }
     
     /// <summary>
     /// Checks if a gamepad exists at the specified index.
@@ -220,6 +196,9 @@ public sealed class GamepadDeviceManager : InputDeviceBase
     /// </summary>
     /// <param name="preferredIndex">Preferred gamepad index, or -1 for any available.</param>
     /// <returns>The claimed gamepad, or null if none available.</returns>
+    /// <remarks>
+    /// If <see cref="preferredIndex"/> is not available, the method will search through all gamepads.
+    /// </remarks>
     public GamepadDevice? RequestGamepad(int preferredIndex = -1)
     {
         var preferredGamepad = GetGamepad(preferredIndex);
@@ -239,7 +218,22 @@ public sealed class GamepadDeviceManager : InputDeviceBase
         }
         return null;
     }
-    
+    /// <summary>
+    /// Claims the gamepad at the specified index if it is connected and available.
+    /// </summary>
+    /// <param name="index">The index of the gamepad to claim.</param>
+    /// <returns>The claimed <see cref="GamepadDevice"/> if successful; otherwise, <c>null</c>.</returns>
+    public GamepadDevice? ClaimGamepad(int index)
+    {
+        var gamepad = GetGamepad(index);
+        if (gamepad is { Connected: true, Available: true })
+        {
+            gamepad.Claim();
+            return gamepad;
+        }
+
+        return null;
+    }
     /// <summary>
     /// Returns (frees) the gamepad at the specified index.
     /// </summary>
@@ -249,53 +243,7 @@ public sealed class GamepadDeviceManager : InputDeviceBase
     /// </summary>
     public void ReturnGamepad(GamepadDevice gamepad) => GetGamepad(gamepad.Index)?.Free();
 
-    /// <summary>
-    /// Checks and updates the connection state of all managed gamepads.
-    /// Triggers connection/disconnection events and tracks last used gamepads.
-    /// </summary>
-    private bool CheckGamepadConnections(float dt, bool wasOtherDeviceUsed)
-    {
-        LastUsedGamepads.Clear();
-        var used = false;
-        for (var i = 0; i < gamepads.Length; i++)
-        {
-            var gamepad = gamepads[i];
-            if (Raylib.IsGamepadAvailable(i))
-            {
-                if (!gamepad.Connected)
-                {
-                    gamepad.Connect();
-                    OnGamepadConnectionChanged?.Invoke(gamepad, true);
-                }
 
-                if (gamepad.Update(dt, wasOtherDeviceUsed))
-                {
-                    LastUsedGamepads.Add(gamepad);
-                    used = true;
-                }
-            }
-            else
-            {
-                if (gamepad.Connected)
-                {
-                    if (gamepad == LastUsedGamepad) LastUsedGamepad = null;
-                        
-                    gamepad.Disconnect();
-                    OnGamepadConnectionChanged?.Invoke(gamepad, false);
-                }
-            }
-            
-        }
-
-
-        if (LastUsedGamepads.Count > 0)
-        {
-            LastUsedGamepad = LastUsedGamepads[^1];
-        }
-
-        return used;
-
-    }
     /// <summary>
     /// Initializes all managed gamepads and sets up button event handlers.
     /// </summary>
@@ -303,24 +251,50 @@ public sealed class GamepadDeviceManager : InputDeviceBase
     {
         for (var i = 0; i < gamepads.Length; i++)
         {
-            var gamepad =  new GamepadDevice(i, Raylib.IsGamepadAvailable(i));
-            gamepads[i] = gamepad;
-            gamepad.OnButtonPressed += GamepadButtonWasPressed;
-            gamepad.OnButtonReleased += GamepadButtonWasReleased;
-            gamepad.OnInputDeviceChangeSettingsChanged += OnGamepadUsageDetectionSettingsChanged;
+            gamepads[i] = CreateGamepad(i);
+        }
+    }
+    
+    private GamepadDevice CreateGamepad(int index)
+    {
+        var gamepad = new GamepadDevice(index, gamepadSettings);
+        gamepad.OnButtonPressed += GamepadButtonWasPressed;
+        gamepad.OnButtonReleased += GamepadButtonWasReleased;
+        gamepad.OnConnectionChanged += GamepadConnectionHasChanged;
+        gamepad.OnClaimed += GamepadWasClaimed;
+        gamepad.OnFreed += GamepadWasFreed;
+        return gamepad;
+    }
+
+    private void GamepadWasFreed(GamepadDevice gamepad)
+    {
+        OnGamepadFreed?.Invoke(gamepad);
+        
+        claimedGamepads.Remove(gamepad);
+        if (LastClaimedGamepad == gamepad)
+        {
+            LastClaimedGamepad = claimedGamepads.Count > 0 ? claimedGamepads[^1] : null;
         }
     }
 
-    private void OnGamepadUsageDetectionSettingsChanged(GamepadDevice gamepadDevice, InputDeviceUsageDetectionSettings settings)
+    private void GamepadWasClaimed(GamepadDevice gamepad)
     {
-        UsageDetectionSettings = settings.Gamepad;
+        OnGamepadClaimed?.Invoke(gamepad);
+    }
+
+    /// <summary>
+    /// Applies new input device usage detection settings to all managed gamepads.
+    /// Propagates the settings to each gamepad.
+    /// </summary>
+    /// <param name="settings">The new input device usage detection settings to apply.</param>
+    internal void ApplyInputDeviceChangeSettings(InputSettings settings)
+    {
+        gamepadSettings = settings.Gamepad;
         foreach (var gamepad in gamepads)
         {
-            if(gamepad == gamepadDevice) continue;
-            gamepad.OverrideInputDeviceChangeSettings(settings);
+            gamepad.ApplyInputDeviceChangeSettings(settings);
         }
     }
-
     /// <summary>
     /// Handler for when a gamepad button is released.
     /// </summary>
@@ -328,8 +302,50 @@ public sealed class GamepadDeviceManager : InputDeviceBase
     /// <summary>
     /// Handler for when a gamepad button is pressed.
     /// </summary>
-    private void GamepadButtonWasPressed(GamepadDevice gamepad, ShapeGamepadButton button) => OnGamepadButtonPressed?.Invoke(gamepad, button);
+    private void GamepadButtonWasPressed(GamepadDevice gamepad, ShapeGamepadButton button)
+    {
+        OnGamepadButtonPressed?.Invoke(gamepad, button);
+        if (AutomaticGamepadClaimButton != ShapeGamepadButton.UNKNOWN && button == AutomaticGamepadClaimButton)
+        {
+            if (gamepad.Claim())
+            {
+                claimedGamepads.Add(gamepad);
+                LastClaimedGamepad = gamepad;
+            }
+        }
+    }
 
+    /// <summary>
+    /// Updates the state of all managed gamepads and checks for connection changes.
+    /// </summary>
+    internal void ClearUsedGamepads()
+    {
+        LastUsedGamepads.Clear();
+    }
+
+    private void GamepadConnectionHasChanged(GamepadDevice gamepad, bool connected)
+    {
+        OnGamepadConnectionChanged?.Invoke(gamepad, connected);
+        if (!connected)
+        {
+            LastUsedGamepads.Remove(gamepad);
+            if (LastUsedGamepad == gamepad) LastUsedGamepad = null;
+            
+            LastUsedGamepad ??= LastUsedGamepads.Count > 0 ? LastUsedGamepads[^1] : null;
+            
+            
+            claimedGamepads.Remove(gamepad);
+            if(LastClaimedGamepad == gamepad) LastClaimedGamepad = null;
+            
+            LastClaimedGamepad ??= claimedGamepads.Count > 0 ? claimedGamepads[^1] : null;
+        }
+    }
+
+    internal void GamepadWasUsed(GamepadDevice gamepad)
+    {
+        LastUsedGamepads.Add(gamepad);
+        LastUsedGamepad = gamepad;
+    }
     #endregion
     
 }

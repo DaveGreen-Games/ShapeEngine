@@ -16,7 +16,7 @@ public sealed class InputTypeGamepadTriggerAxis : IInputType
     /// <param name="inverted">Whether the trigger axis input should be inverted. (From <c>[0 - 1]</c> to <c>[1 - 0]</c></param>
     /// <param name="modifierKeySet">An optional set of modifier keys to apply to this input type.</param>
     /// <returns>A new <see cref="InputTypeGamepadTriggerAxis"/> for the left trigger.</returns>
-    public static InputTypeGamepadTriggerAxis CreateLeftTrigger(float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold,  
+    public static InputTypeGamepadTriggerAxis CreateLeftTrigger(float deadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold,  
         bool inverted = false, ModifierKeySet? modifierKeySet = null) => new (ShapeGamepadTriggerAxis.LEFT, deadzone, inverted, modifierKeySet);
 
     /// <summary>
@@ -26,7 +26,7 @@ public sealed class InputTypeGamepadTriggerAxis : IInputType
     /// <param name="inverted">Whether the trigger axis input should be inverted. (From <c>[0 - 1]</c> to <c>[1 - 0]</c></param>
     /// <param name="modifierKeySet">An optional set of modifier keys to apply to this input type.</param>
     /// <returns>A new <see cref="InputTypeGamepadTriggerAxis"/> for the right trigger.</returns>
-    public static InputTypeGamepadTriggerAxis CreateRightTrigger(float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold,  
+    public static InputTypeGamepadTriggerAxis CreateRightTrigger(float deadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold,  
         bool inverted = false, ModifierKeySet? modifierKeySet = null) => new (ShapeGamepadTriggerAxis.RIGHT, deadzone, inverted, modifierKeySet);
     
     
@@ -42,7 +42,7 @@ public sealed class InputTypeGamepadTriggerAxis : IInputType
     /// <param name="deadzone">The deadzone value. Input values below this threshold are ignored.</param>
     /// <param name="inverted">Whether the trigger axis input should be inverted. (From <c>[0 - 1]</c> to <c>[1 - 0]</c></param>
     /// <param name="modifierKeySet">An optional set of modifier keys to apply to this input type.</param>
-    public InputTypeGamepadTriggerAxis(ShapeGamepadTriggerAxis axis, float deadzone = InputDeviceUsageDetectionSettings.GamepadSettings.DefaultTriggerAxisThreshold, bool inverted = false,  ModifierKeySet? modifierKeySet = null)
+    public InputTypeGamepadTriggerAxis(ShapeGamepadTriggerAxis axis, float deadzone = InputSettings.GamepadSettings.DefaultTriggerAxisThreshold, bool inverted = false,  ModifierKeySet? modifierKeySet = null)
     {
         this.axis = axis; 
         this.deadzone = deadzone;

@@ -7,9 +7,12 @@ using ShapeEngine.Screen;
 
 namespace ShapeEngine.Core.GameDef;
 
+
 /// <summary>
 /// The core game class.
-/// Inherit this class, create a new instance of this class and call Run() to start the game.
+/// Inherit this class, create a new instance of this class and call <see cref="Run"/> to start the game.
+/// Only one instance of the game should be created per application.
+/// A singleton <see cref="Instance"/> property will be set to the newly created game instance and will only allow one instance of the game to be created per application.
 /// </summary>
 /// <remarks>
 /// Main Game loop call order:
@@ -246,6 +249,10 @@ public partial class Game
     /// <returns>The current ScreenTexture instance used by the game.</returns>
     public ScreenTexture GetGameTexture() => gameTexture;
 
+    /// <summary>
+    /// Gets the input manager for handling keyboard, mouse, and gamepad input.
+    /// </summary>
+    public readonly InputSystem Input;
     #endregion
     
     #region Private Members
@@ -266,18 +273,54 @@ public partial class Game
     #endregion
     
     #region Constructor
+
+    
+    
+    /// <summary>
+    /// Gets the singleton instance of the current game.
+    /// </summary>
+    /// <remarks>
+    /// This property is initialized automatically in the constructor.
+    /// You need to create a game instance before accessing this property.
+    /// If it is accessed before being set, a NullReferenceException will be thrown.
+    /// You should only ever create one game instance per application,
+    /// but in case you create multiple, this property will always point to the last created game instance.
+    /// </remarks>
+    public static Game Instance => instance ?? throw new NullReferenceException("Game instance is not initialized! You need to create a game instance before accessing this property!");
+
+    private static Game? instance;
+    
+    /// <summary>
+    /// Gets the current <see cref="Instance"/> cast to the specified type <typeparamref name="T"/>.
+    /// </summary>
+    /// <typeparam name="T">The type to cast the game instance to. Must inherit from <see cref="Game"/>.</typeparam>
+    /// <returns>The game instance as type <typeparamref name="T"/>.</returns>
+    /// <exception cref="InvalidCastException">Thrown if the game instance is not of type <typeparamref name="T"/>.</exception>
+    public static T GetInstanceAs<T>() where T : Game
+    {
+        if (instance is T gameInstance)
+        {
+            return gameInstance;
+        }
+        throw new InvalidCastException($"Game instance is not of type {typeof(T).Name}!");
+    }
+    
     /// <summary>
     /// Initializes a new instance of the Game class with the specified game settings and window settings.
     /// </summary>
     /// <remarks>
-    /// Creating a new instance of the game class will set <see cref="CurrentGameInstance"/> to the newly created class!
-    /// You should never create more than one instance of the game class per application!
+    /// Only one instance of the game class should be created per application.
+    /// <see cref="Instance"/> will be set to the created instance.
     /// </remarks>
     /// <param name="gameSettings">The settings for the game, including fixed framerate, screen texture mode, and rendering options.</param>
     /// <param name="windowSettings">The settings for the window, including size, position, and display properties.</param>
-    public Game(GameSettings gameSettings, WindowSettings windowSettings)
+    /// <param name="inputSettings">The settings for input devices, including keyboard, mouse, and gamepad configurations.</param>
+    public Game(GameSettings gameSettings, WindowSettings windowSettings, InputSettings inputSettings)
     {
-        CurrentGameInstance = this;
+        if (instance != null) 
+            throw new InvalidOperationException("Game instance already exists! You should only create one instance of the game class per application!");
+        
+        instance = this;
         
         #if DEBUG
         DebugMode = true;
@@ -352,8 +395,11 @@ public partial class Game
         GameUiScreenInfo = gameTexture.GameUiScreenInfo;
         UIScreenInfo = new(Window.ScreenArea, mousePosUI);
 
-        ShapeInput.OnInputDeviceChanged += ResolveOnInputDeviceChanged;
-        ShapeInput.ActiveGamepadDeviceManager.OnGamepadConnectionChanged += ResolveOnActiveGamepadConnectionChanged;
+        Input = new InputSystem(inputSettings);
+        Input.OnInputDeviceChanged += ResolveOnInputDeviceChanged;
+        Input.GamepadManager.OnGamepadConnectionChanged += ResolveOnGamepadConnectionChanged;
+        Input.GamepadManager.OnGamepadClaimed += ResolveOnGamepadClaimed;
+        Input.GamepadManager.OnGamepadFreed += ResolveOnGamepadFreed;
         
         //This sets the current directory to the executable's folder, enabling double-click launches.
         //without this, the executable has to be launched from the command line
@@ -520,9 +566,9 @@ public partial class Game
         if (newScene == CurScene) return;
         
         CurScene.ResolveDeactivate();
-        CurScene.SetGameReference(null);
+        // CurScene.SetGameReference(null);
         
-        newScene.SetGameReference(this);
+        // newScene.SetGameReference(this);
         newScene.ResolveActivate(CurScene);
        
         CurScene = newScene;
@@ -631,7 +677,19 @@ public partial class Game
     #endregion
     
     #region Gamepad Connection
-    private void ResolveOnActiveGamepadConnectionChanged(GamepadDevice gamepad, bool connected)
+
+    private void ResolveOnGamepadClaimed(GamepadDevice gamepad)
+    {
+        OnGamepadClaimed(gamepad);
+        CurScene.ResolveOnGamepadClaimed(gamepad);
+    }
+
+    private void ResolveOnGamepadFreed(GamepadDevice gamepad)
+    {
+        OnGamepadFreed(gamepad);
+        CurScene.ResolveOnGamepadFreed(gamepad);
+    }
+    private void ResolveOnGamepadConnectionChanged(GamepadDevice gamepad, bool connected)
     {
         if (connected)
         {

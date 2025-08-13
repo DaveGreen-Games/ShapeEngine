@@ -1,4 +1,5 @@
 using System.Text;
+using ShapeEngine.Core.GameDef;
 
 namespace ShapeEngine.Input;
 
@@ -18,7 +19,7 @@ public sealed class InputTypeMouseButton : IInputType
     /// <param name="button">The mouse button to represent.</param>
     /// <param name="deadzone">The deadzone threshold for input detection.</param>
     /// <param name="modifierKeySet">Optional set of modifier keys required for activation.</param>
-    public InputTypeMouseButton(ShapeMouseButton button, float deadzone = InputDeviceUsageDetectionSettings.MouseSettings.DefaultMouseThreshold, ModifierKeySet? modifierKeySet = null)
+    public InputTypeMouseButton(ShapeMouseButton button, float deadzone = InputSettings.MouseSettings.DefaultMouseThreshold, ModifierKeySet? modifierKeySet = null)
     {
         this.button = button; 
         this.deadzone = deadzone;
@@ -32,10 +33,10 @@ public sealed class InputTypeMouseButton : IInputType
     public void SetDeadzone(float value) { deadzone = value; }
 
     /// <inheritdoc/>
-    public InputState GetState(GamepadDevice? gamepad = null) => ShapeInput.ActiveMouseDevice.CreateInputState(button, deadzone, deadzone,  modifierKeySet);
+    public InputState GetState(GamepadDevice? gamepad = null) => Game.Instance.Input.Mouse.CreateInputState(button, deadzone, deadzone,  modifierKeySet);
 
     /// <inheritdoc/>
-    public InputState GetState(InputState prev, GamepadDevice? gamepad = null) => ShapeInput.ActiveMouseDevice.CreateInputState(button, prev, deadzone,  deadzone, modifierKeySet);
+    public InputState GetState(InputState prev, GamepadDevice? gamepad = null) => Game.Instance.Input.Mouse.CreateInputState(button, prev, deadzone,  deadzone, modifierKeySet);
     /// <inheritdoc/>
     public string GetName(bool shorthand = true)
     {
