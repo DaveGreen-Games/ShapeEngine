@@ -317,7 +317,7 @@ public partial class Game
     /// <param name="inputSettings">The settings for input devices, including keyboard, mouse, and gamepad configurations.</param>
     public Game(GameSettings gameSettings, WindowSettings windowSettings, InputSettings inputSettings)
     {
-        if(instance != null) 
+        if (instance != null) 
             throw new InvalidOperationException("Game instance already exists! You should only create one instance of the game class per application!");
         
         instance = this;
