@@ -178,7 +178,6 @@ public sealed class KeyboardDevice : InputDevice
         
         wasUsed = false;
         wasUsedRaw = false;
-        wasUsedRaw = false;
         
         PressedButtons.Clear();
         ReleasedButtons.Clear();
