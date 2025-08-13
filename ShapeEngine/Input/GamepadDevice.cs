@@ -389,7 +389,6 @@ public sealed class GamepadDevice : InputDevice
         
         wasUsed = false;
         wasUsedRaw = false;
-        wasUsedRaw = false;
         
         PressedButtons.Clear();
         ReleasedButtons.Clear();
