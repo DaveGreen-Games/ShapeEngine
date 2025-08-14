@@ -242,6 +242,12 @@ public sealed class InputGesture
                 {
                     timer = 0f;
                     count = 0;
+
+                    if (ActivationType == Type.LongRelease)
+                    {
+                        return new(ActivationType, State.InProgress, 1f);
+                    }
+                    
                     if (ActivationType == Type.LongPress)
                     {
                         CurState = State.Completed;
@@ -294,6 +300,12 @@ public sealed class InputGesture
                 
                 if(ActivationType == Type.LongRelease)
                 {
+                    if (timer > 0f)
+                    {
+                        CurState = State.Failed;
+                        NormalizedProgress = 0f;
+                        return new(ActivationType, CurState, NormalizedProgress);
+                    }
                     CurState = State.Completed;
                     NormalizedProgress = 1f;
                     return new(ActivationType, CurState, NormalizedProgress);

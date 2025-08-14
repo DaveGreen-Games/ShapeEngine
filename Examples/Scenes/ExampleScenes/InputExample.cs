@@ -423,8 +423,8 @@ namespace Examples.Scenes.ExampleScenes
             InputActionSettings defaultSettings = new();
             var q = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
             var x = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
-            var activation = InputGesture.LongPress(1);
-            button = new(defaultSettings, activation,q, x);
+            var gesture = InputGesture.LongPress(1);
+            button = new(defaultSettings, gesture,q, x);
             inputActionTree = [button];
         }
         public override void Update(float dt, GamepadDevice? gamepad, InputDeviceType inputDeviceType)
@@ -543,11 +543,11 @@ namespace Examples.Scenes.ExampleScenes
             this.textFont = new(font, 1f, Colors.Medium);
             
             var settings = new InputActionSettings();
-            var activation = InputGesture.DoubleTap(0.25f);
+            var gesture = InputGesture.DoubleTap(0.25f);
             this.title = "Double Tap";
             var q = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
             var x = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
-            button = new(settings, activation, q, x);
+            button = new(settings, gesture, q, x);
             
             inputActionTree = [button];
         }
