@@ -987,39 +987,102 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
 // InputState just has an InputActionActivation.Result member
 // InputAction has a InputActionActivation? nullable member
 
-public class InputActionActivation
+
+/// <summary>
+/// Represents an activation logic for an <see cref="InputAction"/>.
+/// Handles tap, multi-tap, long press, and long release activations,
+/// tracking progress, state, and completion.
+/// </summary>
+public sealed class InputActionActivation
 {
+    /// <summary>
+    /// Represents the possible states of an <see cref="InputActionActivation"/>.
+    /// </summary>
     public enum State
     {
-        None = 0,//Q: rename to Idle or Waiting
-        InProgress = 1,
-        Completed = 2,
-        Failed = 3
+        /// <summary>
+        /// The activation is waiting to start.
+        /// </summary>
+        Waiting = 1,
+        /// <summary>
+        /// The activation is currently in progress.
+        /// </summary>
+        InProgress = 2,
+        /// <summary>
+        /// The activation has completed successfully.
+        /// </summary>
+        Completed = 4,
+        /// <summary>
+        /// The activation has failed.
+        /// </summary>
+        Failed = 8
     }
+    
+    /// <summary>
+    /// Represents the types of activation for an <see cref="InputActionActivation"/>.
+    /// </summary>
     public enum Type
     { 
-        None = 0,
-        Press = 1,
-        Hold = 2,
-        Release = 3,
-        Tap = 4,
-        MultiTap = 5,
-        LongPress = 6,
-        LongRelease = 7
+        /// <summary>
+        /// No activation type.
+        /// </summary>
+        None = 1,
+        /// <summary>
+        /// Single tap activation.
+        /// </summary>
+        Tap = 2,
+        /// <summary>
+        /// Multi-tap activation.
+        /// </summary>
+        MultiTap = 4,
+        /// <summary>
+        /// Long press activation.
+        /// </summary>
+        LongPress = 8,
+        /// <summary>
+        /// Long release activation.
+        /// </summary>
+        LongRelease = 16
     }
+    
+    /// <summary>
+    /// Represents the result of an <see cref="InputActionActivation"/> update.
+    /// Contains the activation type, current state, and normalized progress.
+    /// </summary>
     public readonly struct Result
     {
+        /// <summary>
+        /// The type of activation (e.g., Tap, MultiTap, LongPress, etc.).
+        /// </summary>
         public readonly Type ActivationType;
+    
+        /// <summary>
+        /// The current state of the activation (Waiting, InProgress, Completed, Failed).
+        /// </summary>
         public readonly State CurState;
+    
+        /// <summary>
+        /// The normalized progress of the activation, clamped between 0 and 1.
+        /// </summary>
         public readonly float NormalizedProgress;
-
+    
+        /// <summary>
+        /// Initializes a new instance of <see cref="Result"/> with default values.
+        /// </summary>
         public Result()
         {
             ActivationType = Type.None;
-            CurState = State.None;
+            CurState = State.Waiting;
             NormalizedProgress = 0f;
         }
-        public Result(Type activationType, State curState, float normalizedProgress)
+    
+        /// <summary>
+        /// Initializes a new instance of <see cref="Result"/> with specified values.
+        /// </summary>
+        /// <param name="activationType">The type of activation.</param>
+        /// <param name="curState">The current state of the activation.</param>
+        /// <param name="normalizedProgress">The normalized progress value.</param>
+        internal Result(Type activationType, State curState, float normalizedProgress)
         {
             ActivationType = activationType;
             CurState = curState;
@@ -1028,32 +1091,46 @@ public class InputActionActivation
     }
     
     
-    // public readonly Type CurActivationType;
+    /// <summary>
+    /// The type of activation (e.g., Tap, MultiTap, LongPress, etc.)
+    /// </summary>
     public readonly Type ActivationType;
+
+    /// <summary>
+    /// The duration required for the activation, in seconds.
+    /// </summary>
     public readonly float Duration;
+
+    /// <summary>
+    /// The target count for multi-tap activations.
+    /// </summary>
     public readonly int TargetCount;
+
+    /// <summary>
+    /// The current state of the activation (Waiting, InProgress, Completed, Failed).
+    /// </summary>
     public State CurState { get; private set; }
+
+    /// <summary>
+    /// The normalized progress of the activation, clamped between 0 and 1.
+    /// </summary>
     public float NormalizedProgress { get; private set; }
 
     private int count;
     private float timer;
     
-    public InputActionActivation()
+    private InputActionActivation()
     {
-        // CurActivationType = Type.None;
         ActivationType = Type.None;
-        CurState = State.None;
+        CurState = State.Waiting;
         Duration = -1f;
         TargetCount = -1;
         NormalizedProgress = 0f;
         timer = 0f;
         count = 0;
     }
-
     private InputActionActivation(Type type, float duration, int targetCount)
     {
-        
-        // CurActivationType = Type.None;
         ActivationType = type;
         
         Duration = duration;
@@ -1070,60 +1147,179 @@ public class InputActionActivation
     {
         if (ActivationType == Type.None) return new();
         
-        if(CurState is State.Failed or State.Completed) ResetState();
-
-        //TODO: Implement
+        if(CurState is State.Failed or State.Completed) Reset();
         
-        if (CurState is State.InProgress)
+        if (CurState is State.Waiting) //nothing active yet
         {
-            
-            
-            
-            
-            if (Duration > 0f)
+            if (cur.Pressed)
             {
-                timer += dt;
+                switch (ActivationType)
+                {
+                    case Type.Tap:
+                        if (Duration > 0f)
+                        {
+                            CurState = State.InProgress;
+                            timer = Duration;
+                        }
+                        else
+                        {
+                            CurState = State.Failed;
+                        }
+
+                        return new(ActivationType, CurState, 0f);
+                    case Type.MultiTap:
+                        if (Duration > 0f && TargetCount > 1)
+                        {
+                            CurState = State.InProgress;
+                            timer = Duration;
+                            count = 1; //start with the first tap
+                            NormalizedProgress = count / (float)TargetCount;
+                        }
+                        else
+                        {
+                            CurState = State.Failed;
+                        }
+                        return new(ActivationType, CurState, 0f);
+                    case Type.LongPress:
+                    case Type.LongRelease:
+                        if (Duration > 0f)
+                        {
+                            CurState = State.InProgress;
+                            timer = Duration;
+                        }
+                        else
+                        {
+                            CurState = State.Failed;
+                        }
+                        return new(ActivationType, CurState, 0f);
+                }
             }
         }
+        else //in progress
+        {
+            if (timer > 0f)
+            {
+                timer -= dt;
+                if (timer <= 0f)
+                {
+                    timer = 0f;
+                    count = 0;
+                    if (ActivationType == Type.LongPress)
+                    {
+                        CurState = State.Completed;
+                        NormalizedProgress = 1f;
+                        return new(ActivationType, CurState, NormalizedProgress);
+                    }
+                    
+                    NormalizedProgress = 0f;
+                    CurState = State.Failed;
+                    return new(ActivationType, CurState, 0f);
+                }
+                
+                if(ActivationType != Type.MultiTap) NormalizedProgress = 1f - (timer / Duration);
+            }
+            
+            
+            if (cur.Pressed)
+            {
+                if (ActivationType == Type.MultiTap)
+                {
+                    count++;
+                    if (count >= TargetCount)
+                    {
+                        CurState = State.Completed;
+                        NormalizedProgress = 1f;
+                    }
+                    else
+                    {
+                        NormalizedProgress = count / (float)TargetCount;
+                    }
 
-        return new();
+                    return new(ActivationType, CurState, NormalizedProgress);
+                }
+            }
+            else if (cur.Released)
+            {
+                if (ActivationType == Type.Tap)
+                {
+                    CurState = State.Completed;
+                    NormalizedProgress = 1f;
+                    return new(ActivationType, CurState, NormalizedProgress);
+                }
+                
+                if(ActivationType == Type.LongPress)
+                {
+                    CurState = State.Failed;
+                    NormalizedProgress = 0f;
+                    return new(ActivationType, CurState, NormalizedProgress);
+                }
+                
+                if(ActivationType == Type.LongRelease)
+                {
+                    CurState = State.Completed;
+                    NormalizedProgress = 1f;
+                    return new(ActivationType, CurState, NormalizedProgress);
+                }
+            }
+        }
+        
+        return new(ActivationType, CurState, NormalizedProgress);
     }
 
-    private void ResetState()
+    /// <summary>
+    /// Resets the activation state to its initial values.
+    /// Sets <see cref="CurState"/> to Waiting, clears the timer and count, and resets <see cref="NormalizedProgress"/>.
+    /// </summary>
+    public void Reset()
     {
-        CurState = State.None;
+        CurState = State.Waiting;
         timer = 0f;
         count = 0;
         NormalizedProgress = 0f;
     }
     
-    //None -> no activation, used for actions that do not require any special activation.
+    /// <summary>
+    /// Returns an activation representing no special activation.
+    /// Used for actions that do not require any activation logic.
+    /// </summary>
     public static InputActionActivation None() => new();
-    
-    //Press -> triggered on the first frame the input is pressed down.
-    public static InputActionActivation Press() => new(Type.Press, 0f, 0);
-    
-    //Hold -> triggered every frame the input is held down, until released.
-    public static InputActionActivation Hold() => new(Type.Hold, 0f, 0);
-    
-    //Release -> triggered on the first frame the input is released.
-    public static InputActionActivation Release() => new(Type.Release, 0f, 0);
-    
-    //Long Press -> triggered when the input is held down (pressed) for longer than the long press duration. (current hold implementation)
-    public static InputActionActivation LongPress(float duration) => new(Type.LongPress, duration, 0);
-    
-    //Long Release -> triggered when the input is released after the long release duration.
-    public static InputActionActivation LongRelease(float duration) => new(Type.LongRelease, duration, 0);
-    
-    //Tap -> triggered when the input is pressed and released within tap duration
-    public static InputActionActivation Tap(float duration) => new(Type.Tap, duration, 0);
-    
-    //Double Tap -> triggered when the input is pressed and released twice within the double tap duration.
-    public static InputActionActivation DoubleTap(float duration) => new(Type.MultiTap, duration, 2);
-    
-    //Multi Tap -> triggered when the input is pressed and released multi tap count times within the multi tap duration.
-    public static InputActionActivation MultiTap(float duration, int targetCount) => new(Type.MultiTap, duration, targetCount);
-}
 
+    /// <summary>
+    /// Returns an activation for a long press.
+    /// Triggered when the input is held down for longer than the specified duration.
+    /// </summary>
+    /// <param name="duration">The required hold duration in seconds.</param>
+    public static InputActionActivation LongPress(float duration) => new(Type.LongPress, duration, 0);
+
+    /// <summary>
+    /// Returns an activation for a long release.
+    /// Triggered when the input is released after the specified duration.
+    /// </summary>
+    /// <param name="duration">The required release duration in seconds.</param>
+    public static InputActionActivation LongRelease(float duration) => new(Type.LongRelease, duration, 0);
+
+    /// <summary>
+    /// Returns an activation for a tap.
+    /// Triggered when the input is pressed and released within the specified duration.
+    /// </summary>
+    /// <param name="duration">The maximum tap duration in seconds.</param>
+    public static InputActionActivation Tap(float duration) => new(Type.Tap, duration, 0);
+
+    /// <summary>
+    /// Returns an activation for a double tap.
+    /// Triggered when the input is pressed and released twice within the specified duration.
+    /// </summary>
+    /// <param name="duration">The maximum double tap duration in seconds.</param>
+    public static InputActionActivation DoubleTap(float duration) => new(Type.MultiTap, duration, 2);
+
+    /// <summary>
+    /// Returns an activation for a multi tap.
+    /// Triggered when the input is pressed and released the specified number of times within the duration.
+    /// </summary>
+    /// <param name="duration">The maximum multi tap duration in seconds.</param>
+    /// <param name="targetCount">The number of taps required.</param>
+    public static InputActionActivation MultiTap(float duration, int targetCount) => new(Type.MultiTap, duration, targetCount);
+    
+}
 
 
