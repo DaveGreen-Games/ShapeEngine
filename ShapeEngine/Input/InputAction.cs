@@ -68,6 +68,7 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
     
     #region Members
 
+    public readonly InputGesture? Gesture;
    
     /// <summary>
     /// Indicates if this input action is active. If set to <c>false</c>, the action will not process input or update its state.
@@ -152,10 +153,6 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
     /// </summary>
     public string Title = "Input Action";
 
-    private float holdTimer;
-    private float multiTapTimer;
-    private int multiTapCount;
-
     /// <summary>
     /// The settings that define the behavior and configuration of this input action.
     /// </summary>
@@ -192,47 +189,31 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
     #endregion
 
     #region Constructors
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputAction"/> with a unique ID.
-    /// <see cref="Settings"/> are set to default values.
-    /// </summary>
+
     public InputAction()
     {
         Id = ShapeID.NextID;
         Settings = new InputActionSettings();
+        Gesture = null;
     }
-
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputAction"/> with the specified access tag and settings.
-    /// </summary>
-    /// <param name="accessTag">The access tag for this action.</param>
-    /// <param name="settings">The settings for this action.</param>
-    public InputAction(uint accessTag, InputActionSettings settings)
+    
+    public InputAction(uint accessTag, InputActionSettings settings, InputGesture? gesture = null)
     {
         Id = ShapeID.NextID;
         AccessTag = accessTag;
         Settings = settings;
+        Gesture = gesture;
     }
-    
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputAction"/> with the specified access tag, gamepad, and settings.
-    /// </summary>
-    /// <param name="accessTag">The access tag for this action.</param>
-    /// <param name="gamepad">The associated gamepad device.</param>
-    /// <param name="settings">The settings for this action.</param>
-    public InputAction(uint accessTag, GamepadDevice gamepad, InputActionSettings settings)
+
+    public InputAction(uint accessTag, GamepadDevice gamepad, InputActionSettings settings, InputGesture? gesture = null)
     {
         Id = ShapeID.NextID;
         Gamepad = gamepad;
         AccessTag = accessTag;
         Settings = settings;
+        Gesture = gesture;
     }
     
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputAction"/> with the specified settings and input types.
-    /// </summary>
-    /// <param name="settings">The settings for this action.</param>
-    /// <param name="inputTypes">The input types to associate with this action.</param>
     public InputAction(InputActionSettings settings, params IInputType[] inputTypes)
     {
         Id = ShapeID.NextID;
@@ -240,12 +221,6 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
         Settings = settings;
     }
     
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputAction"/> with the specified access tag, settings, and input types.
-    /// </summary>
-    /// <param name="accessTag">The access tag for this action.</param>
-    /// <param name="settings">The settings for this action.</param>
-    /// <param name="inputTypes">The input types to associate with this action.</param>
     public InputAction(uint accessTag, InputActionSettings settings, params IInputType[] inputTypes)
     {
         Id = ShapeID.NextID;
@@ -254,13 +229,6 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
         Settings = settings;
     }
     
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputAction"/> with the specified access tag, gamepad, settings, and input types.
-    /// </summary>
-    /// <param name="accessTag">The access tag for this action.</param>
-    /// <param name="gamepad">The associated gamepad device.</param>
-    /// <param name="settings">The settings for this action.</param>
-    /// <param name="inputTypes">The input types to associate with this action.</param>
     public InputAction(uint accessTag, GamepadDevice gamepad, InputActionSettings settings, params IInputType[] inputTypes)
     {
         Id = ShapeID.NextID;
@@ -269,6 +237,34 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
         inputs.AddRange(inputTypes);
         Settings = settings;
     }
+    
+    public InputAction(InputActionSettings settings, InputGesture gesture, params IInputType[] inputTypes)
+    {
+        Id = ShapeID.NextID;
+        inputs.AddRange(inputTypes);
+        Settings = settings;
+        Gesture = gesture;
+    }
+    
+    public InputAction(uint accessTag, InputActionSettings settings, InputGesture gesture, params IInputType[] inputTypes)
+    {
+        Id = ShapeID.NextID;
+        AccessTag = accessTag;
+        inputs.AddRange(inputTypes);
+        Settings = settings;
+        Gesture = gesture;
+    }
+    
+    public InputAction(uint accessTag, GamepadDevice gamepad, InputActionSettings settings, InputGesture gesture, params IInputType[] inputTypes)
+    {
+        Id = ShapeID.NextID;
+        AccessTag = accessTag;
+        Gamepad = gamepad;
+        inputs.AddRange(inputTypes);
+        Settings = settings;
+        Gesture = gesture;
+    }
+    
     #endregion
 
     #region Class
@@ -290,15 +286,12 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
     }
 
     /// <summary>
-    /// Resets the input action to its initial state, clearing the current input state,
-    /// hold timer, multi-tap timer, and multi-tap count.
+    /// Resets the input action to its initial state.
+    /// Clears the current input state, used inputs, and resets toggle and device type.
     /// </summary>
     public void Reset()
     {
         ClearState();
-        holdTimer = 0f;
-        multiTapTimer = 0f;
-        multiTapCount = 0;
         UsedInputs.Clear();
     }
     /// <summary>
@@ -392,69 +385,6 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
         
         if(inputDeviceType != InputDeviceType.None) CurrentDeviceType = inputDeviceType;
         
-        //Multi Tap & Hold System
-        var multiTapF = 0f;
-        if (multiTapTimer > 0f)
-        {
-            multiTapTimer -= dt;
-            if (multiTapTimer <= 0f)
-            {
-                multiTapTimer = 0f;
-                multiTapCount = 0;
-            }
-        }
-        
-        var holdF = 0f;
-        if (State.Up && current.Down) //pressed
-        {
-            if (Settings.HoldDuration > 0)
-            {
-                holdTimer = Settings.HoldDuration;
-            }
-            if (Settings.MultiTapDuration > 0f && Settings.MultiTapTarget > 1)
-            {
-                if (multiTapTimer <= 0f) multiTapTimer = Settings.MultiTapDuration;
-                multiTapCount++;
-            }
-
-        }
-        else if (State.Down && current.Up) //released
-        {
-            if (holdTimer > 0f)
-            {
-                holdTimer = 0f;
-                holdF = 0f;
-            }
-            
-        }
-
-        if (holdTimer > 0f)
-        {
-            holdTimer -= dt;
-            if (holdTimer <= 0)
-            {
-                holdTimer = 0f;
-                holdF = 1f;
-            }
-            else holdF = 1f - (holdTimer / Settings.HoldDuration);
-        }
-        
-        if (multiTapTimer > 0f)
-        {
-            if (multiTapCount >= Settings.MultiTapTarget)
-            {
-                multiTapF = 1f;
-                if (holdTimer > 0f)
-                {
-                    holdTimer = 0f;
-                    holdF = 0f;
-                }
-            }
-            else multiTapF = multiTapCount / (float)Settings.MultiTapTarget;
-        }
-        
-        //Calculate New State
-        current = new(current, holdF, multiTapF);
         State = new(State, current);
 
         //switch between off and on
@@ -466,12 +396,15 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
                 _ => ToggleState.Off
             };
         }
-        
-        //Reset Multitap Count On Successful Multitap
-        if (multiTapF >= 1f) multiTapCount = 0;
+
+        if (Gesture != null)
+        {
+            var result = Gesture.Update(dt, State);
+            State = new(State, result);
+        }
         
         //Axis Sensitivity & Gravity
-        if (Settings.AxisSensitivity > 0 || Settings.AxisGravitiy > 0)
+        if (Settings.AxisSensitivity > 0 || Settings.AxisGravity > 0)
         {
             int raw = MathF.Sign(State.AxisRaw);
             float dif = State.AxisRaw - State.Axis;
@@ -481,7 +414,7 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
             {
                 var axisChange = 0f;
                 //var snapValue = 0f;
-                float gravity = Settings.AxisGravitiy <= 0f ? 0f : 1f / Settings.AxisGravitiy;
+                float gravity = Settings.AxisGravity <= 0f ? 0f : 1f / Settings.AxisGravity;
                 float sensitivity = Settings.AxisSensitivity <= 0f ? 0f : 1f / Settings.AxisSensitivity;
                 if (dif is > 1 or < -1) //snap
                 {
@@ -502,9 +435,6 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
 
                 if (axisChange != 0f)
                 {
-                    // float totalChange = axisChange + snapValue;
-                    // if (MathF.Abs(totalChange) > MathF.Abs(dif)) totalChange = dif;
-                    // State = State.AdjustAxis(totalChange);
                     if (MathF.Abs(axisChange) > MathF.Abs(dif)) axisChange = dif;
                     State = State.AdjustAxis(axisChange);
                 }
@@ -522,7 +452,23 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
     public InputAction Copy()
     {
         var copied = GetInputsCopiedArray();
-        var copy = new InputAction(AccessTag, Settings, copied)
+        InputAction copy;
+        if (Gesture != null)
+        {
+            copy = new InputAction(AccessTag, Settings, Gesture, copied)
+            {
+                Gamepad = Gamepad,
+                Active = Active,
+                ExecutionOrder = ExecutionOrder,
+                Title = Title,
+                BlocksInput = BlocksInput,
+                Toggle = Toggle,
+                State = State
+            };
+            return copy;
+        }
+        
+        copy = new InputAction(AccessTag, Settings, copied)
         {
             Gamepad = Gamepad,
             Active = Active,
@@ -530,11 +476,9 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
             Title = Title,
             BlocksInput = BlocksInput,
             Toggle = Toggle,
-            State = State,
-            holdTimer = holdTimer,
-            multiTapTimer = multiTapTimer,
-            multiTapCount = multiTapCount,
+            State = State
         };
+        
         return copy;
     }
 
@@ -969,357 +913,3 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
         return hashCode.ToHashCode();
     }
 }
-
-
-
-
-//NOTE: InputAction can have one InputActionActivation
-// if it has one, InputAction will first check and update the internal state, then pass the new input state to the activation update function.
-// the activation update function will return a result that is added to the input state.
-// Therefore an input state with an active activation can either have:
-// - a failed activation -> which should trigger the normal action
-// - a successful activation -> which should trigger the alternative activation based action
-// - a activation in progress -> which should not trigger any action, user should wait for the activation to complete or fail
-// - activation not started/ waiting/ none -> which should do nothing
-// this system is cleaner and easier than the old one but having more than one activation per input type is tricky and not recommended.
-
-//TODO: InputState multitape / hold system can be removed completely
-// InputState just has an InputActionActivation.Result member
-// InputAction has a InputActionActivation? nullable member
-
-
-/// <summary>
-/// Represents an activation logic for an <see cref="InputAction"/>.
-/// Handles tap, multi-tap, long press, and long release activations,
-/// tracking progress, state, and completion.
-/// </summary>
-public sealed class InputActionActivation
-{
-    /// <summary>
-    /// Represents the possible states of an <see cref="InputActionActivation"/>.
-    /// </summary>
-    public enum State
-    {
-        /// <summary>
-        /// The activation is waiting to start.
-        /// </summary>
-        Waiting = 1,
-        /// <summary>
-        /// The activation is currently in progress.
-        /// </summary>
-        InProgress = 2,
-        /// <summary>
-        /// The activation has completed successfully.
-        /// </summary>
-        Completed = 4,
-        /// <summary>
-        /// The activation has failed.
-        /// </summary>
-        Failed = 8
-    }
-    
-    /// <summary>
-    /// Represents the types of activation for an <see cref="InputActionActivation"/>.
-    /// </summary>
-    public enum Type
-    { 
-        /// <summary>
-        /// No activation type.
-        /// </summary>
-        None = 1,
-        /// <summary>
-        /// Single tap activation.
-        /// </summary>
-        Tap = 2,
-        /// <summary>
-        /// Multi-tap activation.
-        /// </summary>
-        MultiTap = 4,
-        /// <summary>
-        /// Long press activation.
-        /// </summary>
-        LongPress = 8,
-        /// <summary>
-        /// Long release activation.
-        /// </summary>
-        LongRelease = 16
-    }
-    
-    /// <summary>
-    /// Represents the result of an <see cref="InputActionActivation"/> update.
-    /// Contains the activation type, current state, and normalized progress.
-    /// </summary>
-    public readonly struct Result
-    {
-        /// <summary>
-        /// The type of activation (e.g., Tap, MultiTap, LongPress, etc.).
-        /// </summary>
-        public readonly Type ActivationType;
-    
-        /// <summary>
-        /// The current state of the activation (Waiting, InProgress, Completed, Failed).
-        /// </summary>
-        public readonly State CurState;
-    
-        /// <summary>
-        /// The normalized progress of the activation, clamped between 0 and 1.
-        /// </summary>
-        public readonly float NormalizedProgress;
-    
-        /// <summary>
-        /// Initializes a new instance of <see cref="Result"/> with default values.
-        /// </summary>
-        public Result()
-        {
-            ActivationType = Type.None;
-            CurState = State.Waiting;
-            NormalizedProgress = 0f;
-        }
-    
-        /// <summary>
-        /// Initializes a new instance of <see cref="Result"/> with specified values.
-        /// </summary>
-        /// <param name="activationType">The type of activation.</param>
-        /// <param name="curState">The current state of the activation.</param>
-        /// <param name="normalizedProgress">The normalized progress value.</param>
-        internal Result(Type activationType, State curState, float normalizedProgress)
-        {
-            ActivationType = activationType;
-            CurState = curState;
-            NormalizedProgress = ShapeMath.Clamp(normalizedProgress, 0f, 1f);
-        }
-    }
-    
-    
-    /// <summary>
-    /// The type of activation (e.g., Tap, MultiTap, LongPress, etc.)
-    /// </summary>
-    public readonly Type ActivationType;
-
-    /// <summary>
-    /// The duration required for the activation, in seconds.
-    /// </summary>
-    public readonly float Duration;
-
-    /// <summary>
-    /// The target count for multi-tap activations.
-    /// </summary>
-    public readonly int TargetCount;
-
-    /// <summary>
-    /// The current state of the activation (Waiting, InProgress, Completed, Failed).
-    /// </summary>
-    public State CurState { get; private set; }
-
-    /// <summary>
-    /// The normalized progress of the activation, clamped between 0 and 1.
-    /// </summary>
-    public float NormalizedProgress { get; private set; }
-
-    private int count;
-    private float timer;
-    
-    private InputActionActivation()
-    {
-        ActivationType = Type.None;
-        CurState = State.Waiting;
-        Duration = -1f;
-        TargetCount = -1;
-        NormalizedProgress = 0f;
-        timer = 0f;
-        count = 0;
-    }
-    private InputActionActivation(Type type, float duration, int targetCount)
-    {
-        ActivationType = type;
-        
-        Duration = duration;
-        
-        TargetCount = targetCount;
-        
-        count = 0;
-        timer = 0f;
-
-        NormalizedProgress = 0f;
-    }
-
-    internal Result Update(float dt, InputState cur)
-    {
-        if (ActivationType == Type.None) return new();
-        
-        if(CurState is State.Failed or State.Completed) Reset();
-        
-        if (CurState is State.Waiting) //nothing active yet
-        {
-            if (cur.Pressed)
-            {
-                switch (ActivationType)
-                {
-                    case Type.Tap:
-                        if (Duration > 0f)
-                        {
-                            CurState = State.InProgress;
-                            timer = Duration;
-                        }
-                        else
-                        {
-                            CurState = State.Failed;
-                        }
-
-                        return new(ActivationType, CurState, 0f);
-                    case Type.MultiTap:
-                        if (Duration > 0f && TargetCount > 1)
-                        {
-                            CurState = State.InProgress;
-                            timer = Duration;
-                            count = 1; //start with the first tap
-                            NormalizedProgress = count / (float)TargetCount;
-                        }
-                        else
-                        {
-                            CurState = State.Failed;
-                        }
-                        return new(ActivationType, CurState, 0f);
-                    case Type.LongPress:
-                    case Type.LongRelease:
-                        if (Duration > 0f)
-                        {
-                            CurState = State.InProgress;
-                            timer = Duration;
-                        }
-                        else
-                        {
-                            CurState = State.Failed;
-                        }
-                        return new(ActivationType, CurState, 0f);
-                }
-            }
-        }
-        else //in progress
-        {
-            if (timer > 0f)
-            {
-                timer -= dt;
-                if (timer <= 0f)
-                {
-                    timer = 0f;
-                    count = 0;
-                    if (ActivationType == Type.LongPress)
-                    {
-                        CurState = State.Completed;
-                        NormalizedProgress = 1f;
-                        return new(ActivationType, CurState, NormalizedProgress);
-                    }
-                    
-                    NormalizedProgress = 0f;
-                    CurState = State.Failed;
-                    return new(ActivationType, CurState, 0f);
-                }
-                
-                if(ActivationType != Type.MultiTap) NormalizedProgress = 1f - (timer / Duration);
-            }
-            
-            
-            if (cur.Pressed)
-            {
-                if (ActivationType == Type.MultiTap)
-                {
-                    count++;
-                    if (count >= TargetCount)
-                    {
-                        CurState = State.Completed;
-                        NormalizedProgress = 1f;
-                    }
-                    else
-                    {
-                        NormalizedProgress = count / (float)TargetCount;
-                    }
-
-                    return new(ActivationType, CurState, NormalizedProgress);
-                }
-            }
-            else if (cur.Released)
-            {
-                if (ActivationType == Type.Tap)
-                {
-                    CurState = State.Completed;
-                    NormalizedProgress = 1f;
-                    return new(ActivationType, CurState, NormalizedProgress);
-                }
-                
-                if(ActivationType == Type.LongPress)
-                {
-                    CurState = State.Failed;
-                    NormalizedProgress = 0f;
-                    return new(ActivationType, CurState, NormalizedProgress);
-                }
-                
-                if(ActivationType == Type.LongRelease)
-                {
-                    CurState = State.Completed;
-                    NormalizedProgress = 1f;
-                    return new(ActivationType, CurState, NormalizedProgress);
-                }
-            }
-        }
-        
-        return new(ActivationType, CurState, NormalizedProgress);
-    }
-
-    /// <summary>
-    /// Resets the activation state to its initial values.
-    /// Sets <see cref="CurState"/> to Waiting, clears the timer and count, and resets <see cref="NormalizedProgress"/>.
-    /// </summary>
-    public void Reset()
-    {
-        CurState = State.Waiting;
-        timer = 0f;
-        count = 0;
-        NormalizedProgress = 0f;
-    }
-    
-    /// <summary>
-    /// Returns an activation representing no special activation.
-    /// Used for actions that do not require any activation logic.
-    /// </summary>
-    public static InputActionActivation None() => new();
-
-    /// <summary>
-    /// Returns an activation for a long press.
-    /// Triggered when the input is held down for longer than the specified duration.
-    /// </summary>
-    /// <param name="duration">The required hold duration in seconds.</param>
-    public static InputActionActivation LongPress(float duration) => new(Type.LongPress, duration, 0);
-
-    /// <summary>
-    /// Returns an activation for a long release.
-    /// Triggered when the input is released after the specified duration.
-    /// </summary>
-    /// <param name="duration">The required release duration in seconds.</param>
-    public static InputActionActivation LongRelease(float duration) => new(Type.LongRelease, duration, 0);
-
-    /// <summary>
-    /// Returns an activation for a tap.
-    /// Triggered when the input is pressed and released within the specified duration.
-    /// </summary>
-    /// <param name="duration">The maximum tap duration in seconds.</param>
-    public static InputActionActivation Tap(float duration) => new(Type.Tap, duration, 0);
-
-    /// <summary>
-    /// Returns an activation for a double tap.
-    /// Triggered when the input is pressed and released twice within the specified duration.
-    /// </summary>
-    /// <param name="duration">The maximum double tap duration in seconds.</param>
-    public static InputActionActivation DoubleTap(float duration) => new(Type.MultiTap, duration, 2);
-
-    /// <summary>
-    /// Returns an activation for a multi tap.
-    /// Triggered when the input is pressed and released the specified number of times within the duration.
-    /// </summary>
-    /// <param name="duration">The maximum multi tap duration in seconds.</param>
-    /// <param name="targetCount">The number of taps required.</param>
-    public static InputActionActivation MultiTap(float duration, int targetCount) => new(Type.MultiTap, duration, targetCount);
-    
-}
-
-

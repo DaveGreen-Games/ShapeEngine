@@ -3,10 +3,8 @@ using ShapeEngine.StaticLib;
 namespace ShapeEngine.Input;
 
 
-//TODO: Cleanup / remove the hold and multitap state system 
-
 /// <summary>
-/// Represents the state of an input, including button states, axis values, device type, and multi-tap/hold information.
+/// Represents the state of an input, including button presses, axis values, device type, and activation details.
 /// </summary>
 public readonly struct InputState
 {
@@ -31,6 +29,10 @@ public readonly struct InputState
     /// Indicates if the input axis is inverted.
     /// </summary>
     public readonly bool Inverted;
+    /// <summary>
+    /// The result of the input action gesture, containing details about how the input was triggered (e.g., multi-tap, hold, etc.)
+    /// </summary>
+    public readonly InputGesture.Result GestureResult;
     
     /// <summary>
     /// The processed axis value, typically smoothed or filtered.
@@ -60,58 +62,9 @@ public readonly struct InputState
     /// Indicates if this input state has been consumed.
     /// </summary>
     public readonly bool Consumed;
-
-    /// <summary>
-    /// The normalized hold progress (0 to 1).
-    /// </summary>
-    public readonly float HoldF;
-    /// <summary>
-    /// The current state of the hold action (None, InProgress, Completed, Failed).
-    /// </summary>
-    public readonly MultiTapState HoldState;
-    /// <summary>
-    /// The normalized multi-tap progress (0 to 1).
-    /// </summary>
-    public readonly float MultiTapF;
-    /// <summary>
-    /// The current state of the multi-tap action (None, InProgress, Completed, Failed).
-    /// </summary>
-    public readonly MultiTapState MultiTapState;
-
-    /// <summary>
-    /// Determines the type of press (Hold, MultiTap, SingleTap, or None) based on the current state.
-    /// </summary>
-    /// <returns>The detected <see cref="PressedType"/>.</returns>
-    public PressedType GetPressedType()
-    {
-        if (HoldState == MultiTapState.Completed) return PressedType.Hold;
-        if (MultiTapState == MultiTapState.Completed) return PressedType.MultiTap;
-        
-        if (HoldF <= 0f && MultiTapState == MultiTapState.Failed) return PressedType.SingleTap;
-        if (MultiTapF <= 0f && HoldState == MultiTapState.Failed) return PressedType.SingleTap;
-        
-        
-        return PressedType.None;
-
-    }
     
     /// <summary>
-    /// Initializes a new default instance of <see cref="InputState"/> with all values set to their defaults.
-    /// <remarks>
-    /// Down = false;
-    /// Up = true;
-    /// Released = false;
-    /// Pressed = false;
-    /// AxisRaw = 0f;
-    /// Axis = 0f;
-    /// Gamepad = -1;
-    /// Consumed = false;
-    /// InputDeviceType = InputDeviceType.Keyboard;
-    /// HoldF = 0f;
-    /// HoldState = MultiTapState.None;
-    /// MultiTapF = 0f;
-    /// MultiTapState = MultiTapState.None;
-    /// </remarks>
+    /// Initializes a new instance of the <see cref="InputState"/> struct with default values.
     /// </summary>
     public InputState()
     {
@@ -124,21 +77,18 @@ public readonly struct InputState
         Gamepad = -1;
         Consumed = false;
         InputDeviceType = InputDeviceType.Keyboard;
-        HoldF = 0f;
-        HoldState = MultiTapState.None;
-        MultiTapF = 0f;
-        MultiTapState = MultiTapState.None;
+        Inverted = false;
+        GestureResult = new();
     }
     /// <summary>
-    /// Initializes a new instance of <see cref="InputState"/> with specified button and axis values.
+    /// Initializes a new instance of the <see cref="InputState"/> struct with specified values.
     /// </summary>
-    /// <param name="down">Whether the input is down.</param>
-    /// <param name="up">Whether the input is up.</param>
-    /// <param name="axisRaw">The raw axis value.</param>
-    /// <param name="gamepad">The gamepad index.</param>
-    /// <param name="inputDeviceType">The input device type.</param>
-    /// <param name="inverted"> Indicates if the axis value is inverted.
-    /// (Only used by <see cref="GamepadDevice"/> for <see cref="ShapeGamepadJoyAxis"/> and <see cref="ShapeGamepadTriggerAxis"/>.</param>
+    /// <param name="down">Indicates if the input is currently held down.</param>
+    /// <param name="up">Indicates if the input is currently up (not pressed).</param>
+    /// <param name="axisRaw">The raw axis value, unprocessed.</param>
+    /// <param name="gamepad">The index of the gamepad associated with this input, or -1 if not applicable.</param>
+    /// <param name="inputDeviceType">The type of input device (keyboard, mouse, gamepad, etc.).</param>
+    /// <param name="inverted">Indicates if the input axis is inverted.</param>
     public InputState(bool down, bool up, float axisRaw, int gamepad, InputDeviceType inputDeviceType, bool inverted = false)
     {
         Down = down;
@@ -151,19 +101,40 @@ public readonly struct InputState
         Consumed = false;
         InputDeviceType = inputDeviceType;
         Inverted = inverted;
-        HoldF = 0f;
-        HoldState = MultiTapState.None;
-        MultiTapF = 0f;
-        MultiTapState = MultiTapState.None;
+        GestureResult = new();
     }
-
     /// <summary>
-    /// Initializes a new instance of <see cref="InputState"/> based on another state and hold/multitap progress.
+    /// Initializes a new instance of the <see cref="InputState"/> struct with specified values, including activation result.
     /// </summary>
-    /// <param name="state">The base input state.</param>
-    /// <param name="holdF">The hold progress.</param>
-    /// <param name="multiTapF">The multitap progress.</param>
-    public InputState(InputState state, float holdF, float multiTapF)
+    /// <param name="down">Indicates if the input is currently held down.</param>
+    /// <param name="up">Indicates if the input is currently up (not pressed).</param>
+    /// <param name="axisRaw">The raw axis value, unprocessed.</param>
+    /// <param name="gamepad">The index of the gamepad associated with this input, or -1 if not applicable.</param>
+    /// <param name="inputDeviceType">The type of input device (keyboard, mouse, gamepad, etc.).</param>
+    /// <param name="gestureResult">The result of the input action activation.</param>
+    /// <param name="inverted">Indicates if the input axis is inverted.</param>
+    public InputState(bool down, bool up, float axisRaw, int gamepad, InputDeviceType inputDeviceType, InputGesture.Result gestureResult,  bool inverted = false)
+    {
+        Down = down;
+        Up = up;
+        Released = false;
+        Pressed = false;
+        AxisRaw = axisRaw;
+        Axis = axisRaw;
+        Gamepad = gamepad;
+        Consumed = false;
+        InputDeviceType = inputDeviceType;
+        Inverted = inverted;
+        GestureResult = gestureResult;
+    }
+    
+    /// <summary>
+    /// Creates a new <see cref="InputState"/> by copying all values from an existing state,
+    /// but replacing the <see cref="GestureResult"/> with the specified value.
+    /// </summary>
+    /// <param name="state">The source <see cref="InputState"/> to copy values from.</param>
+    /// <param name="gestureResult">The new activation result to use.</param>
+    public InputState(InputState state, InputGesture.Result gestureResult)
     {
         Down = state.Down;
         Up = state.Up;
@@ -175,15 +146,13 @@ public readonly struct InputState
         Axis = state.Axis;
         Consumed = state.Consumed;
         InputDeviceType = state.InputDeviceType;
-
-        HoldF = holdF;
-        HoldState = MultiTapState.None;
-        MultiTapF = multiTapF;
-        MultiTapState = MultiTapState.None; 
-        
+        Inverted = state.Inverted;
+        GestureResult = gestureResult;
     }
+    
     /// <summary>
-    /// Initializes a new instance of <see cref="InputState"/> based on previous and current states.
+    /// Initializes a new instance of the <see cref="InputState"/> struct by comparing the previous and current input states.
+    /// Calculates <see cref="Pressed"/> and <see cref="Released"/> based on transitions between <paramref name="prev"/> and <paramref name="cur"/>.
     /// </summary>
     /// <param name="prev">The previous input state.</param>
     /// <param name="cur">The current input state.</param>
@@ -198,32 +167,19 @@ public readonly struct InputState
         Released = prev.Down && cur.Up;
         Consumed = false;
         InputDeviceType = cur.InputDeviceType;
-
-        if (prev.HoldF is > 0f and < 1f)
-        {
-            if(cur.HoldF >= 1f) HoldState = MultiTapState.Completed;
-            else if (cur.HoldF <= 0f) HoldState = MultiTapState.Failed;
-            else HoldState = MultiTapState.InProgress;
-        }
-        else HoldState = MultiTapState.None;
-        HoldF = cur.HoldF;
-
-        if (prev.MultiTapF is > 0f and < 1f)
-        {
-            if(cur.MultiTapF >= 1f) MultiTapState = MultiTapState.Completed;
-            else if (cur.MultiTapF <= 0f) MultiTapState = MultiTapState.Failed;
-            else MultiTapState = MultiTapState.InProgress;
-        }
-        else MultiTapState = MultiTapState.None;
-        MultiTapF = cur.MultiTapF;
+        GestureResult = cur.GestureResult;
+        Inverted = cur.Inverted;
 
     }
+
     /// <summary>
-    /// Initializes a new instance of <see cref="InputState"/> based on previous and current states and a specific device type.
+    /// Initializes a new instance of the <see cref="InputState"/> struct by comparing the previous and current input states,
+    /// and allows overriding the input device type.
+    /// Calculates <see cref="Pressed"/> and <see cref="Released"/> based on transitions between <paramref name="prev"/> and <paramref name="cur"/>.
     /// </summary>
     /// <param name="prev">The previous input state.</param>
     /// <param name="cur">The current input state.</param>
-    /// <param name="inputDeviceType">The input device type.</param>
+    /// <param name="inputDeviceType">The input device type to use for this state.</param>
     public InputState(InputState prev, InputState cur, InputDeviceType inputDeviceType)
     {
         Gamepad = cur.Gamepad;
@@ -235,55 +191,37 @@ public readonly struct InputState
         Released = prev.Down && cur.Up;
         Consumed = false;
         InputDeviceType = inputDeviceType;
-
-        // if (prev.HoldF < 1f && cur.HoldF >= 1f) HoldFinished = true;
-        // else HoldFinished = false;
-        if (prev.HoldF is > 0f and < 1f)
-        {
-            if(cur.HoldF >= 1f) HoldState = MultiTapState.Completed;
-            else if (cur.HoldF <= 0f) HoldState = MultiTapState.Failed;
-            else HoldState = MultiTapState.InProgress;
-        }
-        else HoldState = MultiTapState.None;
-        HoldF = cur.HoldF;
-        
-        if (prev.MultiTapF is > 0f and < 1f)
-        {
-            if(cur.MultiTapF >= 1f) MultiTapState = MultiTapState.Completed;
-            else if (cur.MultiTapF <= 0f) MultiTapState = MultiTapState.Failed;
-            else MultiTapState = MultiTapState.InProgress;
-        }
-        else MultiTapState = MultiTapState.None;
-        MultiTapF = cur.MultiTapF;
+        GestureResult = cur.GestureResult;
+        Inverted = cur.Inverted;
     }
+
     /// <summary>
-    /// Initializes a new instance of <see cref="InputState"/> with a consumed flag.
+    /// Initializes a new instance of the <see cref="InputState"/> struct by copying all values from an existing state,
+    /// but replacing the <see cref="Consumed"/> property with the specified value.
     /// </summary>
-    /// <param name="other">The base input state.</param>
-    /// <param name="consumed">Whether the input is consumed.</param>
-    private InputState(InputState other, bool consumed)
+    /// <param name="state">The source <see cref="InputState"/> to copy values from.</param>
+    /// <param name="consumed">The value to set for <see cref="Consumed"/>.</param>
+    private InputState(InputState state, bool consumed)
     {
-        Down = other.Down;
-        Up = other.Up;
-        Released = other.Released;
-        Pressed = other.Pressed;
-        Gamepad = other.Gamepad;
-        AxisRaw = other.AxisRaw;
-        Axis = other.Axis;
+        Down = state.Down;
+        Up = state.Up;
+        Released = state.Released;
+        Pressed = state.Pressed;
+        Gamepad = state.Gamepad;
+        AxisRaw = state.AxisRaw;
+        Axis = state.Axis;
         Consumed = consumed;
-        InputDeviceType = other.InputDeviceType;
-
-        HoldF = other.HoldF;
-        HoldState = other.HoldState;
-        // HoldFinished = other.HoldFinished;
-        MultiTapF = other.MultiTapF;
-        MultiTapState = other.MultiTapState;
+        InputDeviceType = state.InputDeviceType;
+        Inverted = state.Inverted;
+        GestureResult = state.GestureResult;
     }
+
     /// <summary>
-    /// Initializes a new instance of <see cref="InputState"/> with a modified axis value.
+    /// Initializes a new instance of the <see cref="InputState"/> struct by copying all values from an existing state,
+    /// but replacing the <see cref="Axis"/> property with the specified value (clamped between -1 and 1).
     /// </summary>
-    /// <param name="state">The base input state.</param>
-    /// <param name="axis">The new axis value.</param>
+    /// <param name="state">The source <see cref="InputState"/> to copy values from.</param>
+    /// <param name="axis">The new axis value to use (will be clamped between -1 and 1).</param>
     private InputState(InputState state, float axis)
     {
         Down = state.Down;
@@ -295,12 +233,8 @@ public readonly struct InputState
         Axis = ShapeMath.Clamp(axis, -1f, 1f);
         Consumed = state.Consumed;
         InputDeviceType = state.InputDeviceType;
-        
-        HoldF = state.HoldF;
-        HoldState = state.HoldState;
-        // HoldFinished = state.HoldFinished;
-        MultiTapF = state.MultiTapF;
-        MultiTapState = state.MultiTapState;
+        Inverted = state.Inverted;
+        GestureResult = state.GestureResult;
     }
     /// <summary>
     /// Accumulates another <see cref="InputState"/> into this one, combining their values.
@@ -310,9 +244,14 @@ public readonly struct InputState
     public InputState Accumulate(InputState other)
     {
         var inputDevice = InputDeviceType;
+        var inverted = Inverted;
         if (other.Down)
         {
-            if(!Down || MathF.Abs(other.AxisRaw) > MathF.Abs(AxisRaw))inputDevice = other.InputDeviceType;
+            if (!Down || MathF.Abs(other.AxisRaw) > MathF.Abs(AxisRaw))
+            {
+                inputDevice = other.InputDeviceType;
+                inverted = other.Inverted;
+            }
         }
 
         float axis = AxisRaw;
@@ -320,7 +259,10 @@ public readonly struct InputState
         bool down = Down || other.Down;
         bool up = Up && other.Up;
         
-        return new(down, up, axis, other.Gamepad, inputDevice);
+        //unnecessary, activation results are handled after all states from all input types are handled and accumulated
+        // var pickedResult = ActivationResult.Pick(other.ActivationResult);
+        
+        return new(down, up, axis, other.Gamepad, inputDevice, new(), inverted);
     }
     /// <summary>
     /// Returns a new <see cref="InputState"/> with the axis adjusted by the specified value.

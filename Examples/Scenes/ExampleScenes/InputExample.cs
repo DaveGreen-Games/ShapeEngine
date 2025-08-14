@@ -29,7 +29,7 @@ namespace Examples.Scenes.ExampleScenes
         public JoystickVisualizer(bool left, Font font)
         {
             
-            var settings = InputActionSettings.CreateAxis(0.5f, 0.25f);
+            var settings =  InputActionSettings.Axis(0.5f, 0.25f);
             this.textFont = new(font, 1f, Colors.Medium);
             if (left)
             {
@@ -179,7 +179,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             this.textFont = new(font, 1f, Colors.Medium);
             
-            var settings = InputActionSettings.CreateAxis(0.25f, 0.25f);
+            var settings = InputActionSettings.Axis(0.25f, 0.25f);
             if (left)
             {
                 this.title = "LT";
@@ -405,11 +405,12 @@ namespace Examples.Scenes.ExampleScenes
     {
         private readonly string title;
         private readonly TextFont textFont;
-        private float flashTimer = 0f;
-        private float holdFinishedTimer = 0f;
+        private float flashTimer;
+        private const float flashDuration = 1f;
+        
+        private float holdFinishedTimer;
         private const float holdFinishedDuration = 1f;
         
-        private const float flashDuration = 1f;
         private InputDeviceType curInputDeviceType = InputDeviceType.Keyboard;
 
         private readonly InputAction button;
@@ -422,8 +423,8 @@ namespace Examples.Scenes.ExampleScenes
             InputActionSettings defaultSettings = new();
             var q = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
             var x = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
-            //var rmb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
-            button = new(defaultSettings,q, x);
+            var activation = InputGesture.LongPress(1);
+            button = new(defaultSettings, activation,q, x);
             inputActionTree = [button];
         }
         public override void Update(float dt, GamepadDevice? gamepad, InputDeviceType inputDeviceType)
@@ -435,31 +436,32 @@ namespace Examples.Scenes.ExampleScenes
             
             inputActionTree.CurrentGamepad = gamepad;
             inputActionTree.Update(dt);
-            
 
             if (button.State.Down)
             {
                 flashTimer = flashDuration;
             }
-
+            
+            var result = button.State.GestureResult;
+            if (result.CurState == InputGesture.State.Completed)
+            {
+                holdFinishedTimer = holdFinishedDuration;
+            }
+            else if (result.CurState == InputGesture.State.Failed)
+            {
+                flashTimer = 0f;
+            }
+            
             if (flashTimer > 0f)
             {
                 flashTimer -= dt;
                 if (flashTimer <= 0) flashTimer = 0f;
             }
-
-            if (button.State.HoldState == MultiTapState.Completed)
-            {
-                holdFinishedTimer = holdFinishedDuration;
-            }
-
             if (holdFinishedTimer > 0f)
             {
                 holdFinishedTimer -= dt;
                 if (holdFinishedTimer < 0f) holdFinishedTimer = 0f;
             }
-
-            if (button.State.Up && holdFinishedTimer > 0f) holdFinishedTimer = 0f;
 
         }
 
@@ -470,18 +472,20 @@ namespace Examples.Scenes.ExampleScenes
             var flashColor2 = Colors.Medium.Lerp(Colors.Special, flashF);
             var flashColor3 = Colors.Medium.Lerp(Colors.Warm, flashF);
             
-            Rect top = area.ApplyMargins(0, 0, 0, 0.8f);
-            Rect bottom = area.ApplyMargins(0, 0, 0.2f, 0);
+            var top = area.ApplyMargins(0, 0, 0, 0.8f);
+            var bottom = area.ApplyMargins(0, 0, 0.2f, 0);
             
             var center = bottom.Center;
             var radius = bottom.Size.Min() * 0.5f;
             Circle circle = new(center, radius);
 
-            if (button.State.Down)
+            var result = button.State.GestureResult;
+            if (result.CurState == InputGesture.State.InProgress)
             {
-                if (button.State.HoldF < 1f)
+                var holdF = button.State.GestureResult.NormalizedProgress;
+                if (holdF < 1f)
                 {
-                    float holdRadius = ShapeMath.LerpFloat(0, radius, button.State.HoldF);
+                    float holdRadius = ShapeMath.LerpFloat(0, radius, holdF);
                     Circle holdCircle = new(center, holdRadius);
                     holdCircle.Draw(flashColor2);
                 }
@@ -501,7 +505,6 @@ namespace Examples.Scenes.ExampleScenes
                 circle.DrawLines(thickness, holdFinishedColor);
                 textFont.ColorRgba = holdFinishedColor;
                 textFont.DrawTextWrapNone(title, top, new(0.5f, 0f));
-                // font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), holdFinishedColor);
                 
             }
             else
@@ -509,7 +512,6 @@ namespace Examples.Scenes.ExampleScenes
                 circle.DrawLines(lineThickness / 2, flashColor1);
                 textFont.ColorRgba = flashColor1;
                 textFont.DrawTextWrapNone(title, top, new(0.5f, 0f));
-                // font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), flashColor1);
             }
             
             var inputs = button.GetInputs(curInputDeviceType);
@@ -519,36 +521,7 @@ namespace Examples.Scenes.ExampleScenes
             for (var i = 0; i < inputs.Count; i++)
             {
                 textFont.DrawTextWrapNone(inputs[i].GetName(true), rects[i], new(0.5f, 0f));
-                // font.DrawText(, rects[i], 1f, new Vector2(0.5f, 0f), ExampleScene.ColorMedium);
             }
-            
-            
-            
-            // Rect top = area.ApplyMargins(0, 0, 0, 0.8f);
-            // Rect bottom = area.ApplyMargins(0, 0, 0.2f, 0);
-            // float marginSize = bottom.Size.Max() * 0.025f;
-            // Rect insideBottom = bottom.ApplyMarginsAbsolute(marginSize, marginSize, marginSize, marginSize);//  bottom.ApplyMargins(0.025f, 0.025f, 0.025f, 0.025f);
-            //
-            // insideBottom.DrawLines(lineThickness / 2, flashColor1);
-            //
-            // var insideRect = insideBottom.ScaleSize(0f, new(0.5f)).Lerp(insideBottom,  MathF.Abs(button.State.Axis));
-            // insideRect.Draw(flashColor2);
-            //
-            // var inputs = button.GetInputs(curInputDevice);
-            // var inputNamesRect = insideBottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
-            // var rects = inputNamesRect.SplitV(inputs.Count); // inputNamesRect.GetAlignedRectsVertical(inputs.Count, 0f, 1f);
-            // for (var i = 0; i < inputs.Count; i++)
-            // {
-            //     font.DrawText(inputs[i].GetName(true), rects[i], 1f, new Vector2(0.5f, 0f), ExampleScene.ColorMedium);
-            // }
-            //
-            //
-            //
-            // if (button.State.Down)
-            // {
-            //     bottom.DrawLines(lineThickness, ExampleScene.ColorHighlight2);
-            // }
-
             
         }
     }
@@ -569,12 +542,12 @@ namespace Examples.Scenes.ExampleScenes
         {
             this.textFont = new(font, 1f, Colors.Medium);
             
-            var settings = InputActionSettings.CreateHoldAndMultiTap(1f, 0.25f, 2);
-            
+            var settings = new InputActionSettings();
+            var activation = InputGesture.DoubleTap(0.25f);
             this.title = "Double Tap";
             var q = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
             var x = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
-            button = new(settings, q, x);
+            button = new(settings, activation, q, x);
             
             inputActionTree = [button];
         }
@@ -592,6 +565,16 @@ namespace Examples.Scenes.ExampleScenes
             {
                 flashTimer = flashDuration;
             }
+            
+            var result = button.State.GestureResult;
+            if (result.CurState == InputGesture.State.Completed)
+            {
+                doubleTapFinishedTimer = doubleTapFinishedDuration;
+            }
+            else if (result.CurState == InputGesture.State.Failed)
+            {
+                flashTimer = 0f;
+            }
 
             if (flashTimer > 0f && doubleTapFinishedTimer <= 0f)
             {
@@ -599,47 +582,11 @@ namespace Examples.Scenes.ExampleScenes
                 if (flashTimer <= 0) flashTimer = 0f;
             }
 
-            if (button.State.MultiTapState == MultiTapState.Completed)
-            {
-                doubleTapFinishedTimer = doubleTapFinishedDuration;
-            }
-
             if (doubleTapFinishedTimer > 0f)
             {
                 doubleTapFinishedTimer -= dt;
                 if (doubleTapFinishedTimer < 0f) doubleTapFinishedTimer = 0f;
             }
-
-            // var pressedType = button.State.GetPressedType();
-            // switch (pressedType)
-            // {
-            //     case PressedType.Hold:
-            //         lastAction = "Hold";
-            //         lastActionTimer = lastActionDuration;
-            //         // Console.WriteLine("Hold"); 
-            //         break;
-            //     case PressedType.MultiTap:
-            //         lastAction = "Double Tap";
-            //         lastActionTimer = lastActionDuration;
-            //         // Console.WriteLine("Double Tap"); 
-            //         break;
-            //     case PressedType.SingleTap:
-            //         lastAction = "Single Tap";
-            //         lastActionTimer = lastActionDuration;
-            //         // Console.WriteLine("Single Tap");
-            //         break;
-            //    
-            // }
-            //
-            // if (lastActionTimer > 0f)
-            // {
-            //     lastActionTimer -= dt;
-            //     if (lastActionTimer <= 0)
-            //     {
-            //         lastActionTimer = 0f;
-            //         lastAction = string.Empty;
-            //     }
-            // }
         }
 
         public override void Draw(Rect area, float lineThickness)
@@ -649,19 +596,23 @@ namespace Examples.Scenes.ExampleScenes
             var flashColor2 = Colors.Medium.Lerp(Colors.Special, flashF);
             var flashColor3 = Colors.Medium.Lerp(Colors.Warm, flashF);
             
-            Rect top = area.ApplyMargins(0, 0, 0, 0.8f);
-            Rect bottom = area.ApplyMargins(0, 0, 0.2f, 0);
+            var top = area.ApplyMargins(0, 0, 0, 0.8f);
+            var bottom = area.ApplyMargins(0, 0, 0.2f, 0);
             
             var center = bottom.Center;
             var radius = bottom.Size.Min() * 0.5f;
             Circle circle = new(center, radius);
 
-            
-            if (button.State.MultiTapState == MultiTapState.Failed)
-            {
-                Circle outside = new(center, radius + lineThickness);
-                outside.DrawLines(lineThickness / 2, flashColor3);
-            }
+            // var result = button.State.ActivationResult;
+            // if (result.CurState == InputActionActivation.State.InProgress)
+            // {
+            //     
+            // }
+            // if (button.State.MultiTapState == MultiTapState.Failed)
+            // {
+            //     Circle outside = new(center, radius + lineThickness); 
+            //     outside.DrawLines(lineThickness / 2, flashColor3);
+            // }
 
             if (doubleTapFinishedTimer > 0f)
             {
@@ -679,7 +630,6 @@ namespace Examples.Scenes.ExampleScenes
                 circle.DrawLines(lineThickness / 2, flashColor1);
                 textFont.ColorRgba = flashColor1;
                 textFont.DrawTextWrapNone(title, top, new(0.5f, 0f));
-                // font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), flashColor1);
             }
             
             
@@ -691,7 +641,6 @@ namespace Examples.Scenes.ExampleScenes
             for (var i = 0; i < inputs.Count; i++)
             {
                 textFont.DrawTextWrapNone(inputs[i].GetName(true), rects[i], new(0.5f, 0f));
-                // font.DrawText(, rects[i], 1f, new Vector2(0.5f, 0f), ExampleScene.ColorMedium);
             }
             
             
