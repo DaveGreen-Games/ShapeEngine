@@ -58,6 +58,23 @@ public partial class Polygon
 
         return false;
     }
+    
+    /// <summary>
+    /// Attempts to merge this polygon with another if they overlap.
+    /// </summary>
+    /// <param name="other">The polygon to merge with.</param>
+    /// <returns>True if a merge was performed; otherwise, false.</returns>
+    public bool MergeShapeSelf(Polygon other)
+    {
+        var overlap = OverlapShape(other);
+        if (overlap)
+        {
+            UnionShapeSelf(other);
+            return true;
+        }
+
+        return false;
+    }
 
     /// <summary>
     /// Subtracts the specified polygon (`cutShape`) from this polygon.
@@ -67,7 +84,7 @@ public partial class Polygon
     /// <param name="cutShape">The polygon to subtract from this polygon.</param>
     /// <param name="keepCutout">If true, keeps only the intersected region; otherwise, subtracts the cutShape.</param>
     /// <returns>True if the difference operation produced a valid polygon; otherwise, false.</returns>
-    public bool CutSelf(Polygon cutShape, bool keepCutout = false)
+    public bool CutShapeSelf(Polygon cutShape, bool keepCutout = false)
     {
         var newShapes = keepCutout ? this.Intersect(cutShape) : this.Difference(cutShape);
         
