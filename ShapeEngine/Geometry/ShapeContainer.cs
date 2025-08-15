@@ -20,7 +20,7 @@ public abstract class ShapeContainer : Shape
     
     // List of child shape containers. Not exposed publicly.
     private List<ShapeContainer> children { get; set; } = [];
-    
+    public List<ShapeContainer> GetChildrenCopy() => [..children];
     #endregion
     
     #region Public Functions
