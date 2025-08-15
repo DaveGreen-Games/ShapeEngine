@@ -357,6 +357,27 @@ public readonly partial struct Circle : IEquatable<Circle>
         return poly;
     }
     /// <summary>
+    /// Converts the circle into a polygon representation and stores the result in the provided <see cref="Polygon"/>.
+    /// </summary>
+    /// <param name="result">A reference to the <see cref="Polygon"/> to store the result.</param>
+    /// <param name="pointCount">The number of points to use for the polygon. Default is 16.</param>
+    /// <returns><c>true</c> if the conversion was successful; otherwise, <c>false</c>.</returns>
+    public bool ToPolygon(ref Polygon result, int pointCount = 16)
+    {
+        if (Radius <= 0f) return false;
+        
+        if (result.Count > 0) result.Clear();
+        float angleStep = (MathF.PI * 2f) / pointCount;
+        
+        for (var i = 0; i < pointCount; i++)
+        {
+            var p = Center + new Vector2(Radius, 0f).Rotate(angleStep * i);
+            result.Add(p);
+        }
+
+        return true;
+    }
+    /// <summary>
     /// Converts the circle into a polyline representation.
     /// </summary>
     /// <param name="pointCount">The number of points to use for the polyline. Default is 16.</param>
