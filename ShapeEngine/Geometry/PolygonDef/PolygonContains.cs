@@ -177,5 +177,25 @@ public partial class Polygon
     {
         return ContainsPoints(this, points);
     }
+    
+    /// <summary>
+    /// Determines whether this shape contains the specified <see cref="IShape"/>.
+    /// </summary>
+    /// <param name="shape">The shape to check.</param>
+    /// <returns><c>true</c> if the shape is inside this shape; otherwise, <c>false</c>.</returns>
+    public bool ContainsShape(IShape shape)
+    {
+        return shape.GetShapeType() switch
+        {
+            ShapeType.Circle => ContainsShape(shape.GetCircleShape()),
+            ShapeType.Segment => ContainsShape(shape.GetSegmentShape()),
+            ShapeType.Triangle => ContainsShape(shape.GetTriangleShape()),
+            ShapeType.Rect => ContainsShape(shape.GetRectShape()),
+            ShapeType.Quad => ContainsShape(shape.GetQuadShape()),
+            ShapeType.Poly => ContainsShape(shape.GetPolygonShape()),
+            ShapeType.PolyLine => ContainsShape(shape.GetPolylineShape()),
+            _ => false
+        };
+    }
 
 }

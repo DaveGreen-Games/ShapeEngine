@@ -287,4 +287,26 @@ public partial class Triangulation
         return false;
     }
     
+    /// <summary>
+    /// Determines whether the specified shape is contained within any triangle of this triangulation.
+    /// </summary>
+    /// <param name="shape">The shape to check for containment.</param>
+    /// <param name="triangleIndex">The index of the triangle that contains the shape, or -1 if not found.</param>
+    /// <returns>True if the shape is contained in a triangle, false otherwise.</returns>
+    public bool ContainsShape(IShape shape, out int triangleIndex)
+    {
+        triangleIndex = -1;
+        
+        return shape.GetShapeType() switch
+        {
+            ShapeType.Circle => ContainsShape(shape.GetCircleShape(), out triangleIndex),
+            ShapeType.Segment => ContainsShape(shape.GetSegmentShape(), out triangleIndex),
+            ShapeType.Triangle => ContainsShape(shape.GetTriangleShape(), out triangleIndex),
+            ShapeType.Rect => ContainsShape(shape.GetRectShape(), out triangleIndex),
+            ShapeType.Quad => ContainsShape(shape.GetQuadShape(), out triangleIndex),
+            ShapeType.Poly => ContainsShape(shape.GetPolygonShape(), out triangleIndex),
+            ShapeType.PolyLine => ContainsShape(shape.GetPolylineShape(), out triangleIndex),
+            _ => false
+        };
+    }
 }
