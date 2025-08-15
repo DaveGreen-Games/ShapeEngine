@@ -4,7 +4,7 @@ namespace ShapeEngine.Input;
 
 
 /// <summary>
-/// Represents the state of an input, including button presses, axis values, device type, and activation details.
+/// Represents the state of an input, including button presses, axis values, device type, and input gesture details.
 /// </summary>
 public readonly struct InputState
 {
@@ -104,14 +104,14 @@ public readonly struct InputState
         GestureResult = new();
     }
     /// <summary>
-    /// Initializes a new instance of the <see cref="InputState"/> struct with specified values, including activation result.
+    /// Initializes a new instance of the <see cref="InputState"/> struct with specified values, including input gesture result.
     /// </summary>
     /// <param name="down">Indicates if the input is currently held down.</param>
     /// <param name="up">Indicates if the input is currently up (not pressed).</param>
     /// <param name="axisRaw">The raw axis value, unprocessed.</param>
     /// <param name="gamepad">The index of the gamepad associated with this input, or -1 if not applicable.</param>
     /// <param name="inputDeviceType">The type of input device (keyboard, mouse, gamepad, etc.).</param>
-    /// <param name="gestureResult">The result of the input action activation.</param>
+    /// <param name="gestureResult">The result of the input action gesture.</param>
     /// <param name="inverted">Indicates if the input axis is inverted.</param>
     public InputState(bool down, bool up, float axisRaw, int gamepad, InputDeviceType inputDeviceType, InputGesture.Result gestureResult,  bool inverted = false)
     {
@@ -133,7 +133,7 @@ public readonly struct InputState
     /// but replacing the <see cref="GestureResult"/> with the specified value.
     /// </summary>
     /// <param name="state">The source <see cref="InputState"/> to copy values from.</param>
-    /// <param name="gestureResult">The new activation result to use.</param>
+    /// <param name="gestureResult">The new input gesture result to use.</param> 
     public InputState(InputState state, InputGesture.Result gestureResult)
     {
         Down = state.Down;
@@ -241,7 +241,7 @@ public readonly struct InputState
     /// </summary>
     /// <param name="other">The other input state to accumulate.</param>
     /// <returns>A new accumulated <see cref="InputState"/>.</returns>
-    public InputState Accumulate(InputState other)
+    internal InputState Accumulate(InputState other)
     {
         var inputDevice = InputDeviceType;
         var inverted = Inverted;
@@ -258,9 +258,6 @@ public readonly struct InputState
         if (MathF.Abs(other.AxisRaw) > MathF.Abs((AxisRaw))) axis = other.AxisRaw;
         bool down = Down || other.Down;
         bool up = Up && other.Up;
-        
-        //unnecessary, activation results are handled after all states from all input types are handled and accumulated
-        // var pickedResult = ActivationResult.Pick(other.ActivationResult);
         
         return new(down, up, axis, other.Gamepad, inputDevice, new(), inverted);
     }
