@@ -152,20 +152,56 @@ public sealed class InputGesture
     /// </summary>
     public float NormalizedProgress { get; private set; }
 
+    /// <summary>
+    /// Indicates whether the gesture should automatically reset after completion or failure.
+    /// </summary>
+    /// <remarks>
+    /// <list type="bullet">
+    /// <item>
+    /// If true,
+    /// the gesture will automatically reset to its initial state in the next Update call after being completed or failed.
+    /// </item>
+    /// <item>
+    /// If false, <see cref="Reset"/> has to be called manually to reset the gesture state.
+    /// Until the gesture is reset,
+    /// it will continue to report the last state and progress values after completion or failure.
+    /// </item>
+    /// </list>
+    /// </remarks>
+    public readonly bool AutomaticReset;
+    
     private int count;
     private float timer;
     
+    /// <summary>
+    /// Initializes a new instance of <see cref="InputGesture"/> with default values.
+    /// </summary>
+    /// <remarks>
+    /// Private to restrict instantiation; use static factory methods instead.
+    /// </remarks>
     private InputGesture()
     {
         ActivationType = Type.None;
         CurState = State.Waiting;
-        Duration = -1f;
-        TargetCount = -1;
+        Duration = 0;
+        TargetCount = 0;
         NormalizedProgress = 0f;
         timer = 0f;
         count = 0;
+        AutomaticReset = false;
     }
-    private InputGesture(Type type, float duration, int targetCount)
+    
+    /// <summary>
+    /// Initializes a new instance of <see cref="InputGesture"/> with the specified gesture type, duration, and target count.
+    /// </summary>
+    /// <param name="type">The type of gesture (e.g., Tap, MultiTap, LongPress, etc.).</param>
+    /// <param name="duration">The required duration for the gesture in seconds.</param>
+    /// <param name="targetCount">The number of activations required for multi-tap gestures.</param>
+    /// <param name="automaticReset">Indicates whether the gesture should automatically reset after completion or failure. See <see cref="AutomaticReset"/> for more information. </param>
+    /// <remarks>
+    /// Private to restrict instantiation; use static factory methods instead.
+    /// </remarks>
+    private InputGesture(Type type, float duration, int targetCount, bool automaticReset)
     {
         ActivationType = type;
         
@@ -179,13 +215,19 @@ public sealed class InputGesture
         NormalizedProgress = 0f;
         
         CurState = State.Waiting;
+        
+        AutomaticReset = automaticReset;
     }
 
     internal Result Update(float dt, InputState cur)
     {
         if (ActivationType == Type.None) return new();
-        
-        if(CurState is State.Failed or State.Completed) Reset();
+
+        if (CurState is State.Failed or State.Completed)
+        {
+            if(AutomaticReset) Reset();
+            else return new(ActivationType, CurState, NormalizedProgress);
+        }
         
         if (CurState is State.Waiting) //nothing active yet
         {
@@ -329,8 +371,8 @@ public sealed class InputGesture
     }
     
     /// <summary>
-    /// Returns an activation representing no special activation.
-    /// Used for actions that do not require any activation logic.
+    /// Returns an input gesture representing no special gesture.
+    /// Used for actions that do not require any gesture logic.
     /// </summary>
     public static InputGesture None() => new();
 
@@ -339,28 +381,32 @@ public sealed class InputGesture
     /// Triggered when the input is held down for longer than the specified duration.
     /// </summary>
     /// <param name="duration">The required hold duration in seconds.</param>
-    public static InputGesture LongPress(float duration) => new(Type.LongPress, duration, 0);
+    /// <param name="automaticReset">Indicates whether the gesture should automatically reset after completion or failure. See <see cref="AutomaticReset"/> for more information. </param>
+    public static InputGesture LongPress(float duration, bool automaticReset = true) => new(Type.LongPress, duration, 0, automaticReset);
 
     /// <summary>
     /// Returns a gesture for a long release.
     /// Triggered when the input is released after the specified duration.
     /// </summary>
     /// <param name="duration">The required release duration in seconds.</param>
-    public static InputGesture LongRelease(float duration) => new(Type.LongRelease, duration, 0);
+    /// <param name="automaticReset">Indicates whether the gesture should automatically reset after completion or failure. See <see cref="AutomaticReset"/> for more information. </param>
+    public static InputGesture LongRelease(float duration, bool automaticReset = true) => new(Type.LongRelease, duration, 0, automaticReset);
 
     /// <summary>
     /// Returns a gesture for a tap.
     /// Triggered when the input is pressed and released within the specified duration.
     /// </summary>
     /// <param name="duration">The maximum tap duration in seconds.</param>
-    public static InputGesture Tap(float duration) => new(Type.Tap, duration, 0);
+    /// <param name="automaticReset">Indicates whether the gesture should automatically reset after completion or failure. See <see cref="AutomaticReset"/> for more information. </param>
+    public static InputGesture Tap(float duration, bool automaticReset = true) => new(Type.Tap, duration, 0, automaticReset);
 
     /// <summary>
     /// Returns a gesture for a double tap.
     /// Triggered when the input is pressed and released twice within the specified duration.
     /// </summary>
     /// <param name="duration">The maximum double tap duration in seconds.</param>
-    public static InputGesture DoubleTap(float duration) => new(Type.MultiTap, duration, 2);
+    /// <param name="automaticReset">Indicates whether the gesture should automatically reset after completion or failure. See <see cref="AutomaticReset"/> for more information. </param>
+    public static InputGesture DoubleTap(float duration, bool automaticReset = true) => new(Type.MultiTap, duration, 2, automaticReset);
 
     /// <summary>
     /// Returns a gesture for a multi tap.
@@ -368,6 +414,7 @@ public sealed class InputGesture
     /// </summary>
     /// <param name="duration">The maximum multi tap duration in seconds.</param>
     /// <param name="targetCount">The number of taps required.</param>
-    public static InputGesture MultiTap(float duration, int targetCount) => new(Type.MultiTap, duration, targetCount);
+    /// <param name="automaticReset">Indicates whether the gesture should automatically reset after completion or failure. See <see cref="AutomaticReset"/> for more information. </param>
+    public static InputGesture MultiTap(float duration, int targetCount, bool automaticReset = true) => new(Type.MultiTap, duration, targetCount, automaticReset);
     
 }
