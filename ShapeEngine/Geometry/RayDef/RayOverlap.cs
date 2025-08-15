@@ -214,5 +214,28 @@ public readonly partial struct Ray
     /// <param name="segments">The set of segments to check for overlap.</param>
     /// <returns>True if the ray overlaps any of the segments; otherwise, false.</returns>
     public bool OverlapShape(Segments segments) => OverlapRaySegments(Point, Direction, segments);
+    
+    /// <summary>
+    /// Determines whether this shape overlaps with the specified <see cref="IShape"/>.
+    /// </summary>
+    /// <param name="shape">The shape to test for overlap with this shape.
+    /// The shape can be any supported type such as circle, segment, ray, line, triangle, rectangle, quad, polygon, or polyline.</param>
+    /// <returns><c>true</c> if this shape overlaps with the specified shape; otherwise, <c>false</c>.</returns>
+    public bool OverlapShape(IShape shape)
+    {
+        return shape.GetShapeType() switch
+        {
+            ShapeType.Circle => OverlapShape(shape.GetCircleShape()),
+            ShapeType.Segment => OverlapShape(shape.GetSegmentShape()),
+            ShapeType.Ray => OverlapShape(shape.GetRayShape()),
+            ShapeType.Line => OverlapShape(shape.GetLineShape()),
+            ShapeType.Triangle => OverlapShape(shape.GetTriangleShape()),
+            ShapeType.Rect => OverlapShape(shape.GetRectShape()),
+            ShapeType.Quad => OverlapShape(shape.GetQuadShape()),
+            ShapeType.Poly => OverlapShape(shape.GetPolygonShape()),
+            ShapeType.PolyLine => OverlapShape(shape.GetPolylineShape()),
+            _ => false
+        };
+    }
 
 }
