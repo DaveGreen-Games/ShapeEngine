@@ -603,17 +603,6 @@ namespace Examples.Scenes.ExampleScenes
             var radius = bottom.Size.Min() * 0.5f;
             Circle circle = new(center, radius);
 
-            // var result = button.State.ActivationResult;
-            // if (result.CurState == InputActionActivation.State.InProgress)
-            // {
-            //     
-            // }
-            // if (button.State.MultiTapState == MultiTapState.Failed)
-            // {
-            //     Circle outside = new(center, radius + lineThickness); 
-            //     outside.DrawLines(lineThickness / 2, flashColor3);
-            // }
-
             if (doubleTapFinishedTimer > 0f)
             {
                 float f = doubleTapFinishedTimer / doubleTapFinishedDuration;
