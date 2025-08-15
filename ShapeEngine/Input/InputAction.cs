@@ -68,6 +68,7 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
     
     #region Members
 
+    public readonly InputGesture? Gesture;
    
     /// <summary>
     /// Indicates if this input action is active. If set to <c>false</c>, the action will not process input or update its state.
@@ -152,10 +153,6 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
     /// </summary>
     public string Title = "Input Action";
 
-    private float holdTimer;
-    private float multiTapTimer;
-    private int multiTapCount;
-
     /// <summary>
     /// The settings that define the behavior and configuration of this input action.
     /// </summary>
@@ -192,47 +189,31 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
     #endregion
 
     #region Constructors
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputAction"/> with a unique ID.
-    /// <see cref="Settings"/> are set to default values.
-    /// </summary>
+
     public InputAction()
     {
         Id = ShapeID.NextID;
         Settings = new InputActionSettings();
+        Gesture = null;
     }
-
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputAction"/> with the specified access tag and settings.
-    /// </summary>
-    /// <param name="accessTag">The access tag for this action.</param>
-    /// <param name="settings">The settings for this action.</param>
-    public InputAction(uint accessTag, InputActionSettings settings)
+    
+    public InputAction(uint accessTag, InputActionSettings settings, InputGesture? gesture = null)
     {
         Id = ShapeID.NextID;
         AccessTag = accessTag;
         Settings = settings;
+        Gesture = gesture;
     }
-    
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputAction"/> with the specified access tag, gamepad, and settings.
-    /// </summary>
-    /// <param name="accessTag">The access tag for this action.</param>
-    /// <param name="gamepad">The associated gamepad device.</param>
-    /// <param name="settings">The settings for this action.</param>
-    public InputAction(uint accessTag, GamepadDevice gamepad, InputActionSettings settings)
+
+    public InputAction(uint accessTag, GamepadDevice gamepad, InputActionSettings settings, InputGesture? gesture = null)
     {
         Id = ShapeID.NextID;
         Gamepad = gamepad;
         AccessTag = accessTag;
         Settings = settings;
+        Gesture = gesture;
     }
     
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputAction"/> with the specified settings and input types.
-    /// </summary>
-    /// <param name="settings">The settings for this action.</param>
-    /// <param name="inputTypes">The input types to associate with this action.</param>
     public InputAction(InputActionSettings settings, params IInputType[] inputTypes)
     {
         Id = ShapeID.NextID;
@@ -240,12 +221,6 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
         Settings = settings;
     }
     
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputAction"/> with the specified access tag, settings, and input types.
-    /// </summary>
-    /// <param name="accessTag">The access tag for this action.</param>
-    /// <param name="settings">The settings for this action.</param>
-    /// <param name="inputTypes">The input types to associate with this action.</param>
     public InputAction(uint accessTag, InputActionSettings settings, params IInputType[] inputTypes)
     {
         Id = ShapeID.NextID;
@@ -254,13 +229,6 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
         Settings = settings;
     }
     
-    /// <summary>
-    /// Initializes a new instance of <see cref="InputAction"/> with the specified access tag, gamepad, settings, and input types.
-    /// </summary>
-    /// <param name="accessTag">The access tag for this action.</param>
-    /// <param name="gamepad">The associated gamepad device.</param>
-    /// <param name="settings">The settings for this action.</param>
-    /// <param name="inputTypes">The input types to associate with this action.</param>
     public InputAction(uint accessTag, GamepadDevice gamepad, InputActionSettings settings, params IInputType[] inputTypes)
     {
         Id = ShapeID.NextID;
@@ -269,6 +237,34 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
         inputs.AddRange(inputTypes);
         Settings = settings;
     }
+    
+    public InputAction(InputActionSettings settings, InputGesture gesture, params IInputType[] inputTypes)
+    {
+        Id = ShapeID.NextID;
+        inputs.AddRange(inputTypes);
+        Settings = settings;
+        Gesture = gesture;
+    }
+    
+    public InputAction(uint accessTag, InputActionSettings settings, InputGesture gesture, params IInputType[] inputTypes)
+    {
+        Id = ShapeID.NextID;
+        AccessTag = accessTag;
+        inputs.AddRange(inputTypes);
+        Settings = settings;
+        Gesture = gesture;
+    }
+    
+    public InputAction(uint accessTag, GamepadDevice gamepad, InputActionSettings settings, InputGesture gesture, params IInputType[] inputTypes)
+    {
+        Id = ShapeID.NextID;
+        AccessTag = accessTag;
+        Gamepad = gamepad;
+        inputs.AddRange(inputTypes);
+        Settings = settings;
+        Gesture = gesture;
+    }
+    
     #endregion
 
     #region Class
@@ -290,15 +286,12 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
     }
 
     /// <summary>
-    /// Resets the input action to its initial state, clearing the current input state,
-    /// hold timer, multi-tap timer, and multi-tap count.
+    /// Resets the input action to its initial state.
+    /// Clears the current input state, used inputs, and resets toggle and device type.
     /// </summary>
     public void Reset()
     {
         ClearState();
-        holdTimer = 0f;
-        multiTapTimer = 0f;
-        multiTapCount = 0;
         UsedInputs.Clear();
     }
     /// <summary>
@@ -392,69 +385,6 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
         
         if(inputDeviceType != InputDeviceType.None) CurrentDeviceType = inputDeviceType;
         
-        //Multi Tap & Hold System
-        var multiTapF = 0f;
-        if (multiTapTimer > 0f)
-        {
-            multiTapTimer -= dt;
-            if (multiTapTimer <= 0f)
-            {
-                multiTapTimer = 0f;
-                multiTapCount = 0;
-            }
-        }
-        
-        var holdF = 0f;
-        if (State.Up && current.Down) //pressed
-        {
-            if (Settings.HoldDuration > 0)
-            {
-                holdTimer = Settings.HoldDuration;
-            }
-            if (Settings.MultiTapDuration > 0f && Settings.MultiTapTarget > 1)
-            {
-                if (multiTapTimer <= 0f) multiTapTimer = Settings.MultiTapDuration;
-                multiTapCount++;
-            }
-
-        }
-        else if (State.Down && current.Up) //released
-        {
-            if (holdTimer > 0f)
-            {
-                holdTimer = 0f;
-                holdF = 0f;
-            }
-            
-        }
-
-        if (holdTimer > 0f)
-        {
-            holdTimer -= dt;
-            if (holdTimer <= 0)
-            {
-                holdTimer = 0f;
-                holdF = 1f;
-            }
-            else holdF = 1f - (holdTimer / Settings.HoldDuration);
-        }
-        
-        if (multiTapTimer > 0f)
-        {
-            if (multiTapCount >= Settings.MultiTapTarget)
-            {
-                multiTapF = 1f;
-                if (holdTimer > 0f)
-                {
-                    holdTimer = 0f;
-                    holdF = 0f;
-                }
-            }
-            else multiTapF = multiTapCount / (float)Settings.MultiTapTarget;
-        }
-        
-        //Calculate New State
-        current = new(current, holdF, multiTapF);
         State = new(State, current);
 
         //switch between off and on
@@ -466,12 +396,15 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
                 _ => ToggleState.Off
             };
         }
-        
-        //Reset Multitap Count On Successful Multitap
-        if (multiTapF >= 1f) multiTapCount = 0;
+
+        if (Gesture != null)
+        {
+            var result = Gesture.Update(dt, State);
+            State = new(State, result);
+        }
         
         //Axis Sensitivity & Gravity
-        if (Settings.AxisSensitivity > 0 || Settings.AxisGravitiy > 0)
+        if (Settings.AxisSensitivity > 0 || Settings.AxisGravity > 0)
         {
             int raw = MathF.Sign(State.AxisRaw);
             float dif = State.AxisRaw - State.Axis;
@@ -481,7 +414,7 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
             {
                 var axisChange = 0f;
                 //var snapValue = 0f;
-                float gravity = Settings.AxisGravitiy <= 0f ? 0f : 1f / Settings.AxisGravitiy;
+                float gravity = Settings.AxisGravity <= 0f ? 0f : 1f / Settings.AxisGravity;
                 float sensitivity = Settings.AxisSensitivity <= 0f ? 0f : 1f / Settings.AxisSensitivity;
                 if (dif is > 1 or < -1) //snap
                 {
@@ -502,9 +435,6 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
 
                 if (axisChange != 0f)
                 {
-                    // float totalChange = axisChange + snapValue;
-                    // if (MathF.Abs(totalChange) > MathF.Abs(dif)) totalChange = dif;
-                    // State = State.AdjustAxis(totalChange);
                     if (MathF.Abs(axisChange) > MathF.Abs(dif)) axisChange = dif;
                     State = State.AdjustAxis(axisChange);
                 }
@@ -522,7 +452,23 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
     public InputAction Copy()
     {
         var copied = GetInputsCopiedArray();
-        var copy = new InputAction(AccessTag, Settings, copied)
+        InputAction copy;
+        if (Gesture != null)
+        {
+            copy = new InputAction(AccessTag, Settings, Gesture, copied)
+            {
+                Gamepad = Gamepad,
+                Active = Active,
+                ExecutionOrder = ExecutionOrder,
+                Title = Title,
+                BlocksInput = BlocksInput,
+                Toggle = Toggle,
+                State = State
+            };
+            return copy;
+        }
+        
+        copy = new InputAction(AccessTag, Settings, copied)
         {
             Gamepad = Gamepad,
             Active = Active,
@@ -530,11 +476,9 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
             Title = Title,
             BlocksInput = BlocksInput,
             Toggle = Toggle,
-            State = State,
-            holdTimer = holdTimer,
-            multiTapTimer = multiTapTimer,
-            multiTapCount = multiTapCount,
+            State = State
         };
+        
         return copy;
     }
 
@@ -969,78 +913,3 @@ public class InputAction : IComparable<InputAction>, ICopyable<InputAction>, IEq
         return hashCode.ToHashCode();
     }
 }
-
-
-/* Idea for later
-//Press -> triggered on the first frame the input is pressed down.
-//Hold -> triggered every frame the input is held down, until released.
-//Release -> triggered on the first frame the input is released.
-//Long Press -> triggered when the input is held down (pressed) for longer than the long press duration. (current hold implementation)
-//Long Release -> triggered when the input is released after the long release duration.
-//Tap -> triggered when the input is pressed and released within tap duration
-//Double Tap -> triggered when the input is pressed and released twice within the double tap duration.
-//Multi Tap -> triggered when the input is pressed and released multi tap count times within the multi tap duration.
-
-//This system could potentionally replace current system -> new implementation would have to be simpler and less complex than the current one.
-public enum TypeState //!!! better name
-{
-    None = 0,
-    InProgress = 1,
-    Completed = 2,
-    Failed = 3
-}
-
-//TODO: could handle everyting, and it is just updated in input action and passed to InputState?
-//Update(), TypeState CurrentState, Reset();  if failed or completed it will be reset next frame?
-public readonly struct InputActionTypeSettings//!!! better name
-{
-    public readonly InputActionType Type;
-    public readonly float Duration;
-    public readonly int TargetCount;
-    
-    public InputActionTypeSettings()
-    {
-        Type = InputActionType.None;
-        Duration = -1f;
-        TargetCount = -1;
-    }
-
-    private InputActionTypeSettings(InputActionType type, float duration, int targetCount)
-    {
-        Type = type;
-        Duration = duration;
-        TargetCount = targetCount;
-    }
-    
-    public static InputActionTypeSettings LongPress(float duration)
-    {
-        return new InputActionTypeSettings(InputActionType.LongPress, duration, -1);
-    }
-    public static InputActionTypeSettings LongRelease(float duration)
-    {
-        return new InputActionTypeSettings(InputActionType.LongRelease, duration, -1);
-    }
-    public static InputActionTypeSettings Tap(float duration)
-    {
-        return new InputActionTypeSettings(InputActionType.Tap, duration, -1);
-    }
-    public static InputActionTypeSettings DoubleTap(float duration)
-    {
-        return new InputActionTypeSettings(InputActionType.MultiTap, duration, 2);
-    }
-    public static InputActionTypeSettings MultiTap(float duration, int targetCount)
-    {
-        return new InputActionTypeSettings(InputActionType.MultiTap, duration, targetCount);
-    }
-
-}
-
-public enum InputActionType //!!! better name
-{ 
-    None = 0,
-    LongPress = 1,
-    LongRelease = 2,
-    Tap = 3,
-    MultiTap = 4
-}*/
-
