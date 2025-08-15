@@ -619,6 +619,32 @@ public partial class Triangulation
         var segment = triangle.GetSegment(segmentIndex);
         return (segment, closestResult);
     }
+    
+    /// <summary>
+    /// Finds the closest point in the triangulation to the specified shape.
+    /// </summary>
+    /// <param name="shape">The shape to find the closest point to.</param>
+    /// <param name="triangleIndex">The index of the triangle in the triangulation that is closest to the shape.</param>
+    /// <returns>
+    /// A <see cref="ClosestPointResult"/> containing the closest point information for the shape.
+    /// </returns>
+    public ClosestPointResult GetClosestPoint(IShape shape, out int triangleIndex)
+    {
+        triangleIndex = -1;
+        return shape.GetShapeType() switch
+        {
+            ShapeType.Circle => GetClosestPoint(shape.GetCircleShape(), out triangleIndex),
+            ShapeType.Segment => GetClosestPoint(shape.GetSegmentShape(), out triangleIndex),
+            ShapeType.Ray => GetClosestPoint(shape.GetRayShape(), out triangleIndex),
+            ShapeType.Line => GetClosestPoint(shape.GetLineShape(), out triangleIndex),
+            ShapeType.Triangle => GetClosestPoint(shape.GetTriangleShape(), out triangleIndex),
+            ShapeType.Rect => GetClosestPoint(shape.GetRectShape(), out triangleIndex),
+            ShapeType.Quad => GetClosestPoint(shape.GetQuadShape(), out triangleIndex),
+            ShapeType.Poly => GetClosestPoint(shape.GetPolygonShape(), out triangleIndex),
+            ShapeType.PolyLine => GetClosestPoint(shape.GetPolylineShape(), out triangleIndex),
+            _ => new()
+        };
+    }
 
 }
 
