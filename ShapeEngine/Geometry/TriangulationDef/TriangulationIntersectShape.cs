@@ -291,4 +291,29 @@ public partial class Triangulation
         return result;
     }
 
+    /// <summary>
+    /// Checks for intersections between the triangles in this triangulation and the specified shape implementing <see cref="IShape"/>.
+    /// </summary>
+    /// <param name="shape">The shape to check for intersections.</param>
+    /// <returns>
+    /// A dictionary mapping the index of each intersecting triangle to the resulting <see cref="IntersectionPoints"/>.
+    /// Returns <c>null</c> if no intersections are found or the shape type is not supported.
+    /// </returns>
+    public Dictionary<int, IntersectionPoints>? IntersectShape(IShape shape)
+    {
+        return shape.GetShapeType() switch
+        {
+            ShapeType.Circle => IntersectShape(shape.GetCircleShape()),
+            ShapeType.Segment => IntersectShape(shape.GetSegmentShape()),
+            ShapeType.Ray => IntersectShape(shape.GetRayShape()),
+            ShapeType.Line => IntersectShape(shape.GetLineShape()),
+            ShapeType.Triangle => IntersectShape(shape.GetTriangleShape()),
+            ShapeType.Rect => IntersectShape(shape.GetRectShape()),
+            ShapeType.Quad => IntersectShape(shape.GetQuadShape()),
+            ShapeType.Poly => IntersectShape(shape.GetPolygonShape()),
+            ShapeType.PolyLine => IntersectShape(shape.GetPolylineShape()),
+            _ => null
+        };
+    }
+
 }
