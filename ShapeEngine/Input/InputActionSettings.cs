@@ -20,7 +20,7 @@ public readonly struct InputActionSettings : IEquatable<InputActionSettings>
     
     /// <summary>
     /// Initializes a new instance of <c>InputActionSettings</c> with default values.
-    /// AxisGravitiy and AxisSensitivity are both set to 1.
+    /// <see cref="AxisGravity"/> and <see cref="AxisSensitivity"/> are both set to 1.
     /// </summary>
     public InputActionSettings()
     {
