@@ -174,10 +174,10 @@ public abstract class Shape : IShape
     public virtual Rect GetRectShape() => new();
 
     /// <inheritdoc/>
-    public virtual Polygon GetPolygonShape() => new();
+    public virtual Polygon GetPolygonShape() => [];
 
     /// <inheritdoc/>
-    public virtual Polyline GetPolylineShape() => new();
+    public virtual Polyline GetPolylineShape() => [];
     
     /// <summary>
     /// Determines whether this shape overlaps with the specified shape.

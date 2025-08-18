@@ -750,6 +750,10 @@ public partial class Polygon : Points, IEquatable<Polygon>
     /// </summary>
     /// <param name="shape">The shape to cut out.</param>
     /// <returns>True if the cutout was successful; otherwise, false.</returns>
+    /// <remarks>
+    /// Does not support cutting out holes.
+    /// If the shape for cutting is completely contained within the polygon, it will not be cut out!
+    /// </remarks>
     public bool AddCutoutShape(IShape shape)
     {
         compoundHelperPolygon ??= [];
@@ -763,6 +767,10 @@ public partial class Polygon : Points, IEquatable<Polygon>
     /// </summary>
     /// <param name="shape">The shape container whose shapes will be cut out.</param>
     /// <returns>The number of shapes successfully cut out.</returns>
+    /// <remarks>
+    /// Does not support cutting out holes.
+    /// If the shape for cutting is completely contained within the polygon, it will not be cut out!
+    /// </remarks>
     public int AddCutoutShape(ShapeContainer shape)
     {
         var count = 0;
@@ -785,6 +793,10 @@ public partial class Polygon : Points, IEquatable<Polygon>
     /// <param name="shape">The circle to cut out.</param>
     /// <param name="pointCount">The number of points to use for the polygon approximation. Default is 16.</param>
     /// <returns>True if the cutout was successful; otherwise, false.</returns>
+    /// <remarks>
+    /// Does not support cutting out holes.
+    /// If the shape for cutting is completely contained within the polygon, it will not be cut out!
+    /// </remarks>
     public bool AddCutoutShape(Circle shape, int pointCount = 16)
     {
         compoundHelperPolygon ??= [];
@@ -798,6 +810,10 @@ public partial class Polygon : Points, IEquatable<Polygon>
     /// </summary>
     /// <param name="shape">The triangle to cut out.</param>
     /// <returns>True if the cutout was successful; otherwise, false.</returns>
+    /// <remarks>
+    /// Does not support cutting out holes.
+    /// If the shape for cutting is completely contained within the polygon, it will not be cut out!
+    /// </remarks>
     public bool AddCutoutShape(Triangle shape)
     {
         compoundHelperPolygon ??= [];
@@ -811,6 +827,10 @@ public partial class Polygon : Points, IEquatable<Polygon>
     /// </summary>
     /// <param name="shape">The quad to cut out.</param>
     /// <returns>True if the cutout was successful; otherwise, false.</returns>
+    /// <remarks>
+    /// Does not support cutting out holes.
+    /// If the shape for cutting is completely contained within the polygon, it will not be cut out!
+    /// </remarks>
     public bool AddCutoutShape(Quad shape)
     {
         compoundHelperPolygon ??= [];
@@ -824,6 +844,10 @@ public partial class Polygon : Points, IEquatable<Polygon>
     /// </summary>
     /// <param name="shape">The rectangle to cut out.</param>
     /// <returns>True if the cutout was successful; otherwise, false.</returns>
+    /// <remarks>
+    /// Does not support cutting out holes.
+    /// If the shape for cutting is completely contained within the polygon, it will not be cut out!
+    /// </remarks>
     public bool AddCutoutShape(Rect shape)
     {
         compoundHelperPolygon ??= [];
@@ -837,6 +861,10 @@ public partial class Polygon : Points, IEquatable<Polygon>
     /// </summary>
     /// <param name="shape">The polygon to cut out.</param>
     /// <returns>True if the cutout was successful; otherwise, false.</returns>
+    /// <remarks>
+    /// Does not support cutting out holes.
+    /// If the shape for cutting is completely contained within the polygon, it will not be cut out!
+    /// </remarks>
     public bool AddCutoutShape(Polygon shape)
     {
         if (shape.Count <= 2) return false;
