@@ -644,7 +644,6 @@ public partial class Polygon : Points, IEquatable<Polygon>
                 return shape.GetPolygonShape().ToPolygon(ref result);
         }
     }
-  
     
     /// <summary>
     /// Adds a compound shape to the polygon by converting the given <see cref="IShape"/> to a polygon and merging it.
