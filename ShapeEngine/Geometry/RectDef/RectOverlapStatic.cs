@@ -155,7 +155,7 @@ public readonly partial struct Rect
     /// </remarks>
     public static bool OverlapRectPolygon(Vector2 a, Vector2 b, Vector2 c, Vector2 d, List<Vector2> points)
     {
-        return Quad.OverlapQuadPolygon(a, b, c, d, points);
+        return points.Count >= 3 && Quad.OverlapQuadPolygon(a, b, c, d, points);
     }
 
     /// <summary>
@@ -172,7 +172,7 @@ public readonly partial struct Rect
     /// </remarks>
     public static bool OverlapRectPolyline(Vector2 a, Vector2 b, Vector2 c, Vector2 d, List<Vector2> points)
     {
-        return Quad.OverlapQuadPolyline(a, b, c, d, points);
+        return points.Count >= 2 && Quad.OverlapQuadPolyline(a, b, c, d, points);
     }
 
     /// <summary>

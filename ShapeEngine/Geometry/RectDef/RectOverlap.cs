@@ -82,14 +82,20 @@ public readonly partial struct Rect
     /// </summary>
     /// <param name="points">The list of polygon points.</param>
     /// <returns>True if the polygon overlaps the rectangle; otherwise, false.</returns>
-    public bool OverlapPolygon(List<Vector2> points) => OverlapRectPolygon(A, B, C, D, points);
+    public bool OverlapPolygon(List<Vector2> points)
+    {
+        return points.Count >= 3 && OverlapRectPolygon(A, B, C, D, points);
+    }
 
     /// <summary>
     /// Checks if the rectangle overlaps with the given polyline.
     /// </summary>
     /// <param name="points">The list of polyline points.</param>
     /// <returns>True if the polyline overlaps the rectangle; otherwise, false.</returns>
-    public bool OverlapPolyline(List<Vector2> points) => OverlapRectPolyline(A, B, C, D, points);
+    public bool OverlapPolyline(List<Vector2> points)
+    {
+        return points.Count >= 2 && OverlapRectPolyline(A, B, C, D, points);
+    }
 
     /// <summary>
     /// Checks if the rectangle overlaps with the given list of segments.
