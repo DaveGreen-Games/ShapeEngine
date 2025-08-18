@@ -236,7 +236,7 @@ public readonly partial struct Triangle
     /// </remarks>
     public static bool ContainsTrianglePolyline(Vector2 tA, Vector2 tB, Vector2 tC, List<Vector2> polyline)
     {
-        return ContainsTrianglePoints(tA, tB, tC, polyline);
+        return polyline.Count >= 2 && ContainsTrianglePoints(tA, tB, tC, polyline);
     }
 
     /// <summary>
@@ -253,6 +253,8 @@ public readonly partial struct Triangle
     /// </remarks>
     public static bool ContainsTrianglePolygon(Vector2 tA, Vector2 tB, Vector2 tC, List<Vector2> polygon)
     {
+        if (polygon == null || polygon.Count < 3)
+            return false;
         return ContainsTrianglePoints(tA, tB, tC, polygon);
     }
 

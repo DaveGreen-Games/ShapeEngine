@@ -209,7 +209,7 @@ public readonly partial struct Triangle
     /// </remarks>
     public bool ContainsShape(Polygon polygon)
     {
-        return ContainsTrianglePoints(A, B, C, polygon);
+        return polygon.Count >= 3 && ContainsTrianglePoints(A, B, C, polygon);
     }
 
     /// <summary>
