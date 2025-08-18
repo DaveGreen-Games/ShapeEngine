@@ -608,7 +608,7 @@ public readonly partial struct Segment
     /// <returns>A <see cref="IntersectionPoints"/> collection, or null if there are no intersections.</returns>
     public static IntersectionPoints? IntersectSegmentPolyline(Vector2 segmentStart, Vector2 segmentEnd, List<Vector2> points, int maxCollisionPoints = -1)
     {
-        if (points.Count < 3) return null;
+        if (points.Count < 2) return null;
         if (maxCollisionPoints == 0) return null;
         IntersectionPoints? result = null;
         for (var i = 0; i < points.Count - 1; i++)
