@@ -628,7 +628,7 @@ public partial class Segments
     /// <returns>The number of valid intersection points found.</returns>
     public int IntersectShape(Polyline shape, ref IntersectionPoints points, bool returnAfterFirstValid = false)
     {
-        if (Count <= 0 || shape.Count < 3) return 0;
+        if (Count <= 0 || shape.Count < 2) return 0;
         var count = 0;
         foreach (var segment in this)
         {
