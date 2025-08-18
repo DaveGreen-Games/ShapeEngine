@@ -29,6 +29,7 @@ public class PolygonShape : ShapeContainer
     /// <param name="relativePoints">The points that define the polygon in local space.</param>
     public PolygonShape(Transform2D offset, Points relativePoints)
     {
+        if (relativePoints.Count < 3) throw new ArgumentException("A polygon must have at least 3 points.");
         Offset = offset;
         RelativeShape = relativePoints.ToPolygon();
         shape = new(RelativeShape.Count);
@@ -40,6 +41,7 @@ public class PolygonShape : ShapeContainer
     /// <param name="relativePoints">The polygon defined in local space.</param>
     public PolygonShape(Transform2D offset, Polygon relativePoints)
     {
+        if (relativePoints.Count < 3) throw new ArgumentException("A polygon must have at least 3 points.");
         Offset = offset;
         RelativeShape = relativePoints;
         shape = new(RelativeShape.Count);

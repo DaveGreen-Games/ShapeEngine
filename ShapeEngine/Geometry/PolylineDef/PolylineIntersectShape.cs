@@ -23,6 +23,7 @@ public partial class Polyline
     /// </returns>
     public Dictionary<Collider, IntersectionPoints>? Intersect(CollisionObject collisionObject)
     {
+        if (Count < 2) return null;
         if (!collisionObject.HasColliders) return null;
 
         Dictionary<Collider, IntersectionPoints>? intersections = null;

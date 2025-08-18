@@ -28,6 +28,7 @@ public class PolylineShape : ShapeContainer
     /// <param name="relativePoints">The points that define the polyline in local space.</param>
     public PolylineShape(Transform2D offset, Points relativePoints)
     {
+        if (relativePoints.Count < 2) throw new ArgumentException("A polyline must have at least 2 points.");
         Offset = offset;
         RelativeShape = relativePoints.ToPolyline();
         shape = new(RelativeShape.Count);
@@ -39,6 +40,7 @@ public class PolylineShape : ShapeContainer
     /// <param name="relativePoints">The polyline defined in local space.</param>
     public PolylineShape(Transform2D offset, Polyline relativePoints)
     {
+        if (relativePoints.Count < 2) throw new ArgumentException("A polyline must have at least 2 points.");
         Offset = offset;
         RelativeShape = relativePoints;
         shape = new(RelativeShape.Count);
