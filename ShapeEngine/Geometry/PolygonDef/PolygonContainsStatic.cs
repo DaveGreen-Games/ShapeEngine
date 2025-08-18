@@ -15,6 +15,7 @@ public partial class Polygon
     /// <returns>True if the point is inside the polygon; otherwise, false.</returns>
     public static bool ContainsPoint(List<Vector2> polygon, Vector2 p)
     {
+        if (polygon.Count < 3) return false; // Polygon must have at least 3 points
         var oddNodes = false;
         int num = polygon.Count;
         int j = num - 1;
@@ -37,6 +38,7 @@ public partial class Polygon
     /// <returns>True if both points are inside the polygon; otherwise, false.</returns>
     public static bool ContainsPoints(List<Vector2> polygon, Vector2 a, Vector2 b)
     {
+        if (polygon.Count < 3) return false; // Polygon must have at least 3 points
         var oddNodesA = false;
         var oddNodesB = false;
         int num = polygon.Count;
@@ -63,6 +65,7 @@ public partial class Polygon
     /// <returns>True if all points are inside the polygon; otherwise, false.</returns>
     public static bool ContainsPoints(List<Vector2> polygon, Vector2 a, Vector2 b, Vector2 c)
     {
+        if (polygon.Count < 3) return false; // Polygon must have at least 3 points
         var oddNodesA = false;
         var oddNodesB = false;
         var oddNodesC = false;
@@ -92,6 +95,7 @@ public partial class Polygon
     /// <returns>True if all points are inside the polygon; otherwise, false.</returns>
     public static bool ContainsPoints(List<Vector2> polygon, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
+        if (polygon.Count < 3) return false; // Polygon must have at least 3 points
         var oddNodesA = false;
         var oddNodesB = false;
         var oddNodesC = false;

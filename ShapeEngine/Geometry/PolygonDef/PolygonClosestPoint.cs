@@ -26,7 +26,7 @@ public partial class Polygon
     public static Vector2 GetClosestPointPolygonPoint(List<Vector2> points, Vector2 p, out float disSquared)
     {
         disSquared = -1;
-        if (points.Count <= 2) return new();
+        if (points.Count < 3) return new(); // Polygon must have at least 3 points
 
         var first = points[0];
         var second = points[1];
@@ -56,7 +56,7 @@ public partial class Polygon
     public new IntersectionPoint GetClosestPoint(Vector2 p, out float disSquared)
     {
         disSquared = -1;
-        if (Count <= 2) return new();
+        if (Count < 3) return new(); // Polygon must have at least 3 points
 
         var first = this[0];
         var second = this[1];
@@ -91,7 +91,7 @@ public partial class Polygon
     {
         disSquared = -1;
         index = -1;
-        if (Count <= 2) return new();
+        if (Count < 3) return new(); // Polygon must have at least 3 points
 
         var first = this[0];
         var second = this[1];

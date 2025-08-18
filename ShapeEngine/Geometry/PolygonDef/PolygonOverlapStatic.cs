@@ -19,6 +19,7 @@ public partial class Polygon
     /// <returns>True if the segment overlaps the polygon; otherwise, false.</returns>
     public static bool OverlapPolygonSegment(List<Vector2> points, Vector2 segmentStart, Vector2 segmentEnd)
     {
+        if (points.Count < 3) return false; // Polygon must have at least 3 points
         return Segment.OverlapSegmentPolygon(segmentStart, segmentEnd, points);
     }
 
@@ -32,6 +33,7 @@ public partial class Polygon
     /// <remarks>The Line is infinite in both directions.</remarks>
     public static bool OverlapPolygonLine(List<Vector2> points, Vector2 linePoint, Vector2 lineDirection)
     {
+        if (points.Count < 3) return false; // Polygon must have at least 3 points
         return Line.OverlapLinePolygon(linePoint, lineDirection, points);
     }
 
@@ -45,6 +47,7 @@ public partial class Polygon
     /// <remarks>Ray is infinite in one direction from the origin.</remarks>
     public static bool OverlapPolygonRay(List<Vector2> points, Vector2 rayPoint, Vector2 rayDirection)
     {
+        if (points.Count < 3) return false; // Polygon must have at least 3 points
         return Ray.OverlapRayPolygon(rayPoint, rayDirection, points);
     }
 
@@ -57,6 +60,7 @@ public partial class Polygon
     /// <returns>True if the circle overlaps the polygon; otherwise, false.</returns>
     public static bool OverlapPolygonCircle(List<Vector2> points, Vector2 circleCenter, float circleRadius)
     {
+        if (points.Count < 3) return false; // Polygon must have at least 3 points
         return Circle.OverlapCirclePolygon(circleCenter, circleRadius, points);
     }
 
@@ -70,6 +74,7 @@ public partial class Polygon
     /// <returns>True if the triangle overlaps the polygon; otherwise, false.</returns>
     public static bool OverlapPolygonTriangle(List<Vector2> points, Vector2 ta, Vector2 tb, Vector2 tc)
     {
+        if (points.Count < 3) return false; // Polygon must have at least 3 points
         return Triangle.OverlapTrianglePolygon(ta, tb, tc, points);
     }
 
@@ -84,6 +89,7 @@ public partial class Polygon
     /// <returns>True if the quad overlaps the polygon; otherwise, false.</returns>
     public static bool OverlapPolygonQuad(List<Vector2> points, Vector2 qa, Vector2 qb, Vector2 qc, Vector2 qd)
     {
+        if (points.Count < 3) return false; // Polygon must have at least 3 points
         return Quad.OverlapQuadPolygon(qa, qb, qc, qd, points);
     }
 
@@ -103,6 +109,7 @@ public partial class Polygon
    /// </remarks>
     public static bool OverlapPolygonRect(List<Vector2> points, Vector2 ra, Vector2 rb, Vector2 rc, Vector2 rd)
     {
+        if (points.Count < 3) return false; // Polygon must have at least 3 points
         return Quad.OverlapQuadPolygon(ra, rb, rc, rd, points);
     }
 

@@ -185,7 +185,7 @@ namespace Examples.Scenes.ExampleScenes
                     circlePoints.Add(circ.Transform.Position);
                 }
                 var hull = Polygon.FindConvexHull(circlePoints);
-                hull.DrawLines(4f, Colors.Special);
+                hull?.DrawLines(4f, Colors.Special);
             }
 
         }

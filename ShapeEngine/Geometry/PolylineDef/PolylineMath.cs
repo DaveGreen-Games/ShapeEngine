@@ -43,9 +43,9 @@ public partial class Polyline
     /// </returns>
     public Polygon? ProjectShape(Vector2 v)
     {
-        if (v.LengthSquared() <= 0f) return null;
-
-        var points = new Points(Count);
+        if (v.LengthSquared() <= 0f || Count < 2) return null;
+        
+        var points = new Points(Count * 2);
         for (var i = 0; i < Count; i++)
         {
             points.Add(this[i]);

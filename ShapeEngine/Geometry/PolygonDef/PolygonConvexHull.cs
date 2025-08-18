@@ -46,9 +46,10 @@ public partial class Polygon
     /// </summary>
     /// <param name="points">The list of points to compute the convex hull for.</param>
     /// <returns>A <see cref="Polygon"/> representing the convex hull.</returns>
-    private static Polygon ConvexHull_JarvisMarch(List<Vector2> points)
+    private static Polygon? ConvexHull_JarvisMarch(List<Vector2> points)
     {
-        var hull = new List<Vector2>();
+        if (points.Count < 3) return null; // Polygon must have at least 3 points
+        var hull = new Polygon();
         foreach (var p in points)
         {
             if (hull.Count == 0)
@@ -75,44 +76,66 @@ public partial class Polygon
             counter++;
         }
 
-        return new Polygon(hull);
+        // return new Polygon(hull);
+        return hull;
     }
     /// <summary>
     /// Finds the convex hull of a list of points.
     /// </summary>
     /// <param name="points">The list of points.</param>
     /// <returns>A <see cref="Polygon"/> representing the convex hull.</returns>
-    public static Polygon FindConvexHull(List<Vector2> points) => ConvexHull_JarvisMarch(points);
+    public static Polygon? FindConvexHull(List<Vector2> points)
+    {
+        if (points.Count < 3) return null; // Polygon must have at least 3 points
+        return ConvexHull_JarvisMarch(points);
+    }
     /// <summary>
     /// Finds the convex hull of a set of points.
     /// </summary>
     /// <param name="points">The points as a <see cref="Points"/> collection.</param>
     /// <returns>A <see cref="Polygon"/> representing the convex hull.</returns>
-    public static Polygon FindConvexHull(Points points) => ConvexHull_JarvisMarch(points);
+    public static Polygon? FindConvexHull(Points points)
+    {
+        if (points.Count < 3) return null; // Polygon must have at least 3 points
+        return ConvexHull_JarvisMarch(points);
+    }
     /// <summary>
     /// Finds the convex hull of a set of points.
     /// </summary>
     /// <param name="points">The points as an array of <see cref="Vector2"/>.</param>
     /// <returns>A <see cref="Polygon"/> representing the convex hull.</returns>
-    public static Polygon FindConvexHull(params Vector2[] points) => ConvexHull_JarvisMarch(points.ToList());
+    public static Polygon? FindConvexHull(params Vector2[] points)
+    {
+        if (points.Length < 3) return null; // Polygon must have at least 3 points
+        return ConvexHull_JarvisMarch(points.ToList());
+    }
     /// <summary>
     /// Finds the convex hull of a polygon's points.
     /// </summary>
     /// <param name="points">The polygon whose points are used.</param>
     /// <returns>A <see cref="Polygon"/> representing the convex hull.</returns>
-    public static Polygon FindConvexHull(Polygon points) => ConvexHull_JarvisMarch(points);
+    public static Polygon? FindConvexHull(Polygon points)
+    {
+        if (points.Count < 3) return null; // Polygon must have at least 3 points
+        return ConvexHull_JarvisMarch(points);
+    }
+
     /// <summary>
     /// Finds the convex hull of multiple polygons by combining all their points.
     /// </summary>
     /// <param name="shapes">The polygons to combine.</param>
     /// <returns>A <see cref="Polygon"/> representing the convex hull of all points.</returns>
-    public static Polygon FindConvexHull(params Polygon[] shapes)
+    public static Polygon? FindConvexHull(params Polygon[] shapes)
     {
-        var allPoints = new List<Vector2>();
+        List<Vector2>? allPoints = null;
         foreach (var shape in shapes)
         {
+            if(shape.Count < 3) continue; // Skip polygons with less than 3 points
+
+            allPoints ??= [];
             allPoints.AddRange(shape);
         }
-        return ConvexHull_JarvisMarch(allPoints);
+
+        return allPoints == null ? null : ConvexHull_JarvisMarch(allPoints);
     }
 }
