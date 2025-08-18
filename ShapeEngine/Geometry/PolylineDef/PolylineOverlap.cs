@@ -96,7 +96,11 @@ public partial class Polyline
     /// </summary>
     /// <param name="points">The vertices of the polygon.</param>
     /// <returns><c>true</c> if the polyline overlaps the polygon; otherwise, <c>false</c>.</returns>
-    public bool OverlapPolygon(List<Vector2> points) => OverlapPolylinePolygon(this, points);
+    public bool OverlapPolygon(List<Vector2> points)
+    {
+        if (points.Count < 3) return false;
+        return OverlapPolylinePolygon(this, points);
+    }
 
     /// <summary>
     /// Determines whether the polyline overlaps another polyline.
