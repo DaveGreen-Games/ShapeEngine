@@ -169,12 +169,12 @@ public partial class Triangulation
     /// <remarks>Returns as soon as an overlapping triangle is found.</remarks>
     public bool OverlapShape(Polygon shape)
     {
+        if (shape.Count < 3) return false;
         for (int i = 0; i < Count; i++)
         {
             var tri = this[i];
             if (tri.OverlapShape(shape)) return true;
         }
-
         return false;
     }
 
@@ -186,6 +186,7 @@ public partial class Triangulation
     /// <remarks>Returns as soon as an overlapping triangle is found.</remarks>
     public bool OverlapShape(Polyline shape)
     {
+        if (shape.Count < 2) return false;
         for (int i = 0; i < Count; i++)
         {
             var tri = this[i];

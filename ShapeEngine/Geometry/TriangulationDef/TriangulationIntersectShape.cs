@@ -230,6 +230,7 @@ public partial class Triangulation
     /// <remarks>Only triangles with valid intersections are included in the result.</remarks>
     public Dictionary<int, IntersectionPoints>? IntersectShape(Polygon shape)
     {
+        if (shape.Count < 3) return null;
         Dictionary<int, IntersectionPoints>? result = null;
         for (int i = 0; i < Count; i++)
         {
@@ -241,7 +242,6 @@ public partial class Triangulation
                 result.Add(i, intersection);
             }
         }
-
         return result;
     }
 
@@ -253,6 +253,7 @@ public partial class Triangulation
     /// <remarks>Only triangles with valid intersections are included in the result.</remarks>
     public Dictionary<int, IntersectionPoints>? IntersectShape(Polyline shape)
     {
+        if (shape.Count < 2) return null;
         Dictionary<int, IntersectionPoints>? result = null;
         for (int i = 0; i < Count; i++)
         {
