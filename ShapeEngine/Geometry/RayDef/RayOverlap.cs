@@ -80,13 +80,19 @@ public readonly partial struct Ray
     /// </summary>
     /// <param name="points">The list of points defining the polygon.</param>
     /// <returns>True if the ray overlaps the polygon; otherwise, false.</returns>
-    public bool OverlapPolygon(List<Vector2> points) => OverlapRayPolygon(Point, Direction, points);
+    public bool OverlapPolygon(List<Vector2> points)
+    {
+        return points.Count >= 3 && OverlapRayPolygon(Point, Direction, points);
+    }
     /// <summary>
     /// Determines whether this ray overlaps the specified polyline.
     /// </summary>
     /// <param name="points">The list of points defining the polyline.</param>
     /// <returns>True if the ray overlaps the polyline; otherwise, false.</returns>
-    public bool OverlapPolyline(List<Vector2> points) => OverlapRayPolyline(Point, Direction, points);
+    public bool OverlapPolyline(List<Vector2> points)
+    {
+        return points.Count >= 2 && OverlapRayPolyline(Point, Direction, points);
+    }
     /// <summary>
     /// Determines whether this ray overlaps the specified list of segments.
     /// </summary>

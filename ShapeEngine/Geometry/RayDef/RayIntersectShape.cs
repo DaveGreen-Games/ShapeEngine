@@ -267,7 +267,11 @@ public readonly partial struct Ray
     /// <remarks>
     /// The method uses the ray-polygon intersection algorithm, which may return multiple intersection points depending on the polygon's shape and the ray's direction.
     /// </remarks>
-    public IntersectionPoints? IntersectShape(Polygon p, int maxCollisionPoints = -1) => IntersectRayPolygon(Point, Direction, p, maxCollisionPoints);
+    public IntersectionPoints? IntersectShape(Polygon p, int maxCollisionPoints = -1)
+    {
+        return p.Count < 3 ? null : IntersectRayPolygon(Point, Direction, p, maxCollisionPoints);
+    }
+
     /// <summary>
     /// Computes all intersection points between this ray and a polyline.
     /// </summary>
@@ -277,7 +281,10 @@ public readonly partial struct Ray
     /// <remarks>
     /// The method uses the ray-polyline intersection algorithm, which may return multiple intersection points depending on the polyline's shape and the ray's direction.
     /// </remarks>
-    public IntersectionPoints? IntersectShape(Polyline pl, int maxCollisionPoints = -1) => IntersectRayPolyline(Point, Direction, pl, maxCollisionPoints);
+    public IntersectionPoints? IntersectShape(Polyline pl, int maxCollisionPoints = -1)
+    {
+        return pl.Count < 2 ? null : IntersectRayPolyline(Point, Direction, pl, maxCollisionPoints);
+    }
 
     /// <summary>
     /// Computes all intersection points between this ray and a set of segments.
