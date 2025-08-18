@@ -170,7 +170,7 @@ public readonly partial struct Circle
     /// <returns><c>true</c> if all points are inside or on the circle; otherwise, <c>false</c>.</returns>
     public static bool ContainsCirclePolyline(Vector2 circleCenter, float circleRadius, List<Vector2> polyline)
     {
-        return ContainsCirclePoints(circleCenter, circleRadius, polyline);
+        return polyline.Count >= 2 && ContainsCirclePoints(circleCenter, circleRadius, polyline);
     }
 
     /// <summary>

@@ -181,7 +181,7 @@ public readonly partial struct Circle
     /// <returns><c>true</c> if the circle overlaps with the polyline; otherwise, <c>false</c>.</returns>
     public static bool OverlapCirclePolyline(Vector2 center, float radius, List<Vector2> points)
     {
-        if (points.Count < 3) return false;
+        if (points.Count < 2) return false;
         for (var i = 0; i < points.Count - 1; i++)
         {
             if (OverlapCircleSegment(center, radius, points[i], points[i + 1])) return true;
