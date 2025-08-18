@@ -691,7 +691,7 @@ public readonly partial struct Line
     /// </remarks>
     public static IntersectionPoints? IntersectLinePolyline(Vector2 linePoint, Vector2 lineDirection, List<Vector2> points, int maxCollisionPoints = -1)
     {
-        if (points.Count < 3) return null;
+        if (points.Count < 2) return null;
         if (maxCollisionPoints == 0) return null;
         IntersectionPoints? result = null;
         for (var i = 0; i < points.Count - 1; i++)
@@ -699,7 +699,7 @@ public readonly partial struct Line
             var colPoint = IntersectLineSegment(linePoint, lineDirection, points[i], points[i + 1]);
             if (colPoint.Valid)
             {
-                result ??= new();
+                result ??= [];
                 result.Add(colPoint);
                 if (maxCollisionPoints > 0 && result.Count >= maxCollisionPoints) return result;
             }

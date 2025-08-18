@@ -87,14 +87,22 @@ public readonly partial struct Line
     /// </summary>
     /// <param name="points">A list of vertices defining the polygon. The polygon is assumed to be closed and non-self-intersecting.</param>
     /// <returns>True if the line and polygon overlap; otherwise, false.</returns>
-    public bool OverlapPolygon(List<Vector2> points) => OverlapLinePolygon(Point, Direction, points);
+    public bool OverlapPolygon(List<Vector2> points)
+    {
+        if (points.Count < 3) return false;
+        return OverlapLinePolygon(Point, Direction, points);
+    }
 
     /// <summary>
     /// Determines whether this infinite line and a polyline overlap (i.e., the line passes through or touches any segment of the polyline).
     /// </summary>
     /// <param name="points">A list of vertices defining the polyline. The polyline is assumed to be open and non-self-intersecting.</param>
     /// <returns>True if the line and polyline overlap; otherwise, false.</returns>
-    public bool OverlapPolyline(List<Vector2> points) => OverlapLinePolyline(Point, Direction, points);
+    public bool OverlapPolyline(List<Vector2> points)
+    {
+        if (points.Count < 2) return false;
+        return OverlapLinePolyline(Point, Direction, points);
+    }
 
     /// <summary>
     /// Determines whether this infinite line and any segment in the provided list overlap (i.e., intersect at any point).

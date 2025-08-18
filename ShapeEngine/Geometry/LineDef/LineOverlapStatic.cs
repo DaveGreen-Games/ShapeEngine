@@ -230,7 +230,7 @@ public readonly partial struct Line
     /// <returns>True if the line and polyline overlap; otherwise, false.</returns>
     public static bool OverlapLinePolyline(Vector2 linePoint, Vector2 lineDirection, List<Vector2> points)
     {
-        if (points.Count < 3) return false;
+        if (points.Count < 2) return false;
         for (var i = 0; i < points.Count - 1; i++)
         {
             var colPoint = IntersectLineSegment(linePoint, lineDirection, points[i], points[i + 1]);
