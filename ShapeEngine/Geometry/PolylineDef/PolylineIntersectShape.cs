@@ -433,7 +433,7 @@ public partial class Polyline
         return points;
     }
     
-        /// <summary>
+    /// <summary>
     /// Computes intersection points between this shape and a shape implementing <see cref="IShape"/>.
     /// </summary>
     /// <param name="shape">The shape to test against.</param>
