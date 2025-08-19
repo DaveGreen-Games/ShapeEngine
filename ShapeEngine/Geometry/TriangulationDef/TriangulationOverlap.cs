@@ -169,12 +169,12 @@ public partial class Triangulation
     /// <remarks>Returns as soon as an overlapping triangle is found.</remarks>
     public bool OverlapShape(Polygon shape)
     {
+        if (shape.Count < 3) return false;
         for (int i = 0; i < Count; i++)
         {
             var tri = this[i];
             if (tri.OverlapShape(shape)) return true;
         }
-
         return false;
     }
 
@@ -186,6 +186,7 @@ public partial class Triangulation
     /// <remarks>Returns as soon as an overlapping triangle is found.</remarks>
     public bool OverlapShape(Polyline shape)
     {
+        if (shape.Count < 2) return false;
         for (int i = 0; i < Count; i++)
         {
             var tri = this[i];
@@ -430,6 +431,29 @@ public partial class Triangulation
         }
 
         return triangleIndices != null && triangleIndices.Count > 0;
+    }
+    
+    /// <summary>
+    /// Determines whether this shape overlaps with the specified <see cref="IShape"/>.
+    /// </summary>
+    /// <param name="shape">The shape to test for overlap with this shape.
+    /// The shape can be any supported type such as circle, segment, ray, line, triangle, rectangle, quad, polygon, or polyline.</param>
+    /// <returns><c>true</c> if this shape overlaps with the specified shape; otherwise, <c>false</c>.</returns>
+    public bool OverlapShape(IShape shape)
+    {
+        return shape.GetShapeType() switch
+        {
+            ShapeType.Circle => OverlapShape(shape.GetCircleShape()),
+            ShapeType.Segment => OverlapShape(shape.GetSegmentShape()),
+            ShapeType.Ray => OverlapShape(shape.GetRayShape()),
+            ShapeType.Line => OverlapShape(shape.GetLineShape()),
+            ShapeType.Triangle => OverlapShape(shape.GetTriangleShape()),
+            ShapeType.Rect => OverlapShape(shape.GetRectShape()),
+            ShapeType.Quad => OverlapShape(shape.GetQuadShape()),
+            ShapeType.Poly => OverlapShape(shape.GetPolygonShape()),
+            ShapeType.PolyLine => OverlapShape(shape.GetPolylineShape()),
+            _ => false
+        };
     }
 
 }

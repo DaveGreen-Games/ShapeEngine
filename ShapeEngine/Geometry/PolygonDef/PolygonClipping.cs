@@ -11,6 +11,7 @@ namespace ShapeEngine.Geometry.PolygonDef;
 
 public partial class Polygon
 {
+    
     /// <summary>
     /// Unions this polygon with another polygon and replaces the current shape with the result.
     /// </summary>
@@ -57,7 +58,70 @@ public partial class Polygon
 
         return false;
     }
+    
+    /// <summary>
+    /// Attempts to merge this polygon with another if they overlap.
+    /// </summary>
+    /// <param name="other">The polygon to merge with.</param>
+    /// <returns>True if a merge was performed; otherwise, false.</returns>
+    public bool MergeShapeSelf(Polygon other)
+    {
+        var overlap = OverlapShape(other);
+        if (overlap)
+        {
+            UnionShapeSelf(other);
+            return true;
+        }
 
+        return false;
+    }
+
+    /// <summary>
+    /// Subtracts the specified polygon (`cutShape`) from this polygon.
+    /// Optionally keeps only the intersected (cut-out) region if `keepCutout` is true.
+    /// Returns true if the operation resulted in a valid polygon; otherwise, false.
+    /// </summary>
+    /// <param name="cutShape">The polygon to subtract from this polygon.</param>
+    /// <param name="keepCutout">If true, keeps only the intersected region; otherwise, subtracts the cutShape.</param>
+    /// <returns>True if the difference operation produced a valid polygon; otherwise, false.</returns>
+    public bool CutShapeSelf(Polygon cutShape, bool keepCutout = false)
+    {
+        var newShapes = keepCutout ? this.Intersect(cutShape) : this.Difference(cutShape);
+        
+        if (newShapes.Count > 0)
+        {
+            var polygons = newShapes.ToPolygons(true);
+            if (polygons.Count > 0)
+            {
+                foreach (var polygon in polygons)
+                {
+                    if(polygon.Count < 3) continue; // Skip invalid polygons
+                    this.Clear();
+
+                    if (polygon.IsClockwise())
+                    {
+                        for (int i = polygon.Count - 1; i >= 0; i--)//reverse order clockwise to counter-clockwise
+                        {
+                            Add(polygon[i]);
+                        }
+                    }
+                    else
+                    {
+                        for (int i = 0; i < polygon.Count; i++)
+                        {
+                            Add(polygon[i]);
+                        }
+                    }
+                    
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+   
+    
     /// <summary>
     /// Attempts to merge this polygon with another and returns the merged result as a new polygon.
     /// </summary>

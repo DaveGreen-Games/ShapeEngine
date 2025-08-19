@@ -26,7 +26,7 @@ public partial class Polygon
     public static Vector2 GetClosestPointPolygonPoint(List<Vector2> points, Vector2 p, out float disSquared)
     {
         disSquared = -1;
-        if (points.Count <= 2) return new();
+        if (points.Count < 3) return new(); // Polygon must have at least 3 points
 
         var first = points[0];
         var second = points[1];
@@ -56,7 +56,7 @@ public partial class Polygon
     public new IntersectionPoint GetClosestPoint(Vector2 p, out float disSquared)
     {
         disSquared = -1;
-        if (Count <= 2) return new();
+        if (Count < 3) return new(); // Polygon must have at least 3 points
 
         var first = this[0];
         var second = this[1];
@@ -91,7 +91,7 @@ public partial class Polygon
     {
         disSquared = -1;
         index = -1;
-        if (Count <= 2) return new();
+        if (Count < 3) return new(); // Polygon must have at least 3 points
 
         var first = this[0];
         var second = this[1];
@@ -694,5 +694,29 @@ public partial class Polygon
         }
 
         return new(closestSegment, closest);
+    }
+    
+    /// <summary>
+    /// Finds the closest point on this shapes perimeter to the given <see cref="IShape"/>.
+    /// </summary>
+    /// <param name="shape">The shape to compare against.</param>
+    /// <returns>
+    /// A <see cref="ClosestPointResult"/> containing the closest point information for the shape.
+    /// </returns>
+    public new ClosestPointResult GetClosestPoint(IShape shape)
+    {
+        return shape.GetShapeType() switch
+        {
+            ShapeType.Circle => GetClosestPoint(shape.GetCircleShape()),
+            ShapeType.Segment => GetClosestPoint(shape.GetSegmentShape()),
+            ShapeType.Ray => GetClosestPoint(shape.GetRayShape()),
+            ShapeType.Line => GetClosestPoint(shape.GetLineShape()),
+            ShapeType.Triangle => GetClosestPoint(shape.GetTriangleShape()),
+            ShapeType.Rect => GetClosestPoint(shape.GetRectShape()),
+            ShapeType.Quad => GetClosestPoint(shape.GetQuadShape()),
+            ShapeType.Poly => GetClosestPoint(shape.GetPolygonShape()),
+            ShapeType.PolyLine => GetClosestPoint(shape.GetPolylineShape()),
+            _ => new()
+        };
     }
 }

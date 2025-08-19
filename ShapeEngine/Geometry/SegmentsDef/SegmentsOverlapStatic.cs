@@ -117,7 +117,7 @@ public partial class Segments
     /// <remarks>This is a convenience method that calls Polygon.OverlapPolygonSegments.</remarks>
     public static bool OverlapSegmentsPolygon(List<Segment> segments, List<Vector2> points)
     {
-        return Polygon.OverlapPolygonSegments(points, segments);
+        return points.Count >= 3 && Polygon.OverlapPolygonSegments(points, segments);
     }
 
     /// <summary>
@@ -129,7 +129,7 @@ public partial class Segments
     /// <remarks>This is a convenience method that calls Polyline.OverlapPolylineSegments.</remarks>
     public static bool OverlapSegmentsPolyline(List<Segment> segments, List<Vector2> points)
     {
-        return Polyline.OverlapPolylineSegments(points, segments);
+        return points.Count >= 2 && Polyline.OverlapPolylineSegments(points, segments);
     }
 
     /// <summary>

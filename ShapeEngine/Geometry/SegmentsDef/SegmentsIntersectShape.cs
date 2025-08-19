@@ -300,6 +300,30 @@ public partial class Segments
     }
     
     /// <summary>
+    /// Computes intersection points between this shape and a shape implementing <see cref="IShape"/>.
+    /// </summary>
+    /// <param name="shape">The shape to test against.</param>
+    /// <returns>
+    /// A <see cref="IntersectionPoints"/> collection of intersection points, or null if none.
+    /// </returns>
+    public IntersectionPoints? IntersectShape(IShape shape)
+    {
+        return shape.GetShapeType() switch
+        {
+            ShapeType.Circle => IntersectShape(shape.GetCircleShape()),
+            ShapeType.Segment => IntersectShape(shape.GetSegmentShape()),
+            ShapeType.Ray => IntersectShape(shape.GetRayShape()),
+            ShapeType.Line => IntersectShape(shape.GetLineShape()),
+            ShapeType.Triangle => IntersectShape(shape.GetTriangleShape()),
+            ShapeType.Rect => IntersectShape(shape.GetRectShape()),
+            ShapeType.Quad => IntersectShape(shape.GetQuadShape()),
+            ShapeType.Poly => IntersectShape(shape.GetPolygonShape()),
+            ShapeType.PolyLine => IntersectShape(shape.GetPolylineShape()),
+            _ => null
+        };
+    }
+    
+    /// <summary>
     /// Intersects a set of segments with the segments.
     /// </summary>
     /// <param name="shape">The segments to intersect with.</param>
@@ -462,6 +486,190 @@ public partial class Segments
         }
 
         return count;
+    }
+    /// <summary>
+    /// Computes all intersection points between this segments and a triangle.
+    /// </summary>
+    /// <param name="shape">The triangle to test against.</param>
+    /// <param name="points">A reference to an <see cref="IntersectionPoints"/> collection to store intersection points.</param>
+    /// <param name="returnAfterFirstValid">
+    /// If true, the method returns after finding the first valid intersection point; otherwise, it finds all intersections.
+    /// </param>
+    /// <returns>The number of valid intersection points found.</returns>
+    public int IntersectShape(Triangle shape, ref IntersectionPoints points, bool returnAfterFirstValid = false)
+    {
+        if(Count <= 0) return 0;
+        var count = 0;
+        foreach (var segment in this)
+        {
+            var result = Segment.IntersectSegmentTriangle(segment.Start, segment.End, shape.A, shape.B, shape.C);
+            if (result.a.Valid || result.b.Valid)
+            {
+                if (result.a.Valid)
+                {
+                    points.Add(result.a);
+                    if(returnAfterFirstValid) return 1;
+                    count++;
+                }
+
+                if (result.b.Valid)
+                {
+                    points.Add(result.b);
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+    /// <summary>
+    /// Computes all intersection points between this segments and a rectangle.
+    /// </summary>
+    /// <param name="shape">The rectangle to test against.</param>
+    /// <param name="points">A reference to an <see cref="IntersectionPoints"/> collection to store intersection points.</param>
+    /// <param name="returnAfterFirstValid">
+    /// If true, the method returns after finding the first valid intersection point; otherwise, it finds all intersections.
+    /// </param>
+    /// <returns>The number of valid intersection points found.</returns>
+    public int IntersectShape(Rect shape, ref IntersectionPoints points, bool returnAfterFirstValid = false)
+    {
+        if(Count <= 0) return 0;
+        var count = 0;
+        foreach (var segment in this)
+        {
+            var result = Segment.IntersectSegmentRect(segment.Start, segment.End, shape.A, shape.B, shape.C, shape.D);
+            if (result.a.Valid || result.b.Valid)
+            {
+                if (result.a.Valid)
+                {
+                    points.Add(result.a);
+                    if(returnAfterFirstValid) return 1;
+                    count++;
+                }
+
+                if (result.b.Valid)
+                {
+                    points.Add(result.b);
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+    /// <summary>
+    /// Computes all intersection points between this segments and a quadrilateral.
+    /// </summary>
+    /// <param name="shape">The quadrilateral to test against.</param>
+    /// <param name="points">A reference to an <see cref="IntersectionPoints"/> collection to store intersection points.</param>
+    /// <param name="returnAfterFirstValid">
+    /// If true, the method returns after finding the first valid intersection point; otherwise, it finds all intersections.
+    /// </param>
+    /// <returns>The number of valid intersection points found.</returns>
+    public int IntersectShape(Quad shape, ref IntersectionPoints points, bool returnAfterFirstValid = false)
+    {
+        if(Count <= 0) return 0;
+        var count = 0;
+        foreach (var segment in this)
+        {
+            var result = Segment.IntersectSegmentQuad(segment.Start, segment.End, shape.A, shape.B, shape.C, shape.D);
+            if (result.a.Valid || result.b.Valid)
+            {
+                if (result.a.Valid)
+                {
+                    points.Add(result.a);
+                    if(returnAfterFirstValid) return 1;
+                    count++;
+                }
+
+                if (result.b.Valid)
+                {
+                    points.Add(result.b);
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+    /// <summary>
+    /// Computes all intersection points between this segments and a polygon.
+    /// </summary>
+    /// <param name="shape">The polygon to test against. Must have at least 3 vertices.</param>
+    /// <param name="points">A reference to an <see cref="IntersectionPoints"/> collection to store intersection points.</param>
+    /// <param name="returnAfterFirstValid">
+    /// If true, the method returns after finding the first valid intersection point; otherwise, it finds all intersections.
+    /// </param>
+    /// <returns>The number of valid intersection points found.</returns>
+    public int IntersectShape(Polygon shape, ref IntersectionPoints points, bool returnAfterFirstValid = false)
+    {
+        if (Count <= 0 || shape.Count < 3) return 0;
+        var count = 0;
+        foreach (var segment in this)
+        {
+            for (var i = 0; i < shape.Count; i++)
+            {
+                var colPoint = Segment.IntersectSegmentSegment(segment.Start, segment.End, shape[i], shape[(i + 1) % shape.Count]);
+                if (colPoint.Valid)
+                {
+                    points.Add(colPoint);
+                    if (returnAfterFirstValid) return 1;
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+    /// <summary>
+    /// Computes all intersection points between this segments and a polyline.
+    /// </summary>
+    /// <param name="shape">The polyline to test against. Must have at least 2 vertices.</param>
+    /// <param name="points">A reference to an <see cref="IntersectionPoints"/> collection to store intersection points.</param>
+    /// <param name="returnAfterFirstValid">
+    /// If true, the method returns after finding the first valid intersection point; otherwise, it finds all intersections.
+    /// </param>
+    /// <returns>The number of valid intersection points found.</returns>
+    public int IntersectShape(Polyline shape, ref IntersectionPoints points, bool returnAfterFirstValid = false)
+    {
+        if (Count <= 0 || shape.Count < 2) return 0;
+        var count = 0;
+        foreach (var segment in this)
+        {
+            for (var i = 0; i < shape.Count - 1; i++)
+            {
+                var colPoint = Segment.IntersectSegmentSegment(segment.Start, segment.End, shape[i], shape[i + 1]);
+                if (colPoint.Valid)
+                {
+                    points.Add(colPoint);
+                    if (returnAfterFirstValid) return 1;
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+    
+    /// <summary>
+    /// Computes the number of intersection points between this shape and a shape implementing <see cref="IShape"/>.
+    /// </summary>
+    /// <param name="shape">The shape to test against.</param>
+    /// <param name="points">A reference to an <see cref="IntersectionPoints"/> collection to store intersection points.</param>
+    /// <param name="returnAfterFirstValid">
+    /// If true, the method returns after finding the first valid intersection point; otherwise, it finds all intersections.
+    /// </param>
+    /// <returns>The number of valid intersection points found.</returns>
+    public int IntersectShape(IShape shape, ref IntersectionPoints points, bool returnAfterFirstValid = false)
+    {
+        return shape.GetShapeType() switch
+        {
+            ShapeType.Circle => IntersectShape(shape.GetCircleShape(), ref points, returnAfterFirstValid),
+            ShapeType.Segment => IntersectShape(shape.GetSegmentShape(), ref points, returnAfterFirstValid),
+            ShapeType.Ray => IntersectShape(shape.GetRayShape(), ref points, returnAfterFirstValid),
+            ShapeType.Line => IntersectShape(shape.GetLineShape(), ref points, returnAfterFirstValid),
+            ShapeType.Triangle => IntersectShape(shape.GetTriangleShape(), ref points, returnAfterFirstValid),
+            ShapeType.Rect => IntersectShape(shape.GetRectShape(), ref points, returnAfterFirstValid),
+            ShapeType.Quad => IntersectShape(shape.GetQuadShape(), ref points, returnAfterFirstValid),
+            ShapeType.Poly => IntersectShape(shape.GetPolygonShape(), ref points, returnAfterFirstValid),
+            ShapeType.PolyLine => IntersectShape(shape.GetPolylineShape(), ref points, returnAfterFirstValid),
+            _ => 0
+        };
     }
 
 }

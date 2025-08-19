@@ -192,6 +192,18 @@ public readonly partial struct Triangle : IEquatable<Triangle>
     public Polygon ToPolygon() => new() {A, B, C};
     
     /// <summary>
+    /// Converts this triangle to a polygon by adding its vertices to the provided <paramref name="result"/> polygon.
+    /// </summary>
+    /// <param name="result">A reference to a <see cref="Polygon"/> that will be cleared and filled with the triangle's vertices.</param>
+    public void ToPolygon(ref Polygon result)
+    {
+        if(result.Count > 0) result.Clear();
+        result.Add(A);
+        result.Add(B);
+        result.Add(C);
+    }
+    
+    /// <summary>
     /// Converts the triangle to a polyline representation.
     /// </summary>
     /// <returns>A polyline containing the three vertices of the triangle.</returns>

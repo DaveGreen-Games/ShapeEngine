@@ -1180,6 +1180,30 @@ public readonly partial struct Quad
 
         return furthest;
     }
+    
+    /// <summary>
+    /// Finds the closest point on this shapes perimeter to the given <see cref="IShape"/>.
+    /// </summary>
+    /// <param name="shape">The shape to compare against.</param>
+    /// <returns>
+    /// A <see cref="ClosestPointResult"/> containing the closest point information for the shape.
+    /// </returns>
+    public ClosestPointResult GetClosestPoint(IShape shape)
+    {
+        return shape.GetShapeType() switch
+        {
+            ShapeType.Circle => GetClosestPoint(shape.GetCircleShape()),
+            ShapeType.Segment => GetClosestPoint(shape.GetSegmentShape()),
+            ShapeType.Ray => GetClosestPoint(shape.GetRayShape()),
+            ShapeType.Line => GetClosestPoint(shape.GetLineShape()),
+            ShapeType.Triangle => GetClosestPoint(shape.GetTriangleShape()),
+            ShapeType.Rect => GetClosestPoint(shape.GetRectShape()),
+            ShapeType.Quad => GetClosestPoint(shape.GetQuadShape()),
+            ShapeType.Poly => GetClosestPoint(shape.GetPolygonShape()),
+            ShapeType.PolyLine => GetClosestPoint(shape.GetPolylineShape()),
+            _ => new()
+        };
+    }
 
 }
 

@@ -15,7 +15,7 @@ namespace ShapeEngine.Geometry.SegmentDef;
 
 public readonly partial struct Segment
 {
-        /// <summary>
+    /// <summary>
     /// Finds the closest point on the segment to any collider in the given collision object.
     /// </summary>
     /// <param name="collisionObject">The collision object containing one or more colliders to compare against.</param>
@@ -540,6 +540,30 @@ public readonly partial struct Segment
 
         disSquared = disSqB;
         return End;
+    }
+    
+    /// <summary>
+    /// Finds the closest point on this shapes perimeter to the given <see cref="IShape"/>.
+    /// </summary>
+    /// <param name="shape">The shape to compare against.</param>
+    /// <returns>
+    /// A <see cref="ClosestPointResult"/> containing the closest point information for the shape.
+    /// </returns>
+    public ClosestPointResult GetClosestPoint(IShape shape)
+    {
+        return shape.GetShapeType() switch
+        {
+            ShapeType.Circle => GetClosestPoint(shape.GetCircleShape()),
+            ShapeType.Segment => GetClosestPoint(shape.GetSegmentShape()),
+            ShapeType.Ray => GetClosestPoint(shape.GetRayShape()),
+            ShapeType.Line => GetClosestPoint(shape.GetLineShape()),
+            ShapeType.Triangle => GetClosestPoint(shape.GetTriangleShape()),
+            ShapeType.Rect => GetClosestPoint(shape.GetRectShape()),
+            ShapeType.Quad => GetClosestPoint(shape.GetQuadShape()),
+            ShapeType.Poly => GetClosestPoint(shape.GetPolygonShape()),
+            ShapeType.PolyLine => GetClosestPoint(shape.GetPolylineShape()),
+            _ => new()
+        };
     }
 
 }

@@ -213,7 +213,7 @@ public readonly partial struct Quad
     /// <returns><c>true</c> if the polyline is inside the quad; otherwise, <c>false</c>.</returns>
     public static bool ContainsQuadPolyline(Vector2 qA, Vector2 qB, Vector2 qC, Vector2 qD, List<Vector2> polyline)
     {
-        return ContainsQuadPoints(qA, qB, qC, qD, polyline);
+        return polyline.Count >= 2 && ContainsQuadPoints(qA, qB, qC, qD, polyline);
     }
 
     /// <summary>

@@ -25,7 +25,11 @@ public static class PolygonDrawing
     /// <param name="poly">The polygon to draw.</param>
     /// <param name="color">The fill color.</param>
     /// <param name="clockwise">If true, draws triangles in clockwise order; otherwise, counter-clockwise.</param>
-    public static void DrawPolygonConvex(this Polygon poly, ColorRgba color, bool clockwise = false) { DrawPolygonConvex(poly, poly.GetCentroid(), color, clockwise); }
+    public static void DrawPolygonConvex(this Polygon poly, ColorRgba color, bool clockwise = false)
+    {
+        if (poly.Count < 3) return; // Polygon must have at least 3 points
+        DrawPolygonConvex(poly, poly.GetCentroid(), color, clockwise);
+    }
 
     /// <summary>
     /// Draws a convex polygon filled with the specified color, using a custom center point.
@@ -36,6 +40,7 @@ public static class PolygonDrawing
     /// <param name="clockwise">If true, draws triangles in clockwise order; otherwise, counter-clockwise.</param>
     public static void DrawPolygonConvex(this Polygon poly, Vector2 center, ColorRgba color, bool clockwise = false)
     {
+        if (poly.Count < 3) return; // Polygon must have at least 3 points
         if (clockwise)
         {
             for (var i = 0; i < poly.Count - 1; i++)
@@ -65,6 +70,7 @@ public static class PolygonDrawing
     /// <param name="clockwise">If true, draws triangles in clockwise order; otherwise, counter-clockwise.</param>
     public static void DrawPolygonConvex(this Polygon relativePoly, Vector2 pos, float size, float rotDeg, ColorRgba color, bool clockwise = false)
     {
+        if (relativePoly.Count < 3) return; // Polygon must have at least 3 points
         if (clockwise)
         {
             for (int i = 0; i < relativePoly.Count - 1; i++)

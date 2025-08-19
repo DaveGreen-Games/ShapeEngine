@@ -80,13 +80,19 @@ public readonly partial struct Ray
     /// </summary>
     /// <param name="points">The list of points defining the polygon.</param>
     /// <returns>True if the ray overlaps the polygon; otherwise, false.</returns>
-    public bool OverlapPolygon(List<Vector2> points) => OverlapRayPolygon(Point, Direction, points);
+    public bool OverlapPolygon(List<Vector2> points)
+    {
+        return points.Count >= 3 && OverlapRayPolygon(Point, Direction, points);
+    }
     /// <summary>
     /// Determines whether this ray overlaps the specified polyline.
     /// </summary>
     /// <param name="points">The list of points defining the polyline.</param>
     /// <returns>True if the ray overlaps the polyline; otherwise, false.</returns>
-    public bool OverlapPolyline(List<Vector2> points) => OverlapRayPolyline(Point, Direction, points);
+    public bool OverlapPolyline(List<Vector2> points)
+    {
+        return points.Count >= 2 && OverlapRayPolyline(Point, Direction, points);
+    }
     /// <summary>
     /// Determines whether this ray overlaps the specified list of segments.
     /// </summary>
@@ -214,5 +220,28 @@ public readonly partial struct Ray
     /// <param name="segments">The set of segments to check for overlap.</param>
     /// <returns>True if the ray overlaps any of the segments; otherwise, false.</returns>
     public bool OverlapShape(Segments segments) => OverlapRaySegments(Point, Direction, segments);
+    
+    /// <summary>
+    /// Determines whether this shape overlaps with the specified <see cref="IShape"/>.
+    /// </summary>
+    /// <param name="shape">The shape to test for overlap with this shape.
+    /// The shape can be any supported type such as circle, segment, ray, line, triangle, rectangle, quad, polygon, or polyline.</param>
+    /// <returns><c>true</c> if this shape overlaps with the specified shape; otherwise, <c>false</c>.</returns>
+    public bool OverlapShape(IShape shape)
+    {
+        return shape.GetShapeType() switch
+        {
+            ShapeType.Circle => OverlapShape(shape.GetCircleShape()),
+            ShapeType.Segment => OverlapShape(shape.GetSegmentShape()),
+            ShapeType.Ray => OverlapShape(shape.GetRayShape()),
+            ShapeType.Line => OverlapShape(shape.GetLineShape()),
+            ShapeType.Triangle => OverlapShape(shape.GetTriangleShape()),
+            ShapeType.Rect => OverlapShape(shape.GetRectShape()),
+            ShapeType.Quad => OverlapShape(shape.GetQuadShape()),
+            ShapeType.Poly => OverlapShape(shape.GetPolygonShape()),
+            ShapeType.PolyLine => OverlapShape(shape.GetPolylineShape()),
+            _ => false
+        };
+    }
 
 }

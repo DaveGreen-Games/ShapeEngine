@@ -189,7 +189,6 @@ public readonly partial struct Segment
     public static bool OverlapSegmentPolygon(Vector2 segStart, Vector2 segEnd, List<Vector2> points)
     {
         if (points.Count < 3) return false;
-        // if (Polygon.ContainsPoints(points, segStart)) return true;
         var oddNodes = false;
         for (var i = 0; i < points.Count; i++)
         {
@@ -214,7 +213,7 @@ public readonly partial struct Segment
     /// </remarks>
     public static bool OverlapSegmentPolyline(Vector2 segStart, Vector2 segEnd, List<Vector2> points)
     {
-        if (points.Count < 3) return false;
+        if (points.Count < 2) return false;
         for (var i = 0; i < points.Count - 1; i++)
         {
             if (OverlapSegmentSegment(segStart, segEnd, points[i], points[i + 1])) return true;

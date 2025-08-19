@@ -160,6 +160,21 @@ public partial class Points : ShapeList<Vector2>, IEquatable<Points>
     /// <returns>A new <see cref="Polygon"/> instance containing the same points.</returns>
     public Polygon ToPolygon() => new(this);
 
+    public bool ToPolygon(ref Polygon result)
+    {
+        if (Count < 3) return false;
+        
+        if(result.Count > 0) result.Clear();
+        
+        for (var i = 0; i < Count; i++)
+        {
+            var point = this[i];
+            result.Add(point);
+        }
+
+        return true;
+    }
+
     /// <summary>
     /// Converts this collection of points into a <see cref="Polyline"/> shape.
     /// </summary>

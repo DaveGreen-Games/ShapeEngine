@@ -23,6 +23,7 @@ public partial class Polyline
     /// </returns>
     public Dictionary<Collider, IntersectionPoints>? Intersect(CollisionObject collisionObject)
     {
+        if (Count < 2) return null;
         if (!collisionObject.HasColliders) return null;
 
         Dictionary<Collider, IntersectionPoints>? intersections = null;
@@ -432,5 +433,31 @@ public partial class Polyline
 
         return points;
     }
+    
+    /// <summary>
+    /// Computes intersection points between this shape and a shape implementing <see cref="IShape"/>.
+    /// </summary>
+    /// <param name="shape">The shape to test against.</param>
+    /// <returns>
+    /// A <see cref="IntersectionPoints"/> collection of intersection points, or null if none.
+    /// </returns>
+    public IntersectionPoints? IntersectShape(IShape shape)
+    {
+        return shape.GetShapeType() switch
+        {
+            ShapeType.Circle => IntersectShape(shape.GetCircleShape()),
+            ShapeType.Segment => IntersectShape(shape.GetSegmentShape()),
+            ShapeType.Ray => IntersectShape(shape.GetRayShape()),
+            ShapeType.Line => IntersectShape(shape.GetLineShape()),
+            ShapeType.Triangle => IntersectShape(shape.GetTriangleShape()),
+            ShapeType.Rect => IntersectShape(shape.GetRectShape()),
+            ShapeType.Quad => IntersectShape(shape.GetQuadShape()),
+            ShapeType.Poly => IntersectShape(shape.GetPolygonShape()),
+            ShapeType.PolyLine => IntersectShape(shape.GetPolylineShape()),
+            _ => null
+        };
+    }
+    
+
 
 }

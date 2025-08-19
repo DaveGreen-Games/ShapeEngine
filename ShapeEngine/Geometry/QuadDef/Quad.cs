@@ -225,6 +225,21 @@ public readonly partial struct Quad : IEquatable<Quad>
     /// </summary>
     /// <returns>A <see cref="Polygon"/> representing the quad.</returns>
     public Polygon ToPolygon() => [A, B, C, D];
+    
+
+    /// <summary>
+    /// Converts the quad to a polygon and stores the result in the provided <see cref="Polygon"/> reference.
+    /// </summary>
+    /// <param name="result">A reference to a <see cref="Polygon"/> that will be populated with the quad's vertices.</param>
+    public void ToPolygon(ref Polygon result)
+    {
+        if(result.Count > 0) result.Clear();
+        result.Add(A);
+        result.Add(B);
+        result.Add(C);
+        result.Add(D);
+    }
+    
     /// <summary>
     /// Converts the quad to a set of points.
     /// </summary>

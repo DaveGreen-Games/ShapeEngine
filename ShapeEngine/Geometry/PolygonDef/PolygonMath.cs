@@ -35,16 +35,16 @@ public partial class Polygon
     /// or null if the vector is zero.</returns>
     public Polygon? ProjectShape(Vector2 v)
     {
-        if (v.LengthSquared() <= 0f) return null;
+        if (v.LengthSquared() <= 0f || Count < 3) return null;
 
-        var points = new Points(Count);
+        var points = new Points(Count * 2);
         for (var i = 0; i < Count; i++)
         {
             points.Add(this[i]);
             points.Add(this[i] + v);
         }
 
-        return Polygon.FindConvexHull(points);
+        return FindConvexHull(points);
     }
     /// <summary>
     /// Calculates the centroid (center of mass) of the polygon.

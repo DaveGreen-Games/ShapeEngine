@@ -179,8 +179,11 @@ public readonly partial struct Line
     /// <returns>
     /// A <see cref="IntersectionPoints"/> object containing the intersection points, or null if no intersections exist.
     /// </returns>
-    public IntersectionPoints? IntersectPolygon(List<Vector2> points, int maxCollisionPoints = -1) =>
-        IntersectLinePolygon(Point, Direction, points, maxCollisionPoints);
+    public IntersectionPoints? IntersectPolygon(List<Vector2> points, int maxCollisionPoints = -1)
+    {
+        if (points.Count < 3) return null;
+        return IntersectLinePolygon(Point, Direction, points, maxCollisionPoints);
+    }
 
     /// <summary>
     /// Computes the intersection points between this infinite line and a polygon.
@@ -192,8 +195,11 @@ public readonly partial struct Line
     /// <returns>
     /// A <see cref="IntersectionPoints"/> object containing the intersection points, or null if no intersections exist.
     /// </returns>
-    public IntersectionPoints? IntersectPolygon(Polygon polygon, int maxCollisionPoints = -1) =>
-        IntersectLinePolygon(Point, Direction, polygon, maxCollisionPoints);
+    public IntersectionPoints? IntersectPolygon(Polygon polygon, int maxCollisionPoints = -1)
+    {
+        if (polygon.Count < 3) return null;
+        return IntersectLinePolygon(Point, Direction, polygon, maxCollisionPoints);
+    }
 
     /// <summary>
     /// Computes the intersection points between this infinite line and a polyline defined by a list of vertices.
@@ -205,8 +211,11 @@ public readonly partial struct Line
     /// <returns>
     /// A <see cref="IntersectionPoints"/> object containing the intersection points, or null if no intersections exist.
     /// </returns>
-    public IntersectionPoints? IntersectPolyline(List<Vector2> points, int maxCollisionPoints = -1) =>
-        IntersectLinePolyline(Point, Direction, points, maxCollisionPoints);
+    public IntersectionPoints? IntersectPolyline(List<Vector2> points, int maxCollisionPoints = -1)
+    {
+        if (points.Count < 2) return null;
+        return IntersectLinePolyline(Point, Direction, points, maxCollisionPoints);
+    }
 
     /// <summary>
     /// Computes the intersection points between this infinite line and a polyline.
@@ -218,8 +227,11 @@ public readonly partial struct Line
     /// <returns>
     /// A <see cref="IntersectionPoints"/> object containing the intersection points, or null if no intersections exist.
     /// </returns>
-    public IntersectionPoints? IntersectPolyline(Polyline polyline, int maxCollisionPoints = -1) =>
-        IntersectLinePolyline(Point, Direction, polyline, maxCollisionPoints);
+    public IntersectionPoints? IntersectPolyline(Polyline polyline, int maxCollisionPoints = -1)
+    {
+        if (polyline.Count < 2) return null;
+        return IntersectLinePolyline(Point, Direction, polyline, maxCollisionPoints);
+    }
 
     /// <summary>
     /// Computes the intersection points between this line and a collection of segments.

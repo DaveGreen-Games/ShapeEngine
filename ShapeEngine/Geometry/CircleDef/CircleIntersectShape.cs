@@ -378,6 +378,30 @@ public readonly partial struct Circle
 
         return points;
     }
+    
+    /// <summary>
+    /// Computes intersection points between this shape and a shape implementing <see cref="IShape"/>.
+    /// </summary>
+    /// <param name="shape">The shape to test against.</param>
+    /// <returns>
+    /// A <see cref="IntersectionPoints"/> collection of intersection points, or null if none.
+    /// </returns>
+    public IntersectionPoints? IntersectShape(IShape shape)
+    {
+        return shape.GetShapeType() switch
+        {
+            ShapeType.Circle => IntersectShape(shape.GetCircleShape()),
+            ShapeType.Segment => IntersectShape(shape.GetSegmentShape()),
+            ShapeType.Ray => IntersectShape(shape.GetRayShape()),
+            ShapeType.Line => IntersectShape(shape.GetLineShape()),
+            ShapeType.Triangle => IntersectShape(shape.GetTriangleShape()),
+            ShapeType.Rect => IntersectShape(shape.GetRectShape()),
+            ShapeType.Quad => IntersectShape(shape.GetQuadShape()),
+            ShapeType.Poly => IntersectShape(shape.GetPolygonShape()),
+            ShapeType.PolyLine => IntersectShape(shape.GetPolylineShape()),
+            _ => null
+        };
+    }
 
     /// <summary>
     /// Calculates and adds intersection points between this circle and a collider to the provided <see cref="IntersectionPoints"/> collection.
@@ -902,6 +926,32 @@ public readonly partial struct Circle
         }
 
         return count;
+    }
+    
+    /// <summary>
+    /// Computes the number of intersection points between this shape and a shape implementing <see cref="IShape"/>.
+    /// </summary>
+    /// <param name="shape">The shape to test against.</param>
+    /// <param name="points">A reference to an <see cref="IntersectionPoints"/> collection to store intersection points.</param>
+    /// <param name="returnAfterFirstValid">
+    /// If true, the method returns after finding the first valid intersection point; otherwise, it finds all intersections.
+    /// </param>
+    /// <returns>The number of valid intersection points found.</returns>
+    public int IntersectShape(IShape shape, ref IntersectionPoints points, bool returnAfterFirstValid = false)
+    {
+        return shape.GetShapeType() switch
+        {
+            ShapeType.Circle => IntersectShape(shape.GetCircleShape(), ref points, returnAfterFirstValid),
+            ShapeType.Segment => IntersectShape(shape.GetSegmentShape(), ref points, returnAfterFirstValid),
+            ShapeType.Ray => IntersectShape(shape.GetRayShape(), ref points, returnAfterFirstValid),
+            ShapeType.Line => IntersectShape(shape.GetLineShape(), ref points, returnAfterFirstValid),
+            ShapeType.Triangle => IntersectShape(shape.GetTriangleShape(), ref points, returnAfterFirstValid),
+            ShapeType.Rect => IntersectShape(shape.GetRectShape(), ref points, returnAfterFirstValid),
+            ShapeType.Quad => IntersectShape(shape.GetQuadShape(), ref points, returnAfterFirstValid),
+            ShapeType.Poly => IntersectShape(shape.GetPolygonShape(), ref points, returnAfterFirstValid),
+            ShapeType.PolyLine => IntersectShape(shape.GetPolylineShape(), ref points, returnAfterFirstValid),
+            _ => 0
+        };
     }
 
 }

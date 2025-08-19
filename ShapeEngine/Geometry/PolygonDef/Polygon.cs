@@ -5,6 +5,7 @@ using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.PointsDef;
 using ShapeEngine.Geometry.PolylineDef;
+using ShapeEngine.Geometry.QuadDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.SegmentsDef;
@@ -66,6 +67,8 @@ public partial class Polygon : Points, IEquatable<Polygon>
     /// Gets the diameter (maximum distance between any two vertices) of the polygon.
     /// </summary>
     public float Diameter => GetDiameter();
+    
+    private Polygon? compoundHelperPolygon = null;
     
     #region Constructors
     /// <summary>
@@ -534,7 +537,7 @@ public partial class Polygon : Points, IEquatable<Polygon>
     /// Returns the convex hull of the polygon as a new polygon.
     /// </summary>
     /// <returns>A convex polygon containing all the original points.</returns>
-    public Polygon ToConvex() => Polygon.FindConvexHull(this);
+    public Polygon? ToConvex() => Polygon.FindConvexHull(this);
     #endregion
 
     #region Random
@@ -611,6 +614,262 @@ public partial class Polygon : Points, IEquatable<Polygon>
         return pa.Lerp(pb, Rng.Instance.RandF());
     }
 
+    
+    #endregion
+    
+    #region Cutout & Compound
+    private bool GetPolygonShape(IShape shape, ref Polygon result)
+    {
+        switch (shape.GetShapeType())
+        {
+            default:
+            case ShapeType.None: 
+            case ShapeType.Ray:
+            case ShapeType.Line:
+            case ShapeType.Segment:
+            case ShapeType.PolyLine:
+                return false;
+            case ShapeType.Circle:
+                return shape.GetCircleShape().ToPolygon(ref result);
+            case ShapeType.Triangle:
+                shape.GetTriangleShape().ToPolygon(ref result);
+                return true;
+            case ShapeType.Quad:
+                shape.GetQuadShape().ToPolygon(ref result);
+                return true;
+            case ShapeType.Rect:
+                shape.GetRectShape().ToPolygon(ref result);
+                return true;
+            case ShapeType.Poly:
+                return shape.GetPolygonShape().ToPolygon(ref result);
+        }
+    }
+    
+    /// <summary>
+    /// Adds a compound shape to the polygon by converting the given <see cref="IShape"/> to a polygon and merging it.
+    /// </summary>
+    /// <param name="shape">The shape to add.</param>
+    /// <returns>True if the shape was successfully merged; otherwise, false.</returns>
+    public bool AddCompoundShape(IShape shape)
+    {
+        compoundHelperPolygon ??= [];
+        var valid = GetPolygonShape(shape, ref compoundHelperPolygon);
+        if (!valid || compoundHelperPolygon.Count <= 2) return false;
+        return MergeShapeSelf(compoundHelperPolygon);
+    
+    }
+    
+    /// <summary>
+    /// Adds a compound shape and its children from a <see cref="ShapeContainer"/> to the polygon.
+    /// </summary>
+    /// <param name="shape">The shape container to add.</param>
+    /// <returns>The number of shapes successfully merged. (Parent Shape + Children Shapes) </returns>
+    public int AddCompoundShape(ShapeContainer shape)
+    {
+        int count = 0;
+        if (AddCompoundShape((IShape)shape)) count++;
+        
+        foreach (var child in shape.GetChildrenCopy())
+        {
+            if(AddCompoundShape((IShape)child))
+            {
+                count++;
+            }
+        }
+    
+        return count;
+    }
+    
+    /// <summary>
+    /// Adds a <see cref="Circle"/> shape to the polygon by converting it to a polygon with the specified number of points.
+    /// </summary>
+    /// <param name="shape">The circle to add.</param>
+    /// <param name="pointCount">The number of points to use for the polygon approximation. Default is 16.</param>
+    /// <returns>True if the shape was successfully merged; otherwise, false.</returns>
+    public bool AddCompoundShape(Circle shape, int pointCount = 16)
+    {
+        compoundHelperPolygon ??= [];
+        shape.ToPolygon(ref compoundHelperPolygon, pointCount);
+        if(compoundHelperPolygon.Count <= 2) return false;
+        return MergeShapeSelf(compoundHelperPolygon);
+    }
+    
+    /// <summary>
+    /// Adds a <see cref="Triangle"/> shape to the polygon by converting it to a polygon.
+    /// </summary>
+    /// <param name="shape">The triangle to add.</param>
+    /// <returns>True if the shape was successfully merged; otherwise, false.</returns>
+    public bool AddCompoundShape(Triangle shape)
+    {
+        compoundHelperPolygon ??= [];
+        shape.ToPolygon(ref compoundHelperPolygon);
+        if(compoundHelperPolygon.Count <= 2) return false;
+        return MergeShapeSelf(compoundHelperPolygon);
+    }
+    
+    /// <summary>
+    /// Adds a <see cref="Quad"/> shape to the polygon by converting it to a polygon.
+    /// </summary>
+    /// <param name="shape">The quad to add.</param>
+    /// <returns>True if the shape was successfully merged; otherwise, false.</returns>
+    public bool AddCompoundShape(Quad shape)
+    {
+        compoundHelperPolygon ??= [];
+        shape.ToPolygon(ref compoundHelperPolygon);
+        if(compoundHelperPolygon.Count <= 2) return false;
+        return MergeShapeSelf(compoundHelperPolygon);
+    }
+    
+    /// <summary>
+    /// Adds a <see cref="Rect"/> shape to the polygon by converting it to a polygon.
+    /// </summary>
+    /// <param name="shape">The rectangle to add.</param>
+    /// <returns>True if the shape was successfully merged; otherwise, false.</returns>
+    public bool AddCompoundShape(Rect shape)
+    {
+        compoundHelperPolygon ??= [];
+        shape.ToPolygon(ref compoundHelperPolygon);
+        if(compoundHelperPolygon.Count <= 2) return false;
+        return MergeShapeSelf(compoundHelperPolygon);
+    }
+    
+    /// <summary>
+    /// Adds another <see cref="Polygon"/> shape to the polygon by merging it.
+    /// </summary>
+    /// <param name="shape">The polygon to add.</param>
+    /// <returns>True if the shape was successfully merged; otherwise, false.</returns>
+    public bool AddCompoundShape(Polygon shape)
+    {
+        if (shape.Count <= 2) return false;
+        return MergeShapeSelf(shape);
+    }
+   
+    
+    /// <summary>
+    /// Cuts out the given <see cref="IShape"/> from the polygon by converting it to a polygon and performing a cut operation.
+    /// </summary>
+    /// <param name="shape">The shape to cut out.</param>
+    /// <returns>True if the cutout was successful; otherwise, false.</returns>
+    /// <remarks>
+    /// Does not support cutting out holes.
+    /// If the shape for cutting is completely contained within the polygon, it will not be cut out!
+    /// </remarks>
+    public bool AddCutoutShape(IShape shape)
+    {
+        compoundHelperPolygon ??= [];
+        bool valid = GetPolygonShape(shape, ref compoundHelperPolygon);
+        if (!valid || compoundHelperPolygon.Count <= 2) return false;
+        return CutShapeSelf(compoundHelperPolygon);
+    }
+    
+    /// <summary>
+    /// Cuts out the parent and child shapes from a <see cref="ShapeContainer"/> from the polygon.
+    /// </summary>
+    /// <param name="shape">The shape container whose shapes will be cut out.</param>
+    /// <returns>The number of shapes successfully cut out.</returns>
+    /// <remarks>
+    /// Does not support cutting out holes.
+    /// If the shape for cutting is completely contained within the polygon, it will not be cut out!
+    /// </remarks>
+    public int AddCutoutShape(ShapeContainer shape)
+    {
+        var count = 0;
+        if (AddCutoutShape((IShape)shape)) count++;
+        
+        foreach (var child in shape.GetChildrenCopy())
+        {
+            if(AddCutoutShape((IShape)child))
+            {
+                count++;
+            }
+        }
+    
+        return count;
+    }
+    
+    /// <summary>
+    /// Cuts out a <see cref="Circle"/> shape from the polygon by converting it to a polygon with the specified number of points.
+    /// </summary>
+    /// <param name="shape">The circle to cut out.</param>
+    /// <param name="pointCount">The number of points to use for the polygon approximation. Default is 16.</param>
+    /// <returns>True if the cutout was successful; otherwise, false.</returns>
+    /// <remarks>
+    /// Does not support cutting out holes.
+    /// If the shape for cutting is completely contained within the polygon, it will not be cut out!
+    /// </remarks>
+    public bool AddCutoutShape(Circle shape, int pointCount = 16)
+    {
+        compoundHelperPolygon ??= [];
+        shape.ToPolygon(ref compoundHelperPolygon, pointCount);
+        if(compoundHelperPolygon.Count <= 2) return false;
+        return CutShapeSelf(compoundHelperPolygon);
+    }
+    
+    /// <summary>
+    /// Cuts out a <see cref="Triangle"/> shape from the polygon by converting it to a polygon.
+    /// </summary>
+    /// <param name="shape">The triangle to cut out.</param>
+    /// <returns>True if the cutout was successful; otherwise, false.</returns>
+    /// <remarks>
+    /// Does not support cutting out holes.
+    /// If the shape for cutting is completely contained within the polygon, it will not be cut out!
+    /// </remarks>
+    public bool AddCutoutShape(Triangle shape)
+    {
+        compoundHelperPolygon ??= [];
+        shape.ToPolygon(ref compoundHelperPolygon);
+        if(compoundHelperPolygon.Count <= 2) return false;
+        return CutShapeSelf(compoundHelperPolygon);
+    }
+    
+    /// <summary>
+    /// Cuts out a <see cref="Quad"/> shape from the polygon by converting it to a polygon.
+    /// </summary>
+    /// <param name="shape">The quad to cut out.</param>
+    /// <returns>True if the cutout was successful; otherwise, false.</returns>
+    /// <remarks>
+    /// Does not support cutting out holes.
+    /// If the shape for cutting is completely contained within the polygon, it will not be cut out!
+    /// </remarks>
+    public bool AddCutoutShape(Quad shape)
+    {
+        compoundHelperPolygon ??= [];
+        shape.ToPolygon(ref compoundHelperPolygon);
+        if(compoundHelperPolygon.Count <= 2) return false;
+        return CutShapeSelf(compoundHelperPolygon);
+    }
+    
+    /// <summary>
+    /// Cuts out a <see cref="Rect"/> shape from the polygon by converting it to a polygon.
+    /// </summary>
+    /// <param name="shape">The rectangle to cut out.</param>
+    /// <returns>True if the cutout was successful; otherwise, false.</returns>
+    /// <remarks>
+    /// Does not support cutting out holes.
+    /// If the shape for cutting is completely contained within the polygon, it will not be cut out!
+    /// </remarks>
+    public bool AddCutoutShape(Rect shape)
+    {
+        compoundHelperPolygon ??= [];
+        shape.ToPolygon(ref compoundHelperPolygon);
+        if(compoundHelperPolygon.Count <= 2) return false;
+        return CutShapeSelf(compoundHelperPolygon);
+    }
+    
+    /// <summary>
+    /// Cuts out another <see cref="Polygon"/> shape from the polygon.
+    /// </summary>
+    /// <param name="shape">The polygon to cut out.</param>
+    /// <returns>True if the cutout was successful; otherwise, false.</returns>
+    /// <remarks>
+    /// Does not support cutting out holes.
+    /// If the shape for cutting is completely contained within the polygon, it will not be cut out!
+    /// </remarks>
+    public bool AddCutoutShape(Polygon shape)
+    {
+        if (shape.Count <= 2) return false;
+        return CutShapeSelf(shape);
+    }
     
     #endregion
 }

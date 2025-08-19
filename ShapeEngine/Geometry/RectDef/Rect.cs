@@ -310,6 +310,21 @@ public readonly partial struct Rect : IEquatable<Rect>
     /// </summary>
     /// <returns>A <see cref="Polygon"/> object representing the rectangle.</returns>
     public Polygon ToPolygon() { return [TopLeft, BottomLeft, BottomRight, TopRight]; }
+    
+    /// <summary>
+    /// Converts the rectangle to a polygon by adding its corners to the provided <see cref="Polygon"/> reference.
+    /// The corners are added in counter-clockwise order: top-left, bottom-left, bottom-right, top-right.
+    /// </summary>
+    /// <param name="result">A reference to a <see cref="Polygon"/> that will be populated with the rectangle's corners.</param>
+    public void ToPolygon(ref Polygon result)
+    {
+        if(result.Count > 0) result.Clear();
+        result.Add(A);
+        result.Add(B);
+        result.Add(C);
+        result.Add(D);
+    }
+    
     /// <summary>
     /// Converts the rectangle to a polyline representing its outline.
     /// </summary>

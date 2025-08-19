@@ -46,7 +46,6 @@ public abstract class Collider : Shape
     /// </summary>
     public event Action<Collider>? OnContactEnded;
     
-    
     private CollisionObject? parent;
     /// <summary>
     /// Gets the parent <see cref="CollisionObject"/> of this collider, or sets it internally.

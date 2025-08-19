@@ -255,7 +255,7 @@ public readonly partial struct Ray
     /// </remarks>
     public static bool OverlapRayPolyline(Vector2 rayPoint, Vector2 rayDirection, List<Vector2> points)
     {
-        if (points.Count < 3) return false;
+        if (points.Count < 2) return false;
         for (var i = 0; i < points.Count - 1; i++)
         {
             var colPoint = IntersectRaySegment(rayPoint, rayDirection, points[i], points[i + 1]);

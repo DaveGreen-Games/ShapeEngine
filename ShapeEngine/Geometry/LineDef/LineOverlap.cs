@@ -87,14 +87,22 @@ public readonly partial struct Line
     /// </summary>
     /// <param name="points">A list of vertices defining the polygon. The polygon is assumed to be closed and non-self-intersecting.</param>
     /// <returns>True if the line and polygon overlap; otherwise, false.</returns>
-    public bool OverlapPolygon(List<Vector2> points) => OverlapLinePolygon(Point, Direction, points);
+    public bool OverlapPolygon(List<Vector2> points)
+    {
+        if (points.Count < 3) return false;
+        return OverlapLinePolygon(Point, Direction, points);
+    }
 
     /// <summary>
     /// Determines whether this infinite line and a polyline overlap (i.e., the line passes through or touches any segment of the polyline).
     /// </summary>
     /// <param name="points">A list of vertices defining the polyline. The polyline is assumed to be open and non-self-intersecting.</param>
     /// <returns>True if the line and polyline overlap; otherwise, false.</returns>
-    public bool OverlapPolyline(List<Vector2> points) => OverlapLinePolyline(Point, Direction, points);
+    public bool OverlapPolyline(List<Vector2> points)
+    {
+        if (points.Count < 2) return false;
+        return OverlapLinePolyline(Point, Direction, points);
+    }
 
     /// <summary>
     /// Determines whether this infinite line and any segment in the provided list overlap (i.e., intersect at any point).
@@ -231,4 +239,27 @@ public readonly partial struct Line
     /// <param name="segments">A <see cref="Segments"/> collection to check for overlap with this line.</param>
     /// <returns>True if the line overlaps with any segment in the collection; otherwise, false.</returns>
     public bool OverlapShape(Segments segments) => OverlapLineSegments(Point, Direction, segments);
+    
+    /// <summary>
+    /// Determines whether this shape overlaps with the specified <see cref="IShape"/>.
+    /// </summary>
+    /// <param name="shape">The shape to test for overlap with this shape.
+    /// The shape can be any supported type such as circle, segment, ray, line, triangle, rectangle, quad, polygon, or polyline.</param>
+    /// <returns><c>true</c> if this shape overlaps with the specified shape; otherwise, <c>false</c>.</returns>
+    public bool OverlapShape(IShape shape)
+    {
+        return shape.GetShapeType() switch
+        {
+            ShapeType.Circle => OverlapShape(shape.GetCircleShape()),
+            ShapeType.Segment => OverlapShape(shape.GetSegmentShape()),
+            ShapeType.Ray => OverlapShape(shape.GetRayShape()),
+            ShapeType.Line => OverlapShape(shape.GetLineShape()),
+            ShapeType.Triangle => OverlapShape(shape.GetTriangleShape()),
+            ShapeType.Rect => OverlapShape(shape.GetRectShape()),
+            ShapeType.Quad => OverlapShape(shape.GetQuadShape()),
+            ShapeType.Poly => OverlapShape(shape.GetPolygonShape()),
+            ShapeType.PolyLine => OverlapShape(shape.GetPolylineShape()),
+            _ => false
+        };
+    }
 }
