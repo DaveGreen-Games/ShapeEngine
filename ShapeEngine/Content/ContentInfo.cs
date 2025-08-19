@@ -1,4 +1,4 @@
-namespace ShapeEngine.Persistent;
+namespace ShapeEngine.Content;
 
 /// <summary>
 /// Represents content information for a resource, including its file extension and binary data.

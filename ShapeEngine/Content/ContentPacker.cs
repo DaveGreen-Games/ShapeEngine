@@ -1,6 +1,6 @@
 ﻿using System.IO.Compression;
 
-namespace ShapeEngine.Persistent;
+namespace ShapeEngine.Content;
 
 /// <summary>
 /// Packs all files from a folder structure into a single text file.

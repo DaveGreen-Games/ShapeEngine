@@ -12,7 +12,7 @@ using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.StripedDrawingDef;
 using ShapeEngine.Input;
-using ShapeEngine.Persistent;
+using ShapeEngine.Content;
 using ShapeEngine.Text;
 
 namespace Examples.Scenes

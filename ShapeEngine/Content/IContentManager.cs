@@ -1,6 +1,6 @@
 ﻿using Raylib_cs;
 
-namespace ShapeEngine.Persistent;
+namespace ShapeEngine.Content;
 
 /// <summary>
 /// An interface for a content manager.

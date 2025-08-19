@@ -1,6 +1,6 @@
 using Raylib_cs;
 
-namespace ShapeEngine.Persistent;
+namespace ShapeEngine.Content;
 
 /// <summary>
 /// Provides a simple class to load content and automatically unload all loaded content when close is called.

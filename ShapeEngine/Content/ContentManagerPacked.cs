@@ -1,6 +1,6 @@
 using Raylib_cs;
 
-namespace ShapeEngine.Persistent;
+namespace ShapeEngine.Content;
 
 /// <summary>
 /// Provides a simple class to load content that was packed with the ContentPacker.
