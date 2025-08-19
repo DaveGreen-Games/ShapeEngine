@@ -1,4 +1,4 @@
-namespace ShapeEngine.Persistent;
+namespace ShapeEngine.Serialization;
 
 /// <summary>
 /// Represents an object that can be identified by a name.

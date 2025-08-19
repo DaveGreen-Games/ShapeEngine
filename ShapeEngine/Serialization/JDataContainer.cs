@@ -1,6 +1,6 @@
 using ShapeEngine.Random;
 
-namespace ShapeEngine.Persistent;
+namespace ShapeEngine.Serialization;
 
 /// <summary>
 /// A container class that stores and manages a collection of IDataObject instances by their names.

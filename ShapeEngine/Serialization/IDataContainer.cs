@@ -1,4 +1,4 @@
-namespace ShapeEngine.Persistent;
+namespace ShapeEngine.Serialization;
 
 /// <summary>
 /// Represents a container that holds a collection of data objects.

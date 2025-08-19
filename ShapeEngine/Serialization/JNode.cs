@@ -1,7 +1,7 @@
-﻿using System.Text.Json.Nodes;
-using System.Text.Json;
+﻿using System.Text.Json;
+using System.Text.Json.Nodes;
 
-namespace ShapeEngine.Persistent;
+namespace ShapeEngine.Serialization;
 
 /// <summary>
 /// Provides a wrapper for working with JSON data, allowing easy access to JSON properties and arrays.
