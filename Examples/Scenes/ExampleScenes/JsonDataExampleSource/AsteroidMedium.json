@@ -1,12 +1,12 @@
 {
-  "name": "Asteroid Medium",
-  "speed": 20.0,
-  "size": 7.0,
-  "damage": 3.0,
-  "spawnWeight" : 30,
-  "spawnChances": [
-    { "name": "Common", "chance": 0.7 },
-    { "name": "Uncommon", "chance": 0.2 },
-    { "name": "Rare", "chance": 0.1 }
+  "Name": "Asteroid Medium",
+  "Speed": 20.0,
+  "Size": 7.0,
+  "Damage": 3.0,
+  "SpawnWeight" : 30,
+  "SpawnChances": [
+    { "Type": "Common", "Chance": 0.7 },
+    { "Type": "Uncommon", "Chance": 0.2 },
+    { "Type": "Rare", "Chance": 0.1 }
   ]
 }

@@ -11,7 +11,30 @@ using ShapeEngine.Text;
 
 namespace Examples.Scenes.ExampleScenes.JsonDataExampleSource;
 
-
+/*
+ public class Asteroid
+   {
+       public string Name { get; set; }
+       public double Speed { get; set; }
+       public double Size { get; set; }
+       public double Damage { get; set; }
+       public int SpawnWeight { get; set; }
+       public List<SpawnChance> SpawnChances { get; set; }
+   }
+   
+    public enum SpawnChanceType
+   {
+       Common,
+       Uncommon,
+       Rare
+   }
+   
+   public class SpawnChance
+   {
+       public SpawnChanceType Type { get; set; }
+       public double Chance { get; set; }
+   }
+ */
 public class JsonDataExample : ExampleScene
 {
     

@@ -1,12 +1,12 @@
 {
-  "name": "Asteroid Large",
-  "speed": 12.5,
-  "size": 15.0,
-  "damage": 10.0,
-  "spawnWeight" : 10,
-  "spawnChances": [
-    { "name": "Common", "chance": 0.7 },
-    { "name": "Uncommon", "chance": 0.2 },
-    { "name": "Rare", "chance": 0.1 }
+  "Name": "Asteroid Large",
+  "Speed": 12.5,
+  "Size": 15.0,
+  "Damage": 10.0,
+  "SpawnWeight" : 10,
+  "SpawnChances": [
+    { "Type": "Common", "Chance": 0.7 },
+    { "Type": "Uncommon", "Chance": 0.2 },
+    { "Type": "Rare", "Chance": 0.1 }
   ]
 }
