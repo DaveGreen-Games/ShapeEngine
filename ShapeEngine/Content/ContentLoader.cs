@@ -8,6 +8,11 @@ namespace ShapeEngine.Content;
 /// <summary>
 /// Provides a simple wrapper to load all types of Raylib resources and JSON strings.
 /// </summary>
+/// <remarks>
+/// Resources and content refer to assets shipped with the game, such as textures, fonts, audio files, shaders, and similar files.
+/// Text-based data files (e.g. XML, JSON) included with the game can be loaded as strings using this class.
+/// For loading previously saved game data, use the <see cref="StaticLib.ShapeFileManager"/> class instead.
+/// </remarks>
 public static class ContentLoader
 {
     /// <summary>
