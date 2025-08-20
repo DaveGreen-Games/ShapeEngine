@@ -11,6 +11,7 @@ public partial class Game
     /// <remarks>
     /// This property returns the base directory of the current application domain.
     /// It is equivalent to the value returned by <see cref="System.IO.Directory.GetCurrentDirectory"/> method.
+    /// If you need directories for save games, logs, or other files, you can use <see cref="ShapeFileManager"/> class.
     /// </remarks>
     public static readonly string CURRENT_DIRECTORY = AppDomain.CurrentDomain.BaseDirectory;
 
