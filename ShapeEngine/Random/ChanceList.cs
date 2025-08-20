@@ -51,6 +51,37 @@ public class ChanceList<T>
     }
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="ChanceList{T}"/> class with the specified entries and a random seed.
+    /// </summary>
+    /// <param name="entries">An enumerable of tuples specifying the amount and value for each entry.</param>
+    /// <remarks>
+    /// The Amount specifies the number of times the value will be added to the list.
+    /// Therefore, the amount represents the weight of the item.
+    /// </remarks>
+    public ChanceList(IEnumerable<(int amount, T value)> entries)
+    {
+        this.rng = new Rng();
+        this.entries = entries.ToArray();
+        Generate();
+    }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ChanceList{T}"/> class with the specified seed and entries.
+    /// </summary>
+    /// <param name="seed">The seed for the random number generator.</param>
+    /// <param name="entries">An enumerable of tuples specifying the amount and value for each entry.</param>
+    /// <remarks>
+    /// The Amount specifies the number of times the value will be added to the list.
+    /// Therefore, the amount represents the weight of the item.
+    /// </remarks>
+    public ChanceList(int seed, IEnumerable<(int amount, T value)> entries)
+    {
+        this.rng = new Rng(seed);
+        this.entries = entries.ToArray();
+        Generate();
+    }
+    
+    
+    /// <summary>
     /// Clears and refills the list of values based on the original entries.
     /// </summary>
     public void Refill()
