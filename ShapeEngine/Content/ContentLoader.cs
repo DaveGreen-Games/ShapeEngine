@@ -253,10 +253,10 @@ public static class ContentLoader
         return Raylib.LoadMusicStream(filePath);
     }
     /// <summary>
-    /// Loads a JSON file as a string.
+    /// Loads a text file as a string.
     /// </summary>
-    /// <param name="filePath">The path to the JSON file.</param>
-    /// <returns>The content of the JSON file as a string.</returns>
+    /// <param name="filePath">The path to the text file.</param>
+    /// <returns>The content of the text file as a string.</returns>
     /// <remarks>
     /// Automatically resolves resource paths for macOS application bundles.
     /// By default, file paths should be relative to the executable's directory.
@@ -268,9 +268,10 @@ public static class ContentLoader
     ///   <item><description>"Resources/Audio/Music/BackgroundMusic.mp3"</description></item>
     ///   <item><description>"Resources/Audio/Sounds/Jump.wav"</description></item>
     ///   <item><description>"Resources/Images/Background.png"</description></item>
+    ///   <item><description>"Resources/Data/EnemySpawnData.xml"</description></item>
     /// </list>
     /// </example>
-    public static string LoadJson(string filePath)
+    public static string LoadText(string filePath)
     {
         if (Game.IsOSX())
         {
@@ -366,11 +367,11 @@ public static class ContentLoader
         return Raylib.LoadShaderFromMemory(file, null);
     }
     /// <summary>
-    /// Loads a JSON string from ContentInfo data.
+    /// Decodes binary text data from a ContentInfo object to a string.
     /// </summary>
-    /// <param name="content">The ContentInfo object containing JSON text as binary data.</param>
-    /// <returns>The JSON content as a string.</returns>
-    public static string LoadJsonFromContent(ContentInfo content)
+    /// <param name="content">The ContentInfo object containing text data as a byte array.</param>
+    /// <returns>The decoded string from the content data.</returns>
+    public static string LoadTextFromContent(ContentInfo content)
     {
         return Encoding.Default.GetString(content.data);
     }
