@@ -1,0 +1,12 @@
+{
+  "name": "Asteroid Small",
+  "speed": 25.0,
+  "size": 3.0,
+  "damage": 2.5,
+  "spawnWeight" : 50,
+  "spawnChances": [
+    { "name": "Common", "chance": 0.7 },
+    { "name": "Uncommon", "chance": 0.2 },
+    { "name": "Rare", "chance": 0.1 }
+  ]
+}
