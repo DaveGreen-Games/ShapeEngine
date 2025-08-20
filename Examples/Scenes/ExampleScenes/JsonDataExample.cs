@@ -9,7 +9,7 @@ using ShapeEngine.Random;
 using ShapeEngine.Screen;
 using ShapeEngine.Text;
 
-namespace Examples.Scenes.ExampleScenes.JsonDataExampleSource;
+namespace Examples.Scenes.ExampleScenes;
 
 /*
  public class Asteroid
