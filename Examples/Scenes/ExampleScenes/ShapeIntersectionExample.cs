@@ -1913,7 +1913,7 @@ public class ShapeIntersectionExample : ExampleScene
         var path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
         var fileName = "automated_test_results.txt";
         bool loadingSuccess = false;
-        Game.ReadFromFile(path, fileName, (reader) =>
+        ShapeFileManager.ReadFromFile(path, fileName, (reader) =>
         {
             var movingShapeText = reader.ReadLine();
             var staticShapeText = reader.ReadLine();

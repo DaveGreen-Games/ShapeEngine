@@ -128,4 +128,25 @@ public partial class Game
         return collection[i];
     }
 
+    /// <summary>
+    /// Attempts to parse a string value into the specified enum type.
+    /// </summary>
+    /// <typeparam name="TEnum">The enum type to parse the string value into.</typeparam>
+    /// <param name="value">The string value to parse.</param>
+    /// <param name="result">When this method returns, contains the parsed enum value if the parsing succeeded, or the default value if parsing failed.</param>
+    /// <returns>True if the string was successfully parsed into an enum value; otherwise, false.</returns>
+    public static bool TryParseEnum<TEnum>(string value, out TEnum result) where TEnum : struct
+    {
+        if (typeof(TEnum).IsEnum)
+        {
+            if (Enum.TryParse(value, true, out TEnum parsedValue))
+            {
+                result = parsedValue;
+                return true;
+            }
+        }
+
+        result = default(TEnum);
+        return false;
+    }
 }
