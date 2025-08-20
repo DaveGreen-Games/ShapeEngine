@@ -1,4 +1,6 @@
 using System.Numerics;
+using System.Xml.Serialization;
+using ShapeEngine.Content;
 using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
@@ -7,54 +9,14 @@ using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.StaticLib;
 using ShapeEngine.Random;
 using ShapeEngine.Screen;
+using ShapeEngine.Serialization;
 using ShapeEngine.Text;
 
-namespace Examples.Scenes.ExampleScenes.XmlDataExampleSource;
-
-
-/*
- public class Asteroid
-   {
-       [XmlElement("Name")]
-       public string Name { get; set; }
-   
-       [XmlElement("Speed")]
-       public float Speed { get; set; }
-   
-       [XmlElement("Size")]
-       public float Size { get; set; }
-   
-       [XmlElement("Damage")]
-       public float Damage { get; set; }
-   
-       [XmlElement("SpawnWeight")]
-       public int SpawnWeight { get; set; }
-   
-       [XmlElement("SpawnChances")]
-       public List<SpawnChance> SpawnChances { get; set; }
-   }
-   
-   public enum ChanceType
-   {
-       Common,
-       Rare,
-       Legendary
-   }
-   
-   public class SpawnChance
-   {
-       [XmlElement("Type")]
-       public ChanceType Type { get; set; }
-   
-       [XmlElement("Chance")]
-       public float Chance { get; set; }
-   }
- */
+namespace Examples.Scenes.ExampleScenes;
 
 
 public class XmlDataExample : ExampleScene
 {
-    
     private class ImpactSmoke
     {
         private float duration;
@@ -98,15 +60,6 @@ public class XmlDataExample : ExampleScene
         {
             Shape = new(center, radius);
             rotSpeedRad = Rng.Instance.RandF(-25, 25) * ShapeMath.DEGTORAD;
-            // int randImpactCount = ShapeRandom.RandI(2, 16);
-            // for (int i = 0; i < randImpactCount; i++)
-            // {
-            //     var randR = ShapeRandom.RandF(0.1f, 0.3f) * radius;
-            //     var randOffset = ShapeRandom.RandVec2(0f, radius - randR);
-            //     Impact(center + randOffset, randR);
-            //     // var dot = new Circle(center + randOffset, randR);
-            //     // impacts.Add(dot);
-            // }
         }
 
         public void Impact(Vector2 pos, float r)
@@ -164,39 +117,71 @@ public class XmlDataExample : ExampleScene
             textFont.DrawWord(text, r, new AnchorPoint(0.5f));
         }
     }
-    private readonly struct AsteroidData
+   
+    
+    public record AsteroidData
     {
-        public readonly float Speed;
-        public readonly float Size;
-        public readonly float Damage;
-
-        public AsteroidData(float speed, float size, float damage)
-        {
-            Speed = speed;
-            Size = size;
-            Damage = damage;
-        }
-    }
-    private static class AsteroidSpawner
-    {
-        public static readonly AsteroidData AsteroidSmall = new AsteroidData(200, 20, 0.1f);
-        public static readonly AsteroidData AsteroidMedium = new AsteroidData(150, 32, 0.15f);
-        public static readonly AsteroidData AsteroidBig = new AsteroidData(75, 45, 0.25f);
-        public static readonly AsteroidData AsteroidFast = new AsteroidData(300, 24, 0.2f);
-        public static readonly AsteroidData AsteroidVeryFast = new AsteroidData(350, 28, 0.3f);
+        [XmlElement("Name")] 
+        public required string Name { get; set; }
         
-        public static readonly ChanceList<AsteroidData> ChanceList = new ChanceList<AsteroidData>
-        (
-            (50, AsteroidSmall),
-            (25, AsteroidMedium),
-            (10, AsteroidBig),
-            (10, AsteroidFast),
-            (5, AsteroidVeryFast));
+        [XmlElement("Type")]
+        public AsteroidType Type { get; set; }
+   
+        [XmlElement("Speed")]
+        public float Speed { get; set; }
+   
+        [XmlElement("Size")]
+        public float Size { get; set; }
+   
+        [XmlElement("Damage")]
+        public float Damage { get; set; }
+   
+        [XmlElement("SpawnWeight")]
+        public int SpawnWeight { get; set; }
+   
+        [XmlElement("ParticleChances")]
+        public required List<ParticleChance> ParticleChances { get; set; }
+    }
+    public enum AsteroidType
+    {
+        Small,
+        Medium,
+        Large,
+        Fast
+    }
+    public enum ParticleType
+    {
+        Common,
+        Rare,
+        Legendary
+    }
+    public class ParticleChance
+    {
+        [XmlElement("Type")]
+        public ParticleType Type { get; set; }
+   
+        [XmlElement("Chance")]
+        public float Chance { get; set; }
+    }
+    
+    
+    private class AsteroidSpawner
+    {
+        private readonly ChanceList<AsteroidData> SpawnList;
 
-        public static Asteroid Create(Vector2 center, float radius, Planet target)
+        public AsteroidSpawner(List<AsteroidData> asteroidData)
+        {
+            var spawnEntries = new List<(int amount, AsteroidData data)>();
+            foreach (var data in asteroidData)
+            {
+                spawnEntries.Add((data.SpawnWeight, data));
+            }
+            SpawnList = new(spawnEntries);
+        }
+        public Asteroid Create(Vector2 center, float radius, Planet target)
         {
             var randPos = center + Rng.Instance.RandVec2(radius * 0.95f, radius * 1.05f);
-            return new Asteroid(randPos, target, ChanceList.Next());
+            return new Asteroid(randPos, target, SpawnList.Next());
         }
     }
     private class Asteroid
@@ -240,7 +225,6 @@ public class XmlDataExample : ExampleScene
         }
     }
     
-    
     private const float CameraBaseZoom = 0.45f;
     private const float AsteroidSpawnRadius = 2350f;
     private const float AsteroidSpawnInterval = 0.5f;
@@ -249,16 +233,38 @@ public class XmlDataExample : ExampleScene
     private readonly ShapeCamera camera;
     private readonly List<Asteroid> asteroids = new();
     private float asteroidSpawnTimer = 0f;
-    
-    
+    private AsteroidSpawner asteroidSpawner;
+    private XmlClassSerializer<AsteroidData> serializer;
     public XmlDataExample()
     {
         Title = "Xml Data Example";
         camera = new();
+        serializer = new XmlClassSerializer<AsteroidData>();
+        var data = LoadXmlData();
+        asteroidSpawner = new(data);
         CreatePlanet();
     }
 
+    private List<AsteroidData> LoadXmlData()
+    {
+        //TODO: functions for loading all files in directory
+        var small = ContentLoader.LoadText("Resources/XmlDataExampleSource/AsteroidSmall.xml");
+        var medium = ContentLoader.LoadText("Resources/XmlDataExampleSource/AsteroidMedium.xml");
+        var large = ContentLoader.LoadText("Resources/XmlDataExampleSource/AsteroidLarge.xml");
+        var fast = ContentLoader.LoadText("Resources/XmlDataExampleSource/AsteroidFast.xml");
+        
+        //TODO: Function that reads all files in a directory and returns a list of deserialized objects
+        
+        // ContentLoader.LoadJson("Resources/Fonts/Gruppo-Regular.ttf",)
+        //load source
 
+        //load external
+
+        //setup asteroid spawner
+        return new();
+    }
+    
+    
     protected override void OnActivate(Scene oldScene)
     {
         GameloopExamples.Instance.Camera = camera;
@@ -283,7 +289,7 @@ public class XmlDataExample : ExampleScene
             asteroidSpawnTimer -= time.Delta;
             if (asteroidSpawnTimer <= 0f)
             {
-                var nextAsteroid = AsteroidSpawner.Create(planet.Shape.Center, AsteroidSpawnRadius, planet);
+                var nextAsteroid = asteroidSpawner.Create(planet.Shape.Center, AsteroidSpawnRadius, planet);
                 asteroids.Add(nextAsteroid);
                 asteroidSpawnTimer = AsteroidSpawnInterval;
             }
