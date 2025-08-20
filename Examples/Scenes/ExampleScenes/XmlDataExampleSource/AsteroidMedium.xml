@@ -1,0 +1,21 @@
+<Asteroid>
+    <Name>Asteroid Medium</Name>
+    <Speed>20.0</Speed>
+    <Size>7.0</Size>
+    <Damage>3.0</Damage>
+    <SpawnWeight>30</SpawnWeight>
+    <SpawnChances>
+        <SpawnChance>
+            <Type>Common</Type>
+            <Chance>0.75</Chance>
+        </SpawnChance>
+        <SpawnChance>
+            <Type>Rare</Type>
+            <Chance>0.2</Chance>
+        </SpawnChance>
+        <SpawnChance>
+            <Type>Legendary</Type>
+            <Chance>0.05</Chance>
+        </SpawnChance>
+    </SpawnChances>
+</Asteroid>

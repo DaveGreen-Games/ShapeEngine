@@ -1,0 +1,21 @@
+<Asteroid>
+    <Name>Asteroid Large</Name>
+    <Speed>12.5</Speed>
+    <Size>15.0</Size>
+    <Damage>10.0</Damage>
+    <SpawnWeight>10</SpawnWeight>
+    <SpawnChances>
+        <SpawnChance>
+            <Type>Common</Type>
+            <Chance>0.75</Chance>
+        </SpawnChance>
+        <SpawnChance>
+            <Type>Rare</Type>
+            <Chance>0.2</Chance>
+        </SpawnChance>
+        <SpawnChance>
+            <Type>Legendary</Type>
+            <Chance>0.05</Chance>
+        </SpawnChance>
+    </SpawnChances>
+</Asteroid>
