@@ -259,6 +259,8 @@ public static class ContentLoader
     }
     /// <summary>
     /// Loads a text file as a string.
+    /// This should not be used for game save data,
+    /// but rather for static text files like JSON or XML that were shipped with the game!
     /// </summary>
     /// <param name="filePath">The path to the text file.</param>
     /// <returns>The content of the text file as a string.</returns>
@@ -373,6 +375,8 @@ public static class ContentLoader
     }
     /// <summary>
     /// Decodes binary text data from a ContentInfo object to a string.
+    /// This should not be used for game save data,
+    /// but rather for static text files like JSON or XML that were shipped with the game!
     /// </summary>
     /// <param name="content">The ContentInfo object containing text data as a byte array.</param>
     /// <returns>The decoded string from the content data.</returns>
