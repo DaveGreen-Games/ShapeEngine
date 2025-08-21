@@ -876,6 +876,36 @@ public static class ShapeFileManager
             return string.Empty;
         }
     }
+
+    /// <summary>
+    /// Loads a text file from the specified absolute path.
+    /// </summary>
+    /// <param name="absolutePath">The absolute path to the file.</param>
+    /// <param name="encoding">The encoding to use when reading the file (null uses the default encoding).</param>
+    /// <returns>The loaded text content, or an empty string if not found or if an error occurs.</returns>
+    public static string LoadText(string absolutePath, Encoding? encoding = null)
+    {
+        if (string.IsNullOrWhiteSpace(absolutePath) || !Path.HasExtension(absolutePath))
+            return string.Empty;
+        
+        if (!File.Exists(absolutePath))
+            return string.Empty;
+        
+        try
+        {
+            using (var reader = new StreamReader(absolutePath, encoding ?? Encoding.Default))
+            {
+                return reader.ReadToEnd();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[{ex.GetType().Name}] Failed to load file at {absolutePath}: {ex.Message}");
+            return string.Empty;
+        }
+    }
+    
+    
     /// <summary>
     /// Loads a text file from the specified FileInfo.
     /// </summary>
