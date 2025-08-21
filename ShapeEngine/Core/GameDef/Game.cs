@@ -329,8 +329,6 @@ public partial class Game
         ReleaseMode = false;
         #endif
         
-        UpdateGamepadMappings();
-        
         // this.DevelopmentDimensions = gameSettings.DevelopmentDimensions;
         Window = new(windowSettings);
         Window.OnWindowSizeChanged += ResolveOnWindowSizeChanged;
@@ -349,6 +347,8 @@ public partial class Game
         Window.OnWindowHiddenChanged += ResolveOnWindowHiddenChanged;
         Window.OnWindowTopmostChanged += ResolveOnWindowTopmostChanged;
 
+        UpdateGamepadMappings(inputSettings);
+        
         AudioDevice = new AudioDevice();
 
         var fixedFramerate = gameSettings.FixedFramerate;
@@ -418,36 +418,62 @@ public partial class Game
         }
     }
 
-    private void UpdateGamepadMappings()
+    private void UpdateGamepadMappings(InputSettings inputSettings)
     {
-        string mapping = "";
-        var assembly = Assembly.GetExecutingAssembly();
-        using var stream = assembly.GetManifestResourceStream("ShapeEngine.gamecontrollerdb.txt"); //gamecontrollerdb.txt is embedded in the assembly (file -> properties -> EmbeddedResource)
-        if (stream != null)
+        if (inputSettings.LoadEmbeddedGamepadMappings)
         {
-            using var reader = new StreamReader(stream);
-            mapping = reader.ReadToEnd();
-            Console.WriteLine($"Gamepad mappings loaded with {mapping.Length} characters.");
+            var assembly = Assembly.GetExecutingAssembly();
+            using var stream = assembly.GetManifestResourceStream("ShapeEngine.gamecontrollerdb.txt"); //gamecontrollerdb.txt is embedded in the assembly (file -> properties -> EmbeddedResource)
+            if (stream != null)
+            {
+                using var reader = new StreamReader(stream);
+                var mapping = reader.ReadToEnd();
+                if (mapping.Length > 0)
+                {
+                    Console.WriteLine($"Embedded Gamepad mappings loaded and applied with {mapping.Length} characters.");
+                    Raylib.SetGamepadMappings(mapping);
+                }
+                else 
+                {
+                    Console.WriteLine("No gamepad mappings found in embedded resource.");
+                }
+            }
         }
-        if (IsOSX())
+        else
         {
-            mapping += "030000005e040000130b000020050000,Xbox Wireless Controller,platform:Mac OS X,a:b0,b:b1,x:b3,y:b4,back:b10,guide:b12,start:b11,leftstick:b13,rightstick:b14,leftshoulder:b6,rightshoulder:b7,dpup:h0.1,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,leftx:a0,lefty:a1,rightx:a2,righty:a3,lefttrigger:a5,righttrigger:a4,\n";
-            mapping += "0500c6515e040000130b000017056800,Xbox Wireless Controller,a:b0,b:b1,back:b4,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,guide:b5,leftshoulder:b9,leftstick:b7,lefttrigger:a4,leftx:a0,lefty:a1,rightshoulder:b10,rightstick:b8,righttrigger:a5,rightx:a2,righty:a3,start:b6,x:b2,y:b3,misc1:b11,crc:51c6,platform:Mac OS X,\n";
-            mapping += "050000005e040000130b000022050000,Xbox Wireless Controller,a:b0,b:b1,back:b10,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,guide:b12,leftshoulder:b6,leftstick:b13,lefttrigger:a5,leftx:a0,lefty:a1,misc1:b15,rightshoulder:b7,rightstick:b14,righttrigger:a4,rightx:a2,righty:a3,start:b11,x:b3,y:b4,platform:Max OS X,\n";
-            mapping += "060000005e040000120b000011050000,Xbox Wireless Controller,a:b0,b:b1,back:b6,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,guide:b8,leftshoulder:b4,leftstick:b9,lefttrigger:a2,leftx:a0,lefty:a1,misc1:b11,rightshoulder:b5,rightstick:b10,righttrigger:a5,rightx:a3,righty:a4,start:b7,x:b2,y:b3,platform:Mac OS X,\n";
-            
-            mapping += "030000004c050000e60c000000010000,PS5 Controller,platform:Mac OS X,a:b1,b:b2,x:b0,y:b3,back:b8,guide:b13,start:b9,leftstick:b10,rightstick:b11,leftshoulder:b4,rightshoulder:b5,dpup:h0.1,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,leftx:a0,lefty:a1,rightx:a2,righty:a5,lefttrigger:a3,righttrigger:a4,\n";
-            mapping += "030000004c050000cc09000000010000,PS4 Controller,platform:Mac OS X,a:b1,b:b2,x:b0,y:b3,back:b8,guide:b13,start:b9,leftstick:b10,rightstick:b11,leftshoulder:b4,rightshoulder:b5,dpup:h0.1,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,leftx:a0,lefty:a1,rightx:a2,righty:a5,lefttrigger:a3,righttrigger:a4,\n";
-            mapping += "030000004c0500006802000000010000,PS3 Controller,platform:Mac OS X,a:b14,b:b13,x:b15,y:b12,back:b0,guide:b16,start:b3,leftstick:b1,rightstick:b2,leftshoulder:b10,rightshoulder:b11,dpup:b4,dpdown:b6,dpleft:b7,dpright:b5,leftx:a0,lefty:a1,rightx:a2,righty:a3,lefttrigger:b8,righttrigger:b9,\n";
-            
-            mapping += "030000005e040000130b000009050000,Xbox Series Controller,a:b0,b:b1,back:b10,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,guide:b12,leftshoulder:b6,leftstick:b13,lefttrigger:a5,leftx:a0,lefty:a1,misc1:b15,rightshoulder:b7,rightstick:b14,righttrigger:a4,rightx:a2,righty:a3,start:b11,x:b3,y:b4,platform:Mac OS X,\n";
-            mapping += "030000005e040000130b000013050000,Xbox Series Controller,a:b0,b:b1,back:b10,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,guide:b12,leftshoulder:b6,leftstick:b13,lefttrigger:a5,leftx:a0,lefty:a1,rightshoulder:b7,rightstick:b14,righttrigger:a4,rightx:a2,righty:a3,start:b11,x:b3,y:b4,platform:Mac OS X,\n";
-            mapping += "030000005e040000130b000015050000,Xbox Series Controller,a:b0,b:b1,back:b10,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,guide:b12,leftshoulder:b6,leftstick:b13,lefttrigger:a5,leftx:a0,lefty:a1,rightshoulder:b7,rightstick:b14,righttrigger:a4,rightx:a2,righty:a3,start:b11,x:b3,y:b4,platform:Mac OS X,\n";
-            
-            Console.WriteLine($"Macos Gamepad mappings updated. New length: {mapping.Length} characters.");
+            if (inputSettings.GamepadMappingsFilePath is { Length: > 0 })
+            {
+                var loadedMapping = ShapeFileManager.LoadText(inputSettings.GamepadMappingsFilePath);
+                if (loadedMapping.Length > 0)
+                {
+                    Console.WriteLine($"Gamepad mappings loaded from file '{inputSettings.GamepadMappingsFilePath}' with {loadedMapping.Length} characters.");
+                    Raylib.SetGamepadMappings(loadedMapping);
+                }
+                else
+                {
+                    Console.WriteLine($"Empty Gamepad mappings file loaded from '{inputSettings.GamepadMappingsFilePath}'! No mappings applied.");
+                }
+            }
         }
         
-        Raylib.SetGamepadMappings(mapping);
+        if (inputSettings.GamepadMappings != null && inputSettings.GamepadMappings.Count > 0)
+        {
+            string extraMapping = "";
+            foreach (var mappingString in inputSettings.GamepadMappings)
+            {
+                extraMapping += mappingString;
+            }
+
+            if (extraMapping.Length > 0)
+            {
+                Console.WriteLine($"Additional gamepad mappings applied with {extraMapping.Length} characters.");
+                Raylib.SetGamepadMappings(extraMapping);
+            }
+            else
+            {
+                Console.WriteLine("All additional gamepad mappings are empty! No mappings applied.");
+            }
+        }
     }
     
     #endregion
