@@ -189,10 +189,11 @@ public sealed class GamepadDevice : InputDevice
         Index = index;
      
         Settings = settings;
-        
+        Console.WriteLine($"--- GamepadDevice setup with index: {index}");
         if (Raylib.IsGamepadAvailable(index))
         {
             Connect();
+            Console.WriteLine($"--- Gamepad {index} connected: {Name}");
         }
         
         foreach (var button in AllShapeGamepadButtons)
