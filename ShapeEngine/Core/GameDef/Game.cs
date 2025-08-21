@@ -56,7 +56,16 @@ public partial class Game
     /// Points to <see cref="GameSettings.SaveDirectory"/>/<see cref="GameSettings.ApplicationName"/>.
     /// Will be empty if no save directory is set in <see cref="GameSettings"/>.
     /// </summary>
-    public readonly string SaveDirectory;
+    public readonly DirectoryInfo SaveDirectory;
+    /// <summary>
+    /// Gets the full path of the save directory as a string.
+    /// </summary>
+    public string SaveDirectoryPath => SaveDirectory.FullName;
+    
+    /// <summary>
+    /// Indicates whether the save directory is valid (exists and has a non-empty path).
+    /// </summary>
+    public bool IsSaveDirectoryValid => SaveDirectory is { Exists: true, FullName.Length: > 0 };
     
     /// <summary>
     /// Gets or sets the command-line arguments passed to the application at launch.
@@ -434,9 +443,24 @@ public partial class Game
         if (gameSettings.SaveDirectory != null && ApplicationName.Length > 0)
         {
             var folderPath = Environment.GetFolderPath((Environment.SpecialFolder)gameSettings.SaveDirectory);
-            SaveDirectory = Path.Combine(folderPath, gameSettings.ApplicationName);
+            var absolutePath = Path.Combine(folderPath, gameSettings.ApplicationName);
+            var dir = ShapeFileManager.CreateDirectory(absolutePath, false);
+            if (dir != null)
+            {
+                SaveDirectory = dir;
+                Console.WriteLine($"Save directory set to: {SaveDirectoryPath}");
+            }
+            else
+            {
+                SaveDirectory = new(string.Empty);
+                Console.WriteLine("No save directory set! SaveDirectory will be empty.");
+            }
         }
-        else SaveDirectory = string.Empty;
+        else
+        {
+            SaveDirectory = new(string.Empty);
+            Console.WriteLine("No save directory set! SaveDirectory will be empty.");
+        }
     }
 
     private void UpdateGamepadMappings(InputSettings inputSettings)
