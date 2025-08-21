@@ -431,7 +431,7 @@ public partial class Game
         }
 
         ApplicationName = gameSettings.ApplicationName;
-        if (gameSettings.SaveDirectory != null)
+        if (gameSettings.SaveDirectory != null && ApplicationName.Length > 0)
         {
             var folderPath = Environment.GetFolderPath((Environment.SpecialFolder)gameSettings.SaveDirectory);
             SaveDirectory = Path.Combine(folderPath, gameSettings.ApplicationName);
