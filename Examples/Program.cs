@@ -7,7 +7,7 @@ public static class Program
 {
     public static void Main(string[] args)
     {
-        var gameSettings = GameSettings.StretchMode;
+        var gameSettings = GameSettings.StretchMode("Shape Engine Examples");
         
         var windowSettings = new WindowSettings
         {

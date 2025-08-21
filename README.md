@@ -59,7 +59,7 @@ public static class Program
 {
     public static void Main(string[] args)
     {
-	    var game = new MyGameClass(GameSettings.StretchMode, WindowSettings.Default, InputSettings.Default);
+	    var game = new MyGameClass(GameSettings.StretchMode("Shape Engine Game"), WindowSettings.Default, InputSettings.Default);
 	    game.Run();
     }
 }

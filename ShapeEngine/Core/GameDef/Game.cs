@@ -45,6 +45,19 @@ namespace ShapeEngine.Core.GameDef;
 public partial class Game
 {
     #region Public Members
+
+    /// <summary>
+    /// The name of the application. Used for display and save directory purposes.
+    /// </summary>
+    public readonly string ApplicationName;
+    
+    /// <summary>
+    /// The directory where game data is saved.
+    /// Points to <see cref="GameSettings.SaveDirectory"/>/<see cref="GameSettings.ApplicationName"/>.
+    /// Will be empty if no save directory is set in <see cref="GameSettings"/>.
+    /// </summary>
+    public readonly string SaveDirectory;
+    
     /// <summary>
     /// Gets or sets the command-line arguments passed to the application at launch.
     /// </summary>
@@ -416,6 +429,14 @@ public partial class Game
             }
             else Console.WriteLine("Failed to set current directory to executable's folder in macos.");
         }
+
+        ApplicationName = gameSettings.ApplicationName;
+        if (gameSettings.SaveDirectory != null)
+        {
+            var folderPath = Environment.GetFolderPath((Environment.SpecialFolder)gameSettings.SaveDirectory);
+            SaveDirectory = Path.Combine(folderPath, gameSettings.ApplicationName);
+        }
+        else SaveDirectory = string.Empty;
     }
 
     private void UpdateGamepadMappings(InputSettings inputSettings)
