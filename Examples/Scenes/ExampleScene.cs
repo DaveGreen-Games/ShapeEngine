@@ -3,6 +3,7 @@ using ShapeEngine.StaticLib;
 using ShapeEngine.Screen;
 using System.Numerics;
 using Examples.UIElements;
+using Raylib_cs;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
@@ -204,6 +205,18 @@ namespace Examples.Scenes
                 var gamepadIndex = gamepad.Index;
                 gamepadText = $"Gamepad [{gamepadIndex}] Connected";
             }
+
+            //for testing gamepad connection on macOS
+            // for (int i = 0; i < 8; i++)
+            // {
+            //     if (Raylib.IsGamepadAvailable(i))
+            //     {
+            //         var name = Raylib.GetGamepadName_(i);
+            //         var pressed = Raylib.IsGamepadButtonDown(i, GamepadButton.RightFaceDown);
+            //         
+            //         gamepadText = $"Gamepad [{i}] Connected ({name}) Pressed: {pressed}";
+            //     }
+            // }
             
             titleFont.LineSpacing = 1f;
             titleFont.ColorRgba = gamepad != null ? Colors.Highlight : Colors.Medium;
