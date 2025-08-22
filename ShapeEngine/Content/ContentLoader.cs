@@ -83,8 +83,7 @@ public static class ContentLoader
     /// <returns>True if the file has a valid extension for the specified resource type.</returns>
     public static bool IsValidResourceFile(string filePath, ContentType contentType)
     {
-        if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
-            return false;
+        if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath)) return false;
             
         string extension = Path.GetExtension(filePath).ToLower();
         return ValidExtensions[contentType].Contains(extension);
@@ -104,8 +103,7 @@ public static class ContentLoader
             directoryPath = GetMacOsAppBundleResourcePath(directoryPath);
         }
         
-        if (!Directory.Exists(directoryPath))
-            return Array.Empty<string>();
+        if (!Directory.Exists(directoryPath)) return [];
             
         var searchOption = recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
         
@@ -809,7 +807,6 @@ public static class ContentLoader
     {
         var textPaths = GetResourceFilePaths(directoryPath, ContentType.Text, recursive);
         var texts = new List<string>(textPaths.Length);
-        
         foreach (var path in textPaths)
         {
             try
