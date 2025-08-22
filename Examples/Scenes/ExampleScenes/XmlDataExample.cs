@@ -251,26 +251,25 @@ public class XmlDataExample : ExampleScene
     {
         if (externalDataSavePath == null) return;
 
-        if (!ShapeFileManager.FileExists(externalDataSavePath, "slowAsteroid.xml"))
+        //always create default file
+        var slowAsteroid = new AsteroidData()
         {
-            var slowAsteroid = new AsteroidData()
-            {
-                Name = "Slow Asteroid",
-                Speed = 5,
-                Size = 5f,
-                Damage = 1f,
-                SpawnWeight = 5,
-                ParticleChances =
-                [
-                    new() { Type = ParticleType.Common, Chance = 0.5f },
-                    new() { Type = ParticleType.Rare, Chance = 0.1f },
-                    new() { Type = ParticleType.Legendary, Chance = 0.01f }
-                ]
-            };
-            var xml = serializer.Serialize(slowAsteroid);
-            xml += "\n<!-- ParticaleTypes: Common, Rare, Legendary -->\n";
-            externalDataSavePath.SaveText("slowAsteroid.xml", xml, null, false ,false);
-        }
+            Name = "Slow Asteroid",
+            Speed = 5,
+            Size = 5f,
+            Damage = 1f,
+            SpawnWeight = 5,
+            ParticleChances =
+            [
+                new() { Type = ParticleType.Common, Chance = 0.5f },
+                new() { Type = ParticleType.Rare, Chance = 0.1f },
+                new() { Type = ParticleType.Legendary, Chance = 0.01f }
+            ]
+        };
+        var xml = serializer.Serialize(slowAsteroid);
+        xml += "\n<!-- You can create your custom asteroid data files here. ShapeEngine XmlDataExample will load and use them. -->\n";
+        xml += "<!-- Particale Types: Common, Rare, Legendary -->\n";
+        externalDataSavePath.SaveText("slowAsteroid.xml", xml, null, false ,false);
     }
     private List<AsteroidData> LoadXmlData()
     {
