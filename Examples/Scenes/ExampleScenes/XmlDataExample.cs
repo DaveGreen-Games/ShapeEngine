@@ -290,6 +290,12 @@ public class XmlDataExample : ExampleScene
         xml += "\n<!-- You can create your custom asteroid data files here. ShapeEngine XmlDataExample will load and use them. -->\n";
         xml += "<!-- Particale Types: Common, Rare, Legendary -->\n";
         externalDataSavePath.SaveText("slowAsteroid.xml", xml, null, false ,false);
+        
+        var helpText = string.Empty;
+        helpText += "You can create your custom asteroid data files here.\n";
+        helpText += "ShapeEngine XmlDataExample will load and use them.\n";
+        helpText += "Particale Types: Common, Rare, Legendary\n";
+        externalDataSavePath.SaveText("readme.txt", helpText, null, false ,false);
     }
     private List<AsteroidData> LoadXmlData()
     {
@@ -301,7 +307,7 @@ public class XmlDataExample : ExampleScene
         // load external data
         if (externalDataSavePath != null)
         {
-         var externalData = externalDataSavePath.LoadDirectory();
+         var externalData = externalDataSavePath.LoadDirectory("*.xml");
          data.AddRange(externalData);
          // Console.WriteLine($"----------------- [{externalData.Count}] External data files loaded from {externalDataSavePath.FullName}.");
         }
