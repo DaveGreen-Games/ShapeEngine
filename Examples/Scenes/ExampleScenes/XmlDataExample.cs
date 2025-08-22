@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Xml.Serialization;
 using ShapeEngine.Content;
 using ShapeEngine.Core;
+using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.CircleDef;
@@ -123,9 +124,6 @@ public class XmlDataExample : ExampleScene
     {
         [XmlElement("Name")] 
         public required string Name { get; set; }
-        
-        [XmlElement("Type")]
-        public AsteroidType Type { get; set; }
    
         [XmlElement("Speed")]
         public float Speed { get; set; }
@@ -141,13 +139,6 @@ public class XmlDataExample : ExampleScene
    
         [XmlElement("ParticleChances")]
         public required List<ParticleChance> ParticleChances { get; set; }
-    }
-    public enum AsteroidType
-    {
-        Small,
-        Medium,
-        Large,
-        Fast
     }
     public enum ParticleType
     {
@@ -235,31 +226,67 @@ public class XmlDataExample : ExampleScene
     private float asteroidSpawnTimer = 0f;
     private AsteroidSpawner asteroidSpawner;
     private XmlClassSerializer<AsteroidData> serializer;
+
+    private DirectoryInfo? externalDataSavePath;
+    
     public XmlDataExample()
     {
         Title = "Xml Data Example";
         camera = new();
         serializer = new XmlClassSerializer<AsteroidData>();
+        
+        var saveDirectoryPath = Game.Instance.SaveDirectoryPath;
+        var saveFolder = "XmlDataExamples";
+        var fullPath = Path.Combine(saveDirectoryPath, saveFolder);
+        
+        externalDataSavePath = ShapeFileManager.CreateDirectory(fullPath);
+        
+        CreateDefaultSavegameXmlData();
         var data = LoadXmlData();
         asteroidSpawner = new(data);
         CreatePlanet();
     }
 
+    private void CreateDefaultSavegameXmlData()
+    {
+        if (externalDataSavePath == null) return;
+
+        if (!ShapeFileManager.FileExists(externalDataSavePath, "slowAsteroid.xml"))
+        {
+            var slowAsteroid = new AsteroidData()
+            {
+                Name = "Slow Asteroid",
+                Speed = 5,
+                Size = 5f,
+                Damage = 1f,
+                SpawnWeight = 5,
+                ParticleChances =
+                [
+                    new() { Type = ParticleType.Common, Chance = 0.5f },
+                    new() { Type = ParticleType.Rare, Chance = 0.1f },
+                    new() { Type = ParticleType.Legendary, Chance = 0.01f }
+                ]
+            };
+            var xml = serializer.Serialize(slowAsteroid);
+            xml += "\n<!-- ParticaleTypes: Common, Rare, Legendary -->\n";
+            externalDataSavePath.SaveText("slowAsteroid.xml", xml, null, false ,false);
+        }
+    }
     private List<AsteroidData> LoadXmlData()
     {
+        //load source
         //TODO: functions for loading all files in directory
         var small = ContentLoader.LoadText("Resources/XmlDataExampleSource/AsteroidSmall.xml");
         var medium = ContentLoader.LoadText("Resources/XmlDataExampleSource/AsteroidMedium.xml");
         var large = ContentLoader.LoadText("Resources/XmlDataExampleSource/AsteroidLarge.xml");
         var fast = ContentLoader.LoadText("Resources/XmlDataExampleSource/AsteroidFast.xml");
         
-        //TODO: Function that reads all files in a directory and returns a list of deserialized objects
-        
-        // ContentLoader.LoadJson("Resources/Fonts/Gruppo-Regular.ttf",)
-        //load source
-
         //load external
+        
+        //combine source and external strings
 
+        //deserialize all strings to data objects
+        
         //setup asteroid spawner
         return new();
     }
