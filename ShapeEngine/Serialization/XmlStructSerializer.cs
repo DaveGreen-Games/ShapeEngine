@@ -37,7 +37,33 @@ public class XmlStructSerializer <T> where T : struct
             Encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false)
         };
     }
-    
+    /// <summary>
+    /// Initializes a new instance of the <see cref="XmlStructSerializer{T}"/> class with custom <see cref="XmlWriterSettings"/>.
+    /// </summary>
+    /// <param name="settings">The XML writer settings to use for serialization.</param>
+    /// <remarks>
+    /// Uses default namespaces (no xmlns attribute).
+    /// </remarks>
+    public XmlStructSerializer(XmlWriterSettings settings)
+    {
+       serializer = new XmlSerializer(typeof(T));
+       namespaces = new XmlSerializerNamespaces();
+       namespaces.Add(string.Empty, string.Empty); // no xmlns attribute
+
+       this.settings = settings;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="XmlStructSerializer{T}"/> class with custom <see cref="XmlWriterSettings"/> and <see cref="XmlSerializerNamespaces"/>.
+    /// </summary>
+    /// <param name="settings">The XML writer settings to use for serialization.</param>
+    /// <param name="namespaces">The XML namespaces to use for serialization.</param>
+    public XmlStructSerializer(XmlWriterSettings settings, XmlSerializerNamespaces namespaces)
+    {
+       serializer = new XmlSerializer(typeof(T));
+       this.namespaces = namespaces;
+       this.settings = settings;
+    }
     /// <summary>
     /// Serializes an instance of <typeparamref name="T"/> to an XML string.
     /// </summary>
