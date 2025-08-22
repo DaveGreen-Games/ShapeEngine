@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Xml.Serialization;
+using ShapeEngine.Color;
 using ShapeEngine.Content;
 using ShapeEngine.Core;
 using ShapeEngine.Core.GameDef;
@@ -134,8 +135,20 @@ public class XmlDataExample : ExampleScene
         [XmlElement("Damage")]
         public float Damage { get; set; }
    
+        [XmlElement("Inaccuracy")]
+        public float Inaccuracy { get; set; }
+        
         [XmlElement("SpawnWeight")]
         public int SpawnWeight { get; set; }
+        
+        [XmlElement("R")]
+        public byte R { get; set; }
+        [XmlElement("G")]
+        public byte G { get; set; }
+        [XmlElement("B")]
+        public byte B { get; set; }
+        [XmlElement("A")]
+        public byte A { get; set; }
    
         [XmlElement("ParticleChances")]
         public required List<ParticleChance> ParticleChances { get; set; }
@@ -185,15 +198,17 @@ public class XmlDataExample : ExampleScene
         private bool dead = false;
         public bool IsDead => dead;
         public float DistanceToTargetSq => (target.Shape.Center - position).LengthSquared();
+        private ColorRgba color;
         public Asteroid(Vector2 pos, Planet target, AsteroidData data)
         {
             this.data = data;
             this.position = pos;
-            var targetPos = target.Shape.Center + Rng.Instance.RandVec2(0f, target.Shape.Radius * 2);
+            var targetPos = target.Shape.Center + Rng.Instance.RandVec2(0f, target.Shape.Radius * 2) * data.Inaccuracy;
             var w = targetPos - pos;
             velocity = w.Normalize() * data.Speed;
             shape = new(position, data.Size);
             this.target = target;
+            color = new ColorRgba(data.R, data.G, data.B, data.A);
         }
 
         public void Update(float dt)
@@ -212,13 +227,13 @@ public class XmlDataExample : ExampleScene
 
         public void Draw()
         {
-            shape.Draw(Colors.Warm);
+            shape.Draw(color);
         }
     }
     
     private const float CameraBaseZoom = 0.45f;
     private const float AsteroidSpawnRadius = 2350f;
-    private const float AsteroidSpawnInterval = 0.5f;
+    private const float AsteroidSpawnInterval = 0.25f;
     
     private Planet planet;
     private readonly ShapeCamera camera;
@@ -255,10 +270,15 @@ public class XmlDataExample : ExampleScene
         var slowAsteroid = new AsteroidData()
         {
             Name = "Slow Asteroid",
-            Speed = 5,
-            Size = 5f,
+            Speed = 10f,
+            Size = 10f,
             Damage = 1f,
             SpawnWeight = 5,
+            Inaccuracy = 0.1f,
+            R = 220,
+            G = 235,
+            B = 215,
+            A = 255,
             ParticleChances =
             [
                 new() { Type = ParticleType.Common, Chance = 0.5f },
@@ -273,21 +293,27 @@ public class XmlDataExample : ExampleScene
     }
     private List<AsteroidData> LoadXmlData()
     {
-        //load source
-        //TODO: functions for loading all files in directory
-        var small = ContentLoader.LoadText("Resources/XmlDataExampleSource/AsteroidSmall.xml");
-        var medium = ContentLoader.LoadText("Resources/XmlDataExampleSource/AsteroidMedium.xml");
-        var large = ContentLoader.LoadText("Resources/XmlDataExampleSource/AsteroidLarge.xml");
-        var fast = ContentLoader.LoadText("Resources/XmlDataExampleSource/AsteroidFast.xml");
-        
-        //load external
-        
-        //combine source and external strings
+        //load resource data
+        var resourcePath = "Resources/XmlDataExampleSource";
+        var data = ContentLoader.LoadTextsFromDirectory(resourcePath, false);
+        // Console.WriteLine($"----------------- [{data.Count}] Source data files loaded from {resourcePath}.");
 
-        //deserialize all strings to data objects
+        // load external data
+        if (externalDataSavePath != null)
+        {
+         var externalData = externalDataSavePath.LoadDirectory();
+         data.AddRange(externalData);
+         // Console.WriteLine($"----------------- [{externalData.Count}] External data files loaded from {externalDataSavePath.FullName}.");
+        }
         
-        //setup asteroid spawner
-        return new();
+        var result = new List<AsteroidData>();
+        foreach (var file in data)
+        {
+            var asteroidData = serializer.Deserialize(file);
+            if(asteroidData != null) result.Add(asteroidData);
+        }
+        
+        return result;
     }
     
     
@@ -359,13 +385,13 @@ public class XmlDataExample : ExampleScene
 
     private void DrawDescription(Rect rect)
     {
-        var split = rect.SplitV(0.6f);
+        var split = rect.SplitV(0.5f, 0.25f);
         
         textFont.FontSpacing = 1f;
         textFont.ColorRgba = Colors.Medium;
-        textFont.DrawTextWrapNone("There is nothing to do", split.top, new(0.5f));
-        textFont.DrawTextWrapNone("Asteroids are randomly spawned based on data structs.", split.bottom, new(0.5f));
-        
+        textFont.DrawTextWrapNone("Asteroids are randomly spawned based on xml data.", split[0], new(0.5f));
+        textFont.DrawTextWrapNone($"You can supply your own xml data in the examples savegame folder.", split[1], new(0.5f));
+        textFont.DrawTextWrapNone($"Located here: {Game.Instance.SaveDirectoryPath}", split[2], new(0.5f));
     }
     private void CreatePlanet()
     {

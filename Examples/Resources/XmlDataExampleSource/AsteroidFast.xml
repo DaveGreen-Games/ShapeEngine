@@ -1,10 +1,15 @@
-<Asteroid>
+<AsteroidData>
     <Name>Asteroid Fast</Name>
     <Type>Fast</Type>
-    <Speed>45.0</Speed>
-    <Size>4.5</Size>
+    <Speed>90.0</Speed>
+    <Size>9</Size>
     <Damage>12.0</Damage>
+    <Inaccuracy>1.25</Inaccuracy>
     <SpawnWeight>10</SpawnWeight>
+    <R>255</R>
+    <G>60</G>
+    <B>60</B>
+    <A>255</A>
     <ParticleChances>
         <ParticleChance>
             <Type>Common</Type>
@@ -19,4 +24,4 @@
             <Chance>0.05</Chance>
         </ParticleChance>
     </ParticleChances>
-</Asteroid>
+</AsteroidData>
