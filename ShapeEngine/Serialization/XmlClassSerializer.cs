@@ -82,6 +82,20 @@ public class XmlClassSerializer <T> where T : class
         }
         return Encoding.UTF8.GetString(ms.ToArray());
     }
+    /// <summary>
+    /// Serializes a list of <typeparamref name="T"/> instances to a list of XML strings.
+    /// </summary>
+    /// <param name="instances">The list of object instances to serialize. Must not be null.</param>
+    /// <returns>A list of strings containing the XML representations of the objects.</returns>
+    public List<string> Serialize(List<T> instances)
+    {
+        List<string> result = [];
+        foreach (var instance in instances)
+        {
+            result.Add(Serialize(instance));
+        }
+        return result;
+    }
 
     /// <summary>
     /// Deserializes an XML string into an instance of <typeparamref name="T"/>.
@@ -102,6 +116,21 @@ public class XmlClassSerializer <T> where T : class
         }
 
         return null;
+    }
+    /// <summary>
+    /// Deserializes a list of XML strings into a list of <typeparamref name="T"/> instances.
+    /// </summary>
+    /// <param name="xmls">The list of XML strings to deserialize.</param>
+    /// <returns>A list of deserialized objects of type <typeparamref name="T"/>.</returns>
+    public List<T> Deserialize(List<string> xmls)
+    {
+        List<T> result = [];
+        foreach (var xml in xmls)
+        {
+            var r = Deserialize(xml);
+            if(r != null) result.Add(r);
+        }
+        return result;
     }
     
     /// <summary>
@@ -135,6 +164,22 @@ public class XmlClassSerializer <T> where T : class
     }
 
     /// <summary>
+    /// Serializes a list of instances of the specified type <typeparamref name="TC"/> to a list of XML strings.
+    /// </summary>
+    /// <typeparam name="TC">The type of the object instances. Must be a class.</typeparam>
+    /// <param name="instances">The list of object instances to serialize. Must not be null.</param>
+    /// <returns>A list of strings containing the XML representations of the objects.</returns>
+    public static List<string> Serialize<TC>(List<TC> instances) where TC : class
+    {
+        List<string> result = [];
+        foreach (var instance in instances)
+        {
+            result.Add(Serialize(instance));
+        }
+        return result;
+    }
+    
+    /// <summary>
     /// Deserializes an XML string into an instance of the specified type <typeparamref name="TC"/>.
     /// </summary>
     /// <param name="xml">The XML string to deserialize.</param>
@@ -155,5 +200,22 @@ public class XmlClassSerializer <T> where T : class
         }
 
         return null;
+    }
+    
+    /// <summary>
+    /// Deserializes a list of XML strings into a list of instances of the specified type <typeparamref name="TC"/>.
+    /// </summary>
+    /// <typeparam name="TC">The type to deserialize the XML into. Must be a class.</typeparam>
+    /// <param name="xmls">The list of XML strings to deserialize.</param>
+    /// <returns>A list of deserialized objects of type <typeparamref name="TC"/>.</returns>
+    public static List<TC> Deserialize<TC>(List<string> xmls) where TC : class
+    {
+        List<TC> result = [];
+        foreach (var xml in xmls)
+        {
+            var r = Deserialize<TC>(xml);
+            if(r != null) result.Add(r);
+        }
+        return result;
     }
 }
