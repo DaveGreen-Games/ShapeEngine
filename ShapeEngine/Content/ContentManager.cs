@@ -7,7 +7,6 @@ namespace ShapeEngine.Content;
 /// </summary>
 public sealed class ContentManager : IContentManager
 {
-
     private readonly List<Shader> shadersToUnload = [];
     private readonly List<Texture2D> texturesToUnload = [];
     private readonly List<Image> imagesToUnload = [];
@@ -56,7 +55,9 @@ public sealed class ContentManager : IContentManager
             Raylib.UnloadMusicStream(item);
         }
     }
-
+    
+    #region Load
+    
     /// <summary>
     /// Loads a texture from the given file path.
     /// </summary>
@@ -157,4 +158,264 @@ public sealed class ContentManager : IContentManager
         return ContentLoader.LoadText(filePath);
     }
 
+    #endregion
+
+    #region Load Directories
+
+    /// <summary>
+    /// Loads all textures from the specified directory.
+    /// </summary>
+    /// <param name="directoryPath">The path to the directory containing texture files.</param>
+    /// <param name="recursive">Whether to search subdirectories recursively.</param>
+    /// <returns>A list of loaded <see cref="Texture2D"/> objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid texture extensions: .png, .bmp, .tga, .jpg, .jpeg, .gif, .psd, .pkm, .ktx, .pvr, .dds, .hdr
+    /// </remarks>
+    public List<Texture2D> LoadTexturesFromDirectory(string directoryPath, bool recursive = false)
+    {
+        var textures = ContentLoader.LoadTexturesFromDirectory(directoryPath, recursive);
+        texturesToUnload.AddRange(textures);
+        return textures;
+    }
+    /// <summary>
+    /// Loads all images from the specified directory.
+    /// </summary>
+    /// <param name="directoryPath">The path to the directory containing image files.</param>
+    /// <param name="recursive">Whether to search subdirectories recursively.</param>
+    /// <returns>A list of loaded <see cref="Image"/> objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid image extensions: .png, .bmp, .tga, .jpg, .jpeg, .gif, .psd, .pkm, .ktx, .pvr, .dds, .hdr
+    /// </remarks>
+    public List<Image> LoadImagesFromDirectory(string directoryPath, bool recursive = false)
+    {
+        var images = ContentLoader.LoadImagesFromDirectory(directoryPath, recursive);
+        imagesToUnload.AddRange(images);
+        return images;
+    }
+    /// <summary>
+    /// Loads all fonts from the specified directory.
+    /// </summary>
+    /// <param name="directoryPath">The path to the directory containing font files.</param>
+    /// <param name="fontSize">The size of the fonts to load. Default is 100.</param>
+    /// <param name="recursive">Whether to search subdirectories recursively. Default is false.</param>
+    /// <returns>A list of loaded <see cref="Font"/> objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid font extensions: .ttf, .otf
+    /// </remarks>
+    public List<Font> LoadFontsFromDirectory(string directoryPath, int fontSize = 100, bool recursive = false)
+    {
+        var fonts = ContentLoader.LoadFontsFromDirectory(directoryPath, fontSize, TextureFilter.Trilinear, recursive);
+        fontsToUnload.AddRange(fonts);
+        return fonts;
+    }
+    /// <summary>
+    /// Loads all sounds from the specified directory.
+    /// </summary>
+    /// <param name="directoryPath">The path to the directory containing sound files.</param>
+    /// <param name="recursive">Whether to search subdirectories recursively.</param>
+    /// <returns>A list of loaded <see cref="Sound"/> objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid sound extensions: .wav, .mp3, .ogg, .flac
+    /// </remarks>
+    public List<Sound> LoadSoundsFromDirectory(string directoryPath, bool recursive = false)
+    {
+        var sounds = ContentLoader.LoadSoundsFromDirectory(directoryPath, recursive);
+        soundsToUnload.AddRange(sounds);
+        return sounds;
+    }
+    /// <summary>
+    /// Loads all music streams from the specified directory.
+    /// </summary>
+    /// <param name="directoryPath">The path to the directory containing music files.</param>
+    /// <param name="recursive">Whether to search subdirectories recursively.</param>
+    /// <returns>A list of loaded <see cref="Music"/> objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid music extensions: .mp3, .ogg, .flac, .mod, .xm
+    /// </remarks>
+    public List<Music> LoadMusicStreamsFromDirectory(string directoryPath, bool recursive = false)
+    {
+        var music = ContentLoader.LoadMusicStreamsFromDirectory(directoryPath, recursive);
+        musicToUnload.AddRange(music);
+        return music;
+    }
+    /// <summary>
+    /// Loads all wave files from the specified directory.
+    /// </summary>
+    /// <param name="directoryPath">The path to the directory containing wave files.</param>
+    /// <param name="recursive">Whether to search subdirectories recursively. Default is false.</param>
+    /// <returns>A list of loaded <see cref="Wave"/> objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid wave extensions: .wav, .mp3, .ogg, .flac
+    /// </remarks>
+    public List<Wave> LoadWavesFromDirectory(string directoryPath, bool recursive = false)
+    {
+        var waves = ContentLoader.LoadWavesFromDirectory(directoryPath, recursive);
+        wavesToUnload.AddRange(waves);
+        return waves;
+    }
+    /// <summary>
+    /// Loads all fragment shaders from the specified directory.
+    /// </summary>
+    /// <param name="directoryPath">The path to the directory containing fragment shader files.</param>
+    /// <param name="recursive">Whether to search subdirectories recursively. Default is false.</param>
+    /// <returns>A list of loaded <see cref="Shader"/> objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid fragment shader extensions: .fs, .glsl, .frag
+    /// </remarks>
+    public List<Shader> LoadFragmentShadersFromDirectory(string directoryPath, bool recursive = false)
+    {
+        var shaders = ContentLoader.LoadFragmentShadersFromDirectory(directoryPath, recursive);
+        shadersToUnload.AddRange(shaders);
+        return shaders;
+    }
+    /// <summary>
+    /// Loads all vertex shaders from the specified directory.
+    /// </summary>
+    /// <param name="directoryPath">The path to the directory containing vertex shader files.</param>
+    /// <param name="recursive">Whether to search subdirectories recursively. Default is false.</param>
+    /// <returns>A list of loaded <see cref="Shader"/> objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid vertex shader extensions: .vs, .glsl, .vert
+    /// </remarks>
+    public List<Shader> LoadVertexShadersFromDirectory(string directoryPath, bool recursive = false)
+    {
+        var shaders = ContentLoader.LoadVertexShadersFromDirectory(directoryPath, recursive);
+        shadersToUnload.AddRange(shaders);
+        return shaders;
+    }
+
+    #endregion
+
+    #region Load Directory with Filename
+    
+    /// <summary>
+    /// Loads all textures from a directory and returns a dictionary mapping file names (without extension) to Texture2D objects.
+    /// </summary>
+    /// <param name="directoryPath">The directory path containing texture files.</param>
+    /// <param name="recursive">Whether to search recursively in subdirectories. Default is false.</param>
+    /// <returns>A dictionary mapping file names to loaded Texture2D objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid texture extensions: .png, .bmp, .tga, .jpg, .jpeg, .gif, .psd, .pkm, .ktx, .pvr, .dds, .hdr
+    /// </remarks>
+    public Dictionary<string, Texture2D> LoadTexturesWithFilenameFromDirectory(string directoryPath, bool recursive = false)
+    {
+        var dict = ContentLoader.LoadTexturesWithFilenameFromDirectory(directoryPath, recursive);
+        texturesToUnload.AddRange(dict.Values);
+        return dict;
+    }
+
+    /// <summary>
+    /// Loads all images from a directory and returns a dictionary mapping file names (without extension) to Image objects.
+    /// </summary>
+    /// <param name="directoryPath">The directory path containing image files.</param>
+    /// <param name="recursive">Whether to search recursively in subdirectories. Default is false.</param>
+    /// <returns>A dictionary mapping file names to loaded Image objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid image extensions: .png, .bmp, .tga, .jpg, .jpeg, .gif, .psd, .pkm, .ktx, .pvr, .dds, .hdr
+    /// </remarks>
+    public Dictionary<string, Image> LoadImagesWithFilenameFromDirectory(string directoryPath, bool recursive = false)
+    {
+        var dict = ContentLoader.LoadImagesWithFilenameFromDirectory(directoryPath, recursive);
+        imagesToUnload.AddRange(dict.Values);
+        return dict;
+    }
+
+    /// <summary>
+    /// Loads all fonts from a directory and returns a dictionary mapping file names (without extension) to Font objects.
+    /// </summary>
+    /// <param name="directoryPath">The directory path containing font files.</param>
+    /// <param name="fontSize">The size of the fonts to load. Default is 100.</param>
+    /// <param name="recursive">Whether to search recursively in subdirectories. Default is false.</param>
+    /// <returns>A dictionary mapping file names to loaded Font objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid font extensions: .ttf, .otf
+    /// </remarks>
+    public Dictionary<string, Font> LoadFontsWithFilenameFromDirectory(string directoryPath, int fontSize = 100, bool recursive = false)
+    {
+        var dict = ContentLoader.LoadFontsWithFilenameFromDirectory(directoryPath, fontSize, TextureFilter.Trilinear, recursive);
+        fontsToUnload.AddRange(dict.Values);
+        return dict;
+    }
+
+    /// <summary>
+    /// Loads all sound files from a directory and returns a dictionary mapping file names (without extension) to Sound objects.
+    /// </summary>
+    /// <param name="directoryPath">The directory path containing sound files.</param>
+    /// <param name="recursive">Whether to search recursively in subdirectories. Default is false.</param>
+    /// <returns>A dictionary mapping file names to loaded Sound objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid sound extensions: .wav, .mp3, .ogg, .flac
+    /// </remarks>
+    public Dictionary<string, Sound> LoadSoundsWithFilenameFromDirectory(string directoryPath, bool recursive = false)
+    {
+        var dict = ContentLoader.LoadSoundsWithFilenameFromDirectory(directoryPath, recursive);
+        soundsToUnload.AddRange(dict.Values);
+        return dict;
+    }
+
+    /// <summary>
+    /// Loads all music streams from a directory and returns a dictionary mapping file names (without extension) to Music objects.
+    /// </summary>
+    /// <param name="directoryPath">The directory path containing music files.</param>
+    /// <param name="recursive">Whether to search recursively in subdirectories. Default is false.</param>
+    /// <returns>A dictionary mapping file names to loaded Music objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid music extensions: .mp3, .ogg, .flac, .mod, .xm
+    /// </remarks>
+    public Dictionary<string, Music> LoadMusicStreamsWithFilenameFromDirectory(string directoryPath, bool recursive = false)
+    {
+        var dict = ContentLoader.LoadMusicStreamsWithFilenameFromDirectory(directoryPath, recursive);
+        musicToUnload.AddRange(dict.Values);
+        return dict;
+    }
+
+    /// <summary>
+    /// Loads all wave sounds from a directory and returns a dictionary mapping file names (without extension) to Wave objects.
+    /// </summary>
+    /// <param name="directoryPath">The directory path containing wave sound files.</param>
+    /// <param name="recursive">Whether to search recursively in subdirectories. Default is false.</param>
+    /// <returns>A dictionary mapping file names to loaded Wave objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid wave extensions: .wav, .mp3, .ogg, .flac
+    /// </remarks>
+    public Dictionary<string, Wave> LoadWavesWithFilenameFromDirectory(string directoryPath, bool recursive = false)
+    {
+        var dict = ContentLoader.LoadWavesWithFilenameFromDirectory(directoryPath, recursive);
+        wavesToUnload.AddRange(dict.Values);
+        return dict;
+    }
+
+    /// <summary>
+    /// Loads all fragment shaders from a directory and returns a dictionary mapping file names (without extension) to Shader objects.
+    /// </summary>
+    /// <param name="directoryPath">The directory path containing fragment shader files.</param>
+    /// <param name="recursive">Whether to search recursively in subdirectories. Default is false.</param>
+    /// <returns>A dictionary mapping file names to loaded Shader objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid fragment shader extensions: .fs, .glsl, .frag
+    /// </remarks>
+    public Dictionary<string, Shader> LoadFragmentShadersWithFilenameFromDirectory(string directoryPath, bool recursive = false)
+    {
+        var dict = ContentLoader.LoadFragmentShadersWithFilenameFromDirectory(directoryPath, recursive);
+        shadersToUnload.AddRange(dict.Values);
+        return dict;
+    }
+
+    /// <summary>
+    /// Loads all vertex shaders from a directory and returns a dictionary mapping file names (without extension) to Shader objects.
+    /// </summary>
+    /// <param name="directoryPath">The directory path containing vertex shader files.</param>
+    /// <param name="recursive">Whether to search recursively in subdirectories. Default is false.</param>
+    /// <returns>A dictionary mapping file names to loaded Shader objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid vertex shader extensions: .vs, .glsl, .vert
+    /// </remarks>
+    public Dictionary<string, Shader> LoadVertexShadersWithFilenameFromDirectory(string directoryPath, bool recursive = false)
+    {
+        var dict = ContentLoader.LoadVertexShadersWithFilenameFromDirectory(directoryPath, recursive);
+        shadersToUnload.AddRange(dict.Values);
+        return dict;
+    }
+    
+    #endregion
 }
