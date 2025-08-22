@@ -29,6 +29,7 @@ public static class ContentLoader
         { ContentType.ShaderFragment, [".fs", ".glsl", ".frag"] },
         { ContentType.ShaderVertex, [".vs", ".glsl",  ".vert"] },
         { ContentType.Texture, [".png", ".bmp", ".tga", ".jpg", ".jpeg", ".gif", ".psd", ".pkm", ".ktx", ".pvr", ".dds", ".hdr"] },
+        { ContentType.Wave, [".wav", ".mp3", ".ogg", ".flac"] },
         { ContentType.Sound, [".wav", ".mp3", ".ogg", ".flac"] },
         { ContentType.Music, [".mp3", ".ogg", ".flac", ".mod", ".xm"] },
         { ContentType.Text, [".txt", ".json", ".xml", ".csv"] }
@@ -43,6 +44,7 @@ public static class ContentLoader
         ShaderFragment,
         ShaderVertex,
         Texture,
+        Wave,
         Sound,
         Music,
         Text
@@ -140,9 +142,20 @@ public static class ContentLoader
         {
             filePath = GetMacOsAppBundleResourcePath(filePath);
         }
-        var f = Raylib.LoadFontEx(filePath, fontSize, [], GLYPH_COUNT);
-        Raylib.SetTextureFilter(f.Texture, textureFilter);
-        return f;
+        
+        try
+        {
+            var f = Raylib.LoadFontEx(filePath, fontSize, [], GLYPH_COUNT);
+            Raylib.SetTextureFilter(f.Texture, textureFilter);
+            return f;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading font from {filePath}: {ex.Message}");
+        }
+        
+        return default;
+        
     }
     /// <summary>
     /// Loads a fragment shader from a file.
@@ -168,7 +181,15 @@ public static class ContentLoader
         {
             filePath = GetMacOsAppBundleResourcePath(filePath);
         }
-        return Raylib.LoadShader(null, filePath);
+        try
+        {
+            return Raylib.LoadShader(null, filePath);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading fragment shader from {filePath}: {ex.Message}");
+        }
+        return default;
     }
     /// <summary>
     /// Loads a vertex shader from a file.
@@ -194,7 +215,17 @@ public static class ContentLoader
         {
             filePath = GetMacOsAppBundleResourcePath(filePath);
         }
-        return Raylib.LoadShader(filePath, "");
+        
+        try
+        {
+            return Raylib.LoadShader(filePath, "");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading vertex shader from {filePath}: {ex.Message}");
+        }
+        
+        return default;
     }
     /// <summary>
     /// Loads a texture from a file.
@@ -220,7 +251,17 @@ public static class ContentLoader
         {
             filePath = GetMacOsAppBundleResourcePath(filePath);
         }
-        return Raylib.LoadTexture(filePath);
+        
+        try
+        {
+            return Raylib.LoadTexture(filePath);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading texture from {filePath}: {ex.Message}");
+        }
+        
+        return default;
     }
     /// <summary>
     /// Loads an image from a file.
@@ -246,7 +287,17 @@ public static class ContentLoader
         {
             filePath = GetMacOsAppBundleResourcePath(filePath);
         }
-        return Raylib.LoadImage(filePath);
+        
+        try
+        {
+            return Raylib.LoadImage(filePath);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading image from {filePath}: {ex.Message}");
+        }
+        
+        return default;
     }
     /// <summary>
     /// Loads a wave sound from a file.
@@ -272,7 +323,17 @@ public static class ContentLoader
         {
             filePath = GetMacOsAppBundleResourcePath(filePath);
         }
-        return Raylib.LoadWave(filePath);
+        
+        try
+        {
+            return Raylib.LoadWave(filePath);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading wave from {filePath}: {ex.Message}");
+        }
+        
+        return default;
     }
     /// <summary>
     /// Loads a sound from a file.
@@ -298,7 +359,17 @@ public static class ContentLoader
         {
             filePath = GetMacOsAppBundleResourcePath(filePath);
         }
-        return Raylib.LoadSound(filePath);
+        
+        try
+        {
+            return Raylib.LoadSound(filePath);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading sound from {filePath}: {ex.Message}");
+        }
+        
+        return default;
     }
     /// <summary>
     /// Loads a music stream from a file.
@@ -324,7 +395,17 @@ public static class ContentLoader
         {
             filePath = GetMacOsAppBundleResourcePath(filePath);
         }
-        return Raylib.LoadMusicStream(filePath);
+        
+        try
+        {
+            return Raylib.LoadMusicStream(filePath);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading music from {filePath}: {ex.Message}");
+        }
+        
+        return default;
     }
     /// <summary>
     /// Loads a text file as a string.
@@ -353,7 +434,17 @@ public static class ContentLoader
         {
             filePath = GetMacOsAppBundleResourcePath(filePath);
         }
-        return File.ReadAllText(filePath);
+        
+        try
+        {
+            return File.ReadAllText(filePath);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading text from {filePath}: {ex.Message}");
+        }
+        
+        return string.Empty;
     }
 
     #endregion
@@ -471,7 +562,7 @@ public static class ContentLoader
     /// <returns>A list of loaded Font objects.</returns>
     /// <remarks>
     /// Automatically resolves resource paths for macOS application bundles.
-    /// Only loads files with valid font extensions (.ttf, .otf).
+    /// Only loads files with valid font extensions [".ttf", ".otf"]
     /// </remarks>
     public static List<Font> LoadFontsFromDirectory(string directoryPath, int fontSize = 100, TextureFilter textureFilter = TextureFilter.Trilinear, bool recursive = false)
     {
@@ -501,7 +592,7 @@ public static class ContentLoader
     /// <returns>A list of loaded Shader objects.</returns>
     /// <remarks>
     /// Automatically resolves resource paths for macOS application bundles.
-    /// Only loads files with valid shader extensions (.fs, .frag, etc.).
+    /// Only loads files with valid shader extensions [".fs", ".glsl", ".frag"]
     /// </remarks>
     public static List<Shader> LoadFragmentShadersFromDirectory(string directoryPath, bool recursive = false)
     {
@@ -531,7 +622,7 @@ public static class ContentLoader
     /// <returns>A list of loaded Shader objects.</returns>
     /// <remarks>
     /// Automatically resolves resource paths for macOS application bundles.
-    /// Only loads files with valid shader extensions (.vs, .vert, etc.).
+    /// Only loads files with valid shader extensions [".vs", ".glsl", ".vert"]
     /// </remarks>
     public static List<Shader> LoadVertexShadersFromDirectory(string directoryPath, bool recursive = false)
     {
@@ -561,7 +652,7 @@ public static class ContentLoader
     /// <returns>A list of loaded Texture2D objects.</returns>
     /// <remarks>
     /// Automatically resolves resource paths for macOS application bundles.
-    /// Only loads files with valid texture extensions (.png, .jpg, etc.).
+    /// Only loads files with valid texture extensions [".png", ".bmp", ".tga", ".jpg", ".jpeg", ".gif", ".psd", ".pkm", ".ktx", ".pvr", ".dds", ".hdr"]
     /// </remarks>
     public static List<Texture2D> LoadTexturesFromDirectory(string directoryPath, bool recursive = false)
     {
@@ -591,7 +682,7 @@ public static class ContentLoader
     /// <returns>A list of loaded Image objects.</returns>
     /// <remarks>
     /// Automatically resolves resource paths for macOS application bundles.
-    /// Only loads files with valid image extensions (.png, .jpg, etc.).
+    /// Only loads files with valid image extensions [".png", ".bmp", ".tga", ".jpg", ".jpeg", ".gif", ".psd", ".pkm", ".ktx", ".pvr", ".dds", ".hdr"]
     /// </remarks>
     public static List<Image> LoadImagesFromDirectory(string directoryPath, bool recursive = false)
     {
@@ -625,7 +716,7 @@ public static class ContentLoader
     /// </remarks>
     public static List<Wave> LoadWavesFromDirectory(string directoryPath, bool recursive = false)
     {
-        var wavePaths = GetResourceFilePaths(directoryPath, ContentType.Sound, recursive);
+        var wavePaths = GetResourceFilePaths(directoryPath, ContentType.Wave, recursive);
         var waves = new List<Wave>(wavePaths.Length);
         
         foreach (var path in wavePaths)
@@ -651,7 +742,7 @@ public static class ContentLoader
     /// <returns>A list of loaded Sound objects.</returns>
     /// <remarks>
     /// Automatically resolves resource paths for macOS application bundles.
-    /// Only loads files with valid sound extensions (.wav, .mp3, etc.).
+    /// Only loads files with valid sound extensions [".wav", ".mp3", ".ogg", ".flac"].
     /// </remarks>
     public static List<Sound> LoadSoundsFromDirectory(string directoryPath, bool recursive = false)
     {
@@ -681,7 +772,7 @@ public static class ContentLoader
     /// <returns>A list of loaded Music objects.</returns>
     /// <remarks>
     /// Automatically resolves resource paths for macOS application bundles.
-    /// Only loads files with valid music extensions (.mp3, .ogg, etc.).
+    /// Only loads files with valid music extensions [".mp3", ".ogg", ".flac", ".mod", ".xm"].
     /// </remarks>
     public static List<Music> LoadMusicStreamsFromDirectory(string directoryPath, bool recursive = false)
     {
@@ -711,7 +802,7 @@ public static class ContentLoader
     /// <returns>A list of loaded text strings.</returns>
     /// <remarks>
     /// Automatically resolves resource paths for macOS application bundles.
-    /// Only loads files with valid text extensions (.txt, .json, etc.).
+    /// Only loads files with valid text extensions [".txt", ".json", ".xml", ".csv"].
     /// This should not be used for game save data, but rather for static text files that were shipped with the game!
     /// </remarks>
     public static List<string> LoadTextsFromDirectory(string directoryPath, bool recursive = false)
@@ -734,6 +825,246 @@ public static class ContentLoader
         return texts;
     }
     
+
+
+    #endregion
+
+    #region Load Directories with Filename
+    /// <summary>
+    /// Loads all fonts from a directory and returns a dictionary mapping file names (without extension) to Font objects.
+    /// </summary>
+    /// <param name="directoryPath">The directory path containing font files.</param>
+    /// <param name="fontSize">The size of the fonts to load. Default is 100.</param>
+    /// <param name="textureFilter">The texture filter to apply to the font textures. Default is Trilinear.</param>
+    /// <param name="recursive">Whether to search recursively in subdirectories. Default is false.</param>
+    /// <returns>A dictionary mapping file names to loaded Font objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid font extensions [".ttf", ".otf"]
+    /// </remarks>
+    public static Dictionary<string, Font> LoadFontsWithFilenameFromDirectory(string directoryPath, int fontSize = 100, TextureFilter textureFilter = TextureFilter.Trilinear, bool recursive = false)
+    {
+        var fontPaths = GetResourceFilePaths(directoryPath, ContentType.Font, recursive);
+        var fontDict = new Dictionary<string, Font>(fontPaths.Length);
+
+        foreach (var path in fontPaths)
+        {
+            try
+            {
+                string fileName = Path.GetFileNameWithoutExtension(path);
+                fontDict[fileName] = LoadFont(path, fontSize, textureFilter);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading font from {path}: {ex.Message}");
+            }
+        }
+
+        return fontDict;
+    }
+    /// <summary>
+    /// Loads all fragment shaders from a directory and returns a dictionary mapping file names (without extension) to Shader objects.
+    /// </summary>
+    /// <param name="directoryPath">The directory path containing fragment shader files.</param>
+    /// <param name="recursive">Whether to search recursively in subdirectories. Default is false.</param>
+    /// <returns>A dictionary mapping file names to loaded Shader objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid fragment shader extensions [".fs", ".glsl", ".frag"]
+    /// </remarks>
+    public static Dictionary<string, Shader> LoadFragmentShadersWithFilenameFromDirectory(string directoryPath, bool recursive = false)
+    {
+        var shaderPaths = GetResourceFilePaths(directoryPath, ContentType.ShaderFragment, recursive);
+        var shaderDict = new Dictionary<string, Shader>(shaderPaths.Length);
+
+        foreach (var path in shaderPaths)
+        {
+            try
+            {
+                string fileName = Path.GetFileNameWithoutExtension(path);
+                shaderDict[fileName] = LoadFragmentShader(path);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading fragment shader from {path}: {ex.Message}");
+            }
+        }
+
+        return shaderDict;
+    }
+    /// <summary>
+    /// Loads all vertex shaders from a directory and returns a dictionary mapping file names (without extension) to Shader objects.
+    /// </summary>
+    /// <param name="directoryPath">The directory path containing vertex shader files.</param>
+    /// <param name="recursive">Whether to search recursively in subdirectories. Default is false.</param>
+    /// <returns>A dictionary mapping file names to loaded Shader objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid vertex shader extensions [".vs", ".glsl",  ".vert"]
+    /// </remarks>
+    public static Dictionary<string, Shader> LoadVertexShadersWithFilenameFromDirectory(string directoryPath, bool recursive = false)
+    {
+        var shaderPaths = GetResourceFilePaths(directoryPath, ContentType.ShaderVertex, recursive);
+        var shaderDict = new Dictionary<string, Shader>(shaderPaths.Length);
+
+        foreach (var path in shaderPaths)
+        {
+            try
+            {
+                string fileName = Path.GetFileNameWithoutExtension(path);
+                shaderDict[fileName] = LoadVertexShader(path);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading vertex shader from {path}: {ex.Message}");
+            }
+        }
+
+        return shaderDict;
+    }
+    /// <summary>
+    /// Loads all textures from a directory and returns a dictionary mapping file names (without extension) to Texture2D objects.
+    /// </summary>
+    /// <param name="directoryPath">The directory path containing texture files.</param>
+    /// <param name="recursive">Whether to search recursively in subdirectories. Default is false.</param>
+    /// <returns>A dictionary mapping file names to loaded Texture2D objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid texture extensions [".png", ".bmp", ".tga", ".jpg", ".jpeg", ".gif", ".psd", ".pkm", ".ktx", ".pvr", ".dds", ".hdr"]
+    /// </remarks>
+    public static Dictionary<string, Texture2D> LoadTexturesWithFilenameFromDirectory(string directoryPath, bool recursive = false)
+    {
+        var texturePaths = GetResourceFilePaths(directoryPath, ContentType.Texture, recursive);
+        var textureDict = new Dictionary<string, Texture2D>(texturePaths.Length);
+
+        foreach (var path in texturePaths)
+        {
+            try
+            {
+                string fileName = Path.GetFileNameWithoutExtension(path);
+                textureDict[fileName] = LoadTexture(path);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading texture from {path}: {ex.Message}");
+            }
+        }
+
+        return textureDict;
+    }
+    /// <summary>
+    /// Loads all images from a directory and returns a dictionary mapping file names (without extension) to Image objects.
+    /// </summary>
+    /// <param name="directoryPath">The directory path containing image files.</param>
+    /// <param name="recursive">Whether to search recursively in subdirectories. Default is false.</param>
+    /// <returns>A dictionary mapping file names to loaded Image objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid image extensions [".png", ".bmp", ".tga", ".jpg", ".jpeg", ".gif", ".psd", ".pkm", ".ktx", ".pvr", ".dds", ".hdr"]
+    /// </remarks>
+    public static Dictionary<string, Image> LoadImagesWithFilenameFromDirectory(string directoryPath, bool recursive = false)
+    {
+        var imagePaths = GetResourceFilePaths(directoryPath, ContentType.Texture, recursive);
+        var imageDict = new Dictionary<string, Image>(imagePaths.Length);
+
+        foreach (var path in imagePaths)
+        {
+            try
+            {
+                string fileName = Path.GetFileNameWithoutExtension(path);
+                imageDict[fileName] = LoadImage(path);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading image from {path}: {ex.Message}");
+            }
+        }
+
+        return imageDict;
+    }
+    /// <summary>
+    /// Loads all wave sounds from a directory and returns a dictionary mapping file names (without extension) to Wave objects.
+    /// </summary>
+    /// <param name="directoryPath">The directory path containing wave sound files.</param>
+    /// <param name="recursive">Whether to search recursively in subdirectories. Default is false.</param>
+    /// <returns>A dictionary mapping file names to loaded Wave objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid sound extensions [".wav", ".mp3", ".ogg", ".flac"]
+    /// </remarks>
+    public static Dictionary<string, Wave> LoadWavesWithFilenameFromDirectory(string directoryPath, bool recursive = false)
+    {
+        var wavePaths = GetResourceFilePaths(directoryPath, ContentType.Wave, recursive);
+        var waveDict = new Dictionary<string, Wave>(wavePaths.Length);
+
+        foreach (var path in wavePaths)
+        {
+            try
+            {
+                string fileName = Path.GetFileNameWithoutExtension(path);
+                waveDict[fileName] = LoadWave(path);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading wave sound from {path}: {ex.Message}");
+            }
+        }
+
+        return waveDict;
+    }
+    /// <summary>
+    /// Loads all sound files from a directory and returns a dictionary mapping file names (without extension) to Sound objects.
+    /// </summary>
+    /// <param name="directoryPath">The directory path containing sound files.</param>
+    /// <param name="recursive">Whether to search recursively in subdirectories. Default is false.</param>
+    /// <returns>A dictionary mapping file names to loaded Sound objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid sound extensions [".wav", ".mp3", ".ogg", ".flac"]
+    /// </remarks>
+    public static Dictionary<string, Sound> LoadSoundsWithFilenameFromDirectory(string directoryPath, bool recursive = false)
+    {
+        var soundPaths = GetResourceFilePaths(directoryPath, ContentType.Sound, recursive);
+        var soundDict = new Dictionary<string, Sound>(soundPaths.Length);
+
+        foreach (var path in soundPaths)
+        {
+            try
+            {
+                string fileName = Path.GetFileNameWithoutExtension(path);
+                soundDict[fileName] = LoadSound(path);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading sound from {path}: {ex.Message}");
+            }
+        }
+
+        return soundDict;
+    }
+    /// <summary>
+    /// Loads all music streams from a directory and returns a dictionary mapping file names (without extension) to Music objects.
+    /// </summary>
+    /// <param name="directoryPath">The directory path containing music files.</param>
+    /// <param name="recursive">Whether to search recursively in subdirectories. Default is false.</param>
+    /// <returns>A dictionary mapping file names to loaded Music objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid music extensions [".mp3", ".ogg", ".flac", ".mod", ".xm"].
+    /// </remarks>
+    public static Dictionary<string, Music> LoadMusicStreamsWithFilenameFromDirectory(string directoryPath, bool recursive = false)
+    {
+        var musicPaths = GetResourceFilePaths(directoryPath, ContentType.Music, recursive);
+        var musicDict = new Dictionary<string, Music>(musicPaths.Length);
+
+        foreach (var path in musicPaths)
+        {
+            try
+            {
+                string fileName = Path.GetFileNameWithoutExtension(path);
+                musicDict[fileName] = LoadMusicStream(path);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading music stream from {path}: {ex.Message}");
+            }
+        }
+
+        return musicDict;
+    }
+ 
     /// <summary>
     /// Loads all text files from a directory as key-value pairs, where the key is the file name (without extension) and the value is the file content.
     /// </summary>
@@ -742,7 +1073,7 @@ public static class ContentLoader
     /// <returns>A dictionary mapping file names to their contents.</returns>
     /// <remarks>
     /// Automatically resolves resource paths for macOS application bundles.
-    /// Only loads files with valid text extensions (.txt, .json, etc.).
+    /// Only loads files with valid text extensions [".txt", ".json", ".xml", ".csv"].
     /// This should not be used for game save data, but rather for static text files that were shipped with the game!
     /// </remarks>
     public static Dictionary<string, string> LoadTextsWithFilenameFromDirectory(string directoryPath, bool recursive = false)
@@ -765,7 +1096,6 @@ public static class ContentLoader
         
         return textDict;
     }
-
     #endregion
     
     #region Unload Content
