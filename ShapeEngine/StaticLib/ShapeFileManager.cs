@@ -167,7 +167,17 @@ public static class ShapeFileManager
         string path = Path.Combine(absolutePath, fileName);
         return File.Exists(path);
     }
-    
+    /// <summary>
+    /// Checks if a file with the specified name exists in the given directory.
+    /// </summary>
+    /// <param name="directory">The DirectoryInfo representing the directory to check.</param>
+    /// <param name="fileName">The name of the file to check for existence.</param>
+    /// <returns>True if the file exists; otherwise, false.</returns>
+    public static bool FileExists(DirectoryInfo directory, string fileName)
+    {
+        if (string.IsNullOrWhiteSpace(fileName)) return false;
+        return directory.Exists && File.Exists(Path.Combine(directory.FullName, fileName));
+    }
     #endregion
     
     #region Directories
