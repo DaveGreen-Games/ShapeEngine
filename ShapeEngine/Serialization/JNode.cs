@@ -3,6 +3,91 @@ using System.Text.Json.Nodes;
 
 namespace ShapeEngine.Serialization;
 
+//NOTE:
+// - Interface for data object (each object has a name)
+// - Dictionary for holding DataObjects (name is the key)
+// - DataBase is dictionary holding multiple dictionaries Dictionary<type of T, Dictionary<string, T>> -> possible?!
+// - this system should not be to complicated
+// - having a generic list and dictionary for data objects should be good (implemented in a way that it can be used elsewhere (serializers, file manager))
+//IDEA
+// public class DataBase
+// {
+//     private readonly Dictionary<Type, Dictionary<string, object>> data = new();
+//
+//     public void Add<T>(string key, T value) where T : BaseDataObject
+//     {
+//         var type = typeof(T);
+//         if (!data.TryGetValue(type, out var dict))
+//         {
+//             dict = new Dictionary<string, object>();
+//             data[type] = dict;
+//         }
+//         dict[key] = value;
+//     }
+//
+//     public T? Get<T>(string key) where T : BaseDataObject
+//     {
+//         var type = typeof(T);
+//         if (data.TryGetValue(type, out var dict) && dict.TryGetValue(key, out var obj))
+//         {
+//             return obj as T;
+//         }
+//         return null;
+//     }
+//
+//     public Dictionary<string, T> GetAll<T>() where T : BaseDataObject
+//     {
+//         var type = typeof(T);
+//         if (data.TryGetValue(type, out var dict))
+//         {
+//             return dict.ToDictionary(pair => pair.Key, pair => (T)pair.Value);
+//         }
+//         return new Dictionary<string, T>();
+//     }
+// }
+
+
+
+//NOTE: I could leave this class and just remove IDataContainer usages
+// - Should also be removed and cleaned up if possible
+
+//NOTE:
+// - IDataObject, IDataContainer, and JDataContainer:
+//  - they are good at storing data from different sources.
+//  - Maybe the system can be changed into 1 Interface and 1 generic dictionary and one generic list class?
+//  - This would probably the best way for having a simple and easy to use system.
+//  - JNode would be removed anyway
+
+
+//!!! Deserialzing/Serializing classes could use a generic list implementation that has some convinience methods, like retrieving random items.
+//
+// public record BaseDataObject(string Name) // => could be an interface as well?
+// {
+//     public string GetName() => Name;
+// }
+//
+// public class DataList<T> : List<T> where T : BaseDataObject //cant handle strings if done like this!
+// {
+//     
+// }
+
+//Note: Should be able to handle different data objects in one dictionary
+// - functions for retrieving item of specific type?
+// - functions for retrieving random item of specific type?
+// - functions for retrieving list of items of specific type?
+
+// public class DataDict<T> : Dictionary<string, T> where T : BaseDataObject
+// {
+//     
+// }
+
+
+//Q: Does a generic list for data objects make sense
+// -> serializing json strings into AsteroidData objects that would be stored in the data list and then a random
+// item could easily be retrieved?
+
+//Q: DataBase that holds multiple dictionaries -> each dictionary holds data object of the same type?
+
 /// <summary>
 /// Provides a wrapper for working with JSON data, allowing easy access to JSON properties and arrays.
 /// </summary>
@@ -86,7 +171,7 @@ public sealed class JNode
     /// or an empty array if the property doesn't exist or isn't a valid array.</returns>
     public JNode[] GetArray(string arrayKey)
     {
-        if (!Valid) return Array.Empty<JNode>();   
+        if (!Valid) return [];   
         if(node.ContainsKey(arrayKey))
         {
             var arr = node[arrayKey]?.AsArray();
@@ -101,7 +186,7 @@ public sealed class JNode
                 return result.ToArray();
             }
         }
-        return Array.Empty<JNode>();
+        return [];
     }
     
     /// <summary>
@@ -113,7 +198,7 @@ public sealed class JNode
     /// <returns>A list of objects of type T created from the JSON array.</returns>
     public List<T> ParseToList<T>(string arrayKey, Func<JNode, T> parser) where T : IDataContainer
     {
-        List<T> result = new();
+        List<T> result = [];
         var arr = GetArray(arrayKey);
         foreach (var item in arr)
         {
