@@ -83,6 +83,21 @@ public class XmlStructSerializer <T> where T : struct
     }
 
     /// <summary>
+    /// Serializes a list of <typeparamref name="T"/> instances to a list of XML strings.
+    /// </summary>
+    /// <param name="instances">The list of struct instances to serialize.</param>
+    /// <returns>A list of XML strings representing each struct instance.</returns>
+    public List<string> Serialize(List<T> instances)
+    {
+        List<string> result = [];
+        foreach(var instance in instances)
+        {
+            result.Add(Serialize(instance));
+        }
+        return result;
+    }
+    
+    /// <summary>
     /// Deserializes an XML string into an instance of <typeparamref name="T"/>.
     /// </summary>
     /// <param name="xml">The XML string to deserialize.</param>
@@ -101,6 +116,21 @@ public class XmlStructSerializer <T> where T : struct
         }
 
         return default;
+    }
+    
+    /// <summary>
+    /// Deserializes a list of XML strings into a list of <typeparamref name="T"/> instances.
+    /// </summary>
+    /// <param name="xmls">The list of XML strings to deserialize.</param>
+    /// <returns>A list of deserialized structs of type <typeparamref name="T"/>.</returns>
+    public List<T> Deserialize(List<string> xmls)
+    {
+        List<T> result = [];
+        foreach(var xml in xmls)
+        {
+            result.Add(Deserialize(xml));
+        }
+        return result;
     }
     
     /// <summary>
@@ -134,6 +164,22 @@ public class XmlStructSerializer <T> where T : struct
     }
 
     /// <summary>
+    /// Serializes a list of struct instances of type <typeparamref name="TS"/> to a list of XML strings.
+    /// </summary>
+    /// <param name="instances">The list of struct instances to serialize.</param>
+    /// <typeparam name="TS">The value type of the object instances. Must be a struct.</typeparam>
+    /// <returns>A list of XML strings representing each struct instance.</returns>
+    public static List<string> Serialize<TS>(List<TS> instances) where TS : struct
+    {
+        List<string> result = [];
+        foreach(var instance in instances)
+        {
+            result.Add(Serialize(instance));
+        }
+        return result;
+    }
+    
+    /// <summary>
     /// Deserializes an XML string into an instance of the specified type <typeparamref name="TS"/>.
     /// </summary>
     /// <param name="xml">The XML string to deserialize.</param>
@@ -154,5 +200,21 @@ public class XmlStructSerializer <T> where T : struct
         }
 
         return default;
+    }
+    
+    /// <summary>
+    /// Deserializes a list of XML strings into a list of structs of type <typeparamref name="TS"/>.
+    /// </summary>
+    /// <param name="xmls">The list of XML strings to deserialize.</param>
+    /// <typeparam name="TS">The value type to deserialize the XML into. Must be a struct.</typeparam>
+    /// <returns>A list of deserialized structs of type <typeparamref name="TS"/>.</returns>
+    public static List<TS> Deserialize<TS>(List<string> xmls) where TS : struct
+    {
+        List<TS> result = [];
+        foreach(var xml in xmls)
+        {
+            result.Add(Deserialize<TS>(xml));
+        }
+        return result;
     }
 }
