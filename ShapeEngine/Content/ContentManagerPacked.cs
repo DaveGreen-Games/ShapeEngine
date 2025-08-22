@@ -67,7 +67,6 @@ public sealed class ContentManagerPacked : IContentManager
             Raylib.UnloadMusicStream(item);
         }
     }
-
     /// <summary>
     /// Loads a texture from the given file path.
     /// </summary>
