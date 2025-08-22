@@ -11,13 +11,14 @@ public class JsonClassSerializer<T> where T : class
     private readonly JsonSerializerOptions options;
     
     /// <summary>
-    /// Initializes a new instance of <see cref="JsonClassSerializer{T}"/> with default options (camel case, indented, enum as string).
+    /// Initializes a new instance of <see cref="JsonClassSerializer{T}"/> with default options (no case transformation, indented, enum as string).
     /// </summary>
+    /// <remarks>Setting <see cref="JsonSerializerOptions.PropertyNamingPolicy"/> to null uses the default property naming behavior (no transformation).</remarks>
     public JsonClassSerializer()
     {
         options = new()
         {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNamingPolicy = null,
             WriteIndented = true,
             Converters = { new JsonStringEnumConverter() }
         };
