@@ -4,9 +4,11 @@
   "Size": 3.0,
   "Damage": 2.5,
   "SpawnWeight" : 50,
-  "SpawnChances": [
+  "Inaccuracy":0.25,
+  "Color": [80, 180, 80, 255],
+  "ParticleChances": [
     { "Type": "Common", "Chance": 0.7 },
-    { "Type": "Uncommon", "Chance": 0.2 },
-    { "Type": "Rare", "Chance": 0.1 }
+    { "Type": "Rare", "Chance": 0.2 },
+    { "Type": "Legendary", "Chance": 0.1 }
   ]
 }
