@@ -1,7 +1,215 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Nodes;
+using ShapeEngine.Random;
 
 namespace ShapeEngine.Serialization;
+
+public abstract record DataObject
+{
+    public required string Name { get; set; }//set needs to be for serialization
+}
+public class DataObjectList<T> : List<T> where T : DataObject
+{
+    public T? GetRandomEntry()
+    {
+        if (Count == 0) return null;
+        int index = Rng.Instance.RandI(0, Count);
+        return this[index];
+    }
+
+    public T? GetEntry(string name) => Find(item => item.Name == name);
+}
+public class DataObjectDict<T> : Dictionary<string, T> where T : DataObject
+{
+    public T? GetRandomEntry()
+    {
+        if (Count == 0) return null;
+        int index = Rng.Instance.RandI(0, Count);
+        return this.ElementAt(index).Value;
+    }
+
+    public T? GetEntry(string name) => TryGetValue(name, out var value) ? value : null;
+}
+
+public class DataBase<T> where T : DataObject
+{
+    private readonly Dictionary<Type, DataObjectDict<T>> data = new();
+    public void Add<TU>(TU obj) where TU : T
+    {
+        var type = typeof(TU);
+        if (!data.TryGetValue(type, out var dict))
+        {
+            dict = new DataObjectDict<T>();
+            data[type] = dict;
+        }
+        dict[obj.Name] = obj;
+    }
+    public bool Remove<TU>(string name) where TU : T
+    {
+        var type = typeof(TU);
+        if (data.TryGetValue(type, out var dict))
+        {
+            return dict.Remove(name);
+        }
+        return false;
+    }
+    public void AddRange<TU>(IEnumerable<TU> objs) where TU : T
+    {
+        var type = typeof(TU);
+        if (!data.TryGetValue(type, out var dict))
+        {
+            dict = new DataObjectDict<T>();
+            data[type] = dict;
+        }
+        foreach (var obj in objs)
+        {
+            dict[obj.Name] = obj;
+        }
+    }
+    public int RemoveRange<TU>(IEnumerable<string> names) where TU : T
+    {
+        var type = typeof(TU);
+        if (data.TryGetValue(type, out var dict))
+        {
+            int removed = 0;
+            foreach (var name in names)
+            {
+                if (dict.Remove(name)) removed++;
+            }
+            return removed;
+        }
+        return 0;
+    }
+    
+    public void Add<TU>(DataObjectDict<TU> dict) where TU : T
+    {
+        var type = typeof(TU);
+        if (!data.TryGetValue(type, out var existingDict))
+        {
+            existingDict = new DataObjectDict<T>();
+            data[type] = existingDict;
+        }
+        foreach (var pair in dict)
+        {
+            existingDict[pair.Key] = pair.Value;
+        }
+    }
+
+    public void Add<TU>(DataObjectList<TU> list) where TU : T
+    {
+        var type = typeof(TU);
+        if (!data.TryGetValue(type, out var dict))
+        {
+            dict = new DataObjectDict<T>();
+            data[type] = dict;
+        }
+        foreach (var obj in list)
+        {
+            dict[obj.Name] = obj;
+        }
+    }
+    
+    public TU? Get<TU>(string name) where TU : T
+    {
+        var type = typeof(TU);
+        if (data.TryGetValue(type, out var dict) && dict.TryGetValue(name, out var obj))
+        {
+            return obj as TU;
+        }
+        return null;
+    }
+    public DataObjectDict<TU> GetAll<TU>() where TU : T
+    {
+        var type = typeof(TU);
+        if (data.TryGetValue(type, out var dict))
+        {
+            var result = new DataObjectDict<TU>();
+            foreach (var pair in dict)
+            {
+                if (pair.Value is TU t) result[pair.Key] = t;
+            }
+            return result;
+        }
+        return new DataObjectDict<TU>();
+    }
+    public DataObjectList<TU> GetAllList<TU>() where TU : T
+    {
+        var type = typeof(TU);
+        var result = new DataObjectList<TU>();
+        if (data.TryGetValue(type, out var dict))
+        {
+            foreach (var pair in dict)
+            {
+                if (pair.Value is TU t) result.Add(t);
+            }
+        }
+        return result;
+    }
+    
+    public DataObjectDict<T> GetAll() 
+    {
+        var result = new DataObjectDict<T>();
+        foreach (var dict in data.Values)
+        {
+            foreach (var pair in dict)
+            {
+                result[pair.Key] = pair.Value;
+            }
+        }
+        return result;
+    }
+    
+    //TODO: improve
+    public void Print()
+    {
+        foreach (var kvp in data)
+        {
+            Console.WriteLine($"Type: {kvp.Key.Name}");
+            foreach (var objKvp in kvp.Value)
+            {
+                Console.WriteLine($"  Name: {objKvp.Key}, Value: {objKvp.Value}");
+            }
+        }
+    }
+}
+
+public class DataBaseTest
+{
+    public record DataObject1 : DataObject
+    {
+        public int Value { get; set; }
+    }
+    public record DataObject2 : DataObject
+    {
+        public int Value { get; set; }
+    }
+    public record DataObject3 : DataObject
+    {
+        public int Value { get; set; }
+    }
+    public record DataObject4 : DataObject
+    {
+        public int Value { get; set; }
+    }
+    
+    public void Test1()
+    {
+        var myDataBase = new DataBase<DataObject>();
+        var obj1 = new DataObject1 { Name = "Object1", Value = 10 };
+        var obj2 = new DataObject2 { Name = "Object2", Value = 20 };
+        var obj3 = new DataObject3 { Name = "Object3", Value = 30 };
+        var obj4 = new DataObject4 { Name = "Object4", Value = 40 };
+        myDataBase.Add(obj1);
+        myDataBase.Add(obj2);
+        myDataBase.Add(obj3);
+        myDataBase.Add(obj4);
+        
+        var obj = myDataBase.Get<DataObject1>("Object1");
+        Console.WriteLine(obj?.Value); // Output: 10
+    }
+}
+
+
 
 //NOTE:
 // - Interface for data object (each object has a name)
