@@ -335,12 +335,13 @@ public class Rng
     /// <summary>
     /// Returns a random integer between min and max.
     /// </summary>
-    /// <param name="min">The minimum value.</param>
-    /// <param name="max">The maximum value.</param>
+    /// <param name="min">The (inclusive) minimum value.</param>
+    /// <param name="max">The (exclusive) maximum value.</param>
+    /// <remarks> See <see cref="Random.Next(int, int)"/>.</remarks>
     public int RandI(int min, int max)
     {
         if (max == min) return max;
-        else if (max < min)
+        if (max < min)
         {
             (max, min) = (min, max);
         }
