@@ -193,6 +193,38 @@ public class DataBase<T> where T : DataObject
         return data.TryGetValue(type, out var dict) ? dict.GetRandomEntries(amount) : null;
     }
     
+    public TU? PickRandomEntry<TU>() where TU : T
+    {
+        var type = typeof(TU);
+        if (data.TryGetValue(type, out var dict))
+        {
+            return dict.PickRandomEntry() as TU;
+        }
+        return null;
+    }
+    public DataObjectList<T>? PickRandomEntries<TU>(int amount) where TU : T
+    {
+        var type = typeof(TU);
+        return data.TryGetValue(type, out var dict) ? dict.PickRandomEntries(amount) : null;
+    }
+    public DataObjectList<TU>? PickRandomEntriesCast<TU>(int amount) where TU : T
+    {
+        var type = typeof(TU);
+        if (data.TryGetValue(type, out var dict))
+        {
+            var entries = dict.PickRandomEntries(amount);
+            if (entries == null) return null;
+            var result = new DataObjectList<TU>();
+            foreach (var e in entries)
+            {
+                if (e is TU t) result.Add(t);
+            }
+            return result;
+        }
+        return null;
+    }
+   
+    
     #endregion
     
     #region Clone
