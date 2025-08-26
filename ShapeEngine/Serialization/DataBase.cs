@@ -93,9 +93,20 @@ public class DataBase<T> where T : DataObject
     
     #endregion
 
+    #region Contains
+
+    public bool ContainsType(Type type) => data.ContainsKey(type);
+    public bool ContainsType<TU>() where TU : T
+    {
+        var type = typeof(TU);
+        return data.ContainsKey(type);
+    }
+
+    #endregion
+    
     #region Get
     
-    public TU? Get<TU>(string name) where TU : T
+    public TU? GetDataObject<TU>(string name) where TU : T
     {
         var type = typeof(TU);
         if (data.TryGetValue(type, out var dict) && dict.TryGetValue(name, out var obj))
@@ -104,7 +115,9 @@ public class DataBase<T> where T : DataObject
         }
         return null;
     }
-    public DataObjectDict<TU>? GetAll<TU>() where TU : T
+    public DataObjectDict<T>? GetDataObjectDict(Type type) => data.GetValueOrDefault(type);
+    
+    public DataObjectDict<TU>? GetDataObjectDictCopy<TU>() where TU : T
     {
         var type = typeof(TU);
         if (data.TryGetValue(type, out var dict))
@@ -121,7 +134,22 @@ public class DataBase<T> where T : DataObject
 
         return null;
     }
-    public DataObjectDict<T> GetAll() 
+    public DataObjectList<TU>? GetDataObjectListCopy<TU>() where TU : T
+    {
+        var type = typeof(TU);
+        
+        if (data.TryGetValue(type, out var dict))
+        {
+            var result = new DataObjectList<TU>();
+            foreach (var pair in dict)
+            {
+                if (pair.Value is TU t) result.Add(t);
+            }
+            return result;
+        }
+        return null;
+    }
+    public DataObjectDict<T> GetAllDataObjectsDictCopy() 
     {
         var result = new DataObjectDict<T>();
         foreach (var dict in data.Values)
@@ -133,20 +161,7 @@ public class DataBase<T> where T : DataObject
         }
         return result;
     }
-    public DataObjectList<TU> GetAllList<TU>() where TU : T
-    {
-        var type = typeof(TU);
-        var result = new DataObjectList<TU>();
-        if (data.TryGetValue(type, out var dict))
-        {
-            foreach (var pair in dict)
-            {
-                if (pair.Value is TU t) result.Add(t);
-            }
-        }
-        return result;
-    }
-    public DataObjectList<T> GetAllList() 
+    public DataObjectList<T> GetAllDataObjectsListCopy() 
     {
         var result = new DataObjectList<T>();
         foreach (var dict in data.Values)
@@ -158,6 +173,7 @@ public class DataBase<T> where T : DataObject
         }
         return result;
     }
+    
     #endregion
 
     #region Random
@@ -170,6 +186,15 @@ public class DataBase<T> where T : DataObject
             return dict.GetRandomEntry() as TU;
         }
         return null;
+    }
+    public DataObjectList<T>? GetRandomEntries<TU>(int amount) where TU : T
+    {
+        var type = typeof(TU);
+        return data.TryGetValue(type, out var dict) ? dict.GetRandomEntries(amount) : null;
+    }
+    public DataObjectList<T>? GetRandomEntries(Type type, int amount)
+    {
+        return data.TryGetValue(type, out var dict) ? dict.GetRandomEntries(amount) : null;
     }
     public DataObjectList<TU>? GetRandomEntriesCast<TU>(int amount) where TU : T
     {
@@ -187,11 +212,6 @@ public class DataBase<T> where T : DataObject
         }
         return null;
     }
-    public DataObjectList<T>? GetRandomEntries<TU>(int amount) where TU : T
-    {
-        var type = typeof(TU);
-        return data.TryGetValue(type, out var dict) ? dict.GetRandomEntries(amount) : null;
-    }
     
     public TU? PickRandomEntry<TU>() where TU : T
     {
@@ -205,6 +225,10 @@ public class DataBase<T> where T : DataObject
     public DataObjectList<T>? PickRandomEntries<TU>(int amount) where TU : T
     {
         var type = typeof(TU);
+        return data.TryGetValue(type, out var dict) ? dict.PickRandomEntries(amount) : null;
+    }
+    public DataObjectList<T>? PickRandomEntries(Type type, int amount)
+    {
         return data.TryGetValue(type, out var dict) ? dict.PickRandomEntries(amount) : null;
     }
     public DataObjectList<TU>? PickRandomEntriesCast<TU>(int amount) where TU : T
@@ -223,7 +247,6 @@ public class DataBase<T> where T : DataObject
         }
         return null;
     }
-   
     
     #endregion
     
@@ -235,6 +258,33 @@ public class DataBase<T> where T : DataObject
         foreach (var (type, dict) in data)
         {
             newDb.data[type] = dict.Clone();
+        }
+        return newDb;
+    }
+    
+    #endregion
+    
+    #region Casting
+    
+    public DataBase<TU> CastTo<TU>() where TU : T
+    {
+        var newDb = new DataBase<TU>();
+        var newType = typeof(TU);
+        foreach (var (type, dict) in data)
+        {
+            if (!newType.IsAssignableFrom(type)) continue;
+            var castedDict = new DataObjectDict<TU>();
+            foreach (var pair in dict)
+            {
+                if (pair.Value is TU tObj)
+                {
+                    castedDict[pair.Key] = tObj;
+                }
+            }
+            if (castedDict.Count > 0)
+            {
+                newDb.Add<TU>(castedDict);
+            }
         }
         return newDb;
     }
@@ -258,8 +308,4 @@ public class DataBase<T> where T : DataObject
     
     #endregion
 
-    
-    
-    
-    
 }
