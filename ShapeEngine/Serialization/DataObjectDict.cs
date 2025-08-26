@@ -12,6 +12,14 @@ public class DataObjectDict<T> : Dictionary<string, T> where T : DataObject
         int index = Rng.Instance.RandI(0, Count);
         return this.ElementAt(index).Value;
     }
+    public TU? GetRandomEntry<TU>() where TU : T
+    {
+        if (Count == 0) return null;
+        var entries = Values.OfType<TU>().ToList();
+        if (entries.Count == 0) return null;
+        int index = Rng.Instance.RandI(0, entries.Count);
+        return entries[index];
+    }
     public DataObjectList<T>? GetRandomEntries(int amount)
     {
         if (Count == 0 || amount <= 0) return null;
@@ -20,6 +28,18 @@ public class DataObjectDict<T> : Dictionary<string, T> where T : DataObject
         {
             int index = Rng.Instance.RandI(0, Count);
             result.Add(this.ElementAt(index).Value);
+        }
+        return result;
+    }
+    public DataObjectList<TU>? GetRandomEntries<TU>(int amount) where TU : T
+    {
+        var entries = Values.OfType<TU>().ToList();
+        if (entries.Count == 0 || amount <= 0) return null;
+        var result = new DataObjectList<TU>();
+        for (int i = 0; i < amount; i++)
+        {
+            int index = Rng.Instance.RandI(0, entries.Count);
+            result.Add(entries[index]);
         }
         return result;
     }
@@ -34,6 +54,22 @@ public class DataObjectDict<T> : Dictionary<string, T> where T : DataObject
             if (indices.Add(index))
             {
                 result.Add(this.ElementAt(index).Value);
+            }
+        }
+        return result;
+    }
+    public DataObjectList<TU>? GetRandomEntriesUnique<TU>(int amount) where TU : T
+    {
+        var entries = Values.OfType<TU>().ToList();
+        if (entries.Count == 0 || amount <= 0) return null;
+        var result = new DataObjectList<TU>();
+        var indices = new HashSet<int>();
+        while (indices.Count < Math.Min(amount, entries.Count))
+        {
+            int index = Rng.Instance.RandI(0, entries.Count);
+            if (indices.Add(index))
+            {
+                result.Add(entries[index]);
             }
         }
         return result;
@@ -91,8 +127,6 @@ public class DataObjectDict<T> : Dictionary<string, T> where T : DataObject
         return new ChanceList<T>(entries);
     }
     
-    
-    
     public TU? PickRandomEntry<TU>() where TU : T
     {
         if (Count == 0) return null;
@@ -138,7 +172,10 @@ public class DataObjectDict<T> : Dictionary<string, T> where T : DataObject
                         break;
                     }
                 }
-                
+                else 
+                {
+                    cumulative += entry.SpawnWeight;
+                }
             }
         }
         return result;
@@ -156,12 +193,20 @@ public class DataObjectDict<T> : Dictionary<string, T> where T : DataObject
         }
         return new ChanceList<TU>(entries);
     }
-
     
     #endregion
     
     #region Get
+
     public T? GetEntry(string name) => TryGetValue(name, out var value) ? value : null;
+    public TU? GetEntry<TU>(string name) where TU : T
+    {
+        if (TryGetValue(name, out var value) && value is TU castedValue)
+        {
+            return castedValue;
+        }
+        return null;
+    }
     #endregion
     
     #region Add
