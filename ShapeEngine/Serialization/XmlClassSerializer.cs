@@ -144,7 +144,7 @@ public class XmlClassSerializer <T> where T : class
     /// </remarks>
     public static string Serialize<TC>(TC instance) where TC : class
     {
-        var serializer = new XmlSerializer(typeof(T));
+        var serializer = new XmlSerializer(typeof(TC));
         var ns = new XmlSerializerNamespaces();
         ns.Add(string.Empty, string.Empty); // no xmlns attribute
 
@@ -190,7 +190,7 @@ public class XmlClassSerializer <T> where T : class
     /// </remarks>
     public static TC? Deserialize<TC>(string xml) where TC : class
     {
-        var serializer = new XmlSerializer(typeof(T));
+        var serializer = new XmlSerializer(typeof(TC));
         using var reader = new StringReader(xml);
         object? result = serializer.Deserialize(reader);
         

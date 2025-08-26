@@ -5,6 +5,10 @@ namespace ShapeEngine.Serialization;
 
 public class DataObjectList<T> : List<T> where T : DataObject
 {
+    public DataObjectList(){}
+    public DataObjectList(int capacity) : base(capacity){}
+    
+    
     #region Get
 
     public T? GetEntry(string name) => Find(item => item.Name == name);
