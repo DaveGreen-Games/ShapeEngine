@@ -333,7 +333,10 @@ namespace Examples.Scenes
             string resetInputTypeName = GameloopExamples.Instance.InputActionReset.GetInputTypeDescription(curInputDevice, true, 1, false);
             var resetInfo = $"Reset {resetInputTypeName}";
 
-            var rects = curInputDevice == InputDeviceType.Gamepad ? area.SplitV(6) : area.SplitV(5);
+            var gamepadClaimInfo = "Press [A] on a gamepad to use it!";
+            
+            // var rects = curInputDevice == InputDeviceType.Gamepad ? area.SplitV(6) : area.SplitV(6);
+            var rects = area.SplitV(6);
 
             var color = Colors.Medium;
             var alignement = new AnchorPoint(1f, 0.05f);
@@ -347,9 +350,14 @@ namespace Examples.Scenes
             
             if (curInputDevice == InputDeviceType.Gamepad)
             {
-                string mouseMovementModifierName = GameloopExamples.ModifierKeyGamepad.GetName(true);// GAMELOOP.InputActionReset.GetInputTypeDescription(curInputDevice, true, 1, false);
+                string mouseMovementModifierName = GameloopExamples.ModifierKeyGamepad.GetName(true);
                 var mouseMovementInfo = $"Mouse [{mouseMovementModifierName} + LS]";
                 titleFont.DrawTextWrapNone(mouseMovementInfo, rects[5], alignement);
+                
+            }
+            else
+            {
+                titleFont.DrawTextWrapNone(gamepadClaimInfo, rects[5], alignement);
             }
             
         }
