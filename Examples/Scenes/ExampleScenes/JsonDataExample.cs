@@ -234,13 +234,13 @@ public class JsonDataExample : ExampleScene
         
         externalDataSavePath = ShapeFileManager.CreateDirectory(fullPath);
         
-        CreateDefaultSavegameXmlData();
-        var data = LoadXmlData();
+        CreateDefaultSavegameJsonData();
+        var data = LoadJsonData();
         asteroidSpawner = new(data);
         CreatePlanet();
     }
 
-    private void CreateDefaultSavegameXmlData()
+    private void CreateDefaultSavegameJsonData()
     {
         if (externalDataSavePath == null) return;
 
@@ -270,7 +270,7 @@ public class JsonDataExample : ExampleScene
         helpText += "Particale Types: Common, Rare, Legendary\n";
         externalDataSavePath.SaveText("readme.txt", helpText, null, false ,false);
     }
-    private List<AsteroidData> LoadXmlData()
+    private List<AsteroidData> LoadJsonData()
     {
         //load resource data
         var resourcePath = "Resources/JsonDataExampleSource";
@@ -288,7 +288,7 @@ public class JsonDataExample : ExampleScene
         var result = new List<AsteroidData>();
         foreach (var file in data)
         {
-            Console.WriteLine($"File: {file}");
+            // Console.WriteLine($"File: {file}");
             var asteroidData = serializer.Deserialize(file);
             if(asteroidData != null) result.Add(asteroidData);
         }
