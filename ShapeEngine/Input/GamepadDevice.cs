@@ -65,6 +65,13 @@ public sealed class GamepadDevice : InputDevice
     /// Gets whether this gamepad is available for use.
     /// </summary>
     public bool Available { get; private set; } = true;
+    
+    /// <summary>
+    /// Gets whether this gamepad has been claimed for use.
+    /// A claimed gamepad is not available for other users.
+    /// </summary>
+    public bool Claimed => !Available;
+    
     /// <summary>
     /// Gets whether this gamepad is currently connected.
     /// </summary>
