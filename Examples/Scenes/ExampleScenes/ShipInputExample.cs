@@ -7,6 +7,7 @@ using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
 using Raylib_cs;
+using ShapeEngine.Core.GameDef;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.RectDef;
 
@@ -55,6 +56,7 @@ namespace Examples.Scenes.ExampleScenes
             
             private readonly InputAction iaMoveHor;
             private readonly InputAction iaMoveVer;
+            public readonly InputAction iaRemove;
             private readonly InputActionTree inputActionTree;
             private readonly ColorScheme colorScheme;
             public readonly GamepadDevice Gamepad;
@@ -91,6 +93,13 @@ namespace Examples.Scenes.ExampleScenes
                 };
                 inputActionTree.Add(iaMoveHor);
                 inputActionTree.Add(iaMoveVer);
+                
+                var removeShipInputType = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
+                iaRemove = new(defaultSettings,removeShipInputType)
+                {
+                    Gamepad = gamepad
+                };
+                inputActionTree.Add(iaRemove);
             }
 
             public bool Overlap(SpaceShip other)
@@ -110,10 +119,8 @@ namespace Examples.Scenes.ExampleScenes
             {
                 
             }
-            public void Update(float dt)
+            public bool Update(float dt)
             {
-                // iaMoveHor.Update(dt);
-                // iaMoveVer.Update(dt);
                 inputActionTree.Update(dt);
                 Vector2 dir = new(iaMoveHor.State.AxisRaw, iaMoveVer.State.AxisRaw);
                     
@@ -128,6 +135,8 @@ namespace Examples.Scenes.ExampleScenes
                 {
                     hull = new Circle(hull.Center, Size);
                 }
+
+                return iaRemove.State.Pressed;
             }
 
             public Vector2 GetRandomSpawnPosition()
@@ -171,54 +180,15 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
 
-        internal class InputActionHelper
-        {
-            // public readonly InputAction Add;
-            public readonly InputAction Remove;
-            public readonly GamepadDevice Gamepad;
-            public readonly InputActionTree inputActionTree;
-
-            public InputActionHelper(GamepadDevice gamepad)
-            {
-                this.Gamepad = gamepad;
-                
-                InputActionSettings defaultSettings = new();
-                
-                // var addShipInputType = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
-                // Add = new(defaultSettings,addShipInputType)
-                // {
-                //     Gamepad = gamepad
-                // };
-                
-                var removeShipInputType = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
-                Remove = new(defaultSettings,removeShipInputType)
-                {
-                    Gamepad = gamepad
-                };
-
-                inputActionTree = new InputActionTree
-                {
-                    CurrentGamepad = gamepad
-                };
-                // inputActionTree.Add(Add);
-                inputActionTree.Add(Remove);
-            }
-
-            public void Update(float dt)
-            {
-                inputActionTree.Update(dt);
-            }
-        }
-        
         private readonly Font font;
         private readonly Rect universe = new(new Vector2(0f), new Size(10000f), new AnchorPoint(0.5f));
-        private readonly List<Star> stars = new();
+        private readonly List<Star> stars = [];
 
         private readonly CameraFollowerMulti cameraFollower = new();
         private readonly ShapeCamera camera = new();
-        private readonly List<SpaceShip> spaceShips = new();
+        private readonly List<SpaceShip> spaceShips = [];
 
-        private readonly List<InputActionHelper> inputActionHelpers = new();
+        // private readonly List<InputActionHelper> inputActionHelpers = [];
 
         public ShipInputExample()
         {
@@ -233,7 +203,6 @@ namespace Examples.Scenes.ExampleScenes
        
         private void AddShip(GamepadDevice gamepad)
         {
-            // gamepad.Claim();
             var ship = new SpaceShip(new(), gamepad);
             spaceShips.Add(ship);
             cameraFollower.AddTarget(ship);
@@ -251,6 +220,17 @@ namespace Examples.Scenes.ExampleScenes
                 }
             }
         }
+
+        private void RemoveShip(int index)
+        {
+            if (index < 0 || index >= spaceShips.Count) return;
+            var ship = spaceShips[index];
+            var gamepad = spaceShips[index].Gamepad;
+            spaceShips.RemoveAt(index);
+            cameraFollower.RemoveTarget(ship);
+            gamepad.Free();
+        }
+
         private void GenerateStars(int amount)
         {
             for (int i = 0; i < amount; i++)
@@ -263,16 +243,7 @@ namespace Examples.Scenes.ExampleScenes
                 stars.Add(star);
             }
         }
-
-        private InputActionHelper? GetActiveInputActionHelper()
-        {
-            foreach (var helper in inputActionHelpers)
-            {
-                if (helper.Gamepad is { Connected: true }) return helper;
-            }
-
-            return null;
-        }
+        
 
         protected override void OnActivate(Scene oldScene)
         {
@@ -280,6 +251,8 @@ namespace Examples.Scenes.ExampleScenes
             BitFlag mask = new(GameloopExamples.Instance.SceneAccessTag);
             mask = mask.Add(GameloopExamples.Instance.GamepadMouseMovementTag);
             InputSystem.LockBlacklist(mask);
+
+            UpdateShipsWithClaimedGamepads();
         }
 
         protected override void OnDeactivate()
@@ -288,6 +261,36 @@ namespace Examples.Scenes.ExampleScenes
             GameloopExamples.Instance.ResetCamera();
             InputSystem.Unlock();
         }
+
+        private void UpdateShipsWithClaimedGamepads()
+        {
+            var claimedGamepads = Game.Instance.Input.GamepadManager.GetClaimedGamepads();
+
+            for (int i = spaceShips.Count - 1; i >= 0; i--)
+            {
+                var ship = spaceShips[i];
+                var gamepad = ship.Gamepad;
+                if (!gamepad.Claimed)
+                {
+                    RemoveShip(i);
+                }
+                else
+                {
+                    claimedGamepads.Remove(gamepad);
+                }
+            }
+
+            if (claimedGamepads.Count > 0)
+            {
+                //all claimed gamepads that do not have a ship yet
+
+                foreach (var gamepad in claimedGamepads)
+                {
+                    AddShip(gamepad);
+                }
+            }
+        }
+        
         public override void Reset()
         {
             GameloopExamples.Instance.ScreenEffectIntensity = 1f;
@@ -308,31 +311,16 @@ namespace Examples.Scenes.ExampleScenes
         {
             RemoveShip(gamepad);
         }
-
-        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosGameUi, Vector2 mousePosUI)
-        {
-            foreach (var inputHelper in inputActionHelpers)
-            {
-                var gamepad = inputHelper.Gamepad;
-                if (gamepad.Connected)
-                {
-                    inputHelper.Update(dt);
-                    if (!gamepad.Available)
-                    {
-                        if (inputHelper.Remove.State.Pressed)
-                        {
-                            RemoveShip(gamepad);
-                        }
-                    }
-                }
-            }
-        }
         
         protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
         {
-            foreach (var ship in spaceShips)
+            for (int i = spaceShips.Count - 1; i >= 0; i--)
             {
-                ship.Update(time.Delta);
+                var ship = spaceShips[i];
+                if (ship.Update(time.Delta))
+                {
+                    RemoveShip(i);
+                }
             }
         }
         protected override void OnDrawGameExample(ScreenInfo game)
@@ -385,26 +373,31 @@ namespace Examples.Scenes.ExampleScenes
             textFont.FontSpacing = 1f;
             textFont.ColorRgba = Colors.Light;
             
-            var helper = GetActiveInputActionHelper();
-            if (helper != null)
-            {
-                string removeShipText = helper.Remove.GetInputTypeDescription(InputDeviceType.Gamepad, true, 1, false);
-                string textBottom = $"Remove Ship [{removeShipText}] | Add Ship [A]";
+            var connectedGamepads = Game.Instance.Input.GamepadManager.GetConnectedGamepads().Count;
+            var claimedGamepads = Game.Instance.Input.GamepadManager.GetClaimedGamepads().Count;
 
+            if (connectedGamepads <= 0)
+            {
+                if(!GameloopExamples.Instance.MouseControlEnabled) GameloopExamples.Instance.MouseControlEnabled = true;
+                GameloopExamples.Instance.DrawCursor = true;
+                
+                textFont.DrawTextWrapNone("No gamepads connected. Connect a gamepad to start.", rect, new(0.5f));
+            }
+            else if (claimedGamepads <= 0)
+            {
+                if(!GameloopExamples.Instance.MouseControlEnabled) GameloopExamples.Instance.MouseControlEnabled = true;
+                GameloopExamples.Instance.DrawCursor = true;
+                
+                textFont.DrawTextWrapNone("No gamepads claimed. Claim Gamepad: [A]", rect, new(0.5f));
+            }
+            else
+            {
+                string textBottom = $"Free Gamepad: [Y] | Claim Gamepad: [A]";
                 if(GameloopExamples.Instance.MouseControlEnabled) GameloopExamples.Instance.MouseControlEnabled = false;
                 GameloopExamples.Instance.DrawCursor = false;
                 
                 textFont.DrawTextWrapNone(textBottom, rect, new(0.5f));
             }
-            else
-            {
-
-                if(!GameloopExamples.Instance.MouseControlEnabled) GameloopExamples.Instance.MouseControlEnabled = true;
-                GameloopExamples.Instance.DrawCursor = true;
-                
-                textFont.DrawTextWrapNone("No gamepads connected.", rect, new(0.5f));
-            }
-            
         }
         
     }
