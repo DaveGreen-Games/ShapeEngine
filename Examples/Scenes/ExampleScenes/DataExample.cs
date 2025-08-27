@@ -143,13 +143,7 @@ public class DataExample : ExampleScene
         public static readonly AsteroidData AsteroidBig = new AsteroidData(75, 45, 0.25f);
         public static readonly AsteroidData AsteroidFast = new AsteroidData(300, 24, 0.2f);
         public static readonly AsteroidData AsteroidVeryFast = new AsteroidData(350, 28, 0.3f);
-
-        // public static readonly List<AsteroidData> AsteroidDatas = new()
-        // {
-        //     AsteroidSmall, AsteroidMedium, AsteroidBig,
-        //     AsteroidFast, AsteroidVeryFast
-        // };
-
+        
         public static readonly ChanceList<AsteroidData> ChanceList = new ChanceList<AsteroidData>
         (
             (50, AsteroidSmall),
