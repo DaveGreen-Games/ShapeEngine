@@ -53,7 +53,7 @@ internal class LaserBeam
         hitPoint = new();
     }
     
-    public void Update(Vector2 position, Vector2 direction, float dt, CollisionHandler collisionHandler)
+    public void Update(Vector2 position, Vector2 direction, float dt, CollisionHandler collisionHandler, InputState inputState)
     {
         laserBeamWidthVariationFactorTimer -= dt;
         if (laserBeamWidthVariationFactorTimer <= 0f)
@@ -72,16 +72,21 @@ internal class LaserBeam
             }
         }
         
+        
+        
+        
         if (!isCharging && !isFiring)
         {
-            if (ShapeMouseButton.LEFT.GetInputState().Pressed)
+            if(inputState.Pressed)
+            // if (ShapeMouseButton.LEFT.GetInputState().Pressed)
             {
                 isCharging = true;
             }
         }
         else if (isCharging)
         {
-            if (ShapeMouseButton.LEFT.GetInputState().Released)
+            if(inputState.Released)
+            // if (ShapeMouseButton.LEFT.GetInputState().Released)
             {
                 isCharging = false;
                 chargeTimer = 0f;
@@ -89,7 +94,8 @@ internal class LaserBeam
         }
         else if (isFiring)
         {
-            if (ShapeMouseButton.LEFT.GetInputState().Released)
+            if(inputState.Released)
+            // if (ShapeMouseButton.LEFT.GetInputState().Released)
             {
                 isFiring = false;
                 damageTimer = 0f;
