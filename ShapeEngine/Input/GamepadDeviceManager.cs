@@ -164,7 +164,7 @@ public sealed class GamepadDeviceManager
         return result;
     }
     /// <summary>
-    /// Gets a list of all claimed gamepads (connected but not available).
+    /// Gets a list of all claimed gamepads (connected and  not available).
     /// </summary>
     public List<GamepadDevice> GetClaimedGamepads()
     {
