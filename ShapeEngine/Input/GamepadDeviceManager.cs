@@ -275,6 +275,11 @@ public sealed class GamepadDeviceManager
         {
             LastClaimedGamepad = claimedGamepads.Count > 0 ? claimedGamepads[^1] : null;
         }
+
+        if (LastUsedGamepad == gamepad)
+        {
+            LastUsedGamepad = LastUsedGamepads.Count > 0 ? LastUsedGamepads[^1] : null;
+        }
     }
 
     private void GamepadWasClaimed(GamepadDevice gamepad)
