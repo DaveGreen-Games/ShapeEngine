@@ -21,6 +21,11 @@ public class ChanceList<T>
     private Rng rng;
 
     /// <summary>
+    /// Gets the current number of values available for selection.
+    /// </summary>
+    public int Count => values.Count;
+    
+    /// <summary>
     /// Initializes a new instance of the <see cref="ChanceList{T}"/> class with the specified entries and a random seed.
     /// </summary>
     /// <param name="entries">An array of tuples specifying the amount and value for each entry.</param>
