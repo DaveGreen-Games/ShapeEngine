@@ -190,7 +190,7 @@ public class XmlStructSerializer <T> where T : struct
     /// </remarks>
     public static TS Deserialize<TS>(string xml) where TS : struct
     {
-        var serializer = new XmlSerializer(typeof(T));
+        var serializer = new XmlSerializer(typeof(TS));
         using var reader = new StringReader(xml);
         object? result = serializer.Deserialize(reader);
         
