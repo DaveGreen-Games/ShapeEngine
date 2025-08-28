@@ -144,7 +144,7 @@ public class XmlStructSerializer <T> where T : struct
     /// </remarks>
     public static string Serialize<TS>(TS instance) where TS : struct
     {
-        var serializer = new XmlSerializer(typeof(T));
+        var serializer = new XmlSerializer(typeof(TS));
         var ns = new XmlSerializerNamespaces();
         ns.Add(string.Empty, string.Empty); // no xmlns attribute
 
