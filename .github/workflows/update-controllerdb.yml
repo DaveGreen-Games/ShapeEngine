@@ -1,3 +1,15 @@
+# This workflow automatically updates ShapeEngine/gamecontrollerdb.txt monthly.
+# Steps:
+# 1. Downloads the latest gamecontrollerdb.txt from SDL_GameControllerDB.
+# 2. Stages the file and checks for changes.
+# 3. If changes are detected:
+#    - Creates a new branch
+#    - Commits the update
+#    - Pushes the branch
+#    - Opens a pull request
+# 4. If no changes, no branch/commit/PR is created.
+# The workflow is triggered monthly and can be run manually.
+
 name: Monthly Update gamecontrollerdb.txt
 
 permissions:
@@ -25,22 +37,43 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
 
-      - name: Create update branch
+      - name: Stage gamecontrollerdb.txt
         run: |
-          BRANCH="update-controllerdb-$(date +'%Y%m%d')"
+          git add ShapeEngine/gamecontrollerdb.txt
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if git diff --cached --quiet; then
+            echo "changes_made=false" >> $GITHUB_OUTPUT
+          else
+            echo "changes_made=true" >> $GITHUB_OUTPUT
+          fi
+
+
+      - name: Create update branch
+        if: steps.check_changes.outputs.changes_made == 'true'
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            BRANCH="update-controllerdb-$(date +'%d%m%Y')-manual"
+          else
+            BRANCH="update-controllerdb-$(date +'%d%m%Y')"
+          fi
           git checkout -b $BRANCH
           echo "BRANCH=$BRANCH" >> $GITHUB_ENV
 
       - name: Commit changes
+        if: steps.check_changes.outputs.changes_made == 'true'
         run: |
-          git add ShapeEngine/gamecontrollerdb.txt
-          git diff --cached --quiet || git commit -m "Automated monthly update of gamecontrollerdb.txt"
+          git commit -m "Automated monthly update of gamecontrollerdb.txt"
 
       - name: Push branch
+        if: steps.check_changes.outputs.changes_made == 'true'
         run: |
           git push origin $BRANCH
 
       - name: Create Pull Request
+        if: steps.check_changes.outputs.changes_made == 'true'
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
