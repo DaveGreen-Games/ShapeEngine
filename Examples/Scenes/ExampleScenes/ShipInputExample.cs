@@ -206,6 +206,8 @@ namespace Examples.Scenes.ExampleScenes
             var ship = new SpaceShip(new(), gamepad);
             spaceShips.Add(ship);
             cameraFollower.AddTarget(ship);
+            
+            UpdateCursorValues();
         }
         private void RemoveShip(GamepadDevice gamepad)
         {
@@ -217,8 +219,11 @@ namespace Examples.Scenes.ExampleScenes
                 {
                     spaceShips.RemoveAt(i);
                     cameraFollower.RemoveTarget(ship);
+                    break;
                 }
             }
+
+            UpdateCursorValues();
         }
 
         private void RemoveShip(int index)
@@ -229,6 +234,8 @@ namespace Examples.Scenes.ExampleScenes
             spaceShips.RemoveAt(index);
             cameraFollower.RemoveTarget(ship);
             gamepad.Free();
+
+            UpdateCursorValues();
         }
 
         private void GenerateStars(int amount)
@@ -253,11 +260,20 @@ namespace Examples.Scenes.ExampleScenes
             InputSystem.LockBlacklist(mask);
 
             UpdateShipsWithClaimedGamepads();
+
+            UpdateCursorValues();
         }
 
+        private void UpdateCursorValues()
+        {
+            var cursorActive = spaceShips.Count <= 0;
+            GameloopExamples.Instance.MouseControlEnabled = cursorActive;
+            GameloopExamples.Instance.DrawCursor = cursorActive;
+        }
         protected override void OnDeactivate()
         {
             GameloopExamples.Instance.MouseControlEnabled = true;
+            GameloopExamples.Instance.DrawCursor = true;
             GameloopExamples.Instance.ResetCamera();
             InputSystem.Unlock();
         }
@@ -299,7 +315,14 @@ namespace Examples.Scenes.ExampleScenes
             
             camera.Reset();
             cameraFollower.Reset();
+            foreach (var ship in spaceShips)
+            {
+                ship.Gamepad.Free();
+            }
+            spaceShips.Clear();
             
+            GameloopExamples.Instance.MouseControlEnabled = true;
+            GameloopExamples.Instance.DrawCursor = true;
         }
 
         protected override void OnGamepadClaimed(GamepadDevice gamepad)
@@ -378,25 +401,15 @@ namespace Examples.Scenes.ExampleScenes
 
             if (connectedGamepads <= 0)
             {
-                if(!GameloopExamples.Instance.MouseControlEnabled) GameloopExamples.Instance.MouseControlEnabled = true;
-                GameloopExamples.Instance.DrawCursor = true;
-                
                 textFont.DrawTextWrapNone("No gamepads connected. Connect a gamepad to start.", rect, new(0.5f));
             }
             else if (claimedGamepads <= 0)
             {
-                if(!GameloopExamples.Instance.MouseControlEnabled) GameloopExamples.Instance.MouseControlEnabled = true;
-                GameloopExamples.Instance.DrawCursor = true;
-                
                 textFont.DrawTextWrapNone("No gamepads claimed. Claim Gamepad: [A]", rect, new(0.5f));
             }
             else
             {
-                string textBottom = $"Free Gamepad: [Y] | Claim Gamepad: [A]";
-                if(GameloopExamples.Instance.MouseControlEnabled) GameloopExamples.Instance.MouseControlEnabled = false;
-                GameloopExamples.Instance.DrawCursor = false;
-                
-                textFont.DrawTextWrapNone(textBottom, rect, new(0.5f));
+                textFont.DrawTextWrapNone($"Free Gamepad: [Y] | Claim Gamepad: [A]", rect, new(0.5f));
             }
         }
         
