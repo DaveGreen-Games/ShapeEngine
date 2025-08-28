@@ -1,0 +1,46 @@
+name: Monthly Update gamecontrollerdb.txt
+
+on:
+  schedule:
+    - cron: '0 0 1 * *' # Runs at midnight on the 1st of every month
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  update-controllerdb:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Download latest gamecontrollerdb.txt
+        run: |
+          curl -sSL https://raw.githubusercontent.com/gabomdq/SDL_GameControllerDB/master/gamecontrollerdb.txt -o ShapeEngine/gamecontrollerdb.txt
+
+      - name: Set up git user
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+      - name: Create update branch
+        run: |
+          BRANCH="update-controllerdb-$(date +'%Y%m%d')"
+          git checkout -b $BRANCH
+          echo "BRANCH=$BRANCH" >> $GITHUB_ENV
+
+      - name: Commit changes
+        run: |
+          git add ShapeEngine/gamecontrollerdb.txt
+          git diff --cached --quiet || git commit -m "Automated monthly update of gamecontrollerdb.txt"
+
+      - name: Push branch
+        run: |
+          git push origin $BRANCH
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ env.BRANCH }}
+          title: "Automated monthly update of gamecontrollerdb.txt"
+          body: |
+            This PR updates `ShapeEngine/gamecontrollerdb.txt` from [SDL_GameControllerDB](https://github.com/gabomdq/SDL_GameControllerDB) as part of the scheduled monthly update.
