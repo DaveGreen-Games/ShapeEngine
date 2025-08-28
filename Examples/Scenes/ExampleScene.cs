@@ -3,6 +3,8 @@ using ShapeEngine.StaticLib;
 using ShapeEngine.Screen;
 using System.Numerics;
 using Examples.UIElements;
+using Raylib_cs;
+using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
@@ -195,20 +197,37 @@ namespace Examples.Scenes
             titleFont.LineSpacing = 1f;
             titleFont.ColorRgba = Colors.Medium;
             titleFont.DrawTextWrapNone(deviceText, deviceRect, new AnchorPoint(0.01f, 0.5f));
-            // titleFont.DrawText(deviceText, deviceRect, 1f, new Vector2(0.01f, 0.5f), ColorHighlight3);
             
-            string gamepadText = "No Gamepad Connected";
-            var gamepad = Input.GamepadManager.LastUsedGamepad;
-            if (gamepad != null)
+            var connectedGamepads = Game.Instance.Input.GamepadManager.GetConnectedGamepads().Count;
+            var claimedGamepads = Game.Instance.Input.GamepadManager.GetClaimedGamepads().Count;
+
+            string gamepadText = "No Gamepads Connected";
+            GamepadDevice? gamepad = null;
+            if (connectedGamepads > 0)
             {
-                var gamepadIndex = gamepad.Index;
-                gamepadText = $"Gamepad [{gamepadIndex}] Connected";
+                if (claimedGamepads > 0)
+                {
+                    var lastUsedGamepad = Input.GamepadManager.LastUsedGamepad;
+                    if (lastUsedGamepad != null)
+                    {
+                        gamepad = lastUsedGamepad;
+                        var gamepadIndex = gamepad.Index;
+                        gamepadText = $"Claimed Gamepad [{gamepadIndex}] in use.";
+                    }
+                    else
+                    {
+                        gamepadText = "Claimed gamepad was not used yet!";
+                    }
+                }
+                else
+                {
+                    gamepadText = "Claim connected Gamepads with [A]";
+                }
             }
             
             titleFont.LineSpacing = 1f;
             titleFont.ColorRgba = gamepad != null ? Colors.Highlight : Colors.Medium;
             titleFont.DrawTextWrapNone(gamepadText, gamepadRect, new AnchorPoint(0.01f, 0.5f));
-            // titleFont.DrawText(gamepadText, gamepadRect, 1f, new Vector2(0.01f, 0.5f), GAMELOOP.CurGamepad != null ? ColorHighlight3 : ColorMedium);
         }
 
         protected override void OnActivate(Scene oldScene)

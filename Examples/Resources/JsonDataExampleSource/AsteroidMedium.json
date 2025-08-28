@@ -1,0 +1,14 @@
+{
+  "Name": "Asteroid Medium",
+  "Speed": 20.0,
+  "Size": 7.0,
+  "Damage": 3.0,
+  "SpawnWeight" : 30,
+  "Inaccuracy":0.25,
+  "Color": [100, 150, 220, 255],
+  "ParticleChances": [
+    { "Type": "Common", "Chance": 0.7 },
+    { "Type": "Rare", "Chance": 0.2 },
+    { "Type": "Legendary", "Chance": 0.1 }
+  ]
+}

@@ -1,9 +1,11 @@
+using System.Reflection;
 using Raylib_cs;
 using ShapeEngine.Audio;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
 using ShapeEngine.Screen;
+using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Core.GameDef;
 
@@ -43,6 +45,28 @@ namespace ShapeEngine.Core.GameDef;
 public partial class Game
 {
     #region Public Members
+
+    /// <summary>
+    /// The name of the application. Used for display and save directory purposes.
+    /// </summary>
+    public readonly string ApplicationName;
+    
+    /// <summary>
+    /// The directory where game data is saved.
+    /// Points to <see cref="GameSettings.SaveDirectory"/>/<see cref="GameSettings.ApplicationName"/>.
+    /// Will be empty if no save directory is set in <see cref="GameSettings"/>.
+    /// </summary>
+    public readonly DirectoryInfo SaveDirectory;
+    /// <summary>
+    /// Gets the full path of the save directory as a string.
+    /// </summary>
+    public string SaveDirectoryPath => SaveDirectory.FullName;
+    
+    /// <summary>
+    /// Indicates whether the save directory is valid (exists and has a non-empty path).
+    /// </summary>
+    public bool IsSaveDirectoryValid => SaveDirectory is { Exists: true, FullName.Length: > 0 };
+    
     /// <summary>
     /// Gets or sets the command-line arguments passed to the application at launch.
     /// </summary>
@@ -345,6 +369,8 @@ public partial class Game
         Window.OnWindowHiddenChanged += ResolveOnWindowHiddenChanged;
         Window.OnWindowTopmostChanged += ResolveOnWindowTopmostChanged;
 
+        UpdateGamepadMappings(inputSettings);
+        
         AudioDevice = new AudioDevice();
 
         var fixedFramerate = gameSettings.FixedFramerate;
@@ -412,7 +438,89 @@ public partial class Game
             }
             else Console.WriteLine("Failed to set current directory to executable's folder in macos.");
         }
+
+        ApplicationName = gameSettings.ApplicationName;
+        if (gameSettings.SaveDirectory != null && ApplicationName.Length > 0)
+        {
+            var folderPath = Environment.GetFolderPath((Environment.SpecialFolder)gameSettings.SaveDirectory);
+            var absolutePath = Path.Combine(folderPath, gameSettings.ApplicationName);
+            var dir = ShapeFileManager.CreateDirectory(absolutePath, false);
+            if (dir != null)
+            {
+                SaveDirectory = dir;
+                Console.WriteLine($"Save directory set to: {SaveDirectoryPath}");
+            }
+            else
+            {
+                SaveDirectory = new(string.Empty);
+                Console.WriteLine("No save directory set! SaveDirectory will be empty.");
+            }
+        }
+        else
+        {
+            SaveDirectory = new(string.Empty);
+            Console.WriteLine("No save directory set! SaveDirectory will be empty.");
+        }
     }
+
+    private void UpdateGamepadMappings(InputSettings inputSettings)
+    {
+        if (inputSettings.LoadEmbeddedGamepadMappings)
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            using var stream = assembly.GetManifestResourceStream("ShapeEngine.gamecontrollerdb.txt"); //gamecontrollerdb.txt is embedded in the assembly (file -> properties -> EmbeddedResource)
+            if (stream != null)
+            {
+                using var reader = new StreamReader(stream);
+                var mapping = reader.ReadToEnd();
+                if (mapping.Length > 0)
+                {
+                    Console.WriteLine($"Embedded Gamepad mappings loaded and applied with {mapping.Length} characters.");
+                    Raylib.SetGamepadMappings(mapping);
+                }
+                else 
+                {
+                    Console.WriteLine("No gamepad mappings found in embedded resource.");
+                }
+            }
+        }
+        else
+        {
+            if (inputSettings.GamepadMappingsFilePath is { Length: > 0 })
+            {
+                var loadedMapping = ShapeFileManager.LoadText(inputSettings.GamepadMappingsFilePath);
+                if (loadedMapping.Length > 0)
+                {
+                    Console.WriteLine($"Gamepad mappings loaded from file '{inputSettings.GamepadMappingsFilePath}' with {loadedMapping.Length} characters.");
+                    Raylib.SetGamepadMappings(loadedMapping);
+                }
+                else
+                {
+                    Console.WriteLine($"Empty Gamepad mappings file loaded from '{inputSettings.GamepadMappingsFilePath}'! No mappings applied.");
+                }
+            }
+        }
+        
+        if (inputSettings.GamepadMappings != null && inputSettings.GamepadMappings.Count > 0)
+        {
+            string extraMapping = "";
+            foreach (var mappingString in inputSettings.GamepadMappings)
+            {
+                extraMapping += mappingString;
+            }
+
+            if (extraMapping.Length > 0)
+            {
+                Console.WriteLine($"Additional gamepad mappings applied with {extraMapping.Length} characters.");
+                Raylib.SetGamepadMappings(extraMapping);
+            }
+            else
+            {
+                Console.WriteLine("All additional gamepad mappings are empty! No mappings applied.");
+            }
+        }
+    }
+    
     #endregion
 
     #region Custom Screen Textures
@@ -709,7 +817,3 @@ public partial class Game
     }
     #endregion
 }
-
-
-
-

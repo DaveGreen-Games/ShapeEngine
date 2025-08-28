@@ -164,7 +164,7 @@ public sealed class GamepadDeviceManager
         return result;
     }
     /// <summary>
-    /// Gets a list of all claimed gamepads (connected but not available).
+    /// Gets a list of all claimed gamepads (connected and  not available).
     /// </summary>
     public List<GamepadDevice> GetClaimedGamepads()
     {
@@ -274,6 +274,11 @@ public sealed class GamepadDeviceManager
         if (LastClaimedGamepad == gamepad)
         {
             LastClaimedGamepad = claimedGamepads.Count > 0 ? claimedGamepads[^1] : null;
+        }
+
+        if (LastUsedGamepad == gamepad)
+        {
+            LastUsedGamepad = LastUsedGamepads.Count > 0 ? LastUsedGamepads[^1] : null;
         }
     }
 

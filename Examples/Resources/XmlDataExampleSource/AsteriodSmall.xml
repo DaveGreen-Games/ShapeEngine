@@ -1,0 +1,27 @@
+<AsteroidData>
+    <Name>Asteroid Small</Name>
+    <Type>Small</Type>
+    <Speed>50.0</Speed>
+    <Size>6.0</Size>
+    <Damage>2.5</Damage>
+    <Inaccuracy>0.25</Inaccuracy>
+    <SpawnWeight>50</SpawnWeight>
+    <R>80</R>
+    <G>180</G>
+    <B>80</B>
+    <A>255</A>
+    <ParticleChances>
+        <ParticleChance>
+            <Type>Common</Type>
+            <Chance>0.75</Chance>
+        </ParticleChance>
+        <ParticleChance>
+            <Type>Rare</Type>
+            <Chance>0.2</Chance>
+        </ParticleChance>
+        <ParticleChance>
+            <Type>Legendary</Type>
+            <Chance>0.05</Chance>
+        </ParticleChance>
+    </ParticleChances>
+</AsteroidData>

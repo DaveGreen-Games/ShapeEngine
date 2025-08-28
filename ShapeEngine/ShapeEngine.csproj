@@ -117,4 +117,9 @@
 		<None Include="LICENSE.txt" Pack="true" PackagePath=""/>
 	</ItemGroup>
 
+	<ItemGroup>
+	  <None Remove="gamecontrollerdb.txt" />
+	  <EmbeddedResource Include="gamecontrollerdb.txt" />
+	</ItemGroup>
+
 </Project>

@@ -1,0 +1,27 @@
+<AsteroidData>
+    <Name>Asteroid Medium</Name>
+    <Type>Medium</Type>
+    <Speed>40.0</Speed>
+    <Size>14.0</Size>
+    <Damage>3.0</Damage>
+    <Inaccuracy>0.35</Inaccuracy>
+    <SpawnWeight>30</SpawnWeight>
+    <R>100</R>
+    <G>150</G>
+    <B>220</B>
+    <A>255</A>
+    <ParticleChances>
+        <ParticleChance>
+            <Type>Common</Type>
+            <Chance>0.75</Chance>
+        </ParticleChance>
+        <ParticleChance>
+            <Type>Rare</Type>
+            <Chance>0.2</Chance>
+        </ParticleChance>
+        <ParticleChance>
+            <Type>Legendary</Type>
+            <Chance>0.05</Chance>
+        </ParticleChance>
+    </ParticleChances>
+</AsteroidData>

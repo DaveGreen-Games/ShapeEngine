@@ -1,6 +1,6 @@
 ﻿using Raylib_cs;
 
-namespace ShapeEngine.Persistent;
+namespace ShapeEngine.Content;
 
 /// <summary>
 /// An interface for a content manager.
@@ -70,10 +70,10 @@ public interface IContentManager
     public Shader LoadVertexShader(string filePath);
     
     /// <summary>
-    /// Loads a json string from the given file path.
+    /// Loads a text string from the given file path.
     /// </summary>
-    /// <param name="filePath">The path to the json file.</param>
-    /// <returns>The loaded json string.</returns>
-    public string LoadJson(string filePath);
+    /// <param name="filePath">The path to the text file.</param>
+    /// <returns>The loaded text string.</returns>
+    public string LoadText(string filePath);
 
 }

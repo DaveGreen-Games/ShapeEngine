@@ -55,8 +55,6 @@ public sealed class GamepadDevice : InputDevice
     /// Event triggered when a gamepad button is released.
     /// </summary>
     public event Action<GamepadDevice, ShapeGamepadButton>? OnButtonReleased;
-
-    // internal event Action<InputDevice, InputDeviceUsageDetectionSettings>? OnInputDeviceChangeSettingsChanged;
     
     /// <summary>
     /// The index of this gamepad device.
@@ -67,6 +65,13 @@ public sealed class GamepadDevice : InputDevice
     /// Gets whether this gamepad is available for use.
     /// </summary>
     public bool Available { get; private set; } = true;
+    
+    /// <summary>
+    /// Gets whether this gamepad has been claimed for use.
+    /// A claimed gamepad is not available for other users.
+    /// </summary>
+    public bool Claimed => !Available;
+    
     /// <summary>
     /// Gets whether this gamepad is currently connected.
     /// </summary>
@@ -189,12 +194,11 @@ public sealed class GamepadDevice : InputDevice
         Index = index;
      
         Settings = settings;
-        
+        Console.WriteLine($"--- GamepadDevice [{index}] created.");
         if (Raylib.IsGamepadAvailable(index))
         {
             Connect();
         }
-        
         foreach (var button in AllShapeGamepadButtons)
         {
             buttonStates.Add(button, new());
@@ -564,6 +568,8 @@ public sealed class GamepadDevice : InputDevice
         Name = Raylib.GetGamepadName_(Index);
         AxisCount = Raylib.GetGamepadAxisCount(Index);
         OnConnectionChanged?.Invoke(this, Connected);
+
+        Console.WriteLine($"---Gamepad {Index} connected: {Name}");
     }
     /// <summary>
     /// Marks the gamepad as disconnected.
@@ -573,6 +579,8 @@ public sealed class GamepadDevice : InputDevice
         if (!Connected) return;
         Connected = false;
         OnConnectionChanged?.Invoke(this, Connected);
+        
+        Console.WriteLine($"--- Gamepad {Index} disconnected: {Name}");
         
         ResetState();
     }

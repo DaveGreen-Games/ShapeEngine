@@ -154,7 +154,7 @@ public sealed class InputSystem
         sortedInputDevices.Clear(); 
         sortedInputDevices.Add(Keyboard);
         sortedInputDevices.Add(Mouse);
-        foreach (var gamepad in GamepadManager.GetConnectedGamepads())
+        foreach (var gamepad in GamepadManager.GetAllGamepads())
         {
             sortedInputDevices.Add(gamepad);
         }

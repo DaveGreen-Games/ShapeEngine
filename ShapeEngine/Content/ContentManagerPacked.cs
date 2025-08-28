@@ -1,13 +1,18 @@
 using Raylib_cs;
 
-namespace ShapeEngine.Persistent;
+namespace ShapeEngine.Content;
 
 /// <summary>
-/// Provides a simple class to load content and automatically unload all loaded content when close is called.
+/// Provides a simple class to load content that was packed with the ContentPacker.
 /// </summary>
-public sealed class ContentManager : IContentManager
+public sealed class ContentManagerPacked : IContentManager
 {
-
+    /// <summary>
+    /// The number of glyphs to load for fonts.
+    /// </summary>
+    public int GLYPH_COUNT = 0;
+    private Dictionary<string, ContentInfo> content = new();
+    
     private readonly List<Shader> shadersToUnload = [];
     private readonly List<Texture2D> texturesToUnload = [];
     private readonly List<Image> imagesToUnload = [];
@@ -17,12 +22,18 @@ public sealed class ContentManager : IContentManager
     private readonly List<Wave> wavesToUnload = [];
 
     /// <summary>
-    /// Creates a new content manager.
+    /// Creates a new packed content manager.
     /// </summary>
-    public ContentManager() { }
+    /// <param name="path">The path to the packed content.</param>
+    /// <param name="resourceFileName">The name of the resource file.</param>
+    public ContentManagerPacked(string path, string resourceFileName = "resources.txt")
+    {
+        if (resourceFileName == "") return;
+        content = ContentPacker.Unpack(path, resourceFileName);
+    }
 
     /// <summary>
-    /// Unloads all loaded content.
+    /// Closes the content manager and unloads all loaded content.
     /// </summary>
     public void Close()
     {
@@ -56,7 +67,6 @@ public sealed class ContentManager : IContentManager
             Raylib.UnloadMusicStream(item);
         }
     }
-
     /// <summary>
     /// Loads a texture from the given file path.
     /// </summary>
@@ -64,7 +74,8 @@ public sealed class ContentManager : IContentManager
     /// <returns>The loaded texture.</returns>
     public Texture2D LoadTexture(string filePath)
     {
-        var t = ContentLoader.LoadTexture(filePath);
+        string fileName = Path.GetFileNameWithoutExtension(filePath);
+        var t = ContentLoader.LoadTextureFromContent(content[fileName]);
         texturesToUnload.Add(t);
         return t;
     }
@@ -75,7 +86,8 @@ public sealed class ContentManager : IContentManager
     /// <returns>The loaded image.</returns>
     public Image LoadImage(string filePath)
     {
-        var i = ContentLoader.LoadImage(filePath);
+        string fileName = Path.GetFileNameWithoutExtension(filePath);
+        var i = ContentLoader.LoadImageFromContent(content[fileName]);
         imagesToUnload.Add(i);
         return i;
     }
@@ -87,7 +99,8 @@ public sealed class ContentManager : IContentManager
     /// <returns>The loaded font.</returns>
     public Font LoadFont(string filePath, int fontSize = 100)
     {
-        var f = ContentLoader.LoadFont(filePath, fontSize);
+        string fileName = Path.GetFileNameWithoutExtension(filePath);
+        var f = ContentLoader.LoadFontFromContent( content[fileName], fontSize);
         fontsToUnload.Add(f);
         return f;
     }
@@ -98,7 +111,8 @@ public sealed class ContentManager : IContentManager
     /// <returns>The loaded wave.</returns>
     public Wave LoadWave(string filePath)
     {
-        var w = ContentLoader.LoadWave(filePath);
+        string fileName = Path.GetFileNameWithoutExtension(filePath);
+        var w =  ContentLoader.LoadWaveFromContent(content[fileName]);
         wavesToUnload.Add(w);
         return w;
     }
@@ -109,7 +123,8 @@ public sealed class ContentManager : IContentManager
     /// <returns>The loaded sound.</returns>
     public Sound LoadSound(string filePath)
     {
-        var s = ContentLoader.LoadSound(filePath);
+        string fileName = Path.GetFileNameWithoutExtension(filePath);
+        var s = ContentLoader.LoadSoundFromContent(content[fileName]);
         soundsToUnload.Add(s);
         return s;
 
@@ -121,7 +136,8 @@ public sealed class ContentManager : IContentManager
     /// <returns>The loaded music.</returns>
     public Music LoadMusic(string filePath)
     {
-        var m = ContentLoader.LoadMusicStream(filePath);
+        string fileName = Path.GetFileNameWithoutExtension(filePath);
+        var m = ContentLoader.LoadMusicFromContent( content[fileName]);
         musicToUnload.Add(m);
         return m;
     }
@@ -132,7 +148,8 @@ public sealed class ContentManager : IContentManager
     /// <returns>The loaded shader.</returns>
     public Shader LoadFragmentShader(string filePath)
     {
-        var fs = ContentLoader.LoadFragmentShader(filePath);
+        string fileName = Path.GetFileNameWithoutExtension(filePath);
+        var fs = ContentLoader.LoadFragmentShaderFromContent(content[fileName]);
         shadersToUnload.Add(fs);
         return fs;
     }
@@ -143,18 +160,20 @@ public sealed class ContentManager : IContentManager
     /// <returns>The loaded shader.</returns>
     public Shader LoadVertexShader(string filePath)
     {
-        var vs = ContentLoader.LoadVertexShader(filePath);
+        string fileName = Path.GetFileNameWithoutExtension(filePath);
+        var vs = ContentLoader.LoadVertexShaderFromContent(content[fileName]);
         shadersToUnload.Add(vs);
         return vs;
     }
     /// <summary>
-    /// Loads a json string from the given file path.
+    /// Loads a text string from the given file path.
     /// </summary>
-    /// <param name="filePath">The path to the json file.</param>
-    /// <returns>The loaded json string.</returns>
-    public string LoadJson(string filePath)
+    /// <param name="filePath">The path to the text file.</param>
+    /// <returns>The loaded text string.</returns>
+    public string LoadText(string filePath)
     {
-        return ContentLoader.LoadJson(filePath);
+        string fileName = Path.GetFileNameWithoutExtension(filePath);
+        return ContentLoader.LoadTextFromContent(content[fileName]);
     }
 
 }

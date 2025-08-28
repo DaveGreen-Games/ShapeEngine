@@ -12,7 +12,7 @@ using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.StripedDrawingDef;
 using ShapeEngine.Input;
-using ShapeEngine.Persistent;
+using ShapeEngine.Content;
 using ShapeEngine.Text;
 
 namespace Examples.Scenes
@@ -54,6 +54,8 @@ namespace Examples.Scenes
             examples.Add(new CameraGroupFollowExample());
             examples.Add(new ShipInputExample());
             examples.Add(new DataExample());
+            examples.Add(new XmlDataExample());
+            examples.Add(new JsonDataExample());
             
             examples.Add(new InputExample());
             examples.Add(new CameraExample());
@@ -331,7 +333,10 @@ namespace Examples.Scenes
             string resetInputTypeName = GameloopExamples.Instance.InputActionReset.GetInputTypeDescription(curInputDevice, true, 1, false);
             var resetInfo = $"Reset {resetInputTypeName}";
 
-            var rects = curInputDevice == InputDeviceType.Gamepad ? area.SplitV(6) : area.SplitV(5);
+            var gamepadClaimInfo = "Press [A] on a gamepad to use it!";
+            
+            // var rects = curInputDevice == InputDeviceType.Gamepad ? area.SplitV(6) : area.SplitV(6);
+            var rects = area.SplitV(6);
 
             var color = Colors.Medium;
             var alignement = new AnchorPoint(1f, 0.05f);
@@ -345,9 +350,14 @@ namespace Examples.Scenes
             
             if (curInputDevice == InputDeviceType.Gamepad)
             {
-                string mouseMovementModifierName = GameloopExamples.ModifierKeyGamepad.GetName(true);// GAMELOOP.InputActionReset.GetInputTypeDescription(curInputDevice, true, 1, false);
+                string mouseMovementModifierName = GameloopExamples.ModifierKeyGamepad.GetName(true);
                 var mouseMovementInfo = $"Mouse [{mouseMovementModifierName} + LS]";
                 titleFont.DrawTextWrapNone(mouseMovementInfo, rects[5], alignement);
+                
+            }
+            else
+            {
+                titleFont.DrawTextWrapNone(gamepadClaimInfo, rects[5], alignement);
             }
             
         }

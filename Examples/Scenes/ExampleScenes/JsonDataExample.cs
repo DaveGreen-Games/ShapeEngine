@@ -1,5 +1,10 @@
 using System.Numerics;
+using System.Text.Json;
+using System.Xml.Serialization;
+using ShapeEngine.Color;
+using ShapeEngine.Content;
 using ShapeEngine.Core;
+using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.CircleDef;
@@ -7,13 +12,14 @@ using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.StaticLib;
 using ShapeEngine.Random;
 using ShapeEngine.Screen;
+using ShapeEngine.Serialization;
 using ShapeEngine.Text;
 
 namespace Examples.Scenes.ExampleScenes;
 
-public class DataExample : ExampleScene
+
+public class JsonDataExample : ExampleScene
 {
-    
     private class ImpactSmoke
     {
         private float duration;
@@ -57,15 +63,6 @@ public class DataExample : ExampleScene
         {
             Shape = new(center, radius);
             rotSpeedRad = Rng.Instance.RandF(-25, 25) * ShapeMath.DEGTORAD;
-            // int randImpactCount = ShapeRandom.RandI(2, 16);
-            // for (int i = 0; i < randImpactCount; i++)
-            // {
-            //     var randR = ShapeRandom.RandF(0.1f, 0.3f) * radius;
-            //     var randOffset = ShapeRandom.RandVec2(0f, radius - randR);
-            //     Impact(center + randOffset, randR);
-            //     // var dot = new Circle(center + randOffset, randR);
-            //     // impacts.Add(dot);
-            // }
         }
 
         public void Impact(Vector2 pos, float r)
@@ -123,39 +120,50 @@ public class DataExample : ExampleScene
             textFont.DrawWord(text, r, new AnchorPoint(0.5f));
         }
     }
-    private readonly struct AsteroidData
+   
+    
+    public record AsteroidData
     {
-        public readonly float Speed;
-        public readonly float Size;
-        public readonly float Damage;
-
-        public AsteroidData(float speed, float size, float damage)
-        {
-            Speed = speed;
-            Size = size;
-            Damage = damage;
-        }
-    }
-    private static class AsteroidSpawner
-    {
-        public static readonly AsteroidData AsteroidSmall = new AsteroidData(200, 20, 0.1f);
-        public static readonly AsteroidData AsteroidMedium = new AsteroidData(150, 32, 0.15f);
-        public static readonly AsteroidData AsteroidBig = new AsteroidData(75, 45, 0.25f);
-        public static readonly AsteroidData AsteroidFast = new AsteroidData(300, 24, 0.2f);
-        public static readonly AsteroidData AsteroidVeryFast = new AsteroidData(350, 28, 0.3f);
+        public required string Name { get; set; }
+        public float Speed { get; set; }
+        public float Size { get; set; }
+        public float Damage { get; set; }
+        public float Inaccuracy { get; set; }
+        public int SpawnWeight { get; set; }
         
-        public static readonly ChanceList<AsteroidData> ChanceList = new ChanceList<AsteroidData>
-        (
-            (50, AsteroidSmall),
-            (25, AsteroidMedium),
-            (10, AsteroidBig),
-            (10, AsteroidFast),
-            (5, AsteroidVeryFast));
+        public required int[] Color { get; set; }
+        public required List<ParticleChance> ParticleChances { get; set; }
+    }
+    public enum ParticleType
+    {
+        Common,
+        Rare,
+        Legendary
+    }
+    public class ParticleChance
+    {
+        public ParticleType Type { get; set; }
+        public float Chance { get; set; }
+    }
+    
+    
+    private class AsteroidSpawner
+    {
+        private readonly ChanceList<AsteroidData> SpawnList;
 
-        public static Asteroid Create(Vector2 center, float radius, Planet target)
+        public AsteroidSpawner(List<AsteroidData> asteroidData)
+        {
+            var spawnEntries = new List<(int amount, AsteroidData data)>();
+            foreach (var data in asteroidData)
+            {
+                spawnEntries.Add((data.SpawnWeight, data));
+            }
+            SpawnList = new(spawnEntries);
+        }
+        public Asteroid Create(Vector2 center, float radius, Planet target)
         {
             var randPos = center + Rng.Instance.RandVec2(radius * 0.95f, radius * 1.05f);
-            return new Asteroid(randPos, target, ChanceList.Next());
+            return new Asteroid(randPos, target, SpawnList.Next());
         }
     }
     private class Asteroid
@@ -168,15 +176,17 @@ public class DataExample : ExampleScene
         private bool dead = false;
         public bool IsDead => dead;
         public float DistanceToTargetSq => (target.Shape.Center - position).LengthSquared();
+        private ColorRgba color;
         public Asteroid(Vector2 pos, Planet target, AsteroidData data)
         {
             this.data = data;
             this.position = pos;
-            var targetPos = target.Shape.Center + Rng.Instance.RandVec2(0f, target.Shape.Radius * 2);
+            var targetPos = target.Shape.Center + Rng.Instance.RandVec2(0f, target.Shape.Radius * 2) * data.Inaccuracy;
             var w = targetPos - pos;
             velocity = w.Normalize() * data.Speed;
             shape = new(position, data.Size);
             this.target = target;
+            color = new ColorRgba(data.Color[0], data.Color[1], data.Color[2], data.Color[3]);
         }
 
         public void Update(float dt)
@@ -195,29 +205,98 @@ public class DataExample : ExampleScene
 
         public void Draw()
         {
-            shape.Draw(Colors.Warm);
+            shape.Draw(color);
         }
     }
     
-    
     private const float CameraBaseZoom = 0.45f;
     private const float AsteroidSpawnRadius = 2350f;
-    private const float AsteroidSpawnInterval = 0.5f;
+    private const float AsteroidSpawnInterval = 0.25f;
     
     private Planet planet;
     private readonly ShapeCamera camera;
     private readonly List<Asteroid> asteroids = new();
     private float asteroidSpawnTimer = 0f;
+    private AsteroidSpawner asteroidSpawner;
+    private JsonClassSerializer<AsteroidData> serializer;
+
+    private DirectoryInfo? externalDataSavePath;
     
-    
-    public DataExample()
+    public JsonDataExample()
     {
-        Title = "Data Example";
+        Title = "Json Data Example";
         camera = new();
+        serializer = new JsonClassSerializer<AsteroidData>();
+        
+        var saveDirectoryPath = Game.Instance.SaveDirectoryPath;
+        var saveFolder = "JsonDataExamples";
+        var fullPath = Path.Combine(saveDirectoryPath, saveFolder);
+        
+        externalDataSavePath = ShapeFileManager.CreateDirectory(fullPath);
+        
+        CreateDefaultSavegameJsonData();
+        var data = LoadJsonData();
+        asteroidSpawner = new(data);
         CreatePlanet();
     }
 
+    private void CreateDefaultSavegameJsonData()
+    {
+        if (externalDataSavePath == null) return;
 
+        //always create default file
+        var slowAsteroid = new AsteroidData()
+        {
+            Name = "Slow Asteroid",
+            Speed = 10f,
+            Size = 10f,
+            Damage = 1f,
+            SpawnWeight = 5,
+            Inaccuracy = 0.1f,
+            Color = [220, 235, 215, 255],
+            ParticleChances =
+            [
+                new() { Type = ParticleType.Common, Chance = 0.5f },
+                new() { Type = ParticleType.Rare, Chance = 0.1f },
+                new() { Type = ParticleType.Legendary, Chance = 0.01f }
+            ]
+        };
+        var json = serializer.Serialize(slowAsteroid);
+        externalDataSavePath.SaveText("slowAsteroid.json", json, null, false ,false);
+
+        var helpText = string.Empty;
+        helpText += "You can create your custom asteroid data files here.\n";
+        helpText += "ShapeEngine JsonDataExample will load and use them.\n";
+        helpText += "Particale Types: Common, Rare, Legendary\n";
+        externalDataSavePath.SaveText("readme.txt", helpText, null, false ,false);
+    }
+    private List<AsteroidData> LoadJsonData()
+    {
+        //load resource data
+        var resourcePath = "Resources/JsonDataExampleSource";
+        var data = ContentLoader.LoadTextsFromDirectory(resourcePath, false);
+        // Console.WriteLine($"----------------- [{data.Count}] Source data files loaded from {resourcePath}.");
+
+        // load external data
+        if (externalDataSavePath != null)
+        {
+         var externalData = externalDataSavePath.LoadDirectory("*.json");
+         data.AddRange(externalData);
+         // Console.WriteLine($"----------------- [{externalData.Count}] External data files loaded from {externalDataSavePath.FullName}.");
+        }
+        
+        var result = new List<AsteroidData>();
+        foreach (var file in data)
+        {
+            // Console.WriteLine($"File: {file}");
+            var asteroidData = serializer.Deserialize(file);
+            if(asteroidData != null) result.Add(asteroidData);
+        }
+        
+        return result;
+    }
+    
+    
     protected override void OnActivate(Scene oldScene)
     {
         GameloopExamples.Instance.Camera = camera;
@@ -242,7 +321,7 @@ public class DataExample : ExampleScene
             asteroidSpawnTimer -= time.Delta;
             if (asteroidSpawnTimer <= 0f)
             {
-                var nextAsteroid = AsteroidSpawner.Create(planet.Shape.Center, AsteroidSpawnRadius, planet);
+                var nextAsteroid = asteroidSpawner.Create(planet.Shape.Center, AsteroidSpawnRadius, planet);
                 asteroids.Add(nextAsteroid);
                 asteroidSpawnTimer = AsteroidSpawnInterval;
             }
@@ -286,13 +365,13 @@ public class DataExample : ExampleScene
 
     private void DrawDescription(Rect rect)
     {
-        var split = rect.SplitV(0.6f);
+        var split = rect.SplitV(0.5f, 0.25f);
         
         textFont.FontSpacing = 1f;
         textFont.ColorRgba = Colors.Medium;
-        textFont.DrawTextWrapNone("There is nothing to do", split.top, new(0.5f));
-        textFont.DrawTextWrapNone("Asteroids are randomly spawned based on data structs.", split.bottom, new(0.5f));
-        
+        textFont.DrawTextWrapNone("Asteroids are randomly spawned based on json data.", split[0], new(0.5f));
+        textFont.DrawTextWrapNone($"You can supply your own json data in the examples savegame folder.", split[1], new(0.5f));
+        textFont.DrawTextWrapNone($"Located here: {Game.Instance.SaveDirectoryPath}", split[2], new(0.5f));
     }
     private void CreatePlanet()
     {

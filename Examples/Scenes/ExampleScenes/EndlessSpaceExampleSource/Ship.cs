@@ -42,6 +42,7 @@ internal class Ship : CollisionObject, ICameraFollowTarget
 
     private InputAction iaMoveHor;
     private InputAction iaMoveVer;
+    private InputAction iaLaser;
     private readonly InputActionTree inputActionTree;
     public int Health;
     public float HealthF => (float)Health / (float)MaxHp;
@@ -66,23 +67,29 @@ internal class Ship : CollisionObject, ICameraFollowTarget
         hull = collider.GetTriangleShape();
         InputActionSettings defaultSettings = new();        
         
-        var modifierKeySetGpReversed = new ModifierKeySet(ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-        var modifierKeySetMouseReversed = new ModifierKeySet(ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
+        // var modifierKeySetGpReversed = new ModifierKeySet(ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+        // var modifierKeySetMouseReversed = new ModifierKeySet(ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
         
-        var moveHorKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
-        var moveHor2GP = new InputTypeGamepadJoyAxis(ShapeGamepadJoyAxis.LEFT_X, 0.15f, false,  modifierKeySetGpReversed);
-        var moveHorMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 3f, modifierKeySetMouseReversed);
-        iaMoveHor = new(defaultSettings,moveHorKB, moveHor2GP, moveHorMW);
+        var moveHorKb = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
+        var moveHorGp = new InputTypeGamepadJoyAxis(ShapeGamepadJoyAxis.LEFT_X, 0.05f);
+        // var moveHorMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 3f, modifierKeySetMouseReversed);
+        iaMoveHor = new(defaultSettings,moveHorKb, moveHorGp);
         
-        var moveVerKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
-        var moveVer2GP = new InputTypeGamepadJoyAxis(ShapeGamepadJoyAxis.LEFT_Y, 0.15f, false, modifierKeySetGpReversed);
-        var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, modifierKeySetMouseReversed);
-        iaMoveVer = new(defaultSettings,moveVerKB, moveVer2GP, moveVerMW);
+        var moveVerKb = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
+        var moveVerGp = new InputTypeGamepadJoyAxis(ShapeGamepadJoyAxis.LEFT_Y, 0.05f);
+        // var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, modifierKeySetMouseReversed);
+        iaMoveVer = new(defaultSettings,moveVerKb, moveVerGp);
+        
+        var laserKb = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
+        var laserGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM);
+        var laserMouse = new InputTypeMouseButton(ShapeMouseButton.LEFT);
+        iaLaser = new(defaultSettings,laserKb, laserGp, laserMouse);
         
         inputActionTree =
         [
             iaMoveHor,
-            iaMoveVer
+            iaMoveVer,
+            iaLaser
         ];
 
         Health = MaxHp;
@@ -220,12 +227,18 @@ internal class Ship : CollisionObject, ICameraFollowTarget
 
         if (collisionHandler != null)
         {
-            laserBeam.Update(GetBarrelPosition(), GetBarrelDirection(), time.Delta, collisionHandler);
+            laserBeam.Update(GetBarrelPosition(), GetBarrelDirection(), time.Delta, collisionHandler, iaLaser.State);
         }
 
         if (laserBeam.IsActive)
         {
-            movementDir = (game.MousePos - Transform.Position).Normalize();
+            var inputType = Game.Instance.Input.CurrentInputDeviceType;
+            if (inputType == InputDeviceType.Gamepad)
+            {
+                movementDir = movementDir.Lerp(dir.Normalize(), 0.25f);
+            }
+            else movementDir = (game.MousePos - Transform.Position).Normalize();
+            
             angleRad = movementDir.AngleRad(); 
             Transform = Transform.SetRotationRad(angleRad);
         }

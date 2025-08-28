@@ -1,0 +1,14 @@
+{
+  "Name": "Asteroid Small",
+  "Speed": 25.0,
+  "Size": 3.0,
+  "Damage": 2.5,
+  "SpawnWeight" : 50,
+  "Inaccuracy":0.25,
+  "Color": [80, 180, 80, 255],
+  "ParticleChances": [
+    { "Type": "Common", "Chance": 0.7 },
+    { "Type": "Rare", "Chance": 0.2 },
+    { "Type": "Legendary", "Chance": 0.1 }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "Name": "Asteroid Fast",
+  "Speed": 45.0,
+  "Size": 4.5,
+  "Damage": 12.0,
+  "SpawnWeight" : 10,
+  "Inaccuracy":0.25,
+  "Color": [255, 60, 60, 255],
+  "ParticleChances": [
+    { "Type": "Common", "Chance": 0.7 },
+    { "Type": "Rare", "Chance": 0.2 },
+    { "Type": "Legendary", "Chance": 0.1 }
+  ]
+}
