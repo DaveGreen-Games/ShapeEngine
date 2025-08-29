@@ -10,8 +10,12 @@ namespace ShapeEngine.Text;
 /// </summary>
 public class BitmapFont
 {
+    
+    /// <summary>
+    /// The default 3x5 bitmap font. Each character is represented by a 3x5 grid using string arrays.
+    /// </summary>
     public static readonly BitmapFont Default3x5Font =
-    new BitmapFont(
+    new (
         new Dictionary<char, string[]>
         {
             {'0', new[] { "111", "101", "101", "101", "111" }},
@@ -102,9 +106,11 @@ public class BitmapFont
             // Add more as needed
         }
     );
-
+    /// <summary>
+    /// The default 5x7 bitmap font. Each character is represented by a 5x7 grid using string arrays.
+    /// </summary>
     public static readonly BitmapFont Default5x7Font =
-    new BitmapFont(
+    new (
         new Dictionary<char, string[]>
         {
             // Digits
@@ -196,9 +202,11 @@ public class BitmapFont
             // Add more as needed
         }
     );
-
+    /// <summary>
+    /// The default 8x8 bitmap font. Each character is represented by an 8x8 grid using string arrays.
+    /// </summary>
     public static readonly BitmapFont Default8x8Font =
-    new BitmapFont(
+    new (
         new Dictionary<char, string[]>
         {
             // Digits
@@ -295,9 +303,23 @@ public class BitmapFont
     private readonly int gridWidth;
     private readonly int gridHeight;
 
+    /// <summary>
+    /// Gets the number of characters defined in the font.
+    /// </summary>
     public int Count => fontMap.Count;
+    
+    /// <summary>
+    /// Returns all characters available in the font.
+    /// </summary>
     public IEnumerable<char> GetAllChars() => fontMap.Keys;
-    public string[]? GetGrid(char c) => fontMap.TryGetValue(c, out var grid) ? grid : null;
+    
+    /// <summary>
+    /// Gets the grid representation for the specified character.
+    /// Returns null if the character is not defined in the font.
+    /// </summary>
+    /// <param name="c">The character to retrieve the grid for.</param>
+    /// <returns>String array representing the character grid, or null if not found.</returns>
+    public string[]? GetGrid(char c) => fontMap.GetValueOrDefault(c);
 
     /// <summary>
     /// Initializes a new instance of the BitmapFontRenderer.
@@ -421,6 +443,12 @@ public class BitmapFont
         }
     }
 
+    /// <summary>
+    /// Draws a single character inside the specified rectangle using the bitmap font.
+    /// </summary>
+    /// <param name="c">The character to draw.</param>
+    /// <param name="rect">The rectangle to draw the character in.</param>
+    /// <param name="cellColor">The color for filled cells.</param>
     public void Draw(char c, Rect rect, ColorRgba cellColor)
     {
         if (!fontMap.TryGetValue(c, out var grid)) return;
