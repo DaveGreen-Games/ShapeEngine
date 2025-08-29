@@ -1,0 +1,53 @@
+# This workflow automatically updates ShapeEngine/gamecontrollerdb.txt monthly.
+# Steps:
+# 1. Downloads the latest gamecontrollerdb.txt from SDL_GameControllerDB.
+# 2. Stages the file and checks for changes.
+# 3. If changes are detected:
+#    - Creates a new branch
+#    - Commits the update
+#    - Pushes the branch
+#    - Opens a pull request
+# 4. If no changes, no branch/commit/PR is created.
+# The workflow is triggered monthly and can be run manually.
+
+name: Monthly Update gamecontrollerdb.txt
+
+permissions:
+  contents: write
+  pull-requests: write
+
+on:
+  schedule:
+    - cron: '0 0 1 * *' # Runs at midnight on the 1st of every month
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  update-controllerdb:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Download latest gamecontrollerdb.txt
+        run: |
+          curl -sSL https://raw.githubusercontent.com/gabomdq/SDL_GameControllerDB/master/gamecontrollerdb.txt -o ShapeEngine/gamecontrollerdb.txt
+
+      - name: Set up git user
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+      - name: Stage gamecontrollerdb.txt
+        run: |
+          git add ShapeEngine/gamecontrollerdb.txt
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Automated monthly update of gamecontrollerdb.txt"
+          branch: update-controllerdb-${{ github.run_id }}
+          title: "Automated monthly update of gamecontrollerdb.txt"
+          body: |
+            This PR updates `ShapeEngine/gamecontrollerdb.txt` from [SDL_GameControllerDB](https://github.com/gabomdq/SDL_GameControllerDB) as part of the scheduled monthly update.
+          skip-if-no-changes: true
