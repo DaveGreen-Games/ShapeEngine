@@ -41,13 +41,22 @@ jobs:
         run: |
           git add ShapeEngine/gamecontrollerdb.txt
 
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if git diff --cached --quiet; then
+            echo "changes_made=false" >> $GITHUB_OUTPUT
+          else
+            echo "changes_made=true" >> $GITHUB_OUTPUT
+          fi
+
       - name: Create Pull Request
+        if: steps.check_changes.outputs.changes_made == 'true'
         uses: peter-evans/create-pull-request@v5
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_PAT_PR }}
           commit-message: "Automated monthly update of gamecontrollerdb.txt"
           branch: update-controllerdb-${{ github.run_id }}
           title: "Automated monthly update of gamecontrollerdb.txt"
           body: |
             This PR updates `ShapeEngine/gamecontrollerdb.txt` from [SDL_GameControllerDB](https://github.com/gabomdq/SDL_GameControllerDB) as part of the scheduled monthly update.
-          skip-if-no-changes: true
