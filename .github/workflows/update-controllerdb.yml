@@ -54,7 +54,7 @@ jobs:
         if: steps.check_changes.outputs.changes_made == 'true'
         uses: peter-evans/create-pull-request@v5
         with:
-          token: ${{ secrets.GH_PAT_PR }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "Automated monthly update of gamecontrollerdb.txt"
           branch: update-controllerdb-${{ github.run_id }}
           title: "Automated monthly update of gamecontrollerdb.txt"
