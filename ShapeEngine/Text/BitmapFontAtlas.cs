@@ -36,49 +36,36 @@ namespace ShapeEngine.Text
 
             if (this.supportedChars.Count == 0) throw new ArgumentException("No characters available for atlas generation.");
 
-            // Calculate glyph size based on atlas size and character count
+            // Single row atlas: atlasWidth = glyphWidth * char count, atlasHeight = glyphHeight
             int totalGlyphs = this.supportedChars.Count;
-            int cols = (int)Math.Ceiling(Math.Sqrt(totalGlyphs * atlasWidth / (float)atlasHeight));
-            int rows = (int)Math.Ceiling(totalGlyphs / (float)cols);
-            this.glyphWidth = atlasWidth / cols;
-            this.glyphHeight = atlasHeight / rows;
+            this.glyphWidth = atlasWidth / totalGlyphs;
+            this.glyphHeight = atlasHeight;
 
             if (glyphWidth <= 0 || glyphHeight <= 0)
                 throw new ArgumentException("Calculated glyph size is invalid. Check atlas size and character count.");
-
-            atlasTexture = new();
         }
 
         /// <summary>
         /// Generates the atlas texture and stores UV rects for each character.
         /// </summary>
-        public void GenerateAtlas()
+        public void GenerateAtlas(ColorRgba backgroundColor)
         {
             // Create a blank atlas texture
             atlasTexture = Raylib.LoadRenderTexture(atlasWidth, atlasHeight);
 
-            int cols = atlasWidth / glyphWidth;
-            int rows = atlasHeight / glyphHeight;
+            Raylib.BeginTextureMode(atlasTexture);
+            Raylib.DrawRectangle(0, 0, atlasWidth, atlasHeight, backgroundColor.ToRayColor());
             int i = 0;
-            Raylib.BeginTextureMode((RenderTexture2D)atlasTexture);
             foreach (var c in supportedChars)
             {
-                var grid = font.GetGrid(c);
-                if (grid == null)
-                {
-                    Console.WriteLine($"BitmapFontAtlas - Generation - Character '{c}' not found in font map.");
-                    continue;
-                }
-
-                int col = i % cols;
-                int row = i / cols;
-                var glyhpRect = new Rect(
-                    new Vector2(col * glyphWidth, row * glyphHeight),
+                // Place glyphs left-to-right in a single row
+                var glyphRect = new Rect(
+                    new Vector2(i * glyphWidth, 0),
                     new Size(glyphWidth, glyphHeight),
                     AnchorPoint.TopLeft
                 );
-                glyphUvRects[c] = glyhpRect;
-                font.Draw(c, glyhpRect, ColorRgba.White);
+                glyphUvRects[c] = glyphRect;
+                font.Draw(c, glyphRect, ColorRgba.White);
                 i++;
             }
             Raylib.EndTextureMode();
