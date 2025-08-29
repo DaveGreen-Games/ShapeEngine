@@ -295,6 +295,10 @@ public class BitmapFont
     private readonly int gridWidth;
     private readonly int gridHeight;
 
+    public int Count => fontMap.Count;
+    public IEnumerable<char> GetAllChars() => fontMap.Keys;
+    public string[]? GetGrid(char c) => fontMap.TryGetValue(c, out var grid) ? grid : null;
+
     /// <summary>
     /// Initializes a new instance of the BitmapFontRenderer.
     /// </summary>
@@ -414,6 +418,23 @@ public class BitmapFont
                 }
             }
             x += charWidth + spacing;
+        }
+    }
+
+    public void Draw(char c, Rect rect, ColorRgba cellColor)
+    {
+        if (!fontMap.TryGetValue(c, out var grid)) return;
+        var cellRects = rect.Split(gridWidth, gridHeight);
+        for (int row = 0; row < gridHeight; row++)
+        {
+            for (int col = 0; col < gridWidth; col++)
+            {
+                if (grid[row][col] == '1')
+                {
+                    int cellIndex = row * gridWidth + col;
+                    cellRects[cellIndex].Draw(cellColor);
+                }
+            }
         }
     }
 }
