@@ -12,6 +12,8 @@ namespace ShapeEngine.Text;
 /// </summary>
 public class BitmapFontAtlas
 {
+    private const int Padding = 2; // Padding between glyphs in the atlas
+    
     private readonly Dictionary<char, Rect> glyphUvRects = new(); // UV rects for each character
     private readonly int atlasWidth;
     private readonly int atlasHeight;
@@ -42,10 +44,13 @@ public class BitmapFontAtlas
         
         this.font = font;
         int totalGlyphs = this.supportedChars.Count;
-        atlasWidth = totalGlyphs * glyphWidth;
-        atlasHeight = glyphWidth;
+        
+        atlasWidth = Padding + totalGlyphs * (glyphWidth + Padding);
+        atlasHeight = glyphHeight + 2 * Padding;
+        
         this.glyphWidth = glyphWidth;
         this.glyphHeight = glyphHeight;
+        
         if (atlasWidth <= 0 || atlasHeight <= 0)
             throw new ArgumentException("Calculated atlas size is invalid. Check atlas size and character count.");
     }
@@ -70,9 +75,8 @@ public class BitmapFontAtlas
         int i = 0;
         foreach (var c in supportedChars)
         {
-            // Place glyphs left-to-right in a single row
             var glyphRect = new Rect(
-                new Vector2(i * glyphWidth, 0),
+                new Vector2(Padding + i * (glyphWidth + Padding), Padding),
                 new Size(glyphWidth, glyphHeight),
                 AnchorPoint.TopLeft
             );
@@ -83,9 +87,11 @@ public class BitmapFontAtlas
         }
         Raylib.EndTextureMode();
         IsGenerated = true;
+        Raylib.SetTextureFilter(atlasTexture.Texture, TextureFilter.Point);
         if(writeDebugInfo) Console.WriteLine("Atlas generation completed.");
     }
-
+    
+    
     /// <summary>
     /// Draws the specified text using the atlas, fitting each character into a grid within the given rectangle.
     /// Only characters present in the atlas will be drawn.
@@ -93,6 +99,10 @@ public class BitmapFontAtlas
     /// <param name="text">The text string to render.</param>
     /// <param name="rect">The rectangle area where the text will be drawn.</param>
     /// <param name="color">The color to apply to the rendered text.</param>
+    /// <remarks>
+    /// Glyphs may be distorted if the grid cell aspect ratio does not match the glyph aspect ratio.
+    /// Use <see cref="DrawUniform(string, Rect, ColorRgba)"/> for uniform scaling of glyphs.
+    /// </remarks>
     public void Draw(string text, Rect rect, ColorRgba color)
     {
         if (!IsGenerated) throw new InvalidOperationException("Atlas not generated.");
@@ -116,6 +126,176 @@ public class BitmapFontAtlas
     }
 
     /// <summary>
+    /// Draws the specified text using the atlas, fitting each character into a grid within the given rectangle,
+    /// and applies custom horizontal and vertical padding to each glyph.
+    /// Only characters present in the atlas will be drawn.
+    /// </summary>
+    /// <param name="text">The text string to render.</param>
+    /// <param name="rect">The rectangle area where the text will be drawn.</param>
+    /// <param name="color">The color to apply to the rendered text.</param>
+    /// <param name="paddingX">Horizontal padding to apply to each glyph.</param>
+    /// <param name="paddingY">Vertical padding to apply to each glyph.</param>
+    public void Draw(string text, Rect rect, ColorRgba color, float paddingX, float paddingY)
+    {
+        if (!IsGenerated) throw new InvalidOperationException("Atlas not generated.");
+
+        var chars = text.ToCharArray();
+        float paddedGlyphWidth = glyphWidth + 2 * paddingX;
+        float paddedGlyphHeight = glyphHeight + 2 * paddingY;
+        var charRects = rect.GetAlignedRectsGrid(new Grid(chars.Length, 1), new Size(paddedGlyphWidth, paddedGlyphHeight));
+        if (charRects == null) return;
+        for (int i = 0; i < chars.Length; i++)
+        {
+            var c = chars[i];
+            if (!glyphUvRects.TryGetValue(c, out var uvRect)) continue;
+
+            var srcRect = new Rectangle(uvRect.TopLeft.X, uvRect.TopLeft.Y, uvRect.Size.Width, -uvRect.Size.Height);
+            var destX = charRects[i].TopLeft.X + paddingX;
+            var destY = charRects[i].TopLeft.Y + paddingY;
+            var destRect = new Rectangle(destX, destY, glyphWidth, glyphHeight);
+            var origin = new Vector2(0, 0);
+            float rotation = 0f;
+            Raylib.DrawTexturePro(atlasTexture.Texture, srcRect, destRect, origin, rotation, color.ToRayColor());
+        }
+    }
+   
+    /// <summary>
+    /// Draws the specified text using the atlas, scaling each glyph uniformly to fit within the given rectangle.
+    /// The text is centered and scaled to maintain the glyph aspect ratio.
+    /// Only characters present in the atlas will be drawn.
+    /// </summary>
+    /// <param name="text">The text string to render.</param>
+    /// <param name="rect">The rectangle area where the text will be drawn.</param>
+    /// <param name="color">The color to apply to the rendered text.</param>
+    public void DrawUniform(string text, Rect rect, ColorRgba color)
+    {
+        if (!IsGenerated) throw new InvalidOperationException("Atlas not generated.");
+    
+        var chars = text.ToCharArray();
+    
+        // Calculate uniform scale based on glyph aspect ratio
+        float scaleX = rect.Size.Width / (chars.Length * glyphWidth);
+        float scaleY = rect.Size.Height / glyphHeight;
+        float scale = Math.Min(scaleX, scaleY);
+    
+        float totalWidth = chars.Length * glyphWidth * scale;
+        float totalHeight = glyphHeight * scale;
+        float offsetX = rect.TopLeft.X + (rect.Size.Width - totalWidth) / 2f;
+        float offsetY = rect.TopLeft.Y + (rect.Size.Height - totalHeight) / 2f;
+    
+        for (int i = 0; i < chars.Length; i++)
+        {
+            var c = chars[i];
+            if (!glyphUvRects.TryGetValue(c, out var uvRect)) continue;
+    
+            var srcRect = new Rectangle(uvRect.TopLeft.X, uvRect.TopLeft.Y, uvRect.Size.Width, -uvRect.Size.Height);
+            var destX = offsetX + i * glyphWidth * scale;
+            var destRect = new Rectangle(destX, offsetY, glyphWidth * scale, glyphHeight * scale);
+            var origin = new Vector2(0, 0);
+            Raylib.DrawTexturePro(atlasTexture.Texture, srcRect, destRect, origin, 0f, color.ToRayColor());
+        }
+    }
+    
+    /// <summary>
+    /// Draws the specified text using the atlas, scaling each glyph uniformly to fit within the given rectangle,
+    /// and applies custom horizontal and vertical padding to each glyph.
+    /// The text is centered and scaled to maintain the glyph aspect ratio.
+    /// Only characters present in the atlas will be drawn.
+    /// </summary>
+    /// <param name="text">The text string to render.</param>
+    /// <param name="rect">The rectangle area where the text will be drawn.</param>
+    /// <param name="color">The color to apply to the rendered text.</param>
+    /// <param name="paddingX">Horizontal padding to apply to each glyph.</param>
+    /// <param name="paddingY">Vertical padding to apply to each glyph.</param>
+    public void DrawUniform(string text, Rect rect, ColorRgba color, float paddingX, float paddingY)
+    {
+        if (!IsGenerated) throw new InvalidOperationException("Atlas not generated.");
+
+        var chars = text.ToCharArray();
+
+        // Calculate uniform scale based on glyph aspect ratio and padding
+        float paddedGlyphWidth = glyphWidth + 2 * paddingX;
+        float paddedGlyphHeight = glyphHeight + 2 * paddingY;
+        float scaleX = rect.Size.Width / (chars.Length * paddedGlyphWidth);
+        float scaleY = rect.Size.Height / paddedGlyphHeight;
+        float scale = Math.Min(scaleX, scaleY);
+
+        float totalWidth = chars.Length * paddedGlyphWidth * scale;
+        float totalHeight = paddedGlyphHeight * scale;
+        float offsetX = rect.TopLeft.X + (rect.Size.Width - totalWidth) / 2f;
+        float offsetY = rect.TopLeft.Y + (rect.Size.Height - totalHeight) / 2f;
+
+        for (int i = 0; i < chars.Length; i++)
+        {
+            var c = chars[i];
+            if (!glyphUvRects.TryGetValue(c, out var uvRect)) continue;
+
+            var srcRect = new Rectangle(uvRect.TopLeft.X, uvRect.TopLeft.Y, uvRect.Size.Width, -uvRect.Size.Height);
+            var destX = offsetX + i * paddedGlyphWidth * scale + paddingX * scale;
+            var destY = offsetY + paddingY * scale;
+            var destRect = new Rectangle(destX, destY, glyphWidth * scale, glyphHeight * scale);
+            var origin = new Vector2(0, 0);
+            Raylib.DrawTexturePro(atlasTexture.Texture, srcRect, destRect, origin, 0f, color.ToRayColor());
+        }
+    }
+    
+    /// <summary>
+    /// Draws the specified text using the atlas, scaling each glyph uniformly to fit within the given rectangle,
+    /// and wraps text to new lines as needed. Optionally prevents splitting words across lines.
+    /// The text is centered and scaled to maintain the glyph aspect ratio.
+    /// Only characters present in the atlas will be drawn.
+    /// </summary>
+    /// <param name="text">The text string to render.</param>
+    /// <param name="rect">The rectangle area where the text will be drawn.</param>
+    /// <param name="color">The color to apply to the rendered text.</param>
+    /// <param name="paddingX">Horizontal padding to apply to each glyph.</param>
+    /// <param name="paddingY">Vertical padding to apply to each glyph.</param>
+    /// <param name="dontSplitWords">If true, words will not be split across lines when wrapping.</param>
+    public void DrawUniformWithLineWrap(string text, Rect rect, ColorRgba color, float paddingX = 0f, float paddingY = 0f, bool dontSplitWords = false)
+    {
+        if (dontSplitWords)
+        {
+            DrawUniformWithLineWrapNoWordSplit(text, rect, color, paddingX, paddingY);
+            return;
+        }
+        
+        if (!IsGenerated) throw new InvalidOperationException("Atlas not generated.");
+
+        var chars = text.ToCharArray();
+        float paddedGlyphWidth = glyphWidth + 2 * paddingX;
+        float paddedGlyphHeight = glyphHeight + 2 * paddingY;
+
+        int glyphsPerLine = Math.Max(1, (int)Math.Ceiling(Math.Sqrt(chars.Length * rect.Size.Width / rect.Size.Height)));
+        int lines = (int)Math.Ceiling((double)chars.Length / glyphsPerLine);
+
+        float scaleX = rect.Size.Width / (glyphsPerLine * paddedGlyphWidth);
+        float scaleY = rect.Size.Height / (lines * paddedGlyphHeight);
+        float scale = Math.Min(scaleX, scaleY);
+
+        float totalWidth = glyphsPerLine * paddedGlyphWidth * scale;
+        float totalHeight = lines * paddedGlyphHeight * scale;
+        float offsetX = rect.TopLeft.X + (rect.Size.Width - totalWidth) / 2f;
+        float offsetY = rect.TopLeft.Y + (rect.Size.Height - totalHeight) / 2f;
+
+        int i = 0;
+        for (int line = 0; line < lines; line++)
+        {
+            for (int col = 0; col < glyphsPerLine && i < chars.Length; col++, i++)
+            {
+                var c = chars[i];
+                if (!glyphUvRects.TryGetValue(c, out var uvRect)) continue;
+
+                var srcRect = new Rectangle(uvRect.TopLeft.X, uvRect.TopLeft.Y, uvRect.Size.Width, -uvRect.Size.Height);
+                var destX = offsetX + col * paddedGlyphWidth * scale + paddingX * scale;
+                var destY = offsetY + line * paddedGlyphHeight * scale + paddingY * scale;
+                var destRect = new Rectangle(destX, destY, glyphWidth * scale, glyphHeight * scale);
+                var origin = new Vector2(0, 0);
+                Raylib.DrawTexturePro(atlasTexture.Texture, srcRect, destRect, origin, 0f, color.ToRayColor());
+            }
+        }
+    }
+    
+    /// <summary>
     /// Draws the entire atlas texture at the specified position and scale, applying the given tint color.
     /// The atlas is vertically flipped to match the expected orientation.
     /// </summary>
@@ -133,58 +313,30 @@ public class BitmapFontAtlas
         const float rotation = 0f;
         Raylib.DrawTexturePro(atlasTexture.Texture, srcRect, destRect, origin, rotation, tint.ToRayColor());
     }
-    // /// <summary>
-    // /// Draws the entire atlas texture so it fits into the given rectangle, wrapping glyphs to new lines as needed.
-    // /// </summary>
-    // /// <param name="rect">The rectangle area to fit the atlas into.</param>
-    // /// <param name="tint">The color tint to apply to the atlas texture.</param>
-    // public void DrawAtlas(Rect rect, ColorRgba tint)
-    // {
-    //     if (!IsGenerated) throw new InvalidOperationException("Atlas not generated.");
-    //
-    //     int glyphsPerRow = (int)Math.Max(1, rect.Size.Width / glyphWidth);
-    //     int rows = (int)Math.Ceiling((double)supportedChars.Count / glyphsPerRow);
-    //
-    //     float scaleX = (float)rect.Size.Width / (glyphsPerRow * glyphWidth);
-    //     float scaleY = (float)rect.Size.Height / (rows * glyphHeight);
-    //     float scale = Math.Min(scaleX, scaleY);
-    //
-    //     int i = 0;
-    //     for (int r = 0; r < rows; r++)
-    //     {
-    //         for (int c = 0; c < glyphsPerRow && i < supportedChars.Count; c++, i++)
-    //         {
-    //             char ch = supportedChars[i];
-    //             if (!glyphUvRects.TryGetValue(ch, out var uvRect)) continue;
-    //
-    //             var srcRect = new Rectangle(uvRect.TopLeft.X, uvRect.TopLeft.Y, uvRect.Size.Width, -uvRect.Size.Height);
-    //             var destX = rect.TopLeft.X + c * glyphWidth * scale;
-    //             var destY = rect.TopLeft.Y + r * glyphHeight * scale;
-    //             var destRect = new Rectangle(destX, destY, glyphWidth * scale, glyphHeight * scale);
-    //             var origin = new Vector2(0, 0);
-    //             Raylib.DrawTexturePro(atlasTexture.Texture, srcRect, destRect, origin, 0f, tint.ToRayColor());
-    //         }
-    //     }
-    // }
     
     /// <summary>
     /// Draws the entire atlas texture so it fits into the given rectangle, wrapping glyphs to new lines as needed.
+    /// The glyphs are scaled and centered within the rectangle, and a tint color is applied.
     /// </summary>
     /// <param name="rect">The rectangle area to fit the atlas into.</param>
     /// <param name="tint">The color tint to apply to the atlas texture.</param>
-    public void DrawAtlas(Rect rect, ColorRgba tint)
+    /// <param name="padding">Optional padding around each glyph to prevent overlap.</param>
+    public void DrawAtlas(Rect rect, ColorRgba tint, int padding = 8)
     {
         if (!IsGenerated) throw new InvalidOperationException("Atlas not generated.");
-    
-        int glyphsPerRow = (int)Math.Max(1, Math.Floor(rect.Size.Width / glyphWidth));
+
+        int glyphsPerRow = Math.Min(supportedChars.Count, Math.Max(1, (int)Math.Sqrt(rect.Size.Width * supportedChars.Count / rect.Size.Height)));
         int rows = (int)Math.Ceiling((double)supportedChars.Count / glyphsPerRow);
 
-        float scaleX = (float)rect.Size.Width / (glyphsPerRow * glyphWidth);
-        float scaleY = (float)rect.Size.Height / (rows * glyphHeight);
+        float paddedGlyphWidth = glyphWidth + 2 * padding;
+        float paddedGlyphHeight = glyphHeight + 2 * padding;
+
+        float scaleX = rect.Size.Width / (glyphsPerRow * paddedGlyphWidth);
+        float scaleY = rect.Size.Height / (rows * paddedGlyphHeight);
         float scale = Math.Min(scaleX, scaleY);
 
-        float totalWidth = glyphsPerRow * glyphWidth * scale;
-        float totalHeight = rows * glyphHeight * scale;
+        float totalWidth = glyphsPerRow * paddedGlyphWidth * scale;
+        float totalHeight = rows * paddedGlyphHeight * scale;
         float offsetX = rect.TopLeft.X + (rect.Size.Width - totalWidth) / 2f;
         float offsetY = rect.TopLeft.Y + (rect.Size.Height - totalHeight) / 2f;
 
@@ -197,8 +349,8 @@ public class BitmapFontAtlas
                 if (!glyphUvRects.TryGetValue(ch, out var uvRect)) continue;
 
                 var srcRect = new Rectangle(uvRect.TopLeft.X, uvRect.TopLeft.Y, uvRect.Size.Width, -uvRect.Size.Height);
-                var destX = offsetX + c * glyphWidth * scale;
-                var destY = offsetY + r * glyphHeight * scale;
+                var destX = offsetX + c * paddedGlyphWidth * scale;
+                var destY = offsetY + r * paddedGlyphHeight * scale;
                 var destRect = new Rectangle(destX, destY, glyphWidth * scale, glyphHeight * scale);
                 var origin = new Vector2(0, 0);
                 Raylib.DrawTexturePro(atlasTexture.Texture, srcRect, destRect, origin, 0f, tint.ToRayColor());
@@ -217,4 +369,73 @@ public class BitmapFontAtlas
         Raylib.UnloadRenderTexture(atlasTexture);
         IsGenerated = false;
     }
+    
+    
+    private void DrawUniformWithLineWrapNoWordSplit(string text, Rect rect, ColorRgba color, float paddingX = 0f, float paddingY = 0f)
+    {
+        if (!IsGenerated) throw new InvalidOperationException("Atlas not generated.");
+
+        var words = text.Split(' ');
+        float paddedGlyphWidth = glyphWidth + 2 * paddingX;
+        float paddedGlyphHeight = glyphHeight + 2 * paddingY;
+
+        // Estimate max glyphs per line
+        int maxGlyphsPerLine = Math.Max(1, (int)Math.Ceiling(Math.Sqrt(text.Length * rect.Size.Width / rect.Size.Height)));
+
+        // Build lines without splitting words
+        var linesList = new List<string>();
+        string currentLine = "";
+        int currentLineLen = 0;
+        foreach (var word in words)
+        {
+            int wordLen = word.Length + (currentLineLen > 0 ? 1 : 0); // +1 for space
+            if (currentLineLen + wordLen > maxGlyphsPerLine && currentLineLen > 0)
+            {
+                linesList.Add(currentLine);
+                currentLine = word;
+                currentLineLen = word.Length;
+            }
+            else
+            {
+                if (currentLineLen > 0)
+                {
+                    currentLine += " ";
+                    currentLineLen++;
+                }
+                currentLine += word;
+                currentLineLen += word.Length;
+            }
+        }
+        if (currentLineLen > 0) linesList.Add(currentLine);
+
+        int lines = linesList.Count;
+        int glyphsPerLine = linesList.Max(l => l.Length);
+
+        float scaleX = rect.Size.Width / (glyphsPerLine * paddedGlyphWidth);
+        float scaleY = rect.Size.Height / (lines * paddedGlyphHeight);
+        float scale = Math.Min(scaleX, scaleY);
+
+        float totalWidth = glyphsPerLine * paddedGlyphWidth * scale;
+        float totalHeight = lines * paddedGlyphHeight * scale;
+        float offsetX = rect.TopLeft.X + (rect.Size.Width - totalWidth) / 2f;
+        float offsetY = rect.TopLeft.Y + (rect.Size.Height - totalHeight) / 2f;
+
+        for (int line = 0; line < lines; line++)
+        {
+            var chars = linesList[line].ToCharArray();
+            for (int col = 0; col < chars.Length; col++)
+            {
+                var c = chars[col];
+                if (!glyphUvRects.TryGetValue(c, out var uvRect)) continue;
+
+                var srcRect = new Rectangle(uvRect.TopLeft.X, uvRect.TopLeft.Y, uvRect.Size.Width, -uvRect.Size.Height);
+                var destX = offsetX + col * paddedGlyphWidth * scale + paddingX * scale;
+                var destY = offsetY + line * paddedGlyphHeight * scale + paddingY * scale;
+                var destRect = new Rectangle(destX, destY, glyphWidth * scale, glyphHeight * scale);
+                var origin = new Vector2(0, 0);
+                Raylib.DrawTexturePro(atlasTexture.Texture, srcRect, destRect, origin, 0f, color.ToRayColor());
+            }
+        }
+    }
+        
 }
