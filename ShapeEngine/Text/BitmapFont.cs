@@ -535,17 +535,39 @@ public class BitmapFont
     /// <param name="cellColor">The color for filled cells.</param>
     public void Draw(char c, Rect rect, ColorRgba cellColor)
     {
-        if (!fontMap.TryGetValue(c, out var grid)) return;
+        if (!fontMap.TryGetValue(c, out string[]? grid)) return;
         var cellRects = rect.Split(gridWidth, gridHeight);
-        for (int row = 0; row < gridHeight; row++)
+        for (var row = 0; row < gridHeight; row++)
         {
-            for (int col = 0; col < gridWidth; col++)
+            for (var col = 0; col < gridWidth; col++)
             {
-                if (grid[row][col] == '1')
-                {
-                    int cellIndex = row * gridWidth + col;
-                    cellRects[cellIndex].Draw(cellColor);
-                }
+                if (grid[row][col] != '1') continue;
+                int cellIndex = row * gridWidth + col;
+                cellRects[cellIndex].Draw(cellColor);
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Draws a single character inside the specified rectangle using a custom draw function for each cell.
+    /// </summary>
+    /// <param name="c">The character to draw.</param>
+    /// <param name="rect">The rectangle to draw the character in.</param>
+    /// <param name="drawCell">
+    /// The function to call for each filled cell in the character grid.
+    /// Parameters: Rect cellRect, char character, int row, int col.
+    /// </param>
+    public void Draw(char c, Rect rect, Action<Rect, char, int, int> drawCell)
+    {
+        if (!fontMap.TryGetValue(c, out string[]? grid)) return;
+        var cellRects = rect.Split(gridWidth, gridHeight);
+        for (var row = 0; row < gridHeight; row++)
+        {
+            for (var col = 0; col < gridWidth; col++)
+            {
+                if (grid[row][col] != '1') continue;
+                int cellIndex = row * gridWidth + col;
+                drawCell(cellRects[cellIndex], c, row, col);
             }
         }
     }
