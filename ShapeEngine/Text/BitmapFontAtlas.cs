@@ -91,6 +91,44 @@ public class BitmapFontAtlas
         if(writeDebugInfo) Console.WriteLine("Atlas generation completed.");
     }
     
+    /// <summary>
+    /// Generates the bitmap font atlas using a custom cell drawing function.
+    /// Fills the atlas with the specified background color and uses the provided drawCell action to render each glyph.
+    /// Optionally outputs debug information during generation.
+    /// </summary>
+    /// <param name="backgroundColor">The background color to fill the atlas texture.</param>
+    /// <param name="drawCell">
+    /// The action to draw each glyph cell. Parameters: Rect (cell area), char (glyph), int (glyph width), int (glyph height).
+    /// </param>
+    /// <param name="writeDebugInfo">If true, writes debug information to the console during generation.</param>
+    public void GenerateAtlas(ColorRgba backgroundColor, Action<Rect, char, int, int> drawCell, bool writeDebugInfo = false)
+    {
+        if (IsGenerated) throw new InvalidOperationException("Atlas already generated.");
+        
+        // Create a blank atlas texture
+        atlasTexture = Raylib.LoadRenderTexture(atlasWidth, atlasHeight);
+
+        if(writeDebugInfo) Console.WriteLine($"Atlas generation started with atlas size: {atlasWidth}x{atlasHeight}");
+        Raylib.BeginTextureMode(atlasTexture);
+        Raylib.DrawRectangle(0, 0, atlasWidth, atlasHeight, backgroundColor.ToRayColor());
+        int i = 0;
+        foreach (var c in supportedChars)
+        {
+            var glyphRect = new Rect(
+                new Vector2(Padding + i * (glyphWidth + Padding), Padding),
+                new Size(glyphWidth, glyphHeight),
+                AnchorPoint.TopLeft
+            );
+            glyphUvRects[c] = glyphRect;
+            font.Draw(c, glyphRect, drawCell);
+            if(writeDebugInfo) Console.WriteLine($"Glyph '{c}' with custom {glyphRect}");
+            i++;
+        }
+        Raylib.EndTextureMode();
+        IsGenerated = true;
+        Raylib.SetTextureFilter(atlasTexture.Texture, TextureFilter.Point);
+        if(writeDebugInfo) Console.WriteLine("Atlas generation completed.");
+    }
     
     /// <summary>
     /// Draws the specified text using the atlas, fitting each character into a grid within the given rectangle.
