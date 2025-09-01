@@ -356,7 +356,91 @@ public class BitmapFont
         gridHeight = expectedRows;
         gridWidth = expectedCols;
     }
+    
+    /// <summary>
+    /// Draws the given text inside the given rectangle, using a custom draw function for each cell.
+    /// </summary>
+    /// <param name="text">Text to draw.</param>
+    /// <param name="rect">Rectangle to draw the text in.</param>
+    /// <param name="drawCell">Function to draw each cell.
+    /// Parameters: Rect cellRect, char character, int row, int col.</param>
+    /// <param name="spacing">Spacing between characters.</param>
+    public void Draw(string text, Rect rect, Action<Rect, char, int, int> drawCell, float spacing = 0.05f)
+    {
+        if (string.IsNullOrEmpty(text)) return;
+        var chars = text.ToCharArray();
+        var charRects = rect.GetAlignedRectsGrid(new Grid(chars.Length, 1), new Size(spacing, 0f));
+        if (charRects == null) return;
 
+        for (int i = 0; i < chars.Length; i++)
+        {
+            var c = chars[i];
+            if (!fontMap.TryGetValue(c, out var grid)) continue;
+            var cellRects = charRects[i].Split(gridWidth, gridHeight);
+            for (int row = 0; row < gridHeight; row++)
+            {
+                for (int col = 0; col < gridWidth; col++)
+                {
+                    if (grid[row][col] == '1')
+                    {
+                        int cellIndex = row * gridWidth + col;
+                        drawCell(cellRects[cellIndex], c, row, col);
+                    }
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Draws the given text inside the given rectangle with wrapping, using a custom draw function for each cell.
+    /// </summary>
+    /// <param name="text">Text to draw.</param>
+    /// <param name="rect">Rectangle to draw the text in.</param>
+    /// <param name="drawCell">Function to draw each cell.
+    /// Parameters: Rect cellRect, char character, int row, int col.</param>
+    /// <param name="spacing">Spacing between characters.</param>
+    public void DrawWithWrap(string text, Rect rect, Action<Rect, char, int, int> drawCell, float spacing = 0.05f)
+    {
+        if (string.IsNullOrEmpty(text)) return;
+
+        float charWidth = rect.Size.Width / Math.Max(1, rect.Size.Width / (gridWidth + spacing));
+        float charHeight = rect.Size.Height / Math.Max(1, rect.Size.Height / (gridHeight + spacing));
+        float x = rect.TopLeft.X;
+        float y = rect.TopLeft.Y;
+        float maxX = rect.TopLeft.X + rect.Size.Width;
+        float maxY = rect.TopLeft.Y + rect.Size.Height;
+
+        foreach (char c in text)
+        {
+            if (!fontMap.TryGetValue(c, out var grid)) continue;
+
+            if (x + charWidth > maxX)
+            {
+                x = rect.TopLeft.X;
+                y += charHeight + spacing;
+            }
+
+            for (int row = 0; row < gridHeight; row++)
+            {
+                for (int col = 0; col < gridWidth; col++)
+                {
+                    if (grid[row][col] == '1')
+                    {
+                        float cellY = y + row * charHeight / gridHeight;
+                        if (cellY + charHeight / gridHeight > maxY) continue;
+                        var cellRect = new Rect(
+                            new Vector2(x + col * charWidth / gridWidth, cellY),
+                            new Size(charWidth / gridWidth, charHeight / gridHeight),
+                            AnchorPoint.TopLeft
+                        );
+                        drawCell(cellRect, c, row, col);
+                    }
+                }
+            }
+            x += charWidth + spacing;
+        }
+    }
+    
     /// <summary>
     /// Draws the given text inside the given rectangle.
     /// </summary>
