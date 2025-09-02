@@ -20,11 +20,16 @@ public partial class BitmapFont
     /// Gets the number of characters defined in the font.
     /// </summary>
     public int Count => fontMap.Count;
-
+    
     /// <summary>
     /// Returns all characters available in the font.
     /// </summary>
-    public IEnumerable<char> GetAllChars() => fontMap.Keys;
+    public List<char> SupportedChars => fontMap.Keys.ToList();
+    
+    /// <summary>
+    /// Returns all characters available in the font.
+    /// </summary>
+    public HashSet<char> SupportedCharsSet => fontMap.Keys.ToHashSet();
 
     /// <summary>
     /// Gets the grid representation for the specified character.
