@@ -6,7 +6,6 @@ using ShapeEngine.Geometry.RectDef;
 
 namespace ShapeEngine.Text;
 
-
 public class BitmapFontAtlas
 {
     #region Properties
@@ -244,7 +243,7 @@ public class BitmapFontAtlas
     /// <param name="color">The color to apply to the rendered text.</param>
     /// <remarks>
     /// Glyphs may be distorted if the grid cell aspect ratio does not match the glyph aspect ratio.
-    /// Use <see cref="DrawUniform(string, Rect, ColorRgba)"/> for uniform scaling of glyphs.
+    /// Use <see cref="Draw(string, Rect, ColorRgba, float, float, AnchorPoint)"/> for uniform scaling of glyphs.
     /// </remarks>
     public void Draw(string text, Rect rect, ColorRgba color)
     {
@@ -313,91 +312,6 @@ public class BitmapFontAtlas
             Raylib.DrawTexturePro(atlasTexture.Texture, srcRect, destRect, origin, 0f, color.ToRayColor());
         }
     }
-
-    #endregion
-    
-    #region Draw Uniform
-    
-    /// <summary>
-    /// Draws the specified text using the atlas, scaling each glyph uniformly to fit within the given rectangle.
-    /// The text is centered and scaled to maintain the glyph aspect ratio.
-    /// Only characters present in the atlas will be drawn.
-    /// </summary>
-    /// <param name="text">The text string to render.</param>
-    /// <param name="rect">The rectangle area where the text will be drawn.</param>
-    /// <param name="color">The color to apply to the rendered text.</param>
-    public void DrawUniform(string text, Rect rect, ColorRgba color)
-    {
-       if (!IsGenerated) throw new InvalidOperationException("Atlas not generated.");
-
-       var chars = text.ToCharArray();
-
-       // Calculate uniform scale based on glyph aspect ratio
-       float scaleX = rect.Size.Width / (chars.Length * glyphWidth);
-       float scaleY = rect.Size.Height / glyphHeight;
-       float scale = Math.Min(scaleX, scaleY);
-
-       float totalWidth = chars.Length * glyphWidth * scale;
-       float totalHeight = glyphHeight * scale;
-       float offsetX = rect.TopLeft.X + (rect.Size.Width - totalWidth) / 2f;
-       float offsetY = rect.TopLeft.Y + (rect.Size.Height - totalHeight) / 2f;
-
-       for (int i = 0; i < chars.Length; i++)
-       {
-           var c = chars[i];
-           if (!glyphUvRects.TryGetValue(c, out var uvRect)) continue;
-           // var srcRect = new Rectangle(uvRect.TopLeft.X, uvRect.TopLeft.Y, uvRect.Size.Width, -uvRect.Size.Height);
-           var srcRect = GenerateSourceRectangle(uvRect);
-           var destX = offsetX + i * glyphWidth * scale;
-           var destRect = new Rectangle(destX, offsetY, glyphWidth * scale, glyphHeight * scale);
-           var origin = new Vector2(0, 0);
-           Raylib.DrawTexturePro(atlasTexture.Texture, srcRect, destRect, origin, 0f, color.ToRayColor());
-       }
-    }
-
-    /// <summary>
-    /// Draws the specified text using the atlas, scaling each glyph uniformly to fit within the given rectangle,
-    /// and applies custom horizontal and vertical padding to each glyph.
-    /// The text is centered and scaled to maintain the glyph aspect ratio.
-    /// Only characters present in the atlas will be drawn.
-    /// </summary>
-    /// <param name="text">The text string to render.</param>
-    /// <param name="rect">The rectangle area where the text will be drawn.</param>
-    /// <param name="color">The color to apply to the rendered text.</param>
-    /// <param name="paddingX">Horizontal padding to apply to each glyph.</param>
-    /// <param name="paddingY">Vertical padding to apply to each glyph.</param>
-    public void DrawUniform(string text, Rect rect, ColorRgba color, float paddingX, float paddingY)
-    {
-       if (!IsGenerated) throw new InvalidOperationException("Atlas not generated.");
-
-       var chars = text.ToCharArray();
-
-       // Calculate uniform scale based on glyph aspect ratio and padding
-       float paddedGlyphWidth = glyphWidth + 2 * paddingX;
-       float paddedGlyphHeight = glyphHeight + 2 * paddingY;
-       float scaleX = rect.Size.Width / (chars.Length * paddedGlyphWidth);
-       float scaleY = rect.Size.Height / paddedGlyphHeight;
-       float scale = Math.Min(scaleX, scaleY);
-
-       float totalWidth = chars.Length * paddedGlyphWidth * scale;
-       float totalHeight = paddedGlyphHeight * scale;
-       float offsetX = rect.TopLeft.X + (rect.Size.Width - totalWidth) / 2f;
-       float offsetY = rect.TopLeft.Y + (rect.Size.Height - totalHeight) / 2f;
-
-       for (int i = 0; i < chars.Length; i++)
-       {
-           var c = chars[i];
-           if (!glyphUvRects.TryGetValue(c, out var uvRect)) continue;
-
-           // var srcRect = new Rectangle(uvRect.TopLeft.X, uvRect.TopLeft.Y, uvRect.Size.Width, -uvRect.Size.Height);
-           var srcRect = GenerateSourceRectangle(uvRect);
-           var destX = offsetX + i * paddedGlyphWidth * scale + paddingX * scale;
-           var destY = offsetY + paddingY * scale;
-           var destRect = new Rectangle(destX, destY, glyphWidth * scale, glyphHeight * scale);
-           var origin = new Vector2(0, 0);
-           Raylib.DrawTexturePro(atlasTexture.Texture, srcRect, destRect, origin, 0f, color.ToRayColor());
-       }
-    }
     
     /// <summary>
     /// Draws the specified text using the atlas, scaling each glyph uniformly to fit within the given rectangle,
@@ -408,14 +322,14 @@ public class BitmapFontAtlas
     /// <param name="text">The text string to render.</param>
     /// <param name="rect">The rectangle area where the text will be drawn.</param>
     /// <param name="color">The color to apply to the rendered text.</param>
-    /// <param name="paddingX">Horizontal padding to apply to each glyph.</param>
-    /// <param name="paddingY">Vertical padding to apply to each glyph.</param>
+    /// <param name="paddingX">Absolute horizontal padding to apply to each glyph.</param>
+    /// <param name="paddingY">Absolute vertical padding to apply to each glyph.</param>
     /// <param name="dontSplitWords">If true, words will not be split across lines when wrapping.</param>
-    public void DrawUniformWithLineWrap(string text, Rect rect, ColorRgba color, float paddingX = 0f, float paddingY = 0f, bool dontSplitWords = false)
+    public void DrawWithLineWrap(string text, Rect rect, ColorRgba color, float paddingX = 0f, float paddingY = 0f, bool dontSplitWords = false)
     {
        if (dontSplitWords)
        {
-           DrawUniformWithLineWrapNoWordSplit(text, rect, color, paddingX, paddingY);
+           DrawWithLineWrapNoWordSplit(text, rect, color, paddingX, paddingY);
            return;
        }
        
@@ -424,14 +338,14 @@ public class BitmapFontAtlas
        var chars = text.ToCharArray();
        float paddedGlyphWidth = glyphWidth + 2 * paddingX;
        float paddedGlyphHeight = glyphHeight + 2 * paddingY;
-       // int glyphsPerLine = Math.Max(1, (int)Math.Ceiling(Math.Sqrt(chars.Length * rect.Size.Width / rect.Size.Height)));
-       int glyphsPerLine = Math.Max(1, (int)Math.Floor(rect.Size.Width / paddedGlyphWidth));
+       
+       int glyphsPerLine = Math.Max(1, (int)Math.Ceiling(Math.Sqrt(chars.Length * rect.Size.Width / rect.Size.Height)));
        int lines = (int)Math.Ceiling((double)chars.Length / glyphsPerLine);
-
+       
        float scaleX = rect.Size.Width / (glyphsPerLine * paddedGlyphWidth);
        float scaleY = rect.Size.Height / (lines * paddedGlyphHeight);
        float scale = Math.Min(scaleX, scaleY);
-
+       
        float totalWidth = glyphsPerLine * paddedGlyphWidth * scale;
        float totalHeight = lines * paddedGlyphHeight * scale;
        float offsetX = rect.TopLeft.X + (rect.Size.Width - totalWidth) / 2f;
@@ -445,7 +359,6 @@ public class BitmapFontAtlas
                var c = chars[i];
                if (!glyphUvRects.TryGetValue(c, out var uvRect)) continue;
 
-               // var srcRect = new Rectangle(uvRect.TopLeft.X, uvRect.TopLeft.Y, uvRect.Size.Width, -uvRect.Size.Height);
                var srcRect = GenerateSourceRectangle(uvRect);
                var destX = offsetX + col * paddedGlyphWidth * scale + paddingX * scale;
                var destY = offsetY + line * paddedGlyphHeight * scale + paddingY * scale;
@@ -454,49 +367,6 @@ public class BitmapFontAtlas
                Raylib.DrawTexturePro(atlasTexture.Texture, srcRect, destRect, origin, 0f, color.ToRayColor());
            }
        }
-    }
-    
-    #endregion
-    
-    #region Helper
-    
-    /// <summary>
-    /// Unloads the atlas texture from memory and marks the atlas as not generated.
-    /// Safe to call multiple times; does nothing if the atlas is not generated.
-    /// </summary>
-    public void Unload()
-    {
-        if (!IsGenerated) return;
-        Raylib.UnloadRenderTexture(atlasTexture);
-        IsGenerated = false;
-    }
-    
-    /// <summary>
-    /// Calculates the optimal grid dimensions (rows and columns) for arranging a given number of glyphs.
-    /// The goal is to make the grid as square as possible, minimizing dead space and the difference between rows and columns.
-    /// </summary>
-    /// <param name="count">The total number of glyphs to arrange in the grid.</param>
-    /// <returns>A tuple containing the number of rows and columns for the grid.</returns>
-    private static (int rows, int cols) CalculateGrid(int count)
-    {
-        // Try to make the grid as square as possible, minimizing dead space
-        int bestRows = 1, bestCols = count;
-        int minDeadSpace = int.MaxValue;
-        int minDiff = int.MaxValue;
-        for (int rows = 1; rows <= count; rows++)
-        {
-            int cols = (int)Math.Ceiling(count / (float)rows);
-            int deadSpace = rows * cols - count;
-            int diff = Math.Abs(rows - cols);
-            if (deadSpace < minDeadSpace || (deadSpace == minDeadSpace && diff < minDiff))
-            {
-                minDeadSpace = deadSpace;
-                minDiff = diff;
-                bestRows = rows;
-                bestCols = cols;
-            }
-        }
-        return (bestRows, bestCols);
     }
     
     /// <summary>
@@ -508,7 +378,7 @@ public class BitmapFontAtlas
     /// <param name="color">The color to apply to the glyphs.</param>
     /// <param name="paddingX">Horizontal padding for each glyph.</param>
     /// <param name="paddingY">Vertical padding for each glyph.</param>
-    private void DrawUniformWithLineWrapNoWordSplit(string text, Rect rect, ColorRgba color, float paddingX = 0f, float paddingY = 0f)
+    private void DrawWithLineWrapNoWordSplit(string text, Rect rect, ColorRgba color, float paddingX = 0f, float paddingY = 0f)
     {
        if (!IsGenerated) throw new InvalidOperationException("Atlas not generated.");
 
@@ -565,7 +435,7 @@ public class BitmapFontAtlas
                var c = chars[col];
                if (!glyphUvRects.TryGetValue(c, out var uvRect)) continue;
 
-               var srcRect = new Rectangle(uvRect.TopLeft.X, uvRect.TopLeft.Y, uvRect.Size.Width, -uvRect.Size.Height);
+               var srcRect = GenerateSourceRectangle(uvRect);
                var destX = offsetX + col * paddedGlyphWidth * scale + paddingX * scale;
                var destY = offsetY + line * paddedGlyphHeight * scale + paddingY * scale;
                var destRect = new Rectangle(destX, destY, glyphWidth * scale, glyphHeight * scale);
@@ -575,6 +445,49 @@ public class BitmapFontAtlas
        }
     }
 
+    #endregion
+    
+    #region Helper
+    
+    /// <summary>
+    /// Unloads the atlas texture from memory and marks the atlas as not generated.
+    /// Safe to call multiple times; does nothing if the atlas is not generated.
+    /// </summary>
+    public void Unload()
+    {
+        if (!IsGenerated) return;
+        Raylib.UnloadRenderTexture(atlasTexture);
+        IsGenerated = false;
+    }
+    
+    /// <summary>
+    /// Calculates the optimal grid dimensions (rows and columns) for arranging a given number of glyphs.
+    /// The goal is to make the grid as square as possible, minimizing dead space and the difference between rows and columns.
+    /// </summary>
+    /// <param name="count">The total number of glyphs to arrange in the grid.</param>
+    /// <returns>A tuple containing the number of rows and columns for the grid.</returns>
+    private static (int rows, int cols) CalculateGrid(int count)
+    {
+        // Try to make the grid as square as possible, minimizing dead space
+        int bestRows = 1, bestCols = count;
+        int minDeadSpace = int.MaxValue;
+        int minDiff = int.MaxValue;
+        for (int rows = 1; rows <= count; rows++)
+        {
+            int cols = (int)Math.Ceiling(count / (float)rows);
+            int deadSpace = rows * cols - count;
+            int diff = Math.Abs(rows - cols);
+            if (deadSpace < minDeadSpace || (deadSpace == minDeadSpace && diff < minDiff))
+            {
+                minDeadSpace = deadSpace;
+                minDiff = diff;
+                bestRows = rows;
+                bestCols = cols;
+            }
+        }
+        return (bestRows, bestCols);
+    }
+    
     private Rectangle GenerateSourceRectangle(Rect uvRect)
     {
         return new Rectangle(uvRect.TopLeft.X, atlasHeight - uvRect.TopLeft.Y - uvRect.Size.Height, uvRect.Size.Width, -uvRect.Size.Height);
