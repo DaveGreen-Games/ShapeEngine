@@ -8,297 +8,8 @@ namespace ShapeEngine.Text;
 /// <summary>
 /// Simple bitmap font drawer using string arrays for each character.
 /// </summary>
-public class BitmapFont
+public partial class BitmapFont
 {
-    
-    /// <summary>
-    /// The default 3x5 bitmap font. Each character is represented by a 3x5 grid using string arrays.
-    /// </summary>
-    public static readonly BitmapFont Default3x5Font =
-    new (
-        new Dictionary<char, string[]>
-        {
-            {'0', new[] { "111", "101", "101", "101", "111" }},
-            {'1', new[] { "010", "010", "010", "010", "010" }},
-            {'2', new[] { "111", "001", "111", "100", "111" }},
-            {'3', new[] { "111", "001", "111", "001", "111" }},
-            {'4', new[] { "101", "101", "111", "001", "001" }},
-            {'5', new[] { "111", "100", "111", "001", "111" }},
-            {'6', new[] { "111", "100", "111", "101", "111" }},
-            {'7', new[] { "111", "001", "001", "001", "001" }},
-            {'8', new[] { "111", "101", "111", "101", "111" }},
-            {'9', new[] { "111", "101", "111", "001", "111" }},
-            // Uppercase letters
-            {'A', new[] { "111", "101", "111", "101", "101" }},
-            {'B', new[] { "110", "101", "110", "101", "110" }},
-            {'C', new[] { "111", "100", "100", "100", "111" }},
-            {'D', new[] { "110", "101", "101", "101", "110" }},
-            {'E', new[] { "111", "100", "111", "100", "111" }},
-            {'F', new[] { "111", "100", "111", "100", "100" }},
-            {'G', new[] { "111", "100", "101", "101", "111" }},
-            {'H', new[] { "101", "101", "111", "101", "101" }},
-            {'I', new[] { "111", "010", "010", "010", "111" }},
-            {'J', new[] { "001", "001", "001", "101", "111" }},
-            {'K', new[] { "101", "101", "110", "101", "101" }},
-            {'L', new[] { "100", "100", "100", "100", "111" }},
-            {'M', new[] { "101", "111", "101", "101", "101" }},
-            {'N', new[] { "101", "111", "111", "111", "101" }},
-            {'O', new[] { "111", "101", "101", "101", "111" }},
-            {'P', new[] { "111", "101", "111", "100", "100" }},
-            {'Q', new[] { "111", "101", "101", "111", "011" }},
-            {'R', new[] { "111", "101", "111", "101", "101" }},
-            {'S', new[] { "111", "100", "111", "001", "111" }},
-            {'T', new[] { "111", "010", "010", "010", "010" }},
-            {'U', new[] { "101", "101", "101", "101", "111" }},
-            {'V', new[] { "101", "101", "101", "101", "010" }},
-            {'W', new[] { "101", "101", "101", "111", "101" }},
-            {'X', new[] { "101", "101", "010", "101", "101" }},
-            {'Y', new[] { "101", "101", "010", "010", "010" }},
-            {'Z', new[] { "111", "001", "010", "100", "111" }},
-            // Lowercase letters (simple forms)
-            {'a', new[] { "000", "011", "101", "111", "101" }},
-            {'b', new[] { "100", "110", "101", "101", "110" }},
-            {'c', new[] { "000", "011", "100", "100", "011" }},
-            {'d', new[] { "001", "011", "101", "101", "011" }},
-            {'e', new[] { "000", "011", "111", "100", "011" }},
-            {'f', new[] { "011", "100", "111", "100", "100" }},
-            {'g', new[] { "000", "011", "101", "011", "001" }},
-            {'h', new[] { "100", "110", "101", "101", "101" }},
-            {'i', new[] { "010", "000", "010", "010", "010" }},
-            {'j', new[] { "001", "000", "001", "101", "010" }},
-            {'k', new[] { "100", "101", "110", "101", "101" }},
-            {'l', new[] { "010", "010", "010", "010", "010" }},
-            {'m', new[] { "000", "110", "111", "101", "101" }},
-            {'n', new[] { "000", "110", "101", "101", "101" }},
-            {'o', new[] { "000", "011", "101", "101", "011" }},
-            {'p', new[] { "000", "110", "101", "110", "100" }},
-            {'q', new[] { "000", "011", "101", "011", "001" }},
-            {'r', new[] { "000", "110", "101", "100", "100" }},
-            {'s', new[] { "000", "011", "110", "001", "110" }},
-            {'t', new[] { "010", "111", "010", "010", "011" }},
-            {'u', new[] { "000", "101", "101", "101", "011" }},
-            {'v', new[] { "000", "101", "101", "101", "010" }},
-            {'w', new[] { "000", "101", "101", "111", "101" }},
-            {'x', new[] { "000", "101", "010", "010", "101" }},
-            {'y', new[] { "000", "101", "101", "011", "001" }},
-            {'z', new[] { "000", "111", "010", "100", "111" }},
-            // Common special characters
-            {' ', new[] { "000", "000", "000", "000", "000" }},
-            {'!', new[] { "010", "010", "010", "000", "010" }},
-            {'?', new[] { "111", "001", "010", "000", "010" }},
-            {'.', new[] { "000", "000", "000", "000", "010" }},
-            {',', new[] { "000", "000", "000", "010", "100" }},
-            {'-', new[] { "000", "000", "111", "000", "000" }},
-            {'_', new[] { "000", "000", "000", "000", "111" }},
-            {':', new[] { "000", "010", "000", "010", "000" }},
-            {';', new[] { "000", "010", "000", "010", "100" }},
-            {'\'', new[] { "010", "010", "000", "000", "000" }},
-            {'"', new[] { "101", "101", "000", "000", "000" }},
-            {'(', new[] { "001", "010", "010", "010", "001" }},
-            {')', new[] { "100", "010", "010", "010", "100" }},
-            {'[', new[] { "011", "010", "010", "010", "011" }},
-            {']', new[] { "110", "010", "010", "010", "110" }},
-            {'/', new[] { "001", "001", "010", "100", "100" }},
-            {'\\', new[] { "100", "100", "010", "001", "001" }},
-            {'+', new[] { "000", "010", "111", "010", "000" }},
-            {'*', new[] { "010", "111", "010", "111", "010" }},
-            {'=', new[] { "000", "111", "000", "111", "000" }},
-            // Add more as needed
-        }
-    );
-    /// <summary>
-    /// The default 5x7 bitmap font. Each character is represented by a 5x7 grid using string arrays.
-    /// </summary>
-    public static readonly BitmapFont Default5x7Font =
-    new (
-        new Dictionary<char, string[]>
-        {
-            // Digits
-            {'0', new[] { "01110", "10001", "10011", "10101", "11001", "10001", "01110" }},
-            {'1', new[] { "00100", "01100", "00100", "00100", "00100", "00100", "01110" }},
-            {'2', new[] { "01110", "10001", "00001", "00010", "00100", "01000", "11111" }},
-            {'3', new[] { "01110", "10001", "00001", "00110", "00001", "10001", "01110" }},
-            {'4', new[] { "00010", "00110", "01010", "10010", "11111", "00010", "00010" }},
-            {'5', new[] { "11111", "10000", "11110", "00001", "00001", "10001", "01110" }},
-            {'6', new[] { "00110", "01000", "10000", "11110", "10001", "10001", "01110" }},
-            {'7', new[] { "11111", "00001", "00010", "00100", "01000", "01000", "01000" }},
-            {'8', new[] { "01110", "10001", "10001", "01110", "10001", "10001", "01110" }},
-            {'9', new[] { "01110", "10001", "10001", "01111", "00001", "00010", "01100" }},
-            // Uppercase
-            {'A', new[] { "01110", "10001", "10001", "11111", "10001", "10001", "10001" }},
-            {'B', new[] { "11110", "10001", "10001", "11110", "10001", "10001", "11110" }},
-            {'C', new[] { "01110", "10001", "10000", "10000", "10000", "10001", "01110" }},
-            {'D', new[] { "11110", "10001", "10001", "10001", "10001", "10001", "11110" }},
-            {'E', new[] { "11111", "10000", "10000", "11110", "10000", "10000", "11111" }},
-            {'F', new[] { "11111", "10000", "10000", "11110", "10000", "10000", "10000" }},
-            {'G', new[] { "01110", "10001", "10000", "10111", "10001", "10001", "01110" }},
-            {'H', new[] { "10001", "10001", "10001", "11111", "10001", "10001", "10001" }},
-            {'I', new[] { "01110", "00100", "00100", "00100", "00100", "00100", "01110" }},
-            {'J', new[] { "00111", "00010", "00010", "00010", "10010", "10010", "01100" }},
-            {'K', new[] { "10001", "10010", "10100", "11000", "10100", "10010", "10001" }},
-            {'L', new[] { "10000", "10000", "10000", "10000", "10000", "10000", "11111" }},
-            {'M', new[] { "10001", "11011", "10101", "10101", "10001", "10001", "10001" }},
-            {'N', new[] { "10001", "10001", "11001", "10101", "10011", "10001", "10001" }},
-            {'O', new[] { "01110", "10001", "10001", "10001", "10001", "10001", "01110" }},
-            {'P', new[] { "11110", "10001", "10001", "11110", "10000", "10000", "10000" }},
-            {'Q', new[] { "01110", "10001", "10001", "10001", "10101", "10010", "01101" }},
-            {'R', new[] { "11110", "10001", "10001", "11110", "10100", "10010", "10001" }},
-            {'S', new[] { "01111", "10000", "10000", "01110", "00001", "00001", "11110" }},
-            {'T', new[] { "11111", "00100", "00100", "00100", "00100", "00100", "00100" }},
-            {'U', new[] { "10001", "10001", "10001", "10001", "10001", "10001", "01110" }},
-            {'V', new[] { "10001", "10001", "10001", "10001", "10001", "01010", "00100" }},
-            {'W', new[] { "10001", "10001", "10001", "10101", "10101", "10101", "01010" }},
-            {'X', new[] { "10001", "10001", "01010", "00100", "01010", "10001", "10001" }},
-            {'Y', new[] { "10001", "10001", "01010", "00100", "00100", "00100", "00100" }},
-            {'Z', new[] { "11111", "00001", "00010", "00100", "01000", "10000", "11111" }},
-            // Lowercase
-            {'a', new[] { "00000", "00000", "01110", "00001", "01111", "10001", "01111" }},
-            {'b', new[] { "10000", "10000", "10110", "11001", "10001", "10001", "11110" }},
-            {'c', new[] { "00000", "00000", "01110", "10001", "10000", "10001", "01110" }},
-            {'d', new[] { "00001", "00001", "01101", "10011", "10001", "10001", "01111" }},
-            {'e', new[] { "00000", "00000", "01110", "10001", "11111", "10000", "01110" }},
-            {'f', new[] { "00110", "01001", "01000", "11100", "01000", "01000", "01000" }},
-            {'g', new[] { "00000", "00000", "01111", "10001", "01111", "00001", "01110" }},
-            {'h', new[] { "10000", "10000", "10110", "11001", "10001", "10001", "10001" }},
-            {'i', new[] { "00100", "00000", "01100", "00100", "00100", "00100", "01110" }},
-            {'j', new[] { "00010", "00000", "00110", "00010", "00010", "10010", "01100" }},
-            {'k', new[] { "10000", "10000", "10010", "10100", "11000", "10100", "10010" }},
-            {'l', new[] { "01100", "00100", "00100", "00100", "00100", "00100", "01110" }},
-            {'m', new[] { "00000", "00000", "11010", "10101", "10101", "10001", "10001" }},
-            {'n', new[] { "00000", "00000", "10110", "11001", "10001", "10001", "10001" }},
-            {'o', new[] { "00000", "00000", "01110", "10001", "10001", "10001", "01110" }},
-            {'p', new[] { "00000", "00000", "11110", "10001", "11110", "10000", "10000" }},
-            {'q', new[] { "00000", "00000", "01111", "10001", "01111", "00001", "00001" }},
-            {'r', new[] { "00000", "00000", "10110", "11001", "10000", "10000", "10000" }},
-            {'s', new[] { "00000", "00000", "01111", "10000", "01110", "00001", "11110" }},
-            {'t', new[] { "01000", "01000", "11100", "01000", "01000", "01001", "00110" }},
-            {'u', new[] { "00000", "00000", "10001", "10001", "10001", "10011", "01101" }},
-            {'v', new[] { "00000", "00000", "10001", "10001", "10001", "01010", "00100" }},
-            {'w', new[] { "00000", "00000", "10001", "10001", "10101", "10101", "01010" }},
-            {'x', new[] { "00000", "00000", "10001", "01010", "00100", "01010", "10001" }},
-            {'y', new[] { "00000", "00000", "10001", "10001", "01111", "00001", "01110" }},
-            {'z', new[] { "00000", "00000", "11111", "00010", "00100", "01000", "11111" }},
-            // Special characters
-            {' ', new[] { "00000", "00000", "00000", "00000", "00000", "00000", "00000" }},
-            {'!', new[] { "00100", "00100", "00100", "00100", "00000", "00000", "00100" }},
-            {'?', new[] { "01110", "10001", "00001", "00010", "00100", "00000", "00100" }},
-            {'.', new[] { "00000", "00000", "00000", "00000", "00000", "00100", "00100" }},
-            {',', new[] { "00000", "00000", "00000", "00000", "00100", "00100", "01000" }},
-            {'-', new[] { "00000", "00000", "00000", "11111", "00000", "00000", "00000" }},
-            {'_', new[] { "00000", "00000", "00000", "00000", "00000", "00000", "11111" }},
-            {':', new[] { "00000", "00100", "00000", "00000", "00100", "00000", "00000" }},
-            {';', new[] { "00000", "00100", "00000", "00000", "00100", "00100", "01000" }},
-            {'\'', new[] { "00100", "00100", "00000", "00000", "00000", "00000", "00000" }},
-            {'"', new[] { "01010", "01010", "00000", "00000", "00000", "00000", "00000" }},
-            {'(', new[] { "00010", "00100", "01000", "01000", "01000", "00100", "00010" }},
-            {')', new[] { "01000", "00100", "00010", "00010", "00010", "00100", "01000" }},
-            {'[', new[] { "00110", "00100", "00100", "00100", "00100", "00100", "00110" }},
-            {']', new[] { "01100", "00100", "00100", "00100", "00100", "00100", "01100" }},
-            {'/', new[] { "00001", "00010", "00100", "01000", "10000", "00000", "00000" }},
-            {'\\', new[] { "10000", "01000", "00100", "00010", "00001", "00000", "00000" }},
-            {'+', new[] { "00000", "00100", "00100", "11111", "00100", "00100", "00000" }},
-            {'*', new[] { "00000", "01010", "00100", "11111", "00100", "01010", "00000" }},
-            {'=', new[] { "00000", "11111", "00000", "11111", "00000", "00000", "00000" }},
-            // Add more as needed
-        }
-    );
-    /// <summary>
-    /// The default 8x8 bitmap font. Each character is represented by an 8x8 grid using string arrays.
-    /// </summary>
-    public static readonly BitmapFont Default8x8Font =
-    new (
-        new Dictionary<char, string[]>
-        {
-            // Digits
-            {'0', new[] { "00111100", "01000010", "10000001", "10000011", "10000101", "10001001", "01010010", "00111100" }},
-            {'1', new[] { "00011000", "00111000", "00011000", "00011000", "00011000", "00011000", "00011000", "00111100" }},
-            {'2', new[] { "00111100", "01000010", "00000010", "00000100", "00001000", "00010000", "00100000", "01111110" }},
-            {'3', new[] { "00111100", "01000010", "00000010", "00011100", "00000010", "01000010", "00111100", "00000000" }},
-            {'4', new[] { "00000100", "00001100", "00010100", "00100100", "01000100", "01111110", "00000100", "00000100" }},
-            {'5', new[] { "01111110", "01000000", "01111100", "00000010", "00000010", "01000010", "00111100", "00000000" }},
-            {'6', new[] { "00111100", "01000000", "10000000", "11111100", "10000010", "10000010", "01000010", "00111100" }},
-            {'7', new[] { "01111110", "00000010", "00000100", "00001000", "00010000", "00100000", "00100000", "00100000" }},
-            {'8', new[] { "00111100", "01000010", "01000010", "00111100", "01000010", "01000010", "00111100", "00000000" }},
-            {'9', new[] { "00111100", "01000010", "01000010", "00111110", "00000010", "00000100", "00111000", "00000000" }},
-            // Uppercase (A-Z)
-            {'A', new[] { "00011000", "00100100", "01000010", "01000010", "01111110", "01000010", "01000010", "01000010" }},
-            {'B', new[] { "01111100", "01000010", "01000010", "01111100", "01000010", "01000010", "01000010", "01111100" }},
-            {'C', new[] { "00111100", "01000010", "10000000", "10000000", "10000000", "01000010", "00111100", "00000000" }},
-            {'D', new[] { "01111000", "01000100", "01000010", "01000010", "01000010", "01000100", "01111000", "00000000" }},
-            {'E', new[] { "01111110", "01000000", "01000000", "01111100", "01000000", "01000000", "01111110", "00000000" }},
-            {'F', new[] { "01111110", "01000000", "01000000", "01111100", "01000000", "01000000", "01000000", "00000000" }},
-            {'G', new[] { "00111100", "01000010", "10000000", "10011110", "10000010", "01000010", "00111100", "00000000" }},
-            {'H', new[] { "01000010", "01000010", "01000010", "01111110", "01000010", "01000010", "01000010", "00000000" }},
-            {'I', new[] { "00111100", "00011000", "00011000", "00011000", "00011000", "00011000", "00111100", "00000000" }},
-            {'J', new[] { "00011110", "00000100", "00000100", "00000100", "01000100", "01000100", "00111000", "00000000" }},
-            {'K', new[] { "01000010", "01000100", "01001000", "01110000", "01001000", "01000100", "01000010", "00000000" }},
-            {'L', new[] { "01000000", "01000000", "01000000", "01000000", "01000000", "01000000", "01111110", "00000000" }},
-            {'M', new[] { "01000010", "01100110", "01011010", "01000010", "01000010", "01000010", "01000010", "00000000" }},
-            {'N', new[] { "01000010", "01100010", "01010010", "01001010", "01000110", "01000010", "01000010", "00000000" }},
-            {'O', new[] { "00111100", "01000010", "10000001", "10000001", "10000001", "01000010", "00111100", "00000000" }},
-            {'P', new[] { "01111100", "01000010", "01000010", "01111100", "01000000", "01000000", "01000000", "00000000" }},
-            {'Q', new[] { "00111100", "01000010", "10000001", "10000001", "10001001", "01000010", "00111101", "00000000" }},
-            {'R', new[] { "01111100", "01000010", "01000010", "01111100", "01001000", "01000100", "01000010", "00000000" }},
-            {'S', new[] { "00111110", "01000000", "01000000", "00111100", "00000010", "00000010", "01111100", "00000000" }},
-            {'T', new[] { "01111110", "00011000", "00011000", "00011000", "00011000", "00011000", "00011000", "00000000" }},
-            {'U', new[] { "01000010", "01000010", "01000010", "01000010", "01000010", "01000010", "00111100", "00000000" }},
-            {'V', new[] { "01000010", "01000010", "01000010", "01000010", "01000010", "00100100", "00011000", "00000000" }},
-            {'W', new[] { "01000010", "01000010", "01000010", "01000010", "01011010", "01100110", "01000010", "00000000" }},
-            {'X', new[] { "01000010", "01000010", "00100100", "00011000", "00100100", "01000010", "01000010", "00000000" }},
-            {'Y', new[] { "01000010", "01000010", "00100100", "00011000", "00011000", "00011000", "00011000", "00000000" }},
-            {'Z', new[] { "01111110", "00000010", "00000100", "00001000", "00010000", "00100000", "01111110", "00000000" }},
-            // Lowercase (a-z)
-            {'a', new[] { "00000000", "00000000", "00111000", "00000100", "00111100", "01000100", "00111100", "00000000" }},
-            {'b', new[] { "01000000", "01000000", "01111000", "01000100", "01000100", "01000100", "01111000", "00000000" }},
-            {'c', new[] { "00000000", "00000000", "00111100", "01000000", "01000000", "01000000", "00111100", "00000000" }},
-            {'d', new[] { "00000100", "00000100", "00111100", "01000100", "01000100", "01000100", "00111100", "00000000" }},
-            {'e', new[] { "00000000", "00000000", "00111000", "01000100", "01111100", "01000000", "00111100", "00000000" }},
-            {'f', new[] { "00011000", "00100100", "00100000", "01110000", "00100000", "00100000", "00100000", "00000000" }},
-            {'g', new[] { "00000000", "00000000", "00111100", "01000100", "00111100", "00000100", "00111000", "00000000" }},
-            {'h', new[] { "01000000", "01000000", "01111000", "01000100", "01000100", "01000100", "01000100", "00000000" }},
-            {'i', new[] { "00010000", "00000000", "00110000", "00010000", "00010000", "00010000", "00111000", "00000000" }},
-            {'j', new[] { "00001000", "00000000", "00011000", "00001000", "00001000", "01001000", "00110000", "00000000" }},
-            {'k', new[] { "01000000", "01000000", "01001000", "01010000", "01100000", "01010000", "01001000", "00000000" }},
-            {'l', new[] { "00110000", "00010000", "00010000", "00010000", "00010000", "00010000", "00111000", "00000000" }},
-            {'m', new[] { "00000000", "00000000", "01101100", "01010100", "01010100", "01000100", "01000100", "00000000" }},
-            {'n', new[] { "00000000", "00000000", "01111000", "01000100", "01000100", "01000100", "01000100", "00000000" }},
-            {'o', new[] { "00000000", "00000000", "00111000", "01000100", "01000100", "01000100", "00111000", "00000000" }},
-            {'p', new[] { "00000000", "00000000", "01111000", "01000100", "01111000", "01000000", "01000000", "00000000" }},
-            {'q', new[] { "00000000", "00000000", "00111100", "01000100", "00111100", "00000100", "00000100", "00000000" }},
-            {'r', new[] { "00000000", "00000000", "01111000", "01000100", "01000000", "01000000", "01000000", "00000000" }},
-            {'s', new[] { "00000000", "00000000", "00111100", "01000000", "00111000", "00000100", "01111000", "00000000" }},
-            {'t', new[] { "00100000", "00100000", "01110000", "00100000", "00100000", "00100100", "00011000", "00000000" }},
-            {'u', new[] { "00000000", "00000000", "01000100", "01000100", "01000100", "01001100", "00110100", "00000000" }},
-            {'v', new[] { "00000000", "00000000", "01000100", "01000100", "01000100", "00101000", "00010000", "00000000" }},
-            {'w', new[] { "00000000", "00000000", "01000100", "01000100", "01010100", "01010100", "00101000", "00000000" }},
-            {'x', new[] { "00000000", "00000000", "01000100", "00101000", "00010000", "00101000", "01000100", "00000000" }},
-            {'y', new[] { "00000000", "00000000", "01000100", "01000100", "00111100", "00000100", "00111000", "00000000" }},
-            {'z', new[] { "00000000", "00000000", "01111100", "00001000", "00010000", "00100000", "01111100", "00000000" }},
-            // Special characters
-            {' ', new[] { "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000" }},
-            {'!', new[] { "00010000", "00010000", "00010000", "00010000", "00010000", "00000000", "00010000", "00000000" }},
-            {'?', new[] { "00111000", "01000100", "00000100", "00001000", "00010000", "00000000", "00010000", "00000000" }},
-            {'.', new[] { "00000000", "00000000", "00000000", "00000000", "00000000", "00010000", "00010000", "00000000" }},
-            {',', new[] { "00000000", "00000000", "00000000", "00000000", "00010000", "00010000", "00100000", "00000000" }},
-            {'-', new[] { "00000000", "00000000", "00000000", "01111110", "00000000", "00000000", "00000000", "00000000" }},
-            {'_', new[] { "00000000", "00000000", "00000000", "00000000", "00000000", "00000000", "01111110", "00000000" }},
-            {':', new[] { "00000000", "00010000", "00000000", "00000000", "00010000", "00000000", "00000000", "00000000" }},
-            {';', new[] { "00000000", "00010000", "00000000", "00000000", "00010000", "00010000", "00100000", "00000000" }},
-            {'\'', new[] { "00010000", "00010000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000" }},
-            {'"', new[] { "00101000", "00101000", "00000000", "00000000", "00000000", "00000000", "00000000", "00000000" }},
-            {'(', new[] { "00001000", "00010000", "00100000", "00100000", "00100000", "00010000", "00001000", "00000000" }},
-            {')', new[] { "00100000", "00010000", "00001000", "00001000", "00001000", "00010000", "00100000", "00000000" }},
-            {'[', new[] { "00011000", "00010000", "00010000", "00010000", "00010000", "00010000", "00011000", "00000000" }},
-            {']', new[] { "00110000", "00010000", "00010000", "00010000", "00010000", "00010000", "00110000", "00000000" }},
-            {'/', new[] { "00000010", "00000100", "00001000", "00010000", "00100000", "01000000", "00000000", "00000000" }},
-            {'\\', new[] { "01000000", "00100000", "00010000", "00001000", "00000100", "00000010", "00000000", "00000000" }},
-            {'+', new[] { "00000000", "00010000", "00010000", "01111110", "00010000", "00010000", "00000000", "00000000" }},
-            {'*', new[] { "00000000", "00101000", "00010000", "01111110", "00010000", "00101000", "00000000", "00000000" }},
-            {'=', new[] { "00000000", "01111110", "00000000", "01111110", "00000000", "00000000", "00000000", "00000000" }},
-            // Add more as needed
-        }
-    );
-
     private readonly Dictionary<char, string[]> fontMap;
     private readonly int gridWidth;
     private readonly int gridHeight;
@@ -307,12 +18,12 @@ public class BitmapFont
     /// Gets the number of characters defined in the font.
     /// </summary>
     public int Count => fontMap.Count;
-    
+
     /// <summary>
     /// Returns all characters available in the font.
     /// </summary>
     public IEnumerable<char> GetAllChars() => fontMap.Keys;
-    
+
     /// <summary>
     /// Gets the grid representation for the specified character.
     /// Returns null if the character is not defined in the font.
@@ -328,7 +39,7 @@ public class BitmapFont
     /// Dictionary mapping characters to their grid representation as string arrays.
     /// Can not be empty and has to contain all characters that will be drawn.
     /// </param>
-    /// <remarks> 
+    /// <remarks>
     /// All characters need to have the same amount of rows (string array entries) and columns (string length).
     /// </remarks>
     public BitmapFont(Dictionary<char, string[]> fontMap)
@@ -356,185 +67,22 @@ public class BitmapFont
         gridHeight = expectedRows;
         gridWidth = expectedCols;
     }
+
+
+    #region Draw Char
     
     /// <summary>
-    /// Draws the given text inside the given rectangle, using a custom draw function for each cell.
-    /// </summary>
-    /// <param name="text">Text to draw.</param>
-    /// <param name="rect">Rectangle to draw the text in.</param>
-    /// <param name="drawCell">Function to draw each cell.
-    /// Parameters: Rect cellRect, char character, int row, int col.</param>
-    /// <param name="spacing">Spacing between characters.</param>
-    public void Draw(string text, Rect rect, Action<Rect, char, int, int> drawCell, float spacing = 0.05f)
-    {
-        if (string.IsNullOrEmpty(text)) return;
-        var chars = text.ToCharArray();
-        var charRects = rect.GetAlignedRectsGrid(new Grid(chars.Length, 1), new Size(spacing, 0f));
-        if (charRects == null) return;
-
-        for (int i = 0; i < chars.Length; i++)
-        {
-            var c = chars[i];
-            if (!fontMap.TryGetValue(c, out var grid)) continue;
-            var cellRects = charRects[i].Split(gridWidth, gridHeight);
-            for (int row = 0; row < gridHeight; row++)
-            {
-                for (int col = 0; col < gridWidth; col++)
-                {
-                    if (grid[row][col] == '1')
-                    {
-                        int cellIndex = row * gridWidth + col;
-                        drawCell(cellRects[cellIndex], c, row, col);
-                    }
-                }
-            }
-        }
-    }
-
-    /// <summary>
-    /// Draws the given text inside the given rectangle with wrapping, using a custom draw function for each cell.
-    /// </summary>
-    /// <param name="text">Text to draw.</param>
-    /// <param name="rect">Rectangle to draw the text in.</param>
-    /// <param name="drawCell">Function to draw each cell.
-    /// Parameters: Rect cellRect, char character, int row, int col.</param>
-    /// <param name="spacing">Spacing between characters.</param>
-    public void DrawWithWrap(string text, Rect rect, Action<Rect, char, int, int> drawCell, float spacing = 0.05f)
-    {
-        if (string.IsNullOrEmpty(text)) return;
-
-        float charWidth = rect.Size.Width / Math.Max(1, rect.Size.Width / (gridWidth + spacing));
-        float charHeight = rect.Size.Height / Math.Max(1, rect.Size.Height / (gridHeight + spacing));
-        float x = rect.TopLeft.X;
-        float y = rect.TopLeft.Y;
-        float maxX = rect.TopLeft.X + rect.Size.Width;
-        float maxY = rect.TopLeft.Y + rect.Size.Height;
-
-        foreach (char c in text)
-        {
-            if (!fontMap.TryGetValue(c, out var grid)) continue;
-
-            if (x + charWidth > maxX)
-            {
-                x = rect.TopLeft.X;
-                y += charHeight + spacing;
-            }
-
-            for (int row = 0; row < gridHeight; row++)
-            {
-                for (int col = 0; col < gridWidth; col++)
-                {
-                    if (grid[row][col] == '1')
-                    {
-                        float cellY = y + row * charHeight / gridHeight;
-                        if (cellY + charHeight / gridHeight > maxY) continue;
-                        var cellRect = new Rect(
-                            new Vector2(x + col * charWidth / gridWidth, cellY),
-                            new Size(charWidth / gridWidth, charHeight / gridHeight),
-                            AnchorPoint.TopLeft
-                        );
-                        drawCell(cellRect, c, row, col);
-                    }
-                }
-            }
-            x += charWidth + spacing;
-        }
-    }
-    
-    /// <summary>
-    /// Draws the given text inside the given rectangle.
-    /// </summary>
-    /// <param name="text">Text to draw.</param>
-    /// <param name="rect">Rectangle to draw the text in.</param>
-    /// <param name="cellColor">Color for filled cells.</param>
-    /// <param name="spacing">Spacing between characters.</param>
-    public void Draw(string text, Rect rect, ColorRgba cellColor, float spacing = 0.05f)
-    {
-        if (string.IsNullOrEmpty(text)) return;
-        var chars = text.ToCharArray();
-        var charRects = rect.GetAlignedRectsGrid(new Grid(chars.Length, 1), new Size(spacing, 0f));
-        if (charRects == null) return;
-
-        for (int i = 0; i < chars.Length; i++)
-        {
-            var c = chars[i];
-            if (!fontMap.TryGetValue(c, out var grid)) continue;
-            var cellRects = charRects[i].Split(gridWidth, gridHeight);
-            for (int row = 0; row < gridHeight; row++)
-            {
-                for (int col = 0; col < gridWidth; col++)
-                {
-                    if (grid[row][col] == '1')
-                    {
-                        int cellIndex = row * gridWidth + col;
-                        cellRects[cellIndex].Draw(cellColor);
-                    }
-                }
-            }
-        }
-    }
-
-    /// <summary>
-    /// Draws the given text inside the given rectangle, wrapping to a new line when the next character would exceed the rectangle's width.
-    /// Continues drawing characters even if a new line goes over the rectangle's height, but only draws cells that are within the rectangle's vertical bounds.
-    /// </summary>
-    /// <param name="text">Text to draw.</param>
-    /// <param name="rect">Rectangle to draw the text in.</param>
-    /// <param name="cellColor">Color for filled cells.</param>
-    /// <param name="spacing">Spacing between characters.</param>
-    public void DrawWithWrap(string text, Rect rect, ColorRgba cellColor, float spacing = 0.05f)
-    {
-        if (string.IsNullOrEmpty(text)) return;
-
-        float charWidth = rect.Size.Width / Math.Max(1, rect.Size.Width / (gridWidth + spacing));
-        float charHeight = rect.Size.Height / Math.Max(1, rect.Size.Height / (gridHeight + spacing));
-        float x = rect.TopLeft.X;
-        float y = rect.TopLeft.Y;
-        float maxX = rect.TopLeft.X + rect.Size.Width;
-        float maxY = rect.TopLeft.Y + rect.Size.Height;
-
-        foreach (char c in text)
-        {
-            if (!fontMap.TryGetValue(c, out var grid)) continue;
-
-            // If next character would exceed rect width, wrap to next line
-            if (x + charWidth > maxX)
-            {
-                x = rect.TopLeft.X;
-                y += charHeight + spacing;
-            }
-
-            // Draw character grid, but only cells within rect height
-            for (int row = 0; row < gridHeight; row++)
-            {
-                for (int col = 0; col < gridWidth; col++)
-                {
-                    if (grid[row][col] == '1')
-                    {
-                        float cellY = y + row * charHeight / gridHeight;
-                        if (cellY + charHeight / gridHeight > maxY) continue; // Skip cells outside rect height
-
-                        var cellRect = new Rect(
-                            new Vector2(x + col * charWidth / gridWidth, cellY),
-                            new Size(charWidth / gridWidth, charHeight / gridHeight),
-                            AnchorPoint.TopLeft
-                        );
-                        cellRect.Draw(cellColor);
-                    }
-                }
-            }
-            x += charWidth + spacing;
-        }
-    }
-
-    /// <summary>
-    /// Draws a single character inside the specified rectangle using the bitmap font.
+    /// Draws a single character into the specified rectangle using the provided color.
     /// </summary>
     /// <param name="c">The character to draw.</param>
-    /// <param name="rect">The rectangle to draw the character in.</param>
-    /// <param name="cellColor">The color for filled cells.</param>
+    /// <param name="rect">The rectangle area in which to draw the character.</param>
+    /// <param name="cellColor">The color to use for each filled cell.</param>
+    /// <remarks>
+    /// Only cells marked as '1' in the character grid are drawn. If the rectangle is too small, nothing is drawn.
+    /// </remarks>
     public void Draw(char c, Rect rect, ColorRgba cellColor)
     {
+        if(rect.Width <= 1 || rect.Height <= 1) return;
         if (!fontMap.TryGetValue(c, out string[]? grid)) return;
         var cellRects = rect.Split(gridWidth, gridHeight);
         for (var row = 0; row < gridHeight; row++)
@@ -547,18 +95,18 @@ public class BitmapFont
             }
         }
     }
-    
     /// <summary>
-    /// Draws a single character inside the specified rectangle using a custom draw function for each cell.
+    /// Draws a single character into the specified rectangle using a custom cell drawing action.
     /// </summary>
     /// <param name="c">The character to draw.</param>
-    /// <param name="rect">The rectangle to draw the character in.</param>
-    /// <param name="drawCell">
-    /// The function to call for each filled cell in the character grid.
-    /// Parameters: Rect cellRect, char character, int row, int col.
-    /// </param>
+    /// <param name="rect">The rectangle area in which to draw the character.</param>
+    /// <param name="drawCell">Action to invoke for each filled cell, providing the cell rectangle, character, row, and column.</param>
+    /// <remarks>
+    /// Only cells marked as '1' in the character grid are drawn. If the rectangle is too small, nothing is drawn.
+    /// </remarks>
     public void Draw(char c, Rect rect, Action<Rect, char, int, int> drawCell)
     {
+        if(rect.Width <= 1 || rect.Height <= 1) return;
         if (!fontMap.TryGetValue(c, out string[]? grid)) return;
         var cellRects = rect.Split(gridWidth, gridHeight);
         for (var row = 0; row < gridHeight; row++)
@@ -571,4 +119,425 @@ public class BitmapFont
             }
         }
     }
+    
+    #endregion
+
+    #region Draw
+    /// <summary>
+    /// Draws a string of text into the specified rectangle using the provided color.
+    /// </summary>
+    /// <param name="text">The text to draw.</param>
+    /// <param name="rect">The rectangle area in which to draw the text.</param>
+    /// <param name="cellColor">The color to use for each filled cell.</param>
+    /// <param name="spacing">Spacing between characters, relative to character width.</param>
+    /// <remarks>
+    /// Each character is drawn in sequence, spaced according to the spacing parameter. Only cells marked as '1' are drawn.
+    /// </remarks>
+    public void Draw(string text, Rect rect, ColorRgba cellColor, float spacing = 0.05f)
+    {
+        if(rect.Width <= 1 || rect.Height <= 1) return;
+        if (string.IsNullOrEmpty(text)) return;
+        var chars = text.ToCharArray();
+        int charCount = chars.Length;
+        if (charCount == 0) return;
+
+        float charWidth = rect.Size.Width / (charCount + (charCount - 1) * spacing);
+        float charHeight = rect.Size.Height;
+        float cellWidth = charWidth / gridWidth;
+        float cellHeight = charHeight / gridHeight;
+
+        float x = rect.TopLeft.X;
+        float y = rect.TopLeft.Y;
+
+        for (int i = 0; i < charCount; i++)
+        {
+            var c = chars[i];
+            if (!fontMap.TryGetValue(c, out var grid)) continue;
+
+            for (int row = 0; row < gridHeight; row++)
+            {
+                for (int col = 0; col < gridWidth; col++)
+                {
+                    if (grid[row][col] == '1')
+                    {
+                        float cellX = x + col * cellWidth;
+                        float cellY = y + row * cellHeight;
+                        var cellRect = new Rect(
+                            new Vector2(cellX, cellY),
+                            new Size(cellWidth, cellHeight),
+                            AnchorPoint.TopLeft
+                        );
+                        cellRect.Draw(cellColor);
+                    }
+                }
+            }
+            x += charWidth + spacing * charWidth;
+        }
+    }
+    
+    /// <summary>
+    /// Draws a string of text into the specified rectangle using a custom cell drawing action.
+    /// </summary>
+    /// <param name="text">The text to draw.</param>
+    /// <param name="rect">The rectangle area in which to draw the text.</param>
+    /// <param name="drawCell">Action to invoke for each filled cell, providing the cell rectangle, character, row, and column.</param>
+    /// <param name="spacing">Spacing between characters, relative to character width.</param>
+    /// <remarks>
+    /// Each character is drawn in sequence, spaced according to the spacing parameter. Only cells marked as '1' are drawn.
+    /// </remarks>
+    public void Draw(string text, Rect rect, Action<Rect, char, int, int> drawCell, float spacing = 0.05f)
+    {
+        if(rect.Width <= 1 || rect.Height <= 1) return;
+        if (string.IsNullOrEmpty(text)) return;
+        var chars = text.ToCharArray();
+        int charCount = chars.Length;
+        if (charCount == 0) return;
+        
+        float charWidth = rect.Size.Width / (charCount + (charCount - 1) * spacing);
+        float charHeight = rect.Size.Height;
+        float cellWidth = charWidth / gridWidth;
+        float cellHeight = charHeight / gridHeight;
+
+        float x = rect.TopLeft.X;
+        float y = rect.TopLeft.Y;
+
+        for (int i = 0; i < charCount; i++)
+        {
+            var c = chars[i];
+            if (!fontMap.TryGetValue(c, out var grid)) continue;
+
+            for (int row = 0; row < gridHeight; row++)
+            {
+                for (int col = 0; col < gridWidth; col++)
+                {
+                    if (grid[row][col] == '1')
+                    {
+                        float cellX = x + col * cellWidth;
+                        float cellY = y + row * cellHeight;
+                        var cellRect = new Rect(
+                            new Vector2(cellX, cellY),
+                            new Size(cellWidth, cellHeight),
+                            AnchorPoint.TopLeft
+                        );
+                        drawCell(cellRect, c, row, col);
+                    }
+                }
+            }
+            x += charWidth + spacing * charWidth;
+        }
+    }
+    
+    /// <summary>
+    /// Draws a string of text into the specified rectangle with uniform scaling and alignment, using the provided color.
+    /// </summary>
+    /// <param name="text">The text to draw.</param>
+    /// <param name="rect">The rectangle area in which to draw the text.</param>
+    /// <param name="cellColor">The color to use for each filled cell.</param>
+    /// <param name="alignment">Anchor point for text alignment within the rectangle.</param>
+    /// <param name="spacing">Spacing between characters, relative to character width.</param>
+    /// <remarks>
+    /// Uniform scaling ensures all characters are the same size and aligned according to the specified anchor point.
+    /// </remarks>
+    public void DrawUniform(string text, Rect rect, ColorRgba cellColor, AnchorPoint alignment, float spacing = 0.05f)
+    {
+        if(rect.Width <= 1 || rect.Height <= 1) return;
+        if (string.IsNullOrEmpty(text)) return;
+        var chars = text.ToCharArray();
+        int charCount = chars.Length;
+        if (charCount == 0) return;
+
+        // Uniform scaling using gridWidth/gridHeight ratio
+        float totalGridWidth = charCount * gridWidth + (charCount - 1) * spacing * gridWidth;
+        float scaleX = rect.Size.Width / totalGridWidth;
+        float scaleY = rect.Size.Height / gridHeight;
+        float scale = Math.Min(scaleX, scaleY);
+
+        float charWidth = scale * gridWidth;
+        float charHeight = scale * gridHeight;
+        float cellWidth = charWidth / gridWidth;
+        float cellHeight = charHeight / gridHeight;
+
+        float textWidth = charCount * charWidth + (charCount - 1) * spacing * charWidth;
+        float textHeight = charHeight;
+
+        // Use AnchorPoint alignment for offset
+        float offsetX = (rect.Size.Width - textWidth) * alignment.X;
+        float offsetY = (rect.Size.Height - textHeight) * alignment.Y;
+        float x = rect.TopLeft.X + offsetX;
+        float y = rect.TopLeft.Y + offsetY;
+
+        for (int i = 0; i < charCount; i++)
+        {
+            var c = chars[i];
+            if (!fontMap.TryGetValue(c, out var grid)) continue;
+
+            for (int row = 0; row < gridHeight; row++)
+            {
+                for (int col = 0; col < gridWidth; col++)
+                {
+                    if (grid[row][col] == '1')
+                    {
+                        float cellX = x + col * cellWidth;
+                        float cellY = y + row * cellHeight;
+                        var cellRect = new Rect(
+                            new Vector2(cellX, cellY),
+                            new Size(cellWidth, cellHeight),
+                            AnchorPoint.TopLeft
+                        );
+                        cellRect.Draw(cellColor);
+                    }
+                }
+            }
+            x += charWidth + spacing * charWidth;
+        }
+    }
+    
+    /// <summary>
+    /// Draws a string of text into the specified rectangle with uniform scaling and alignment, using a custom cell drawing action.
+    /// </summary>
+    /// <param name="text">The text to draw.</param>
+    /// <param name="rect">The rectangle area in which to draw the text.</param>
+    /// <param name="drawCell">Action to invoke for each filled cell, providing the cell rectangle, character, character index, and row.</param>
+    /// <param name="alignment">Anchor point for text alignment within the rectangle.</param>
+    /// <param name="spacing">Spacing between characters, relative to character width.</param>
+    /// <remarks>
+    /// Uniform scaling ensures all characters are the same size and aligned according to the specified anchor point.
+    /// </remarks>
+    public void DrawUniform(string text, Rect rect, Action<Rect, char, int, int> drawCell, AnchorPoint alignment, float spacing = 0.05f)
+    {
+        if(rect.Width <= 1 || rect.Height <= 1) return;
+        if (string.IsNullOrEmpty(text)) return;
+        var chars = text.ToCharArray();
+        int charCount = chars.Length;
+        if (charCount == 0) return;
+
+        // Uniform scaling using gridWidth/gridHeight ratio
+        float totalGridWidth = charCount * gridWidth + (charCount - 1) * spacing * gridWidth;
+        float scaleX = rect.Size.Width / totalGridWidth;
+        float scaleY = rect.Size.Height / gridHeight;
+        float scale = Math.Min(scaleX, scaleY);
+
+        float charWidth = scale * gridWidth;
+        float charHeight = scale * gridHeight;
+        float cellWidth = charWidth / gridWidth;
+        float cellHeight = charHeight / gridHeight;
+
+        float textWidth = charCount * charWidth + (charCount - 1) * spacing * charWidth;
+        float textHeight = charHeight;
+
+        // Use AnchorPoint alignment for offset
+        float offsetX = (rect.Size.Width - textWidth) * alignment.X;
+        float offsetY = (rect.Size.Height - textHeight) * alignment.Y;
+        float x = rect.TopLeft.X + offsetX;
+        float y = rect.TopLeft.Y + offsetY;
+
+        for (int i = 0; i < charCount; i++)
+        {
+            var c = chars[i];
+            if (!fontMap.TryGetValue(c, out var grid)) continue;
+
+            for (int row = 0; row < gridHeight; row++)
+            {
+                for (int col = 0; col < gridWidth; col++)
+                {
+                    if (grid[row][col] == '1')
+                    {
+                        float cellX = x + col * cellWidth;
+                        float cellY = y + row * cellHeight;
+                        var cellRect = new Rect(
+                            new Vector2(cellX, cellY),
+                            new Size(cellWidth, cellHeight),
+                            AnchorPoint.TopLeft
+                        );
+                        drawCell(cellRect, c, i, row);
+                    }
+                }
+            }
+            x += charWidth + spacing * charWidth;
+        }
+    }
+    #endregion
+
+    #region Draw With Wrap
+
+    /// <summary>
+    /// Draws a string of text into the specified rectangle, wrapping text to multiple lines as needed, using the provided color.
+    /// </summary>
+    /// <param name="text">The text to draw.</param>
+    /// <param name="rect">The rectangle area in which to draw the text.</param>
+    /// <param name="cellColor">The color to use for each filled cell.</param>
+    /// <param name="charSpacing">Spacing between characters, relative to character width.</param>
+    /// <param name="lineSpacing">Spacing between lines, relative to character height.</param>
+    /// <remarks>
+    /// Automatically determines the optimal number of characters per line to maximize area usage. Only cells marked as '1' are drawn.
+    /// </remarks>
+    public void DrawWithWrap(string text, Rect rect, ColorRgba cellColor, float charSpacing = 0.05f, float lineSpacing = 0.05f)
+    {
+        if(rect.Width <= 1 || rect.Height <= 1) return;
+        if (string.IsNullOrEmpty(text)) return;
+        var chars = text.ToCharArray();
+        int charCount = chars.Length;
+        if (charCount == 0) return;
+
+        // Try all possible charsPerLine to maximize area usage
+        int bestCharsPerLine = 1;
+        float bestCharHeight = 0f;
+        float bestCharWidth = 0f;
+        int bestLines = charCount;
+        for (int charsPerLine = 1; charsPerLine <= charCount; charsPerLine++)
+        {
+            int lines = (int)Math.Ceiling((float)charCount / charsPerLine);
+            float totalSpacingX = (charsPerLine - 1) * charSpacing;
+            float totalSpacingY = (lines - 1) * lineSpacing;
+            float charWidth = rect.Size.Width / (charsPerLine + totalSpacingX);
+            float charHeight = rect.Size.Height / (lines + totalSpacingY);
+            // Maintain aspect ratio
+            if (charHeight > 0 && charWidth > 0 && charHeight < charWidth * gridHeight / gridWidth)
+            {
+                charWidth = charHeight * gridWidth / gridHeight;
+            }
+            else
+            {
+                charHeight = charWidth * gridHeight / gridWidth;
+            }
+            if (charHeight > bestCharHeight)
+            {
+                bestCharHeight = charHeight;
+                bestCharWidth = charWidth;
+                bestCharsPerLine = charsPerLine;
+                bestLines = lines;
+            }
+        }
+
+        float cellWidth = bestCharWidth / gridWidth;
+        float cellHeight = bestCharHeight / gridHeight;
+
+        float totalTextHeight = bestLines * bestCharHeight + (bestLines - 1) * lineSpacing * bestCharHeight;
+        float offsetY = rect.TopLeft.Y + (rect.Size.Height - totalTextHeight) * 0.5f;
+
+        int charIndex = 0;
+        for (int line = 0; line < bestLines; line++)
+        {
+            int charsThisLine = Math.Min(bestCharsPerLine, charCount - charIndex);
+            float totalLineWidth = charsThisLine * bestCharWidth + (charsThisLine - 1) * charSpacing * bestCharWidth;
+            float offsetX = rect.TopLeft.X + (rect.Size.Width - totalLineWidth) * 0.5f;
+            float y = offsetY + line * (bestCharHeight + lineSpacing * bestCharHeight);
+            float x = offsetX;
+            for (int i = 0; i < charsThisLine; i++)
+            {
+                var c = chars[charIndex++];
+                if (!fontMap.TryGetValue(c, out var grid)) continue;
+                for (int row = 0; row < gridHeight; row++)
+                {
+                    for (int col = 0; col < gridWidth; col++)
+                    {
+                        if (grid[row][col] == '1')
+                        {
+                            float cellX = x + col * cellWidth;
+                            float cellY = y + row * cellHeight;
+                            var cellRect = new Rect(
+                                new Vector2(cellX, cellY),
+                                new Size(cellWidth, cellHeight),
+                                AnchorPoint.TopLeft
+                            );
+                            cellRect.Draw(cellColor);
+                        }
+                    }
+                }
+                x += bestCharWidth + charSpacing * bestCharWidth;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Draws a string of text into the specified rectangle, wrapping text to multiple lines as needed, using a custom cell drawing action.
+    /// </summary>
+    /// <param name="text">The text to draw.</param>
+    /// <param name="rect">The rectangle area in which to draw the text.</param>
+    /// <param name="drawCell">Action to invoke for each filled cell, providing the cell rectangle, character, row, and column.</param>
+    /// <param name="charSpacing">Spacing between characters, relative to character width.</param>
+    /// <param name="lineSpacing">Spacing between lines, relative to character height.</param>
+    /// <remarks>
+    /// Automatically determines the optimal number of characters per line to maximize area usage. Only cells marked as '1' are drawn.
+    /// </remarks>
+    public void DrawWithWrap(string text, Rect rect, Action<Rect, char, int, int> drawCell, float charSpacing = 0.05f, float lineSpacing = 0.05f)
+    {
+        if(rect.Width <= 1 || rect.Height <= 1) return;
+        if (string.IsNullOrEmpty(text)) return;
+        var chars = text.ToCharArray();
+        int charCount = chars.Length;
+        if (charCount == 0) return;
+
+        // Try all possible charsPerLine to maximize area usage
+        int bestCharsPerLine = 1;
+        float bestCharHeight = 0f;
+        float bestCharWidth = 0f;
+        int bestLines = charCount;
+        for (int charsPerLine = 1; charsPerLine <= charCount; charsPerLine++)
+        {
+            int lines = (int)Math.Ceiling((float)charCount / charsPerLine);
+            float totalSpacingX = (charsPerLine - 1) * charSpacing;
+            float totalSpacingY = (lines - 1) * lineSpacing;
+            float charWidth = rect.Size.Width / (charsPerLine + totalSpacingX);
+            float charHeight = rect.Size.Height / (lines + totalSpacingY);
+            // Maintain aspect ratio
+            if (charHeight > 0 && charWidth > 0 && charHeight < charWidth * gridHeight / gridWidth)
+            {
+                charWidth = charHeight * gridWidth / gridHeight;
+            }
+            else
+            {
+                charHeight = charWidth * gridHeight / gridWidth;
+            }
+            if (charHeight > bestCharHeight)
+            {
+                bestCharHeight = charHeight;
+                bestCharWidth = charWidth;
+                bestCharsPerLine = charsPerLine;
+                bestLines = lines;
+            }
+        }
+
+        float cellWidth = bestCharWidth / gridWidth;
+        float cellHeight = bestCharHeight / gridHeight;
+
+        float totalTextHeight = bestLines * bestCharHeight + (bestLines - 1) * lineSpacing * bestCharHeight;
+        float offsetY = rect.TopLeft.Y + (rect.Size.Height - totalTextHeight) * 0.5f;
+
+        int charIndex = 0;
+        for (int line = 0; line < bestLines; line++)
+        {
+            int charsThisLine = Math.Min(bestCharsPerLine, charCount - charIndex);
+            float totalLineWidth = charsThisLine * bestCharWidth + (charsThisLine - 1) * charSpacing * bestCharWidth;
+            float offsetX = rect.TopLeft.X + (rect.Size.Width - totalLineWidth) * 0.5f;
+            float y = offsetY + line * (bestCharHeight + lineSpacing * bestCharHeight);
+            float x = offsetX;
+            for (int i = 0; i < charsThisLine; i++)
+            {
+                var c = chars[charIndex++];
+                if (!fontMap.TryGetValue(c, out var grid)) continue;
+                for (int row = 0; row < gridHeight; row++)
+                {
+                    for (int col = 0; col < gridWidth; col++)
+                    {
+                        if (grid[row][col] == '1')
+                        {
+                            float cellX = x + col * cellWidth;
+                            float cellY = y + row * cellHeight;
+                            var cellRect = new Rect(
+                                new Vector2(cellX, cellY),
+                                new Size(cellWidth, cellHeight),
+                                AnchorPoint.TopLeft
+                            );
+                            drawCell(cellRect, c, row, col);
+                        }
+                    }
+                }
+                x += bestCharWidth + charSpacing * bestCharWidth;
+            }
+        }
+    }
+    
+    #endregion
+
 }
