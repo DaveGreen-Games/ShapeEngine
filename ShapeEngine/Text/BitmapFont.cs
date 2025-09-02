@@ -10,6 +10,8 @@ namespace ShapeEngine.Text;
 /// </summary>
 public partial class BitmapFont
 {
+    #region Properties
+    
     private readonly Dictionary<char, string[]> fontMap;
     private readonly int gridWidth;
     private readonly int gridHeight;
@@ -32,6 +34,10 @@ public partial class BitmapFont
     /// <returns>String array representing the character grid, or null if not found.</returns>
     public string[]? GetGrid(char c) => fontMap.GetValueOrDefault(c);
 
+    #endregion
+    
+    #region Constructors
+    
     /// <summary>
     /// Initializes a new instance of the BitmapFontRenderer.
     /// </summary>
@@ -67,8 +73,69 @@ public partial class BitmapFont
         gridHeight = expectedRows;
         gridWidth = expectedCols;
     }
+    private BitmapFont(Dictionary<char, string[]> fontMap, int gridWidth, int gridHeight)
+    {
+        this.fontMap = fontMap;
+        this.gridWidth = gridWidth;
+        this.gridHeight = gridHeight;
+    }
 
+    #endregion
 
+    #region Copy / Filter
+    
+    /// <summary>
+    /// Creates a deep copy of the current <see cref="BitmapFont"/>.
+    /// </summary>
+    /// <returns>A new <see cref="BitmapFont"/> instance with copied font map and grid dimensions.</returns>
+    public BitmapFont Copy()
+    {
+        var newFontMap = new Dictionary<char, string[]>(fontMap.Count);
+        foreach (var kvp in fontMap)
+        {
+            var gridCopy = new string[kvp.Value.Length];
+            Array.Copy(kvp.Value, gridCopy, kvp.Value.Length);
+            newFontMap[kvp.Key] = gridCopy;
+        }
+        return new BitmapFont(newFontMap, gridWidth, gridHeight);
+    }
+    /// <summary>
+    /// Returns a new <see cref="BitmapFont"/> containing only the specified supported characters.
+    /// </summary>
+    /// <param name="supportedChars">A list of characters to include in the filtered font.</param>
+    /// <returns>A new <see cref="BitmapFont"/> instance with only the supported characters.</returns>
+    public BitmapFont Filter(List<char> supportedChars)
+    {
+        var newFontMap = new Dictionary<char, string[]>();
+        foreach (var kvp in fontMap)
+        {
+            if (!supportedChars.Contains(kvp.Key)) continue;
+            var gridCopy = new string[kvp.Value.Length];
+            Array.Copy(kvp.Value, gridCopy, kvp.Value.Length);
+            newFontMap[kvp.Key] = gridCopy;
+        }
+        return new BitmapFont(newFontMap, gridWidth, gridHeight);
+    }
+    /// <summary>
+    /// Returns a new <see cref="BitmapFont"/> containing only the specified supported characters.
+    /// </summary>
+    /// <param name="supportedChars">A hash set of characters to include in the filtered font.</param>
+    /// <returns>A new <see cref="BitmapFont"/> instance with only the supported characters.</returns>
+    public BitmapFont Filter(HashSet<char> supportedChars)
+    {
+        var newFontMap = new Dictionary<char, string[]>();
+        foreach (var kvp in fontMap)
+        {
+            if (!supportedChars.Contains(kvp.Key)) continue;
+            var gridCopy = new string[kvp.Value.Length];
+            Array.Copy(kvp.Value, gridCopy, kvp.Value.Length);
+            newFontMap[kvp.Key] = gridCopy;
+        }
+        return new BitmapFont(newFontMap, gridWidth, gridHeight);
+    }
+
+    #endregion
+    
     #region Draw Char
     
     /// <summary>
@@ -100,11 +167,11 @@ public partial class BitmapFont
     /// </summary>
     /// <param name="c">The character to draw.</param>
     /// <param name="rect">The rectangle area in which to draw the character.</param>
-    /// <param name="drawCell">Action to invoke for each filled cell, providing the cell rectangle, character, row, and column.</param>
+    /// <param name="drawCell">Action to invoke for each cell, providing the cell rectangle, a bool indicating if the cell is filled, the character, row, and column.</param>
     /// <remarks>
-    /// Only cells marked as '1' in the character grid are drawn. If the rectangle is too small, nothing is drawn.
+    /// If the rectangle is too small, nothing is drawn.
     /// </remarks>
-    public void Draw(char c, Rect rect, Action<Rect, char, int, int> drawCell)
+    public void Draw(char c, Rect rect, Action<Rect, bool, char, int, int> drawCell)
     {
         if(rect.Width <= 1 || rect.Height <= 1) return;
         if (!fontMap.TryGetValue(c, out string[]? grid)) return;
@@ -113,9 +180,8 @@ public partial class BitmapFont
         {
             for (var col = 0; col < gridWidth; col++)
             {
-                if (grid[row][col] != '1') continue;
                 int cellIndex = row * gridWidth + col;
-                drawCell(cellRects[cellIndex], c, row, col);
+                drawCell(cellRects[cellIndex], grid[row][col] == '1', c, row, col);
             }
         }
     }
@@ -180,12 +246,12 @@ public partial class BitmapFont
     /// </summary>
     /// <param name="text">The text to draw.</param>
     /// <param name="rect">The rectangle area in which to draw the text.</param>
-    /// <param name="drawCell">Action to invoke for each filled cell, providing the cell rectangle, character, row, and column.</param>
+    /// <param name="drawCell">Action to invoke for each cell, providing the cell rectangle, a bool indicating if the cell is filled, the character, row, and column.</param>
     /// <param name="spacing">Spacing between characters, relative to character width.</param>
     /// <remarks>
     /// Each character is drawn in sequence, spaced according to the spacing parameter. Only cells marked as '1' are drawn.
     /// </remarks>
-    public void Draw(string text, Rect rect, Action<Rect, char, int, int> drawCell, float spacing = 0.05f)
+    public void Draw(string text, Rect rect, Action<Rect, bool, char, int, int> drawCell, float spacing = 0.05f)
     {
         if(rect.Width <= 1 || rect.Height <= 1) return;
         if (string.IsNullOrEmpty(text)) return;
@@ -210,17 +276,16 @@ public partial class BitmapFont
             {
                 for (int col = 0; col < gridWidth; col++)
                 {
-                    if (grid[row][col] == '1')
-                    {
-                        float cellX = x + col * cellWidth;
-                        float cellY = y + row * cellHeight;
-                        var cellRect = new Rect(
-                            new Vector2(cellX, cellY),
-                            new Size(cellWidth, cellHeight),
-                            AnchorPoint.TopLeft
-                        );
-                        drawCell(cellRect, c, row, col);
-                    }
+                    float cellX = x + col * cellWidth;
+                    float cellY = y + row * cellHeight;
+                    var cellRect = new Rect(
+                        new Vector2(cellX, cellY),
+                        new Size(cellWidth, cellHeight),
+                        AnchorPoint.TopLeft
+                    );
+                    bool filled = grid[row][col] == '1';
+                    drawCell(cellRect, filled, c, row, col);
+                    
                 }
             }
             x += charWidth + spacing * charWidth;
@@ -297,13 +362,13 @@ public partial class BitmapFont
     /// </summary>
     /// <param name="text">The text to draw.</param>
     /// <param name="rect">The rectangle area in which to draw the text.</param>
-    /// <param name="drawCell">Action to invoke for each filled cell, providing the cell rectangle, character, character index, and row.</param>
+    /// <param name="drawCell">Action to invoke for each cell, providing the cell rectangle, a bool indicating if the cell is filled, the character, row, and column.</param>
     /// <param name="alignment">Anchor point for text alignment within the rectangle.</param>
     /// <param name="spacing">Spacing between characters, relative to character width.</param>
     /// <remarks>
     /// Uniform scaling ensures all characters are the same size and aligned according to the specified anchor point.
     /// </remarks>
-    public void DrawUniform(string text, Rect rect, Action<Rect, char, int, int> drawCell, AnchorPoint alignment, float spacing = 0.05f)
+    public void DrawUniform(string text, Rect rect, Action<Rect, bool, char, int, int> drawCell, AnchorPoint alignment, float spacing = 0.05f)
     {
         if(rect.Width <= 1 || rect.Height <= 1) return;
         if (string.IsNullOrEmpty(text)) return;
@@ -340,17 +405,15 @@ public partial class BitmapFont
             {
                 for (int col = 0; col < gridWidth; col++)
                 {
-                    if (grid[row][col] == '1')
-                    {
-                        float cellX = x + col * cellWidth;
-                        float cellY = y + row * cellHeight;
-                        var cellRect = new Rect(
-                            new Vector2(cellX, cellY),
-                            new Size(cellWidth, cellHeight),
-                            AnchorPoint.TopLeft
-                        );
-                        drawCell(cellRect, c, i, row);
-                    }
+                    float cellX = x + col * cellWidth;
+                    float cellY = y + row * cellHeight;
+                    var cellRect = new Rect(
+                        new Vector2(cellX, cellY),
+                        new Size(cellWidth, cellHeight),
+                        AnchorPoint.TopLeft
+                    );
+                    bool filled = grid[row][col] == '1';
+                    drawCell(cellRect, filled, c, row, col);
                 }
             }
             x += charWidth + spacing * charWidth;
@@ -454,13 +517,13 @@ public partial class BitmapFont
     /// </summary>
     /// <param name="text">The text to draw.</param>
     /// <param name="rect">The rectangle area in which to draw the text.</param>
-    /// <param name="drawCell">Action to invoke for each filled cell, providing the cell rectangle, character, row, and column.</param>
+    /// <param name="drawCell">Action to invoke for each cell, providing the cell rectangle, a bool indicating if the cell is filled, the character, row, and column.</param>
     /// <param name="charSpacing">Spacing between characters, relative to character width.</param>
     /// <param name="lineSpacing">Spacing between lines, relative to character height.</param>
     /// <remarks>
     /// Automatically determines the optimal number of characters per line to maximize area usage. Only cells marked as '1' are drawn.
     /// </remarks>
-    public void DrawWithWrap(string text, Rect rect, Action<Rect, char, int, int> drawCell, float charSpacing = 0.05f, float lineSpacing = 0.05f)
+    public void DrawWithWrap(string text, Rect rect, Action<Rect, bool, char, int, int> drawCell, float charSpacing = 0.05f, float lineSpacing = 0.05f)
     {
         if(rect.Width <= 1 || rect.Height <= 1) return;
         if (string.IsNullOrEmpty(text)) return;
@@ -520,17 +583,15 @@ public partial class BitmapFont
                 {
                     for (int col = 0; col < gridWidth; col++)
                     {
-                        if (grid[row][col] == '1')
-                        {
-                            float cellX = x + col * cellWidth;
-                            float cellY = y + row * cellHeight;
-                            var cellRect = new Rect(
-                                new Vector2(cellX, cellY),
-                                new Size(cellWidth, cellHeight),
-                                AnchorPoint.TopLeft
-                            );
-                            drawCell(cellRect, c, row, col);
-                        }
+                        float cellX = x + col * cellWidth;
+                        float cellY = y + row * cellHeight;
+                        var cellRect = new Rect(
+                            new Vector2(cellX, cellY),
+                            new Size(cellWidth, cellHeight),
+                            AnchorPoint.TopLeft
+                        );
+                        bool filled = grid[row][col] == '1';
+                        drawCell(cellRect, filled, c, row, col);
                     }
                 }
                 x += bestCharWidth + charSpacing * bestCharWidth;
