@@ -261,16 +261,8 @@ namespace Examples.Scenes
 
 
             var inputInfoRect = ui.Area.ApplyMargins(0.75f, 0.01f, 0.75f, 0.01f);
-            // var centerRight = GAMELOOP.UIRects.GetRect("center right");//.Union(GAMELOOP.UIRects.GetRect("bottom right"));
-            // var inputInfoRect = centerRight.ApplyMargins(-2f, 0f, 0.65f, 0f);
             DrawInputInfoBox(inputInfoRect);
 
-
-            // var binaryDrawerRect = ui.Area.ApplyMargins(0.05f, 0.05f, 0.32f, 0.32f);
-            // binaryDrawerRect.Draw(Colors.Medium);
-            // BinaryDrawerTester.BinaryDrawer3x5Standard.Draw("8439567102", binaryDrawerRect.ApplyMargins(0.025f));
-            
-            // ShapeDrawing.DrawArrow3(ui.Area.Center, ui.MousePos, 0.25f, 0.25f, new LineDrawingInfo(4f, Colors.Warm, LineCapType.CappedExtended, 8), ColorRgba.Clear);
         }
 
 
