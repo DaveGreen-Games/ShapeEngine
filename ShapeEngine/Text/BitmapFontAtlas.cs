@@ -76,6 +76,9 @@ public class BitmapFontAtlas
 
     #region Generate Atlas
     
+    //TODO: Atlas generation grid setup not optimal -> 82 glyphs are generated in a 2x41 grid.... not square at all
+    
+    
     /// <summary>
     /// Generates the font atlas texture by drawing each glyph with the specified color and background.
     /// Throws an exception if the atlas is already generated.
