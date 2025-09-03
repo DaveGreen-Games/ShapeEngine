@@ -1,12 +1,17 @@
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
+using ShapeEngine.Core.Logging;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Text;
 
+/// <summary>
+/// Represents a bitmap font atlas that arranges glyphs into a texture for efficient rendering.
+/// Provides methods to generate, draw, and manage the atlas and its glyphs.
+/// </summary>
 public class BitmapFontAtlas
 {
     #region Properties
@@ -83,9 +88,9 @@ public class BitmapFontAtlas
         if (IsGenerated) throw new InvalidOperationException("Atlas already generated.");
         atlasTexture = Raylib.LoadRenderTexture(atlasWidth, atlasHeight);
         
-        Logger.StartLogBlock("Atlas Generation", LogLevel.Info);
-        Logger.Info($"Atlas size: {atlasWidth}x{atlasHeight}, grid: {gridRows}x{gridCols}");
-        Logger.Info($"Grid: {gridRows}x{gridCols}");
+        ShapeLogger.StartLogBlock("Atlas Generation", LogLevel.Info);
+        ShapeLogger.LogInfo($"Atlas size: {atlasWidth}x{atlasHeight}, grid: {gridRows}x{gridCols}");
+        ShapeLogger.LogInfo($"Grid: {gridRows}x{gridCols}");
         
         Raylib.BeginTextureMode(atlasTexture);
         Raylib.DrawRectangle(0, 0, atlasWidth, atlasHeight, backgroundColor.ToRayColor());
@@ -105,7 +110,7 @@ public class BitmapFontAtlas
                 );
                 glyphUvRects[c] = glyphRect;
                 font.Draw(c, glyphRect, glyphColor);
-                Logger.Info($"Glyph '{c}' at row {row}, col {col} with {glyphRect}");
+                ShapeLogger.LogInfo($"Glyph '{c}' at row {row}, col {col} with {glyphRect}");
                 i++;
             }
             if (i >= supportedChars.Count) break;
@@ -113,7 +118,7 @@ public class BitmapFontAtlas
         Raylib.EndTextureMode();
         IsGenerated = true;
         Raylib.SetTextureFilter(atlasTexture.Texture, TextureFilter.Point);
-        Logger.EndLogBlock();
+        ShapeLogger.EndLogBlock();
     }
     /// <summary>
     /// Generates the font atlas texture using a custom cell drawing action.
@@ -135,9 +140,9 @@ public class BitmapFontAtlas
         if (IsGenerated) throw new InvalidOperationException("Atlas already generated.");
         atlasTexture = Raylib.LoadRenderTexture(atlasWidth, atlasHeight);
         
-        Logger.StartLogBlock("Atlas Generation", LogLevel.Info);
-        Logger.Info($"Atlas size: {atlasWidth}x{atlasHeight}, grid: {gridRows}x{gridCols}");
-        Logger.Info($"Grid: {gridRows}x{gridCols}");
+        ShapeLogger.StartLogBlock("Atlas Generation", LogLevel.Info);
+        ShapeLogger.LogInfo($"Atlas size: {atlasWidth}x{atlasHeight}, grid: {gridRows}x{gridCols}");
+        ShapeLogger.LogInfo($"Grid: {gridRows}x{gridCols}");
         
         Raylib.BeginTextureMode(atlasTexture);
         Raylib.DrawRectangle(0, 0, atlasWidth, atlasHeight, backgroundColor.ToRayColor());
@@ -157,7 +162,7 @@ public class BitmapFontAtlas
                 );
                 glyphUvRects[c] = glyphRect;
                 font.Draw(c, glyphRect, drawCell);
-                Logger.Info($"Glyph '{c}' at row {row}, col {col} with {glyphRect}");
+                ShapeLogger.LogInfo($"Glyph '{c}' at row {row}, col {col} with {glyphRect}");
                 i++;
             }
             if (i >= supportedChars.Count) break;
@@ -165,7 +170,7 @@ public class BitmapFontAtlas
         Raylib.EndTextureMode();
         IsGenerated = true;
         Raylib.SetTextureFilter(atlasTexture.Texture, TextureFilter.Point);
-        Logger.EndLogBlock();
+        ShapeLogger.EndLogBlock();
     }
     
     #endregion
@@ -464,7 +469,7 @@ public class BitmapFontAtlas
         if (!IsGenerated) return;
         Raylib.UnloadRenderTexture(atlasTexture);
         IsGenerated = false;
-        Logger.Info($"Atlas unloaded successfully from memory.");
+        ShapeLogger.LogInfo($"Atlas unloaded successfully from memory.");
     }
     
     /// <summary>
