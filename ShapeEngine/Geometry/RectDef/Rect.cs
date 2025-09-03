@@ -38,6 +38,11 @@ public readonly partial struct Rect : IEquatable<Rect>
     /// </summary>
     public readonly float Height;
 
+    public override string ToString()
+    {
+        return $"Rect[X: {X}, Y: {Y}, Width: {Width}, Height: {Height}]";
+    }
+    
     #endregion
 
     #region Getter Setter
