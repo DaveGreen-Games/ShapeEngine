@@ -224,10 +224,16 @@ public class GameloopExamples : Game
 
         if (ReleaseMode)
         {
-            var loggingPath = Path.Combine(Game.Instance.SaveDirectoryPath, "Debug/Logs/Log.txt");
+            var loggingPath = Path.Combine(Game.Instance.SaveDirectoryPath, "Debug/Logs/DebugLog.txt");
+            ShapeLogger.SetLogFilePath(loggingPath);
             DebugLogger = new Logger(loggingPath, LogLevel.Info, true);
+            DebugLogger.Log($"Debug Logger for [Release] version created. Logger output type: {DebugLogger.OutputType}. Logger File Path: {loggingPath}");
         }
-        else DebugLogger = new Logger(LogLevel.Info);
+        else
+        {
+            DebugLogger = new Logger(LogLevel.Info);
+            DebugLogger.Log($"Debug Logger for [Debug] version created. Logger output type: {DebugLogger.OutputType}. No log file path set.");
+        }
     }
     
     protected override void LoadContent()
