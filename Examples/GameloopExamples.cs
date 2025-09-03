@@ -5,6 +5,7 @@ using ShapeEngine.Content;
 using Examples.Scenes;
 using Examples.UIElements;
 using ShapeEngine.Color;
+using ShapeEngine.Core.Logging;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.CircleDef;
@@ -163,7 +164,8 @@ public class GameloopExamples : Game
     
     public new static GameloopExamples Instance  => examplesInstance?? throw new NullReferenceException("Instance is not initialized! You need to create a GameloopExamples instance before accessing this property!");
     private static GameloopExamples? examplesInstance;
-    
+
+    public static Logger DebugLogger;
     
     public GameloopExamples(GameSettings gameSettings, WindowSettings windowSettings, InputSettings inputSettings) : base(gameSettings, windowSettings, inputSettings)
     {
@@ -219,22 +221,13 @@ public class GameloopExamples : Game
         var mainBottomRightBottom = new RectNode(new AnchorPoint(0.5f, 1f), new Vector2(1f, 0.5f), "bottom");
         mainBottomRight.AddChild(mainBottomRightTop);
         mainBottomRight.AddChild(mainBottomRightBottom);
-        
-        
-        var loggingPath = Path.Combine(Game.Instance.SaveDirectoryPath, "Debug/Logs/Log.txt");
-        if (Logger.SetLogFilePath(loggingPath))
+
+        if (ReleaseMode)
         {
-            Logger.LogSimple($"Logging path set to {loggingPath}");
-            if (ReleaseMode)
-            {
-                Logger.LogToFile = true;
-                Logger.LogSimple("Logging to file enabled at " + loggingPath);
-            }
+            var loggingPath = Path.Combine(Game.Instance.SaveDirectoryPath, "Debug/Logs/Log.txt");
+            DebugLogger = new Logger(loggingPath, LogLevel.Info, true);
         }
-        else
-        {
-            Logger.LogSimple("Failed to set logging path to " + loggingPath);
-        }
+        else DebugLogger = new Logger(LogLevel.Info);
     }
     
     protected override void LoadContent()
