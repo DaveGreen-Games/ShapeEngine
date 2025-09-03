@@ -108,9 +108,11 @@ public static class Logger
     /// <returns>True if the path is valid and set; otherwise, false.</returns>
     public static bool SetLogFilePath(string path)
     {
-        if (!IsValidTxtFilePath(path)) return false;
+        if (!ShapeFileManager.CreateFile(path, ".txt")) return false;
+        
         logFilePath = path;
         logFilePathValid = true;
+        
         return true;
     }
 
