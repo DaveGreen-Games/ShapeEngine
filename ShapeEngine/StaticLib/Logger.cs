@@ -179,6 +179,17 @@ public static class Logger
             Console.WriteLine(logMsg);
         }
     }
+    
+    /// <summary>
+    /// Logs a simple message with the specified severity level.
+    /// The message is always printed to the console, regardless of file logging settings.
+    /// </summary>
+    public static void LogSimple(string message, LogLevel level = LogLevel.Info)
+    {
+        if (!LoggingEnabled || level < MinimumLevel) return;
+
+        Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] [{level}] {message}");
+    }
 
     /// <summary>
     /// Logs a message with Debug severity.
@@ -224,6 +235,8 @@ public static class Logger
     /// Logs a message with Emergency severity.
     /// </summary>
     public static void Emergency(string message) => Log(message, LogLevel.Emergency);
+    
+    
     
     /// <summary>
     /// Checks if the provided path is a valid .txt file path.
