@@ -6,7 +6,20 @@ public class Logger
 {
     #region Members
     
-    public bool Enabled { get; set; }
+    private bool enabled = false;
+    public bool Enabled
+    {
+        get => enabled;
+        set
+        {
+            if(value == enabled) return;
+            if (!value && isBlockLogging)
+            {
+                EndLogBlock();
+            }
+            enabled = value;
+        }        
+    }
     public LogLevel MinimumLevel { get; set; }
     public readonly LogOutputType OutputType;
     public readonly string LogFilePath;
