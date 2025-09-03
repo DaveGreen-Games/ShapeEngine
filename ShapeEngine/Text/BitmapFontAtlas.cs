@@ -76,17 +76,11 @@ public class BitmapFontAtlas
     /// </summary>
     /// <param name="glyphColor">The color to use for glyphs.</param>
     /// <param name="backgroundColor">The background color of the atlas.</param>
-    /// <param name="writeDebugInfo">If true, writes debug information to the console during generation.</param>
-    public void GenerateAtlas(ColorRgba glyphColor, ColorRgba backgroundColor, bool writeDebugInfo = false)
+    public void GenerateAtlas(ColorRgba glyphColor, ColorRgba backgroundColor)
     {
         if (IsGenerated) throw new InvalidOperationException("Atlas already generated.");
-        if(writeDebugInfo) {
-            Console.WriteLine("Order of supportedChars during atlas generation:");
-            for (int idx = 0; idx < supportedChars.Count; idx++)
-                Console.WriteLine($"[{idx}] '{supportedChars[idx]}'");
-        }
         atlasTexture = Raylib.LoadRenderTexture(atlasWidth, atlasHeight);
-        if(writeDebugInfo) Console.WriteLine($"Atlas generation started with atlas size: {atlasWidth}x{atlasHeight}, grid: {gridRows}x{gridCols}");
+        Console.WriteLine($"Atlas generation started with atlas size: {atlasWidth}x{atlasHeight}, grid: {gridRows}x{gridCols}");
         Raylib.BeginTextureMode(atlasTexture);
         Raylib.DrawRectangle(0, 0, atlasWidth, atlasHeight, backgroundColor.ToRayColor());
         int i = 0;
@@ -105,7 +99,7 @@ public class BitmapFontAtlas
                 );
                 glyphUvRects[c] = glyphRect;
                 font.Draw(c, glyphRect, glyphColor);
-                if(writeDebugInfo) Console.WriteLine($"Glyph '{c}' at row {row}, col {col} with {glyphRect}");
+                Console.WriteLine($"Glyph '{c}' at row {row}, col {col} with {glyphRect}");
                 i++;
             }
             if (i >= supportedChars.Count) break;
@@ -113,7 +107,7 @@ public class BitmapFontAtlas
         Raylib.EndTextureMode();
         IsGenerated = true;
         Raylib.SetTextureFilter(atlasTexture.Texture, TextureFilter.Point);
-        if(writeDebugInfo) Console.WriteLine("Atlas generation completed.");
+        Console.WriteLine("Atlas generation completed.");
     }
     /// <summary>
     /// Generates the font atlas texture using a custom cell drawing action.
@@ -130,12 +124,11 @@ public class BitmapFontAtlas
     /// <item><description>int: The column index.</description></item>
     /// </list>
     /// </param>
-    /// <param name="writeDebugInfo">If true, writes debug information to the console during generation.</param>
-    public void GenerateAtlas(ColorRgba backgroundColor, Action<Rect, bool, char, int, int> drawCell, bool writeDebugInfo = false)
+    public void GenerateAtlas(ColorRgba backgroundColor, Action<Rect, bool, char, int, int> drawCell)
     {
         if (IsGenerated) throw new InvalidOperationException("Atlas already generated.");
         atlasTexture = Raylib.LoadRenderTexture(atlasWidth, atlasHeight);
-        if(writeDebugInfo) Console.WriteLine($"Atlas generation started with atlas size: {atlasWidth}x{atlasHeight}, grid: {gridRows}x{gridCols}");
+        Console.WriteLine($"Atlas generation started with atlas size: {atlasWidth}x{atlasHeight}, grid: {gridRows}x{gridCols}");
         Raylib.BeginTextureMode(atlasTexture);
         Raylib.DrawRectangle(0, 0, atlasWidth, atlasHeight, backgroundColor.ToRayColor());
         int i = 0;
@@ -154,7 +147,7 @@ public class BitmapFontAtlas
                 );
                 glyphUvRects[c] = glyphRect;
                 font.Draw(c, glyphRect, drawCell);
-                if(writeDebugInfo) Console.WriteLine($"Glyph '{c}' at row {row}, col {col} with custom {glyphRect}");
+                Console.WriteLine($"Glyph '{c}' at row {row}, col {col} with custom {glyphRect}");
                 i++;
             }
             if (i >= supportedChars.Count) break;
@@ -162,7 +155,7 @@ public class BitmapFontAtlas
         Raylib.EndTextureMode();
         IsGenerated = true;
         Raylib.SetTextureFilter(atlasTexture.Texture, TextureFilter.Point);
-        if(writeDebugInfo) Console.WriteLine("Atlas generation completed.");
+        Console.WriteLine("Atlas generation completed.");
     }
     
     
@@ -488,6 +481,16 @@ public class BitmapFontAtlas
         return (bestRows, bestCols);
     }
     
+    /// <summary>
+    /// Generates a source rectangle for a glyph in the atlas texture, flipping it vertically
+    /// to match the expected orientation for rendering with Raylib.
+    /// </summary>
+    /// <param name="uvRect">The UV rectangle of the glyph within the atlas.</param>
+    /// <returns>A Rectangle representing the source area in the atlas texture.</returns>
+    /// <remarks>
+    /// The source area has to be flipped on the atlas (top-left is actually bottom-left),
+    /// and the area itself has to be flipped vertically (-height).
+    /// </remarks>
     private Rectangle GenerateSourceRectangle(Rect uvRect)
     {
         return new Rectangle(uvRect.TopLeft.X, atlasHeight - uvRect.TopLeft.Y - uvRect.Size.Height, uvRect.Size.Width, -uvRect.Size.Height);
