@@ -102,6 +102,7 @@ public class Logger
     /// Initializes a new instance of the <see cref="Logger"/> class with a specified minimum log level.
     /// Logging is enabled, output is set to console, and log file path is empty.
     /// </summary>
+    /// <param name="minimumLevel">The minimum log level required for messages to be logged.</param>
     public Logger(LogLevel minimumLevel)
     {
         Enabled = true;
