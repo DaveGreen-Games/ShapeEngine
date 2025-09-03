@@ -30,9 +30,33 @@ public enum LogLevel
 public static class Logger
 {
     /// <summary>
+    /// Indicates whether logging is currently enabled.
+    /// </summary>
+    private static bool loggingEnabled = true;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether logging is currently enabled.
+    /// </summary>
+    /// <remarks>
+    /// Terminates any active log block if logging is disabled while a block is active.
+    /// </remarks>
+    public static bool LoggingEnabled
+    {
+        get => loggingEnabled;
+        set
+        {
+            if(value == loggingEnabled) return;
+            if (!value && isBlockLogging)
+            {
+                EndLogBlock();
+            }
+            loggingEnabled = value;
+        }        
+    }
+    /// <summary>
     /// Gets or sets the minimum severity level required for a message to be logged.
     /// </summary>
-    public static LogLevel MinimumLevel { get; set; } = LogLevel.Debug;
+    public static LogLevel MinimumLevel { get; set; } = LogLevel.Info;
     
 
     // public static bool LogToFile { get; set; } = false;
@@ -90,9 +114,41 @@ public static class Logger
         return true;
     }
 
+    
+    
+    // Block logging state
+    private static bool isBlockLogging = false;
+    private static string blockTitle = string.Empty;
+    private static LogLevel blockLevel = LogLevel.Info;
+
+    /// <summary>
+    /// Starts a block of logging with a title and log level.
+    /// </summary>
+    public static void StartLogBlock(string title, LogLevel level = LogLevel.Info)
+    {
+        if (isBlockLogging) EndLogBlock();
+        blockTitle = title;
+        blockLevel = level;
+        Log($"[START BLOCK] ---> {title}:", level);
+        isBlockLogging = true;
+    }
+
+    /// <summary>
+    /// Ends the current block of logging.
+    /// </summary>
+    public static void EndLogBlock()
+    {
+        if (!isBlockLogging) return;
+        isBlockLogging = false;
+        Log($"[END BLOCK] <--- {blockTitle}", blockLevel);
+        blockTitle = string.Empty;
+    }
+    
+    
     /// <summary>
     /// Logs a message with the specified severity level.
     /// If no level is provided, defaults to Info.
+    /// If LogBlock is active, the message is prefixed with "--- " and <see cref="LogLevel"/> and data/time is ommitted.
     /// </summary>
     /// <param name="message">The message to log.</param>
     /// <param name="level">The severity level of the log message.</param>
@@ -103,13 +159,15 @@ public static class Logger
     /// </remarks>
     public static void Log(string message, LogLevel level = LogLevel.Info)
     {
-        if (level < MinimumLevel) return;
-        
+        if (!LoggingEnabled || level < MinimumLevel) return;
+
+        string logMsg = isBlockLogging ? $"--- {message}" : $"[{DateTime.Now:HH:mm:ss}] [{level}] {message}";
+
         if (LogToFile)
         {
             try
             {
-                File.AppendAllText(LogFilePath, $"[{DateTime.Now:HH:mm:ss}] [{level}] {message}{Environment.NewLine}");
+                File.AppendAllText(LogFilePath, logMsg + Environment.NewLine);
             }
             catch (Exception ex)
             {
@@ -118,7 +176,7 @@ public static class Logger
         }
         else
         {
-            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] [{level}] {message}");
+            Console.WriteLine(logMsg);
         }
     }
 
