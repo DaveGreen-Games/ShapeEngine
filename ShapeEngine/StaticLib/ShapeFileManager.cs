@@ -121,8 +121,6 @@ public static class ShapeFileManager
         }
     }
     
-    
-    
     /// <summary>
     /// Creates a file within the specified directory.
     /// </summary>
@@ -178,6 +176,34 @@ public static class ShapeFileManager
         if (string.IsNullOrWhiteSpace(fileName)) return false;
         return directory.Exists && File.Exists(Path.Combine(directory.FullName, fileName));
     }
+
+    /// <summary>
+    /// Creates a file at the specified absolute path if it does not exist.
+    /// Ensures the directory exists before creating the file.
+    /// Returns true if the file was created or already exists; otherwise, false.
+    /// </summary>
+    /// <param name="absolutePath">The absolute path of the file to create.</param>
+    /// <returns>True if the file was created or already exists; otherwise, false.</returns>
+    public static bool CreateFile(string absolutePath)
+    {
+        if (string.IsNullOrWhiteSpace(absolutePath) || !Path.HasExtension(absolutePath)) return false;
+        
+        try
+        {
+            string? dir = Path.GetDirectoryName(absolutePath);
+            if (!string.IsNullOrWhiteSpace(dir) && !Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
+            if (File.Exists(absolutePath)) return true;
+            using (File.Create(absolutePath)) { }
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[{ex.GetType().Name}] Failed to create file at {absolutePath}: {ex.Message}");
+            return false;
+        }
+    }
+    
     #endregion
     
     #region Directories
