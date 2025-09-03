@@ -219,6 +219,22 @@ public class GameloopExamples : Game
         var mainBottomRightBottom = new RectNode(new AnchorPoint(0.5f, 1f), new Vector2(1f, 0.5f), "bottom");
         mainBottomRight.AddChild(mainBottomRightTop);
         mainBottomRight.AddChild(mainBottomRightBottom);
+        
+        
+        var loggingPath = Path.Combine(Game.Instance.SaveDirectoryPath, "Debug/Logs/Log.txt");
+        if (Logger.SetLogFilePath(loggingPath))
+        {
+            Logger.LogSimple($"Logging path set to {loggingPath}");
+            if (ReleaseMode)
+            {
+                Logger.LogToFile = true;
+                Logger.LogSimple("Logging to file enabled at " + loggingPath);
+            }
+        }
+        else
+        {
+            Logger.LogSimple("Failed to set logging path to " + loggingPath);
+        }
     }
     
     protected override void LoadContent()
