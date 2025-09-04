@@ -89,7 +89,7 @@ public class BitmapFontAtlas
         atlasTexture = Raylib.LoadRenderTexture(atlasWidth, atlasHeight);
         
         ShapeLogger.StartLogBlock("Atlas Generation", LogLevel.Info);
-        ShapeLogger.LogInfo($"Atlas size: {atlasWidth}x{atlasHeight}, grid: {gridRows}x{gridCols}");
+        ShapeLogger.LogInfo($"Atlas size: {atlasWidth}x{atlasHeight}");
         ShapeLogger.LogInfo($"Grid: {gridRows}x{gridCols}");
         
         Raylib.BeginTextureMode(atlasTexture);
@@ -141,7 +141,7 @@ public class BitmapFontAtlas
         atlasTexture = Raylib.LoadRenderTexture(atlasWidth, atlasHeight);
         
         ShapeLogger.StartLogBlock("Atlas Generation", LogLevel.Info);
-        ShapeLogger.LogInfo($"Atlas size: {atlasWidth}x{atlasHeight}, grid: {gridRows}x{gridCols}");
+        ShapeLogger.LogInfo($"Atlas size: {atlasWidth}x{atlasHeight}");
         ShapeLogger.LogInfo($"Grid: {gridRows}x{gridCols}");
         
         Raylib.BeginTextureMode(atlasTexture);
