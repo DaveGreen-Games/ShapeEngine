@@ -358,7 +358,7 @@ public static class ShapeLogger
         try
         {
             string logMsg = isBlockLogging ? $"--- {message}" : $"[{DateTime.Now:HH:mm:ss}] [{level}] {message}";
-            File.AppendAllText(LogFilePath, logMsg + Environment.NewLine);
+            File.AppendAllText(path, logMsg + Environment.NewLine);
         }
         catch (Exception ex)
         {
