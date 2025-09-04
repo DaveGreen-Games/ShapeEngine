@@ -1,11 +1,17 @@
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Color;
+using ShapeEngine.Core.Logging;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.RectDef;
+using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Text;
 
+/// <summary>
+/// Represents a bitmap font atlas that arranges glyphs into a texture for efficient rendering.
+/// Provides methods to generate, draw, and manage the atlas and its glyphs.
+/// </summary>
 public class BitmapFontAtlas
 {
     #region Properties
@@ -78,9 +84,14 @@ public class BitmapFontAtlas
     /// <param name="backgroundColor">The background color of the atlas.</param>
     public void GenerateAtlas(ColorRgba glyphColor, ColorRgba backgroundColor)
     {
+        
         if (IsGenerated) throw new InvalidOperationException("Atlas already generated.");
         atlasTexture = Raylib.LoadRenderTexture(atlasWidth, atlasHeight);
-        Console.WriteLine($"Atlas generation started with atlas size: {atlasWidth}x{atlasHeight}, grid: {gridRows}x{gridCols}");
+        
+        ShapeLogger.StartLogBlock("Atlas Generation", LogLevel.Info);
+        ShapeLogger.LogInfo($"Atlas size: {atlasWidth}x{atlasHeight}");
+        ShapeLogger.LogInfo($"Grid: {gridRows}x{gridCols}");
+        
         Raylib.BeginTextureMode(atlasTexture);
         Raylib.DrawRectangle(0, 0, atlasWidth, atlasHeight, backgroundColor.ToRayColor());
         int i = 0;
@@ -99,7 +110,7 @@ public class BitmapFontAtlas
                 );
                 glyphUvRects[c] = glyphRect;
                 font.Draw(c, glyphRect, glyphColor);
-                Console.WriteLine($"Glyph '{c}' at row {row}, col {col} with {glyphRect}");
+                ShapeLogger.LogInfo($"Glyph '{c}' at row {row}, col {col} with {glyphRect}");
                 i++;
             }
             if (i >= supportedChars.Count) break;
@@ -107,7 +118,7 @@ public class BitmapFontAtlas
         Raylib.EndTextureMode();
         IsGenerated = true;
         Raylib.SetTextureFilter(atlasTexture.Texture, TextureFilter.Point);
-        Console.WriteLine("Atlas generation completed.");
+        ShapeLogger.EndLogBlock();
     }
     /// <summary>
     /// Generates the font atlas texture using a custom cell drawing action.
@@ -128,7 +139,11 @@ public class BitmapFontAtlas
     {
         if (IsGenerated) throw new InvalidOperationException("Atlas already generated.");
         atlasTexture = Raylib.LoadRenderTexture(atlasWidth, atlasHeight);
-        Console.WriteLine($"Atlas generation started with atlas size: {atlasWidth}x{atlasHeight}, grid: {gridRows}x{gridCols}");
+        
+        ShapeLogger.StartLogBlock("Atlas Generation", LogLevel.Info);
+        ShapeLogger.LogInfo($"Atlas size: {atlasWidth}x{atlasHeight}");
+        ShapeLogger.LogInfo($"Grid: {gridRows}x{gridCols}");
+        
         Raylib.BeginTextureMode(atlasTexture);
         Raylib.DrawRectangle(0, 0, atlasWidth, atlasHeight, backgroundColor.ToRayColor());
         int i = 0;
@@ -147,7 +162,7 @@ public class BitmapFontAtlas
                 );
                 glyphUvRects[c] = glyphRect;
                 font.Draw(c, glyphRect, drawCell);
-                Console.WriteLine($"Glyph '{c}' at row {row}, col {col} with custom {glyphRect}");
+                ShapeLogger.LogInfo($"Glyph '{c}' at row {row}, col {col} with {glyphRect}");
                 i++;
             }
             if (i >= supportedChars.Count) break;
@@ -155,9 +170,12 @@ public class BitmapFontAtlas
         Raylib.EndTextureMode();
         IsGenerated = true;
         Raylib.SetTextureFilter(atlasTexture.Texture, TextureFilter.Point);
-        Console.WriteLine("Atlas generation completed.");
+        ShapeLogger.EndLogBlock();
     }
     
+    #endregion
+    
+    #region Draw Atlas
     
     /// <summary>
     /// Draws the entire atlas texture at the specified position and scale, applying the given tint color.
@@ -451,35 +469,41 @@ public class BitmapFontAtlas
         if (!IsGenerated) return;
         Raylib.UnloadRenderTexture(atlasTexture);
         IsGenerated = false;
+        ShapeLogger.LogInfo($"Atlas unloaded successfully from memory.");
     }
     
     /// <summary>
-    /// Calculates the optimal grid dimensions (rows and columns) for arranging a given number of glyphs.
-    /// The goal is to make the grid as square as possible, minimizing dead space and the difference between rows and columns.
+    /// Calculates the optimal grid dimensions (rows and columns) for arranging a given number of items.
+    /// Attempts to make the grid as square as possible, prioritizing aspect ratio and minimizing dead space.
     /// </summary>
-    /// <param name="count">The total number of glyphs to arrange in the grid.</param>
+    /// <param name="count">The total number of items to arrange in the grid.</param>
     /// <returns>A tuple containing the number of rows and columns for the grid.</returns>
     private static (int rows, int cols) CalculateGrid(int count)
     {
-        // Try to make the grid as square as possible, minimizing dead space
-        int bestRows = 1, bestCols = count;
-        int minDeadSpace = int.MaxValue;
-        int minDiff = int.MaxValue;
-        for (int rows = 1; rows <= count; rows++)
-        {
-            int cols = (int)Math.Ceiling(count / (float)rows);
-            int deadSpace = rows * cols - count;
-            int diff = Math.Abs(rows - cols);
-            if (deadSpace < minDeadSpace || (deadSpace == minDeadSpace && diff < minDiff))
-            {
-                minDeadSpace = deadSpace;
-                minDiff = diff;
-                bestRows = rows;
-                bestCols = cols;
-            }
-        }
-        return (bestRows, bestCols);
+       // Try to make the grid as square as possible, prioritizing aspect ratio over dead space
+       int bestRows = 1, bestCols = count; // Start with a single row and all columns
+       double bestAspectDiff = double.MaxValue; // Track the best aspect ratio difference from 1 (square)
+       int minDeadSpace = int.MaxValue; // Track the minimum unused cells in the grid
+       
+       // Iterate through possible row counts to find the optimal grid
+       for (int rows = 1; rows <= count; rows++)
+       {
+           int cols = (int)Math.Ceiling(count / (float)rows); // Calculate columns needed for current row count
+           int deadSpace = rows * cols - count; // Calculate unused cells in the grid
+           double aspectDiff = Math.Abs((double)rows / cols - 1.0); // Calculate how close the grid is to square
+       
+           // Choose the grid with the best aspect ratio, breaking ties with less dead space
+           if (aspectDiff < bestAspectDiff || (Math.Abs(aspectDiff - bestAspectDiff) < 0.0001 && deadSpace < minDeadSpace))
+           {
+               bestAspectDiff = aspectDiff;
+               minDeadSpace = deadSpace;
+               bestRows = rows;
+               bestCols = cols;
+           }
+       }
+       return (bestRows, bestCols); // Return the optimal grid dimensions
     }
+    
     
     /// <summary>
     /// Generates a source rectangle for a glyph in the atlas texture, flipping it vertically
