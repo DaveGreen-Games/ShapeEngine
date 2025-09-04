@@ -12,22 +12,22 @@ using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Geometry.StripedDrawingDef;
 using ShapeEngine.Input;
-using ShapeEngine.Content;
 using ShapeEngine.Text;
+using Color = System.Drawing.Color;
 
 namespace Examples.Scenes
 {
-    public class TestSaveGame : SavegameObject
-    {
-        public int ID {get; set;}
-        public string Text {get; set;}
-
-        public TestSaveGame(int id, string text)
-        {
-            this.ID = id;
-            this.Text = text;
-        }
-    }
+    // public class TestSaveGame : SavegameObject
+    // {
+    //     public int ID {get; set;}
+    //     public string Text {get; set;}
+    //
+    //     public TestSaveGame(int id, string text)
+    //     {
+    //         this.ID = id;
+    //         this.Text = text;
+    //     }
+    // }
     public class MainScene : Scene
     {
         private readonly List<ExampleScene> examples = new();
@@ -39,6 +39,7 @@ namespace Examples.Scenes
         private readonly InputActionLabel quitLabel;
 
         private readonly TextureSurface textureSurface;
+        
         public MainScene()
         {
             examples.Add(new OutlineDrawingExample());
@@ -84,7 +85,6 @@ namespace Examples.Scenes
             for (var i = 0; i < examples.Count; i++)
             {
                 var b = new ExampleSelectionButton();
-                // b.OnSelectedChanged += OnButtonSelected;
                 b.SetScene(examples[i]);
                 buttonContainer.AddChild(b);
             }
@@ -102,6 +102,7 @@ namespace Examples.Scenes
             LineDrawingInfo stripedInfo = new(2f, ColorRgba.White, LineCapType.Capped, 6);
             textureSurface.Rect.DrawStriped(16f, 30f, stripedInfo);
             textureSurface.EndDraw();
+            
         }
         
         
@@ -156,7 +157,6 @@ namespace Examples.Scenes
                     PrevPage();
                     tabChangeMouseWheelLockTimer = 0f;
                 }
-                //PrevPage();
             }
 
             var nextTabState = GameloopExamples.Instance.InputActionUINextTab.Consume(out _);
@@ -175,20 +175,7 @@ namespace Examples.Scenes
                     NextPage();
                     tabChangeMouseWheelLockTimer = 0f;
                 }
-                // NextPage();
             }
-
-            // var uiDownState = GAMELOOP.InputActionUIDown.Consume();
-            // if (uiDownState is { Consumed: false, Pressed: true })
-            // { 
-            //     // NextButton();
-            // }
-            //
-            // var uiUpState = GAMELOOP.InputActionUIUp.Consume();
-            // if (uiUpState is { Consumed: false, Pressed: true })
-            // { 
-            //     // PrevButton();
-            // }
 
             var nextMonitorState = GameloopExamples.Instance.InputActionNextMonitor.Consume(out _);
             if (nextMonitorState is { Consumed: false, Pressed: true })
@@ -208,10 +195,6 @@ namespace Examples.Scenes
             buttonContainer.UpdateRect(ui.Area);
             buttonContainer.Update(time.Delta, ui.MousePos);
             navigator.Update();
-            // foreach (var b in buttons)
-            // {
-            //     b.Update(time.Delta, ui.MousePos);
-            // }
         }
         protected override void OnDrawUI(ScreenInfo ui)
         {
@@ -262,19 +245,16 @@ namespace Examples.Scenes
 
             var inputInfoRect = ui.Area.ApplyMargins(0.75f, 0.01f, 0.75f, 0.01f);
             DrawInputInfoBox(inputInfoRect);
-
         }
 
 
         protected override void OnActivate(Scene oldScene)
         {
-            // GAMELOOP.Window.SwitchCursor(new SimpleCursorUI());
             navigator.StartNavigation();
         }
 
         protected override void OnDeactivate()
         {
-            // GAMELOOP.Window.SwitchCursor(new SimpleCursorGameUI());
             navigator.EndNavigation();
         }
 
@@ -310,15 +290,9 @@ namespace Examples.Scenes
             string cycleShaderInputTypeDescription = GameloopExamples.Instance.InputActionCycleShaders.GetInputTypeDescription(InputDeviceType.Keyboard, true, 1, false);
             var cycleShaderInfo = $"Cycle Shaders {cycleShaderInputTypeDescription}";
             
-            // string crtInputTypeNamesPlus = GAMELOOP.InputActionCRTPlus.GetInputTypeDescription(InputDeviceType.Keyboard, true, 1, false, false);
-            // string crtInputTypeNamesMinus = GAMELOOP.InputActionCRTMinus.GetInputTypeDescription(InputDeviceType.Keyboard, true, 1, false, false);
-            // var crtInfo = $"Shader [{crtInputTypeNamesPlus}|{crtInputTypeNamesMinus}]";
-            
             string zoomInputTypeName = GameloopExamples.Instance.InputActionZoom.GetInputTypeDescription(Input.CurrentInputDeviceType, true, 1, false);
             var zoomInfo = $"Zoom {zoomInputTypeName}";
             
-            // string pauseInputTypeName = GAMELOOP.InputActionPause.GetInputTypeDescription(curInputDevice, true, 1, false);
-            // var pauseInfo = $"Pause {pauseInputTypeName}";
             string palleteInputTypeName = GameloopExamples.Instance.InputActionCyclePalette.GetInputTypeDescription(curInputDevice, true, 1, false);
             var pauseInfo = $"Palette {palleteInputTypeName}";
             
@@ -327,7 +301,6 @@ namespace Examples.Scenes
 
             var gamepadClaimInfo = "Press [A] on a gamepad to use it!";
             
-            // var rects = curInputDevice == InputDeviceType.Gamepad ? area.SplitV(6) : area.SplitV(6);
             var rects = area.SplitV(6);
 
             var color = Colors.Medium;
