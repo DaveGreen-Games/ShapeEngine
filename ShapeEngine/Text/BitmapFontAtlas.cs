@@ -76,9 +76,6 @@ public class BitmapFontAtlas
 
     #region Generate Atlas
     
-    //TODO: Atlas generation grid setup not optimal -> 82 glyphs are generated in a 2x41 grid.... not square at all
-    
-    
     /// <summary>
     /// Generates the font atlas texture by drawing each glyph with the specified color and background.
     /// Throws an exception if the atlas is already generated.
@@ -476,32 +473,37 @@ public class BitmapFontAtlas
     }
     
     /// <summary>
-    /// Calculates the optimal grid dimensions (rows and columns) for arranging a given number of glyphs.
-    /// The goal is to make the grid as square as possible, minimizing dead space and the difference between rows and columns.
+    /// Calculates the optimal grid dimensions (rows and columns) for arranging a given number of items.
+    /// Attempts to make the grid as square as possible, prioritizing aspect ratio and minimizing dead space.
     /// </summary>
-    /// <param name="count">The total number of glyphs to arrange in the grid.</param>
+    /// <param name="count">The total number of items to arrange in the grid.</param>
     /// <returns>A tuple containing the number of rows and columns for the grid.</returns>
     private static (int rows, int cols) CalculateGrid(int count)
     {
-        // Try to make the grid as square as possible, minimizing dead space
-        int bestRows = 1, bestCols = count;
-        int minDeadSpace = int.MaxValue;
-        int minDiff = int.MaxValue;
-        for (int rows = 1; rows <= count; rows++)
-        {
-            int cols = (int)Math.Ceiling(count / (float)rows);
-            int deadSpace = rows * cols - count;
-            int diff = Math.Abs(rows - cols);
-            if (deadSpace < minDeadSpace || (deadSpace == minDeadSpace && diff < minDiff))
-            {
-                minDeadSpace = deadSpace;
-                minDiff = diff;
-                bestRows = rows;
-                bestCols = cols;
-            }
-        }
-        return (bestRows, bestCols);
+       // Try to make the grid as square as possible, prioritizing aspect ratio over dead space
+       int bestRows = 1, bestCols = count; // Start with a single row and all columns
+       double bestAspectDiff = double.MaxValue; // Track the best aspect ratio difference from 1 (square)
+       int minDeadSpace = int.MaxValue; // Track the minimum unused cells in the grid
+       
+       // Iterate through possible row counts to find the optimal grid
+       for (int rows = 1; rows <= count; rows++)
+       {
+           int cols = (int)Math.Ceiling(count / (float)rows); // Calculate columns needed for current row count
+           int deadSpace = rows * cols - count; // Calculate unused cells in the grid
+           double aspectDiff = Math.Abs((double)rows / cols - 1.0); // Calculate how close the grid is to square
+       
+           // Choose the grid with the best aspect ratio, breaking ties with less dead space
+           if (aspectDiff < bestAspectDiff || (Math.Abs(aspectDiff - bestAspectDiff) < 0.0001 && deadSpace < minDeadSpace))
+           {
+               bestAspectDiff = aspectDiff;
+               minDeadSpace = deadSpace;
+               bestRows = rows;
+               bestCols = cols;
+           }
+       }
+       return (bestRows, bestCols); // Return the optimal grid dimensions
     }
+    
     
     /// <summary>
     /// Generates a source rectangle for a glyph in the atlas texture, flipping it vertically
