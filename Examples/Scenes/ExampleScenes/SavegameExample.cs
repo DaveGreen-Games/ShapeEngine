@@ -25,8 +25,12 @@ namespace Examples.Scenes.ExampleScenes;
 //      - switch between savegame slots
 
 
+//TODO: We need another savegame data to store the current slot!
 public record ExampleSavegameData : DataObject
 {
+    public static ExampleSavegameData Default => new ExampleSavegameData(0, 0, new Rect(10, 10, 100, 100), ColorRgba.White);
+    
+    
     [XmlElement("Slot")]
     public int Slot { get; set; }
     
@@ -69,5 +73,70 @@ public record ExampleSavegameData : DataObject
 
 public class SavegameExample : ExampleScene
 {
+    public const int MaxSavegameSlots = 3;
+    public int CurrentSavegameSlot { get; private set; } = 0;
+    public string CurrentSavegameFileName => $"SavegameExample-Slot{CurrentSavegameSlot}.xml";
     
+    public ExampleSavegameData CurrentSavegameData { get; private set; }
+
+
+    public SavegameExample()
+    {
+        //load savegame data from file if exists, otherwise create default data
+    }
+    
+    
+    public int NextSavegameSlot()
+    {
+        var newSlot = CurrentSavegameSlot + 1;
+        if(newSlot >= MaxSavegameSlots) newSlot = 0;
+        CurrentSavegameSlot = newSlot;
+        return CurrentSavegameSlot;
+    }
+
+    public int PreviousSavegameSlot()
+    {
+        var newSlot = CurrentSavegameSlot - 1;
+        if(newSlot < 0) newSlot = MaxSavegameSlots - 1;
+        CurrentSavegameSlot = newSlot;
+        return CurrentSavegameSlot;
+    }
+
+    public int LoadSavegameSlot()
+    {
+        return 0;
+    }
+    public bool SaveSavegameSlot()
+    {
+        return false;
+    }
+    public int ResetSavegameSlot()
+    {
+        CurrentSavegameSlot = 0;
+        SaveSavegameSlot();
+        return CurrentSavegameSlot;
+    }
+
+    public int SetSavegameSlot(int slot) => CurrentSavegameSlot = slot < 0 ? 0 : slot >= MaxSavegameSlots ? MaxSavegameSlots - 1 : slot;
+
+
+    public bool LoadSavgame()
+    {
+        return false;
+    }
+
+    public bool SaveSavgame()
+    {
+        return false;
+    }
+
+    public bool ApplySavegameData()
+    {
+        return false;
+    }
+
+    public void ResetSavegameData()
+    {
+        
+    }
 }
