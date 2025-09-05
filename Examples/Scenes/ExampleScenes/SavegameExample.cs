@@ -157,6 +157,8 @@ public class SavegameExample : ExampleScene
     private bool draggingBottomRight;
     private bool nearTopLeft;
     private bool nearBottomRight;
+
+    private Rect curScreenArea;
     
     public SavegameExample()
     {
@@ -176,11 +178,14 @@ public class SavegameExample : ExampleScene
 
         ApplySavegameData();
 
+        curScreenArea = Game.Instance.Window.ScreenArea;
+
     }
 
     protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
         var mousePosUI = ui.MousePos;
+        curScreenArea = ui.Area;
         
         rectLineThickness = ui.Area.Size.Min() * 0.004f;
         rectCornerSize = rectLineThickness * 2f;
@@ -336,16 +341,16 @@ public class SavegameExample : ExampleScene
     
     private ExampleSavegameData LoadSavegameData()
     {
-        if (saveDirectory == null) return ExampleSavegameData.Default();
+        if (saveDirectory == null) return ExampleSavegameData.Random(currentSavegameSlot, curScreenArea);
         var fileString = saveDirectory.LoadText(CurrentSavegameFileName);
         if (string.IsNullOrEmpty(fileString))
         {
-            var defaultData = ExampleSavegameData.Default();
+            var defaultData = ExampleSavegameData.Random(currentSavegameSlot, curScreenArea);
             saveDirectory.SaveText(CurrentSavegameFileName, dataSerializer.Serialize(defaultData));
             return defaultData;
         }
         var savegameData = dataSerializer.Deserialize(fileString);
-        return savegameData ?? ExampleSavegameData.Default();
+        return savegameData ?? ExampleSavegameData.Random(currentSavegameSlot, curScreenArea);
         
     }
     private bool SaveSavgameData()
@@ -366,7 +371,7 @@ public class SavegameExample : ExampleScene
 
     private void ResetSavegameData()
     {
-        currentSavegameData = ExampleSavegameData.Default();
+        currentSavegameData = ExampleSavegameData.Random(currentSavegameSlot, curScreenArea);
         SaveSavgameData();
         ApplySavegameData();
     }
