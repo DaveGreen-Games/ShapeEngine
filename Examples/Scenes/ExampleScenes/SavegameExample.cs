@@ -107,6 +107,23 @@ public record ExampleSavegameData : DataObject
     public new int SpawnWeight { get; set; }
     
     public ColorRgba RectColor => new(RectColorR, RectColorG, RectColorB, RectColorA);
+    public Rect Rect => new(RectX, RectY, RectWidth, RectHeight);
+
+    public void SetRect(Rect rect)
+    {
+        RectX = rect.X;
+        RectY = rect.Y;
+        RectWidth = rect.Width;
+        RectHeight = rect.Height;
+    }
+
+    public void SetRectColor(ColorRgba color)
+    {
+        RectColorA = color.A;
+        RectColorR = color.R;
+        RectColorG = color.G;
+        RectColorB = color.B;
+    }
 }
 
 
@@ -127,9 +144,9 @@ public class SavegameExample : ExampleScene
     private readonly XmlDataObjectSerializer<ExampleSavegameProfileData> profileSerializer;
 
     private readonly Size rectMinSize = new Size(200, 50);
-    private Rect rect = new();
-    private ColorRgba color = new();
-    private int value;
+    // private Rect rect = new();
+    // private ColorRgba color = new();
+    // private int value;
     private TextFont valueFont;
     private TextFont buttonFont;
 
@@ -178,12 +195,14 @@ public class SavegameExample : ExampleScene
             currentProfileData = LoadProfileData();
             currentSavegameSlot = currentProfileData.SavegameSlot;
             currentSavegameData = LoadSavegameData();
-            ApplySavegameData();
+            // ApplySavegameData();
         }
         
         rectLineThickness = ui.Area.Size.Min() * 0.003f;
         rectCornerSize = rectLineThickness * 2f;
         rectCornerSelectionRadius = rectCornerSize * 2f;
+        
+        var rect = currentSavegameData.Rect;
         
         var lmbState = ShapeMouseButton.LEFT.GetInputState();
         
@@ -265,20 +284,24 @@ public class SavegameExample : ExampleScene
         {
             rect = rect.Clamp(curScreenArea);
         }
+        
+        currentSavegameData.SetRect(rect);
     }
 
     protected override void OnDrawUIExample(ScreenInfo ui)
     {
+        var rect = currentSavegameData.Rect;
+        var color = currentSavegameData.RectColor;
+        int value = currentSavegameData.Value;
+        valueFont.ColorRgba = color;
+        
         curScreenArea.DrawStriped(
             rectCornerSelectionRadius * 4,
             45f,
             new LineDrawingInfo(rectLineThickness / 2,
                 new ColorRgba(Color.DarkGray).SetAlpha(50)),
             0f);
-        // curScreenArea.DrawLines(2f, ColorRgba.White);
-        // buttonArea.DrawLines(2f, ColorRgba.White);
 
-        // rect.DrawStriped(rectCornerSelectionRadius, 45f, new LineDrawingInfo(rectLineThickness / 2, color.SetAlpha(100)), 0f);
         rect.Draw(color.SetAlpha(100));
         rect.DrawLines(rectLineThickness, color);
 
@@ -375,7 +398,7 @@ public class SavegameExample : ExampleScene
             else if (lmbState.Released)
             {
                 buttonColor = new ColorRgba(Color.LightSkyBlue);
-                UpdateSavegameData();
+                // UpdateSavegameData();
                 SaveSavgameData();
             }
             else
@@ -402,7 +425,6 @@ public class SavegameExample : ExampleScene
             {
                 buttonColor = new ColorRgba(Color.OrangeRed);
                 currentSavegameData = LoadSavegameData();
-                ApplySavegameData();
             }
             else
             {
@@ -459,7 +481,7 @@ public class SavegameExample : ExampleScene
             {
                 buttonColor = new ColorRgba(Color.Gold);
                 value = Rng.Instance.RandI(1, 999);
-                // SaveSavgameData();
+                currentSavegameData.Value = value;
             }
             else
             {
@@ -485,7 +507,7 @@ public class SavegameExample : ExampleScene
                 buttonColor = new ColorRgba(Color.MediumPurple);
                 color = Rng.Instance.RandColor(100, 255, 255);
                 valueFont.ColorRgba = color;
-                // SaveSavgameData();
+                currentSavegameData.SetRectColor(color);
             }
             else
             {
@@ -511,7 +533,6 @@ public class SavegameExample : ExampleScene
         currentSavegameSlot = newSlot;
         SaveProfileData();
         currentSavegameData = LoadSavegameData();
-        ApplySavegameData();
         return currentSavegameSlot;
     }
 
@@ -522,7 +543,6 @@ public class SavegameExample : ExampleScene
         currentSavegameSlot = newSlot;
         SaveProfileData();
         currentSavegameData = LoadSavegameData();
-        ApplySavegameData();
         return currentSavegameSlot;
     }
     
@@ -533,10 +553,8 @@ public class SavegameExample : ExampleScene
          currentSavegameSlot = slot < 0 ? 0 : slot >= MaxSavegameSlots ? MaxSavegameSlots - 1 : slot;
          SaveProfileData();
          currentSavegameData = LoadSavegameData();
-         ApplySavegameData();
          return currentSavegameSlot;
     }
-    
     private ExampleSavegameProfileData LoadProfileData()
     {
         if (saveDirectory == null) return ExampleSavegameProfileData.Default();
@@ -565,7 +583,6 @@ public class SavegameExample : ExampleScene
         SaveProfileData();
         return currentProfileData;
     }
-    
     private ExampleSavegameData LoadSavegameData()
     {
         if (saveDirectory == null) return ExampleSavegameData.Random(currentSavegameSlot, curScreenArea);
@@ -578,26 +595,6 @@ public class SavegameExample : ExampleScene
         }
         var savegameData = dataSerializer.Deserialize(fileString);
         return savegameData ?? ExampleSavegameData.Random(currentSavegameSlot, curScreenArea);
-        
-    }
-
-    private void UpdateSavegameData()
-    {
-        currentSavegameData = new ExampleSavegameData()
-        {
-            Slot = currentSavegameData.Slot,
-            Value = value,
-            RectX = rect.X,
-            RectY = rect.Y,
-            RectWidth = rect.Width,
-            RectHeight = rect.Height,
-            RectColorA = color.A,
-            RectColorR = color.R,
-            RectColorG = color.G,
-            RectColorB = color.B,
-            Name = currentSavegameData.Name,
-            SpawnWeight = currentSavegameData.SpawnWeight
-        };
     }
     private bool SaveSavgameData()
     {
@@ -607,20 +604,10 @@ public class SavegameExample : ExampleScene
         saveDirectory.SaveText(CurrentSavegameFileName, fileString);
         return true;
     }
-    private void ApplySavegameData()
-    {
-        rect = new Rect(currentSavegameData.RectX, currentSavegameData.RectY, currentSavegameData.RectWidth, currentSavegameData.RectHeight);
-        rect = rect.Clamp(curScreenArea);
-        color = new ColorRgba(currentSavegameData.RectColorR, currentSavegameData.RectColorG, currentSavegameData.RectColorB, currentSavegameData.RectColorA);
-        value = currentSavegameData.Value;
-        valueFont.ColorRgba = color;
-    }
-
     private void ResetSavegameData()
     {
         currentSavegameData = ExampleSavegameData.Random(currentSavegameSlot, curScreenArea);
         SaveSavgameData();
-        ApplySavegameData();
     }
     #endregion
 }
