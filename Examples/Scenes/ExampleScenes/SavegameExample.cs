@@ -43,26 +43,32 @@ public record ExampleSavegameProfileData : DataObject
 }
 public record ExampleSavegameData : DataObject
 {
-
+    public static readonly float RelativeMinRectWidth = 0.1f;
+    public static readonly float RelativeMinRectHeight = 0.1f;
+    public static readonly float RelativeMaxRectWidth = 0.5f;
+    public static readonly float RelativeMaxRectHeight = 0.5f;
+    
     public static ExampleSavegameData Random(int slot, Rect area)
     {
         var rand = Rng.Instance;
-        var minAreaSize = area.Size.Min();
-        float minRectSize = minAreaSize * 0.25f;
-        float maxRectSize = minRectSize * 0.5f;
-        int minValue = 1;
-        int maxValue = 999;
+
+        const int minValue = 1;
+        const int maxValue = 999;
+
+        var randRelativeRectWidth = rand.RandF(RelativeMinRectWidth, RelativeMaxRectWidth);
+        var randRelativeRectHeight = rand.RandF(RelativeMinRectHeight, RelativeMaxRectHeight);
+        var randRelativeRectX = rand.RandF(0f, 1f - randRelativeRectWidth);
+        var randRelativeRectY = rand.RandF(0f, 1f - randRelativeRectHeight);
         
-        var randRect = rand.RandRect(area, minRectSize, maxRectSize, AnchorPoint.TopLeft);
         var randColor = rand.RandColor(100, 255, 255);
         var data = new ExampleSavegameData()
         {
             Slot = slot,
             Value = rand.RandI(minValue, maxValue),
-            RectX = randRect.X,
-            RectY = randRect.Y,
-            RectWidth = randRect.Width,
-            RectHeight = randRect.Height,
+            RectX = randRelativeRectX,
+            RectY = randRelativeRectY,
+            RectWidth = randRelativeRectWidth,
+            RectHeight = randRelativeRectHeight,
             RectColorA = randColor.A,
             RectColorR = randColor.R,
             RectColorG = randColor.G,
@@ -126,9 +132,6 @@ public record ExampleSavegameData : DataObject
     }
 }
 
-
-
-
 public class SavegameExample : ExampleScene
 {
     private const int MaxSavegameSlots = 3;
@@ -143,17 +146,14 @@ public class SavegameExample : ExampleScene
     private readonly XmlDataObjectSerializer<ExampleSavegameData> dataSerializer;
     private readonly XmlDataObjectSerializer<ExampleSavegameProfileData> profileSerializer;
 
-    private readonly Size rectMinSize = new Size(200, 50);
-    // private Rect rect = new();
-    // private ColorRgba color = new();
-    // private int value;
     private TextFont valueFont;
     private TextFont buttonFont;
 
     private float rectLineThickness = 2f;
     private float rectCornerSize = 5f;
     private float rectCornerSelectionRadius = 20f;
-    
+
+    private bool prevDragging;
     private bool draggingTopLeft;
     private bool draggingBottomRight;
     private bool nearTopLeft;
@@ -162,11 +162,9 @@ public class SavegameExample : ExampleScene
     private Rect curScreenArea;
     private Rect buttonArea;
     
-    
-    
-    
     public SavegameExample()
     {
+        Title = "Savegame Example";
         var saveDirectoryPath = Game.Instance.SaveDirectoryPath;
         var saveFolder = "SaveGameExampleScene";
         var fullPath = Path.Combine(saveDirectoryPath, saveFolder);
@@ -189,6 +187,8 @@ public class SavegameExample : ExampleScene
         curScreenArea = ui.Area.ApplyMargins(0.05f, 0.05f, 0.15f, 0.3f);
         buttonArea = ui.Area.ApplyMargins(0.2f, 0.05f, 0.72f, 0.025f);
         
+        prevDragging = draggingTopLeft || draggingBottomRight;
+        
         if (!dataInitialized)
         {
             dataInitialized = true;
@@ -202,7 +202,13 @@ public class SavegameExample : ExampleScene
         rectCornerSize = rectLineThickness * 2f;
         rectCornerSelectionRadius = rectCornerSize * 2f;
         
-        var rect = currentSavegameData.Rect;
+        //transform relative rect to screen coordinates
+        var uiAreaX = curScreenArea.X;
+        var uiAreaY = curScreenArea.Y;
+        var uiAreaWidth = curScreenArea.Size.Width;
+        var uiAreaHeight = curScreenArea.Size.Height;
+        var relativeRect = currentSavegameData.Rect;
+        var  rect = new Rect(uiAreaX + relativeRect.X * uiAreaWidth, uiAreaY + relativeRect.Y * uiAreaHeight, relativeRect.Width * uiAreaWidth, relativeRect.Height * uiAreaHeight);
         
         var lmbState = ShapeMouseButton.LEFT.GetInputState();
         
@@ -237,8 +243,12 @@ public class SavegameExample : ExampleScene
             draggingTopLeft = false;
             draggingBottomRight = false;
         }
-        
-        
+
+        var rectMinSize = new ShapeEngine.Core.Structs.Size
+        (
+            uiAreaWidth * ExampleSavegameData.RelativeMinRectWidth,
+            uiAreaHeight * ExampleSavegameData.RelativeMinRectHeight
+        );
         if (draggingTopLeft)
         {
             var mousePosClamped = new Vector2
@@ -285,12 +295,27 @@ public class SavegameExample : ExampleScene
             rect = rect.Clamp(curScreenArea);
         }
         
-        currentSavegameData.SetRect(rect);
+        
+        //transform back to relative coordinates
+        var newRelativeRect = new Rect
+        (
+            (rect.X - uiAreaX) / (uiAreaWidth),
+            (rect.Y - uiAreaY) / (uiAreaHeight),
+            rect.Width / uiAreaWidth,
+            rect.Height / uiAreaHeight
+        );
+        
+        currentSavegameData.SetRect(newRelativeRect);
     }
 
     protected override void OnDrawUIExample(ScreenInfo ui)
     {
-        var rect = currentSavegameData.Rect;
+        var uiAreaX = curScreenArea.X;
+        var uiAreaY = curScreenArea.Y;
+        var uiAreaWidth = curScreenArea.Size.Width;
+        var uiAreaHeight = curScreenArea.Size.Height;
+        var relativeRect = currentSavegameData.Rect;
+        var  rect = new Rect(uiAreaX + relativeRect.X * uiAreaWidth, uiAreaY + relativeRect.Y * uiAreaHeight, relativeRect.Width * uiAreaWidth, relativeRect.Height * uiAreaHeight);
         var color = currentSavegameData.RectColor;
         int value = currentSavegameData.Value;
         valueFont.ColorRgba = color;
@@ -343,6 +368,8 @@ public class SavegameExample : ExampleScene
         var slotButtonsArea = buttonAreas[0];
         var slotButtonsAreas = slotButtonsArea.SplitV(MaxSavegameSlots);
         
+        
+        
         // Draw buttons for Save, Load, Reset, and Slot selection
         for (int i = 0; i < MaxSavegameSlots; i++)
         {
@@ -354,7 +381,7 @@ public class SavegameExample : ExampleScene
 
             ColorRgba slotColor;
             
-            if (slotButtonArea.ContainsPoint(ui.MousePos))
+            if (slotButtonArea.ContainsPoint(ui.MousePos) && !prevDragging)
             {
                 if (lmbState.Down)
                 {
@@ -389,7 +416,7 @@ public class SavegameExample : ExampleScene
         var resetButtonArea = saveGameButtonsAreas[2].ApplyMargins(buttonMargin);
 
         ColorRgba buttonColor;
-        if (saveButtonArea.ContainsPoint(ui.MousePos))
+        if (saveButtonArea.ContainsPoint(ui.MousePos) && !prevDragging)
         {
             if (lmbState.Down)
             {
@@ -415,7 +442,7 @@ public class SavegameExample : ExampleScene
         buttonFont.DrawWord("Save", saveButtonArea, AnchorPoint.Center);
 
         
-        if (loadButtonArea.ContainsPoint(ui.MousePos))
+        if (loadButtonArea.ContainsPoint(ui.MousePos) && !prevDragging)
         {
             if (lmbState.Down)
             {
@@ -439,7 +466,7 @@ public class SavegameExample : ExampleScene
         loadButtonArea.Draw(buttonColor.SetAlpha(100));
         buttonFont.DrawWord("Load", loadButtonArea, AnchorPoint.Center);
 
-        if (resetButtonArea.ContainsPoint(ui.MousePos))
+        if (resetButtonArea.ContainsPoint(ui.MousePos) && !prevDragging)
         {
             if (lmbState.Down)
             {
@@ -471,7 +498,7 @@ public class SavegameExample : ExampleScene
         var randomColorButtonArea = randomizeButtonAreas.bottom.ApplyMargins(buttonMargin);
         
         // Randomize Value Button
-        if (randomValueButtonArea.ContainsPoint(ui.MousePos))
+        if (randomValueButtonArea.ContainsPoint(ui.MousePos) && !prevDragging)
         {
             if (lmbState.Down)
             {
@@ -496,7 +523,7 @@ public class SavegameExample : ExampleScene
         buttonFont.DrawWord("Random Value", randomValueButtonArea, AnchorPoint.Center);
 
         // Randomize Color Button
-        if (randomColorButtonArea.ContainsPoint(ui.MousePos))
+        if (randomColorButtonArea.ContainsPoint(ui.MousePos) && !prevDragging)
         {
             if (lmbState.Down)
             {
