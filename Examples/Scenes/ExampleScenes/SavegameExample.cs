@@ -1,3 +1,9 @@
+using ShapeEngine.Serialization;
+using System.Drawing;
+using System.Xml.Serialization;
+using ShapeEngine.Color;
+using ShapeEngine.Geometry.RectDef;
+
 namespace Examples.Scenes.ExampleScenes;
 
 
@@ -17,6 +23,49 @@ namespace Examples.Scenes.ExampleScenes;
 //      - load the current state from a savegame slot
 //      - reset the savegame slot
 //      - switch between savegame slots
+
+
+public record ExampleSavegameData : DataObject
+{
+    [XmlElement("Slot")]
+    public int Slot { get; set; }
+    
+    [XmlElement("Value")]
+    public int Value { get; set; }
+    [XmlElement("RectX")]
+    public float RectX { get; set; }
+    [XmlElement("RectY")]
+    public float RectY { get; set; }
+    [XmlElement("RectWidth")]
+    public float RectWidth { get; set; }
+    [XmlElement("RectHeight")]
+    public float RectHeight { get; set; }
+    [XmlElement("RectColor")]
+    public Color RectColor { get; set; }
+
+    [XmlElement("Name")]
+    public new string Name { get; set; }
+    [XmlElement("SpawnWeight")]
+    public new int SpawnWeight { get; set; }
+    
+    public ExampleSavegameData(int slot, int value, Rect rect, ColorRgba color)
+    {
+        Slot = slot;
+        Value = value;
+        RectX = rect.X;
+        RectY = rect.Y;
+        RectWidth = rect.Width;
+        RectHeight = rect.Height;
+        RectColor = color.ToSysColor();
+        
+        Name = $"ExampleSavegameData-Slot{Slot}";
+        SpawnWeight = 0;
+    }
+    
+}
+
+
+
 
 public class SavegameExample : ExampleScene
 {
