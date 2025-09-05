@@ -54,6 +54,7 @@ namespace Examples.Scenes
             examples.Add(new ScreenEffectsExample());
             examples.Add(new CameraGroupFollowExample());
             examples.Add(new ShipInputExample());
+            examples.Add(new SavegameExample());
             examples.Add(new DataExample());
             examples.Add(new XmlDataExample());
             examples.Add(new JsonDataExample());

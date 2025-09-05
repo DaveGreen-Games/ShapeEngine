@@ -13,6 +13,11 @@ namespace ShapeEngine.Serialization;
 /// To be serializable by <see cref="XmlDataObjectSerializer{T}"/> or <see cref="JsonDataObjectSerializer{T}"/>
 /// all members have to be public and have both getter and setter.
 /// If used for XML serialization, XML attributes have to be used (See code example).
+/// For instance the difference between XML attributes and XML elements is:
+/// <list type="bullet">
+/// <item>[XmlAttribute("Name")] -> XmlAttribute maps a property to an XML attribute, appearing inside the opening tag: <Person Name="John" Age="30" /></item>
+/// <item>[XmlElement("Name")] -> XmlElement maps a property to an XML element, appearing as a child node: <Person><Name>John</Name><Age>30</Age></Person></item>
+/// </list>
 /// </remarks>
 /// <code>
 /// using System.Xml.Serialization;
