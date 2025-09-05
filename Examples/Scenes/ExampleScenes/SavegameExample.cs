@@ -13,27 +13,9 @@ using ShapeEngine.Input;
 using ShapeEngine.Random;
 using ShapeEngine.StaticLib;
 using ShapeEngine.Text;
+using Size = System.Drawing.Size;
 
 namespace Examples.Scenes.ExampleScenes;
-
-
-
-// Todo:
-// - This scene should be able to generate something, then save it to a savegame, then load it back from the savegame.
-// - It should be able to reset the savegame as well.
-// - Maybe it has multiple savegame slots as well (to demonstrate that functionality).
-// - For instance:
-//   - Generate a random number in a random positioned / sized rect with a random color
-//   - The user can:
-//      - regenerate the number
-//      - drag the top left corner to move the rect
-//      - drag the bottom right corner to resize the rect
-//      - regnerate a new random color
-//      - save the current state to a savegame slot
-//      - load the current state from a savegame slot
-//      - reset the savegame slot
-//      - switch between savegame slots
-
 
 
 public record ExampleSavegameProfileData : DataObject
@@ -66,7 +48,7 @@ public record ExampleSavegameData : DataObject
     {
         var rand = Rng.Instance;
         var minAreaSize = area.Size.Min();
-        float minRectSize = minAreaSize * 0.1f;
+        float minRectSize = minAreaSize * 0.25f;
         float maxRectSize = minRectSize * 0.5f;
         int minValue = 1;
         int maxValue = 999;
@@ -136,18 +118,20 @@ public class SavegameExample : ExampleScene
     private int currentSavegameSlot;
     private string CurrentSavegameFileName => $"SavegameExample-Slot{currentSavegameSlot}.xml";
 
-    private ExampleSavegameProfileData currentProfileData;
-    private ExampleSavegameData currentSavegameData;
+    private bool dataInitialized = false;
+    private ExampleSavegameProfileData currentProfileData = new();
+    private ExampleSavegameData currentSavegameData = new();
     
     private readonly DirectoryInfo? saveDirectory;
     private readonly XmlDataObjectSerializer<ExampleSavegameData> dataSerializer;
     private readonly XmlDataObjectSerializer<ExampleSavegameProfileData> profileSerializer;
 
-    
+    private readonly Size rectMinSize = new Size(200, 50);
     private Rect rect = new();
     private ColorRgba color = new();
     private int value;
     private TextFont valueFont;
+    private TextFont buttonFont;
 
     private float rectLineThickness = 2f;
     private float rectCornerSize = 5f;
@@ -159,6 +143,10 @@ public class SavegameExample : ExampleScene
     private bool nearBottomRight;
 
     private Rect curScreenArea;
+    private Rect buttonArea;
+    
+    
+    
     
     public SavegameExample()
     {
@@ -168,26 +156,32 @@ public class SavegameExample : ExampleScene
         
         saveDirectory = ShapeFileManager.CreateDirectory(fullPath);
         
-        valueFont = textFont;
-        
+        valueFont = textFont.Clone();
+        buttonFont = textFont.Clone();
+        buttonFont.ColorRgba = new ColorRgba(Color.AntiqueWhite);
         dataSerializer = new XmlDataObjectSerializer<ExampleSavegameData>();
         profileSerializer = new XmlDataObjectSerializer<ExampleSavegameProfileData>();
-        currentProfileData = LoadProfileData();
-        currentSavegameSlot = currentProfileData.SavegameSlot;
-        currentSavegameData = LoadSavegameData();
 
-        ApplySavegameData();
-
-        curScreenArea = Game.Instance.Window.ScreenArea;
-
+        curScreenArea = new();// new Rect(320, 180, 640, 360);
+        buttonArea = new(); //new Rect(320, 180 + 360, 640, 180);
     }
 
     protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi, ScreenInfo ui)
     {
         var mousePosUI = ui.MousePos;
-        curScreenArea = ui.Area;
+        curScreenArea = ui.Area.ApplyMargins(0.05f, 0.05f, 0.15f, 0.3f);
+        buttonArea = ui.Area.ApplyMargins(0.2f, 0.05f, 0.72f, 0.025f);
         
-        rectLineThickness = ui.Area.Size.Min() * 0.004f;
+        if (!dataInitialized)
+        {
+            dataInitialized = true;
+            currentProfileData = LoadProfileData();
+            currentSavegameSlot = currentProfileData.SavegameSlot;
+            currentSavegameData = LoadSavegameData();
+            ApplySavegameData();
+        }
+        
+        rectLineThickness = ui.Area.Size.Min() * 0.003f;
         rectCornerSize = rectLineThickness * 2f;
         rectCornerSelectionRadius = rectCornerSize * 2f;
         
@@ -228,18 +222,64 @@ public class SavegameExample : ExampleScene
         
         if (draggingTopLeft)
         {
-            rect = new Rect(ui.MousePos, rect.BottomRight);
+            var mousePosClamped = new Vector2
+            (
+                ShapeMath.Clamp(mousePosUI.X, curScreenArea.Left, curScreenArea.Right - rectMinSize.Width),
+                ShapeMath.Clamp(mousePosUI.Y, curScreenArea.Top, curScreenArea.Bottom - rectMinSize.Height)
+                
+            );
+
+
+            if (mousePosClamped.X > rect.Right - rectMinSize.Width)
+            {
+                mousePosClamped.X = rect.Right - rectMinSize.Width;
+            }
+
+            if (mousePosClamped.Y > rect.Bottom - rectMinSize.Height)
+            {
+                mousePosClamped.Y = rect.Bottom - rectMinSize.Height;
+            }
+            
+            rect = new Rect(mousePosClamped, rect.BottomRight);
+            
         }
         else if (draggingBottomRight)
         {
-            rect = new Rect(rect.TopLeft, ui.MousePos);
+            var mousePosClamped = new Vector2
+            (
+                ShapeMath.Clamp(mousePosUI.X, curScreenArea.Left + rectMinSize.Width, curScreenArea.Right),
+                ShapeMath.Clamp(mousePosUI.Y, curScreenArea.Top + rectMinSize.Height, curScreenArea.Bottom)
+                
+            );
+            if (mousePosClamped.X < rect.Left + rectMinSize.Width)
+            {
+                mousePosClamped.X = rect.Left + rectMinSize.Width;
+            }
+            if (mousePosClamped.Y < rect.Top + rectMinSize.Height)
+            {
+                mousePosClamped.Y = rect.Top + rectMinSize.Height;
+            }
+            rect = new Rect(rect.TopLeft, mousePosClamped);
+        }
+        else
+        {
+            rect = rect.Clamp(curScreenArea);
         }
     }
 
     protected override void OnDrawUIExample(ScreenInfo ui)
     {
-        
-        rect.DrawStriped(rectCornerSelectionRadius, 45f, new LineDrawingInfo(rectLineThickness / 2, color.SetAlpha(150)), 0f);
+        curScreenArea.DrawStriped(
+            rectCornerSelectionRadius * 4,
+            45f,
+            new LineDrawingInfo(rectLineThickness / 2,
+                new ColorRgba(Color.DarkGray).SetAlpha(50)),
+            0f);
+        // curScreenArea.DrawLines(2f, ColorRgba.White);
+        // buttonArea.DrawLines(2f, ColorRgba.White);
+
+        // rect.DrawStriped(rectCornerSelectionRadius, 45f, new LineDrawingInfo(rectLineThickness / 2, color.SetAlpha(100)), 0f);
+        rect.Draw(color.SetAlpha(100));
         rect.DrawLines(rectLineThickness, color);
 
         if (draggingTopLeft)
@@ -267,11 +307,198 @@ public class SavegameExample : ExampleScene
             CircleDrawing.DrawCircleFast(rect.TopLeft, rectCornerSize, color);
             CircleDrawing.DrawCircleFast(rect.BottomRight, rectCornerSize, color);
         }
-        
-        
-        
-        var valueText = $"Value: {value}";
+
+
+        var lmbState = ShapeMouseButton.LEFT.GetInputState();
+        // var valueText = $"Value: {value}";
+        var valueText = $"{value}";
         valueFont.DrawWord(valueText, rect, AnchorPoint.Center);
+
+        float buttonMargin = 0.04f;
+        var buttonAreas = buttonArea.SplitH(0.3f, 0.05f, 0.3f, 0.05f);
+
+        var slotButtonsArea = buttonAreas[0];
+        var slotButtonsAreas = slotButtonsArea.SplitV(MaxSavegameSlots);
+        
+        // Draw buttons for Save, Load, Reset, and Slot selection
+        for (int i = 0; i < MaxSavegameSlots; i++)
+        {
+            var slotButtonArea = slotButtonsAreas[i].ApplyMargins(buttonMargin);
+            if (i == currentSavegameSlot)
+            {
+                slotButtonArea.DrawCornersRelative(new LineDrawingInfo(rectLineThickness / 2, ColorRgba.White), 0.15f);
+            }
+
+            ColorRgba slotColor;
+            
+            if (slotButtonArea.ContainsPoint(ui.MousePos))
+            {
+                if (lmbState.Down)
+                {
+                    slotColor = new ColorRgba(Color.GreenYellow);
+                }
+                else if (lmbState.Released)
+                {
+                    slotColor = new ColorRgba(Color.GreenYellow);
+                    SetSavegameSlot(i);
+                }
+                else
+                {
+                    slotColor = new ColorRgba(Color.DarkGreen);
+                }
+                
+            }
+            else
+            {
+                slotColor = new ColorRgba(Color.Gray);
+            }
+            
+            slotButtonArea.Draw(slotColor.SetAlpha(100));
+            buttonFont.DrawWord($"Slot {i}", slotButtonArea, AnchorPoint.Center);
+        }
+
+        var saveGameButtonsArea = buttonAreas[2];
+
+        const int buttons = 3;
+        var saveGameButtonsAreas = saveGameButtonsArea.SplitV(buttons);
+        var saveButtonArea = saveGameButtonsAreas[0].ApplyMargins(buttonMargin);
+        var loadButtonArea = saveGameButtonsAreas[1].ApplyMargins(buttonMargin);
+        var resetButtonArea = saveGameButtonsAreas[2].ApplyMargins(buttonMargin);
+
+        ColorRgba buttonColor;
+        if (saveButtonArea.ContainsPoint(ui.MousePos))
+        {
+            if (lmbState.Down)
+            {
+                buttonColor = new ColorRgba(Color.LightSkyBlue);
+            }
+            else if (lmbState.Released)
+            {
+                buttonColor = new ColorRgba(Color.LightSkyBlue);
+                UpdateSavegameData();
+                SaveSavgameData();
+            }
+            else
+            {
+                buttonColor = new ColorRgba(Color.SteelBlue);
+            }
+                
+        }
+        else
+        {
+            buttonColor = new ColorRgba(Color.DarkSlateBlue);
+        }
+        saveButtonArea.Draw(buttonColor.SetAlpha(100));
+        buttonFont.DrawWord("Save", saveButtonArea, AnchorPoint.Center);
+
+        
+        if (loadButtonArea.ContainsPoint(ui.MousePos))
+        {
+            if (lmbState.Down)
+            {
+                buttonColor = new ColorRgba(Color.OrangeRed);
+            }
+            else if (lmbState.Released)
+            {
+                buttonColor = new ColorRgba(Color.OrangeRed);
+                currentSavegameData = LoadSavegameData();
+                ApplySavegameData();
+            }
+            else
+            {
+                buttonColor = new ColorRgba(Color.Coral);
+            }
+                
+        }
+        else
+        {
+            buttonColor = new ColorRgba(Color.DarkSalmon);
+        }
+        loadButtonArea.Draw(buttonColor.SetAlpha(100));
+        buttonFont.DrawWord("Load", loadButtonArea, AnchorPoint.Center);
+
+        if (resetButtonArea.ContainsPoint(ui.MousePos))
+        {
+            if (lmbState.Down)
+            {
+                buttonColor = new ColorRgba(Color.Red);
+            }
+            else if (lmbState.Released)
+            {
+                buttonColor = new ColorRgba(Color.Red);
+                ResetSavegameData();
+            }
+            else
+            {
+                buttonColor = new ColorRgba(Color.Crimson);
+            }
+                
+        }
+        else
+        {
+            buttonColor = new ColorRgba(Color.DarkRed);
+        }
+        resetButtonArea.Draw(buttonColor.SetAlpha(100));
+        buttonFont.DrawWord("Reset", resetButtonArea, AnchorPoint.Center);
+        
+        
+        var randomizeButtons = buttonAreas[4];
+
+        var randomizeButtonAreas = randomizeButtons.SplitV(0.5f);
+        var randomValueButtonArea = randomizeButtonAreas.top.ApplyMargins(buttonMargin);
+        var randomColorButtonArea = randomizeButtonAreas.bottom.ApplyMargins(buttonMargin);
+        
+        // Randomize Value Button
+        if (randomValueButtonArea.ContainsPoint(ui.MousePos))
+        {
+            if (lmbState.Down)
+            {
+                buttonColor = new ColorRgba(Color.Gold);
+            }
+            else if (lmbState.Released)
+            {
+                buttonColor = new ColorRgba(Color.Gold);
+                value = Rng.Instance.RandI(1, 999);
+                // SaveSavgameData();
+            }
+            else
+            {
+                buttonColor = new ColorRgba(Color.Yellow);
+            }
+        }
+        else
+        {
+            buttonColor = new ColorRgba(Color.DarkGoldenrod);
+        }
+        randomValueButtonArea.Draw(buttonColor.SetAlpha(100));
+        buttonFont.DrawWord("Random Value", randomValueButtonArea, AnchorPoint.Center);
+
+        // Randomize Color Button
+        if (randomColorButtonArea.ContainsPoint(ui.MousePos))
+        {
+            if (lmbState.Down)
+            {
+                buttonColor = new ColorRgba(Color.MediumPurple);
+            }
+            else if (lmbState.Released)
+            {
+                buttonColor = new ColorRgba(Color.MediumPurple);
+                color = Rng.Instance.RandColor(100, 255, 255);
+                valueFont.ColorRgba = color;
+                // SaveSavgameData();
+            }
+            else
+            {
+                buttonColor = new ColorRgba(Color.Plum);
+            }
+        }
+        else
+        {
+            buttonColor = new ColorRgba(Color.Indigo);
+        }
+        randomColorButtonArea.Draw(buttonColor.SetAlpha(100));
+        buttonFont.DrawWord("Random Color", randomColorButtonArea, AnchorPoint.Center);
+
     }
 
 
@@ -353,6 +580,25 @@ public class SavegameExample : ExampleScene
         return savegameData ?? ExampleSavegameData.Random(currentSavegameSlot, curScreenArea);
         
     }
+
+    private void UpdateSavegameData()
+    {
+        currentSavegameData = new ExampleSavegameData()
+        {
+            Slot = currentSavegameData.Slot,
+            Value = value,
+            RectX = rect.X,
+            RectY = rect.Y,
+            RectWidth = rect.Width,
+            RectHeight = rect.Height,
+            RectColorA = color.A,
+            RectColorR = color.R,
+            RectColorG = color.G,
+            RectColorB = color.B,
+            Name = currentSavegameData.Name,
+            SpawnWeight = currentSavegameData.SpawnWeight
+        };
+    }
     private bool SaveSavgameData()
     {
         if (saveDirectory == null) return false;
@@ -364,6 +610,7 @@ public class SavegameExample : ExampleScene
     private void ApplySavegameData()
     {
         rect = new Rect(currentSavegameData.RectX, currentSavegameData.RectY, currentSavegameData.RectWidth, currentSavegameData.RectHeight);
+        rect = rect.Clamp(curScreenArea);
         color = new ColorRgba(currentSavegameData.RectColorR, currentSavegameData.RectColorG, currentSavegameData.RectColorB, currentSavegameData.RectColorA);
         value = currentSavegameData.Value;
         valueFont.ColorRgba = color;
