@@ -588,6 +588,16 @@ public class Rng
         var size = RandSize(sizeMin, sizeMax);
         return new(origin + pos, size, alignment);
     }
+
+    public Rect RandRect(Rect area, float minSize, float maxSize, AnchorPoint alignment)
+    {
+        var size = RandSize(minSize, maxSize);
+        var pos = new Vector2(
+            RandF(area.X, area.X + area.Width - size.Width),
+            RandF(area.Y, area.Y + area.Height - size.Height)
+        );
+        return new(pos, size, alignment);
+    }
     #endregion
 
     #region Collections

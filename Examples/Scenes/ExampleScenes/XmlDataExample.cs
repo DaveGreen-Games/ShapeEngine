@@ -384,11 +384,6 @@ public class XmlDataExample : ExampleScene
         DrawDescription(r);
     }
 
-    protected override void OnDrawGameUIExample(ScreenInfo gameUi)
-    {
-        
-    }
-
     private void DrawDescription(Rect rect)
     {
         var split = rect.SplitV(0.5f, 0.25f);
