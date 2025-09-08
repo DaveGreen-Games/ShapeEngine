@@ -150,31 +150,36 @@ class Program
         }
         
         var resxDir = Path.GetDirectoryName(resxPath);
-        if (resxDir != null && !Directory.Exists(resxDir))
+        if (resxDir == null)
         {
             Console.WriteLine($"Directory not found: {resxDir}");
+            return;
         }
-
-        if (Path.GetExtension(resxPath) != ".resource")
-        {
-            Console.WriteLine($"Path does not point to a .resource file: {resxPath}");
-        }
+        
+        if (!Directory.Exists(resxDir)) Directory.CreateDirectory(resxDir);
 
         var fileName = Path.GetFileName(filePath);
         using var writer = new ResourceWriter(resxPath);
         writer.AddResource(fileName, File.ReadAllBytes(filePath));
         writer.Generate();
     }
-    public static void CreateResourcePackFromFile(string resxPath, FileInfo file)
-    {
-        CreateResourcePackFromFile(resxPath, file.FullName);
-    }
     public static void CreateResourcePackFromDirectory(string resxPath, string directoryPath)
     {
         if (!Directory.Exists(directoryPath))
         {
             Console.WriteLine($"Directory not found: {directoryPath}");
+            return;
         }
+        
+        var resxDir = Path.GetDirectoryName(resxPath);
+        if (resxDir == null)
+        {
+            Console.WriteLine($"Directory not found: {resxDir}");
+            return;
+        }
+        
+        if (!Directory.Exists(resxDir)) Directory.CreateDirectory(resxDir);
+        
         var files = Directory.GetFiles(directoryPath, "*", SearchOption.AllDirectories);
         using var writer = new ResourceWriter(resxPath);
         foreach (var file in files)
@@ -183,10 +188,6 @@ class Program
             writer.AddResource(relativeName, File.ReadAllBytes(file));
         }
         writer.Generate();
-    }
-    public static void CreateResourcePackFromDirectory(string resxPath, DirectoryInfo directory)
-    {
-        CreateResourcePackFromDirectory(resxPath, directory.FullName);
     }
     
     #endregion
@@ -201,18 +202,31 @@ class Program
             return;
         }
 
-        // Read existing resources
-        var resources = new Dictionary<string, byte[]>();
-        if (File.Exists(resxPath))
+        var resxDir = Path.GetDirectoryName(resxPath);
+        if (resxDir == null)
         {
-            using var reader = new ResourceReader(resxPath);
-            foreach (DictionaryEntry entry in reader)
+            Console.WriteLine($"Directory not found: {resxDir}");
+            return;
+        }
+        
+        var resources = new Dictionary<string, byte[]>();
+        
+        if (Directory.Exists(resxDir))
+        {
+            // Read existing resources
+            if (File.Exists(resxPath))
             {
-                var fileName = entry.Key.ToString();
-                if (fileName == null) continue;
-                if(entry.Value is byte[] bytes) resources[fileName] = bytes;
+                using var reader = new ResourceReader(resxPath);
+                foreach (DictionaryEntry entry in reader)
+                {
+                    var fileName = entry.Key.ToString();
+                    if (fileName == null) continue;
+                    if(entry.Value is byte[] bytes) resources[fileName] = bytes;
+                }
             }
         }
+        else Directory.CreateDirectory(resxDir);
+        
         var resourceName = Path.GetFileName(filePath);
         resources[resourceName] = File.ReadAllBytes(filePath);
 
@@ -223,10 +237,6 @@ class Program
         }
         writer.Generate();
     }
-    public static void AddFileToPack(string resxPath, FileInfo file)
-    {
-        AddFileToPack(resxPath, file.FullName);
-    }
     public static void AddDirectoryToPack(string resxPath, string directoryPath)
     {
         if (!Directory.Exists(directoryPath))
@@ -235,18 +245,30 @@ class Program
             return;
         }
         
-        // Read existing resources
-        var resources = new Dictionary<string, byte[]>();
-        if (File.Exists(resxPath))
+        var resxDir = Path.GetDirectoryName(resxPath);
+        if (resxDir == null)
         {
-            using var reader = new ResourceReader(resxPath);
-            foreach (DictionaryEntry entry in reader)
+            Console.WriteLine($"Directory not found: {resxDir}");
+            return;
+        }
+        
+        var resources = new Dictionary<string, byte[]>();
+        
+        if (Directory.Exists(resxDir))
+        {
+            // Read existing resources
+            if (File.Exists(resxPath))
             {
-                var fileName = entry.Key.ToString();
-                if (fileName == null) continue;
-                if(entry.Value is byte[] bytes) resources[fileName] = bytes;
+                using var reader = new ResourceReader(resxPath);
+                foreach (DictionaryEntry entry in reader)
+                {
+                    var fileName = entry.Key.ToString();
+                    if (fileName == null) continue;
+                    if(entry.Value is byte[] bytes) resources[fileName] = bytes;
+                }
             }
         }
+        else Directory.CreateDirectory(resxDir);
 
         var files = Directory.GetFiles(directoryPath, "*", SearchOption.AllDirectories);
         foreach (var file in files)
@@ -262,16 +284,13 @@ class Program
         }
         writer.Generate();
     }
-    public static void AddDirectoryToPack(string resxPath, DirectoryInfo directory)
-    {
-        AddDirectoryToPack(resxPath, directory.FullName);
-    }
-   
+    
     #endregion
     
     public static void ExtractPack(string resxPath, string outputDirectory)
     {
-        Directory.CreateDirectory(outputDirectory);
+        if (!Directory.Exists(outputDirectory)) Directory.CreateDirectory(outputDirectory);
+
         using var reader = new ResourceReader(resxPath);
         foreach (DictionaryEntry entry in reader)
         {
