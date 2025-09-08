@@ -17,7 +17,6 @@ using Size = System.Drawing.Size;
 
 namespace Examples.Scenes.ExampleScenes;
 
-
 public record ExampleSavegameProfileData : DataObject
 {
     public static ExampleSavegameProfileData Default()
@@ -131,7 +130,6 @@ public record ExampleSavegameData : DataObject
         RectColorB = color.B;
     }
 }
-
 public class SavegameExample : ExampleScene
 {
     private const int MaxSavegameSlots = 3;
@@ -208,7 +206,7 @@ public class SavegameExample : ExampleScene
         var uiAreaWidth = curScreenArea.Size.Width;
         var uiAreaHeight = curScreenArea.Size.Height;
         var relativeRect = currentSavegameData.Rect;
-        var  rect = new Rect(uiAreaX + relativeRect.X * uiAreaWidth, uiAreaY + relativeRect.Y * uiAreaHeight, relativeRect.Width * uiAreaWidth, relativeRect.Height * uiAreaHeight);
+        var rect = new Rect(uiAreaX + relativeRect.X * uiAreaWidth, uiAreaY + relativeRect.Y * uiAreaHeight, relativeRect.Width * uiAreaWidth, relativeRect.Height * uiAreaHeight);
         
         var lmbState = ShapeMouseButton.LEFT.GetInputState();
         
@@ -315,7 +313,7 @@ public class SavegameExample : ExampleScene
         var uiAreaWidth = curScreenArea.Size.Width;
         var uiAreaHeight = curScreenArea.Size.Height;
         var relativeRect = currentSavegameData.Rect;
-        var  rect = new Rect(uiAreaX + relativeRect.X * uiAreaWidth, uiAreaY + relativeRect.Y * uiAreaHeight, relativeRect.Width * uiAreaWidth, relativeRect.Height * uiAreaHeight);
+        var rect = new Rect(uiAreaX + relativeRect.X * uiAreaWidth, uiAreaY + relativeRect.Y * uiAreaHeight, relativeRect.Width * uiAreaWidth, relativeRect.Height * uiAreaHeight);
         var color = currentSavegameData.RectColor;
         int value = currentSavegameData.Value;
         valueFont.ColorRgba = color;
@@ -355,10 +353,8 @@ public class SavegameExample : ExampleScene
             CircleDrawing.DrawCircleFast(rect.TopLeft, rectCornerSize, color);
             CircleDrawing.DrawCircleFast(rect.BottomRight, rectCornerSize, color);
         }
-
-
+        
         var lmbState = ShapeMouseButton.LEFT.GetInputState();
-        // var valueText = $"Value: {value}";
         var valueText = $"{value}";
         valueFont.DrawWord(valueText, rect, AnchorPoint.Center);
 
@@ -367,8 +363,6 @@ public class SavegameExample : ExampleScene
 
         var slotButtonsArea = buttonAreas[0];
         var slotButtonsAreas = slotButtonsArea.SplitV(MaxSavegameSlots);
-        
-        
         
         // Draw buttons for Save, Load, Reset, and Slot selection
         for (int i = 0; i < MaxSavegameSlots; i++)
@@ -426,7 +420,7 @@ public class SavegameExample : ExampleScene
             {
                 buttonColor = new ColorRgba(Color.LightSkyBlue);
                 // UpdateSavegameData();
-                SaveSavgameData();
+                SaveSavegameData();
             }
             else
             {
@@ -577,7 +571,7 @@ public class SavegameExample : ExampleScene
     {
         if (slot == currentSavegameSlot) return slot;
         
-         currentSavegameSlot = slot < 0 ? 0 : slot >= MaxSavegameSlots ? MaxSavegameSlots - 1 : slot;
+         currentSavegameSlot = ShapeMath.Clamp(slot, 0, MaxSavegameSlots - 1);
          SaveProfileData();
          currentSavegameData = LoadSavegameData();
          return currentSavegameSlot;
@@ -623,7 +617,7 @@ public class SavegameExample : ExampleScene
         var savegameData = dataSerializer.Deserialize(fileString);
         return savegameData ?? ExampleSavegameData.Random(currentSavegameSlot, curScreenArea);
     }
-    private bool SaveSavgameData()
+    private bool SaveSavegameData()
     {
         if (saveDirectory == null) return false;
         var fileString = dataSerializer.Serialize(currentSavegameData);
@@ -634,7 +628,7 @@ public class SavegameExample : ExampleScene
     private void ResetSavegameData()
     {
         currentSavegameData = ExampleSavegameData.Random(currentSavegameSlot, curScreenArea);
-        SaveSavgameData();
+        SaveSavegameData();
     }
     #endregion
 }
