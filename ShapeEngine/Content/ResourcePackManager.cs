@@ -10,11 +10,20 @@ public static class ResourcePackManager
 
     public static void CreateResourcePackFromFile(string resxPath, string filePath)
     {
-        if (!File.Exists(filePath)) throw new FileNotFoundException($"File not found: {filePath}");
+        if (!File.Exists(filePath))
+        {
+            Console.WriteLine($"File not found: {filePath}");
+            return;
+        }
         
         var resxDir = Path.GetDirectoryName(resxPath);
-        if (resxDir != null && !Directory.Exists(resxDir)) throw new DirectoryNotFoundException($"Directory not found: {resxDir}");
-        if (Path.GetExtension(resxPath) != ".resource") throw new ArgumentException($"Path does not point to a .resource file: {resxPath}");
+        if (resxDir == null)
+        {
+            Console.WriteLine($"Directory not found: {resxDir}");
+            return;
+        }
+        
+        if (!Directory.Exists(resxDir)) Directory.CreateDirectory(resxDir);
 
         var fileName = Path.GetFileName(filePath);
         using var writer = new ResourceWriter(resxPath);
@@ -27,7 +36,21 @@ public static class ResourcePackManager
     }
     public static void CreateResourcePackFromDirectory(string resxPath, string directoryPath)
     {
-        if (!Directory.Exists(directoryPath)) throw new DirectoryNotFoundException($"Directory not found: {directoryPath}");
+        if (!Directory.Exists(directoryPath))
+        {
+            Console.WriteLine($"Directory not found: {directoryPath}");
+            return;
+        }
+        
+        var resxDir = Path.GetDirectoryName(resxPath);
+        if (resxDir == null)
+        {
+            Console.WriteLine($"Directory not found: {resxDir}");
+            return;
+        }
+        
+        if (!Directory.Exists(resxDir)) Directory.CreateDirectory(resxDir);
+        
         var files = Directory.GetFiles(directoryPath, "*", SearchOption.AllDirectories);
         using var writer = new ResourceWriter(resxPath);
         foreach (var file in files)
@@ -48,27 +71,38 @@ public static class ResourcePackManager
     
     public static void AddFileToPack(string resxPath, string filePath)
     {
-        if (!File.Exists(filePath)) throw new FileNotFoundException($"File not found: {filePath}");
-        
-        var resxDir = Path.GetDirectoryName(resxPath);
-        if (resxDir != null && !Directory.Exists(resxDir)) throw new DirectoryNotFoundException($"Directory not found: {resxDir}");
-        if (Path.GetExtension(resxPath) != ".resource") throw new ArgumentException($"Path does not point to a .resource file: {resxPath}");
-
-        var resourceName = Path.GetFileName(filePath);
-
-        // Read existing resources
-        var resources = new Dictionary<string, byte[]>();
-        if (File.Exists(resxPath))
+        if (!File.Exists(filePath))
         {
-            using var reader = new ResourceReader(resxPath);
-            foreach (DictionaryEntry entry in reader)
+            Console.WriteLine($"File not found: {filePath}");
+            return;
+        }
+
+        var resxDir = Path.GetDirectoryName(resxPath);
+        if (resxDir == null)
+        {
+            Console.WriteLine($"Directory not found: {resxDir}");
+            return;
+        }
+        
+        var resources = new Dictionary<string, byte[]>();
+        
+        if (Directory.Exists(resxDir))
+        {
+            // Read existing resources
+            if (File.Exists(resxPath))
             {
-                var fileName = entry.Key.ToString();
-                if (fileName == null) continue;
-                if(entry.Value is byte[] bytes) resources[fileName] = bytes;
+                using var reader = new ResourceReader(resxPath);
+                foreach (DictionaryEntry entry in reader)
+                {
+                    var fileName = entry.Key.ToString();
+                    if (fileName == null) continue;
+                    if(entry.Value is byte[] bytes) resources[fileName] = bytes;
+                }
             }
         }
-        // Add/replace the new resource
+        else Directory.CreateDirectory(resxDir);
+        
+        var resourceName = Path.GetFileName(filePath);
         resources[resourceName] = File.ReadAllBytes(filePath);
 
         using var writer = new ResourceWriter(resxPath);
@@ -84,18 +118,36 @@ public static class ResourcePackManager
     }
     public static void AddDirectoryToPack(string resxPath, string directoryPath)
     {
-        // Read existing resources
-        var resources = new Dictionary<string, byte[]>();
-        if (File.Exists(resxPath))
+        if (!Directory.Exists(directoryPath))
         {
-            using var reader = new ResourceReader(resxPath);
-            foreach (DictionaryEntry entry in reader)
+            Console.WriteLine($"Directory not found: {directoryPath}");
+            return;
+        }
+        
+        var resxDir = Path.GetDirectoryName(resxPath);
+        if (resxDir == null)
+        {
+            Console.WriteLine($"Directory not found: {resxDir}");
+            return;
+        }
+        
+        var resources = new Dictionary<string, byte[]>();
+        
+        if (Directory.Exists(resxDir))
+        {
+            // Read existing resources
+            if (File.Exists(resxPath))
             {
-                var fileName = entry.Key.ToString();
-                if (fileName == null) continue;
-                if(entry.Value is byte[] bytes) resources[fileName] = bytes;
+                using var reader = new ResourceReader(resxPath);
+                foreach (DictionaryEntry entry in reader)
+                {
+                    var fileName = entry.Key.ToString();
+                    if (fileName == null) continue;
+                    if(entry.Value is byte[] bytes) resources[fileName] = bytes;
+                }
             }
         }
+        else Directory.CreateDirectory(resxDir);
 
         var files = Directory.GetFiles(directoryPath, "*", SearchOption.AllDirectories);
         foreach (var file in files)
@@ -120,7 +172,8 @@ public static class ResourcePackManager
     
     public static void ExtractPack(string resxPath, string outputDirectory)
     {
-        Directory.CreateDirectory(outputDirectory);
+        if (!Directory.Exists(outputDirectory)) Directory.CreateDirectory(outputDirectory);
+
         using var reader = new ResourceReader(resxPath);
         foreach (DictionaryEntry entry in reader)
         {
