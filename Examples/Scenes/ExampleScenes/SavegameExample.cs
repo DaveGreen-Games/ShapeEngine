@@ -571,7 +571,7 @@ public class SavegameExample : ExampleScene
     {
         if (slot == currentSavegameSlot) return slot;
         
-         currentSavegameSlot = ShapeMath.Clamp(slot, 0, MaxSavegameSlots - 1);
+        currentSavegameSlot = ShapeMath.Clamp(slot, 0, MaxSavegameSlots - 1);
          SaveProfileData();
          currentSavegameData = LoadSavegameData();
          return currentSavegameSlot;
