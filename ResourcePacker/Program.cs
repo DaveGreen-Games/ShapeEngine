@@ -29,6 +29,7 @@ class Program
                           " - add files/directories to existing packed binary files.\n" +
                           " - unpack packed binary files into directories.\n" +
                           " - pack directories into text files with each file taking up 2 lines:\n" +
+                          " - resource packs are always compressed.\n" +
                           "  - 1st line = filename.\n" +
                           "  - 2nd line =  binary data of the file compressed to a string.\n");
         Console.WriteLine("Use '--help' for usage instructions.");

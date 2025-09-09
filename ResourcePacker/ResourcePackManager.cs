@@ -79,7 +79,6 @@ public static class ResourcePackManager
     #region Resource File Packer
     
     #region Create Resource File
-
     public static bool CreateResourcePackFromFile(string outputResPath, string sourceFilePath)
     {
         if (!File.Exists(sourceFilePath))
@@ -107,6 +106,7 @@ public static class ResourcePackManager
         writer.Generate();
         return true;
     }
+
     public static bool CreateResourcePackFromDirectory(string outputResPath, string sourceDirectoryPath, List<string>? extensionExceptions = null)
     {
         if (!Directory.Exists(sourceDirectoryPath))
@@ -114,39 +114,50 @@ public static class ResourcePackManager
             Console.WriteLine($"Directory not found: {sourceDirectoryPath}");
             return false;
         }
-        
-        if(!Path.HasExtension(outputResPath))
+    
+        if (!Path.HasExtension(outputResPath))
         {
             Console.WriteLine($"Output resource path must have a valid extension: {outputResPath}");
             return false;
         }
-        
+    
         var resxDir = Path.GetDirectoryName(outputResPath);
         if (resxDir == null)
         {
             Console.WriteLine($"Directory not found: {resxDir}");
             return false;
         }
-
+    
         if (!Directory.Exists(resxDir))
         {
             Console.WriteLine($"Created output directory: {resxDir}");
             Directory.CreateDirectory(resxDir);
         }
-        
+    
         var files = Directory.GetFiles(sourceDirectoryPath, "*", SearchOption.AllDirectories);
-        using var writer = new ResourceWriter(outputResPath);
-        foreach (var file in files)
+    
+        using var memStream = new MemoryStream();
+        using (var writer = new ResourceWriter(memStream))
         {
-            if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(file))) continue;
-            
-            var relativeName = Path.GetRelativePath(sourceDirectoryPath, file);
-            writer.AddResource(relativeName, File.ReadAllBytes(file));
+            foreach (var file in files)
+            {
+                if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(file))) continue;
+                var relativeName = Path.GetRelativePath(sourceDirectoryPath, file);
+                writer.AddResource(relativeName, File.ReadAllBytes(file));
+            }
+            writer.Generate();
+            writer.Close(); // Ensure all data is written
         }
-        writer.Generate();
+
+        // Copy buffer to a new stream since memStream is closed
+        var buffer = memStream.ToArray();
+        using var bufferStream = new MemoryStream(buffer);
+        using var fileStream = new FileStream(outputResPath, FileMode.Create, FileAccess.Write);
+        using var gzipStream = new GZipStream(fileStream, CompressionLevel.Optimal);
+        bufferStream.CopyTo(gzipStream);
+
         return true;
     }
-    
     #endregion
 
     #region Append Resource File
@@ -264,14 +275,20 @@ public static class ResourcePackManager
             Console.WriteLine($"Source File not found: {sourceResPath}");
             return false;
         }
-        
+    
         if (!Directory.Exists(outputDirectory))
         {
             Console.WriteLine($"Directory created: {outputDirectory}");
             Directory.CreateDirectory(outputDirectory);
         }
-
-        using var reader = new ResourceReader(sourceResPath);
+    
+        using var fileStream = new FileStream(sourceResPath, FileMode.Open, FileAccess.Read);
+        using var gzipStream = new GZipStream(fileStream, CompressionMode.Decompress);
+        using var memStream = new MemoryStream();
+        gzipStream.CopyTo(memStream);
+        memStream.Position = 0;
+    
+        using var reader = new ResourceReader(memStream);
         foreach (DictionaryEntry entry in reader)
         {
             var fileName = entry.Key.ToString();
@@ -280,12 +297,11 @@ public static class ResourcePackManager
             string? directoryPath = Path.GetDirectoryName(filePath);
             if (directoryPath == null) continue;
             Directory.CreateDirectory(directoryPath);
-            if(entry.Value is byte[] bytes) File.WriteAllBytes(filePath, bytes);
+            if (entry.Value is byte[] bytes) File.WriteAllBytes(filePath, bytes);
         }
-
+    
         return true;
     }
-    
     public static bool UnpackDebug(string outputDirectory, string sourceResPath)
     {
         if (!Path.HasExtension(sourceResPath) || !File.Exists(sourceResPath))
@@ -293,8 +309,14 @@ public static class ResourcePackManager
             Console.WriteLine($"Source File not found: {sourceResPath}");
             return false;
         }
-
-        using var reader = new ResourceReader(sourceResPath);
+    
+        using var fileStream = new FileStream(sourceResPath, FileMode.Open, FileAccess.Read);
+        using var gzipStream = new GZipStream(fileStream, CompressionMode.Decompress);
+        using var memStream = new MemoryStream();
+        gzipStream.CopyTo(memStream);
+        memStream.Position = 0;
+    
+        using var reader = new ResourceReader(memStream);
         foreach (DictionaryEntry entry in reader)
         {
             var fileName = entry.Key.ToString();
@@ -302,16 +324,113 @@ public static class ResourcePackManager
             string filePath = Path.Combine(outputDirectory, fileName);
             string? directoryPath = Path.GetDirectoryName(filePath);
             if (directoryPath == null) continue;
-
+    
             if (entry.Value is byte[] bytes)
             {
                 Console.WriteLine($"File read -> Filename: {fileName} | FilePath: {filePath} | DirectoryPath: {directoryPath} with {bytes.Length} bytes");
             }
         }
-
+    
         return true;
     }
+    
+
     #endregion
     
     #endregion
 }
+
+    // public static bool CreateResourcePackFromDirectory(string outputResPath, string sourceDirectoryPath, List<string>? extensionExceptions = null)
+    // {
+    //     if (!Directory.Exists(sourceDirectoryPath))
+    //     {
+    //         Console.WriteLine($"Directory not found: {sourceDirectoryPath}");
+    //         return false;
+    //     }
+    //     
+    //     if(!Path.HasExtension(outputResPath))
+    //     {
+    //         Console.WriteLine($"Output resource path must have a valid extension: {outputResPath}");
+    //         return false;
+    //     }
+    //     
+    //     var resxDir = Path.GetDirectoryName(outputResPath);
+    //     if (resxDir == null)
+    //     {
+    //         Console.WriteLine($"Directory not found: {resxDir}");
+    //         return false;
+    //     }
+    //
+    //     if (!Directory.Exists(resxDir))
+    //     {
+    //         Console.WriteLine($"Created output directory: {resxDir}");
+    //         Directory.CreateDirectory(resxDir);
+    //     }
+    //     
+    //     var files = Directory.GetFiles(sourceDirectoryPath, "*", SearchOption.AllDirectories);
+    //     using var writer = new ResourceWriter(outputResPath);
+    //     foreach (var file in files)
+    //     {
+    //         if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(file))) continue;
+    //         
+    //         var relativeName = Path.GetRelativePath(sourceDirectoryPath, file);
+    //         writer.AddResource(relativeName, File.ReadAllBytes(file));
+    //     }
+    //     writer.Generate();
+    //     return true;
+    // }
+
+    // public static bool Unpack(string outputDirectory, string sourceResPath)
+    // {
+    //     if (!Path.HasExtension(sourceResPath) || !File.Exists(sourceResPath))
+    //     {
+    //         Console.WriteLine($"Source File not found: {sourceResPath}");
+    //         return false;
+    //     }
+    //     
+    //     if (!Directory.Exists(outputDirectory))
+    //     {
+    //         Console.WriteLine($"Directory created: {outputDirectory}");
+    //         Directory.CreateDirectory(outputDirectory);
+    //     }
+    //
+    //     using var reader = new ResourceReader(sourceResPath);
+    //     foreach (DictionaryEntry entry in reader)
+    //     {
+    //         var fileName = entry.Key.ToString();
+    //         if (fileName == null) continue;
+    //         string filePath = Path.Combine(outputDirectory, fileName);
+    //         string? directoryPath = Path.GetDirectoryName(filePath);
+    //         if (directoryPath == null) continue;
+    //         Directory.CreateDirectory(directoryPath);
+    //         if(entry.Value is byte[] bytes) File.WriteAllBytes(filePath, bytes);
+    //     }
+    //
+    //     return true;
+    // }
+    //
+    // public static bool UnpackDebug(string outputDirectory, string sourceResPath)
+    // {
+    //     if (!Path.HasExtension(sourceResPath) || !File.Exists(sourceResPath))
+    //     {
+    //         Console.WriteLine($"Source File not found: {sourceResPath}");
+    //         return false;
+    //     }
+    //
+    //     using var reader = new ResourceReader(sourceResPath);
+    //     foreach (DictionaryEntry entry in reader)
+    //     {
+    //         var fileName = entry.Key.ToString();
+    //         if (fileName == null) continue;
+    //         string filePath = Path.Combine(outputDirectory, fileName);
+    //         string? directoryPath = Path.GetDirectoryName(filePath);
+    //         if (directoryPath == null) continue;
+    //
+    //         if (entry.Value is byte[] bytes)
+    //         {
+    //             Console.WriteLine($"File read -> Filename: {fileName} | FilePath: {filePath} | DirectoryPath: {directoryPath} with {bytes.Length} bytes");
+    //         }
+    //     }
+    //
+    //     return true;
+    // }
