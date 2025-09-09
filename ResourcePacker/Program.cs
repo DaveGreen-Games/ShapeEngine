@@ -40,7 +40,7 @@ class Program
         Console.WriteLine("------------------------------------------------------------");
         
         
-        if (args.Length is <= 0 or > 3)
+        if (args.Length <= 0)
         {
             Console.WriteLine("Invalid number of arguments. Use '--help' for usage instructions.");
             return;
@@ -52,17 +52,20 @@ class Program
             {
                 Console.WriteLine(
                             "Commands:\n" +
-                                "  resourcepacker --help\n" +
-                                "  resourcepacker packDir <sourceDirectory> <targetResourceFile>\n" +
-                                "  resourcepacker packFile <sourceFile> <targetResourceFile>\n" +
-                                "  resourcepacker addFile <sourceFile> <targetResourceFile>\n" +
-                                "  resourcepacker addDir <sourceDirectory> <targetResourceFile>\n" +
-                                "  resourcepacker unpack <resourceFile> <outputDirectory>\n" +
-                                "  resourcepacker packDirText <sourceDirectory> <targetTextFile>\n" +
+                                "  ./ResourcePacker --help\n" +
+                                "  ./ResourcePacker packDir <sourceDirectory> <targetResourceFile>\n" +
+                                "  ./ResourcePacker packFile <sourceFile> <targetResourceFile>\n" +
+                                "  ./ResourcePacker addFile <sourceFile> <targetResourceFile>\n" +
+                                "  ./ResourcePacker addDir <sourceDirectory> <targetResourceFile>\n" +
+                                "  ./ResourcePacker unpack <resourceFile> <outputDirectory>\n" +
+                                "  ./ResourcePacker packDirText <sourceDirectory> <targetTextFile>\n" +
+                            "Flags:\n" +
+                                "  --exceptions <.ext1> <.ext2> ... : Optional flag to specify file extensions to exclude when packing directories.\n" +
                             "Examples:\n" +
-                                "  resourcepacker packDir ./backgroundMusic ./backgroundMusic.resource\n" +
-                                "  resourcepacker packFile ./logo.png ./output.resource\n" +
-                                "  resourcepacker packDireText ./assets ./packedResources.txt\n"
+                                "  ./ResourcePacker packDir ./backgroundMusic ./backgroundMusic.resource\n" +
+                                "  ./ResourcePacker packFile ./logo.png ./output.resource\n" +
+                                "  ./ResourcePacker packDireText ./assets ./packedResources.txt\n" +
+                                "  ./ResourcePacker packDir ./assets ./build/release/packedAssets.resource --exceptions .txt .png .wav\n"
                             );
             }
             else
@@ -78,6 +81,17 @@ class Program
             return;
         }
         
+        int exceptionsIndex = Array.IndexOf(args, "--exceptions");
+        List<string>? extensionExceptions = null;
+        if (exceptionsIndex > 2)
+        {
+            extensionExceptions = [];
+            for (int i = exceptionsIndex + 1; i < args.Length; i++)
+            {
+                extensionExceptions.Add(args[i]);
+            }
+        }
+        
         var command = args[0].ToLower();
 
         if (command == "packdir")
@@ -86,12 +100,19 @@ class Program
             var targetFile = args[2];
             try
             {
-                ResourcePackManager.CreateResourcePackFromDirectory(targetFile, sourceDir);
-                Console.WriteLine($"Packed '{sourceDir}' to '{targetFile}'.");
+                if (ResourcePackManager.CreateResourcePackFromDirectory(targetFile, sourceDir, extensionExceptions))
+                {
+                    Console.WriteLine($"Packed '{sourceDir}' to '{targetFile}'.");
+                }
+                else
+                {
+                    Console.WriteLine($"Error: Packing '{sourceDir}' to '{targetFile}' failed!");
+                }
+                
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error packing directory '{sourceDir}' to '{targetFile}': {ex.Message}");
+                Console.WriteLine($"Error: Packing directory '{sourceDir}' to '{targetFile}': {ex.Message}");
             }
         }
         else if (command == "packfile")
@@ -100,12 +121,19 @@ class Program
             var targetFile = args[2];
             try
             {
-                ResourcePackManager.CreateResourcePackFromFile(targetFile, sourceFile);
-                Console.WriteLine($"Packed '{sourceFile}' to '{targetFile}'.");
+                if (ResourcePackManager.CreateResourcePackFromFile(targetFile, sourceFile))
+                {
+                    Console.WriteLine($"Packed '{sourceFile}' to '{targetFile}'.");
+                }
+                else
+                {
+                    Console.WriteLine($"Error: Packing '{sourceFile}' to '{targetFile}'!");
+                }
+                
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error packing file '{sourceFile}' to '{targetFile}': {ex.Message}");
+                Console.WriteLine($"Error: Packing file '{sourceFile}' to '{targetFile}': {ex.Message}");
             }
         }
         else if (command == "addfile")
@@ -114,12 +142,19 @@ class Program
             var targetFile = args[2];
             try
             {
-                ResourcePackManager.AddFileToPack(targetFile, sourceFile);
-                Console.WriteLine($"Added '{sourceFile}' to '{targetFile}'.");
+                if (ResourcePackManager.AddFileToPack(targetFile, sourceFile))
+                {
+                    Console.WriteLine($"Added '{sourceFile}' to '{targetFile}'.");
+                }
+                else
+                {
+                    Console.WriteLine($"Error: Adding '{sourceFile}' to '{targetFile}'!");
+                }
+                
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error adding file '{sourceFile}' to '{targetFile}': {ex.Message}");
+                Console.WriteLine($"Error: Adding file '{sourceFile}' to '{targetFile}': {ex.Message}");
             }
             
         }
@@ -129,12 +164,19 @@ class Program
             var targetFile = args[2];
             try
             {
-                ResourcePackManager.AddDirectoryToPack(targetFile, sourceDir);
-                Console.WriteLine($"Added directory '{sourceDir}' to '{targetFile}'.");
+                if (ResourcePackManager.AddDirectoryToPack(targetFile, sourceDir, extensionExceptions))
+                {
+                    Console.WriteLine($"Added directory '{sourceDir}' to '{targetFile}'.");
+                }
+                else
+                {
+                    Console.WriteLine($"Error: Adding directory '{sourceDir}' to '{targetFile}' failed!");
+                }
+                
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error adding directory '{sourceDir}' to '{targetFile}': {ex.Message}");
+                Console.WriteLine($"Error: Adding directory '{sourceDir}' to '{targetFile}': {ex.Message}");
             }
         }
         else if (command == "packdirtext")
@@ -143,28 +185,63 @@ class Program
             var targetFile = args[2];
             try
             {
-                ResourcePackManager.PackToText(sourceDir, targetFile);
-                Console.WriteLine($"Packed '{sourceDir}' to text file '{targetFile}'.");
+                if (ResourcePackManager.PackToText(targetFile, sourceDir, extensionExceptions))
+                {
+                    Console.WriteLine($"Packed '{sourceDir}' to text file '{targetFile}'.");
+                }
+                else
+                {
+                    Console.WriteLine($"Error: Packing '{sourceDir}' to text file '{targetFile}' failed!");
+                }
+                
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error packing directory '{sourceDir}' to text file '{targetFile}': {ex.Message}");
+                Console.WriteLine($"Error: Packing directory '{sourceDir}' to text file '{targetFile}': {ex.Message}");
             }
         }
         else if (command == "unpack")
         {
-            
             var resxFile = args[1];
             var outputDir = args[2];
 
             try
             {
-                ResourcePackManager.Unpack(resxFile, outputDir);
-                Console.WriteLine($"Unpacked '{resxFile}' to '{outputDir}'.");
+                if (ResourcePackManager.Unpack(outputDir, resxFile))
+                {
+                    Console.WriteLine($"Unpacked '{resxFile}' to '{outputDir}'.");
+                }
+                else
+                {
+                    Console.WriteLine($"Error: Unpacking '{resxFile}' to '{outputDir}' failed!");
+                }
+                
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error unpacking resource pack {resxFile} to {outputDir} with exception: {ex.Message}");
+                Console.WriteLine($"Error: Unpacking resource pack {resxFile} to {outputDir} with exception: {ex.Message}");
+            }
+        }
+        else if (command == "unpackdebug")
+        {
+            var resxFile = args[1];
+            var outputDir = args[2];
+
+            try
+            {
+                if (ResourcePackManager.UnpackDebug(outputDir, resxFile))
+                {
+                    Console.WriteLine($"Unpacked debug '{resxFile}' to '{outputDir}'.");
+                }
+                else
+                {
+                    Console.WriteLine($"Error: Unpacking debug '{resxFile}' to '{outputDir}' failed!");
+                }
+                
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: Unpacking debug resource pack {resxFile} to {outputDir} with exception: {ex.Message}");
             }
         }
         else

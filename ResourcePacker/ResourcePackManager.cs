@@ -11,42 +11,50 @@ namespace ResourcePacker;
 public static class ResourcePackManager
 {
     #region Simple Txt Packer
-    /// <summary>
-    /// Pack a folder structure of various content types into a single txt file.
-    /// </summary>
-    /// <param name="sourcePath">The path to the folder that should be packed.
-    /// Goes through all subfolders as well.</param>
-    /// <param name="outputPath">The path of the resulting txt file.</param>
 
-    public static void PackToText(string sourcePath, string outputPath)
+    public static bool PackToText(string outputPath, string sourcePath, List<string>? extensionExceptions = null)
     {
         if(!Directory.Exists(sourcePath))
         {
             Console.WriteLine($"Source Directory not found: {sourcePath}");
-            return;
+            return false;
         }
 
         if (!Path.HasExtension(outputPath))
         {
             Console.WriteLine($"No output file extension found: {outputPath}");
-            return;
+            return false;
         }
 
         if (Path.GetExtension(outputPath) != ".txt")
         {
             Console.WriteLine($"Output file extension must be .txt: {outputPath}");
-            return;
+            return false;
+        }
+        var outputDirectory = Path.GetDirectoryName(outputPath);
+        if (outputDirectory == null)
+        {
+            Console.WriteLine($"Directory not found: {outputPath}");
+            return false;
+        }
+        if (!Directory.Exists(outputDirectory))
+        {
+            Directory.CreateDirectory(outputDirectory);
+            Console.WriteLine($"Created output directory: {outputDirectory}");
         }
         
         string[] files = Directory.GetFiles(sourcePath, "", SearchOption.AllDirectories);
-        List<string> lines = new List<string>();
-        foreach (var file in files)
+        var lines = new List<string>();
+        foreach (string file in files)
         {
+            if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(file))) continue;
+            
             lines.Add(Path.GetFileName(file));
-            var d = File.ReadAllBytes(file);
+            byte[] d = File.ReadAllBytes(file);
             lines.Add(Convert.ToBase64String(Compress(d)));
         }
         File.WriteAllLines(outputPath, lines);
+        return true;
     }
     
     /// <summary>
@@ -72,72 +80,90 @@ public static class ResourcePackManager
     
     #region Create Resource File
 
-    public static void CreateResourcePackFromFile(string resxPath, string filePath)
+    public static bool CreateResourcePackFromFile(string outputResPath, string sourceFilePath)
     {
-        if (!File.Exists(filePath))
+        if (!File.Exists(sourceFilePath))
         {
-            Console.WriteLine($"File not found: {filePath}");
-            return;
+            Console.WriteLine($"File not found: {sourceFilePath}");
+            return false;
         }
         
-        var resxDir = Path.GetDirectoryName(resxPath);
+        var resxDir = Path.GetDirectoryName(outputResPath);
         if (resxDir == null)
         {
             Console.WriteLine($"Directory not found: {resxDir}");
-            return;
+            return false;
         }
-        
-        if (!Directory.Exists(resxDir)) Directory.CreateDirectory(resxDir);
 
-        var fileName = Path.GetFileName(filePath);
-        using var writer = new ResourceWriter(resxPath);
-        writer.AddResource(fileName, File.ReadAllBytes(filePath));
-        writer.Generate();
-    }
-    public static void CreateResourcePackFromDirectory(string resxPath, string directoryPath)
-    {
-        if (!Directory.Exists(directoryPath))
+        if (!Directory.Exists(resxDir))
         {
-            Console.WriteLine($"Directory not found: {directoryPath}");
-            return;
+            Directory.CreateDirectory(resxDir);
+            Console.WriteLine($"Created output directory: {resxDir}");
+        }
+
+        var fileName = Path.GetFileName(sourceFilePath);
+        using var writer = new ResourceWriter(outputResPath);
+        writer.AddResource(fileName, File.ReadAllBytes(sourceFilePath));
+        writer.Generate();
+        return true;
+    }
+    public static bool CreateResourcePackFromDirectory(string outputResPath, string sourceDirectoryPath, List<string>? extensionExceptions = null)
+    {
+        if (!Directory.Exists(sourceDirectoryPath))
+        {
+            Console.WriteLine($"Directory not found: {sourceDirectoryPath}");
+            return false;
         }
         
-        var resxDir = Path.GetDirectoryName(resxPath);
+        if(!Path.HasExtension(outputResPath))
+        {
+            Console.WriteLine($"Output resource path must have a valid extension: {outputResPath}");
+            return false;
+        }
+        
+        var resxDir = Path.GetDirectoryName(outputResPath);
         if (resxDir == null)
         {
             Console.WriteLine($"Directory not found: {resxDir}");
-            return;
+            return false;
+        }
+
+        if (!Directory.Exists(resxDir))
+        {
+            Console.WriteLine($"Created output directory: {resxDir}");
+            Directory.CreateDirectory(resxDir);
         }
         
-        if (!Directory.Exists(resxDir)) Directory.CreateDirectory(resxDir);
-        
-        var files = Directory.GetFiles(directoryPath, "*", SearchOption.AllDirectories);
-        using var writer = new ResourceWriter(resxPath);
+        var files = Directory.GetFiles(sourceDirectoryPath, "*", SearchOption.AllDirectories);
+        using var writer = new ResourceWriter(outputResPath);
         foreach (var file in files)
         {
-            var relativeName = Path.GetRelativePath(directoryPath, file);
+            if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(file))) continue;
+            
+            var relativeName = Path.GetRelativePath(sourceDirectoryPath, file);
             writer.AddResource(relativeName, File.ReadAllBytes(file));
         }
         writer.Generate();
+        return true;
     }
     
     #endregion
 
     #region Append Resource File
     
-    public static void AddFileToPack(string resxPath, string filePath)
+    public static bool AddFileToPack(string outputResPath, string sourceFilePath)
     {
-        if (!File.Exists(filePath))
+        if (!Path.HasExtension(sourceFilePath) || !File.Exists(sourceFilePath))
         {
-            Console.WriteLine($"File not found: {filePath}");
-            return;
+            Console.WriteLine($"Source File not found: {sourceFilePath}");
+            return false;
         }
 
-        var resxDir = Path.GetDirectoryName(resxPath);
+        var resxDir = Path.GetDirectoryName(outputResPath);
         if (resxDir == null)
         {
             Console.WriteLine($"Directory not found: {resxDir}");
-            return;
+            return false;
         }
         
         var resources = new Dictionary<string, byte[]>();
@@ -145,9 +171,9 @@ public static class ResourcePackManager
         if (Directory.Exists(resxDir))
         {
             // Read existing resources
-            if (File.Exists(resxPath))
+            if (File.Exists(outputResPath))
             {
-                using var reader = new ResourceReader(resxPath);
+                using var reader = new ResourceReader(outputResPath);
                 foreach (DictionaryEntry entry in reader)
                 {
                     var fileName = entry.Key.ToString();
@@ -156,31 +182,36 @@ public static class ResourcePackManager
                 }
             }
         }
-        else Directory.CreateDirectory(resxDir);
+        else
+        {
+            Console.WriteLine($"Created output directory: {resxDir}");
+            Directory.CreateDirectory(resxDir);
+        }
         
-        var resourceName = Path.GetFileName(filePath);
-        resources[resourceName] = File.ReadAllBytes(filePath);
+        var resourceName = Path.GetFileName(sourceFilePath);
+        resources[resourceName] = File.ReadAllBytes(sourceFilePath);
 
-        using var writer = new ResourceWriter(resxPath);
+        using var writer = new ResourceWriter(outputResPath);
         foreach (var kvp in resources)
         {
             writer.AddResource(kvp.Key, kvp.Value);
         }
         writer.Generate();
+        return true;
     }
-    public static void AddDirectoryToPack(string resxPath, string directoryPath)
+    public static bool AddDirectoryToPack(string outputResPath, string sourceDirectoryPath, List<string>? extensionExceptions = null)
     {
-        if (!Directory.Exists(directoryPath))
+        if (!Directory.Exists(sourceDirectoryPath))
         {
-            Console.WriteLine($"Directory not found: {directoryPath}");
-            return;
+            Console.WriteLine($"Directory not found: {sourceDirectoryPath}");
+            return false;
         }
         
-        var resxDir = Path.GetDirectoryName(resxPath);
+        string? resxDir = Path.GetDirectoryName(outputResPath);
         if (resxDir == null)
         {
             Console.WriteLine($"Directory not found: {resxDir}");
-            return;
+            return false;
         }
         
         var resources = new Dictionary<string, byte[]>();
@@ -188,9 +219,9 @@ public static class ResourcePackManager
         if (Directory.Exists(resxDir))
         {
             // Read existing resources
-            if (File.Exists(resxPath))
+            if (File.Exists(outputResPath))
             {
-                using var reader = new ResourceReader(resxPath);
+                using var reader = new ResourceReader(outputResPath);
                 foreach (DictionaryEntry entry in reader)
                 {
                     var fileName = entry.Key.ToString();
@@ -199,31 +230,48 @@ public static class ResourcePackManager
                 }
             }
         }
-        else Directory.CreateDirectory(resxDir);
-
-        var files = Directory.GetFiles(directoryPath, "*", SearchOption.AllDirectories);
-        foreach (var file in files)
+        else
         {
-            var relativeName = Path.GetRelativePath(directoryPath, file);
+            Console.WriteLine($"Created output directory: {resxDir}");
+            Directory.CreateDirectory(resxDir);
+        }
+
+        string[] files = Directory.GetFiles(sourceDirectoryPath, "*", SearchOption.AllDirectories);
+        foreach (string file in files)
+        {
+            if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(file))) continue;
+            
+            string relativeName = Path.GetRelativePath(sourceDirectoryPath, file);
             resources[relativeName] = File.ReadAllBytes(file);
         }
 
-        using var writer = new ResourceWriter(resxPath);
+        using var writer = new ResourceWriter(outputResPath);
         foreach (var kvp in resources)
         {
             writer.AddResource(kvp.Key, kvp.Value);
         }
         writer.Generate();
+        return true;
     }
    
     #endregion
     
-    #region Extract Resouce File
-    public static void Unpack(string resxPath, string outputDirectory)
+    #region Unpack Resouce File
+    public static bool Unpack(string outputDirectory, string sourceResPath)
     {
-        if (!Directory.Exists(outputDirectory)) Directory.CreateDirectory(outputDirectory);
+        if (!Path.HasExtension(sourceResPath) || !File.Exists(sourceResPath))
+        {
+            Console.WriteLine($"Source File not found: {sourceResPath}");
+            return false;
+        }
+        
+        if (!Directory.Exists(outputDirectory))
+        {
+            Console.WriteLine($"Directory created: {outputDirectory}");
+            Directory.CreateDirectory(outputDirectory);
+        }
 
-        using var reader = new ResourceReader(resxPath);
+        using var reader = new ResourceReader(sourceResPath);
         foreach (DictionaryEntry entry in reader)
         {
             var fileName = entry.Key.ToString();
@@ -234,8 +282,35 @@ public static class ResourcePackManager
             Directory.CreateDirectory(directoryPath);
             if(entry.Value is byte[] bytes) File.WriteAllBytes(filePath, bytes);
         }
+
+        return true;
     }
     
+    public static bool UnpackDebug(string outputDirectory, string sourceResPath)
+    {
+        if (!Path.HasExtension(sourceResPath) || !File.Exists(sourceResPath))
+        {
+            Console.WriteLine($"Source File not found: {sourceResPath}");
+            return false;
+        }
+
+        using var reader = new ResourceReader(sourceResPath);
+        foreach (DictionaryEntry entry in reader)
+        {
+            var fileName = entry.Key.ToString();
+            if (fileName == null) continue;
+            string filePath = Path.Combine(outputDirectory, fileName);
+            string? directoryPath = Path.GetDirectoryName(filePath);
+            if (directoryPath == null) continue;
+
+            if (entry.Value is byte[] bytes)
+            {
+                Console.WriteLine($"File read -> Filename: {fileName} | FilePath: {filePath} | DirectoryPath: {directoryPath} with {bytes.Length} bytes");
+            }
+        }
+
+        return true;
+    }
     #endregion
     
     #endregion
