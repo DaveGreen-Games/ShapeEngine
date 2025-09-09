@@ -1,7 +1,6 @@
-﻿using System.Collections;
-using System.Resources;
-
+﻿
 namespace ResourcePacker;
+
 
 class Program
 {
@@ -13,13 +12,33 @@ class Program
     /// <item>resourcePacker packFile sourceFile targetResourceFile</item>
     /// <item>resourcePacker addFile sourceFile targetResourceFile</item>
     /// <item>resourcePacker addDir sourceDirectory targetResourceFile</item>
-    /// <item>resourcePacker extract resourceFile outputDirectory</item>
+    /// <item>resourcePacker unpack resourceFile outputDirectory</item>
+    /// <item>resourcePacker packDirText sourceDirectory targetTextFile</item>
     /// </list>
     /// </summary>
     /// <param name="args">command line arguments</param>
     static void Main(string[] args)
     {
-        Console.WriteLine("ResourcePacker: Packs and manages .resource files.\nUse '--help' for usage instructions.");
+        Console.WriteLine("Welcome to ResourcePacker v1.0.0");
+        Console.WriteLine("ResourcePacker is licensed under the MIT License.");
+        Console.WriteLine("Copyright (c) 2025 David Grueneis");
+        Console.WriteLine("Source code available at: https://github.com/DaveGreen-Games/ShapeEngine");
+        Console.WriteLine("Use at your own risk. No warranties provided.");
+        Console.WriteLine("ResourcePacker can:\n" +
+                          " - pack directories or single files into binary files.\n" +
+                          " - add files/directories to existing packed binary files.\n" +
+                          " - unpack packed binary files into directories.\n" +
+                          " - pack directories into text files with each file taking up 2 lines:\n" +
+                          "  - 1st line = filename.\n" +
+                          "  - 2nd line =  binary data of the file compressed to a string.\n");
+        Console.WriteLine("Use '--help' for usage instructions.");
+        Console.WriteLine("Remarks:\n" +
+                          " - ResourcePacker does not modify or delete any source files or directories.\n" +
+                          " - The <packDirText> command always expects a .txt target file extension.\n" +
+                          " - The other pack commands do not care about the target file extension but .resources is a good default.\n" +
+                          " - Ensure you have the necessary permissions for file operations in the specified directories.");
+        Console.WriteLine("------------------------------------------------------------");
+        
         
         if (args.Length is <= 0 or > 3)
         {
@@ -38,10 +57,12 @@ class Program
                                 "  resourcepacker packFile <sourceFile> <targetResourceFile>\n" +
                                 "  resourcepacker addFile <sourceFile> <targetResourceFile>\n" +
                                 "  resourcepacker addDir <sourceDirectory> <targetResourceFile>\n" +
-                                "  resourcepacker extract <resourceFile> <outputDirectory>\n" +
+                                "  resourcepacker unpack <resourceFile> <outputDirectory>\n" +
+                                "  resourcepacker packDirText <sourceDirectory> <targetTextFile>\n" +
                             "Examples:\n" +
                                 "  resourcepacker packDir ./backgroundMusic ./backgroundMusic.resource\n" +
-                                "  resourcepacker packFile ./logo.png ./output.resource\n"
+                                "  resourcepacker packFile ./logo.png ./output.resource\n" +
+                                "  resourcepacker packDireText ./assets ./packedResources.txt\n"
                             );
             }
             else
@@ -116,7 +137,21 @@ class Program
                 Console.WriteLine($"Error adding directory '{sourceDir}' to '{targetFile}': {ex.Message}");
             }
         }
-        else if (command == "extract")
+        else if (command == "packdirtext")
+        {
+            var sourceDir = args[1];
+            var targetFile = args[2];
+            try
+            {
+                ResourcePackManager.PackToText(sourceDir, targetFile);
+                Console.WriteLine($"Packed '{sourceDir}' to text file '{targetFile}'.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error packing directory '{sourceDir}' to text file '{targetFile}': {ex.Message}");
+            }
+        }
+        else if (command == "unpack")
         {
             
             var resxFile = args[1];
@@ -124,12 +159,12 @@ class Program
 
             try
             {
-                ResourcePackManager.ExtractPack(resxFile, outputDir);
-                Console.WriteLine($"Extracted '{resxFile}' to '{outputDir}'.");
+                ResourcePackManager.Unpack(resxFile, outputDir);
+                Console.WriteLine($"Unpacked '{resxFile}' to '{outputDir}'.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error extracting resource pack {resxFile} to {outputDir} with exception: {ex.Message}");
+                Console.WriteLine($"Error unpacking resource pack {resxFile} to {outputDir} with exception: {ex.Message}");
             }
         }
         else

@@ -4,6 +4,10 @@ using System.Resources;
 
 namespace ResourcePacker;
 
+/// <summary>
+/// Provides static methods for packing and unpacking resources and directories
+/// into text files or resource files, as well as extracting them.
+/// </summary>
 public static class ResourcePackManager
 {
     #region Simple Txt Packer
@@ -12,10 +16,28 @@ public static class ResourcePackManager
     /// </summary>
     /// <param name="sourcePath">The path to the folder that should be packed.
     /// Goes through all subfolders as well.</param>
-    /// <param name="outputPath">The path where the resulting txt file should be saved.</param>
-    /// <param name="outputFilename">The name of the resulting txt file.</param>
-    public static void Pack(string sourcePath, string outputPath, string outputFilename = "resources.txt")
+    /// <param name="outputPath">The path of the resulting txt file.</param>
+
+    public static void PackToText(string sourcePath, string outputPath)
     {
+        if(!Directory.Exists(sourcePath))
+        {
+            Console.WriteLine($"Source Directory not found: {sourcePath}");
+            return;
+        }
+
+        if (!Path.HasExtension(outputPath))
+        {
+            Console.WriteLine($"No output file extension found: {outputPath}");
+            return;
+        }
+
+        if (Path.GetExtension(outputPath) != ".txt")
+        {
+            Console.WriteLine($"Output file extension must be .txt: {outputPath}");
+            return;
+        }
+        
         string[] files = Directory.GetFiles(sourcePath, "", SearchOption.AllDirectories);
         List<string> lines = new List<string>();
         foreach (var file in files)
@@ -24,7 +46,7 @@ public static class ResourcePackManager
             var d = File.ReadAllBytes(file);
             lines.Add(Convert.ToBase64String(Compress(d)));
         }
-        File.WriteAllLines(outputPath + outputFilename, lines);
+        File.WriteAllLines(outputPath, lines);
     }
     
     /// <summary>
@@ -72,10 +94,6 @@ public static class ResourcePackManager
         writer.AddResource(fileName, File.ReadAllBytes(filePath));
         writer.Generate();
     }
-    public static void CreateResourcePackFromFile(string resxPath, FileInfo file)
-    {
-        CreateResourcePackFromFile(resxPath, file.FullName);
-    }
     public static void CreateResourcePackFromDirectory(string resxPath, string directoryPath)
     {
         if (!Directory.Exists(directoryPath))
@@ -101,10 +119,6 @@ public static class ResourcePackManager
             writer.AddResource(relativeName, File.ReadAllBytes(file));
         }
         writer.Generate();
-    }
-    public static void CreateResourcePackFromDirectory(string resxPath, DirectoryInfo directory)
-    {
-        CreateResourcePackFromDirectory(resxPath, directory.FullName);
     }
     
     #endregion
@@ -154,10 +168,6 @@ public static class ResourcePackManager
         }
         writer.Generate();
     }
-    public static void AddFileToPack(string resxPath, FileInfo file)
-    {
-        AddFileToPack(resxPath, file.FullName);
-    }
     public static void AddDirectoryToPack(string resxPath, string directoryPath)
     {
         if (!Directory.Exists(directoryPath))
@@ -205,15 +215,11 @@ public static class ResourcePackManager
         }
         writer.Generate();
     }
-    public static void AddDirectoryToPack(string resxPath, DirectoryInfo directory)
-    {
-        AddDirectoryToPack(resxPath, directory.FullName);
-    }
    
     #endregion
     
     #region Extract Resouce File
-    public static void ExtractPack(string resxPath, string outputDirectory)
+    public static void Unpack(string resxPath, string outputDirectory)
     {
         if (!Directory.Exists(outputDirectory)) Directory.CreateDirectory(outputDirectory);
 
@@ -229,8 +235,6 @@ public static class ResourcePackManager
             if(entry.Value is byte[] bytes) File.WriteAllBytes(filePath, bytes);
         }
     }
-
-
     
     #endregion
     
