@@ -5,8 +5,6 @@ using Raylib_cs;
 
 namespace ShapeEngine.Content;
 
-//TODO: should be able to unpack resource packer .resource files and content packer .txt files
-
 /// <summary>
 /// Provides a simple class to load content that was packed with the ContentPacker.
 /// </summary>
