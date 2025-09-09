@@ -1,6 +1,11 @@
+using System.Collections;
+using System.IO.Compression;
+using System.Resources;
 using Raylib_cs;
 
 namespace ShapeEngine.Content;
+
+//TODO: should be able to unpack resource packer .resource files and content packer .txt files
 
 /// <summary>
 /// Provides a simple class to load content that was packed with the ContentPacker.
@@ -11,7 +16,8 @@ public sealed class ContentManagerPacked : IContentManager
     /// The number of glyphs to load for fonts.
     /// </summary>
     public int GLYPH_COUNT = 0;
-    private Dictionary<string, ContentInfo> content = new();
+
+    private Dictionary<string, ContentInfo> content;
     
     private readonly List<Shader> shadersToUnload = [];
     private readonly List<Texture2D> texturesToUnload = [];
@@ -21,16 +27,43 @@ public sealed class ContentManagerPacked : IContentManager
     private readonly List<Music> musicToUnload = [];
     private readonly List<Wave> wavesToUnload = [];
 
+
+
     /// <summary>
-    /// Creates a new packed content manager.
+    /// Initializes a new instance of the <see cref="ContentManagerPacked"/> class,
+    /// loading packed content from the specified file path.
     /// </summary>
-    /// <param name="path">The path to the packed content.</param>
-    /// <param name="resourceFileName">The name of the resource file.</param>
-    public ContentManagerPacked(string path, string resourceFileName = "resources.txt")
+    /// <param name="path">The path to the packed content file (.txt or .resource for instance).</param>
+    /// <remarks>
+    /// If path ends in .txt <see cref="UnpackTextPack"/> is used to unpack the content. Otherwise <see cref="UnpackResourcePack"/> is used.
+    /// Content files must have been packed using a compatible resource packing method.
+    /// </remarks>
+    public ContentManagerPacked(string path)
     {
-        if (resourceFileName == "") return;
-        content = ContentPacker.Unpack(path, resourceFileName);
+        if (!Path.HasExtension(path))
+        {
+            Console.WriteLine($"ContentManagerPacked failed to load file: Path has no file extension: {path}");
+            content = new();
+        }
+        
+        var extension = Path.GetExtension(path);
+        if (extension.Equals(".txt", StringComparison.OrdinalIgnoreCase))
+        {
+            content = UnpackTextPack(path);
+        }
+        else
+        {
+            content = UnpackResourcePack(path);
+        }
+        
+        if (content.Count <= 0)
+        {
+            Console.WriteLine($"ContentManagerPacked no content loaded from file: {path}");
+        }
     }
+    
+    
+    
 
     /// <summary>
     /// Closes the content manager and unloads all loaded content.
@@ -175,5 +208,101 @@ public sealed class ContentManagerPacked : IContentManager
         string fileName = Path.GetFileNameWithoutExtension(filePath);
         return ContentLoader.LoadTextFromContent(content[fileName]);
     }
+    
+    
+    /// <summary>
+    /// Loads and unpacks a text file generated with a compatible resource packing method.
+    /// </summary>
+    /// <param name="textFilePath">The path to the packed txt file.</param>
+    /// <returns></returns>
+    public static Dictionary<string, ContentInfo> UnpackTextPack(string textFilePath)
+    {
+        Dictionary<string, ContentInfo> result = new();
 
+        if (!Directory.Exists(textFilePath))
+        {
+            Console.WriteLine($"Directory doesn't exist: {textFilePath}");
+            return result;
+        }
+        
+        var fileName = Path.GetFileName(textFilePath);
+        if (!fileName.EndsWith(".txt"))
+        {
+            Console.WriteLine($"File name doesn't end with '.txt': {textFilePath}");
+            return result;
+        }
+
+        if (!File.Exists(textFilePath))
+        {
+            Console.WriteLine($"File doesn't exist: {textFilePath}");
+            return result;
+        }
+        
+        var lines = File.ReadAllLines(textFilePath);
+        for (int i = 0; i < lines.Length; i += 2)
+        {
+            string key = lines[i];
+            string name = Path.GetFileNameWithoutExtension(key);
+            string extension = Path.GetExtension(key);
+            string dataText = lines[i + 1];
+            var data = Convert.FromBase64String(dataText);
+            result.Add(name, new(extension, Decompress(data)));
+        }
+        return result;
+    }
+    /// <summary>
+    /// Extracts all resources from a file and returns them as a dictionary of <see cref="ContentInfo"/> objects.
+    /// The key is the file name without extension, and the value contains the file name and its byte data.
+    /// Only works with files that were packed using a compatible resource packing method.
+    /// </summary>
+    /// <param name="resxPath">The path to the .resx resource file.</param>
+    /// <returns>
+    /// A dictionary where each key is the file name without extension and the value is a <see cref="ContentInfo"/>
+    /// containing the full file name and its byte data.
+    /// </returns>
+    public static Dictionary<string, ContentInfo> UnpackResourcePack(string resxPath)
+    {
+        var contentInfos = new Dictionary<string, ContentInfo>();
+        if (!Directory.Exists(resxPath))
+        {
+            Console.WriteLine($"Directory doesn't exist: {resxPath}");
+            return contentInfos;
+        }
+
+        if (!File.Exists(resxPath))
+        {
+            Console.WriteLine($"File doesn't exist: {resxPath}");
+            return contentInfos;
+        }
+        
+        using var reader = new ResourceReader(resxPath);
+        foreach (DictionaryEntry entry in reader)
+        {
+            var fileName = entry.Key.ToString();
+            if (fileName == null) continue;
+            if (entry.Value is byte[] bytes)
+            {
+                var name = Path.GetFileNameWithoutExtension(fileName);
+                contentInfos[name] = new ContentInfo(fileName, bytes);
+            }
+        }
+        return contentInfos;
+    }
+    /// <summary>
+    /// Decompresses binary data that was compressed using the Deflate algorithm using compression mode <see cref="CompressionMode.Decompress"/>.
+    /// </summary>
+    /// <seealso cref="DeflateStream"/>
+    /// <seealso cref="MemoryStream"/>
+    /// <param name="data">The compressed binary data to decompress.</param>
+    /// <returns>The decompressed binary data.</returns>
+    private static byte[] Decompress(byte[] data)
+    {
+        var input = new MemoryStream(data);
+        var output = new MemoryStream();
+        using (var deflateStream = new DeflateStream(input, CompressionMode.Decompress))
+        {
+            deflateStream.CopyTo(output);
+        }
+        return output.ToArray();
+    }
 }
