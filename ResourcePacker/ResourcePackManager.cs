@@ -79,6 +79,7 @@ public static class ResourcePackManager
     #region Resource File Packer
     
     #region Create Resource File
+    
     public static bool CreateResourcePackFromFile(string outputResPath, string sourceFilePath)
     {
         if (!File.Exists(sourceFilePath))
@@ -101,9 +102,16 @@ public static class ResourcePackManager
         }
 
         var fileName = Path.GetFileName(sourceFilePath);
-        using var writer = new ResourceWriter(outputResPath);
-        writer.AddResource(fileName, File.ReadAllBytes(sourceFilePath));
-        writer.Generate();
+        using var memStream = new MemoryStream();
+        using (var writer = new ResourceWriter(memStream))
+        {
+            writer.AddResource(fileName, File.ReadAllBytes(sourceFilePath));
+            writer.Generate();
+            writer.Close();
+        }
+        
+        CompressGzip(memStream, outputResPath);
+        
         return true;
     }
 
@@ -149,12 +157,7 @@ public static class ResourcePackManager
             writer.Close(); // Ensure all data is written
         }
 
-        // Copy buffer to a new stream since memStream is closed
-        var buffer = memStream.ToArray();
-        using var bufferStream = new MemoryStream(buffer);
-        using var fileStream = new FileStream(outputResPath, FileMode.Create, FileAccess.Write);
-        using var gzipStream = new GZipStream(fileStream, CompressionLevel.Optimal);
-        bufferStream.CopyTo(gzipStream);
+        CompressGzip(memStream, outputResPath);
 
         return true;
     }
@@ -184,12 +187,14 @@ public static class ResourcePackManager
             // Read existing resources
             if (File.Exists(outputResPath))
             {
-                using var reader = new ResourceReader(outputResPath);
+                using var decompressMemStream = DecompressGzip(outputResPath);
+
+                using var reader = new ResourceReader(decompressMemStream);
                 foreach (DictionaryEntry entry in reader)
                 {
                     var fileName = entry.Key.ToString();
                     if (fileName == null) continue;
-                    if(entry.Value is byte[] bytes) resources[fileName] = bytes;
+                    if (entry.Value is byte[] bytes) resources[fileName] = bytes;
                 }
             }
         }
@@ -202,14 +207,21 @@ public static class ResourcePackManager
         var resourceName = Path.GetFileName(sourceFilePath);
         resources[resourceName] = File.ReadAllBytes(sourceFilePath);
 
-        using var writer = new ResourceWriter(outputResPath);
-        foreach (var kvp in resources)
+        using var memStream = new MemoryStream();
+        using (var writer = new ResourceWriter(memStream))
         {
-            writer.AddResource(kvp.Key, kvp.Value);
+            foreach (var kvp in resources)
+            {
+                writer.AddResource(kvp.Key, kvp.Value);
+            }
+            writer.Generate();
+            writer.Close();
         }
-        writer.Generate();
+
+        CompressGzip(memStream, outputResPath);
         return true;
     }
+    
     public static bool AddDirectoryToPack(string outputResPath, string sourceDirectoryPath, List<string>? extensionExceptions = null)
     {
         if (!Directory.Exists(sourceDirectoryPath))
@@ -232,7 +244,8 @@ public static class ResourcePackManager
             // Read existing resources
             if (File.Exists(outputResPath))
             {
-                using var reader = new ResourceReader(outputResPath);
+                using var decompressMemStream = DecompressGzip(outputResPath);
+                using var reader = new ResourceReader(decompressMemStream);
                 foreach (DictionaryEntry entry in reader)
                 {
                     var fileName = entry.Key.ToString();
@@ -256,12 +269,18 @@ public static class ResourcePackManager
             resources[relativeName] = File.ReadAllBytes(file);
         }
 
-        using var writer = new ResourceWriter(outputResPath);
-        foreach (var kvp in resources)
+        using var memStream = new MemoryStream();
+        using (var writer = new ResourceWriter(memStream))
         {
-            writer.AddResource(kvp.Key, kvp.Value);
+            foreach (var kvp in resources)
+            {
+                writer.AddResource(kvp.Key, kvp.Value);
+            }
+            writer.Generate();
+            writer.Close();
         }
-        writer.Generate();
+
+        CompressGzip(memStream, outputResPath);
         return true;
     }
    
@@ -282,13 +301,8 @@ public static class ResourcePackManager
             Directory.CreateDirectory(outputDirectory);
         }
     
-        using var fileStream = new FileStream(sourceResPath, FileMode.Open, FileAccess.Read);
-        using var gzipStream = new GZipStream(fileStream, CompressionMode.Decompress);
-        using var memStream = new MemoryStream();
-        gzipStream.CopyTo(memStream);
-        memStream.Position = 0;
-    
-        using var reader = new ResourceReader(memStream);
+        using var decompressMemStream = DecompressGzip(sourceResPath);
+        using var reader = new ResourceReader(decompressMemStream);
         foreach (DictionaryEntry entry in reader)
         {
             var fileName = entry.Key.ToString();
@@ -310,13 +324,8 @@ public static class ResourcePackManager
             return false;
         }
     
-        using var fileStream = new FileStream(sourceResPath, FileMode.Open, FileAccess.Read);
-        using var gzipStream = new GZipStream(fileStream, CompressionMode.Decompress);
-        using var memStream = new MemoryStream();
-        gzipStream.CopyTo(memStream);
-        memStream.Position = 0;
-    
-        using var reader = new ResourceReader(memStream);
+        using var decompressMemStream = DecompressGzip(sourceResPath);
+        using var reader = new ResourceReader(decompressMemStream);
         foreach (DictionaryEntry entry in reader)
         {
             var fileName = entry.Key.ToString();
@@ -337,100 +346,29 @@ public static class ResourcePackManager
 
     #endregion
     
+    #region Compress/Decompress Helpers
+    private static MemoryStream DecompressGzip(string path)
+    {
+        using var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read);
+        using var gzipStream = new GZipStream(fileStream, CompressionMode.Decompress);
+        var memStream = new MemoryStream();
+        gzipStream.CopyTo(memStream);
+        memStream.Position = 0;
+        return memStream;
+    }
+    private static void CompressGzip(MemoryStream memStream, string outputPath)
+    {
+        var buffer = memStream.ToArray();
+        using var bufferStream = new MemoryStream(buffer);
+        using var fileStream = new FileStream(outputPath, FileMode.Create, FileAccess.Write);
+        using var gzipStream = new GZipStream(fileStream, CompressionLevel.Optimal);
+        bufferStream.CopyTo(gzipStream);
+    }
     #endregion
+    
+    #endregion
+
+    
+    
+
 }
-
-    // public static bool CreateResourcePackFromDirectory(string outputResPath, string sourceDirectoryPath, List<string>? extensionExceptions = null)
-    // {
-    //     if (!Directory.Exists(sourceDirectoryPath))
-    //     {
-    //         Console.WriteLine($"Directory not found: {sourceDirectoryPath}");
-    //         return false;
-    //     }
-    //     
-    //     if(!Path.HasExtension(outputResPath))
-    //     {
-    //         Console.WriteLine($"Output resource path must have a valid extension: {outputResPath}");
-    //         return false;
-    //     }
-    //     
-    //     var resxDir = Path.GetDirectoryName(outputResPath);
-    //     if (resxDir == null)
-    //     {
-    //         Console.WriteLine($"Directory not found: {resxDir}");
-    //         return false;
-    //     }
-    //
-    //     if (!Directory.Exists(resxDir))
-    //     {
-    //         Console.WriteLine($"Created output directory: {resxDir}");
-    //         Directory.CreateDirectory(resxDir);
-    //     }
-    //     
-    //     var files = Directory.GetFiles(sourceDirectoryPath, "*", SearchOption.AllDirectories);
-    //     using var writer = new ResourceWriter(outputResPath);
-    //     foreach (var file in files)
-    //     {
-    //         if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(file))) continue;
-    //         
-    //         var relativeName = Path.GetRelativePath(sourceDirectoryPath, file);
-    //         writer.AddResource(relativeName, File.ReadAllBytes(file));
-    //     }
-    //     writer.Generate();
-    //     return true;
-    // }
-
-    // public static bool Unpack(string outputDirectory, string sourceResPath)
-    // {
-    //     if (!Path.HasExtension(sourceResPath) || !File.Exists(sourceResPath))
-    //     {
-    //         Console.WriteLine($"Source File not found: {sourceResPath}");
-    //         return false;
-    //     }
-    //     
-    //     if (!Directory.Exists(outputDirectory))
-    //     {
-    //         Console.WriteLine($"Directory created: {outputDirectory}");
-    //         Directory.CreateDirectory(outputDirectory);
-    //     }
-    //
-    //     using var reader = new ResourceReader(sourceResPath);
-    //     foreach (DictionaryEntry entry in reader)
-    //     {
-    //         var fileName = entry.Key.ToString();
-    //         if (fileName == null) continue;
-    //         string filePath = Path.Combine(outputDirectory, fileName);
-    //         string? directoryPath = Path.GetDirectoryName(filePath);
-    //         if (directoryPath == null) continue;
-    //         Directory.CreateDirectory(directoryPath);
-    //         if(entry.Value is byte[] bytes) File.WriteAllBytes(filePath, bytes);
-    //     }
-    //
-    //     return true;
-    // }
-    //
-    // public static bool UnpackDebug(string outputDirectory, string sourceResPath)
-    // {
-    //     if (!Path.HasExtension(sourceResPath) || !File.Exists(sourceResPath))
-    //     {
-    //         Console.WriteLine($"Source File not found: {sourceResPath}");
-    //         return false;
-    //     }
-    //
-    //     using var reader = new ResourceReader(sourceResPath);
-    //     foreach (DictionaryEntry entry in reader)
-    //     {
-    //         var fileName = entry.Key.ToString();
-    //         if (fileName == null) continue;
-    //         string filePath = Path.Combine(outputDirectory, fileName);
-    //         string? directoryPath = Path.GetDirectoryName(filePath);
-    //         if (directoryPath == null) continue;
-    //
-    //         if (entry.Value is byte[] bytes)
-    //         {
-    //             Console.WriteLine($"File read -> Filename: {fileName} | FilePath: {filePath} | DirectoryPath: {directoryPath} with {bytes.Length} bytes");
-    //         }
-    //     }
-    //
-    //     return true;
-    // }
