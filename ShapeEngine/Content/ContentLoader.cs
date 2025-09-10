@@ -450,100 +450,103 @@ public static class ContentLoader
     #region Load from ContentInfo
     
     /// <summary>
-    /// Loads a texture from ContentInfo data.
+    /// Loads a texture from raw content data.
     /// </summary>
-    /// <param name="content">The ContentInfo object containing texture data and extension.</param>
+    /// <param name="extension">The file extension (e.g. ".png").</param>
+    /// <param name="data">The raw image data as a byte array.</param>
     /// <returns>The loaded Texture2D object.</returns>
-    public static Texture2D LoadTextureFromContent(ContentInfo content)
+    public static Texture2D LoadTextureFromContent(string extension, byte[] data)
     {
-        return Raylib.LoadTextureFromImage(LoadImageFromContent(content));
+        return Raylib.LoadTextureFromImage(LoadImageFromContent(extension, data));
     }
+
     /// <summary>
-    /// Loads an image from ContentInfo data.
+    /// Loads an image from raw content data.
     /// </summary>
-    /// <param name="content">The ContentInfo object containing image data and extension.</param>
+    /// <param name="extension">The file extension (e.g. ".png").</param>
+    /// <param name="data">The raw image data as a byte array.</param>
     /// <returns>The loaded Image object.</returns>
-    public static Image LoadImageFromContent(ContentInfo content)
+    public static Image LoadImageFromContent(string extension, byte[] data)
     {
-        byte[] data = content.data;
-        string extension = content.extension;
         return Raylib.LoadImageFromMemory(extension, data);
     }
+
     /// <summary>
-    /// Loads a font from ContentInfo data with the specified font size.
+    /// Loads a font from raw content data.
     /// </summary>
-    /// <param name="content">The ContentInfo object containing font data and extension.</param>
+    /// <param name="extension">The file extension (e.g. ".ttf").</param>
+    /// <param name="data">The raw font data as a byte array.</param>
     /// <param name="fontSize">The size of the font to load. Default is 100.</param>
     /// <returns>The loaded Font object.</returns>
-    public static Font LoadFontFromContent(ContentInfo content, int fontSize = 100)
+    public static Font LoadFontFromContent(string extension, byte[] data, int fontSize = 100)
     {
-        byte[] data = content.data;
-        string extension = content.extension;
-        return Raylib.LoadFontFromMemory(extension, data, fontSize, Array.Empty<int>(), GLYPH_COUNT);
-        
+        return Raylib.LoadFontFromMemory(extension, data, fontSize, [], GLYPH_COUNT);
     }
+
     /// <summary>
-    /// Loads a wave sound from ContentInfo data.
+    /// Loads a wave sound from raw content data.
     /// </summary>
-    /// <param name="content">The ContentInfo object containing wave sound data and extension.</param>
+    /// <param name="extension">The file extension (e.g. ".wav").</param>
+    /// <param name="data">The raw wave data as a byte array.</param>
     /// <returns>The loaded Wave object.</returns>
-    public static Wave LoadWaveFromContent(ContentInfo content)
+    public static Wave LoadWaveFromContent(string extension, byte[] data)
     {
-        byte[] data = content.data;
-        string extension = content.extension;
         return Raylib.LoadWaveFromMemory(extension, data);
     }
-    /// <summary>
-    /// Loads a sound from ContentInfo data by first converting it to a Wave object.
-    /// </summary>
-    /// <param name="content">The ContentInfo object containing sound data and extension.</param>
-    /// <returns>The loaded Sound object.</returns>
-    public static Sound LoadSoundFromContent(ContentInfo content)
-    {
-        return Raylib.LoadSoundFromWave(LoadWaveFromContent(content));
 
-    }
     /// <summary>
-    /// Loads a music stream from ContentInfo data.
+    /// Loads a sound from raw content data.
     /// </summary>
-    /// <param name="content">The ContentInfo object containing music data and extension.</param>
-    /// <returns>The loaded Music object.</returns>
-    public static Music LoadMusicFromContent(ContentInfo content)
+    /// <param name="extension">The file extension (e.g. ".wav").</param>
+    /// <param name="data">The raw sound data as a byte array.</param>
+    /// <returns>The loaded Sound object.</returns>
+    public static Sound LoadSoundFromContent(string extension, byte[] data)
     {
-        byte[] data = content.data;
-        string extension = content.extension;
+        return Raylib.LoadSoundFromWave(LoadWaveFromContent(extension, data));
+    }
+
+    /// <summary>
+    /// Loads a music stream from raw content data.
+    /// </summary>
+    /// <param name="extension">The file extension (e.g. ".mp3").</param>
+    /// <param name="data">The raw music data as a byte array.</param>
+    /// <returns>The loaded Music object.</returns>
+    public static Music LoadMusicFromContent(string extension, byte[] data)
+    {
         return Raylib.LoadMusicStreamFromMemory(extension, data);
     }
+
     /// <summary>
-    /// Loads a fragment shader from ContentInfo data.
+    /// Loads a fragment shader from raw content data.
     /// </summary>
-    /// <param name="content">The ContentInfo object containing shader code as binary data.</param>
-    /// <returns>The loaded Shader object configured as a fragment shader.</returns>
-    public static Shader LoadFragmentShaderFromContent(ContentInfo content)
+    /// <param name="data">The raw shader data as a byte array.</param>
+    /// <returns>The loaded Shader object.</returns>
+    public static Shader LoadFragmentShaderFromContent(byte[] data)
     {
-        string file = Encoding.Default.GetString(content.data);
+        string file = Encoding.Default.GetString(data);
         return Raylib.LoadShaderFromMemory(null, file);
     }
+
     /// <summary>
-    /// Loads a vertex shader from ContentInfo data.
+    /// Loads a vertex shader from raw content data.
     /// </summary>
-    /// <param name="content">The ContentInfo object containing shader code as binary data.</param>
-    /// <returns>The loaded Shader object configured as a vertex shader.</returns>
-    public static Shader LoadVertexShaderFromContent(ContentInfo content)
+    /// <param name="data">The raw shader data as a byte array.</param>
+    /// <returns>The loaded Shader object.</returns>
+    public static Shader LoadVertexShaderFromContent(byte[] data)
     {
-        string file = Encoding.Default.GetString(content.data);
+        string file = Encoding.Default.GetString(data);
         return Raylib.LoadShaderFromMemory(file, null);
     }
+
     /// <summary>
-    /// Decodes binary text data from a ContentInfo object to a string.
-    /// This should not be used for game save data,
-    /// but rather for static text files like JSON or XML that were shipped with the game!
+    /// Loads text content from raw data.
     /// </summary>
-    /// <param name="content">The ContentInfo object containing text data as a byte array.</param>
-    /// <returns>The decoded string from the content data.</returns>
-    public static string LoadTextFromContent(ContentInfo content)
+    /// <param name="extension">The file extension (e.g. ".txt").</param>
+    /// <param name="data">The raw text data as a byte array.</param>
+    /// <returns>The loaded text as a string.</returns>
+    public static string LoadTextFromContent(string extension, byte[] data)
     {
-        return Encoding.Default.GetString(content.data);
+        return Encoding.Default.GetString(data);
     }
 
     #endregion

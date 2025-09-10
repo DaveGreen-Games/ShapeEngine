@@ -5,6 +5,7 @@ using Raylib_cs;
 
 namespace ShapeEngine.Content;
 
+
 /// <summary>
 /// Provides a simple class to load content that was packed with the ContentPacker.
 /// </summary>
@@ -15,7 +16,8 @@ public sealed class ContentManagerPacked : IContentManager
     /// </summary>
     public int GLYPH_COUNT = 0;
 
-    private Dictionary<string, ContentInfo> content;
+    // private Dictionary<string, ContentInfo> content;
+    private Dictionary<string, byte[]> content;
     
     private readonly List<Shader> shadersToUnload = [];
     private readonly List<Texture2D> texturesToUnload = [];
@@ -102,8 +104,8 @@ public sealed class ContentManagerPacked : IContentManager
     /// <returns>The loaded texture.</returns>
     public Texture2D LoadTexture(string filePath)
     {
-        string fileName = Path.GetFileNameWithoutExtension(filePath);
-        var t = ContentLoader.LoadTextureFromContent(content[fileName]);
+        var extension = Path.GetExtension(filePath);
+        var t = ContentLoader.LoadTextureFromContent(extension, content[filePath]);
         texturesToUnload.Add(t);
         return t;
     }
@@ -114,8 +116,8 @@ public sealed class ContentManagerPacked : IContentManager
     /// <returns>The loaded image.</returns>
     public Image LoadImage(string filePath)
     {
-        string fileName = Path.GetFileNameWithoutExtension(filePath);
-        var i = ContentLoader.LoadImageFromContent(content[fileName]);
+        var extension = Path.GetExtension(filePath);
+        var i = ContentLoader.LoadImageFromContent(extension, content[filePath]);
         imagesToUnload.Add(i);
         return i;
     }
@@ -127,8 +129,8 @@ public sealed class ContentManagerPacked : IContentManager
     /// <returns>The loaded font.</returns>
     public Font LoadFont(string filePath, int fontSize = 100)
     {
-        string fileName = Path.GetFileNameWithoutExtension(filePath);
-        var f = ContentLoader.LoadFontFromContent( content[fileName], fontSize);
+        var extension = Path.GetExtension(filePath);
+        var f = ContentLoader.LoadFontFromContent(extension, content[filePath], fontSize);
         fontsToUnload.Add(f);
         return f;
     }
@@ -139,8 +141,8 @@ public sealed class ContentManagerPacked : IContentManager
     /// <returns>The loaded wave.</returns>
     public Wave LoadWave(string filePath)
     {
-        string fileName = Path.GetFileNameWithoutExtension(filePath);
-        var w =  ContentLoader.LoadWaveFromContent(content[fileName]);
+        var extension = Path.GetExtension(filePath);
+        var w =  ContentLoader.LoadWaveFromContent(extension, content[filePath]);
         wavesToUnload.Add(w);
         return w;
     }
@@ -151,8 +153,8 @@ public sealed class ContentManagerPacked : IContentManager
     /// <returns>The loaded sound.</returns>
     public Sound LoadSound(string filePath)
     {
-        string fileName = Path.GetFileNameWithoutExtension(filePath);
-        var s = ContentLoader.LoadSoundFromContent(content[fileName]);
+        var extension = Path.GetExtension(filePath);
+        var s = ContentLoader.LoadSoundFromContent(extension, content[filePath]);
         soundsToUnload.Add(s);
         return s;
 
@@ -164,8 +166,8 @@ public sealed class ContentManagerPacked : IContentManager
     /// <returns>The loaded music.</returns>
     public Music LoadMusic(string filePath)
     {
-        string fileName = Path.GetFileNameWithoutExtension(filePath);
-        var m = ContentLoader.LoadMusicFromContent( content[fileName]);
+        var extension = Path.GetExtension(filePath);
+        var m = ContentLoader.LoadMusicFromContent(extension, content[filePath]);
         musicToUnload.Add(m);
         return m;
     }
@@ -176,8 +178,7 @@ public sealed class ContentManagerPacked : IContentManager
     /// <returns>The loaded shader.</returns>
     public Shader LoadFragmentShader(string filePath)
     {
-        string fileName = Path.GetFileNameWithoutExtension(filePath);
-        var fs = ContentLoader.LoadFragmentShaderFromContent(content[fileName]);
+        var fs = ContentLoader.LoadFragmentShaderFromContent(content[filePath]);
         shadersToUnload.Add(fs);
         return fs;
     }
@@ -188,8 +189,7 @@ public sealed class ContentManagerPacked : IContentManager
     /// <returns>The loaded shader.</returns>
     public Shader LoadVertexShader(string filePath)
     {
-        string fileName = Path.GetFileNameWithoutExtension(filePath);
-        var vs = ContentLoader.LoadVertexShaderFromContent(content[fileName]);
+        var vs = ContentLoader.LoadVertexShaderFromContent(content[filePath]);
         shadersToUnload.Add(vs);
         return vs;
     }
@@ -200,20 +200,20 @@ public sealed class ContentManagerPacked : IContentManager
     /// <returns>The loaded text string.</returns>
     public string LoadText(string filePath)
     {
-        string fileName = Path.GetFileNameWithoutExtension(filePath);
-        return ContentLoader.LoadTextFromContent(content[fileName]);
+        var extension = Path.GetExtension(filePath);
+        return ContentLoader.LoadTextFromContent(extension, content[filePath]);
     }
     
-    //TODO: change to Dictionary<string, byte[]> and remove content info
-    
     /// <summary>
-    /// Loads and unpacks a text file generated with a compatible resource packing method.
+    /// Unpacks a text pack from the specified text file path.
+    /// Each pair of lines in the file represents a relative path and its associated base64-encoded, compressed data.
+    /// Returns a dictionary mapping relative paths to their decompressed byte arrays.
     /// </summary>
-    /// <param name="textFilePath">The path to the packed txt file.</param>
-    /// <returns></returns>
-    public static Dictionary<string, ContentInfo> UnpackTextPack(string textFilePath)
+    /// <param name="textFilePath">The path to the packed text file.</param>
+    /// <returns>A dictionary mapping relative paths to their unpacked byte arrays.</returns>
+    public static Dictionary<string, byte[]> UnpackTextPack(string textFilePath)
     {
-        Dictionary<string, ContentInfo> result = new();
+        Dictionary<string, byte[]> result = new();
 
         if (!Directory.Exists(textFilePath))
         {
@@ -235,58 +235,53 @@ public sealed class ContentManagerPacked : IContentManager
         }
         
         var lines = File.ReadAllLines(textFilePath);
-        for (int i = 0; i < lines.Length; i += 2)
+        for (var i = 0; i < lines.Length; i += 2)
         {
-            string key = lines[i];
-            string name = Path.GetFileNameWithoutExtension(key);
-            string extension = Path.GetExtension(key);
+            if (i + 1 >= lines.Length) break;
+            string relativePath = lines[i];
             string dataText = lines[i + 1];
-            var data = Convert.FromBase64String(dataText);
-            result.Add(name, new(extension, Decompress(data)));
+            byte[] data = Convert.FromBase64String(dataText);
+            result.Add(relativePath, Decompress(data));
         }
         return result;
     }
-    
     /// <summary>
-    /// Extracts all resources from a file and returns them as a dictionary of <see cref="ContentInfo"/> objects.
-    /// The key is the file name without extension, and the value contains the file name and its byte data.
-    /// Only works with files that were packed using a compatible resource packing method.
+    /// Unpacks a resource pack from the specified resource file path.
+    /// Decompresses the file using GZip and reads its contents as key-value pairs,
+    /// where each key is a relative path and each value is the corresponding byte array.
     /// </summary>
-    /// <param name="resxPath">The path to the .resx resource file.</param>
-    /// <returns>
-    /// A dictionary where each key is the file name without extension and the value is a <see cref="ContentInfo"/>
-    /// containing the full file name and its byte data.
-    /// </returns>
-    public static Dictionary<string, ContentInfo> UnpackResourcePack(string resxPath)
+    /// <param name="resourceFilePath">The path to the resource pack file.</param>
+    /// <returns>A dictionary mapping relative paths to their unpacked byte arrays.</returns>
+    public static Dictionary<string, byte[]> UnpackResourcePack(string resourceFilePath)
     {
-        var contentInfos = new Dictionary<string, ContentInfo>();
-        if (!Directory.Exists(resxPath))
+        var contentInfos = new Dictionary<string, byte[]>();
+        if (!Directory.Exists(resourceFilePath))
         {
-            Console.WriteLine($"Directory doesn't exist: {resxPath}");
+            Console.WriteLine($"Directory doesn't exist: {resourceFilePath}");
             return contentInfos;
         }
 
-        if (!File.Exists(resxPath))
+        if (!File.Exists(resourceFilePath))
         {
-            Console.WriteLine($"File doesn't exist: {resxPath}");
+            Console.WriteLine($"File doesn't exist: {resourceFilePath}");
             return contentInfos;
         }
         
         
-        using var decompressMemStream = DecompressGzip(resxPath);
+        using var decompressMemStream = DecompressGzip(resourceFilePath);
         using var reader = new ResourceReader(decompressMemStream);
         foreach (DictionaryEntry entry in reader)
         {
-            var fileName = entry.Key.ToString();
-            if (fileName == null) continue;
+            var relativePath = entry.Key.ToString();
+            if (relativePath == null) continue;
             if (entry.Value is byte[] bytes)
             {
-                var name = Path.GetFileNameWithoutExtension(fileName);
-                contentInfos[name] = new ContentInfo(fileName, bytes);
+                contentInfos.Add(relativePath, bytes);
             }
         }
         return contentInfos;
     }
+   
     /// <summary>
     /// Decompresses binary data that was compressed using the Deflate algorithm using compression mode <see cref="CompressionMode.Decompress"/>.
     /// </summary>
