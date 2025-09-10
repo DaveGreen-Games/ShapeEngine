@@ -43,7 +43,15 @@ public static class ResourcePackManager
         int filled = (int)(barWidth * percent);
         int empty = barWidth - filled;
         string bar = new string('/', filled) + new string('_', empty);
-        Console.Write($"\r[{title} {current}/{total}] [{bar}] [{(percent * 100):F1}%] ");
+        
+        if (current == total)
+        {
+            Console.Write($"\r[{title} {current}/{total}] [{bar}] [{(percent * 100):F1}%]\n");
+        }
+        else
+        {
+            Console.Write($"\r[{title} {current}/{total}] [{bar}] [{(percent * 100):F1}%]");
+        }
     }
     
     #region Simple Txt Packer
@@ -267,7 +275,6 @@ public static class ResourcePackManager
         var debugMessages = debug ? new List<string>(total) : [];
         Console.WriteLine($"Pack to file {outputFilePath} started with {total} files found in {sourceDirectoryPath}.");
         
-        //VARIANT 1
         using var memStream = new MemoryStream();
         using (var writer = new ResourceWriter(memStream))
         {
@@ -302,44 +309,6 @@ public static class ResourcePackManager
         }
         
         CompressGzip(memStream, outputFilePath);
-
-        //VARIANT 2
-        // using (var fileStream = new FileStream(outputResPath, FileMode.Create, FileAccess.Write))
-        // using (var gzipStream = new GZipStream(fileStream, CompressionLevel.Optimal))
-        // using (var writer = new ResourceWriter(gzipStream))
-        // {
-        //     foreach (var file in files)
-        //     {
-        //         if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(file))) continue;
-        //         var relativeName = Path.GetRelativePath(sourceDirectoryPath, file);
-        //         writer.AddResource(relativeName, File.ReadAllBytes(file));
-        //     }
-        //     writer.Generate();
-        //     writer.Close(); // Ensure all data is written
-        // }
-        
-        //VARIANT 3
-        // using (var memStream = new MemoryStream())
-        // {
-        //     using (var writer = new ResourceWriter(memStream))
-        //     {
-        //         foreach (var file in files)
-        //         {
-        //             if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(file))) continue;
-        //             var relativeName = Path.GetRelativePath(sourceDirectoryPath, file);
-        //             writer.AddResource(relativeName, File.ReadAllBytes(file));
-        //         }
-        //         writer.Generate();
-        //         writer.Close();
-        //     }
-        //     memStream.Position = 0;
-        //     using (var fileStream = new FileStream(outputResPath, FileMode.Create, FileAccess.Write))
-        //     using (var gzipStream = new GZipStream(fileStream, CompressionLevel.Optimal))
-        //     {
-        //         memStream.CopyTo(gzipStream);
-        //     }
-        // }
-        
         
         Console.WriteLine("");
         if (debugMessages.Count > 0)
@@ -354,7 +323,57 @@ public static class ResourcePackManager
         
         return true;
     }
-
+    
+    private static bool PackToFileLarge(string outputFilePath, string sourceDirectoryPath, List<string>? extensionExceptions = null, bool debug = false)
+    {
+        if (!Directory.Exists(sourceDirectoryPath))
+        {
+            Console.WriteLine($"Directory not found: {sourceDirectoryPath}");
+            return false;
+        }
+    
+        var files = Directory.GetFiles(sourceDirectoryPath, "*", SearchOption.AllDirectories);
+        int total = files.Length, current = 0;
+        var sw = Stopwatch.StartNew();
+        var debugMessages = debug ? new List<string>(total) : [];
+    
+        using var fileStream = new FileStream(outputFilePath, FileMode.Create, FileAccess.Write);
+        using var gzipStream = new GZipStream(fileStream, CompressionLevel.Optimal);
+    
+        foreach (var file in files)
+        {
+            current++;
+            if (sw.Elapsed.TotalMilliseconds >= progressInterval || current == total)
+            {
+                PrintProgressBar(current, total);
+                sw.Restart();
+            }
+    
+            if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(file)))
+            {
+                if (debug) debugMessages.Add($"File skipped due to extension: {Path.GetFileName(file)}");
+                continue;
+            }
+    
+            var relativePath = Path.GetRelativePath(sourceDirectoryPath, file);
+            var pathBytes = System.Text.Encoding.UTF8.GetBytes(relativePath);
+            var data = File.ReadAllBytes(file);
+    
+            // Write header: [path length][path][data length][data]
+            gzipStream.Write(BitConverter.GetBytes(pathBytes.Length), 0, 4);
+            gzipStream.Write(pathBytes, 0, pathBytes.Length);
+            gzipStream.Write(BitConverter.GetBytes(data.Length), 0, 4);
+            gzipStream.Write(data, 0, data.Length);
+    
+            if (debug) debugMessages.Add($"Packed {relativePath} ({data.Length} bytes)");
+        }
+        gzipStream.Write(BitConverter.GetBytes(total), 0, 4);
+        
+        if (debugMessages.Count > 0) foreach (var msg in debugMessages) Console.WriteLine(msg);
+        Console.WriteLine($"Packing finished. {total} files packed to {outputFilePath}");
+        return true;
+    }
+    
     private static bool UnpackFromFile(string outputDirectoryPath, string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false)
     {
         if (!Path.HasExtension(sourceFilePath) || !File.Exists(sourceFilePath))
@@ -434,7 +453,117 @@ public static class ResourcePackManager
         
         return true;
     }
+
+    public static bool UnpackFromFileLarge(string outputDirectoryPath, string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false)
+    {
+        if (!File.Exists(sourceFilePath))
+        {
+            Console.WriteLine($"Packed file not found: {sourceFilePath}");
+            return false;
+        }
+        if (!Directory.Exists(outputDirectoryPath))
+        {
+            Directory.CreateDirectory(outputDirectoryPath);
+            Console.WriteLine($"Created output directory: {outputDirectoryPath}");
+        }
+
+        var debugMessages = debug ? new List<string>() : [];
+        using var fileStream = new FileStream(sourceFilePath, FileMode.Open, FileAccess.Read);
+        using var gzipStream = new GZipStream(fileStream, CompressionMode.Decompress);
+
+        // Read total files from the last 4 bytes of the file
+        fileStream.Seek(-4, SeekOrigin.End);
+        var totalBytes = new byte[4];
+        fileStream.ReadExactly(totalBytes, 0, 4);
+        int total = BitConverter.ToInt32(totalBytes, 0);
+
+        // Reset to start for unpacking
+        fileStream.Seek(0, SeekOrigin.Begin);
+
+        int unpackedFiles = 0;
+        int current = 0;
+        var sw = Stopwatch.StartNew();
+
+        long dataEnd = fileStream.Length - 4; // Exclude last 4 bytes
+        while (gzipStream.Position < dataEnd)
+        {
+            var pathLenBytes = new byte[4];
+            if (gzipStream.Read(pathLenBytes, 0, 4) < 4) break;
+            int pathLen = BitConverter.ToInt32(pathLenBytes, 0);
+
+            var pathBytes = new byte[pathLen];
+            if (gzipStream.Read(pathBytes, 0, pathLen) < pathLen) break;
+            string relativePath = System.Text.Encoding.UTF8.GetString(pathBytes);
+
+            var dataLenBytes = new byte[4];
+            if (gzipStream.Read(dataLenBytes, 0, 4) < 4) break;
+            int dataLen = BitConverter.ToInt32(dataLenBytes, 0);
+
+            var data = new byte[dataLen];
+            if (gzipStream.Read(data, 0, dataLen) < dataLen) break;
+
+            current++;
+            if (sw.Elapsed.TotalMilliseconds >= progressInterval || current == total)
+            {
+                PrintProgressBar(current, total, 30, "Unpack");
+                sw.Restart();
+            }
+
+            if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(relativePath)))
+            {
+                if (debug) debugMessages.Add($"File skipped due to extension: {Path.GetFileName(relativePath)}");
+                continue;
+            }
+
+            var filePath = Path.Combine(outputDirectoryPath, relativePath);
+            var dirPath = Path.GetDirectoryName(filePath);
+            if (dirPath != null && !Directory.Exists(dirPath))
+                Directory.CreateDirectory(dirPath);
+
+            File.WriteAllBytes(filePath, data);
+            unpackedFiles++;
+            if (debug) debugMessages.Add($"Unpacked {relativePath} ({dataLen} bytes)");
+        }
+
+        if (debugMessages.Count > 0) foreach (var msg in debugMessages) Console.WriteLine(msg);
+        Console.WriteLine($"Unpacking finished. {unpackedFiles} files unpacked to {outputDirectoryPath}");
+        return true;
+    }
     
+    public static Dictionary<string, byte[]> UnpackFromFileLarge(string packedFilePath, List<string>? extensionExceptions = null)
+    {
+        var result = new Dictionary<string, byte[]>();
+        if (!File.Exists(packedFilePath))
+            return result;
+
+        using var fileStream = new FileStream(packedFilePath, FileMode.Open, FileAccess.Read);
+        using var gzipStream = new GZipStream(fileStream, CompressionMode.Decompress);
+
+        while (gzipStream.Position < fileStream.Length)
+        {
+            var pathLenBytes = new byte[4];
+            if (gzipStream.Read(pathLenBytes, 0, 4) < 4) break;
+            int pathLen = BitConverter.ToInt32(pathLenBytes, 0);
+
+            var pathBytes = new byte[pathLen];
+            if (gzipStream.Read(pathBytes, 0, pathLen) < pathLen) break;
+            string relativePath = System.Text.Encoding.UTF8.GetString(pathBytes);
+
+            var dataLenBytes = new byte[4];
+            if (gzipStream.Read(dataLenBytes, 0, 4) < 4) break;
+            int dataLen = BitConverter.ToInt32(dataLenBytes, 0);
+
+            var data = new byte[dataLen];
+            if (gzipStream.Read(data, 0, dataLen) < dataLen) break;
+
+            if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(relativePath)))
+                continue;
+
+            result[relativePath] = data;
+        }
+        return result;
+    }
+
     private static MemoryStream DecompressGzip(string path)
     {
         using var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read);
