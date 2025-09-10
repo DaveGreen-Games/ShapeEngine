@@ -4,6 +4,11 @@ using System.Resources;
 
 namespace ResourcePacker;
 
+//TODO: make final AI check for issues
+
+//TODO: add documentation comments
+
+
 /// <summary>
 /// Provides static methods for packing and unpacking resources and directories
 /// into text files or resource files, as well as extracting them.
