@@ -1098,6 +1098,290 @@ public static class ContentLoader
     }
     #endregion
     
+    #region Load Directories with Filename
+    /// <summary>
+    /// Loads all fonts from a directory and returns a dictionary mapping relative file paths to Font objects.
+    /// </summary>
+    /// <param name="directoryPath">The directory path containing font files.</param>
+    /// <param name="fontSize">The size of the fonts to load. Default is 100.</param>
+    /// <param name="textureFilter">The texture filter to apply to the font textures. Default is Trilinear.</param>
+    /// <param name="recursive">Whether to search recursively in subdirectories. Default is false.</param>
+    /// <returns>A dictionary mapping relative file paths to loaded Font objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid font extensions [".ttf", ".otf"].
+    /// The key is the relative path from the directory to the font file.
+    /// </remarks>
+    public static Dictionary<string, Font> LoadFontsWithRelativePathFromDirectory(string directoryPath, int fontSize = 100, TextureFilter textureFilter = TextureFilter.Trilinear, bool recursive = false)
+    {
+        var fontPaths = GetResourceFilePaths(directoryPath, ContentType.Font, recursive);
+        var fontDict = new Dictionary<string, Font>(fontPaths.Length);
+
+        foreach (var path in fontPaths)
+        {
+            try
+            {
+                string relativePath = Path.GetRelativePath(directoryPath, path);
+                fontDict[relativePath] = LoadFont(path, fontSize, textureFilter);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading font from {path}: {ex.Message}");
+            }
+        }
+
+        return fontDict;
+    }
+    
+    /// <summary>
+    /// Loads all fragment shaders from a directory and returns a dictionary mapping relative file paths to Shader objects.
+    /// </summary>
+    /// <param name="directoryPath">The directory path containing fragment shader files.</param>
+    /// <param name="recursive">Whether to search recursively in subdirectories. Default is false.</param>
+    /// <returns>A dictionary mapping relative file paths to loaded Shader objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid fragment shader extensions [".fs", ".glsl", ".frag"].
+    /// The key is the relative path from the directory to the shader file.
+    /// </remarks>
+    public static Dictionary<string, Shader> LoadFragmentShadersWithRelativePathFromDirectory(string directoryPath, bool recursive = false)
+    {
+        var shaderPaths = GetResourceFilePaths(directoryPath, ContentType.ShaderFragment, recursive);
+        var shaderDict = new Dictionary<string, Shader>(shaderPaths.Length);
+
+        foreach (var path in shaderPaths)
+        {
+            try
+            {
+                string relativePath = Path.GetRelativePath(directoryPath, path);
+                shaderDict[relativePath] = LoadFragmentShader(path);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading fragment shader from {path}: {ex.Message}");
+            }
+        }
+
+        return shaderDict;
+    }
+    
+    /// <summary>
+    /// Loads all vertex shaders from a directory and returns a dictionary mapping relative file paths to Shader objects.
+    /// </summary>
+    /// <param name="directoryPath">The directory path containing vertex shader files.</param>
+    /// <param name="recursive">Whether to search recursively in subdirectories. Default is false.</param>
+    /// <returns>A dictionary mapping relative file paths to loaded Shader objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid vertex shader extensions [".vs", ".glsl", ".vert"].
+    /// The key is the relative path from the directory to the shader file.
+    /// </remarks>
+    public static Dictionary<string, Shader> LoadVertexShadersWithRelativePathFromDirectory(string directoryPath, bool recursive = false)
+    {
+        var shaderPaths = GetResourceFilePaths(directoryPath, ContentType.ShaderVertex, recursive);
+        var shaderDict = new Dictionary<string, Shader>(shaderPaths.Length);
+
+        foreach (var path in shaderPaths)
+        {
+            try
+            {
+                string relativePath = Path.GetRelativePath(directoryPath, path);
+                shaderDict[relativePath] = LoadVertexShader(path);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading vertex shader from {path}: {ex.Message}");
+            }
+        }
+
+        return shaderDict;
+    }
+    
+    /// <summary>
+    /// Loads all textures from a directory and returns a dictionary mapping relative file paths to Texture2D objects.
+    /// </summary>
+    /// <param name="directoryPath">The directory path containing texture files.</param>
+    /// <param name="recursive">Whether to search recursively in subdirectories. Default is false.</param>
+    /// <returns>A dictionary mapping relative file paths to loaded Texture2D objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid texture extensions [".png", ".bmp", ".tga", ".jpg", ".jpeg", ".gif", ".psd", ".pkm", ".ktx", ".pvr", ".dds", ".hdr"].
+    /// The key is the relative path from the directory to the texture file.
+    /// </remarks>
+    public static Dictionary<string, Texture2D> LoadTexturesWithRelativePathFromDirectory(string directoryPath, bool recursive = false)
+    {
+        var texturePaths = GetResourceFilePaths(directoryPath, ContentType.Texture, recursive);
+        var textureDict = new Dictionary<string, Texture2D>(texturePaths.Length);
+
+        foreach (var path in texturePaths)
+        {
+            try
+            {
+                string relativePath = Path.GetRelativePath(directoryPath, path);
+                textureDict[relativePath] = LoadTexture(path);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading texture from {path}: {ex.Message}");
+            }
+        }
+
+        return textureDict;
+    }
+    
+    /// <summary>
+    /// Loads all images from a directory and returns a dictionary mapping relative file paths to Image objects.
+    /// </summary>
+    /// <param name="directoryPath">The directory path containing image files.</param>
+    /// <param name="recursive">Whether to search recursively in subdirectories. Default is false.</param>
+    /// <returns>A dictionary mapping relative file paths to loaded Image objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid image extensions [".png", ".bmp", ".tga", ".jpg", ".jpeg", ".gif", ".psd", ".pkm", ".ktx", ".pvr", ".dds", ".hdr"].
+    /// The key is the relative path from the directory to the image file.
+    /// </remarks>
+    public static Dictionary<string, Image> LoadImagesWithRelativePathFromDirectory(string directoryPath, bool recursive = false)
+    {
+        var imagePaths = GetResourceFilePaths(directoryPath, ContentType.Texture, recursive);
+        var imageDict = new Dictionary<string, Image>(imagePaths.Length);
+
+        foreach (var path in imagePaths)
+        {
+            try
+            {
+                string relativePath = Path.GetRelativePath(directoryPath, path);
+                imageDict[relativePath] = LoadImage(path);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading image from {path}: {ex.Message}");
+            }
+        }
+
+        return imageDict;
+    }
+    
+    /// <summary>
+    /// Loads all wave sound files from a directory and returns a dictionary mapping relative file paths to Wave objects.
+    /// </summary>
+    /// <param name="directoryPath">The directory path containing wave sound files.</param>
+    /// <param name="recursive">Whether to search recursively in subdirectories. Default is false.</param>
+    /// <returns>A dictionary mapping relative file paths to loaded Wave objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid sound extensions [".wav", ".mp3", ".ogg", ".flac"].
+    /// The key is the relative path from the directory to the wave file.
+    /// </remarks>
+    public static Dictionary<string, Wave> LoadWavesWithRelativePathFromDirectory(string directoryPath, bool recursive = false)
+    {
+        var wavePaths = GetResourceFilePaths(directoryPath, ContentType.Wave, recursive);
+        var waveDict = new Dictionary<string, Wave>(wavePaths.Length);
+
+        foreach (var path in wavePaths)
+        {
+            try
+            {
+                string relativePath = Path.GetRelativePath(directoryPath, path);
+                waveDict[relativePath] = LoadWave(path);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading wave sound from {path}: {ex.Message}");
+            }
+        }
+
+        return waveDict;
+    }
+    
+    /// <summary>
+    /// Loads all sound files from a directory and returns a dictionary mapping relative file paths to Sound objects.
+    /// </summary>
+    /// <param name="directoryPath">The directory path containing sound files.</param>
+    /// <param name="recursive">Whether to search recursively in subdirectories. Default is false.</param>
+    /// <returns>A dictionary mapping relative file paths to loaded Sound objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid sound extensions [".wav", ".mp3", ".ogg", ".flac"].
+    /// The key is the relative path from the directory to the sound file.
+    /// </remarks>
+    public static Dictionary<string, Sound> LoadSoundsWithRelativePathFromDirectory(string directoryPath, bool recursive = false)
+    {
+        var soundPaths = GetResourceFilePaths(directoryPath, ContentType.Sound, recursive);
+        var soundDict = new Dictionary<string, Sound>(soundPaths.Length);
+
+        foreach (var path in soundPaths)
+        {
+            try
+            {
+                string relativePath = Path.GetRelativePath(directoryPath, path);
+                soundDict[relativePath] = LoadSound(path);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading sound from {path}: {ex.Message}");
+            }
+        }
+
+        return soundDict;
+    }
+    
+    /// <summary>
+    /// Loads all music streams from a directory and returns a dictionary mapping relative file paths to Music objects.
+    /// </summary>
+    /// <param name="directoryPath">The directory path containing music files.</param>
+    /// <param name="recursive">Whether to search recursively in subdirectories. Default is false.</param>
+    /// <returns>A dictionary mapping relative file paths to loaded Music objects.</returns>
+    /// <remarks>
+    /// Only loads files with valid music extensions [".mp3", ".ogg", ".flac", ".mod", ".xm"].
+    /// The key is the relative path from the directory to the music file.
+    /// </remarks>
+    public static Dictionary<string, Music> LoadMusicStreamsWithRelativePathFromDirectory(string directoryPath, bool recursive = false)
+    {
+        var musicPaths = GetResourceFilePaths(directoryPath, ContentType.Music, recursive);
+        var musicDict = new Dictionary<string, Music>(musicPaths.Length);
+
+        foreach (var path in musicPaths)
+        {
+            try
+            {
+                string relativePath = Path.GetRelativePath(directoryPath, path);
+                musicDict[relativePath] = LoadMusicStream(path);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading music stream from {path}: {ex.Message}");
+            }
+        }
+
+        return musicDict;
+    }
+    
+    /// <summary>
+    /// Loads all text files from a directory and returns a dictionary mapping relative file paths to their contents.
+    /// </summary>
+    /// <param name="directoryPath">The directory path containing text files.</param>
+    /// <param name="recursive">Whether to search recursively in subdirectories. Default is false.</param>
+    /// <returns>A dictionary mapping relative file paths to loaded text strings.</returns>
+    /// <remarks>
+    /// Only loads files with valid text extensions [".txt", ".json", ".xml", ".csv"].
+    /// The key is the relative path from the directory to the text file.
+    /// This should not be used for game save data, but rather for static text files that were shipped with the game.
+    /// </remarks>
+    public static Dictionary<string, string> LoadTextsWithRelativePathFromDirectory(string directoryPath, bool recursive = false)
+    {
+        var textPaths = GetResourceFilePaths(directoryPath, ContentType.Text, recursive);
+        var textDict = new Dictionary<string, string>(textPaths.Length);
+        
+        foreach (var path in textPaths)
+        {
+            try
+            {
+                string relativePath = Path.GetRelativePath(directoryPath, path);
+                textDict[relativePath] = LoadText(path);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading text from {path}: {ex.Message}");
+            }
+        }
+        
+        return textDict;
+    }
+    #endregion
+    
     #region Unload Content
     /// <summary>
     /// Unloads a font from memory.
