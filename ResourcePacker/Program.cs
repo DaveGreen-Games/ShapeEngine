@@ -60,6 +60,7 @@ class Program
                                 "  ./ResourcePacker addDir <sourceDirectory> <targetResourceFile>\n" +
                                 "  ./ResourcePacker unpack <resourceFile> <outputDirectory>\n" +
                                 "  ./ResourcePacker packDirText <sourceDirectory> <targetTextFile>\n" +
+                                "  ./ResourcePacker unpackDirText <resourceTextFile> <outputDirectory>\n" +
                             "Flags:\n" +
                                 "  --exceptions <.ext1> <.ext2> ... : Optional flag to specify file extensions to exclude when packing directories.\n" +
                             "Examples:\n" +
@@ -243,6 +244,28 @@ class Program
             catch (Exception ex)
             {
                 Console.WriteLine($"Error: Unpacking debug resource pack {resxFile} to {outputDir} with exception: {ex.Message}");
+            }
+        }
+        else if (command == "unpackdirtext")
+        {
+            var resxFile = args[1];
+            var outputDir = args[2];
+
+            try
+            {
+                if (ResourcePackManager.UnpackFromText(outputDir, resxFile))
+                {
+                    Console.WriteLine($"Unpacked text file '{resxFile}' to '{outputDir}'.");
+                }
+                else
+                {
+                    Console.WriteLine($"Error: Unpacking text file '{resxFile}' to '{outputDir}' failed!");
+                }
+                
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: Unpacking text file {resxFile} to {outputDir} with exception: {ex.Message}");
             }
         }
         else

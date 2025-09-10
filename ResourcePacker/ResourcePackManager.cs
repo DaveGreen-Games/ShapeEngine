@@ -49,12 +49,59 @@ public static class ResourcePackManager
         {
             if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(file))) continue;
             
-            lines.Add(Path.GetFileName(file));
+            lines.Add(Path.GetRelativePath(sourcePath, file));
             byte[] d = File.ReadAllBytes(file);
             lines.Add(Convert.ToBase64String(Compress(d)));
         }
         File.WriteAllLines(outputPath, lines);
         return true;
+    }
+    
+    public static bool UnpackFromText(string outputDirectory, string sourcePath)
+    {
+        if (!File.Exists(sourcePath))
+        {
+            Console.WriteLine($"Source file not found: {sourcePath}");
+            return false;
+        }
+
+        if (Path.GetExtension(sourcePath) != ".txt")
+        {
+            Console.WriteLine($"Source file must have a .txt extension: {sourcePath}");
+            return false;
+        }
+
+        if (!Directory.Exists(outputDirectory))
+        {
+            Console.WriteLine($"Directory created: {outputDirectory}");
+            Directory.CreateDirectory(outputDirectory);
+        }
+
+        var lines = File.ReadAllLines(sourcePath);
+        for (int i = 0; i < lines.Length; i += 2)
+        {
+            if (i + 1 >= lines.Length) break;
+            var relativePath = lines[i];
+            var base64Data = lines[i + 1];
+            var filePath = Path.Combine(outputDirectory, relativePath);
+            var dirPath = Path.GetDirectoryName(filePath);
+            if(dirPath == null) continue;
+            if(!Directory.Exists(dirPath))
+            {
+                Directory.CreateDirectory(dirPath);
+            }
+            var compressedData = Convert.FromBase64String(base64Data);
+            File.WriteAllBytes(filePath, Decompress(compressedData));
+        }
+        return true;
+    }
+    private static byte[] Decompress(byte[] data)
+    {
+        using var input = new MemoryStream(data);
+        using var deflateStream = new DeflateStream(input, CompressionMode.Decompress);
+        using var output = new MemoryStream();
+        deflateStream.CopyTo(output);
+        return output.ToArray();
     }
     
     /// <summary>
@@ -367,8 +414,5 @@ public static class ResourcePackManager
     #endregion
     
     #endregion
-
     
-    
-
 }
