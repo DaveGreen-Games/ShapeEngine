@@ -25,8 +25,7 @@ public sealed class ContentManagerPacked : IContentManager
     private readonly List<Music> musicToUnload = [];
     private readonly List<Wave> wavesToUnload = [];
 
-
-
+    
     /// <summary>
     /// Initializes a new instance of the <see cref="ContentManagerPacked"/> class,
     /// loading packed content from the specified file path.
@@ -59,8 +58,6 @@ public sealed class ContentManagerPacked : IContentManager
             Console.WriteLine($"ContentManagerPacked no content loaded from file: {path}");
         }
     }
-    
-    
     
 
     /// <summary>
@@ -207,6 +204,7 @@ public sealed class ContentManagerPacked : IContentManager
         return ContentLoader.LoadTextFromContent(content[fileName]);
     }
     
+    //TODO: change to Dictionary<string, byte[]> and remove content info
     
     /// <summary>
     /// Loads and unpacks a text file generated with a compatible resource packing method.
@@ -248,6 +246,7 @@ public sealed class ContentManagerPacked : IContentManager
         }
         return result;
     }
+    
     /// <summary>
     /// Extracts all resources from a file and returns them as a dictionary of <see cref="ContentInfo"/> objects.
     /// The key is the file name without extension, and the value contains the file name and its byte data.
@@ -273,7 +272,9 @@ public sealed class ContentManagerPacked : IContentManager
             return contentInfos;
         }
         
-        using var reader = new ResourceReader(resxPath);
+        
+        using var decompressMemStream = DecompressGzip(resxPath);
+        using var reader = new ResourceReader(decompressMemStream);
         foreach (DictionaryEntry entry in reader)
         {
             var fileName = entry.Key.ToString();
@@ -302,5 +303,15 @@ public sealed class ContentManagerPacked : IContentManager
             deflateStream.CopyTo(output);
         }
         return output.ToArray();
+    }
+    
+    private static MemoryStream DecompressGzip(string path)
+    {
+        using var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read);
+        using var gzipStream = new GZipStream(fileStream, CompressionMode.Decompress);
+        var memStream = new MemoryStream();
+        gzipStream.CopyTo(memStream);
+        memStream.Position = 0;
+        return memStream;
     }
 }
