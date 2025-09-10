@@ -8,12 +8,13 @@ class Program
     /// Commands:
     /// <list type="bullet">
     /// <item>--help</item>
-    /// <item>resourcePacker packDir sourceDirectory targetResourceFile</item>
-    /// <item>resourcePacker packFile sourceFile targetResourceFile</item>
-    /// <item>resourcePacker addFile sourceFile targetResourceFile</item>
-    /// <item>resourcePacker addDir sourceDirectory targetResourceFile</item>
-    /// <item>resourcePacker unpack resourceFile outputDirectory</item>
-    /// <item>resourcePacker packDirText sourceDirectory targetTextFile</item>
+    /// <item>resourcePacker pack sourceDirectoryPath outputFilePath</item>
+    /// <item>resourcePacker unpack sourceFilePath outputDirectoryPath</item>
+    /// </list>
+    /// Flags:
+    /// <list type="bullet">
+    /// <item>--debug</item>
+    /// <item>--extensions .txt .json .xml and so on</item>
     /// </list>
     /// </summary>
     /// <param name="args">command line arguments</param>
@@ -26,17 +27,16 @@ class Program
         Console.WriteLine("Use at your own risk. No warranties provided.");
         Console.WriteLine("ResourcePacker can:\n" +
                           " - pack directories or single files into binary files.\n" +
-                          " - add files/directories to existing packed binary files.\n" +
                           " - unpack packed binary files into directories.\n" +
                           " - pack directories into text files with each file taking up 2 lines:\n" +
-                          " - resource packs are always compressed.\n" +
                           "  - 1st line = filename.\n" +
-                          "  - 2nd line =  binary data of the file compressed to a string.\n");
+                          "  - 2nd line =  binary data of the file compressed to a string.\n" +
+                          " - unpack text files into directories.\n" +
+                          " - resource packs are always compressed.\n");
         Console.WriteLine("Use '--help' for usage instructions.");
         Console.WriteLine("Remarks:\n" +
                           " - ResourcePacker does not modify or delete any source files or directories.\n" +
-                          " - The <packDirText> command always expects a .txt target file extension.\n" +
-                          " - The other pack commands do not care about the target file extension but .resources is a good default.\n" +
+                          " - Using .txt extension for the sourceFilePath in unpack or the outputFilePath uses the text based packing system. Any other extensions will use the binary packing system.\n" +
                           " - Ensure you have the necessary permissions for file operations in the specified directories.");
         Console.WriteLine("------------------------------------------------------------");
         
@@ -54,20 +54,15 @@ class Program
                 Console.WriteLine(
                             "Commands:\n" +
                                 "  ./ResourcePacker --help\n" +
-                                "  ./ResourcePacker packDir <sourceDirectory> <targetResourceFile>\n" +
-                                "  ./ResourcePacker packFile <sourceFile> <targetResourceFile>\n" +
-                                "  ./ResourcePacker addFile <sourceFile> <targetResourceFile>\n" +
-                                "  ./ResourcePacker addDir <sourceDirectory> <targetResourceFile>\n" +
-                                "  ./ResourcePacker unpack <resourceFile> <outputDirectory>\n" +
-                                "  ./ResourcePacker packDirText <sourceDirectory> <targetTextFile>\n" +
-                                "  ./ResourcePacker unpackDirText <resourceTextFile> <outputDirectory>\n" +
+                                "  ./ResourcePacker pack <sourceDirectoryPath> <outputFilePath>\n" +
+                                "  ./ResourcePacker unpack <sourceFilePath> <outputDirectoryPath>\n" +
                             "Flags:\n" +
-                                "  --exceptions <.ext1> <.ext2> ... : Optional flag to specify file extensions to exclude when packing directories.\n" +
+                                "  --exceptions <.ext1> <.ext2> ... : Optional flag to specify file extensions to exclude when packing/unpacking directories.\n" +
+                                "  --debug : Optional flag to enable debug mode for detailed logging during operations.\n" +
                             "Examples:\n" +
-                                "  ./ResourcePacker packDir ./backgroundMusic ./backgroundMusic.resource\n" +
-                                "  ./ResourcePacker packFile ./logo.png ./output.resource\n" +
-                                "  ./ResourcePacker packDireText ./assets ./packedResources.txt\n" +
-                                "  ./ResourcePacker packDir ./assets ./build/release/packedAssets.resource --exceptions .txt .png .wav\n"
+                                "  ./ResourcePacker pack ./backgroundMusic ./packedMusic.res\n" +
+                                "  ./ResourcePacker pack ./assets ./packedResources.txt\n" +
+                                "  ./ResourcePacker pack ./assets ./build/release/packedAssets.res --exceptions .txt .png .wav --debug\n"
                             );
             }
             else
@@ -82,6 +77,10 @@ class Program
             Console.WriteLine("Wrong number of arguments. Use '--help' for usage instructions.");
             return;
         }
+
+        bool isDebug = false;
+        int debugIndex = Array.IndexOf(args, "--debug");
+        if(debugIndex > 2) isDebug = true;
         
         int exceptionsIndex = Array.IndexOf(args, "--exceptions");
         List<string>? extensionExceptions = null;
@@ -90,182 +89,55 @@ class Program
             extensionExceptions = [];
             for (int i = exceptionsIndex + 1; i < args.Length; i++)
             {
+                string arg = args[i];
+                if (!arg.StartsWith('.')) break;
                 extensionExceptions.Add(args[i]);
             }
         }
         
         var command = args[0].ToLower();
 
-        if (command == "packdir")
+        if (command == "pack")
         {
-            var sourceDir = args[1];
-            var targetFile = args[2];
+            var sourceDirectoryPath = args[1];
+            var outputFilePath = args[2];
             try
             {
-                if (ResourcePackManager.CreateResourcePackFromDirectory(targetFile, sourceDir, extensionExceptions))
+                if (ResourcePackManager.Pack(outputFilePath, sourceDirectoryPath, extensionExceptions, isDebug))
                 {
-                    Console.WriteLine($"Packed '{sourceDir}' to '{targetFile}'.");
+                    Console.WriteLine($"Packed '{sourceDirectoryPath}' to '{outputFilePath}'.");
                 }
                 else
                 {
-                    Console.WriteLine($"Error: Packing '{sourceDir}' to '{targetFile}' failed!");
+                    Console.WriteLine($"Error: Packing '{sourceDirectoryPath}' to '{outputFilePath}' failed!");
                 }
                 
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error: Packing directory '{sourceDir}' to '{targetFile}': {ex.Message}");
-            }
-        }
-        else if (command == "packfile")
-        {
-            var sourceFile = args[1];
-            var targetFile = args[2];
-            try
-            {
-                if (ResourcePackManager.CreateResourcePackFromFile(targetFile, sourceFile))
-                {
-                    Console.WriteLine($"Packed '{sourceFile}' to '{targetFile}'.");
-                }
-                else
-                {
-                    Console.WriteLine($"Error: Packing '{sourceFile}' to '{targetFile}'!");
-                }
-                
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: Packing file '{sourceFile}' to '{targetFile}': {ex.Message}");
-            }
-        }
-        else if (command == "addfile")
-        {
-            var sourceFile = args[1];
-            var targetFile = args[2];
-            try
-            {
-                if (ResourcePackManager.AddFileToPack(targetFile, sourceFile))
-                {
-                    Console.WriteLine($"Added '{sourceFile}' to '{targetFile}'.");
-                }
-                else
-                {
-                    Console.WriteLine($"Error: Adding '{sourceFile}' to '{targetFile}'!");
-                }
-                
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: Adding file '{sourceFile}' to '{targetFile}': {ex.Message}");
-            }
-            
-        }
-        else if (command == "adddir")
-        {
-            var sourceDir = args[1];
-            var targetFile = args[2];
-            try
-            {
-                if (ResourcePackManager.AddDirectoryToPack(targetFile, sourceDir, extensionExceptions))
-                {
-                    Console.WriteLine($"Added directory '{sourceDir}' to '{targetFile}'.");
-                }
-                else
-                {
-                    Console.WriteLine($"Error: Adding directory '{sourceDir}' to '{targetFile}' failed!");
-                }
-                
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: Adding directory '{sourceDir}' to '{targetFile}': {ex.Message}");
-            }
-        }
-        else if (command == "packdirtext")
-        {
-            var sourceDir = args[1];
-            var targetFile = args[2];
-            try
-            {
-                if (ResourcePackManager.PackToText(targetFile, sourceDir, extensionExceptions))
-                {
-                    Console.WriteLine($"Packed '{sourceDir}' to text file '{targetFile}'.");
-                }
-                else
-                {
-                    Console.WriteLine($"Error: Packing '{sourceDir}' to text file '{targetFile}' failed!");
-                }
-                
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: Packing directory '{sourceDir}' to text file '{targetFile}': {ex.Message}");
+                Console.WriteLine($"Error: Packing directory '{sourceDirectoryPath}' to '{outputFilePath}': {ex.Message}");
             }
         }
         else if (command == "unpack")
         {
-            var resxFile = args[1];
-            var outputDir = args[2];
+            var sourceFilePath = args[1];
+            var outputDirectoryPath = args[2];
 
             try
             {
-                if (ResourcePackManager.Unpack(outputDir, resxFile))
+                if (ResourcePackManager.Unpack(outputDirectoryPath, sourceFilePath, extensionExceptions, isDebug))
                 {
-                    Console.WriteLine($"Unpacked '{resxFile}' to '{outputDir}'.");
+                    Console.WriteLine($"Unpacked '{sourceFilePath}' to '{outputDirectoryPath}'.");
                 }
                 else
                 {
-                    Console.WriteLine($"Error: Unpacking '{resxFile}' to '{outputDir}' failed!");
+                    Console.WriteLine($"Error: Unpacking '{sourceFilePath}' to '{outputDirectoryPath}' failed!");
                 }
                 
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error: Unpacking resource pack {resxFile} to {outputDir} with exception: {ex.Message}");
-            }
-        }
-        else if (command == "unpackdebug")
-        {
-            var resxFile = args[1];
-            var outputDir = args[2];
-
-            try
-            {
-                if (ResourcePackManager.UnpackDebug(outputDir, resxFile))
-                {
-                    Console.WriteLine($"Unpacked debug '{resxFile}' to '{outputDir}'.");
-                }
-                else
-                {
-                    Console.WriteLine($"Error: Unpacking debug '{resxFile}' to '{outputDir}' failed!");
-                }
-                
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: Unpacking debug resource pack {resxFile} to {outputDir} with exception: {ex.Message}");
-            }
-        }
-        else if (command == "unpackdirtext")
-        {
-            var resxFile = args[1];
-            var outputDir = args[2];
-
-            try
-            {
-                if (ResourcePackManager.UnpackFromText(outputDir, resxFile))
-                {
-                    Console.WriteLine($"Unpacked text file '{resxFile}' to '{outputDir}'.");
-                }
-                else
-                {
-                    Console.WriteLine($"Error: Unpacking text file '{resxFile}' to '{outputDir}' failed!");
-                }
-                
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: Unpacking text file {resxFile} to {outputDir} with exception: {ex.Message}");
+                Console.WriteLine($"Error: Unpacking resource pack {sourceFilePath} to {outputDirectoryPath} with exception: {ex.Message}");
             }
         }
         else
