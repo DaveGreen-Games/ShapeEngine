@@ -1,6 +1,7 @@
 ﻿
 namespace ResourcePacker;
 
+//TODO: make final AI check for issues
 
 class Program
 {
@@ -103,11 +104,7 @@ class Program
             var outputFilePath = args[2];
             try
             {
-                if (ResourcePackManager.Pack(outputFilePath, sourceDirectoryPath, extensionExceptions, isDebug))
-                {
-                    Console.WriteLine($"Packed '{sourceDirectoryPath}' to '{outputFilePath}'.");
-                }
-                else
+                if (!ResourcePackManager.Pack(outputFilePath, sourceDirectoryPath, extensionExceptions, isDebug))
                 {
                     Console.WriteLine($"Error: Packing '{sourceDirectoryPath}' to '{outputFilePath}' failed!");
                 }
@@ -125,11 +122,7 @@ class Program
 
             try
             {
-                if (ResourcePackManager.Unpack(outputDirectoryPath, sourceFilePath, extensionExceptions, isDebug))
-                {
-                    Console.WriteLine($"Unpacked '{sourceFilePath}' to '{outputDirectoryPath}'.");
-                }
-                else
+                if (!ResourcePackManager.Unpack(outputDirectoryPath, sourceFilePath, extensionExceptions, isDebug))
                 {
                     Console.WriteLine($"Error: Unpacking '{sourceFilePath}' to '{outputDirectoryPath}' failed!");
                 }

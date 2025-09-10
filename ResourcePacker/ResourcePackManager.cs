@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Diagnostics;
 using System.IO.Compression;
 using System.Resources;
 
@@ -15,11 +16,9 @@ namespace ResourcePacker;
 /// </summary>
 public static class ResourcePackManager
 {
-    //TODO: add progress bars to pack functions
-    
     //TODO: fix memory stream too long error when packing large directories
-    
-    
+
+    private const double progressInterval = 100.0;
     
     public static bool Pack(string outputFilePath, string sourceDirectoryPath, List<string>? extensionExceptions = null, bool debug = false)
     {
@@ -38,6 +37,14 @@ public static class ResourcePackManager
         return UnpackFromFile(outputDirectoryPath, sourceFilePath, extensionExceptions, debug);
     }
     
+    private static void PrintProgressBar(int current, int total, int barWidth = 30, string title = "File")
+    {
+        double percent = (double)current / total;
+        int filled = (int)(barWidth * percent);
+        int empty = barWidth - filled;
+        string bar = new string('/', filled) + new string('_', empty);
+        Console.Write($"\r[{title} {current}/{total}] [{bar}] [{(percent * 100):F1}%] ");
+    }
     
     #region Simple Txt Packer
 
@@ -73,16 +80,29 @@ public static class ResourcePackManager
         }
         
         string[] files = Directory.GetFiles(sourceDirectoryPath, "", SearchOption.AllDirectories);
-        Console.WriteLine($"File packing started with {files.Length} files.");
+        
+        int total = files.Length;
+        int current = 0;
+        var sw = Stopwatch.StartNew();
+
+        var debugMessages = debug ? new List<string>(total) : [];
+        Console.WriteLine($"File packing started with {total} files.");
         
         var lines = new List<string>();
         foreach (string file in files)
         {
+            current++;
+            if (sw.Elapsed.TotalMilliseconds >= progressInterval || current == total)
+            {
+                PrintProgressBar(current, total);
+                sw.Restart();
+            }
+            
             if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(file)))
             {
                 if (debug)
                 {
-                    Console.WriteLine($"File skipped due to extension: {Path.GetFileName(file)}");
+                    debugMessages.Add($"File skipped due to extension: {Path.GetFileName(file)}");
                 }
                 continue;
             }
@@ -93,10 +113,19 @@ public static class ResourcePackManager
 
             if (debug)
             {
-                Console.WriteLine($" -File {file} has been packed with {d.Length} bytes.");
+                debugMessages.Add($" -File {file} has been packed with {d.Length} bytes.");
             }
         }
         File.WriteAllLines(outputFilePath, lines);
+
+        Console.WriteLine("");
+        if (debugMessages.Count > 0)
+        {
+            foreach (string message in debugMessages)
+            {
+                Console.WriteLine(message);
+            }
+        }
         Console.WriteLine($"File packing finished. With {lines.Count / 2} files packed to {outputFilePath}");
         return true;
     }
@@ -121,17 +150,32 @@ public static class ResourcePackManager
         }
 
         var lines = File.ReadAllLines(sourceFilePath);
-        Console.WriteLine($"File unpacking started with {lines.Length} lines.");
+        
+        int total = lines.Length;
+        int current = 0;
+        var sw = Stopwatch.StartNew();
+
+        var debugMessages = debug ? new List<string>(total / 2) : [];
+        Console.WriteLine($"File unpacking started with {total} lines.");
+        
         for (int i = 0; i < lines.Length; i += 2)
         {
             if (i + 1 >= lines.Length) break;
+            
+            current += 2;
+            if (sw.Elapsed.TotalMilliseconds >= progressInterval || current == total)
+            {
+                PrintProgressBar(current, total);
+                sw.Restart();
+            }
+            
             var relativePath = lines[i];
             
             if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(relativePath)))
             {
                 if (debug)
                 {
-                    Console.WriteLine($"File skipped due to extension: {Path.GetFileName(relativePath)}");
+                    debugMessages.Add($"File skipped due to extension: {Path.GetFileName(relativePath)}");
                 }
                 continue;
             }
@@ -142,14 +186,23 @@ public static class ResourcePackManager
             if(!Directory.Exists(dirPath))
             {
                 Directory.CreateDirectory(dirPath);
-                if(debug) Console.WriteLine($"Output Directory created: {dirPath}");
+                if(debug) debugMessages.Add($"Output Directory created: {dirPath}");
             }
             var base64Data = lines[i + 1];
             var compressedData = Convert.FromBase64String(base64Data);
             File.WriteAllBytes(filePath, Decompress(compressedData));
             if (debug)
             {
-                Console.WriteLine($" -File {filePath} has been unpacked with {compressedData.Length} bytes.");
+                debugMessages.Add($" -File {filePath} has been unpacked with {compressedData.Length} bytes.");
+            }
+        }
+        
+        Console.WriteLine("");
+        if (debugMessages.Count > 0)
+        {
+            foreach (string message in debugMessages)
+            {
+                Console.WriteLine(message);
             }
         }
         Console.WriteLine($"File unpacking finished. With {lines.Length / 2} files unpacked to {outputDirectoryPath}");
@@ -206,7 +259,13 @@ public static class ResourcePackManager
     
         var files = Directory.GetFiles(sourceDirectoryPath, "*", SearchOption.AllDirectories);
         
-        Console.WriteLine($"Pack to file {outputFilePath} started with {files.Length} files found in {sourceDirectoryPath}.");
+        int total = files.Length;
+        int current = 0;
+        var sw = Stopwatch.StartNew();
+        int packedFiles = 0;
+        
+        var debugMessages = debug ? new List<string>(total) : [];
+        Console.WriteLine($"Pack to file {outputFilePath} started with {total} files found in {sourceDirectoryPath}.");
         
         //VARIANT 1
         using var memStream = new MemoryStream();
@@ -214,21 +273,30 @@ public static class ResourcePackManager
         {
             foreach (var file in files)
             {
+                current++;
+                if (sw.Elapsed.TotalMilliseconds >= progressInterval || current == total)
+                {
+                    PrintProgressBar(current, total);
+                    sw.Restart();
+                }
+                
                 if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(file)))
                 {
                     if (debug)
                     {
-                        Console.WriteLine($"File skipped due to extension: {Path.GetFileName(file)}");
+                        debugMessages.Add($"File skipped due to extension: {Path.GetFileName(file)}");
                     }
                     continue;
                 }
                 var relativeName = Path.GetRelativePath(sourceDirectoryPath, file);
                 writer.AddResource(relativeName, File.ReadAllBytes(file));
+                packedFiles++;
                 if (debug)
                 {
-                    Console.WriteLine($" -File {file} has been packed with {new FileInfo(file).Length} bytes.");
+                    debugMessages.Add($" -File {file} has been packed with {new FileInfo(file).Length} bytes.");
                 }
             }
+            
             writer.Generate();
             writer.Close(); // Ensure all data is written
         }
@@ -272,7 +340,17 @@ public static class ResourcePackManager
         //     }
         // }
         
-        Console.WriteLine("Pack to file finished.");
+        
+        Console.WriteLine("");
+        if (debugMessages.Count > 0)
+        {
+            foreach (string message in debugMessages)
+            {
+                Console.WriteLine(message);
+            }
+        }
+        
+        Console.WriteLine($"File packing finished. With {packedFiles} files packed to {outputFilePath}");
         
         return true;
     }
@@ -294,11 +372,23 @@ public static class ResourcePackManager
         using var decompressMemStream = DecompressGzip(sourceFilePath);
         using var reader = new ResourceReader(decompressMemStream);
         
-        
-        Console.WriteLine($"Unpack from file {sourceFilePath} started to {outputDirectoryPath}.");
+        int total = reader.Cast<DictionaryEntry>().Count();
+        int current = 0;
+        int unpackedFiles = 0;
+        var sw = Stopwatch.StartNew();
+
+        var debugMessages = debug ? new List<string>(total) : [];
+        Console.WriteLine($"Unpack from file {sourceFilePath}  to {outputDirectoryPath} with {total} files started.");
         
         foreach (DictionaryEntry entry in reader)
         {
+            current++;
+            if (sw.Elapsed.TotalMilliseconds >= progressInterval || current == total)
+            {
+                PrintProgressBar(current, total);
+                sw.Restart();
+            }
+            
             var fileName = entry.Key.ToString();
             if (fileName == null) continue;
             
@@ -306,7 +396,7 @@ public static class ResourcePackManager
             {
                 if (debug)
                 {
-                    Console.WriteLine($"File skipped due to extension: {Path.GetFileName(fileName)}");
+                    debugMessages.Add($"File skipped due to extension: {Path.GetFileName(fileName)}");
                 }
                 continue;
             }
@@ -315,14 +405,32 @@ public static class ResourcePackManager
             string? directoryPath = Path.GetDirectoryName(filePath);
             if (directoryPath == null) continue;
             Directory.CreateDirectory(directoryPath);
-            if (entry.Value is byte[] bytes) File.WriteAllBytes(filePath, bytes);
-            if (debug)
+            if (entry.Value is byte[] bytes)
             {
-                Console.WriteLine($" -File {filePath} has been unpacked with {new FileInfo(filePath).Length} bytes.");
+                File.WriteAllBytes(filePath, bytes);
+                unpackedFiles++;
+                if (debug)
+                {
+                    debugMessages.Add($" -File {filePath} has been unpacked with {new FileInfo(filePath).Length} bytes.");
+                }
+            }
+            else
+            {
+                debugMessages.Add($" -File {filePath} has unknown data type and was skipped.");
+            }
+            
+        }
+        
+        Console.WriteLine("");
+        if (debugMessages.Count > 0)
+        {
+            foreach (string message in debugMessages)
+            {
+                Console.WriteLine(message);
             }
         }
     
-        Console.WriteLine("Unpack from file finished.");
+        Console.WriteLine($"File unpacking finished. With {unpackedFiles} files unpacked to {outputDirectoryPath}");
         
         return true;
     }
