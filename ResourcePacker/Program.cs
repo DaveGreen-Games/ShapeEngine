@@ -78,7 +78,7 @@ class Program
             Console.WriteLine("Wrong number of arguments. Use '--help' for usage instructions.");
             return;
         }
-
+        
         bool isDebug = false;
         int debugIndex = Array.IndexOf(args, "--debug");
         if(debugIndex > 2) isDebug = true;
