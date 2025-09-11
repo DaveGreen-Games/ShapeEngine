@@ -27,7 +27,7 @@ class Program
         Console.WriteLine("Source code available at: https://github.com/DaveGreen-Games/ShapeEngine");
         Console.WriteLine("Use at your own risk. No warranties provided.");
         Console.WriteLine("ResourcePacker can:\n" +
-                          " - pack directories or single files into binary files.\n" +
+                          " - pack directories into binary files.\n" +
                           " - unpack packed binary files into directories.\n" +
                           " - pack directories into text files with each file taking up 2 lines:\n" +
                           "  - 1st line = filename.\n" +
@@ -37,7 +37,7 @@ class Program
         Console.WriteLine("Use '--help' for usage instructions.");
         Console.WriteLine("Remarks:\n" +
                           " - ResourcePacker does not modify or delete any source files or directories.\n" +
-                          " - Using .txt extension for the sourceFilePath in unpack or the outputFilePath uses the text based packing system. Any other extensions will use the binary packing system.\n" +
+                          " - Using .txt extension for the sourceFilePath in unpack or the outputFilePath in pack uses the text based packing system. Any other extensions will use the binary packing system.\n" +
                           " - Ensure you have the necessary permissions for file operations in the specified directories.");
         Console.WriteLine("------------------------------------------------------------");
         
@@ -60,6 +60,8 @@ class Program
                             "Flags:\n" +
                                 "  --exceptions <.ext1> <.ext2> ... : Optional flag to specify file extensions to exclude when packing/unpacking directories.\n" +
                                 "  --debug : Optional flag to enable debug mode for detailed logging during operations.\n" +
+                                "  --batching : Optional flag to enable batching mode for pack command possible reducing memory peak usage.\n" +
+                                "  --parallel : Optional flag to enable parallel file reading mode for pack command possible increasing speed. (only works for binary packing system)\n" +
                             "Examples:\n" +
                                 "  ./ResourcePacker pack ./backgroundMusic ./packedMusic.res\n" +
                                 "  ./ResourcePacker pack ./assets ./packedResources.txt\n" +
@@ -100,11 +102,19 @@ class Program
 
         if (command == "pack")
         {
+            bool isParallel = false;
+            int parallelIndex = Array.IndexOf(args, "--parallel");
+            if(parallelIndex > 2) isParallel = true;
+        
+            bool isBatching = false;
+            int batchingIndex = Array.IndexOf(args, "--batching");
+            if(batchingIndex > 2) isBatching = true;
+            
             var sourceDirectoryPath = args[1];
             var outputFilePath = args[2];
             try
             {
-                if (!ResourcePackManager.Pack(outputFilePath, sourceDirectoryPath, extensionExceptions, isDebug))
+                if (!ResourcePackManager.Pack(outputFilePath, sourceDirectoryPath, extensionExceptions, isParallel, isBatching, isDebug))
                 {
                     Console.WriteLine($"Error: Packing '{sourceDirectoryPath}' to '{outputFilePath}' failed!");
                 }
