@@ -55,6 +55,7 @@ public static class ResourcePackManager
     
     #region Text Packer
 
+    //TODO: further compression possible?
     private static bool PackToText(string outputFilePath, string sourceDirectoryPath, List<string>? extensionExceptions = null, bool debug = false)
     {
         if(!Directory.Exists(sourceDirectoryPath))
@@ -222,52 +223,6 @@ public static class ResourcePackManager
         }
         Console.WriteLine($"File unpacking finished. With {lines.Length / 2} files unpacked to {outputDirectoryPath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
         return true;
-    }
-
-    public static Dictionary<string, byte[]> UnpackFromText(string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false)
-    {
-        var result = new Dictionary<string, byte[]>();
-
-        if (!File.Exists(sourceFilePath))
-        {
-            Console.WriteLine($"Source file not found: {sourceFilePath}");
-            return result;
-        }
-
-        if (Path.GetExtension(sourceFilePath) != ".txt")
-        {
-            Console.WriteLine($"Source file must have a .txt extension: {sourceFilePath}");
-            return result;
-        }
-
-        var debugWatch = Stopwatch.StartNew();
-        var lines = File.ReadAllLines(sourceFilePath);
-        long totalBytesUnpacked = 0;
-        int unpackedFiles = 0;
-
-        for (int i = 0; i < lines.Length; i += 2)
-        {
-            if (i + 1 >= lines.Length) break;
-
-            var relativePath = lines[i];
-
-            if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(relativePath)))
-            {
-                if (debug) Console.WriteLine($"File skipped due to extension: {Path.GetFileName(relativePath)}");
-                continue;
-            }
-
-            var base64Data = lines[i + 1];
-            var compressedData = Convert.FromBase64String(base64Data);
-            var data = Decompress(compressedData);
-            totalBytesUnpacked += data.Length;
-            result[relativePath] = data;
-            unpackedFiles++;
-            if (debug) Console.WriteLine($"Unpacked {relativePath} ({compressedData.Length} bytes)");
-        }
-
-        Console.WriteLine($"Unpacking packed text file {sourceFilePath} finished. {unpackedFiles} files unpacked in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
-        return result;
     }
     
     private static byte[] Decompress(byte[] data)
@@ -464,6 +419,12 @@ public static class ResourcePackManager
         return true;
     }
     
+    #endregion
+
+    #region External Unpacking
+    
+    //TODO: add async versions
+    
     public static Dictionary<string, byte[]> UnpackFromFile(string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false)
     {
         var result = new Dictionary<string, byte[]>();
@@ -516,6 +477,59 @@ public static class ResourcePackManager
         }
 
         Console.WriteLine($"Unpacking from packed file {sourceFilePath} finished. {unpackedFiles} files unpacked in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
+        return result;
+    }
+    
+    public static Dictionary<string, byte[]> UnpackFromText(string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false)
+    {
+        var result = new Dictionary<string, byte[]>();
+
+        if (!File.Exists(sourceFilePath))
+        {
+            Console.WriteLine($"Source file not found: {sourceFilePath}");
+            return result;
+        }
+
+        if (Path.GetExtension(sourceFilePath) != ".txt")
+        {
+            Console.WriteLine($"Source file must have a .txt extension: {sourceFilePath}");
+            return result;
+        }
+
+        var debugWatch = Stopwatch.StartNew();
+        var lines = File.ReadAllLines(sourceFilePath);
+        long totalBytesUnpacked = 0;
+        int unpackedFiles = 0;
+
+        for (int i = 0; i < lines.Length; i += 2)
+        {
+            if (i + 1 >= lines.Length) break;
+
+            var relativePath = lines[i];
+
+            if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(relativePath)))
+            {
+                if (debug) Console.WriteLine($"File skipped due to extension: {Path.GetFileName(relativePath)}");
+                continue;
+            }
+
+            var base64Data = lines[i + 1];
+            var compressedData = Convert.FromBase64String(base64Data);
+            // var data = Decompress(compressedData);
+            
+            using var input = new MemoryStream(compressedData);
+            using var deflateStream = new DeflateStream(input, CompressionMode.Decompress);
+            using var output = new MemoryStream();
+            deflateStream.CopyTo(output);
+            byte[] data = output.ToArray();
+            
+            totalBytesUnpacked += data.Length;
+            result[relativePath] = data;
+            unpackedFiles++;
+            if (debug) Console.WriteLine($"Unpacked {relativePath} ({compressedData.Length} bytes)");
+        }
+
+        Console.WriteLine($"Unpacking packed text file {sourceFilePath} finished. {unpackedFiles} files unpacked in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
         return result;
     }
     
@@ -714,257 +728,3 @@ public static class ResourcePackManager
 
     #endregion
 }
-
-
-
-
-/*
-private static bool PackToFile_OLD2(string outputFilePath, string sourceDirectoryPath, List<string>? extensionExceptions = null, bool debug = false)
-{
-    if (!Directory.Exists(sourceDirectoryPath))
-    {
-        Console.WriteLine($"Directory not found: {sourceDirectoryPath}");
-        return false;
-    }
-
-    if (!Path.HasExtension(outputFilePath))
-    {
-        Console.WriteLine($"Output resource path must have a valid extension: {outputFilePath}");
-        return false;
-    }
-
-    var resxDir = Path.GetDirectoryName(outputFilePath);
-    if (resxDir == null)
-    {
-        Console.WriteLine($"Directory not found: {resxDir}");
-        return false;
-    }
-
-    if (!Directory.Exists(resxDir))
-    {
-        Console.WriteLine($"Created output directory: {resxDir}");
-        Directory.CreateDirectory(resxDir);
-    }
-
-    var files = Directory.GetFiles(sourceDirectoryPath, "*", SearchOption.AllDirectories);
-
-    int total = files.Length;
-    int current = 0;
-    var sw = Stopwatch.StartNew();
-    int packedFiles = 0;
-
-    var debugMessages = debug ? new List<string>(total) : [];
-    Console.WriteLine($"Pack to file {outputFilePath} started with {total} files found in {sourceDirectoryPath}.");
-
-    // Write directly to file stream with GZip compression
-    using var fileStream = new FileStream(outputFilePath, FileMode.Create, FileAccess.Write);
-    using var gzipStream = new GZipStream(fileStream, CompressionLevel.Optimal);
-    using (var writer = new ResourceWriter(gzipStream))
-    {
-        foreach (var file in files)
-        {
-            current++;
-            if (sw.Elapsed.TotalMilliseconds >= progressInterval || current == total)
-            {
-                PrintProgressBar(current, total);
-                sw.Restart();
-            }
-
-            if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(file)))
-            {
-                if (debug)
-                {
-                    debugMessages.Add($"File skipped due to extension: {Path.GetFileName(file)}");
-                }
-                continue;
-            }
-            var relativeName = Path.GetRelativePath(sourceDirectoryPath, file);
-            writer.AddResource(relativeName, File.ReadAllBytes(file));
-            packedFiles++;
-            if (debug)
-            {
-                debugMessages.Add($" -File {file} has been packed with {new FileInfo(file).Length} bytes.");
-            }
-        }
-
-        writer.Generate();
-        writer.Close();
-    }
-
-    Console.WriteLine("");
-    if (debugMessages.Count > 0)
-    {
-        foreach (string message in debugMessages)
-        {
-            Console.WriteLine(message);
-        }
-    }
-
-    Console.WriteLine($"File packing finished. With {packedFiles} files packed to {outputFilePath}");
-
-    return true;
-}
-
-private static bool PackToFile_OLD3(string outputFilePath, string sourceDirectoryPath, List<string>? extensionExceptions = null, bool debug = false)
-{
-    if (!Directory.Exists(sourceDirectoryPath))
-    {
-        Console.WriteLine($"Directory not found: {sourceDirectoryPath}");
-        return false;
-    }
-
-    if (!Path.HasExtension(outputFilePath))
-    {
-        Console.WriteLine($"Output resource path must have a valid extension: {outputFilePath}");
-        return false;
-    }
-
-    var resxDir = Path.GetDirectoryName(outputFilePath);
-    if (resxDir == null)
-    {
-        Console.WriteLine($"Directory not found: {resxDir}");
-        return false;
-    }
-
-    if (!Directory.Exists(resxDir))
-    {
-        Console.WriteLine($"Created output directory: {resxDir}");
-        Directory.CreateDirectory(resxDir);
-    }
-
-    var files = Directory.GetFiles(sourceDirectoryPath, "*", SearchOption.AllDirectories);
-
-    int total = files.Length;
-    int current = 0;
-    var sw = Stopwatch.StartNew();
-    int packedFiles = 0;
-
-    var debugMessages = debug ? new List<string>(total) : [];
-    Console.WriteLine($"Pack to file {outputFilePath} started with {total} files found in {sourceDirectoryPath}.");
-
-    // Step 1: Write resources to a temporary file
-    string tempFile = Path.GetTempFileName();
-    try
-    {
-        using (var tempStream = new FileStream(tempFile, FileMode.Create, FileAccess.Write))
-        using (var writer = new ResourceWriter(tempStream))
-        {
-            foreach (var file in files)
-            {
-                current++;
-                if (sw.Elapsed.TotalMilliseconds >= progressInterval || current == total)
-                {
-                    PrintProgressBar(current, total);
-                    sw.Restart();
-                    if (current == total)
-                    {
-                        Console.WriteLine("");
-                    }
-                }
-
-                if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(file)))
-                {
-                    if (debug)
-                    {
-                        debugMessages.Add($"File skipped due to extension: {Path.GetFileName(file)}");
-                    }
-                    continue;
-                }
-                var relativeName = Path.GetRelativePath(sourceDirectoryPath, file);
-                writer.AddResource(relativeName, File.ReadAllBytes(file));
-                packedFiles++;
-                if (debug)
-                {
-                    debugMessages.Add($" -File {file} has been packed with {new FileInfo(file).Length} bytes.");
-                }
-            }
-            writer.Generate();
-            writer.Close();
-        }
-
-        // Step 2: Compress the temporary file to the final output
-        using (var tempStream = new FileStream(tempFile, FileMode.Open, FileAccess.Read))
-        using (var fileStream = new FileStream(outputFilePath, FileMode.Create, FileAccess.Write))
-        using (var gzipStream = new GZipStream(fileStream, CompressionLevel.Optimal))
-        {
-            tempStream.CopyTo(gzipStream);
-        }
-    }
-    finally
-    {
-        // Step 3: Delete the temporary file
-        if (File.Exists(tempFile))
-            File.Delete(tempFile);
-    }
-
-    
-    if (debugMessages.Count > 0)
-    {
-        foreach (string message in debugMessages)
-        {
-            Console.WriteLine(message);
-        }
-    }
-
-    Console.WriteLine($"File packing finished. With {packedFiles} files packed to {outputFilePath}");
-
-    return true;
-}
-*/
-
-/*public static bool UnpackFromFileLarge_OLD(string outputDirectoryPath, string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false)
-{
-    if (!File.Exists(sourceFilePath))
-    {
-        Console.WriteLine($"Packed file not found: {sourceFilePath}");
-        return false;
-    }
-    if (!Directory.Exists(outputDirectoryPath))
-    {
-        Directory.CreateDirectory(outputDirectoryPath);
-        Console.WriteLine($"Created output directory: {outputDirectoryPath}");
-    }
-
-    var debugMessages = debug ? new List<string>() : [];
-    using var fileStream = new FileStream(sourceFilePath, FileMode.Open, FileAccess.Read);
-    using var gzipStream = new GZipStream(fileStream, CompressionMode.Decompress);
-
-    int unpackedFiles = 0;
-    while (gzipStream.Position < fileStream.Length)
-    {
-        var pathLenBytes = new byte[4];
-        if (gzipStream.Read(pathLenBytes, 0, 4) < 4) break;
-        int pathLen = BitConverter.ToInt32(pathLenBytes, 0);
-
-        var pathBytes = new byte[pathLen];
-        if (gzipStream.Read(pathBytes, 0, pathLen) < pathLen) break;
-        string relativePath = System.Text.Encoding.UTF8.GetString(pathBytes);
-
-        var dataLenBytes = new byte[4];
-        if (gzipStream.Read(dataLenBytes, 0, 4) < 4) break;
-        int dataLen = BitConverter.ToInt32(dataLenBytes, 0);
-
-        var data = new byte[dataLen];
-        if (gzipStream.Read(data, 0, dataLen) < dataLen) break;
-
-        if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(relativePath)))
-        {
-            if (debug) debugMessages.Add($"File skipped due to extension: {Path.GetFileName(relativePath)}");
-            continue;
-        }
-
-        var filePath = Path.Combine(outputDirectoryPath, relativePath);
-        var dirPath = Path.GetDirectoryName(filePath);
-        if (dirPath != null && !Directory.Exists(dirPath))
-            Directory.CreateDirectory(dirPath);
-
-        File.WriteAllBytes(filePath, data);
-        unpackedFiles++;
-        if (debug) debugMessages.Add($"Unpacked {relativePath} ({dataLen} bytes)");
-    }
-
-    if (debugMessages.Count > 0) foreach (var msg in debugMessages) Console.WriteLine(msg);
-    Console.WriteLine($"Unpacking finished. {unpackedFiles} files unpacked to {outputDirectoryPath}");
-    return true;
-}*/
-    
