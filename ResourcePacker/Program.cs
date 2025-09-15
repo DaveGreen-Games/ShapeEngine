@@ -85,6 +85,14 @@ class Program
         int debugIndex = Array.IndexOf(args, "--debug");
         if(debugIndex > 2) isDebug = true;
         
+        bool isParallel = false;
+        int parallelIndex = Array.IndexOf(args, "--parallel");
+        if(parallelIndex > 2) isParallel = true;
+        
+        bool isBatching = false;
+        int batchingIndex = Array.IndexOf(args, "--batching");
+        if(batchingIndex > 2) isBatching = true;
+        
         int exceptionsIndex = Array.IndexOf(args, "--exceptions");
         List<string>? extensionExceptions = null;
         if (exceptionsIndex > 2)
@@ -102,14 +110,6 @@ class Program
 
         if (command == "pack")
         {
-            bool isParallel = false;
-            int parallelIndex = Array.IndexOf(args, "--parallel");
-            if(parallelIndex > 2) isParallel = true;
-        
-            bool isBatching = false;
-            int batchingIndex = Array.IndexOf(args, "--batching");
-            if(batchingIndex > 2) isBatching = true;
-            
             var sourceDirectoryPath = args[1];
             var outputFilePath = args[2];
             try
@@ -132,7 +132,7 @@ class Program
 
             try
             {
-                if (!ResourcePackManager.Unpack(outputDirectoryPath, sourceFilePath, extensionExceptions, isDebug))
+                if (!ResourcePackManager.Unpack(outputDirectoryPath, sourceFilePath, extensionExceptions, isParallel, isBatching, isDebug))
                 {
                     Console.WriteLine($"Error: Unpacking '{sourceFilePath}' to '{outputDirectoryPath}' failed!");
                 }

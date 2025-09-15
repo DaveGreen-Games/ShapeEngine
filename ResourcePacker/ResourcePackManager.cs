@@ -21,7 +21,7 @@ namespace ResourcePacker;
 /// </summary>
 public static class ResourcePackManager
 {
-    private const double progressIntervalMilliseconds = 100.0;
+    private const double progressIntervalMilliseconds = 10.0;
     
     #region Public Interface
     public static bool Pack(string outputFilePath, string sourceDirectoryPath, List<string>? extensionExceptions = null, bool parallel = false, bool batching = false, bool debug = false)
@@ -53,10 +53,23 @@ public static class ResourcePackManager
         
         return PackToFile(outputFilePath, sourceDirectoryPath, extensionExceptions, debug);
     }
-    public static bool Unpack(string outputDirectoryPath, string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false)
+    public static bool Unpack(string outputDirectoryPath, string sourceFilePath, List<string>? extensionExceptions = null, bool parallel = false, bool batching = false, bool debug = false)
     {
         if (Path.GetExtension(sourceFilePath) == ".txt")
         {
+            // return UnpackFromTextBatchingParallel(outputDirectoryPath, sourceFilePath, extensionExceptions, debug, 16);
+            // var value = UnpackFromTextBatchingParallel(sourceFilePath, extensionExceptions, debug, 16);
+            // return value.Count > 0;
+            
+            if (batching)
+            {
+                return UnpackFromTextBatching(outputDirectoryPath, sourceFilePath, extensionExceptions, debug);
+            }
+
+            if (parallel)
+            {
+                return UnpackFromTextParallel(outputDirectoryPath, sourceFilePath, extensionExceptions, debug);
+            }
             return UnpackFromText(outputDirectoryPath, sourceFilePath, extensionExceptions, debug);
         }
         return UnpackFromFile(outputDirectoryPath, sourceFilePath, extensionExceptions, debug);
@@ -81,6 +94,9 @@ public static class ResourcePackManager
     #endregion
     
     #region Text Packer
+    //TODO: Combine into 2 pack and 2 unpack functions (parallel and non-parallel) (always batching)
+    
+    
     //this should always do the batching version instead
     private static bool PackToText(string outputFilePath, string sourceDirectoryPath, List<string>? extensionExceptions = null, bool debug = false)
     {
@@ -117,6 +133,7 @@ public static class ResourcePackManager
         string[] files = Directory.GetFiles(sourceDirectoryPath, "", SearchOption.AllDirectories);
 
         long totalBytesPacked = 0;
+        int totalFilesPacked = 0;
         int total = files.Length;
         int current = 0;
         var sw = Stopwatch.StartNew();
@@ -146,16 +163,18 @@ public static class ResourcePackManager
             lines.Add(Path.GetRelativePath(sourceDirectoryPath, file));
             byte[] d = File.ReadAllBytes(file);
             totalBytesPacked += d.Length;
+            totalFilesPacked++;
             lines.Add(Convert.ToBase64String(Compress(d)));
-
             if (debug)
             {
                 debugMessages.Add($" -File {file} has been packed with {d.Length} bytes.");
             }
         }
-        File.WriteAllLines(outputFilePath, lines);
-
-        Console.WriteLine("");
+        //Data -> Empty Line -> Number of files packed
+        File.WriteAllLines(outputFilePath, lines.Concat(["", totalFilesPacked.ToString()]));
+        
+        PrintProgressBar(current, total, debugWatch.Elapsed.TotalSeconds);
+        
         if (debugMessages.Count > 0)
         {
             foreach (string message in debugMessages)
@@ -163,7 +182,7 @@ public static class ResourcePackManager
                 Console.WriteLine(message);
             }
         }
-        Console.WriteLine($"File packing finished. With {lines.Count / 2} files packed to {outputFilePath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes packed: {totalBytesPacked}");
+        Console.WriteLine($"File packing finished. With {totalFilesPacked} files packed to {outputFilePath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes packed: {totalBytesPacked}");
         return true;
     }
     //works great for keeping memory usage low
@@ -202,6 +221,7 @@ public static class ResourcePackManager
         string[] files = Directory.GetFiles(sourceDirectoryPath, "*", SearchOption.AllDirectories);
         int total = files.Length, current = 0;
         long totalBytesPacked = 0;
+        int totalFilesPacked = 0;
         var sw = Stopwatch.StartNew();
         var debugMessages = debug ? new List<string>(total) : [];
         Console.WriteLine($"Text File packing started with {total} files. Batch");
@@ -225,11 +245,17 @@ public static class ResourcePackManager
             writer.WriteLine(Path.GetRelativePath(sourceDirectoryPath, file));
             byte[] d = File.ReadAllBytes(file);
             totalBytesPacked += d.Length;
+            totalFilesPacked++;
             writer.WriteLine(Convert.ToBase64String(Compress(d)));
 
             if (debug) debugMessages.Add($" -File {file} has been packed with {d.Length} bytes.");
         }
 
+        writer.WriteLine("");
+        writer.WriteLine(totalFilesPacked.ToString());
+        
+        PrintProgressBar(current, total, debugWatch.Elapsed.TotalSeconds);
+        
         if (debugMessages.Count > 0)
         {
             foreach (string message in debugMessages)
@@ -237,7 +263,7 @@ public static class ResourcePackManager
                 Console.WriteLine(message);
             }
         }
-        Console.WriteLine($"File packing finished. With {current} files packed to {outputFilePath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes packed: {totalBytesPacked}");
+        Console.WriteLine($"File packing finished. With {totalFilesPacked} files packed to {outputFilePath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes packed: {totalBytesPacked}");
         return true;
     }
     //very fast
@@ -280,7 +306,8 @@ public static class ResourcePackManager
         int total = files.Length;
         int current = 0;
         var sw = Stopwatch.StartNew();
-    
+        int totalFilesPacked = 0;
+        long totalBytesPacked = 0;
         Console.WriteLine($"Text File packing started with {total} files. Parallel on {processorCount} threads.");
     
         Parallel.For(0, processorCount, i =>
@@ -305,6 +332,8 @@ public static class ResourcePackManager
                 writer.WriteLine(Path.GetRelativePath(sourceDirectoryPath, file));
                 byte[] d = File.ReadAllBytes(file);
                 writer.WriteLine(Convert.ToBase64String(Compress(d)));
+                Interlocked.Increment(ref totalFilesPacked);
+                Interlocked.Add(ref totalBytesPacked, d.Length);
                 debugMessages?.Add($" -File {file} has been packed with {d.Length} bytes.");
             }
         });
@@ -317,8 +346,12 @@ public static class ResourcePackManager
                     outputWriter.WriteLine(line);
                 File.Delete(tempFile);
             }
+            outputWriter.WriteLine("");
+            outputWriter.WriteLine(totalFilesPacked.ToString());
         }
     
+        PrintProgressBar(current, total, debugWatch.Elapsed.TotalSeconds);
+        
         if (debugMessages != null && debugMessages.Count > 0)
         {
             foreach (var msg in debugMessages)
@@ -330,7 +363,6 @@ public static class ResourcePackManager
         return true;
     }
     
-
     private static bool UnpackFromText(string outputDirectoryPath, string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false)
     {
         if (!File.Exists(sourceFilePath))
@@ -356,18 +388,21 @@ public static class ResourcePackManager
         var lines = File.ReadAllLines(sourceFilePath);
         
         long totalBytesUnpacked = 0;
-        int total = lines.Length;
+        int totalFilesUnpacked = 0;
+        int total = int.Parse(lines[^1]); // parse last line for total files packed
         int current = 0;
         var sw = Stopwatch.StartNew();
 
         var debugMessages = debug ? new List<string>(total / 2) : [];
         Console.WriteLine($"File unpacking started with {total} lines.");
         
-        for (int i = 0; i < lines.Length; i += 2)
+        //last 2 lines are meta data
+        for (int i = 0; i < lines.Length - 2; i += 2)
         {
             if (i + 1 >= lines.Length) break;
+            if (lines[i] == string.Empty) continue;
             
-            current += 2;
+            current += 1;
             if (sw.Elapsed.TotalMilliseconds >= progressIntervalMilliseconds || current == total)
             {
                 PrintProgressBar(current, total, debugWatch.Elapsed.TotalSeconds);
@@ -397,6 +432,7 @@ public static class ResourcePackManager
             var compressedData = Convert.FromBase64String(base64Data);
             var data = Decompress(compressedData);
             totalBytesUnpacked += data.Length;
+            totalFilesUnpacked++;
             File.WriteAllBytes(filePath, data);
             if (debug)
             {
@@ -404,7 +440,8 @@ public static class ResourcePackManager
             }
         }
         
-        Console.WriteLine("");
+        PrintProgressBar(current, total, debugWatch.Elapsed.TotalSeconds);
+        
         if (debugMessages.Count > 0)
         {
             foreach (string message in debugMessages)
@@ -412,7 +449,7 @@ public static class ResourcePackManager
                 Console.WriteLine(message);
             }
         }
-        Console.WriteLine($"File unpacking finished. With {lines.Length / 2} files unpacked to {outputDirectoryPath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
+        Console.WriteLine($"File unpacking finished. With {totalFilesUnpacked} files unpacked to {outputDirectoryPath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
         return true;
     }
     private static bool UnpackFromTextParallel(string outputDirectoryPath, string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false)
@@ -435,19 +472,22 @@ public static class ResourcePackManager
     
         var debugWatch = Stopwatch.StartNew();
         var lines = File.ReadAllLines(sourceFilePath);
-        int total = lines.Length / 2;
+        int total = int.Parse(lines[^1]); // parse last line for total files packed
         int current = 0;
         var sw = Stopwatch.StartNew();
         var debugMessages = debug ? new ConcurrentBag<string>() : null;
-    
+        int totalFilesUnpacked = 0;
+        long totalBytesUnpacked = 0;
         Console.WriteLine($"Parallel text unpacking started with {total} files.");
     
         Parallel.For(0, total, i =>
         {
+            if (i * 2 + 1 >= lines.Length - 2) return;
+            
             int progress = Interlocked.Add(ref current, 1);
             if (sw.Elapsed.TotalMilliseconds >= progressIntervalMilliseconds || progress == total)
             {
-                PrintProgressBar(progress * 2, lines.Length, debugWatch.Elapsed.TotalSeconds);
+                PrintProgressBar(progress, total, debugWatch.Elapsed.TotalSeconds);
                 sw.Restart();
             }
     
@@ -466,18 +506,27 @@ public static class ResourcePackManager
             var base64Data = lines[i * 2 + 1];
             var compressedData = Convert.FromBase64String(base64Data);
             var data = Decompress(compressedData);
+            Interlocked.Add(ref totalBytesUnpacked, data.Length);
+            Interlocked.Increment(ref totalFilesUnpacked);
             File.WriteAllBytes(filePath, data);
     
             if (debug) debugMessages?.Add($" -File {filePath} has been unpacked with {compressedData.Length} bytes.");
         });
     
+        PrintProgressBar(current, total, debugWatch.Elapsed.TotalSeconds);
+
         if (debugMessages != null && debugMessages.Count > 0)
-            foreach (var msg in debugMessages) Console.WriteLine(msg);
+        {
+            foreach (var msg in debugMessages)
+            {
+                Console.WriteLine(msg);
+            }
+        }
     
-        Console.WriteLine($"Parallel unpacking finished. {total} files unpacked to {outputDirectoryPath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds.");
+        Console.WriteLine($"Parallel unpacking finished. {totalFilesUnpacked} files unpacked to {outputDirectoryPath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds with {totalBytesUnpacked} total bytes unpacked.");
         return true;
     }
-    private static bool UnpackFromTextBatching(string outputDirectoryPath, string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false)
+    private static bool UnpackFromTextBatching(string outputDirectoryPath, string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false, int batchSize = 16)
     {
         if (!File.Exists(sourceFilePath))
         {
@@ -496,51 +545,369 @@ public static class ResourcePackManager
         }
 
         var debugWatch = Stopwatch.StartNew();
-        var lines = File.ReadAllLines(sourceFilePath);
-        int total = lines.Length / 2;
         int current = 0;
-        var sw = Stopwatch.StartNew();
-        var debugMessages = debug ? new List<string>(total) : [];
-
-        Console.WriteLine($"Batch unpacking started with {total} files.");
-
-        for (int i = 0; i < lines.Length; i += 2)
+        int totalFiles = int.Parse(File.ReadLines(sourceFilePath).Last());
+        if (totalFiles <= 0)
         {
-            current++;
-            if (sw.Elapsed.TotalMilliseconds >= progressIntervalMilliseconds || current == total)
-            {
-                PrintProgressBar(current * 2, lines.Length, debugWatch.Elapsed.TotalSeconds);
-                sw.Restart();
-            }
-
-            var relativePath = lines[i];
-            if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(relativePath)))
-            {
-                if (debug) debugMessages.Add($"File skipped due to extension: {Path.GetFileName(relativePath)}");
-                continue;
-            }
-
-            var filePath = Path.Combine(outputDirectoryPath, relativePath);
-            var dirPath = Path.GetDirectoryName(filePath);
-            if (dirPath != null && !Directory.Exists(dirPath))
-                Directory.CreateDirectory(dirPath);
-
-            var base64Data = lines[i + 1];
-            var compressedData = Convert.FromBase64String(base64Data);
-            var data = Decompress(compressedData);
-            File.WriteAllBytes(filePath, data);
-
-            if (debug) debugMessages.Add($" -File {filePath} has been unpacked with {compressedData.Length} bytes.");
+            Console.WriteLine("No files to unpack.");
+            return false;
         }
 
-        if (debugMessages.Count > 0)
-            foreach (var msg in debugMessages) Console.WriteLine(msg);
+        bool finished = false;
+        int totalFilesRead = 0;
+        long totalBytesUnpacked = 0;
+        int totalFilesUnpacked = 0;
+        var sw = Stopwatch.StartNew();
+        var debugMessages = debug ? new List<string>() : [];
+        Console.WriteLine($"Batch unpacking started. Batch size: {batchSize}");
 
-        Console.WriteLine($"Batch unpacking finished. {total} files unpacked to {outputDirectoryPath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds.");
+        using var reader = new StreamReader(sourceFilePath);
+        var batchLines = new List<string>(batchSize * 2);
+
+        while (!reader.EndOfStream && !finished)
+        {
+            batchLines.Clear();
+            var firstLine = string.Empty;
+            for (int i = 0; i < batchSize * 2 && !reader.EndOfStream; i++)
+            {
+                if (totalFilesRead >= totalFiles)
+                {
+                    finished = true;
+                    break;
+                }
+                var line = reader.ReadLine();
+                if (line != null)
+                {
+                    if (firstLine == string.Empty)
+                    {
+                        firstLine = line;
+                    }
+                    else
+                    {
+                        //only add complete pairs of two to batch lines
+                        batchLines.Add(firstLine);
+                        firstLine = string.Empty;
+                        batchLines.Add(line);
+                        totalFilesRead++;
+                    }
+                }
+            }
+
+            if (firstLine != string.Empty)
+            {
+                Console.WriteLine("Odd number of lines in file, last line ignored.");
+            }
+
+            int filesInBatch = batchLines.Count / 2;
+            for (int i = 0; i < filesInBatch; i++)
+            {
+                current++;
+                if (sw.Elapsed.TotalMilliseconds >= progressIntervalMilliseconds)
+                {
+                    PrintProgressBar(current, totalFiles, debugWatch.Elapsed.TotalSeconds);
+                    sw.Restart();
+                }
+                
+                var relativePath = batchLines[i * 2];
+                if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(relativePath)))
+                {
+                    if (debug) debugMessages.Add($"File skipped due to extension: {Path.GetFileName(relativePath)}");
+                    continue;
+                }
+
+                var filePath = Path.Combine(outputDirectoryPath, relativePath);
+                var dirPath = Path.GetDirectoryName(filePath);
+                if (dirPath != null && !Directory.Exists(dirPath))
+                    Directory.CreateDirectory(dirPath);
+
+                var base64Data = batchLines[i * 2 + 1];
+                var compressedData = Convert.FromBase64String(base64Data);
+                var data = Decompress(compressedData);
+                File.WriteAllBytes(filePath, data);
+                totalBytesUnpacked += data.Length;
+                totalFilesUnpacked++;
+                if (debug) debugMessages.Add($" -File {filePath} has been unpacked with {compressedData.Length} bytes.");
+            }
+        }
+
+        PrintProgressBar(current, totalFiles, debugWatch.Elapsed.TotalSeconds);
+        
+        if (debugMessages.Count > 0)
+        {
+            foreach (var msg in debugMessages)
+            {
+                Console.WriteLine(msg);
+            }
+        }
+
+        Console.WriteLine($"Batch unpacking finished. {totalFilesUnpacked} files unpacked to {outputDirectoryPath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
+        return true;
+    }
+    private static bool UnpackFromTextBatchingParallel(string outputDirectoryPath, string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false, int batchSize = 16)
+    {
+        if (!File.Exists(sourceFilePath))
+        {
+            Console.WriteLine($"Source file not found: {sourceFilePath}");
+            return false;
+        }
+        if (Path.GetExtension(sourceFilePath) != ".txt")
+        {
+            Console.WriteLine($"Source file must have a .txt extension: {sourceFilePath}");
+            return false;
+        }
+        if (!Directory.Exists(outputDirectoryPath))
+        {
+            Directory.CreateDirectory(outputDirectoryPath);
+            Console.WriteLine($"Directory created: {outputDirectoryPath}");
+        }
+
+        bool finished = false;
+        var debugWatch = Stopwatch.StartNew();
+        int current = 0;
+        int totalFiles = int.Parse(File.ReadLines(sourceFilePath).Last());
+        if (totalFiles <= 0)
+        {
+            Console.WriteLine("No files to unpack.");
+            return false;
+        }
+        int totalFilesRead = 0;
+        long totalBytesUnpacked = 0;
+        int totalFilesUnpacked = 0;
+        var sw = Stopwatch.StartNew();
+        var debugMessages = debug ? new List<string>() : [];
+        Console.WriteLine($"Batch Parallel unpacking started. Batch size: {batchSize}");
+
+        using var reader = new StreamReader(sourceFilePath);
+        var batchLines = new List<string>(batchSize * 2);
+
+        while (!reader.EndOfStream && !finished)
+        {
+            batchLines.Clear();
+            var firstLine = string.Empty;
+            for (int i = 0; i < batchSize * 2 && !reader.EndOfStream; i++)
+            {
+                if (totalFilesRead >= totalFiles)
+                {
+                    finished = true;
+                    break;
+                }
+                
+                var line = reader.ReadLine();
+                if (line != null)
+                {
+                    if(firstLine == string.Empty) firstLine = line;
+                    else
+                    {
+                        //only add complete pairs of two to batch lines
+                        batchLines.Add(firstLine);
+                        firstLine = string.Empty;
+                        batchLines.Add(line);
+                        totalFilesRead++;
+                    }
+                }
+            }
+
+            if (firstLine != string.Empty)
+            {
+                Console.WriteLine("Odd number of lines in file, last line ignored.");
+            }
+
+            int filesInBatch = batchLines.Count / 2;
+            Parallel.For(0, filesInBatch, i =>
+            {
+                var relativePath = batchLines[i * 2];
+                if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(relativePath)))
+                {
+                    if (debug) lock (debugMessages) debugMessages.Add($"File skipped due to extension: {Path.GetFileName(relativePath)}");
+                    return;
+                }
+
+                var filePath = Path.Combine(outputDirectoryPath, relativePath);
+                var dirPath = Path.GetDirectoryName(filePath);
+                if (dirPath != null && !Directory.Exists(dirPath))
+                    Directory.CreateDirectory(dirPath);
+
+                var base64Data = batchLines[i * 2 + 1];
+                var compressedData = Convert.FromBase64String(base64Data);
+                var data = Decompress(compressedData);
+                File.WriteAllBytes(filePath, data);
+
+                Interlocked.Add(ref totalBytesUnpacked, data.Length);
+                Interlocked.Increment(ref totalFilesUnpacked);
+                if (debug) lock (debugMessages) debugMessages.Add($" -File {filePath} has been unpacked with {compressedData.Length} bytes.");
+                Interlocked.Increment(ref current);
+                if (sw.Elapsed.TotalMilliseconds >= progressIntervalMilliseconds)
+                {
+                    PrintProgressBar(current, totalFiles, debugWatch.Elapsed.TotalSeconds);
+                    sw.Restart();
+                }
+            });
+        }
+
+        PrintProgressBar(current, totalFiles, debugWatch.Elapsed.TotalSeconds);
+        
+        if (debugMessages.Count > 0)
+        {
+            foreach (var msg in debugMessages)
+            {
+                Console.WriteLine(msg);
+            }
+        }
+
+        Console.WriteLine($"Batch unpacking finished. {totalFilesUnpacked} files unpacked to {outputDirectoryPath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
         return true;
     }
 
-    
+    public static Dictionary<string, byte[]> UnpackFromText(string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false)
+    {
+        var result = new Dictionary<string, byte[]>();
+
+        if (!File.Exists(sourceFilePath))
+        {
+            Console.WriteLine($"Source file not found: {sourceFilePath}");
+            return result;
+        }
+
+        if (Path.GetExtension(sourceFilePath) != ".txt")
+        {
+            Console.WriteLine($"Source file must have a .txt extension: {sourceFilePath}");
+            return result;
+        }
+
+        var debugWatch = Stopwatch.StartNew();
+        var lines = File.ReadAllLines(sourceFilePath);
+        long totalBytesUnpacked = 0;
+        int unpackedFiles = 0;
+
+        for (int i = 0; i < lines.Length; i += 2)
+        {
+            if (i + 1 >= lines.Length) break;
+
+            var relativePath = lines[i];
+
+            if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(relativePath)))
+            {
+                if (debug) Console.WriteLine($"File skipped due to extension: {Path.GetFileName(relativePath)}");
+                continue;
+            }
+
+            var base64Data = lines[i + 1];
+            var compressedData = Convert.FromBase64String(base64Data);
+            // var data = Decompress(compressedData);
+            
+            using var input = new MemoryStream(compressedData);
+            using var deflateStream = new DeflateStream(input, CompressionMode.Decompress);
+            using var output = new MemoryStream();
+            deflateStream.CopyTo(output);
+            byte[] data = output.ToArray();
+            
+            totalBytesUnpacked += data.Length;
+            result[relativePath] = data;
+            unpackedFiles++;
+            if (debug) Console.WriteLine($"Unpacked {relativePath} ({compressedData.Length} bytes)");
+        }
+
+        Console.WriteLine($"Unpacking packed text file {sourceFilePath} finished. {unpackedFiles} files unpacked in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
+        return result;
+    }
+    public static Dictionary<string, byte[]> UnpackFromTextBatchingParallel(string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false, int batchSize = 16)
+    {
+        var result = new ConcurrentDictionary<string, byte[]>();
+
+        if (!File.Exists(sourceFilePath))
+        {
+            Console.WriteLine($"Source file not found: {sourceFilePath}");
+            return new Dictionary<string, byte[]>();
+        }
+
+        if (Path.GetExtension(sourceFilePath) != ".txt")
+        {
+            Console.WriteLine($"Source file must have a .txt extension: {sourceFilePath}");
+            return new Dictionary<string, byte[]>();
+        }
+
+        var debugWatch = Stopwatch.StartNew();
+        int totalFiles = int.Parse(File.ReadLines(sourceFilePath).Last());
+        if (totalFiles <= 0)
+        {
+            Console.WriteLine("No files to unpack.");
+            return new Dictionary<string, byte[]>();
+        }
+
+        Console.WriteLine($"Batch Parallel unpacking to memory started. Batch size: {batchSize}");
+        bool finished = false;
+        int totalFilesRead = 0;
+        var debugMessages = debug ? new ConcurrentBag<string>() : null;
+
+        using var reader = new StreamReader(sourceFilePath);
+        var batchLines = new List<string>(batchSize * 2);
+
+        while (!reader.EndOfStream && !finished)
+        {
+            batchLines.Clear();
+            var firstLine = string.Empty;
+            for (int i = 0; i < batchSize * 2 && !reader.EndOfStream; i++)
+            {
+                if (totalFilesRead >= totalFiles)
+                {
+                    finished = true;
+                    break;
+                }
+                var line = reader.ReadLine();
+                if (line != null)
+                {
+                    if (firstLine == string.Empty)
+                    {
+                        firstLine = line;
+                    }
+                    else
+                    {
+                        batchLines.Add(firstLine);
+                        firstLine = string.Empty;
+                        batchLines.Add(line);
+                        totalFilesRead++;
+                    }
+                }
+            }
+
+            if (firstLine != string.Empty)
+            {
+                Console.WriteLine("Odd number of lines in file, last line ignored.");
+            }
+
+            int filesInBatch = batchLines.Count / 2;
+            Parallel.For(0, filesInBatch, i =>
+            {
+                var relativePath = batchLines[i * 2];
+                if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(relativePath)))
+                {
+                    if (debug) debugMessages?.Add($"File skipped due to extension: {Path.GetFileName(relativePath)}");
+                    return;
+                }
+
+                var base64Data = batchLines[i * 2 + 1];
+                var compressedData = Convert.FromBase64String(base64Data);
+                using var input = new MemoryStream(compressedData);
+                using var deflateStream = new DeflateStream(input, CompressionMode.Decompress);
+                using var output = new MemoryStream();
+                deflateStream.CopyTo(output);
+                byte[] data = output.ToArray();
+
+                result[relativePath] = data;
+                if (debug) debugMessages?.Add($"Unpacked {relativePath} ({compressedData.Length} bytes)");
+            });
+        }
+
+        Console.WriteLine($"Unpacking packed text file {sourceFilePath} to memory finished. {result.Count} files unpacked in {debugWatch.Elapsed.TotalSeconds:F2} seconds.");
+        if (debugMessages != null && debugMessages.Count > 0)
+        {
+            foreach (var msg in debugMessages)
+            {
+                Console.WriteLine(msg);
+            }
+        }
+        return new Dictionary<string, byte[]>(result);
+    }
     private static byte[] Decompress(byte[] data)
     {
         using var input = new MemoryStream(data);
@@ -968,60 +1335,6 @@ public static class ResourcePackManager
         Console.WriteLine($"Unpacking from packed file {sourceFilePath} finished. {unpackedFiles} files unpacked in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
         return result;
     }
-    
-    public static Dictionary<string, byte[]> UnpackFromText(string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false)
-    {
-        var result = new Dictionary<string, byte[]>();
-
-        if (!File.Exists(sourceFilePath))
-        {
-            Console.WriteLine($"Source file not found: {sourceFilePath}");
-            return result;
-        }
-
-        if (Path.GetExtension(sourceFilePath) != ".txt")
-        {
-            Console.WriteLine($"Source file must have a .txt extension: {sourceFilePath}");
-            return result;
-        }
-
-        var debugWatch = Stopwatch.StartNew();
-        var lines = File.ReadAllLines(sourceFilePath);
-        long totalBytesUnpacked = 0;
-        int unpackedFiles = 0;
-
-        for (int i = 0; i < lines.Length; i += 2)
-        {
-            if (i + 1 >= lines.Length) break;
-
-            var relativePath = lines[i];
-
-            if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(relativePath)))
-            {
-                if (debug) Console.WriteLine($"File skipped due to extension: {Path.GetFileName(relativePath)}");
-                continue;
-            }
-
-            var base64Data = lines[i + 1];
-            var compressedData = Convert.FromBase64String(base64Data);
-            // var data = Decompress(compressedData);
-            
-            using var input = new MemoryStream(compressedData);
-            using var deflateStream = new DeflateStream(input, CompressionMode.Decompress);
-            using var output = new MemoryStream();
-            deflateStream.CopyTo(output);
-            byte[] data = output.ToArray();
-            
-            totalBytesUnpacked += data.Length;
-            result[relativePath] = data;
-            unpackedFiles++;
-            if (debug) Console.WriteLine($"Unpacked {relativePath} ({compressedData.Length} bytes)");
-        }
-
-        Console.WriteLine($"Unpacking packed text file {sourceFilePath} finished. {unpackedFiles} files unpacked in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
-        return result;
-    }
-    
     #endregion
     
     #region Legacy Binary Packer
