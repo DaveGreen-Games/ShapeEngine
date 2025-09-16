@@ -1,4 +1,6 @@
 using System.Collections;
+using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.IO.Compression;
 using System.Resources;
 using Raylib_cs;
@@ -18,8 +20,239 @@ namespace ShapeEngine.Content;
 // - loaded from a packed file (text or binary) to fill the content dictionary
 // - or additional packs can be loaded and added to the content dictionary
 
+public record PackedTextIndex
+{
+    private Dictionary<string, long> index;
+    private string sourceFilePath;
+    private bool debug;
+    public PackedTextIndex(string sourceFilePath, bool debug = false)
+    {
+        this.sourceFilePath = sourceFilePath;
+        this.debug = debug;
+        this.index = CreateIndexFromText();
+    }
+    
+    public byte[] GetData(string path)
+    {
+        return !index.TryGetValue(path, out long value) ? throw new KeyNotFoundException($"Path not found in index: {path}") : GetDataFromText(value);
+    }
+    
+    private byte[] GetDataFromText(long byteOffset)
+    {
+        using var fs = new FileStream(sourceFilePath, FileMode.Open, FileAccess.Read);
+        fs.Seek(byteOffset, SeekOrigin.Begin);
+        using var reader = new StreamReader(fs);
+        var base64Data = reader.ReadLine();
+        if (base64Data == null) throw new IndexOutOfRangeException("Index out of range.");
+        var compressedData = Convert.FromBase64String(base64Data);
+        using var input = new MemoryStream(compressedData);
+        using var deflateStream = new DeflateStream(input, CompressionMode.Decompress);
+        using var output = new MemoryStream();
+        deflateStream.CopyTo(output);
+        return output.ToArray();
+    }
+
+    private Dictionary<string, long> CreateIndexFromText()
+    {
+        var result = new Dictionary<string, long>();
+
+        if (!File.Exists(sourceFilePath))
+        {
+            Console.WriteLine($"Source file not found: {sourceFilePath}");
+            return result;
+        }
+
+        if (Path.GetExtension(sourceFilePath) != ".txt")
+        {
+            Console.WriteLine($"Source file must have a .txt extension: {sourceFilePath}");
+            return result;
+        }
+
+        var debugWatch = Stopwatch.StartNew();
+        int indexedFiles = 0;
+
+        
+        using var fs = new FileStream(sourceFilePath, FileMode.Open, FileAccess.Read);
+        using var reader = new StreamReader(fs);
+        
+        while (!reader.EndOfStream)
+        {
+            // long offset = fs.Position;
+            string? path = reader.ReadLine();
+            long dataOffset = fs.Position;
+            string? data = reader.ReadLine();
+            if (path != null && data != null)
+            {
+                result[path] = dataOffset;
+                if (debug)
+                {
+                    Console.WriteLine($"Indexed File {path} with offset {dataOffset})");
+                }
+            }
+            indexedFiles++;
+        }
+
+        Console.WriteLine($"Indexing packed text file {sourceFilePath} finished. {indexedFiles} files indexed in {debugWatch.Elapsed.TotalSeconds:F2} seconds.");
+        return result;
+    }
+}
 
 
+public class TextUnpacker
+{
+    public static Dictionary<string, byte[]> UnpackFromTextSimple(string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false)
+    {
+        var result = new Dictionary<string, byte[]>();
+
+        if (!File.Exists(sourceFilePath))
+        {
+            Console.WriteLine($"Source file not found: {sourceFilePath}");
+            return result;
+        }
+
+        if (Path.GetExtension(sourceFilePath) != ".txt")
+        {
+            Console.WriteLine($"Source file must have a .txt extension: {sourceFilePath}");
+            return result;
+        }
+
+        var debugWatch = Stopwatch.StartNew();
+        var lines = File.ReadAllLines(sourceFilePath);
+        long totalBytesUnpacked = 0;
+        int unpackedFiles = 0;
+
+        for (int i = 0; i < lines.Length; i += 2)
+        {
+            if (i + 1 >= lines.Length) break;
+
+            var relativePath = lines[i];
+
+            if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(relativePath)))
+            {
+                if (debug) Console.WriteLine($"File skipped due to extension: {Path.GetFileName(relativePath)}");
+                continue;
+            }
+
+            var base64Data = lines[i + 1];
+            var compressedData = Convert.FromBase64String(base64Data);
+            // var data = Decompress(compressedData);
+            
+            using var input = new MemoryStream(compressedData);
+            using var deflateStream = new DeflateStream(input, CompressionMode.Decompress);
+            using var output = new MemoryStream();
+            deflateStream.CopyTo(output);
+            byte[] data = output.ToArray();
+            
+            totalBytesUnpacked += data.Length;
+            result[relativePath] = data;
+            unpackedFiles++;
+            if (debug) Console.WriteLine($"Unpacked {relativePath} ({compressedData.Length} bytes)");
+        }
+
+        Console.WriteLine($"Unpacking packed text file {sourceFilePath} finished. {unpackedFiles} files unpacked in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
+        return result;
+    }
+    public static Dictionary<string, byte[]> UnpackFromText(string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false, int batchSize = 16)
+    {
+        var result = new ConcurrentDictionary<string, byte[]>();
+
+        if (!File.Exists(sourceFilePath))
+        {
+            Console.WriteLine($"Source file not found: {sourceFilePath}");
+            return new Dictionary<string, byte[]>();
+        }
+
+        if (Path.GetExtension(sourceFilePath) != ".txt")
+        {
+            Console.WriteLine($"Source file must have a .txt extension: {sourceFilePath}");
+            return new Dictionary<string, byte[]>();
+        }
+
+        var debugWatch = Stopwatch.StartNew();
+        int totalFiles = int.Parse(File.ReadLines(sourceFilePath).Last());
+        if (totalFiles <= 0)
+        {
+            Console.WriteLine("No files to unpack.");
+            return new Dictionary<string, byte[]>();
+        }
+
+        Console.WriteLine($"Batch Parallel unpacking to memory started. Batch size: {batchSize}");
+        bool finished = false;
+        int totalFilesRead = 0;
+        var debugMessages = debug ? new ConcurrentBag<string>() : null;
+
+        using var reader = new StreamReader(sourceFilePath);
+        var batchLines = new List<string>(batchSize * 2);
+
+        while (!reader.EndOfStream && !finished)
+        {
+            batchLines.Clear();
+            var firstLine = string.Empty;
+            for (int i = 0; i < batchSize * 2 && !reader.EndOfStream; i++)
+            {
+                if (totalFilesRead >= totalFiles)
+                {
+                    finished = true;
+                    break;
+                }
+                var line = reader.ReadLine();
+                if (line != null)
+                {
+                    if (firstLine == string.Empty)
+                    {
+                        firstLine = line;
+                    }
+                    else
+                    {
+                        batchLines.Add(firstLine);
+                        firstLine = string.Empty;
+                        batchLines.Add(line);
+                        totalFilesRead++;
+                    }
+                }
+            }
+
+            if (firstLine != string.Empty)
+            {
+                Console.WriteLine("Odd number of lines in file, last line ignored.");
+            }
+
+            int filesInBatch = batchLines.Count / 2;
+            Parallel.For(0, filesInBatch, i =>
+            {
+                var relativePath = batchLines[i * 2];
+                if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(relativePath)))
+                {
+                    if (debug) debugMessages?.Add($"File skipped due to extension: {Path.GetFileName(relativePath)}");
+                    return;
+                }
+
+                var base64Data = batchLines[i * 2 + 1];
+                var compressedData = Convert.FromBase64String(base64Data);
+                using var input = new MemoryStream(compressedData);
+                using var deflateStream = new DeflateStream(input, CompressionMode.Decompress);
+                using var output = new MemoryStream();
+                deflateStream.CopyTo(output);
+                byte[] data = output.ToArray();
+
+                result[relativePath] = data;
+                if (debug) debugMessages?.Add($"Unpacked {relativePath} ({compressedData.Length} bytes)");
+            });
+        }
+
+        Console.WriteLine($"Unpacking packed text file {sourceFilePath} to memory finished. {result.Count} files unpacked in {debugWatch.Elapsed.TotalSeconds:F2} seconds.");
+        if (debugMessages != null && debugMessages.Count > 0)
+        {
+            foreach (var msg in debugMessages)
+            {
+                Console.WriteLine(msg);
+            }
+        }
+        return new Dictionary<string, byte[]>(result);
+    }
+    
+    
+}
 
 /// <summary>
 /// Provides a simple class to load content that was packed with the ContentPacker.
