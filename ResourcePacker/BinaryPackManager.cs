@@ -225,6 +225,89 @@ public static class BinaryPackManager
         return true;
     }
     
+    public static bool Unpack(string outputDirectoryPath, string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false)
+    {
+        if (!File.Exists(sourceFilePath))
+        {
+            Console.WriteLine($"Packed file not found: {sourceFilePath}");
+            return false;
+        }
+        if (!Directory.Exists(outputDirectoryPath))
+        {
+            Directory.CreateDirectory(outputDirectoryPath);
+            Console.WriteLine($"Created output directory: {outputDirectoryPath}");
+        }
+    
+        var debugWatch = Stopwatch.StartNew();
+        var debugMessages = debug ? new List<string>() : [];
+    
+        using var fileStream = new FileStream(sourceFilePath, FileMode.Open, FileAccess.Read);
+        var header = new byte[12];
+        fileStream.ReadExactly(header, 0, 12);
+        int totalFiles = BitConverter.ToInt32(header, 0);
+    
+        int unpackedFiles = 0;
+        long totalBytesUnpacked = 0;
+        int currentFile = 0;
+        var sw = Stopwatch.StartNew();
+    
+        while (currentFile < totalFiles)
+        {
+            currentFile++;
+            
+            var pathLenBytes = new byte[4];
+            fileStream.ReadExactly(pathLenBytes, 0, 4);
+            int pathLen = BitConverter.ToInt32(pathLenBytes, 0);
+    
+            var pathBytes = new byte[pathLen];
+            fileStream.ReadExactly(pathBytes, 0, pathLen);
+            string relativePath = System.Text.Encoding.UTF8.GetString(pathBytes);
+    
+            var dataLenBytes = new byte[4];
+            fileStream.ReadExactly(dataLenBytes, 0, 4);
+            int dataLen = BitConverter.ToInt32(dataLenBytes, 0);
+            
+            if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(relativePath)))
+            {
+                if (debug) debugMessages.Add($"File skipped due to extension: {Path.GetFileName(relativePath)}");
+                fileStream.Position += dataLen; // skip data
+                continue;
+            }
+    
+            var compressedData = new byte[dataLen];
+            fileStream.ReadExactly(compressedData, 0, dataLen);
+    
+            using var ms = new MemoryStream(compressedData);
+            using var gzip = new GZipStream(ms, CompressionMode.Decompress);
+            using var outMs = new MemoryStream();
+            gzip.CopyTo(outMs);
+            var data = outMs.ToArray();
+            
+            unpackedFiles++;
+            totalBytesUnpacked += data.Length;
+    
+            if (sw.Elapsed.TotalMilliseconds >= ResourcePackManager.ProgressIntervalMilliseconds || currentFile == totalFiles)
+            {
+                ResourcePackManager.PrintProgressBar(currentFile, totalFiles, debugWatch.Elapsed.TotalSeconds);
+                sw.Restart();
+            }
+    
+            var filePath = Path.Combine(outputDirectoryPath, relativePath);
+            var dirPath = Path.GetDirectoryName(filePath);
+            if (dirPath != null && !Directory.Exists(dirPath))
+                Directory.CreateDirectory(dirPath);
+    
+            File.WriteAllBytes(filePath, data);
+            
+            if (debug) debugMessages.Add($"Unpacked {relativePath} ({data.Length} bytes)");
+        }
+    
+        if (debugMessages.Count > 0)
+            foreach (var msg in debugMessages) Console.WriteLine(msg);
+    
+        Console.WriteLine($"Unpacking finished. {unpackedFiles} files unpacked to {outputDirectoryPath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
+        return true;
+    }
     
     
     public static Dictionary<string, long> ReadIndexFromPackedFile(string packedFilePath)
@@ -294,9 +377,63 @@ public static class BinaryPackManager
     
     
     
-    //TODO: look at performance and memory usage
-    // can batching or parallel improve it?
-    public static bool Unpack(string outputDirectoryPath, string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false)
+    
+    public static bool UnpackIndexed_OLD( string outputDirectoryPath, string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false)
+    {
+        if (!File.Exists(sourceFilePath))
+        {
+            Console.WriteLine($"Packed file not found: {sourceFilePath}");
+            return false;
+        }
+        if (!Directory.Exists(outputDirectoryPath))
+        {
+            Directory.CreateDirectory(outputDirectoryPath);
+            Console.WriteLine($"Created output directory: {outputDirectoryPath}");
+        }
+    
+        var debugWatch = Stopwatch.StartNew();
+        var debugMessages = debug ? new List<string>() : [];
+        var index = ReadIndexFromPackedFile(sourceFilePath);
+    
+        int totalFiles = index.Count, currentFile = 0;
+        long totalBytesUnpacked = 0;
+        var sw = Stopwatch.StartNew();
+    
+        foreach (var kvp in index)
+        {
+            currentFile++;
+            if (sw.Elapsed.TotalMilliseconds >= ResourcePackManager.ProgressIntervalMilliseconds || currentFile == totalFiles)
+            {
+                ResourcePackManager.PrintProgressBar(currentFile, totalFiles, debugWatch.Elapsed.TotalSeconds);
+                sw.Restart();
+            }
+    
+            var relativePath = kvp.Key;
+            if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(relativePath)))
+            {
+                if (debug) debugMessages.Add($"File skipped due to extension: {Path.GetFileName(relativePath)}");
+                continue;
+            }
+    
+            var data = LoadFileFromPackedFile(sourceFilePath, relativePath, index);
+            var filePath = Path.Combine(outputDirectoryPath, relativePath);
+            var dirPath = Path.GetDirectoryName(filePath);
+            if (dirPath != null && !Directory.Exists(dirPath))
+                Directory.CreateDirectory(dirPath);
+    
+            File.WriteAllBytes(filePath, data);
+            totalBytesUnpacked += data.Length;
+            if (debug) debugMessages.Add($"Unpacked {relativePath} ({data.Length} bytes)");
+        }
+    
+        if (debugMessages.Count > 0)
+            foreach (var msg in debugMessages) Console.WriteLine(msg);
+    
+        Console.WriteLine($"Unpacking finished. {totalFiles} files unpacked to {outputDirectoryPath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
+        return true;
+    }
+    
+    public static bool Unpack_OLD(string outputDirectoryPath, string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false)
     {
         if (!File.Exists(sourceFilePath))
         {
@@ -314,13 +451,16 @@ public static class BinaryPackManager
         var debugMessages = debug ? new List<string>() : [];
         
         using var fileStream = new FileStream(sourceFilePath, FileMode.Open, FileAccess.Read);
-        var totalFilesBytes = new byte[4];
-        fileStream.ReadExactly(totalFilesBytes, 0, 4);
-        int totalFiles = BitConverter.ToInt32(totalFilesBytes, 0);
-        Console.WriteLine("Total files to unpack: " + totalFiles);
+        var header = new byte[12];
+        fileStream.ReadExactly(header, 0, 12);
+        int totalFiles = BitConverter.ToInt32(header, 0);
+        long totalDataBytes = BitConverter.ToInt64(header, 4);
+        
+        Console.WriteLine($"Total files to unpack: {totalFiles}. Total data bytes (compressed): {totalDataBytes}.");
         
         using var gzipStream = new GZipStream(fileStream, CompressionMode.Decompress);
         
+        long bytesRead = 0;
         long totalBytesUnpacked = 0;
         int unpackedFiles = 0;
         int currentFile = 0;
@@ -344,6 +484,13 @@ public static class BinaryPackManager
             var data = new byte[dataLen];
             gzipStream.ReadExactly(data, 0, dataLen);
 
+            bytesRead += 4 + pathLen + 4 + dataLen;
+            if(bytesRead > totalDataBytes)
+            {
+                Console.WriteLine($"Error: Read more data ({bytesRead} bytes) than expected ({totalDataBytes} bytes). The packed file may be corrupted.");
+                failed = true;
+                break;
+            }
             totalBytesUnpacked += dataLen;
             currentFile++;
             if (sw.Elapsed.TotalMilliseconds >= ResourcePackManager.ProgressIntervalMilliseconds || currentFile == totalFiles)
