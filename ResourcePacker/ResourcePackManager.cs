@@ -20,7 +20,7 @@ public static class ResourcePackManager
     public const double ProgressIntervalMilliseconds = 10.0;
     
     #region Public Interface
-    public static bool Pack(string outputFilePath, string sourceDirectoryPath, List<string>? extensionExceptions = null, bool parallel = false, bool batching = false, bool debug = false)
+    public static bool Pack(string outputFilePath, string sourceDirectoryPath, List<string>? extensionExceptions = null, bool parallel = false, bool debug = false)
     {
         if (Path.GetExtension(outputFilePath) == ".txt")
         {
@@ -30,11 +30,6 @@ public static class ResourcePackManager
             }
             
             return TextPackManager.Pack(outputFilePath, sourceDirectoryPath, extensionExceptions, debug);
-        }
-
-        if (batching)
-        {
-            return BinaryPackManager.PackBatching(outputFilePath, sourceDirectoryPath, extensionExceptions, debug);
         }
         
         if (parallel)

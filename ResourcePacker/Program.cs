@@ -114,7 +114,7 @@ class Program
             var outputFilePath = args[2];
             try
             {
-                if (!ResourcePackManager.Pack(outputFilePath, sourceDirectoryPath, extensionExceptions, isParallel, isBatching, isDebug))
+                if (!ResourcePackManager.Pack(outputFilePath, sourceDirectoryPath, extensionExceptions, isParallel, isDebug))
                 {
                     Console.WriteLine($"Error: Packing '{sourceDirectoryPath}' to '{outputFilePath}' failed!");
                 }
