@@ -20,6 +20,9 @@ namespace ShapeEngine.Content;
 // - loaded from a packed file (text or binary) to fill the content dictionary
 // - or additional packs can be loaded and added to the content dictionary
 
+
+
+//TODO: Test if it works correctly
 public record PackedTextIndex
 {
     private Dictionary<string, long> index;
@@ -29,15 +32,15 @@ public record PackedTextIndex
     {
         this.sourceFilePath = sourceFilePath;
         this.debug = debug;
-        this.index = CreateIndexFromText();
+        this.index = CreateIndex();
     }
     
     public byte[] GetData(string path)
     {
-        return !index.TryGetValue(path, out long value) ? throw new KeyNotFoundException($"Path not found in index: {path}") : GetDataFromText(value);
+        return !index.TryGetValue(path, out long value) ? throw new KeyNotFoundException($"Path not found in index: {path}") : GetDataFromIndex(value);
     }
     
-    private byte[] GetDataFromText(long byteOffset)
+    private byte[] GetDataFromIndex(long byteOffset)
     {
         using var fs = new FileStream(sourceFilePath, FileMode.Open, FileAccess.Read);
         fs.Seek(byteOffset, SeekOrigin.Begin);
@@ -51,8 +54,7 @@ public record PackedTextIndex
         deflateStream.CopyTo(output);
         return output.ToArray();
     }
-
-    private Dictionary<string, long> CreateIndexFromText()
+    private Dictionary<string, long> CreateIndex()
     {
         var result = new Dictionary<string, long>();
 
@@ -97,10 +99,11 @@ public record PackedTextIndex
     }
 }
 
-
+//TODO: Test if it works correctly
 public class TextUnpacker
 {
-    public static Dictionary<string, byte[]> UnpackFromTextSimple(string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false)
+    //TODO: is it not possible to just read 1 line after the other and process them instead of reading all lines into memory first?
+    public static Dictionary<string, byte[]> UnpackToMemorySimple(string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false)
     {
         var result = new Dictionary<string, byte[]>();
 
@@ -152,7 +155,7 @@ public class TextUnpacker
         Console.WriteLine($"Unpacking packed text file {sourceFilePath} finished. {unpackedFiles} files unpacked in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
         return result;
     }
-    public static Dictionary<string, byte[]> UnpackFromText(string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false, int batchSize = 16)
+    public static Dictionary<string, byte[]> UnpackToMemory(string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false, int batchSize = 16)
     {
         var result = new ConcurrentDictionary<string, byte[]>();
 
@@ -253,6 +256,14 @@ public class TextUnpacker
     
     
 }
+
+//TODO: Test if it works correctly
+public class BinaryUnpacker
+{
+    
+}
+
+
 
 /// <summary>
 /// Provides a simple class to load content that was packed with the ContentPacker.
