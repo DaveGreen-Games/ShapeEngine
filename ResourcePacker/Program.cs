@@ -146,34 +146,6 @@ class Program
                 Console.WriteLine($"Error: Unpacking resource pack {sourceFilePath} to {outputDirectoryPath} with exception: {ex.Message}");
             }
         }
-        else if (command == "load")
-        {
-            var sw = Stopwatch.StartNew();
-            var packedFilePath = args[1];
-            var resourceToLoad = args[2];
-            var index = BinaryPackManager.ReadIndexFromPackedFile(packedFilePath);
-            Console.WriteLine($"Index created with {index.Count} entries after {sw.ElapsedMilliseconds} ms.");
-            
-            sw.Restart();
-            var data = BinaryPackManager.LoadFileFromPackedFile(packedFilePath, resourceToLoad, index);
-            Console.WriteLine($"File: {resourceToLoad} loaded with {data.Length} bytes after {sw.ElapsedMilliseconds} ms.");
-            
-            sw.Restart();
-            if (isParallel)
-            {
-                var memory = BinaryPackManager.UnpackToMemoryParallel(packedFilePath, extensionExceptions, isDebug);
-                Console.WriteLine($"File {packedFilePath} unpacked in parallel to memory with {memory.Count} entries after {sw.ElapsedMilliseconds} ms.");
-            }
-            else
-            {
-                var memory = BinaryPackManager.UnpackToMemory(packedFilePath, extensionExceptions, isDebug);
-                Console.WriteLine($"File {packedFilePath} unpacked to memory with {memory.Count} entries after {sw.ElapsedMilliseconds} ms.");
-            }
-            
-            Console.WriteLine("Sleeping for 10 seconds to allow memory inspection.");
-            Thread.Sleep(10000);
-            
-        }
         else
         {
             Console.WriteLine($"Unknown command: {command}. Use '--help' for usage instructions.");

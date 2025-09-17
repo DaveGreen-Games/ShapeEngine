@@ -6,7 +6,6 @@ using System.Resources;
 
 namespace ResourcePacker;
 
-//TODO: test all pack/unpack functions
 //TODO: make final AI check for issues
 //TODO: add documentation comments
 
