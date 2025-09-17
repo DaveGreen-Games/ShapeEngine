@@ -5,9 +5,18 @@ using System.IO.MemoryMappedFiles;
 
 namespace ResourcePacker;
 
-//TODO: add documentation comments
 public static class BinaryPackManager
 {
+    /// <summary>
+    /// Packs all files from the specified source directory into a single binary file with optional compression.
+    /// Skips files with extensions listed in <paramref name="extensionExceptions"/>.
+    /// Writes progress and debug information if <paramref name="debug"/> is true.
+    /// </summary>
+    /// <param name="outputFilePath">The path to the output binary file.</param>
+    /// <param name="sourceDirectoryPath">The directory containing files to pack.</param>
+    /// <param name="extensionExceptions">List of file extensions to exclude from packing.</param>
+    /// <param name="debug">If true, enables verbose debug output.</param>
+    /// <returns>True if packing succeeds; otherwise, false.</returns>
     public static bool Pack(string outputFilePath, string sourceDirectoryPath, List<string>? extensionExceptions = null, bool debug = false)
     {
         if (!Directory.Exists(sourceDirectoryPath))
@@ -124,6 +133,17 @@ public static class BinaryPackManager
         Console.WriteLine($"Index written at offset {indexOffset}");
         return true;
     }
+    
+    /// <summary>
+    /// Packs all files from the specified source directory into a single binary file using parallel compression.
+    /// Skips files with extensions listed in <paramref name="extensionExceptions"/>.
+    /// Writes progress and debug information if <paramref name="debug"/> is true.
+    /// </summary>
+    /// <param name="outputFilePath">The path to the output binary file.</param>
+    /// <param name="sourceDirectoryPath">The directory containing files to pack.</param>
+    /// <param name="extensionExceptions">List of file extensions to exclude from packing.</param>
+    /// <param name="debug">If true, enables verbose debug output.</param>
+    /// <returns>True if packing succeeds; otherwise, false.</returns>
     public static bool PackParallel(string outputFilePath, string sourceDirectoryPath, List<string>? extensionExceptions = null, bool debug = false)
     {
         if (!Directory.Exists(sourceDirectoryPath))
@@ -237,6 +257,17 @@ public static class BinaryPackManager
         Console.WriteLine($"Index written at offset {indexOffset}");
         return true;
     }
+    
+    /// <summary>
+    /// Unpacks files from a packed binary file into the specified output directory.
+    /// Skips files with extensions listed in <paramref name="extensionExceptions"/>.
+    /// Writes progress and debug information if <paramref name="debug"/> is true.
+    /// </summary>
+    /// <param name="outputDirectoryPath">The directory to extract files to.</param>
+    /// <param name="sourceFilePath">The path to the packed binary file.</param>
+    /// <param name="extensionExceptions">List of file extensions to exclude from unpacking.</param>
+    /// <param name="debug">If true, enables verbose debug output.</param>
+    /// <returns>True if unpacking succeeds; otherwise, false.</returns>
     public static bool Unpack(string outputDirectoryPath, string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false)
     {
         if (!File.Exists(sourceFilePath))
@@ -332,6 +363,17 @@ public static class BinaryPackManager
         Console.WriteLine($"Unpacking finished. {unpackedFiles} files unpacked to {outputDirectoryPath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
         return true;
     }
+    
+    /// <summary>
+    /// Unpacks files from a packed binary file into the specified output directory using parallel decompression.
+    /// Skips files with extensions listed in <paramref name="extensionExceptions"/>.
+    /// Writes progress and debug information if <paramref name="debug"/> is true.
+    /// </summary>
+    /// <param name="outputDirectoryPath">The directory to extract files to.</param>
+    /// <param name="sourceFilePath">The path to the packed binary file.</param>
+    /// <param name="extensionExceptions">List of file extensions to exclude from unpacking.</param>
+    /// <param name="debug">If true, enables verbose debug output.</param>
+    /// <returns>True if unpacking succeeds; otherwise, false.</returns>
     public static bool UnpackParallel(string outputDirectoryPath, string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false)
     {
         if (!File.Exists(sourceFilePath))
@@ -457,7 +499,13 @@ public static class BinaryPackManager
         return true;
     }
     
-
+    /// <summary>
+    /// Determines if the given file extension is present in the list of extension exceptions.
+    /// Comparison is case-insensitive.
+    /// </summary>
+    /// <param name="extension">The file extension to check (including the dot, e.g. ".txt").</param>
+    /// <param name="extensionExceptions">List of file extensions to exclude.</param>
+    /// <returns>True if the extension is in the exception list; otherwise, false.</returns>
     private static bool IsExtensionException(string extension, List<string> extensionExceptions)
     {
         return extensionExceptions.Any(ext => string.Equals(ext, extension, StringComparison.OrdinalIgnoreCase));
