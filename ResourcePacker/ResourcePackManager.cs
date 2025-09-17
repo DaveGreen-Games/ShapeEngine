@@ -39,7 +39,7 @@ public static class ResourcePackManager
         
         return BinaryPackManager.Pack(outputFilePath, sourceDirectoryPath, extensionExceptions, debug);
     }
-    public static bool Unpack(string outputDirectoryPath, string sourceFilePath, List<string>? extensionExceptions = null, bool parallel = false, bool batching = false, bool debug = false)
+    public static bool Unpack(string outputDirectoryPath, string sourceFilePath, List<string>? extensionExceptions = null, bool parallel = false, bool debug = false)
     {
         if (Path.GetExtension(sourceFilePath) == ".txt")
         {
@@ -48,6 +48,10 @@ public static class ResourcePackManager
                 return TextPackManager.UnpackParallel(outputDirectoryPath, sourceFilePath, extensionExceptions, debug);
             }
             return TextPackManager.Unpack(outputDirectoryPath, sourceFilePath, extensionExceptions, debug);
+        }
+        if (parallel)
+        {
+            return BinaryPackManager.UnpackParallel(outputDirectoryPath, sourceFilePath, extensionExceptions, debug);
         }
         return BinaryPackManager.Unpack(outputDirectoryPath, sourceFilePath, extensionExceptions, debug);
     }

@@ -1,4 +1,6 @@
 ﻿
+using System.Diagnostics;
+
 namespace ResourcePacker;
 
 //TODO: make final AI check for issues
@@ -27,13 +29,19 @@ class Program
         Console.WriteLine("Source code available at: https://github.com/DaveGreen-Games/ShapeEngine");
         Console.WriteLine("Use at your own risk. No warranties provided.");
         Console.WriteLine("ResourcePacker can:\n" +
-                          " - pack directories into binary files.\n" +
+                          " - pack directories into binary files using gzip with this layout:.\n" +
+                          "  - Total Files packed (4 bytes)\n" +
+                          "  - Total Bytes packed (8 bytes). Used for offset to skip data block.\n" +
+                          "  - Data block with [path length][path][data length][data] layout. path length & data length have 4 bytes.\n" +
+                          "  - Index with [path length][path][data length] layout used for fast random access\n" +
                           " - unpack packed binary files into directories.\n" +
-                          " - pack directories into text files with each file taking up 2 lines:\n" +
-                          "  - 1st line = filename.\n" +
-                          "  - 2nd line =  binary data of the file compressed to a string.\n" +
-                          " - unpack text files into directories.\n" +
-                          " - resource packs are always compressed.\n");
+                          " - pack directories into text files with this layout:\n" +
+                          "  - Data block with each resource file taking up 2 lines:\n" +
+                          "   - 1st line = filename.\n" +
+                          "   - 2nd line = binary data of the file compressed to a string.\n" +
+                          "  - Empty Line.\n" +
+                          "  - Number of packed files.\n" +
+                          " - unpack text files into directories.\n");
         Console.WriteLine("Use '--help' for usage instructions.");
         Console.WriteLine("Remarks:\n" +
                           " - ResourcePacker does not modify or delete any source files or directories.\n" +
@@ -60,8 +68,7 @@ class Program
                             "Flags:\n" +
                                 "  --exceptions <.ext1> <.ext2> ... : Optional flag to specify file extensions to exclude when packing/unpacking directories.\n" +
                                 "  --debug : Optional flag to enable debug mode for detailed logging during operations.\n" +
-                                "  --batching : Optional flag to enable batching mode for pack command possible reducing memory peak usage.\n" +
-                                "  --parallel : Optional flag to enable parallel file reading mode for pack command possible increasing speed. (only works for binary packing system)\n" +
+                                "  --parallel : Optional flag to enable parallel packing/unpacking possible increasing speed at the cost of increase memory usage.\n" +
                             "Examples:\n" +
                                 "  ./ResourcePacker pack ./backgroundMusic ./packedMusic.res\n" +
                                 "  ./ResourcePacker pack ./assets ./packedResources.txt\n" +
@@ -88,10 +95,6 @@ class Program
         bool isParallel = false;
         int parallelIndex = Array.IndexOf(args, "--parallel");
         if(parallelIndex > 2) isParallel = true;
-        
-        bool isBatching = false;
-        int batchingIndex = Array.IndexOf(args, "--batching");
-        if(batchingIndex > 2) isBatching = true;
         
         int exceptionsIndex = Array.IndexOf(args, "--exceptions");
         List<string>? extensionExceptions = null;
@@ -132,7 +135,7 @@ class Program
 
             try
             {
-                if (!ResourcePackManager.Unpack(outputDirectoryPath, sourceFilePath, extensionExceptions, isParallel, isBatching, isDebug))
+                if (!ResourcePackManager.Unpack(outputDirectoryPath, sourceFilePath, extensionExceptions, isParallel, isDebug))
                 {
                     Console.WriteLine($"Error: Unpacking '{sourceFilePath}' to '{outputDirectoryPath}' failed!");
                 }
@@ -142,6 +145,34 @@ class Program
             {
                 Console.WriteLine($"Error: Unpacking resource pack {sourceFilePath} to {outputDirectoryPath} with exception: {ex.Message}");
             }
+        }
+        else if (command == "load")
+        {
+            var sw = Stopwatch.StartNew();
+            var packedFilePath = args[1];
+            var resourceToLoad = args[2];
+            var index = BinaryPackManager.ReadIndexFromPackedFile(packedFilePath);
+            Console.WriteLine($"Index created with {index.Count} entries after {sw.ElapsedMilliseconds} ms.");
+            
+            sw.Restart();
+            var data = BinaryPackManager.LoadFileFromPackedFile(packedFilePath, resourceToLoad, index);
+            Console.WriteLine($"File: {resourceToLoad} loaded with {data.Length} bytes after {sw.ElapsedMilliseconds} ms.");
+            
+            sw.Restart();
+            if (isParallel)
+            {
+                var memory = BinaryPackManager.UnpackToMemoryParallel(packedFilePath, extensionExceptions, isDebug);
+                Console.WriteLine($"File {packedFilePath} unpacked in parallel to memory with {memory.Count} entries after {sw.ElapsedMilliseconds} ms.");
+            }
+            else
+            {
+                var memory = BinaryPackManager.UnpackToMemory(packedFilePath, extensionExceptions, isDebug);
+                Console.WriteLine($"File {packedFilePath} unpacked to memory with {memory.Count} entries after {sw.ElapsedMilliseconds} ms.");
+            }
+            
+            Console.WriteLine("Sleeping for 10 seconds to allow memory inspection.");
+            Thread.Sleep(10000);
+            
         }
         else
         {
