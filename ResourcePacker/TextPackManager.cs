@@ -4,6 +4,7 @@ using System.IO.Compression;
 
 namespace ResourcePacker;
 
+//TODO: add documentation comments
 public static class TextPackManager
 {
     public static bool Pack(string outputFilePath, string sourceDirectoryPath, List<string>? extensionExceptions = null, bool debug = false)

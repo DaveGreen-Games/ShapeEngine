@@ -5,6 +5,7 @@ using System.IO.MemoryMappedFiles;
 
 namespace ResourcePacker;
 
+//TODO: add documentation comments
 public static class BinaryPackManager
 {
     public static bool Pack(string outputFilePath, string sourceDirectoryPath, List<string>? extensionExceptions = null, bool debug = false)
@@ -393,6 +394,7 @@ public static class BinaryPackManager
             // Second pass: decompress and write in parallel
             Parallel.ForEach(entries, entry =>
             {
+                // ReSharper disable once AccessToDisposedClosure
                 using var viewStream = mmf.CreateViewStream(entry.dataOffset, entry.dataLen, MemoryMappedFileAccess.Read);
                 // using var fs = new FileStream(sourceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
                 // fs.Position = entry.dataOffset;

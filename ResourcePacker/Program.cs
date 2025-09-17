@@ -1,7 +1,4 @@
-﻿
-using System.Diagnostics;
-
-namespace ResourcePacker;
+﻿namespace ResourcePacker;
 
 //TODO: make final AI check for issues
 
@@ -29,11 +26,11 @@ class Program
         Console.WriteLine("Source code available at: https://github.com/DaveGreen-Games/ShapeEngine");
         Console.WriteLine("Use at your own risk. No warranties provided.");
         Console.WriteLine("ResourcePacker can:\n" +
-                          " - pack directories into binary files using gzip with this layout:.\n" +
-                          "  - Total Files packed (4 bytes)\n" +
+                          " - pack directories into binary files using gzip with this layout:\n" +
+                          "  - Total Files packed (4 bytes).\n" +
                           "  - Total Bytes packed (8 bytes). Used for offset to skip data block.\n" +
                           "  - Data block with [path length][path][data length][data] layout. path length & data length have 4 bytes.\n" +
-                          "  - Index with [path length][path][data length] layout used for fast random access\n" +
+                          "  - Index with [path length][path][data length] layout used for fast random access.\n" +
                           " - unpack packed binary files into directories.\n" +
                           " - pack directories into text files with this layout:\n" +
                           "  - Data block with each resource file taking up 2 lines:\n" +

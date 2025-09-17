@@ -1,8 +1,3 @@
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Diagnostics;
-using System.IO.Compression;
-using System.Resources;
 
 namespace ResourcePacker;
 
