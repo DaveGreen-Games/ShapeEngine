@@ -4,9 +4,18 @@ using System.IO.Compression;
 
 namespace ResourcePacker;
 
-//TODO: add documentation comments
 public static class TextPackManager
 {
+    /// <summary>
+    /// Packs all files from the specified source directory into a single text file.
+    /// Each file is compressed and encoded in Base64, with its relative path stored.
+    /// Optionally skips files with specified extensions and provides debug output.
+    /// </summary>
+    /// <param name="outputFilePath">The path to the output .txt file.</param>
+    /// <param name="sourceDirectoryPath">The directory containing files to pack.</param>
+    /// <param name="extensionExceptions">List of file extensions to skip (optional).</param>
+    /// <param name="debug">Enables debug output if true.</param>
+    /// <returns>True if packing succeeds, false otherwise.</returns>
     public static bool Pack(string outputFilePath, string sourceDirectoryPath, List<string>? extensionExceptions = null, bool debug = false)
     {
         if(!Directory.Exists(sourceDirectoryPath))
@@ -87,6 +96,17 @@ public static class TextPackManager
         Console.WriteLine($"File packing finished. With {totalFilesPacked} files packed to {outputFilePath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes packed: {totalBytesPacked}");
         return true;
     }
+    
+    /// <summary>
+    /// Packs all files from the specified source directory into a single text file using parallel processing.
+    /// Each file is compressed and encoded in Base64, with its relative path stored.
+    /// Optionally skips files with specified extensions and provides debug output.
+    /// </summary>
+    /// <param name="outputFilePath">The path to the output .txt file.</param>
+    /// <param name="sourceDirectoryPath">The directory containing files to pack.</param>
+    /// <param name="extensionExceptions">List of file extensions to skip (optional).</param>
+    /// <param name="debug">Enables debug output if true.</param>
+    /// <returns>True if packing succeeds, false otherwise.</returns>
     public static bool PackParallel(string outputFilePath, string sourceDirectoryPath, List<string>? extensionExceptions = null, bool debug = false)
     {
         if(!Directory.Exists(sourceDirectoryPath))
@@ -183,6 +203,17 @@ public static class TextPackManager
         return true;
     }
     
+    /// <summary>
+    /// Unpacks files from a packed text file into the specified output directory.
+    /// Each file is decompressed and decoded from Base64, with its relative path restored.
+    /// Optionally skips files with specified extensions, provides debug output, and processes files in batches.
+    /// </summary>
+    /// <param name="outputDirectoryPath">The directory to extract files to.</param>
+    /// <param name="sourceFilePath">The packed .txt file to unpack.</param>
+    /// <param name="extensionExceptions">List of file extensions to skip (optional).</param>
+    /// <param name="debug">Enables debug output if true.</param>
+    /// <param name="batchSize">Number of files to process per batch.</param>
+    /// <returns>True if unpacking succeeds, false otherwise.</returns>
     public static bool Unpack(string outputDirectoryPath, string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false, int batchSize = 16)
     {
         if (!File.Exists(sourceFilePath))
@@ -312,6 +343,18 @@ public static class TextPackManager
         Console.WriteLine($"Batch unpacking finished. {totalFilesUnpacked} files unpacked to {outputDirectoryPath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
         return true;
     }
+    
+    /// <summary>
+    /// Unpacks files from a packed text file into the specified output directory using parallel processing.
+    /// Each file is decompressed and decoded from Base64, with its relative path restored.
+    /// Optionally skips files with specified extensions, provides debug output, and processes files in batches.
+    /// </summary>
+    /// <param name="outputDirectoryPath">The directory to extract files to.</param>
+    /// <param name="sourceFilePath">The packed .txt file to unpack.</param>
+    /// <param name="extensionExceptions">List of file extensions to skip (optional).</param>
+    /// <param name="debug">Enables debug output if true.</param>
+    /// <param name="batchSize">Number of files to process per batch.</param>
+    /// <returns>True if unpacking succeeds, false otherwise.</returns>
     public static bool UnpackParallel(string outputDirectoryPath, string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false, int batchSize = 16)
     {
         if (!File.Exists(sourceFilePath))
@@ -440,6 +483,11 @@ public static class TextPackManager
         return true;
     }
     
+    /// <summary>
+    /// Decompresses a byte array using the Deflate algorithm.
+    /// </summary>
+    /// <param name="data">The compressed byte array to decompress.</param>
+    /// <returns>The decompressed byte array.</returns>
     private static byte[] Decompress(byte[] data)
     {
         using var input = new MemoryStream(data);
@@ -448,6 +496,12 @@ public static class TextPackManager
         deflateStream.CopyTo(output);
         return output.ToArray();
     }
+    
+    /// <summary>
+    /// Compresses a byte array using the Deflate algorithm.
+    /// </summary>
+    /// <param name="data">The byte array to compress.</param>
+    /// <returns>The compressed byte array.</returns>
     private static byte[] Compress(byte[] data)
     {
         using var output = new MemoryStream();
@@ -458,10 +512,23 @@ public static class TextPackManager
         return output.ToArray();
     }
     
+    /// <summary>
+    /// Checks if the given file extension matches the valid extension.
+    /// </summary>
+    /// <param name="extension">The file extension to check.</param>
+    /// <param name="validExtension">The valid extension to compare against. Defaults to ".txt".</param>
+    /// <returns>True if the extension matches the valid extension, false otherwise.</returns>
     private static bool IsExtensionValid(string extension, string validExtension = ".txt")
     {
         return string.Equals(extension, validExtension, StringComparison.OrdinalIgnoreCase);
     }
+    
+    /// <summary>
+    /// Checks if the given file extension is present in the list of extension exceptions.
+    /// </summary>
+    /// <param name="extension">The file extension to check.</param>
+    /// <param name="extensionExceptions">The list of file extensions to skip.</param>
+    /// <returns>True if the extension is in the exception list, false otherwise.</returns>
     private static bool IsExtensionException(string extension, List<string> extensionExceptions)
     {
         return extensionExceptions.Any(ext => string.Equals(ext, extension, StringComparison.OrdinalIgnoreCase));
