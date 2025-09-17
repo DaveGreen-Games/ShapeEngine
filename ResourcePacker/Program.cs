@@ -1,6 +1,5 @@
 ﻿namespace ResourcePacker;
 
-//TODO: make final AI check for issues
 
 class Program
 {
@@ -14,7 +13,8 @@ class Program
     /// Flags:
     /// <list type="bullet">
     /// <item>--debug</item>
-    /// <item>--extensions .txt .json .xml and so on</item>
+    /// <item>--exceptions .txt .json .xml and so on</item>
+    /// <item>--parallel for parallel processing</item>
     /// </list>
     /// </summary>
     /// <param name="args">command line arguments</param>
@@ -85,17 +85,19 @@ class Program
             return;
         }
         
+        var command = args[0].ToLower();
+        
         bool isDebug = false;
         int debugIndex = Array.IndexOf(args, "--debug");
-        if(debugIndex > 2) isDebug = true;
+        if(debugIndex > 0) isDebug = true;
         
         bool isParallel = false;
         int parallelIndex = Array.IndexOf(args, "--parallel");
-        if(parallelIndex > 2) isParallel = true;
+        if(parallelIndex > 0) isParallel = true;
         
         int exceptionsIndex = Array.IndexOf(args, "--exceptions");
         List<string>? extensionExceptions = null;
-        if (exceptionsIndex > 2)
+        if (exceptionsIndex > 0)
         {
             extensionExceptions = [];
             for (int i = exceptionsIndex + 1; i < args.Length; i++)
@@ -106,8 +108,6 @@ class Program
             }
         }
         
-        var command = args[0].ToLower();
-
         if (command == "pack")
         {
             var sourceDirectoryPath = args[1];
