@@ -40,6 +40,7 @@ class Program
                           "  - Number of packed files.\n" +
                           " - unpack text files into directories.\n");
         Console.WriteLine("Use '--help' for usage instructions.");
+        Console.WriteLine("Open a terminal at the folder containing ResourcePacker.exe and run commands starting with './ResourcePacker'.");
         Console.WriteLine("Remarks:\n" +
                           " - ResourcePacker does not modify or delete any source files or directories.\n" +
                           " - Using .txt extension for the sourceFilePath in unpack or the outputFilePath in pack uses the text based packing system. Any other extensions will use the binary packing system.\n" +
