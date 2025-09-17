@@ -20,7 +20,7 @@ public static class TextPackManager
             return false;
         }
 
-        if (Path.GetExtension(outputFilePath) != ".txt")
+        if (!IsExtensionValid(Path.GetExtension(outputFilePath)))
         {
             Console.WriteLine($"Output file extension must be .txt: {outputFilePath}");
             return false;
@@ -44,7 +44,7 @@ public static class TextPackManager
         int totalFilesPacked = 0;
         var sw = Stopwatch.StartNew();
         var debugMessages = debug ? new List<string>(total) : [];
-        Console.WriteLine($"Text File packing started with {total} files. Batch");
+        Console.WriteLine($"Text File packing started with {total} files.");
         using var writer = new StreamWriter(outputFilePath, false);
 
         foreach (string file in files)
@@ -56,7 +56,7 @@ public static class TextPackManager
                 sw.Restart();
             }
 
-            if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(file)))
+            if (extensionExceptions != null && IsExtensionException(Path.GetExtension(file), extensionExceptions))
             {
                 if (debug) debugMessages.Add($"File skipped due to extension: {Path.GetFileName(file)}");
                 continue;
@@ -100,7 +100,7 @@ public static class TextPackManager
             return false;
         }
 
-        if (Path.GetExtension(outputFilePath) != ".txt")
+        if (!IsExtensionValid(Path.GetExtension(outputFilePath)))
         {
             Console.WriteLine($"Output file extension must be .txt: {outputFilePath}");
             return false;
@@ -143,9 +143,9 @@ public static class TextPackManager
                 }
     
                 var file = files[j];
-                if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(file)))
+                if (extensionExceptions != null && IsExtensionException(Path.GetExtension(file), extensionExceptions))
                 {
-                    debugMessages?.Add($"File skipped due to extension: {Path.GetFileName(file)}");
+                    if (debug) debugMessages?.Add($"File skipped due to extension: {Path.GetFileName(file)}");
                     continue;
                 }
                 writer.WriteLine(Path.GetRelativePath(sourceDirectoryPath, file));
@@ -181,6 +181,7 @@ public static class TextPackManager
         Console.WriteLine($"File packing finished. {total} files packed to {outputFilePath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds.");
         return true;
     }
+    
     public static bool Unpack(string outputDirectoryPath, string sourceFilePath, List<string>? extensionExceptions = null, bool debug = false, int batchSize = 16)
     {
         if (!File.Exists(sourceFilePath))
@@ -188,7 +189,7 @@ public static class TextPackManager
             Console.WriteLine($"Source file not found: {sourceFilePath}");
             return false;
         }
-        if (Path.GetExtension(sourceFilePath) != ".txt")
+        if (!IsExtensionValid(Path.GetExtension(sourceFilePath)))
         {
             Console.WriteLine($"Source file must have a .txt extension: {sourceFilePath}");
             return false;
@@ -199,15 +200,15 @@ public static class TextPackManager
             Console.WriteLine($"Directory created: {outputDirectoryPath}");
         }
 
-        var debugWatch = Stopwatch.StartNew();
-        int current = 0;
-        int totalFiles = int.Parse(File.ReadLines(sourceFilePath).Last());
-        if (totalFiles <= 0)
+        var lastLine = File.ReadLines(sourceFilePath).LastOrDefault();
+        if (lastLine == null || !int.TryParse(lastLine, out int totalFiles) || totalFiles <= 0)
         {
-            Console.WriteLine("No files to unpack.");
+            Console.WriteLine("Pack file is malformed or contains no files to unpack.");
             return false;
         }
 
+        var debugWatch = Stopwatch.StartNew();
+        int current = 0;
         bool finished = false;
         int totalFilesRead = 0;
         long totalBytesUnpacked = 0;
@@ -264,7 +265,7 @@ public static class TextPackManager
                 }
                 
                 var relativePath = batchLines[i * 2];
-                if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(relativePath)))
+                if (extensionExceptions != null && IsExtensionException(Path.GetExtension(relativePath), extensionExceptions))
                 {
                     if (debug) debugMessages.Add($"File skipped due to extension: {Path.GetFileName(relativePath)}");
                     continue;
@@ -305,7 +306,7 @@ public static class TextPackManager
             Console.WriteLine($"Source file not found: {sourceFilePath}");
             return false;
         }
-        if (Path.GetExtension(sourceFilePath) != ".txt")
+        if (!IsExtensionValid(Path.GetExtension(sourceFilePath)))
         {
             Console.WriteLine($"Source file must have a .txt extension: {sourceFilePath}");
             return false;
@@ -315,21 +316,22 @@ public static class TextPackManager
             Directory.CreateDirectory(outputDirectoryPath);
             Console.WriteLine($"Directory created: {outputDirectoryPath}");
         }
-
+        
+        var lastLine = File.ReadLines(sourceFilePath).LastOrDefault();
+        if (lastLine == null || !int.TryParse(lastLine, out int totalFiles) || totalFiles <= 0)
+        {
+            Console.WriteLine("Pack file is malformed or contains no files to unpack.");
+            return false;
+        }
+        
         bool finished = false;
         var debugWatch = Stopwatch.StartNew();
         int current = 0;
-        int totalFiles = int.Parse(File.ReadLines(sourceFilePath).Last());
-        if (totalFiles <= 0)
-        {
-            Console.WriteLine("No files to unpack.");
-            return false;
-        }
         int totalFilesRead = 0;
         long totalBytesUnpacked = 0;
         int totalFilesUnpacked = 0;
         var sw = Stopwatch.StartNew();
-        var debugMessages = debug ? new List<string>() : [];
+        var debugMessages = debug ? new ConcurrentBag<string>() : null;
         Console.WriteLine($"Batch Parallel unpacking started. Batch size: {batchSize}");
 
         using var reader = new StreamReader(sourceFilePath);
@@ -371,9 +373,9 @@ public static class TextPackManager
             Parallel.For(0, filesInBatch, i =>
             {
                 var relativePath = batchLines[i * 2];
-                if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(relativePath)))
+                if (extensionExceptions != null && IsExtensionException(Path.GetExtension(relativePath), extensionExceptions))
                 {
-                    if (debug) lock (debugMessages) debugMessages.Add($"File skipped due to extension: {Path.GetFileName(relativePath)}");
+                    if (debug) debugMessages?.Add($"File skipped due to extension: {Path.GetFileName(relativePath)}");
                     return;
                 }
 
@@ -389,7 +391,7 @@ public static class TextPackManager
 
                 Interlocked.Add(ref totalBytesUnpacked, data.Length);
                 Interlocked.Increment(ref totalFilesUnpacked);
-                if (debug) lock (debugMessages) debugMessages.Add($" -File {filePath} has been unpacked with {compressedData.Length} bytes.");
+                if (debug)  debugMessages?.Add($" -File {filePath} has been unpacked with {compressedData.Length} bytes.");
                 Interlocked.Increment(ref current);
                 if (sw.Elapsed.TotalMilliseconds >= ResourcePackManager.ProgressIntervalMilliseconds)
                 {
@@ -401,7 +403,7 @@ public static class TextPackManager
 
         ResourcePackManager.PrintProgressBar(current, totalFiles, debugWatch.Elapsed.TotalSeconds);
         
-        if (debugMessages.Count > 0)
+        if (debugMessages != null && debugMessages.Count > 0)
         {
             foreach (var msg in debugMessages)
             {
@@ -412,6 +414,7 @@ public static class TextPackManager
         Console.WriteLine($"Batch unpacking finished. {totalFilesUnpacked} files unpacked to {outputDirectoryPath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
         return true;
     }
+    
     private static byte[] Decompress(byte[] data)
     {
         using var input = new MemoryStream(data);
@@ -422,11 +425,21 @@ public static class TextPackManager
     }
     private static byte[] Compress(byte[] data)
     {
-        var output = new MemoryStream();
+        using var output = new MemoryStream();
         using (var deflateStream = new DeflateStream(output, CompressionLevel.Optimal))
         {
             deflateStream.Write(data, 0, data.Length);
         }
         return output.ToArray();
     }
+    
+    private static bool IsExtensionValid(string extension, string validExtension = ".txt")
+    {
+        return string.Equals(extension, validExtension, StringComparison.OrdinalIgnoreCase);
+    }
+    private static bool IsExtensionException(string extension, List<string> extensionExceptions)
+    {
+        return extensionExceptions.Any(ext => string.Equals(ext, extension, StringComparison.OrdinalIgnoreCase));
+    }
+
 }
