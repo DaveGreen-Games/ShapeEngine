@@ -255,7 +255,7 @@ public static class TextPackManager
             }
 
             int filesInBatch = batchLines.Count / 2;
-            for (int i = 0; i < filesInBatch; i++)
+            for (var i = 0; i < filesInBatch; i++)
             {
                 current++;
                 if (sw.Elapsed.TotalMilliseconds >= ResourcePackManager.ProgressIntervalMilliseconds)
@@ -264,21 +264,33 @@ public static class TextPackManager
                     sw.Restart();
                 }
                 
-                var relativePath = batchLines[i * 2];
+                string relativePath = batchLines[i * 2];
                 if (extensionExceptions != null && IsExtensionException(Path.GetExtension(relativePath), extensionExceptions))
                 {
                     if (debug) debugMessages.Add($"File skipped due to extension: {Path.GetFileName(relativePath)}");
                     continue;
                 }
 
-                var filePath = Path.Combine(outputDirectoryPath, relativePath);
-                var dirPath = Path.GetDirectoryName(filePath);
+                string filePath = Path.Combine(outputDirectoryPath, relativePath);
+                
+                //check for path traversal, eg "../../somefile.txt" would extract outside of outputDirectoryPath
+                string fullOutputDir = Path.GetFullPath(outputDirectoryPath);
+                string fullFilePath = Path.GetFullPath(filePath);
+                if (!fullFilePath.StartsWith(fullOutputDir, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (debug) debugMessages.Add($"Skipped file due to path traversal: {relativePath}. File would be extracted outside of the output directory {outputDirectoryPath}.");
+                    continue;
+                }
+                
+                string? dirPath = Path.GetDirectoryName(filePath);
                 if (dirPath != null && !Directory.Exists(dirPath))
+                {
                     Directory.CreateDirectory(dirPath);
+                }
 
-                var base64Data = batchLines[i * 2 + 1];
-                var compressedData = Convert.FromBase64String(base64Data);
-                var data = Decompress(compressedData);
+                string base64Data = batchLines[i * 2 + 1];
+                byte[] compressedData = Convert.FromBase64String(base64Data);
+                byte[] data = Decompress(compressedData);
                 File.WriteAllBytes(filePath, data);
                 totalBytesUnpacked += data.Length;
                 totalFilesUnpacked++;
@@ -372,21 +384,33 @@ public static class TextPackManager
             int filesInBatch = batchLines.Count / 2;
             Parallel.For(0, filesInBatch, i =>
             {
-                var relativePath = batchLines[i * 2];
+                string relativePath = batchLines[i * 2];
                 if (extensionExceptions != null && IsExtensionException(Path.GetExtension(relativePath), extensionExceptions))
                 {
                     if (debug) debugMessages?.Add($"File skipped due to extension: {Path.GetFileName(relativePath)}");
                     return;
                 }
 
-                var filePath = Path.Combine(outputDirectoryPath, relativePath);
-                var dirPath = Path.GetDirectoryName(filePath);
+                string filePath = Path.Combine(outputDirectoryPath, relativePath);
+                
+                //check for path traversal, eg "../../somefile.txt" would extract outside of outputDirectoryPath
+                var fullOutputDir = Path.GetFullPath(outputDirectoryPath);
+                var fullFilePath = Path.GetFullPath(filePath);
+                if (!fullFilePath.StartsWith(fullOutputDir, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (debug) debugMessages?.Add($"Skipped file due to path traversal: {relativePath}. File would be extracted outside of the output directory {outputDirectoryPath}.");
+                    return;
+                }
+                
+                string? dirPath = Path.GetDirectoryName(filePath);
                 if (dirPath != null && !Directory.Exists(dirPath))
+                {
                     Directory.CreateDirectory(dirPath);
+                }
 
-                var base64Data = batchLines[i * 2 + 1];
-                var compressedData = Convert.FromBase64String(base64Data);
-                var data = Decompress(compressedData);
+                string base64Data = batchLines[i * 2 + 1];
+                byte[] compressedData = Convert.FromBase64String(base64Data);
+                byte[] data = Decompress(compressedData);
                 File.WriteAllBytes(filePath, data);
 
                 Interlocked.Add(ref totalBytesUnpacked, data.Length);
