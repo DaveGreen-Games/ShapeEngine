@@ -98,6 +98,7 @@ class Program
                                     if (packIndex >= 0)
                                     {
                                         args = ConstructCommand(true);
+                                        if(args.Length <= 0) continue;
                                         var success = ProcessArguments(args);
                                         if (success)
                                         {
@@ -116,6 +117,7 @@ class Program
                                     if (unpackIndex >= 0)
                                     {
                                         args = ConstructCommand(false);
+                                        if (args.Length <= 0) continue;
                                         var success = ProcessArguments(args);
                                         if (success)
                                         {
