@@ -1,7 +1,5 @@
 ﻿namespace ResourcePacker;
 
-//TODO: Implement double clicking the exe and writing commands in terminal window (see github copilot suggestions)
-
 class Program
 {
     /// <summary>
@@ -150,182 +148,295 @@ class Program
 
     private static string[] ConstructCommand(bool pack)
     {
-        if (pack)
-        {
-            List<string> commandParts = ["pack"];
-            bool commandFinished = false;
-            
-            Console.WriteLine("Starting packing command construction.");
-            
-            while (!commandFinished)
-            {
-                if (commandParts.Count == 1)
-                {
-                    Console.WriteLine($"Current command entry: {string.Join(' ', commandParts)}");
-                    Console.WriteLine("write 'exit', 'quit', 'close' or 'done' to stop command construction.");
-                    Console.WriteLine("Please enter the source directory path to pack:");
-                    Console.Write("> ");
-                    var input = Console.ReadLine();
-                    if (!string.IsNullOrWhiteSpace(input))
-                    {
-                        if(input.Equals("exit", StringComparison.OrdinalIgnoreCase) || 
-                           input.Equals("quit", StringComparison.OrdinalIgnoreCase) || 
-                           input.Equals("close", StringComparison.OrdinalIgnoreCase) || 
-                           input.Equals("done", StringComparison.OrdinalIgnoreCase))
-                        {
-                            Console.WriteLine("Exiting command construction.");
-                            return [];
-                        }
-                        
-                        if (Path.HasExtension(input))
-                        {
-                            Console.WriteLine("Source directory path should not have a file extension. Please try again.");
-                        }
-                        else if(Directory.Exists(input))
-                        {
-                            commandParts.Add(input);
-                            Console.WriteLine($"Source directory path added to command: {input}");
-                        }
-                        else
-                        {
-                            Console.WriteLine("Invalid source directory path. Please try again.");
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("No input detected. Please try again.");
-                    }
-                }
-                else if (commandParts.Count == 2)
-                {
-                    Console.WriteLine($"Current command entry: {string.Join(' ', commandParts)}");
-                    Console.WriteLine("write 'exit', 'quit', 'close' or 'done' to stop command construction.");
-                    Console.WriteLine("Please enter the output file path:");
-                    Console.Write("> ");
-                    var input = Console.ReadLine();
-                    if (!string.IsNullOrWhiteSpace(input))
-                    {
-                        if(input.Equals("exit", StringComparison.OrdinalIgnoreCase) || 
-                           input.Equals("quit", StringComparison.OrdinalIgnoreCase) || 
-                           input.Equals("close", StringComparison.OrdinalIgnoreCase) || 
-                           input.Equals("done", StringComparison.OrdinalIgnoreCase))
-                        {
-                            Console.WriteLine("Exiting command construction.");
-                            return [];
-                        }
-                        
-                        if (Path.HasExtension(input))
-                        {
-                            commandParts.Add(input);
-                            Console.WriteLine($"Output file path added to command: {input}");
-                            commandFinished = true;
-                        }
-                        else
-                        {
-                            Console.WriteLine("Output file path should have a file extension. Please try again.");
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("No input detected. Please try again.");
-                    }
-                }
-                else
-                {
-                    //TODO: add possibility to add flags like --debug, --exceptions .ext1 .ext2 and so on
-                }
-            }
-            return commandParts.ToArray();
-        }
-        else
-        {
-            List<string> commandParts = ["unpack"];
-            bool commandFinished = false;
-            
-            Console.WriteLine("Starting unpacking command construction.");
-            
-            while (!commandFinished)
-            {
-                if (commandParts.Count == 1)
-                {
-                    Console.WriteLine($"Current command entry: {string.Join(' ', commandParts)}");
-                    Console.WriteLine("write 'exit', 'quit', 'close' or 'done' to stop command construction.");
-                    Console.WriteLine("Please enter the source file path to unpack:");
-                    Console.Write("> ");
-                    var input = Console.ReadLine();
-                    if (!string.IsNullOrWhiteSpace(input))
-                    {
-                        if(input.Equals("exit", StringComparison.OrdinalIgnoreCase) || 
-                           input.Equals("quit", StringComparison.OrdinalIgnoreCase) || 
-                           input.Equals("close", StringComparison.OrdinalIgnoreCase) || 
-                           input.Equals("done", StringComparison.OrdinalIgnoreCase))
-                        {
-                            Console.WriteLine("Exiting command construction.");
-                            return [];
-                        }
-                        
-                        if (Path.HasExtension(input))
-                        {
-                            commandParts.Add(input);
-                            Console.WriteLine($"Source file path added to command: {input}");
-                            commandFinished = true;
-                        }
-                        else
-                        {
-                            Console.WriteLine("Source file path should have a file extension. Please try again.");
-                        }
-                        
-                    }
-                    else
-                    {
-                        Console.WriteLine("No input detected. Please try again.");
-                    }
-                }
-                else if (commandParts.Count == 2)
-                {
-                    Console.WriteLine($"Current command entry: {string.Join(' ', commandParts)}");
-                    Console.WriteLine("write 'exit', 'quit', 'close' or 'done' to stop command construction.");
-                    Console.WriteLine("Please enter the output directory  path:");
-                    Console.Write("> ");
-                    var input = Console.ReadLine();
-                    if (!string.IsNullOrWhiteSpace(input))
-                    {
-                        if(input.Equals("exit", StringComparison.OrdinalIgnoreCase) || 
-                           input.Equals("quit", StringComparison.OrdinalIgnoreCase) || 
-                           input.Equals("close", StringComparison.OrdinalIgnoreCase) || 
-                           input.Equals("done", StringComparison.OrdinalIgnoreCase))
-                        {
-                            Console.WriteLine("Exiting command construction.");
-                            return [];
-                        }
-                        
-                        if (Path.HasExtension(input))
-                        {
-                            Console.WriteLine("Output directory path should not have a file extension. Please try again.");
-                        }
-                        else if(Directory.Exists(input))
-                        {
-                            commandParts.Add(input);
-                            Console.WriteLine($"Output directory path added to command: {input}");
-                        }
-                        else
-                        {
-                            Console.WriteLine("Invalid output directory path. Please try again.");
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("No input detected. Please try again.");
-                    }
-                }
-                else
-                {
-                    //TODO: add possibility to add flags like --debug, --exceptions .ext1 .ext2 and so on
-                }
-            }
-            return commandParts.ToArray();
-        }
+        return pack ? ConstructPackCommand() : ConstructUnpackCommand();
+    }
+    private static string[] ConstructPackCommand()
+    {
+        List<string> commandParts = ["pack"];
+        // bool commandFinished = false;
+        bool debugEnabled = false;
+        bool parallelEnabled = false;
+        bool exceptionsEnabled = false;
+        int totalFlagsEnabled = 0;
+        int maxFlags = 3;
+        Console.WriteLine("Starting packing command construction.");
         
+        int safetyCounter = 0;
+        
+        while (true)
+        {
+            safetyCounter++;
+            if (safetyCounter > 100)
+            {
+                Console.WriteLine("Packing command construction failed. Too many tries. Please try again.");
+                return [];
+            }
+            
+            if (commandParts.Count == 1)
+            {
+                Console.WriteLine($"Current command entry: {string.Join(' ', commandParts)}");
+                Console.WriteLine("Write 'exit' to cancel command construction.");
+                Console.WriteLine("Please enter the source directory path to pack:");
+                Console.Write("> ");
+                var input = Console.ReadLine();
+                if (!string.IsNullOrWhiteSpace(input))
+                {
+                    if(input.Equals("exit", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Console.WriteLine("Exiting command construction.");
+                        return [];
+                    }
+                    
+                    if (Path.HasExtension(input))
+                    {
+                        Console.WriteLine("Source directory path should not have a file extension. Please try again.");
+                    }
+                    else if(Directory.Exists(input))
+                    {
+                        commandParts.Add(input);
+                        Console.WriteLine($"Source directory path added to command: {input}");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Invalid source directory path. Please try again.");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("No input detected. Please try again.");
+                }
+            }
+            else if (commandParts.Count == 2)
+            {
+                Console.WriteLine($"Current command entry: {string.Join(' ', commandParts)}");
+                Console.WriteLine("Write 'exit' to cancel command construction.");
+                Console.WriteLine("Please enter the output file path:");
+                Console.Write("> ");
+                var input = Console.ReadLine();
+                if (!string.IsNullOrWhiteSpace(input))
+                {
+                    if(input.Equals("exit", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Console.WriteLine("Exiting command construction.");
+                        return [];
+                    }
+                    
+                    if (Path.HasExtension(input))
+                    {
+                        commandParts.Add(input);
+                        Console.WriteLine($"Output file path added to command: {input}");
+                        // commandFinished = true;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Output file path should have a file extension. Please try again.");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("No input detected. Please try again.");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Current command entry: {string.Join(' ', commandParts)}");
+                Console.WriteLine("Write 'exit' to cancel command construction.");
+                Console.WriteLine("Write 'done' to finish command construction.");
+                Console.WriteLine($"Please enter optional flags " +
+                                  $"(" +
+                                  $"--debug{(debugEnabled ? " [ENABLED]" : "")}, " +
+                                  $"--parallel{(parallelEnabled ? " [ENABLED]" : "")}, " +
+                                  $"--exceptions{(exceptionsEnabled ? " [ENABLED]" : "")}" +
+                                  $"). Enabled {totalFlagsEnabled}/{maxFlags}:");
+                Console.Write("> ");
+                var input = Console.ReadLine();
+                if (!string.IsNullOrWhiteSpace(input))
+                {
+                    var inputSplit = input.Split(' ');
+                    var cancelIndex = Array.IndexOf(inputSplit, "exit");
+                    if (cancelIndex >= 0)
+                    {
+                        Console.WriteLine("Exiting command construction.");
+                        return [];
+                    }
+
+                    int currentFlagsEnabled = 0;
+                    var debugIndex = Array.IndexOf(inputSplit, "--debug");
+                    if (debugIndex >= 0)
+                    {
+                        if (debugEnabled)
+                        {
+                            Console.WriteLine("Debugging flag was already enabled. Ignoring duplicate.");
+                        }
+                        else
+                        {
+                            debugEnabled = true;
+                            commandParts.Add("--debug");
+                            Console.WriteLine("Debug flag enabled.");
+                            currentFlagsEnabled++;
+                            totalFlagsEnabled++;
+                        }
+                        
+                    }
+                    
+                    var parallelIndex = Array.IndexOf(inputSplit, "--parallel");
+                    if (parallelIndex >= 0)
+                    {
+                        if (parallelEnabled)
+                        {
+                            Console.WriteLine("Parallel flag was already enabled. Ignoring duplicate.");
+                        }
+                        else
+                        {
+                            parallelEnabled = true;
+                            commandParts.Add("--parallel");
+                            Console.WriteLine("Parallel flag enabled.");
+                            currentFlagsEnabled++;
+                            totalFlagsEnabled++;
+                        }
+                    }
+                    
+                    var exceptionsIndex = Array.IndexOf(inputSplit, "--exceptions");
+                    if (exceptionsIndex >= 0)
+                    {
+                        if (exceptionsEnabled)
+                        {
+                            Console.WriteLine("Exceptions flag was already enabled. Ignoring duplicate.");
+                        }
+                        else
+                        {
+                            List<string> extensionExceptions = [];
+                            for (int i = exceptionsIndex + 1; i < inputSplit.Length; i++)
+                            {
+                                string arg = inputSplit[i];
+                                if (!arg.StartsWith('.')) break;
+                                extensionExceptions.Add(inputSplit[i]);
+                            }
+
+                            if (extensionExceptions.Count > 0)
+                            {
+                                exceptionsEnabled = true;
+                                commandParts.Add("--exceptions");
+                                commandParts.AddRange(extensionExceptions);
+                                Console.WriteLine($"Exceptions flag enabled with exceptions: {string.Join(' ', extensionExceptions)}");
+                                currentFlagsEnabled++;
+                                totalFlagsEnabled++;
+                            }
+                            else
+                            {
+                                Console.WriteLine("No valid extensions provided for --exceptions flag. Please try again.");
+                            }
+                        }
+                    }
+
+                    if (totalFlagsEnabled >= maxFlags)
+                    {
+                        Console.WriteLine($"{currentFlagsEnabled} flags added. Maximum amount of {maxFlags} flags enabled. Finishing command construction.");
+                        return commandParts.ToArray();
+                    }
+                    
+                    var doneIndex = Array.IndexOf(inputSplit, "done");
+                    if (doneIndex >= 0)
+                    {
+                        Console.WriteLine($"Command construction finished with {currentFlagsEnabled} enabled flags.");
+                        return commandParts.ToArray();
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("No input detected. Please try again.");
+                }
+            }
+        }
+    }
+    private static string[] ConstructUnpackCommand()
+    {
+        List<string> commandParts = ["unpack"];
+        bool commandFinished = false;
+        
+        Console.WriteLine("Starting unpacking command construction.");
+        
+        while (!commandFinished)
+        {
+            if (commandParts.Count == 1)
+            {
+                Console.WriteLine($"Current command entry: {string.Join(' ', commandParts)}");
+                Console.WriteLine("write 'exit', 'quit', 'close' or 'done' to stop command construction.");
+                Console.WriteLine("Please enter the source file path to unpack:");
+                Console.Write("> ");
+                var input = Console.ReadLine();
+                if (!string.IsNullOrWhiteSpace(input))
+                {
+                    if(input.Equals("exit", StringComparison.OrdinalIgnoreCase) || 
+                       input.Equals("quit", StringComparison.OrdinalIgnoreCase) || 
+                       input.Equals("close", StringComparison.OrdinalIgnoreCase) || 
+                       input.Equals("done", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Console.WriteLine("Exiting command construction.");
+                        return [];
+                    }
+                    
+                    if (Path.HasExtension(input))
+                    {
+                        commandParts.Add(input);
+                        Console.WriteLine($"Source file path added to command: {input}");
+                        commandFinished = true;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Source file path should have a file extension. Please try again.");
+                    }
+                    
+                }
+                else
+                {
+                    Console.WriteLine("No input detected. Please try again.");
+                }
+            }
+            else if (commandParts.Count == 2)
+            {
+                Console.WriteLine($"Current command entry: {string.Join(' ', commandParts)}");
+                Console.WriteLine("write 'exit', 'quit', 'close' or 'done' to stop command construction.");
+                Console.WriteLine("Please enter the output directory  path:");
+                Console.Write("> ");
+                var input = Console.ReadLine();
+                if (!string.IsNullOrWhiteSpace(input))
+                {
+                    if(input.Equals("exit", StringComparison.OrdinalIgnoreCase) || 
+                       input.Equals("quit", StringComparison.OrdinalIgnoreCase) || 
+                       input.Equals("close", StringComparison.OrdinalIgnoreCase) || 
+                       input.Equals("done", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Console.WriteLine("Exiting command construction.");
+                        return [];
+                    }
+                    
+                    if (Path.HasExtension(input))
+                    {
+                        Console.WriteLine("Output directory path should not have a file extension. Please try again.");
+                    }
+                    else if(Directory.Exists(input))
+                    {
+                        commandParts.Add(input);
+                        Console.WriteLine($"Output directory path added to command: {input}");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Invalid output directory path. Please try again.");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("No input detected. Please try again.");
+                }
+            }
+            else
+            {
+                //TODO: add possibility to add flags like --debug, --exceptions .ext1 .ext2 and so on
+            }
+        }
+
+        return commandParts.ToArray();
     }
     private static void PrintHelp()
     {
