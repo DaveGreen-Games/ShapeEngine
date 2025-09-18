@@ -192,8 +192,16 @@ class Program
                     }
                     else if(Directory.Exists(input))
                     {
-                        commandParts.Add(input);
-                        Console.WriteLine($"Source directory path added to command: {input}");
+                        int fileCount = FileCount(input);
+                        if (fileCount <= 0)
+                        {
+                            Console.WriteLine("Source directory contains 0 files. Please choose a directory with files to pack.");
+                        }
+                        else
+                        {
+                            commandParts.Add(input);
+                            Console.WriteLine($"Source directory path added to command: {input}. Directory contains {fileCount} files.");
+                        }
                     }
                     else
                     {
@@ -222,9 +230,45 @@ class Program
                     
                     if (Path.HasExtension(input))
                     {
-                        commandParts.Add(input);
-                        Console.WriteLine($"Output file path added to command: {input}");
-                        // commandFinished = true;
+                        if (File.Exists(input))
+                        {
+                            Console.WriteLine($"File {input} already exists! Do you want to overwrite it? (yes/no)");
+                            Console.Write("> ");
+                            int overwriteSafetyCounter = 0;
+                            while (true)
+                            {
+                                var overwriteInput = Console.ReadLine();
+                                if (!string.IsNullOrWhiteSpace(overwriteInput))
+                                {
+                                    if (overwriteInput.Equals("yes", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        commandParts.Add(input);
+                                        Console.WriteLine($"Output file path added to command: {input}. File will be overwritten.");
+                                        break;
+                                    }
+                                    if (overwriteInput.Equals("no", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        Console.WriteLine($"Output file path not added to command due to existing file {input}.");
+                                        break;
+                                    }
+                                }
+                                
+                                Console.WriteLine("Unknown input. Please answer with 'yes' or 'no'.");
+                                Console.Write("> ");
+                                
+                                overwriteSafetyCounter++;
+                                if (overwriteSafetyCounter > 10)
+                                {
+                                    Console.WriteLine($"To many tries! Output file path not added to command due to existing file {input}.");
+                                    break;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            commandParts.Add(input);
+                            Console.WriteLine($"Output file path added to command: {input}");
+                        }
                     }
                     else
                     {
@@ -343,7 +387,8 @@ class Program
                 }
                 else
                 {
-                    Console.WriteLine("No input detected. Please try again.");
+                    Console.WriteLine("No flags added. Command construction finished.");
+                    return commandParts.ToArray();
                 }
             }
         }
@@ -440,8 +485,49 @@ class Program
                         }
                         else
                         {
-                            commandParts.Add(input);
-                            Console.WriteLine($"Source directory path added to command: {input}");
+                            if (Directory.Exists(input))
+                            {
+                                int fileCount = FileCount(input);
+                                if (fileCount > 0)
+                                {
+                                    Console.WriteLine($"Output directory {input} already exists and contains {fileCount} files! Do you want to unpack anyway? (yes/no)");
+                                    Console.Write("> ");
+                                    int overwriteSafetyCounter = 0;
+                                    while (true)
+                                    {
+                                        var overwriteInput = Console.ReadLine();
+                                        if (!string.IsNullOrWhiteSpace(overwriteInput))
+                                        {
+                                            if (overwriteInput.Equals("yes", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                commandParts.Add(input);
+                                                Console.WriteLine($"Output directory path added to command: {input}. Files may be overwritten.");
+                                                break;
+                                            }
+                                            if (overwriteInput.Equals("no", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                Console.WriteLine($"Output directory path not added to command due to existing {fileCount} files in directory {input}.");
+                                                break;
+                                            }
+                                        }
+                                        
+                                        Console.WriteLine("Unknown input. Please answer with 'yes' or 'no'.");
+                                        Console.Write("> ");
+                                
+                                        overwriteSafetyCounter++;
+                                        if (overwriteSafetyCounter > 10)
+                                        {
+                                            Console.WriteLine($"To many tries! Output directory path not added to command due to existing file {input}.");
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                commandParts.Add(input);
+                                Console.WriteLine($"Source directory path added to command: {input}");
+                            }
                         }
                     }
                 }
@@ -557,11 +643,36 @@ class Program
                 }
                 else
                 {
-                    Console.WriteLine("No input detected. Please try again.");
+                    Console.WriteLine("No flags added. Command construction finished.");
+                    return commandParts.ToArray();
                 }
             }
         }
     }
+    
+    private static bool HasFilesOrSubdirs(string path)
+    {
+        return Directory.GetFiles(path).Length > 0 || Directory.GetDirectories(path).Length > 0;
+    }
+    private static int SubdirectoryCount(string path)
+    {
+        return Directory.GetDirectories(path, "*", SearchOption.AllDirectories).Length;
+    }
+    private static int FileCount(string path)
+    {
+        return Directory.GetFiles(path, "*", SearchOption.AllDirectories).Length;
+    }
+    
+    // private static long GetDirectorySize(string path)
+    // {
+    //     long size = 0;
+    //     foreach (var file in Directory.GetFiles(path, "*", SearchOption.AllDirectories))
+    //     {
+    //         size += new FileInfo(file).Length;
+    //     }
+    //     return size;
+    // }
+    
     private static void PrintHelp()
     {
         Console.WriteLine(
