@@ -7,34 +7,30 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Content;
 
-//NOTE: Handles loading from packed files (text or binary) to memory
-//NOTE: Handles index creation and data retrieval
 
-
-//TODO: Unify into ContentPack -> Constructor allows to set unpack mode (memory/indexed) and source file path
-// this way abstract is no needed and the only class is ContentPack
-
-public abstract class ContentPack
+public enum UnpackMode
 {
-    public bool IsLoaded { get; protected set; } = false;
-    
-    public abstract byte[]? GetFileData(string filePath);
-    public abstract bool HasFile(string filePath);
-    
-    public abstract bool LoadContent(bool parallelProcessing = false, List<string>? extensionExceptions = null,  bool debugLogging = false);
-    public abstract bool ClearCache();
+    None,
+    Memory,
+    Indexed
 }
 
-public sealed class ContentPackMemory : ContentPack
+//TODO: change console write line to debuglogger
+//TODO: add logging for errors and info in most functions
+public abstract class ContentPack
 {
-    private Dictionary<string, byte[]> cache = new();
-
-    public int TextFileUnpackBatchSize = 16;
-    public long CacheSize { get; private set; } = 0;
-    public readonly bool IsTextPack;
+    public bool IsLoaded => UnpackMode != UnpackMode.None;
+    public UnpackMode UnpackMode { get; private set; } = UnpackMode.None;
     public readonly string SourceFilePath;
-
-    public ContentPackMemory(string sourceFilePath)
+    public readonly bool IsTextPack;
+    public long CacheSize { get; private set; }
+    
+    public bool DebugLogging = false;
+    
+    private Dictionary<string, byte[]> cache = new();
+    private Dictionary<string, long> index = new();
+    
+    public ContentPack(string sourceFilePath)
     {
         if(!Path.HasExtension(sourceFilePath))
         {
@@ -45,16 +41,23 @@ public sealed class ContentPackMemory : ContentPack
         IsTextPack = Path.GetExtension(sourceFilePath).Equals(".txt", StringComparison.CurrentCultureIgnoreCase);
     }
     
-    public override byte[]? GetFileData(string filePath)
+    
+    public byte[]? GetFileData(string filePath)
     {
-        return !HasFile(filePath) ? null : cache[filePath];
+        if(!IsLoaded) return null;
+        if(!HasFile(filePath)) return null;
+        if(UnpackMode == UnpackMode.Memory) return cache[filePath];
+        
+        if(IsTextPack) return index.TryGetValue(filePath, out long offsetText) ? GetDataFromTextIndex(offsetText) : null;
+        return index.TryGetValue(filePath, out long offsetFile) ? GetDataFromFileIndex(offsetFile) : null;
     }
-    public override bool HasFile(string filePath)
+    public bool HasFile(string filePath)
     {
-        return cache.ContainsKey(filePath);
+        if(!IsLoaded) return false;
+        return UnpackMode == UnpackMode.Memory ? cache.ContainsKey(filePath) : index.ContainsKey(filePath);
     }
 
-    public override bool LoadContent(bool parallelProcessing = false, List<string>? extensionExceptions = null,  bool debugLogging = false)
+    public bool CreateCache(bool parallelProcessing = false, List<string>? extensionExceptions = null, int textFileUnpackingBatchSize = 16)
     {
         if (IsLoaded) return false;
         if (!File.Exists(SourceFilePath))
@@ -67,12 +70,12 @@ public sealed class ContentPackMemory : ContentPack
         {
             if (parallelProcessing)
             {
-                cache = UnpackTextToMemoryParallel(SourceFilePath, out long cacheSize, extensionExceptions, debugLogging, TextFileUnpackBatchSize);
+                cache = UnpackTextToMemoryParallel(SourceFilePath, out long cacheSize, extensionExceptions, DebugLogging, textFileUnpackingBatchSize);
                 CacheSize = cacheSize;
             }
             else
             {
-                cache = UnpackTextToMemory(SourceFilePath, out long cacheSize, extensionExceptions, debugLogging);
+                cache = UnpackTextToMemory(SourceFilePath, out long cacheSize, extensionExceptions, DebugLogging);
                 CacheSize = cacheSize;
             }
         }
@@ -80,12 +83,12 @@ public sealed class ContentPackMemory : ContentPack
         {
             if (parallelProcessing)
             {
-                cache = UnpackFileToMemoryParallel(SourceFilePath, out long cacheSize, extensionExceptions, debugLogging);
+                cache = UnpackFileToMemoryParallel(SourceFilePath, out long cacheSize, extensionExceptions, DebugLogging);
                 CacheSize = cacheSize;
             }
             else
             {
-                cache = UnpackFileToMemory(SourceFilePath, out long cacheSize, extensionExceptions, debugLogging);
+                cache = UnpackFileToMemory(SourceFilePath, out long cacheSize, extensionExceptions, DebugLogging);
                 CacheSize = cacheSize;
             }
         }
@@ -93,25 +96,54 @@ public sealed class ContentPackMemory : ContentPack
         if (cache.Count <= 0)
         {
             CacheSize = 0;
-            IsLoaded = false;
             return false;
         }
 
-        IsLoaded = true;
+        UnpackMode = UnpackMode.Memory;
         return true;
+        
     }
+    
+    public bool CreateIndex()
+    {
+        if (IsLoaded) return false;
+        if (!File.Exists(SourceFilePath))
+        {
+            ShapeLogger.LogError($"ContentPackMemory LoadContent() failed.  Source file not found: {SourceFilePath}");
+            return false;
+        }
+        
+        if (IsTextPack)
+        {
+            index = CreateTextIndex();
+        }
+        else
+        {
+            index = CreateFileIndex();
+        }
 
-    public override bool ClearCache()
+        if (index.Count <= 0)
+        {
+            return false;
+        }
+
+        UnpackMode = UnpackMode.Indexed;
+        return true;
+        
+    }
+    
+    public bool Clear()
     {
         if (!IsLoaded) return false;
-        IsLoaded = false;
         CacheSize = 0;
         cache.Clear();
+        index.Clear();
+        UnpackMode = UnpackMode.None;
         return true;
     }
     
-    #region Unpacking
-    //TODO: change console write line to debuglogger
+    #region Unpack To Memory
+    
     public static Dictionary<string, byte[]> UnpackFileToMemory(string sourceFilePath, out long totalBytesUnpacked, List<string>? extensionExceptions = null, bool debug = false)
     {
         totalBytesUnpacked = 0;
@@ -414,27 +446,124 @@ public sealed class ContentPackMemory : ContentPack
         return new Dictionary<string, byte[]>(result);
     }
     #endregion
-}
-
-public sealed class ContentPackIndexed : ContentPack
-{
-    public override byte[]? GetFileData(string filePath)
+    
+    #region Index
+    private Dictionary<string, long> CreateFileIndex()
     {
-        throw new NotImplementedException();
-    }
+        var result = new Dictionary<string, long>();
+        using var fs = new FileStream(SourceFilePath, FileMode.Open, FileAccess.Read);
+    
+        // Read total files (4 bytes) and index offset (8 bytes)
+        var header = new byte[12];
+        fs.ReadExactly(header, 0, 12);
+        long indexOffset = BitConverter.ToInt64(header, 4);
+    
+        fs.Position = indexOffset;
+        var countBytes = new byte[4];
+        fs.ReadExactly(countBytes, 0, 4);
+        int count = BitConverter.ToInt32(countBytes, 0);
+    
+        for (int i = 0; i < count; i++)
+        {
+            var pathLenBytes = new byte[4];
+            fs.ReadExactly(pathLenBytes, 0, 4);
+            int pathLen = BitConverter.ToInt32(pathLenBytes, 0);
+    
+            var pathBytes = new byte[pathLen];
+            fs.ReadExactly(pathBytes, 0, pathLen);
+            string path = System.Text.Encoding.UTF8.GetString(pathBytes);
+    
+            var offsetBytes = new byte[8];
+            fs.ReadExactly(offsetBytes, 0, 8);
+            long offset = BitConverter.ToInt64(offsetBytes, 0);
 
-    public override bool HasFile(string filePath)
-    {
-        throw new NotImplementedException();
+            result[path] = offset;
+        }
+        return result;
     }
+    private Dictionary<string, long> CreateTextIndex()
+    {
+        var result = new Dictionary<string, long>();
 
-    public override bool LoadContent(bool parallelProcessing = false, List<string>? extensionExceptions = null,  bool debugLogging = false)
-    {
-        throw new NotImplementedException();
-    }
+        if (!File.Exists(SourceFilePath))
+        {
+            Console.WriteLine($"Source file not found: {SourceFilePath}");
+            return result;
+        }
 
-    public override bool ClearCache()
-    {
-        throw new NotImplementedException();
+        if (Path.GetExtension(SourceFilePath) != ".txt")
+        {
+            Console.WriteLine($"Source file must have a .txt extension: {SourceFilePath}");
+            return result;
+        }
+
+        var debugWatch = Stopwatch.StartNew();
+        int indexedFiles = 0;
+
+        
+        using var fs = new FileStream(SourceFilePath, FileMode.Open, FileAccess.Read);
+        using var reader = new StreamReader(fs);
+        
+        while (!reader.EndOfStream)
+        {
+            // long offset = fs.Position;
+            string? path = reader.ReadLine();
+            long dataOffset = fs.Position;
+            string? data = reader.ReadLine();
+            if (path != null && data != null)
+            {
+                result[path] = dataOffset;
+                if (DebugLogging)
+                {
+                    Console.WriteLine($"Indexed File {path} with offset {dataOffset})");
+                }
+            }
+            indexedFiles++;
+        }
+
+        Console.WriteLine($"Indexing packed text file {SourceFilePath} finished. {indexedFiles} files indexed in {debugWatch.Elapsed.TotalSeconds:F2} seconds.");
+        return result;
     }
+    
+    private byte[] GetDataFromFileIndex(long byteOffset)
+    {
+        using var fs = new FileStream(SourceFilePath, FileMode.Open, FileAccess.Read);
+        fs.Position = byteOffset;
+    
+        // Read header: [path length][path][data length]
+        var pathLenBytes = new byte[4];
+        fs.ReadExactly(pathLenBytes, 0, 4);
+        int pathLen = BitConverter.ToInt32(pathLenBytes, 0);
+    
+        fs.Position += pathLen; // skip path bytes
+    
+        var dataLenBytes = new byte[4];
+        fs.ReadExactly(dataLenBytes, 0, 4);
+        int dataLen = BitConverter.ToInt32(dataLenBytes, 0);
+    
+        var compressedData = new byte[dataLen];
+        fs.ReadExactly(compressedData, 0, dataLen);
+    
+        using var ms = new MemoryStream(compressedData);
+        using var gzip = new GZipStream(ms, CompressionMode.Decompress);
+        using var outMs = new MemoryStream();
+        gzip.CopyTo(outMs);
+        return outMs.ToArray();
+    }
+    private byte[] GetDataFromTextIndex(long byteOffset)
+    {
+        using var fs = new FileStream(SourceFilePath, FileMode.Open, FileAccess.Read);
+        fs.Seek(byteOffset, SeekOrigin.Begin);
+        using var reader = new StreamReader(fs);
+        var base64Data = reader.ReadLine();
+        if (base64Data == null) throw new IndexOutOfRangeException("Index out of range.");
+        var compressedData = Convert.FromBase64String(base64Data);
+        using var input = new MemoryStream(compressedData);
+        using var deflateStream = new DeflateStream(input, CompressionMode.Decompress);
+        using var output = new MemoryStream();
+        deflateStream.CopyTo(output);
+        return output.ToArray();
+    }
+    
+    #endregion
 }
