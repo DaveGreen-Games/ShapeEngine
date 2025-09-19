@@ -2,6 +2,18 @@ using Raylib_cs;
 
 namespace ShapeEngine.Content;
 
+
+
+//TODO: save content with filepath as well (can retrieve it later and prevents loading the same content multiple times)
+//NOTE: ContentManager handles content packs
+// -> load looks if content is available in a content pack first
+// -> if not found, load from file system
+// -> when closing, unloads all content that was loaded through it
+// -> content pack can be unloaded separately if needed (unloads all content loaded from it)
+// -> content pack can be added/removed from content manager
+// -> content pack can be queried if it contains a specific file
+
+
 /// <summary>
 /// Provides a simple class to load content and automatically unload all loaded content when close is called.
 /// </summary>

@@ -8,19 +8,20 @@ using ShapeEngine.StaticLib;
 namespace ShapeEngine.Content;
 
 
-public enum UnpackMode
-{
-    None,
-    Memory,
-    Indexed
-}
-
 //TODO: change console write line to debuglogger
 //TODO: add logging for errors and info in most functions
 public abstract class ContentPack
 {
-    public bool IsLoaded => UnpackMode != UnpackMode.None;
-    public UnpackMode UnpackMode { get; private set; } = UnpackMode.None;
+    public enum UnpackMode
+    {
+        None,
+        Memory,
+        Indexed
+    }
+    
+    #region Members
+    public bool IsLoaded => CurrentUnpackMode != UnpackMode.None;
+    public UnpackMode CurrentUnpackMode { get; private set; } = UnpackMode.None;
     public readonly string SourceFilePath;
     public readonly bool IsTextPack;
     public long CacheSize { get; private set; }
@@ -29,6 +30,9 @@ public abstract class ContentPack
     
     private Dictionary<string, byte[]> cache = new();
     private Dictionary<string, long> index = new();
+    #endregion
+
+    #region Public
     
     public ContentPack(string sourceFilePath)
     {
@@ -41,12 +45,11 @@ public abstract class ContentPack
         IsTextPack = Path.GetExtension(sourceFilePath).Equals(".txt", StringComparison.CurrentCultureIgnoreCase);
     }
     
-    
     public byte[]? GetFileData(string filePath)
     {
         if(!IsLoaded) return null;
         if(!HasFile(filePath)) return null;
-        if(UnpackMode == UnpackMode.Memory) return cache[filePath];
+        if(CurrentUnpackMode == UnpackMode.Memory) return cache[filePath];
         
         if(IsTextPack) return index.TryGetValue(filePath, out long offsetText) ? GetDataFromTextIndex(offsetText) : null;
         return index.TryGetValue(filePath, out long offsetFile) ? GetDataFromFileIndex(offsetFile) : null;
@@ -54,7 +57,7 @@ public abstract class ContentPack
     public bool HasFile(string filePath)
     {
         if(!IsLoaded) return false;
-        return UnpackMode == UnpackMode.Memory ? cache.ContainsKey(filePath) : index.ContainsKey(filePath);
+        return CurrentUnpackMode == UnpackMode.Memory ? cache.ContainsKey(filePath) : index.ContainsKey(filePath);
     }
 
     public bool CreateCache(bool parallelProcessing = false, List<string>? extensionExceptions = null, int textFileUnpackingBatchSize = 16)
@@ -99,7 +102,7 @@ public abstract class ContentPack
             return false;
         }
 
-        UnpackMode = UnpackMode.Memory;
+        CurrentUnpackMode = UnpackMode.Memory;
         return true;
         
     }
@@ -127,7 +130,7 @@ public abstract class ContentPack
             return false;
         }
 
-        UnpackMode = UnpackMode.Indexed;
+        CurrentUnpackMode = UnpackMode.Indexed;
         return true;
         
     }
@@ -138,9 +141,11 @@ public abstract class ContentPack
         CacheSize = 0;
         cache.Clear();
         index.Clear();
-        UnpackMode = UnpackMode.None;
+        CurrentUnpackMode = UnpackMode.None;
         return true;
     }
+    
+    #endregion
     
     #region Unpack To Memory
     

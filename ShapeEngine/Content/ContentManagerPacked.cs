@@ -7,39 +7,7 @@ using Raylib_cs;
 
 namespace ShapeEngine.Content;
 
-//TODO: Combine ContentManagerPacked and ContentManager into one class (called ContentManager) and
-// add all static stuff from ContentLoader as well.
-
-//NOTE: The new ContentManager has a nullable content dictionary.
-// When loading resources, manager first checks if
-// content is available and contains the requested resource. If so, it loads from there.
-// If not, it falls back to loading from file system.
-
-//NOTE: At any time content can be:
-// - cleared (set to null) to free up memory
-// - loaded from a packed file (text or binary) to fill the content dictionary
-// - or additional packs can be loaded and added to the content dictionary
-
-
-public class ContentManagerNew
-{
-    //NOTE:
-    // -Can load from disk
-    // -Handles ContentPacks
-    
-    //Old if ContentPack approach is used!
-    // -Can load from packed content (text or binary) into memory
-    // -Can load from packed content (text or binary) and add it to existing content in memory
-    // -Can clear content in memory
-    // -Good aproach is to load to memory, load all content from data and then clear memory
-    // -If content is not in memory, it will load from disk, otherwise from memory
-    
-    
-    //!!! This class should unify ContentManager, ContentManagerPacked, and ContentLoader into 1 class.
-    
-    //NOTE: The best option would be to have this class handle index loading as well, but how? 
-    //NOTE: Maybe have a ContentPack class that handles the index and data loading, and ContentManagerNew can have a list of ContentPacks?
-}
+//TODO: Will be combined into 1 class called ContentManager!
 
 /// <summary>
 /// Provides a simple class to load content that was packed with the ContentPacker.
