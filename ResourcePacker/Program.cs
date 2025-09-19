@@ -649,30 +649,10 @@ class Program
             }
         }
     }
-    
-    private static bool HasFilesOrSubdirs(string path)
-    {
-        return Directory.GetFiles(path).Length > 0 || Directory.GetDirectories(path).Length > 0;
-    }
-    private static int SubdirectoryCount(string path)
-    {
-        return Directory.GetDirectories(path, "*", SearchOption.AllDirectories).Length;
-    }
     private static int FileCount(string path)
     {
         return Directory.GetFiles(path, "*", SearchOption.AllDirectories).Length;
     }
-    
-    // private static long GetDirectorySize(string path)
-    // {
-    //     long size = 0;
-    //     foreach (var file in Directory.GetFiles(path, "*", SearchOption.AllDirectories))
-    //     {
-    //         size += new FileInfo(file).Length;
-    //     }
-    //     return size;
-    // }
-    
     private static void PrintHelp()
     {
         Console.WriteLine(
@@ -794,3 +774,21 @@ class Program
         return false;
     }
 }
+
+// private static bool HasFilesOrSubdirs(string path)
+// {
+//     return Directory.GetFiles(path).Length > 0 || Directory.GetDirectories(path).Length > 0;
+// }
+// private static int SubdirectoryCount(string path)
+// {
+//     return Directory.GetDirectories(path, "*", SearchOption.AllDirectories).Length;
+// }
+// private static long GetDirectorySize(string path)
+// {
+//     long size = 0;
+//     foreach (var file in Directory.GetFiles(path, "*", SearchOption.AllDirectories))
+//     {
+//         size += new FileInfo(file).Length;
+//     }
+//     return size;
+// }
