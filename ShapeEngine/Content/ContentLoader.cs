@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Raylib_cs;
 using ShapeEngine.Core.GameDef;
+using ShapeEngine.StaticLib;
 
 
 namespace ShapeEngine.Content;
@@ -25,7 +26,7 @@ public static class ContentLoader
     /// <summary>
     /// Valid file extensions for different resource types
     /// </summary>
-    private static readonly Dictionary<ContentType, string[]> ValidExtensions = new()
+    private static readonly Dictionary<ContentType, HashSet<string>> ValidExtensions = new()
     {
         { ContentType.Font, [".ttf", ".otf"] },
         { ContentType.ShaderFragment, [".fs", ".glsl", ".frag"] },
@@ -113,12 +114,23 @@ public static class ContentLoader
             .Where(file => IsValidResourceFile(file, contentType))
             .ToArray();
     }
-
+    /// <summary>
+    /// Checks if the given file extension is valid for the specified content type.
+    /// </summary>
+    /// <param name="extension">The file extension to check (e.g. ".png").</param>
+    /// <param name="contentType">The content type to validate against.</param>
+    /// <returns>True if the extension is valid for the content type; otherwise, false.</returns>
     public static bool IsValidExtension(string extension, ContentType contentType)
     {
         return ValidExtensions.ContainsKey(contentType) && ValidExtensions[contentType].Contains(extension);
     }
-
+    /// <summary>
+    /// Gets the <see cref="ContentType"/> associated with a given file extension.
+    /// </summary>
+    /// <param name="extension">The file extension to check (e.g. ".png").</param>
+    /// <returns>
+    /// The corresponding <see cref="ContentType"/> if the extension is valid; otherwise, null.
+    /// </returns>
     public static ContentType? GetContentType(string extension)
     {
         foreach (var kvp in ValidExtensions)
@@ -128,7 +140,111 @@ public static class ContentLoader
 
         return null;
     }
+    /// <summary>
+    /// Gets a list of valid file extensions for the specified content type.
+    /// </summary>
+    /// <param name="contentType">The content type to retrieve valid extensions for.</param>
+    /// <returns>A list of valid file extensions for the given content type.</returns>
+    public static List<string> GetValidFileExtensions(ContentType contentType)
+    {
+        return ValidExtensions.TryGetValue(contentType, out var extension) ? extension.ToList() : [];
+    }
+    /// <summary>
+    /// Adds a valid file extension for the specified <see cref="ContentType"/>.
+    /// Automatically adds a '.' prefix if missing.
+    /// </summary>
+    /// <param name="contentType">The content type to associate the extension with.</param>
+    /// <param name="extension">The file extension to add (e.g. ".png").</param>
+    /// <returns>True if the extension was added; false if it already existed.</returns>
+    public static bool AddValidFileExtension(ContentType contentType, string extension)
+    {
+        if (!extension.StartsWith('.'))
+        {
+            ShapeLogger.LogInfo($"ContentLoader AddValidFileExtension: Automatically added '.' prefix to extension {extension}.");
+            extension = "." + extension;
+        }
 
+        if (ValidExtensions.TryGetValue(contentType, out var value))
+        {
+            return value.Add(extension);
+        }
+        
+        ValidExtensions[contentType] = [extension];
+        return true;
+    }
+    /// <summary>
+    /// Adds multiple valid file extensions for the specified <see cref="ContentType"/>.
+    /// </summary>
+    /// <param name="contentType">The content type to associate the extensions with.</param>
+    /// <param name="extensions">An array of file extensions to add (e.g. ".png", ".jpg").</param>
+    /// <returns>The number of extensions that were added (not already present).</returns>
+    public static int AddValidFileExtensions(ContentType contentType, params string[] extensions)
+    {
+        var addedCount = 0;
+
+        if(ValidExtensions.TryGetValue(contentType, out var value))
+        {
+            foreach (string ext in extensions)
+            {
+               if(value.Add(ext)) addedCount++;
+            }
+        }
+        else
+        {
+            addedCount = extensions.Length;
+            ValidExtensions[contentType] = new HashSet<string>(extensions);
+        }
+        return addedCount;
+    }
+    /// <summary>
+    /// Removes a valid file extension for the specified <see cref="ContentType"/>.
+    /// </summary>
+    /// <param name="contentType">The content type to remove the extension from.</param>
+    /// <param name="extension">The file extension to remove (e.g. ".png").</param>
+    /// <returns>True if the extension was removed; false if it did not exist.</returns>
+    public static bool RemoveValidFileExtension(ContentType contentType, string extension)
+    {
+        return ValidExtensions.TryGetValue(contentType, out var value) && value.Remove(extension);
+    }
+    /// <summary>
+    /// Removes multiple valid file extensions for the specified <see cref="ContentType"/>.
+    /// </summary>
+    /// <param name="contentType">The content type to remove extensions from.</param>
+    /// <param name="extensions">An array of file extensions to remove (e.g. ".png", ".jpg").</param>
+    /// <returns>The number of extensions that were removed (existed and were deleted).</returns>
+    public static int RemoveValidFileExtensions(ContentType contentType, params string[] extensions)
+    {
+        var removedCount = 0;
+        if (!ValidExtensions.TryGetValue(contentType, out var value)) return removedCount;
+        foreach (string ext in extensions)
+        {
+            if (value.Remove(ext)) removedCount++;
+        }
+        return removedCount;
+    }
+    /// <summary>
+    /// Sets the valid file extensions for the specified <see cref="ContentType"/>.
+    /// Replaces any existing extensions with the provided ones.
+    /// </summary>
+    /// <param name="contentType">The content type to set extensions for.</param>
+    /// <param name="extensions">An array of file extensions to associate (e.g. ".png", ".jpg").</param>
+    public static void SetValidFileExtensions(ContentType contentType, params string[] extensions)
+    {
+        ValidExtensions[contentType] = new HashSet<string>(extensions);
+    }
+
+    /// <summary>
+    /// Prints all valid file extensions for each <see cref="ContentType"/> to the console.
+    /// </summary>
+    public static void PrintValidFileExtensions()
+    {
+        foreach (var kvp in ValidExtensions)
+        {
+            string extensions = string.Join(", ", kvp.Value);
+            ShapeLogger.LogInfo($"{kvp.Key}: [{extensions}]");
+        }
+    }
+    
     #region Load
     
     /// <summary>
