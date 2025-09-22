@@ -274,7 +274,7 @@ public class JsonDataExample : ExampleScene
     {
         //load resource data
         var resourcePath = "Resources/JsonDataExampleSource";
-        var data = ContentLoader.LoadTextsFromDirectory(resourcePath, false);
+        var data = ContentLoader.LoadTextsFromDirectory(resourcePath, false).Values.ToList();
         // Console.WriteLine($"----------------- [{data.Count}] Source data files loaded from {resourcePath}.");
 
         // load external data
