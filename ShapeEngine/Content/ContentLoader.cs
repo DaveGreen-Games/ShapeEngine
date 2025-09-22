@@ -6,8 +6,6 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Content;
 
-//TODO: Add ShapeLogger logging instead of Console.WriteLine
-
 /// <summary>
 /// Provides a simple wrapper to load all types of Raylib resources and JSON strings.
 /// </summary>
@@ -18,6 +16,21 @@ namespace ShapeEngine.Content;
 /// </remarks>
 public static class ContentLoader
 {
+    /// <summary>
+    /// Defines the types of resources that can be loaded
+    /// </summary>
+    public enum ContentType
+    {
+        Font,
+        ShaderFragment,
+        ShaderVertex,
+        Texture,
+        Wave,
+        Sound,
+        Music,
+        Text
+    }
+    
     /// <summary>
     /// Specifies the number of font glyphs to load. Default value is 0, which loads the default character set.
     /// </summary>
@@ -38,21 +51,7 @@ public static class ContentLoader
         { ContentType.Text, [".txt", ".json", ".xml", ".csv"] }
     };
 
-    /// <summary>
-    /// Defines the types of resources that can be loaded
-    /// </summary>
-    public enum ContentType
-    {
-        Font,
-        ShaderFragment,
-        ShaderVertex,
-        Texture,
-        Wave,
-        Sound,
-        Music,
-        Text
-    }
-
+    #region Paths
     /// <summary>
     /// Resolves the full path to a resource file when running inside a macOS application bundle.
     /// </summary>
@@ -74,10 +73,9 @@ public static class ContentLoader
         string exeDir = AppContext.BaseDirectory; // This is Contents/MacOS/
         string resourcesDir = Path.Combine(exeDir, "..", "Resources");//".." goes up one level to Contents
         string fullPath = Path.GetFullPath(Path.Combine(resourcesDir, relativePath));
-        Console.WriteLine($"--- MacOS app bundle loading resource from path: {fullPath}");
+        ShapeLogger.LogInfo($"MacOS app bundle loading resource from path: {fullPath}");
         return fullPath;
     }
-    
     /// <summary>
     /// Checks if a file is a valid resource based on its extension.
     /// </summary>
@@ -91,7 +89,6 @@ public static class ContentLoader
         string extension = Path.GetExtension(filePath).ToLower();
         return ValidExtensions[contentType].Contains(extension);
     }
-    
     /// <summary>
     /// Gets all valid resource file paths in a directory.
     /// </summary>
@@ -114,16 +111,9 @@ public static class ContentLoader
             .Where(file => IsValidResourceFile(file, contentType))
             .ToArray();
     }
-    /// <summary>
-    /// Checks if the given file extension is valid for the specified content type.
-    /// </summary>
-    /// <param name="extension">The file extension to check (e.g. ".png").</param>
-    /// <param name="contentType">The content type to validate against.</param>
-    /// <returns>True if the extension is valid for the content type; otherwise, false.</returns>
-    public static bool IsValidExtension(string extension, ContentType contentType)
-    {
-        return ValidExtensions.ContainsKey(contentType) && ValidExtensions[contentType].Contains(extension);
-    }
+    #endregion
+    
+    #region Extensions
     /// <summary>
     /// Gets the <see cref="ContentType"/> associated with a given file extension.
     /// </summary>
@@ -139,6 +129,16 @@ public static class ContentLoader
         }
 
         return null;
+    }
+    /// <summary>
+    /// Checks if the given file extension is valid for the specified content type.
+    /// </summary>
+    /// <param name="extension">The file extension to check (e.g. ".png").</param>
+    /// <param name="contentType">The content type to validate against.</param>
+    /// <returns>True if the extension is valid for the content type; otherwise, false.</returns>
+    public static bool IsValidExtension(string extension, ContentType contentType)
+    {
+        return ValidExtensions.ContainsKey(contentType) && ValidExtensions[contentType].Contains(extension);
     }
     /// <summary>
     /// Gets a list of valid file extensions for the specified content type.
@@ -232,7 +232,6 @@ public static class ContentLoader
     {
         ValidExtensions[contentType] = new HashSet<string>(extensions);
     }
-
     /// <summary>
     /// Prints all valid file extensions for each <see cref="ContentType"/> to the console.
     /// </summary>
@@ -244,6 +243,7 @@ public static class ContentLoader
             ShapeLogger.LogInfo($"{kvp.Key}: [{extensions}]");
         }
     }
+    #endregion
     
     #region Load
     
@@ -282,7 +282,7 @@ public static class ContentLoader
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading font from {filePath}: {ex.Message}");
+            ShapeLogger.LogError($"Error loading font from {filePath}: {ex.Message}");
         }
         
         return default;
@@ -318,7 +318,7 @@ public static class ContentLoader
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading fragment shader from {filePath}: {ex.Message}");
+            ShapeLogger.LogError($"Error loading fragment shader from {filePath}: {ex.Message}");
         }
         return default;
     }
@@ -353,7 +353,7 @@ public static class ContentLoader
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading vertex shader from {filePath}: {ex.Message}");
+            ShapeLogger.LogError($"Error loading vertex shader from {filePath}: {ex.Message}");
         }
         
         return default;
@@ -389,7 +389,7 @@ public static class ContentLoader
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading texture from {filePath}: {ex.Message}");
+            ShapeLogger.LogError($"Error loading texture from {filePath}: {ex.Message}");
         }
         
         return default;
@@ -425,7 +425,7 @@ public static class ContentLoader
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading image from {filePath}: {ex.Message}");
+            ShapeLogger.LogError($"Error loading image from {filePath}: {ex.Message}");
         }
         
         return default;
@@ -461,7 +461,7 @@ public static class ContentLoader
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading wave from {filePath}: {ex.Message}");
+            ShapeLogger.LogError($"Error loading wave from {filePath}: {ex.Message}");
         }
         
         return default;
@@ -497,7 +497,7 @@ public static class ContentLoader
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading sound from {filePath}: {ex.Message}");
+            ShapeLogger.LogError($"Error loading sound from {filePath}: {ex.Message}");
         }
         
         return default;
@@ -533,7 +533,7 @@ public static class ContentLoader
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading music from {filePath}: {ex.Message}");
+            ShapeLogger.LogError($"Error loading music stream from {filePath}: {ex.Message}");
         }
         
         return default;
@@ -572,7 +572,7 @@ public static class ContentLoader
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading text from {filePath}: {ex.Message}");
+            ShapeLogger.LogError($"Error loading text from {filePath}: {ex.Message}");
         }
         
         return string.Empty;
@@ -711,7 +711,7 @@ public static class ContentLoader
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error loading font from {path}: {ex.Message}");
+                ShapeLogger.LogError($"Error loading font from {path}: {ex.Message}");
             }
         }
 
@@ -742,7 +742,7 @@ public static class ContentLoader
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error loading fragment shader from {path}: {ex.Message}");
+                ShapeLogger.LogError($"Error loading fragment shader from {path}: {ex.Message}");
             }
         }
 
@@ -773,7 +773,7 @@ public static class ContentLoader
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error loading vertex shader from {path}: {ex.Message}");
+                ShapeLogger.LogError($"Error loading vertex shader from {path}: {ex.Message}");
             }
         }
 
@@ -804,7 +804,7 @@ public static class ContentLoader
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error loading texture from {path}: {ex.Message}");
+                ShapeLogger.LogError($"Error loading texture from {path}: {ex.Message}");
             }
         }
 
@@ -835,7 +835,7 @@ public static class ContentLoader
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error loading image from {path}: {ex.Message}");
+                ShapeLogger.LogError($"Error loading image from {path}: {ex.Message}");
             }
         }
 
@@ -866,7 +866,7 @@ public static class ContentLoader
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error loading wave sound from {path}: {ex.Message}");
+                ShapeLogger.LogError($"Error loading wave sound from {path}: {ex.Message}");
             }
         }
 
@@ -897,7 +897,7 @@ public static class ContentLoader
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error loading sound from {path}: {ex.Message}");
+                ShapeLogger.LogError($"Error loading sound from {path}: {ex.Message}");
             }
         }
 
@@ -928,7 +928,7 @@ public static class ContentLoader
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error loading music stream from {path}: {ex.Message}");
+                ShapeLogger.LogError($"Error loading music stream from {path}: {ex.Message}");
             }
         }
 
@@ -960,7 +960,7 @@ public static class ContentLoader
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error loading text from {path}: {ex.Message}");
+                ShapeLogger.LogError($"Error loading text from {path}: {ex.Message}");
             }
         }
         
