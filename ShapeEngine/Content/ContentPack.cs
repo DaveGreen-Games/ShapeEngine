@@ -573,33 +573,6 @@ public abstract class ContentPack
     #endregion
     
     #region Load
-    //TODO: add functions for loading all resources of a certain type?
-    
-    
-    public Dictionary<string, Texture2D> LoadAllTextures(out bool success)
-    {
-        success = false;
-        var result = new Dictionary<string, Texture2D>();
-        if (!IsLoaded)
-        {
-            ShapeLogger.LogError($"Content Pack LoadAllTextures() failed. Content pack not loaded!");
-            return result;
-        }
-
-        var list = CurrentUnpackMode == UnpackMode.Memory ? cache.Keys.ToList() : index.Keys.ToList();
-        foreach (var file in list)
-        {
-            var ext = Path.GetExtension(file);
-            if (ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.Texture))
-            {
-                var texture = LoadTexture(file, out bool loaded);
-                if (loaded) result[file] = texture;
-            }
-        }
-        success = true;
-        return result;
-    }
-    
     public Texture2D LoadTexture(string filePath, out bool success)
     {
         success = false;
@@ -796,5 +769,286 @@ public abstract class ContentPack
         return ContentLoader.LoadTextFromMemory(extension, data);
     }
 
+    #endregion
+    
+    #region Load All
+    public Dictionary<string, Texture2D> LoadAllTextures(out bool success)
+    {
+        success = false;
+        var result = new Dictionary<string, Texture2D>();
+        if (!IsLoaded)
+        {
+            ShapeLogger.LogError($"ContentPack LoadAllTextures() failed. Content pack not loaded!");
+            return result;
+        }
+
+        var list = CurrentUnpackMode == UnpackMode.Memory ? cache.Keys.ToList() : index.Keys.ToList();
+        foreach (var file in list)
+        {
+            var ext = Path.GetExtension(file);
+            if (ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.Texture))
+            {
+                var texture = LoadTexture(file, out bool loaded);
+                if (loaded) result[file] = texture;
+            }
+        }
+
+        if (result.Count <= 0)
+        {
+            ShapeLogger.LogWarning($"ContentPack LoadAllTextures() found no valid content in pack!");
+            return result;
+        }
+        
+        success = true;
+        return result;
+    }
+    
+    public Dictionary<string, Image> LoadAllImages(out bool success)
+        {
+            success = false;
+            var result = new Dictionary<string, Image>();
+            if (!IsLoaded)
+            {
+                ShapeLogger.LogError($"ContentPack LoadAllImages() failed. Content pack not loaded!");
+                return result;
+            }
+    
+            var list = CurrentUnpackMode == UnpackMode.Memory ? cache.Keys.ToList() : index.Keys.ToList();
+            foreach (var file in list)
+            {
+                var ext = Path.GetExtension(file);
+                if (ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.Texture))
+                {
+                    var image = LoadImage(file, out bool loaded);
+                    if (loaded) result[file] = image;
+                }
+            }
+            
+            if (result.Count <= 0)
+            {
+                ShapeLogger.LogWarning($"ContentPack LoadAllImages() found no valid content in pack!");
+                return result;
+            }
+            
+            success = true;
+            return result;
+        }
+    
+    public Dictionary<string, Font> LoadAllFonts(out bool success, int fontSize = 100)
+    {
+        success = false;
+        var result = new Dictionary<string, Font>();
+        if (!IsLoaded)
+        {
+            ShapeLogger.LogError($"ContentPack LoadAllFonts() failed. Content pack not loaded!");
+            return result;
+        }
+
+        var list = CurrentUnpackMode == UnpackMode.Memory ? cache.Keys.ToList() : index.Keys.ToList();
+        foreach (var file in list)
+        {
+            var ext = Path.GetExtension(file);
+            if (ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.Font))
+            {
+                var font = LoadFont(file, out bool loaded, fontSize);
+                if (loaded) result[file] = font;
+            }
+        }
+        
+        if (result.Count <= 0)
+        {
+            ShapeLogger.LogWarning($"ContentPack LoadAllFonts() found no valid content in pack!");
+            return result;
+        }
+        
+        success = true;
+        return result;
+    }
+
+    public Dictionary<string, Wave> LoadAllWaves(out bool success)
+    {
+        success = false;
+        var result = new Dictionary<string, Wave>();
+        if (!IsLoaded)
+        {
+            ShapeLogger.LogError($"ContentPack LoadAllWaves() failed. Content pack not loaded!");
+            return result;
+        }
+
+        var list = CurrentUnpackMode == UnpackMode.Memory ? cache.Keys.ToList() : index.Keys.ToList();
+        foreach (var file in list)
+        {
+            var ext = Path.GetExtension(file);
+            if (ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.Wave))
+            {
+                var wave = LoadWave(file, out bool loaded);
+                if (loaded) result[file] = wave;
+            }
+        }
+        
+        if (result.Count <= 0)
+        {
+            ShapeLogger.LogWarning($"ContentPack LoadAllWaves() found no valid content in pack!");
+            return result;
+        }
+        
+        success = true;
+        return result;
+    }
+
+    public Dictionary<string, Sound> LoadAllSounds(out bool success)
+    {
+        success = false;
+        var result = new Dictionary<string, Sound>();
+        if (!IsLoaded)
+        {
+            ShapeLogger.LogError($"ContentPack LoadAllSounds() failed. Content pack not loaded!");
+            return result;
+        }
+
+        var list = CurrentUnpackMode == UnpackMode.Memory ? cache.Keys.ToList() : index.Keys.ToList();
+        foreach (var file in list)
+        {
+            var ext = Path.GetExtension(file);
+            if (ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.Sound))
+            {
+                var sound = LoadSound(file, out bool loaded);
+                if (loaded) result[file] = sound;
+            }
+        }
+        
+        if (result.Count <= 0)
+        {
+            ShapeLogger.LogWarning($"ContentPack LoadAllSounds() found no valid content in pack!");
+            return result;
+        }
+        
+        success = true;
+        return result;
+    }
+
+    public Dictionary<string, Music> LoadAllMusic(out bool success)
+    {
+        success = false;
+        var result = new Dictionary<string, Music>();
+        if (!IsLoaded)
+        {
+            ShapeLogger.LogError($"ContentPack LoadAllMusic() failed. Content pack not loaded!");
+            return result;
+        }
+
+        var list = CurrentUnpackMode == UnpackMode.Memory ? cache.Keys.ToList() : index.Keys.ToList();
+        foreach (var file in list)
+        {
+            var ext = Path.GetExtension(file);
+            if (ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.Music))
+            {
+                var music = LoadMusic(file, out bool loaded);
+                if (loaded) result[file] = music;
+            }
+        }
+        
+        if (result.Count <= 0)
+        {
+            ShapeLogger.LogWarning($"ContentPack LoadAllMusic() found no valid content in pack!");
+            return result;
+        }
+        
+        success = true;
+        return result;
+    }
+
+    public Dictionary<string, Shader> LoadAllFragmentShaders(out bool success)
+    {
+        success = false;
+        var result = new Dictionary<string, Shader>();
+        if (!IsLoaded)
+        {
+            ShapeLogger.LogError($"ContentPack LoadAllFragmentShaders() failed. Content pack not loaded!");
+            return result;
+        }
+
+        var list = CurrentUnpackMode == UnpackMode.Memory ? cache.Keys.ToList() : index.Keys.ToList();
+        foreach (var file in list)
+        {
+            var ext = Path.GetExtension(file);
+            if (ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.ShaderFragment))
+            {
+                var shader = LoadFragmentShader(file, out bool loaded);
+                if (loaded) result[file] = shader;
+            }
+        }
+
+        if (result.Count <= 0)
+        {
+            ShapeLogger.LogWarning($"ContentPack LoadAllFragmentShader() found no valid content in pack!");
+            return result;
+        }
+        
+        success = true;
+        return result;
+    }
+
+    public Dictionary<string, Shader> LoadAllVertexShaders(out bool success)
+    {
+        success = false;
+        var result = new Dictionary<string, Shader>();
+        if (!IsLoaded)
+        {
+            ShapeLogger.LogError($"ContentPack LoadAllVertexShaders() failed. Content pack not loaded!");
+            return result;
+        }
+
+        var list = CurrentUnpackMode == UnpackMode.Memory ? cache.Keys.ToList() : index.Keys.ToList();
+        foreach (var file in list)
+        {
+            var ext = Path.GetExtension(file);
+            if (ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.ShaderVertex))
+            {
+                var shader = LoadVertexShader(file, out bool loaded);
+                if (loaded) result[file] = shader;
+            }
+        }
+        
+        if (result.Count <= 0)
+        {
+            ShapeLogger.LogWarning($"ContentPack LoadAllVertexShaders() found no valid content in pack!");
+            return result;
+        }
+        
+        success = true;
+        return result;
+    }
+
+    public Dictionary<string, string> LoadAllText(out bool success)
+    {
+        success = false;
+        var result = new Dictionary<string, string>();
+        if (!IsLoaded)
+        {
+            ShapeLogger.LogError($"Content Pack LoadAllText() failed. Content pack not loaded!");
+            return result;
+        }
+
+        var list = CurrentUnpackMode == UnpackMode.Memory ? cache.Keys.ToList() : index.Keys.ToList();
+        foreach (var file in list)
+        {
+            var ext = Path.GetExtension(file);
+            if (ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.Text))
+            {
+                var text = LoadText(file, out bool loaded);
+                if (loaded) result[file] = text;
+            }
+        }
+
+        if (result.Count <= 0)
+        {
+            ShapeLogger.LogWarning($"ContentPack LoadAllText() found no valid content in pack!");
+            return result;
+        }
+        
+        success = true;
+        return result;
+    }
     #endregion
 }
