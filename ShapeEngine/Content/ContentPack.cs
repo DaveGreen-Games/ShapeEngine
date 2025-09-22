@@ -29,6 +29,7 @@ public abstract class ContentPack
     
     private Dictionary<string, byte[]> cache = new();
     private Dictionary<string, long> index = new();
+    
     #endregion
 
     #region Public
@@ -572,6 +573,32 @@ public abstract class ContentPack
     #endregion
     
     #region Load
+    //TODO: add functions for loading all resources of a certain type?
+    
+    
+    public Dictionary<string, Texture2D> LoadAllTextures(out bool success)
+    {
+        success = false;
+        var result = new Dictionary<string, Texture2D>();
+        if (!IsLoaded)
+        {
+            ShapeLogger.LogError($"Content Pack LoadAllTextures() failed. Content pack not loaded!");
+            return result;
+        }
+
+        var list = CurrentUnpackMode == UnpackMode.Memory ? cache.Keys.ToList() : index.Keys.ToList();
+        foreach (var file in list)
+        {
+            var ext = Path.GetExtension(file);
+            if (ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.Texture))
+            {
+                var texture = LoadTexture(file, out bool loaded);
+                if (loaded) result[file] = texture;
+            }
+        }
+        success = true;
+        return result;
+    }
     
     public Texture2D LoadTexture(string filePath, out bool success)
     {
