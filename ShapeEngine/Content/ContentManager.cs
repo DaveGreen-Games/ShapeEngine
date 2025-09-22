@@ -17,7 +17,7 @@ namespace ShapeEngine.Content;
 /// <summary>
 /// Provides a simple class to load content and automatically unload all loaded content when close is called.
 /// </summary>
-public sealed class ContentManager : IContentManager
+public sealed class ContentManager
 {
     private readonly List<Shader> shadersToUnload = [];
     private readonly List<Texture2D> texturesToUnload = [];
