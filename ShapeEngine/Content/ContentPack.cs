@@ -608,6 +608,7 @@ public sealed class ContentPack
     #endregion
     
     #region Load
+    //TODO: Use TryLoad* functions internally and remove code duplication
     public Texture2D LoadTexture(string filePath)
     {
         if (!IsLoaded)

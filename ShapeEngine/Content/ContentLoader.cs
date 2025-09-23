@@ -462,7 +462,6 @@ public static class ContentLoader
     #endregion
     
     #region TryLoad
-    //TODO: extension checks
     
     /// <summary>
     /// Attempts to load a font from the specified file path with the given font size and texture filter.
@@ -572,6 +571,15 @@ public static class ContentLoader
             return false;
         }
         
+        string extension = Path.GetExtension(filePath).ToLower();
+        var contentType = ContentType.ShaderVertex;
+        if (!IsValidExtension(extension, contentType))
+        {
+            ShapeLogger.LogError($"Loading resource failed, invalid file extension '{extension}' for {contentType}: {filePath}. Current valid extensions for {contentType} are: {string.Join(", ", GetValidFileExtensions(contentType))}");
+            shader = new();
+            return false;
+        }
+        
         try
         {
             shader = Raylib.LoadShader(filePath, "");
@@ -601,6 +609,15 @@ public static class ContentLoader
         if (!File.Exists(filePath))
         {
             ShapeLogger.LogError($"Loading resource failed, file does not exist: {filePath}");
+            texture = new();
+            return false;
+        }
+        
+        string extension = Path.GetExtension(filePath).ToLower();
+        var contentType = ContentType.Texture;
+        if (!IsValidExtension(extension, contentType))
+        {
+            ShapeLogger.LogError($"Loading resource failed, invalid file extension '{extension}' for {contentType}: {filePath}. Current valid extensions for {contentType} are: {string.Join(", ", GetValidFileExtensions(contentType))}");
             texture = new();
             return false;
         }
@@ -638,6 +655,15 @@ public static class ContentLoader
             return false;
         }
         
+        string extension = Path.GetExtension(filePath).ToLower();
+        var contentType = ContentType.Texture;
+        if (!IsValidExtension(extension, contentType))
+        {
+            ShapeLogger.LogError($"Loading resource failed, invalid file extension '{extension}' for {contentType}: {filePath}. Current valid extensions for {contentType} are: {string.Join(", ", GetValidFileExtensions(contentType))}");
+            image = new();
+            return false;
+        }
+        
         try
         {
             image = Raylib.LoadImage(filePath);
@@ -667,6 +693,15 @@ public static class ContentLoader
         if (!File.Exists(filePath))
         {
             ShapeLogger.LogError($"Loading resource failed, file does not exist: {filePath}");
+            wave = new();
+            return false;
+        }
+        
+        string extension = Path.GetExtension(filePath).ToLower();
+        var contentType = ContentType.Wave;
+        if (!IsValidExtension(extension, contentType))
+        {
+            ShapeLogger.LogError($"Loading resource failed, invalid file extension '{extension}' for {contentType}: {filePath}. Current valid extensions for {contentType} are: {string.Join(", ", GetValidFileExtensions(contentType))}");
             wave = new();
             return false;
         }
@@ -704,6 +739,15 @@ public static class ContentLoader
             return false;
         }
         
+        string extension = Path.GetExtension(filePath).ToLower();
+        var contentType = ContentType.Sound;
+        if (!IsValidExtension(extension, contentType))
+        {
+            ShapeLogger.LogError($"Loading resource failed, invalid file extension '{extension}' for {contentType}: {filePath}. Current valid extensions for {contentType} are: {string.Join(", ", GetValidFileExtensions(contentType))}");
+            sound = new();
+            return false;
+        }
+        
         try
         {
             sound = Raylib.LoadSound(filePath);
@@ -737,6 +781,15 @@ public static class ContentLoader
             return false;
         }
         
+        string extension = Path.GetExtension(filePath).ToLower();
+        var contentType = ContentType.Music;
+        if (!IsValidExtension(extension, contentType))
+        {
+            ShapeLogger.LogError($"Loading resource failed, invalid file extension '{extension}' for {contentType}: {filePath}. Current valid extensions for {contentType} are: {string.Join(", ", GetValidFileExtensions(contentType))}");
+            music = new();
+            return false;
+        }
+        
         try
         {
             music = Raylib.LoadMusicStream(filePath);
@@ -766,6 +819,15 @@ public static class ContentLoader
         if (!File.Exists(filePath))
         {
             ShapeLogger.LogError($"Loading resource failed, file does not exist: {filePath}");
+            text = string.Empty;
+            return false;
+        }
+        
+        string extension = Path.GetExtension(filePath).ToLower();
+        var contentType = ContentType.Text;
+        if (!IsValidExtension(extension, contentType))
+        {
+            ShapeLogger.LogError($"Loading resource failed, invalid file extension '{extension}' for {contentType}: {filePath}. Current valid extensions for {contentType} are: {string.Join(", ", GetValidFileExtensions(contentType))}");
             text = string.Empty;
             return false;
         }
