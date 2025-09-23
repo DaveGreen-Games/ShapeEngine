@@ -126,6 +126,39 @@ public static class ShapeLogger
     #region Log
     
     /// <summary>
+    /// Logs a message with the specified log level from the given caller object.
+    /// If logging is disabled or the log level is below the minimum, the message is not logged.
+    /// </summary>
+    /// <param name="caller">The object calling the log method, used for context in the log message.</param>
+    /// <param name="message">The message to log.</param>
+    /// <param name="level">The severity level of the log message. Defaults to LogLevel.Info.</param>
+    public static void Log(this object caller, string message, LogLevel level = LogLevel.Info)
+    {
+        if (!loggingEnabled || level < MinimumLevel) return;
+
+        string logMsg = isBlockLogging ? $"--- [{caller}]: {message}" : $"[{DateTime.Now:HH:mm:ss}] [{level}] [{caller}] {message}";
+        
+        if(OutputType is LogOutputType.Console or LogOutputType.Both)
+        {
+            Console.WriteLine(logMsg);
+            if(OutputType == LogOutputType.Console || !LogFilePathValid) return;
+        }
+        bool LogToFile = OutputType is LogOutputType.File or LogOutputType.Both && LogFilePathValid;
+        if (LogToFile)
+        {
+            try
+            {
+                File.AppendAllText(LogFilePath, logMsg + Environment.NewLine);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] [Logger Error] Failed to write to log file {LogFilePath}: {ex.Message}");
+            }
+        }
+    }
+
+    
+    /// <summary>
     /// Logs a message with the specified log level to the configured output(s).
     /// If logging is disabled or the log level is below the minimum, the message is not logged.
     /// </summary>
@@ -160,7 +193,7 @@ public static class ShapeLogger
     /// Logs a debug message. Debug level is used for detailed diagnostic information.
     /// </summary>
     /// <remarks>
-    /// Shortcut for calling <see cref="Log"/> with <see cref="LogLevel.Debug"/>.
+    /// Shortcut for calling <see cref="Log(string, LogLevel)"/> with <see cref="LogLevel.Debug"/>.
     /// </remarks>
     public static void LogDebug(string message) => Log(message, LogLevel.Debug);
     
@@ -168,7 +201,7 @@ public static class ShapeLogger
     /// Logs an informational message. Info level is used for general operational entries.
     /// </summary>
     /// <remarks>
-    /// Shortcut for calling <see cref="Log"/> with <see cref="LogLevel.Info"/>.
+    /// Shortcut for calling <see cref="Log(string, LogLevel)"/> with <see cref="LogLevel.Info"/>.
     /// </remarks>
     public static void LogInfo(string message) => Log(message, LogLevel.Info);
     
@@ -176,7 +209,7 @@ public static class ShapeLogger
     /// Logs a warning message. Warning level indicates a potential issue or important situation.
     /// </summary>
     /// <remarks>
-    /// Shortcut for calling <see cref="Log"/> with <see cref="LogLevel.Warning"/>.
+    /// Shortcut for calling <see cref="Log(string, LogLevel)"/> with <see cref="LogLevel.Warning"/>.
     /// </remarks>
     public static void LogWarning(string message) => Log(message, LogLevel.Warning);
     
@@ -184,7 +217,7 @@ public static class ShapeLogger
     /// Logs an error message. Error level indicates a failure or problem that needs attention.
     /// </summary>
     /// <remarks>
-    /// Shortcut for calling <see cref="Log"/> with <see cref="LogLevel.Error"/>.
+    /// Shortcut for calling <see cref="Log(string, LogLevel)"/> with <see cref="LogLevel.Error"/>.
     /// </remarks>
     public static void LogError(string message) => Log(message, LogLevel.Error);
     
@@ -192,7 +225,7 @@ public static class ShapeLogger
     /// Logs a fatal error message. Fatal level indicates a critical failure causing program termination.
     /// </summary>
     /// <remarks>
-    /// Shortcut for calling <see cref="Log"/> with <see cref="LogLevel.Fatal"/>.
+    /// Shortcut for calling <see cref="Log(string, LogLevel)"/> with <see cref="LogLevel.Fatal"/>.
     /// </remarks>
     public static void LogFatal(string message) => Log(message, LogLevel.Fatal);
     
@@ -200,7 +233,7 @@ public static class ShapeLogger
     /// Logs a trace message. Trace level is used for very fine-grained informational events.
     /// </summary>
     /// <remarks>
-    /// Shortcut for calling <see cref="Log"/> with <see cref="LogLevel.Trace"/>.
+    /// Shortcut for calling <see cref="Log(string, LogLevel)"/> with <see cref="LogLevel.Trace"/>.
     /// </remarks>
     public static void LogTrace(string message) => Log(message, LogLevel.Trace);
     
@@ -208,7 +241,7 @@ public static class ShapeLogger
     /// Logs a notice message. Notice level is used for normal but significant conditions.
     /// </summary>
     /// <remarks>
-    /// Shortcut for calling <see cref="Log"/> with <see cref="LogLevel.Notice"/>.
+    /// Shortcut for calling <see cref="Log(string, LogLevel)"/> with <see cref="LogLevel.Notice"/>.
     /// </remarks>
     public static void LogNotice(string message) => Log(message, LogLevel.Notice);
     
@@ -216,7 +249,7 @@ public static class ShapeLogger
     /// Logs an alert message. Alert level indicates action must be taken immediately.
     /// </summary>
     /// <remarks>
-    /// Shortcut for calling <see cref="Log"/> with <see cref="LogLevel.Alert"/>.
+    /// Shortcut for calling <see cref="Log(string, LogLevel)"/> with <see cref="LogLevel.Alert"/>.
     /// </remarks>
     public static void LogAlert(string message) => Log(message, LogLevel.Alert);
     
@@ -224,14 +257,31 @@ public static class ShapeLogger
     /// Logs an emergency message. Emergency level indicates a system-wide failure.
     /// </summary>
     /// <remarks>
-    /// Shortcut for calling <see cref="Log"/> with <see cref="LogLevel.Emergency"/>.
+    /// Shortcut for calling <see cref="Log(string, LogLevel)"/> with <see cref="LogLevel.Emergency"/>.
     /// </remarks>
     public static void LogEmergency(string message) => Log(message, LogLevel.Emergency);
+
+
     
     #endregion
     
     #region Log Console
  
+    /// <summary>
+    /// Logs a message to the console with the specified log level from the given caller object.
+    /// If logging is disabled or the log level is below the minimum, the message is not logged.
+    /// </summary>
+    /// <param name="caller">The object calling the log method, used for context in the log message.</param>
+    /// <param name="message">The message to log to the console.</param>
+    /// <param name="level">The severity level of the log message. Defaults to LogLevel.Info.</param>
+    public static void LogConsole(this object caller, string message, LogLevel level = LogLevel.Info)
+    {
+        if (!LoggingEnabled || level < MinimumLevel) return;
+
+        string logMsg = isBlockLogging ? $"--- [{caller}]: {message}" : $"[{DateTime.Now:HH:mm:ss}] [{level}] [{caller}] {message}";
+        Console.WriteLine(logMsg);
+    }
+    
     /// <summary>
     /// Logs a message to the console with the specified log level.
     /// If logging is disabled or the log level is below the minimum, the message is not logged.
@@ -321,6 +371,29 @@ public static class ShapeLogger
     #endregion
     
     #region Log File
+    
+    /// <summary>
+    /// Logs a message to the log file with the specified log level from the given caller object.
+    /// If logging is disabled, the log level is below the minimum, or the log file path is invalid, the message is not logged.
+    /// </summary>
+    /// <param name="caller">The object calling the log method, used for context in the log message.</param>
+    /// <param name="message">The message to log to the file.</param>
+    /// <param name="level">The severity level of the log message. Defaults to LogLevel.Info.</param>
+    public static void LogFile(this object caller, string message, LogLevel level = LogLevel.Info)
+    {
+        if (!LoggingEnabled || level < MinimumLevel) return;
+        if (!LogFilePathValid) return;
+        try
+        {
+            string logMsg = isBlockLogging ? $"--- [{caller}]: {message}" : $"[{DateTime.Now:HH:mm:ss}] [{level}] [{caller}] {message}";
+            File.AppendAllText(LogFilePath, logMsg + Environment.NewLine);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] [Logger Error] Failed to write to log file {LogFilePath}: {ex.Message}");
+        }
+    }
+    
     /// <summary>
     /// Logs a message to the log file with the specified log level.
     /// If logging is disabled, the log level is below the minimum, or the log file path is invalid, the message is not logged.

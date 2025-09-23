@@ -135,7 +135,6 @@ public class Asteroid : CollisionObject
             var p = new AsteroidForceParticle(sizeRange, forceParticleLifetime,lineThickness, color, reversed);
             forceParticlesStack.Push(p);
         }
-
     }
 
     protected override void Collision(CollisionInformation info)
