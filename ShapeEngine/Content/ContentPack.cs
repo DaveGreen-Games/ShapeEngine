@@ -6,10 +6,7 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Content;
 
-
-//TODO: change console write line to debuglogger
-//TODO: add logging for errors and info in most functions
-public abstract class ContentPack
+public sealed class ContentPack
 {
     public enum UnpackMode
     {
@@ -156,7 +153,7 @@ public abstract class ContentPack
 
         if (!File.Exists(sourceFilePath))
         {
-            Console.WriteLine($"Packed file not found: {sourceFilePath}");
+            ShapeLogger.LogError($"Packed file not found: {sourceFilePath}");
             return result;
         }
 
@@ -212,24 +209,25 @@ public abstract class ContentPack
 
         if (debugMessages.Count > 0)
         {
+            ShapeLogger.StartLogBlock("ContentPack UnpackFileToMemory Debug Info");
             foreach (var msg in debugMessages)
             {
-                Console.WriteLine(msg);
+                ShapeLogger.LogInfo(msg);
             }
+            ShapeLogger.EndLogBlock();
         }
-
-        Console.WriteLine($"Unpacking to memory finished. {unpackedFiles} files loaded from {sourceFilePath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
+        
+        ShapeLogger.LogInfo($"Unpacking to memory finished. {unpackedFiles} files loaded from {sourceFilePath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
         return result;
     }
     public static Dictionary<string, byte[]> UnpackFileToMemoryParallel(string sourceFilePath, out long totalBytesUnpacked, List<string>? extensionExceptions = null, bool debug = false)
     {
-        //TODO: Implement
         totalBytesUnpacked = 0;
         var result = new ConcurrentDictionary<string, byte[]>();
     
         if (!File.Exists(sourceFilePath))
         {
-            Console.WriteLine($"Packed file not found: {sourceFilePath}");
+            ShapeLogger.LogError($"Packed file not found: {sourceFilePath}");
             return new Dictionary<string, byte[]>();
         }
     
@@ -272,6 +270,7 @@ public abstract class ContentPack
             }
         }
     
+        long bytesProcessed = 0;
         // Second pass: decompress in parallel
         Parallel.ForEach(entries, entry =>
         {
@@ -285,15 +284,26 @@ public abstract class ContentPack
             using var outMs = new MemoryStream();
             gzip.CopyTo(outMs);
             var data = outMs.ToArray();
-    
+            bytesProcessed += data.Length;
             result[entry.path] = data;
             debugMessages?.Add($"Unpacked {entry.path} ({data.Length} bytes)");
         });
     
-        if (debugMessages != null)
-            foreach (var msg in debugMessages) Console.WriteLine(msg);
+        totalBytesUnpacked = bytesProcessed;
+
+        if (debugMessages is { Count: > 0 })
+        {
+            ShapeLogger.StartLogBlock("ContentPack UnpackFileToMemoryParallel Debug Info");
+            foreach (string msg in debugMessages)
+            {
+                ShapeLogger.LogInfo(msg);
+                
+            }
+            ShapeLogger.EndLogBlock();
+        }
+            
     
-        Console.WriteLine($"Unpacking to memory (parallel) finished. {result.Count} files loaded from {sourceFilePath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds.");
+        ShapeLogger.LogInfo($"Unpacking to memory (parallel) finished. {result.Count} files loaded and {totalBytesUnpacked} bytes unpacked from {sourceFilePath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds.");
         return new Dictionary<string, byte[]>(result);
     }
     
@@ -304,13 +314,13 @@ public abstract class ContentPack
 
         if (!File.Exists(sourceFilePath))
         {
-            Console.WriteLine($"Source file not found: {sourceFilePath}");
+            ShapeLogger.LogError($"Source file not found: {sourceFilePath}");
             return result;
         }
 
         if (Path.GetExtension(sourceFilePath) != ".txt")
         {
-            Console.WriteLine($"Source file must have a .txt extension: {sourceFilePath}");
+            ShapeLogger.LogError($"Source file must have a .txt extension: {sourceFilePath}");
             return result;
         }
 
@@ -319,6 +329,8 @@ public abstract class ContentPack
         
         int unpackedFiles = 0;
 
+        if(debug) ShapeLogger.StartLogBlock("ContentPack UnpackTextToMemory Debug Info");
+        
         for (int i = 0; i < lines.Length; i += 2)
         {
             if (i + 1 >= lines.Length) break;
@@ -327,7 +339,10 @@ public abstract class ContentPack
 
             if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(relativePath)))
             {
-                if (debug) Console.WriteLine($"File skipped due to extension: {Path.GetFileName(relativePath)}");
+                if (debug)
+                {
+                    ShapeLogger.LogInfo($"File skipped due to extension: {Path.GetFileName(relativePath)}");
+                }
                 continue;
             }
 
@@ -344,27 +359,30 @@ public abstract class ContentPack
             totalBytesUnpacked += data.Length;
             result[relativePath] = data;
             unpackedFiles++;
-            if (debug) Console.WriteLine($"Unpacked {relativePath} ({compressedData.Length} bytes)");
+            if (debug)
+            {
+                ShapeLogger.LogInfo($"Unpacked {relativePath} ({compressedData.Length} bytes)");
+            }
         }
+        if (debug) ShapeLogger.EndLogBlock();
 
-        Console.WriteLine($"Unpacking packed text file {sourceFilePath} finished. {unpackedFiles} files unpacked in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
+        ShapeLogger.LogInfo($"Unpacking packed text file {sourceFilePath} finished. {unpackedFiles} files unpacked in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
         return result;
     }
     public static Dictionary<string, byte[]> UnpackTextToMemoryParallel(string sourceFilePath, out long totalBytesUnpacked, List<string>? extensionExceptions = null, bool debug = false, int batchSize = 16)
     {
-        //TODO: Implement
         totalBytesUnpacked = 0;
         var result = new ConcurrentDictionary<string, byte[]>();
 
         if (!File.Exists(sourceFilePath))
         {
-            Console.WriteLine($"Source file not found: {sourceFilePath}");
+            ShapeLogger.LogError($"Source file not found: {sourceFilePath}");
             return new Dictionary<string, byte[]>();
         }
 
         if (Path.GetExtension(sourceFilePath) != ".txt")
         {
-            Console.WriteLine($"Source file must have a .txt extension: {sourceFilePath}");
+            ShapeLogger.LogError($"Source file must have a .txt extension: {sourceFilePath}");
             return new Dictionary<string, byte[]>();
         }
 
@@ -372,18 +390,20 @@ public abstract class ContentPack
         int totalFiles = int.Parse(File.ReadLines(sourceFilePath).Last());
         if (totalFiles <= 0)
         {
-            Console.WriteLine("No files to unpack.");
+            ShapeLogger.LogWarning("No files to unpack.");
             return new Dictionary<string, byte[]>();
         }
 
-        Console.WriteLine($"Batch Parallel unpacking to memory started. Batch size: {batchSize}");
+        ShapeLogger.LogInfo($"ContentPack Batch Parallel unpacking to memory started. Batch size: {batchSize}");
+        
         bool finished = false;
         int totalFilesRead = 0;
         var debugMessages = debug ? new ConcurrentBag<string>() : null;
 
         using var reader = new StreamReader(sourceFilePath);
         var batchLines = new List<string>(batchSize * 2);
-
+        
+        long bytesProcessed = 0;
         while (!reader.EndOfStream && !finished)
         {
             batchLines.Clear();
@@ -414,16 +434,20 @@ public abstract class ContentPack
 
             if (firstLine != string.Empty)
             {
-                Console.WriteLine("Odd number of lines in file, last line ignored.");
+                ShapeLogger.LogWarning("Odd number of lines in file, last line ignored.");
             }
 
+           
             int filesInBatch = batchLines.Count / 2;
             Parallel.For(0, filesInBatch, i =>
             {
                 var relativePath = batchLines[i * 2];
                 if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(relativePath)))
                 {
-                    if (debug) debugMessages?.Add($"File skipped due to extension: {Path.GetFileName(relativePath)}");
+                    if (debug)
+                    {
+                        debugMessages?.Add($"File skipped due to extension: {Path.GetFileName(relativePath)}");
+                    }
                     return;
                 }
 
@@ -434,20 +458,30 @@ public abstract class ContentPack
                 using var output = new MemoryStream();
                 deflateStream.CopyTo(output);
                 byte[] data = output.ToArray();
-
+                bytesProcessed += data.Length;
                 result[relativePath] = data;
-                if (debug) debugMessages?.Add($"Unpacked {relativePath} ({compressedData.Length} bytes)");
+                if (debug)
+                {
+                    debugMessages?.Add($"Unpacked {relativePath} ({compressedData.Length} bytes)");
+                }
             });
         }
+        
+        totalBytesUnpacked += bytesProcessed;
 
-        Console.WriteLine($"Unpacking packed text file {sourceFilePath} to memory finished. {result.Count} files unpacked in {debugWatch.Elapsed.TotalSeconds:F2} seconds.");
-        if (debugMessages != null && debugMessages.Count > 0)
+       
+        if (debugMessages is { Count: > 0 })
         {
-            foreach (var msg in debugMessages)
+            ShapeLogger.StartLogBlock("ContentPack UnpackTextToMemoryParallel Debug Info");
+            foreach (string msg in debugMessages)
             {
-                Console.WriteLine(msg);
+                ShapeLogger.LogInfo(msg);
             }
+            ShapeLogger.EndLogBlock();
         }
+        
+        ShapeLogger.LogInfo($"Unpacking packed text file {sourceFilePath} to memory finished. {result.Count} files with {totalBytesUnpacked} total bytes unpacked in {debugWatch.Elapsed.TotalSeconds:F2} seconds.");
+        
         return new Dictionary<string, byte[]>(result);
     }
     #endregion
@@ -492,13 +526,13 @@ public abstract class ContentPack
 
         if (!File.Exists(SourceFilePath))
         {
-            Console.WriteLine($"Source file not found: {SourceFilePath}");
+            ShapeLogger.LogError($"Source file not found: {SourceFilePath}");
             return result;
         }
 
         if (Path.GetExtension(SourceFilePath) != ".txt")
         {
-            Console.WriteLine($"Source file must have a .txt extension: {SourceFilePath}");
+            ShapeLogger.LogError($"Source file must have a .txt extension: {SourceFilePath}");
             return result;
         }
 
@@ -508,7 +542,7 @@ public abstract class ContentPack
         
         using var fs = new FileStream(SourceFilePath, FileMode.Open, FileAccess.Read);
         using var reader = new StreamReader(fs);
-        
+        if(DebugLogging) ShapeLogger.StartLogBlock("ContentPack CreateTextIndex Debug Info");
         while (!reader.EndOfStream)
         {
             // long offset = fs.Position;
@@ -520,13 +554,14 @@ public abstract class ContentPack
                 result[path] = dataOffset;
                 if (DebugLogging)
                 {
-                    Console.WriteLine($"Indexed File {path} with offset {dataOffset})");
+                    ShapeLogger.LogInfo($"Indexed File {path} with offset {dataOffset})");
                 }
             }
             indexedFiles++;
         }
-
-        Console.WriteLine($"Indexing packed text file {SourceFilePath} finished. {indexedFiles} files indexed in {debugWatch.Elapsed.TotalSeconds:F2} seconds.");
+        if(DebugLogging) ShapeLogger.EndLogBlock();
+        
+        ShapeLogger.LogInfo($"Indexing packed text file {SourceFilePath} finished. {indexedFiles} files indexed in {debugWatch.Elapsed.TotalSeconds:F2} seconds.");
         return result;
     }
     
