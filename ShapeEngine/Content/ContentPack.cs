@@ -5,7 +5,7 @@ using Raylib_cs;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Content;
-
+//TODO: Docs!
 public sealed class ContentPack
 {
     public enum UnpackMode
@@ -608,200 +608,366 @@ public sealed class ContentPack
     #endregion
     
     #region Load
-    public Texture2D LoadTexture(string filePath, out bool success)
+    public Texture2D LoadTexture(string filePath)
     {
-        success = false;
         if (!IsLoaded)
         {
             ShapeLogger.LogError("ContentPack LoadTexture() failed. Content pack not loaded!");
             return new();
         }
         
-        var data = GetFileData(filePath);
+        byte[]? data = GetFileData(filePath);
         if (data == null)
         {
             ShapeLogger.LogError($"ContentPack LoadTexture() failed. File {filePath} not found in pack!");
             return new();
         }
-        success = true;
         
-        var extension = Path.GetExtension(filePath);
+        string extension = Path.GetExtension(filePath);
         var t = ContentLoader.LoadTextureFromMemory(extension, data);
         return t;
     }
-
-    public Image LoadImage(string filePath, out bool success)
+    public Image LoadImage(string filePath)
     {
-        success = false;
         if (!IsLoaded)
         {
             ShapeLogger.LogError("ContentPack LoadImage() failed. Content pack not loaded!");
             return new();
         }
         
-        var data = GetFileData(filePath);
+        byte[]? data = GetFileData(filePath);
         if (data == null)
         {
             ShapeLogger.LogError($"ContentPack LoadImage() failed. File {filePath} not found in pack!");
             return new();
         }
-        success = true;
         
-        var extension = Path.GetExtension(filePath);
+        string extension = Path.GetExtension(filePath);
         var i = ContentLoader.LoadImageFromMemory(extension, data);
         return i;
     }
-
-    public Font LoadFont(string filePath, out bool success, int fontSize = 100)
+    public Font LoadFont(string filePath, int fontSize = 100)
     {
-        success = false;
         if (!IsLoaded)
         {
             ShapeLogger.LogError("ContentPack LoadFont() failed. Content pack not loaded!");
             return new();
         }
         
-        var data = GetFileData(filePath);
+        byte[]? data = GetFileData(filePath);
         if (data == null)
         {
             ShapeLogger.LogError($"ContentPack LoadFont() failed. File {filePath} not found in pack!");
             return new();
         }
-        success = true;
         
-        var extension = Path.GetExtension(filePath);
+        string extension = Path.GetExtension(filePath);
         var f = ContentLoader.LoadFontFromMemory(extension, data, fontSize);
         return f;
     }
-
-    public Wave LoadWave(string filePath, out bool success)
+    public Wave LoadWave(string filePath)
     {
-        success = false;
         if (!IsLoaded)
         {
             ShapeLogger.LogError("ContentPack LoadWave() failed. Content pack not loaded!");
             return new();
         }
         
-        var data = GetFileData(filePath);
+        byte[]? data = GetFileData(filePath);
         if (data == null)
         {
             ShapeLogger.LogError($"ContentPack LoadWave() failed. File {filePath} not found in pack!");
             return new();
         }
-        success = true;
         
-        var extension = Path.GetExtension(filePath);
+        string extension = Path.GetExtension(filePath);
         var w =  ContentLoader.LoadWaveFromMemory(extension, data);
         return w;
     }
-
-    public Sound LoadSound(string filePath, out bool success)
+    public Sound LoadSound(string filePath)
     {
-        success = false;
         if (!IsLoaded)
         {
             ShapeLogger.LogError("ContentPack LoadSound() failed. Content pack not loaded!");
             return new();
         }
         
-        var data = GetFileData(filePath);
+        byte[]? data = GetFileData(filePath);
         if (data == null)
         {
             ShapeLogger.LogError($"ContentPack LoadSound() failed. File {filePath} not found in pack!");
             return new();
         }
-        success = true;
         
-        var extension = Path.GetExtension(filePath);
+        string extension = Path.GetExtension(filePath);
         var s = ContentLoader.LoadSoundFromMemory(extension, data);
         return s;
 
     }
-
-    public Music LoadMusic(string filePath, out bool success)
+    public Music LoadMusic(string filePath)
     {
-        success = false;
         if (!IsLoaded)
         {
             ShapeLogger.LogError("ContentPack LoadMusic() failed. Content pack not loaded!");
             return new();
         }
         
-        var data = GetFileData(filePath);
+        byte[]? data = GetFileData(filePath);
         if (data == null)
         {
             ShapeLogger.LogError($"ContentPack LoadMusic() failed. File {filePath} not found in pack!");
             return new();
         }
-        success = true;
         
-        var extension = Path.GetExtension(filePath);
+        string extension = Path.GetExtension(filePath);
         var m = ContentLoader.LoadMusicFromMemory(extension, data);
         return m;
     }
-
-    public Shader LoadFragmentShader(string filePath, out bool success)
+    public Shader LoadFragmentShader(string filePath)
     {
-        success = false;
         if (!IsLoaded)
         {
             ShapeLogger.LogError("ContentPack LoadFragmentShader() failed. Content pack not loaded!");
             return new();
         }
         
-        var data = GetFileData(filePath);
+        byte[]? data = GetFileData(filePath);
         if (data == null)
         {
             ShapeLogger.LogError($"ContentPack LoadFragmentShader() failed. File {filePath} not found in pack!");
             return new();
         }
-        success = true;
         
         var fs = ContentLoader.LoadFragmentShaderFromMemory(data);
         return fs;
     }
-
-    public Shader LoadVertexShader(string filePath, out bool success)
+    public Shader LoadVertexShader(string filePath)
     {
-        success = false;
         if (!IsLoaded)
         {
             ShapeLogger.LogError("ContentPack LoadVertexShader() failed. Content pack not loaded!");
             return new();
         }
         
-        var data = GetFileData(filePath);
+        byte[]? data = GetFileData(filePath);
         if (data == null)
         {
             ShapeLogger.LogError($"ContentPack LoadVertexShader() failed. File {filePath} not found in pack!");
             return new();
         }
-        success = true;
         
         var vs = ContentLoader.LoadVertexShaderFromMemory(data);
         return vs;
     }
-
-    public string LoadText(string filePath, out bool success)
+    public string LoadText(string filePath)
     {
-        success = false;
         if (!IsLoaded)
         {
             ShapeLogger.LogError("ContentPack LoadText() failed. Content pack not loaded!");
             return string.Empty;
         }
         
-        var data = GetFileData(filePath);
+        byte[]? data = GetFileData(filePath);
         if (data == null)
         {
             ShapeLogger.LogError($"ContentPack LoadText() failed. File {filePath} not found in pack!");
             return string.Empty;
         }
-        success = true;
         
-        var extension = Path.GetExtension(filePath);
-        return ContentLoader.LoadTextFromMemory(extension, data);
+        // string extension = Path.GetExtension(filePath);
+        return ContentLoader.LoadTextFromMemory(data);
+    }
+
+    #endregion
+    
+    #region TryLoad
+    public bool TryLoadTexture(string filePath, out Texture2D texture)
+    {
+        if (!IsLoaded)
+        {
+            ShapeLogger.LogError("ContentPack LoadTexture() failed. Content pack not loaded!");
+            texture = new();
+            return false;
+        }
+        
+        byte[]? data = GetFileData(filePath);
+        if (data == null)
+        {
+            ShapeLogger.LogError($"ContentPack LoadTexture() failed. File {filePath} not found in pack!");
+            texture = new();
+            return false;
+        }
+
+        string extension = Path.GetExtension(filePath);
+        texture = ContentLoader.LoadTextureFromMemory(extension, data);
+        return true;
+    }
+    public bool TryLoadImage(string filePath, out Image image)
+    {
+        if (!IsLoaded)
+        {
+            ShapeLogger.LogError("ContentPack LoadImage() failed. Content pack not loaded!");
+            image = new();
+            return false;
+        }
+        
+        byte[]? data = GetFileData(filePath);
+        if (data == null)
+        {
+            ShapeLogger.LogError($"ContentPack LoadImage() failed. File {filePath} not found in pack!");
+            image = new();
+            return false;
+        }
+
+        string extension = Path.GetExtension(filePath);
+        image = ContentLoader.LoadImageFromMemory(extension, data);
+        return true;
+    }
+    public bool TryLoadFont(string filePath, out Font font, int fontSize = 100)
+    {
+        if (!IsLoaded)
+        {
+            ShapeLogger.LogError("ContentPack LoadFont() failed. Content pack not loaded!");
+            font = new();
+            return false;
+        }
+        
+        byte[]? data = GetFileData(filePath);
+        if (data == null)
+        {
+            ShapeLogger.LogError($"ContentPack LoadFont() failed. File {filePath} not found in pack!");
+            font = new();
+            return false;
+        }
+        
+        string extension = Path.GetExtension(filePath);
+        font = ContentLoader.LoadFontFromMemory(extension, data, fontSize);
+        return true;
+    }
+    public bool TryLoadWave(string filePath, out Wave wave)
+    {
+        if (!IsLoaded)
+        {
+            ShapeLogger.LogError("ContentPack LoadWave() failed. Content pack not loaded!");
+            wave = new();
+            return false;
+        }
+        
+        byte[]? data = GetFileData(filePath);
+        if (data == null)
+        {
+            ShapeLogger.LogError($"ContentPack LoadWave() failed. File {filePath} not found in pack!");
+            wave = new();
+            return false;
+        }
+        
+        string extension = Path.GetExtension(filePath);
+        wave =  ContentLoader.LoadWaveFromMemory(extension, data);
+        return true;
+    }
+    public bool TryLoadSound(string filePath, out Sound sound)
+    {
+        if (!IsLoaded)
+        {
+            ShapeLogger.LogError("ContentPack LoadSound() failed. Content pack not loaded!");
+            sound = new();
+            return false;
+        }
+        
+        byte[]? data = GetFileData(filePath);
+        if (data == null)
+        {
+            ShapeLogger.LogError($"ContentPack LoadSound() failed. File {filePath} not found in pack!");
+            sound = new();
+            return false;
+        }
+        
+        string extension = Path.GetExtension(filePath);
+        sound = ContentLoader.LoadSoundFromMemory(extension, data);
+        return true;
+
+    }
+    public bool TryLoadMusic(string filePath, out Music music)
+    {
+        if (!IsLoaded)
+        {
+            ShapeLogger.LogError("ContentPack LoadMusic() failed. Content pack not loaded!");
+            music = new();   
+            return false;
+        }
+        
+        byte[]? data = GetFileData(filePath);
+        if (data == null)
+        {
+            ShapeLogger.LogError($"ContentPack LoadMusic() failed. File {filePath} not found in pack!");
+            music = new();
+            return false;
+        }
+        
+        string extension = Path.GetExtension(filePath);
+        music = ContentLoader.LoadMusicFromMemory(extension, data);
+        return true;
+    }
+    public bool TryLoadFragmentShader(string filePath, out Shader shader)
+    {
+        if (!IsLoaded)
+        {
+            ShapeLogger.LogError("ContentPack LoadFragmentShader() failed. Content pack not loaded!");
+            shader = new();
+            return false;
+        }
+        
+        byte[]? data = GetFileData(filePath);
+        if (data == null)
+        {
+            ShapeLogger.LogError($"ContentPack LoadFragmentShader() failed. File {filePath} not found in pack!");
+            shader = new();
+            return false;
+        }
+        
+        shader = ContentLoader.LoadFragmentShaderFromMemory(data);
+        return true;
+    }
+    public bool TryLoadVertexShader(string filePath, out Shader shader)
+    {
+        if (!IsLoaded)
+        {
+            ShapeLogger.LogError("ContentPack LoadVertexShader() failed. Content pack not loaded!");
+            shader = new();
+            return false;
+        }
+        
+        byte[]? data = GetFileData(filePath);
+        if (data == null)
+        {
+            ShapeLogger.LogError($"ContentPack LoadVertexShader() failed. File {filePath} not found in pack!");
+            shader = new();
+            return false;
+        }
+        
+        shader = ContentLoader.LoadVertexShaderFromMemory(data);
+        return true;
+    }
+    public bool TryLoadText(string filePath, out string text)
+    {
+        if (!IsLoaded)
+        {
+            ShapeLogger.LogError("ContentPack LoadText() failed. Content pack not loaded!");
+            text = string.Empty;
+            return false;
+        }
+        
+        byte[]? data = GetFileData(filePath);
+        if (data == null)
+        {
+            ShapeLogger.LogError($"ContentPack LoadText() failed. File {filePath} not found in pack!");
+            text = string.Empty;
+            return false;
+        }
+        
+        // string extension = Path.GetExtension(filePath);
+        text = ContentLoader.LoadTextFromMemory(data);
+        return true;
     }
 
     #endregion
@@ -818,13 +984,13 @@ public sealed class ContentPack
         }
 
         var list = CurrentUnpackMode == UnpackMode.Memory ? cache.Keys.ToList() : index.Keys.ToList();
-        foreach (var file in list)
+        foreach (string file in list)
         {
-            var ext = Path.GetExtension(file);
-            if (ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.Texture))
+            string ext = Path.GetExtension(file);
+            if (!ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.Texture)) continue;
+            if (TryLoadTexture(file, out var texture))
             {
-                var texture = LoadTexture(file, out bool loaded);
-                if (loaded) result[file] = texture;
+                result[file] = texture;
             }
         }
 
@@ -849,13 +1015,13 @@ public sealed class ContentPack
             }
     
             var list = CurrentUnpackMode == UnpackMode.Memory ? cache.Keys.ToList() : index.Keys.ToList();
-            foreach (var file in list)
+            foreach (string file in list)
             {
-                var ext = Path.GetExtension(file);
-                if (ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.Texture))
+                string ext = Path.GetExtension(file);
+                if (!ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.Texture)) continue;
+                if (TryLoadImage(file, out var image))
                 {
-                    var image = LoadImage(file, out bool loaded);
-                    if (loaded) result[file] = image;
+                    result[file] = image;
                 }
             }
             
@@ -880,13 +1046,13 @@ public sealed class ContentPack
         }
 
         var list = CurrentUnpackMode == UnpackMode.Memory ? cache.Keys.ToList() : index.Keys.ToList();
-        foreach (var file in list)
+        foreach (string file in list)
         {
-            var ext = Path.GetExtension(file);
-            if (ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.Font))
+            string ext = Path.GetExtension(file);
+            if (!ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.Font)) continue;
+            if (TryLoadFont(file, out var font, fontSize))
             {
-                var font = LoadFont(file, out bool loaded, fontSize);
-                if (loaded) result[file] = font;
+                result[file] = font;
             }
         }
         
@@ -911,13 +1077,13 @@ public sealed class ContentPack
         }
 
         var list = CurrentUnpackMode == UnpackMode.Memory ? cache.Keys.ToList() : index.Keys.ToList();
-        foreach (var file in list)
+        foreach (string file in list)
         {
-            var ext = Path.GetExtension(file);
-            if (ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.Wave))
+            string ext = Path.GetExtension(file);
+            if (!ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.Wave)) continue;
+            if (TryLoadWave(file, out var wave))
             {
-                var wave = LoadWave(file, out bool loaded);
-                if (loaded) result[file] = wave;
+                result[file] = wave;
             }
         }
         
@@ -942,13 +1108,13 @@ public sealed class ContentPack
         }
 
         var list = CurrentUnpackMode == UnpackMode.Memory ? cache.Keys.ToList() : index.Keys.ToList();
-        foreach (var file in list)
+        foreach (string file in list)
         {
-            var ext = Path.GetExtension(file);
-            if (ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.Sound))
+            string ext = Path.GetExtension(file);
+            if (!ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.Sound)) continue;
+            if (TryLoadSound(file, out var sound))
             {
-                var sound = LoadSound(file, out bool loaded);
-                if (loaded) result[file] = sound;
+                result[file] = sound;
             }
         }
         
@@ -973,13 +1139,13 @@ public sealed class ContentPack
         }
 
         var list = CurrentUnpackMode == UnpackMode.Memory ? cache.Keys.ToList() : index.Keys.ToList();
-        foreach (var file in list)
+        foreach (string file in list)
         {
-            var ext = Path.GetExtension(file);
-            if (ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.Music))
+            string ext = Path.GetExtension(file);
+            if (!ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.Music)) continue;
+            if (TryLoadMusic(file, out var music))
             {
-                var music = LoadMusic(file, out bool loaded);
-                if (loaded) result[file] = music;
+                result[file] = music;
             }
         }
         
@@ -1004,13 +1170,13 @@ public sealed class ContentPack
         }
 
         var list = CurrentUnpackMode == UnpackMode.Memory ? cache.Keys.ToList() : index.Keys.ToList();
-        foreach (var file in list)
+        foreach (string file in list)
         {
-            var ext = Path.GetExtension(file);
-            if (ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.ShaderFragment))
+            string ext = Path.GetExtension(file);
+            if (!ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.ShaderFragment)) continue;
+            if (TryLoadFragmentShader(file, out var shader))
             {
-                var shader = LoadFragmentShader(file, out bool loaded);
-                if (loaded) result[file] = shader;
+                result[file] = shader;
             }
         }
 
@@ -1035,13 +1201,13 @@ public sealed class ContentPack
         }
 
         var list = CurrentUnpackMode == UnpackMode.Memory ? cache.Keys.ToList() : index.Keys.ToList();
-        foreach (var file in list)
+        foreach (string file in list)
         {
-            var ext = Path.GetExtension(file);
-            if (ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.ShaderVertex))
+            string ext = Path.GetExtension(file);
+            if (!ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.ShaderVertex)) continue;
+            if (TryLoadVertexShader(file, out var shader))
             {
-                var shader = LoadVertexShader(file, out bool loaded);
-                if (loaded) result[file] = shader;
+                result[file] = shader;
             }
         }
         
@@ -1068,11 +1234,11 @@ public sealed class ContentPack
         var list = CurrentUnpackMode == UnpackMode.Memory ? cache.Keys.ToList() : index.Keys.ToList();
         foreach (var file in list)
         {
-            var ext = Path.GetExtension(file);
-            if (ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.Text))
+            string ext = Path.GetExtension(file);
+            if (!ContentLoader.IsValidExtension(ext, ContentLoader.ContentType.Text)) continue;
+            if (TryLoadText(file, out string text))
             {
-                var text = LoadText(file, out bool loaded);
-                if (loaded) result[file] = text;
+                result[file] = text;
             }
         }
 

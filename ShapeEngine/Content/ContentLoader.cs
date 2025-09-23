@@ -3,7 +3,6 @@ using Raylib_cs;
 using ShapeEngine.Core.GameDef;
 using ShapeEngine.StaticLib;
 
-
 namespace ShapeEngine.Content;
 
 /// <summary>
@@ -269,24 +268,8 @@ public static class ContentLoader
     /// </example>
     public static Font LoadFont(string filePath, int fontSize = 100, TextureFilter textureFilter = TextureFilter.Trilinear)
     {
-        if (Game.IsOSX())
-        {
-            filePath = GetMacOsAppBundleResourcePath(filePath);
-        }
-        
-        try
-        {
-            var f = Raylib.LoadFontEx(filePath, fontSize, [], GLYPH_COUNT);
-            Raylib.SetTextureFilter(f.Texture, textureFilter);
-            return f;
-        }
-        catch (Exception ex)
-        {
-            ShapeLogger.LogError($"Error loading font from {filePath}: {ex.Message}");
-        }
-        
-        return default;
-        
+        TryLoadFont(filePath, out var font, fontSize, textureFilter);
+        return font;
     }
     /// <summary>
     /// Loads a fragment shader from a file.
@@ -308,19 +291,8 @@ public static class ContentLoader
     /// </example>
     public static Shader LoadFragmentShader(string filePath)
     {
-        if (Game.IsOSX())
-        {
-            filePath = GetMacOsAppBundleResourcePath(filePath);
-        }
-        try
-        {
-            return Raylib.LoadShader(null, filePath);
-        }
-        catch (Exception ex)
-        {
-            ShapeLogger.LogError($"Error loading fragment shader from {filePath}: {ex.Message}");
-        }
-        return default;
+        TryLoadFragmentShader(filePath, out var shader);
+        return shader;
     }
     /// <summary>
     /// Loads a vertex shader from a file.
@@ -342,21 +314,8 @@ public static class ContentLoader
     /// </example>
     public static Shader LoadVertexShader(string filePath)
     {
-        if (Game.IsOSX())
-        {
-            filePath = GetMacOsAppBundleResourcePath(filePath);
-        }
-        
-        try
-        {
-            return Raylib.LoadShader(filePath, "");
-        }
-        catch (Exception ex)
-        {
-            ShapeLogger.LogError($"Error loading vertex shader from {filePath}: {ex.Message}");
-        }
-        
-        return default;
+        TryLoadVertexShader(filePath, out var shader);
+        return shader;
     }
     /// <summary>
     /// Loads a texture from a file.
@@ -378,21 +337,8 @@ public static class ContentLoader
     /// </example>
     public static Texture2D LoadTexture(string filePath)
     {
-        if (Game.IsOSX())
-        {
-            filePath = GetMacOsAppBundleResourcePath(filePath);
-        }
-        
-        try
-        {
-            return Raylib.LoadTexture(filePath);
-        }
-        catch (Exception ex)
-        {
-            ShapeLogger.LogError($"Error loading texture from {filePath}: {ex.Message}");
-        }
-        
-        return default;
+        TryLoadTexture(filePath, out var texture);
+        return texture;
     }
     /// <summary>
     /// Loads an image from a file.
@@ -414,21 +360,8 @@ public static class ContentLoader
     /// </example>
     public static Image LoadImage(string filePath)
     {
-        if (Game.IsOSX())
-        {
-            filePath = GetMacOsAppBundleResourcePath(filePath);
-        }
-        
-        try
-        {
-            return Raylib.LoadImage(filePath);
-        }
-        catch (Exception ex)
-        {
-            ShapeLogger.LogError($"Error loading image from {filePath}: {ex.Message}");
-        }
-        
-        return default;
+        TryLoadImage(filePath, out var image);
+        return image;
     }
     /// <summary>
     /// Loads a wave sound from a file.
@@ -450,21 +383,8 @@ public static class ContentLoader
     /// </example>
     public static Wave LoadWave(string filePath)
     {
-        if (Game.IsOSX())
-        {
-            filePath = GetMacOsAppBundleResourcePath(filePath);
-        }
-        
-        try
-        {
-            return Raylib.LoadWave(filePath);
-        }
-        catch (Exception ex)
-        {
-            ShapeLogger.LogError($"Error loading wave from {filePath}: {ex.Message}");
-        }
-        
-        return default;
+        TryLoadWave(filePath, out var wave);
+        return wave;
     }
     /// <summary>
     /// Loads a sound from a file.
@@ -486,21 +406,8 @@ public static class ContentLoader
     /// </example>
     public static Sound LoadSound(string filePath)
     {
-        if (Game.IsOSX())
-        {
-            filePath = GetMacOsAppBundleResourcePath(filePath);
-        }
-        
-        try
-        {
-            return Raylib.LoadSound(filePath);
-        }
-        catch (Exception ex)
-        {
-            ShapeLogger.LogError($"Error loading sound from {filePath}: {ex.Message}");
-        }
-        
-        return default;
+        TryLoadSound(filePath, out var sound);
+        return sound;
     }
     /// <summary>
     /// Loads a music stream from a file.
@@ -520,23 +427,10 @@ public static class ContentLoader
     ///   <item><description>"Resources/Images/Background.png"</description></item>
     /// </list>
     /// </example>
-    public static Music LoadMusicStream(string filePath)
+    public static Music LoadMusic(string filePath)
     {
-        if (Game.IsOSX())
-        {
-            filePath = GetMacOsAppBundleResourcePath(filePath);
-        }
-        
-        try
-        {
-            return Raylib.LoadMusicStream(filePath);
-        }
-        catch (Exception ex)
-        {
-            ShapeLogger.LogError($"Error loading music stream from {filePath}: {ex.Message}");
-        }
-        
-        return default;
+        TryLoadMusic(filePath, out var music);
+        return music;
     }
     /// <summary>
     /// Loads a text file as a string.
@@ -561,26 +455,698 @@ public static class ContentLoader
     /// </example>
     public static string LoadText(string filePath)
     {
+        TryLoadText(filePath, out string text);
+        return text;
+    }
+
+    #endregion
+    
+    #region TryLoad
+    //TODO: extension checks
+    
+    /// <summary>
+    /// Attempts to load a font from the specified file path with the given font size and texture filter.
+    /// Automatically resolves resource paths for macOS application bundles.
+    /// </summary>
+    /// <param name="filePath">The path to the font file.</param>
+    /// <param name="font">The loaded Font object if successful; otherwise, a default Font.</param>
+    /// <param name="fontSize">The size of the font to load. Default is 100.</param>
+    /// <param name="textureFilter">The texture filter to apply to the font texture. Default is Trilinear.</param>
+    /// <returns>True if the font was loaded successfully; otherwise, false.</returns>
+    public static bool TryLoadFont(string filePath, out Font font, int fontSize = 100, TextureFilter textureFilter = TextureFilter.Trilinear)
+    {
+        if (Game.IsOSX())
+        {
+            filePath = GetMacOsAppBundleResourcePath(filePath);
+        }
+
+        if (!File.Exists(filePath))
+        {
+            ShapeLogger.LogError($"Loading resource failed, file does not exist: {filePath}");
+            font = new();
+            return false;
+        }
+        
+        var extension = Path.GetExtension(filePath).ToLower();
+        var contentType = ContentType.Font;
+        if (!IsValidExtension(extension, contentType))
+        {
+            ShapeLogger.LogError($"Loading resource failed, invalid file extension '{extension}' for Font: {filePath}. Current valid extensions for {contentType} are: {string.Join(", ", GetValidFileExtensions(contentType))}");
+            font = new();
+            return false;
+        }
+        
+        try
+        {
+            font = Raylib.LoadFontEx(filePath, fontSize, [], GLYPH_COUNT);
+            Raylib.SetTextureFilter(font.Texture, textureFilter);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ShapeLogger.LogError($"Error loading font from {filePath}: {ex.Message}");
+            font = new();
+            return false;
+        }
+    }
+    /// <summary>
+    /// Attempts to load a fragment shader from the specified file path.
+    /// Automatically resolves resource paths for macOS application bundles.
+    /// </summary>
+    /// <param name="filePath">The path to the fragment shader file.</param>
+    /// <param name="shader">The loaded Shader object if successful; otherwise, a default Shader.</param>
+    /// <returns>True if the fragment shader was loaded successfully; otherwise, false.</returns>
+    public static bool TryLoadFragmentShader(string filePath, out Shader shader)
+    {
         if (Game.IsOSX())
         {
             filePath = GetMacOsAppBundleResourcePath(filePath);
         }
         
+        if (!File.Exists(filePath))
+        {
+            ShapeLogger.LogError($"Loading resource failed, file does not exist: {filePath}");
+            shader = new();
+            return false;
+        }
+        
+        string extension = Path.GetExtension(filePath).ToLower();
+        var contentType = ContentType.ShaderFragment;
+        if (!IsValidExtension(extension, contentType))
+        {
+            ShapeLogger.LogError($"Loading resource failed, invalid file extension '{extension}' for {contentType}: {filePath}. Current valid extensions for {contentType} are: {string.Join(", ", GetValidFileExtensions(contentType))}");
+            shader = new();
+            return false;
+        }
+        
         try
         {
-            return File.ReadAllText(filePath);
+            shader = Raylib.LoadShader(null, filePath);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ShapeLogger.LogError($"Error loading fragment shader from {filePath}: {ex.Message}");
+            shader = new();
+            return false;
+        }
+    }
+    /// <summary>
+    /// Attempts to load a vertex shader from the specified file path.
+    /// Automatically resolves resource paths for macOS application bundles.
+    /// </summary>
+    /// <param name="filePath">The path to the vertex shader file.</param>
+    /// <param name="shader">The loaded Shader object if successful; otherwise, a default Shader.</param>
+    /// <returns>True if the vertex shader was loaded successfully; otherwise, false.</returns>
+    public static bool TryLoadVertexShader(string filePath, out Shader shader)
+    {
+        if (Game.IsOSX())
+        {
+            filePath = GetMacOsAppBundleResourcePath(filePath);
+        }
+        
+        if (!File.Exists(filePath))
+        {
+            ShapeLogger.LogError($"Loading resource failed, file does not exist: {filePath}");
+            shader = new();
+            return false;
+        }
+        
+        try
+        {
+            shader = Raylib.LoadShader(filePath, "");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ShapeLogger.LogError($"Error loading vertex shader from {filePath}: {ex.Message}");
+            shader = new();
+            return false;
+        }
+    }
+    /// <summary>
+    /// Attempts to load a texture from the specified file path.
+    /// Automatically resolves resource paths for macOS application bundles.
+    /// </summary>
+    /// <param name="filePath">The path to the texture file.</param>
+    /// <param name="texture">The loaded Texture2D object if successful; otherwise, a default Texture2D.</param>
+    /// <returns>True if the texture was loaded successfully; otherwise, false.</returns>
+    public static bool TryLoadTexture(string filePath, out Texture2D texture)
+    {
+        if (Game.IsOSX())
+        {
+            filePath = GetMacOsAppBundleResourcePath(filePath);
+        }
+        
+        if (!File.Exists(filePath))
+        {
+            ShapeLogger.LogError($"Loading resource failed, file does not exist: {filePath}");
+            texture = new();
+            return false;
+        }
+        
+        try
+        {
+            texture = Raylib.LoadTexture(filePath);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ShapeLogger.LogError($"Error loading texture from {filePath}: {ex.Message}");
+            texture = new();
+            return false;
+        }
+    }
+    /// <summary>
+    /// Attempts to load an image from the specified file path.
+    /// Automatically resolves resource paths for macOS application bundles.
+    /// </summary>
+    /// <param name="filePath">The path to the image file.</param>
+    /// <param name="image">The loaded Image object if successful; otherwise, a default Image.</param>
+    /// <returns>True if the image was loaded successfully; otherwise, false.</returns>
+    public static bool TryLoadImage(string filePath, out Image image)
+    {
+        if (Game.IsOSX())
+        {
+            filePath = GetMacOsAppBundleResourcePath(filePath);
+        }
+        
+        if (!File.Exists(filePath))
+        {
+            ShapeLogger.LogError($"Loading resource failed, file does not exist: {filePath}");
+            image = new();
+            return false;
+        }
+        
+        try
+        {
+            image = Raylib.LoadImage(filePath);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ShapeLogger.LogError($"Error loading image from {filePath}: {ex.Message}");
+            image = new();
+            return false;
+        }
+    }
+    /// <summary>
+    /// Attempts to load a wave sound from the specified file path.
+    /// Automatically resolves resource paths for macOS application bundles.
+    /// </summary>
+    /// <param name="filePath">The path to the wave sound file.</param>
+    /// <param name="wave">The loaded Wave object if successful; otherwise, a default Wave.</param>
+    /// <returns>True if the wave was loaded successfully; otherwise, false.</returns>
+    public static bool TryLoadWave(string filePath, out Wave wave)
+    {
+        if (Game.IsOSX())
+        {
+            filePath = GetMacOsAppBundleResourcePath(filePath);
+        }
+       
+        if (!File.Exists(filePath))
+        {
+            ShapeLogger.LogError($"Loading resource failed, file does not exist: {filePath}");
+            wave = new();
+            return false;
+        }
+        
+        try
+        {
+            wave = Raylib.LoadWave(filePath);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ShapeLogger.LogError($"Error loading wave from {filePath}: {ex.Message}");
+            wave = new();
+            return false;
+        }
+    }
+    /// <summary>
+    /// Attempts to load a sound from the specified file path.
+    /// Automatically resolves resource paths for macOS application bundles.
+    /// </summary>
+    /// <param name="filePath">The path to the sound file.</param>
+    /// <param name="sound">The loaded Sound object if successful; otherwise, a default Sound.</param>
+    /// <returns>True if the sound was loaded successfully; otherwise, false.</returns>
+    public static bool TryLoadSound(string filePath, out Sound sound)
+    {
+        if (Game.IsOSX())
+        {
+            filePath = GetMacOsAppBundleResourcePath(filePath);
+        }
+        
+        if (!File.Exists(filePath))
+        {
+            ShapeLogger.LogError($"Loading resource failed, file does not exist: {filePath}");
+            sound = new();
+            return false;
+        }
+        
+        try
+        {
+            sound = Raylib.LoadSound(filePath);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ShapeLogger.LogError($"Error loading sound from {filePath}: {ex.Message}");
+            sound = new();
+            return false;
+        }
+    }
+    /// <summary>
+    /// Attempts to load a music stream from the specified file path.
+    /// Automatically resolves resource paths for macOS application bundles.
+    /// </summary>
+    /// <param name="filePath">The path to the music file.</param>
+    /// <param name="music">The loaded Music object if successful; otherwise, a default Music.</param>
+    /// <returns>True if the music stream was loaded successfully; otherwise, false.</returns>
+    public static bool TryLoadMusic(string filePath, out Music music)
+    {
+        if (Game.IsOSX())
+        {
+            filePath = GetMacOsAppBundleResourcePath(filePath);
+        }
+        
+        if (!File.Exists(filePath))
+        {
+            ShapeLogger.LogError($"Loading resource failed, file does not exist: {filePath}");
+            music = new();
+            return false;
+        }
+        
+        try
+        {
+            music = Raylib.LoadMusicStream(filePath);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ShapeLogger.LogError($"Error loading music stream from {filePath}: {ex.Message}");
+            music = new();
+            return false;
+        }
+    }
+    /// <summary>
+    /// Attempts to load a text file as a string.
+    /// Automatically resolves resource paths for macOS application bundles.
+    /// </summary>
+    /// <param name="filePath">The path to the text file.</param>
+    /// <param name="text">The loaded text content if successful; otherwise, an empty string.</param>
+    /// <returns>True if the text was loaded successfully; otherwise, false.</returns>
+    public static bool TryLoadText(string filePath, out string text)
+    {
+        if (Game.IsOSX())
+        {
+            filePath = GetMacOsAppBundleResourcePath(filePath);
+        }
+        
+        if (!File.Exists(filePath))
+        {
+            ShapeLogger.LogError($"Loading resource failed, file does not exist: {filePath}");
+            text = string.Empty;
+            return false;
+        }
+        
+        try
+        {
+            text = File.ReadAllText(filePath);
+            return true;
         }
         catch (Exception ex)
         {
             ShapeLogger.LogError($"Error loading text from {filePath}: {ex.Message}");
+            text = string.Empty;
+            return false;
         }
-        
-        return string.Empty;
     }
 
     #endregion
     
-    #region Load from Data
+    #region TryLoad from Memory
+
+    /// <summary>
+    /// Attempts to load a texture from raw content data in memory.
+    /// </summary>
+    /// <param name="extension">The file extension (e.g. ".png").
+    /// Will be checked against valid extensions for <see cref="ContentType.Texture"/></param>
+    /// <param name="data">The raw image data as a byte array.</param>
+    /// <param name="texture">The loaded Texture2D object if successful; otherwise, a default Texture2D.</param>
+    /// <returns>True if the texture was loaded successfully; otherwise, false.</returns>
+    /// <remarks>
+    /// Valid extensions for <see cref="ContentType.Texture"/> can be managed via <see cref="AddValidFileExtension"/>,
+    /// <see cref="RemoveValidFileExtension"/>,and <see cref="SetValidFileExtensions"/>.
+    /// </remarks>
+    public static bool TryLoadTextureFromMemory(string extension, byte[] data, out Texture2D texture)
+    {
+        if (data.Length <= 0)
+        {
+            ShapeLogger.LogError($"Loading resource failed, data has zero length.");
+            texture = new();
+            return false;
+        }
+        if (extension == string.Empty)
+        {
+            ShapeLogger.LogError($"Loading resource failed, extension is empty.");
+            texture = new();
+            return false;
+        }
+        if (!IsValidExtension(extension, ContentType.Texture))
+        {
+            ShapeLogger.LogError($"Loading resource failed, file extension is invalid: {extension}. Current Valid extensions for {ContentType.Texture} are: {string.Join(", ", GetValidFileExtensions(ContentType.Texture))}");
+            texture = new();
+            return false;
+        }
+        
+        try
+        {
+            if (!TryLoadImageFromMemory(extension, data, out var image))
+            {
+                texture = new();
+                return false;
+            }
+            texture = Raylib.LoadTextureFromImage(image);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ShapeLogger.LogError($"Error loading texture from memory: {ex.Message}");
+            texture = new();
+            return false;
+        }
+    }
+    /// <summary>
+    /// Attempts to load an image from raw content data in memory.
+    /// </summary>
+    /// <param name="extension">The file extension (e.g. ".png"). Will be checked against valid extensions for <see cref="ContentType.Texture"/>.</param>
+    /// <param name="data">The raw image data as a byte array.</param>
+    /// <param name="image">The loaded Image object if successful; otherwise, a default Image.</param>
+    /// <returns>True if the image was loaded successfully; otherwise, false.</returns>
+    /// <remarks>
+    /// Valid extensions for <see cref="ContentType.Texture"/> can be managed via <see cref="AddValidFileExtension"/>,
+    /// <see cref="RemoveValidFileExtension"/>,and <see cref="SetValidFileExtensions"/>.
+    /// </remarks>
+    public static bool TryLoadImageFromMemory(string extension, byte[] data, out Image image)
+    {
+        if (data.Length <= 0)
+        {
+            ShapeLogger.LogError($"Loading resource failed, data has zero length.");
+            image = new();
+            return false;
+        }
+        if (extension == string.Empty)
+        {
+            ShapeLogger.LogError($"Loading resource failed, extension is empty.");
+            image = new();
+            return false;
+        }
+        if (!IsValidExtension(extension, ContentType.Texture))
+        {
+            ShapeLogger.LogError($"Loading resource failed, file extension is invalid: {extension}. Current Valid extensions for {ContentType.Texture} are: {string.Join(", ", GetValidFileExtensions(ContentType.Texture))}");
+            image = new();
+            return false;
+        }
+        
+        try
+        {
+            image = Raylib.LoadImageFromMemory(extension, data);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ShapeLogger.LogError($"Error loading image from memory: {ex.Message}");
+            image = new();
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Attempts to load a font from raw content data in memory.
+    /// </summary>
+    /// <param name="extension">The file extension (e.g. ".ttf"). Will be checked against valid extensions for <see cref="ContentType.Font"/>.</param>
+    /// <param name="data">The raw font data as a byte array.</param>
+    /// <param name="font">The loaded Font object if successful; otherwise, a default Font.</param>
+    /// <param name="fontSize">The size of the font to load. Default is 100.</param>
+    /// <returns>True if the font was loaded successfully; otherwise, false.</returns>
+    /// <remarks>
+    /// Valid extensions for <see cref="ContentType.Font"/> can be managed via <see cref="AddValidFileExtension"/>,
+    /// <see cref="RemoveValidFileExtension"/>,and <see cref="SetValidFileExtensions"/>.
+    /// </remarks>
+    public static bool TryLoadFontFromMemory(string extension, byte[] data, out Font font, int fontSize = 100)
+    {
+        if (data.Length <= 0)
+        {
+            ShapeLogger.LogError($"Loading resource failed, data has zero length.");
+            font = new();
+            return false;
+        }
+        if (extension == string.Empty)
+        {
+            ShapeLogger.LogError($"Loading resource failed, extension is empty.");
+            font = new();
+            return false;
+        }
+        if (!IsValidExtension(extension, ContentType.Font))
+        {
+            ShapeLogger.LogError($"Loading resource failed, file extension is invalid: {extension}. Current Valid extensions for {ContentType.Font} are: {string.Join(", ", GetValidFileExtensions(ContentType.Font))}");
+            font = new();
+            return false;
+        }
+        
+        try
+        {
+            font = Raylib.LoadFontFromMemory(extension, data, fontSize, [], GLYPH_COUNT);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ShapeLogger.LogError($"Error loading font from memory: {ex.Message}");
+            font = new();
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Attempts to load a wave sound from raw content data in memory.
+    /// </summary>
+    /// <param name="extension">The file extension (e.g. ".wav"). Will be checked against valid extensions for <see cref="ContentType.Wave"/>.</param>
+    /// <param name="data">The raw wave data as a byte array.</param>
+    /// <param name="wave">The loaded Wave object if successful; otherwise, a default Wave.</param>
+    /// <returns>True if the wave was loaded successfully; otherwise, false.</returns>
+    /// <remarks>
+    /// Valid extensions for <see cref="ContentType.Wave"/> can be managed via <see cref="AddValidFileExtension"/>,
+    /// <see cref="RemoveValidFileExtension"/>,and <see cref="SetValidFileExtensions"/>.
+    /// </remarks>
+    public static bool TryLoadWaveFromMemory(string extension, byte[] data, out Wave wave)
+    {
+        if (data.Length <= 0)
+        {
+            ShapeLogger.LogError($"Loading resource failed, data has zero length.");
+            wave = new();
+            return false;
+        }
+        if (extension == string.Empty)
+        {
+            ShapeLogger.LogError($"Loading resource failed, extension is empty.");
+            wave = new();
+            return false;
+        }
+        if (!IsValidExtension(extension, ContentType.Wave))
+        {
+            ShapeLogger.LogError($"Loading resource failed, file extension is invalid: {extension}. Current Valid extensions for {ContentType.Wave} are: {string.Join(", ", GetValidFileExtensions(ContentType.Wave))}");
+            wave = new();
+            return false;
+        }
+        
+        try
+        {
+            wave = Raylib.LoadWaveFromMemory(extension, data);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ShapeLogger.LogError($"Error loading wave from memory: {ex.Message}");
+            wave = new();
+            return false;
+        }
+    }
+    /// <summary>
+    /// Attempts to load a sound from raw content data in memory.
+    /// </summary>
+    /// <param name="extension">The file extension (e.g. ".wav"). Will be checked against valid extensions for <see cref="ContentType.Sound"/>.</param>
+    /// <param name="data">The raw sound data as a byte array.</param>
+    /// <param name="sound">The loaded Sound object if successful; otherwise, a default Sound.</param>
+    /// <returns>True if the sound was loaded successfully; otherwise, false.</returns>
+    /// <remarks>
+    /// Valid extensions for <see cref="ContentType.Sound"/> can be managed via <see cref="AddValidFileExtension"/>,
+    /// <see cref="RemoveValidFileExtension"/>, and <see cref="SetValidFileExtensions"/>.
+    /// </remarks>
+    public static bool TryLoadSoundFromMemory(string extension, byte[] data, out Sound sound)
+    {
+        if (data.Length <= 0)
+        {
+            ShapeLogger.LogError($"Loading resource failed, data has zero length.");
+            sound = new();
+            return false;
+        }
+        if (extension == string.Empty)
+        {
+            ShapeLogger.LogError($"Loading resource failed, extension is empty.");
+            sound = new();
+            return false;
+        }
+        if (!IsValidExtension(extension, ContentType.Sound))
+        {
+            ShapeLogger.LogError($"Loading resource failed, file extension is invalid: {extension}. Current Valid extensions for {ContentType.Sound} are: {string.Join(", ", GetValidFileExtensions(ContentType.Sound))}");
+            sound = new();
+            return false;
+        }
+        
+        try
+        {
+            sound = Raylib.LoadSoundFromWave(Raylib.LoadWaveFromMemory(extension, data));
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ShapeLogger.LogError($"Error loading sound from memory: {ex.Message}");
+            sound = new();
+            return false;
+        }
+    }
+    /// <summary>
+    /// Attempts to load a music stream from raw content data in memory.
+    /// </summary>
+    /// <param name="extension">The file extension (e.g. ".mp3", ".ogg", ".flac", ".mod", ".xm"). Will be checked against valid extensions for <see cref="ContentType.Music"/>.</param>
+    /// <param name="data">The raw music data as a byte array.</param>
+    /// <param name="music">The loaded Music object if successful; otherwise, a default Music.</param>
+    /// <returns>True if the music stream was loaded successfully; otherwise, false.</returns>
+    /// <remarks>
+    /// Valid extensions for <see cref="ContentType.Music"/> can be managed via <see cref="AddValidFileExtension"/>, <see cref="RemoveValidFileExtension"/>, and <see cref="SetValidFileExtensions"/>.
+    /// </remarks>
+    public static bool TryLoadMusicFromMemory(string extension, byte[] data, out Music music)
+    {
+        if (data.Length <= 0)
+        {
+            ShapeLogger.LogError($"Loading resource failed, data has zero length.");
+            music = new();
+            return false;
+        }
+        if (extension == string.Empty)
+        {
+            ShapeLogger.LogError($"Loading resource failed, extension is empty.");
+            music = new();
+            return false;
+        }
+        if (!IsValidExtension(extension, ContentType.Music))
+        {
+            ShapeLogger.LogError($"Loading resource failed, file extension is invalid: {extension}. Current Valid extensions for {ContentType.Music} are: {string.Join(", ", GetValidFileExtensions(ContentType.Music))}");
+            music = new();
+            return false;
+        }
+        
+        try
+        {
+            music = Raylib.LoadMusicStreamFromMemory(extension, data);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ShapeLogger.LogError($"Error loading music from memory: {ex.Message}");
+            music = new();
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Attempts to load a fragment shader from raw content data in memory.
+    /// </summary>
+    /// <param name="data">The raw fragment shader data as a byte array.</param>
+    /// <param name="shader">The loaded Shader object if successful; otherwise, a default Shader.</param>
+    /// <returns>True if the fragment shader was loaded successfully; otherwise, false.</returns>
+    public static bool TryLoadFragmentShaderFromMemory(byte[] data, out Shader shader)
+    {
+        if (data.Length <= 0)
+        {
+            ShapeLogger.LogError($"Loading resource failed, data has zero length.");
+            shader = new();
+            return false;
+        }
+        
+        try
+        {
+            string file = Encoding.Default.GetString(data);
+            shader = Raylib.LoadShaderFromMemory(null, file);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ShapeLogger.LogError($"Error loading fragment shader from memory: {ex.Message}");
+            shader = new();
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Attempts to load a vertex shader from raw content data in memory.
+    /// </summary>
+    /// <param name="data">The raw vertex shader data as a byte array.</param>
+    /// <param name="shader">The loaded Shader object if successful; otherwise, a default Shader.</param>
+    /// <returns>True if the vertex shader was loaded successfully; otherwise, false.</returns>
+    public static bool TryLoadVertexShaderFromMemory(byte[] data, out Shader shader)
+    {
+        if (data.Length <= 0)
+        {
+            ShapeLogger.LogError($"Loading resource failed, data has zero length.");
+            shader = new();
+            return false;
+        }
+        
+        try
+        {
+            string file = Encoding.Default.GetString(data);
+            shader = Raylib.LoadShaderFromMemory(file, null);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ShapeLogger.LogError($"Error loading vertex shader from memory: {ex.Message}");
+            shader = new();
+            return false;
+        }
+    }
+    /// <summary>
+    /// Attempts to load a text string from raw content data in memory.
+    /// </summary>
+    /// <param name="data">The raw text data as a byte array.</param>
+    /// <param name="text">The loaded text content if successful; otherwise, an empty string.</param>
+    /// <returns>True if the text was loaded successfully; otherwise, false.</returns>
+    public static bool TryLoadTextFromMemory(byte[] data, out string text)
+    {
+        if (data.Length <= 0)
+        {
+            ShapeLogger.LogError($"Loading resource failed, data has zero length.");
+            text = string.Empty;
+            return false;
+        }
+        
+        try
+        {
+            text = Encoding.Default.GetString(data);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ShapeLogger.LogError($"Error loading text from memory: {ex.Message}");
+            text = string.Empty;
+            return false;
+        }
+    }
+    #endregion
+    
+    #region Load from Memory
     
     /// <summary>
     /// Loads a texture from raw content data.
@@ -590,7 +1156,8 @@ public static class ContentLoader
     /// <returns>The loaded Texture2D object.</returns>
     public static Texture2D LoadTextureFromMemory(string extension, byte[] data)
     {
-        return Raylib.LoadTextureFromImage(LoadImageFromMemory(extension, data));
+        TryLoadTextureFromMemory(extension, data, out var texture);
+        return texture;
     }
 
     /// <summary>
@@ -601,7 +1168,8 @@ public static class ContentLoader
     /// <returns>The loaded Image object.</returns>
     public static Image LoadImageFromMemory(string extension, byte[] data)
     {
-        return Raylib.LoadImageFromMemory(extension, data);
+        TryLoadImageFromMemory(extension, data, out var image);
+        return image;
     }
 
     /// <summary>
@@ -613,7 +1181,8 @@ public static class ContentLoader
     /// <returns>The loaded Font object.</returns>
     public static Font LoadFontFromMemory(string extension, byte[] data, int fontSize = 100)
     {
-        return Raylib.LoadFontFromMemory(extension, data, fontSize, [], GLYPH_COUNT);
+        TryLoadFontFromMemory(extension, data, out var font, fontSize);
+        return font;
     }
 
     /// <summary>
@@ -624,7 +1193,8 @@ public static class ContentLoader
     /// <returns>The loaded Wave object.</returns>
     public static Wave LoadWaveFromMemory(string extension, byte[] data)
     {
-        return Raylib.LoadWaveFromMemory(extension, data);
+        TryLoadWaveFromMemory(extension, data, out var wave);
+        return wave;
     }
 
     /// <summary>
@@ -635,7 +1205,8 @@ public static class ContentLoader
     /// <returns>The loaded Sound object.</returns>
     public static Sound LoadSoundFromMemory(string extension, byte[] data)
     {
-        return Raylib.LoadSoundFromWave(LoadWaveFromMemory(extension, data));
+        TryLoadSoundFromMemory(extension, data, out var sound);
+        return sound;
     }
 
     /// <summary>
@@ -646,7 +1217,8 @@ public static class ContentLoader
     /// <returns>The loaded Music object.</returns>
     public static Music LoadMusicFromMemory(string extension, byte[] data)
     {
-        return Raylib.LoadMusicStreamFromMemory(extension, data);
+        TryLoadMusicFromMemory(extension, data, out var music);
+        return music;
     }
 
     /// <summary>
@@ -656,8 +1228,8 @@ public static class ContentLoader
     /// <returns>The loaded Shader object.</returns>
     public static Shader LoadFragmentShaderFromMemory(byte[] data)
     {
-        string file = Encoding.Default.GetString(data);
-        return Raylib.LoadShaderFromMemory(null, file);
+        TryLoadFragmentShaderFromMemory(data, out var shader);
+        return shader;
     }
 
     /// <summary>
@@ -667,24 +1239,24 @@ public static class ContentLoader
     /// <returns>The loaded Shader object.</returns>
     public static Shader LoadVertexShaderFromMemory(byte[] data)
     {
-        string file = Encoding.Default.GetString(data);
-        return Raylib.LoadShaderFromMemory(file, null);
+        TryLoadVertexShaderFromMemory(data, out var shader);
+        return shader;
     }
 
     /// <summary>
     /// Loads text content from raw data.
     /// </summary>
-    /// <param name="extension">The file extension (e.g. ".txt").</param>
     /// <param name="data">The raw text data as a byte array.</param>
     /// <returns>The loaded text as a string.</returns>
-    public static string LoadTextFromMemory(string extension, byte[] data)
+    public static string LoadTextFromMemory(byte[] data)
     {
-        return Encoding.Default.GetString(data);
+        TryLoadTextFromMemory(data, out string text);
+        return text;
     }
-
     #endregion
     
     #region Load Directories
+    
     /// <summary>
     /// Loads all fonts from a directory and returns a dictionary mapping relative file paths to Font objects.
     /// </summary>
@@ -699,20 +1271,14 @@ public static class ContentLoader
     /// </remarks>
     public static Dictionary<string, Font> LoadFontsFromDirectory(string directoryPath, int fontSize = 100, TextureFilter textureFilter = TextureFilter.Trilinear, bool recursive = false)
     {
-        var fontPaths = GetResourceFilePaths(directoryPath, ContentType.Font, recursive);
+        string[] fontPaths = GetResourceFilePaths(directoryPath, ContentType.Font, recursive);
         var fontDict = new Dictionary<string, Font>(fontPaths.Length);
 
-        foreach (var path in fontPaths)
+        foreach (string path in fontPaths)
         {
-            try
-            {
-                string relativePath = Path.GetRelativePath(directoryPath, path);
-                fontDict[relativePath] = LoadFont(path, fontSize, textureFilter);
-            }
-            catch (Exception ex)
-            {
-                ShapeLogger.LogError($"Error loading font from {path}: {ex.Message}");
-            }
+            if (!TryLoadFont(path, out var font)) continue;
+            string relativePath = Path.GetRelativePath(directoryPath, path);
+            fontDict[relativePath] = font;
         }
 
         return fontDict;
@@ -730,20 +1296,14 @@ public static class ContentLoader
     /// </remarks>
     public static Dictionary<string, Shader> LoadFragmentShadersFromDirectory(string directoryPath, bool recursive = false)
     {
-        var shaderPaths = GetResourceFilePaths(directoryPath, ContentType.ShaderFragment, recursive);
+        string[] shaderPaths = GetResourceFilePaths(directoryPath, ContentType.ShaderFragment, recursive);
         var shaderDict = new Dictionary<string, Shader>(shaderPaths.Length);
 
-        foreach (var path in shaderPaths)
+        foreach (string path in shaderPaths)
         {
-            try
-            {
-                string relativePath = Path.GetRelativePath(directoryPath, path);
-                shaderDict[relativePath] = LoadFragmentShader(path);
-            }
-            catch (Exception ex)
-            {
-                ShapeLogger.LogError($"Error loading fragment shader from {path}: {ex.Message}");
-            }
+            if (!TryLoadFragmentShader(path, out var shader)) continue;
+            string relativePath = Path.GetRelativePath(directoryPath, path);
+            shaderDict[relativePath] = shader;
         }
 
         return shaderDict;
@@ -761,20 +1321,14 @@ public static class ContentLoader
     /// </remarks>
     public static Dictionary<string, Shader> LoadVertexShadersFromDirectory(string directoryPath, bool recursive = false)
     {
-        var shaderPaths = GetResourceFilePaths(directoryPath, ContentType.ShaderVertex, recursive);
+        string[] shaderPaths = GetResourceFilePaths(directoryPath, ContentType.ShaderVertex, recursive);
         var shaderDict = new Dictionary<string, Shader>(shaderPaths.Length);
 
-        foreach (var path in shaderPaths)
+        foreach (string path in shaderPaths)
         {
-            try
-            {
-                string relativePath = Path.GetRelativePath(directoryPath, path);
-                shaderDict[relativePath] = LoadVertexShader(path);
-            }
-            catch (Exception ex)
-            {
-                ShapeLogger.LogError($"Error loading vertex shader from {path}: {ex.Message}");
-            }
+            if (!TryLoadVertexShader(path, out var shader)) continue;
+            string relativePath = Path.GetRelativePath(directoryPath, path);
+            shaderDict[relativePath] = shader;
         }
 
         return shaderDict;
@@ -792,20 +1346,14 @@ public static class ContentLoader
     /// </remarks>
     public static Dictionary<string, Texture2D> LoadTexturesFromDirectory(string directoryPath, bool recursive = false)
     {
-        var texturePaths = GetResourceFilePaths(directoryPath, ContentType.Texture, recursive);
+        string[] texturePaths = GetResourceFilePaths(directoryPath, ContentType.Texture, recursive);
         var textureDict = new Dictionary<string, Texture2D>(texturePaths.Length);
 
-        foreach (var path in texturePaths)
+        foreach (string path in texturePaths)
         {
-            try
-            {
-                string relativePath = Path.GetRelativePath(directoryPath, path);
-                textureDict[relativePath] = LoadTexture(path);
-            }
-            catch (Exception ex)
-            {
-                ShapeLogger.LogError($"Error loading texture from {path}: {ex.Message}");
-            }
+            if (!TryLoadTexture(path, out var texture)) continue;
+            string relativePath = Path.GetRelativePath(directoryPath, path);
+            textureDict[relativePath] = texture;
         }
 
         return textureDict;
@@ -823,20 +1371,14 @@ public static class ContentLoader
     /// </remarks>
     public static Dictionary<string, Image> LoadImagesFromDirectory(string directoryPath, bool recursive = false)
     {
-        var imagePaths = GetResourceFilePaths(directoryPath, ContentType.Texture, recursive);
+        string[] imagePaths = GetResourceFilePaths(directoryPath, ContentType.Texture, recursive);
         var imageDict = new Dictionary<string, Image>(imagePaths.Length);
 
-        foreach (var path in imagePaths)
+        foreach (string path in imagePaths)
         {
-            try
-            {
-                string relativePath = Path.GetRelativePath(directoryPath, path);
-                imageDict[relativePath] = LoadImage(path);
-            }
-            catch (Exception ex)
-            {
-                ShapeLogger.LogError($"Error loading image from {path}: {ex.Message}");
-            }
+            if (!TryLoadImage(path, out var image)) continue;
+            string relativePath = Path.GetRelativePath(directoryPath, path);
+            imageDict[relativePath] = image;
         }
 
         return imageDict;
@@ -854,20 +1396,14 @@ public static class ContentLoader
     /// </remarks>
     public static Dictionary<string, Wave> LoadWavesFromDirectory(string directoryPath, bool recursive = false)
     {
-        var wavePaths = GetResourceFilePaths(directoryPath, ContentType.Wave, recursive);
+        string[] wavePaths = GetResourceFilePaths(directoryPath, ContentType.Wave, recursive);
         var waveDict = new Dictionary<string, Wave>(wavePaths.Length);
 
-        foreach (var path in wavePaths)
+        foreach (string path in wavePaths)
         {
-            try
-            {
-                string relativePath = Path.GetRelativePath(directoryPath, path);
-                waveDict[relativePath] = LoadWave(path);
-            }
-            catch (Exception ex)
-            {
-                ShapeLogger.LogError($"Error loading wave sound from {path}: {ex.Message}");
-            }
+            if (!TryLoadWave(path, out var wave)) continue;
+            string relativePath = Path.GetRelativePath(directoryPath, path);
+            waveDict[relativePath] = wave;
         }
 
         return waveDict;
@@ -885,20 +1421,14 @@ public static class ContentLoader
     /// </remarks>
     public static Dictionary<string, Sound> LoadSoundsFromDirectory(string directoryPath, bool recursive = false)
     {
-        var soundPaths = GetResourceFilePaths(directoryPath, ContentType.Sound, recursive);
+        string[] soundPaths = GetResourceFilePaths(directoryPath, ContentType.Sound, recursive);
         var soundDict = new Dictionary<string, Sound>(soundPaths.Length);
 
-        foreach (var path in soundPaths)
+        foreach (string path in soundPaths)
         {
-            try
-            {
-                string relativePath = Path.GetRelativePath(directoryPath, path);
-                soundDict[relativePath] = LoadSound(path);
-            }
-            catch (Exception ex)
-            {
-                ShapeLogger.LogError($"Error loading sound from {path}: {ex.Message}");
-            }
+            if (!TryLoadSound(path, out var sound)) continue;
+            string relativePath = Path.GetRelativePath(directoryPath, path);
+            soundDict[relativePath] = sound;
         }
 
         return soundDict;
@@ -916,20 +1446,14 @@ public static class ContentLoader
     /// </remarks>
     public static Dictionary<string, Music> LoadMusicFromDirectory(string directoryPath, bool recursive = false)
     {
-        var musicPaths = GetResourceFilePaths(directoryPath, ContentType.Music, recursive);
+        string[] musicPaths = GetResourceFilePaths(directoryPath, ContentType.Music, recursive);
         var musicDict = new Dictionary<string, Music>(musicPaths.Length);
 
-        foreach (var path in musicPaths)
+        foreach (string path in musicPaths)
         {
-            try
-            {
-                string relativePath = Path.GetRelativePath(directoryPath, path);
-                musicDict[relativePath] = LoadMusicStream(path);
-            }
-            catch (Exception ex)
-            {
-                ShapeLogger.LogError($"Error loading music stream from {path}: {ex.Message}");
-            }
+            if (!TryLoadMusic(path, out var music)) continue;
+            string relativePath = Path.GetRelativePath(directoryPath, path);
+            musicDict[relativePath] = music;
         }
 
         return musicDict;
@@ -948,20 +1472,14 @@ public static class ContentLoader
     /// </remarks>
     public static Dictionary<string, string> LoadTextsFromDirectory(string directoryPath, bool recursive = false)
     {
-        var textPaths = GetResourceFilePaths(directoryPath, ContentType.Text, recursive);
+        string[] textPaths = GetResourceFilePaths(directoryPath, ContentType.Text, recursive);
         var textDict = new Dictionary<string, string>(textPaths.Length);
         
-        foreach (var path in textPaths)
+        foreach (string path in textPaths)
         {
-            try
-            {
-                string relativePath = Path.GetRelativePath(directoryPath, path);
-                textDict[relativePath] = LoadText(path);
-            }
-            catch (Exception ex)
-            {
-                ShapeLogger.LogError($"Error loading text from {path}: {ex.Message}");
-            }
+            if (!TryLoadText(path, out string text)) continue;
+            string relativePath = Path.GetRelativePath(directoryPath, path);
+            textDict[relativePath] = text;
         }
         
         return textDict;

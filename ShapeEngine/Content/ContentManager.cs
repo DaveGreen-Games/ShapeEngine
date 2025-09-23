@@ -1,3 +1,4 @@
+using System.Reflection.Metadata.Ecma335;
 using Raylib_cs;
 
 namespace ShapeEngine.Content;
@@ -13,6 +14,87 @@ namespace ShapeEngine.Content;
 // -> content pack can be unloaded separately if needed (unloads all content loaded from it)
 // -> content pack can be added/removed from content manager
 // -> content pack can be queried if it contains a specific file
+
+
+public sealed class ContentManager2
+{
+    private readonly Dictionary<string, Shader> loadedShaders = new();
+    private readonly Dictionary<string, Texture2D> loadedTextures = new();
+    private readonly Dictionary<string, Image> loadedImages = new();
+    private readonly Dictionary<string, Font> loadedFonts = new();
+    private readonly Dictionary<string, Sound> loadedSounds = new();
+    private readonly Dictionary<string, Music> loadedMusic = new();
+    private readonly Dictionary<string, Wave> loadedWaves = new();
+    
+    private readonly Dictionary<string, ContentPack> loadedPacks = new();
+    
+    public ContentManager2()
+    {
+        
+    }
+    
+    //TODO: implement the rest 
+    private bool TryGetTexture(string filePath, out Texture2D texture)
+    {
+        if (loadedTextures.TryGetValue(filePath, out texture))
+        {
+            return true;
+        }
+
+        foreach (var pack in loadedPacks.Values)
+        {
+            if (!pack.IsLoaded) continue;
+            if (!pack.HasFile(filePath)) continue;
+            if (!pack.TryLoadTexture(filePath, out var packTexture)) continue;
+            
+            texture = packTexture;
+            loadedTextures[filePath] = packTexture;
+            return true;
+        }
+
+        if (!ContentLoader.TryLoadTexture(filePath, out var loadedTexture)) return false;
+        
+        loadedTextures[filePath] = loadedTexture;
+        return true;
+
+    }
+    
+
+    public void Close()
+    {
+        foreach (var item in loadedShaders)
+        {
+            Raylib.UnloadShader(item.Value);
+        }
+
+        foreach (var item in loadedTextures)
+        {
+            Raylib.UnloadTexture(item.Value);
+        }
+        foreach (var item in loadedImages)
+        {
+            Raylib.UnloadImage(item.Value);
+        }
+        foreach (var item in loadedFonts)
+        {
+            Raylib.UnloadFont(item.Value);
+        }
+        foreach (var item in loadedWaves)
+        {
+            Raylib.UnloadWave(item.Value);
+        }
+        foreach (var item in loadedSounds)
+        {
+            Raylib.UnloadSound(item.Value);
+        }
+        foreach (var item in loadedMusic)
+        {
+            Raylib.UnloadMusicStream(item.Value);
+        }
+    }
+}
+
+
 
 
 /// <summary>
@@ -135,7 +217,7 @@ public sealed class ContentManager
     /// <returns>The loaded music.</returns>
     public Music LoadMusic(string filePath)
     {
-        var m = ContentLoader.LoadMusicStream(filePath);
+        var m = ContentLoader.LoadMusic(filePath);
         musicToUnload.Add(m);
         return m;
     }
