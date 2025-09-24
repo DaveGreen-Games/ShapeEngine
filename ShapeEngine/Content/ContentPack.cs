@@ -6,6 +6,8 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Content;
 
+//TODO: Add progress info (float) to async loading? Is it possible, feasible?
+
 /// <summary>
 /// Represents a content pack that can load, cache, index, and provide access to various types of content files.
 /// Supports both binary and text-based packs, with options for memory or indexed unpacking.
@@ -15,6 +17,12 @@ namespace ShapeEngine.Content;
 /// </remarks>
 public sealed class ContentPack
 {
+    /// <summary>
+    /// Event triggered when the asynchronous cache loading operation completes.
+    /// Subscribers can use this to perform actions after the content pack has finished loading its cache.
+    /// </summary>
+    public event Action<ContentPack>? OnAsyncCacheLoaded;
+    
     /// <summary>
     /// Specifies the mode used to unpack content files in the ContentPack.
     /// </summary>
@@ -205,6 +213,117 @@ public sealed class ContentPack
         CurrentUnpackMode = UnpackMode.Memory;
         return true;
     }
+    
+    /// <summary>
+    /// Asynchronously unpacks the content pack into memory, optionally using parallel processing.
+    /// Use <see cref="OnAsyncCacheLoaded"/> event to get notified when loading is complete.
+    /// Alternatively, await this method (see Example).
+    /// </summary>
+    /// <param name="parallelProcessing">If true, uses parallel processing for unpacking.</param>
+    /// <param name="extensionExceptions">List of file extensions to skip during unpacking.</param>
+    /// <param name="directoryRestriction">
+    /// If set, only files whose relative path starts with this directory restriction will be unpacked.
+    /// Example: setting to `Audio/Music/Background` will only load resources within that directory path.
+    /// </param>
+    /// <param name="textFileUnpackingBatchSize">Batch size for parallel text file unpacking.</param>
+    /// <param name="cancellationToken">Token to cancel the async operation.</param>
+    /// <returns>True if cache was created and files loaded; otherwise, false.</returns>
+    /// <remarks>
+    /// Returns false if the content pack is already loaded or if the source file does not exist.
+    /// Use <see cref="IsLoaded"/> to check load status.
+    /// Use <see cref="Clear"/> to unload and clear the cache/index.
+    /// </remarks>
+    /// <example>
+    /// How to use CreateCacheAsync():
+    /// <code>
+    ///public async Task LoadAndUseContentPackAsync()
+    ///{
+    ///    var pack = new ContentPack("Resources/Pack.bin");
+    ///    bool loaded = await pack.CreateCacheAsync();
+    ///
+    ///    if (loaded)
+    ///    {
+    ///        // Notify: ContentPack is ready
+    ///        // Now use pack normally
+    ///        var data = pack.GetFileData("Textures/Logo.png");
+    ///        // ... use data
+    ///    }
+    ///    else
+    ///    {
+    ///        // Notify: loading failed
+    ///    }
+    ///}
+    /// </code>
+    /// </example>
+    public async Task<bool> CreateCacheAsync(bool parallelProcessing = false, List<string>? extensionExceptions = null, 
+        string directoryRestriction = "", int textFileUnpackingBatchSize = 16, CancellationToken cancellationToken = default)
+    {
+        if (IsLoaded) return false;
+        if (!File.Exists(SourceFilePath))
+        {
+            ShapeLogger.LogError($"ContentPackMemory LoadContentAsync() failed. Source file not found: {SourceFilePath}");
+            return false;
+        }
+    
+        long cacheSize = 0;
+        if (IsTextPack)
+        {
+            if (parallelProcessing)
+            {
+                cache = await UnpackTextToMemoryParallelAsync(
+                    SourceFilePath,
+                    size => cacheSize = size,
+                    extensionExceptions,
+                    directoryRestriction,
+                    textFileUnpackingBatchSize,
+                    DebugLogging);
+            }
+            else
+            {
+                cache = await UnpackTextToMemoryAsync(
+                    SourceFilePath,
+                    size => cacheSize = size,
+                    extensionExceptions,
+                    directoryRestriction,
+                    DebugLogging);
+            }
+        }
+        else
+        {
+            if (parallelProcessing)
+            {
+                cache = await UnpackFileToMemoryParallelAsync(
+                    SourceFilePath,
+                    size => cacheSize = size,
+                    extensionExceptions,
+                    directoryRestriction,
+                    DebugLogging);
+            }
+            else
+            {
+                cache = await UnpackFileToMemoryAsync(
+                    SourceFilePath,
+                    size => cacheSize = size,
+                    extensionExceptions,
+                    directoryRestriction,
+                    DebugLogging);
+            }
+        }
+    
+        CacheSize = cacheSize;
+        if (cache.Count <= 0)
+        {
+            CacheSize = 0;
+            return false;
+        }
+    
+        CurrentUnpackMode = UnpackMode.Memory;
+        
+        OnAsyncCacheLoaded?.Invoke(this); // Fire event
+        
+        return true;
+    }
+    
     /// <summary>
     /// Creates an index for the content pack, allowing on-demand access to files without loading them into memory.
     /// Returns true if the index was successfully created; otherwise, false.
@@ -708,6 +827,457 @@ public sealed class ContentPack
         
         return new Dictionary<string, byte[]>(result);
     }
+    #endregion
+    
+    #region Unpack To Memory Async
+    
+    /// <summary>
+    /// Asynchronously unpacks a binary content pack file into memory.
+    /// </summary>
+    /// <param name="sourceFilePath">The path to the packed binary file.</param>
+    /// <param name="setTotalBytesUnpacked">Optional callback to set the total number of bytes unpacked.</param>
+    /// <param name="extensionExceptions">Optional list of file extensions to skip during unpacking.</param>
+    /// <param name="directoryRestriction">
+    /// If set, only files whose relative path starts with this directory restriction will be unpacked.
+    /// </param>
+    /// <param name="debug">If true, enables debug logging.</param>
+    /// <returns>A task that represents the asynchronous operation.
+    /// The task result contains a dictionary of relative file paths and their corresponding decompressed byte arrays.</returns>
+    /// <example>
+    /// <code>
+    ///public async Task LoadContentPackAsync()
+    ///{
+    ///    string packPath = "Resources/Pack.bin";
+    ///    Dictionary string, byte[] files = await ContentPack.UnpackFileToMemoryAsync(packPath);
+    ///
+    ///    foreach (var kvp in files)
+    ///    {
+    ///        string filePath = kvp.Key;
+    ///        byte[] data = kvp.Value;
+    ///        // Use filePath and data as needed
+    ///        Console.WriteLine($"Loaded {filePath} ({data.Length} bytes)");
+    ///    }
+    ///}
+    /// </code>
+    /// </example>
+    public static async Task<Dictionary<string, byte[]>> UnpackFileToMemoryAsync(string sourceFilePath, Action<long>? setTotalBytesUnpacked = null, 
+        List<string>? extensionExceptions = null, string directoryRestriction = "", bool debug = false)
+    {
+        long totalBytesUnpacked = 0;
+        var result = new Dictionary<string, byte[]>();
+    
+        if (!File.Exists(sourceFilePath))
+        {
+            ShapeLogger.LogError($"Packed file not found: {sourceFilePath}");
+            setTotalBytesUnpacked?.Invoke(0);
+            return result;
+        }
+    
+        var debugWatch = Stopwatch.StartNew();
+        var debugMessages = debug ? new List<string>() : null;
+        using var fileStream = new FileStream(sourceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, true);
+        var header = new byte[12];
+        await fileStream.ReadExactlyAsync(header, 0, 12);
+        int totalFiles = BitConverter.ToInt32(header, 0);
+    
+        int unpackedFiles = 0;
+        int currentFile = 0;
+    
+        while (currentFile < totalFiles)
+        {
+            currentFile++;
+    
+            var pathLenBytes = new byte[4];
+            await fileStream.ReadExactlyAsync(pathLenBytes, 0, 4);
+            int pathLen = BitConverter.ToInt32(pathLenBytes, 0);
+    
+            var pathBytes = new byte[pathLen];
+            await fileStream.ReadExactlyAsync(pathBytes, 0, pathLen);
+            string relativePath = System.Text.Encoding.UTF8.GetString(pathBytes);
+    
+            var dataLenBytes = new byte[4];
+            await fileStream.ReadExactlyAsync(dataLenBytes, 0, 4);
+            int dataLen = BitConverter.ToInt32(dataLenBytes, 0);
+    
+            if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(relativePath)))
+            {
+                debugMessages?.Add($"File skipped due to extension: {Path.GetFileName(relativePath)}");
+                fileStream.Position += dataLen;
+                continue;
+            }
+    
+            if (!string.IsNullOrEmpty(directoryRestriction) && !relativePath.StartsWith(directoryRestriction, StringComparison.OrdinalIgnoreCase))
+            {
+                fileStream.Position += dataLen;
+                continue;
+            }
+    
+            var compressedData = new byte[dataLen];
+            await fileStream.ReadExactlyAsync(compressedData, 0, dataLen);
+    
+            var data = await Task.Run(() =>
+            {
+                using var ms = new MemoryStream(compressedData);
+                using var gzip = new GZipStream(ms, CompressionMode.Decompress);
+                using var outMs = new MemoryStream();
+                gzip.CopyTo(outMs);
+                return outMs.ToArray();
+            });
+    
+            result[relativePath] = data;
+            unpackedFiles++;
+            totalBytesUnpacked += data.Length;
+    
+            debugMessages?.Add($"Unpacked {relativePath} ({data.Length} bytes)");
+        }
+    
+        if (debugMessages is { Count: > 0 })
+        {
+            ShapeLogger.StartLogBlock("ContentPack UnpackFileToMemoryAsync Debug Info");
+            foreach (var msg in debugMessages)
+            {
+                ShapeLogger.LogInfo(msg);
+            }
+            ShapeLogger.EndLogBlock();
+        }
+    
+        ShapeLogger.LogInfo($"Unpacking to memory finished. {unpackedFiles} files loaded from {sourceFilePath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
+        setTotalBytesUnpacked?.Invoke(totalBytesUnpacked);
+        return result;
+    }
+   
+    /// <summary>
+    /// Asynchronously unpacks a binary content pack file into memory using parallel processing.
+    /// </summary>
+    /// <param name="sourceFilePath">The path to the packed binary file.</param>
+    /// <param name="setTotalBytesUnpacked">Optional callback to set the total number of bytes unpacked.</param>
+    /// <param name="extensionExceptions">Optional list of file extensions to skip during unpacking.</param>
+    /// <param name="directoryRestriction">
+    /// If set, only files whose relative path starts with this directory restriction will be unpacked.
+    /// </param>
+    /// <param name="debug">If true, enables debug logging.</param>
+    /// <returns>A task that represents the asynchronous operation.
+    /// The task result contains a dictionary of relative file paths and their corresponding decompressed byte arrays.</returns>
+    /// <example>
+    /// <code>
+    ///public async Task LoadContentPackAsync()
+    ///{
+    ///    string packPath = "Resources/Pack.bin";
+    ///    Dictionary string, byte[] files = await ContentPack.UnpackFileToMemoryParallelAsync(packPath);
+    ///
+    ///    foreach (var kvp in files)
+    ///    {
+    ///        string filePath = kvp.Key;
+    ///        byte[] data = kvp.Value;
+    ///        // Use filePath and data as needed
+    ///        Console.WriteLine($"Loaded {filePath} ({data.Length} bytes)");
+    ///    }
+    ///}
+    /// </code>
+    /// </example>
+    public static async Task<Dictionary<string, byte[]>> UnpackFileToMemoryParallelAsync(string sourceFilePath, Action<long>? setTotalBytesUnpacked = null, 
+        List<string>? extensionExceptions = null, string directoryRestriction = "", bool debug = false)
+    {
+        long totalBytesUnpacked = 0;
+        var result = new ConcurrentDictionary<string, byte[]>();
+    
+        if (!File.Exists(sourceFilePath))
+        {
+            ShapeLogger.LogError($"Packed file not found: {sourceFilePath}");
+            setTotalBytesUnpacked?.Invoke(0);
+            return new Dictionary<string, byte[]>();
+        }
+    
+        var debugWatch = Stopwatch.StartNew();
+        var debugMessages = debug ? new ConcurrentBag<string>() : null;
+        var entries = new List<(string path, long dataOffset, int dataLen)>();
+    
+        using (var fileStream = new FileStream(sourceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, true))
+        {
+            var header = new byte[12];
+            await fileStream.ReadExactlyAsync(header, 0, 12);
+            int totalFiles = BitConverter.ToInt32(header, 0);
+    
+            for (int i = 0; i < totalFiles; i++)
+            {
+                var pathLenBytes = new byte[4];
+                await fileStream.ReadExactlyAsync(pathLenBytes, 0, 4);
+                int pathLen = BitConverter.ToInt32(pathLenBytes, 0);
+    
+                var pathBytes = new byte[pathLen];
+                await fileStream.ReadExactlyAsync(pathBytes, 0, pathLen);
+                string relativePath = System.Text.Encoding.UTF8.GetString(pathBytes);
+    
+                var dataLenBytes = new byte[4];
+                await fileStream.ReadExactlyAsync(dataLenBytes, 0, 4);
+                int dataLen = BitConverter.ToInt32(dataLenBytes, 0);
+    
+                long dataOffset = fileStream.Position;
+    
+                if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(relativePath)))
+                {
+                    debugMessages?.Add($"File skipped due to extension: {Path.GetFileName(relativePath)}");
+                    fileStream.Position += dataLen;
+                    continue;
+                }
+    
+                if (!string.IsNullOrEmpty(directoryRestriction) && !relativePath.StartsWith(directoryRestriction, StringComparison.OrdinalIgnoreCase))
+                {
+                    fileStream.Position += dataLen;
+                    continue;
+                }
+    
+                entries.Add((relativePath, dataOffset, dataLen));
+                fileStream.Position += dataLen;
+            }
+        }
+    
+        var tasks = entries.Select(async entry =>
+        {
+            using var fs = new FileStream(sourceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, true);
+            fs.Position = entry.dataOffset;
+            var compressedData = new byte[entry.dataLen];
+            await fs.ReadExactlyAsync(compressedData, 0, entry.dataLen);
+    
+            var data = await Task.Run(() =>
+            {
+                using var ms = new MemoryStream(compressedData);
+                using var gzip = new GZipStream(ms, CompressionMode.Decompress);
+                using var outMs = new MemoryStream();
+                gzip.CopyTo(outMs);
+                return outMs.ToArray();
+            });
+    
+            result[entry.path] = data;
+            Interlocked.Add(ref totalBytesUnpacked, data.Length);
+            debugMessages?.Add($"Unpacked {entry.path} ({data.Length} bytes)");
+        });
+    
+        await Task.WhenAll(tasks);
+    
+        if (debugMessages is { Count: > 0 })
+        {
+            ShapeLogger.StartLogBlock("ContentPack UnpackFileToMemoryParallelAsync Debug Info");
+            foreach (string msg in debugMessages)
+                ShapeLogger.LogInfo(msg);
+            ShapeLogger.EndLogBlock();
+        }
+    
+        ShapeLogger.LogInfo($"Unpacking to memory (parallel) finished. {result.Count} files loaded and {totalBytesUnpacked} bytes unpacked from {sourceFilePath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds.");
+        setTotalBytesUnpacked?.Invoke(totalBytesUnpacked);
+        return new Dictionary<string, byte[]>(result);
+    }
+    /// <summary>
+    /// Asynchronously unpacks a packed text file (.txt) into memory.
+    /// Each file is stored as two lines: the relative path and the base64-encoded compressed data.
+    /// </summary>
+    /// <param name="sourceFilePath">The path to the packed text file (.txt).</param>
+    /// <param name="setTotalBytesUnpacked">Optional callback to set the total number of bytes unpacked.</param>
+    /// <param name="extensionExceptions">Optional list of file extensions to skip during unpacking.</param>
+    /// <param name="directoryRestriction">
+    /// If set, only files whose relative path starts with this directory restriction will be unpacked.
+    /// Example: setting to `Audio/Music/Background` will only load resources within that directory path.
+    /// </param>
+    /// <param name="debug">If true, enables debug logging.</param>
+    /// <returns>A task that represents the asynchronous operation.
+    /// The task result contains a dictionary of relative file paths and their corresponding decompressed byte arrays.</returns>
+    /// <example>
+    /// <code>
+    ///public async Task LoadContentPackAsync()
+    ///{
+    ///    string packPath = "Resources/Pack.bin";
+    ///    Dictionary string, byte[] files = await ContentPack.UnpackTextToMemoryAsync(packPath);
+    ///
+    ///    foreach (var kvp in files)
+    ///    {
+    ///        string filePath = kvp.Key;
+    ///        byte[] data = kvp.Value;
+    ///        // Use filePath and data as needed
+    ///        Console.WriteLine($"Loaded {filePath} ({data.Length} bytes)");
+    ///    }
+    ///}
+    /// </code>
+    /// </example>
+    public static async Task<Dictionary<string, byte[]>> UnpackTextToMemoryAsync(string sourceFilePath, Action<long>? setTotalBytesUnpacked = null, 
+        List<string>? extensionExceptions = null, string directoryRestriction = "", bool debug = false)
+    {
+        long totalBytesUnpacked = 0;
+        var result = new Dictionary<string, byte[]>();
+    
+        if (!File.Exists(sourceFilePath))
+        {
+            ShapeLogger.LogError($"Source file not found: {sourceFilePath}");
+            setTotalBytesUnpacked?.Invoke(0);
+            return result;
+        }
+    
+        if (Path.GetExtension(sourceFilePath) != ".txt")
+        {
+            ShapeLogger.LogError($"Source file must have a .txt extension: {sourceFilePath}");
+            setTotalBytesUnpacked?.Invoke(0);
+            return result;
+        }
+    
+        var debugWatch = Stopwatch.StartNew();
+        string[] lines = await File.ReadAllLinesAsync(sourceFilePath);
+    
+        var unpackedFiles = 0;
+        if (debug) ShapeLogger.StartLogBlock("ContentPack UnpackTextToMemoryAsync Debug Info");
+    
+        for (var i = 0; i < lines.Length; i += 2)
+        {
+            if (i + 1 >= lines.Length) break;
+    
+            string relativePath = lines[i];
+    
+            if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(relativePath)))
+            {
+                if (debug)
+                    ShapeLogger.LogInfo($"File skipped due to extension: {Path.GetFileName(relativePath)}");
+                continue;
+            }
+    
+            if (!string.IsNullOrEmpty(directoryRestriction) && !relativePath.StartsWith(directoryRestriction, StringComparison.OrdinalIgnoreCase))
+            {
+                if (debug)
+                    ShapeLogger.LogInfo($"File skipped due to directory restriction {directoryRestriction}: {relativePath}");
+                continue;
+            }
+    
+            string base64Data = lines[i + 1];
+            byte[] compressedData = Convert.FromBase64String(base64Data);
+    
+            byte[] data = await Task.Run(() =>
+            {
+                using var input = new MemoryStream(compressedData);
+                using var deflateStream = new DeflateStream(input, CompressionMode.Decompress);
+                using var output = new MemoryStream();
+                deflateStream.CopyTo(output);
+                return output.ToArray();
+            });
+    
+            totalBytesUnpacked += data.Length;
+            result[relativePath] = data;
+            unpackedFiles++;
+            if (debug)
+                ShapeLogger.LogInfo($"Unpacked {relativePath} ({compressedData.Length} bytes)");
+        }
+        if (debug) ShapeLogger.EndLogBlock();
+    
+        ShapeLogger.LogInfo($"Unpacking packed text file {sourceFilePath} finished. {unpackedFiles} files unpacked in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
+        setTotalBytesUnpacked?.Invoke(totalBytesUnpacked);
+        return result;
+    }
+    
+    /// <summary>
+    /// Asynchronously unpacks a packed text file (.txt) into memory using parallel processing and batching.
+    /// Each file is stored as two lines: the relative path and the base64-encoded compressed data.
+    /// </summary>
+    /// <param name="sourceFilePath">The path to the packed text file (.txt).</param>
+    /// <param name="setTotalBytesUnpacked">Optional callback to set the total number of bytes unpacked.</param>
+    /// <param name="extensionExceptions">Optional list of file extensions to skip during unpacking.</param>
+    /// <param name="directoryRestriction">
+    /// If set, only files whose relative path starts with this directory restriction will be unpacked.
+    /// Example: setting to `Audio/Music/Background` will only load resources within that directory path.
+    /// </param>
+    /// <param name="batchSize">Batch size for parallel text file unpacking.</param>
+    /// <param name="debug">If true, enables debug logging.</param>
+    /// <returns>A task that represents the asynchronous operation.
+    /// The task result contains a dictionary of relative file paths and their corresponding decompressed byte arrays.</returns>
+    /// <example>
+    /// <code>
+    ///public async Task LoadContentPackAsync()
+    ///{
+    ///    string packPath = "Resources/Pack.bin";
+    ///    Dictionary string, byte[] files = await ContentPack.UnpackTextToMemoryParallelAsync(packPath);
+    ///
+    ///    foreach (var kvp in files)
+    ///    {
+    ///        string filePath = kvp.Key;
+    ///        byte[] data = kvp.Value;
+    ///        // Use filePath and data as needed
+    ///        Console.WriteLine($"Loaded {filePath} ({data.Length} bytes)");
+    ///    }
+    ///}
+    /// </code>
+    /// </example>
+    public static async Task<Dictionary<string, byte[]>> UnpackTextToMemoryParallelAsync(string sourceFilePath, Action<long>? setTotalBytesUnpacked = null, 
+        List<string>? extensionExceptions = null, string directoryRestriction = "", int batchSize = 16, bool debug = false)
+    {
+        long totalBytesUnpacked = 0;
+        var result = new ConcurrentDictionary<string, byte[]>();
+    
+        if (!File.Exists(sourceFilePath))
+        {
+            ShapeLogger.LogError($"Source file not found: {sourceFilePath}");
+            setTotalBytesUnpacked?.Invoke(0);
+            return new Dictionary<string, byte[]>();
+        }
+    
+        if (Path.GetExtension(sourceFilePath) != ".txt")
+        {
+            ShapeLogger.LogError($"Source file must have a .txt extension: {sourceFilePath}");
+            setTotalBytesUnpacked?.Invoke(0);
+            return new Dictionary<string, byte[]>();
+        }
+    
+        var debugWatch = Stopwatch.StartNew();
+        string[] lines = await File.ReadAllLinesAsync(sourceFilePath);
+        int totalFiles = (lines.Length - 1) / 2;
+        if (totalFiles <= 0)
+        {
+            ShapeLogger.LogWarning("No files to unpack.");
+            setTotalBytesUnpacked?.Invoke(0);
+            return new Dictionary<string, byte[]>();
+        }
+    
+        ShapeLogger.LogInfo($"ContentPack Batch Parallel unpacking to memory started. Batch size: {batchSize}");
+    
+        var debugMessages = debug ? new ConcurrentBag<string>() : null;
+        var entries = new List<(string path, string base64Data)>();
+    
+        for (int i = 0; i < lines.Length - 1; i += 2)
+        {
+            string relativePath = lines[i];
+            if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(relativePath)))
+                continue;
+            if (!string.IsNullOrEmpty(directoryRestriction) && !relativePath.StartsWith(directoryRestriction, StringComparison.OrdinalIgnoreCase))
+                continue;
+            entries.Add((relativePath, lines[i + 1]));
+        }
+    
+        var tasks = entries.Select(async entry =>
+        {
+            byte[] compressedData = Convert.FromBase64String(entry.base64Data);
+            byte[] data = await Task.Run(() =>
+            {
+                using var input = new MemoryStream(compressedData);
+                using var deflateStream = new DeflateStream(input, CompressionMode.Decompress);
+                using var output = new MemoryStream();
+                deflateStream.CopyTo(output);
+                return output.ToArray();
+            });
+            result[entry.path] = data;
+            Interlocked.Add(ref totalBytesUnpacked, data.Length);
+            if (debug)
+                debugMessages?.Add($"Unpacked {entry.path} ({compressedData.Length} bytes)");
+        });
+    
+        await Task.WhenAll(tasks);
+    
+        if (debugMessages is { Count: > 0 })
+        {
+            ShapeLogger.StartLogBlock("ContentPack UnpackTextToMemoryParallelAsync Debug Info");
+            foreach (string msg in debugMessages)
+                ShapeLogger.LogInfo(msg);
+            ShapeLogger.EndLogBlock();
+        }
+    
+        ShapeLogger.LogInfo($"Unpacking packed text file {sourceFilePath} to memory finished. {result.Count} files with {totalBytesUnpacked} total bytes unpacked in {debugWatch.Elapsed.TotalSeconds:F2} seconds.");
+        setTotalBytesUnpacked?.Invoke(totalBytesUnpacked);
+        return new Dictionary<string, byte[]>(result);
+    }
+    
     #endregion
     
     #region Index

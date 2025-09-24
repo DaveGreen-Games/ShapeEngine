@@ -5,6 +5,7 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Content;
 
+
 /// <summary>
 /// Provides a simple wrapper to load all types of Raylib resources and JSON strings.
 /// </summary>
