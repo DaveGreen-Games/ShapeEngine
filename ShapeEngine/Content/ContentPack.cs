@@ -6,32 +6,93 @@ using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Content;
 
-
+/// <summary>
+/// Represents a content pack that can load, cache, index, and provide access to various types of content files.
+/// Supports both binary and text-based packs, with options for memory or indexed unpacking.
+/// </summary>
+/// <remarks>
+/// This class only supports content packs created with the ShapeEngine ResourcePacker tool, available in the ShapeEngine GitHub repository.
+/// </remarks>
 public sealed class ContentPack
 {
+    /// <summary>
+    /// Specifies the mode used to unpack content files in the ContentPack.
+    /// </summary>
     public enum UnpackMode
     {
+        /// <summary>
+        /// No unpacking performed.
+        /// </summary>
         None,
+        /// <summary>
+        /// All files unpacked into memory.
+        /// </summary>
         Memory,
+        /// <summary>
+        /// Files are indexed for on-demand access.
+        /// </summary>
         Indexed
     }
     
     #region Members
+    /// <summary>
+    /// Indicates whether the content pack is loaded (i.e., unpacked or indexed).
+    /// </summary>
     public bool IsLoaded => CurrentUnpackMode != UnpackMode.None;
+    
+    /// <summary>
+    /// Gets the current <see cref="UnpackMode"/> of the content pack.
+    /// </summary>
+    /// <remarks>
+    /// When <see cref="CurrentUnpackMode"/> is <see cref="UnpackMode.None"/>, <see cref="IsLoaded"/> will be false.
+    /// </remarks>
     public UnpackMode CurrentUnpackMode { get; private set; } = UnpackMode.None;
+    
+    /// <summary>
+    /// The source file path for the content pack.
+    /// </summary>
     public readonly string SourceFilePath;
+    
+    /// <summary>
+    /// Indicates if the content pack is a text pack (.txt extension).
+    /// </summary>
     public readonly bool IsTextPack;
+    
+    /// <summary>
+    /// The total size of the cached content in bytes.
+    /// </summary>
+    /// <remarks>
+    /// Only applicable when using <see cref="UnpackMode.Memory"/>.
+    /// Will be 0 if the content pack is not loaded or if using <see cref="UnpackMode.Indexed"/>.
+    /// </remarks>
     public long CacheSize { get; private set; }
     
+    /// <summary>
+    /// Enables or disables debug logging for content pack operations.
+    /// </summary>
     public bool DebugLogging = false;
     
+    /// <summary>
+    /// Stores cached file data when unpacked into memory.
+    /// </summary>
     private Dictionary<string, byte[]> cache = new();
+    
+    /// <summary>
+    /// Stores file offsets for indexed access.
+    /// </summary>
     private Dictionary<string, long> index = new();
     
     #endregion
 
     #region Public
     
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ContentPack"/> class with the specified source file path.
+    /// The source file path must have a valid extension (.txt for text packs, others for binary packs).
+    /// </summary>
+    /// <remarks>
+    /// Will throw and <see cref="ArgumentException"/> if the source file path does not have a valid extension.
+    /// </remarks>
     public ContentPack(string sourceFilePath)
     {
         if(!Path.HasExtension(sourceFilePath))
@@ -43,6 +104,24 @@ public sealed class ContentPack
         IsTextPack = Path.GetExtension(sourceFilePath).Equals(".txt", StringComparison.CurrentCultureIgnoreCase);
     }
     
+    /// <summary>
+    /// Retrieves the file data for the specified file path from the content pack.
+    /// Returns null if the content pack is not loaded or the file does not exist.
+    /// </summary>
+    /// <param name="filePath">The relative path of the file within the content pack.</param>
+    /// <returns>The file data as a byte array, or null if not found.</returns>
+    /// <remarks>
+    /// For example, if the following directory structure was packed:
+    /// <list type="bullet">
+    ///   <item>Resources/</item>
+    ///   <item>Resources/Textures/...</item>
+    ///   <item>Resources/Sounds/...</item>
+    ///   <item>Resources/Music/</item>
+    ///   <item>Resources/Music/myBackgroundMusic.mp3</item>
+    ///   <item>Resources/...</item>
+    /// </list>
+    /// The relative <paramref name="filePath"/> to access myBackgroundMusic.mp3 would be <c>Music/myBackgroundMusic.mp3</c>.
+    /// </remarks>
     public byte[]? GetFileData(string filePath)
     {
         if(!IsLoaded) return null;
@@ -52,12 +131,31 @@ public sealed class ContentPack
         if(IsTextPack) return index.TryGetValue(filePath, out long offsetText) ? GetDataFromTextIndex(offsetText) : null;
         return index.TryGetValue(filePath, out long offsetFile) ? GetDataFromFileIndex(offsetFile) : null;
     }
+    /// <summary>
+    /// Checks if the specified file exists in the content pack.
+    /// Returns true if the content pack is loaded and the file is present in the cache or index.
+    /// </summary>
     public bool HasFile(string filePath)
     {
         if(!IsLoaded) return false;
         return CurrentUnpackMode == UnpackMode.Memory ? cache.ContainsKey(filePath) : index.ContainsKey(filePath);
     }
 
+    /// <summary>
+    /// Unpacks the content pack into memory, optionally using parallel processing.
+    /// Skips files with extensions listed in <paramref name="extensionExceptions"/>.
+    /// For text packs, allows batch size control via <paramref name="textFileUnpackingBatchSize"/>.
+    /// Returns true if cache creation succeeds and files are loaded.
+    /// </summary>
+    /// <param name="parallelProcessing">If true, uses parallel processing for unpacking.</param>
+    /// <param name="extensionExceptions">List of file extensions to skip during unpacking.</param>
+    /// <param name="textFileUnpackingBatchSize">Batch size for parallel text file unpacking.</param>
+    /// <returns>True if cache was created and files loaded; otherwise, false.</returns>
+    /// <remarks>
+    /// Returns false if the content pack is already loaded or if the source file does not exist.
+    /// Use <see cref="IsLoaded"/> to check load status.
+    /// Use <see cref="Clear"/> to unload and clear the cache/index.
+    /// </remarks>
     public bool CreateCache(bool parallelProcessing = false, List<string>? extensionExceptions = null, int textFileUnpackingBatchSize = 16)
     {
         if (IsLoaded) return false;
@@ -104,7 +202,13 @@ public sealed class ContentPack
         return true;
         
     }
-    
+    /// <summary>
+    /// Creates an index for the content pack, allowing on-demand access to files without loading them into memory.
+    /// Returns true if the index was successfully created; otherwise, false.
+    /// Returns false if the content pack is already loaded or the source file does not exist.
+    /// Use <see cref="IsLoaded"/> to check load status.
+    /// Use <see cref="Clear"/> to unload and clear the cache/index.
+    /// </summary>
     public bool CreateIndex()
     {
         if (IsLoaded) return false;
@@ -132,7 +236,15 @@ public sealed class ContentPack
         return true;
         
     }
-    
+    /// <summary>
+    /// Clears the content pack by unloading all cached and indexed files.
+    /// Resets the cache size and unpack mode to None.
+    /// Returns true if the content pack was loaded and is now cleared; otherwise, false.
+    /// </summary>
+    /// <remarks>
+    /// Call this method to unload the content pack and free memory when it is no longer necessary.
+    /// Indexed mode uses significantly less memory than memory mode, but file access is slower.
+    /// </remarks>
     public bool Clear()
     {
         if (!IsLoaded) return false;
@@ -147,6 +259,18 @@ public sealed class ContentPack
     
     #region Unpack To Memory
     
+    /// <summary>
+    /// Unpacks a binary content pack file into memory.
+    /// Reads all files from the specified <paramref name="sourceFilePath"/>, decompresses them, and stores them in a dictionary.
+    /// Skips files with extensions listed in <paramref name="extensionExceptions"/>.
+    /// If <paramref name="debug"/> is true, logs detailed unpacking information.
+    /// Returns a dictionary mapping relative file paths to their decompressed byte data.
+    /// </summary>
+    /// <param name="sourceFilePath">The path to the packed binary file.</param>
+    /// <param name="totalBytesUnpacked">Outputs the total number of bytes unpacked.</param>
+    /// <param name="extensionExceptions">Optional list of file extensions to skip during unpacking.</param>
+    /// <param name="debug">If true, enables debug logging.</param>
+    /// <returns>A dictionary of relative file paths and their corresponding decompressed byte arrays.</returns>
     public static Dictionary<string, byte[]> UnpackFileToMemory(string sourceFilePath, out long totalBytesUnpacked, List<string>? extensionExceptions = null, bool debug = false)
     {
         totalBytesUnpacked = 0;
@@ -221,6 +345,18 @@ public sealed class ContentPack
         ShapeLogger.LogInfo($"Unpacking to memory finished. {unpackedFiles} files loaded from {sourceFilePath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
         return result;
     }
+    /// <summary>
+    /// Unpacks a binary content pack file into memory using parallel processing.
+    /// Reads all files from the specified <paramref name="sourceFilePath"/>, decompresses them, and stores them in a dictionary.
+    /// Skips files with extensions listed in <paramref name="extensionExceptions"/>.
+    /// If <paramref name="debug"/> is true, logs detailed unpacking information.
+    /// Returns a dictionary mapping relative file paths to their decompressed byte data.
+    /// </summary>
+    /// <param name="sourceFilePath">The path to the packed binary file.</param>
+    /// <param name="totalBytesUnpacked">Outputs the total number of bytes unpacked.</param>
+    /// <param name="extensionExceptions">Optional list of file extensions to skip during unpacking.</param>
+    /// <param name="debug">If true, enables debug logging.</param>
+    /// <returns>A dictionary of relative file paths and their corresponding decompressed byte arrays.</returns>
     public static Dictionary<string, byte[]> UnpackFileToMemoryParallel(string sourceFilePath, out long totalBytesUnpacked, List<string>? extensionExceptions = null, bool debug = false)
     {
         totalBytesUnpacked = 0;
@@ -308,6 +444,18 @@ public sealed class ContentPack
         return new Dictionary<string, byte[]>(result);
     }
     
+    /// <summary>
+    /// Unpacks a packed text file into memory.
+    /// Each file is stored as two lines: the relative path and the base64-encoded compressed data.
+    /// Skips files with extensions listed in <paramref name="extensionExceptions"/>.
+    /// If <paramref name="debug"/> is true, logs detailed unpacking information.
+    /// Returns a dictionary mapping relative file paths to their decompressed byte data.
+    /// </summary>
+    /// <param name="sourceFilePath">The path to the packed text file (.txt).</param>
+    /// <param name="totalBytesUnpacked">Outputs the total number of bytes unpacked.</param>
+    /// <param name="extensionExceptions">Optional list of file extensions to skip during unpacking.</param>
+    /// <param name="debug">If true, enables debug logging.</param>
+    /// <returns>A dictionary of relative file paths and their corresponding decompressed byte arrays.</returns>
     public static Dictionary<string, byte[]> UnpackTextToMemory(string sourceFilePath, out long totalBytesUnpacked, List<string>? extensionExceptions = null, bool debug = false)
     {
         totalBytesUnpacked = 0;
@@ -370,6 +518,20 @@ public sealed class ContentPack
         ShapeLogger.LogInfo($"Unpacking packed text file {sourceFilePath} finished. {unpackedFiles} files unpacked in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
         return result;
     }
+    
+    /// <summary>
+    /// Unpacks a packed text file into memory using parallel processing and batching.
+    /// Each file is stored as two lines: the relative path and the base64-encoded compressed data.
+    /// Skips files with extensions listed in <paramref name="extensionExceptions"/>.
+    /// If <paramref name="debug"/> is true, logs detailed unpacking information.
+    /// Returns a dictionary mapping relative file paths to their decompressed byte data.
+    /// </summary>
+    /// <param name="sourceFilePath">The path to the packed text file (.txt).</param>
+    /// <param name="totalBytesUnpacked">Outputs the total number of bytes unpacked.</param>
+    /// <param name="extensionExceptions">Optional list of file extensions to skip during unpacking.</param>
+    /// <param name="debug">If true, enables debug logging.</param>
+    /// <param name="batchSize">Batch size for parallel text file unpacking.</param>
+    /// <returns>A dictionary of relative file paths and their corresponding decompressed byte arrays.</returns>
     public static Dictionary<string, byte[]> UnpackTextToMemoryParallel(string sourceFilePath, out long totalBytesUnpacked, List<string>? extensionExceptions = null, bool debug = false, int batchSize = 16)
     {
         totalBytesUnpacked = 0;
@@ -488,6 +650,11 @@ public sealed class ContentPack
     #endregion
     
     #region Index
+    /// <summary>
+    /// Creates an index for a binary content pack file, mapping relative file paths to their byte offsets in the file.
+    /// Reads the index offset from the file header and then iterates through the index entries.
+    /// Returns a dictionary where each key is a file path and each value is the offset for that file's data.
+    /// </summary>
     private Dictionary<string, long> CreateFileIndex()
     {
         var result = new Dictionary<string, long>();
@@ -521,6 +688,11 @@ public sealed class ContentPack
         }
         return result;
     }
+    /// <summary>
+    /// Creates an index for a packed text file (.txt), mapping each relative file path to its offset in the file.
+    /// Each file entry consists of two lines: the relative path and the base64-encoded compressed data.
+    /// Returns a dictionary where the key is the file path and the value is the offset for the data line.
+    /// </summary>
     private Dictionary<string, long> CreateTextIndex()
     {
         var result = new Dictionary<string, long>();
@@ -566,6 +738,13 @@ public sealed class ContentPack
         return result;
     }
     
+    /// <summary>
+    /// Retrieves and decompresses file data from a binary content pack at the specified byte offset.
+    /// The offset should point to the start of the file entry in the pack.
+    /// Returns the decompressed byte array for the file.
+    /// </summary>
+    /// <param name="byteOffset">The byte offset in the content pack file where the file entry starts.</param>
+    /// <returns>The decompressed file data as a byte array.</returns>
     private byte[] GetDataFromFileIndex(long byteOffset)
     {
         using var fs = new FileStream(SourceFilePath, FileMode.Open, FileAccess.Read);
@@ -591,6 +770,13 @@ public sealed class ContentPack
         gzip.CopyTo(outMs);
         return outMs.ToArray();
     }
+    /// <summary>
+    /// Retrieves and decompresses file data from a packed text file (.txt) at the specified byte offset.
+    /// The offset should point to the start of the base64-encoded compressed data line.
+    /// Returns the decompressed byte array for the file.
+    /// </summary>
+    /// <param name="byteOffset">The byte offset in the text file where the base64 data line starts.</param>
+    /// <returns>The decompressed file data as a byte array.</returns>
     private byte[] GetDataFromTextIndex(long byteOffset)
     {
         using var fs = new FileStream(SourceFilePath, FileMode.Open, FileAccess.Read);
@@ -609,56 +795,164 @@ public sealed class ContentPack
     #endregion
     
     #region Load
-
+    /// <summary>
+    /// Loads a <see cref="Texture2D"/> from the content pack using the specified file path.
+    /// </summary>
+    /// <param name="filePath">The relative path of the texture file within the content pack.</param>
+    /// <returns>The loaded <see cref="Texture2D"/> instance.</returns>
+    /// <remarks>
+    /// ContentPack <see cref="IsLoaded"/> has to be true before calling this method,
+    /// otherwise it will fail and return a default value.
+    /// Use <see cref="CreateCache"/> or <see cref="CreateIndex"/> to load the content pack first.
+    /// </remarks>
     public Texture2D LoadTexture(string filePath)
     {
         TryLoadTexture(filePath, out var texture);
         return texture;
     }
+
+    /// <summary>
+    /// Loads an <see cref="Image"/> from the content pack using the specified file path.
+    /// </summary>
+    /// <param name="filePath">The relative path of the image file within the content pack.</param>
+    /// <returns>The loaded <see cref="Image"/> instance.</returns>
+    /// <remarks>
+    /// ContentPack <see cref="IsLoaded"/> has to be true before calling this method,
+    /// otherwise it will fail and return a default value.
+    /// Use <see cref="CreateCache"/> or <see cref="CreateIndex"/> to load the content pack first.
+    /// </remarks>
     public Image LoadImage(string filePath)
     {
         TryLoadImage(filePath, out var image);
         return image;
     }
+
+    /// <summary>
+    /// Loads a <see cref="Font"/> from the content pack using the specified file path and font size.
+    /// </summary>
+    /// <param name="filePath">The relative path of the font file within the content pack.</param>
+    /// <param name="fontSize">The desired font size. Default is 100.</param>
+    /// <returns>The loaded <see cref="Font"/> instance.</returns>
+    /// <remarks>
+    /// ContentPack <see cref="IsLoaded"/> has to be true before calling this method,
+    /// otherwise it will fail and return a default value.
+    /// Use <see cref="CreateCache"/> or <see cref="CreateIndex"/> to load the content pack first.
+    /// </remarks>
     public Font LoadFont(string filePath, int fontSize = 100)
     {
         TryLoadFont(filePath, out var font, fontSize);
         return font;
     }
+
+    /// <summary>
+    /// Loads a <see cref="Wave"/> from the content pack using the specified file path.
+    /// </summary>
+    /// <param name="filePath">The relative path of the wave file within the content pack.</param>
+    /// <returns>The loaded <see cref="Wave"/> instance.</returns>
+    /// <remarks>
+    /// ContentPack <see cref="IsLoaded"/> has to be true before calling this method,
+    /// otherwise it will fail and return a default value.
+    /// Use <see cref="CreateCache"/> or <see cref="CreateIndex"/> to load the content pack first.
+    /// </remarks>
     public Wave LoadWave(string filePath)
     {
         TryLoadWave(filePath, out var wave);
         return wave;
     }
+
+    /// <summary>
+    /// Loads a <see cref="Sound"/> from the content pack using the specified file path.
+    /// </summary>
+    /// <param name="filePath">The relative path of the sound file within the content pack.</param>
+    /// <returns>The loaded <see cref="Sound"/> instance.</returns>
+    /// <remarks>
+    /// ContentPack <see cref="IsLoaded"/> has to be true before calling this method,
+    /// otherwise it will fail and return a default value.
+    /// Use <see cref="CreateCache"/> or <see cref="CreateIndex"/> to load the content pack first.
+    /// </remarks>
     public Sound LoadSound(string filePath)
     {
         TryLoadSound(filePath, out var sound);
         return sound;
     }
+
+    /// <summary>
+    /// Loads a <see cref="Music"/> from the content pack using the specified file path.
+    /// </summary>
+    /// <param name="filePath">The relative path of the music file within the content pack.</param>
+    /// <returns>The loaded <see cref="Music"/> instance.</returns>
+    /// <remarks>
+    /// ContentPack <see cref="IsLoaded"/> has to be true before calling this method,
+    /// otherwise it will fail and return a default value.
+    /// Use <see cref="CreateCache"/> or <see cref="CreateIndex"/> to load the content pack first.
+    /// </remarks>
     public Music LoadMusic(string filePath)
     {
         TryLoadMusic(filePath, out var music);
         return music;
     }
+
+    /// <summary>
+    /// Loads a fragment <see cref="Shader"/> from the content pack using the specified file path.
+    /// </summary>
+    /// <param name="filePath">The relative path of the fragment shader file within the content pack.</param>
+    /// <returns>The loaded <see cref="Shader"/> instance.</returns>
+    /// <remarks>
+    /// ContentPack <see cref="IsLoaded"/> has to be true before calling this method,
+    /// otherwise it will fail and return a default value.
+    /// Use <see cref="CreateCache"/> or <see cref="CreateIndex"/> to load the content pack first.
+    /// </remarks>
     public Shader LoadFragmentShader(string filePath)
     {
         TryLoadFragmentShader(filePath, out var shader);
         return shader;
     }
+
+    /// <summary>
+    /// Loads a vertex <see cref="Shader"/> from the content pack using the specified file path.
+    /// </summary>
+    /// <param name="filePath">The relative path of the vertex shader file within the content pack.</param>
+    /// <returns>The loaded <see cref="Shader"/> instance.</returns>
+    /// <remarks>
+    /// ContentPack <see cref="IsLoaded"/> has to be true before calling this method,
+    /// otherwise it will fail and return a default value.
+    /// Use <see cref="CreateCache"/> or <see cref="CreateIndex"/> to load the content pack first.
+    /// </remarks>
     public Shader LoadVertexShader(string filePath)
     {
         TryLoadVertexShader(filePath, out var shader);
         return shader;
     }
+
+    /// <summary>
+    /// Loads a text file from the content pack using the specified file path.
+    /// </summary>
+    /// <param name="filePath">The relative path of the text file within the content pack.</param>
+    /// <returns>The loaded text as a <see cref="string"/>.</returns>
+    /// <remarks>
+    /// ContentPack <see cref="IsLoaded"/> has to be true before calling this method,
+    /// otherwise it will fail and return a default value.
+    /// Use <see cref="CreateCache"/> or <see cref="CreateIndex"/> to load the content pack first.
+    /// </remarks>
     public string LoadText(string filePath)
     {
         TryLoadText(filePath, out var text);
         return text;
     }
-
     #endregion
     
     #region TryLoad
+    /// <summary>
+    /// Attempts to load a <see cref="Texture2D"/> from the content pack using the specified file path.
+    /// Returns true if the texture is successfully loaded; otherwise, false.
+    /// </summary>
+    /// <param name="filePath">The relative path of the texture file within the content pack.</param>
+    /// <param name="texture">The loaded <see cref="Texture2D"/> instance if successful;
+    /// otherwise, a default value.</param>
+    /// <remarks>
+    /// ContentPack <see cref="IsLoaded"/> has to be true before calling this method, otherwise it will fail and return false.
+    /// Use <see cref="CreateCache"/> or <see cref="CreateIndex"/> to load the content pack first.
+    /// </remarks>
     public bool TryLoadTexture(string filePath, out Texture2D texture)
     {
         if (!IsLoaded)
@@ -680,6 +974,16 @@ public sealed class ContentPack
         texture = ContentLoader.LoadTextureFromMemory(extension, data);
         return true;
     }
+    /// <summary>
+    /// Attempts to load an <see cref="Image"/> from the content pack using the specified file path.
+    /// Returns true if the image is successfully loaded; otherwise, false.
+    /// </summary>
+    /// <param name="filePath">The relative path of the image file within the content pack.</param>
+    /// <param name="image">The loaded <see cref="Image"/> instance if successful; otherwise, a default value.</param>
+    /// <remarks>
+    /// ContentPack <see cref="IsLoaded"/> must be true before calling this method, otherwise it will fail and return false.
+    /// Use <see cref="CreateCache"/> or <see cref="CreateIndex"/> to load the content pack first.
+    /// </remarks>
     public bool TryLoadImage(string filePath, out Image image)
     {
         if (!IsLoaded)
@@ -701,6 +1005,17 @@ public sealed class ContentPack
         image = ContentLoader.LoadImageFromMemory(extension, data);
         return true;
     }
+    /// <summary>
+    /// Attempts to load a <see cref="Font"/> from the content pack using the specified file path and font size.
+    /// Returns true if the font is successfully loaded; otherwise, false.
+    /// </summary>
+    /// <param name="filePath">The relative path of the font file within the content pack.</param>
+    /// <param name="font">The loaded <see cref="Font"/> instance if successful; otherwise, a default value.</param>
+    /// <param name="fontSize">The desired font size. Default is 100.</param>
+    /// <remarks>
+    /// ContentPack <see cref="IsLoaded"/> must be true before calling this method, otherwise it will fail and return false.
+    /// Use <see cref="CreateCache"/> or <see cref="CreateIndex"/> to load the content pack first.
+    /// </remarks>
     public bool TryLoadFont(string filePath, out Font font, int fontSize = 100)
     {
         if (!IsLoaded)
@@ -722,6 +1037,16 @@ public sealed class ContentPack
         font = ContentLoader.LoadFontFromMemory(extension, data, fontSize);
         return true;
     }
+    /// <summary>
+    /// Attempts to load a <see cref="Wave"/> from the content pack using the specified file path.
+    /// Returns true if the wave is successfully loaded; otherwise, false.
+    /// </summary>
+    /// <param name="filePath">The relative path of the wave file within the content pack.</param>
+    /// <param name="wave">The loaded <see cref="Wave"/> instance if successful; otherwise, a default value.</param>
+    /// <remarks>
+    /// ContentPack <see cref="IsLoaded"/> must be true before calling this method, otherwise it will fail and return false.
+    /// Use <see cref="CreateCache"/> or <see cref="CreateIndex"/> to load the content pack first.
+    /// </remarks>
     public bool TryLoadWave(string filePath, out Wave wave)
     {
         if (!IsLoaded)
@@ -743,6 +1068,16 @@ public sealed class ContentPack
         wave =  ContentLoader.LoadWaveFromMemory(extension, data);
         return true;
     }
+    /// <summary>
+    /// Attempts to load a <see cref="Sound"/> from the content pack using the specified file path.
+    /// Returns true if the sound is successfully loaded; otherwise, false.
+    /// </summary>
+    /// <param name="filePath">The relative path of the sound file within the content pack.</param>
+    /// <param name="sound">The loaded <see cref="Sound"/> instance if successful; otherwise, a default value.</param>
+    /// <remarks>
+    /// ContentPack <see cref="IsLoaded"/> must be true before calling this method, otherwise it will fail and return false.
+    /// Use <see cref="CreateCache"/> or <see cref="CreateIndex"/> to load the content pack first.
+    /// </remarks>
     public bool TryLoadSound(string filePath, out Sound sound)
     {
         if (!IsLoaded)
@@ -765,6 +1100,17 @@ public sealed class ContentPack
         return true;
 
     }
+    
+    /// <summary>
+    /// Attempts to load a <see cref="Music"/> from the content pack using the specified file path.
+    /// Returns true if the music is successfully loaded; otherwise, false.
+    /// </summary>
+    /// <param name="filePath">The relative path of the music file within the content pack.</param>
+    /// <param name="music">The loaded <see cref="Music"/> instance if successful; otherwise, a default value.</param>
+    /// <remarks>
+    /// ContentPack <see cref="IsLoaded"/> must be true before calling this method, otherwise it will fail and return false.
+    /// Use <see cref="CreateCache"/> or <see cref="CreateIndex"/> to load the content pack first.
+    /// </remarks>
     public bool TryLoadMusic(string filePath, out Music music)
     {
         if (!IsLoaded)
@@ -786,6 +1132,16 @@ public sealed class ContentPack
         music = ContentLoader.LoadMusicFromMemory(extension, data);
         return true;
     }
+    /// <summary>
+    /// Attempts to load a fragment <see cref="Shader"/> from the content pack using the specified file path.
+    /// Returns true if the shader is successfully loaded; otherwise, false.
+    /// </summary>
+    /// <param name="filePath">The relative path of the fragment shader file within the content pack.</param>
+    /// <param name="shader">The loaded <see cref="Shader"/> instance if successful; otherwise, a default value.</param>
+    /// <remarks>
+    /// ContentPack <see cref="IsLoaded"/> must be true before calling this method, otherwise it will fail and return false.
+    /// Use <see cref="CreateCache"/> or <see cref="CreateIndex"/> to load the content pack first.
+    /// </remarks>
     public bool TryLoadFragmentShader(string filePath, out Shader shader)
     {
         if (!IsLoaded)
@@ -806,6 +1162,17 @@ public sealed class ContentPack
         shader = ContentLoader.LoadFragmentShaderFromMemory(data);
         return true;
     }
+    
+    /// <summary>
+    /// Attempts to load a vertex <see cref="Shader"/> from the content pack using the specified file path.
+    /// Returns true if the shader is successfully loaded; otherwise, false.
+    /// </summary>
+    /// <param name="filePath">The relative path of the vertex shader file within the content pack.</param>
+    /// <param name="shader">The loaded <see cref="Shader"/> instance if successful; otherwise, a default value.</param>
+    /// <remarks>
+    /// ContentPack <see cref="IsLoaded"/> must be true before calling this method, otherwise it will fail and return false.
+    /// Use <see cref="CreateCache"/> or <see cref="CreateIndex"/> to load the content pack first.
+    /// </remarks>
     public bool TryLoadVertexShader(string filePath, out Shader shader)
     {
         if (!IsLoaded)
@@ -826,6 +1193,17 @@ public sealed class ContentPack
         shader = ContentLoader.LoadVertexShaderFromMemory(data);
         return true;
     }
+   
+    /// <summary>
+    /// Attempts to load a text file from the content pack using the specified file path.
+    /// Returns true if the text is successfully loaded; otherwise, false.
+    /// </summary>
+    /// <param name="filePath">The relative path of the text file within the content pack.</param>
+    /// <param name="text">The loaded text as a <see cref="string"/> if successful; otherwise, an empty string.</param>
+    /// <remarks>
+    /// ContentPack <see cref="IsLoaded"/> must be true before calling this method, otherwise it will fail and return false.
+    /// Use <see cref="CreateCache"/> or <see cref="CreateIndex"/> to load the content pack first.
+    /// </remarks>
     public bool TryLoadText(string filePath, out string text)
     {
         if (!IsLoaded)
@@ -847,10 +1225,20 @@ public sealed class ContentPack
         text = ContentLoader.LoadTextFromMemory(data);
         return true;
     }
-
     #endregion
     
     #region Load All
+    /// <summary>
+    /// Loads all <see cref="Texture2D"/> assets from the content pack.
+    /// Returns a dictionary mapping file paths to loaded textures.
+    /// The <paramref name="success"/> output parameter is set to true if at least one texture is loaded; otherwise, false.
+    /// </summary>
+    /// <param name="success">True if textures were loaded; otherwise, false.</param>
+    /// <returns>Dictionary of file paths and their corresponding <see cref="Texture2D"/> instances.</returns>
+    /// <remarks>
+    /// ContentPack <see cref="IsLoaded"/> must be true before calling this method, otherwise it will fail and <paramref name="success"/> will be false.
+    /// Use <see cref="CreateCache"/> or <see cref="CreateIndex"/> to load the content pack first.
+    /// </remarks>
     public Dictionary<string, Texture2D> LoadAllTextures(out bool success)
     {
         success = false;
@@ -881,7 +1269,17 @@ public sealed class ContentPack
         success = true;
         return result;
     }
-    
+    /// <summary>
+    /// Loads all <see cref="Image"/> assets from the content pack.
+    /// Returns a dictionary mapping file paths to loaded images.
+    /// The <paramref name="success"/> output parameter is set to true if at least one image is loaded; otherwise, false.
+    /// </summary>
+    /// <param name="success">True if images were loaded; otherwise, false.</param>
+    /// <returns>Dictionary of file paths and their corresponding <see cref="Image"/> instances.</returns>
+    /// <remarks>
+    /// ContentPack <see cref="IsLoaded"/> must be true before calling this method, otherwise it will fail and <paramref name="success"/> will be false.
+    /// Use <see cref="CreateCache"/> or <see cref="CreateIndex"/> to load the content pack first.
+    /// </remarks>
     public Dictionary<string, Image> LoadAllImages(out bool success)
         {
             success = false;
@@ -912,7 +1310,18 @@ public sealed class ContentPack
             success = true;
             return result;
         }
-    
+    /// <summary>
+    /// Loads all <see cref="Font"/> assets from the content pack.
+    /// Returns a dictionary mapping file paths to loaded fonts.
+    /// The <paramref name="success"/> output parameter is set to true if at least one font is loaded; otherwise, false.
+    /// </summary>
+    /// <param name="success">True if fonts were loaded; otherwise, false.</param>
+    /// <param name="fontSize">The desired font size. Default is 100.</param>
+    /// <returns>Dictionary of file paths and their corresponding <see cref="Font"/> instances.</returns>
+    /// <remarks>
+    /// ContentPack <see cref="IsLoaded"/> must be true before calling this method, otherwise it will fail and <paramref name="success"/> will be false.
+    /// Use <see cref="CreateCache"/> or <see cref="CreateIndex"/> to load the content pack first.
+    /// </remarks>
     public Dictionary<string, Font> LoadAllFonts(out bool success, int fontSize = 100)
     {
         success = false;
@@ -943,7 +1352,17 @@ public sealed class ContentPack
         success = true;
         return result;
     }
-
+    /// <summary>
+    /// Loads all <see cref="Wave"/> assets from the content pack.
+    /// Returns a dictionary mapping file paths to loaded waves.
+    /// The <paramref name="success"/> output parameter is set to true if at least one wave is loaded; otherwise, false.
+    /// </summary>
+    /// <param name="success">True if waves were loaded; otherwise, false.</param>
+    /// <returns>Dictionary of file paths and their corresponding <see cref="Wave"/> instances.</returns>
+    /// <remarks>
+    /// ContentPack <see cref="IsLoaded"/> must be true before calling this method, otherwise it will fail and <paramref name="success"/> will be false.
+    /// Use <see cref="CreateCache"/> or <see cref="CreateIndex"/> to load the content pack first.
+    /// </remarks>
     public Dictionary<string, Wave> LoadAllWaves(out bool success)
     {
         success = false;
@@ -974,7 +1393,17 @@ public sealed class ContentPack
         success = true;
         return result;
     }
-
+    /// <summary>
+    /// Loads all <see cref="Sound"/> assets from the content pack.
+    /// Returns a dictionary mapping file paths to loaded sounds.
+    /// The <paramref name="success"/> output parameter is set to true if at least one sound is loaded; otherwise, false.
+    /// </summary>
+    /// <param name="success">True if sounds were loaded; otherwise, false.</param>
+    /// <returns>Dictionary of file paths and their corresponding <see cref="Sound"/> instances.</returns>
+    /// <remarks>
+    /// ContentPack <see cref="IsLoaded"/> must be true before calling this method, otherwise it will fail and <paramref name="success"/> will be false.
+    /// Use <see cref="CreateCache"/> or <see cref="CreateIndex"/> to load the content pack first.
+    /// </remarks>
     public Dictionary<string, Sound> LoadAllSounds(out bool success)
     {
         success = false;
@@ -1005,7 +1434,17 @@ public sealed class ContentPack
         success = true;
         return result;
     }
-
+    /// <summary>
+    /// Loads all <see cref="Music"/> assets from the content pack.
+    /// Returns a dictionary mapping file paths to loaded music instances.
+    /// The <paramref name="success"/> output parameter is set to true if at least one music file is loaded; otherwise, false.
+    /// </summary>
+    /// <param name="success">True if music files were loaded; otherwise, false.</param>
+    /// <returns>Dictionary of file paths and their corresponding <see cref="Music"/> instances.</returns>
+    /// <remarks>
+    /// ContentPack <see cref="IsLoaded"/> must be true before calling this method, otherwise it will fail and <paramref name="success"/> will be false.
+    /// Use <see cref="CreateCache"/> or <see cref="CreateIndex"/> to load the content pack first.
+    /// </remarks>
     public Dictionary<string, Music> LoadAllMusic(out bool success)
     {
         success = false;
@@ -1036,7 +1475,17 @@ public sealed class ContentPack
         success = true;
         return result;
     }
-
+    /// <summary>
+    /// Loads all fragment <see cref="Shader"/> assets from the content pack.
+    /// Returns a dictionary mapping file paths to loaded fragment shaders.
+    /// The <paramref name="success"/> output parameter is set to true if at least one fragment shader is loaded; otherwise, false.
+    /// </summary>
+    /// <param name="success">True if fragment shaders were loaded; otherwise, false.</param>
+    /// <returns>Dictionary of file paths and their corresponding <see cref="Shader"/> instances.</returns>
+    /// <remarks>
+    /// ContentPack <see cref="IsLoaded"/> must be true before calling this method, otherwise it will fail and <paramref name="success"/> will be false.
+    /// Use <see cref="CreateCache"/> or <see cref="CreateIndex"/> to load the content pack first.
+    /// </remarks>
     public Dictionary<string, Shader> LoadAllFragmentShaders(out bool success)
     {
         success = false;
@@ -1067,7 +1516,17 @@ public sealed class ContentPack
         success = true;
         return result;
     }
-
+    /// <summary>
+    /// Loads all vertex <see cref="Shader"/> assets from the content pack.
+    /// Returns a dictionary mapping file paths to loaded vertex shaders.
+    /// The <paramref name="success"/> output parameter is set to true if at least one vertex shader is loaded; otherwise, false.
+    /// </summary>
+    /// <param name="success">True if vertex shaders were loaded; otherwise, false.</param>
+    /// <returns>Dictionary of file paths and their corresponding <see cref="Shader"/> instances.</returns>
+    /// <remarks>
+    /// ContentPack <see cref="IsLoaded"/> must be true before calling this method, otherwise it will fail and <paramref name="success"/> will be false.
+    /// Use <see cref="CreateCache"/> or <see cref="CreateIndex"/> to load the content pack first.
+    /// </remarks>
     public Dictionary<string, Shader> LoadAllVertexShaders(out bool success)
     {
         success = false;
@@ -1098,7 +1557,13 @@ public sealed class ContentPack
         success = true;
         return result;
     }
-
+    /// <summary>
+    /// Loads all text files from the content pack.
+    /// Returns a dictionary mapping file paths to their loaded text content.
+    /// The <paramref name="success"/> output parameter is set to true if at least one text file is loaded; otherwise, false.
+    /// </summary>
+    /// <param name="success">True if text files were loaded; otherwise, false.</param>
+    /// <returns>Dictionary of file paths and their corresponding text content as <see cref="string"/>.</returns>
     public Dictionary<string, string> LoadAllText(out bool success)
     {
         success = false;
