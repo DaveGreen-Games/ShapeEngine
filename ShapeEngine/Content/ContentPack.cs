@@ -140,7 +140,7 @@ public sealed class ContentPack
         if(!IsLoaded) return false;
         return CurrentUnpackMode == UnpackMode.Memory ? cache.ContainsKey(filePath) : index.ContainsKey(filePath);
     }
-
+    
     /// <summary>
     /// Unpacks the content pack into memory, optionally using parallel processing.
     /// Skips files with extensions listed in <paramref name="extensionExceptions"/>.
@@ -149,6 +149,10 @@ public sealed class ContentPack
     /// </summary>
     /// <param name="parallelProcessing">If true, uses parallel processing for unpacking.</param>
     /// <param name="extensionExceptions">List of file extensions to skip during unpacking.</param>
+    /// <param name="directoryRestriction">
+    /// If set, only files whose relative path starts with this directory restriction will be unpacked.
+    /// Example: setting to `Audio/Music/Background` will only load resources within that directory path.
+    /// </param>
     /// <param name="textFileUnpackingBatchSize">Batch size for parallel text file unpacking.</param>
     /// <returns>True if cache was created and files loaded; otherwise, false.</returns>
     /// <remarks>
@@ -156,7 +160,7 @@ public sealed class ContentPack
     /// Use <see cref="IsLoaded"/> to check load status.
     /// Use <see cref="Clear"/> to unload and clear the cache/index.
     /// </remarks>
-    public bool CreateCache(bool parallelProcessing = false, List<string>? extensionExceptions = null, int textFileUnpackingBatchSize = 16)
+    public bool CreateCache(bool parallelProcessing = false, List<string>? extensionExceptions = null, string directoryRestriction = "", int textFileUnpackingBatchSize = 16)
     {
         if (IsLoaded) return false;
         if (!File.Exists(SourceFilePath))
@@ -169,12 +173,12 @@ public sealed class ContentPack
         {
             if (parallelProcessing)
             {
-                cache = UnpackTextToMemoryParallel(SourceFilePath, out long cacheSize, extensionExceptions, DebugLogging, textFileUnpackingBatchSize);
+                cache = UnpackTextToMemoryParallel(SourceFilePath, out long cacheSize, extensionExceptions, directoryRestriction, textFileUnpackingBatchSize, DebugLogging);
                 CacheSize = cacheSize;
             }
             else
             {
-                cache = UnpackTextToMemory(SourceFilePath, out long cacheSize, extensionExceptions, DebugLogging);
+                cache = UnpackTextToMemory(SourceFilePath, out long cacheSize, extensionExceptions, directoryRestriction, DebugLogging);
                 CacheSize = cacheSize;
             }
         }
@@ -182,12 +186,12 @@ public sealed class ContentPack
         {
             if (parallelProcessing)
             {
-                cache = UnpackFileToMemoryParallel(SourceFilePath, out long cacheSize, extensionExceptions, DebugLogging);
+                cache = UnpackFileToMemoryParallel(SourceFilePath, out long cacheSize, extensionExceptions, directoryRestriction, DebugLogging);
                 CacheSize = cacheSize;
             }
             else
             {
-                cache = UnpackFileToMemory(SourceFilePath, out long cacheSize, extensionExceptions, DebugLogging);
+                cache = UnpackFileToMemory(SourceFilePath, out long cacheSize, extensionExceptions, directoryRestriction, DebugLogging);
                 CacheSize = cacheSize;
             }
         }
@@ -200,7 +204,6 @@ public sealed class ContentPack
 
         CurrentUnpackMode = UnpackMode.Memory;
         return true;
-        
     }
     /// <summary>
     /// Creates an index for the content pack, allowing on-demand access to files without loading them into memory.
@@ -269,9 +272,13 @@ public sealed class ContentPack
     /// <param name="sourceFilePath">The path to the packed binary file.</param>
     /// <param name="totalBytesUnpacked">Outputs the total number of bytes unpacked.</param>
     /// <param name="extensionExceptions">Optional list of file extensions to skip during unpacking.</param>
+    /// <param name="directoryRestriction">
+    /// If set, only files whose relative path starts with this directory restriction will be unpacked.
+    /// Example: setting to `Audio/Music/Background` will only load resources within that directory path.
+    /// </param>
     /// <param name="debug">If true, enables debug logging.</param>
     /// <returns>A dictionary of relative file paths and their corresponding decompressed byte arrays.</returns>
-    public static Dictionary<string, byte[]> UnpackFileToMemory(string sourceFilePath, out long totalBytesUnpacked, List<string>? extensionExceptions = null, bool debug = false)
+    public static Dictionary<string, byte[]> UnpackFileToMemory(string sourceFilePath, out long totalBytesUnpacked, List<string>? extensionExceptions = null, string directoryRestriction = "", bool debug = false)
     {
         totalBytesUnpacked = 0;
         var result = new Dictionary<string, byte[]>();
@@ -304,7 +311,7 @@ public sealed class ContentPack
             var pathBytes = new byte[pathLen];
             fileStream.ReadExactly(pathBytes, 0, pathLen);
             string relativePath = System.Text.Encoding.UTF8.GetString(pathBytes);
-
+            
             var dataLenBytes = new byte[4];
             fileStream.ReadExactly(dataLenBytes, 0, 4);
             int dataLen = BitConverter.ToInt32(dataLenBytes, 0);
@@ -312,6 +319,12 @@ public sealed class ContentPack
             if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(relativePath)))
             {
                 if (debug) debugMessages.Add($"File skipped due to extension: {Path.GetFileName(relativePath)}");
+                fileStream.Position += dataLen; // skip data
+                continue;
+            }
+            
+            if (!string.IsNullOrEmpty(directoryRestriction) && !relativePath.StartsWith(directoryRestriction, StringComparison.OrdinalIgnoreCase))
+            {
                 fileStream.Position += dataLen; // skip data
                 continue;
             }
@@ -355,9 +368,13 @@ public sealed class ContentPack
     /// <param name="sourceFilePath">The path to the packed binary file.</param>
     /// <param name="totalBytesUnpacked">Outputs the total number of bytes unpacked.</param>
     /// <param name="extensionExceptions">Optional list of file extensions to skip during unpacking.</param>
+    /// <param name="directoryRestriction">
+    /// If set, only files whose relative path starts with this directory restriction will be unpacked.
+    /// Example: setting to `Audio/Music/Background` will only load resources within that directory path.
+    /// </param>
     /// <param name="debug">If true, enables debug logging.</param>
     /// <returns>A dictionary of relative file paths and their corresponding decompressed byte arrays.</returns>
-    public static Dictionary<string, byte[]> UnpackFileToMemoryParallel(string sourceFilePath, out long totalBytesUnpacked, List<string>? extensionExceptions = null, bool debug = false)
+    public static Dictionary<string, byte[]> UnpackFileToMemoryParallel(string sourceFilePath, out long totalBytesUnpacked, List<string>? extensionExceptions = null, string directoryRestriction = "", bool debug = false)
     {
         totalBytesUnpacked = 0;
         var result = new ConcurrentDictionary<string, byte[]>();
@@ -402,6 +419,12 @@ public sealed class ContentPack
                     continue;
                 }
     
+                if (!string.IsNullOrEmpty(directoryRestriction) && !relativePath.StartsWith(directoryRestriction, StringComparison.OrdinalIgnoreCase))
+                {
+                    fileStream.Position += dataLen; // skip data
+                    continue;
+                }
+                
                 entries.Add((relativePath, dataOffset, dataLen));
                 fileStream.Position += dataLen;
             }
@@ -454,9 +477,13 @@ public sealed class ContentPack
     /// <param name="sourceFilePath">The path to the packed text file (.txt).</param>
     /// <param name="totalBytesUnpacked">Outputs the total number of bytes unpacked.</param>
     /// <param name="extensionExceptions">Optional list of file extensions to skip during unpacking.</param>
+    /// <param name="directoryRestriction">
+    /// If set, only files whose relative path starts with this directory restriction will be unpacked.
+    /// Example: setting to `Audio/Music/Background` will only load resources within that directory path.
+    /// </param>
     /// <param name="debug">If true, enables debug logging.</param>
     /// <returns>A dictionary of relative file paths and their corresponding decompressed byte arrays.</returns>
-    public static Dictionary<string, byte[]> UnpackTextToMemory(string sourceFilePath, out long totalBytesUnpacked, List<string>? extensionExceptions = null, bool debug = false)
+    public static Dictionary<string, byte[]> UnpackTextToMemory(string sourceFilePath, out long totalBytesUnpacked, List<string>? extensionExceptions = null, string directoryRestriction = "", bool debug = false)
     {
         totalBytesUnpacked = 0;
         var result = new Dictionary<string, byte[]>();
@@ -495,6 +522,15 @@ public sealed class ContentPack
                 continue;
             }
 
+            if (!string.IsNullOrEmpty(directoryRestriction) && !relativePath.StartsWith(directoryRestriction, StringComparison.OrdinalIgnoreCase))
+            {
+                if (debug)
+                {
+                    ShapeLogger.LogInfo($"File skipped due to directory restriction {directoryRestriction}: {relativePath}");
+                }
+                continue;
+            }
+            
             var base64Data = lines[i + 1];
             var compressedData = Convert.FromBase64String(base64Data);
             // var data = Decompress(compressedData);
@@ -529,10 +565,14 @@ public sealed class ContentPack
     /// <param name="sourceFilePath">The path to the packed text file (.txt).</param>
     /// <param name="totalBytesUnpacked">Outputs the total number of bytes unpacked.</param>
     /// <param name="extensionExceptions">Optional list of file extensions to skip during unpacking.</param>
-    /// <param name="debug">If true, enables debug logging.</param>
+    /// <param name="directoryRestriction">
+    /// If set, only files whose relative path starts with this directory restriction will be unpacked.
+    /// Example: setting to `Audio/Music/Background` will only load resources within that directory path.
+    /// </param>
     /// <param name="batchSize">Batch size for parallel text file unpacking.</param>
+    /// <param name="debug">If true, enables debug logging.</param>
     /// <returns>A dictionary of relative file paths and their corresponding decompressed byte arrays.</returns>
-    public static Dictionary<string, byte[]> UnpackTextToMemoryParallel(string sourceFilePath, out long totalBytesUnpacked, List<string>? extensionExceptions = null, bool debug = false, int batchSize = 16)
+    public static Dictionary<string, byte[]> UnpackTextToMemoryParallel(string sourceFilePath, out long totalBytesUnpacked, List<string>? extensionExceptions = null, string directoryRestriction = "", int batchSize = 16, bool debug = false)
     {
         totalBytesUnpacked = 0;
         var result = new ConcurrentDictionary<string, byte[]>();
@@ -587,6 +627,25 @@ public sealed class ContentPack
                     }
                     else
                     {
+                        
+                        if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(firstLine)))
+                        {
+                            if (debug)
+                            {
+                                debugMessages?.Add($"File skipped due to extension: {Path.GetFileName(firstLine)}");
+                            }
+                            continue;
+                        }
+                        
+                        if (!string.IsNullOrEmpty(directoryRestriction) && !firstLine.StartsWith(directoryRestriction, StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (debug)
+                            {
+                                ShapeLogger.LogInfo($"File skipped due to directory restriction {directoryRestriction}: {firstLine}");
+                            }
+                            continue;
+                        }
+                        
                         batchLines.Add(firstLine);
                         firstLine = string.Empty;
                         batchLines.Add(line);
@@ -605,14 +664,16 @@ public sealed class ContentPack
             Parallel.For(0, filesInBatch, i =>
             {
                 var relativePath = batchLines[i * 2];
-                if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(relativePath)))
-                {
-                    if (debug)
-                    {
-                        debugMessages?.Add($"File skipped due to extension: {Path.GetFileName(relativePath)}");
-                    }
-                    return;
-                }
+                
+                //Is now done above when creating the batch lines
+                // if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(relativePath)))
+                // {
+                //     if (debug)
+                //     {
+                //         debugMessages?.Add($"File skipped due to extension: {Path.GetFileName(relativePath)}");
+                //     }
+                //     return;
+                // }
 
                 var base64Data = batchLines[i * 2 + 1];
                 var compressedData = Convert.FromBase64String(base64Data);
