@@ -5,7 +5,8 @@ using Raylib_cs;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Content;
-//TODO: Docs!
+
+
 public sealed class ContentPack
 {
     public enum UnpackMode
@@ -608,175 +609,51 @@ public sealed class ContentPack
     #endregion
     
     #region Load
-    //TODO: Use TryLoad* functions internally and remove code duplication
+
     public Texture2D LoadTexture(string filePath)
     {
-        if (!IsLoaded)
-        {
-            ShapeLogger.LogError("ContentPack LoadTexture() failed. Content pack not loaded!");
-            return new();
-        }
-        
-        byte[]? data = GetFileData(filePath);
-        if (data == null)
-        {
-            ShapeLogger.LogError($"ContentPack LoadTexture() failed. File {filePath} not found in pack!");
-            return new();
-        }
-        
-        string extension = Path.GetExtension(filePath);
-        var t = ContentLoader.LoadTextureFromMemory(extension, data);
-        return t;
+        TryLoadTexture(filePath, out var texture);
+        return texture;
     }
     public Image LoadImage(string filePath)
     {
-        if (!IsLoaded)
-        {
-            ShapeLogger.LogError("ContentPack LoadImage() failed. Content pack not loaded!");
-            return new();
-        }
-        
-        byte[]? data = GetFileData(filePath);
-        if (data == null)
-        {
-            ShapeLogger.LogError($"ContentPack LoadImage() failed. File {filePath} not found in pack!");
-            return new();
-        }
-        
-        string extension = Path.GetExtension(filePath);
-        var i = ContentLoader.LoadImageFromMemory(extension, data);
-        return i;
+        TryLoadImage(filePath, out var image);
+        return image;
     }
     public Font LoadFont(string filePath, int fontSize = 100)
     {
-        if (!IsLoaded)
-        {
-            ShapeLogger.LogError("ContentPack LoadFont() failed. Content pack not loaded!");
-            return new();
-        }
-        
-        byte[]? data = GetFileData(filePath);
-        if (data == null)
-        {
-            ShapeLogger.LogError($"ContentPack LoadFont() failed. File {filePath} not found in pack!");
-            return new();
-        }
-        
-        string extension = Path.GetExtension(filePath);
-        var f = ContentLoader.LoadFontFromMemory(extension, data, fontSize);
-        return f;
+        TryLoadFont(filePath, out var font, fontSize);
+        return font;
     }
     public Wave LoadWave(string filePath)
     {
-        if (!IsLoaded)
-        {
-            ShapeLogger.LogError("ContentPack LoadWave() failed. Content pack not loaded!");
-            return new();
-        }
-        
-        byte[]? data = GetFileData(filePath);
-        if (data == null)
-        {
-            ShapeLogger.LogError($"ContentPack LoadWave() failed. File {filePath} not found in pack!");
-            return new();
-        }
-        
-        string extension = Path.GetExtension(filePath);
-        var w =  ContentLoader.LoadWaveFromMemory(extension, data);
-        return w;
+        TryLoadWave(filePath, out var wave);
+        return wave;
     }
     public Sound LoadSound(string filePath)
     {
-        if (!IsLoaded)
-        {
-            ShapeLogger.LogError("ContentPack LoadSound() failed. Content pack not loaded!");
-            return new();
-        }
-        
-        byte[]? data = GetFileData(filePath);
-        if (data == null)
-        {
-            ShapeLogger.LogError($"ContentPack LoadSound() failed. File {filePath} not found in pack!");
-            return new();
-        }
-        
-        string extension = Path.GetExtension(filePath);
-        var s = ContentLoader.LoadSoundFromMemory(extension, data);
-        return s;
-
+        TryLoadSound(filePath, out var sound);
+        return sound;
     }
     public Music LoadMusic(string filePath)
     {
-        if (!IsLoaded)
-        {
-            ShapeLogger.LogError("ContentPack LoadMusic() failed. Content pack not loaded!");
-            return new();
-        }
-        
-        byte[]? data = GetFileData(filePath);
-        if (data == null)
-        {
-            ShapeLogger.LogError($"ContentPack LoadMusic() failed. File {filePath} not found in pack!");
-            return new();
-        }
-        
-        string extension = Path.GetExtension(filePath);
-        var m = ContentLoader.LoadMusicFromMemory(extension, data);
-        return m;
+        TryLoadMusic(filePath, out var music);
+        return music;
     }
     public Shader LoadFragmentShader(string filePath)
     {
-        if (!IsLoaded)
-        {
-            ShapeLogger.LogError("ContentPack LoadFragmentShader() failed. Content pack not loaded!");
-            return new();
-        }
-        
-        byte[]? data = GetFileData(filePath);
-        if (data == null)
-        {
-            ShapeLogger.LogError($"ContentPack LoadFragmentShader() failed. File {filePath} not found in pack!");
-            return new();
-        }
-        
-        var fs = ContentLoader.LoadFragmentShaderFromMemory(data);
-        return fs;
+        TryLoadFragmentShader(filePath, out var shader);
+        return shader;
     }
     public Shader LoadVertexShader(string filePath)
     {
-        if (!IsLoaded)
-        {
-            ShapeLogger.LogError("ContentPack LoadVertexShader() failed. Content pack not loaded!");
-            return new();
-        }
-        
-        byte[]? data = GetFileData(filePath);
-        if (data == null)
-        {
-            ShapeLogger.LogError($"ContentPack LoadVertexShader() failed. File {filePath} not found in pack!");
-            return new();
-        }
-        
-        var vs = ContentLoader.LoadVertexShaderFromMemory(data);
-        return vs;
+        TryLoadVertexShader(filePath, out var shader);
+        return shader;
     }
     public string LoadText(string filePath)
     {
-        if (!IsLoaded)
-        {
-            ShapeLogger.LogError("ContentPack LoadText() failed. Content pack not loaded!");
-            return string.Empty;
-        }
-        
-        byte[]? data = GetFileData(filePath);
-        if (data == null)
-        {
-            ShapeLogger.LogError($"ContentPack LoadText() failed. File {filePath} not found in pack!");
-            return string.Empty;
-        }
-        
-        // string extension = Path.GetExtension(filePath);
-        return ContentLoader.LoadTextFromMemory(data);
+        TryLoadText(filePath, out var text);
+        return text;
     }
 
     #endregion
