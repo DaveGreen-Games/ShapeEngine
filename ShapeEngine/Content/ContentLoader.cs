@@ -1,7 +1,6 @@
 ﻿using System.Text;
 using Raylib_cs;
 using ShapeEngine.Core.GameDef;
-using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Content;
 
@@ -73,7 +72,7 @@ public static class ContentLoader
         string exeDir = AppContext.BaseDirectory; // This is Contents/MacOS/
         string resourcesDir = Path.Combine(exeDir, "..", "Resources");//".." goes up one level to Contents
         string fullPath = Path.GetFullPath(Path.Combine(resourcesDir, relativePath));
-        ShapeLogger.LogInfo($"MacOS app bundle loading resource from path: {fullPath}");
+        Game.Instance.Logger.LogInfo($"MacOS app bundle loading resource from path: {fullPath}");
         return fullPath;
     }
     /// <summary>
@@ -160,7 +159,7 @@ public static class ContentLoader
     {
         if (!extension.StartsWith('.'))
         {
-            ShapeLogger.LogInfo($"ContentLoader AddValidFileExtension: Automatically added '.' prefix to extension {extension}.");
+            Game.Instance.Logger.LogInfo($"ContentLoader AddValidFileExtension: Automatically added '.' prefix to extension {extension}.");
             extension = "." + extension;
         }
 
@@ -240,7 +239,7 @@ public static class ContentLoader
         foreach (var kvp in ValidExtensions)
         {
             string extensions = string.Join(", ", kvp.Value);
-            ShapeLogger.LogInfo($"{kvp.Key}: [{extensions}]");
+            Game.Instance.Logger.LogInfo($"{kvp.Key}: [{extensions}]");
         }
     }
     #endregion
@@ -482,7 +481,7 @@ public static class ContentLoader
 
         if (!File.Exists(filePath))
         {
-            ShapeLogger.LogError($"Loading resource failed, file does not exist: {filePath}");
+            Game.Instance.Logger.LogError($"Loading resource failed, file does not exist: {filePath}");
             font = new();
             return false;
         }
@@ -491,7 +490,7 @@ public static class ContentLoader
         var contentType = ContentType.Font;
         if (!IsValidExtension(extension, contentType))
         {
-            ShapeLogger.LogError($"Loading resource failed, invalid file extension '{extension}' for Font: {filePath}. Current valid extensions for {contentType} are: {string.Join(", ", GetValidFileExtensions(contentType))}");
+            Game.Instance.Logger.LogError($"Loading resource failed, invalid file extension '{extension}' for Font: {filePath}. Current valid extensions for {contentType} are: {string.Join(", ", GetValidFileExtensions(contentType))}");
             font = new();
             return false;
         }
@@ -504,7 +503,7 @@ public static class ContentLoader
         }
         catch (Exception ex)
         {
-            ShapeLogger.LogError($"Error loading font from {filePath}: {ex.Message}");
+            Game.Instance.Logger.LogError($"Error loading font from {filePath}: {ex.Message}");
             font = new();
             return false;
         }
@@ -525,7 +524,7 @@ public static class ContentLoader
         
         if (!File.Exists(filePath))
         {
-            ShapeLogger.LogError($"Loading resource failed, file does not exist: {filePath}");
+            Game.Instance.Logger.LogError($"Loading resource failed, file does not exist: {filePath}");
             shader = new();
             return false;
         }
@@ -534,7 +533,7 @@ public static class ContentLoader
         var contentType = ContentType.ShaderFragment;
         if (!IsValidExtension(extension, contentType))
         {
-            ShapeLogger.LogError($"Loading resource failed, invalid file extension '{extension}' for {contentType}: {filePath}. Current valid extensions for {contentType} are: {string.Join(", ", GetValidFileExtensions(contentType))}");
+            Game.Instance.Logger.LogError($"Loading resource failed, invalid file extension '{extension}' for {contentType}: {filePath}. Current valid extensions for {contentType} are: {string.Join(", ", GetValidFileExtensions(contentType))}");
             shader = new();
             return false;
         }
@@ -546,7 +545,7 @@ public static class ContentLoader
         }
         catch (Exception ex)
         {
-            ShapeLogger.LogError($"Error loading fragment shader from {filePath}: {ex.Message}");
+            Game.Instance.Logger.LogError($"Error loading fragment shader from {filePath}: {ex.Message}");
             shader = new();
             return false;
         }
@@ -567,7 +566,7 @@ public static class ContentLoader
         
         if (!File.Exists(filePath))
         {
-            ShapeLogger.LogError($"Loading resource failed, file does not exist: {filePath}");
+            Game.Instance.Logger.LogError($"Loading resource failed, file does not exist: {filePath}");
             shader = new();
             return false;
         }
@@ -576,7 +575,7 @@ public static class ContentLoader
         var contentType = ContentType.ShaderVertex;
         if (!IsValidExtension(extension, contentType))
         {
-            ShapeLogger.LogError($"Loading resource failed, invalid file extension '{extension}' for {contentType}: {filePath}. Current valid extensions for {contentType} are: {string.Join(", ", GetValidFileExtensions(contentType))}");
+            Game.Instance.Logger.LogError($"Loading resource failed, invalid file extension '{extension}' for {contentType}: {filePath}. Current valid extensions for {contentType} are: {string.Join(", ", GetValidFileExtensions(contentType))}");
             shader = new();
             return false;
         }
@@ -588,7 +587,7 @@ public static class ContentLoader
         }
         catch (Exception ex)
         {
-            ShapeLogger.LogError($"Error loading vertex shader from {filePath}: {ex.Message}");
+            Game.Instance.Logger.LogError($"Error loading vertex shader from {filePath}: {ex.Message}");
             shader = new();
             return false;
         }
@@ -609,7 +608,7 @@ public static class ContentLoader
         
         if (!File.Exists(filePath))
         {
-            ShapeLogger.LogError($"Loading resource failed, file does not exist: {filePath}");
+            Game.Instance.Logger.LogError($"Loading resource failed, file does not exist: {filePath}");
             texture = new();
             return false;
         }
@@ -618,7 +617,7 @@ public static class ContentLoader
         var contentType = ContentType.Texture;
         if (!IsValidExtension(extension, contentType))
         {
-            ShapeLogger.LogError($"Loading resource failed, invalid file extension '{extension}' for {contentType}: {filePath}. Current valid extensions for {contentType} are: {string.Join(", ", GetValidFileExtensions(contentType))}");
+            Game.Instance.Logger.LogError($"Loading resource failed, invalid file extension '{extension}' for {contentType}: {filePath}. Current valid extensions for {contentType} are: {string.Join(", ", GetValidFileExtensions(contentType))}");
             texture = new();
             return false;
         }
@@ -630,7 +629,7 @@ public static class ContentLoader
         }
         catch (Exception ex)
         {
-            ShapeLogger.LogError($"Error loading texture from {filePath}: {ex.Message}");
+            Game.Instance.Logger.LogError($"Error loading texture from {filePath}: {ex.Message}");
             texture = new();
             return false;
         }
@@ -651,7 +650,7 @@ public static class ContentLoader
         
         if (!File.Exists(filePath))
         {
-            ShapeLogger.LogError($"Loading resource failed, file does not exist: {filePath}");
+            Game.Instance.Logger.LogError($"Loading resource failed, file does not exist: {filePath}");
             image = new();
             return false;
         }
@@ -660,7 +659,7 @@ public static class ContentLoader
         var contentType = ContentType.Texture;
         if (!IsValidExtension(extension, contentType))
         {
-            ShapeLogger.LogError($"Loading resource failed, invalid file extension '{extension}' for {contentType}: {filePath}. Current valid extensions for {contentType} are: {string.Join(", ", GetValidFileExtensions(contentType))}");
+            Game.Instance.Logger.LogError($"Loading resource failed, invalid file extension '{extension}' for {contentType}: {filePath}. Current valid extensions for {contentType} are: {string.Join(", ", GetValidFileExtensions(contentType))}");
             image = new();
             return false;
         }
@@ -672,7 +671,7 @@ public static class ContentLoader
         }
         catch (Exception ex)
         {
-            ShapeLogger.LogError($"Error loading image from {filePath}: {ex.Message}");
+            Game.Instance.Logger.LogError($"Error loading image from {filePath}: {ex.Message}");
             image = new();
             return false;
         }
@@ -693,7 +692,7 @@ public static class ContentLoader
        
         if (!File.Exists(filePath))
         {
-            ShapeLogger.LogError($"Loading resource failed, file does not exist: {filePath}");
+            Game.Instance.Logger.LogError($"Loading resource failed, file does not exist: {filePath}");
             wave = new();
             return false;
         }
@@ -702,7 +701,7 @@ public static class ContentLoader
         var contentType = ContentType.Wave;
         if (!IsValidExtension(extension, contentType))
         {
-            ShapeLogger.LogError($"Loading resource failed, invalid file extension '{extension}' for {contentType}: {filePath}. Current valid extensions for {contentType} are: {string.Join(", ", GetValidFileExtensions(contentType))}");
+            Game.Instance.Logger.LogError($"Loading resource failed, invalid file extension '{extension}' for {contentType}: {filePath}. Current valid extensions for {contentType} are: {string.Join(", ", GetValidFileExtensions(contentType))}");
             wave = new();
             return false;
         }
@@ -714,7 +713,7 @@ public static class ContentLoader
         }
         catch (Exception ex)
         {
-            ShapeLogger.LogError($"Error loading wave from {filePath}: {ex.Message}");
+            Game.Instance.Logger.LogError($"Error loading wave from {filePath}: {ex.Message}");
             wave = new();
             return false;
         }
@@ -735,7 +734,7 @@ public static class ContentLoader
         
         if (!File.Exists(filePath))
         {
-            ShapeLogger.LogError($"Loading resource failed, file does not exist: {filePath}");
+            Game.Instance.Logger.LogError($"Loading resource failed, file does not exist: {filePath}");
             sound = new();
             return false;
         }
@@ -744,7 +743,7 @@ public static class ContentLoader
         var contentType = ContentType.Sound;
         if (!IsValidExtension(extension, contentType))
         {
-            ShapeLogger.LogError($"Loading resource failed, invalid file extension '{extension}' for {contentType}: {filePath}. Current valid extensions for {contentType} are: {string.Join(", ", GetValidFileExtensions(contentType))}");
+            Game.Instance.Logger.LogError($"Loading resource failed, invalid file extension '{extension}' for {contentType}: {filePath}. Current valid extensions for {contentType} are: {string.Join(", ", GetValidFileExtensions(contentType))}");
             sound = new();
             return false;
         }
@@ -756,7 +755,7 @@ public static class ContentLoader
         }
         catch (Exception ex)
         {
-            ShapeLogger.LogError($"Error loading sound from {filePath}: {ex.Message}");
+            Game.Instance.Logger.LogError($"Error loading sound from {filePath}: {ex.Message}");
             sound = new();
             return false;
         }
@@ -777,7 +776,7 @@ public static class ContentLoader
         
         if (!File.Exists(filePath))
         {
-            ShapeLogger.LogError($"Loading resource failed, file does not exist: {filePath}");
+            Game.Instance.Logger.LogError($"Loading resource failed, file does not exist: {filePath}");
             music = new();
             return false;
         }
@@ -786,7 +785,7 @@ public static class ContentLoader
         var contentType = ContentType.Music;
         if (!IsValidExtension(extension, contentType))
         {
-            ShapeLogger.LogError($"Loading resource failed, invalid file extension '{extension}' for {contentType}: {filePath}. Current valid extensions for {contentType} are: {string.Join(", ", GetValidFileExtensions(contentType))}");
+            Game.Instance.Logger.LogError($"Loading resource failed, invalid file extension '{extension}' for {contentType}: {filePath}. Current valid extensions for {contentType} are: {string.Join(", ", GetValidFileExtensions(contentType))}");
             music = new();
             return false;
         }
@@ -798,7 +797,7 @@ public static class ContentLoader
         }
         catch (Exception ex)
         {
-            ShapeLogger.LogError($"Error loading music stream from {filePath}: {ex.Message}");
+            Game.Instance.Logger.LogError($"Error loading music stream from {filePath}: {ex.Message}");
             music = new();
             return false;
         }
@@ -819,7 +818,7 @@ public static class ContentLoader
         
         if (!File.Exists(filePath))
         {
-            ShapeLogger.LogError($"Loading resource failed, file does not exist: {filePath}");
+            Game.Instance.Logger.LogError($"Loading resource failed, file does not exist: {filePath}");
             text = string.Empty;
             return false;
         }
@@ -828,7 +827,7 @@ public static class ContentLoader
         var contentType = ContentType.Text;
         if (!IsValidExtension(extension, contentType))
         {
-            ShapeLogger.LogError($"Loading resource failed, invalid file extension '{extension}' for {contentType}: {filePath}. Current valid extensions for {contentType} are: {string.Join(", ", GetValidFileExtensions(contentType))}");
+            Game.Instance.Logger.LogError($"Loading resource failed, invalid file extension '{extension}' for {contentType}: {filePath}. Current valid extensions for {contentType} are: {string.Join(", ", GetValidFileExtensions(contentType))}");
             text = string.Empty;
             return false;
         }
@@ -840,7 +839,7 @@ public static class ContentLoader
         }
         catch (Exception ex)
         {
-            ShapeLogger.LogError($"Error loading text from {filePath}: {ex.Message}");
+            Game.Instance.Logger.LogError($"Error loading text from {filePath}: {ex.Message}");
             text = string.Empty;
             return false;
         }
@@ -866,19 +865,19 @@ public static class ContentLoader
     {
         if (data.Length <= 0)
         {
-            ShapeLogger.LogError($"Loading resource failed, data has zero length.");
+            Game.Instance.Logger.LogError($"Loading resource failed, data has zero length.");
             texture = new();
             return false;
         }
         if (extension == string.Empty)
         {
-            ShapeLogger.LogError($"Loading resource failed, extension is empty.");
+            Game.Instance.Logger.LogError($"Loading resource failed, extension is empty.");
             texture = new();
             return false;
         }
         if (!IsValidExtension(extension, ContentType.Texture))
         {
-            ShapeLogger.LogError($"Loading resource failed, file extension is invalid: {extension}. Current Valid extensions for {ContentType.Texture} are: {string.Join(", ", GetValidFileExtensions(ContentType.Texture))}");
+            Game.Instance.Logger.LogError($"Loading resource failed, file extension is invalid: {extension}. Current Valid extensions for {ContentType.Texture} are: {string.Join(", ", GetValidFileExtensions(ContentType.Texture))}");
             texture = new();
             return false;
         }
@@ -895,7 +894,7 @@ public static class ContentLoader
         }
         catch (Exception ex)
         {
-            ShapeLogger.LogError($"Error loading texture from memory: {ex.Message}");
+            Game.Instance.Logger.LogError($"Error loading texture from memory: {ex.Message}");
             texture = new();
             return false;
         }
@@ -915,19 +914,19 @@ public static class ContentLoader
     {
         if (data.Length <= 0)
         {
-            ShapeLogger.LogError($"Loading resource failed, data has zero length.");
+            Game.Instance.Logger.LogError($"Loading resource failed, data has zero length.");
             image = new();
             return false;
         }
         if (extension == string.Empty)
         {
-            ShapeLogger.LogError($"Loading resource failed, extension is empty.");
+            Game.Instance.Logger.LogError($"Loading resource failed, extension is empty.");
             image = new();
             return false;
         }
         if (!IsValidExtension(extension, ContentType.Texture))
         {
-            ShapeLogger.LogError($"Loading resource failed, file extension is invalid: {extension}. Current Valid extensions for {ContentType.Texture} are: {string.Join(", ", GetValidFileExtensions(ContentType.Texture))}");
+            Game.Instance.Logger.LogError($"Loading resource failed, file extension is invalid: {extension}. Current Valid extensions for {ContentType.Texture} are: {string.Join(", ", GetValidFileExtensions(ContentType.Texture))}");
             image = new();
             return false;
         }
@@ -939,7 +938,7 @@ public static class ContentLoader
         }
         catch (Exception ex)
         {
-            ShapeLogger.LogError($"Error loading image from memory: {ex.Message}");
+            Game.Instance.Logger.LogError($"Error loading image from memory: {ex.Message}");
             image = new();
             return false;
         }
@@ -961,19 +960,19 @@ public static class ContentLoader
     {
         if (data.Length <= 0)
         {
-            ShapeLogger.LogError($"Loading resource failed, data has zero length.");
+            Game.Instance.Logger.LogError($"Loading resource failed, data has zero length.");
             font = new();
             return false;
         }
         if (extension == string.Empty)
         {
-            ShapeLogger.LogError($"Loading resource failed, extension is empty.");
+            Game.Instance.Logger.LogError($"Loading resource failed, extension is empty.");
             font = new();
             return false;
         }
         if (!IsValidExtension(extension, ContentType.Font))
         {
-            ShapeLogger.LogError($"Loading resource failed, file extension is invalid: {extension}. Current Valid extensions for {ContentType.Font} are: {string.Join(", ", GetValidFileExtensions(ContentType.Font))}");
+            Game.Instance.Logger.LogError($"Loading resource failed, file extension is invalid: {extension}. Current Valid extensions for {ContentType.Font} are: {string.Join(", ", GetValidFileExtensions(ContentType.Font))}");
             font = new();
             return false;
         }
@@ -985,7 +984,7 @@ public static class ContentLoader
         }
         catch (Exception ex)
         {
-            ShapeLogger.LogError($"Error loading font from memory: {ex.Message}");
+            Game.Instance.Logger.LogError($"Error loading font from memory: {ex.Message}");
             font = new();
             return false;
         }
@@ -1006,19 +1005,19 @@ public static class ContentLoader
     {
         if (data.Length <= 0)
         {
-            ShapeLogger.LogError($"Loading resource failed, data has zero length.");
+            Game.Instance.Logger.LogError($"Loading resource failed, data has zero length.");
             wave = new();
             return false;
         }
         if (extension == string.Empty)
         {
-            ShapeLogger.LogError($"Loading resource failed, extension is empty.");
+            Game.Instance.Logger.LogError($"Loading resource failed, extension is empty.");
             wave = new();
             return false;
         }
         if (!IsValidExtension(extension, ContentType.Wave))
         {
-            ShapeLogger.LogError($"Loading resource failed, file extension is invalid: {extension}. Current Valid extensions for {ContentType.Wave} are: {string.Join(", ", GetValidFileExtensions(ContentType.Wave))}");
+            Game.Instance.Logger.LogError($"Loading resource failed, file extension is invalid: {extension}. Current Valid extensions for {ContentType.Wave} are: {string.Join(", ", GetValidFileExtensions(ContentType.Wave))}");
             wave = new();
             return false;
         }
@@ -1030,7 +1029,7 @@ public static class ContentLoader
         }
         catch (Exception ex)
         {
-            ShapeLogger.LogError($"Error loading wave from memory: {ex.Message}");
+            Game.Instance.Logger.LogError($"Error loading wave from memory: {ex.Message}");
             wave = new();
             return false;
         }
@@ -1050,19 +1049,19 @@ public static class ContentLoader
     {
         if (data.Length <= 0)
         {
-            ShapeLogger.LogError($"Loading resource failed, data has zero length.");
+            Game.Instance.Logger.LogError($"Loading resource failed, data has zero length.");
             sound = new();
             return false;
         }
         if (extension == string.Empty)
         {
-            ShapeLogger.LogError($"Loading resource failed, extension is empty.");
+            Game.Instance.Logger.LogError($"Loading resource failed, extension is empty.");
             sound = new();
             return false;
         }
         if (!IsValidExtension(extension, ContentType.Sound))
         {
-            ShapeLogger.LogError($"Loading resource failed, file extension is invalid: {extension}. Current Valid extensions for {ContentType.Sound} are: {string.Join(", ", GetValidFileExtensions(ContentType.Sound))}");
+            Game.Instance.Logger.LogError($"Loading resource failed, file extension is invalid: {extension}. Current Valid extensions for {ContentType.Sound} are: {string.Join(", ", GetValidFileExtensions(ContentType.Sound))}");
             sound = new();
             return false;
         }
@@ -1074,7 +1073,7 @@ public static class ContentLoader
         }
         catch (Exception ex)
         {
-            ShapeLogger.LogError($"Error loading sound from memory: {ex.Message}");
+            Game.Instance.Logger.LogError($"Error loading sound from memory: {ex.Message}");
             sound = new();
             return false;
         }
@@ -1093,19 +1092,19 @@ public static class ContentLoader
     {
         if (data.Length <= 0)
         {
-            ShapeLogger.LogError($"Loading resource failed, data has zero length.");
+            Game.Instance.Logger.LogError($"Loading resource failed, data has zero length.");
             music = new();
             return false;
         }
         if (extension == string.Empty)
         {
-            ShapeLogger.LogError($"Loading resource failed, extension is empty.");
+            Game.Instance.Logger.LogError($"Loading resource failed, extension is empty.");
             music = new();
             return false;
         }
         if (!IsValidExtension(extension, ContentType.Music))
         {
-            ShapeLogger.LogError($"Loading resource failed, file extension is invalid: {extension}. Current Valid extensions for {ContentType.Music} are: {string.Join(", ", GetValidFileExtensions(ContentType.Music))}");
+            Game.Instance.Logger.LogError($"Loading resource failed, file extension is invalid: {extension}. Current Valid extensions for {ContentType.Music} are: {string.Join(", ", GetValidFileExtensions(ContentType.Music))}");
             music = new();
             return false;
         }
@@ -1117,7 +1116,7 @@ public static class ContentLoader
         }
         catch (Exception ex)
         {
-            ShapeLogger.LogError($"Error loading music from memory: {ex.Message}");
+            Game.Instance.Logger.LogError($"Error loading music from memory: {ex.Message}");
             music = new();
             return false;
         }
@@ -1133,7 +1132,7 @@ public static class ContentLoader
     {
         if (data.Length <= 0)
         {
-            ShapeLogger.LogError($"Loading resource failed, data has zero length.");
+            Game.Instance.Logger.LogError($"Loading resource failed, data has zero length.");
             shader = new();
             return false;
         }
@@ -1146,7 +1145,7 @@ public static class ContentLoader
         }
         catch (Exception ex)
         {
-            ShapeLogger.LogError($"Error loading fragment shader from memory: {ex.Message}");
+            Game.Instance.Logger.LogError($"Error loading fragment shader from memory: {ex.Message}");
             shader = new();
             return false;
         }
@@ -1162,7 +1161,7 @@ public static class ContentLoader
     {
         if (data.Length <= 0)
         {
-            ShapeLogger.LogError($"Loading resource failed, data has zero length.");
+            Game.Instance.Logger.LogError($"Loading resource failed, data has zero length.");
             shader = new();
             return false;
         }
@@ -1175,7 +1174,7 @@ public static class ContentLoader
         }
         catch (Exception ex)
         {
-            ShapeLogger.LogError($"Error loading vertex shader from memory: {ex.Message}");
+            Game.Instance.Logger.LogError($"Error loading vertex shader from memory: {ex.Message}");
             shader = new();
             return false;
         }
@@ -1190,7 +1189,7 @@ public static class ContentLoader
     {
         if (data.Length <= 0)
         {
-            ShapeLogger.LogError($"Loading resource failed, data has zero length.");
+            Game.Instance.Logger.LogError($"Loading resource failed, data has zero length.");
             text = string.Empty;
             return false;
         }
@@ -1202,7 +1201,7 @@ public static class ContentLoader
         }
         catch (Exception ex)
         {
-            ShapeLogger.LogError($"Error loading text from memory: {ex.Message}");
+            Game.Instance.Logger.LogError($"Error loading text from memory: {ex.Message}");
             text = string.Empty;
             return false;
         }

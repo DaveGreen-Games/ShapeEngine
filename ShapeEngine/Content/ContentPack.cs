@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO.Compression;
 using Raylib_cs;
-using ShapeEngine.StaticLib;
+using ShapeEngine.Core.GameDef;
 
 namespace ShapeEngine.Content;
 
@@ -173,7 +173,7 @@ public sealed class ContentPack
         if (IsLoaded) return false;
         if (!File.Exists(SourceFilePath))
         {
-            ShapeLogger.LogError($"ContentPackMemory LoadContent() failed.  Source file not found: {SourceFilePath}");
+            Game.Instance.Logger.LogError($"ContentPackMemory LoadContent() failed.  Source file not found: {SourceFilePath}");
             return false;
         }
 
@@ -261,7 +261,7 @@ public sealed class ContentPack
         if (IsLoaded) return false;
         if (!File.Exists(SourceFilePath))
         {
-            ShapeLogger.LogError($"ContentPackMemory LoadContentAsync() failed. Source file not found: {SourceFilePath}");
+            Game.Instance.Logger.LogError($"ContentPackMemory LoadContentAsync() failed. Source file not found: {SourceFilePath}");
             return false;
         }
     
@@ -336,7 +336,7 @@ public sealed class ContentPack
         if (IsLoaded) return false;
         if (!File.Exists(SourceFilePath))
         {
-            ShapeLogger.LogError($"ContentPackMemory LoadContent() failed.  Source file not found: {SourceFilePath}");
+            Game.Instance.Logger.LogError($"ContentPackMemory LoadContent() failed.  Source file not found: {SourceFilePath}");
             return false;
         }
         
@@ -404,7 +404,7 @@ public sealed class ContentPack
 
         if (!File.Exists(sourceFilePath))
         {
-            ShapeLogger.LogError($"Packed file not found: {sourceFilePath}");
+            Game.Instance.Logger.LogError($"Packed file not found: {sourceFilePath}");
             return result;
         }
 
@@ -466,15 +466,15 @@ public sealed class ContentPack
 
         if (debugMessages.Count > 0)
         {
-            ShapeLogger.StartLogBlock("ContentPack UnpackFileToMemory Debug Info");
+            Game.Instance.Logger.StartLogBlock("ContentPack UnpackFileToMemory Debug Info");
             foreach (var msg in debugMessages)
             {
-                ShapeLogger.LogInfo(msg);
+                Game.Instance.Logger.LogInfo(msg);
             }
-            ShapeLogger.EndLogBlock();
+            Game.Instance.Logger.EndLogBlock();
         }
         
-        ShapeLogger.LogInfo($"Unpacking to memory finished. {unpackedFiles} files loaded from {sourceFilePath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
+        Game.Instance.Logger.LogInfo($"Unpacking to memory finished. {unpackedFiles} files loaded from {sourceFilePath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
         return result;
     }
     /// <summary>
@@ -500,7 +500,7 @@ public sealed class ContentPack
     
         if (!File.Exists(sourceFilePath))
         {
-            ShapeLogger.LogError($"Packed file not found: {sourceFilePath}");
+            Game.Instance.Logger.LogError($"Packed file not found: {sourceFilePath}");
             return new Dictionary<string, byte[]>();
         }
     
@@ -572,17 +572,17 @@ public sealed class ContentPack
 
         if (debugMessages is { Count: > 0 })
         {
-            ShapeLogger.StartLogBlock("ContentPack UnpackFileToMemoryParallel Debug Info");
+            Game.Instance.Logger.StartLogBlock("ContentPack UnpackFileToMemoryParallel Debug Info");
             foreach (string msg in debugMessages)
             {
-                ShapeLogger.LogInfo(msg);
+                Game.Instance.Logger.LogInfo(msg);
                 
             }
-            ShapeLogger.EndLogBlock();
+            Game.Instance.Logger.EndLogBlock();
         }
             
     
-        ShapeLogger.LogInfo($"Unpacking to memory (parallel) finished. {result.Count} files loaded and {totalBytesUnpacked} bytes unpacked from {sourceFilePath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds.");
+        Game.Instance.Logger.LogInfo($"Unpacking to memory (parallel) finished. {result.Count} files loaded and {totalBytesUnpacked} bytes unpacked from {sourceFilePath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds.");
         return new Dictionary<string, byte[]>(result);
     }
     
@@ -609,13 +609,13 @@ public sealed class ContentPack
 
         if (!File.Exists(sourceFilePath))
         {
-            ShapeLogger.LogError($"Source file not found: {sourceFilePath}");
+            Game.Instance.Logger.LogError($"Source file not found: {sourceFilePath}");
             return result;
         }
 
         if (Path.GetExtension(sourceFilePath) != ".txt")
         {
-            ShapeLogger.LogError($"Source file must have a .txt extension: {sourceFilePath}");
+            Game.Instance.Logger.LogError($"Source file must have a .txt extension: {sourceFilePath}");
             return result;
         }
 
@@ -624,7 +624,7 @@ public sealed class ContentPack
         
         int unpackedFiles = 0;
 
-        if(debug) ShapeLogger.StartLogBlock("ContentPack UnpackTextToMemory Debug Info");
+        if(debug) Game.Instance.Logger.StartLogBlock("ContentPack UnpackTextToMemory Debug Info");
         
         for (int i = 0; i < lines.Length; i += 2)
         {
@@ -636,7 +636,7 @@ public sealed class ContentPack
             {
                 if (debug)
                 {
-                    ShapeLogger.LogInfo($"File skipped due to extension: {Path.GetFileName(relativePath)}");
+                    Game.Instance.Logger.LogInfo($"File skipped due to extension: {Path.GetFileName(relativePath)}");
                 }
                 continue;
             }
@@ -645,7 +645,7 @@ public sealed class ContentPack
             {
                 if (debug)
                 {
-                    ShapeLogger.LogInfo($"File skipped due to directory restriction {directoryRestriction}: {relativePath}");
+                    Game.Instance.Logger.LogInfo($"File skipped due to directory restriction {directoryRestriction}: {relativePath}");
                 }
                 continue;
             }
@@ -665,12 +665,12 @@ public sealed class ContentPack
             unpackedFiles++;
             if (debug)
             {
-                ShapeLogger.LogInfo($"Unpacked {relativePath} ({compressedData.Length} bytes)");
+                Game.Instance.Logger.LogInfo($"Unpacked {relativePath} ({compressedData.Length} bytes)");
             }
         }
-        if (debug) ShapeLogger.EndLogBlock();
+        if (debug) Game.Instance.Logger.EndLogBlock();
 
-        ShapeLogger.LogInfo($"Unpacking packed text file {sourceFilePath} finished. {unpackedFiles} files unpacked in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
+        Game.Instance.Logger.LogInfo($"Unpacking packed text file {sourceFilePath} finished. {unpackedFiles} files unpacked in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
         return result;
     }
     
@@ -698,13 +698,13 @@ public sealed class ContentPack
 
         if (!File.Exists(sourceFilePath))
         {
-            ShapeLogger.LogError($"Source file not found: {sourceFilePath}");
+            Game.Instance.Logger.LogError($"Source file not found: {sourceFilePath}");
             return new Dictionary<string, byte[]>();
         }
 
         if (Path.GetExtension(sourceFilePath) != ".txt")
         {
-            ShapeLogger.LogError($"Source file must have a .txt extension: {sourceFilePath}");
+            Game.Instance.Logger.LogError($"Source file must have a .txt extension: {sourceFilePath}");
             return new Dictionary<string, byte[]>();
         }
 
@@ -712,11 +712,11 @@ public sealed class ContentPack
         int totalFiles = int.Parse(File.ReadLines(sourceFilePath).Last());
         if (totalFiles <= 0)
         {
-            ShapeLogger.LogWarning("No files to unpack.");
+            Game.Instance.Logger.LogWarning("No files to unpack.");
             return new Dictionary<string, byte[]>();
         }
 
-        ShapeLogger.LogInfo($"ContentPack Batch Parallel unpacking to memory started. Batch size: {batchSize}");
+        Game.Instance.Logger.LogInfo($"ContentPack Batch Parallel unpacking to memory started. Batch size: {batchSize}");
         
         bool finished = false;
         int totalFilesRead = 0;
@@ -760,7 +760,7 @@ public sealed class ContentPack
                         {
                             if (debug)
                             {
-                                ShapeLogger.LogInfo($"File skipped due to directory restriction {directoryRestriction}: {firstLine}");
+                                Game.Instance.Logger.LogInfo($"File skipped due to directory restriction {directoryRestriction}: {firstLine}");
                             }
                             continue;
                         }
@@ -775,7 +775,7 @@ public sealed class ContentPack
 
             if (firstLine != string.Empty)
             {
-                ShapeLogger.LogWarning("Odd number of lines in file, last line ignored.");
+                Game.Instance.Logger.LogWarning("Odd number of lines in file, last line ignored.");
             }
 
            
@@ -815,15 +815,15 @@ public sealed class ContentPack
        
         if (debugMessages is { Count: > 0 })
         {
-            ShapeLogger.StartLogBlock("ContentPack UnpackTextToMemoryParallel Debug Info");
+            Game.Instance.Logger.StartLogBlock("ContentPack UnpackTextToMemoryParallel Debug Info");
             foreach (string msg in debugMessages)
             {
-                ShapeLogger.LogInfo(msg);
+                Game.Instance.Logger.LogInfo(msg);
             }
-            ShapeLogger.EndLogBlock();
+            Game.Instance.Logger.EndLogBlock();
         }
         
-        ShapeLogger.LogInfo($"Unpacking packed text file {sourceFilePath} to memory finished. {result.Count} files with {totalBytesUnpacked} total bytes unpacked in {debugWatch.Elapsed.TotalSeconds:F2} seconds.");
+        Game.Instance.Logger.LogInfo($"Unpacking packed text file {sourceFilePath} to memory finished. {result.Count} files with {totalBytesUnpacked} total bytes unpacked in {debugWatch.Elapsed.TotalSeconds:F2} seconds.");
         
         return new Dictionary<string, byte[]>(result);
     }
@@ -868,7 +868,7 @@ public sealed class ContentPack
     
         if (!File.Exists(sourceFilePath))
         {
-            ShapeLogger.LogError($"Packed file not found: {sourceFilePath}");
+            Game.Instance.Logger.LogError($"Packed file not found: {sourceFilePath}");
             setTotalBytesUnpacked?.Invoke(0);
             return result;
         }
@@ -933,15 +933,15 @@ public sealed class ContentPack
     
         if (debugMessages is { Count: > 0 })
         {
-            ShapeLogger.StartLogBlock("ContentPack UnpackFileToMemoryAsync Debug Info");
+            Game.Instance.Logger.StartLogBlock("ContentPack UnpackFileToMemoryAsync Debug Info");
             foreach (var msg in debugMessages)
             {
-                ShapeLogger.LogInfo(msg);
+                Game.Instance.Logger.LogInfo(msg);
             }
-            ShapeLogger.EndLogBlock();
+            Game.Instance.Logger.EndLogBlock();
         }
     
-        ShapeLogger.LogInfo($"Unpacking to memory finished. {unpackedFiles} files loaded from {sourceFilePath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
+        Game.Instance.Logger.LogInfo($"Unpacking to memory finished. {unpackedFiles} files loaded from {sourceFilePath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
         setTotalBytesUnpacked?.Invoke(totalBytesUnpacked);
         return result;
     }
@@ -983,7 +983,7 @@ public sealed class ContentPack
     
         if (!File.Exists(sourceFilePath))
         {
-            ShapeLogger.LogError($"Packed file not found: {sourceFilePath}");
+            Game.Instance.Logger.LogError($"Packed file not found: {sourceFilePath}");
             setTotalBytesUnpacked?.Invoke(0);
             return new Dictionary<string, byte[]>();
         }
@@ -1057,13 +1057,13 @@ public sealed class ContentPack
     
         if (debugMessages is { Count: > 0 })
         {
-            ShapeLogger.StartLogBlock("ContentPack UnpackFileToMemoryParallelAsync Debug Info");
+            Game.Instance.Logger.StartLogBlock("ContentPack UnpackFileToMemoryParallelAsync Debug Info");
             foreach (string msg in debugMessages)
-                ShapeLogger.LogInfo(msg);
-            ShapeLogger.EndLogBlock();
+                Game.Instance.Logger.LogInfo(msg);
+            Game.Instance.Logger.EndLogBlock();
         }
     
-        ShapeLogger.LogInfo($"Unpacking to memory (parallel) finished. {result.Count} files loaded and {totalBytesUnpacked} bytes unpacked from {sourceFilePath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds.");
+        Game.Instance.Logger.LogInfo($"Unpacking to memory (parallel) finished. {result.Count} files loaded and {totalBytesUnpacked} bytes unpacked from {sourceFilePath} in {debugWatch.Elapsed.TotalSeconds:F2} seconds.");
         setTotalBytesUnpacked?.Invoke(totalBytesUnpacked);
         return new Dictionary<string, byte[]>(result);
     }
@@ -1106,14 +1106,14 @@ public sealed class ContentPack
     
         if (!File.Exists(sourceFilePath))
         {
-            ShapeLogger.LogError($"Source file not found: {sourceFilePath}");
+            Game.Instance.Logger.LogError($"Source file not found: {sourceFilePath}");
             setTotalBytesUnpacked?.Invoke(0);
             return result;
         }
     
         if (Path.GetExtension(sourceFilePath) != ".txt")
         {
-            ShapeLogger.LogError($"Source file must have a .txt extension: {sourceFilePath}");
+            Game.Instance.Logger.LogError($"Source file must have a .txt extension: {sourceFilePath}");
             setTotalBytesUnpacked?.Invoke(0);
             return result;
         }
@@ -1122,7 +1122,7 @@ public sealed class ContentPack
         string[] lines = await File.ReadAllLinesAsync(sourceFilePath);
     
         var unpackedFiles = 0;
-        if (debug) ShapeLogger.StartLogBlock("ContentPack UnpackTextToMemoryAsync Debug Info");
+        if (debug) Game.Instance.Logger.StartLogBlock("ContentPack UnpackTextToMemoryAsync Debug Info");
     
         for (var i = 0; i < lines.Length; i += 2)
         {
@@ -1133,14 +1133,14 @@ public sealed class ContentPack
             if (extensionExceptions is { Count: > 0 } && extensionExceptions.Contains(Path.GetExtension(relativePath)))
             {
                 if (debug)
-                    ShapeLogger.LogInfo($"File skipped due to extension: {Path.GetFileName(relativePath)}");
+                    Game.Instance.Logger.LogInfo($"File skipped due to extension: {Path.GetFileName(relativePath)}");
                 continue;
             }
     
             if (!string.IsNullOrEmpty(directoryRestriction) && !relativePath.StartsWith(directoryRestriction, StringComparison.OrdinalIgnoreCase))
             {
                 if (debug)
-                    ShapeLogger.LogInfo($"File skipped due to directory restriction {directoryRestriction}: {relativePath}");
+                    Game.Instance.Logger.LogInfo($"File skipped due to directory restriction {directoryRestriction}: {relativePath}");
                 continue;
             }
     
@@ -1160,11 +1160,11 @@ public sealed class ContentPack
             result[relativePath] = data;
             unpackedFiles++;
             if (debug)
-                ShapeLogger.LogInfo($"Unpacked {relativePath} ({compressedData.Length} bytes)");
+                Game.Instance.Logger.LogInfo($"Unpacked {relativePath} ({compressedData.Length} bytes)");
         }
-        if (debug) ShapeLogger.EndLogBlock();
+        if (debug) Game.Instance.Logger.EndLogBlock();
     
-        ShapeLogger.LogInfo($"Unpacking packed text file {sourceFilePath} finished. {unpackedFiles} files unpacked in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
+        Game.Instance.Logger.LogInfo($"Unpacking packed text file {sourceFilePath} finished. {unpackedFiles} files unpacked in {debugWatch.Elapsed.TotalSeconds:F2} seconds. Total bytes unpacked: {totalBytesUnpacked}");
         setTotalBytesUnpacked?.Invoke(totalBytesUnpacked);
         return result;
     }
@@ -1209,14 +1209,14 @@ public sealed class ContentPack
     
         if (!File.Exists(sourceFilePath))
         {
-            ShapeLogger.LogError($"Source file not found: {sourceFilePath}");
+            Game.Instance.Logger.LogError($"Source file not found: {sourceFilePath}");
             setTotalBytesUnpacked?.Invoke(0);
             return new Dictionary<string, byte[]>();
         }
     
         if (Path.GetExtension(sourceFilePath) != ".txt")
         {
-            ShapeLogger.LogError($"Source file must have a .txt extension: {sourceFilePath}");
+            Game.Instance.Logger.LogError($"Source file must have a .txt extension: {sourceFilePath}");
             setTotalBytesUnpacked?.Invoke(0);
             return new Dictionary<string, byte[]>();
         }
@@ -1226,12 +1226,12 @@ public sealed class ContentPack
         int totalFiles = (lines.Length - 1) / 2;
         if (totalFiles <= 0)
         {
-            ShapeLogger.LogWarning("No files to unpack.");
+            Game.Instance.Logger.LogWarning("No files to unpack.");
             setTotalBytesUnpacked?.Invoke(0);
             return new Dictionary<string, byte[]>();
         }
     
-        ShapeLogger.LogInfo($"ContentPack Batch Parallel unpacking to memory started. Batch size: {batchSize}");
+        Game.Instance.Logger.LogInfo($"ContentPack Batch Parallel unpacking to memory started. Batch size: {batchSize}");
     
         var debugMessages = debug ? new ConcurrentBag<string>() : null;
         var entries = new List<(string path, string base64Data)>();
@@ -1267,13 +1267,13 @@ public sealed class ContentPack
     
         if (debugMessages is { Count: > 0 })
         {
-            ShapeLogger.StartLogBlock("ContentPack UnpackTextToMemoryParallelAsync Debug Info");
+            Game.Instance.Logger.StartLogBlock("ContentPack UnpackTextToMemoryParallelAsync Debug Info");
             foreach (string msg in debugMessages)
-                ShapeLogger.LogInfo(msg);
-            ShapeLogger.EndLogBlock();
+                Game.Instance.Logger.LogInfo(msg);
+            Game.Instance.Logger.EndLogBlock();
         }
     
-        ShapeLogger.LogInfo($"Unpacking packed text file {sourceFilePath} to memory finished. {result.Count} files with {totalBytesUnpacked} total bytes unpacked in {debugWatch.Elapsed.TotalSeconds:F2} seconds.");
+        Game.Instance.Logger.LogInfo($"Unpacking packed text file {sourceFilePath} to memory finished. {result.Count} files with {totalBytesUnpacked} total bytes unpacked in {debugWatch.Elapsed.TotalSeconds:F2} seconds.");
         setTotalBytesUnpacked?.Invoke(totalBytesUnpacked);
         return new Dictionary<string, byte[]>(result);
     }
@@ -1330,13 +1330,13 @@ public sealed class ContentPack
 
         if (!File.Exists(SourceFilePath))
         {
-            ShapeLogger.LogError($"Source file not found: {SourceFilePath}");
+            Game.Instance.Logger.LogError($"Source file not found: {SourceFilePath}");
             return result;
         }
 
         if (Path.GetExtension(SourceFilePath) != ".txt")
         {
-            ShapeLogger.LogError($"Source file must have a .txt extension: {SourceFilePath}");
+            Game.Instance.Logger.LogError($"Source file must have a .txt extension: {SourceFilePath}");
             return result;
         }
 
@@ -1346,7 +1346,7 @@ public sealed class ContentPack
         
         using var fs = new FileStream(SourceFilePath, FileMode.Open, FileAccess.Read);
         using var reader = new StreamReader(fs);
-        if(DebugLogging) ShapeLogger.StartLogBlock("ContentPack CreateTextIndex Debug Info");
+        if(DebugLogging) Game.Instance.Logger.StartLogBlock("ContentPack CreateTextIndex Debug Info");
         while (!reader.EndOfStream)
         {
             // long offset = fs.Position;
@@ -1358,14 +1358,14 @@ public sealed class ContentPack
                 result[path] = dataOffset;
                 if (DebugLogging)
                 {
-                    ShapeLogger.LogInfo($"Indexed File {path} with offset {dataOffset})");
+                    Game.Instance.Logger.LogInfo($"Indexed File {path} with offset {dataOffset})");
                 }
             }
             indexedFiles++;
         }
-        if(DebugLogging) ShapeLogger.EndLogBlock();
+        if(DebugLogging) Game.Instance.Logger.EndLogBlock();
         
-        ShapeLogger.LogInfo($"Indexing packed text file {SourceFilePath} finished. {indexedFiles} files indexed in {debugWatch.Elapsed.TotalSeconds:F2} seconds.");
+        Game.Instance.Logger.LogInfo($"Indexing packed text file {SourceFilePath} finished. {indexedFiles} files indexed in {debugWatch.Elapsed.TotalSeconds:F2} seconds.");
         return result;
     }
     
@@ -1588,7 +1588,7 @@ public sealed class ContentPack
     {
         if (!IsLoaded)
         {
-            ShapeLogger.LogError("ContentPack LoadTexture() failed. Content pack not loaded!");
+            Game.Instance.Logger.LogError("ContentPack LoadTexture() failed. Content pack not loaded!");
             texture = new();
             return false;
         }
@@ -1596,7 +1596,7 @@ public sealed class ContentPack
         byte[]? data = GetFileData(filePath);
         if (data == null)
         {
-            ShapeLogger.LogError($"ContentPack LoadTexture() failed. File {filePath} not found in pack!");
+            Game.Instance.Logger.LogError($"ContentPack LoadTexture() failed. File {filePath} not found in pack!");
             texture = new();
             return false;
         }
@@ -1619,7 +1619,7 @@ public sealed class ContentPack
     {
         if (!IsLoaded)
         {
-            ShapeLogger.LogError("ContentPack LoadImage() failed. Content pack not loaded!");
+            Game.Instance.Logger.LogError("ContentPack LoadImage() failed. Content pack not loaded!");
             image = new();
             return false;
         }
@@ -1627,7 +1627,7 @@ public sealed class ContentPack
         byte[]? data = GetFileData(filePath);
         if (data == null)
         {
-            ShapeLogger.LogError($"ContentPack LoadImage() failed. File {filePath} not found in pack!");
+            Game.Instance.Logger.LogError($"ContentPack LoadImage() failed. File {filePath} not found in pack!");
             image = new();
             return false;
         }
@@ -1651,7 +1651,7 @@ public sealed class ContentPack
     {
         if (!IsLoaded)
         {
-            ShapeLogger.LogError("ContentPack LoadFont() failed. Content pack not loaded!");
+            Game.Instance.Logger.LogError("ContentPack LoadFont() failed. Content pack not loaded!");
             font = new();
             return false;
         }
@@ -1659,7 +1659,7 @@ public sealed class ContentPack
         byte[]? data = GetFileData(filePath);
         if (data == null)
         {
-            ShapeLogger.LogError($"ContentPack LoadFont() failed. File {filePath} not found in pack!");
+            Game.Instance.Logger.LogError($"ContentPack LoadFont() failed. File {filePath} not found in pack!");
             font = new();
             return false;
         }
@@ -1682,7 +1682,7 @@ public sealed class ContentPack
     {
         if (!IsLoaded)
         {
-            ShapeLogger.LogError("ContentPack LoadWave() failed. Content pack not loaded!");
+            Game.Instance.Logger.LogError("ContentPack LoadWave() failed. Content pack not loaded!");
             wave = new();
             return false;
         }
@@ -1690,7 +1690,7 @@ public sealed class ContentPack
         byte[]? data = GetFileData(filePath);
         if (data == null)
         {
-            ShapeLogger.LogError($"ContentPack LoadWave() failed. File {filePath} not found in pack!");
+            Game.Instance.Logger.LogError($"ContentPack LoadWave() failed. File {filePath} not found in pack!");
             wave = new();
             return false;
         }
@@ -1713,7 +1713,7 @@ public sealed class ContentPack
     {
         if (!IsLoaded)
         {
-            ShapeLogger.LogError("ContentPack LoadSound() failed. Content pack not loaded!");
+            Game.Instance.Logger.LogError("ContentPack LoadSound() failed. Content pack not loaded!");
             sound = new();
             return false;
         }
@@ -1721,7 +1721,7 @@ public sealed class ContentPack
         byte[]? data = GetFileData(filePath);
         if (data == null)
         {
-            ShapeLogger.LogError($"ContentPack LoadSound() failed. File {filePath} not found in pack!");
+            Game.Instance.Logger.LogError($"ContentPack LoadSound() failed. File {filePath} not found in pack!");
             sound = new();
             return false;
         }
@@ -1746,7 +1746,7 @@ public sealed class ContentPack
     {
         if (!IsLoaded)
         {
-            ShapeLogger.LogError("ContentPack LoadMusic() failed. Content pack not loaded!");
+            Game.Instance.Logger.LogError("ContentPack LoadMusic() failed. Content pack not loaded!");
             music = new();   
             return false;
         }
@@ -1754,7 +1754,7 @@ public sealed class ContentPack
         byte[]? data = GetFileData(filePath);
         if (data == null)
         {
-            ShapeLogger.LogError($"ContentPack LoadMusic() failed. File {filePath} not found in pack!");
+            Game.Instance.Logger.LogError($"ContentPack LoadMusic() failed. File {filePath} not found in pack!");
             music = new();
             return false;
         }
@@ -1777,7 +1777,7 @@ public sealed class ContentPack
     {
         if (!IsLoaded)
         {
-            ShapeLogger.LogError("ContentPack LoadFragmentShader() failed. Content pack not loaded!");
+            Game.Instance.Logger.LogError("ContentPack LoadFragmentShader() failed. Content pack not loaded!");
             shader = new();
             return false;
         }
@@ -1785,7 +1785,7 @@ public sealed class ContentPack
         byte[]? data = GetFileData(filePath);
         if (data == null)
         {
-            ShapeLogger.LogError($"ContentPack LoadFragmentShader() failed. File {filePath} not found in pack!");
+            Game.Instance.Logger.LogError($"ContentPack LoadFragmentShader() failed. File {filePath} not found in pack!");
             shader = new();
             return false;
         }
@@ -1808,7 +1808,7 @@ public sealed class ContentPack
     {
         if (!IsLoaded)
         {
-            ShapeLogger.LogError("ContentPack LoadVertexShader() failed. Content pack not loaded!");
+            Game.Instance.Logger.LogError("ContentPack LoadVertexShader() failed. Content pack not loaded!");
             shader = new();
             return false;
         }
@@ -1816,7 +1816,7 @@ public sealed class ContentPack
         byte[]? data = GetFileData(filePath);
         if (data == null)
         {
-            ShapeLogger.LogError($"ContentPack LoadVertexShader() failed. File {filePath} not found in pack!");
+            Game.Instance.Logger.LogError($"ContentPack LoadVertexShader() failed. File {filePath} not found in pack!");
             shader = new();
             return false;
         }
@@ -1839,7 +1839,7 @@ public sealed class ContentPack
     {
         if (!IsLoaded)
         {
-            ShapeLogger.LogError("ContentPack LoadText() failed. Content pack not loaded!");
+            Game.Instance.Logger.LogError("ContentPack LoadText() failed. Content pack not loaded!");
             text = string.Empty;
             return false;
         }
@@ -1847,7 +1847,7 @@ public sealed class ContentPack
         byte[]? data = GetFileData(filePath);
         if (data == null)
         {
-            ShapeLogger.LogError($"ContentPack LoadText() failed. File {filePath} not found in pack!");
+            Game.Instance.Logger.LogError($"ContentPack LoadText() failed. File {filePath} not found in pack!");
             text = string.Empty;
             return false;
         }
@@ -1876,7 +1876,7 @@ public sealed class ContentPack
         var result = new Dictionary<string, Texture2D>();
         if (!IsLoaded)
         {
-            ShapeLogger.LogError($"ContentPack LoadAllTextures() failed. Content pack not loaded!");
+            Game.Instance.Logger.LogError($"ContentPack LoadAllTextures() failed. Content pack not loaded!");
             return result;
         }
 
@@ -1893,7 +1893,7 @@ public sealed class ContentPack
 
         if (result.Count <= 0)
         {
-            ShapeLogger.LogWarning($"ContentPack LoadAllTextures() found no valid content in pack!");
+            Game.Instance.Logger.LogWarning($"ContentPack LoadAllTextures() found no valid content in pack!");
             return result;
         }
         
@@ -1917,7 +1917,7 @@ public sealed class ContentPack
             var result = new Dictionary<string, Image>();
             if (!IsLoaded)
             {
-                ShapeLogger.LogError($"ContentPack LoadAllImages() failed. Content pack not loaded!");
+                Game.Instance.Logger.LogError($"ContentPack LoadAllImages() failed. Content pack not loaded!");
                 return result;
             }
     
@@ -1934,7 +1934,7 @@ public sealed class ContentPack
             
             if (result.Count <= 0)
             {
-                ShapeLogger.LogWarning($"ContentPack LoadAllImages() found no valid content in pack!");
+                Game.Instance.Logger.LogWarning($"ContentPack LoadAllImages() found no valid content in pack!");
                 return result;
             }
             
@@ -1959,7 +1959,7 @@ public sealed class ContentPack
         var result = new Dictionary<string, Font>();
         if (!IsLoaded)
         {
-            ShapeLogger.LogError($"ContentPack LoadAllFonts() failed. Content pack not loaded!");
+            Game.Instance.Logger.LogError($"ContentPack LoadAllFonts() failed. Content pack not loaded!");
             return result;
         }
 
@@ -1976,7 +1976,7 @@ public sealed class ContentPack
         
         if (result.Count <= 0)
         {
-            ShapeLogger.LogWarning($"ContentPack LoadAllFonts() found no valid content in pack!");
+            Game.Instance.Logger.LogWarning($"ContentPack LoadAllFonts() found no valid content in pack!");
             return result;
         }
         
@@ -2000,7 +2000,7 @@ public sealed class ContentPack
         var result = new Dictionary<string, Wave>();
         if (!IsLoaded)
         {
-            ShapeLogger.LogError($"ContentPack LoadAllWaves() failed. Content pack not loaded!");
+            Game.Instance.Logger.LogError($"ContentPack LoadAllWaves() failed. Content pack not loaded!");
             return result;
         }
 
@@ -2017,7 +2017,7 @@ public sealed class ContentPack
         
         if (result.Count <= 0)
         {
-            ShapeLogger.LogWarning($"ContentPack LoadAllWaves() found no valid content in pack!");
+            Game.Instance.Logger.LogWarning($"ContentPack LoadAllWaves() found no valid content in pack!");
             return result;
         }
         
@@ -2041,7 +2041,7 @@ public sealed class ContentPack
         var result = new Dictionary<string, Sound>();
         if (!IsLoaded)
         {
-            ShapeLogger.LogError($"ContentPack LoadAllSounds() failed. Content pack not loaded!");
+            Game.Instance.Logger.LogError($"ContentPack LoadAllSounds() failed. Content pack not loaded!");
             return result;
         }
 
@@ -2058,7 +2058,7 @@ public sealed class ContentPack
         
         if (result.Count <= 0)
         {
-            ShapeLogger.LogWarning($"ContentPack LoadAllSounds() found no valid content in pack!");
+            Game.Instance.Logger.LogWarning($"ContentPack LoadAllSounds() found no valid content in pack!");
             return result;
         }
         
@@ -2082,7 +2082,7 @@ public sealed class ContentPack
         var result = new Dictionary<string, Music>();
         if (!IsLoaded)
         {
-            ShapeLogger.LogError($"ContentPack LoadAllMusic() failed. Content pack not loaded!");
+            Game.Instance.Logger.LogError($"ContentPack LoadAllMusic() failed. Content pack not loaded!");
             return result;
         }
 
@@ -2099,7 +2099,7 @@ public sealed class ContentPack
         
         if (result.Count <= 0)
         {
-            ShapeLogger.LogWarning($"ContentPack LoadAllMusic() found no valid content in pack!");
+            Game.Instance.Logger.LogWarning($"ContentPack LoadAllMusic() found no valid content in pack!");
             return result;
         }
         
@@ -2123,7 +2123,7 @@ public sealed class ContentPack
         var result = new Dictionary<string, Shader>();
         if (!IsLoaded)
         {
-            ShapeLogger.LogError($"ContentPack LoadAllFragmentShaders() failed. Content pack not loaded!");
+            Game.Instance.Logger.LogError($"ContentPack LoadAllFragmentShaders() failed. Content pack not loaded!");
             return result;
         }
 
@@ -2140,7 +2140,7 @@ public sealed class ContentPack
 
         if (result.Count <= 0)
         {
-            ShapeLogger.LogWarning($"ContentPack LoadAllFragmentShader() found no valid content in pack!");
+            Game.Instance.Logger.LogWarning($"ContentPack LoadAllFragmentShader() found no valid content in pack!");
             return result;
         }
         
@@ -2164,7 +2164,7 @@ public sealed class ContentPack
         var result = new Dictionary<string, Shader>();
         if (!IsLoaded)
         {
-            ShapeLogger.LogError($"ContentPack LoadAllVertexShaders() failed. Content pack not loaded!");
+            Game.Instance.Logger.LogError($"ContentPack LoadAllVertexShaders() failed. Content pack not loaded!");
             return result;
         }
 
@@ -2181,7 +2181,7 @@ public sealed class ContentPack
         
         if (result.Count <= 0)
         {
-            ShapeLogger.LogWarning($"ContentPack LoadAllVertexShaders() found no valid content in pack!");
+            Game.Instance.Logger.LogWarning($"ContentPack LoadAllVertexShaders() found no valid content in pack!");
             return result;
         }
         
@@ -2201,7 +2201,7 @@ public sealed class ContentPack
         var result = new Dictionary<string, string>();
         if (!IsLoaded)
         {
-            ShapeLogger.LogError($"Content Pack LoadAllText() failed. Content pack not loaded!");
+            Game.Instance.Logger.LogError($"Content Pack LoadAllText() failed. Content pack not loaded!");
             return result;
         }
 
@@ -2218,7 +2218,7 @@ public sealed class ContentPack
 
         if (result.Count <= 0)
         {
-            ShapeLogger.LogWarning($"ContentPack LoadAllText() found no valid content in pack!");
+            Game.Instance.Logger.LogWarning($"ContentPack LoadAllText() found no valid content in pack!");
             return result;
         }
         
