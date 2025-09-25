@@ -2,13 +2,13 @@ using System.Reflection;
 using Raylib_cs;
 using ShapeEngine.Audio;
 using ShapeEngine.Color;
+using ShapeEngine.Core.Logging;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
 using ShapeEngine.Screen;
 using ShapeEngine.StaticLib;
 
 namespace ShapeEngine.Core.GameDef;
-
 
 /// <summary>
 /// The core game class.
@@ -44,7 +44,13 @@ namespace ShapeEngine.Core.GameDef;
 /// </remarks>
 public partial class Game
 {
+    
+    
     #region Public Members
+    // public static Logger Logger => logger ?? throw new NullReferenceException("Logger instance is not initialized! You need to create a game instance before accessing this property!");
+    // private static Logger? logger;
+
+    public readonly Logger Logger;
 
     /// <summary>
     /// The name of the application. Used for display and save directory purposes.
@@ -297,9 +303,6 @@ public partial class Game
     #endregion
     
     #region Constructor
-
-    
-    
     /// <summary>
     /// Gets the singleton instance of the current game.
     /// </summary>
@@ -461,6 +464,9 @@ public partial class Game
             SaveDirectory = new(string.Empty);
             Console.WriteLine("No save directory set! SaveDirectory will be empty.");
         }
+
+        // logger = new Logger(gameSettings.LoggerSettings);
+        Logger = new Logger(gameSettings.LoggerSettings);
     }
 
     private void UpdateGamepadMappings(InputSettings inputSettings)
