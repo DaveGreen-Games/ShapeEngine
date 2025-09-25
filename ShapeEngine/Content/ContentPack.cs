@@ -96,6 +96,7 @@ public sealed class ContentPack
     /// Initializes a new instance of the <see cref="ContentPack"/> class with the specified source file path.
     /// The source file path must have a valid extension (.txt for text packs, others for binary packs).
     /// </summary>
+    /// <param name="sourceFilePath">The path to the packed source file.</param>
     /// <remarks>
     /// Will throw and <see cref="ArgumentException"/> if the source file path does not have a valid extension.
     /// </remarks>
