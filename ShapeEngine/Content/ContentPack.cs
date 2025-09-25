@@ -60,6 +60,14 @@ public sealed class ContentPack
     public readonly string SourceFilePath;
     
     /// <summary>
+    /// The root directory is used to for flexible path resolving when using multiple packs and loading from disk.
+    /// The path set in <see cref="RootDirectory"/> will automatically be stripped from filePath when using <see cref="GetFileData(string)"/> and <see cref="HasFile(string)"/>.
+    /// If the root directory is not part of the file path, then nothing will be stripped.
+    /// Set to <c>string.Empty</c> to disable this behavior.
+    /// </summary>
+    public readonly string RootDirectory;
+    
+    /// <summary>
     /// Indicates if the content pack is a text pack (.txt extension).
     /// </summary>
     public readonly bool IsTextPack;
@@ -97,16 +105,35 @@ public sealed class ContentPack
     /// The source file path must have a valid extension (.txt for text packs, others for binary packs).
     /// </summary>
     /// <param name="sourceFilePath">The path to the packed source file.</param>
+    /// <param name="rootDirectory">
+    /// The root directory is used to for flexible path resolving when using multiple packs and loading from disk.
+    /// The path set in <see cref="RootDirectory"/> will automatically be stripped from filePath when using <see cref="GetFileData(string)"/> and <see cref="HasFile(string)"/>.
+    /// If the root directory is not part of the file path, then nothing will be stripped.
+    /// Set to <c>string.Empty</c> to disable this behavior.
+    /// For example, if the following directory structure was packed:
+    /// <list type="bullet">
+    ///   <item>Resources/</item>
+    ///   <item>Resources/Textures/...</item>
+    ///   <item>Resources/Sounds/...</item>
+    ///   <item>Resources/Music/</item>
+    ///   <item>Resources/Music/myBackgroundMusic.mp3</item>
+    ///   <item>Resources/...</item>
+    /// </list>
+    /// The relative path stored in the pack to access myBackgroundMusic.mp3 would be <c>Music/myBackgroundMusic.mp3</c>.
+    /// But using the <see cref="RootDirectory"/> set to <c>Resources</c> in the constructor, this path would work now  <c>"Resources/Music/myBackgroundMusic.mp3"</c>.
+
+    /// </param>
     /// <remarks>
     /// Will throw and <see cref="ArgumentException"/> if the source file path does not have a valid extension.
     /// </remarks>
-    public ContentPack(string sourceFilePath)
+    public ContentPack(string sourceFilePath, string rootDirectory)
     {
         if(!Path.HasExtension(sourceFilePath))
         {
             throw new ArgumentException("Source file path must have a valid extension. (.txt for text packs, others for binary packs)");
         }
         
+        RootDirectory = rootDirectory;
         SourceFilePath = sourceFilePath;
         IsTextPack = Path.GetExtension(sourceFilePath).Equals(".txt", StringComparison.CurrentCultureIgnoreCase);
     }
@@ -127,12 +154,18 @@ public sealed class ContentPack
     ///   <item>Resources/Music/myBackgroundMusic.mp3</item>
     ///   <item>Resources/...</item>
     /// </list>
-    /// The relative <paramref name="filePath"/> to access myBackgroundMusic.mp3 would be <c>Music/myBackgroundMusic.mp3</c>.
+    /// The relative <paramref name="filePath"/> stored in the pack to access myBackgroundMusic.mp3 would be <c>Music/myBackgroundMusic.mp3</c>.
+    /// But using the <see cref="RootDirectory"/> set to <c>Resources</c> in the constructor, this path would work now  <c>"Resources/Music/myBackgroundMusic.mp3"</c>.
     /// </remarks>
     public byte[]? GetFileData(string filePath)
     {
         if(!IsLoaded) return null;
         if(!HasFile(filePath)) return null;
+        if (RootDirectory != string.Empty)
+        {
+            filePath = Path.GetRelativePath(RootDirectory, filePath); // should essentially strip the root directory if it's there, otherwise do nothing
+        }
+        
         if(CurrentUnpackMode == UnpackMode.Memory) return cache[filePath];
         
         if(IsTextPack) return index.TryGetValue(filePath, out long offsetText) ? GetDataFromTextIndex(offsetText) : null;
@@ -142,9 +175,16 @@ public sealed class ContentPack
     /// Checks if the specified file exists in the content pack.
     /// Returns true if the content pack is loaded and the file is present in the cache or index.
     /// </summary>
+    /// <remarks>
+    /// If <paramref name="filePath"/> shares are root with <see cref="RootDirectory"/>, then it will be stripped before checking.
+    /// </remarks>
     public bool HasFile(string filePath)
     {
         if(!IsLoaded) return false;
+        if (RootDirectory != string.Empty)
+        {
+            filePath = Path.GetRelativePath(RootDirectory, filePath); // should essentially strip the root directory if it's there, otherwise do nothing
+        }
         return CurrentUnpackMode == UnpackMode.Memory ? cache.ContainsKey(filePath) : index.ContainsKey(filePath);
     }
     
