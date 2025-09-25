@@ -18,11 +18,10 @@ public readonly struct GameSettings
     /// <param name="saveGameDirectory">The directory for saving game data.
     /// If set to null, no directory will be created.
     /// Savegame location: saveGameDirectory/applicationName</param>
-    /// <param name="loggerSettings">The logger settings for configuring logging behavior. If null, logging will be disabled by default.</param>
     public static GameSettings StretchMode(string applicationName = "ShapeEngineGame", 
-        Environment.SpecialFolder? saveGameDirectory = Environment.SpecialFolder.LocalApplicationData, LoggerSettings? loggerSettings = null)
+        Environment.SpecialFolder? saveGameDirectory = Environment.SpecialFolder.LocalApplicationData)
     {
-        return new GameSettings(-1, TextureFilter.Bilinear, ShaderSupportType.Multi, applicationName, saveGameDirectory, loggerSettings);
+        return new GameSettings(-1, TextureFilter.Bilinear, ShaderSupportType.Multi, applicationName, saveGameDirectory);
     }
 
     /// <summary>
@@ -32,11 +31,10 @@ public readonly struct GameSettings
     /// <param name="saveGameDirectory">The directory for saving game data.
     /// If set to null, no directory will be created.
     /// Savegame location: saveGameDirectory/applicationName</param>
-    /// <param name="loggerSettings">The logger settings for configuring logging behavior. If null, logging will be disabled by default.</param>
     public static GameSettings FixedMode(string applicationName = "ShapeEngineGame", 
-        Environment.SpecialFolder? saveGameDirectory = Environment.SpecialFolder.LocalApplicationData, LoggerSettings? loggerSettings = null)
+        Environment.SpecialFolder? saveGameDirectory = Environment.SpecialFolder.LocalApplicationData)
     {
-        return new GameSettings(new Dimensions(320, 180), -1, TextureFilter.Point, ShaderSupportType.Multi, false, applicationName, saveGameDirectory, loggerSettings);
+        return new GameSettings(new Dimensions(320, 180), -1, TextureFilter.Point, ShaderSupportType.Multi, false, applicationName, saveGameDirectory);
     }
 
     /// <summary>
@@ -46,11 +44,10 @@ public readonly struct GameSettings
     /// <param name="saveGameDirectory">The directory for saving game data.
     /// If set to null, no directory will be created.
     /// Savegame location: saveGameDirectory/applicationName</param>
-    /// <param name="loggerSettings">The logger settings for configuring logging behavior. If null, logging will be disabled by default.</param>
     public static GameSettings FixedNearestMode(string applicationName = "ShapeEngineGame", 
-        Environment.SpecialFolder? saveGameDirectory = Environment.SpecialFolder.LocalApplicationData, LoggerSettings? loggerSettings = null)
+        Environment.SpecialFolder? saveGameDirectory = Environment.SpecialFolder.LocalApplicationData)
     {
-        return new GameSettings(new Dimensions(320, 180), -1, TextureFilter.Point, ShaderSupportType.Multi, true, applicationName, saveGameDirectory, loggerSettings);
+        return new GameSettings(new Dimensions(320, 180), -1, TextureFilter.Point, ShaderSupportType.Multi, true, applicationName, saveGameDirectory);
     }
 
     /// <summary>
@@ -60,11 +57,10 @@ public readonly struct GameSettings
     /// <param name="saveGameDirectory">The directory for saving game data.
     /// If set to null, no directory will be created.
     /// Savegame location: saveGameDirectory/applicationName</param>
-    /// <param name="loggerSettings">The logger settings for configuring logging behavior. If null, logging will be disabled by default.</param>
     public static GameSettings PixelationMode(string applicationName = "ShapeEngineGame", 
-        Environment.SpecialFolder? saveGameDirectory = Environment.SpecialFolder.LocalApplicationData, LoggerSettings? loggerSettings = null)
+        Environment.SpecialFolder? saveGameDirectory = Environment.SpecialFolder.LocalApplicationData)
     {
-        return new GameSettings(0.25f, -1, TextureFilter.Point, ShaderSupportType.Multi, applicationName, saveGameDirectory, loggerSettings);
+        return new GameSettings(0.25f, -1, TextureFilter.Point, ShaderSupportType.Multi, applicationName, saveGameDirectory);
     }
 
     #endregion
@@ -79,10 +75,8 @@ public readonly struct GameSettings
     /// <param name="shaderSupportType">The shader support type.</param>
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
     /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created. Savegame location: saveGameDirectory/applicationName</param>
-    /// <param name="loggerSettings">The logger settings for configuring logging behavior. If null, logging will be disabled by default.</param>
     public GameSettings (int fixedFramerate, TextureFilter textureFilter, ShaderSupportType shaderSupportType, 
-        string applicationName = "ShapeEngineGame", Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData, 
-        LoggerSettings? loggerSettings = null)
+        string applicationName = "ShapeEngineGame", Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
     {
         FixedFramerate = fixedFramerate;
         TextureFilter = textureFilter;
@@ -92,7 +86,6 @@ public readonly struct GameSettings
         ScreenTextureMode = ScreenTextureMode.Stretch;
         ApplicationName = applicationName;
         SaveDirectory = saveDirectory;
-        LoggerSettings = loggerSettings ?? new LoggerSettings();//disabled
     }
 
     /// <summary>
@@ -105,10 +98,8 @@ public readonly struct GameSettings
     /// <param name="nearestScaling">A value indicating whether the nearest scaling should be used.</param>
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
     /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created. Savegame location: saveGameDirectory/applicationName</param>
-    /// <param name="loggerSettings">The logger settings for configuring logging behavior. If null, logging will be disabled by default.</param>
     public GameSettings(Dimensions fixedDimensions, int fixedFramerate, TextureFilter textureFilter, ShaderSupportType shaderSupportType, 
-        bool nearestScaling = false, string applicationName = "ShapeEngineGame", Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData, 
-        LoggerSettings? loggerSettings = null)
+        bool nearestScaling = false, string applicationName = "ShapeEngineGame", Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
     {
         FixedFramerate = fixedFramerate;
         TextureFilter = textureFilter;
@@ -135,7 +126,6 @@ public readonly struct GameSettings
         }
         ApplicationName = applicationName;
         SaveDirectory = saveDirectory;
-        LoggerSettings = loggerSettings ?? new LoggerSettings();//disabled
     }
 
     /// <summary>
@@ -147,10 +137,8 @@ public readonly struct GameSettings
     /// <param name="shaderSupportType">The shader support type.</param>
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
     /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created. Savegame location: saveGameDirectory/applicationName</param>
-    /// <param name="loggerSettings">The logger settings for configuring logging behavior. If null, logging will be disabled by default.</param>
     public GameSettings(float pixelationFactor, int fixedFramerate, TextureFilter textureFilter, ShaderSupportType shaderSupportType, 
-        string applicationName = "ShapeEngineGame", Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData, 
-        LoggerSettings? loggerSettings = null)
+        string applicationName = "ShapeEngineGame", Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
     {
         FixedFramerate = fixedFramerate;
         TextureFilter = textureFilter;
@@ -169,7 +157,6 @@ public readonly struct GameSettings
         }
         ApplicationName = applicationName;
         SaveDirectory = saveDirectory;
-        LoggerSettings = loggerSettings ?? new LoggerSettings();//disabled
     }
     
     #endregion
@@ -231,8 +218,6 @@ public readonly struct GameSettings
     /// Choose based on your application's requirements and platform conventions.
     /// </remarks>
     public readonly Environment.SpecialFolder? SaveDirectory = Environment.SpecialFolder.LocalApplicationData;
-
-    public readonly LoggerSettings LoggerSettings;
 
     #endregion
 }
