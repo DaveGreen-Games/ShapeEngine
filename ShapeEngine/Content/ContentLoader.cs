@@ -20,13 +20,37 @@ public static class ContentLoader
     /// </summary>
     public enum ContentType
     {
+        /// <summary>
+        /// Font resource (e.g. ttf, otf)
+        /// </summary>
         Font,
+        /// <summary>
+        /// Fragment shader resource (e.g. glsl, fs, frag)
+        /// </summary>
         ShaderFragment,
+        /// <summary>
+        /// Vertex shader resource (e.g. glsl, vs, vert)
+        /// </summary>
         ShaderVertex,
+        /// <summary>
+        /// Texture resource (e.g. png, jpg))
+        /// </summary>
         Texture,
+        /// <summary>
+        /// Wave sound resource (e.g. wav, mp3, ogg, flac)
+        /// </summary>
         Wave,
+        /// <summary>
+        /// Sound resource (e.g. wav, mp3, ogg, flac)
+        /// </summary>
         Sound,
+        /// <summary>
+        /// Music stream resource (e.g. mp3, ogg, flac, mod, xm)
+        /// </summary>
         Music,
+        /// <summary>
+        /// Text file resource (e.g. txt, json, xml, csv)
+        /// </summary>
         Text
     }
     
