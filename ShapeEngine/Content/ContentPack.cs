@@ -6,8 +6,6 @@ using ShapeEngine.Core.GameDef;
 
 namespace ShapeEngine.Content;
 
-//TODO: Add progress info (float) to async loading? Is it possible, feasible?
-
 /// <summary>
 /// Represents a content pack that can load, cache, index, and provide access to various types of content files.
 /// Supports both binary and text-based packs, with options for memory or indexed unpacking.
