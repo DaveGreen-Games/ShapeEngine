@@ -9,11 +9,11 @@ namespace ShapeEngine.Core.Logging;
 public readonly struct LoggerSettings
 {
     #region Static Factory Methods
-    public static readonly LoggerSettings Disabled = new LoggerSettings();
-    public static readonly LoggerSettings Default = new LoggerSettings(LogLevel.Info);
-    public static LoggerSettings LogToConsole(LogLevel minimumLogLevel) => new LoggerSettings(minimumLogLevel);
-    public static LoggerSettings LogToFile(LogLevel minimumLogLevel, string logFilePath) => new LoggerSettings(minimumLogLevel, logFilePath, false);
-    public static LoggerSettings LogToFileAndConsole(LogLevel minimumLogLevel, string logFilePath) => new LoggerSettings(minimumLogLevel, logFilePath, true);
+    public static readonly LoggerSettings Disabled = new();
+    public static readonly LoggerSettings Default = new(LogLevel.Info);
+    public static LoggerSettings LogToConsole(LogLevel minimumLogLevel) => new(minimumLogLevel);
+    public static LoggerSettings LogToFile(LogLevel minimumLogLevel, string logFilePath) => new(minimumLogLevel, logFilePath, false);
+    public static LoggerSettings LogToFileAndConsole(LogLevel minimumLogLevel, string logFilePath) => new(minimumLogLevel, logFilePath, true);
     
     #endregion
     
