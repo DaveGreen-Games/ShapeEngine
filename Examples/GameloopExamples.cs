@@ -236,6 +236,8 @@ public class GameloopExamples : Game
     
     protected override void LoadContent()
     {
+        Instance.Logger.LogInfo("Loading Content started.");
+        
         BackgroundColorRgba = Colors.Background; // ExampleScene.ColorDark;
         
         fonts.Add(FontIDs.GruppoRegular, ContentLoader.LoadFont("Resources/Fonts/Gruppo-Regular.ttf", 100));
