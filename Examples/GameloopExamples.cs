@@ -164,8 +164,6 @@ public class GameloopExamples : Game
     
     public new static GameloopExamples Instance  => examplesInstance?? throw new NullReferenceException("Instance is not initialized! You need to create a GameloopExamples instance before accessing this property!");
     private static GameloopExamples? examplesInstance;
-
-    public static Logger DebugLogger;
     
     public GameloopExamples(GameSettings gameSettings, WindowSettings windowSettings, InputSettings inputSettings) : base(gameSettings, windowSettings, inputSettings)
     {
@@ -222,18 +220,18 @@ public class GameloopExamples : Game
         mainBottomRight.AddChild(mainBottomRightTop);
         mainBottomRight.AddChild(mainBottomRightBottom);
 
-        if (ReleaseMode)
-        {
-            var loggingPath = Path.Combine(Game.Instance.SaveDirectoryPath, "Debug/Logs/DebugLog.txt");
-            ShapeLogger.SetLogFilePath(loggingPath);
-            DebugLogger = new Logger(loggingPath, LogLevel.Info, true);
-            DebugLogger.Log($"Debug Logger for [Release] version created. Logger output type: {DebugLogger.OutputType}. Logger File Path: {loggingPath}");
-        }
-        else
-        {
-            DebugLogger = new Logger(LogLevel.Info);
-            DebugLogger.Log($"Debug Logger for [Debug] version created. Logger output type: {DebugLogger.OutputType}. No log file path set.");
-        }
+        // if (ReleaseMode)
+        // {
+        //     var loggingPath = Path.Combine(Game.Instance.SaveDirectoryPath, "Debug/Logs/DebugLog.txt");
+        //     ShapeLogger.SetLogFilePath(loggingPath);
+        //     DebugLogger = new Logger(loggingPath, LogLevel.Info, true);
+        //     DebugLogger.Log($"Debug Logger for [Release] version created. Logger output type: {DebugLogger.OutputType}. Logger File Path: {loggingPath}");
+        // }
+        // else
+        // {
+        //     DebugLogger = new Logger(LogLevel.Info);
+        //     DebugLogger.Log($"Debug Logger for [Debug] version created. Logger output type: {DebugLogger.OutputType}. No log file path set.");
+        // }
     }
     
     protected override void LoadContent()
