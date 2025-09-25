@@ -84,64 +84,22 @@ public class Logger
     #endregion
     
     #region Constructors
-    
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Logger"/> class with default settings.
-    /// Logging is enabled, minimum level is set to Info, and output is set to console.
-    /// </summary>
-    public Logger()
+    public Logger(LoggerSettings settings)
     {
-        Enabled = true;
-        MinimumLevel = LogLevel.Info;
-        OutputType = LogOutputType.Console;
-        LogFilePath = string.Empty;
-        LogFilePathValid = false;
-    }
-    
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Logger"/> class with a specified minimum log level.
-    /// Logging is enabled, output is set to console, and log file path is empty.
-    /// </summary>
-    /// <param name="minimumLevel">The minimum log level required for messages to be logged.</param>
-    public Logger(LogLevel minimumLevel)
-    {
-        Enabled = true;
-        MinimumLevel = minimumLevel;
-        OutputType = LogOutputType.Console;
-        LogFilePath = string.Empty;
-        LogFilePathValid = false;
-    }
-    
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Logger"/> class with a specified log file path, minimum log level, and an option to also log to the console.
-    /// </summary>
-    /// <param name="logFilePath">The file path to write log messages to.</param>
-    /// <param name="minimumLevel">The minimum log level required for messages to be logged.</param>
-    /// <param name="logToConsole">If true, log messages will be written to both the console and the log file
-    /// and  <see cref="OutputType"/> will be set to Both.</param>
-    public Logger(string logFilePath, LogLevel minimumLevel, bool logToConsole = false)
-    {
-        Enabled = true;
-        if (ShapeFileManager.CreateFile(logFilePath, ".txt"))
+        enabled = settings.Enabled;
+        MinimumLevel = settings.MinimumLevel;
+        OutputType = settings.OutputType;
+        if (settings.LogFilePath != string.Empty)
         {
-            LogFilePath = logFilePath;
             LogFilePathValid = true;
-            OutputType = logToConsole ? LogOutputType.Both : LogOutputType.File;
-            
-            //file exists and is valid, clear it before starting logging
-            File.WriteAllText(logFilePath, string.Empty); // Clear the file before logging
-            
+            LogFilePath = settings.LogFilePath;
         }
         else
         {
-            OutputType = LogOutputType.Console;
-            LogFilePath = string.Empty;
             LogFilePathValid = false;
+            LogFilePath = string.Empty;
         }
-
-        MinimumLevel = minimumLevel;
     }
-
     #endregion
     
     #region Log
