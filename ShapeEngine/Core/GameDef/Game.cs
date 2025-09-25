@@ -44,13 +44,17 @@ namespace ShapeEngine.Core.GameDef;
 /// </remarks>
 public partial class Game
 {
-    
-    
     #region Public Members
-    // public static Logger Logger => logger ?? throw new NullReferenceException("Logger instance is not initialized! You need to create a game instance before accessing this property!");
-    // private static Logger? logger;
-
-    public readonly Logger Logger;
+    
+    /// <summary>
+    /// The logger instance used for logging messages, warnings, and errors throughout the game.
+    /// Initialized during game construction and can be used for file and console output.
+    /// </summary>
+    /// <remarks>
+    /// If <see cref="SaveDirectory"/> is empty, logger will be created with default settings (console only).
+    /// Otherwise, it will log to both console and a log file in the save directory. (SaveDirectory/LogOutput/DefaultLog.txt)
+    /// </remarks>
+    public Logger Logger;
 
     /// <summary>
     /// The name of the application. Used for display and save directory purposes.
@@ -349,10 +353,78 @@ public partial class Game
         
         instance = this;
         
-        #if DEBUG
+#if DEBUG
         DebugMode = true;
         ReleaseMode = false;
-        #endif
+#endif
+        
+        //This sets the current directory to the executable's folder, enabling double-click launches.
+        //without this, the executable has to be launched from the command line
+        if (IsOSX())
+        {
+            string exeDir = AppContext.BaseDirectory;
+            if (!string.IsNullOrEmpty(exeDir))
+            {
+                Directory.SetCurrentDirectory(exeDir);
+            }
+            else Console.WriteLine("Failed to set current directory to executable's folder in macos.");
+        }
+
+        ApplicationName = gameSettings.ApplicationName;
+        if (gameSettings.SaveDirectory != null && ApplicationName.Length > 0)
+        {
+            var folderPath = Environment.GetFolderPath((Environment.SpecialFolder)gameSettings.SaveDirectory);
+            var absolutePath = Path.Combine(folderPath, gameSettings.ApplicationName);
+            var dir = ShapeFileManager.CreateDirectory(absolutePath, false);
+            if (dir != null)
+            {
+                SaveDirectory = dir;
+
+                if (ReleaseMode)
+                {
+                    var logPath = Path.Combine(absolutePath, "LogOutput/DefaultLog.txt");
+                    var loggerSettings = LoggerSettings.LogToFileAndConsole(LogLevel.Info, logPath);
+                    Logger = new Logger(loggerSettings);
+                    Logger.LogInfo($"Logger initialized in release mode. Log file: {logPath}");
+                }
+                else
+                {
+                    Logger = new Logger(LoggerSettings.Default);
+                    Logger.LogInfo("Logger initialized in debug mode. No log file will be created.");
+                }
+                
+                Logger.LogInfo($"Save directory set to: {SaveDirectoryPath}");
+            }
+            else
+            {
+                SaveDirectory = new(string.Empty);
+                Logger = new Logger(LoggerSettings.Default);
+                if (ReleaseMode)
+                {
+                    Logger.LogInfo("Logger initialized in release mode. No valid save directory set. No log file created.");
+                }
+                else
+                {
+                    Logger.LogInfo("Logger initialized in debug mode. No log file will be created.");
+                }
+                
+                Logger.LogWarning("No save directory set! SaveDirectory will be empty.");
+            }
+        }
+        else
+        {
+            SaveDirectory = new(string.Empty);
+            Logger = new Logger(LoggerSettings.Default);
+            if (ReleaseMode)
+            {
+                Logger.LogInfo("Logger initialized in release mode. No valid save directory set. No log file created.");
+            }
+            else
+            {
+                Logger.LogInfo("Logger initialized in debug mode. No log file will be created.");
+            }
+            Logger.LogWarning("No save directory set! SaveDirectory will be empty.");
+        }
         
         // this.DevelopmentDimensions = gameSettings.DevelopmentDimensions;
         Window = new(windowSettings);
@@ -430,43 +502,7 @@ public partial class Game
         Input.GamepadManager.OnGamepadClaimed += ResolveOnGamepadClaimed;
         Input.GamepadManager.OnGamepadFreed += ResolveOnGamepadFreed;
         
-        //This sets the current directory to the executable's folder, enabling double-click launches.
-        //without this, the executable has to be launched from the command line
-        if (IsOSX())
-        {
-            string exeDir = AppContext.BaseDirectory;
-            if (!string.IsNullOrEmpty(exeDir))
-            {
-                Directory.SetCurrentDirectory(exeDir);
-            }
-            else Console.WriteLine("Failed to set current directory to executable's folder in macos.");
-        }
-
-        ApplicationName = gameSettings.ApplicationName;
-        if (gameSettings.SaveDirectory != null && ApplicationName.Length > 0)
-        {
-            var folderPath = Environment.GetFolderPath((Environment.SpecialFolder)gameSettings.SaveDirectory);
-            var absolutePath = Path.Combine(folderPath, gameSettings.ApplicationName);
-            var dir = ShapeFileManager.CreateDirectory(absolutePath, false);
-            if (dir != null)
-            {
-                SaveDirectory = dir;
-                Console.WriteLine($"Save directory set to: {SaveDirectoryPath}");
-            }
-            else
-            {
-                SaveDirectory = new(string.Empty);
-                Console.WriteLine("No save directory set! SaveDirectory will be empty.");
-            }
-        }
-        else
-        {
-            SaveDirectory = new(string.Empty);
-            Console.WriteLine("No save directory set! SaveDirectory will be empty.");
-        }
-
-        // logger = new Logger(gameSettings.LoggerSettings);
-        Logger = new Logger(gameSettings.LoggerSettings);
+        
     }
 
     private void UpdateGamepadMappings(InputSettings inputSettings)
