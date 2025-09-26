@@ -3,33 +3,39 @@ using ShapeEngine.Core.GameDef;
 
 namespace ShapeEngine.Content;
 
+//TODO: Docs & Cleanup (regions etc)
 
-public sealed class ContentManager2
+//TODO: test in GameloopExamples LoadContent with loading from disk, loading from 1 pack, or from multiple packs
+
+public sealed class ContentManager
 {
+    #region Members
+    public readonly string RootDirectory;
     
     private readonly Dictionary<string, Shader> loadedShaders = new();
     private readonly Dictionary<string, Texture2D> loadedTextures = new();
     private readonly Dictionary<string, Image> loadedImages = new();
     private readonly Dictionary<string, Font> loadedFonts = new();
     private readonly Dictionary<string, Sound> loadedSounds = new();
-    private readonly Dictionary<string, Music> loadedMusic = new();
+    private readonly Dictionary<string, Music> loadedMusicStreams = new();
     private readonly Dictionary<string, Wave> loadedWaves = new();
-    
+    private readonly Dictionary<string, string> loadedTexts = new();
     private readonly Dictionary<string, ContentPack> contentPacks = new();
     
-    public readonly string RootDirectory;
-
-
-    private List<string> pathParts = [];
-    private List<string> possibleRoots = [];
-    
+    private readonly List<string> pathParts = [];
+    private readonly List<string> possibleRoots = [];
     private static readonly char[] separators = [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar];
+    #endregion
     
-    public ContentManager2(string rootDirectory)
+    #region Constructors
+    public ContentManager(string rootDirectory)
     {
         RootDirectory = rootDirectory;
     }
 
+    #endregion
+    
+    #region Content Packs
     public bool AddContentPack(ContentPack pack, string root)
     {
         if (root == string.Empty)
@@ -87,11 +93,10 @@ public sealed class ContentManager2
     {
         return contentPacks.TryGetValue(root, out pack);
     }   
+    #endregion
     
-    
-
-
-    private bool TryLoadTexture(string filePath, out Texture2D texture)
+    #region Try Load Content
+    public bool TryLoadTexture(string filePath, out Texture2D texture)
     {
         texture = default;
     
@@ -105,7 +110,7 @@ public sealed class ContentManager2
             return true;
         }
 
-        if (TryFindContentPack(relativePath, out var pack, out string packFilePath) && pack != null)
+        if (FindContentPack(relativePath, out var pack, out string packFilePath) && pack != null)
         {
             if (pack.TryLoadTexture(packFilePath, out var packTexture))
             {
@@ -134,42 +139,353 @@ public sealed class ContentManager2
         texture = loadedTexture;
         return true;
     }
-
-    
-    private bool TryFindContentPack(string relativePath, out ContentPack? pack,  out string packFilePath)
+    public bool TryLoadFragmentShader(string filePath, out Shader shader)
     {
-        // Generate all possible parent directory paths
-        pathParts.Clear();
-        pathParts.AddRange(relativePath.Split(separators, StringSplitOptions.RemoveEmptyEntries));
-        
-        possibleRoots.Clear();
-        // Build paths from most specific to least specific
-        // e.g., "Fonts/TitleFonts/HeaderFonts" -> "Fonts/TitleFonts" -> "Fonts"
-        for (int i = pathParts.Count - 2; i >= 0; i--)
+        shader = default;
+
+        // Normalize path to be relative to RootDirectory
+        string relativePath = RootDirectory != string.Empty ? Path.GetRelativePath(RootDirectory, filePath) : filePath;
+
+        // Check cache first
+        if (loadedShaders.TryGetValue(relativePath, out shader))
         {
-            possibleRoots.Add(string.Join(Path.DirectorySeparatorChar, pathParts.Take(i + 1)));
-        }
-        
-        // 1. Try all content packs with matching roots from most specific to least specific
-        foreach (string possibleRoot in possibleRoots)
-        {
-            if (!contentPacks.TryGetValue(possibleRoot, out var contentPack)) continue;
-            
-            packFilePath = Path.GetRelativePath(relativePath, possibleRoot);
-            pack = contentPack;
+            Game.Instance.Logger.LogInfo($"Content '{relativePath}' is already loaded, returning cached version.");
             return true;
         }
-        
-        packFilePath = string.Empty;
-        pack = null;
-        return false;
+
+        if (FindContentPack(relativePath, out var pack, out string packFilePath) && pack != null)
+        {
+            if (pack.TryLoadFragmentShader(packFilePath, out var packShader))
+            {
+                shader = packShader;
+                loadedShaders[relativePath] = packShader;
+                return true;
+            }
+        }
+
+        // 2. Try root pack if available
+        if (contentPacks.TryGetValue(RootDirectory, out var rootPack))
+        {
+            if (rootPack.TryLoadFragmentShader(relativePath, out var packShader))
+            {
+                shader = packShader;
+                loadedShaders[relativePath] = packShader;
+                return true;
+            }
+        }
+
+        // 3. Try loading from disk
+        string contentPath = RootDirectory != string.Empty ? Path.Combine(RootDirectory, relativePath) : relativePath;
+        if (!ContentLoader.TryLoadFragmentShader(contentPath, out var loadedShader)) return false;
+
+        loadedShaders[relativePath] = loadedShader;
+        shader = loadedShader;
+        return true;
     }
-    // private string NormalizePath(string path)
-    // {
-    //     string fullPath = Path.GetFullPath(path);
-    //     return Path.TrimEndingDirectorySeparator(fullPath).ToLowerInvariant();
-    // }
+    public bool TryLoadVertexShader(string filePath, out Shader shader)
+    {
+        shader = default;
+
+        // Normalize path to be relative to RootDirectory
+        string relativePath = RootDirectory != string.Empty ? Path.GetRelativePath(RootDirectory, filePath) : filePath;
+
+        // Check cache first
+        if (loadedShaders.TryGetValue(relativePath, out shader))
+        {
+            Game.Instance.Logger.LogInfo($"Content '{relativePath}' is already loaded, returning cached version.");
+            return true;
+        }
+
+        if (FindContentPack(relativePath, out var pack, out string packFilePath) && pack != null)
+        {
+            if (pack.TryLoadVertexShader(packFilePath, out var packShader))
+            {
+                shader = packShader;
+                loadedShaders[relativePath] = packShader;
+                return true;
+            }
+        }
+
+        // 2. Try root pack if available
+        if (contentPacks.TryGetValue(RootDirectory, out var rootPack))
+        {
+            if (rootPack.TryLoadVertexShader(relativePath, out var packShader))
+            {
+                shader = packShader;
+                loadedShaders[relativePath] = packShader;
+                return true;
+            }
+        }
+
+        // 3. Try loading from disk
+        string contentPath = RootDirectory != string.Empty ? Path.Combine(RootDirectory, relativePath) : relativePath;
+        if (!ContentLoader.TryLoadVertexShader(contentPath, out var loadedShader)) return false;
+
+        loadedShaders[relativePath] = loadedShader;
+        shader = loadedShader;
+        return true;
+    }
+    public bool TryLoadImage(string filePath, out Image image)
+    {
+        image = default;
+
+        // Normalize path to be relative to RootDirectory
+        string relativePath = RootDirectory != string.Empty ? Path.GetRelativePath(RootDirectory, filePath) : filePath;
+
+        // Check cache first
+        if (loadedImages.TryGetValue(relativePath, out image))
+        {
+            Game.Instance.Logger.LogInfo($"Content '{relativePath}' is already loaded, returning cached version.");
+            return true;
+        }
+
+        if (FindContentPack(relativePath, out var pack, out string packFilePath) && pack != null)
+        {
+            if (pack.TryLoadImage(packFilePath, out var packImage))
+            {
+                image = packImage;
+                loadedImages[relativePath] = packImage;
+                return true;
+            }
+        }
+
+        // 2. Try root pack if available
+        if (contentPacks.TryGetValue(RootDirectory, out var rootPack))
+        {
+            if (rootPack.TryLoadImage(relativePath, out var packImage))
+            {
+                image = packImage;
+                loadedImages[relativePath] = packImage;
+                return true;
+            }
+        }
+
+        // 3. Try loading from disk
+        string contentPath = RootDirectory != string.Empty ? Path.Combine(RootDirectory, relativePath) : relativePath;
+        if (!ContentLoader.TryLoadImage(contentPath, out var loadedImage)) return false;
+
+        loadedImages[relativePath] = loadedImage;
+        image = loadedImage;
+        return true;
+    }
+    public bool TryLoadFont(string filePath, out Font font)
+    {
+        font = default;
+
+        // Normalize path to be relative to RootDirectory
+        string relativePath = RootDirectory != string.Empty ? Path.GetRelativePath(RootDirectory, filePath) : filePath;
+
+        // Check cache first
+        if (loadedFonts.TryGetValue(relativePath, out font))
+        {
+            Game.Instance.Logger.LogInfo($"Content '{relativePath}' is already loaded, returning cached version.");
+            return true;
+        }
+
+        if (FindContentPack(relativePath, out var pack, out string packFilePath) && pack != null)
+        {
+            if (pack.TryLoadFont(packFilePath, out var packFont))
+            {
+                font = packFont;
+                loadedFonts[relativePath] = packFont;
+                return true;
+            }
+        }
+
+        // 2. Try root pack if available
+        if (contentPacks.TryGetValue(RootDirectory, out var rootPack))
+        {
+            if (rootPack.TryLoadFont(relativePath, out var packFont))
+            {
+                font = packFont;
+                loadedFonts[relativePath] = packFont;
+                return true;
+            }
+        }
+
+        // 3. Try loading from disk
+        string contentPath = RootDirectory != string.Empty ? Path.Combine(RootDirectory, relativePath) : relativePath;
+        if (!ContentLoader.TryLoadFont(contentPath, out var loadedFont)) return false;
+
+        loadedFonts[relativePath] = loadedFont;
+        font = loadedFont;
+        return true;
+    }
+    public bool TryLoadSound(string filePath, out Sound sound)
+    {
+        sound = default;
+
+        // Normalize path to be relative to RootDirectory
+        string relativePath = RootDirectory != string.Empty ? Path.GetRelativePath(RootDirectory, filePath) : filePath;
+
+        // Check cache first
+        if (loadedSounds.TryGetValue(relativePath, out sound))
+        {
+            Game.Instance.Logger.LogInfo($"Content '{relativePath}' is already loaded, returning cached version.");
+            return true;
+        }
+
+        if (FindContentPack(relativePath, out var pack, out string packFilePath) && pack != null)
+        {
+            if (pack.TryLoadSound(packFilePath, out var packSound))
+            {
+                sound = packSound;
+                loadedSounds[relativePath] = packSound;
+                return true;
+            }
+        }
+
+        // 2. Try root pack if available
+        if (contentPacks.TryGetValue(RootDirectory, out var rootPack))
+        {
+            if (rootPack.TryLoadSound(relativePath, out var packSound))
+            {
+                sound = packSound;
+                loadedSounds[relativePath] = packSound;
+                return true;
+            }
+        }
+
+        // 3. Try loading from disk
+        string contentPath = RootDirectory != string.Empty ? Path.Combine(RootDirectory, relativePath) : relativePath;
+        if (!ContentLoader.TryLoadSound(contentPath, out var loadedSound)) return false;
+
+        loadedSounds[relativePath] = loadedSound;
+        sound = loadedSound;
+        return true;
+    }
+    public bool TryLoadMusic(string filePath, out Music music)
+    {
+        music = default;
+
+        // Normalize path to be relative to RootDirectory
+        string relativePath = RootDirectory != string.Empty ? Path.GetRelativePath(RootDirectory, filePath) : filePath;
+
+        // Check cache first
+        if (loadedMusicStreams.TryGetValue(relativePath, out music))
+        {
+            Game.Instance.Logger.LogInfo($"Content '{relativePath}' is already loaded, returning cached version.");
+            return true;
+        }
+
+        if (FindContentPack(relativePath, out var pack, out string packFilePath) && pack != null)
+        {
+            if (pack.TryLoadMusic(packFilePath, out var packMusic))
+            {
+                music = packMusic;
+                loadedMusicStreams[relativePath] = packMusic;
+                return true;
+            }
+        }
+
+        // 2. Try root pack if available
+        if (contentPacks.TryGetValue(RootDirectory, out var rootPack))
+        {
+            if (rootPack.TryLoadMusic(relativePath, out var packMusic))
+            {
+                music = packMusic;
+                loadedMusicStreams[relativePath] = packMusic;
+                return true;
+            }
+        }
+
+        // 3. Try loading from disk
+        string contentPath = RootDirectory != string.Empty ? Path.Combine(RootDirectory, relativePath) : relativePath;
+        if (!ContentLoader.TryLoadMusic(contentPath, out var loadedMusic)) return false;
+
+        loadedMusicStreams[relativePath] = loadedMusic;
+        music = loadedMusic;
+        return true;
+    }
+    public bool TryLoadWave(string filePath, out Wave wave)
+    {
+        wave = default;
+
+        // Normalize path to be relative to RootDirectory
+        string relativePath = RootDirectory != string.Empty ? Path.GetRelativePath(RootDirectory, filePath) : filePath;
+
+        // Check cache first
+        if (loadedWaves.TryGetValue(relativePath, out wave))
+        {
+            Game.Instance.Logger.LogInfo($"Content '{relativePath}' is already loaded, returning cached version.");
+            return true;
+        }
+
+        if (FindContentPack(relativePath, out var pack, out string packFilePath) && pack != null)
+        {
+            if (pack.TryLoadWave(packFilePath, out var packWave))
+            {
+                wave = packWave;
+                loadedWaves[relativePath] = packWave;
+                return true;
+            }
+        }
+
+        // 2. Try root pack if available
+        if (contentPacks.TryGetValue(RootDirectory, out var rootPack))
+        {
+            if (rootPack.TryLoadWave(relativePath, out var packWave))
+            {
+                wave = packWave;
+                loadedWaves[relativePath] = packWave;
+                return true;
+            }
+        }
+
+        // 3. Try loading from disk
+        string contentPath = RootDirectory != string.Empty ? Path.Combine(RootDirectory, relativePath) : relativePath;
+        if (!ContentLoader.TryLoadWave(contentPath, out var loadedWave)) return false;
+
+        loadedWaves[relativePath] = loadedWave;
+        wave = loadedWave;
+        return true;
+    }
+    public bool TryLoadText(string filePath, out string text)
+    {
+        text = string.Empty;
+
+        // Normalize path to be relative to RootDirectory
+        string relativePath = RootDirectory != string.Empty ? Path.GetRelativePath(RootDirectory, filePath) : filePath;
+
+        // Check cache first
+        if (loadedTexts.TryGetValue(relativePath, out text))
+        {
+            Game.Instance.Logger.LogInfo($"Content '{relativePath}' is already loaded, returning cached version.");
+            return true;
+        }
+
+        if (FindContentPack(relativePath, out var pack, out string packFilePath) && pack != null)
+        {
+            if (pack.TryLoadText(packFilePath, out var packText))
+            {
+                text = packText;
+                loadedTexts[relativePath] = packText;
+                return true;
+            }
+        }
+
+        // 2. Try root pack if available
+        if (contentPacks.TryGetValue(RootDirectory, out var rootPack))
+        {
+            if (rootPack.TryLoadText(relativePath, out var packText))
+            {
+                text = packText;
+                loadedTexts[relativePath] = packText;
+                return true;
+            }
+        }
+
+        // 3. Try loading from disk
+        string contentPath = RootDirectory != string.Empty ? Path.Combine(RootDirectory, relativePath) : relativePath;
+        if (!ContentLoader.TryLoadText(contentPath, out var loadedText)) return false;
+
+        loadedTexts[relativePath] = loadedText;
+        text = loadedText;
+        return true;
+    }
+    #endregion
     
+    #region Unloading
     
     public void UnloadAllContentPacks()
     {
@@ -204,7 +520,7 @@ public sealed class ContentManager2
         {
             Raylib.UnloadSound(item.Value);
         }
-        foreach (var item in loadedMusic)
+        foreach (var item in loadedMusicStreams)
         {
             Raylib.UnloadMusicStream(item.Value);
         }
@@ -214,7 +530,8 @@ public sealed class ContentManager2
         loadedFonts.Clear();
         loadedWaves.Clear();
         loadedSounds.Clear();
-        loadedMusic.Clear();
+        loadedMusicStreams.Clear();
+        loadedTexts.Clear();
     }
     public void Close()
     {
@@ -223,11 +540,48 @@ public sealed class ContentManager2
         UnloadContentCache();
     }
     
+    #endregion
     
+    #region Helpers
+    private bool FindContentPack(string relativePath, out ContentPack? pack,  out string packFilePath)
+    {
+        // Generate all possible parent directory paths
+        pathParts.Clear();
+        pathParts.AddRange(relativePath.Split(separators, StringSplitOptions.RemoveEmptyEntries));
+        
+        possibleRoots.Clear();
+        // Build paths from most specific to least specific
+        // e.g., "Fonts/TitleFonts/HeaderFonts" -> "Fonts/TitleFonts" -> "Fonts"
+        for (int i = pathParts.Count - 2; i >= 0; i--)
+        {
+            possibleRoots.Add(string.Join(Path.DirectorySeparatorChar, pathParts.Take(i + 1)));
+        }
+        
+        // 1. Try all content packs with matching roots from most specific to least specific
+        foreach (string possibleRoot in possibleRoots)
+        {
+            if (!contentPacks.TryGetValue(possibleRoot, out var contentPack)) continue;
+            
+            packFilePath = Path.GetRelativePath(relativePath, possibleRoot);
+            pack = contentPack;
+            return true;
+        }
+        
+        packFilePath = string.Empty;
+        pack = null;
+        return false;
+    }
+
+    #endregion
     
 }
 
 /*
+     // private string NormalizePath(string path)
+   // {
+   //     string fullPath = Path.GetFullPath(path);
+   //     return Path.TrimEndingDirectorySeparator(fullPath).ToLowerInvariant();
+   // }
      private bool TryGetContentPack2(string relativePath, out ContentPack? pack, out string newFilePath)
    {
        foreach (var kvp in contentPacks)
@@ -398,287 +752,3 @@ public sealed class ContentManager2
    
    
  */
-
-
-/// <summary>
-/// Provides a simple class to load content and automatically unload all loaded content when close is called.
-/// </summary>
-public sealed class ContentManager
-{
-    private readonly List<Shader> shadersToUnload = [];
-    private readonly List<Texture2D> texturesToUnload = [];
-    private readonly List<Image> imagesToUnload = [];
-    private readonly List<Font> fontsToUnload = [];
-    private readonly List<Sound> soundsToUnload = [];
-    private readonly List<Music> musicToUnload = [];
-    private readonly List<Wave> wavesToUnload = [];
-
-    /// <summary>
-    /// Creates a new content manager.
-    /// </summary>
-    public ContentManager() { }
-
-    /// <summary>
-    /// Unloads all loaded content.
-    /// </summary>
-    public void Close()
-    {
-        foreach (var item in shadersToUnload)
-        {
-            Raylib.UnloadShader(item);
-        }
-
-        foreach (var item in texturesToUnload)
-        {
-            Raylib.UnloadTexture(item);
-        }
-        foreach (var item in imagesToUnload)
-        {
-            Raylib.UnloadImage(item);
-        }
-        foreach (var item in fontsToUnload)
-        {
-            Raylib.UnloadFont(item);
-        }
-        foreach (var item in wavesToUnload)
-        {
-            Raylib.UnloadWave(item);
-        }
-        foreach (var item in soundsToUnload)
-        {
-            Raylib.UnloadSound(item);
-        }
-        foreach (var item in musicToUnload)
-        {
-            Raylib.UnloadMusicStream(item);
-        }
-    }
-    
-    #region Load
-    
-    /// <summary>
-    /// Loads a texture from the given file path.
-    /// </summary>
-    /// <param name="filePath">The path to the texture file.</param>
-    /// <returns>The loaded texture.</returns>
-    public Texture2D LoadTexture(string filePath)
-    {
-        var t = ContentLoader.LoadTexture(filePath);
-        texturesToUnload.Add(t);
-        return t;
-    }
-    /// <summary>
-    /// Loads an image from the given file path.
-    /// </summary>
-    /// <param name="filePath">The path to the image file.</param>
-    /// <returns>The loaded image.</returns>
-    public Image LoadImage(string filePath)
-    {
-        var i = ContentLoader.LoadImage(filePath);
-        imagesToUnload.Add(i);
-        return i;
-    }
-    /// <summary>
-    /// Loads a font from the given file path.
-    /// </summary>
-    /// <param name="filePath">The path to the font file.</param>
-    /// <param name="fontSize">The size of the font.</param>
-    /// <returns>The loaded font.</returns>
-    public Font LoadFont(string filePath, int fontSize = 100)
-    {
-        var f = ContentLoader.LoadFont(filePath, fontSize);
-        fontsToUnload.Add(f);
-        return f;
-    }
-    /// <summary>
-    /// Loads a wave from the given file path.
-    /// </summary>
-    /// <param name="filePath">The path to the wave file.</param>
-    /// <returns>The loaded wave.</returns>
-    public Wave LoadWave(string filePath)
-    {
-        var w = ContentLoader.LoadWave(filePath);
-        wavesToUnload.Add(w);
-        return w;
-    }
-    /// <summary>
-    /// Loads a sound from the given file path.
-    /// </summary>
-    /// <param name="filePath">The path to the sound file.</param>
-    /// <returns>The loaded sound.</returns>
-    public Sound LoadSound(string filePath)
-    {
-        var s = ContentLoader.LoadSound(filePath);
-        soundsToUnload.Add(s);
-        return s;
-
-    }
-    /// <summary>
-    /// Loads music from the given file path.
-    /// </summary>
-    /// <param name="filePath">The path to the music file.</param>
-    /// <returns>The loaded music.</returns>
-    public Music LoadMusic(string filePath)
-    {
-        var m = ContentLoader.LoadMusic(filePath);
-        musicToUnload.Add(m);
-        return m;
-    }
-    /// <summary>
-    /// Loads a fragment shader from the given file path.
-    /// </summary>
-    /// <param name="filePath">The path to the fragment shader file.</param>
-    /// <returns>The loaded shader.</returns>
-    public Shader LoadFragmentShader(string filePath)
-    {
-        var fs = ContentLoader.LoadFragmentShader(filePath);
-        shadersToUnload.Add(fs);
-        return fs;
-    }
-    /// <summary>
-    /// Loads a vertex shader from the given file path.
-    /// </summary>
-    /// <param name="filePath">The path to the vertex shader file.</param>
-    /// <returns>The loaded shader.</returns>
-    public Shader LoadVertexShader(string filePath)
-    {
-        var vs = ContentLoader.LoadVertexShader(filePath);
-        shadersToUnload.Add(vs);
-        return vs;
-    }
-    /// <summary>
-    /// Loads a text string from the given file path.
-    /// </summary>
-    /// <param name="filePath">The path to the text file.</param>
-    /// <returns>The loaded text string.</returns>
-    public string LoadText(string filePath)
-    {
-        return ContentLoader.LoadText(filePath);
-    }
-
-    #endregion
-
-    #region Load Directory
-
-    /// <summary>
-    /// Loads all textures from the specified directory.
-    /// </summary>
-    /// <param name="directoryPath">The path to the directory containing texture files.</param>
-    /// <param name="recursive">Whether to search subdirectories recursively.</param>
-    /// <returns>
-    /// A dictionary mapping relative file paths to loaded <see cref="Texture2D"/> objects.
-    /// </returns>
-    public Dictionary<string, Texture2D> LoadTexturesFromDirectory(string directoryPath, bool recursive = false)
-    {
-        var dict = ContentLoader.LoadTexturesFromDirectory(directoryPath, recursive);
-        texturesToUnload.AddRange(dict.Values);
-        return dict;
-    }
-    /// <summary>
-    /// Loads all images from the specified directory.
-    /// </summary>
-    /// <param name="directoryPath">The path to the directory containing image files.</param>
-    /// <param name="recursive">Whether to search subdirectories recursively.</param>
-    /// <returns>
-    /// A dictionary mapping relative file paths to loaded <see cref="Image"/> objects.
-    /// </returns>
-    public Dictionary<string, Image> LoadImagesFromDirectory(string directoryPath, bool recursive = false)
-    {
-        var dict = ContentLoader.LoadImagesFromDirectory(directoryPath, recursive);
-        imagesToUnload.AddRange(dict.Values);
-        return dict;
-    }
-
-    /// <summary>
-    /// Loads all fonts from the specified directory.
-    /// </summary>
-    /// <param name="directoryPath">The path to the directory containing font files.</param>
-    /// <param name="fontSize">The size of the fonts to load.</param>
-    /// <param name="recursive">Whether to search subdirectories recursively.</param>
-    /// <returns>
-    /// A dictionary mapping relative file paths to loaded <see cref="Font"/> objects.
-    /// </returns>
-    public Dictionary<string, Font> LoadFontsFromDirectory(string directoryPath, int fontSize = 100, bool recursive = false)
-    {
-        var dict = ContentLoader.LoadFontsFromDirectory(directoryPath, fontSize, TextureFilter.Trilinear, recursive);
-        fontsToUnload.AddRange(dict.Values);
-        return dict;
-    }
-
-    /// <summary>
-    /// Loads all sounds from the specified directory.
-    /// </summary>
-    /// <param name="directoryPath">The path to the directory containing sound files.</param>
-    /// <param name="recursive">Whether to search subdirectories recursively.</param>
-    /// <returns>
-    /// A dictionary mapping relative file paths to loaded <see cref="Sound"/> objects.
-    /// </returns>
-    public Dictionary<string, Sound> LoadSoundsFromDirectory(string directoryPath, bool recursive = false)
-    {
-        var dict = ContentLoader.LoadSoundsFromDirectory(directoryPath, recursive);
-        soundsToUnload.AddRange(dict.Values);
-        return dict;
-    }
-
-    /// <summary>
-    /// Loads all music files from the specified directory.
-    /// </summary>
-    /// <param name="directoryPath">The path to the directory containing music files.</param>
-    /// <param name="recursive">Whether to search subdirectories recursively.</param>
-    /// <returns>
-    /// A dictionary mapping relative file paths to loaded <see cref="Music"/> objects.
-    /// </returns>
-    public Dictionary<string, Music> LoadMusicFromDirectory(string directoryPath, bool recursive = false)
-    {
-        var dict = ContentLoader.LoadMusicFromDirectory(directoryPath, recursive);
-        musicToUnload.AddRange(dict.Values);
-        return dict;
-    }
-
-    /// <summary>
-    /// Loads all wave files from the specified directory.
-    /// </summary>
-    /// <param name="directoryPath">The path to the directory containing wave files.</param>
-    /// <param name="recursive">Whether to search subdirectories recursively.</param>
-    /// <returns>
-    /// A dictionary mapping relative file paths to loaded <see cref="Wave"/> objects.
-    /// </returns>
-    public Dictionary<string, Wave> LoadWavesFromDirectory(string directoryPath, bool recursive = false)
-    {
-        var dict = ContentLoader.LoadWavesFromDirectory(directoryPath, recursive);
-        wavesToUnload.AddRange(dict.Values);
-        return dict;
-    }
-
-    /// <summary>
-    /// Loads all fragment shaders from the specified directory.
-    /// </summary>
-    /// <param name="directoryPath">The path to the directory containing fragment shader files.</param>
-    /// <param name="recursive">Whether to search subdirectories recursively.</param>
-    /// <returns>
-    /// A dictionary mapping relative file paths to loaded <see cref="Shader"/> objects.
-    /// </returns>
-    public Dictionary<string, Shader> LoadFragmentShadersFromDirectory(string directoryPath, bool recursive = false)
-    {
-        var dict = ContentLoader.LoadFragmentShadersFromDirectory(directoryPath, recursive);
-        shadersToUnload.AddRange(dict.Values);
-        return dict;
-    }
-
-    /// <summary>
-    /// Loads all vertex shaders from the specified directory.
-    /// </summary>
-    /// <param name="directoryPath">The path to the directory containing vertex shader files.</param>
-    /// <param name="recursive">Whether to search subdirectories recursively.</param>
-    /// <returns>
-    /// A dictionary mapping relative file paths to loaded <see cref="Shader"/> objects.
-    /// </returns>
-    public Dictionary<string, Shader> LoadVertexShadersFromDirectory(string directoryPath, bool recursive = false)
-    {
-        var dict = ContentLoader.LoadVertexShadersFromDirectory(directoryPath, recursive);
-        shadersToUnload.AddRange(dict.Values);
-        return dict;
-    }
-    
-    #endregion
-}
