@@ -15,7 +15,7 @@ public sealed class ContentManager
     private readonly Dictionary<string, Shader> loadedShaders = new();
     private readonly Dictionary<string, Texture2D> loadedTextures = new();
     private readonly Dictionary<string, Image> loadedImages = new();
-    private readonly Dictionary<string, Font> loadedFonts = new();
+    private readonly Dictionary<string, Dictionary<int, Font>> loadedFonts = new();
     private readonly Dictionary<string, Sound> loadedSounds = new();
     private readonly Dictionary<string, Music> loadedMusicStreams = new();
     private readonly Dictionary<string, Wave> loadedWaves = new();
@@ -268,26 +268,29 @@ public sealed class ContentManager
         image = loadedImage;
         return true;
     }
-    public bool TryLoadFont(string filePath, out Font font)
+    public bool TryLoadFont(string filePath, out Font font, int fontSize = 100)
     {
         font = default;
 
         // Normalize path to be relative to RootDirectory
         string relativePath = RootDirectory != string.Empty ? Path.GetRelativePath(RootDirectory, filePath) : filePath;
-
         // Check cache first
-        if (loadedFonts.TryGetValue(relativePath, out font))
+        if (loadedFonts.TryGetValue(relativePath, out var fontDict))
         {
-            Game.Instance.Logger.LogInfo($"Content '{relativePath}' is already loaded, returning cached version.");
-            return true;
+            if (fontDict.TryGetValue(fontSize, out font))
+            {
+                Game.Instance.Logger.LogInfo($"Content '{relativePath}' is already loaded, returning cached version.");
+                return true;
+            }
         }
 
         if (FindContentPack(relativePath, out var pack, out string packFilePath) && pack != null)
         {
-            if (pack.TryLoadFont(packFilePath, out var packFont))
+            if (pack.TryLoadFont(packFilePath, out var packFont, fontSize))
             {
                 font = packFont;
-                loadedFonts[relativePath] = packFont;
+                if (!loadedFonts.ContainsKey(relativePath)) loadedFonts[relativePath] = new Dictionary<int, Font>();
+                loadedFonts[relativePath][fontSize] = packFont;
                 return true;
             }
         }
@@ -295,19 +298,24 @@ public sealed class ContentManager
         // 2. Try root pack if available
         if (contentPacks.TryGetValue(RootDirectory, out var rootPack))
         {
-            if (rootPack.TryLoadFont(relativePath, out var packFont))
+            if (rootPack.TryLoadFont(relativePath, out var packFont, fontSize))
             {
                 font = packFont;
-                loadedFonts[relativePath] = packFont;
+                if (!loadedFonts.ContainsKey(relativePath)) loadedFonts[relativePath] = new Dictionary<int, Font>();
+                loadedFonts[relativePath][fontSize] = packFont;
                 return true;
             }
         }
 
         // 3. Try loading from disk
         string contentPath = RootDirectory != string.Empty ? Path.Combine(RootDirectory, relativePath) : relativePath;
-        if (!ContentLoader.TryLoadFont(contentPath, out var loadedFont)) return false;
+        if (!ContentLoader.TryLoadFont(contentPath, out var loadedFont, fontSize))
+        {
+            return false;
+        }
 
-        loadedFonts[relativePath] = loadedFont;
+        if (!loadedFonts.ContainsKey(relativePath)) loadedFonts[relativePath] = new Dictionary<int, Font>();
+        loadedFonts[relativePath][fontSize] = loadedFont;
         font = loadedFont;
         return true;
     }
@@ -448,9 +456,10 @@ public sealed class ContentManager
         string relativePath = RootDirectory != string.Empty ? Path.GetRelativePath(RootDirectory, filePath) : filePath;
 
         // Check cache first
-        if (loadedTexts.TryGetValue(relativePath, out text))
+        if (loadedTexts.TryGetValue(relativePath, out string? cachedText))
         {
             Game.Instance.Logger.LogInfo($"Content '{relativePath}' is already loaded, returning cached version.");
+            text = cachedText;
             return true;
         }
 
@@ -510,7 +519,11 @@ public sealed class ContentManager
         }
         foreach (var item in loadedFonts)
         {
-            Raylib.UnloadFont(item.Value);
+            foreach (var kvp in item.Value)
+            {
+                Raylib.UnloadFont(kvp.Value);
+            }
+            
         }
         foreach (var item in loadedWaves)
         {
@@ -562,7 +575,7 @@ public sealed class ContentManager
         {
             if (!contentPacks.TryGetValue(possibleRoot, out var contentPack)) continue;
             
-            packFilePath = Path.GetRelativePath(relativePath, possibleRoot);
+            packFilePath = Path.GetRelativePath(possibleRoot, relativePath);
             pack = contentPack;
             return true;
         }
