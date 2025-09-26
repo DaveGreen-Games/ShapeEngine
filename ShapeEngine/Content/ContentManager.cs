@@ -1,4 +1,3 @@
-using System.Reflection.Metadata.Ecma335;
 using Raylib_cs;
 using ShapeEngine.Core.GameDef;
 
@@ -7,6 +6,7 @@ namespace ShapeEngine.Content;
 
 public sealed class ContentManager2
 {
+    
     private readonly Dictionary<string, Shader> loadedShaders = new();
     private readonly Dictionary<string, Texture2D> loadedTextures = new();
     private readonly Dictionary<string, Image> loadedImages = new();
@@ -18,6 +18,12 @@ public sealed class ContentManager2
     private readonly Dictionary<string, ContentPack> contentPacks = new();
     
     public readonly string RootDirectory;
+
+
+    private List<string> pathParts = [];
+    private List<string> possibleRoots = [];
+    
+    private static readonly char[] separators = [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar];
     
     public ContentManager2(string rootDirectory)
     {
@@ -83,47 +89,86 @@ public sealed class ContentManager2
     }   
     
     
-    //TODO: implement the rest 
-    private bool TryGetTexture(string filePath, out Texture2D texture)
+
+
+    private bool TryLoadTexture(string filePath, out Texture2D texture)
     {
-        filePath = RootDirectory != string.Empty ? Path.GetRelativePath(RootDirectory, filePath) : filePath;
-        
-        if (loadedTextures.TryGetValue(filePath, out texture))
+        texture = default;
+    
+        // Normalize path to be relative to RootDirectory
+        string relativePath = RootDirectory != string.Empty ? Path.GetRelativePath(RootDirectory, filePath) : filePath;
+    
+        // Check cache first
+        if (loadedTextures.TryGetValue(relativePath, out texture))
         {
-            Game.Instance.Logger.LogWarning($"Content '{filePath}' is already loaded, returning cached version.");
+            Game.Instance.Logger.LogInfo($"Content '{relativePath}' is already loaded, returning cached version.");
             return true;
         }
 
-        if (contentPacks.Count > 0)
+        if (TryFindContentPack(relativePath, out var pack, out string packFilePath) && pack != null)
         {
-            string packRoot = Path.GetFileName(filePath);
-            if (packRoot == string.Empty || Path.HasExtension(packRoot))
+            if (pack.TryLoadTexture(packFilePath, out var packTexture))
             {
-                Game.Instance.Logger.LogWarning($"File path '{filePath}' does not contain a valid root directory. Trying to load from file system.");
-            }
-            else
-            {
-                if (contentPacks.TryGetValue(packRoot, out var pack))
-                {
-                    if (pack.TryLoadTexture(filePath, out var packTexture))
-                    {
-                        texture = packTexture;
-                        loadedTextures[filePath] = packTexture;
-                        return true;
-                    }
-                }
-            
-                Game.Instance.Logger.LogInfo($"No content pack found for root '{packRoot}'. Trying to load from file system.");
+                texture = packTexture;
+                loadedTextures[relativePath] = packTexture;
+                return true;
             }
         }
         
-        var contentPath = RootDirectory != string.Empty ? Path.Combine(RootDirectory, filePath) : filePath;  
+        // 2. Try root pack if available
+        if (contentPacks.TryGetValue(RootDirectory, out var rootPack))
+        {
+            if (rootPack.TryLoadTexture(relativePath, out var packTexture))
+            {
+                texture = packTexture;
+                loadedTextures[relativePath] = packTexture;
+                return true;
+            }
+        }
+        
+        // 3. Try loading from disk
+        string contentPath = RootDirectory != string.Empty ? Path.Combine(RootDirectory, relativePath) : relativePath;
         if (!ContentLoader.TryLoadTexture(contentPath, out var loadedTexture)) return false;
         
-        loadedTextures[filePath] = loadedTexture;
+        loadedTextures[relativePath] = loadedTexture;
+        texture = loadedTexture;
         return true;
-
     }
+
+    
+    private bool TryFindContentPack(string relativePath, out ContentPack? pack,  out string packFilePath)
+    {
+        // Generate all possible parent directory paths
+        pathParts.Clear();
+        pathParts.AddRange(relativePath.Split(separators, StringSplitOptions.RemoveEmptyEntries));
+        
+        possibleRoots.Clear();
+        // Build paths from most specific to least specific
+        // e.g., "Fonts/TitleFonts/HeaderFonts" -> "Fonts/TitleFonts" -> "Fonts"
+        for (int i = pathParts.Count - 2; i >= 0; i--)
+        {
+            possibleRoots.Add(string.Join(Path.DirectorySeparatorChar, pathParts.Take(i + 1)));
+        }
+        
+        // 1. Try all content packs with matching roots from most specific to least specific
+        foreach (string possibleRoot in possibleRoots)
+        {
+            if (!contentPacks.TryGetValue(possibleRoot, out var contentPack)) continue;
+            
+            packFilePath = Path.GetRelativePath(relativePath, possibleRoot);
+            pack = contentPack;
+            return true;
+        }
+        
+        packFilePath = string.Empty;
+        pack = null;
+        return false;
+    }
+    // private string NormalizePath(string path)
+    // {
+    //     string fullPath = Path.GetFullPath(path);
+    //     return Path.TrimEndingDirectorySeparator(fullPath).ToLowerInvariant();
+    // }
     
     
     public void UnloadAllContentPacks()
@@ -177,9 +222,182 @@ public sealed class ContentManager2
         RemoveAllContentPacks();
         UnloadContentCache();
     }
+    
+    
+    
 }
 
+/*
+     private bool TryGetContentPack2(string relativePath, out ContentPack? pack, out string newFilePath)
+   {
+       foreach (var kvp in contentPacks)
+       {
+           string packRoot = kvp.Key + Path.DirectorySeparatorChar;
+           if (relativePath.StartsWith(packRoot))
+           {
+               newFilePath = Path.GetRelativePath(packRoot, relativePath);
+               pack = kvp.Value;
+               return true;
+           }
+       }
+       
+       pack = null;
+       newFilePath = string.Empty;
+       return false;
+   }
+   private bool TryGetContentPack(string relativePath, out ContentPack? pack, out string root)
+   {
+       foreach (var kvp in contentPacks)
+       {
+           string packRoot = kvp.Key;
+           int index = relativePath.IndexOf(packRoot, StringComparison.Ordinal);
+           if (index < 0) continue;
+           
+           // Get the full root path up to and including the matched packRoot
+           int endIndex = index + packRoot.Length;
+           root = relativePath.Substring(0, endIndex);
+           pack = kvp.Value;
+           return true;
+       }
+       
+       pack = null;
+       root = string.Empty;
+       return false;
+   }
+   private ContentPack? GetContentPack (string relativePath, out string root)
+   {
+       // Generate all possible parent directory paths
+       pathParts.Clear();
+       pathParts.AddRange(relativePath.Split(separators, StringSplitOptions.RemoveEmptyEntries));
+       
+       possibleRoots.Clear();
+       // Build paths from most specific to least specific
+       // e.g., "Fonts/TitleFonts/HeaderFonts" -> "Fonts/TitleFonts" -> "Fonts"
+       for (int i = pathParts.Count - 2; i >= 0; i--)
+       {
+           possibleRoots.Add(string.Join(Path.DirectorySeparatorChar, pathParts.Take(i + 1)));
+       }
+       
+       // 1. Try all content packs with matching roots from most specific to least specific
+       foreach (string possibleRoot in possibleRoots)
+       {
+           if (contentPacks.TryGetValue(possibleRoot, out var pack))
+           {
+               root = possibleRoot;
+               return pack;
+           }
+       }
+       root = string.Empty;
+       return null;
+   }
+   
+    public static string GetRelativePathRoot(string path)
+   {
+       if (string.IsNullOrEmpty(path)) return string.Empty;
+       string[] parts = path.Split(separators, StringSplitOptions.RemoveEmptyEntries);
+       return parts.Length > 0 ? parts[0] : string.Empty;
+   }
+    private bool TryLoadTexture_OLD1(string filePath, out Texture2D texture)
+   {
+       //strip root if filePath starts with it
+       filePath = RootDirectory != string.Empty ? Path.GetRelativePath(RootDirectory, filePath) : filePath;
+       
+       if (loadedTextures.TryGetValue(filePath, out texture))
+       {
+           Game.Instance.Logger.LogInfo($"Content '{filePath}' is already loaded, returning cached version.");
+           return true;
+       }
 
+       if (contentPacks.Count > 0)
+       {
+           if (contentPacks.TryGetValue(RootDirectory, out var rootPack))
+           {
+               if (rootPack.TryLoadTexture(filePath, out var packTexture))
+               {
+                   texture = packTexture;
+                   loadedTextures[filePath] = packTexture;
+                   return true;
+               }
+           }
+           else
+           {
+               var packRoot = GetRelativePathRoot(filePath);
+               if (string.IsNullOrEmpty(packRoot) || Path.HasExtension(packRoot))
+               {
+                   Game.Instance.Logger.LogWarning($"Pack Root invalid: {packRoot}. File path '{filePath}' does not contain a valid root directory. Trying to load from file system.");
+               }
+               else
+               {
+                   if (contentPacks.TryGetValue(packRoot, out var pack))
+                   {
+                       var relativePackPath = Path.GetRelativePath(packRoot, filePath);
+                       if (pack.TryLoadTexture(relativePackPath, out var packTexture))
+                       {
+                           texture = packTexture;
+                           loadedTextures[filePath] = packTexture;
+                           return true;
+                       }
+                   }
+           
+                   Game.Instance.Logger.LogInfo($"No content pack found for root '{packRoot}'. Trying to load from file system.");
+               }
+           }
+       }
+       
+       var contentPath = RootDirectory != string.Empty ? Path.Combine(RootDirectory, filePath) : filePath;  
+       if (!ContentLoader.TryLoadTexture(contentPath, out var loadedTexture)) return false;
+       
+       loadedTextures[filePath] = loadedTexture;
+       return true;
+
+   }
+   private bool TryLoadTexture_OLD2(string filePath, out Texture2D texture)
+   {
+       texture = default;
+   
+       // Normalize path to be relative to RootDirectory
+       var relativePath = RootDirectory != string.Empty ? Path.GetRelativePath(RootDirectory, filePath) : filePath;
+   
+       if (loadedTextures.TryGetValue(relativePath, out texture))
+       {
+           Game.Instance.Logger.LogInfo($"Content '{relativePath}' is already loaded, returning cached version.");
+           return true;
+       }
+   
+       // Try all content packs whose root matches the start of the path
+       foreach (var kvp in contentPacks)
+       {
+           string packRoot = kvp.Key;
+           if (!relativePath.StartsWith(packRoot + Path.DirectorySeparatorChar)) continue;
+           string packRelativePath = Path.GetRelativePath(packRoot, relativePath);
+           if (!kvp.Value.TryLoadTexture(packRelativePath, out var packTexture)) continue;
+           texture = packTexture;
+           loadedTextures[relativePath] = packTexture;
+           return true;
+       }
+   
+       // Try root pack if it matches
+       if (contentPacks.TryGetValue(RootDirectory, out var rootPack))
+       {
+           if (rootPack.TryLoadTexture(relativePath, out var packTexture))
+           {
+               texture = packTexture;
+               loadedTextures[relativePath] = packTexture;
+               return true;
+           }
+       }
+   
+       // Try loading from disk
+       string contentPath = RootDirectory != string.Empty ? Path.Combine(RootDirectory, relativePath) : relativePath;
+       if (!ContentLoader.TryLoadTexture(contentPath, out var loadedTexture)) return false;
+   
+       loadedTextures[relativePath] = loadedTexture;
+       texture = loadedTexture;
+       return true;
+   }
+   
+   
+ */
 
 
 /// <summary>
