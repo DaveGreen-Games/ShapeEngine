@@ -83,7 +83,17 @@ class Program
                                     {
                                         commandFinished = true;
                                         args = []; //to avoid processing arguments again
-                                        Console.WriteLine("Command executed successfully. Exiting ResourcePacker. Goodbye!");
+                                        Console.WriteLine("Command executed successfully. Do you want to exit ResourcePacker? (yes/no)");
+                                        Console.Write("> ");
+                                        var successExitInput = Console.ReadLine();
+                                        if(string.IsNullOrWhiteSpace(successExitInput) || successExitInput.Equals("yes", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            Console.WriteLine("Exiting ResourcePacker. Goodbye!");
+                                        }
+                                        else
+                                        {
+                                            commandFinished = false;
+                                        }
                                     }
                                     else
                                     {
@@ -102,7 +112,17 @@ class Program
                                         {
                                             commandFinished = true;
                                             args = []; //to avoid processing arguments again
-                                            Console.WriteLine("Command executed successfully. Exiting ResourcePacker. Goodbye!");
+                                            Console.WriteLine("Command executed successfully. Do you want to exit ResourcePacker? (yes/no)");
+                                            Console.Write("> ");
+                                            var successExitInput = Console.ReadLine();
+                                            if(string.IsNullOrWhiteSpace(successExitInput) || successExitInput.Equals("yes", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                Console.WriteLine("Exiting ResourcePacker. Goodbye!");
+                                            }
+                                            else
+                                            {
+                                                commandFinished = false;
+                                            }
                                         }
                                         else
                                         {
@@ -121,7 +141,17 @@ class Program
                                         {
                                             commandFinished = true;
                                             args = []; //to avoid processing arguments again
-                                            Console.WriteLine("Command executed successfully. Exiting ResourcePacker. Goodbye!");
+                                            Console.WriteLine("Command executed successfully. Do you want to exit ResourcePacker? (yes/no)");
+                                            Console.Write("> ");
+                                            var successExitInput = Console.ReadLine();
+                                            if(string.IsNullOrWhiteSpace(successExitInput) || successExitInput.Equals("yes", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                Console.WriteLine("Exiting ResourcePacker. Goodbye!");
+                                            }
+                                            else
+                                            {
+                                                commandFinished = false;
+                                            }
                                         }
                                         else
                                         {
@@ -774,21 +804,3 @@ class Program
         return false;
     }
 }
-
-// private static bool HasFilesOrSubdirs(string path)
-// {
-//     return Directory.GetFiles(path).Length > 0 || Directory.GetDirectories(path).Length > 0;
-// }
-// private static int SubdirectoryCount(string path)
-// {
-//     return Directory.GetDirectories(path, "*", SearchOption.AllDirectories).Length;
-// }
-// private static long GetDirectorySize(string path)
-// {
-//     long size = 0;
-//     foreach (var file in Directory.GetFiles(path, "*", SearchOption.AllDirectories))
-//     {
-//         size += new FileInfo(file).Length;
-//     }
-//     return size;
-// }
