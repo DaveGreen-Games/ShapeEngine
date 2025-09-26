@@ -1,19 +1,8 @@
 using System.Reflection.Metadata.Ecma335;
 using Raylib_cs;
+using ShapeEngine.Core.GameDef;
 
 namespace ShapeEngine.Content;
-
-
-
-//TODO: save content with filepath as well (can retrieve it later and prevents loading the same content multiple times)?!
-// -> instead of shaderToUnload, use Dictionary<string, Shader> loadedShaders -> can be used for unloading and to prevent loading the same content multiple times
-//NOTE: ContentManager handles content packs
-// -> load looks if content is available in a content pack first
-// -> if not found, load from file system
-// -> when closing, unloads all content that was loaded through it
-// -> content pack can be unloaded separately if needed (unloads all content loaded from it)
-// -> content pack can be added/removed from content manager
-// -> content pack can be queried if it contains a specific file
 
 
 public sealed class ContentManager2
@@ -26,47 +15,130 @@ public sealed class ContentManager2
     private readonly Dictionary<string, Music> loadedMusic = new();
     private readonly Dictionary<string, Wave> loadedWaves = new();
     
-    private readonly Dictionary<string, ContentPack> loadedPacks = new();
+    private readonly Dictionary<string, ContentPack> contentPacks = new();
     
-    public ContentManager2()
+    public readonly string RootDirectory;
+    
+    public ContentManager2(string rootDirectory)
     {
-        
+        RootDirectory = rootDirectory;
     }
+
+    public bool AddContentPack(ContentPack pack, string root)
+    {
+        if (root == string.Empty)
+        {
+            Game.Instance.Logger.LogWarning("Content pack root cannot be empty!");
+            return false;
+        }
+        
+        if (contentPacks.TryAdd(root, pack)) return true;
+        Game.Instance.Logger.LogWarning($"Content pack with root '{root}' is already loaded.");
+        return false;
+    }
+    public bool RemoveContentPack(string root, bool clear = true)
+    {
+        if (contentPacks.Remove(root, out var pack))
+        {
+            if(clear) pack.Clear();
+            return true;
+        }
+        
+        Game.Instance.Logger.LogWarning($"No content pack with root '{root}' found.");
+        return false;
+    }
+    public bool RemoveContentPack(ContentPack pack, bool clear = true)
+    {
+        var item = contentPacks.FirstOrDefault(x => x.Value == pack);
+        if (item.Value != null)
+        {
+            if(clear) pack.Clear();
+            return contentPacks.Remove(item.Key);
+        }
+        
+        Game.Instance.Logger.LogWarning("Content pack not found.");
+        return false;
+    }
+    public void RemoveAllContentPacks(bool clear = true)
+    {
+        if (clear) UnloadAllContentPacks();
+        contentPacks.Clear();
+    }
+    
+    public List<ContentPack> GetAllContentPacks()
+    {
+        return contentPacks.Values.ToList();
+    }
+    public List<ContentPack> GetAllLoadedContentPacks()
+    {
+        return contentPacks.Values.Where(x => x.IsLoaded).ToList();
+    }
+    public bool HasContentPack(string root)
+    {
+        return contentPacks.ContainsKey(root);
+    }
+    public bool TryGetContentPack(string root, out ContentPack? pack)
+    {
+        return contentPacks.TryGetValue(root, out pack);
+    }   
+    
     
     //TODO: implement the rest 
     private bool TryGetTexture(string filePath, out Texture2D texture)
     {
+        filePath = RootDirectory != string.Empty ? Path.GetRelativePath(RootDirectory, filePath) : filePath;
+        
         if (loadedTextures.TryGetValue(filePath, out texture))
         {
+            Game.Instance.Logger.LogWarning($"Content '{filePath}' is already loaded, returning cached version.");
             return true;
         }
 
-        foreach (var pack in loadedPacks.Values)
+        if (contentPacks.Count > 0)
         {
-            if (!pack.IsLoaded) continue;
-            if (!pack.HasFile(filePath)) continue;
-            if (!pack.TryLoadTexture(filePath, out var packTexture)) continue;
+            string packRoot = Path.GetFileName(filePath);
+            if (packRoot == string.Empty || Path.HasExtension(packRoot))
+            {
+                Game.Instance.Logger.LogWarning($"File path '{filePath}' does not contain a valid root directory. Trying to load from file system.");
+            }
+            else
+            {
+                if (contentPacks.TryGetValue(packRoot, out var pack))
+                {
+                    if (pack.TryLoadTexture(filePath, out var packTexture))
+                    {
+                        texture = packTexture;
+                        loadedTextures[filePath] = packTexture;
+                        return true;
+                    }
+                }
             
-            texture = packTexture;
-            loadedTextures[filePath] = packTexture;
-            return true;
+                Game.Instance.Logger.LogInfo($"No content pack found for root '{packRoot}'. Trying to load from file system.");
+            }
         }
-
-        if (!ContentLoader.TryLoadTexture(filePath, out var loadedTexture)) return false;
+        
+        var contentPath = RootDirectory != string.Empty ? Path.Combine(RootDirectory, filePath) : filePath;  
+        if (!ContentLoader.TryLoadTexture(contentPath, out var loadedTexture)) return false;
         
         loadedTextures[filePath] = loadedTexture;
         return true;
 
     }
     
-
-    public void Close()
+    
+    public void UnloadAllContentPacks()
+    {
+        foreach (var pack in contentPacks.Values)
+        {
+            pack.Clear();
+        }
+    }
+    public void UnloadContentCache()
     {
         foreach (var item in loadedShaders)
         {
             Raylib.UnloadShader(item.Value);
         }
-
         foreach (var item in loadedTextures)
         {
             Raylib.UnloadTexture(item.Value);
@@ -91,6 +163,19 @@ public sealed class ContentManager2
         {
             Raylib.UnloadMusicStream(item.Value);
         }
+        loadedShaders.Clear();
+        loadedTextures.Clear();
+        loadedImages.Clear();
+        loadedFonts.Clear();
+        loadedWaves.Clear();
+        loadedSounds.Clear();
+        loadedMusic.Clear();
+    }
+    public void Close()
+    {
+        UnloadAllContentPacks();
+        RemoveAllContentPacks();
+        UnloadContentCache();
     }
 }
 
