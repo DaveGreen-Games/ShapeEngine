@@ -5,8 +5,6 @@ namespace ShapeEngine.Content;
 
 //TODO: Docs & Cleanup (regions etc)
 
-//TODO: test in GameloopExamples LoadContent with loading from disk, loading from 1 pack, or from multiple packs
-
 public sealed class ContentManager
 {
     #region Members
@@ -503,7 +501,7 @@ public sealed class ContentManager
             pack.Clear();
         }
     }
-    public void UnloadContentCache()
+    public void UnloadContent()
     {
         foreach (var item in loadedShaders)
         {
@@ -550,7 +548,7 @@ public sealed class ContentManager
     {
         UnloadAllContentPacks();
         RemoveAllContentPacks();
-        UnloadContentCache();
+        UnloadContent();
     }
     
     #endregion

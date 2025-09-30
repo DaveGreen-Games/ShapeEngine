@@ -15,14 +15,17 @@
         <Content Include="shape-engine.ico" />
     </ItemGroup>  
     
-  <ItemGroup>
+    <ItemGroup>
     <ProjectReference Include="..\ShapeEngine\ShapeEngine.csproj" />
-  </ItemGroup>
+    </ItemGroup>
 
-  <ItemGroup>
-    <Content Include="Resources\**">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <ItemGroup>
+ <!--
+ <Content Include="Resources\**">
+   <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+ </Content>
+ -->
+      
     <Content Include="../NOTICE.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -33,18 +36,23 @@
     <Content Include="examples.icns">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-  </ItemGroup>
-
-  <!--Target Name="BundleAppPostPublish" AfterTargets="Publish" Condition="'$(RuntimeIdentifier)' == 'osx-arm64' Or '$(RuntimeIdentifier)' == 'osx-x64'">
-    <Exec Command="bash ./macos-app-bundling/bundle-macos-app.sh '$(PublishDir)'" />
-  </Target-->
+    </ItemGroup>
   
-  <Target Name="BundleAppPostPublish"
+    <Target Name="BundleAppPostPublish"
           AfterTargets="Publish"
           Condition="( ('$(RuntimeIdentifier)' == 'osx-arm64' Or '$(RuntimeIdentifier)' == 'osx-x64' ) 
                      And '$(SelfContained)' == 'true' 
                      And '$(Configuration)' == 'Release' )">
     <Exec Command="bash ./macos-app-bundling/bundle-macos-app.sh '$(PublishDir)'" />
-  </Target>
-  
+    </Target>
+
+    <Target Name="PackResources" AfterTargets="Build">
+        <Exec
+                Command="dotnet run --project ../ResourcePacker/ResourcePacker.csproj -- pack Resources $(OutDir)packedExampleResources.shaperes"
+                WorkingDirectory="$(MSBuildThisFileDirectory)" 
+        />
+    </Target>
+
+
+
 </Project>
