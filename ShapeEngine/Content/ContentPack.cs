@@ -370,6 +370,16 @@ public sealed class ContentPack
     public bool Clear()
     {
         if (!IsLoaded) return false;
+        
+        if (CurrentUnpackMode == UnpackMode.Memory)
+        {
+            Game.Instance.Logger.LogInfo($"ContentPack cleared. Unloaded {cache.Count} cached files, freeing {CacheSize} bytes.");
+        }
+        else
+        {
+            Game.Instance.Logger.LogInfo($"ContentPack cleared. Unloaded index of {index.Count} files.");
+        }
+        
         CacheSize = 0;
         cache.Clear();
         index.Clear();
