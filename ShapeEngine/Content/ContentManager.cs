@@ -112,6 +112,7 @@ public sealed class ContentManager
         {
             if (pack.TryLoadTexture(packFilePath, out var packTexture))
             {
+                Game.Instance.Logger.LogInfo($"Texture '{relativePath}' loaded from content pack {pack.SourceFilePath}.");
                 texture = packTexture;
                 loadedTextures[relativePath] = packTexture;
                 return true;
@@ -123,6 +124,7 @@ public sealed class ContentManager
         {
             if (rootPack.TryLoadTexture(relativePath, out var packTexture))
             {
+                Game.Instance.Logger.LogInfo($"Texture '{relativePath}' loaded from root content pack {rootPack.SourceFilePath}.");
                 texture = packTexture;
                 loadedTextures[relativePath] = packTexture;
                 return true;
@@ -131,8 +133,12 @@ public sealed class ContentManager
         
         // 3. Try loading from disk
         string contentPath = RootDirectory != string.Empty ? Path.Combine(RootDirectory, relativePath) : relativePath;
-        if (!ContentLoader.TryLoadTexture(contentPath, out var loadedTexture)) return false;
+        if (!ContentLoader.TryLoadTexture(contentPath, out var loadedTexture))
+        {
+            return false;
+        }
         
+        Game.Instance.Logger.LogInfo($"Texture '{relativePath}' loaded from file system.");
         loadedTextures[relativePath] = loadedTexture;
         texture = loadedTexture;
         return true;
@@ -155,6 +161,7 @@ public sealed class ContentManager
         {
             if (pack.TryLoadFragmentShader(packFilePath, out var packShader))
             {
+                Game.Instance.Logger.LogInfo($"Fragment shader '{relativePath}' loaded from content pack  {pack.SourceFilePath}.");
                 shader = packShader;
                 loadedShaders[relativePath] = packShader;
                 return true;
@@ -166,6 +173,7 @@ public sealed class ContentManager
         {
             if (rootPack.TryLoadFragmentShader(relativePath, out var packShader))
             {
+                Game.Instance.Logger.LogInfo($"Fragment shader '{relativePath}' loaded from root content pack  {rootPack.SourceFilePath}.");
                 shader = packShader;
                 loadedShaders[relativePath] = packShader;
                 return true;
@@ -176,6 +184,7 @@ public sealed class ContentManager
         string contentPath = RootDirectory != string.Empty ? Path.Combine(RootDirectory, relativePath) : relativePath;
         if (!ContentLoader.TryLoadFragmentShader(contentPath, out var loadedShader)) return false;
 
+        Game.Instance.Logger.LogInfo($"Fragment shader '{relativePath}' loaded from file system.");
         loadedShaders[relativePath] = loadedShader;
         shader = loadedShader;
         return true;
@@ -198,6 +207,7 @@ public sealed class ContentManager
         {
             if (pack.TryLoadVertexShader(packFilePath, out var packShader))
             {
+                Game.Instance.Logger.LogInfo($"Vertex shader '{relativePath}' loaded from content pack  {pack.SourceFilePath}.");
                 shader = packShader;
                 loadedShaders[relativePath] = packShader;
                 return true;
@@ -209,6 +219,7 @@ public sealed class ContentManager
         {
             if (rootPack.TryLoadVertexShader(relativePath, out var packShader))
             {
+                Game.Instance.Logger.LogInfo($"Vertex shader '{relativePath}' loaded from root content pack  {rootPack.SourceFilePath}.");
                 shader = packShader;
                 loadedShaders[relativePath] = packShader;
                 return true;
@@ -241,6 +252,7 @@ public sealed class ContentManager
         {
             if (pack.TryLoadImage(packFilePath, out var packImage))
             {
+                Game.Instance.Logger.LogInfo($"Image '{relativePath}' loaded from content pack  {pack.SourceFilePath}.");
                 image = packImage;
                 loadedImages[relativePath] = packImage;
                 return true;
@@ -252,6 +264,7 @@ public sealed class ContentManager
         {
             if (rootPack.TryLoadImage(relativePath, out var packImage))
             {
+                Game.Instance.Logger.LogInfo($"Image '{relativePath}' loaded from root content pack  {rootPack.SourceFilePath}.");
                 image = packImage;
                 loadedImages[relativePath] = packImage;
                 return true;
@@ -262,6 +275,7 @@ public sealed class ContentManager
         string contentPath = RootDirectory != string.Empty ? Path.Combine(RootDirectory, relativePath) : relativePath;
         if (!ContentLoader.TryLoadImage(contentPath, out var loadedImage)) return false;
 
+        Game.Instance.Logger.LogInfo($"Image '{relativePath}' loaded from file system.");
         loadedImages[relativePath] = loadedImage;
         image = loadedImage;
         return true;
@@ -286,6 +300,7 @@ public sealed class ContentManager
         {
             if (pack.TryLoadFont(packFilePath, out var packFont, fontSize))
             {
+                Game.Instance.Logger.LogInfo($"Font '{relativePath}' loaded from content pack {pack.SourceFilePath} with font size: {fontSize}.");
                 font = packFont;
                 if (!loadedFonts.ContainsKey(relativePath)) loadedFonts[relativePath] = new Dictionary<int, Font>();
                 loadedFonts[relativePath][fontSize] = packFont;
@@ -298,6 +313,7 @@ public sealed class ContentManager
         {
             if (rootPack.TryLoadFont(relativePath, out var packFont, fontSize))
             {
+                Game.Instance.Logger.LogInfo($"Font '{relativePath}' loaded from root content pack  {rootPack.SourceFilePath} with font size: {fontSize}.");
                 font = packFont;
                 if (!loadedFonts.ContainsKey(relativePath)) loadedFonts[relativePath] = new Dictionary<int, Font>();
                 loadedFonts[relativePath][fontSize] = packFont;
@@ -312,6 +328,7 @@ public sealed class ContentManager
             return false;
         }
 
+        Game.Instance.Logger.LogInfo($"Font '{relativePath}' loaded from file system with font size: {fontSize}.");
         if (!loadedFonts.ContainsKey(relativePath)) loadedFonts[relativePath] = new Dictionary<int, Font>();
         loadedFonts[relativePath][fontSize] = loadedFont;
         font = loadedFont;
@@ -335,6 +352,7 @@ public sealed class ContentManager
         {
             if (pack.TryLoadSound(packFilePath, out var packSound))
             {
+                Game.Instance.Logger.LogInfo($"Sound '{relativePath}' loaded from content pack {pack.SourceFilePath}.");
                 sound = packSound;
                 loadedSounds[relativePath] = packSound;
                 return true;
@@ -346,6 +364,7 @@ public sealed class ContentManager
         {
             if (rootPack.TryLoadSound(relativePath, out var packSound))
             {
+                Game.Instance.Logger.LogInfo($"Sound '{relativePath}' loaded from root content pack {rootPack.SourceFilePath}.");
                 sound = packSound;
                 loadedSounds[relativePath] = packSound;
                 return true;
@@ -356,6 +375,7 @@ public sealed class ContentManager
         string contentPath = RootDirectory != string.Empty ? Path.Combine(RootDirectory, relativePath) : relativePath;
         if (!ContentLoader.TryLoadSound(contentPath, out var loadedSound)) return false;
 
+        Game.Instance.Logger.LogInfo($"Sound '{relativePath}' loaded from file system.");
         loadedSounds[relativePath] = loadedSound;
         sound = loadedSound;
         return true;
@@ -378,6 +398,7 @@ public sealed class ContentManager
         {
             if (pack.TryLoadMusic(packFilePath, out var packMusic))
             {
+                Game.Instance.Logger.LogInfo($"Music '{relativePath}' loaded from content pack {pack.SourceFilePath}.");
                 music = packMusic;
                 loadedMusicStreams[relativePath] = packMusic;
                 return true;
@@ -389,6 +410,7 @@ public sealed class ContentManager
         {
             if (rootPack.TryLoadMusic(relativePath, out var packMusic))
             {
+                Game.Instance.Logger.LogInfo($"Music '{relativePath}' loaded from root content pack {rootPack.SourceFilePath}.");
                 music = packMusic;
                 loadedMusicStreams[relativePath] = packMusic;
                 return true;
@@ -399,6 +421,7 @@ public sealed class ContentManager
         string contentPath = RootDirectory != string.Empty ? Path.Combine(RootDirectory, relativePath) : relativePath;
         if (!ContentLoader.TryLoadMusic(contentPath, out var loadedMusic)) return false;
 
+        Game.Instance.Logger.LogInfo($"Music '{relativePath}' loaded from file system.");
         loadedMusicStreams[relativePath] = loadedMusic;
         music = loadedMusic;
         return true;
@@ -421,6 +444,7 @@ public sealed class ContentManager
         {
             if (pack.TryLoadWave(packFilePath, out var packWave))
             {
+                Game.Instance.Logger.LogInfo($"Wave '{relativePath}' loaded from content pack  {pack.SourceFilePath}.");
                 wave = packWave;
                 loadedWaves[relativePath] = packWave;
                 return true;
@@ -432,6 +456,7 @@ public sealed class ContentManager
         {
             if (rootPack.TryLoadWave(relativePath, out var packWave))
             {
+                Game.Instance.Logger.LogInfo($"Wave '{relativePath}' loaded from root content pack  {rootPack.SourceFilePath}.");
                 wave = packWave;
                 loadedWaves[relativePath] = packWave;
                 return true;
@@ -442,6 +467,7 @@ public sealed class ContentManager
         string contentPath = RootDirectory != string.Empty ? Path.Combine(RootDirectory, relativePath) : relativePath;
         if (!ContentLoader.TryLoadWave(contentPath, out var loadedWave)) return false;
 
+        Game.Instance.Logger.LogInfo($"Wave '{relativePath}' loaded from file system.");
         loadedWaves[relativePath] = loadedWave;
         wave = loadedWave;
         return true;
@@ -465,6 +491,7 @@ public sealed class ContentManager
         {
             if (pack.TryLoadText(packFilePath, out var packText))
             {
+                Game.Instance.Logger.LogInfo($"Text '{relativePath}' loaded from content pack {pack.SourceFilePath}.");
                 text = packText;
                 loadedTexts[relativePath] = packText;
                 return true;
@@ -476,6 +503,7 @@ public sealed class ContentManager
         {
             if (rootPack.TryLoadText(relativePath, out var packText))
             {
+                Game.Instance.Logger.LogInfo($"Text '{relativePath}' loaded from root content pack {rootPack.SourceFilePath}.");
                 text = packText;
                 loadedTexts[relativePath] = packText;
                 return true;
@@ -486,6 +514,7 @@ public sealed class ContentManager
         string contentPath = RootDirectory != string.Empty ? Path.Combine(RootDirectory, relativePath) : relativePath;
         if (!ContentLoader.TryLoadText(contentPath, out var loadedText)) return false;
 
+        Game.Instance.Logger.LogInfo($"Text '{relativePath}' loaded from file system.");
         loadedTexts[relativePath] = loadedText;
         text = loadedText;
         return true;
@@ -496,44 +525,63 @@ public sealed class ContentManager
     
     public void UnloadAllContentPacks()
     {
+        Game.Instance.Logger.LogInfo($"ContentManager unloading all {contentPacks.Count} content packs.");
         foreach (var pack in contentPacks.Values)
         {
             pack.Clear();
         }
+        Game.Instance.Logger.LogInfo($"Unloading all content packs finished.");
+        
     }
     public void UnloadContent()
     {
+        Game.Instance.Logger.LogInfo("ContentManager unloading content.");
+        int unloadedContent = 0;
         foreach (var item in loadedShaders)
         {
             Raylib.UnloadShader(item.Value);
+            unloadedContent++;
+            Game.Instance.Logger.LogInfo($"Shader '{item.Key}' unloaded.");
         }
         foreach (var item in loadedTextures)
         {
             Raylib.UnloadTexture(item.Value);
+            unloadedContent++;
+            Game.Instance.Logger.LogInfo($"Texture '{item.Key}' unloaded.");
         }
         foreach (var item in loadedImages)
         {
             Raylib.UnloadImage(item.Value);
+            unloadedContent++;
+            Game.Instance.Logger.LogInfo($"Image '{item.Key}' unloaded.");
         }
         foreach (var item in loadedFonts)
         {
             foreach (var kvp in item.Value)
             {
                 Raylib.UnloadFont(kvp.Value);
+                unloadedContent++;
+                Game.Instance.Logger.LogInfo($"Font '{item.Key}' size {kvp.Key} unloaded.");
             }
             
         }
         foreach (var item in loadedWaves)
         {
             Raylib.UnloadWave(item.Value);
+            unloadedContent++;
+            Game.Instance.Logger.LogInfo($"Wave '{item.Key}' unloaded.");
         }
         foreach (var item in loadedSounds)
         {
             Raylib.UnloadSound(item.Value);
+            unloadedContent++;
+            Game.Instance.Logger.LogInfo($"Sound '{item.Key}' unloaded.");
         }
         foreach (var item in loadedMusicStreams)
         {
             Raylib.UnloadMusicStream(item.Value);
+            unloadedContent++;
+            Game.Instance.Logger.LogInfo($"Music Stream '{item.Key}' unloaded.");
         }
         loadedShaders.Clear();
         loadedTextures.Clear();
@@ -543,12 +591,14 @@ public sealed class ContentManager
         loadedSounds.Clear();
         loadedMusicStreams.Clear();
         loadedTexts.Clear();
+        Game.Instance.Logger.LogInfo($"ContentManager unloading {unloadedContent} content items finished.");
     }
     public void Close()
     {
-        UnloadAllContentPacks();
-        RemoveAllContentPacks();
+        Game.Instance.Logger.LogInfo($"ContentManager closing started. Unloading and removing all content packs and unloading all cached content.");
+        RemoveAllContentPacks(true);
         UnloadContent();
+        Game.Instance.Logger.LogInfo($"ContentManager closing finished.");
     }
     
     #endregion
