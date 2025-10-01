@@ -463,9 +463,10 @@ public class GameloopExamples : Game
 
     protected override void UnloadContent()
     {
+        Logger.LogInfo("Closing application, unloading content.");
         contentManager.Close();
-        // ContentLoader.UnloadFonts(fonts.Values);
         fonts.Clear();
+        Logger.LogInfo("Content unloaded.");
     }
     protected override void BeginRun()
     {
