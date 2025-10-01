@@ -102,6 +102,11 @@ public sealed class ContentPack
     /// </remarks>
     public ContentPack(string sourceFilePath)
     {
+        if (Game.IsOSX())
+        {
+            sourceFilePath = ContentLoader.GetMacOsAppBundleResourcePath(sourceFilePath);
+        }
+        
         if(!Path.HasExtension(sourceFilePath))
         {
             throw new ArgumentException("Source file path must have a valid extension. (.txt for text packs, others for binary packs)");
