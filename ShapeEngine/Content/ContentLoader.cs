@@ -87,7 +87,7 @@ public static class ContentLoader
     /// In macOS .app bundles, the executable is located in Contents/MacOS/ while resources are in Contents/Resources/.
     /// This method handles the path conversion for proper resource loading in both development and deployed scenarios.
     /// </remarks>
-    private static string GetMacOsAppBundleResourcePath(string relativePath)
+    public static string GetMacOsAppBundleResourcePath(string relativePath)
     {
         if (!Game.OSXIsRunningInAppBundle()) return relativePath;
         
