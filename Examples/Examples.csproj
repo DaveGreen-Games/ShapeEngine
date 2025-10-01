@@ -37,22 +37,31 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     </ItemGroup>
-  
+
+    <PropertyGroup>
+        <IsPublishing Condition="'$(PublishDir)' != ''">true</IsPublishing>
+        <!-- <ResourcePackOutputDir Condition="'$(IsPublishing)' == 'true'">$(PublishDir)/</ResourcePackOutputDir>
+        <ResourcePackOutputDir Condition="'$(IsPublishing)' != 'true'">$(OutDir)/</ResourcePackOutputDir>
+        <ResourcePackOutputDir Condition="'$(IsPublishing)' != 'true' and '$(OutDir)' == ''">bin/Debug/net8.0/</ResourcePackOutputDir> -->
+    </PropertyGroup>
+    
+    <Target Name="PackResources" AfterTargets="Build">
+        <Exec
+                Condition="'$(IsPublishing)' != 'true'"
+                Command="dotnet run --project ../ResourcePacker/ResourcePacker.csproj -- pack Resources $(OutDir)packedExampleResources.shaperes"
+                WorkingDirectory="$(MSBuildThisFileDirectory)" />
+        <Exec
+                Condition="'$(IsPublishing)' == 'true'"
+                Command="dotnet run --project ../ResourcePacker/ResourcePacker.csproj -- pack Resources $(PublishDir)/packedExampleResources.shaperes"
+                WorkingDirectory="$(MSBuildThisFileDirectory)" />
+    </Target>
+    
     <Target Name="BundleAppPostPublish"
-          AfterTargets="Publish"
-          Condition="( ('$(RuntimeIdentifier)' == 'osx-arm64' Or '$(RuntimeIdentifier)' == 'osx-x64' ) 
+        AfterTargets="Publish"
+        Condition="( ('$(RuntimeIdentifier)' == 'osx-arm64' Or '$(RuntimeIdentifier)' == 'osx-x64' ) 
                      And '$(SelfContained)' == 'true' 
                      And '$(Configuration)' == 'Release' )">
     <Exec Command="bash ./macos-app-bundling/bundle-macos-app.sh '$(PublishDir)'" />
     </Target>
-
-    <Target Name="PackResources" AfterTargets="Build">
-        <Exec
-                Command="dotnet run --project ../ResourcePacker/ResourcePacker.csproj -- pack Resources $(OutDir)packedExampleResources.shaperes"
-                WorkingDirectory="$(MSBuildThisFileDirectory)" 
-        />
-    </Target>
-
-
 
 </Project>
