@@ -23,10 +23,12 @@ jobs:
 
       - name: Extract dependencies from csproj
         run: |
-          xmllint --xpath '//PackageReference' ShapeEngine/ShapeEngine.csproj | \
+          (xmllint --xpath '//PackageReference' ShapeEngine/ShapeEngine.csproj 2>/dev/null || true) | \
           grep -oP 'Include="\K[^"]+|Version="\K[^"]+' | \
           paste -d' ' - - | \
           sort > final/dependency-versions.txt
+          # Ensure the file exists even if no dependencies were found
+          touch final/dependency-versions.txt
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
