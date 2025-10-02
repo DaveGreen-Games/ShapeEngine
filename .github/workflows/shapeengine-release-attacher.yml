@@ -1,0 +1,77 @@
+name: Build/Attach Examples & ResourcePacker Artifacts to ShapeEngine Releases
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    env:
+      dotnet-version: "8.0"
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            runtime: win-x64
+          - os: ubuntu-latest
+            runtime: linux-x64
+          - os: macos-latest
+            runtime: osx-arm64
+          - os: macos-13
+            runtime: osx-x64
+
+    runs-on: ${{ matrix.os }}
+    name: Build (${{ matrix.runtime }})
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.dotnet-version }}
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Publish Examples
+        run: dotnet publish --sc -r ${{ matrix.runtime }} ./Examples/Examples.csproj -c Release
+
+      - name: Publish ResourcePacker
+        run: dotnet publish --sc -r ${{ matrix.runtime }} ./ResourcePacker/ResourcePacker.csproj -c Release
+
+      - name: Upload Examples Artifact
+        uses: actions/upload-artifact@v4.5.0
+        with:
+          name: ${{ matrix.runtime }}-Examples
+          path: ./Examples/bin/Release/net8.0/${{ matrix.runtime }}/publish
+
+      - name: Upload ResourcePacker Artifact
+        uses: actions/upload-artifact@v4.5.0
+        with:
+          name: ${{ matrix.runtime }}-ResourcePacker
+          path: ./ResourcePacker/bin/Release/net8.0/${{ matrix.runtime }}/publish
+
+  attach:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: List artifacts
+        run: ls -R ./artifacts
+
+      - name: Upload artifacts to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./artifacts/**/*.*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Clean up artifacts
+        run: rm -rf ./artifacts
