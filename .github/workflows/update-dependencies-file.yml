@@ -15,17 +15,15 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Install xmllint
-        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
-
+      - name: Install xmllint and xmlstarlet
+        run: sudo apt-get update && sudo apt-get install -y libxml2-utils xmlstarlet
+        
       - name: Ensure final directory exists
         run: mkdir -p final
-
+        
       - name: Extract dependencies from csproj
         run: |
-          (xmllint --xpath '//PackageReference' ShapeEngine/ShapeEngine.csproj 2>/dev/null || true) | \
-          grep -oP 'Include="\K[^"]+|Version="\K[^"]+' | \
-          paste -d' ' - - | \
+          xmlstarlet sel -T -t -m '//PackageReference' -v '@Include' -o ' ' -v '@Version' -n ShapeEngine/ShapeEngine.csproj | \
           sort > final/dependency-versions.txt
           # Ensure the file exists even if no dependencies were found
           touch final/dependency-versions.txt
