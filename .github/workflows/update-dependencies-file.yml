@@ -1,0 +1,37 @@
+name: Update dependency-versions.txt
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  update-dependency-versions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install xmllint
+        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
+
+      - name: Ensure final directory exists
+        run: mkdir -p final
+
+      - name: Extract dependencies from csproj
+        run: |
+          xmllint --xpath '//PackageReference' ShapeEngine/ShapeEngine.csproj | \
+          grep -oP 'Include="\K[^"]+|Version="\K[^"]+' | \
+          paste -d' ' - - | \
+          sort > final/dependency-versions.txt
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          branch: update-dependency-versions-txt
+          title: Update dependency-versions.txt from csproj
+          commit-message: Update dependency-versions.txt from csproj
+          body: |
+            This pull request updates `final/dependency-versions.txt` to match the dependencies listed in `ShapeEngine.csproj`.
+          add-paths: |
+            final/dependency-versions.txt
