@@ -5,7 +5,6 @@ using ShapeEngine.Content;
 using Examples.Scenes;
 using Examples.UIElements;
 using ShapeEngine.Color;
-using ShapeEngine.Core.Logging;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.CircleDef;
@@ -17,7 +16,6 @@ using ShapeEngine.Random;
 using ShapeEngine.Text;
 using ShapeEngine.UI;
 using Game = ShapeEngine.Core.GameDef.Game;
-
 
 namespace Examples;
 
@@ -164,9 +162,8 @@ public class GameloopExamples : Game
     
     public new static GameloopExamples Instance  => examplesInstance?? throw new NullReferenceException("Instance is not initialized! You need to create a GameloopExamples instance before accessing this property!");
     private static GameloopExamples? examplesInstance;
-
-    public static Logger DebugLogger;
     
+    private ContentManager contentManager;
     public GameloopExamples(GameSettings gameSettings, WindowSettings windowSettings, InputSettings inputSettings) : base(gameSettings, windowSettings, inputSettings)
     {
         //Game.Instance is already checked to never be instantiated twice, so this is safe
@@ -222,101 +219,176 @@ public class GameloopExamples : Game
         mainBottomRight.AddChild(mainBottomRightTop);
         mainBottomRight.AddChild(mainBottomRightBottom);
 
-        if (ReleaseMode)
-        {
-            var loggingPath = Path.Combine(Game.Instance.SaveDirectoryPath, "Debug/Logs/DebugLog.txt");
-            ShapeLogger.SetLogFilePath(loggingPath);
-            DebugLogger = new Logger(loggingPath, LogLevel.Info, true);
-            DebugLogger.Log($"Debug Logger for [Release] version created. Logger output type: {DebugLogger.OutputType}. Logger File Path: {loggingPath}");
-        }
-        else
-        {
-            DebugLogger = new Logger(LogLevel.Info);
-            DebugLogger.Log($"Debug Logger for [Debug] version created. Logger output type: {DebugLogger.OutputType}. No log file path set.");
-        }
+        // if (ReleaseMode)
+        // {
+        //     var loggingPath = Path.Combine(Game.Instance.SaveDirectoryPath, "Debug/Logs/DebugLog.txt");
+        //     ShapeLogger.SetLogFilePath(loggingPath);
+        //     DebugLogger = new Logger(loggingPath, LogLevel.Info, true);
+        //     DebugLogger.Log($"Debug Logger for [Release] version created. Logger output type: {DebugLogger.OutputType}. Logger File Path: {loggingPath}");
+        // }
+        // else
+        // {
+        //     DebugLogger = new Logger(LogLevel.Info);
+        //     DebugLogger.Log($"Debug Logger for [Debug] version created. Logger output type: {DebugLogger.OutputType}. No log file path set.");
+        // }
     }
     
     protected override void LoadContent()
     {
+        Logger.LogInfo("Loading Content started.");
+        
         BackgroundColorRgba = Colors.Background; // ExampleScene.ColorDark;
         
-        fonts.Add(FontIDs.GruppoRegular, ContentLoader.LoadFont("Resources/Fonts/Gruppo-Regular.ttf", 100));
-        fonts.Add(FontIDs.IndieFlowerRegular, ContentLoader.LoadFont("Resources/Fonts/IndieFlower-Regular.ttf", 100));
-        fonts.Add(FontIDs.OrbitRegular, ContentLoader.LoadFont("Resources/Fonts/Orbit-Regular.ttf", 100));
-        fonts.Add(FontIDs.OrbitronBold, ContentLoader.LoadFont("Resources/Fonts/Orbitron-Bold.ttf", 100));
-        fonts.Add(FontIDs.OrbitronRegular, ContentLoader.LoadFont("Resources/Fonts/Orbitron-Regular.ttf", 100));
-        fonts.Add(FontIDs.PromptLightItalic, ContentLoader.LoadFont("Resources/Fonts/Prompt-LightItalic.ttf", 100));
-        fonts.Add(FontIDs.PromptRegular, ContentLoader.LoadFont("Resources/Fonts/Prompt-Regular.ttf", 100));
-        fonts.Add(FontIDs.PromptThin, ContentLoader.LoadFont("Resources/Fonts/Prompt-Thin.ttf", 100));
-        fonts.Add(FontIDs.TekoMedium, ContentLoader.LoadFont("Resources/Fonts/Teko-Medium.ttf", 100));
-        fonts.Add(FontIDs.JetBrains, ContentLoader.LoadFont("Resources/Fonts/JetBrainsMono.ttf", 100));
-        fonts.Add(FontIDs.JetBrainsLarge, ContentLoader.LoadFont("Resources/Fonts/JetBrainsMono.ttf", 500));
+        // fonts.Add(FontIDs.GruppoRegular, ContentLoader.LoadFont("Resources/Fonts/Gruppo-Regular.ttf", 100));
+        // fonts.Add(FontIDs.IndieFlowerRegular, ContentLoader.LoadFont("Resources/Fonts/IndieFlower-Regular.ttf", 100));
+        // fonts.Add(FontIDs.OrbitRegular, ContentLoader.LoadFont("Resources/Fonts/Orbit-Regular.ttf", 100));
+        // fonts.Add(FontIDs.OrbitronBold, ContentLoader.LoadFont("Resources/Fonts/Orbitron-Bold.ttf", 100));
+        // fonts.Add(FontIDs.OrbitronRegular, ContentLoader.LoadFont("Resources/Fonts/Orbitron-Regular.ttf", 100));
+        // fonts.Add(FontIDs.PromptLightItalic, ContentLoader.LoadFont("Resources/Fonts/Prompt-LightItalic.ttf", 100));
+        // fonts.Add(FontIDs.PromptRegular, ContentLoader.LoadFont("Resources/Fonts/Prompt-Regular.ttf", 100));
+        // fonts.Add(FontIDs.PromptThin, ContentLoader.LoadFont("Resources/Fonts/Prompt-Thin.ttf", 100));
+        // fonts.Add(FontIDs.TekoMedium, ContentLoader.LoadFont("Resources/Fonts/Teko-Medium.ttf", 100));
+        // fonts.Add(FontIDs.JetBrains, ContentLoader.LoadFont("Resources/Fonts/JetBrainsMono.ttf", 100));
+        // fonts.Add(FontIDs.JetBrainsLarge, ContentLoader.LoadFont("Resources/Fonts/JetBrainsMono.ttf", 500));
         
-        fontNames.Add("Gruppo Regular");
-        fontNames.Add("Indie Flower Regular");
-        fontNames.Add("Orbit Regular");
-        fontNames.Add("Orbitron Bold");
-        fontNames.Add("Orbitron Regular");
-        fontNames.Add("Prompt Light Italic");
-        fontNames.Add("Prompt Regular");
-        fontNames.Add("Prompt Thin");
-        fontNames.Add("Teko Medium");
-        fontNames.Add("Jet Brains Mono");
-
+        var contentPackAll = new ContentPack("packedExampleResources.shaperes")
+        {
+            DebugLogging = false
+        };
+        contentPackAll.CreateCache();
+        
+        contentManager = new ContentManager("Resources");
+        contentManager.AddContentPack(contentPackAll, "Resources");
+        
+        if(contentManager.TryLoadFont("Resources/Fonts/Gruppo-Regular.ttf", out var gruppoRegularFont, 100))
+        {
+            fonts.Add(FontIDs.GruppoRegular, gruppoRegularFont);
+            fontNames.Add("Gruppo Regular");
+        }
+        if(contentManager.TryLoadFont("Resources/Fonts/IndieFlower-Regular.ttf", out var indieFlowerRegularFont, 100))
+        {
+            fonts.Add(FontIDs.IndieFlowerRegular, indieFlowerRegularFont);
+            fontNames.Add("Indie Flower Regular");
+        }
+        if(contentManager.TryLoadFont("Resources/Fonts/Orbit-Regular.ttf", out var orbitRegularFont, 100))
+        {
+            fonts.Add(FontIDs.OrbitRegular, orbitRegularFont);
+            fontNames.Add("Orbit Regular");
+        }
+        if(contentManager.TryLoadFont("Resources/Fonts/Orbitron-Bold.ttf", out var orbitronBoldFont, 100))
+        {
+            fonts.Add(FontIDs.OrbitronBold, orbitronBoldFont);
+            fontNames.Add("Orbitron Bold");
+        }
+        if(contentManager.TryLoadFont("Resources/Fonts/Orbitron-Regular.ttf", out var orbitronRegularFont, 100))
+        {
+            fonts.Add(FontIDs.OrbitronRegular, orbitronRegularFont);
+            fontNames.Add("Orbitron Regular");
+        }
+        if(contentManager.TryLoadFont("Resources/Fonts/Prompt-LightItalic.ttf", out var promptLightItalicFont, 100))
+        {
+            fonts.Add(FontIDs.PromptLightItalic, promptLightItalicFont);
+            fontNames.Add("Prompt Light Italic");
+        }
+        if(contentManager.TryLoadFont("Resources/Fonts/Prompt-Regular.ttf", out var promptRegularFont, 100))
+        {
+            fonts.Add(FontIDs.PromptRegular, promptRegularFont);
+            fontNames.Add("Prompt Regular");
+        }
+        if(contentManager.TryLoadFont("Resources/Fonts/Prompt-Thin.ttf", out var promptThinFont, 100))
+        {
+            fonts.Add(FontIDs.PromptThin, promptThinFont);
+            fontNames.Add("Prompt Thin");
+        }
+        if(contentManager.TryLoadFont("Resources/Fonts/Teko-Medium.ttf", out var tekoMediumFont, 100))
+        {
+            fonts.Add(FontIDs.TekoMedium, tekoMediumFont);
+            fontNames.Add("Teko Medium");
+        }
+        if(contentManager.TryLoadFont("Resources/Fonts/JetBrainsMono.ttf", out var jetBrainsFont, 100))
+        {
+            fonts.Add(FontIDs.JetBrains, jetBrainsFont);
+            fontNames.Add("Jet Brains Mono");
+        }
+        if(contentManager.TryLoadFont("Resources/Fonts/JetBrainsMono.ttf", out var jetBrainsLargeFont, 500))
+        {
+            fonts.Add(FontIDs.JetBrainsLarge, jetBrainsLargeFont);
+            fontNames.Add("Jet Brains Mono Large");
+        }
+        
         if (ScreenShaders != null)
         {
             var shapeShaders = new List<ShapeShader>(7);
-            
-            var crt = ContentLoader.LoadFragmentShader("Resources/Shaders/CRTShader.frag");
-            ShapeShader crtShader = new(crt, crtShaderID, true, 1);
-            ShapeShader.SetValueFloat(crtShader.Shader, "renderWidth", Window.CurScreenSize.Width);
-            ShapeShader.SetValueFloat(crtShader.Shader, "renderHeight", Window.CurScreenSize.Height);
-            var bgColor = BackgroundColorRgba;
-            ShapeShader.SetValueColor(crtShader.Shader, "cornerColor", bgColor);
-            ShapeShader.SetValueFloat(crtShader.Shader, "vignetteOpacity", 0.35f);
-            ShapeShader.SetValueVector2(crtShader.Shader, "curvatureAmount", crtCurvature.X, crtCurvature.Y);//smaller values = bigger curvature
-            // ScreenShaders.Add(crtShader);
-            shapeShaders.Add(crtShader);
-            
-            var pixel = ContentLoader.LoadFragmentShader("Resources/Shaders/PixelationShader.frag");
-            ShapeShader pixelationShader = new(pixel, pixelationShaderID, false, 2);
-            ShapeShader.SetValueFloat(pixelationShader.Shader, "renderWidth", Window.CurScreenSize.Width);
-            ShapeShader.SetValueFloat(pixelationShader.Shader, "renderHeight", Window.CurScreenSize.Height);
-            // ScreenShaders.Add(pixelationShader);
-            shapeShaders.Add(pixelationShader);
 
-            var bloom = ContentLoader.LoadFragmentShader("Resources/Shaders/BloomShader.frag");
-            ShapeShader bloomShader = new(bloom, bloomShaderID, false, 3);
-            ShapeShader.SetValueVector2(bloomShader.Shader, "size", Window.CurScreenSize.ToVector2());
-            // ScreenShaders.Add(bloomShader);
-            shapeShaders.Add(bloomShader);
+            // var crt = ContentLoader.LoadFragmentShader("Resources/Shaders/CRTShader.frag");
+            if (contentManager.TryLoadFragmentShader("Resources/Shaders/CRTShader.frag",  out var crt))
+            {
+                ShapeShader crtShader = new(crt, crtShaderID, true, 1);
+                ShapeShader.SetValueFloat(crtShader.Shader, "renderWidth", Window.CurScreenSize.Width);
+                ShapeShader.SetValueFloat(crtShader.Shader, "renderHeight", Window.CurScreenSize.Height);
+                var bgColor = BackgroundColorRgba;
+                ShapeShader.SetValueColor(crtShader.Shader, "cornerColor", bgColor);
+                ShapeShader.SetValueFloat(crtShader.Shader, "vignetteOpacity", 0.35f);
+                ShapeShader.SetValueVector2(crtShader.Shader, "curvatureAmount", crtCurvature.X, crtCurvature.Y);//smaller values = bigger curvature
+                shapeShaders.Add(crtShader);
+            }
+            
+            // var pixel = ContentLoader.LoadFragmentShader("Resources/Shaders/PixelationShader.frag");
+            if (contentManager.TryLoadFragmentShader("Resources/Shaders/PixelationShader.frag", out var pixel))
+            {
+                ShapeShader pixelationShader = new(pixel, pixelationShaderID, false, 2);
+                ShapeShader.SetValueFloat(pixelationShader.Shader, "renderWidth", Window.CurScreenSize.Width);
+                ShapeShader.SetValueFloat(pixelationShader.Shader, "renderHeight", Window.CurScreenSize.Height);
+                shapeShaders.Add(pixelationShader);
+            }
+            
+            // var bloom = ContentLoader.LoadFragmentShader("Resources/Shaders/BloomShader.frag");
+            if (contentManager.TryLoadFragmentShader("Resources/Shaders/BloomShader.frag", out var bloom))
+            {
+                ShapeShader bloomShader = new(bloom, bloomShaderID, false, 3);
+                ShapeShader.SetValueVector2(bloomShader.Shader, "size", Window.CurScreenSize.ToVector2());
+                shapeShaders.Add(bloomShader);
+            }
 
-            var overdraw = ContentLoader.LoadFragmentShader("Resources/Shaders/OverdrawShader.frag");
-            ShapeShader overdrawShader = new(overdraw, overdrawID, false, 4);
-            // ScreenShaders.Add(overdrawShader);
-            shapeShaders.Add(overdrawShader);
+            // var overdraw = ContentLoader.LoadFragmentShader("Resources/Shaders/OverdrawShader.frag");
+            if (contentManager.TryLoadFragmentShader("Resources/Shaders/OverdrawShader.frag", out var overdraw))
+            {
+                ShapeShader overdrawShader = new(overdraw, overdrawID, false, 4);
+                shapeShaders.Add(overdrawShader);
+            }
             
-            var darkness = ContentLoader.LoadFragmentShader("Resources/Shaders/Darkness.frag");
-            ShapeShader darknessShader = new(darkness, darknessID, false, 5);
-            // ScreenShaders.Add(darknessShader);
-            shapeShaders.Add(darknessShader);
+            // var darkness = ContentLoader.LoadFragmentShader("Resources/Shaders/Darkness.frag");
+            if (contentManager.TryLoadFragmentShader("Resources/Shaders/Darkness.frag", out var darkness))
+            {
+                ShapeShader darknessShader = new(darkness, darknessID, false, 5);
+                shapeShaders.Add(darknessShader);
+            }
             
-            var blur = ContentLoader.LoadFragmentShader("Resources/Shaders/BlurShader.frag");
-            ShapeShader blurShader = new(blur, blurID, false, 6);
-            ShapeShader.SetValueFloat(blurShader.Shader, "renderWidth", Window.CurScreenSize.Width);
-            ShapeShader.SetValueFloat(blurShader.Shader, "renderHeight", Window.CurScreenSize.Height);
-            shapeShaders.Add(blurShader);
-            
-            var alphaCircle = ContentLoader.LoadFragmentShader("Resources/Shaders/AlphaCircle.frag");
-            ShapeShader alphaCircleShader = new(alphaCircle, alphaCircleID, false, 7);
-            ShapeShader.SetValueVector2(alphaCircleShader.Shader, "origin", new Vector2(0f, 0f));
-            ShapeShader.SetValueFloat(alphaCircleShader.Shader, "minDis", 0.25f);
-            ShapeShader.SetValueFloat(alphaCircleShader.Shader, "maxDis", 1f);
-            shapeShaders.Add(alphaCircleShader);
-            
-            var chromaticAberration = ContentLoader.LoadFragmentShader("Resources/Shaders/ChromaticAberrationShader.frag");
-            ShapeShader chromaticAberrationShader = new(chromaticAberration, chromaticAberrationID, false, 7);
-            ScreenShaders.Add(chromaticAberrationShader);
+            // var blur = ContentLoader.LoadFragmentShader("Resources/Shaders/BlurShader.frag");
+            if (contentManager.TryLoadFragmentShader("Resources/Shaders/BlurShader.frag", out var blur))
+            {
+                ShapeShader blurShader = new(blur, blurID, false, 6);
+                ShapeShader.SetValueFloat(blurShader.Shader, "renderWidth", Window.CurScreenSize.Width);
+                ShapeShader.SetValueFloat(blurShader.Shader, "renderHeight", Window.CurScreenSize.Height);
+                shapeShaders.Add(blurShader);
+            }
+
+            // var alphaCircle = ContentLoader.LoadFragmentShader("Resources/Shaders/AlphaCircle.frag");
+            if (contentManager.TryLoadFragmentShader("Resources/Shaders/AlphaCircle.frag", out var alphaCircle))
+            {
+                ShapeShader alphaCircleShader = new(alphaCircle, alphaCircleID, false, 7);
+                ShapeShader.SetValueVector2(alphaCircleShader.Shader, "origin", new Vector2(0f, 0f));
+                ShapeShader.SetValueFloat(alphaCircleShader.Shader, "minDis", 0.25f);
+                ShapeShader.SetValueFloat(alphaCircleShader.Shader, "maxDis", 1f);
+                shapeShaders.Add(alphaCircleShader);
+            }
+
+            // var chromaticAberration = ContentLoader.LoadFragmentShader("Resources/Shaders/ChromaticAberrationShader.frag");
+            if (contentManager.TryLoadFragmentShader("Resources/Shaders/ChromaticAberrationShader.frag", out var chromaticAberration))
+            {
+                ShapeShader chromaticAberrationShader = new(chromaticAberration, chromaticAberrationID, false, 7);
+                ScreenShaders.Add(chromaticAberrationShader);
+            }
             
             currentShaderID = crtShaderID;
             
@@ -333,14 +405,15 @@ public class GameloopExamples : Game
         
         FontDefault = GetFont(FontIDs.JetBrains);
 
-        this.Window.FpsLimit = 60;
-        this.Window.VSync = false;
-        // this.Window.MaxFramerate = 480;
-        // this.Window.FpsLimit = 240;
+        Window.FpsLimit = 60;
+        Window.VSync = false;
 
         fpsLabel = new(FontDefault, Colors.PcCold, Colors.PcText, Colors.PcHighlight);
         
         paletteInfoBox = new();
+        
+        contentManager.RemoveContentPack(contentPackAll);
+        contentPackAll.Clear();
     }
 
     protected override Vector2 ChangeMousePos(float dt, Vector2 mousePos, Rect screenArea)
@@ -390,8 +463,10 @@ public class GameloopExamples : Game
 
     protected override void UnloadContent()
     {
-        
-        ContentLoader.UnloadFonts(fonts.Values);
+        Logger.LogInfo("Closing application, unloading content.");
+        contentManager.Close();
+        fonts.Clear();
+        Logger.LogInfo("Content unloaded.");
     }
     protected override void BeginRun()
     {

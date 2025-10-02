@@ -37,9 +37,18 @@ cp "${PUBLISH_ROOT}/"*.pdb "$MACOS_DIR/" 2>/dev/null || true
 #  cp -R "${PUBLISH_ROOT}/Resources"/* "$RESOURCES_DIR/" 2>/dev/null || true
 #fi
 
-echo "Copying resources..."
 if [ -d "${PUBLISH_ROOT}/Resources" ]; then
+  echo "Copying Resource folder to bundle resources..."
   cp -R "${PUBLISH_ROOT}/Resources" "$RESOURCES_DIR/"
+else
+  echo "Resource folder not found, skipping copy."
+fi
+
+if [ -f "${PUBLISH_ROOT}/packedExampleResources.shaperes" ]; then
+  echo "Copying packedExampleResources.shaperes to bundle resources..."
+  cp "${PUBLISH_ROOT}/packedExampleResources.shaperes" "$RESOURCES_DIR/"
+else
+  echo "packedExampleResources.shaperes not found, skipping copy."
 fi
 
 # Copy the .icns file from the output directory to the Resources directory in the bundle

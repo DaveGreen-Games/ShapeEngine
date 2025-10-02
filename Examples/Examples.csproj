@@ -15,14 +15,17 @@
         <Content Include="shape-engine.ico" />
     </ItemGroup>  
     
-  <ItemGroup>
+    <ItemGroup>
     <ProjectReference Include="..\ShapeEngine\ShapeEngine.csproj" />
-  </ItemGroup>
+    </ItemGroup>
 
-  <ItemGroup>
-    <Content Include="Resources\**">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <ItemGroup>
+ <!--
+ <Content Include="Resources\**">
+   <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+ </Content>
+ -->
+      
     <Content Include="../NOTICE.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -33,18 +36,42 @@
     <Content Include="examples.icns">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-  </ItemGroup>
+    </ItemGroup>
 
-  <!--Target Name="BundleAppPostPublish" AfterTargets="Publish" Condition="'$(RuntimeIdentifier)' == 'osx-arm64' Or '$(RuntimeIdentifier)' == 'osx-x64'">
-    <Exec Command="bash ./macos-app-bundling/bundle-macos-app.sh '$(PublishDir)'" />
-  </Target-->
-  
-  <Target Name="BundleAppPostPublish"
-          AfterTargets="Publish"
-          Condition="( ('$(RuntimeIdentifier)' == 'osx-arm64' Or '$(RuntimeIdentifier)' == 'osx-x64' ) 
+    <!-- For regular builds -->
+    <Target Name="PackResourcesForDev" AfterTargets="Build">
+        <PropertyGroup>
+            <ResourcePackPath>$(OutputPath)packedExampleResources.shaperes</ResourcePackPath>
+        </PropertyGroup>
+
+        <!-- Ensure output directory exists -->
+        <MakeDir Directories="$(OutputPath)" Condition="!Exists('$(OutputPath)')" />
+
+        <Message Importance="high" Text="Packing resources for dev build to: $(ResourcePackPath)" />
+        <Exec
+                Command="dotnet run --project ../ResourcePacker/ResourcePacker.csproj -- pack Resources $(ResourcePackPath)"
+                WorkingDirectory="$(MSBuildThisFileDirectory)" />
+    </Target>
+
+
+    <!-- For publishing -->
+    <Target Name="PackResourcesForPublish" BeforeTargets="BundleAppPostPublish" AfterTargets="Publish">
+        <PropertyGroup>
+            <ResourcePackPublishPath>$(PublishDir)packedExampleResources.shaperes</ResourcePackPublishPath>
+        </PropertyGroup>
+        <Message Importance="high" Text="Packing resources for publish to: $(ResourcePackPublishPath)" />
+        <Exec
+                Command="dotnet run --project ../ResourcePacker/ResourcePacker.csproj -- pack Resources $(ResourcePackPublishPath)"
+                WorkingDirectory="$(MSBuildThisFileDirectory)" />
+    </Target>
+
+    
+    <Target Name="BundleAppPostPublish"
+        AfterTargets="Publish"
+        Condition="( ('$(RuntimeIdentifier)' == 'osx-arm64' Or '$(RuntimeIdentifier)' == 'osx-x64' ) 
                      And '$(SelfContained)' == 'true' 
                      And '$(Configuration)' == 'Release' )">
     <Exec Command="bash ./macos-app-bundling/bundle-macos-app.sh '$(PublishDir)'" />
-  </Target>
-  
+    </Target>
+
 </Project>
