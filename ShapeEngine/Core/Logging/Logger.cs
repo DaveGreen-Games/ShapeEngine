@@ -100,6 +100,20 @@ public class Logger
             LogFilePath = string.Empty;
         }
     }
+    /// <summary>
+    /// Gets the current logger settings as a <see cref="LoggerSettings"/> object.
+    /// </summary>
+    public LoggerSettings GetSettings()
+    {
+        return new LoggerSettings(Enabled, MinimumLevel, LogFilePath, OutputType);
+    }
+    /// <summary>
+    /// Creates a copy of the current <see cref="Logger"/> instance with the same settings.
+    /// </summary>
+    public Logger Copy()
+    {
+        return new Logger(GetSettings());
+    }
     #endregion
     
     #region Log

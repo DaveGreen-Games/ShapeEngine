@@ -106,5 +106,14 @@ public readonly struct LoggerSettings
         }
         
     }
+
+
+    internal LoggerSettings(bool enabled, LogLevel minimumLevel, string logFilePath, LogOutputType outputType)
+    {
+        Enabled = enabled;
+        MinimumLevel = minimumLevel;
+        LogFilePath = logFilePath;
+        OutputType = outputType;
+    }
     #endregion
 }
