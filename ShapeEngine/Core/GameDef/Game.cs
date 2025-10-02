@@ -68,14 +68,35 @@ public partial class Game
     /// </summary>
     public readonly DirectoryInfo SaveDirectory;
     /// <summary>
+    /// The directory where backup copies of savegame data are stored.
+    /// Points to a "Backups" subdirectory within <see cref="SaveDirectory"/>.
+    /// Will be empty if the backup directory could not be created, or if no save directory is set, or if <see cref="MaxSavegameBackups"/> is less or equal to zero.
+    /// </summary>
+    public readonly DirectoryInfo SaveBackupDirectory;
+    /// <summary>
     /// Gets the full path of the save directory as a string.
     /// </summary>
     public string SaveDirectoryPath => SaveDirectory.FullName;
+    /// <summary>
+    /// Gets the full path of the save backup directory as a string.
+    /// </summary>
+    public string SaveBackupDirectoryPath => SaveBackupDirectory.FullName;
     
     /// <summary>
     /// Indicates whether the save directory is valid (exists and has a non-empty path).
     /// </summary>
     public bool IsSaveDirectoryValid => SaveDirectory is { Exists: true, FullName.Length: > 0 };
+    
+    /// <summary>
+    /// Indicates whether the save backup directory is valid (exists and has a non-empty path).
+    /// </summary>
+    public bool IsSaveBackupDirectoryValid => SaveBackupDirectory is { Exists: true, FullName.Length: > 0 };
+
+    /// <summary>
+    /// The maximum number of savegame backup files to keep. Is set with <see cref="GameSettings.MaxSavegameBackups"/> in the constructor.
+    /// If set to 0 or less, no backups will be created.
+    /// </summary>
+    public readonly int MaxSavegameBackups;
     
     /// <summary>
     /// Gets or sets the command-line arguments passed to the application at launch.
@@ -371,6 +392,7 @@ public partial class Game
         }
 
         ApplicationName = gameSettings.ApplicationName;
+        MaxSavegameBackups = gameSettings.MaxSavegameBackups;
         if (gameSettings.SaveDirectory != null && ApplicationName.Length > 0)
         {
             var folderPath = Environment.GetFolderPath((Environment.SpecialFolder)gameSettings.SaveDirectory);
@@ -379,7 +401,7 @@ public partial class Game
             if (dir != null)
             {
                 SaveDirectory = dir;
-
+                
                 if (ReleaseMode)
                 {
                     var logPath = Path.Combine(absolutePath, "LogOutput/DefaultLog.txt");
@@ -393,11 +415,36 @@ public partial class Game
                     Logger.LogInfo("Logger initialized in debug mode. No log file will be created.");
                 }
                 
-                Logger.LogInfo($"Save directory set to: {SaveDirectoryPath}");
+                
+                Logger.LogInfo($"Save directory set to: {SaveDirectoryPath}.");
+                if (MaxSavegameBackups <= 0)
+                {
+                    SaveBackupDirectory = new DirectoryInfo(string.Empty);
+                    Logger.LogInfo("MaxSavegameBackups is set to 0 or less. No save backups will be created. SaveBackupDirectory will be empty.");
+                }
+                else
+                {
+                    var backupDirPath = Path.Combine(dir.FullName, "Backups");
+                    var backupDir = ShapeFileManager.CreateDirectory(backupDirPath, false);
+                    if (backupDir != null)
+                    {
+                        SaveBackupDirectory = backupDir;
+                        Logger.LogInfo($"Save backup directory set to: {SaveBackupDirectoryPath} with MaxSavegameBackups = {MaxSavegameBackups}.");
+                    }
+                    else
+                    {
+                        SaveBackupDirectory = new DirectoryInfo(string.Empty);
+                        Logger.LogWarning("Failed to create save backup directory! SaveBackupDirectory will be empty and MaxSavegameBackups will be set to 0.");
+                        MaxSavegameBackups = 0;
+                    } 
+                }
+                
+                
             }
             else
             {
                 SaveDirectory = new(string.Empty);
+                SaveBackupDirectory = new(string.Empty);
                 Logger = new Logger(LoggerSettings.Default);
                 if (ReleaseMode)
                 {
@@ -408,12 +455,14 @@ public partial class Game
                     Logger.LogInfo("Logger initialized in debug mode. No log file will be created.");
                 }
                 
-                Logger.LogWarning("No save directory set! SaveDirectory will be empty.");
+                Logger.LogWarning("No save directory set! SaveDirectory will be empty. SaveBackupDirectory will be empty.");
             }
         }
         else
         {
             SaveDirectory = new(string.Empty);
+            SaveBackupDirectory = new(string.Empty);
+            MaxSavegameBackups = 0;
             Logger = new Logger(LoggerSettings.Default);
             if (ReleaseMode)
             {
@@ -423,7 +472,7 @@ public partial class Game
             {
                 Logger.LogInfo("Logger initialized in debug mode. No log file will be created.");
             }
-            Logger.LogWarning("No save directory set! SaveDirectory will be empty.");
+            Logger.LogWarning("No save directory set! SaveDirectory will be empty. SaveBackupDirectory will be empty and MaxSavegameBackups will be set to 0.");
         }
         
         // this.DevelopmentDimensions = gameSettings.DevelopmentDimensions;
