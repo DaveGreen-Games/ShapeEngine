@@ -38,23 +38,33 @@
     </Content>
     </ItemGroup>
 
-    <PropertyGroup>
-        <IsPublishing Condition="'$(PublishDir)' != ''">true</IsPublishing>
-        <!-- <ResourcePackOutputDir Condition="'$(IsPublishing)' == 'true'">$(PublishDir)/</ResourcePackOutputDir>
-        <ResourcePackOutputDir Condition="'$(IsPublishing)' != 'true'">$(OutDir)/</ResourcePackOutputDir>
-        <ResourcePackOutputDir Condition="'$(IsPublishing)' != 'true' and '$(OutDir)' == ''">bin/Debug/net8.0/</ResourcePackOutputDir> -->
-    </PropertyGroup>
-    
-    <Target Name="PackResources" AfterTargets="Build">
+    <!-- For regular builds -->
+    <Target Name="PackResourcesForDev" AfterTargets="Build">
+        <PropertyGroup>
+            <ResourcePackPath>$(OutputPath)packedExampleResources.shaperes</ResourcePackPath>
+        </PropertyGroup>
+
+        <!-- Ensure output directory exists -->
+        <MakeDir Directories="$(OutputPath)" Condition="!Exists('$(OutputPath)')" />
+
+        <Message Importance="high" Text="Packing resources for dev build to: $(ResourcePackPath)" />
         <Exec
-                Condition="'$(IsPublishing)' != 'true'"
-                Command="dotnet run --project ../ResourcePacker/ResourcePacker.csproj -- pack Resources $(OutDir)packedExampleResources.shaperes"
-                WorkingDirectory="$(MSBuildThisFileDirectory)" />
-        <Exec
-                Condition="'$(IsPublishing)' == 'true'"
-                Command="dotnet run --project ../ResourcePacker/ResourcePacker.csproj -- pack Resources $(PublishDir)/packedExampleResources.shaperes"
+                Command="dotnet run --project ../ResourcePacker/ResourcePacker.csproj -- pack Resources $(ResourcePackPath)"
                 WorkingDirectory="$(MSBuildThisFileDirectory)" />
     </Target>
+
+
+    <!-- For publishing -->
+    <Target Name="PackResourcesForPublish" BeforeTargets="BundleAppPostPublish" AfterTargets="Publish">
+        <PropertyGroup>
+            <ResourcePackPublishPath>$(PublishDir)packedExampleResources.shaperes</ResourcePackPublishPath>
+        </PropertyGroup>
+        <Message Importance="high" Text="Packing resources for publish to: $(ResourcePackPublishPath)" />
+        <Exec
+                Command="dotnet run --project ../ResourcePacker/ResourcePacker.csproj -- pack Resources $(ResourcePackPublishPath)"
+                WorkingDirectory="$(MSBuildThisFileDirectory)" />
+    </Target>
+
     
     <Target Name="BundleAppPostPublish"
         AfterTargets="Publish"
