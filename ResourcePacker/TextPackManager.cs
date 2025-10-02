@@ -232,7 +232,7 @@ public static class TextPackManager
             Console.WriteLine($"Directory created: {outputDirectoryPath}");
         }
 
-        var lastLine = File.ReadLines(sourceFilePath).LastOrDefault();
+        var lastLine = ReadLastLine(sourceFilePath); // File.ReadLines(sourceFilePath).LastOrDefault();
         if (lastLine == null || !int.TryParse(lastLine, out int totalFiles) || totalFiles <= 0)
         {
             Console.WriteLine("Pack file is malformed or contains no files to unpack.");
@@ -373,7 +373,7 @@ public static class TextPackManager
             Console.WriteLine($"Directory created: {outputDirectoryPath}");
         }
         
-        var lastLine = File.ReadLines(sourceFilePath).LastOrDefault();
+        var lastLine = ReadLastLine(sourceFilePath);// File.ReadLines(sourceFilePath).LastOrDefault();
         if (lastLine == null || !int.TryParse(lastLine, out int totalFiles) || totalFiles <= 0)
         {
             Console.WriteLine("Pack file is malformed or contains no files to unpack.");
@@ -534,4 +534,67 @@ public static class TextPackManager
         return extensionExceptions.Any(ext => string.Equals(ext, extension, StringComparison.OrdinalIgnoreCase));
     }
 
+    private static string? ReadLastLine(string path)
+    {
+        if (new FileInfo(path).Length == 0) return null;
+        return File.ReadLines(path).LastOrDefault();
+
+        //If reading last line of large files ever becomes a bottleneck, use the more complex method below
+        // return ReadLastLineLargeFile(path);
+
+    }
+    /// <summary>
+    /// Efficiently reads the last line of a text file without loading the entire file into memory at once.
+    /// </summary>
+    /// <param name="path">Path to the file</param>
+    /// <returns>The last line of the file, or null if the file is empty or doesn't exist</returns>
+    private static string? ReadLastLineLargeFile(string path)
+    {
+        if (!File.Exists(path)) return null;
+
+        using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        if (fs.Length == 0) return null;
+
+        // For large files, read in reverse from the end
+        const int bufferSize = 4096;
+        var buffer = new byte[bufferSize];
+        long position = fs.Length;
+        var lineBuilder = new List<byte>(256);
+        var foundNewLine = false;
+        var firstPass = true;
+
+        while (position > 0 && !foundNewLine)
+        {
+            long bytesToRead = Math.Min(bufferSize, position);
+            position -= bytesToRead;
+            fs.Position = position;
+            int bytesRead = fs.Read(buffer, 0, (int)bytesToRead);
+
+            for (int i = bytesRead - 1; i >= 0; i--)
+            {
+                if (buffer[i] == '\n' && !firstPass)
+                {
+                    foundNewLine = true;
+                    // If we found a newline, skip it and break
+                    i++;
+                    // Add any remaining bytes after the newline
+                    for (int j = i; j < bytesRead; j++)
+                        lineBuilder.Add(buffer[j]);
+                    break;
+                }
+            
+                if (firstPass && i == bytesRead - 1 && buffer[i] == '\n')
+                    continue; // Skip trailing newline
+
+                firstPass = false;
+                lineBuilder.Add(buffer[i]);
+            }
+        }
+
+        // Reverse the bytes (since we read them backward)
+        lineBuilder.Reverse();
+    
+        // Convert to string and trim any trailing CR (for CRLF line endings)
+        return System.Text.Encoding.UTF8.GetString(lineBuilder.ToArray()).TrimEnd('\r');
+    }
 }
