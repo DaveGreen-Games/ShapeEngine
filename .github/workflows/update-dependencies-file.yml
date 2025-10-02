@@ -1,4 +1,7 @@
 name: Update dependency-versions.txt
+permissions:
+  contents: write
+  pull-requests: write
 
 on:
   push:
