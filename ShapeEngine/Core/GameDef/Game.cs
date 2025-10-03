@@ -125,7 +125,7 @@ public partial class Game
     public readonly int MaxSavegameBackups;
 
     public int CurrentSavegameBackup { get; private set; } = 0;
-
+    public int CreatedSavegameBackups { get; private set; } = 0;
     /// <summary>
     /// The directory where savegame files are stored.
     /// This points to "<see cref="SaveDirectoryPath"/>/Savegames".
@@ -970,7 +970,36 @@ public partial class Game
     #endregion
     
     #region Savegame System
-    
+
+    public bool SaveSavegameSlotNumber(int currentActiveSlot)
+    {
+        if (!IsSavegameDirectoryValid) return false;
+        if (currentActiveSlot < 0) return false;
+        
+        string path = Path.Combine(SavegameDirectoryPath, "CurrentSavegameSlot.txt");
+        return ShapeFileManager.SaveText(currentActiveSlot.ToString(), path);
+    }
+    public bool LoadSavegameSlotNumber(out int slotNumber)
+    {
+        slotNumber = -1;
+        if (!IsSavegameDirectoryValid) return false;
+        
+        string path = Path.Combine(SavegameDirectoryPath, "CurrentSavegameSlot.txt");
+        string content = ShapeFileManager.LoadText(path);
+        if (content.Length == 0) return false;
+        
+        if (int.TryParse(content, out slotNumber))
+        {
+            if (slotNumber < 0)
+            {
+                slotNumber = -1;
+                return false;
+            }
+            return true;
+        }
+        slotNumber = -1;
+        return false;
+    }
     public bool Save(string relativeFilePath, string content)
     {
         if (SaveDirectoryPath == string.Empty) return false;
@@ -1015,25 +1044,97 @@ public partial class Game
     #endregion
     
     #region Savegame Backup System
-    
+
+    public bool SaveBackupInformation()
+    {
+        return SaveBackupInformation(CurrentSavegameBackup, CreatedSavegameBackups);
+    }
+    public bool SaveBackupInformation(int backupNumber, int createdBackups)
+    {
+        if (!IsSavegameBackupDirectoryValid) return false;
+        if(backupNumber < 0 || createdBackups < 0) return false;
+        string backupInfoPath = Path.Combine(SavegameBackupDirectoryPath, "BackupInfo.txt");
+        var content = $"{backupNumber},{createdBackups}";
+        return ShapeFileManager.SaveText(content, backupInfoPath);
+    }
+    public bool LoadBackupInformation(out int currentBackupNumber, out int createdBackups)
+    {
+        currentBackupNumber = -1;
+        createdBackups = -1;
+        if (!IsSavegameBackupDirectoryValid) return false;
+
+        string backupInfoPath = Path.Combine(SavegameBackupDirectoryPath, "BackupInfo.txt");
+        string content = ShapeFileManager.LoadText(backupInfoPath);
+        if (string.IsNullOrEmpty(content)) return false;
+
+        var parts = content.Split(',');
+        if (parts.Length != 2) return false;
+
+        if (int.TryParse(parts[0], out currentBackupNumber) && int.TryParse(parts[1], out createdBackups))
+        {
+            if (currentBackupNumber >= 0 && createdBackups >= 0) return true;
+        }
+        currentBackupNumber = -1;
+        createdBackups = -1;
+        return false;
+    }
     public bool CreateBackup()
     {
+        if (MaxSavegameBackups <= 0) return false;
         
+        var success = CreateBackup(CurrentSavegameBackup);
+        if (success)
+        {
+            IncrementBackupNumber();
+            CreatedSavegameBackups++;
+            if(CreatedSavegameBackups > MaxSavegameBackups) CreatedSavegameBackups = MaxSavegameBackups;
+            SaveBackupInformation();
+        }
+        return success;
     }
 
-    public bool CreateBackup(int slotNumber)
+    public bool CreateBackup(int backupNumber)
     {
-        
+        if (!IsSavegameDirectoryValid || !IsSavegameBackupDirectoryValid) return false;
+
+        string sourcePath = SavegameDirectoryPath;
+        string destinationPath = GetBackupPath(backupNumber);
+
+        try
+        {
+            return ShapeFileManager.CopyDirectory(sourcePath, destinationPath, true);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError($"Failed to create backup: {ex.Message}");
+            return false;
+        }
     }
 
     public bool ApplyLastBackup()
     {
-        
+        if (MaxSavegameBackups <= 0 || CreatedSavegameBackups <= 0) return false;
+        int lastBackup = GetPreviousBackupNumber();
+        return ApplyBackup(lastBackup);
     }
 
     public bool ApplyBackup(int backupNumber)
     {
-        
+        if (!IsSavegameDirectoryValid || !IsSavegameBackupDirectoryValid) return false;
+
+        string sourcePath = GetBackupPath(backupNumber);
+        string destinationPath = SavegameDirectoryPath;
+
+        try
+        {
+            return ShapeFileManager.CopyDirectory(sourcePath, destinationPath, true);
+
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError($"Failed to apply backup: {ex.Message}");
+            return false;
+        }
     }
     
     public string GetBackupPath(int backupNumber)
@@ -1041,13 +1142,13 @@ public partial class Game
         return !IsSavegameBackupDirectoryValid ? string.Empty : Path.Combine(SavegameBackupDirectoryPath, $"Backup-{backupNumber:D2}");
     }
     
-    public int IncrementBackupNumber()
+    private int IncrementBackupNumber()
     {
         CurrentSavegameBackup++;
         if (CurrentSavegameBackup >= MaxSavegameBackups) CurrentSavegameBackup = 0;
         return CurrentSavegameBackup;
     }
-    public int GetPreviousBackupNumber()
+    private int GetPreviousBackupNumber()
     {
         var prev = CurrentSavegameBackup--;
         if(prev < 0) prev = MaxSavegameBackups - 1;
