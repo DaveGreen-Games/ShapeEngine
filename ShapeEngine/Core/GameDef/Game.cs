@@ -61,6 +61,12 @@ public partial class Game
     /// </summary>
     public readonly string ApplicationName;
     
+    
+    //TODO: Add savegame slot system
+    // - update backup system to use slots as well
+    // - add max savegame slots to GameSettings
+    // - save, load, GetBackupPath just get a current save slot parameter
+    
     /// <summary>
     /// The directory where game data is saved.
     /// Points to <see cref="GameSettings.SaveDirectory"/>/<see cref="GameSettings.ApplicationName"/>.
@@ -97,6 +103,13 @@ public partial class Game
     /// If set to 0 or less, no backups will be created.
     /// </summary>
     public readonly int MaxSavegameBackups;
+
+    public readonly Dictionary<string, int> CurrentSavegameBackupCount = new();
+    
+    public readonly Dictionary<string, string> LastSavegameBackupPath = new();
+    
+    
+    
     
     /// <summary>
     /// Gets or sets the command-line arguments passed to the application at launch.
@@ -906,5 +919,78 @@ public partial class Game
         OnInputDeviceChanged(prevDeviceType, newDeviceType);
         CurScene.ResolveOnInputDeviceChanged(prevDeviceType, newDeviceType);
     }
+    #endregion
+    
+    #region Savegame Backup System
+    
+    public bool Save(string relativeFilePath, string content)
+    {
+        if (SaveDirectoryPath == string.Empty) return false;
+        if (relativeFilePath == string.Empty) return false;
+        
+        string path = Path.Combine(SaveDirectoryPath, relativeFilePath);
+        if (!ShapeFileManager.SaveText(content, path)) return false;
+        if (SaveBackupDirectoryPath == string.Empty || MaxSavegameBackups <= 0) return true;
+        var fileName = Path.GetFileName(relativeFilePath);
+        if (GetNextSavegameBackupPath(fileName, out string backupPath))
+        {
+            ShapeFileManager.SaveText(content, backupPath);
+        }
+        return true;
+    }
+    
+    public bool Load(string relativeFilePath, out string content)
+    {
+        content = string.Empty;
+        
+        if (SaveDirectoryPath == string.Empty) return false;
+        if (relativeFilePath == string.Empty) return false;
+        
+        string path = Path.Combine(SaveDirectoryPath, relativeFilePath);
+        content = ShapeFileManager.LoadText(path);
+        
+        return true;
+    }
+    public bool LoadLastBackup(string fileName, out string content)
+    {
+        content = string.Empty;
+        if (!LastSavegameBackupPath.TryGetValue(fileName, out string? path)) return false;
+        content = ShapeFileManager.LoadText(path);
+        return true;
+
+    }
+    
+    public bool GetNextSavegameBackupPath(string fileName, out string backupFilePath)
+    {
+        backupFilePath = string.Empty;
+        if (MaxSavegameBackups <= 0) return false;
+        if (SaveBackupDirectory.FullName.Length == 0) return false;
+        if (!Path.HasExtension(fileName)) return false;
+        
+        string extension = Path.GetExtension(fileName);
+        string nameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
+
+        int currentSavegameBackupCount = 0;
+        if (CurrentSavegameBackupCount.TryGetValue(fileName, out int value))
+        {
+            currentSavegameBackupCount = value;
+            
+        }
+        else
+        {
+            CurrentSavegameBackupCount.Add(fileName, 0);
+        }
+        
+        var backupFileName = $"{nameWithoutExt}-backup{currentSavegameBackupCount}{extension}";
+        backupFilePath = Path.Combine(SaveBackupDirectory.FullName, backupFileName);
+
+        LastSavegameBackupPath[fileName] = backupFilePath;
+        
+        currentSavegameBackupCount++;
+        if (currentSavegameBackupCount >= MaxSavegameBackups) currentSavegameBackupCount = 0;
+        CurrentSavegameBackupCount[fileName] = currentSavegameBackupCount;
+        return true;
+    }
+    
     #endregion
 }
