@@ -58,7 +58,7 @@ public static class ShapeFileManager
     /// <param name="absolutePath">The absolute path of the file to create.</param>
     /// <param name="overrideIfExists">If true and the file exists, it will be deleted and recreated (WARNING: all contents will be lost).</param>
     /// <returns>The FileInfo of the created or existing file, or null if the operation failed.</returns>
-    public static FileInfo? CreateFile(string absolutePath, bool overrideIfExists = false)
+    public static FileInfo? CreateFile(string absolutePath, bool overrideIfExists)
     {
         if (string.IsNullOrWhiteSpace(absolutePath)) return null;
 
@@ -93,7 +93,7 @@ public static class ShapeFileManager
     /// <param name="text">The text content to write to the file.</param>
     /// <param name="overrideIfExists">If true and the file exists, it will be deleted and recreated with the new content.</param>
     /// <returns>The FileInfo of the created or existing file, or null if the operation failed.</returns>
-    public static FileInfo? CreateFile(string absolutePath, string text, bool overrideIfExists = false)
+    public static FileInfo? CreateFile(string absolutePath, string text, bool overrideIfExists)
     {
         if (string.IsNullOrWhiteSpace(absolutePath)) return null;
 
@@ -810,6 +810,24 @@ public static class ShapeFileManager
         catch (Exception ex)
         {
             Console.Error.WriteLine($"[{ex.GetType().Name}] Failed to save {fileName} to {absolutePath}: {ex.Message}");
+            return false;
+        }
+    }
+    public static bool SaveText(string text, string absolutePath, Encoding? encoding = null, bool append = false, bool createDirectory = true)
+    {
+        if (string.IsNullOrWhiteSpace(absolutePath)) return false;
+    
+        try
+        {
+            if (createDirectory) Directory.CreateDirectory(absolutePath);
+
+            using var writer = new StreamWriter(absolutePath, append, encoding ?? Encoding.Default);
+            writer.Write(text);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[{ex.GetType().Name}] Failed to save {absolutePath}: {ex.Message}");
             return false;
         }
     }
