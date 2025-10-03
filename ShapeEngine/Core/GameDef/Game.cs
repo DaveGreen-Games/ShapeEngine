@@ -123,9 +123,18 @@ public partial class Game
     /// If set to 0 or less, no backups will be created.
     /// </summary>
     public readonly int MaxSavegameBackups;
-
-    public int CurrentSavegameBackup { get; private set; } = 0;
-    public int CreatedSavegameBackups { get; private set; } = 0;
+    /// <summary>
+    /// Gets the current backup number for savegame backups.
+    /// This value is incremented each time a new backup is created with <see cref="CreateBackup()"/> and wraps around based on <see cref="MaxSavegameBackups"/>.
+    /// If <see cref="MaxSavegameBackups"/> is 0 or less, this value will always be 0 and no backups will be created.
+    /// </summary>
+    public int CurrentSavegameBackup { get; private set; }
+    
+    /// <summary>
+    /// Gets the total number of savegame backups that have been created so far.
+    /// This value is incremented each time a new backup is created, up to the maximum allowed by <see cref="MaxSavegameBackups"/>.
+    /// </summary>
+    public int CreatedSavegameBackups { get; private set; }
     /// <summary>
     /// The directory where savegame files are stored.
     /// This points to "<see cref="SaveDirectoryPath"/>/Savegames".
@@ -439,6 +448,8 @@ public partial class Game
 
         ApplicationName = gameSettings.ApplicationName;
         MaxSavegameBackups = gameSettings.MaxSavegameBackups;
+        CurrentSavegameBackup = 0;
+        CreatedSavegameBackups = 0;
         if (gameSettings.SaveDirectory != null && ApplicationName.Length > 0)
         {
             var folderPath = Environment.GetFolderPath((Environment.SpecialFolder)gameSettings.SaveDirectory);
@@ -480,6 +491,16 @@ public partial class Game
                     if (backupDir != null)
                     {
                         SavegameBackupDirectory = backupDir;
+                        if (LoadBackupInformation(out int currentBackup, out int createdBackups))
+                        {
+                            CurrentSavegameBackup = currentBackup;
+                            CreatedSavegameBackups = createdBackups;
+                            Logger.LogInfo($"Loaded savegame backup information. CurrentSavegameBackup = {CurrentSavegameBackup}, CreatedSavegameBackups = {CreatedSavegameBackups}.");
+                        }
+                        else
+                        {
+                            Logger.LogInfo($"No existing savegame backup information found. Starting with CurrentSavegameBackup = {CurrentSavegameBackup}, CreatedSavegameBackups = {CreatedSavegameBackups}. " );
+                        }
                         Logger.LogInfo($"Savegame backup directory set to: {SavegameBackupDirectoryPath} with MaxSavegameBackups = {MaxSavegameBackups}.");
                     }
                     else
