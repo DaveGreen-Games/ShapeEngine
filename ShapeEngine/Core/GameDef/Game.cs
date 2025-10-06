@@ -60,99 +60,8 @@ public partial class Game
     /// The name of the application. Used for display and save directory purposes.
     /// </summary>
     public readonly string ApplicationName;
-    
-    //NOTE:
-    // - SaveDirectory -> Local/ApplicationName
-    // - SavegameDirectory -> SaveDirectory/Savegames
-    //  - Slot -> SaveDirectory/Savegames/Slot{number}
-    // - BackupDirectory -> SaveDirectory/Backups
-    //  - Backup 1 -> BackupDirectory/Backup1 -> backup of SavegameDirectory
-    //  - Backup 2 -> BackupDirectory/Backup2 -> backup of SavegameDirectory
-    //  - Backup 3 -> BackupDirectory/Backup2 -> backup of SavegameDirectory
-    
-    //!!!
-    // - Only use 1 backup number that increments for each backup created
-    // - Only have 1 function that creates a backup of the entire savegame folder (with all slots, and extra files)
-    // - Have 1 function that can restore a backup by overwriting the entire savegame folder with the backup folder
-    // - save functions do NOT create backups
-    
-    //NOTE:
-    // - Save -> saves single text file with relative path
-    // - SaveToSlot -> saves single text file with relative path to a numbered slot
-    // - Load -> loads single text file with relative path
-    // - LoadFromSlot -> loads single text file with relative path from a numbered slot
-    // - CreateBackup -> creates a backup of the entire savegame folder (with all slots, and extra files) - increments backup number
-    // - ApplyLastBackup -> loads most recent backup file with relative path
-    // - ApplyBackup(int number)
-    
 
-    
-    /// <summary>
-    /// The directory where game data is saved.
-    /// Points to <see cref="GameSettings.SaveDirectory"/>/<see cref="GameSettings.ApplicationName"/>.
-    /// Will be empty if no save directory is set in <see cref="GameSettings"/>.
-    /// </summary>
-    public readonly DirectoryInfo SaveDirectory;
-    /// <summary>
-    /// Gets the full path of the save directory as a string.
-    /// </summary>
-    public string SaveDirectoryPath => SaveDirectory.FullName;
-    /// <summary>
-    /// Indicates whether the save directory is valid (exists and has a non-empty path).
-    /// </summary>
-    public bool IsSaveDirectoryValid => SaveDirectory is { Exists: true, FullName.Length: > 0 };
-    
-    
-    /// <summary>
-    /// The directory where backup copies of savegame data are stored.
-    /// Resolves to "<see cref="SaveDirectoryPath"/>/Backups".
-    /// Will be empty if the backup directory could not be created, or if no save directory is set, or if <see cref="MaxSavegameBackups"/> is less or equal to zero.
-    /// </summary>
-    public readonly DirectoryInfo SavegameBackupDirectory;
-    /// <summary>
-    /// Gets the full path of the save backup directory as a string.
-    /// </summary>
-    public string SavegameBackupDirectoryPath => SavegameBackupDirectory.FullName;
-    /// <summary>
-    /// Indicates whether the save backup directory is valid (exists and has a non-empty path).
-    /// </summary>
-    public bool IsSavegameBackupDirectoryValid => SavegameBackupDirectory is { Exists: true, FullName.Length: > 0 };
 
-    /// <summary>
-    /// The maximum number of savegame backup files to keep. Is set with <see cref="GameSettings.MaxSavegameBackups"/> in the constructor.
-    /// If set to 0 or less, no backups will be created.
-    /// </summary>
-    public readonly int MaxSavegameBackups;
-    /// <summary>
-    /// Gets the current backup number for savegame backups.
-    /// This value is incremented each time a new backup is created with <see cref="CreateBackup()"/> and wraps around based on <see cref="MaxSavegameBackups"/>.
-    /// If <see cref="MaxSavegameBackups"/> is 0 or less, this value will always be 0 and no backups will be created.
-    /// </summary>
-    public int CurrentSavegameBackup { get; private set; }
-    
-    /// <summary>
-    /// Gets the total number of savegame backups that have been created so far.
-    /// This value is incremented each time a new backup is created, up to the maximum allowed by <see cref="MaxSavegameBackups"/>.
-    /// </summary>
-    public int CreatedSavegameBackups { get; private set; }
-    /// <summary>
-    /// The directory where savegame files are stored.
-    /// This points to "<see cref="SaveDirectoryPath"/>/Savegames".
-    /// </summary>
-    public readonly DirectoryInfo SavegameDirectory;
-    
-    /// <summary>
-    /// Gets the full path of the savegame directory as a string.
-    /// </summary>
-    public string SavegameDirectoryPath => SavegameDirectory.FullName;
-    
-    /// <summary>
-    /// Indicates whether the savegame directory is valid (exists and has a non-empty path).
-    /// </summary>
-    public bool IsSavegameDirectoryValid => SavegameDirectory is { Exists: true, FullName.Length: > 0 };
-    
-    
-    
     /// <summary>
     /// Gets or sets the command-line arguments passed to the application at launch.
     /// </summary>
@@ -447,9 +356,6 @@ public partial class Game
         }
 
         ApplicationName = gameSettings.ApplicationName;
-        MaxSavegameBackups = gameSettings.MaxSavegameBackups;
-        CurrentSavegameBackup = 0;
-        CreatedSavegameBackups = 0;
         if (gameSettings.SaveDirectory != null && ApplicationName.Length > 0)
         {
             var folderPath = Environment.GetFolderPath((Environment.SpecialFolder)gameSettings.SaveDirectory);
@@ -474,11 +380,6 @@ public partial class Game
                 
                 
                 Logger.LogInfo($"Save directory set to: {SaveDirectoryPath}.");
-                if (MaxSavegameBackups <= 0)
-                {
-                    Logger.LogInfo("MaxSavegameBackups is set to 0 or less. No save backups will be created.");
-                }
-                
                 
                 var savegameDirPath = Path.Combine(dir.FullName, "Savegames");
                 var savegameDir = ShapeFileManager.CreateDirectory(savegameDirPath, false);
@@ -491,31 +392,19 @@ public partial class Game
                     if (backupDir != null)
                     {
                         SavegameBackupDirectory = backupDir;
-                        if (LoadBackupInformation(out int currentBackup, out int createdBackups))
-                        {
-                            CurrentSavegameBackup = currentBackup;
-                            CreatedSavegameBackups = createdBackups;
-                            Logger.LogInfo($"Loaded savegame backup information. CurrentSavegameBackup = {CurrentSavegameBackup}, CreatedSavegameBackups = {CreatedSavegameBackups}.");
-                        }
-                        else
-                        {
-                            Logger.LogInfo($"No existing savegame backup information found. Starting with CurrentSavegameBackup = {CurrentSavegameBackup}, CreatedSavegameBackups = {CreatedSavegameBackups}. " );
-                        }
-                        Logger.LogInfo($"Savegame backup directory set to: {SavegameBackupDirectoryPath} with MaxSavegameBackups = {MaxSavegameBackups}.");
+                        Logger.LogInfo($"Savegame backup directory set to: {SavegameBackupDirectoryPath}.");
                     }
                     else
                     {
                         SavegameBackupDirectory = new (string.Empty);
-                        Logger.LogWarning("Failed to create save backup directory! SaveBackupDirectory will be empty and MaxSavegameBackups will be set to 0.");
-                        MaxSavegameBackups = 0;
+                        Logger.LogWarning("Failed to create save backup directory! SaveBackupDirectory will be empty.");
                     } 
                 }
                 else
                 {
                     SavegameDirectory = new(string.Empty);
                     SavegameBackupDirectory = new(string.Empty);
-                    MaxSavegameBackups = 0;
-                    Logger.LogWarning("Failed to create SavegameDirectory. SavegameDirectory and SaveBackupDirectory will be empty and MaxSavegameBackups will be set to 0.");
+                    Logger.LogWarning("Failed to create SavegameDirectory. SavegameDirectory and SaveBackupDirectory will be empty.");
                 } 
                 
             }
@@ -543,7 +432,6 @@ public partial class Game
             SaveDirectory = new(string.Empty);
             SavegameDirectory = new(string.Empty);
             SavegameBackupDirectory = new(string.Empty);
-            MaxSavegameBackups = 0;
             Logger = new Logger(LoggerSettings.Default);
             if (ReleaseMode)
             {
@@ -554,7 +442,7 @@ public partial class Game
                 Logger.LogInfo("Logger initialized in debug mode. No log file will be created.");
             }
             Logger.LogWarning("No save directory set! SaveDirectory will be empty.");
-            Logger.LogWarning("SavegameDirectory and SavegameBackupDirectory will be empty and MaxSavegameBackups will be set to 0.");
+            Logger.LogWarning("SavegameDirectory and SavegameBackupDirectory will be empty.");
         }
         
         // this.DevelopmentDimensions = gameSettings.DevelopmentDimensions;
@@ -988,193 +876,5 @@ public partial class Game
         OnInputDeviceChanged(prevDeviceType, newDeviceType);
         CurScene.ResolveOnInputDeviceChanged(prevDeviceType, newDeviceType);
     }
-    #endregion
-    
-    #region Savegame System
-
-    public bool SaveSavegameSlotNumber(int currentActiveSlot)
-    {
-        if (!IsSavegameDirectoryValid) return false;
-        if (currentActiveSlot < 0) return false;
-        
-        string path = Path.Combine(SavegameDirectoryPath, "CurrentSavegameSlot.txt");
-        return ShapeFileManager.SaveText(currentActiveSlot.ToString(), path);
-    }
-    public bool LoadSavegameSlotNumber(out int slotNumber)
-    {
-        slotNumber = -1;
-        if (!IsSavegameDirectoryValid) return false;
-        
-        string path = Path.Combine(SavegameDirectoryPath, "CurrentSavegameSlot.txt");
-        string content = ShapeFileManager.LoadText(path);
-        if (content.Length == 0) return false;
-        
-        if (int.TryParse(content, out slotNumber))
-        {
-            if (slotNumber < 0)
-            {
-                slotNumber = -1;
-                return false;
-            }
-            return true;
-        }
-        slotNumber = -1;
-        return false;
-    }
-    public bool Save(string relativeFilePath, string content)
-    {
-        if (SaveDirectoryPath == string.Empty) return false;
-        if (!Path.HasExtension(relativeFilePath)) return false;
-        
-        string path = Path.Combine(SaveDirectoryPath, relativeFilePath);
-        return ShapeFileManager.SaveText(content, path);
-    }
-    public bool Load(string relativeFilePath, out string content)
-    {
-        content = string.Empty;
-        
-        if (SaveDirectoryPath == string.Empty) return false;
-        if (!Path.HasExtension(relativeFilePath)) return false;
-        
-        string path = Path.Combine(SaveDirectoryPath, relativeFilePath);
-        content = ShapeFileManager.LoadText(path);
-        
-        return true;
-    }
-    public bool SaveToSlot(string relativeFilePath, string content, int slotNumber)
-    {
-        string slotPath = GetSlotPath(relativeFilePath, slotNumber);
-        return slotPath != string.Empty && Save(slotPath, content);
-    }
-    public bool LoadFromSlot(string relativeFilePath, int slotNumber, out string content)
-    {
-        string slotPath = GetSlotPath(relativeFilePath, slotNumber);
-        content = string.Empty;
-        return slotPath != string.Empty && Load(slotPath, out content);
-    }
-    public string GetSlotPath(int slotNumber)
-    {
-        return !IsSavegameDirectoryValid ? string.Empty : Path.Combine(SavegameDirectoryPath, $"Slot-{slotNumber:D2}");
-    }
-    public string GetSlotPath(string relativeFilePath, int slotNumber)
-    {
-        if(relativeFilePath == string.Empty || !Path.HasExtension(relativeFilePath) || !IsSavegameDirectoryValid) return string.Empty;
-        string slotDir = Path.Combine(SavegameDirectoryPath, $"Slot-{slotNumber:D2}");
-        return Path.Combine(slotDir, relativeFilePath);
-    }
-    #endregion
-    
-    #region Savegame Backup System
-
-    public bool SaveBackupInformation()
-    {
-        return SaveBackupInformation(CurrentSavegameBackup, CreatedSavegameBackups);
-    }
-    public bool SaveBackupInformation(int backupNumber, int createdBackups)
-    {
-        if (!IsSavegameBackupDirectoryValid) return false;
-        if(backupNumber < 0 || createdBackups < 0) return false;
-        string backupInfoPath = Path.Combine(SavegameBackupDirectoryPath, "BackupInfo.txt");
-        var content = $"{backupNumber},{createdBackups}";
-        return ShapeFileManager.SaveText(content, backupInfoPath);
-    }
-    public bool LoadBackupInformation(out int currentBackupNumber, out int createdBackups)
-    {
-        currentBackupNumber = -1;
-        createdBackups = -1;
-        if (!IsSavegameBackupDirectoryValid) return false;
-
-        string backupInfoPath = Path.Combine(SavegameBackupDirectoryPath, "BackupInfo.txt");
-        string content = ShapeFileManager.LoadText(backupInfoPath);
-        if (string.IsNullOrEmpty(content)) return false;
-
-        var parts = content.Split(',');
-        if (parts.Length != 2) return false;
-
-        if (int.TryParse(parts[0], out currentBackupNumber) && int.TryParse(parts[1], out createdBackups))
-        {
-            if (currentBackupNumber >= 0 && createdBackups >= 0) return true;
-        }
-        currentBackupNumber = -1;
-        createdBackups = -1;
-        return false;
-    }
-    public bool CreateBackup()
-    {
-        if (MaxSavegameBackups <= 0) return false;
-        
-        var success = CreateBackup(CurrentSavegameBackup);
-        if (success)
-        {
-            IncrementBackupNumber();
-            CreatedSavegameBackups++;
-            if(CreatedSavegameBackups > MaxSavegameBackups) CreatedSavegameBackups = MaxSavegameBackups;
-            SaveBackupInformation();
-        }
-        return success;
-    }
-
-    public bool CreateBackup(int backupNumber)
-    {
-        if (!IsSavegameDirectoryValid || !IsSavegameBackupDirectoryValid) return false;
-
-        string sourcePath = SavegameDirectoryPath;
-        string destinationPath = GetBackupPath(backupNumber);
-
-        try
-        {
-            return ShapeFileManager.CopyDirectory(sourcePath, destinationPath, true);
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError($"Failed to create backup: {ex.Message}");
-            return false;
-        }
-    }
-
-    public bool ApplyLastBackup()
-    {
-        if (MaxSavegameBackups <= 0 || CreatedSavegameBackups <= 0) return false;
-        int lastBackup = GetPreviousBackupNumber();
-        return ApplyBackup(lastBackup);
-    }
-
-    public bool ApplyBackup(int backupNumber)
-    {
-        if (!IsSavegameDirectoryValid || !IsSavegameBackupDirectoryValid) return false;
-
-        string sourcePath = GetBackupPath(backupNumber);
-        string destinationPath = SavegameDirectoryPath;
-
-        try
-        {
-            return ShapeFileManager.CopyDirectory(sourcePath, destinationPath, true);
-
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError($"Failed to apply backup: {ex.Message}");
-            return false;
-        }
-    }
-    
-    public string GetBackupPath(int backupNumber)
-    {
-        return !IsSavegameBackupDirectoryValid ? string.Empty : Path.Combine(SavegameBackupDirectoryPath, $"Backup-{backupNumber:D2}");
-    }
-    
-    private int IncrementBackupNumber()
-    {
-        CurrentSavegameBackup++;
-        if (CurrentSavegameBackup >= MaxSavegameBackups) CurrentSavegameBackup = 0;
-        return CurrentSavegameBackup;
-    }
-    private int GetPreviousBackupNumber()
-    {
-        var prev = CurrentSavegameBackup--;
-        if(prev < 0) prev = MaxSavegameBackups - 1;
-        return prev;
-    }
-    
     #endregion
 }

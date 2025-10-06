@@ -1,5 +1,4 @@
 using Raylib_cs;
-using ShapeEngine.Core.Logging;
 using ShapeEngine.Screen;
 
 namespace ShapeEngine.Core.Structs;
@@ -17,14 +16,11 @@ public readonly struct GameSettings
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
     /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created.
     /// Savegame location: saveDirectory/applicationName.</param>
-    /// <param name="maxSavegameBackups">The maximum number of savegame backup files to keep.
-    /// If set to 0 or less, no backups will be created.
-    /// Savegame Backup location: saveDirectory/applicationName/Backups.</param>
     public static GameSettings StretchMode(string applicationName = "ShapeEngineGame", 
-        Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData, int maxSavegameBackups = 3)
+        Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
     {
         return new GameSettings(-1, TextureFilter.Bilinear, ShaderSupportType.Multi, 
-            applicationName, saveDirectory, maxSavegameBackups);
+            applicationName, saveDirectory);
     }
 
     /// <summary>
@@ -33,14 +29,11 @@ public readonly struct GameSettings
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
     /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created.
     /// Savegame location: saveDirectory/applicationName.</param>
-    /// <param name="maxSavegameBackups">The maximum number of savegame backup files to keep.
-    /// If set to 0 or less, no backups will be created.
-    /// Savegame Backup location: saveDirectory/applicationName/Backups.</param>
     public static GameSettings FixedMode(string applicationName = "ShapeEngineGame", 
-        Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData, int maxSavegameBackups = 3)
+        Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
     {
         return new GameSettings(new Dimensions(320, 180), -1, TextureFilter.Point, ShaderSupportType.Multi, false, 
-            applicationName, saveDirectory, maxSavegameBackups);
+            applicationName, saveDirectory);
     }
 
     /// <summary>
@@ -49,14 +42,12 @@ public readonly struct GameSettings
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
     /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created.
     /// Savegame location: saveDirectory/applicationName.</param>
-    /// <param name="maxSavegameBackups">The maximum number of savegame backup files to keep.
-    /// If set to 0 or less, no backups will be created.
-    /// Savegame Backup location: saveDirectory/applicationName/Backups.</param>
+
     public static GameSettings FixedNearestMode(string applicationName = "ShapeEngineGame", 
-        Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData, int maxSavegameBackups = 3)
+        Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
     {
         return new GameSettings(new Dimensions(320, 180), -1, TextureFilter.Point, ShaderSupportType.Multi, true, 
-            applicationName, saveDirectory, maxSavegameBackups);
+            applicationName, saveDirectory);
     }
 
     /// <summary>
@@ -65,14 +56,11 @@ public readonly struct GameSettings
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
     /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created.
     /// Savegame location: saveDirectory/applicationName.</param>
-    /// <param name="maxSavegameBackups">The maximum number of savegame backup files to keep.
-    /// If set to 0 or less, no backups will be created.
-    /// Savegame Backup location: saveDirectory/applicationName/Backups.</param>
     public static GameSettings PixelationMode(string applicationName = "ShapeEngineGame", 
-        Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData, int maxSavegameBackups = 3)
+        Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
     {
         return new GameSettings(0.25f, -1, TextureFilter.Point, ShaderSupportType.Multi, 
-            applicationName, saveDirectory, maxSavegameBackups);
+            applicationName, saveDirectory);
     }
 
     #endregion
@@ -88,11 +76,8 @@ public readonly struct GameSettings
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
     /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created.
     /// Savegame location: saveDirectory/applicationName.</param>
-    /// <param name="maxSavegameBackups">The maximum number of savegame backup files to keep.
-    /// If set to 0 or less, no backups will be created.
-    /// Savegame Backup location: saveDirectory/applicationName/Backups.</param>
     public GameSettings (int fixedFramerate, TextureFilter textureFilter, ShaderSupportType shaderSupportType, 
-        string applicationName = "ShapeEngineGame", Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData, int maxSavegameBackups = 3)
+        string applicationName = "ShapeEngineGame", Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
     {
         FixedFramerate = fixedFramerate;
         TextureFilter = textureFilter;
@@ -102,8 +87,6 @@ public readonly struct GameSettings
         ScreenTextureMode = ScreenTextureMode.Stretch;
         ApplicationName = applicationName;
         SaveDirectory = saveDirectory;
-        MaxSavegameBackups = maxSavegameBackups;
-        if (MaxSavegameBackups <= 0) MaxSavegameBackups = 0;
     }
 
     /// <summary>
@@ -117,11 +100,8 @@ public readonly struct GameSettings
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
     /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created.
     /// Savegame location: saveDirectory/applicationName.</param>
-    /// <param name="maxSavegameBackups">The maximum number of savegame backup files to keep.
-    /// If set to 0 or less, no backups will be created.
-    /// Savegame Backup location: saveDirectory/applicationName/Backups.</param>
     public GameSettings(Dimensions fixedDimensions, int fixedFramerate, TextureFilter textureFilter, ShaderSupportType shaderSupportType, 
-        bool nearestScaling = false, string applicationName = "ShapeEngineGame", Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData, int maxSavegameBackups = 3)
+        bool nearestScaling = false, string applicationName = "ShapeEngineGame", Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
     {
         FixedFramerate = fixedFramerate;
         TextureFilter = textureFilter;
@@ -148,8 +128,6 @@ public readonly struct GameSettings
         }
         ApplicationName = applicationName;
         SaveDirectory = saveDirectory;
-        MaxSavegameBackups = maxSavegameBackups;
-        if (MaxSavegameBackups <= 0) MaxSavegameBackups = 0;
     }
 
     /// <summary>
@@ -162,11 +140,8 @@ public readonly struct GameSettings
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
     /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created.
     /// Savegame location: saveDirectory/applicationName.</param>
-    /// <param name="maxSavegameBackups">The maximum number of savegame backup files to keep.
-    /// If set to 0 or less, no backups will be created.
-    /// Savegame Backup location: saveDirectory/applicationName/Backups.</param>
     public GameSettings(float pixelationFactor, int fixedFramerate, TextureFilter textureFilter, ShaderSupportType shaderSupportType, 
-        string applicationName = "ShapeEngineGame", Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData, int maxSavegameBackups = 3)
+        string applicationName = "ShapeEngineGame", Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
     {
         FixedFramerate = fixedFramerate;
         TextureFilter = textureFilter;
@@ -185,8 +160,6 @@ public readonly struct GameSettings
         }
         ApplicationName = applicationName;
         SaveDirectory = saveDirectory;
-        MaxSavegameBackups = maxSavegameBackups;
-        if (MaxSavegameBackups <= 0) MaxSavegameBackups = 0;
     }
     
     #endregion
@@ -249,13 +222,13 @@ public readonly struct GameSettings
     /// </remarks>
     public readonly Environment.SpecialFolder? SaveDirectory = Environment.SpecialFolder.LocalApplicationData;
 
-    /// <summary>
-    /// Gets the maximum number of savegame backup files to keep.
-    /// </summary>
-    /// <remarks>
-    /// If set to 0 or less, no backups will be created and no backup directory will be created.
-    /// </remarks>
-    public readonly int MaxSavegameBackups = 3;
+    // /// <summary>
+    // /// Gets the maximum number of savegame backup files to keep.
+    // /// </summary>
+    // /// <remarks>
+    // /// If set to 0 or less, no backups will be created and no backup directory will be created.
+    // /// </remarks>
+    // public readonly int MaxSavegameBackups = 3;
 
     #endregion
 }
