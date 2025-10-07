@@ -1,46 +1,9 @@
 ﻿
 using System.Text;
 using ShapeEngine.Core.GameDef;
+using ShapeEngine.Serialization;
 
 namespace ShapeEngine.StaticLib;
-
-
-
-/// <summary>
-/// Interface for objects that can be serialized to and deserialized from CSV format.
-/// </summary>
-public interface ICsvSerializable
-{
-    /// <summary>
-    /// Serializes the object to a CSV string.
-    /// All values should be in a comma-separated list like: value1,value2,value3.
-    /// </summary>
-    /// <returns>A CSV-formatted string representing the object.</returns>
-    /// <example>
-    /// <code>
-    /// public string ToCsv()
-    /// {
-    ///    return $"{Property1},{Property2},{Property3}";
-    /// }
-    /// public void FromCsv(string[] values)
-    /// {
-    ///     Name = values[0];
-    ///     Age = int.TryParse(values[1], out int age) ? age : 0;
-    ///     IsAlive = bool.TryParse(values[2], out bool alive) && alive;
-    /// }
-    /// </code>
-    /// </example>
-    string ToCsv();
-
-    /// <summary>
-    /// Populates the object from an array of CSV values.
-    /// </summary>
-    /// <param name="values">The CSV values to deserialize from.</param>
-    void FromCsv(string[] values);
-}
-
-
-
 
 /// <summary>
 /// Provides static methods for saving and loading text and data files, as well as accessing common application directories.
@@ -1361,11 +1324,14 @@ public static class ShapeFileManager
     /// </summary>
     /// <param name="content">The object to serialize and save as CSV.</param>
     /// <param name="filePath">The file path where the CSV will be saved.</param>
+    /// <remarks>
+    /// Values will be saved in a single line, separated by commas.
+    /// No header is included or generated, just the values are saved.
+    /// </remarks>
     public static void SaveToCsv(this ICsvSerializable content, string filePath)
     {
         SaveText(content.ToCsv(), filePath);
     }
-
     /// <summary>
     /// Loads data from a CSV file into the object implementing <see cref="ICsvSerializable"/>.
     /// </summary>
@@ -1383,7 +1349,92 @@ public static class ShapeFileManager
         content.FromCsv(csv);
         return true;
     }
+    /// <summary>
+    /// Saves the object implementing <see cref="ICsvSerializable"/> to a CSV file at the specified path.
+    /// </summary>
+    /// <typeparam name="T">The type of the object to serialize and save as CSV.
+    /// Must implement <see cref="ICsvSerializable"/> and have a parameterless constructor.</typeparam>
+    /// <param name="content">The object to serialize and save as CSV.</param>
+    /// <param name="filePath">The file path where the CSV will be saved.</param>
+    /// <returns>True if the CSV was saved successfully; otherwise, false.</returns>
+    /// <remarks>
+    /// Values will be saved in a single line, separated by commas.
+    /// No header is included or generated, just the values are saved.
+    /// </remarks>
+    public static bool SaveToCsv<T>(this T content, string filePath) where T : ICsvSerializable, new()
+    {
+        string csvText = content.ToCsv();
+        if (string.IsNullOrWhiteSpace(csvText)) return false;
+        
+        SaveText(csvText, filePath);
+        return true;
+    }
+    /// <summary>
+    /// Loads data from a CSV file into the object implementing <see cref="ICsvSerializable"/>.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of the object to populate from the CSV file.
+    /// Must implement <see cref="ICsvSerializable"/> and have a parameterless constructor.
+    /// </typeparam>
+    /// <param name="content">The object to populate from the CSV file.</param>
+    /// <param name="filePath">The file path from which to load the CSV data.</param>
+    /// <returns>True if loading was successful; otherwise, false.</returns>
+    public static bool LoadFromCsv<T>(this T content, string filePath) where T : ICsvSerializable, new()
+    {
+        string csvText = LoadText(filePath);
+        if (string.IsNullOrWhiteSpace(csvText)) return false;
+        
+        string[] csv = ParseCsv(csvText);
+        if(csv.Length <= 0) return false;
+        
+        content.FromCsv(csv);
+        return true;
+    }
+    /// <summary>
+    /// Saves a list of objects implementing <see cref="ICsvSerializable"/> to a CSV file at the specified path.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of the objects to serialize and save as CSV.
+    /// Must implement <see cref="ICsvSerializable"/> and have a parameterless constructor.
+    /// </typeparam>
+    /// <param name="contents">The list of objects to serialize and save as CSV. Each entry will represent a single line.</param>
+    /// <param name="filePath">The file path where the CSV will be saved.</param>
+    /// <returns>True if the CSV was saved successfully; otherwise, false.</returns>
+    /// <remarks>
+    /// Values will be saved in a single line, separated by commas.
+    /// No header is included or generated, just the values are saved.
+    /// </remarks>
+    public static bool SaveToCsv<T>(this List<T> contents, string filePath) where T : ICsvSerializable, new()
+    {
+        var csvLines = contents.Select(c => c.ToCsv());
+        string csvText = string.Join(Environment.NewLine, csvLines);
+        return !string.IsNullOrWhiteSpace(csvText) && SaveText(csvText, filePath);
+    }
+    /// <summary>
+    /// Loads data from a CSV file into a list of objects implementing <see cref="ICsvSerializable"/>.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of the objects to populate from the CSV file.
+    /// Must implement <see cref="ICsvSerializable"/> and have a parameterless constructor.
+    /// </typeparam>
+    /// <param name="contents">The list to populate with objects from the CSV file.</param>
+    /// <param name="filePath">The file path from which to load the CSV data.</param>
+    /// <returns>True if loading was successful; otherwise, false.</returns>
+    public static bool LoadFromCsv<T>(this List<T> contents, string filePath) where T : ICsvSerializable, new()
+    {
+        string csvText = LoadText(filePath);
+        if (string.IsNullOrWhiteSpace(csvText)) return false;
+        
+        var csvLines = ParseCsvLines(csvText);
+        if(csvLines.Count <= 0) return false;
 
+        for (var i = 0; i < csvLines.Count; i++)
+        {
+            contents[i].FromCsv(csvLines[i]);
+        }
+
+        return true;
+    }
     /// <summary>
     /// Parses a CSV string into an array of values, splitting on commas and line breaks.
     /// </summary>
@@ -1392,6 +1443,26 @@ public static class ShapeFileManager
     public static string[] ParseCsv(string csvText)
     {
         return string.IsNullOrWhiteSpace(csvText) ? [] : csvText.Split([',', '\n', '\r'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    }
+    /// <summary>
+    /// Parses a CSV string into a list of string arrays, each representing a line split by commas.
+    /// </summary>
+    /// <param name="csvText">The CSV text to parse.</param>
+    /// <returns>An array of string arrays, one for each line.</returns>
+    public static List<string[]> ParseCsvLines(string csvText)
+    {
+        if (string.IsNullOrWhiteSpace(csvText)) return [];
+        string[] lines = csvText.Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if(lines.Length <= 0) return [];
+        
+        var result = new List<string[]>();
+        foreach (string line in lines)
+        {
+            if (string.IsNullOrWhiteSpace(line)) continue;
+            string[] csv = line.Split([','], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            result.Add(csv);
+        }
+        return result;
     }
     #endregion
 }
