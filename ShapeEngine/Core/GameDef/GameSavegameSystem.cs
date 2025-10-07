@@ -71,7 +71,7 @@ public partial class Game
     /// <returns>True if the information was successfully saved; otherwise, false.</returns>
     /// <remarks>
     /// Saves the information to a file named "CurrentSavegameSlot.txt" in the <see cref="SavegameDirectoryPath"/>.
-    /// Requires <see cref="IsSavegameBackupDirectoryValid"/> to be true.
+    /// Requires <see cref="IsSavegameDirectoryValid"/> to be true.
     /// When constructing the <see cref="Game"/> object,
     /// ensure that <see cref="GameSettings.SaveDirectory"/> and <see cref="GameSettings.ApplicationName"/> are set
     /// in <see cref="GameSettings"/> to create a valid savegame backup directory.
@@ -96,7 +96,7 @@ public partial class Game
     /// <returns>True if the information was successfully loaded; otherwise, false.</returns>
     /// <remarks>
     /// Loads the information from a file named "CurrentSavegameSlot.txt" in the <see cref="SavegameDirectoryPath"/>.
-    /// Requires <see cref="IsSavegameBackupDirectoryValid"/> to be true.
+    /// Requires <see cref="IsSavegameDirectoryValid"/> to be true.
     /// When constructing the <see cref="Game"/> object,
     /// ensure that <see cref="GameSettings.SaveDirectory"/> and <see cref="GameSettings.ApplicationName"/> are set
     /// in <see cref="GameSettings"/> to create a valid savegame backup directory.
@@ -127,37 +127,37 @@ public partial class Game
     }
 
     /// <summary>
-    /// Saves the specified content to a file at the given relative path within the save directory.
+    /// Saves the specified content to a file at the given relative path within the <see cref="SavegameDirectory"/>
     /// Requires <see cref="IsSavegameDirectoryValid"/> to be true.
     /// </summary>
-    /// <param name="relativeFilePath">The relative file path (including extension) within the save directory.</param>
+    /// <param name="relativeFilePath">The relative file path (including extension) within the <see cref="SavegameDirectory"/>.</param>
     /// <param name="content">The content to save to the file.</param>
     /// <returns>True if the content was successfully saved; otherwise, false.</returns>
     /// <remarks>
-    /// Saves to "<see cref="SaveDirectoryPath"/>/<paramref name="relativeFilePath"/>".
-    /// Requires <see cref="IsSavegameBackupDirectoryValid"/> to be true.
+    /// Saves to "<see cref="SavegameDirectoryPath"/>/<paramref name="relativeFilePath"/>".
+    /// Requires <see cref="IsSavegameDirectoryValid"/> to be true.
     /// When constructing the <see cref="Game"/> object,
     /// ensure that <see cref="GameSettings.SaveDirectory"/> and <see cref="GameSettings.ApplicationName"/> are set
     /// in <see cref="GameSettings"/> to create a valid savegame backup directory.
     /// </remarks>
     public bool Save(string relativeFilePath, string content)
     {
-        if (SaveDirectoryPath == string.Empty) return false;
+        if (SavegameDirectoryPath == string.Empty) return false;
         if (!Path.HasExtension(relativeFilePath)) return false;
 
-        string path = Path.Combine(SaveDirectoryPath, relativeFilePath);
+        string path = Path.Combine(SavegameDirectoryPath, relativeFilePath);
         return ShapeFileManager.SaveText(content, path);
     }
 
     /// <summary>
-    /// Loads the content of a file at the given relative path within the save directory.
+    /// Loads the content of a file at the given relative path within the <see cref="SavegameDirectory"/>
     /// </summary>
-    /// <param name="relativeFilePath">The relative file path (including extension) within the save directory.</param>
+    /// <param name="relativeFilePath">The relative file path (including extension) within the <see cref="SavegameDirectory"/>.</param>
     /// <param name="content">Outputs the content loaded from the file.</param>
     /// <returns>True if the content was successfully loaded; otherwise, false.</returns>
     /// <remarks>
-    /// Loads from "<see cref="SaveDirectoryPath"/>/<paramref name="relativeFilePath"/>".
-    /// Requires <see cref="IsSavegameBackupDirectoryValid"/> to be true.
+    /// Loads from "<see cref="SavegameDirectoryPath"/>/<paramref name="relativeFilePath"/>".
+    /// Requires <see cref="IsSavegameDirectoryValid"/> to be true.
     /// When constructing the <see cref="Game"/> object,
     /// ensure that <see cref="GameSettings.SaveDirectory"/> and <see cref="GameSettings.ApplicationName"/> are set
     /// in <see cref="GameSettings"/> to create a valid savegame backup directory.
@@ -166,10 +166,10 @@ public partial class Game
     {
         content = string.Empty;
 
-        if (SaveDirectoryPath == string.Empty) return false;
+        if (SavegameDirectoryPath == string.Empty) return false;
         if (!Path.HasExtension(relativeFilePath)) return false;
 
-        string path = Path.Combine(SaveDirectoryPath, relativeFilePath);
+        string path = Path.Combine(SavegameDirectoryPath, relativeFilePath);
         content = ShapeFileManager.LoadText(path);
 
         return true;
@@ -184,7 +184,7 @@ public partial class Game
     /// <returns>True if the content was successfully saved; otherwise, false.</returns>
     /// <remarks>
     /// Saves to "<see cref="SavegameDirectoryPath"/>/Slot-XX/<paramref name="relativeFilePath"/>".
-    /// Requires <see cref="IsSavegameBackupDirectoryValid"/> to be true.
+    /// Requires <see cref="IsSavegameDirectoryValid"/> to be true.
     /// When constructing the <see cref="Game"/> object,
     /// ensure that <see cref="GameSettings.SaveDirectory"/> and <see cref="GameSettings.ApplicationName"/> are set
     /// in <see cref="GameSettings"/> to create a valid savegame backup directory.
@@ -203,7 +203,7 @@ public partial class Game
     /// <returns>True if the content was successfully loaded; otherwise, false.</returns>
     /// <remarks>
     /// Loads from "<see cref="SavegameDirectoryPath"/>/Slot-XX/<paramref name="relativeFilePath"/>".
-    /// Requires <see cref="IsSavegameBackupDirectoryValid"/> to be true.
+    /// Requires <see cref="IsSavegameDirectoryValid"/> to be true.
     /// When constructing the <see cref="Game"/> object,
     /// ensure that <see cref="GameSettings.SaveDirectory"/> and <see cref="GameSettings.ApplicationName"/> are set
     /// in <see cref="GameSettings"/> to create a valid savegame backup directory.
@@ -223,7 +223,7 @@ public partial class Game
     /// <returns>The full path to the slot directory, or an empty string if invalid
     /// ("<see cref="SavegameDirectoryPath"/>/Slot-XX/").</returns>
     /// <remarks>
-    /// Requires <see cref="IsSavegameBackupDirectoryValid"/> to be true.
+    /// Requires <see cref="IsSavegameDirectoryValid"/> to be true.
     /// When constructing the <see cref="Game"/> object,
     /// ensure that <see cref="GameSettings.SaveDirectory"/> and <see cref="GameSettings.ApplicationName"/> are set
     /// in <see cref="GameSettings"/> to create a valid savegame backup directory.
@@ -243,7 +243,7 @@ public partial class Game
     /// <returns>The full path to the file in the slot directory, or an empty string if invalid
     /// ("<see cref="SavegameDirectoryPath"/>/Slot-XX/<paramref name="relativeFilePath"/>").</returns>
     /// <remarks>
-    /// Requires <see cref="IsSavegameBackupDirectoryValid"/> to be true.
+    /// Requires <see cref="IsSavegameDirectoryValid"/> to be true.
     /// When constructing the <see cref="Game"/> object,
     /// ensure that <see cref="GameSettings.SaveDirectory"/> and <see cref="GameSettings.ApplicationName"/> are set
     /// in <see cref="GameSettings"/> to create a valid savegame backup directory.
@@ -309,7 +309,7 @@ public partial class Game
         if (string.IsNullOrEmpty(content)) return false;
 
         var parts = content.Split(',');
-        if (parts.Length != 2) return false;
+        if (parts.Length != 3) return false;
 
         if (int.TryParse(parts[0], out currentBackupNumber) && int.TryParse(parts[1], out createdBackups) && int.TryParse(parts[2], out maxBackups))
         {

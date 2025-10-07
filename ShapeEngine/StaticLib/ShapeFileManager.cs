@@ -422,21 +422,21 @@ public static class ShapeFileManager
             return false;
         }
         
+        if (!Directory.Exists(destinationDirectoryPath))
+        {
+            Game.Instance.Logger.LogInfo($"ShapeFileManager CopyDirectory: Creating destination directory at {destinationDirectoryPath}");
+            Directory.CreateDirectory(destinationDirectoryPath);
+        }
+        
         try
         {
             string[] allFiles = Directory.GetFiles(sourceDirectoryPath, "*", SearchOption.AllDirectories);
             if (allFiles.Length <= 0)
             {
                 Game.Instance.Logger.LogInfo($"ShapeFileManager CopyDirectory: No files found in source directory at {sourceDirectoryPath} to copy.");
-                return false;
+                return true;
             }
             
-            if (!Directory.Exists(destinationDirectoryPath))
-            {
-                Game.Instance.Logger.LogInfo($"ShapeFileManager CopyDirectory: Creating destination directory at {destinationDirectoryPath}");
-                Directory.CreateDirectory(destinationDirectoryPath);
-            }
-
             foreach (string file in allFiles)
             {
                 string relativePath = Path.GetRelativePath(sourceDirectoryPath, file);

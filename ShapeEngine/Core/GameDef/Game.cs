@@ -386,7 +386,7 @@ public partial class Game
                 if (savegameDir != null)
                 {
                     SavegameDirectory = savegameDir;
-                    Logger.LogInfo($"Savegame directory set to: {SavegameDirectory}.");
+                    Logger.LogInfo($"Savegame directory set to: {SavegameDirectoryPath}.");
                     var backupDirPath = Path.Combine(dir.FullName, "Backups");
                     var backupDir = ShapeFileManager.CreateDirectory(backupDirPath, false);
                     if (backupDir != null)
