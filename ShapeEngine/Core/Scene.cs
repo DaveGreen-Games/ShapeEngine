@@ -2,6 +2,7 @@ using System.Numerics;
 using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CollisionSystem;
+using ShapeEngine.Geometry.CollisionSystem.CollisionHandlerDef;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Input;
 using ShapeEngine.Pathfinding;

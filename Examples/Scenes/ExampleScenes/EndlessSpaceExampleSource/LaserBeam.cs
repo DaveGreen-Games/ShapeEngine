@@ -4,6 +4,7 @@ using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.CollisionSystem;
+using ShapeEngine.Geometry.CollisionSystem.CollisionHandlerDef;
 using ShapeEngine.Geometry.RayDef;
 using ShapeEngine.Geometry.SegmentDef;
 using ShapeEngine.Input;
