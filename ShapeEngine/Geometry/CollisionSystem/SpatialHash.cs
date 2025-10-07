@@ -1,7 +1,6 @@
 ﻿using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
-using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.LineDef;
 using ShapeEngine.Geometry.PolygonDef;
@@ -21,40 +20,8 @@ namespace ShapeEngine.Geometry.CollisionSystem;
 /// The spatial hash divides a 2D space into a grid of buckets, each containing colliders that overlap its region.
 /// Provides fast lookup for collision candidates and supports dynamic resizing and grid changes.
 /// </remarks>
-public class SpatialHash : IBounds
+public class SpatialHash : IBounds, IBroadphase
 {
-    /// <summary>
-    /// Represents a collection of colliders within a single spatial hash bucket.
-    /// </summary>
-    public class Bucket : HashSet<Collider>
-    {
-        /// <summary>
-        /// Returns a new <see cref="Bucket"/> containing only colliders matching the given collision mask.
-        /// </summary>
-        /// <param name="mask">The collision mask to filter colliders by.</param>
-        /// <returns>A filtered <see cref="Bucket"/> or null if no colliders match.</returns>
-        public Bucket? FilterObjects(BitFlag mask)
-        {
-            if (Count <= 0 || mask.IsEmpty()) return null;
-            
-            Bucket? objects = null;
-            foreach (var collidable in this)
-            {
-                if (mask.Has(collidable.CollisionLayer))
-                {
-                    objects ??= new();
-                    objects.Add(collidable);
-                }
-            }
-            return objects;
-        }
-        /// <summary>
-        /// Creates a shallow copy of this <see cref="Bucket"/>.
-        /// </summary>
-        /// <returns>A new <see cref="Bucket"/> with the same colliders, or null if empty.</returns>
-        public Bucket? Copy() => Count <= 0 ? null : (Bucket)this.ToHashSet();
-    }
-
     #region Public Members
     /// <summary>
     /// Gets the bounds of the spatial hash grid.
@@ -83,7 +50,7 @@ public class SpatialHash : IBounds
     #endregion
 
     #region Private Members
-    private Bucket[] buckets;
+    private BroadphaseBucket[] buckets;
     private readonly Dictionary<Collider, List<int>> register = new();
     private readonly HashSet<Collider> registerKeys = [];
     private bool boundsResizeQueued;
@@ -107,7 +74,7 @@ public class SpatialHash : IBounds
         this.Cols = cols;
         this.SetSpacing();
         this.BucketCount = rows * cols;
-        this.buckets = new Bucket[this.BucketCount];
+        this.buckets = new BroadphaseBucket[this.BucketCount];
         for (int i = 0; i < BucketCount; i++)
         {
             this.buckets[i] = new();
@@ -126,7 +93,7 @@ public class SpatialHash : IBounds
         this.Cols = cols;
         this.SetSpacing();
         this.BucketCount = rows * cols;
-        this.buckets = new Bucket[this.BucketCount];
+        this.buckets = new BroadphaseBucket[this.BucketCount];
         for (int i = 0; i < BucketCount; i++)
         {
             this.buckets[i] = new();
@@ -165,7 +132,7 @@ public class SpatialHash : IBounds
     {
         Clear();
         register.Clear();
-        buckets = Array.Empty<Bucket>();  //new HashSet<ICollidable>[0];
+        buckets = Array.Empty<BroadphaseBucket>();  //new HashSet<ICollidable>[0];
     }
     /// <summary>
     /// Queues a resize of the spatial hash bounds to the specified rectangle. The resize is applied on the next clear.
@@ -191,38 +158,25 @@ public class SpatialHash : IBounds
         Cols = cols;
         SetSpacing();
         BucketCount = rows * cols;
-        buckets = new Bucket[BucketCount];
+        buckets = new BroadphaseBucket[BucketCount];
         for (int i = 0; i < BucketCount; i++)
         {
             buckets[i] = new();
         }
     }
-    /// <summary>
-    /// Gets the buckets containing the specified collider, if registered.
-    /// </summary>
-    /// <param name="collider">The collider to look up.</param>
-    /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetRegisteredCollisionCandidateBuckets(Collider collider, ref List<Bucket> candidateBuckets)
-    {
-        if (!collider.Enabled) return;
-        if (!register.TryGetValue(collider, out var bucketIds)) return;
-        if (bucketIds.Count <= 0) return;
-        foreach (var id in bucketIds)
-        {
-            var bucket = buckets[id];
-            if(bucket.Count > 0) candidateBuckets.Add(buckets[id]);
-        }
-    }
+
+
     /// <summary>
     /// Gets all buckets that may contain colliders overlapping the given collision object.
     /// </summary>
     /// <param name="collidable">The collision object to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetCandidateBuckets(CollisionObject collidable, ref List<Bucket> candidateBuckets)
+    /// <param name="registeredOnly">If true, only checks registered buckets; otherwise, computes overlapping buckets.</param>
+    public void GetCandidateBuckets(CollisionObject collidable, ref List<BroadphaseBucket> candidateBuckets, bool registeredOnly = false)
     {
         foreach (var collider in collidable.Colliders)
         {
-            GetCandidateBuckets(collider, ref candidateBuckets);
+            GetCandidateBuckets(collider, ref candidateBuckets, registeredOnly);
         }
     }
     /// <summary>
@@ -230,7 +184,8 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="collider">The collider to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetCandidateBuckets(Collider collider, ref List<Bucket> candidateBuckets)
+    /// <param name="registeredOnly">If true, only checks registered buckets; otherwise, computes overlapping buckets.</param>
+    public void GetCandidateBuckets(Collider collider, ref List<BroadphaseBucket> candidateBuckets, bool registeredOnly = false)
     {
         if (!collider.Enabled) return;
         if (register.TryGetValue(collider, out var bucketIds))
@@ -244,17 +199,19 @@ public class SpatialHash : IBounds
 
             return;
         }
+        
+        if (registeredOnly) return;
+        
         List<int> ids = new();
         GetCellIDs(collider, ref ids);
         FillCandidateBuckets(ids, ref candidateBuckets);
     }
-
     /// <summary>
     /// Gets all buckets that may contain colliders overlapping the given segment.
     /// </summary>
     /// <param name="segment">The segment to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetCandidateBuckets(Segment segment, ref List<Bucket> candidateBuckets)
+    public void GetCandidateBuckets(Segment segment, ref List<BroadphaseBucket> candidateBuckets)
     {
         List<int> bucketIds = new();
         GetCellIDs(segment, ref bucketIds);
@@ -266,7 +223,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="line">The line to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetCandidateBuckets(Line line, ref List<Bucket> candidateBuckets)
+    public void GetCandidateBuckets(Line line, ref List<BroadphaseBucket> candidateBuckets)
     {
         List<int> bucketIds = new();
         GetCellIDs(line, ref bucketIds);
@@ -278,7 +235,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="ray">The ray to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetCandidateBuckets(Ray ray, ref List<Bucket> candidateBuckets)
+    public void GetCandidateBuckets(Ray ray, ref List<BroadphaseBucket> candidateBuckets)
     {
         List<int> bucketIds = new();
         GetCellIDs(ray, ref bucketIds);
@@ -290,7 +247,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="circle">The circle to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetCandidateBuckets(Circle circle, ref List<Bucket> candidateBuckets)
+    public void GetCandidateBuckets(Circle circle, ref List<BroadphaseBucket> candidateBuckets)
     {
         List<int> bucketIds = new();
         GetCellIDs(circle, ref bucketIds);
@@ -302,7 +259,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="triangle">The triangle to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetCandidateBuckets(Triangle triangle, ref List<Bucket> candidateBuckets)
+    public void GetCandidateBuckets(Triangle triangle, ref List<BroadphaseBucket> candidateBuckets)
     {
         List<int> bucketIds = new();
         GetCellIDs(triangle, ref bucketIds);
@@ -314,7 +271,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="rect">The rectangle to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetCandidateBuckets(Rect rect, ref List<Bucket> candidateBuckets)
+    public void GetCandidateBuckets(Rect rect, ref List<BroadphaseBucket> candidateBuckets)
     {
         List<int> bucketIds = new();
         GetCellIDs(rect, ref bucketIds);
@@ -326,7 +283,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="quad">The quad to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetCandidateBuckets(Quad quad, ref List<Bucket> candidateBuckets)
+    public void GetCandidateBuckets(Quad quad, ref List<BroadphaseBucket> candidateBuckets)
     {
         List<int> bucketIds = new();
         GetCellIDs(quad, ref bucketIds);
@@ -338,7 +295,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="poly">The polygon to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetCandidateBuckets(Polygon poly, ref List<Bucket> candidateBuckets)
+    public void GetCandidateBuckets(Polygon poly, ref List<BroadphaseBucket> candidateBuckets)
     {
         List<int> bucketIds = new();
         GetCellIDs(poly, ref bucketIds);
@@ -350,13 +307,14 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="polyLine">The polyline to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetCandidateBuckets(Polyline polyLine, ref List<Bucket> candidateBuckets)
+    public void GetCandidateBuckets(Polyline polyLine, ref List<BroadphaseBucket> candidateBuckets)
     {
         List<int> bucketIds = new();
         GetCellIDs(polyLine, ref bucketIds);
         
         FillCandidateBuckets(bucketIds, ref candidateBuckets);
     }
+  
     /// <summary>
     /// Gets all unique colliders that may overlap the given collision object.
     /// </summary>
@@ -478,6 +436,7 @@ public class SpatialHash : IBounds
         
         AccumulateUniqueCandidates(bucketIds, ref candidates);
     }
+  
     /// <summary>
     /// Draws the spatial hash grid and filled cells for debugging purposes.
     /// </summary>
@@ -532,7 +491,7 @@ public class SpatialHash : IBounds
     /// </summary>
     /// <param name="bucketIds">List of bucket indices to check.</param>
     /// <param name="candidateBuckets">Reference to the list of candidate buckets to populate.</param>
-    private void FillCandidateBuckets(List<int> bucketIds, ref List<Bucket> candidateBuckets)
+    private void FillCandidateBuckets(List<int> bucketIds, ref List<BroadphaseBucket> candidateBuckets)
     {
         if (bucketIds.Count <= 0) return;
         foreach (var id in bucketIds)

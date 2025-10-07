@@ -28,6 +28,7 @@ public partial class CollisionHandler : IBounds
     
     private readonly CollisionObjectRegister collisionBodyRegister;
     
+    //TODO: Has IBroadphase now
     private readonly SpatialHash spatialHash;
     private readonly CollisionStack collisionStack;
 
@@ -38,13 +39,15 @@ public partial class CollisionHandler : IBounds
     private  FirstContactStack<Collider, Collider> colliderFirstContactRegisterTemp;
  
     private readonly HashSet<Collider> collisionCandidateCheckRegister = [];
-    private List<SpatialHash.Bucket> collisionCandidateBuckets = [];
+    private List<BroadphaseBucket> collisionCandidateBuckets = [];
 
     private readonly Dictionary<CollisionObject, IntersectSpaceRegister> intersectSpaceRegisters = new(128);
     #endregion
 
     #region Constructors
 
+    //TODO: Constructor now needs IBroadphase parameter instead of all spatial hash parameters
+    
     /// <summary>
     /// Initializes a new instance of the <see cref="CollisionHandler"/> class with the specified bounds and grid size.
     /// </summary>
@@ -275,7 +278,7 @@ public partial class CollisionHandler : IBounds
                     if (collider.Parent == null) continue;
                     collisionCandidateBuckets.Clear();
                     collisionCandidateCheckRegister.Clear();
-                    spatialHash.GetRegisteredCollisionCandidateBuckets(collider, ref collisionCandidateBuckets);
+                    spatialHash.GetCandidateBuckets(collider, ref collisionCandidateBuckets, true);
                     
                     if(collisionCandidateBuckets.Count <= 0) continue;     
                     
