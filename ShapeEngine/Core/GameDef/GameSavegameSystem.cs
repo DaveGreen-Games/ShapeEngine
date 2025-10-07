@@ -172,7 +172,7 @@ public partial class Game
         string path = Path.Combine(SavegameDirectoryPath, relativeFilePath);
         content = ShapeFileManager.LoadText(path);
 
-        return true;
+        return content.Length > 0;
     }
 
     /// <summary>

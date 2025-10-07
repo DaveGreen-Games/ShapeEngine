@@ -1327,6 +1327,7 @@ public static class ShapeFileManager
     /// <remarks>
     /// Values will be saved in a single line, separated by commas.
     /// No header is included or generated, just the values are saved.
+    /// This method overrides any existing file with the data supplied by <see cref="ICsvSerializable.ToCsv"/>.
     /// </remarks>
     public static void SaveToCsv(this ICsvSerializable content, string filePath)
     {
@@ -1338,6 +1339,10 @@ public static class ShapeFileManager
     /// <param name="content">The object to populate from the CSV file.</param>
     /// <param name="filePath">The file path from which to load the CSV data.</param>
     /// <returns>True if loading was successful; otherwise, false.</returns>
+    /// <remarks>
+    /// This methods uses <see cref="ParseCsv(string)"/> to split the CSV text into values.
+    /// It will read the entire file and treat new lines and carriage returns as comma separators.
+    /// </remarks>
     public static bool LoadFromCsv(this ICsvSerializable content, string filePath)
     {
         string csvText = LoadText(filePath);
@@ -1376,6 +1381,10 @@ public static class ShapeFileManager
     /// <param name="content">The object to populate from the CSV file.</param>
     /// <param name="filePath">The file path from which to load the CSV data.</param>
     /// <returns>True if loading was successful; otherwise, false.</returns>
+    /// <remarks>
+    /// This methods uses <see cref="ParseCsv(string)"/> to split the CSV text into values.
+    /// It will read the entire file and treat new lines and carriage returns as comma separators.
+    /// </remarks>
     public static bool LoadFromCsv<T>(this T content, string filePath) where T : ICsvSerializable, new()
     {
         string csvText = LoadText(filePath);
@@ -1438,6 +1447,9 @@ public static class ShapeFileManager
     /// </summary>
     /// <param name="csvText">The CSV text to parse.</param>
     /// <returns>An array of parsed CSV values.</returns>
+    /// <remarks>
+    /// This will split the input string by commas, new lines, and carriage returns. Do not use if lines represent different records!
+    /// </remarks>
     public static string[] ParseCsv(string csvText)
     {
         return string.IsNullOrWhiteSpace(csvText) ? [] : csvText.Split([',', '\n', '\r'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
@@ -1447,6 +1459,9 @@ public static class ShapeFileManager
     /// </summary>
     /// <param name="csvText">The CSV text to parse.</param>
     /// <returns>An array of string arrays, one for each line.</returns>
+    /// <remarks>
+    /// Each line will represent a separate record (string[]). Commas split each entry in the record.
+    /// </remarks>
     public static List<string[]> ParseCsvLines(string csvText)
     {
         if (string.IsNullOrWhiteSpace(csvText)) return [];
