@@ -1,5 +1,7 @@
 ﻿
 using System.Text;
+using ShapeEngine.Core.GameDef;
+using ShapeEngine.Serialization;
 
 namespace ShapeEngine.StaticLib;
 
@@ -58,7 +60,7 @@ public static class ShapeFileManager
     /// <param name="absolutePath">The absolute path of the file to create.</param>
     /// <param name="overrideIfExists">If true and the file exists, it will be deleted and recreated (WARNING: all contents will be lost).</param>
     /// <returns>The FileInfo of the created or existing file, or null if the operation failed.</returns>
-    public static FileInfo? CreateFile(string absolutePath, bool overrideIfExists = false)
+    public static FileInfo? CreateFile(string absolutePath, bool overrideIfExists)
     {
         if (string.IsNullOrWhiteSpace(absolutePath)) return null;
 
@@ -93,7 +95,7 @@ public static class ShapeFileManager
     /// <param name="text">The text content to write to the file.</param>
     /// <param name="overrideIfExists">If true and the file exists, it will be deleted and recreated with the new content.</param>
     /// <returns>The FileInfo of the created or existing file, or null if the operation failed.</returns>
-    public static FileInfo? CreateFile(string absolutePath, string text, bool overrideIfExists = false)
+    public static FileInfo? CreateFile(string absolutePath, string text, bool overrideIfExists)
     {
         if (string.IsNullOrWhiteSpace(absolutePath)) return null;
 
@@ -392,6 +394,65 @@ public static class ShapeFileManager
     /// <param name="absolutePath">The absolute directory path.</param>
     /// <returns>True if the directory exists; otherwise, false.</returns>
     public static bool DirectoryExists(string absolutePath) => Directory.Exists(absolutePath);
+
+    /// <summary>
+    /// Copies the contents of the source directory to the destination directory.
+    /// </summary>
+    /// <param name="sourceDirectoryPath">The absolute path of the source directory.</param>
+    /// <param name="destinationDirectoryPath">The absolute path of the destination directory.</param>
+    /// <param name="overwrite">If true, existing files in the destination will be overwritten.</param>
+    /// <returns>True if the copy operation succeeded; otherwise, false.</returns>
+    public static bool CopyDirectory(string sourceDirectoryPath, string destinationDirectoryPath, bool overwrite)
+    {
+        if (string.IsNullOrWhiteSpace(sourceDirectoryPath) || string.IsNullOrWhiteSpace(destinationDirectoryPath))
+        {
+            Game.Instance.Logger.LogWarning($"ShapeFileManager CopyDirectory: sourceDirectoryPath {sourceDirectoryPath} and/or destinationDirectoryPath {destinationDirectoryPath} is null or empty.");
+            return false;
+        }
+
+        if (Path.HasExtension(sourceDirectoryPath) || Path.HasExtension(destinationDirectoryPath))
+        {
+            Game.Instance.Logger.LogWarning($"ShapeFileManager CopyDirectory: sourceDirectoryPath {sourceDirectoryPath} and/or destinationDirectoryPath {destinationDirectoryPath} appears to be a file path, not a directory path.");
+            return false;
+        }
+
+        if (!Directory.Exists(sourceDirectoryPath))
+        {
+            Game.Instance.Logger.LogWarning($"ShapeFileManager CopyDirectory: Source directory at {sourceDirectoryPath} does not exist.");
+            return false;
+        }
+        
+        if (!Directory.Exists(destinationDirectoryPath))
+        {
+            Game.Instance.Logger.LogInfo($"ShapeFileManager CopyDirectory: Creating destination directory at {destinationDirectoryPath}");
+            Directory.CreateDirectory(destinationDirectoryPath);
+        }
+        
+        try
+        {
+            string[] allFiles = Directory.GetFiles(sourceDirectoryPath, "*", SearchOption.AllDirectories);
+            if (allFiles.Length <= 0)
+            {
+                Game.Instance.Logger.LogInfo($"ShapeFileManager CopyDirectory: No files found in source directory at {sourceDirectoryPath} to copy.");
+                return true;
+            }
+            
+            foreach (string file in allFiles)
+            {
+                string relativePath = Path.GetRelativePath(sourceDirectoryPath, file);
+                string destFile = Path.Combine(destinationDirectoryPath, relativePath);
+                Directory.CreateDirectory(Path.GetDirectoryName(destFile)!);
+                File.Copy(file, destFile, overwrite);
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Game.Instance.Logger.LogError($"[{ex.GetType().Name}] Failed to copy directory from {sourceDirectoryPath} to {destinationDirectoryPath}: {ex.Message}");
+            return false;
+        }
+    }
     #endregion
 
     #region Load/Process Directory
@@ -810,6 +871,24 @@ public static class ShapeFileManager
         catch (Exception ex)
         {
             Console.Error.WriteLine($"[{ex.GetType().Name}] Failed to save {fileName} to {absolutePath}: {ex.Message}");
+            return false;
+        }
+    }
+    public static bool SaveText(string text, string absolutePath, Encoding? encoding = null, bool append = false, bool createDirectory = true)
+    {
+        if (string.IsNullOrWhiteSpace(absolutePath)) return false;
+    
+        try
+        {
+            if (createDirectory) Directory.CreateDirectory(absolutePath);
+
+            using var writer = new StreamWriter(absolutePath, append, encoding ?? Encoding.Default);
+            writer.Write(text);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[{ex.GetType().Name}] Failed to save {absolutePath}: {ex.Message}");
             return false;
         }
     }
@@ -1236,6 +1315,167 @@ public static class ShapeFileManager
             Console.Error.WriteLine($"[{ex.GetType().Name}] Failed to read from {file.FullName}: {ex.Message}");
             return false;
         }
+    }
+    #endregion
+    
+    #region Csv
+    /// <summary>
+    /// Saves the object implementing <see cref="ICsvSerializable"/> to a CSV file at the specified path.
+    /// </summary>
+    /// <param name="content">The object to serialize and save as CSV.</param>
+    /// <param name="filePath">The file path where the CSV will be saved.</param>
+    /// <remarks>
+    /// Values will be saved in a single line, separated by commas.
+    /// No header is included or generated, just the values are saved.
+    /// This method overrides any existing file with the data supplied by <see cref="ICsvSerializable.ToCsv"/>.
+    /// </remarks>
+    public static void SaveToCsv(this ICsvSerializable content, string filePath)
+    {
+        SaveText(content.ToCsv(), filePath);
+    }
+    /// <summary>
+    /// Loads data from a CSV file into the object implementing <see cref="ICsvSerializable"/>.
+    /// </summary>
+    /// <param name="content">The object to populate from the CSV file.</param>
+    /// <param name="filePath">The file path from which to load the CSV data.</param>
+    /// <returns>True if loading was successful; otherwise, false.</returns>
+    /// <remarks>
+    /// This methods uses <see cref="ParseCsv(string)"/> to split the CSV text into values.
+    /// It will read the entire file and treat new lines and carriage returns as comma separators.
+    /// </remarks>
+    public static bool LoadFromCsv(this ICsvSerializable content, string filePath)
+    {
+        string csvText = LoadText(filePath);
+        if (string.IsNullOrWhiteSpace(csvText)) return false;
+        
+        string[] csv = ParseCsv(csvText);
+        if(csv.Length <= 0) return false;
+        
+        content.FromCsv(csv);
+        return true;
+    }
+    /// <summary>
+    /// Saves the object implementing <see cref="ICsvSerializable"/> to a CSV file at the specified path.
+    /// </summary>
+    /// <typeparam name="T">The type of the object to serialize and save as CSV.
+    /// Must implement <see cref="ICsvSerializable"/> and have a parameterless constructor.</typeparam>
+    /// <param name="content">The object to serialize and save as CSV.</param>
+    /// <param name="filePath">The file path where the CSV will be saved.</param>
+    /// <returns>True if the CSV was saved successfully; otherwise, false.</returns>
+    /// <remarks>
+    /// Values will be saved in a single line, separated by commas.
+    /// No header is included or generated, just the values are saved.
+    /// </remarks>
+    public static bool SaveToCsv<T>(this T content, string filePath) where T : ICsvSerializable, new()
+    {
+        string csvText = content.ToCsv();
+        return !string.IsNullOrWhiteSpace(csvText) && SaveText(csvText, filePath);
+    }
+    /// <summary>
+    /// Loads data from a CSV file into the object implementing <see cref="ICsvSerializable"/>.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of the object to populate from the CSV file.
+    /// Must implement <see cref="ICsvSerializable"/> and have a parameterless constructor.
+    /// </typeparam>
+    /// <param name="content">The object to populate from the CSV file.</param>
+    /// <param name="filePath">The file path from which to load the CSV data.</param>
+    /// <returns>True if loading was successful; otherwise, false.</returns>
+    /// <remarks>
+    /// This methods uses <see cref="ParseCsv(string)"/> to split the CSV text into values.
+    /// It will read the entire file and treat new lines and carriage returns as comma separators.
+    /// </remarks>
+    public static bool LoadFromCsv<T>(this T content, string filePath) where T : ICsvSerializable, new()
+    {
+        string csvText = LoadText(filePath);
+        if (string.IsNullOrWhiteSpace(csvText)) return false;
+        
+        string[] csv = ParseCsv(csvText);
+        if(csv.Length <= 0) return false;
+        
+        content.FromCsv(csv);
+        return true;
+    }
+    /// <summary>
+    /// Saves a list of objects implementing <see cref="ICsvSerializable"/> to a CSV file at the specified path.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of the objects to serialize and save as CSV.
+    /// Must implement <see cref="ICsvSerializable"/> and have a parameterless constructor.
+    /// </typeparam>
+    /// <param name="contents">The list of objects to serialize and save as CSV. Each entry will represent a single line.</param>
+    /// <param name="filePath">The file path where the CSV will be saved.</param>
+    /// <returns>True if the CSV was saved successfully; otherwise, false.</returns>
+    /// <remarks>
+    /// Values will be saved in a single line, separated by commas.
+    /// No header is included or generated, just the values are saved.
+    /// </remarks>
+    public static bool SaveToCsv<T>(this List<T> contents, string filePath) where T : ICsvSerializable, new()
+    {
+        var csvLines = contents.Select(c => c.ToCsv());
+        string csvText = string.Join(Environment.NewLine, csvLines);
+        return !string.IsNullOrWhiteSpace(csvText) && SaveText(csvText, filePath);
+    }
+    /// <summary>
+    /// Loads data from a CSV file into a list of objects implementing <see cref="ICsvSerializable"/>.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of the objects to populate from the CSV file.
+    /// Must implement <see cref="ICsvSerializable"/> and have a parameterless constructor.
+    /// </typeparam>
+    /// <param name="contents">The list to populate with objects from the CSV file.</param>
+    /// <param name="filePath">The file path from which to load the CSV data.</param>
+    /// <returns>True if loading was successful; otherwise, false.</returns>
+    public static bool LoadFromCsv<T>(this List<T> contents, string filePath) where T : ICsvSerializable, new()
+    {
+        string csvText = LoadText(filePath);
+        if (string.IsNullOrWhiteSpace(csvText)) return false;
+        
+        var csvLines = ParseCsvLines(csvText);
+        if(csvLines.Count <= 0) return false;
+
+        for (var i = 0; i < csvLines.Count; i++)
+        {
+            if (i >= contents.Count) return true;
+            contents[i].FromCsv(csvLines[i]);
+        }
+
+        return true;
+    }
+    /// <summary>
+    /// Parses a CSV string into an array of values, splitting on commas and line breaks.
+    /// </summary>
+    /// <param name="csvText">The CSV text to parse.</param>
+    /// <returns>An array of parsed CSV values.</returns>
+    /// <remarks>
+    /// This will split the input string by commas, new lines, and carriage returns. Do not use if lines represent different records!
+    /// </remarks>
+    public static string[] ParseCsv(string csvText)
+    {
+        return string.IsNullOrWhiteSpace(csvText) ? [] : csvText.Split([',', '\n', '\r'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    }
+    /// <summary>
+    /// Parses a CSV string into a list of string arrays, each representing a line split by commas.
+    /// </summary>
+    /// <param name="csvText">The CSV text to parse.</param>
+    /// <returns>An array of string arrays, one for each line.</returns>
+    /// <remarks>
+    /// Each line will represent a separate record (string[]). Commas split each entry in the record.
+    /// </remarks>
+    public static List<string[]> ParseCsvLines(string csvText)
+    {
+        if (string.IsNullOrWhiteSpace(csvText)) return [];
+        string[] lines = csvText.Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if(lines.Length <= 0) return [];
+        
+        var result = new List<string[]>();
+        foreach (string line in lines)
+        {
+            if (string.IsNullOrWhiteSpace(line)) continue;
+            string[] csv = line.Split([','], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            result.Add(csv);
+        }
+        return result;
     }
     #endregion
 }

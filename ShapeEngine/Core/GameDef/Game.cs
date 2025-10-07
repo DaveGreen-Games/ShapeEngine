@@ -60,23 +60,8 @@ public partial class Game
     /// The name of the application. Used for display and save directory purposes.
     /// </summary>
     public readonly string ApplicationName;
-    
-    /// <summary>
-    /// The directory where game data is saved.
-    /// Points to <see cref="GameSettings.SaveDirectory"/>/<see cref="GameSettings.ApplicationName"/>.
-    /// Will be empty if no save directory is set in <see cref="GameSettings"/>.
-    /// </summary>
-    public readonly DirectoryInfo SaveDirectory;
-    /// <summary>
-    /// Gets the full path of the save directory as a string.
-    /// </summary>
-    public string SaveDirectoryPath => SaveDirectory.FullName;
-    
-    /// <summary>
-    /// Indicates whether the save directory is valid (exists and has a non-empty path).
-    /// </summary>
-    public bool IsSaveDirectoryValid => SaveDirectory is { Exists: true, FullName.Length: > 0 };
-    
+
+
     /// <summary>
     /// Gets or sets the command-line arguments passed to the application at launch.
     /// </summary>
@@ -379,7 +364,7 @@ public partial class Game
             if (dir != null)
             {
                 SaveDirectory = dir;
-
+                
                 if (ReleaseMode)
                 {
                     var logPath = Path.Combine(absolutePath, "LogOutput/DefaultLog.txt");
@@ -393,11 +378,41 @@ public partial class Game
                     Logger.LogInfo("Logger initialized in debug mode. No log file will be created.");
                 }
                 
-                Logger.LogInfo($"Save directory set to: {SaveDirectoryPath}");
+                
+                Logger.LogInfo($"Save directory set to: {SaveDirectoryPath}.");
+                
+                var savegameDirPath = Path.Combine(dir.FullName, "Savegames");
+                var savegameDir = ShapeFileManager.CreateDirectory(savegameDirPath, false);
+                if (savegameDir != null)
+                {
+                    SavegameDirectory = savegameDir;
+                    Logger.LogInfo($"Savegame directory set to: {SavegameDirectoryPath}.");
+                    var backupDirPath = Path.Combine(dir.FullName, "Backups");
+                    var backupDir = ShapeFileManager.CreateDirectory(backupDirPath, false);
+                    if (backupDir != null)
+                    {
+                        SavegameBackupDirectory = backupDir;
+                        Logger.LogInfo($"Savegame backup directory set to: {SavegameBackupDirectoryPath}.");
+                    }
+                    else
+                    {
+                        SavegameBackupDirectory = new (string.Empty);
+                        Logger.LogWarning("Failed to create save backup directory! SaveBackupDirectory will be empty.");
+                    } 
+                }
+                else
+                {
+                    SavegameDirectory = new(string.Empty);
+                    SavegameBackupDirectory = new(string.Empty);
+                    Logger.LogWarning("Failed to create SavegameDirectory. SavegameDirectory and SaveBackupDirectory will be empty.");
+                } 
+                
             }
             else
             {
                 SaveDirectory = new(string.Empty);
+                SavegameDirectory = new(string.Empty);
+                SavegameBackupDirectory = new(string.Empty);
                 Logger = new Logger(LoggerSettings.Default);
                 if (ReleaseMode)
                 {
@@ -408,12 +423,15 @@ public partial class Game
                     Logger.LogInfo("Logger initialized in debug mode. No log file will be created.");
                 }
                 
-                Logger.LogWarning("No save directory set! SaveDirectory will be empty.");
+                Logger.LogWarning("No save directory set! SaveDirectory will be empty. ");
+                Logger.LogWarning("SavegameDirectory and SavegameBackupDirectory will be empty.");
             }
         }
         else
         {
             SaveDirectory = new(string.Empty);
+            SavegameDirectory = new(string.Empty);
+            SavegameBackupDirectory = new(string.Empty);
             Logger = new Logger(LoggerSettings.Default);
             if (ReleaseMode)
             {
@@ -424,6 +442,7 @@ public partial class Game
                 Logger.LogInfo("Logger initialized in debug mode. No log file will be created.");
             }
             Logger.LogWarning("No save directory set! SaveDirectory will be empty.");
+            Logger.LogWarning("SavegameDirectory and SavegameBackupDirectory will be empty.");
         }
         
         // this.DevelopmentDimensions = gameSettings.DevelopmentDimensions;

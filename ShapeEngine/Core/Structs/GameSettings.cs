@@ -1,5 +1,4 @@
 using Raylib_cs;
-using ShapeEngine.Core.Logging;
 using ShapeEngine.Screen;
 
 namespace ShapeEngine.Core.Structs;
@@ -15,52 +14,53 @@ public readonly struct GameSettings
     /// Creates a new GameSettings instance with stretch mode.
     /// </summary>
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
-    /// <param name="saveGameDirectory">The directory for saving game data.
-    /// If set to null, no directory will be created.
-    /// Savegame location: saveGameDirectory/applicationName</param>
+    /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created.
+    /// Savegame location: saveDirectory/applicationName.</param>
     public static GameSettings StretchMode(string applicationName = "ShapeEngineGame", 
-        Environment.SpecialFolder? saveGameDirectory = Environment.SpecialFolder.LocalApplicationData)
+        Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
     {
-        return new GameSettings(-1, TextureFilter.Bilinear, ShaderSupportType.Multi, applicationName, saveGameDirectory);
+        return new GameSettings(-1, TextureFilter.Bilinear, ShaderSupportType.Multi, 
+            applicationName, saveDirectory);
     }
 
     /// <summary>
     /// Creates a new GameSettings instance with fixed dimensions and the nearest scaling disabled.
     /// </summary>
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
-    /// <param name="saveGameDirectory">The directory for saving game data.
-    /// If set to null, no directory will be created.
-    /// Savegame location: saveGameDirectory/applicationName</param>
+    /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created.
+    /// Savegame location: saveDirectory/applicationName.</param>
     public static GameSettings FixedMode(string applicationName = "ShapeEngineGame", 
-        Environment.SpecialFolder? saveGameDirectory = Environment.SpecialFolder.LocalApplicationData)
+        Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
     {
-        return new GameSettings(new Dimensions(320, 180), -1, TextureFilter.Point, ShaderSupportType.Multi, false, applicationName, saveGameDirectory);
+        return new GameSettings(new Dimensions(320, 180), -1, TextureFilter.Point, ShaderSupportType.Multi, false, 
+            applicationName, saveDirectory);
     }
 
     /// <summary>
     /// Creates a new GameSettings instance with fixed dimensions and the nearest scaling enabled.
     /// </summary>
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
-    /// <param name="saveGameDirectory">The directory for saving game data.
-    /// If set to null, no directory will be created.
-    /// Savegame location: saveGameDirectory/applicationName</param>
+    /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created.
+    /// Savegame location: saveDirectory/applicationName.</param>
+
     public static GameSettings FixedNearestMode(string applicationName = "ShapeEngineGame", 
-        Environment.SpecialFolder? saveGameDirectory = Environment.SpecialFolder.LocalApplicationData)
+        Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
     {
-        return new GameSettings(new Dimensions(320, 180), -1, TextureFilter.Point, ShaderSupportType.Multi, true, applicationName, saveGameDirectory);
+        return new GameSettings(new Dimensions(320, 180), -1, TextureFilter.Point, ShaderSupportType.Multi, true, 
+            applicationName, saveDirectory);
     }
 
     /// <summary>
     /// Creates a new GameSettings instance with pixelation mode.
     /// </summary>
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
-    /// <param name="saveGameDirectory">The directory for saving game data.
-    /// If set to null, no directory will be created.
-    /// Savegame location: saveGameDirectory/applicationName</param>
+    /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created.
+    /// Savegame location: saveDirectory/applicationName.</param>
     public static GameSettings PixelationMode(string applicationName = "ShapeEngineGame", 
-        Environment.SpecialFolder? saveGameDirectory = Environment.SpecialFolder.LocalApplicationData)
+        Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
     {
-        return new GameSettings(0.25f, -1, TextureFilter.Point, ShaderSupportType.Multi, applicationName, saveGameDirectory);
+        return new GameSettings(0.25f, -1, TextureFilter.Point, ShaderSupportType.Multi, 
+            applicationName, saveDirectory);
     }
 
     #endregion
@@ -74,7 +74,8 @@ public readonly struct GameSettings
     /// <param name="textureFilter">The texture filter to be used.</param>
     /// <param name="shaderSupportType">The shader support type.</param>
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
-    /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created. Savegame location: saveGameDirectory/applicationName</param>
+    /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created.
+    /// Savegame location: saveDirectory/applicationName.</param>
     public GameSettings (int fixedFramerate, TextureFilter textureFilter, ShaderSupportType shaderSupportType, 
         string applicationName = "ShapeEngineGame", Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
     {
@@ -97,7 +98,8 @@ public readonly struct GameSettings
     /// <param name="shaderSupportType">The shader support type.</param>
     /// <param name="nearestScaling">A value indicating whether the nearest scaling should be used.</param>
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
-    /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created. Savegame location: saveGameDirectory/applicationName</param>
+    /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created.
+    /// Savegame location: saveDirectory/applicationName.</param>
     public GameSettings(Dimensions fixedDimensions, int fixedFramerate, TextureFilter textureFilter, ShaderSupportType shaderSupportType, 
         bool nearestScaling = false, string applicationName = "ShapeEngineGame", Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
     {
@@ -136,7 +138,8 @@ public readonly struct GameSettings
     /// <param name="textureFilter">The texture filter to be used.</param>
     /// <param name="shaderSupportType">The shader support type.</param>
     /// <param name="applicationName">The name of the application. Will also be used for savegame folder name.</param>
-    /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created. Savegame location: saveGameDirectory/applicationName</param>
+    /// <param name="saveDirectory">The directory for saving game data. If set to null, no directory will be created.
+    /// Savegame location: saveDirectory/applicationName.</param>
     public GameSettings(float pixelationFactor, int fixedFramerate, TextureFilter textureFilter, ShaderSupportType shaderSupportType, 
         string applicationName = "ShapeEngineGame", Environment.SpecialFolder? saveDirectory = Environment.SpecialFolder.LocalApplicationData)
     {
@@ -218,6 +221,14 @@ public readonly struct GameSettings
     /// Choose based on your application's requirements and platform conventions.
     /// </remarks>
     public readonly Environment.SpecialFolder? SaveDirectory = Environment.SpecialFolder.LocalApplicationData;
+
+    // /// <summary>
+    // /// Gets the maximum number of savegame backup files to keep.
+    // /// </summary>
+    // /// <remarks>
+    // /// If set to 0 or less, no backups will be created and no backup directory will be created.
+    // /// </remarks>
+    // public readonly int MaxSavegameBackups = 3;
 
     #endregion
 }
