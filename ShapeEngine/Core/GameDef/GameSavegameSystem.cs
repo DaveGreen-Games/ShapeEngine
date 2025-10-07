@@ -363,7 +363,7 @@ public partial class Game
         }
         catch (Exception ex)
         {
-            Logger.LogError($"Failed to create backup{currentBackupNumber}: {ex.Message}");
+            Logger.LogError($"Failed to create backup {currentBackupNumber}: {ex.Message}");
             return (false, currentBackupNumber, createdBackups);
         }
     }
@@ -394,7 +394,7 @@ public partial class Game
         }
         catch (Exception ex)
         {
-            Logger.LogError($"Failed to create backup{backupNumber}: {ex.Message}");
+            Logger.LogError($"Failed to create backup {backupNumber}: {ex.Message}");
             return false;
         }
     }

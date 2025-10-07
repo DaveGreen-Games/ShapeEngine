@@ -1364,10 +1364,7 @@ public static class ShapeFileManager
     public static bool SaveToCsv<T>(this T content, string filePath) where T : ICsvSerializable, new()
     {
         string csvText = content.ToCsv();
-        if (string.IsNullOrWhiteSpace(csvText)) return false;
-        
-        SaveText(csvText, filePath);
-        return true;
+        return !string.IsNullOrWhiteSpace(csvText) && SaveText(csvText, filePath);
     }
     /// <summary>
     /// Loads data from a CSV file into the object implementing <see cref="ICsvSerializable"/>.
@@ -1430,6 +1427,7 @@ public static class ShapeFileManager
 
         for (var i = 0; i < csvLines.Count; i++)
         {
+            if (i >= contents.Count) return true;
             contents[i].FromCsv(csvLines[i]);
         }
 
