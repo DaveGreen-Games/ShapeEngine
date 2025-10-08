@@ -172,12 +172,18 @@ public class SpatialHash : IBounds, IBroadphase
     /// <param name="collidable">The collision object to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
     /// <param name="registeredOnly">If true, only checks registered buckets; otherwise, computes overlapping buckets.</param>
-    public void GetCandidateBuckets(CollisionObject collidable, ref List<BroadphaseBucket> candidateBuckets, bool registeredOnly = false)
+    /// <returns>
+    /// Returns the number of buckets added to the candidateBuckets list.
+    /// </returns>
+    public int GetCandidateBuckets(CollisionObject collidable, ref List<BroadphaseBucket> candidateBuckets, bool registeredOnly = false)
     {
+        int count = 0;
         foreach (var collider in collidable.Colliders)
         {
-            GetCandidateBuckets(collider, ref candidateBuckets, registeredOnly);
+            count += GetCandidateBuckets(collider, ref candidateBuckets, registeredOnly);
         }
+
+        return count;
     }
     /// <summary>
     /// Gets all buckets that may contain colliders overlapping the given collider.
@@ -185,134 +191,169 @@ public class SpatialHash : IBounds, IBroadphase
     /// <param name="collider">The collider to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
     /// <param name="registeredOnly">If true, only checks registered buckets; otherwise, computes overlapping buckets.</param>
-    public void GetCandidateBuckets(Collider collider, ref List<BroadphaseBucket> candidateBuckets, bool registeredOnly = false)
+    /// <returns>
+    /// Returns the number of buckets added to the candidateBuckets list.
+    /// </returns>
+    public int GetCandidateBuckets(Collider collider, ref List<BroadphaseBucket> candidateBuckets, bool registeredOnly = false)
     {
-        if (!collider.Enabled) return;
+        if (!collider.Enabled) return 0;
+        int count = 0;
         if (register.TryGetValue(collider, out var bucketIds))
         {
-            if (bucketIds.Count <= 0) return;
-            foreach (var id in bucketIds)
+            if (bucketIds.Count <= 0) return 0;
+            foreach (int id in bucketIds)
             {
                 var bucket = buckets[id];
-                if(bucket.Count > 0) candidateBuckets.Add(buckets[id]);
+                if (bucket.Count > 0)
+                {
+                    count++;
+                    candidateBuckets.Add(buckets[id]);
+                }
             }
 
-            return;
+            return count;
         }
         
-        if (registeredOnly) return;
+        if (registeredOnly) return count;
         
         List<int> ids = new();
         GetCellIDs(collider, ref ids);
-        FillCandidateBuckets(ids, ref candidateBuckets);
+        return FillCandidateBuckets(ids, ref candidateBuckets);
     }
     /// <summary>
     /// Gets all buckets that may contain colliders overlapping the given segment.
     /// </summary>
     /// <param name="segment">The segment to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetCandidateBuckets(Segment segment, ref List<BroadphaseBucket> candidateBuckets)
+    /// <returns>
+    /// Returns the number of buckets added to the candidateBuckets list.
+    /// </returns>
+    public int GetCandidateBuckets(Segment segment, ref List<BroadphaseBucket> candidateBuckets)
     {
-        List<int> bucketIds = new();
+        List<int> bucketIds = [];
         GetCellIDs(segment, ref bucketIds);
         
-        FillCandidateBuckets(bucketIds, ref candidateBuckets);
+        return FillCandidateBuckets(bucketIds, ref candidateBuckets);
     }
     /// <summary>
     /// Gets all buckets that may contain colliders overlapping the given line.
     /// </summary>
     /// <param name="line">The line to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetCandidateBuckets(Line line, ref List<BroadphaseBucket> candidateBuckets)
+    /// <returns>
+    /// Returns the number of buckets added to the candidateBuckets list.
+    /// </returns>
+    public int GetCandidateBuckets(Line line, ref List<BroadphaseBucket> candidateBuckets)
     {
-        List<int> bucketIds = new();
+        List<int> bucketIds = [];
         GetCellIDs(line, ref bucketIds);
         
-        FillCandidateBuckets(bucketIds, ref candidateBuckets);
+        return FillCandidateBuckets(bucketIds, ref candidateBuckets);
     }
     /// <summary>
     /// Gets all buckets that may contain colliders overlapping the given ray.
     /// </summary>
     /// <param name="ray">The ray to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetCandidateBuckets(Ray ray, ref List<BroadphaseBucket> candidateBuckets)
+    /// <returns>
+    /// Returns the number of buckets added to the candidateBuckets list.
+    /// </returns>
+    public int GetCandidateBuckets(Ray ray, ref List<BroadphaseBucket> candidateBuckets)
     {
-        List<int> bucketIds = new();
+        List<int> bucketIds = [];
         GetCellIDs(ray, ref bucketIds);
         
-        FillCandidateBuckets(bucketIds, ref candidateBuckets);
+        return FillCandidateBuckets(bucketIds, ref candidateBuckets);
     }
     /// <summary>
     /// Gets all buckets that may contain colliders overlapping the given circle.
     /// </summary>
     /// <param name="circle">The circle to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetCandidateBuckets(Circle circle, ref List<BroadphaseBucket> candidateBuckets)
+    /// <returns>
+    /// Returns the number of buckets added to the candidateBuckets list.
+    /// </returns>
+    public int GetCandidateBuckets(Circle circle, ref List<BroadphaseBucket> candidateBuckets)
     {
-        List<int> bucketIds = new();
+        List<int> bucketIds = [];
         GetCellIDs(circle, ref bucketIds);
         
-        FillCandidateBuckets(bucketIds, ref candidateBuckets);
+        return FillCandidateBuckets(bucketIds, ref candidateBuckets);
     }
     /// <summary>
     /// Gets all buckets that may contain colliders overlapping the given triangle.
     /// </summary>
     /// <param name="triangle">The triangle to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetCandidateBuckets(Triangle triangle, ref List<BroadphaseBucket> candidateBuckets)
+    /// <returns>
+    /// Returns the number of buckets added to the candidateBuckets list.
+    /// </returns>
+    public int GetCandidateBuckets(Triangle triangle, ref List<BroadphaseBucket> candidateBuckets)
     {
-        List<int> bucketIds = new();
+        List<int> bucketIds = [];
         GetCellIDs(triangle, ref bucketIds);
         
-        FillCandidateBuckets(bucketIds, ref candidateBuckets);
+        return FillCandidateBuckets(bucketIds, ref candidateBuckets);
     }
     /// <summary>
     /// Gets all buckets that may contain colliders overlapping the given rectangle.
     /// </summary>
     /// <param name="rect">The rectangle to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetCandidateBuckets(Rect rect, ref List<BroadphaseBucket> candidateBuckets)
+    /// <returns>
+    /// Returns the number of buckets added to the candidateBuckets list.
+    /// </returns>
+    public int GetCandidateBuckets(Rect rect, ref List<BroadphaseBucket> candidateBuckets)
     {
-        List<int> bucketIds = new();
+        List<int> bucketIds = [];
         GetCellIDs(rect, ref bucketIds);
         
-        FillCandidateBuckets(bucketIds, ref candidateBuckets);
+        return FillCandidateBuckets(bucketIds, ref candidateBuckets);
     }
     /// <summary>
     /// Gets all buckets that may contain colliders overlapping the given quad.
     /// </summary>
     /// <param name="quad">The quad to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetCandidateBuckets(Quad quad, ref List<BroadphaseBucket> candidateBuckets)
+    /// <returns>
+    /// Returns the number of buckets added to the candidateBuckets list.
+    /// </returns>
+    public int GetCandidateBuckets(Quad quad, ref List<BroadphaseBucket> candidateBuckets)
     {
-        List<int> bucketIds = new();
+        List<int> bucketIds = [];
         GetCellIDs(quad, ref bucketIds);
         
-        FillCandidateBuckets(bucketIds, ref candidateBuckets);
+        return FillCandidateBuckets(bucketIds, ref candidateBuckets);
     }
     /// <summary>
     /// Gets all buckets that may contain colliders overlapping the given polygon.
     /// </summary>
     /// <param name="poly">The polygon to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetCandidateBuckets(Polygon poly, ref List<BroadphaseBucket> candidateBuckets)
+    /// <returns>
+    /// Returns the number of buckets added to the candidateBuckets list.
+    /// </returns>
+    public int GetCandidateBuckets(Polygon poly, ref List<BroadphaseBucket> candidateBuckets)
     {
-        List<int> bucketIds = new();
+        List<int> bucketIds = [];
         GetCellIDs(poly, ref bucketIds);
         
-        FillCandidateBuckets(bucketIds, ref candidateBuckets);
+        return FillCandidateBuckets(bucketIds, ref candidateBuckets);
     }
     /// <summary>
     /// Gets all buckets that may contain colliders overlapping the given polyline.
     /// </summary>
     /// <param name="polyLine">The polyline to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    public void GetCandidateBuckets(Polyline polyLine, ref List<BroadphaseBucket> candidateBuckets)
+    /// <returns>
+    /// Returns the number of buckets added to the candidateBuckets list.
+    /// </returns>
+    public int GetCandidateBuckets(Polyline polyLine, ref List<BroadphaseBucket> candidateBuckets)
     {
-        List<int> bucketIds = new();
+        List<int> bucketIds = [];
         GetCellIDs(polyLine, ref bucketIds);
         
-        FillCandidateBuckets(bucketIds, ref candidateBuckets);
+        return FillCandidateBuckets(bucketIds, ref candidateBuckets);
     }
   
     /// <summary>
@@ -320,121 +361,154 @@ public class SpatialHash : IBounds, IBroadphase
     /// </summary>
     /// <param name="collisionBody">The collision object to query.</param>
     /// <param name="candidates">A set to populate with unique colliders.</param>
-    public void GetUniqueCandidates(CollisionObject collisionBody, ref HashSet<Collider> candidates)
+    /// <returns>
+    /// Returns the number of unique colliders added to the candidates set.
+    /// </returns>
+    public int GetUniqueCandidates(CollisionObject collisionBody, ref HashSet<Collider> candidates)
     {
-        if (!collisionBody.HasColliders) return;
+        if (!collisionBody.HasColliders) return 0;
+        var count = 0;
         foreach (var collider in collisionBody.Colliders)
         {
-            GetUniqueCandidates(collider, ref candidates);
+            count += GetUniqueCandidates(collider, ref candidates);
         }
+
+        return count;
     }
     /// <summary>
     /// Gets all unique colliders that may overlap the given collider.
     /// </summary>
     /// <param name="collider">The collider to query.</param>
     /// <param name="candidates">A set to populate with unique colliders.</param>
-    public void GetUniqueCandidates(Collider collider, ref HashSet<Collider> candidates)
+    /// <returns>
+    /// Returns the number of unique colliders added to the candidates set.
+    /// </returns>
+    public int GetUniqueCandidates(Collider collider, ref HashSet<Collider> candidates)
+    
     {
-        if (!collider.Enabled) return;
+        if (!collider.Enabled) return 0;
         if (register.TryGetValue(collider, out var bucketIds))
         {
-            if (bucketIds.Count <= 0) return;
-            foreach (var id in bucketIds)
+            if (bucketIds.Count <= 0) return 0;
+            int prevCount = candidates.Count;
+            
+            foreach (int id in bucketIds)
             {
                 var bucket = buckets[id];
                 if(bucket.Count > 0) candidates.UnionWith(bucket);
             }
 
-            return;
+            return candidates.Count - prevCount;
         }
         
-        List<int> ids = new();
+        List<int> ids = [];
         GetCellIDs(collider, ref ids);
-        AccumulateUniqueCandidates(ids, ref candidates);
+        return AccumulateUniqueCandidates(ids, ref candidates);
     }
     /// <summary>
     /// Gets all unique colliders that may overlap the given segment.
     /// </summary>
     /// <param name="segment">The segment to query.</param>
     /// <param name="candidates">A set to populate with unique colliders.</param>
-    public void GetUniqueCandidates(Segment segment, ref HashSet<Collider> candidates)
+    /// <returns>
+    /// Returns the number of unique colliders added to the candidates set.
+    /// </returns>
+    public int GetUniqueCandidates(Segment segment, ref HashSet<Collider> candidates)
     {
-        List<int> bucketIds = new();
+        List<int> bucketIds = [];
         GetCellIDs(segment, ref bucketIds);
         
-        AccumulateUniqueCandidates(bucketIds, ref candidates);
+        return AccumulateUniqueCandidates(bucketIds, ref candidates);
     }
     /// <summary>
     /// Gets all unique colliders that may overlap the given circle.
     /// </summary>
     /// <param name="circle">The circle to query.</param>
     /// <param name="candidates">A set to populate with unique colliders.</param>
-    public void GetUniqueCandidates(Circle circle, ref HashSet<Collider> candidates)
+    /// <returns>
+    /// Returns the number of unique colliders added to the candidates set.
+    /// </returns>
+    public int GetUniqueCandidates(Circle circle, ref HashSet<Collider> candidates)
     {
-        List<int> bucketIds = new();
+        List<int> bucketIds = [];
         GetCellIDs(circle, ref bucketIds);
         
-        AccumulateUniqueCandidates(bucketIds, ref candidates);
+        return AccumulateUniqueCandidates(bucketIds, ref candidates);
     }
     /// <summary>
     /// Gets all unique colliders that may overlap the given triangle.
     /// </summary>
     /// <param name="triangle">The triangle to query.</param>
     /// <param name="candidates">A set to populate with unique colliders.</param>
-    public void GetUniqueCandidates(Triangle triangle, ref HashSet<Collider> candidates)
+    /// <returns>
+    /// Returns the number of unique colliders added to the candidates set.
+    /// </returns>
+    public int GetUniqueCandidates(Triangle triangle, ref HashSet<Collider> candidates)
     {
-        List<int> bucketIds = new();
+        List<int> bucketIds = [];
         GetCellIDs(triangle, ref bucketIds);
         
-        AccumulateUniqueCandidates(bucketIds, ref candidates);
+        return AccumulateUniqueCandidates(bucketIds, ref candidates);
     }
     /// <summary>
     /// Gets all unique colliders that may overlap the given rectangle.
     /// </summary>
     /// <param name="rect">The rectangle to query.</param>
     /// <param name="candidates">A set to populate with unique colliders.</param>
-    public void GetUniqueCandidates(Rect rect, ref HashSet<Collider> candidates)
+    /// <returns>
+    /// Returns the number of unique colliders added to the candidates set.
+    /// </returns>
+    public int GetUniqueCandidates(Rect rect, ref HashSet<Collider> candidates)
     {
-        List<int> bucketIds = new();
+        List<int> bucketIds = [];
         GetCellIDs(rect, ref bucketIds);
         
-        AccumulateUniqueCandidates(bucketIds, ref candidates);
+        return AccumulateUniqueCandidates(bucketIds, ref candidates);
     }
     /// <summary>
     /// Gets all unique colliders that may overlap the given quad.
     /// </summary>
     /// <param name="quad">The quad to query.</param>
     /// <param name="candidates">A set to populate with unique colliders.</param>
-    public void GetUniqueCandidates(Quad quad, ref HashSet<Collider> candidates)
+    /// <returns>
+    /// Returns the number of unique colliders added to the candidates set.
+    /// </returns>
+    public int GetUniqueCandidates(Quad quad, ref HashSet<Collider> candidates)
     {
-        List<int> bucketIds = new();
+        List<int> bucketIds = [];
         GetCellIDs(quad, ref bucketIds);
         
-        AccumulateUniqueCandidates(bucketIds, ref candidates);
+        return AccumulateUniqueCandidates(bucketIds, ref candidates);
     }
     /// <summary>
     /// Gets all unique colliders that may overlap the given polygon.
     /// </summary>
     /// <param name="poly">The polygon to query.</param>
     /// <param name="candidates">A set to populate with unique colliders.</param>
-    public void GetUniqueCandidates(Polygon poly, ref HashSet<Collider> candidates)
+    /// <returns>
+    /// Returns the number of unique colliders added to the candidates set.
+    /// </returns>
+    public int GetUniqueCandidates(Polygon poly, ref HashSet<Collider> candidates)
     {
-        List<int> bucketIds = new();
+        List<int> bucketIds = [];
         GetCellIDs(poly, ref bucketIds);
         
-        AccumulateUniqueCandidates(bucketIds, ref candidates);
+        return AccumulateUniqueCandidates(bucketIds, ref candidates);
     }
     /// <summary>
     /// Gets all unique colliders that may overlap the given polyline.
     /// </summary>
     /// <param name="polyLine">The polyline to query.</param>
     /// <param name="candidates">A set to populate with unique colliders.</param>
-    public void GetUniqueCandidates(Polyline polyLine, ref HashSet<Collider> candidates)
+    /// <returns>
+    /// Returns the number of unique colliders added to the candidates set.
+    /// </returns>
+    public int GetUniqueCandidates(Polyline polyLine, ref HashSet<Collider> candidates)
     {
-        List<int> bucketIds = new();
+        List<int> bucketIds = [];
         GetCellIDs(polyLine, ref bucketIds);
         
-        AccumulateUniqueCandidates(bucketIds, ref candidates);
+        return AccumulateUniqueCandidates(bucketIds, ref candidates);
     }
   
     /// <summary>
@@ -477,28 +551,44 @@ public class SpatialHash : IBounds, IBroadphase
     /// </summary>
     /// <param name="bucketIds">List of bucket indices to check.</param>
     /// <param name="candidates">Reference to the set of unique colliders to populate.</param>
-    private void AccumulateUniqueCandidates(List<int> bucketIds, ref HashSet<Collider> candidates)
+    /// <returns>
+    /// Returns the number of unique colliders added to the candidates set.
+    /// </returns>
+    private int AccumulateUniqueCandidates(List<int> bucketIds, ref HashSet<Collider> candidates)
     {
-        if (bucketIds.Count <= 0) return;
-        foreach (var id in bucketIds)
+        if (bucketIds.Count <= 0) return 0;
+        var prevCount = candidates.Count;
+        foreach (int id in bucketIds)
         {
             var bucket = buckets[id];
-            if(bucket.Count > 0) candidates.UnionWith(bucket);
+            if (bucket.Count > 0) candidates.UnionWith(bucket);
         }
+        return candidates.Count - prevCount;
     }
     /// <summary>
     /// Adds all non-empty buckets from the specified bucket IDs to the candidateBuckets list.
     /// </summary>
     /// <param name="bucketIds">List of bucket indices to check.</param>
     /// <param name="candidateBuckets">Reference to the list of candidate buckets to populate.</param>
-    private void FillCandidateBuckets(List<int> bucketIds, ref List<BroadphaseBucket> candidateBuckets)
+    /// <returns>
+    /// Returns the number of buckets added to the candidateBuckets list.
+    /// </returns>
+    private int FillCandidateBuckets(List<int> bucketIds, ref List<BroadphaseBucket> candidateBuckets)
     {
-        if (bucketIds.Count <= 0) return;
+        if (bucketIds.Count <= 0) return 0;
+
+        int count = 0;
         foreach (var id in bucketIds)
         {
             var bucket = buckets[id];
-            if(bucket.Count > 0) candidateBuckets.Add(buckets[id]);
+            if (bucket.Count > 0)
+            {
+                count++;
+                candidateBuckets.Add(buckets[id]);
+            }
         }
+
+        return count;
     }
 
     

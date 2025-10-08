@@ -19,15 +19,15 @@ public interface IBroadphase
     public void ResizeBounds(Rect targetBounds);
     public void DebugDraw(ColorRgba border, ColorRgba fill);
     
-    public void GetCandidateBuckets(CollisionObject collidable, ref List<BroadphaseBucket> candidateBuckets, bool registeredOnly = false);
-    public void GetCandidateBuckets(Collider collider, ref List<BroadphaseBucket> candidateBuckets, bool registeredOnly = false);
-    public void GetCandidateBuckets(Segment segment, ref List<BroadphaseBucket> candidateBuckets);
-    public void GetCandidateBuckets(Line line, ref List<BroadphaseBucket> candidateBuckets);
-    public void GetCandidateBuckets(Ray ray, ref List<BroadphaseBucket> candidateBuckets);
-    public void GetCandidateBuckets(Circle circle, ref List<BroadphaseBucket> candidateBuckets);
-    public void GetCandidateBuckets(Triangle triangle, ref List<BroadphaseBucket> candidateBuckets);
-    public void GetCandidateBuckets(Rect rect, ref List<BroadphaseBucket> candidateBuckets);
-    public void GetCandidateBuckets(Quad quad, ref List<BroadphaseBucket> candidateBuckets);
-    public void GetCandidateBuckets(Polygon poly, ref List<BroadphaseBucket> candidateBuckets);
-    public void GetCandidateBuckets(Polyline polyLine, ref List<BroadphaseBucket> candidateBuckets);
+    public int GetCandidateBuckets(CollisionObject collidable, ref List<BroadphaseBucket> candidateBuckets, bool registeredOnly = false);
+    public int GetCandidateBuckets(Collider collider, ref List<BroadphaseBucket> candidateBuckets, bool registeredOnly = false);
+    public int GetCandidateBuckets(Segment segment, ref List<BroadphaseBucket> candidateBuckets);
+    public int GetCandidateBuckets(Line line, ref List<BroadphaseBucket> candidateBuckets);
+    public int GetCandidateBuckets(Ray ray, ref List<BroadphaseBucket> candidateBuckets);
+    public int GetCandidateBuckets(Circle circle, ref List<BroadphaseBucket> candidateBuckets);
+    public int GetCandidateBuckets(Triangle triangle, ref List<BroadphaseBucket> candidateBuckets);
+    public int GetCandidateBuckets(Rect rect, ref List<BroadphaseBucket> candidateBuckets);
+    public int GetCandidateBuckets(Quad quad, ref List<BroadphaseBucket> candidateBuckets);
+    public int GetCandidateBuckets(Polygon poly, ref List<BroadphaseBucket> candidateBuckets);
+    public int GetCandidateBuckets(Polyline polyLine, ref List<BroadphaseBucket> candidateBuckets);
 }
