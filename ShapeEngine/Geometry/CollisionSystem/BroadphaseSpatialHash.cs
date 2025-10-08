@@ -13,6 +13,7 @@ using ShapeEngine.Geometry.TriangleDef;
 
 namespace ShapeEngine.Geometry.CollisionSystem;
 
+
 /// <summary>
 /// Implements a spatial hash grid for efficient broad-phase collision detection and spatial queries.
 /// </summary>
@@ -20,7 +21,7 @@ namespace ShapeEngine.Geometry.CollisionSystem;
 /// The spatial hash divides a 2D space into a grid of buckets, each containing colliders that overlap its region.
 /// Provides fast lookup for collision candidates and supports dynamic resizing and grid changes.
 /// </remarks>
-public class SpatialHash : IBounds, IBroadphase
+public class BroadphaseSpatialHash : IBounds, IBroadphase
 {
     #region Public Members
     /// <summary>
@@ -59,7 +60,7 @@ public class SpatialHash : IBounds, IBroadphase
     
     #region Constructors
     /// <summary>
-    /// Initializes a new instance of the <see cref="SpatialHash"/> class with explicit bounds and grid size.
+    /// Initializes a new instance of the <see cref="BroadphaseSpatialHash"/> class with explicit bounds and grid size.
     /// </summary>
     /// <param name="x">The X coordinate of the grid's top-left corner.</param>
     /// <param name="y">The Y coordinate of the grid's top-left corner.</param>
@@ -67,7 +68,7 @@ public class SpatialHash : IBounds, IBroadphase
     /// <param name="h">The height of the grid.</param>
     /// <param name="rows">The number of rows in the grid.</param>
     /// <param name="cols">The number of columns in the grid.</param>
-    public SpatialHash(float x, float y, float w, float h, int rows, int cols)
+    public BroadphaseSpatialHash(float x, float y, float w, float h, int rows, int cols)
     {
         this.Bounds = new(x, y, w, h);
         this.Rows = rows;
@@ -81,12 +82,12 @@ public class SpatialHash : IBounds, IBroadphase
         }
     }
     /// <summary>
-    /// Initializes a new instance of the <see cref="SpatialHash"/> class with a bounding rectangle and grid size.
+    /// Initializes a new instance of the <see cref="BroadphaseSpatialHash"/> class with a bounding rectangle and grid size.
     /// </summary>
     /// <param name="bounds">The bounding rectangle for the grid.</param>
     /// <param name="rows">The number of rows in the grid.</param>
     /// <param name="cols">The number of columns in the grid.</param>
-    public SpatialHash(Rect bounds, int rows, int cols)
+    public BroadphaseSpatialHash(Rect bounds, int rows, int cols)
     {
         this.Bounds = bounds;
         this.Rows = rows;

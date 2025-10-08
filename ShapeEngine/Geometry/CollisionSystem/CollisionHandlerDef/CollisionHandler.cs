@@ -24,12 +24,12 @@ public partial class CollisionHandler : IBounds
     /// <summary>
     /// Gets the bounding rectangle of the collision system.
     /// </summary>
-    public Rect Bounds => spatialHash.Bounds;
+    public Rect Bounds => broadphaseSpatialHash.Bounds;
     
     private readonly CollisionObjectRegister collisionBodyRegister;
     
     //TODO: Has IBroadphase now
-    private readonly SpatialHash spatialHash;
+    private readonly BroadphaseSpatialHash broadphaseSpatialHash;
     private readonly CollisionStack collisionStack;
 
     private  FirstContactStack<CollisionObject, CollisionObject> collisionObjectFirstContactRegisterActive;
@@ -60,7 +60,7 @@ public partial class CollisionHandler : IBounds
     /// <param name="startCapacity">The initial capacity for object registers. Default is 1024.</param>
     public CollisionHandler(float x, float y, float w, float h, int rows, int cols, int startCapacity = 1024)
     {
-        spatialHash = new(x, y, w, h, rows, cols);
+        broadphaseSpatialHash = new(x, y, w, h, rows, cols);
         collisionBodyRegister = new(startCapacity, this);
         collisionStack = new(startCapacity / 4);
         colliderFirstContactRegisterActive = new(startCapacity / 4);
@@ -78,7 +78,7 @@ public partial class CollisionHandler : IBounds
     /// <param name="startCapacity">The initial capacity for object registers. Default is 1024.</param>
     public CollisionHandler(Rect bounds, int rows, int cols, int startCapacity = 1024)
     {
-        spatialHash = new(bounds.X, bounds.Y, bounds.Width, bounds.Height, rows, cols);
+        broadphaseSpatialHash = new(bounds.X, bounds.Y, bounds.Width, bounds.Height, rows, cols);
         
         collisionBodyRegister = new(startCapacity, this);
         collisionStack = new(startCapacity / 4);
@@ -133,7 +133,7 @@ public partial class CollisionHandler : IBounds
     /// Resizes the bounds of the collision system.
     /// </summary>
     /// <param name="newBounds">The new bounding rectangle.</param>
-    public void ResizeBounds(Rect newBounds) => spatialHash.ResizeBounds(newBounds);
+    public void ResizeBounds(Rect newBounds) => broadphaseSpatialHash.ResizeBounds(newBounds);
 
     /// <summary>
     /// Removes all registered collision objects and clears the collision system.
@@ -155,7 +155,7 @@ public partial class CollisionHandler : IBounds
     public void Close()
     {
         Clear();
-        spatialHash.Close();
+        broadphaseSpatialHash.Close();
         
     }
     /// <summary>
@@ -167,7 +167,7 @@ public partial class CollisionHandler : IBounds
     /// </remarks>
     public void Update(float dt)
     {
-        spatialHash.Fill(collisionBodyRegister.AllObjects);
+        broadphaseSpatialHash.Fill(collisionBodyRegister.AllObjects);
 
         ProcessCollisions(dt);
         
@@ -199,7 +199,7 @@ public partial class CollisionHandler : IBounds
                     if(projected == null) continue;
                     collisionCandidateBuckets.Clear();
                     collisionCandidateCheckRegister.Clear();
-                    spatialHash.GetCandidateBuckets(projected, ref collisionCandidateBuckets);
+                    broadphaseSpatialHash.GetCandidateBuckets(projected, ref collisionCandidateBuckets);
                     
                     if(collisionCandidateBuckets.Count <= 0) continue;     
                     
@@ -278,7 +278,7 @@ public partial class CollisionHandler : IBounds
                     if (collider.Parent == null) continue;
                     collisionCandidateBuckets.Clear();
                     collisionCandidateCheckRegister.Clear();
-                    spatialHash.GetCandidateBuckets(collider, ref collisionCandidateBuckets, true);
+                    broadphaseSpatialHash.GetCandidateBuckets(collider, ref collisionCandidateBuckets, true);
                     
                     if(collisionCandidateBuckets.Count <= 0) continue;     
                     
@@ -404,7 +404,7 @@ public partial class CollisionHandler : IBounds
     /// <param name="fill">The color to use for the fill.</param>
     public void DebugDraw(ColorRgba border, ColorRgba fill)
     {
-        spatialHash.DebugDraw(border, fill);
+        broadphaseSpatialHash.DebugDraw(border, fill);
     }
 
     /// <summary>

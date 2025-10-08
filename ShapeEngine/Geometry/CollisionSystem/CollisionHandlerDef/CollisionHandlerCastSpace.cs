@@ -55,7 +55,7 @@ public partial class CollisionHandler
 
             collisionCandidateBuckets.Clear();
             collisionCandidateCheckRegister.Clear();
-            spatialHash.GetCandidateBuckets(collider, ref collisionCandidateBuckets);
+            broadphaseSpatialHash.GetCandidateBuckets(collider, ref collisionCandidateBuckets);
             if (collisionCandidateBuckets.Count <= 0) return;
 
             var mask = collider.CollisionMask;
@@ -99,7 +99,7 @@ public partial class CollisionHandler
             if (!collider.Enabled) continue;
             collisionCandidateBuckets.Clear();
             collisionCandidateCheckRegister.Clear();
-            spatialHash.GetCandidateBuckets(collider, ref collisionCandidateBuckets);
+            broadphaseSpatialHash.GetCandidateBuckets(collider, ref collisionCandidateBuckets);
             if (collisionCandidateBuckets.Count <= 0) return;
 
             var mask = collider.CollisionMask;
@@ -139,7 +139,7 @@ public partial class CollisionHandler
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
 
-        spatialHash.GetCandidateBuckets(collider, ref collisionCandidateBuckets);
+        broadphaseSpatialHash.GetCandidateBuckets(collider, ref collisionCandidateBuckets);
         if (collisionCandidateBuckets.Count <= 0) return;
         var mask = collider.CollisionMask;
         foreach (var bucket in collisionCandidateBuckets)
@@ -177,7 +177,7 @@ public partial class CollisionHandler
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
 
-        spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
+        broadphaseSpatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
         if (collisionCandidateBuckets.Count <= 0) return;
         foreach (var bucket in collisionCandidateBuckets)
         {
@@ -213,7 +213,7 @@ public partial class CollisionHandler
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
 
-        spatialHash.GetCandidateBuckets(line, ref collisionCandidateBuckets);
+        broadphaseSpatialHash.GetCandidateBuckets(line, ref collisionCandidateBuckets);
         if (collisionCandidateBuckets.Count <= 0) return;
         foreach (var bucket in collisionCandidateBuckets)
         {
@@ -249,7 +249,7 @@ public partial class CollisionHandler
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
 
-        spatialHash.GetCandidateBuckets(ray, ref collisionCandidateBuckets);
+        broadphaseSpatialHash.GetCandidateBuckets(ray, ref collisionCandidateBuckets);
         if (collisionCandidateBuckets.Count <= 0) return;
         foreach (var bucket in collisionCandidateBuckets)
         {
@@ -285,7 +285,7 @@ public partial class CollisionHandler
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
 
-        spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
+        broadphaseSpatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
         if (collisionCandidateBuckets.Count <= 0) return;
         foreach (var bucket in collisionCandidateBuckets)
         {
@@ -321,7 +321,7 @@ public partial class CollisionHandler
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
 
-        spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
+        broadphaseSpatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
         if (collisionCandidateBuckets.Count <= 0) return;
         foreach (var bucket in collisionCandidateBuckets)
         {
@@ -357,7 +357,7 @@ public partial class CollisionHandler
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
 
-        spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
+        broadphaseSpatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
         if (collisionCandidateBuckets.Count <= 0) return;
         foreach (var bucket in collisionCandidateBuckets)
         {
@@ -393,7 +393,7 @@ public partial class CollisionHandler
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
 
-        spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
+        broadphaseSpatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
         if (collisionCandidateBuckets.Count <= 0) return;
         foreach (var bucket in collisionCandidateBuckets)
         {
@@ -429,7 +429,7 @@ public partial class CollisionHandler
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
 
-        spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
+        broadphaseSpatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
         if (collisionCandidateBuckets.Count <= 0) return;
         foreach (var bucket in collisionCandidateBuckets)
         {
@@ -467,7 +467,7 @@ public partial class CollisionHandler
 
             collisionCandidateBuckets.Clear();
             collisionCandidateCheckRegister.Clear();
-            spatialHash.GetCandidateBuckets(collider, ref collisionCandidateBuckets);
+            broadphaseSpatialHash.GetCandidateBuckets(collider, ref collisionCandidateBuckets);
             if (collisionCandidateBuckets.Count <= 0) return 0;
 
             var mask = collider.CollisionMask;
@@ -504,7 +504,7 @@ public partial class CollisionHandler
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
 
-        spatialHash.GetCandidateBuckets(collider, ref collisionCandidateBuckets);
+        broadphaseSpatialHash.GetCandidateBuckets(collider, ref collisionCandidateBuckets);
         if (collisionCandidateBuckets.Count <= 0) return 0;
 
         int count = 0;
@@ -541,7 +541,7 @@ public partial class CollisionHandler
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
 
-        spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
+        broadphaseSpatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
         if (collisionCandidateBuckets.Count <= 0) return 0;
 
         int count = 0;
@@ -576,7 +576,7 @@ public partial class CollisionHandler
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
 
-        spatialHash.GetCandidateBuckets(line, ref collisionCandidateBuckets);
+        broadphaseSpatialHash.GetCandidateBuckets(line, ref collisionCandidateBuckets);
         if (collisionCandidateBuckets.Count <= 0) return 0;
 
         int count = 0;
@@ -611,7 +611,7 @@ public partial class CollisionHandler
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
 
-        spatialHash.GetCandidateBuckets(ray, ref collisionCandidateBuckets);
+        broadphaseSpatialHash.GetCandidateBuckets(ray, ref collisionCandidateBuckets);
         if (collisionCandidateBuckets.Count <= 0) return 0;
 
         int count = 0;
@@ -646,7 +646,7 @@ public partial class CollisionHandler
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
 
-        spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
+        broadphaseSpatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
         if (collisionCandidateBuckets.Count <= 0) return 0;
 
         int count = 0;
@@ -681,7 +681,7 @@ public partial class CollisionHandler
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
 
-        spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
+        broadphaseSpatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
         if (collisionCandidateBuckets.Count <= 0) return 0;
 
         int count = 0;
@@ -716,7 +716,7 @@ public partial class CollisionHandler
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
 
-        spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
+        broadphaseSpatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
         if (collisionCandidateBuckets.Count <= 0) return 0;
 
         int count = 0;
@@ -751,7 +751,7 @@ public partial class CollisionHandler
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
 
-        spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
+        broadphaseSpatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
         if (collisionCandidateBuckets.Count <= 0) return 0;
 
         int count = 0;
@@ -786,7 +786,7 @@ public partial class CollisionHandler
         collisionCandidateBuckets.Clear();
         collisionCandidateCheckRegister.Clear();
 
-        spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
+        broadphaseSpatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
         if (collisionCandidateBuckets.Count <= 0) return 0;
 
         int count = 0;
