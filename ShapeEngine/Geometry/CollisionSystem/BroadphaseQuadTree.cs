@@ -14,11 +14,11 @@ using ShapeEngine.Geometry.TriangleDef;
 
 namespace ShapeEngine.Geometry.CollisionSystem;
 
-//NOTE: finish in the easiest way possible to test it out. After that decide between changing, optimizing or scrapping it.
 public class BroadphaseQuadTree : IBroadphase
 {
     private class QuadTreeNode
     {
+        public event Action<Collider, BroadphaseBucket>? OnColliderAdded;
         private readonly int capacity;
         private readonly Size minSize;
 
@@ -41,6 +41,7 @@ public class BroadphaseQuadTree : IBroadphase
         private readonly BroadphaseBucket splitBucket;
         private readonly BroadphaseBucket bucket;
         private readonly QuadTreeNode? parent;
+        private readonly QuadTreeNode root;
         private QuadTreeNode[]? children; //4 children
         
         public QuadTreeNode(Rect bounds, int capacity, Size minSize)
@@ -48,22 +49,23 @@ public class BroadphaseQuadTree : IBroadphase
             this.minSize = minSize;
             this.capacity = capacity;
             Bounds = bounds;
+            root = this;
             parent = null;
             children = null;
             splitBucket = [];
             bucket = [];
         }
-        private QuadTreeNode(QuadTreeNode parent, AnchorPoint anchor, int capacity, Size minSize)
+        private QuadTreeNode(QuadTreeNode parent, QuadTreeNode root, AnchorPoint anchor, int capacity, Size minSize)
         {
             var parentBounds = parent.Bounds;
             var halfSize = parentBounds.Size / 2;
             var tl = parentBounds.TopLeft + anchor * halfSize;
             var br = tl + halfSize;
             Bounds = new Rect(tl, br);
-            
             children = null;
             splitBucket = [];
             bucket = [];
+            this.root = root;
             this.parent = parent;
             this.capacity = capacity;
             this.minSize = minSize;
@@ -102,6 +104,7 @@ public class BroadphaseQuadTree : IBroadphase
             {
                 // too big, add to this bucket
                 bucket.Add(collider);
+                root.AddToRegister(collider, bucket);
                 return true;
             }
 
@@ -116,6 +119,7 @@ public class BroadphaseQuadTree : IBroadphase
                 else
                 {
                     splitBucket.Add(collider);
+                    root.AddToRegister(collider, splitBucket);
                 }
             }
             else
@@ -126,50 +130,304 @@ public class BroadphaseQuadTree : IBroadphase
             return true;
         }
 
-        //TODO: Implement
-        public int GetCandidateBuckets(CollisionObject collidable, ref List<BroadphaseBucket> candidateBuckets, bool registeredOnly = false)
+
+        public int GetCandidateBuckets(CollisionObject collidable, ref List<BroadphaseBucket> candidateBuckets)
         {
-            throw new NotImplementedException();
+            int count = 0;
+            foreach (var collider in collidable.Colliders)
+            {
+                count += GetCandidateBuckets(collider, ref candidateBuckets);
+            }
+
+            return count;
         }
-        public int GetCandidateBuckets(Collider collider, ref List<BroadphaseBucket> candidateBuckets, bool registeredOnly = false)
+        public int GetCandidateBuckets(Collider collider, ref List<BroadphaseBucket> candidateBuckets)
         {
-            throw new NotImplementedException();
+            if (!collider.Enabled) return 0;
+            
+            switch (collider.GetShapeType())
+            {
+                case ShapeType.Circle: return GetCandidateBuckets(collider.GetCircleShape(), ref candidateBuckets); 
+                case ShapeType.Segment: return GetCandidateBuckets(collider.GetSegmentShape(), ref candidateBuckets); 
+                case ShapeType.Line: return GetCandidateBuckets(collider.GetLineShape(), ref candidateBuckets); 
+                case ShapeType.Ray: return GetCandidateBuckets(collider.GetRayShape(), ref candidateBuckets); 
+                case ShapeType.Triangle: return GetCandidateBuckets(collider.GetTriangleShape(), ref candidateBuckets); 
+                case ShapeType.Rect: return GetCandidateBuckets(collider.GetRectShape(), ref candidateBuckets); 
+                case ShapeType.Quad: return GetCandidateBuckets(collider.GetQuadShape(), ref candidateBuckets); 
+                case ShapeType.Poly: return GetCandidateBuckets(collider.GetPolygonShape(), ref candidateBuckets); 
+                case ShapeType.PolyLine: return GetCandidateBuckets(collider.GetPolylineShape(), ref candidateBuckets); 
+            }
+
+            return 0;
         }
         public int GetCandidateBuckets(Segment segment, ref List<BroadphaseBucket> candidateBuckets)
         {
-            throw new NotImplementedException();
+            // var boundingBox = segment.GetBoundingBox();
+            if (!bounds.OverlapShape(segment)) return 0; // out of bounds
+            
+            var added = 0;
+            
+            if (bucket.Count > 0)
+            {
+                candidateBuckets.Add(bucket);
+                added++;
+            }
+            
+            if (children == null)
+            {
+                if (splitBucket.Count > 0)
+                {
+                    candidateBuckets.Add(splitBucket);
+                    added++;
+                }
+                return added;
+            }
+            
+            foreach (var child in children)
+            {
+                added += child.GetCandidateBuckets(segment, ref candidateBuckets);
+            }
+            
+            return added;
         }
         public int GetCandidateBuckets(Line line, ref List<BroadphaseBucket> candidateBuckets)
         {
-            throw new NotImplementedException();
+            // var boundingBox = line.GetBoundingBox();
+            if (!bounds.OverlapShape(line)) return 0; // out of bounds
+            
+            var added = 0;
+            
+            if (bucket.Count > 0)
+            {
+                candidateBuckets.Add(bucket);
+                added++;
+            }
+            
+            if (children == null)
+            {
+                if (splitBucket.Count > 0)
+                {
+                    candidateBuckets.Add(splitBucket);
+                    added++;
+                }
+                return added;
+            }
+            
+            foreach (var child in children)
+            {
+                added += child.GetCandidateBuckets(line, ref candidateBuckets);
+            }
+            
+            return added;
         }
         public int GetCandidateBuckets(Ray ray, ref List<BroadphaseBucket> candidateBuckets)
         {
-            throw new NotImplementedException();
+            // var boundingBox = ray.GetBoundingBox();
+            if (!bounds.OverlapShape(ray)) return 0; // out of bounds
+            
+            var added = 0;
+            
+            if (bucket.Count > 0)
+            {
+                candidateBuckets.Add(bucket);
+                added++;
+            }
+            
+            if (children == null)
+            {
+                if (splitBucket.Count > 0)
+                {
+                    candidateBuckets.Add(splitBucket);
+                    added++;
+                }
+                return added;
+            }
+            
+            foreach (var child in children)
+            {
+                added += child.GetCandidateBuckets(ray, ref candidateBuckets);
+            }
+            
+            return added;
         }
         public int GetCandidateBuckets(Circle circle, ref List<BroadphaseBucket> candidateBuckets)
         {
-            throw new NotImplementedException();
+            var boundingBox = circle.GetBoundingBox();
+            if (!bounds.OverlapShape(boundingBox)) return 0; // out of bounds
+            
+            var added = 0;
+            
+            if (bucket.Count > 0)
+            {
+                candidateBuckets.Add(bucket);
+                added++;
+            }
+            
+            if (children == null)
+            {
+                if (splitBucket.Count > 0)
+                {
+                    candidateBuckets.Add(splitBucket);
+                    added++;
+                }
+                return added;
+            }
+            
+            foreach (var child in children)
+            {
+                added += child.GetCandidateBuckets(circle, ref candidateBuckets);
+            }
+            
+            return added;
         }
         public int GetCandidateBuckets(Triangle triangle, ref List<BroadphaseBucket> candidateBuckets)
         {
-            throw new NotImplementedException();
+            var boundingBox = triangle.GetBoundingBox();
+            if (!bounds.OverlapShape(boundingBox)) return 0; // out of bounds
+            
+            var added = 0;
+            
+            if (bucket.Count > 0)
+            {
+                candidateBuckets.Add(bucket);
+                added++;
+            }
+            
+            if (children == null)
+            {
+                if (splitBucket.Count > 0)
+                {
+                    candidateBuckets.Add(splitBucket);
+                    added++;
+                }
+                return added;
+            }
+            
+            foreach (var child in children)
+            {
+                added += child.GetCandidateBuckets(triangle, ref candidateBuckets);
+            }
+            
+            return added;
         }
         public int GetCandidateBuckets(Rect rect, ref List<BroadphaseBucket> candidateBuckets)
         {
-            throw new NotImplementedException();
+            if (!bounds.OverlapShape(rect)) return 0; // out of bounds
+            
+            var added = 0;
+            
+            if (bucket.Count > 0)
+            {
+                candidateBuckets.Add(bucket);
+                added++;
+            }
+            
+            if (children == null)
+            {
+                if (splitBucket.Count > 0)
+                {
+                    candidateBuckets.Add(splitBucket);
+                    added++;
+                }
+                return added;
+            }
+            
+            foreach (var child in children)
+            {
+                added += child.GetCandidateBuckets(rect, ref candidateBuckets);
+            }
+            
+            return added;
         }
         public int GetCandidateBuckets(Quad quad, ref List<BroadphaseBucket> candidateBuckets)
         {
-            throw new NotImplementedException();
+            var boundingBox = quad.GetBoundingBox();
+            if (!bounds.OverlapShape(boundingBox)) return 0; // out of bounds
+            
+            var added = 0;
+            
+            if (bucket.Count > 0)
+            {
+                candidateBuckets.Add(bucket);
+                added++;
+            }
+            
+            if (children == null)
+            {
+                if (splitBucket.Count > 0)
+                {
+                    candidateBuckets.Add(splitBucket);
+                    added++;
+                }
+                return added;
+            }
+            
+            foreach (var child in children)
+            {
+                added += child.GetCandidateBuckets(quad, ref candidateBuckets);
+            }
+            
+            return added;
         }
         public int GetCandidateBuckets(Polygon poly, ref List<BroadphaseBucket> candidateBuckets)
         {
-            throw new NotImplementedException();
+            var boundingBox = poly.GetBoundingBox();
+            if (!bounds.OverlapShape(boundingBox)) return 0; // out of bounds
+            
+            var added = 0;
+            
+            if (bucket.Count > 0)
+            {
+                candidateBuckets.Add(bucket);
+                added++;
+            }
+            
+            if (children == null)
+            {
+                if (splitBucket.Count > 0)
+                {
+                    candidateBuckets.Add(splitBucket);
+                    added++;
+                }
+                return added;
+            }
+            
+            foreach (var child in children)
+            {
+                added += child.GetCandidateBuckets(poly, ref candidateBuckets);
+            }
+            
+            return added;
         }
         public int GetCandidateBuckets(Polyline polyLine, ref List<BroadphaseBucket> candidateBuckets)
         {
-            throw new NotImplementedException();
+            var boundingBox = polyLine.GetBoundingBox();
+            if (!bounds.OverlapShape(boundingBox)) return 0; // out of bounds
+            
+            var added = 0;
+            
+            if (bucket.Count > 0)
+            {
+                candidateBuckets.Add(bucket);
+                added++;
+            }
+            
+            if (children == null)
+            {
+                if (splitBucket.Count > 0)
+                {
+                    candidateBuckets.Add(splitBucket);
+                    added++;
+                }
+                return added;
+            }
+            
+            foreach (var child in children)
+            {
+                added += child.GetCandidateBuckets(polyLine, ref candidateBuckets);
+            }
+            
+            return added;
         }
         
         
@@ -210,10 +468,14 @@ public class BroadphaseQuadTree : IBroadphase
                     }
                     else
                     {
+                        // overlaps multiple children, add to this bucket (too big)
                         bucket.Add(collider);
+                        root.AddToRegister(collider, bucket);
+                        return;
                     }
                 }
             }
+            //only overlapped one (or no child, but that should not happen), so add it to the child
             firstChild?.Add(collider);
         }
         private bool CanSplit()
@@ -232,18 +494,23 @@ public class BroadphaseQuadTree : IBroadphase
         private void Split()
         {
             children = new QuadTreeNode[4];
-            children[0] = new QuadTreeNode(this, AnchorPoint.TopLeft, capacity, minSize);
-            children[1] = new QuadTreeNode(this, AnchorPoint.TopRight, capacity, minSize);
-            children[2] = new QuadTreeNode(this, AnchorPoint.BottomRight, capacity, minSize);
-            children[3] = new QuadTreeNode(this, AnchorPoint.BottomLeft, capacity, minSize);
+            children[0] = new QuadTreeNode(this, root, AnchorPoint.TopLeft, capacity, minSize);
+            children[1] = new QuadTreeNode(this, root, AnchorPoint.TopRight, capacity, minSize);
+            children[2] = new QuadTreeNode(this, root, AnchorPoint.BottomRight, capacity, minSize);
+            children[3] = new QuadTreeNode(this, root, AnchorPoint.BottomLeft, capacity, minSize);
+        }
+        private void AddToRegister(Collider collider, BroadphaseBucket targetBucket)
+        {
+            OnColliderAdded?.Invoke(collider, targetBucket);
         }
     }
     
 
     private readonly QuadTreeNode root;
     public Rect Bounds => root.Bounds;
+    private readonly Dictionary<Collider, BroadphaseBucket> register = new();
     
-
+    
     public BroadphaseQuadTree(Rect bounds, int maxObjects, Size minBoundsSize)
     {
         if (bounds.Width <= 0 || bounds.Height <= 0)
@@ -265,12 +532,15 @@ public class BroadphaseQuadTree : IBroadphase
         }
         
         root = new(bounds, maxObjects, minBoundsSize);
+        root.OnColliderAdded += OnColliderAdded;
+
+        
     }
-    
     
     
     public void Fill(IEnumerable<CollisionObject> collisionBodies)
     {
+        register.Clear();
         root.Clear();
         foreach (var body in collisionBodies)
         {
@@ -281,66 +551,84 @@ public class BroadphaseQuadTree : IBroadphase
             }
         }
     }
-
     public void Close()
     {
         root.Clear();
+        register.Clear();
     }
-
     public void ResizeBounds(Rect targetBounds)
     {
         root.Bounds = targetBounds;
     }
-
     public void DebugDraw(ColorRgba border, ColorRgba fill)
     {
        root.DebugDraw(border, fill);
     }
     
-    
-    //TODO: Implement
     public int GetCandidateBuckets(CollisionObject collidable, ref List<BroadphaseBucket> candidateBuckets, bool registeredOnly = false)
     {
-        throw new NotImplementedException();
+        int count = 0;
+        foreach (var collider in collidable.Colliders)
+        {
+            count += GetCandidateBuckets(collider, ref candidateBuckets, registeredOnly);
+        }
+
+        return count;
     }
     public int GetCandidateBuckets(Collider collider, ref List<BroadphaseBucket> candidateBuckets, bool registeredOnly = false)
     {
-        throw new NotImplementedException();
+        if (register.TryGetValue(collider, out var registerBucket))
+        {
+            if (registerBucket.Count > 0)
+            {
+                candidateBuckets.Add(registerBucket);
+                return 1;
+            }
+        }
+
+        if (registeredOnly) return 0;
+        
+        return root.GetCandidateBuckets(collider, ref candidateBuckets);
     }
     public int GetCandidateBuckets(Segment segment, ref List<BroadphaseBucket> candidateBuckets)
     {
-        throw new NotImplementedException();
+        return root.GetCandidateBuckets(segment, ref candidateBuckets);
     }
     public int GetCandidateBuckets(Line line, ref List<BroadphaseBucket> candidateBuckets)
     {
-        throw new NotImplementedException();
+        return root.GetCandidateBuckets(line, ref candidateBuckets);
     }
     public int GetCandidateBuckets(Ray ray, ref List<BroadphaseBucket> candidateBuckets)
     {
-        throw new NotImplementedException();
+        return root.GetCandidateBuckets(ray, ref candidateBuckets);
     }
     public int GetCandidateBuckets(Circle circle, ref List<BroadphaseBucket> candidateBuckets)
     {
-        throw new NotImplementedException();
+        return root.GetCandidateBuckets(circle, ref candidateBuckets);
     }
     public int GetCandidateBuckets(Triangle triangle, ref List<BroadphaseBucket> candidateBuckets)
     {
-        throw new NotImplementedException();
+        return root.GetCandidateBuckets(triangle, ref candidateBuckets);
     }
     public int GetCandidateBuckets(Rect rect, ref List<BroadphaseBucket> candidateBuckets)
     {
-        throw new NotImplementedException();
+        return root.GetCandidateBuckets(rect, ref candidateBuckets);
     }
     public int GetCandidateBuckets(Quad quad, ref List<BroadphaseBucket> candidateBuckets)
     {
-        throw new NotImplementedException();
+        return root.GetCandidateBuckets(quad, ref candidateBuckets);
     }
     public int GetCandidateBuckets(Polygon poly, ref List<BroadphaseBucket> candidateBuckets)
     {
-        throw new NotImplementedException();
+        return root.GetCandidateBuckets(poly, ref candidateBuckets);
     }
     public int GetCandidateBuckets(Polyline polyLine, ref List<BroadphaseBucket> candidateBuckets)
     {
-        throw new NotImplementedException();
+        return root.GetCandidateBuckets(polyLine, ref candidateBuckets);
+    }
+    
+    private void OnColliderAdded(Collider collider, BroadphaseBucket bucket)
+    {
+        register[collider] = bucket;
     }
 }
