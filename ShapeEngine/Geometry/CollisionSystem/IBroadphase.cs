@@ -20,8 +20,8 @@ public interface IBroadphase
     public void ResizeBounds(Rect targetBounds);
     public void DebugDraw(ColorRgba border, ColorRgba fill);
     
-    public int GetCandidateBuckets(CollisionObject collidable, ref List<BroadphaseBucket> candidateBuckets, bool registeredOnly = false);
-    public int GetCandidateBuckets(Collider collider, ref List<BroadphaseBucket> candidateBuckets, bool registeredOnly = false);
+    public int GetCandidateBuckets(CollisionObject collidable, ref List<BroadphaseBucket> candidateBuckets);
+    public int GetCandidateBuckets(Collider collider, ref List<BroadphaseBucket> candidateBuckets);
     public int GetCandidateBuckets(Segment segment, ref List<BroadphaseBucket> candidateBuckets);
     public int GetCandidateBuckets(Line line, ref List<BroadphaseBucket> candidateBuckets);
     public int GetCandidateBuckets(Ray ray, ref List<BroadphaseBucket> candidateBuckets);

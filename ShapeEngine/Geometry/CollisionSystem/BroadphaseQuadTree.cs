@@ -430,7 +430,6 @@ public class BroadphaseQuadTree : IBroadphase
             return added;
         }
         
-        
         public void DebugDraw(ColorRgba border, ColorRgba fill)
         {
             var lt = bounds.Size.Max() * 0.02f;
@@ -443,6 +442,8 @@ public class BroadphaseQuadTree : IBroadphase
                 child.DebugDraw(border, fill);
             }
         }
+        
+        
         private void ProcessSplitBucket()
         {
             if (children == null) return;
@@ -566,29 +567,26 @@ public class BroadphaseQuadTree : IBroadphase
        root.DebugDraw(border, fill);
     }
     
-    public int GetCandidateBuckets(CollisionObject collidable, ref List<BroadphaseBucket> candidateBuckets, bool registeredOnly = false)
+    public int GetCandidateBuckets(CollisionObject collidable, ref List<BroadphaseBucket> candidateBuckets)
     {
-        int count = 0;
+        var count = 0;
+        
         foreach (var collider in collidable.Colliders)
         {
-            count += GetCandidateBuckets(collider, ref candidateBuckets, registeredOnly);
+            count += GetCandidateBuckets(collider, ref candidateBuckets);
         }
 
         return count;
     }
-    public int GetCandidateBuckets(Collider collider, ref List<BroadphaseBucket> candidateBuckets, bool registeredOnly = false)
+    public int GetCandidateBuckets(Collider collider, ref List<BroadphaseBucket> candidateBuckets)
     {
         if (register.TryGetValue(collider, out var registerBucket))
         {
-            if (registerBucket.Count > 0)
-            {
-                candidateBuckets.Add(registerBucket);
-                return 1;
-            }
-        }
+            if (registerBucket.Count <= 0) return 0;
+            candidateBuckets.Add(registerBucket);
+            return 1;
 
-        if (registeredOnly) return 0;
-        
+        }
         return root.GetCandidateBuckets(collider, ref candidateBuckets);
     }
     public int GetCandidateBuckets(Segment segment, ref List<BroadphaseBucket> candidateBuckets)

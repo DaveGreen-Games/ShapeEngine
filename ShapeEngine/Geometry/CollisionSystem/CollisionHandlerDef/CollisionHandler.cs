@@ -251,7 +251,7 @@ public partial class CollisionHandler : IBounds
                     if (collider.Parent == null) continue;
                     collisionCandidateBuckets.Clear();
                     collisionCandidateCheckRegister.Clear();
-                    broadphase.GetCandidateBuckets(collider, ref collisionCandidateBuckets, true);
+                    broadphase.GetCandidateBuckets(collider, ref collisionCandidateBuckets);
                     
                     if(collisionCandidateBuckets.Count <= 0) continue;     
                     

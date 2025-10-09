@@ -175,16 +175,16 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </summary>
     /// <param name="collidable">The collision object to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    /// <param name="registeredOnly">If true, only checks registered buckets; otherwise, computes overlapping buckets.</param>
     /// <returns>
     /// Returns the number of buckets added to the candidateBuckets list.
     /// </returns>
-    public int GetCandidateBuckets(CollisionObject collidable, ref List<BroadphaseBucket> candidateBuckets, bool registeredOnly = false)
+    public int GetCandidateBuckets(CollisionObject collidable, ref List<BroadphaseBucket> candidateBuckets)
     {
-        int count = 0;
+        var count = 0;
+        
         foreach (var collider in collidable.Colliders)
         {
-            count += GetCandidateBuckets(collider, ref candidateBuckets, registeredOnly);
+            count += GetCandidateBuckets(collider, ref candidateBuckets);
         }
 
         return count;
@@ -194,11 +194,10 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </summary>
     /// <param name="collider">The collider to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
-    /// <param name="registeredOnly">If true, only checks registered buckets; otherwise, computes overlapping buckets.</param>
     /// <returns>
     /// Returns the number of buckets added to the candidateBuckets list.
     /// </returns>
-    public int GetCandidateBuckets(Collider collider, ref List<BroadphaseBucket> candidateBuckets, bool registeredOnly = false)
+    public int GetCandidateBuckets(Collider collider, ref List<BroadphaseBucket> candidateBuckets)
     {
         if (!collider.Enabled) return 0;
         int count = 0;
@@ -218,9 +217,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
             return count;
         }
         
-        if (registeredOnly) return count;
-        
-        List<int> ids = new();
+        List<int> ids = [];
         GetCellIDs(collider, ref ids);
         return FillCandidateBuckets(ids, ref candidateBuckets);
     }
@@ -388,7 +385,6 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// Returns the number of unique colliders added to the candidates set.
     /// </returns>
     public int GetUniqueCandidates(Collider collider, ref HashSet<Collider> candidates)
-    
     {
         if (!collider.Enabled) return 0;
         if (register.TryGetValue(collider, out var bucketIds))
