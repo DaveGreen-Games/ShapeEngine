@@ -507,7 +507,6 @@ public class BroadphaseQuadTree : IBroadphase
     
 
     private readonly QuadTreeNode root;
-    public Rect Bounds => root.Bounds;
     private readonly Dictionary<Collider, BroadphaseBucket> register = new();
     
     
@@ -536,8 +535,10 @@ public class BroadphaseQuadTree : IBroadphase
 
         
     }
-    
-    
+
+
+    public Rect GetBounds() => root.Bounds;
+
     public void Fill(IEnumerable<CollisionObject> collisionBodies)
     {
         register.Clear();

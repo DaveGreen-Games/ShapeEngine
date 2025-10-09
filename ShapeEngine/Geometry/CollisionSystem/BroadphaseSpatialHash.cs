@@ -103,6 +103,9 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     #endregion
     
     #region Public
+
+    public Rect GetBounds() => Bounds;
+
     /// <summary>
     /// Fills the spatial hash with all colliders from the provided collision objects.
     /// </summary>

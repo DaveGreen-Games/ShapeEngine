@@ -14,6 +14,7 @@ namespace ShapeEngine.Geometry.CollisionSystem;
 //TODO: docs
 public interface IBroadphase
 {
+    public Rect GetBounds();
     public void Fill(IEnumerable<CollisionObject> collisionBodies);
     public void Close();
     public void ResizeBounds(Rect targetBounds);
