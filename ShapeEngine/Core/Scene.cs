@@ -120,27 +120,18 @@ public abstract class Scene
             
         return true;
     }
-        
-    //TODO: Either change to IBroadphase parameter or add overloads InitCollisionHandlerSpatialHash, InitCollisionHandlerQuadTree, ...
     
     /// <summary>
-    /// Initializes a new CollisionHandler with the specified grid dimensions.
+    /// Initializes a new <see cref="CollisionHandler"/> for this scene using the specified broadphase algorithm and starting capacity.
+    /// Only creates a new <see cref="CollisionHandler"/> if one does not already exist.
     /// </summary>
-    /// <param name="bounds">The bounds of the collision grid.</param>
-    /// <param name="rows">The number of rows in the grid.</param>
-    /// <param name="cols">The number of columns in the grid.</param>
-    /// <returns>
-    /// Returns true if a new CollisionHandler was created successfully.
-    /// Returns false if a CollisionHandler already exists, in which case no new CollisionHandler is created.
-    /// </returns>
-    protected bool InitCollisionHandler(Rect bounds, int rows, int cols)
+    /// <param name="broadphase">The broadphase algorithm to use for collision detection.</param>
+    /// <param name="startingCapacity">The initial capacity for the collision handler. Default is 1024.</param>
+    /// <returns>Returns true if a new <see cref="CollisionHandler"/> was created; false if one already exists.</returns>
+    protected bool InitCollisionHandler(IBroadphase broadphase, int startingCapacity = 1024)
     {
         if (CollisionHandler != null) return false;
-
-        // var spatialHash = new BroadphaseSpatialHash(bounds, rows, cols);
-        
-        var quadTree = new BroadphaseQuadTree(bounds, 24, new Size(50, 50));
-        CollisionHandler = new(quadTree);
+        CollisionHandler = new(broadphase, startingCapacity);
         
         return true;
     }

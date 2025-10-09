@@ -6,6 +6,7 @@ using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry;
 using ShapeEngine.Geometry.CircleDef;
+using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.RectDef;
 using ShapeEngine.Geometry.StripedDrawingDef;
 using ShapeEngine.StaticLib;
@@ -47,7 +48,8 @@ public class PhysicsExample : ExampleScene
         var rectSize = SectorRadiusOutside * 2;
         sectorRect = new(new Vector2(0f), new Size(rectSize, rectSize) , new AnchorPoint(0.5f));
 
-        InitCollisionHandler(sectorRect, CollisionRows, CollisionCols);
+        var spatialHash = new BroadphaseSpatialHash(sectorRect, CollisionRows, CollisionCols);
+        InitCollisionHandler(spatialHash);
         cellSize = rectSize / CollisionRows;
         
         camera = new();

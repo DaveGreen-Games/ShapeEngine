@@ -561,7 +561,8 @@ namespace Examples.Scenes.ExampleScenes
             Title = "Asteroid Mining Example";
             UpdateBoundaryRect(Game.Instance.GameScreenInfo.Area);
             InitSpawnArea(boundaryRect);
-            InitCollisionHandler(boundaryRect, 4, 4);
+            var spatialHash = new BroadphaseSpatialHash(boundaryRect, 4, 4);
+            InitCollisionHandler(spatialHash);
             
             InputActionSettings defaultSettings = new();
             
