@@ -518,9 +518,6 @@ public class BroadphaseQuadTree : IBroadphase
     
 
     private readonly QuadTreeNode root;
-    private readonly Dictionary<Collider, BroadphaseBucket> register = new();
-    
-    
     public BroadphaseQuadTree(Rect bounds, int capacity, Size minBoundsSize)
     {
         if (bounds.Width <= 0 || bounds.Height <= 0)
@@ -549,7 +546,6 @@ public class BroadphaseQuadTree : IBroadphase
 
     public void Fill(IEnumerable<CollisionObject> collisionBodies)
     {
-        register.Clear();
         root.Clear();
         foreach (var body in collisionBodies)
         {
@@ -563,7 +559,6 @@ public class BroadphaseQuadTree : IBroadphase
     public void Close()
     {
         root.Clear();
-        register.Clear();
     }
     public void ResizeBounds(Rect targetBounds)
     {
@@ -587,13 +582,13 @@ public class BroadphaseQuadTree : IBroadphase
     }
     public int GetCandidateBuckets(Collider collider, ref List<BroadphaseBucket> candidateBuckets)
     {
-        if (register.TryGetValue(collider, out var registerBucket))
-        {
-            if (registerBucket.Count <= 0) return 0;
-            candidateBuckets.Add(registerBucket);
-            return 1;
-
-        }
+        // if (register.TryGetValue(collider, out var registerBucket))
+        // {
+        //     if (registerBucket.Count <= 0) return 0;
+        //     candidateBuckets.Add(registerBucket);
+        //     return 1;
+        //
+        // }
         return root.GetCandidateBuckets(collider, ref candidateBuckets);
     }
     public int GetCandidateBuckets(Segment segment, ref List<BroadphaseBucket> candidateBuckets)
