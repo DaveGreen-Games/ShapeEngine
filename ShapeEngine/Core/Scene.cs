@@ -121,6 +121,7 @@ public abstract class Scene
         return true;
     }
         
+    //TODO: Either change to IBroadphase parameter or add overloads InitCollisionHandlerSpatialHash, InitCollisionHandlerQuadTree, ...
     
     /// <summary>
     /// Initializes a new CollisionHandler with the specified grid dimensions.
@@ -135,7 +136,12 @@ public abstract class Scene
     protected bool InitCollisionHandler(Rect bounds, int rows, int cols)
     {
         if (CollisionHandler != null) return false;
-        CollisionHandler = new(bounds, rows, cols);
+
+        // var spatialHash = new BroadphaseSpatialHash(bounds, rows, cols);
+        
+        var quadTree = new BroadphaseQuadTree(bounds, 24, new Size(50, 50));
+        CollisionHandler = new(quadTree);
+        
         return true;
     }
     /// <summary>
