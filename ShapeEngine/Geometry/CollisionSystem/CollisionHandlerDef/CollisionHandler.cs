@@ -24,12 +24,11 @@ public partial class CollisionHandler : IBounds
     /// <summary>
     /// Gets the bounding rectangle of the collision system.
     /// </summary>
-    public Rect Bounds => broadphaseSpatialHash.Bounds;
+    public Rect Bounds => broadphase.GetBounds();
     
     private readonly CollisionObjectRegister collisionBodyRegister;
     
-    //TODO: Has IBroadphase now
-    private readonly BroadphaseSpatialHash broadphaseSpatialHash;
+    private readonly IBroadphase broadphase;
     private readonly CollisionStack collisionStack;
 
     private  FirstContactStack<CollisionObject, CollisionObject> collisionObjectFirstContactRegisterActive;
@@ -45,41 +44,15 @@ public partial class CollisionHandler : IBounds
     #endregion
 
     #region Constructors
-
-    //TODO: Constructor now needs IBroadphase parameter instead of all spatial hash parameters
     
     /// <summary>
     /// Initializes a new instance of the <see cref="CollisionHandler"/> class with the specified bounds and grid size.
     /// </summary>
-    /// <param name="x">The X coordinate of the bounds.</param>
-    /// <param name="y">The Y coordinate of the bounds.</param>
-    /// <param name="w">The width of the bounds.</param>
-    /// <param name="h">The height of the bounds.</param>
-    /// <param name="rows">The number of rows in the spatial hash grid.</param>
-    /// <param name="cols">The number of columns in the spatial hash grid.</param>
+    /// <param name="broadphase">The broadphase to use.</param>
     /// <param name="startCapacity">The initial capacity for object registers. Default is 1024.</param>
-    public CollisionHandler(float x, float y, float w, float h, int rows, int cols, int startCapacity = 1024)
+    public CollisionHandler(IBroadphase broadphase, int startCapacity = 1024)
     {
-        broadphaseSpatialHash = new(x, y, w, h, rows, cols);
-        collisionBodyRegister = new(startCapacity, this);
-        collisionStack = new(startCapacity / 4);
-        colliderFirstContactRegisterActive = new(startCapacity / 4);
-        colliderFirstContactRegisterTemp = new(startCapacity / 4);
-        collisionObjectFirstContactRegisterActive = new(startCapacity / 4);
-        collisionObjectFirstContactRegisterTemp = new(startCapacity / 4);
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="CollisionHandler"/> class with the specified bounding rectangle and grid size.
-    /// </summary>
-    /// <param name="bounds">The bounding rectangle for the collision system.</param>
-    /// <param name="rows">The number of rows in the spatial hash grid.</param>
-    /// <param name="cols">The number of columns in the spatial hash grid.</param>
-    /// <param name="startCapacity">The initial capacity for object registers. Default is 1024.</param>
-    public CollisionHandler(Rect bounds, int rows, int cols, int startCapacity = 1024)
-    {
-        broadphaseSpatialHash = new(bounds.X, bounds.Y, bounds.Width, bounds.Height, rows, cols);
-        
+        this.broadphase = broadphase;
         collisionBodyRegister = new(startCapacity, this);
         collisionStack = new(startCapacity / 4);
         colliderFirstContactRegisterActive = new(startCapacity / 4);
@@ -133,7 +106,7 @@ public partial class CollisionHandler : IBounds
     /// Resizes the bounds of the collision system.
     /// </summary>
     /// <param name="newBounds">The new bounding rectangle.</param>
-    public void ResizeBounds(Rect newBounds) => broadphaseSpatialHash.ResizeBounds(newBounds);
+    public void ResizeBounds(Rect newBounds) => broadphase.ResizeBounds(newBounds);
 
     /// <summary>
     /// Removes all registered collision objects and clears the collision system.
@@ -155,7 +128,7 @@ public partial class CollisionHandler : IBounds
     public void Close()
     {
         Clear();
-        broadphaseSpatialHash.Close();
+        broadphase.Close();
         
     }
     /// <summary>
@@ -167,7 +140,7 @@ public partial class CollisionHandler : IBounds
     /// </remarks>
     public void Update(float dt)
     {
-        broadphaseSpatialHash.Fill(collisionBodyRegister.AllObjects);
+        broadphase.Fill(collisionBodyRegister.AllObjects);
 
         ProcessCollisions(dt);
         
@@ -199,7 +172,7 @@ public partial class CollisionHandler : IBounds
                     if(projected == null) continue;
                     collisionCandidateBuckets.Clear();
                     collisionCandidateCheckRegister.Clear();
-                    broadphaseSpatialHash.GetCandidateBuckets(projected, ref collisionCandidateBuckets);
+                    broadphase.GetCandidateBuckets(projected, ref collisionCandidateBuckets);
                     
                     if(collisionCandidateBuckets.Count <= 0) continue;     
                     
@@ -278,7 +251,7 @@ public partial class CollisionHandler : IBounds
                     if (collider.Parent == null) continue;
                     collisionCandidateBuckets.Clear();
                     collisionCandidateCheckRegister.Clear();
-                    broadphaseSpatialHash.GetCandidateBuckets(collider, ref collisionCandidateBuckets, true);
+                    broadphase.GetCandidateBuckets(collider, ref collisionCandidateBuckets, true);
                     
                     if(collisionCandidateBuckets.Count <= 0) continue;     
                     
@@ -404,7 +377,7 @@ public partial class CollisionHandler : IBounds
     /// <param name="fill">The color to use for the fill.</param>
     public void DebugDraw(ColorRgba border, ColorRgba fill)
     {
-        broadphaseSpatialHash.DebugDraw(border, fill);
+        broadphase.DebugDraw(border, fill);
     }
 
     /// <summary>
