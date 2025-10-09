@@ -1,4 +1,3 @@
-using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
@@ -18,11 +17,11 @@ public class BroadphaseQuadTree : IBroadphase
 {
     private class QuadTreeNode
     {
-        public event Action<Collider, BroadphaseBucket>? OnColliderAdded;
         private readonly int capacity;
         private readonly Size minSize;
 
-        private Rect newBounds = new();
+        private bool newBoundsSet = false;
+        private Rect newBounds;
         private Rect bounds;
         public Rect Bounds
         {
@@ -36,6 +35,7 @@ public class BroadphaseQuadTree : IBroadphase
                     return;
                 }
                 newBounds = value;
+                newBoundsSet = true;
             }
         }
         private readonly BroadphaseBucket splitBucket;
@@ -43,12 +43,12 @@ public class BroadphaseQuadTree : IBroadphase
         private readonly QuadTreeNode? parent;
         private readonly QuadTreeNode root;
         private QuadTreeNode[]? children; //4 children
-        
         public QuadTreeNode(Rect bounds, int capacity, Size minSize)
         {
             this.minSize = minSize;
+            if (capacity <= 1) capacity = 2; //safeguard against invalid capacity
             this.capacity = capacity;
-            Bounds = bounds;
+            this.bounds = bounds;
             root = this;
             parent = null;
             children = null;
@@ -61,7 +61,7 @@ public class BroadphaseQuadTree : IBroadphase
             var halfSize = parentBounds.Size / 2;
             var tl = parentBounds.TopLeft + anchor * halfSize;
             var br = tl + halfSize;
-            Bounds = new Rect(tl, br);
+            bounds = new Rect(tl, br);
             children = null;
             splitBucket = [];
             bucket = [];
@@ -84,27 +84,33 @@ public class BroadphaseQuadTree : IBroadphase
             }
             splitBucket.Clear();
             bucket.Clear();
-            if (newBounds != bounds)
+            if (newBoundsSet)
             {
                 bounds = newBounds;
                 newBounds = new();
+                newBoundsSet = false;
             }
             return true;
         }
         public bool Add(Collider collider)
         {
-            if (!collider.Enabled) return false;
-
+            if (!collider.Enabled)
+            {
+                return false;
+            }
+            
             var boundingBox = collider.GetBoundingBox();
             
-            if (!bounds.OverlapShape(boundingBox)) return false; // out of bounds
+            if (!bounds.OverlapShape(boundingBox))
+            {
+                return false; // out of bounds
+            }
             
             var halfSize = bounds.Size / 2;
             if(boundingBox.Size.Width > halfSize.Width || boundingBox.Size.Height > halfSize.Height)
             {
                 // too big, add to this bucket
                 bucket.Add(collider);
-                root.AddToRegister(collider, bucket);
                 return true;
             }
 
@@ -119,7 +125,6 @@ public class BroadphaseQuadTree : IBroadphase
                 else
                 {
                     splitBucket.Add(collider);
-                    root.AddToRegister(collider, splitBucket);
                 }
             }
             else
@@ -432,8 +437,9 @@ public class BroadphaseQuadTree : IBroadphase
         
         public void DebugDraw(ColorRgba border, ColorRgba fill)
         {
-            var lt = bounds.Size.Max() * 0.02f;
+            var lt = bounds.Size.Max() * 0.005f;
             if (lt < 0.5f) lt = 0.5f;
+            // lt = 10;
             bounds.Draw(fill);
             bounds.DrawLines(lt, border);
             if (children == null) return;
@@ -447,7 +453,6 @@ public class BroadphaseQuadTree : IBroadphase
         private void ProcessSplitBucket()
         {
             if (children == null) return;
-            
             foreach (var c in splitBucket)
             {
                 ProcessCollider(c);
@@ -457,12 +462,14 @@ public class BroadphaseQuadTree : IBroadphase
         private void ProcessCollider(Collider collider)
         {
             if (children == null) return;
+            
             var boundingBox = collider.GetBoundingBox();
             QuadTreeNode? firstChild = null;
             foreach (var child in children)
             {
                 if (child.Bounds.OverlapShape(boundingBox))
                 {
+                    
                     if (firstChild == null)
                     {
                         firstChild = child;
@@ -471,13 +478,20 @@ public class BroadphaseQuadTree : IBroadphase
                     {
                         // overlaps multiple children, add to this bucket (too big)
                         bucket.Add(collider);
-                        root.AddToRegister(collider, bucket);
                         return;
                     }
                 }
             }
-            //only overlapped one (or no child, but that should not happen), so add it to the child
-            firstChild?.Add(collider);
+
+            if (firstChild != null)
+            {
+                firstChild.Add(collider);
+            }
+            else
+            {
+                bucket.Add(collider);
+            }
+            
         }
         private bool CanSplit()
         {
@@ -500,10 +514,6 @@ public class BroadphaseQuadTree : IBroadphase
             children[2] = new QuadTreeNode(this, root, AnchorPoint.BottomRight, capacity, minSize);
             children[3] = new QuadTreeNode(this, root, AnchorPoint.BottomLeft, capacity, minSize);
         }
-        private void AddToRegister(Collider collider, BroadphaseBucket targetBucket)
-        {
-            OnColliderAdded?.Invoke(collider, targetBucket);
-        }
     }
     
 
@@ -511,7 +521,7 @@ public class BroadphaseQuadTree : IBroadphase
     private readonly Dictionary<Collider, BroadphaseBucket> register = new();
     
     
-    public BroadphaseQuadTree(Rect bounds, int maxObjects, Size minBoundsSize)
+    public BroadphaseQuadTree(Rect bounds, int capacity, Size minBoundsSize)
     {
         if (bounds.Width <= 0 || bounds.Height <= 0)
         {
@@ -519,10 +529,10 @@ public class BroadphaseQuadTree : IBroadphase
             throw new ArgumentException($"BroadphaseQuadTree creation failed: Invalid bounds {bounds}, bounds size must be positive.", nameof(bounds));
         }
 
-        if (maxObjects <= 0)
+        if (capacity <= 1)
         {
-            Game.Instance.Logger.LogError($"BroadphaseQuadTree creation failed: maxObjects must be greater than zero, got {maxObjects}.");
-            throw new ArgumentException($"BroadphaseQuadTree creation failed: Invalid maxObjects {maxObjects}, must be greater than zero.", nameof(maxObjects));
+            Game.Instance.Logger.LogError($"BroadphaseQuadTree creation failed: maxObjects must be greater than one, got {capacity}.");
+            throw new ArgumentException($"BroadphaseQuadTree creation failed: Invalid maxObjects {capacity}, must be greater than one.", nameof(capacity));
         }
         
         if (minBoundsSize.Width >= bounds.Size.Width || minBoundsSize.Height >= bounds.Size.Height)
@@ -531,10 +541,7 @@ public class BroadphaseQuadTree : IBroadphase
             Game.Instance.Logger.LogWarning($"BroadphaseQuadTree creation: minBoundsSize {minBoundsSize} is larger than or equal to bounds size {bounds.Size}, disabling minimum bounds size.");
         }
         
-        root = new(bounds, maxObjects, minBoundsSize);
-        root.OnColliderAdded += OnColliderAdded;
-
-        
+        root = new(bounds, capacity, minBoundsSize);
     }
 
 
@@ -624,10 +631,5 @@ public class BroadphaseQuadTree : IBroadphase
     public int GetCandidateBuckets(Polyline polyLine, ref List<BroadphaseBucket> candidateBuckets)
     {
         return root.GetCandidateBuckets(polyLine, ref candidateBuckets);
-    }
-    
-    private void OnColliderAdded(Collider collider, BroadphaseBucket bucket)
-    {
-        register[collider] = bucket;
     }
 }
