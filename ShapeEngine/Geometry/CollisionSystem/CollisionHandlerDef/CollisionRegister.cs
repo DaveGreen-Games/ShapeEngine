@@ -2,7 +2,7 @@ namespace ShapeEngine.Geometry.CollisionSystem.CollisionHandlerDef;
 
 public partial class CollisionHandler
 {
-    private partial class CollisionRegister
+    private class CollisionRegister: Dictionary<CollisionObject, CollisionInformation>
     {
         public bool AddCollision(Collision collision, bool firstContact)
         {
