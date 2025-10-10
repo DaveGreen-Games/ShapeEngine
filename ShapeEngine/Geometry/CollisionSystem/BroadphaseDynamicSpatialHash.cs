@@ -32,7 +32,6 @@ namespace ShapeEngine.Geometry.CollisionSystem;
 
 public class BroadphaseDynamicSpatialHash : IBroadphase
 {
-
     private struct Coords(int x, int y) : IEquatable<Coords>
     {
         public readonly int X = x;
@@ -55,7 +54,6 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
             return X == other.X && Y == other.Y;
         }
     }
-    
     
     
     private Rect currentBounds = new();//calculated from added colliders
@@ -240,6 +238,10 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
     public void ResizeBounds(Rect targetBounds) { }
     public void DebugDraw(ColorRgba border, ColorRgba fill)
     {
+        var borderLineThickness = currentBounds.Size.Max() * 0.0025f;
+        if (borderLineThickness <= 1f) borderLineThickness = 1f;
+        currentBounds.DrawLines(borderLineThickness, border);
+        
         var lineThickness = bucketSize.Max() * 0.0025f;
         if(lineThickness <= 0.5f) lineThickness = 0.5f;
         
@@ -262,58 +264,435 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         }
     }
 
-    public int GetCandidateBuckets(CollisionObject collidable, ref List<BroadphaseBucket> candidateBuckets)
+    public int GetCandidateBuckets(CollisionObject collisionObject, ref List<BroadphaseBucket> candidateBuckets)
     {
-        throw new NotImplementedException();
+        var count = 0;
+        
+        foreach (var collider in collisionObject.Colliders)
+        {
+            count += GetCandidateBuckets(collider, ref candidateBuckets);
+        }
+
+        return count;
     }
 
     public int GetCandidateBuckets(Collider collider, ref List<BroadphaseBucket> candidateBuckets)
     {
-        throw new NotImplementedException();
+        if (!collider.Enabled) return 0;
+        
+        if (register.TryGetValue(collider, out var registerBuckets))
+        {
+            foreach (var bucket in registerBuckets)
+            {
+                candidateBuckets.Add(bucket);
+            }
+            return registerBuckets.Count;
+        }
+        
+        switch (collider.GetShapeType())
+        {
+            case ShapeType.Circle: return  GetCandidateBuckets(collider.GetCircleShape(), ref candidateBuckets);
+            case ShapeType.Segment: return  GetCandidateBuckets(collider.GetSegmentShape(), ref candidateBuckets);
+            case ShapeType.Line: return  GetCandidateBuckets(collider.GetLineShape(), ref candidateBuckets);
+            case ShapeType.Ray: return  GetCandidateBuckets(collider.GetRayShape(), ref candidateBuckets);
+            case ShapeType.Triangle: return  GetCandidateBuckets(collider.GetTriangleShape(), ref candidateBuckets);
+            case ShapeType.Rect: return  GetCandidateBuckets(collider.GetRectShape(), ref candidateBuckets);
+            case ShapeType.Quad: return  GetCandidateBuckets(collider.GetQuadShape(), ref candidateBuckets);
+            case ShapeType.Poly: return  GetCandidateBuckets(collider.GetPolygonShape(), ref candidateBuckets);
+            case ShapeType.PolyLine: return  GetCandidateBuckets(collider.GetPolylineShape(), ref candidateBuckets);
+        }
+
+        return 0;
     }
 
     public int GetCandidateBuckets(Segment segment, ref List<BroadphaseBucket> candidateBuckets)
     {
-        throw new NotImplementedException();
+        var boundingBox = segment.GetBoundingBox();
+        
+        var minX = (int)Math.Floor(boundingBox.Left / bucketSize.Width);
+        var maxX = (int)Math.Floor(boundingBox.Right / bucketSize.Width);
+        var minY = (int)Math.Floor(boundingBox.Top / bucketSize.Height);
+        var maxY = (int)Math.Floor(boundingBox.Bottom / bucketSize.Height);
+
+        int bucketCount = (1 + maxX - minX) * (1 + maxY - minY);
+        if (bucketCount <= 0) return 0;
+        
+        int added = 0;
+        if (bucketCount == 1)
+        {
+            var coords = new Coords(minX, minY);
+            if (buckets.TryGetValue(coords, out var bucket) && bucket.Count > 0)
+            {
+                candidateBuckets.Add(bucket);
+                added++;
+            }
+        }
+        else
+        {
+            for (int x = minX; x <= maxX; x++)
+            {
+                for (int y = minY; y <= maxY; y++)
+                {
+                    var coords = new Coords(x, y);
+                    if (!buckets.TryGetValue(coords, out var bucket)) continue;
+                    if(bucket.Count <= 0) continue;
+                
+                    var bucketRect = GetBucketBounds(coords);
+                    if (!segment.OverlapShape(bucketRect)) continue;
+                
+                    candidateBuckets.Add(bucket);
+                    added++;
+                }
+            }
+        }
+
+        return added;
     }
 
     public int GetCandidateBuckets(Line line, ref List<BroadphaseBucket> candidateBuckets)
     {
-        throw new NotImplementedException();
+        var boundingBox = line.GetBoundingBox();
+        
+        var minX = (int)Math.Floor(boundingBox.Left / bucketSize.Width);
+        var maxX = (int)Math.Floor(boundingBox.Right / bucketSize.Width);
+        var minY = (int)Math.Floor(boundingBox.Top / bucketSize.Height);
+        var maxY = (int)Math.Floor(boundingBox.Bottom / bucketSize.Height);
+
+        int bucketCount = (1 + maxX - minX) * (1 + maxY - minY);
+        if (bucketCount <= 0) return 0;
+        
+        int added = 0;
+        if (bucketCount == 1)
+        {
+            var coords = new Coords(minX, minY);
+            if (buckets.TryGetValue(coords, out var bucket) && bucket.Count > 0)
+            {
+                candidateBuckets.Add(bucket);
+                added++;
+            }
+        }
+        else
+        {
+            for (int x = minX; x <= maxX; x++)
+            {
+                for (int y = minY; y <= maxY; y++)
+                {
+                    var coords = new Coords(x, y);
+                    if (!buckets.TryGetValue(coords, out var bucket)) continue;
+                    if(bucket.Count <= 0) continue;
+                
+                    var bucketRect = GetBucketBounds(coords);
+                    if (!line.OverlapShape(bucketRect)) continue;
+                
+                    candidateBuckets.Add(bucket);
+                    added++;
+                }
+            }
+        }
+
+        return added;
     }
 
     public int GetCandidateBuckets(Ray ray, ref List<BroadphaseBucket> candidateBuckets)
     {
-        throw new NotImplementedException();
+        var boundingBox = ray.GetBoundingBox();
+        
+        var minX = (int)Math.Floor(boundingBox.Left / bucketSize.Width);
+        var maxX = (int)Math.Floor(boundingBox.Right / bucketSize.Width);
+        var minY = (int)Math.Floor(boundingBox.Top / bucketSize.Height);
+        var maxY = (int)Math.Floor(boundingBox.Bottom / bucketSize.Height);
+
+        int bucketCount = (1 + maxX - minX) * (1 + maxY - minY);
+        if (bucketCount <= 0) return 0;
+        
+        int added = 0;
+        if (bucketCount == 1)
+        {
+            var coords = new Coords(minX, minY);
+            if (buckets.TryGetValue(coords, out var bucket) && bucket.Count > 0)
+            {
+                candidateBuckets.Add(bucket);
+                added++;
+            }
+        }
+        else
+        {
+            for (int x = minX; x <= maxX; x++)
+            {
+                for (int y = minY; y <= maxY; y++)
+                {
+                    var coords = new Coords(x, y);
+                    if (!buckets.TryGetValue(coords, out var bucket)) continue;
+                    if(bucket.Count <= 0) continue;
+                
+                    var bucketRect = GetBucketBounds(coords);
+                    if (!ray.OverlapShape(bucketRect)) continue;
+                
+                    candidateBuckets.Add(bucket);
+                    added++;
+                }
+            }
+        }
+
+        return added;
     }
 
     public int GetCandidateBuckets(Circle circle, ref List<BroadphaseBucket> candidateBuckets)
     {
-        throw new NotImplementedException();
+        var boundingBox = circle.GetBoundingBox();
+        
+        var minX = (int)Math.Floor(boundingBox.Left / bucketSize.Width);
+        var maxX = (int)Math.Floor(boundingBox.Right / bucketSize.Width);
+        var minY = (int)Math.Floor(boundingBox.Top / bucketSize.Height);
+        var maxY = (int)Math.Floor(boundingBox.Bottom / bucketSize.Height);
+
+        int bucketCount = (1 + maxX - minX) * (1 + maxY - minY);
+        if (bucketCount <= 0) return 0;
+        
+        int added = 0;
+        if (bucketCount == 1)
+        {
+            var coords = new Coords(minX, minY);
+            if (buckets.TryGetValue(coords, out var bucket) && bucket.Count > 0)
+            {
+                candidateBuckets.Add(bucket);
+                added++;
+            }
+        }
+        else
+        {
+            for (int x = minX; x <= maxX; x++)
+            {
+                for (int y = minY; y <= maxY; y++)
+                {
+                    var coords = new Coords(x, y);
+                    if (!buckets.TryGetValue(coords, out var bucket)) continue;
+                    if(bucket.Count <= 0) continue;
+                
+                    var bucketRect = GetBucketBounds(coords);
+                    if (!circle.OverlapShape(bucketRect)) continue;
+                
+                    candidateBuckets.Add(bucket);
+                    added++;
+                }
+            }
+        }
+
+        return added;
     }
 
     public int GetCandidateBuckets(Triangle triangle, ref List<BroadphaseBucket> candidateBuckets)
     {
-        throw new NotImplementedException();
+        var boundingBox = triangle.GetBoundingBox();
+        
+        var minX = (int)Math.Floor(boundingBox.Left / bucketSize.Width);
+        var maxX = (int)Math.Floor(boundingBox.Right / bucketSize.Width);
+        var minY = (int)Math.Floor(boundingBox.Top / bucketSize.Height);
+        var maxY = (int)Math.Floor(boundingBox.Bottom / bucketSize.Height);
+
+        int bucketCount = (1 + maxX - minX) * (1 + maxY - minY);
+        if (bucketCount <= 0) return 0;
+        
+        int added = 0;
+        if (bucketCount == 1)
+        {
+            var coords = new Coords(minX, minY);
+            if (buckets.TryGetValue(coords, out var bucket) && bucket.Count > 0)
+            {
+                candidateBuckets.Add(bucket);
+                added++;
+            }
+        }
+        else
+        {
+            for (int x = minX; x <= maxX; x++)
+            {
+                for (int y = minY; y <= maxY; y++)
+                {
+                    var coords = new Coords(x, y);
+                    if (!buckets.TryGetValue(coords, out var bucket)) continue;
+                    if(bucket.Count <= 0) continue;
+                
+                    var bucketRect = GetBucketBounds(coords);
+                    if (!triangle.OverlapShape(bucketRect)) continue;
+                
+                    candidateBuckets.Add(bucket);
+                    added++;
+                }
+            }
+        }
+
+        return added;
     }
 
     public int GetCandidateBuckets(Rect rect, ref List<BroadphaseBucket> candidateBuckets)
     {
-        throw new NotImplementedException();
+        var minX = (int)Math.Floor(rect.Left / bucketSize.Width);
+        var maxX = (int)Math.Floor(rect.Right / bucketSize.Width);
+        var minY = (int)Math.Floor(rect.Top / bucketSize.Height);
+        var maxY = (int)Math.Floor(rect.Bottom / bucketSize.Height);
+
+        int bucketCount = (1 + maxX - minX) * (1 + maxY - minY);
+        if (bucketCount <= 0) return 0;
+        
+        int added = 0;
+        if (bucketCount == 1)
+        {
+            var coords = new Coords(minX, minY);
+            if (buckets.TryGetValue(coords, out var bucket) && bucket.Count > 0)
+            {
+                candidateBuckets.Add(bucket);
+                added++;
+            }
+        }
+        else
+        {
+            for (int x = minX; x <= maxX; x++)
+            {
+                for (int y = minY; y <= maxY; y++)
+                {
+                    var coords = new Coords(x, y);
+                    if (!buckets.TryGetValue(coords, out var bucket)) continue;
+                    if(bucket.Count <= 0) continue;
+                    
+                    candidateBuckets.Add(bucket);
+                    added++;
+                }
+            }
+        }
+
+        return added;
     }
 
     public int GetCandidateBuckets(Quad quad, ref List<BroadphaseBucket> candidateBuckets)
     {
-        throw new NotImplementedException();
+        var boundingBox = quad.GetBoundingBox();
+        
+        var minX = (int)Math.Floor(boundingBox.Left / bucketSize.Width);
+        var maxX = (int)Math.Floor(boundingBox.Right / bucketSize.Width);
+        var minY = (int)Math.Floor(boundingBox.Top / bucketSize.Height);
+        var maxY = (int)Math.Floor(boundingBox.Bottom / bucketSize.Height);
+
+        int bucketCount = (1 + maxX - minX) * (1 + maxY - minY);
+        if (bucketCount <= 0) return 0;
+        
+        int added = 0;
+        if (bucketCount == 1)
+        {
+            var coords = new Coords(minX, minY);
+            if (buckets.TryGetValue(coords, out var bucket) && bucket.Count > 0)
+            {
+                candidateBuckets.Add(bucket);
+                added++;
+            }
+        }
+        else
+        {
+            for (int x = minX; x <= maxX; x++)
+            {
+                for (int y = minY; y <= maxY; y++)
+                {
+                    var coords = new Coords(x, y);
+                    if (!buckets.TryGetValue(coords, out var bucket)) continue;
+                    if(bucket.Count <= 0) continue;
+                
+                    var bucketRect = GetBucketBounds(coords);
+                    if (!quad.OverlapShape(bucketRect)) continue;
+                
+                    candidateBuckets.Add(bucket);
+                    added++;
+                }
+            }
+        }
+
+        return added;
     }
 
     public int GetCandidateBuckets(Polygon poly, ref List<BroadphaseBucket> candidateBuckets)
     {
-        throw new NotImplementedException();
+        var boundingBox = poly.GetBoundingBox();
+        
+        var minX = (int)Math.Floor(boundingBox.Left / bucketSize.Width);
+        var maxX = (int)Math.Floor(boundingBox.Right / bucketSize.Width);
+        var minY = (int)Math.Floor(boundingBox.Top / bucketSize.Height);
+        var maxY = (int)Math.Floor(boundingBox.Bottom / bucketSize.Height);
+
+        int bucketCount = (1 + maxX - minX) * (1 + maxY - minY);
+        if (bucketCount <= 0) return 0;
+        
+        int added = 0;
+        if (bucketCount == 1)
+        {
+            var coords = new Coords(minX, minY);
+            if (buckets.TryGetValue(coords, out var bucket) && bucket.Count > 0)
+            {
+                candidateBuckets.Add(bucket);
+                added++;
+            }
+        }
+        else
+        {
+            for (int x = minX; x <= maxX; x++)
+            {
+                for (int y = minY; y <= maxY; y++)
+                {
+                    var coords = new Coords(x, y);
+                    if (!buckets.TryGetValue(coords, out var bucket)) continue;
+                    if(bucket.Count <= 0) continue;
+                
+                    var bucketRect = GetBucketBounds(coords);
+                    if (!poly.OverlapShape(bucketRect)) continue;
+                
+                    candidateBuckets.Add(bucket);
+                    added++;
+                }
+            }
+        }
+
+        return added;
     }
 
     public int GetCandidateBuckets(Polyline polyLine, ref List<BroadphaseBucket> candidateBuckets)
     {
-        throw new NotImplementedException();
+        var boundingBox = polyLine.GetBoundingBox();
+        
+        var minX = (int)Math.Floor(boundingBox.Left / bucketSize.Width);
+        var maxX = (int)Math.Floor(boundingBox.Right / bucketSize.Width);
+        var minY = (int)Math.Floor(boundingBox.Top / bucketSize.Height);
+        var maxY = (int)Math.Floor(boundingBox.Bottom / bucketSize.Height);
+
+        int bucketCount = (1 + maxX - minX) * (1 + maxY - minY);
+        if (bucketCount <= 0) return 0;
+        
+        int added = 0;
+        if (bucketCount == 1)
+        {
+            var coords = new Coords(minX, minY);
+            if (buckets.TryGetValue(coords, out var bucket) && bucket.Count > 0)
+            {
+                candidateBuckets.Add(bucket);
+                added++;
+            }
+        }
+        else
+        {
+            for (int x = minX; x <= maxX; x++)
+            {
+                for (int y = minY; y <= maxY; y++)
+                {
+                    var coords = new Coords(x, y);
+                    if (!buckets.TryGetValue(coords, out var bucket)) continue;
+                    if(bucket.Count <= 0) continue;
+                
+                    var bucketRect = GetBucketBounds(coords);
+                    if (!polyLine.OverlapShape(bucketRect)) continue;
+                
+                    candidateBuckets.Add(bucket);
+                    added++;
+                }
+            }
+        }
+
+        return added;
     }
 }

@@ -173,16 +173,16 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// <summary>
     /// Gets all buckets that may contain colliders overlapping the given collision object.
     /// </summary>
-    /// <param name="collidable">The collision object to query.</param>
+    /// <param name="collisionObject">The collision object to query.</param>
     /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
     /// <returns>
     /// Returns the number of buckets added to the candidateBuckets list.
     /// </returns>
-    public int GetCandidateBuckets(CollisionObject collidable, ref List<BroadphaseBucket> candidateBuckets)
+    public int GetCandidateBuckets(CollisionObject collisionObject, ref List<BroadphaseBucket> candidateBuckets)
     {
         var count = 0;
         
-        foreach (var collider in collidable.Colliders)
+        foreach (var collider in collisionObject.Colliders)
         {
             count += GetCandidateBuckets(collider, ref candidateBuckets);
         }

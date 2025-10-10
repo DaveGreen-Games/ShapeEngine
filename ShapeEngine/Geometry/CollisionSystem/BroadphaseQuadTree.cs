@@ -569,11 +569,11 @@ public class BroadphaseQuadTree : IBroadphase
        root.DebugDraw(border, fill);
     }
     
-    public int GetCandidateBuckets(CollisionObject collidable, ref List<BroadphaseBucket> candidateBuckets)
+    public int GetCandidateBuckets(CollisionObject collisionObject, ref List<BroadphaseBucket> candidateBuckets)
     {
         var count = 0;
         
-        foreach (var collider in collidable.Colliders)
+        foreach (var collider in collisionObject.Colliders)
         {
             count += GetCandidateBuckets(collider, ref candidateBuckets);
         }
