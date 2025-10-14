@@ -124,71 +124,77 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
                 //collider does not overlap with this bucket - only checked with more than 4 buckets to save performance
                 if (bucketCount > 4 && collider.BroadphaseType == BroadphaseType.FullShape && !OverlapsColliderShapeWithBucketRect(coords, collider)) continue;
                 
-                if (buckets.TryGetValue(coords, out var bucket))//bucket already exists
-                {
-                    if(bucket.Count == 0) emptyUsedBuckets.Remove(bucket);//no longer empty
-                    bucket.Add(collider);
-                    registerSet.Add(bucket);
-                }
-                else //bucket does not exist yet
-                {
-                    if (availableBuckets.Count > 0)
-                    {
-                        bucket = availableBuckets.First();
-                        availableBuckets.Remove(bucket);
-                    }
-                    else
-                    {
-                        if (maxBuckets <= 0)
-                        {
-                            if (emptyUsedBuckets.Count > 0)
-                            {
-                                var kvp = emptyUsedBuckets.First();
-                                bucket = kvp.Key;
-                                buckets.Remove(kvp.Value);
-                                emptyUsedBuckets.Remove(bucket);
-                            }
-                            else
-                            {
-                                //create a new bucket
-                                bucket = [];
-                                createdBuckets++;
-                            }
-                        }
-                        else
-                        {
-                            if (createdBuckets >= maxBuckets)
-                            {
-                                if (emptyUsedBuckets.Count > 0)
-                                {
-                                    var kvp = emptyUsedBuckets.First();
-                                    bucket = kvp.Key;
-                                    buckets.Remove(kvp.Value);
-                                    emptyUsedBuckets.Remove(bucket);
-                                }
-                                else
-                                {
-                                    Game.Instance.Logger.LogWarning($"BroadphaseDynamicSpatialHash: Max bucket count of {maxBuckets} reached and no empty used buckets available! Cannot add new bucket for collider {collider}.");
-                                    continue;
-                                }
-                            }
-                            else
-                            {
-                                //create a new bucket
-                                bucket = [];
-                                createdBuckets++;
-                            }
-                        }
-                    }
-                    
-                    bucket.Add(collider);
-                    buckets[coords] = bucket;
-                    registerSet.Add(bucket);
-                }
+                AddColliderToBucket(collider, coords, ref registerSet);
             }
         }
 
     }
+
+    private void AddColliderToBucket(Collider collider, Coords coords, ref HashSet<BroadphaseBucket> registerSet)
+    {
+        if (buckets.TryGetValue(coords, out var bucket))//bucket already exists
+        {
+            if(bucket.Count == 0) emptyUsedBuckets.Remove(bucket);//no longer empty
+            bucket.Add(collider);
+            registerSet.Add(bucket);
+        }
+        else //bucket does not exist yet
+        {
+            if (availableBuckets.Count > 0)
+            {
+                bucket = availableBuckets.First();
+                availableBuckets.Remove(bucket);
+            }
+            else
+            {
+                if (maxBuckets <= 0)
+                {
+                    if (emptyUsedBuckets.Count > 0)
+                    {
+                        var kvp = emptyUsedBuckets.First();
+                        bucket = kvp.Key;
+                        buckets.Remove(kvp.Value);
+                        emptyUsedBuckets.Remove(bucket);
+                    }
+                    else
+                    {
+                        //create a new bucket
+                        bucket = [];
+                        createdBuckets++;
+                    }
+                }
+                else
+                {
+                    if (createdBuckets >= maxBuckets)
+                    {
+                        if (emptyUsedBuckets.Count > 0)
+                        {
+                            var kvp = emptyUsedBuckets.First();
+                            bucket = kvp.Key;
+                            buckets.Remove(kvp.Value);
+                            emptyUsedBuckets.Remove(bucket);
+                        }
+                        else
+                        {
+                            Game.Instance.Logger.LogWarning($"BroadphaseDynamicSpatialHash: Max bucket count of {maxBuckets} reached and no empty used buckets available! Cannot add new bucket for collider {collider}.");
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        //create a new bucket
+                        bucket = [];
+                        createdBuckets++;
+                    }
+                }
+            }
+            
+            bucket.Add(collider);
+            buckets[coords] = bucket;
+            registerSet.Add(bucket);
+        }
+    }
+    
     private void CleanRegister()
     {
         //remaining colliders that were not used this frame. Remove them from the register.
