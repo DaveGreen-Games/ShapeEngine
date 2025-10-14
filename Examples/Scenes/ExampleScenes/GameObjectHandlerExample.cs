@@ -42,7 +42,6 @@ namespace Examples.Scenes.ExampleScenes
             col.Enabled = true;
             col.CollisionMask = BitFlag.Empty;
             col.CollisionLayer = CollisionFlags.WallFlag;
-
             Layer = SpawnAreaLayers.WallFlag;
             
             AddCollider(col);
@@ -100,7 +99,6 @@ namespace Examples.Scenes.ExampleScenes
             
         }
     }
-    
     internal class Overlapper : CollisionObject
     {
         private CircleCollider circleCollider;
@@ -200,7 +198,6 @@ namespace Examples.Scenes.ExampleScenes
         {
         }
     }
-   
     internal class Ball : CollisionObject
     {
         private CircleCollider circleCollider;
@@ -255,7 +252,6 @@ namespace Examples.Scenes.ExampleScenes
         }
         
     }
-   
     internal class Bullet : CollisionObject
     {
         private CircleCollider circleCollider;
@@ -269,6 +265,7 @@ namespace Examples.Scenes.ExampleScenes
             col.CollisionMask = new(CollisionFlags.WallFlag);
             col.CollisionMask = col.CollisionMask.Add(CollisionFlags.BoundaryFlag);
             col.CollisionLayer = CollisionFlags.BulletFlag;
+            col.BroadphaseType = BroadphaseType.Point;
             ProjectShape = true;
 
             Velocity = Rng.Instance.RandVec2(5000, 6000);

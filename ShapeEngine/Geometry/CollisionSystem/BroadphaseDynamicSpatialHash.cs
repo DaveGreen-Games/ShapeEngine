@@ -64,14 +64,27 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
     private void AddCollider(Collider collider, MotionType motionType)
     {
         if (!collider.Enabled) return;
-        var boundingBox = collider.GetBoundingBox();
         
-        var minX = (int)Math.Floor(boundingBox.Left / bucketSize.Width);
-        var maxX = (int)Math.Floor(boundingBox.Right / bucketSize.Width);
-        var minY = (int)Math.Floor(boundingBox.Top / bucketSize.Height);
-        var maxY = (int)Math.Floor(boundingBox.Bottom / bucketSize.Height);
+        int bucketCount;
+        int minX, maxX, minY, maxY;
         
-        int bucketCount = (1 + maxX - minX) * (1 + maxY - minY);
+        if (collider.BroadphaseType == BroadphaseType.Point)
+        {
+            var position = collider.CurTransform.Position;
+            minX = maxX = (int)Math.Floor(position.X / bucketSize.Width);
+            minY = maxY = (int)Math.Floor(position.Y / bucketSize.Width);
+            bucketCount = 1;
+        }
+        else
+        {
+            var boundingBox = collider.GetBoundingBox();
+            minX = (int)Math.Floor(boundingBox.Left / bucketSize.Width);
+            maxX = (int)Math.Floor(boundingBox.Right / bucketSize.Width);
+            minY = (int)Math.Floor(boundingBox.Top / bucketSize.Height);
+            maxY = (int)Math.Floor(boundingBox.Bottom / bucketSize.Height);
+            bucketCount = (1 + maxX - minX) * (1 + maxY - minY);
+        }
+        
         HashSet<BroadphaseBucket> registerSet;
         //TODO: Check static register if static
         // if static and it exists in register, use register to fill buckets and return
@@ -89,8 +102,6 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
             registerSet = new HashSet<BroadphaseBucket>(bucketCount);
             register[collider] = registerSet;
         }
-        
-        //TODO: Broadphase type has to be used here somewhere
         
         if (bucketCount > 1)
         {
@@ -111,7 +122,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
                 var coords = new Coords(x, y);
                 
                 //collider does not overlap with this bucket - only checked with more than 4 buckets to save performance
-                if (bucketCount > 4 && !OverlapsColliderShapeWithBucketRect(coords, collider)) continue;
+                if (bucketCount > 4 && collider.BroadphaseType == BroadphaseType.FullShape && !OverlapsColliderShapeWithBucketRect(coords, collider)) continue;
                 
                 if (buckets.TryGetValue(coords, out var bucket))//bucket already exists
                 {
