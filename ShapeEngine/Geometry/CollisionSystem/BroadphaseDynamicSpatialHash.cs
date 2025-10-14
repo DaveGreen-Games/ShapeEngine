@@ -14,9 +14,12 @@ using ShapeEngine.Geometry.TriangleDef;
 namespace ShapeEngine.Geometry.CollisionSystem;
 
 
-//TODO: adding objects outside of region for gameobject handler leaves buckets in the structure...
+//BUG: adding objects outside of region for gameobject handler leaves buckets in the structure...
 public class BroadphaseDynamicSpatialHash : IBroadphase
 {
+    //TODO: Seperate into files, spatial hash needs them as well.
+    // - Maybe find better names? BuccketCoords, BroadphaseBucketRegister, StaticColliderRegister?
+    // - look it CollisionHandler internal class names to prevent confusion.
     private struct Coords(int x, int y) : IEquatable<Coords>
     {
         public readonly int X = x;
@@ -39,15 +42,14 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
             return X == other.X && Y == other.Y;
         }
     }
-
-    private class ColliderRegister<T>
+    private class ColliderRegister
     {
-        private readonly Dictionary<Collider, HashSet<T>> register = new();
+        private readonly Dictionary<Collider, HashSet<BroadphaseBucket>> register = new();
         private readonly HashSet<Collider> unusedRegisterColliders = [];
 
-        public HashSet<T>? GetEntrySet(Collider collider, int capacity)
+        public HashSet<BroadphaseBucket>? AddEntry(Collider collider, int capacity)
         {
-            HashSet<T> registerSet;
+            HashSet<BroadphaseBucket> registerSet;
             if (register.TryGetValue(collider, out var value))
             {
                 //already added this frame
@@ -61,12 +63,16 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
             }
             else
             {
-                registerSet = new HashSet<T>(capacity);
+                registerSet = new HashSet<BroadphaseBucket>(capacity);
                 register[collider] = registerSet;
             }
             return registerSet;
         }
-        public void CleanRegister()
+        public HashSet<BroadphaseBucket>? GetEntry(Collider collider)
+        {
+            return register.TryGetValue(collider, out var registerBuckets) ? registerBuckets : null;
+        }
+        public void Clean()
         {
             //remaining colliders that were not used this frame. Remove them from the register.
             foreach (var collider in unusedRegisterColliders)
@@ -84,15 +90,46 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
             unusedRegisterColliders.Clear();
         }
     }
-    
+    private class StaticColliderRegister
+    {
+        private readonly Dictionary<Collider, HashSet<Coords>> register = new();
+        private readonly HashSet<Collider> unusedRegisterColliders = [];
+
+        public HashSet<Coords> AddEntry(Collider collider, int capacity)
+        {
+            if (register.TryGetValue(collider, out var value))
+            {
+                unusedRegisterColliders.Remove(collider);
+                return value;
+            }
+            var registerSet = new HashSet<Coords>(capacity);
+            register[collider] = registerSet;
+            return registerSet;
+        }
+        public void Clean()
+        {
+            //remaining colliders that were not used this frame. Remove them from the register.
+            foreach (var collider in unusedRegisterColliders)
+            {
+                register.Remove(collider);
+            }
+            //set up for next frame
+            unusedRegisterColliders.Clear();
+            //all keys in register are now candidates for removal next frame if not used again
+            unusedRegisterColliders.UnionWith(register.Keys);
+        }
+        public void Close()
+        {
+            register.Clear();
+            unusedRegisterColliders.Clear();
+        }
+    }
+
     
     private Rect currentBounds = new();//calculated from added colliders
     
-    private readonly Dictionary<Collider, HashSet<BroadphaseBucket>> register = new(); //cleared every frame
-    //used to detect colliders that were not used this frame and remove them from the register
-    private readonly HashSet<Collider> unusedRegisterColliders = [];
-    
-    //TODO: add static register ? Dict<Collider, HashSet<Coords>>
+    private readonly ColliderRegister register = new();
+    private readonly StaticColliderRegister staticRegister = new();
     
     private readonly Dictionary<Coords, BroadphaseBucket> buckets = new();
     private readonly HashSet<BroadphaseBucket> availableBuckets = []; //could be a queue or stack as well
@@ -105,11 +142,84 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         this.maxBuckets = maxBuckets;
         bucketSize = new Size(bucketWidth, bucketHeight);
     }
-
-
+    
+    
+    public void Fill(IEnumerable<CollisionObject> collisionBodies)
+    {
+        Clear();
+        
+        currentBounds = new();
+        foreach (var body in collisionBodies)
+        {
+            if (!body.Enabled || !body.HasColliders) continue;
+            foreach (var collider in body.Colliders)
+            {
+                AddCollider(collider, body.MotionType);
+            }   
+        }
+        
+        register.Clean();
+        staticRegister.Clean();
+    }
+    private void Clear()
+    {
+        foreach (var kvp in emptyUsedBuckets)
+        {
+            buckets.Remove(kvp.Value);
+            availableBuckets.Add(kvp.Key);
+        }
+        emptyUsedBuckets.Clear();
+        
+        foreach (var kvp in buckets)
+        {
+            var coords = kvp.Key;
+            var bucket = kvp.Value;
+            //was not used this frame, remove from structure
+            if (bucket.Count == 0) //should not happen, but just in case (emptyUsedBuckets should clear all of them out before)
+            {
+                availableBuckets.Add(bucket);
+                buckets.Remove(coords);
+            }
+            else
+            {
+                bucket.Clear();
+                emptyUsedBuckets.Add(bucket, coords);
+            }
+        }
+    }
+    public void Close()
+    {
+        register.Close();
+        staticRegister.Close();
+        buckets.Clear();
+        availableBuckets.Clear();
+        emptyUsedBuckets.Clear();
+        createdBuckets = 0;
+        currentBounds = new();
+    }
+    
     private void AddCollider(Collider collider, MotionType motionType)
     {
         if (!collider.Enabled) return;
+        
+        HashSet<Coords>? staticColliderCoords = null;
+        if (motionType == MotionType.Static)
+        {
+            var staticSet = staticRegister.AddEntry(collider, 1);
+            if (staticSet.Count > 0)
+            {
+                var resultSet = register.AddEntry(collider, staticSet.Count);
+                if(resultSet == null) return; //already added this frame
+                foreach (var coords in staticSet)
+                {
+                    AddColliderToBucket(collider, coords, ref resultSet);
+                }
+        
+                return;
+            }
+            
+            staticColliderCoords = staticSet;
+        }
         
         int bucketCount;
         int minX, maxX, minY, maxY;
@@ -131,23 +241,8 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
             bucketCount = (1 + maxX - minX) * (1 + maxY - minY);
         }
         
-        HashSet<BroadphaseBucket> registerSet;
-        //TODO: Check static register if static
-        // if static and it exists in register, use register to fill buckets and return
-
-        if (register.TryGetValue(collider, out var value))
-        {
-            //already added this frame
-            if (!unusedRegisterColliders.Contains(collider)) return;
-            registerSet = value;
-            registerSet.Clear();//clean up from last frame
-            unusedRegisterColliders.Remove(collider);
-        }
-        else
-        {
-            registerSet = new HashSet<BroadphaseBucket>(bucketCount);
-            register[collider] = registerSet;
-        }
+        var registerSet = register.AddEntry(collider, bucketCount);
+        if(registerSet == null) return; //already added this frame
         
         if (bucketCount > 1)
         {
@@ -169,13 +264,14 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
                 
                 //collider does not overlap with this bucket - only checked with more than 4 buckets to save performance
                 if (bucketCount > 4 && collider.BroadphaseType == BroadphaseType.FullShape && !OverlapsColliderShapeWithBucketRect(coords, collider)) continue;
-                
+
+                staticColliderCoords?.Add(coords);
+
                 AddColliderToBucket(collider, coords, ref registerSet);
             }
         }
 
     }
-
     private void AddColliderToBucket(Collider collider, Coords coords, ref HashSet<BroadphaseBucket> registerSet)
     {
         if (buckets.TryGetValue(coords, out var bucket))//bucket already exists
@@ -241,82 +337,18 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         }
     }
     
-    private void CleanRegister()
-    {
-        //remaining colliders that were not used this frame. Remove them from the register.
-        foreach (var collider in unusedRegisterColliders)
-        {
-            register.Remove(collider);
-        }
-        //set up for next frame
-        unusedRegisterColliders.Clear();
-        //all keys in register are now candidates for removal next frame if not used again
-        unusedRegisterColliders.UnionWith(register.Keys);
-    }
-    private void Clear()
-    {
-        // register.Clear();
-        foreach (var kvp in emptyUsedBuckets)
-        {
-            buckets.Remove(kvp.Value);
-            availableBuckets.Add(kvp.Key);
-        }
-        emptyUsedBuckets.Clear();
-        
-        foreach (var kvp in buckets)
-        {
-            var coords = kvp.Key;
-            var bucket = kvp.Value;
-            //was not used this frame, remove from structure
-            if (bucket.Count == 0) //should not happen, but just in case (emptyUsedBuckets should clear all of them out before)
-            {
-                availableBuckets.Add(bucket);
-                buckets.Remove(coords);
-            }
-            else
-            {
-                bucket.Clear();
-                emptyUsedBuckets.Add(bucket, coords);
-            }
-        }
-    }
-    private Rect GetBucketBounds(Coords coords)
-    {
-        return new Rect(coords.X * bucketSize.Width, coords.Y * bucketSize.Height, bucketSize.Width, bucketSize.Height);
-    }
     private bool OverlapsColliderShapeWithBucketRect(Coords coords, Collider collider)
     {
         var bucketRect = GetBucketBounds(coords);
         return collider.Overlap(bucketRect);
     }
-    
+    private Rect GetBucketBounds(Coords coords)
+    {
+        return new Rect(coords.X * bucketSize.Width, coords.Y * bucketSize.Height, bucketSize.Width, bucketSize.Height);
+    }
     public Rect GetBounds() => currentBounds;
-    public void Fill(IEnumerable<CollisionObject> collisionBodies)
-    {
-        Clear();
-        
-        currentBounds = new();
-        foreach (var body in collisionBodies)
-        {
-            if (!body.Enabled || !body.HasColliders) continue;
-            foreach (var collider in body.Colliders)
-            {
-                AddCollider(collider, body.MotionType);
-            }
-        }
-        
-        CleanRegister();
-    }
-    public void Close()
-    {
-        register.Clear();
-        buckets.Clear();
-        availableBuckets.Clear();
-        emptyUsedBuckets.Clear();
-        createdBuckets = 0;
-        currentBounds = new();
-    }
     public void ResizeBounds(Rect targetBounds) { }
+    
     public void DebugDraw(ColorRgba border, ColorRgba fill)
     {
         var borderLineThickness = currentBounds.Size.Max() * 0.0025f;
@@ -344,7 +376,8 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
             
         }
     }
-
+    
+    
     public int GetCandidateBuckets(CollisionObject collisionObject, ref List<BroadphaseBucket> candidateBuckets)
     {
         var count = 0;
@@ -361,13 +394,14 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
     {
         if (!collider.Enabled) return 0;
         
-        if (register.TryGetValue(collider, out var registerBuckets))
+        var registerBuckets = register.GetEntry(collider);
+        if (registerBuckets != null)
         {
             foreach (var bucket in registerBuckets)
             {
                 candidateBuckets.Add(bucket);
             }
-            return registerBuckets.Count;
+            return registerBuckets.Count;   
         }
         
         switch (collider.GetShapeType())
