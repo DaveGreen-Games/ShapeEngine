@@ -13,6 +13,9 @@ using ShapeEngine.Geometry.TriangleDef;
 
 namespace ShapeEngine.Geometry.CollisionSystem;
 
+//TODO: Implement MotionType optimizations (static vs dynamic objects).
+//TODO: Implement broadphase type optimizations (point, bounding box, full shape).
+
 
 /// <summary>
 /// Implements a spatial hash grid for efficient broad-phase collision detection and spatial queries.
@@ -52,8 +55,12 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
 
     #region Private Members
     private BroadphaseBucket[] buckets;
+    //TODO: Use collider register from dynamic spatial hash.
     private readonly Dictionary<Collider, List<int>> register = new();
     private readonly HashSet<Collider> unusedRegisterColliders = [];
+    
+    //TODO: add static register system
+    
     private bool boundsResizeQueued;
     private Rect newBounds;
     #endregion

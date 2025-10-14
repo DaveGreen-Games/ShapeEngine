@@ -13,6 +13,7 @@ using ShapeEngine.Geometry.TriangleDef;
 
 namespace ShapeEngine.Geometry.CollisionSystem;
 
+//TODO: REMOVE this again! Bad Performance!
 public class BroadphaseQuadTree : IBroadphase
 {
     private class QuadTreeNode
