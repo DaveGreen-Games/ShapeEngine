@@ -40,11 +40,14 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         }
     }
     
-    
     private Rect currentBounds = new();//calculated from added colliders
-
-    //TODO: use spatial hash system to only remove colliders that are no longer used
+    
     private readonly Dictionary<Collider, HashSet<BroadphaseBucket>> register = new(); //cleared every frame
+    //used to detect colliders that were not used this frame and remove them from the register
+    private readonly HashSet<Collider> unusedRegisterColliders = [];
+    
+    //TODO: add static register ? Dict<Collider, HashSet<Coords>>
+    
     private readonly Dictionary<Coords, BroadphaseBucket> buckets = new();
     private readonly HashSet<BroadphaseBucket> availableBuckets = []; //could be a queue or stack as well
     private readonly Dictionary<BroadphaseBucket, Coords> emptyUsedBuckets = [];
@@ -58,11 +61,9 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
     }
 
 
-    private void AddCollider(Collider collider)
+    private void AddCollider(Collider collider, MotionType motionType)
     {
         if (!collider.Enabled) return;
-        if (register.ContainsKey(collider)) return;
-
         var boundingBox = collider.GetBoundingBox();
         
         var minX = (int)Math.Floor(boundingBox.Left / bucketSize.Width);
@@ -71,8 +72,25 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         var maxY = (int)Math.Floor(boundingBox.Bottom / bucketSize.Height);
         
         int bucketCount = (1 + maxX - minX) * (1 + maxY - minY);
-        var registerSet = new HashSet<BroadphaseBucket>(bucketCount); //TODO: fix allocation problem with spatial hash system for registers
-        register[collider] = registerSet;
+        HashSet<BroadphaseBucket> registerSet;
+        //TODO: Check static register if static
+        // if static and it exists in register, use register to fill buckets and return
+
+        if (register.TryGetValue(collider, out var value))
+        {
+            //already added this frame
+            if (!unusedRegisterColliders.Contains(collider)) return;
+            registerSet = value;
+            registerSet.Clear();//clean up from last frame
+            unusedRegisterColliders.Remove(collider);
+        }
+        else
+        {
+            registerSet = new HashSet<BroadphaseBucket>(bucketCount);
+            register[collider] = registerSet;
+        }
+        
+        //TODO: Broadphase type has to be used here somewhere
         
         if (bucketCount > 1)
         {
@@ -160,9 +178,21 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         }
 
     }
+    private void CleanRegister()
+    {
+        //remaining colliders that were not used this frame. Remove them from the register.
+        foreach (var collider in unusedRegisterColliders)
+        {
+            register.Remove(collider);
+        }
+        //set up for next frame
+        unusedRegisterColliders.Clear();
+        //all keys in register are now candidates for removal next frame if not used again
+        unusedRegisterColliders.UnionWith(register.Keys);
+    }
     private void Clear()
     {
-        register.Clear();
+        // register.Clear();
         foreach (var kvp in emptyUsedBuckets)
         {
             buckets.Remove(kvp.Value);
@@ -201,15 +231,18 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
     public void Fill(IEnumerable<CollisionObject> collisionBodies)
     {
         Clear();
+        
         currentBounds = new();
         foreach (var body in collisionBodies)
         {
             if (!body.Enabled || !body.HasColliders) continue;
             foreach (var collider in body.Colliders)
             {
-                AddCollider(collider);
+                AddCollider(collider, body.MotionType);
             }
         }
+        
+        CleanRegister();
     }
     public void Close()
     {

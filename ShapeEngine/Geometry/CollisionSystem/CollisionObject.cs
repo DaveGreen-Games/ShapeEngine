@@ -12,6 +12,12 @@ using ShapeEngine.Geometry.TriangleDef;
 
 namespace ShapeEngine.Geometry.CollisionSystem;
 
+public enum MotionType
+{
+    Static,
+    Dynamic
+}
+
 /// <summary>
 /// Represents an object that participates in the collision system and can contain multiple colliders.
 /// Handles collision detection, intersection, and overlap logic,
@@ -130,6 +136,14 @@ public abstract class CollisionObject : PhysicsObject
     /// </summary>
     public CollisionPointsFilterType CollisionPointsFilterType = CollisionPointsFilterType.Closest;
 
+    /// <summary>
+    /// Gets or sets the motion type of this object for collision detection optimizations.
+    /// <para>
+    /// <see cref="MotionType.Dynamic"/> is the default and should be used for moving objects.
+    /// <see cref="MotionType.Static"/> is optimized for non-moving objects and can improve broadphase collision detection performance.
+    /// </para>
+    /// </summary>
+    public MotionType MotionType = MotionType.Dynamic;
     
    
     /// <summary>

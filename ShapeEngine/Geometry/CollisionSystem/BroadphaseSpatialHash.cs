@@ -53,7 +53,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     #region Private Members
     private BroadphaseBucket[] buckets;
     private readonly Dictionary<Collider, List<int>> register = new();
-    private readonly HashSet<Collider> registerKeys = [];
+    private readonly HashSet<Collider> unusedRegisterColliders = [];
     private bool boundsResizeQueued;
     private Rect newBounds;
     #endregion
@@ -121,11 +121,6 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
                 Add(body);
             }
         }
-
-        /*foreach (var collider in colliders)
-        {
-            Add(collider);
-        }*/
         
         CleanRegister();
     }
@@ -702,7 +697,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
         }
         GetCellIDs(collider, ref ids);
         if (ids.Count <= 0) return;
-        registerKeys.Remove(collider);
+        unusedRegisterColliders.Remove(collider);
         foreach (int hash in ids)
         {
             buckets[hash].Add(collider);
@@ -714,14 +709,13 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </summary>
     private void CleanRegister()
     {
-        foreach (var collider in registerKeys)
+        foreach (var collider in unusedRegisterColliders)
         {
             register.Remove(collider);
         }
 
-        registerKeys.Clear();
-        registerKeys.UnionWith(register.Keys);
-        // registerKeys = register.Keys.ToHashSet();
+        unusedRegisterColliders.Clear();
+        unusedRegisterColliders.UnionWith(register.Keys);
     }
     /// <summary>
     /// Clears all buckets and applies any queued bounds resize.
