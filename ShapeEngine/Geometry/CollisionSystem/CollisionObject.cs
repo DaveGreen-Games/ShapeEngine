@@ -12,12 +12,6 @@ using ShapeEngine.Geometry.TriangleDef;
 
 namespace ShapeEngine.Geometry.CollisionSystem;
 
-public enum MotionType
-{
-    Static,
-    Dynamic
-}
-
 /// <summary>
 /// Represents an object that participates in the collision system and can contain multiple colliders.
 /// Handles collision detection, intersection, and overlap logic,
