@@ -47,6 +47,8 @@ namespace Examples.Scenes.ExampleScenes
             AddCollider(col);
 
             polyCollider = col;
+
+            MotionType = MotionType.Static;
         }
 
         public override void DrawGame(ScreenInfo game)
@@ -84,6 +86,8 @@ namespace Examples.Scenes.ExampleScenes
             AddCollider(col);
 
             polyCollider = col;
+            
+            MotionType = MotionType.Static;
         }
 
         public override void DrawGame(ScreenInfo game)
