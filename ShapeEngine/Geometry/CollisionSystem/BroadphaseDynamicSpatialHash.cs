@@ -19,7 +19,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
 {
     private Rect currentBounds = new();//calculated from added colliders
     
-    private readonly BroadphaseColliderRegister register = new();
+    private readonly BroadphaseColliderRegister<BroadphaseBucket> register = new();
     private readonly BroadphaseStaticColliderRegister staticRegister = new();
     
     private readonly Dictionary<Coordinates, BroadphaseBucket> buckets = new();
@@ -293,12 +293,12 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         return count;
     }
 
+    //TODO: add BroadphaseType check to only use position for Point types -> GetCandidateBuckets needs point overload!
     public int GetCandidateBuckets(Collider collider, ref List<BroadphaseBucket> candidateBuckets)
     {
         if (!collider.Enabled) return 0;
-        
-        var registerBuckets = register.GetEntry(collider);
-        if (registerBuckets != null)
+
+        if (register.TryGetEntry(collider, out var registerBuckets) && registerBuckets != null)
         {
             foreach (var bucket in registerBuckets)
             {

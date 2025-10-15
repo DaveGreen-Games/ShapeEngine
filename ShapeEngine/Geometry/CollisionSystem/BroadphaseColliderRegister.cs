@@ -1,14 +1,14 @@
 namespace ShapeEngine.Geometry.CollisionSystem;
 
 //TODO: Docs
-public class BroadphaseColliderRegister
+public class BroadphaseColliderRegister<T>
 {
-    private readonly Dictionary<Collider, HashSet<BroadphaseBucket>> register = new();
+    private readonly Dictionary<Collider, HashSet<T>> register = new();
     private readonly HashSet<Collider> unusedRegisterColliders = [];
 
-    public HashSet<BroadphaseBucket>? AddEntry(Collider collider, int capacity)
+    public HashSet<T>? AddEntry(Collider collider, int capacity)
     {
-        HashSet<BroadphaseBucket> registerSet;
+        HashSet<T> registerSet;
         if (register.TryGetValue(collider, out var value))
         {
             //already added this frame
@@ -22,14 +22,19 @@ public class BroadphaseColliderRegister
         }
         else
         {
-            registerSet = new HashSet<BroadphaseBucket>(capacity);
+            registerSet = new HashSet<T>(capacity);
             register[collider] = registerSet;
         }
         return registerSet;
     }
-    public HashSet<BroadphaseBucket>? GetEntry(Collider collider)
+    // public HashSet<T>? GetEntry(Collider collider)
+    // {
+    //     return register.TryGetValue(collider, out var registerBuckets) ? registerBuckets : null;
+    // }
+
+    public bool TryGetEntry(Collider collider, out HashSet<T>? value)
     {
-        return register.TryGetValue(collider, out var registerBuckets) ? registerBuckets : null;
+        return register.TryGetValue(collider, out value);
     }
     public void Clean()
     {
