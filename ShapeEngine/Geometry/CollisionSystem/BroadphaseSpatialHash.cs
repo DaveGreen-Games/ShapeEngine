@@ -13,12 +13,6 @@ using ShapeEngine.Geometry.TriangleDef;
 
 namespace ShapeEngine.Geometry.CollisionSystem;
 
-//TODO: implement Point/Vector2 version for
-// - GetCellIDs
-// - GetUniqueCandidates
-// - GetCandidateBuckets
-// for Broaphase type point
-
 /// <summary>
 /// Implements a spatial hash grid for efficient broad-phase collision detection and spatial queries.
 /// </summary>
@@ -679,6 +673,8 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
         int yi = Math.Clamp((int)Math.Floor((y - Bounds.Y) / SpacingY), 0, Rows - 1);
         return (xi, yi);
     }
+    
+    //TODO: use static parameter of collisionBody here
     /// <summary>
     /// Adds all colliders from a collision object to the spatial hash.
     /// </summary>
@@ -745,11 +741,24 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     }
     
     /// <summary>
+    /// Populates the given <paramref name="idList"/> with the cell ID (bucket index) that contains the specified point.
+    /// </summary>
+    /// <param name="point">The world-space point to locate in the grid.</param>
+    /// <param name="idList">The set to populate with the cell ID.</param>
+    private void GetCellIDs(Vector2 point, ref HashSet<int> idList)
+    {
+        var coordinate = GetCellCoordinate(point.X, point.Y);
+        int id = GetCellId(coordinate.x, coordinate.y);
+        idList.Add(id);
+    }
+    
+    /// <summary>
     /// Populates a list with the cell IDs (bucket indices) that a segment overlaps.
     /// </summary>
     /// <param name="segment">The segment to check.</param>
     /// <param name="idList">The list to populate with cell IDs.</param>
-    private void GetCellIDs(Segment segment, ref HashSet<int> idList)
+    /// <param name="testFullShape">Whether to test the exact shape against each bucket rect or just the bounding box of the shape.</param>
+    private void GetCellIDs(Segment segment, ref HashSet<int> idList, bool testFullShape = true)
     {
         var boundingRect = segment.GetBoundingBox();
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
@@ -760,8 +769,16 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
             for (int i = topLeft.x; i <= bottomRight.x; i++)
             {
                 int id = GetCellId(i, j);
-                var cellRect = GetCellRectangle(id);
-                if(cellRect.OverlapShape(segment)) idList.Add(id);
+
+                if (testFullShape)
+                {
+                    var cellRect = GetCellRectangle(id);
+                    if(cellRect.OverlapShape(segment)) idList.Add(id);
+                }
+                else
+                {
+                    idList.Add(id);
+                }
             }
         }
     }
@@ -770,7 +787,8 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </summary>
     /// <param name="line">The line to check.</param>
     /// <param name="idList">The list to populate with cell IDs.</param>
-    private void GetCellIDs(Line line, ref HashSet<int> idList)
+    ///  <param name="testFullShape">Whether to test the exact shape against each bucket rect or just the bounding box of the shape.</param>
+    private void GetCellIDs(Line line, ref HashSet<int> idList, bool testFullShape = true)
     {
         var boundingRect = line.GetBoundingBox();
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
@@ -781,8 +799,15 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
             for (int i = topLeft.x; i <= bottomRight.x; i++)
             {
                 int id = GetCellId(i, j);
-                var cellRect = GetCellRectangle(id);
-                if(cellRect.OverlapShape(line)) idList.Add(id);
+                if (testFullShape)
+                {
+                    var cellRect = GetCellRectangle(id);
+                    if(cellRect.OverlapShape(line)) idList.Add(id);
+                }
+                else
+                {
+                    idList.Add(id);
+                }
             }
         }
     }
@@ -791,7 +816,8 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </summary>
     /// <param name="ray">The ray to check.</param>
     /// <param name="idList">The list to populate with cell IDs.</param>
-    private void GetCellIDs(Ray ray, ref HashSet<int> idList)
+    ///  <param name="testFullShape">Whether to test the exact shape against each bucket rect or just the bounding box of the shape.</param>
+    private void GetCellIDs(Ray ray, ref HashSet<int> idList, bool testFullShape = true)
     {
         var boundingRect = ray.GetBoundingBox();
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
@@ -802,8 +828,15 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
             for (int i = topLeft.x; i <= bottomRight.x; i++)
             {
                 int id = GetCellId(i, j);
-                var cellRect = GetCellRectangle(id);
-                if(cellRect.OverlapShape(ray)) idList.Add(id);
+                if (testFullShape)
+                {
+                    var cellRect = GetCellRectangle(id);
+                    if(cellRect.OverlapShape(ray)) idList.Add(id);
+                }
+                else
+                {
+                    idList.Add(id);
+                }
             }
         }
     }
@@ -812,7 +845,8 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </summary>
     /// <param name="triangle">The triangle to check.</param>
     /// <param name="idList">The list to populate with cell IDs.</param>
-    private void GetCellIDs(Triangle triangle, ref HashSet<int> idList)
+    /// /// <param name="testFullShape">Whether to test the exact shape against each bucket rect or just the bounding box of the shape.</param>
+    private void GetCellIDs(Triangle triangle, ref HashSet<int> idList, bool testFullShape = true)
     {
         var boundingRect = triangle.GetBoundingBox();
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
@@ -823,8 +857,15 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
             for (int i = topLeft.x; i <= bottomRight.x; i++)
             {
                 int id = GetCellId(i, j);
-                var cellRect = GetCellRectangle(id);
-                if(cellRect.OverlapShape(triangle)) idList.Add(id);
+                if (testFullShape)
+                {
+                    var cellRect = GetCellRectangle(id);
+                    if(cellRect.OverlapShape(triangle)) idList.Add(id);
+                }
+                else
+                {
+                    idList.Add(id);
+                }
             }
         }
     }
@@ -833,7 +874,8 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </summary>
     /// <param name="quad">The quad to check.</param>
     /// <param name="idList">The list to populate with cell IDs.</param>
-    private void GetCellIDs(Quad quad, ref HashSet<int> idList)
+    ///  <param name="testFullShape">Whether to test the exact shape against each bucket rect or just the bounding box of the shape.</param>
+    private void GetCellIDs(Quad quad, ref HashSet<int> idList, bool testFullShape = true)
     {
         var boundingRect = quad.GetBoundingBox();
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
@@ -844,8 +886,15 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
             for (int i = topLeft.x; i <= bottomRight.x; i++)
             {
                 int id = GetCellId(i, j);
-                var cellRect = GetCellRectangle(id);
-                if(cellRect.OverlapShape(quad)) idList.Add(id);
+                if (testFullShape)
+                {
+                    var cellRect = GetCellRectangle(id);
+                    if(cellRect.OverlapShape(quad)) idList.Add(id);
+                }
+                else
+                {
+                    idList.Add(id);
+                }
             }
         }
     }
@@ -854,7 +903,8 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </summary>
     /// <param name="circle">The circle to check.</param>
     /// <param name="idList">The list to populate with cell IDs.</param>
-    private void GetCellIDs(Circle circle, ref HashSet<int> idList)
+    /// <param name="testFullShape">Whether to test the exact shape against each bucket rect or just the bounding box of the shape.</param>
+    private void GetCellIDs(Circle circle, ref HashSet<int> idList, bool testFullShape = true)
     {
         var boundingRect = circle.GetBoundingBox();
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
@@ -865,8 +915,15 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
             for (int i = topLeft.x; i <= bottomRight.x; i++)
             {
                 int id = GetCellId(i, j);
-                var cellRect = GetCellRectangle(id);
-                if(cellRect.OverlapShape(circle)) idList.Add(id);
+                if (testFullShape)
+                {
+                    var cellRect = GetCellRectangle(id);
+                    if(cellRect.OverlapShape(circle)) idList.Add(id);
+                }
+                else
+                {
+                    idList.Add(id);
+                }
             }
         }
     }
@@ -895,7 +952,8 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </summary>
     /// <param name="poly">The poly to check.</param>
     /// <param name="idList">The list to populate with cell IDs.</param>
-    private void GetCellIDs(Polygon poly, ref HashSet<int> idList)
+    /// <param name="testFullShape">Whether to test the exact shape against each bucket rect or just the bounding box of the shape.</param>
+    private void GetCellIDs(Polygon poly, ref HashSet<int> idList, bool testFullShape = true)
     {
         var boundingRect = poly.GetBoundingBox();
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
@@ -906,8 +964,15 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
             for (int i = topLeft.x; i <= bottomRight.x; i++)
             {
                 int id = GetCellId(i, j);
-                var cellRect = GetCellRectangle(id);
-                if(cellRect.OverlapShape(poly)) idList.Add(id);
+                if (testFullShape)
+                {
+                    var cellRect = GetCellRectangle(id);
+                    if(cellRect.OverlapShape(poly)) idList.Add(id);
+                }
+                else
+                {
+                    idList.Add(id);
+                }
             }
         }
     }
@@ -916,7 +981,8 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </summary>
     /// <param name="polyLine">The polyline to check.</param>
     /// <param name="idList">The list to populate with cell IDs.</param>
-    private void GetCellIDs(Polyline polyLine, ref HashSet<int> idList)
+    /// <param name="testFullShape">Whether to test the exact shape against each bucket rect or just the bounding box of the shape.</param>
+    private void GetCellIDs(Polyline polyLine, ref HashSet<int> idList, bool testFullShape = true)
     {
         var boundingRect = polyLine.GetBoundingBox();
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
@@ -927,8 +993,15 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
             for (int i = topLeft.x; i <= bottomRight.x; i++)
             {
                 int id = GetCellId(i, j);
-                var cellRect = GetCellRectangle(id);
-                if(cellRect.OverlapShape(polyLine)) idList.Add(id);
+                if (testFullShape)
+                {
+                    var cellRect = GetCellRectangle(id);
+                    if(cellRect.OverlapShape(polyLine)) idList.Add(id);
+                }
+                else
+                {
+                    idList.Add(id);
+                }
             }
         }
     }
@@ -940,26 +1013,34 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     private void GetCellIDs(Collider collider, ref HashSet<int> idList)
     {
         if (!collider.Enabled) return;
+
+        if (collider.BroadphaseType == BroadphaseType.Point)
+        {
+            GetCellIDs(collider.CurTransform.Position, ref idList);
+            return;
+        }
+        
+        var testFullShape = collider.BroadphaseType == BroadphaseType.FullShape;
         
         switch (collider.GetShapeType())
         {
-            case ShapeType.Circle: GetCellIDs(collider.GetCircleShape(), ref idList); 
+            case ShapeType.Circle: GetCellIDs(collider.GetCircleShape(), ref idList, testFullShape); 
                 break;
-            case ShapeType.Segment: GetCellIDs(collider.GetSegmentShape(), ref idList); 
+            case ShapeType.Segment: GetCellIDs(collider.GetSegmentShape(), ref idList, testFullShape); 
                 break;
-            case ShapeType.Line: GetCellIDs(collider.GetLineShape(), ref idList); 
+            case ShapeType.Line: GetCellIDs(collider.GetLineShape(), ref idList, testFullShape); 
                 break;
-            case ShapeType.Ray: GetCellIDs(collider.GetRayShape(), ref idList); 
+            case ShapeType.Ray: GetCellIDs(collider.GetRayShape(), ref idList, testFullShape); 
                 break;
-            case ShapeType.Triangle: GetCellIDs(collider.GetTriangleShape(), ref idList); 
+            case ShapeType.Triangle: GetCellIDs(collider.GetTriangleShape(), ref idList, testFullShape); 
                 break;
             case ShapeType.Rect: GetCellIDs(collider.GetRectShape(), ref idList); 
                 break;
-            case ShapeType.Quad: GetCellIDs(collider.GetQuadShape(), ref idList); 
+            case ShapeType.Quad: GetCellIDs(collider.GetQuadShape(), ref idList, testFullShape); 
                 break;
-            case ShapeType.Poly: GetCellIDs(collider.GetPolygonShape(), ref idList); 
+            case ShapeType.Poly: GetCellIDs(collider.GetPolygonShape(), ref idList, testFullShape); 
                 break;
-            case ShapeType.PolyLine: GetCellIDs(collider.GetPolylineShape(), ref idList); 
+            case ShapeType.PolyLine: GetCellIDs(collider.GetPolylineShape(), ref idList, testFullShape); 
                 break;
         }
     }
