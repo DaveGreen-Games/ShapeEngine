@@ -13,127 +13,18 @@ using ShapeEngine.Geometry.TriangleDef;
 
 namespace ShapeEngine.Geometry.CollisionSystem;
 
-
+//TODO: Docs
 //BUG: adding objects outside of region for gameobject handler leaves buckets in the structure...
 public class BroadphaseDynamicSpatialHash : IBroadphase
 {
-    //TODO: Seperate into files, spatial hash needs them as well.
-    // - Maybe find better names? BuccketCoords, BroadphaseBucketRegister, StaticColliderRegister?
-    // - look it CollisionHandler internal class names to prevent confusion.
-    private struct Coords(int x, int y) : IEquatable<Coords>
-    {
-        public readonly int X = x;
-        public readonly int Y = y;
-
-        public override bool Equals(object? obj)
-        {
-            if (obj is Coords other)
-            {
-                return X == other.X && Y == other.Y;
-            }
-            return false;
-        }
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(X, Y);
-        }
-        public bool Equals(Coords other)
-        {
-            return X == other.X && Y == other.Y;
-        }
-    }
-    private class BroadphaseColliderRegister
-    {
-        private readonly Dictionary<Collider, HashSet<BroadphaseBucket>> register = new();
-        private readonly HashSet<Collider> unusedRegisterColliders = [];
-
-        public HashSet<BroadphaseBucket>? AddEntry(Collider collider, int capacity)
-        {
-            HashSet<BroadphaseBucket> registerSet;
-            if (register.TryGetValue(collider, out var value))
-            {
-                //already added this frame
-                if (!unusedRegisterColliders.Contains(collider))
-                {
-                    return null;
-                }
-                registerSet = value;
-                registerSet.Clear();//clean up from last frame
-                unusedRegisterColliders.Remove(collider);
-            }
-            else
-            {
-                registerSet = new HashSet<BroadphaseBucket>(capacity);
-                register[collider] = registerSet;
-            }
-            return registerSet;
-        }
-        public HashSet<BroadphaseBucket>? GetEntry(Collider collider)
-        {
-            return register.TryGetValue(collider, out var registerBuckets) ? registerBuckets : null;
-        }
-        public void Clean()
-        {
-            //remaining colliders that were not used this frame. Remove them from the register.
-            foreach (var collider in unusedRegisterColliders)
-            {
-                register.Remove(collider);
-            }
-            //set up for next frame
-            unusedRegisterColliders.Clear();
-            //all keys in register are now candidates for removal next frame if not used again
-            unusedRegisterColliders.UnionWith(register.Keys);
-        }
-        public void Close()
-        {
-            register.Clear();
-            unusedRegisterColliders.Clear();
-        }
-    }
-    private class BroadphaseStaticColliderRegister
-    {
-        private readonly Dictionary<Collider, HashSet<Coords>> register = new();
-        private readonly HashSet<Collider> unusedRegisterColliders = [];
-
-        public HashSet<Coords> AddEntry(Collider collider, int capacity)
-        {
-            if (register.TryGetValue(collider, out var value))
-            {
-                unusedRegisterColliders.Remove(collider);
-                return value;
-            }
-            var registerSet = new HashSet<Coords>(capacity);
-            register[collider] = registerSet;
-            return registerSet;
-        }
-        public void Clean()
-        {
-            //remaining colliders that were not used this frame. Remove them from the register.
-            foreach (var collider in unusedRegisterColliders)
-            {
-                register.Remove(collider);
-            }
-            //set up for next frame
-            unusedRegisterColliders.Clear();
-            //all keys in register are now candidates for removal next frame if not used again
-            unusedRegisterColliders.UnionWith(register.Keys);
-        }
-        public void Close()
-        {
-            register.Clear();
-            unusedRegisterColliders.Clear();
-        }
-    }
-
-    
     private Rect currentBounds = new();//calculated from added colliders
     
     private readonly BroadphaseColliderRegister register = new();
     private readonly BroadphaseStaticColliderRegister staticRegister = new();
     
-    private readonly Dictionary<Coords, BroadphaseBucket> buckets = new();
+    private readonly Dictionary<Coordinates, BroadphaseBucket> buckets = new();
     private readonly HashSet<BroadphaseBucket> availableBuckets = []; //could be a queue or stack as well
-    private readonly Dictionary<BroadphaseBucket, Coords> emptyUsedBuckets = [];
+    private readonly Dictionary<BroadphaseBucket, Coordinates> emptyUsedBuckets = [];
     private readonly int maxBuckets;
     private readonly Size bucketSize;
     private int createdBuckets = 0;
@@ -202,11 +93,11 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
     {
         if (!collider.Enabled) return;
         
-        HashSet<Coords>? staticColliderCoords = null;
+        HashSet<Coordinates>? staticColliderCoords = null;
         if (motionType == MotionType.Static)
         {
-            var staticSet = staticRegister.AddEntry(collider, 1);
-            if (staticSet.Count > 0)
+            var entryExists = staticRegister.AddEntry(collider, 1, out var staticSet, out var staticBounds);
+            if (entryExists)
             {
                 var resultSet = register.AddEntry(collider, staticSet.Count);
                 if(resultSet == null) return; //already added this frame
@@ -215,6 +106,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
                     AddColliderToBucket(collider, coords, ref resultSet);
                 }
         
+                currentBounds = currentBounds.Union(staticBounds);
                 return;
             }
             
@@ -230,6 +122,12 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
             minX = maxX = (int)Math.Floor(position.X / bucketSize.Width);
             minY = maxY = (int)Math.Floor(position.Y / bucketSize.Width);
             bucketCount = 1;
+
+            if (staticColliderCoords != null)
+            {
+                var staticBounds = new Rect(position, new Size(1, 1), AnchorPoint.Center);
+                staticRegister.UpdateRect(collider, staticBounds);
+            }
         }
         else
         {
@@ -239,6 +137,11 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
             minY = (int)Math.Floor(boundingBox.Top / bucketSize.Height);
             maxY = (int)Math.Floor(boundingBox.Bottom / bucketSize.Height);
             bucketCount = (1 + maxX - minX) * (1 + maxY - minY);
+            
+            if (staticColliderCoords != null)
+            {
+                staticRegister.UpdateRect(collider, boundingBox);
+            }
         }
         
         var registerSet = register.AddEntry(collider, bucketCount);
@@ -246,21 +149,21 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         
         if (bucketCount > 1)
         {
-            var tlBucketRect = GetBucketBounds(new Coords(minX, minY));
-            var brBucketRect = GetBucketBounds(new Coords(maxX, maxY));
+            var tlBucketRect = GetBucketBounds(new Coordinates(minX, minY));
+            var brBucketRect = GetBucketBounds(new Coordinates(maxX, maxY));
             var totalBucketsRect = new Rect(tlBucketRect.TopLeft, brBucketRect.BottomRight);
             currentBounds = currentBounds.Union(totalBucketsRect);
         }
         else
         {
-            currentBounds = currentBounds.Union(GetBucketBounds(new Coords(minX, minY)));
+            currentBounds = currentBounds.Union(GetBucketBounds(new Coordinates(minX, minY)));
         }
         
         for (int x = minX; x <= maxX; x++)
         {
             for (int y = minY; y <= maxY; y++)
             {
-                var coords = new Coords(x, y);
+                var coords = new Coordinates(x, y);
                 
                 //collider does not overlap with this bucket - only checked with more than 4 buckets to save performance
                 if (bucketCount > 4 && collider.BroadphaseType == BroadphaseType.FullShape && !OverlapsColliderShapeWithBucketRect(coords, collider)) continue;
@@ -272,7 +175,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         }
 
     }
-    private void AddColliderToBucket(Collider collider, Coords coords, ref HashSet<BroadphaseBucket> registerSet)
+    private void AddColliderToBucket(Collider collider, Coordinates coords, ref HashSet<BroadphaseBucket> registerSet)
     {
         if (buckets.TryGetValue(coords, out var bucket))//bucket already exists
         {
@@ -337,12 +240,12 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         }
     }
     
-    private bool OverlapsColliderShapeWithBucketRect(Coords coords, Collider collider)
+    private bool OverlapsColliderShapeWithBucketRect(Coordinates coords, Collider collider)
     {
         var bucketRect = GetBucketBounds(coords);
         return collider.Overlap(bucketRect);
     }
-    private Rect GetBucketBounds(Coords coords)
+    private Rect GetBucketBounds(Coordinates coords)
     {
         return new Rect(coords.X * bucketSize.Width, coords.Y * bucketSize.Height, bucketSize.Width, bucketSize.Height);
     }
@@ -435,7 +338,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         int added = 0;
         if (bucketCount == 1)
         {
-            var coords = new Coords(minX, minY);
+            var coords = new Coordinates(minX, minY);
             if (buckets.TryGetValue(coords, out var bucket) && bucket.Count > 0)
             {
                 candidateBuckets.Add(bucket);
@@ -448,7 +351,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
             {
                 for (int y = minY; y <= maxY; y++)
                 {
-                    var coords = new Coords(x, y);
+                    var coords = new Coordinates(x, y);
                     if (!buckets.TryGetValue(coords, out var bucket)) continue;
                     if(bucket.Count <= 0) continue;
                 
@@ -479,7 +382,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         int added = 0;
         if (bucketCount == 1)
         {
-            var coords = new Coords(minX, minY);
+            var coords = new Coordinates(minX, minY);
             if (buckets.TryGetValue(coords, out var bucket) && bucket.Count > 0)
             {
                 candidateBuckets.Add(bucket);
@@ -492,7 +395,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
             {
                 for (int y = minY; y <= maxY; y++)
                 {
-                    var coords = new Coords(x, y);
+                    var coords = new Coordinates(x, y);
                     if (!buckets.TryGetValue(coords, out var bucket)) continue;
                     if(bucket.Count <= 0) continue;
                 
@@ -523,7 +426,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         int added = 0;
         if (bucketCount == 1)
         {
-            var coords = new Coords(minX, minY);
+            var coords = new Coordinates(minX, minY);
             if (buckets.TryGetValue(coords, out var bucket) && bucket.Count > 0)
             {
                 candidateBuckets.Add(bucket);
@@ -536,7 +439,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
             {
                 for (int y = minY; y <= maxY; y++)
                 {
-                    var coords = new Coords(x, y);
+                    var coords = new Coordinates(x, y);
                     if (!buckets.TryGetValue(coords, out var bucket)) continue;
                     if(bucket.Count <= 0) continue;
                 
@@ -567,7 +470,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         int added = 0;
         if (bucketCount == 1)
         {
-            var coords = new Coords(minX, minY);
+            var coords = new Coordinates(minX, minY);
             if (buckets.TryGetValue(coords, out var bucket) && bucket.Count > 0)
             {
                 candidateBuckets.Add(bucket);
@@ -580,7 +483,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
             {
                 for (int y = minY; y <= maxY; y++)
                 {
-                    var coords = new Coords(x, y);
+                    var coords = new Coordinates(x, y);
                     if (!buckets.TryGetValue(coords, out var bucket)) continue;
                     if(bucket.Count <= 0) continue;
                 
@@ -611,7 +514,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         int added = 0;
         if (bucketCount == 1)
         {
-            var coords = new Coords(minX, minY);
+            var coords = new Coordinates(minX, minY);
             if (buckets.TryGetValue(coords, out var bucket) && bucket.Count > 0)
             {
                 candidateBuckets.Add(bucket);
@@ -624,7 +527,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
             {
                 for (int y = minY; y <= maxY; y++)
                 {
-                    var coords = new Coords(x, y);
+                    var coords = new Coordinates(x, y);
                     if (!buckets.TryGetValue(coords, out var bucket)) continue;
                     if(bucket.Count <= 0) continue;
                 
@@ -653,7 +556,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         int added = 0;
         if (bucketCount == 1)
         {
-            var coords = new Coords(minX, minY);
+            var coords = new Coordinates(minX, minY);
             if (buckets.TryGetValue(coords, out var bucket) && bucket.Count > 0)
             {
                 candidateBuckets.Add(bucket);
@@ -666,7 +569,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
             {
                 for (int y = minY; y <= maxY; y++)
                 {
-                    var coords = new Coords(x, y);
+                    var coords = new Coordinates(x, y);
                     if (!buckets.TryGetValue(coords, out var bucket)) continue;
                     if(bucket.Count <= 0) continue;
                     
@@ -694,7 +597,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         int added = 0;
         if (bucketCount == 1)
         {
-            var coords = new Coords(minX, minY);
+            var coords = new Coordinates(minX, minY);
             if (buckets.TryGetValue(coords, out var bucket) && bucket.Count > 0)
             {
                 candidateBuckets.Add(bucket);
@@ -707,7 +610,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
             {
                 for (int y = minY; y <= maxY; y++)
                 {
-                    var coords = new Coords(x, y);
+                    var coords = new Coordinates(x, y);
                     if (!buckets.TryGetValue(coords, out var bucket)) continue;
                     if(bucket.Count <= 0) continue;
                 
@@ -738,7 +641,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         int added = 0;
         if (bucketCount == 1)
         {
-            var coords = new Coords(minX, minY);
+            var coords = new Coordinates(minX, minY);
             if (buckets.TryGetValue(coords, out var bucket) && bucket.Count > 0)
             {
                 candidateBuckets.Add(bucket);
@@ -751,7 +654,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
             {
                 for (int y = minY; y <= maxY; y++)
                 {
-                    var coords = new Coords(x, y);
+                    var coords = new Coordinates(x, y);
                     if (!buckets.TryGetValue(coords, out var bucket)) continue;
                     if(bucket.Count <= 0) continue;
                 
@@ -782,7 +685,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         int added = 0;
         if (bucketCount == 1)
         {
-            var coords = new Coords(minX, minY);
+            var coords = new Coordinates(minX, minY);
             if (buckets.TryGetValue(coords, out var bucket) && bucket.Count > 0)
             {
                 candidateBuckets.Add(bucket);
@@ -795,7 +698,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
             {
                 for (int y = minY; y <= maxY; y++)
                 {
-                    var coords = new Coords(x, y);
+                    var coords = new Coordinates(x, y);
                     if (!buckets.TryGetValue(coords, out var bucket)) continue;
                     if(bucket.Count <= 0) continue;
                 
