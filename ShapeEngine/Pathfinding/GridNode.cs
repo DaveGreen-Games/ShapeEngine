@@ -25,7 +25,7 @@ internal class GridNode : Node
     /// <summary>
     /// The coordinates of this node in the grid.
     /// </summary>
-    public readonly Grid.Coordinates Coordinates;
+    public readonly Coordinates Coordinates;
     /// <summary>
     /// The parent Pathfinder that owns this node.
     /// </summary>
@@ -36,7 +36,7 @@ internal class GridNode : Node
     /// </summary>
     /// <param name="coordinates">The grid coordinates of the node.</param>
     /// <param name="parent">The parent Pathfinder.</param>
-    public GridNode(Grid.Coordinates coordinates, Pathfinder parent)
+    public GridNode(Coordinates coordinates, Pathfinder parent)
     {
         this.Coordinates = coordinates;
         this.parent = parent;

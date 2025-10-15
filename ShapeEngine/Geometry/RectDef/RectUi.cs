@@ -46,7 +46,7 @@ public readonly partial struct Rect
             {
                 for (var row = 0; row < grid.Rows; row++)
                 {
-                    var coords = new Grid.Coordinates(col, row);
+                    var coords = new Coordinates(col, row);
                     var r = new Rect
                     (
                         startPos + ((gapSize + elementSize) * coords.ToVector2() * direction),
@@ -64,7 +64,7 @@ public readonly partial struct Rect
             {
                 for (var col = 0; col < grid.Cols; col++)
                 {
-                    var coords = new Grid.Coordinates(col, row);
+                    var coords = new Coordinates(col, row);
                     var r = new Rect
                     (
                         startPos + ((gapSize + elementSize) * coords.ToVector2() * direction),

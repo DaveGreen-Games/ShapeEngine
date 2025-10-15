@@ -898,7 +898,7 @@ public class Pathfinder
         if (!Grid.IsIndexInBounds(index)) return null;
         return nodes[index];
     }
-    private GridNode? GetNode(Grid.Coordinates coordinates)
+    private GridNode? GetNode(Coordinates coordinates)
     {
         if (!Grid.AreCoordinatesInside(coordinates)) return null;
         var index = Grid.CoordinatesToIndex(coordinates);
