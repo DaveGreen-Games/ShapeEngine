@@ -1,3 +1,4 @@
+using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
@@ -292,8 +293,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
 
         return count;
     }
-
-    //TODO: add BroadphaseType check to only use position for Point types -> GetCandidateBuckets needs point overload!
+    
     public int GetCandidateBuckets(Collider collider, ref List<BroadphaseBucket> candidateBuckets)
     {
         if (!collider.Enabled) return 0;
@@ -306,24 +306,31 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
             }
             return registerBuckets.Count;   
         }
+
+        if (collider.BroadphaseType == BroadphaseType.Point)
+        {
+            return GetCandidateBuckets(collider.CurTransform.Position, ref candidateBuckets);
+        }
+        
+        bool testFullShape = collider.BroadphaseType == BroadphaseType.FullShape;
         
         switch (collider.GetShapeType())
         {
-            case ShapeType.Circle: return  GetCandidateBuckets(collider.GetCircleShape(), ref candidateBuckets);
-            case ShapeType.Segment: return  GetCandidateBuckets(collider.GetSegmentShape(), ref candidateBuckets);
-            case ShapeType.Line: return  GetCandidateBuckets(collider.GetLineShape(), ref candidateBuckets);
-            case ShapeType.Ray: return  GetCandidateBuckets(collider.GetRayShape(), ref candidateBuckets);
-            case ShapeType.Triangle: return  GetCandidateBuckets(collider.GetTriangleShape(), ref candidateBuckets);
+            case ShapeType.Circle: return  GetCandidateBuckets(collider.GetCircleShape(), ref candidateBuckets, testFullShape);
+            case ShapeType.Segment: return  GetCandidateBuckets(collider.GetSegmentShape(), ref candidateBuckets, testFullShape);
+            case ShapeType.Line: return  GetCandidateBuckets(collider.GetLineShape(), ref candidateBuckets, testFullShape);
+            case ShapeType.Ray: return  GetCandidateBuckets(collider.GetRayShape(), ref candidateBuckets, testFullShape);
+            case ShapeType.Triangle: return  GetCandidateBuckets(collider.GetTriangleShape(), ref candidateBuckets, testFullShape);
             case ShapeType.Rect: return  GetCandidateBuckets(collider.GetRectShape(), ref candidateBuckets);
-            case ShapeType.Quad: return  GetCandidateBuckets(collider.GetQuadShape(), ref candidateBuckets);
-            case ShapeType.Poly: return  GetCandidateBuckets(collider.GetPolygonShape(), ref candidateBuckets);
-            case ShapeType.PolyLine: return  GetCandidateBuckets(collider.GetPolylineShape(), ref candidateBuckets);
+            case ShapeType.Quad: return  GetCandidateBuckets(collider.GetQuadShape(), ref candidateBuckets, testFullShape);
+            case ShapeType.Poly: return  GetCandidateBuckets(collider.GetPolygonShape(), ref candidateBuckets, testFullShape);
+            case ShapeType.PolyLine: return  GetCandidateBuckets(collider.GetPolylineShape(), ref candidateBuckets, testFullShape);
         }
 
         return 0;
     }
 
-    public int GetCandidateBuckets(Segment segment, ref List<BroadphaseBucket> candidateBuckets)
+    public int GetCandidateBuckets(Segment segment, ref List<BroadphaseBucket> candidateBuckets, bool testFullShape = true)
     {
         var boundingBox = segment.GetBoundingBox();
         
@@ -354,9 +361,12 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
                     var coords = new Coordinates(x, y);
                     if (!buckets.TryGetValue(coords, out var bucket)) continue;
                     if(bucket.Count <= 0) continue;
-                
-                    var bucketRect = GetBucketBounds(coords);
-                    if (!segment.OverlapShape(bucketRect)) continue;
+
+                    if (testFullShape)
+                    {
+                        var bucketRect = GetBucketBounds(coords);
+                        if (!segment.OverlapShape(bucketRect)) continue;
+                    }
                 
                     candidateBuckets.Add(bucket);
                     added++;
@@ -367,7 +377,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         return added;
     }
 
-    public int GetCandidateBuckets(Line line, ref List<BroadphaseBucket> candidateBuckets)
+    public int GetCandidateBuckets(Line line, ref List<BroadphaseBucket> candidateBuckets, bool testFullShape = true)
     {
         var boundingBox = line.GetBoundingBox();
         
@@ -398,10 +408,13 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
                     var coords = new Coordinates(x, y);
                     if (!buckets.TryGetValue(coords, out var bucket)) continue;
                     if(bucket.Count <= 0) continue;
-                
-                    var bucketRect = GetBucketBounds(coords);
-                    if (!line.OverlapShape(bucketRect)) continue;
-                
+                    
+                    if (testFullShape)
+                    {
+                        var bucketRect = GetBucketBounds(coords);
+                        if (!line.OverlapShape(bucketRect)) continue; 
+                    }
+                    
                     candidateBuckets.Add(bucket);
                     added++;
                 }
@@ -411,7 +424,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         return added;
     }
 
-    public int GetCandidateBuckets(Ray ray, ref List<BroadphaseBucket> candidateBuckets)
+    public int GetCandidateBuckets(Ray ray, ref List<BroadphaseBucket> candidateBuckets, bool testFullShape = true)
     {
         var boundingBox = ray.GetBoundingBox();
         
@@ -443,8 +456,11 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
                     if (!buckets.TryGetValue(coords, out var bucket)) continue;
                     if(bucket.Count <= 0) continue;
                 
-                    var bucketRect = GetBucketBounds(coords);
-                    if (!ray.OverlapShape(bucketRect)) continue;
+                    if (testFullShape)
+                    {
+                        var bucketRect = GetBucketBounds(coords);
+                        if (!ray.OverlapShape(bucketRect)) continue;
+                    }
                 
                     candidateBuckets.Add(bucket);
                     added++;
@@ -455,7 +471,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         return added;
     }
 
-    public int GetCandidateBuckets(Circle circle, ref List<BroadphaseBucket> candidateBuckets)
+    public int GetCandidateBuckets(Circle circle, ref List<BroadphaseBucket> candidateBuckets, bool testFullShape = true)
     {
         var boundingBox = circle.GetBoundingBox();
         
@@ -487,8 +503,11 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
                     if (!buckets.TryGetValue(coords, out var bucket)) continue;
                     if(bucket.Count <= 0) continue;
                 
-                    var bucketRect = GetBucketBounds(coords);
-                    if (!circle.OverlapShape(bucketRect)) continue;
+                    if (testFullShape)
+                    {
+                        var bucketRect = GetBucketBounds(coords);
+                        if (!circle.OverlapShape(bucketRect)) continue;
+                    }
                 
                     candidateBuckets.Add(bucket);
                     added++;
@@ -499,7 +518,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         return added;
     }
 
-    public int GetCandidateBuckets(Triangle triangle, ref List<BroadphaseBucket> candidateBuckets)
+    public int GetCandidateBuckets(Triangle triangle, ref List<BroadphaseBucket> candidateBuckets, bool testFullShape = true)
     {
         var boundingBox = triangle.GetBoundingBox();
         
@@ -531,8 +550,11 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
                     if (!buckets.TryGetValue(coords, out var bucket)) continue;
                     if(bucket.Count <= 0) continue;
                 
-                    var bucketRect = GetBucketBounds(coords);
-                    if (!triangle.OverlapShape(bucketRect)) continue;
+                    if (testFullShape)
+                    {
+                        var bucketRect = GetBucketBounds(coords);
+                        if (!triangle.OverlapShape(bucketRect)) continue;
+                    }
                 
                     candidateBuckets.Add(bucket);
                     added++;
@@ -582,7 +604,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         return added;
     }
 
-    public int GetCandidateBuckets(Quad quad, ref List<BroadphaseBucket> candidateBuckets)
+    public int GetCandidateBuckets(Quad quad, ref List<BroadphaseBucket> candidateBuckets, bool testFullShape = true)
     {
         var boundingBox = quad.GetBoundingBox();
         
@@ -614,9 +636,12 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
                     if (!buckets.TryGetValue(coords, out var bucket)) continue;
                     if(bucket.Count <= 0) continue;
                 
-                    var bucketRect = GetBucketBounds(coords);
-                    if (!quad.OverlapShape(bucketRect)) continue;
-                
+                    if (testFullShape)
+                    {
+                        var bucketRect = GetBucketBounds(coords);
+                        if (!quad.OverlapShape(bucketRect)) continue;
+                    }
+                    
                     candidateBuckets.Add(bucket);
                     added++;
                 }
@@ -626,7 +651,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         return added;
     }
 
-    public int GetCandidateBuckets(Polygon poly, ref List<BroadphaseBucket> candidateBuckets)
+    public int GetCandidateBuckets(Polygon poly, ref List<BroadphaseBucket> candidateBuckets, bool testFullShape = true)
     {
         var boundingBox = poly.GetBoundingBox();
         
@@ -658,8 +683,11 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
                     if (!buckets.TryGetValue(coords, out var bucket)) continue;
                     if(bucket.Count <= 0) continue;
                 
-                    var bucketRect = GetBucketBounds(coords);
-                    if (!poly.OverlapShape(bucketRect)) continue;
+                    if (testFullShape)
+                    {
+                        var bucketRect = GetBucketBounds(coords);
+                        if (!poly.OverlapShape(bucketRect)) continue;
+                    }
                 
                     candidateBuckets.Add(bucket);
                     added++;
@@ -670,7 +698,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         return added;
     }
 
-    public int GetCandidateBuckets(Polyline polyLine, ref List<BroadphaseBucket> candidateBuckets)
+    public int GetCandidateBuckets(Polyline polyLine, ref List<BroadphaseBucket> candidateBuckets, bool testFullShape = true)
     {
         var boundingBox = polyLine.GetBoundingBox();
         
@@ -702,9 +730,12 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
                     if (!buckets.TryGetValue(coords, out var bucket)) continue;
                     if(bucket.Count <= 0) continue;
                 
-                    var bucketRect = GetBucketBounds(coords);
-                    if (!polyLine.OverlapShape(bucketRect)) continue;
-                
+                    if (testFullShape)
+                    {
+                        var bucketRect = GetBucketBounds(coords);
+                        if (!polyLine.OverlapShape(bucketRect)) continue;
+                    }
+                    
                     candidateBuckets.Add(bucket);
                     added++;
                 }
@@ -713,4 +744,22 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
 
         return added;
     }
+    
+    public int GetCandidateBuckets(Vector2 point, ref List<BroadphaseBucket> candidateBuckets)
+    {
+        int added = 0;
+        
+        var coordinateX = (int)Math.Floor(point.X / bucketSize.Width);
+        var coordinateY = (int)Math.Floor(point.Y / bucketSize.Height);
+        var coordinates = new Coordinates(coordinateX, coordinateY);
+        
+        if (buckets.TryGetValue(coordinates, out var bucket) && bucket.Count > 0)
+        {
+            candidateBuckets.Add(bucket);
+            added++;
+        }
+
+        return added;
+    }
+
 }
