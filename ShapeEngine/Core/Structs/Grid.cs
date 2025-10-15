@@ -64,8 +64,8 @@ public readonly struct Grid : IEquatable<Grid>
         /// </summary>
         public Coordinates()
         {
-            this.Row = -1;
-            this.Col = -1;
+            Row = -1;
+            Col = -1;
         }
         /// <summary>
         /// Initializes a coordinate with the specified column and row.
@@ -74,15 +74,15 @@ public readonly struct Grid : IEquatable<Grid>
         /// <param name="row">The row index.</param>
         public Coordinates(int col, int row)
         {
-            this.Row = row;
-            this.Col = col;
+            Row = row;
+            Col = col;
         }
 
         /// <summary>
         /// Converts this coordinate to a <see cref="Vector2"/>.
         /// </summary>
         /// <returns>A <see cref="Vector2"/> with (Col, Row).</returns>
-        public Vector2 ToVector2() => new Vector2(Col, Row);
+        public Vector2 ToVector2() => new(Col, Row);
 
         #region Operators
         /// <summary>
