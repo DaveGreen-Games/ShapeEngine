@@ -636,9 +636,14 @@ namespace Examples.Scenes.ExampleScenes
                 SpawnArea.OnGameObjectRemoved += OnGameObjectDied;
             }
             
-            var spatialHash = new BroadphaseSpatialHash(boundaryRect, 50, 50);
-            // var quadTree = new BroadphaseQuadTree(boundaryRect, 24, new Size(50, 50));
-            InitCollisionHandler(spatialHash);
+            // var spatialHash = new BroadphaseSpatialHash(boundaryRect, 50, 50);
+            // InitCollisionHandler(spatialHash);
+            // var quadTree = new BroadphaseQuadTree(boundaryRect, 5, new Size(50, 50));
+            // InitCollisionHandler(quadTree);
+
+            var dynamicSpatialHash = new BroadphaseDynamicSpatialHash(150, 150, 10000);
+            InitCollisionHandler(dynamicSpatialHash);
+            
             SetupBoundary();
 
             clearAreaMask = new BitFlag(CollisionFlags.RockFlag);
