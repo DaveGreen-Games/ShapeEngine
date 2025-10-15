@@ -42,7 +42,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
             return X == other.X && Y == other.Y;
         }
     }
-    private class ColliderRegister
+    private class BroadphaseColliderRegister
     {
         private readonly Dictionary<Collider, HashSet<BroadphaseBucket>> register = new();
         private readonly HashSet<Collider> unusedRegisterColliders = [];
@@ -90,7 +90,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
             unusedRegisterColliders.Clear();
         }
     }
-    private class StaticColliderRegister
+    private class BroadphaseStaticColliderRegister
     {
         private readonly Dictionary<Collider, HashSet<Coords>> register = new();
         private readonly HashSet<Collider> unusedRegisterColliders = [];
@@ -128,8 +128,8 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
     
     private Rect currentBounds = new();//calculated from added colliders
     
-    private readonly ColliderRegister register = new();
-    private readonly StaticColliderRegister staticRegister = new();
+    private readonly BroadphaseColliderRegister register = new();
+    private readonly BroadphaseStaticColliderRegister staticRegister = new();
     
     private readonly Dictionary<Coords, BroadphaseBucket> buckets = new();
     private readonly HashSet<BroadphaseBucket> availableBuckets = []; //could be a queue or stack as well
