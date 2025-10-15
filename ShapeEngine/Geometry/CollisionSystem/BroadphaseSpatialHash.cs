@@ -13,9 +13,11 @@ using ShapeEngine.Geometry.TriangleDef;
 
 namespace ShapeEngine.Geometry.CollisionSystem;
 
-//TODO: Implement MotionType optimizations (static vs dynamic objects).
-//TODO: Implement broadphase type optimizations (point, bounding box, full shape).
-
+//TODO: implement Point/Vector2 version for
+// - GetCellIDs
+// - GetUniqueCandidates
+// - GetCandidateBuckets
+// for Broaphase type point
 
 /// <summary>
 /// Implements a spatial hash grid for efficient broad-phase collision detection and spatial queries.
@@ -55,11 +57,16 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
 
     #region Private Members
     private BroadphaseBucket[] buckets;
-    //TODO: Use collider register from dynamic spatial hash.
-    private readonly Dictionary<Collider, List<int>> register = new();
-    private readonly HashSet<Collider> unusedRegisterColliders = [];
     
-    //TODO: add static register system
+    // private readonly Dictionary<Collider, List<int>> register = new();
+    // private readonly HashSet<Collider> unusedRegisterColliders = [];
+    
+    private readonly BroadphaseColliderRegister<int> register = new();
+    
+    //TODO: Implement MotionType optimizations (static vs dynamic objects).
+    //TODO: implement
+    private readonly BroadphaseStaticColliderRegister staticRegister = new();
+    
     
     private bool boundsResizeQueued;
     private Rect newBounds;
@@ -129,7 +136,8 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
             }
         }
         
-        CleanRegister();
+        register.Clean();
+        staticRegister.Clean();
     }
     /// <summary>
     /// Clears all buckets and internal registers, releasing resources.
@@ -137,8 +145,9 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     public void Close()
     {
         Clear();
-        register.Clear();
-        buckets = Array.Empty<BroadphaseBucket>();  //new HashSet<ICollidable>[0];
+        register.Close();
+        staticRegister.Close();
+        buckets = [];
     }
     /// <summary>
     /// Queues a resize of the spatial hash bounds to the specified rectangle. The resize is applied on the next clear.
@@ -203,7 +212,8 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     {
         if (!collider.Enabled) return 0;
         int count = 0;
-        if (register.TryGetValue(collider, out var bucketIds))
+        
+        if (register.TryGetEntry(collider, out var bucketIds) && bucketIds != null)
         {
             if (bucketIds.Count <= 0) return 0;
             foreach (int id in bucketIds)
@@ -215,11 +225,11 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
                     candidateBuckets.Add(buckets[id]);
                 }
             }
-
+            
             return count;
         }
         
-        List<int> ids = [];
+        HashSet<int> ids = [];
         GetCellIDs(collider, ref ids);
         return FillCandidateBuckets(ids, ref candidateBuckets);
     }
@@ -233,7 +243,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetCandidateBuckets(Segment segment, ref List<BroadphaseBucket> candidateBuckets)
     {
-        List<int> bucketIds = [];
+        HashSet<int> bucketIds = [];
         GetCellIDs(segment, ref bucketIds);
         
         return FillCandidateBuckets(bucketIds, ref candidateBuckets);
@@ -248,7 +258,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetCandidateBuckets(Line line, ref List<BroadphaseBucket> candidateBuckets)
     {
-        List<int> bucketIds = [];
+        HashSet<int> bucketIds = [];
         GetCellIDs(line, ref bucketIds);
         
         return FillCandidateBuckets(bucketIds, ref candidateBuckets);
@@ -263,7 +273,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetCandidateBuckets(Ray ray, ref List<BroadphaseBucket> candidateBuckets)
     {
-        List<int> bucketIds = [];
+        HashSet<int> bucketIds = [];
         GetCellIDs(ray, ref bucketIds);
         
         return FillCandidateBuckets(bucketIds, ref candidateBuckets);
@@ -278,7 +288,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetCandidateBuckets(Circle circle, ref List<BroadphaseBucket> candidateBuckets)
     {
-        List<int> bucketIds = [];
+        HashSet<int> bucketIds = [];
         GetCellIDs(circle, ref bucketIds);
         
         return FillCandidateBuckets(bucketIds, ref candidateBuckets);
@@ -293,7 +303,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetCandidateBuckets(Triangle triangle, ref List<BroadphaseBucket> candidateBuckets)
     {
-        List<int> bucketIds = [];
+        HashSet<int> bucketIds = [];
         GetCellIDs(triangle, ref bucketIds);
         
         return FillCandidateBuckets(bucketIds, ref candidateBuckets);
@@ -308,7 +318,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetCandidateBuckets(Rect rect, ref List<BroadphaseBucket> candidateBuckets)
     {
-        List<int> bucketIds = [];
+        HashSet<int> bucketIds = [];
         GetCellIDs(rect, ref bucketIds);
         
         return FillCandidateBuckets(bucketIds, ref candidateBuckets);
@@ -323,7 +333,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetCandidateBuckets(Quad quad, ref List<BroadphaseBucket> candidateBuckets)
     {
-        List<int> bucketIds = [];
+        HashSet<int> bucketIds = [];
         GetCellIDs(quad, ref bucketIds);
         
         return FillCandidateBuckets(bucketIds, ref candidateBuckets);
@@ -338,7 +348,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetCandidateBuckets(Polygon poly, ref List<BroadphaseBucket> candidateBuckets)
     {
-        List<int> bucketIds = [];
+        HashSet<int> bucketIds = [];
         GetCellIDs(poly, ref bucketIds);
         
         return FillCandidateBuckets(bucketIds, ref candidateBuckets);
@@ -353,7 +363,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetCandidateBuckets(Polyline polyLine, ref List<BroadphaseBucket> candidateBuckets)
     {
-        List<int> bucketIds = [];
+        HashSet<int> bucketIds = [];
         GetCellIDs(polyLine, ref bucketIds);
         
         return FillCandidateBuckets(bucketIds, ref candidateBuckets);
@@ -389,7 +399,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     public int GetUniqueCandidates(Collider collider, ref HashSet<Collider> candidates)
     {
         if (!collider.Enabled) return 0;
-        if (register.TryGetValue(collider, out var bucketIds))
+        if (register.TryGetEntry(collider, out var bucketIds) && bucketIds != null)
         {
             if (bucketIds.Count <= 0) return 0;
             int prevCount = candidates.Count;
@@ -403,7 +413,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
             return candidates.Count - prevCount;
         }
         
-        List<int> ids = [];
+        HashSet<int> ids = [];
         GetCellIDs(collider, ref ids);
         return AccumulateUniqueCandidates(ids, ref candidates);
     }
@@ -417,7 +427,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetUniqueCandidates(Segment segment, ref HashSet<Collider> candidates)
     {
-        List<int> bucketIds = [];
+        HashSet<int> bucketIds = [];
         GetCellIDs(segment, ref bucketIds);
         
         return AccumulateUniqueCandidates(bucketIds, ref candidates);
@@ -432,7 +442,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetUniqueCandidates(Circle circle, ref HashSet<Collider> candidates)
     {
-        List<int> bucketIds = [];
+        HashSet<int> bucketIds = [];
         GetCellIDs(circle, ref bucketIds);
         
         return AccumulateUniqueCandidates(bucketIds, ref candidates);
@@ -447,7 +457,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetUniqueCandidates(Triangle triangle, ref HashSet<Collider> candidates)
     {
-        List<int> bucketIds = [];
+        HashSet<int> bucketIds = [];
         GetCellIDs(triangle, ref bucketIds);
         
         return AccumulateUniqueCandidates(bucketIds, ref candidates);
@@ -462,7 +472,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetUniqueCandidates(Rect rect, ref HashSet<Collider> candidates)
     {
-        List<int> bucketIds = [];
+        HashSet<int> bucketIds = [];
         GetCellIDs(rect, ref bucketIds);
         
         return AccumulateUniqueCandidates(bucketIds, ref candidates);
@@ -477,7 +487,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetUniqueCandidates(Quad quad, ref HashSet<Collider> candidates)
     {
-        List<int> bucketIds = [];
+        HashSet<int> bucketIds = [];
         GetCellIDs(quad, ref bucketIds);
         
         return AccumulateUniqueCandidates(bucketIds, ref candidates);
@@ -492,7 +502,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetUniqueCandidates(Polygon poly, ref HashSet<Collider> candidates)
     {
-        List<int> bucketIds = [];
+        HashSet<int> bucketIds = [];
         GetCellIDs(poly, ref bucketIds);
         
         return AccumulateUniqueCandidates(bucketIds, ref candidates);
@@ -507,7 +517,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetUniqueCandidates(Polyline polyLine, ref HashSet<Collider> candidates)
     {
-        List<int> bucketIds = [];
+        HashSet<int> bucketIds = [];
         GetCellIDs(polyLine, ref bucketIds);
         
         return AccumulateUniqueCandidates(bucketIds, ref candidates);
@@ -556,7 +566,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// <returns>
     /// Returns the number of unique colliders added to the candidates set.
     /// </returns>
-    private int AccumulateUniqueCandidates(List<int> bucketIds, ref HashSet<Collider> candidates)
+    private int AccumulateUniqueCandidates(HashSet<int> bucketIds, ref HashSet<Collider> candidates)
     {
         if (bucketIds.Count <= 0) return 0;
         var prevCount = candidates.Count;
@@ -575,7 +585,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// <returns>
     /// Returns the number of buckets added to the candidateBuckets list.
     /// </returns>
-    private int FillCandidateBuckets(List<int> bucketIds, ref List<BroadphaseBucket> candidateBuckets)
+    private int FillCandidateBuckets(HashSet<int> bucketIds, ref List<BroadphaseBucket> candidateBuckets)
     {
         if (bucketIds.Count <= 0) return 0;
 
@@ -677,10 +687,11 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     {
         foreach (var collider in collisionBody.Colliders)
         {
-            Add(collider);
+            Add(collider);//TODO: use static parameter
         }
     }
    
+    //TODO: Implement broadphase type optimizations (point, bounding box, full shape).
     /// <summary>
     /// Adds a collider to the spatial hash, updating the register and buckets.
     /// </summary>
@@ -690,40 +701,31 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
         // The SpatialHash is cleared and filled every frame, so skipping disabled colliders here is safe.
         if (!collider.Enabled) return;
             
-        List<int> ids;
-        if (register.TryGetValue(collider, out var value))
-        {
-            ids = value;
-            ids.Clear();
-        }
-        else
-        {
-            ids = new List<int>();
-            register.Add(collider, ids);
+        // List<int> ids;
+        
+        var ids = register.AddEntry(collider, 0);
+        if(ids == null) return; //already added this frame
+        
+        // if (register.TryGetValue(collider, out var value))
+        // {
+            // ids = value;
+            // ids.Clear();
+        // }
+        // else
+        // {
+            // ids = new List<int>();
+            // register.Add(collider, ids);
             
-        }
+        // }
         GetCellIDs(collider, ref ids);
         if (ids.Count <= 0) return;
-        unusedRegisterColliders.Remove(collider);
+        // unusedRegisterColliders.Remove(collider);
         foreach (int hash in ids)
         {
             buckets[hash].Add(collider);
         }
     }
-
-    /// <summary>
-    /// Cleans the register by removing unreferenced colliders and updating the register keys set.
-    /// </summary>
-    private void CleanRegister()
-    {
-        foreach (var collider in unusedRegisterColliders)
-        {
-            register.Remove(collider);
-        }
-
-        unusedRegisterColliders.Clear();
-        unusedRegisterColliders.UnionWith(register.Keys);
-    }
+    
     /// <summary>
     /// Clears all buckets and applies any queued bounds resize.
     /// </summary>
@@ -747,7 +749,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </summary>
     /// <param name="segment">The segment to check.</param>
     /// <param name="idList">The list to populate with cell IDs.</param>
-    private void GetCellIDs(Segment segment, ref List<int> idList)
+    private void GetCellIDs(Segment segment, ref HashSet<int> idList)
     {
         var boundingRect = segment.GetBoundingBox();
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
@@ -768,7 +770,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </summary>
     /// <param name="line">The line to check.</param>
     /// <param name="idList">The list to populate with cell IDs.</param>
-    private void GetCellIDs(Line line, ref List<int> idList)
+    private void GetCellIDs(Line line, ref HashSet<int> idList)
     {
         var boundingRect = line.GetBoundingBox();
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
@@ -789,7 +791,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </summary>
     /// <param name="ray">The ray to check.</param>
     /// <param name="idList">The list to populate with cell IDs.</param>
-    private void GetCellIDs(Ray ray, ref List<int> idList)
+    private void GetCellIDs(Ray ray, ref HashSet<int> idList)
     {
         var boundingRect = ray.GetBoundingBox();
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
@@ -810,7 +812,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </summary>
     /// <param name="triangle">The triangle to check.</param>
     /// <param name="idList">The list to populate with cell IDs.</param>
-    private void GetCellIDs(Triangle triangle, ref List<int> idList)
+    private void GetCellIDs(Triangle triangle, ref HashSet<int> idList)
     {
         var boundingRect = triangle.GetBoundingBox();
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
@@ -831,7 +833,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </summary>
     /// <param name="quad">The quad to check.</param>
     /// <param name="idList">The list to populate with cell IDs.</param>
-    private void GetCellIDs(Quad quad, ref List<int> idList)
+    private void GetCellIDs(Quad quad, ref HashSet<int> idList)
     {
         var boundingRect = quad.GetBoundingBox();
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
@@ -852,7 +854,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </summary>
     /// <param name="circle">The circle to check.</param>
     /// <param name="idList">The list to populate with cell IDs.</param>
-    private void GetCellIDs(Circle circle, ref List<int> idList)
+    private void GetCellIDs(Circle circle, ref HashSet<int> idList)
     {
         var boundingRect = circle.GetBoundingBox();
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
@@ -873,7 +875,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </summary>
     /// <param name="rect">The rect to check.</param>
     /// <param name="idList">The list to populate with cell IDs.</param>
-    private void GetCellIDs(Rect rect, ref List<int> idList)
+    private void GetCellIDs(Rect rect, ref HashSet<int> idList)
     {
         var topLeft = GetCellCoordinate(rect.X, rect.Y);
         var bottomRight = GetCellCoordinate(rect.X + rect.Width, rect.Y + rect.Height);
@@ -893,7 +895,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </summary>
     /// <param name="poly">The poly to check.</param>
     /// <param name="idList">The list to populate with cell IDs.</param>
-    private void GetCellIDs(Polygon poly, ref List<int> idList)
+    private void GetCellIDs(Polygon poly, ref HashSet<int> idList)
     {
         var boundingRect = poly.GetBoundingBox();
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
@@ -914,7 +916,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </summary>
     /// <param name="polyLine">The polyline to check.</param>
     /// <param name="idList">The list to populate with cell IDs.</param>
-    private void GetCellIDs(Polyline polyLine, ref List<int> idList)
+    private void GetCellIDs(Polyline polyLine, ref HashSet<int> idList)
     {
         var boundingRect = polyLine.GetBoundingBox();
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
@@ -935,7 +937,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </summary>
     /// <param name="collider">The collider to check.</param>
     /// <param name="idList">The list to populate with cell IDs.</param>
-    private void GetCellIDs(Collider collider, ref List<int> idList)
+    private void GetCellIDs(Collider collider, ref HashSet<int> idList)
     {
         if (!collider.Enabled) return;
         
