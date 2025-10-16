@@ -1,5 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Color;
+using ShapeEngine.Core;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.LineDef;
 using ShapeEngine.Geometry.PolygonDef;
@@ -13,12 +14,10 @@ using ShapeEngine.Geometry.TriangleDef;
 namespace ShapeEngine.Geometry.CollisionSystem;
 
 //TODO: docs
-public interface IBroadphase
+public interface IBroadphase : IBounds
 {
-    public Rect GetBounds();
     public void Fill(IEnumerable<CollisionObject> collisionBodies);
     public void Close();
-    public void ResizeBounds(Rect targetBounds);
     public void DebugDraw(ColorRgba border, ColorRgba fill);
 
     public int GetCandidateBuckets(CollisionObject collisionObject, ref List<BroadphaseBucket> candidateBuckets);

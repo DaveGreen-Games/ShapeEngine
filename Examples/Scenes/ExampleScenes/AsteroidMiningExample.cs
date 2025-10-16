@@ -657,8 +657,8 @@ namespace Examples.Scenes.ExampleScenes
         protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo gameUi,  ScreenInfo ui)
         {
             UpdateBoundaryRect(game.Area);
-            SpawnArea?.ResizeBounds(boundaryRect);
-            CollisionHandler?.ResizeBounds(boundaryRect);
+            SpawnArea?.SetBounds(boundaryRect);
+            CollisionHandler?.SetBounds(boundaryRect);
             // spawnArea.Update(time, game, ui);
 
             for (int i = lastCutOuts.Count - 1; i >= 0; i--)

@@ -34,8 +34,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         this.maxBuckets = maxBuckets;
         bucketSize = new Size(bucketWidth, bucketHeight);
     }
-    
-    
+
     public void Fill(IEnumerable<CollisionObject> collisionBodies)
     {
         Clear();
@@ -251,7 +250,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         return new Rect(coords.X * bucketSize.Width, coords.Y * bucketSize.Height, bucketSize.Width, bucketSize.Height);
     }
     public Rect GetBounds() => currentBounds;
-    public void ResizeBounds(Rect targetBounds) { }
+    public void SetBounds(Rect targetBounds) { }
     
     public void DebugDraw(ColorRgba border, ColorRgba fill)
     {

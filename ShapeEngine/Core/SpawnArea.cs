@@ -5,6 +5,9 @@ using ShapeEngine.Geometry.CollisionSystem;
 using ShapeEngine.Geometry.CollisionSystem.CollisionHandlerDef;
 using ShapeEngine.Geometry.RectDef;
 
+//TODO: Is it possible to have bounds be empty by default and instead:
+// - set (valid) bounds and the spawn area will enforce those bounds (How to enforce them? Notify objects that they are out of bounds? Remove them? Call a function to request valid position with bounds parameter?)
+// - leave them empty and there will be no bounds enforcement?
 namespace ShapeEngine.Core
 {
     /// <summary>
@@ -78,15 +81,7 @@ namespace ShapeEngine.Core
         {
             Bounds = bounds;
         }
-
-        /// <summary>
-        /// Resizes the bounds of the spawn area.
-        /// </summary>
-        /// <param name="newBounds">The new bounds for the spawn area.</param>
-        public virtual void ResizeBounds(Rect newBounds)
-        {
-            Bounds = newBounds;
-        }
+        
         /// <summary>
         /// Determines whether the specified layer exists in the spawn area.
         /// </summary>
@@ -520,7 +515,7 @@ namespace ShapeEngine.Core
                         
                         if (obj.IsDead || obj.HasLeftBounds(Bounds))
                         {
-                            RemoveGameObject(obj);
+                            RemoveGameObject(obj); //Note: Currenty out of bounds objects are removed.
                         }
                     }
                 }
@@ -623,6 +618,16 @@ namespace ShapeEngine.Core
             {
                 allObjects.Add(layer, new(capacityEstimate));
             }
+        }
+
+        public Rect GetBounds()
+        {
+            return Bounds;
+        }
+
+        public virtual void SetBounds(Rect newBounds)
+        {
+            Bounds = newBounds;
         }
     }
 }

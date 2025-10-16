@@ -21,7 +21,7 @@ namespace ShapeEngine.Geometry.CollisionSystem;
 /// The spatial hash divides a 2D space into a grid of buckets, each containing colliders that overlap its region.
 /// Provides fast lookup for collision candidates and supports dynamic resizing and grid changes.
 /// </remarks>
-public class BroadphaseSpatialHash : IBounds, IBroadphase
+public class BroadphaseSpatialHash : IBroadphase
 {
     #region Public Members
     /// <summary>
@@ -142,7 +142,7 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// Queues a resize of the spatial hash bounds to the specified rectangle. The resize is applied on the next clear.
     /// </summary>
     /// <param name="targetBounds">The new bounds for the grid.</param>
-    public void ResizeBounds(Rect targetBounds) 
+    public void SetBounds(Rect targetBounds) 
     {
         newBounds = targetBounds;
         boundsResizeQueued = true;

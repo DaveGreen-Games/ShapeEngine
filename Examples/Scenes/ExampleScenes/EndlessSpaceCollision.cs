@@ -616,7 +616,7 @@ public class EndlessSpaceCollision : ExampleScene
             }
         }
         
-        CollisionHandler?.ResizeBounds(universe);
+        CollisionHandler?.SetBounds(universe);
         CollisionHandler?.Update(time.Delta);
 
         // var removed = 0;

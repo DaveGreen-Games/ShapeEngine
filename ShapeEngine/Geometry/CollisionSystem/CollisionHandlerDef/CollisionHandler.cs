@@ -102,11 +102,20 @@ public partial class CollisionHandler : IBounds
     #endregion
     
     #region Public Functions
+
+    /// <summary>
+    /// Gets the current bounding rectangle of the collision system.
+    /// </summary>
+    public Rect GetBounds()
+    {
+        return broadphase.GetBounds();
+    }
+
     /// <summary>
     /// Resizes the bounds of the collision system.
     /// </summary>
     /// <param name="newBounds">The new bounding rectangle.</param>
-    public void ResizeBounds(Rect newBounds) => broadphase.ResizeBounds(newBounds);
+    public void SetBounds(Rect newBounds) => broadphase.SetBounds(newBounds);
 
     /// <summary>
     /// Removes all registered collision objects and clears the collision system.
