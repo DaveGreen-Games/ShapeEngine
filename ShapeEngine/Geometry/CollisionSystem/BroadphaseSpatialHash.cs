@@ -52,15 +52,12 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     #region Private Members
     private BroadphaseBucket[] buckets;
     
-    // private readonly Dictionary<Collider, List<int>> register = new();
-    // private readonly HashSet<Collider> unusedRegisterColliders = [];
-    
     private readonly BroadphaseColliderRegister<int> register = new();
     private readonly BroadphaseStaticColliderRegister staticRegister = new();
     
-    
     private bool boundsResizeQueued;
     private Rect newBounds;
+    private HashSet<int> idHolder = new(128);
     #endregion
     
     #region Constructors
@@ -220,10 +217,26 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
             return count;
         }
         
-        HashSet<int> ids = [];
-        GetCellIDs(collider, ref ids);
-        return FillCandidateBuckets(ids, ref candidateBuckets);
+        idHolder.Clear();
+        GetCellIDs(collider, ref idHolder);
+        return FillCandidateBuckets(idHolder, ref candidateBuckets);
     }
+
+    /// <summary>
+    /// Gets all buckets that may contain colliders overlapping the given point.
+    /// </summary>
+    /// <param name="point">The world-space point to query.</param>
+    /// <param name="candidateBuckets">A list to populate with candidate buckets.</param>
+    /// <returns>
+    /// Returns the number of buckets added to the candidateBuckets list.
+    /// </returns>
+    public int GetCandidateBuckets(Vector2 point, ref List<BroadphaseBucket> candidateBuckets)
+    {
+        idHolder.Clear();
+        GetCellIDs(point, ref idHolder);
+        return FillCandidateBuckets(idHolder, ref candidateBuckets);
+    }
+
     /// <summary>
     /// Gets all buckets that may contain colliders overlapping the given segment.
     /// </summary>
@@ -234,10 +247,9 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetCandidateBuckets(Segment segment, ref List<BroadphaseBucket> candidateBuckets)
     {
-        HashSet<int> bucketIds = [];
-        GetCellIDs(segment, ref bucketIds);
-        
-        return FillCandidateBuckets(bucketIds, ref candidateBuckets);
+        idHolder.Clear();
+        GetCellIDs(segment, ref idHolder);
+        return FillCandidateBuckets(idHolder, ref candidateBuckets);
     }
     /// <summary>
     /// Gets all buckets that may contain colliders overlapping the given line.
@@ -249,10 +261,9 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetCandidateBuckets(Line line, ref List<BroadphaseBucket> candidateBuckets)
     {
-        HashSet<int> bucketIds = [];
-        GetCellIDs(line, ref bucketIds);
-        
-        return FillCandidateBuckets(bucketIds, ref candidateBuckets);
+        idHolder.Clear();
+        GetCellIDs(line, ref idHolder);
+        return FillCandidateBuckets(idHolder, ref candidateBuckets);
     }
     /// <summary>
     /// Gets all buckets that may contain colliders overlapping the given ray.
@@ -264,10 +275,9 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetCandidateBuckets(Ray ray, ref List<BroadphaseBucket> candidateBuckets)
     {
-        HashSet<int> bucketIds = [];
-        GetCellIDs(ray, ref bucketIds);
-        
-        return FillCandidateBuckets(bucketIds, ref candidateBuckets);
+        idHolder.Clear();
+        GetCellIDs(ray, ref idHolder);
+        return FillCandidateBuckets(idHolder, ref candidateBuckets);
     }
     /// <summary>
     /// Gets all buckets that may contain colliders overlapping the given circle.
@@ -279,10 +289,9 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetCandidateBuckets(Circle circle, ref List<BroadphaseBucket> candidateBuckets)
     {
-        HashSet<int> bucketIds = [];
-        GetCellIDs(circle, ref bucketIds);
-        
-        return FillCandidateBuckets(bucketIds, ref candidateBuckets);
+        idHolder.Clear();
+        GetCellIDs(circle, ref idHolder);
+        return FillCandidateBuckets(idHolder, ref candidateBuckets);
     }
     /// <summary>
     /// Gets all buckets that may contain colliders overlapping the given triangle.
@@ -294,10 +303,9 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetCandidateBuckets(Triangle triangle, ref List<BroadphaseBucket> candidateBuckets)
     {
-        HashSet<int> bucketIds = [];
-        GetCellIDs(triangle, ref bucketIds);
-        
-        return FillCandidateBuckets(bucketIds, ref candidateBuckets);
+        idHolder.Clear();
+        GetCellIDs(triangle, ref idHolder);
+        return FillCandidateBuckets(idHolder, ref candidateBuckets);
     }
     /// <summary>
     /// Gets all buckets that may contain colliders overlapping the given rectangle.
@@ -309,10 +317,9 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetCandidateBuckets(Rect rect, ref List<BroadphaseBucket> candidateBuckets)
     {
-        HashSet<int> bucketIds = [];
-        GetCellIDs(rect, ref bucketIds);
-        
-        return FillCandidateBuckets(bucketIds, ref candidateBuckets);
+        idHolder.Clear();
+        GetCellIDs(rect, ref idHolder);
+        return FillCandidateBuckets(idHolder, ref candidateBuckets);
     }
     /// <summary>
     /// Gets all buckets that may contain colliders overlapping the given quad.
@@ -324,10 +331,9 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetCandidateBuckets(Quad quad, ref List<BroadphaseBucket> candidateBuckets)
     {
-        HashSet<int> bucketIds = [];
-        GetCellIDs(quad, ref bucketIds);
-        
-        return FillCandidateBuckets(bucketIds, ref candidateBuckets);
+        idHolder.Clear();
+        GetCellIDs(quad, ref idHolder);
+        return FillCandidateBuckets(idHolder, ref candidateBuckets);
     }
     /// <summary>
     /// Gets all buckets that may contain colliders overlapping the given polygon.
@@ -339,10 +345,9 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetCandidateBuckets(Polygon poly, ref List<BroadphaseBucket> candidateBuckets)
     {
-        HashSet<int> bucketIds = [];
-        GetCellIDs(poly, ref bucketIds);
-        
-        return FillCandidateBuckets(bucketIds, ref candidateBuckets);
+        idHolder.Clear();
+        GetCellIDs(poly, ref idHolder);
+        return FillCandidateBuckets(idHolder, ref candidateBuckets);
     }
     /// <summary>
     /// Gets all buckets that may contain colliders overlapping the given polyline.
@@ -354,10 +359,9 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetCandidateBuckets(Polyline polyLine, ref List<BroadphaseBucket> candidateBuckets)
     {
-        HashSet<int> bucketIds = [];
-        GetCellIDs(polyLine, ref bucketIds);
-        
-        return FillCandidateBuckets(bucketIds, ref candidateBuckets);
+        idHolder.Clear();
+        GetCellIDs(polyLine, ref idHolder);
+        return FillCandidateBuckets(idHolder, ref candidateBuckets);
     }
   
     /// <summary>
@@ -404,9 +408,9 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
             return candidates.Count - prevCount;
         }
         
-        HashSet<int> ids = [];
-        GetCellIDs(collider, ref ids);
-        return AccumulateUniqueCandidates(ids, ref candidates);
+        idHolder.Clear();
+        GetCellIDs(collider, ref idHolder);
+        return AccumulateUniqueCandidates(idHolder, ref candidates);
     }
     /// <summary>
     /// Gets all unique colliders that may overlap the given segment.
@@ -418,10 +422,9 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetUniqueCandidates(Segment segment, ref HashSet<Collider> candidates)
     {
-        HashSet<int> bucketIds = [];
-        GetCellIDs(segment, ref bucketIds);
-        
-        return AccumulateUniqueCandidates(bucketIds, ref candidates);
+        idHolder.Clear();
+        GetCellIDs(segment, ref idHolder);
+        return AccumulateUniqueCandidates(idHolder, ref candidates);
     }
     /// <summary>
     /// Gets all unique colliders that may overlap the given circle.
@@ -433,10 +436,9 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetUniqueCandidates(Circle circle, ref HashSet<Collider> candidates)
     {
-        HashSet<int> bucketIds = [];
-        GetCellIDs(circle, ref bucketIds);
-        
-        return AccumulateUniqueCandidates(bucketIds, ref candidates);
+        idHolder.Clear();
+        GetCellIDs(circle, ref idHolder);
+        return AccumulateUniqueCandidates(idHolder, ref candidates);
     }
     /// <summary>
     /// Gets all unique colliders that may overlap the given triangle.
@@ -448,10 +450,9 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetUniqueCandidates(Triangle triangle, ref HashSet<Collider> candidates)
     {
-        HashSet<int> bucketIds = [];
-        GetCellIDs(triangle, ref bucketIds);
-        
-        return AccumulateUniqueCandidates(bucketIds, ref candidates);
+        idHolder.Clear();
+        GetCellIDs(triangle, ref idHolder);
+        return AccumulateUniqueCandidates(idHolder, ref candidates);
     }
     /// <summary>
     /// Gets all unique colliders that may overlap the given rectangle.
@@ -463,10 +464,9 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetUniqueCandidates(Rect rect, ref HashSet<Collider> candidates)
     {
-        HashSet<int> bucketIds = [];
-        GetCellIDs(rect, ref bucketIds);
-        
-        return AccumulateUniqueCandidates(bucketIds, ref candidates);
+        idHolder.Clear();
+        GetCellIDs(rect, ref idHolder);
+        return AccumulateUniqueCandidates(idHolder, ref candidates);
     }
     /// <summary>
     /// Gets all unique colliders that may overlap the given quad.
@@ -478,10 +478,9 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetUniqueCandidates(Quad quad, ref HashSet<Collider> candidates)
     {
-        HashSet<int> bucketIds = [];
-        GetCellIDs(quad, ref bucketIds);
-        
-        return AccumulateUniqueCandidates(bucketIds, ref candidates);
+        idHolder.Clear();
+        GetCellIDs(quad, ref idHolder);
+        return AccumulateUniqueCandidates(idHolder, ref candidates);
     }
     /// <summary>
     /// Gets all unique colliders that may overlap the given polygon.
@@ -493,10 +492,9 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetUniqueCandidates(Polygon poly, ref HashSet<Collider> candidates)
     {
-        HashSet<int> bucketIds = [];
-        GetCellIDs(poly, ref bucketIds);
-        
-        return AccumulateUniqueCandidates(bucketIds, ref candidates);
+        idHolder.Clear();
+        GetCellIDs(poly, ref idHolder);
+        return AccumulateUniqueCandidates(idHolder, ref candidates);
     }
     /// <summary>
     /// Gets all unique colliders that may overlap the given polyline.
@@ -508,10 +506,9 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </returns>
     public int GetUniqueCandidates(Polyline polyLine, ref HashSet<Collider> candidates)
     {
-        HashSet<int> bucketIds = [];
-        GetCellIDs(polyLine, ref bucketIds);
-        
-        return AccumulateUniqueCandidates(bucketIds, ref candidates);
+        idHolder.Clear();
+        GetCellIDs(polyLine, ref idHolder);
+        return AccumulateUniqueCandidates(idHolder, ref candidates);
     }
   
     /// <summary>
@@ -692,6 +689,8 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     /// </param>
     private void Add(Collider collider, MotionType motionType)
     {
+        //TODO: implement motion type & static register
+        
         // The SpatialHash is cleared and filled every frame, so skipping disabled colliders here is safe.
         if (!collider.Enabled) return;
         
