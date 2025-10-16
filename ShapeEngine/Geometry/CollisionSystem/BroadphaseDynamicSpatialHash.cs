@@ -121,7 +121,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
         {
             var position = collider.CurTransform.Position;
             minX = maxX = (int)Math.Floor(position.X / bucketSize.Width);
-            minY = maxY = (int)Math.Floor(position.Y / bucketSize.Width);
+            minY = maxY = (int)Math.Floor(position.Y / bucketSize.Height);
             bucketCount = 1;
 
             if (staticColliderCoords != null)
