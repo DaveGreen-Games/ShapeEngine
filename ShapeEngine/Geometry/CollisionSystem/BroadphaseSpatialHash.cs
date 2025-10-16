@@ -519,12 +519,14 @@ public class BroadphaseSpatialHash : IBroadphase
     /// <param name="fill">The color to fill non-empty cells.</param>
     public void DebugDraw(ColorRgba border, ColorRgba fill)
     {
-        for (int i = 0; i < BucketCount; i++)
+        for (var i = 0; i < BucketCount; i++)
         {
             var coords = GetCoordinatesGrid(i);
             var rect = new Rect(Bounds.X + coords.x * SpacingX, Bounds.Y + coords.y * SpacingY, SpacingX, SpacingY);
             rect.DrawLines(2f, border);
-            int id = GetCellId(coords.x, coords.y);
+            bool validId = GetCellId(coords.x, coords.y, out int id);
+            if(!validId) continue;
+            
             if (buckets[id].Count > 0)
             {
                 rect.Draw(fill);
@@ -622,28 +624,37 @@ public class BroadphaseSpatialHash : IBroadphase
     {
         return GetCellRectangle(index % Cols, index / Cols);
     }
+
     /// <summary>
-    /// Gets the cell id (bucket index) for the given grid coordinates.
+    /// Calculates the cell ID (bucket index) for the given grid coordinates.
     /// </summary>
     /// <param name="x">Grid x coordinate.</param>
     /// <param name="y">Grid y coordinate.</param>
-    /// <returns>Bucket index.</returns>
-    private int GetCellId(int x, int y)
+    /// <param name="id">The resulting cell ID if valid; otherwise, -1.</param>
+    /// <returns>True if the coordinates are valid and the ID is set; otherwise, false.</returns>
+    private bool GetCellId(int x, int y, out int id)
     {
-        return x + y * Cols;
+        id = -1;
+        if (x < 0 || y < 0) return false;
+        id = x + y * Cols;
+        return true;
+    }
+    private bool IsValidId(int id)
+    {
+        return id >= 0 && id < BucketCount;
     }
 
     /// <summary>
-    /// Gets the cell id (bucket index) for the given world-space coordinates.
+    /// Calculates the cell ID (bucket index) for the given world-space coordinates (x, y).
     /// </summary>
     /// <param name="x">World x coordinate.</param>
     /// <param name="y">World y coordinate.</param>
-    /// <returns>Bucket index.</returns>
-    private int GetCellId(float x, float y)
+    /// <param name="id">The resulting cell ID if valid; otherwise, -1.</param>
+    /// <returns>True if the coordinates are valid and the ID is set; otherwise, false.</returns>
+    private bool GetCellId(float x, float y, out int id)
     {
-        int xi = Math.Clamp((int)Math.Floor((x - Bounds.X) / SpacingX), 0, Cols - 1);
-        int yi = Math.Clamp((int)Math.Floor((y - Bounds.Y) / SpacingY), 0, Rows - 1);
-        return GetCellId(xi, yi);
+        (int xi, int yi) = GetCellCoordinate(x, y);
+        return GetCellId(xi, yi, out id);
     }
     /// <summary>
     /// Gets the grid cell coordinates for the given world-space coordinates.
@@ -653,8 +664,12 @@ public class BroadphaseSpatialHash : IBroadphase
     /// <returns>Tuple of (x, y) grid coordinates.</returns>
     private (int x, int y) GetCellCoordinate(float x, float y)
     {
-        int xi = Math.Clamp((int)Math.Floor((x - Bounds.X) / SpacingX), 0, Cols - 1);
-        int yi = Math.Clamp((int)Math.Floor((y - Bounds.Y) / SpacingY), 0, Rows - 1);
+        // int xi = Math.Clamp((int)Math.Floor((x - Bounds.X) / SpacingX), 0, Cols - 1);
+        // int yi = Math.Clamp((int)Math.Floor((y - Bounds.Y) / SpacingY), 0, Rows - 1);
+        var xi = (int)Math.Floor((x - Bounds.X) / SpacingX);
+        var yi = (int)Math.Floor((y - Bounds.Y) / SpacingY);
+        if (xi < 0 || xi > Cols - 1) xi = -1;
+        if (yi < 0 || yi > Rows - 1) yi = -1;
         return (xi, yi);
     }
     
@@ -708,7 +723,7 @@ public class BroadphaseSpatialHash : IBroadphase
         if(ids == null) return; //already added this frame
         
         var boundingRect = GetCellIDs(collider, ref ids);
-        if (ids.Count <= 0) return;
+        if (ids.Count <= 0) return; 
 
         if (staticColliderIds != null)
         {
@@ -748,7 +763,8 @@ public class BroadphaseSpatialHash : IBroadphase
     private void GetCellIDs(Vector2 point, ref HashSet<int> idList)
     {
         var coordinate = GetCellCoordinate(point.X, point.Y);
-        int id = GetCellId(coordinate.x, coordinate.y);
+        bool validId = GetCellId(coordinate.x, coordinate.y, out int id);
+        if(!validId) return;
         idList.Add(id);
     }
     
@@ -771,8 +787,9 @@ public class BroadphaseSpatialHash : IBroadphase
         {
             for (int i = topLeft.x; i <= bottomRight.x; i++)
             {
-                int id = GetCellId(i, j);
-
+                bool validId = GetCellId(i, j, out int id);
+                if(!validId) continue;
+                
                 if (testFullShape)
                 {
                     var cellRect = GetCellRectangle(id);
@@ -805,7 +822,9 @@ public class BroadphaseSpatialHash : IBroadphase
         {
             for (int i = topLeft.x; i <= bottomRight.x; i++)
             {
-                int id = GetCellId(i, j);
+                bool validId = GetCellId(i, j, out int id);
+                if(!validId) continue;
+                
                 if (testFullShape)
                 {
                     var cellRect = GetCellRectangle(id);
@@ -838,7 +857,9 @@ public class BroadphaseSpatialHash : IBroadphase
         {
             for (int i = topLeft.x; i <= bottomRight.x; i++)
             {
-                int id = GetCellId(i, j);
+                bool validId = GetCellId(i, j, out int id);
+                if(!validId) continue;
+                
                 if (testFullShape)
                 {
                     var cellRect = GetCellRectangle(id);
@@ -872,7 +893,9 @@ public class BroadphaseSpatialHash : IBroadphase
         {
             for (int i = topLeft.x; i <= bottomRight.x; i++)
             {
-                int id = GetCellId(i, j);
+                bool validId = GetCellId(i, j, out int id);
+                if(!validId) continue;
+                
                 if (testFullShape)
                 {
                     var cellRect = GetCellRectangle(id);
@@ -906,7 +929,9 @@ public class BroadphaseSpatialHash : IBroadphase
         {
             for (int i = topLeft.x; i <= bottomRight.x; i++)
             {
-                int id = GetCellId(i, j);
+                bool validId = GetCellId(i, j, out int id);
+                if(!validId) continue;
+                
                 if (testFullShape)
                 {
                     var cellRect = GetCellRectangle(id);
@@ -940,7 +965,9 @@ public class BroadphaseSpatialHash : IBroadphase
         {
             for (int i = topLeft.x; i <= bottomRight.x; i++)
             {
-                int id = GetCellId(i, j);
+                bool validId = GetCellId(i, j, out int id);
+                if(!validId) continue;
+                
                 if (testFullShape)
                 {
                     var cellRect = GetCellRectangle(id);
@@ -972,7 +999,9 @@ public class BroadphaseSpatialHash : IBroadphase
         {
             for (int i = topLeft.x; i <= bottomRight.x; i++)
             {
-                int id = GetCellId(i, j);
+                bool validId = GetCellId(i, j, out int id);
+                if(!validId) continue;
+                
                 var cellRect = GetCellRectangle(id);
                 if(cellRect.OverlapShape(rect)) idList.Add(id);
             }
@@ -998,7 +1027,9 @@ public class BroadphaseSpatialHash : IBroadphase
         {
             for (int i = topLeft.x; i <= bottomRight.x; i++)
             {
-                int id = GetCellId(i, j);
+                bool validId = GetCellId(i, j, out int id);
+                if(!validId) continue;
+                
                 if (testFullShape)
                 {
                     var cellRect = GetCellRectangle(id);
@@ -1031,7 +1062,9 @@ public class BroadphaseSpatialHash : IBroadphase
         {
             for (int i = topLeft.x; i <= bottomRight.x; i++)
             {
-                int id = GetCellId(i, j);
+                bool validId = GetCellId(i, j, out int id);
+                if(!validId) continue;
+                
                 if (testFullShape)
                 {
                     var cellRect = GetCellRectangle(id);
