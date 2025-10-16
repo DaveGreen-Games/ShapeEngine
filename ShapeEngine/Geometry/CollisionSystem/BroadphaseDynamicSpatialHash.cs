@@ -21,7 +21,7 @@ public class BroadphaseDynamicSpatialHash : IBroadphase
     private Rect currentBounds = new();//calculated from added colliders
     
     private readonly BroadphaseColliderRegister<BroadphaseBucket> register = new();
-    private readonly BroadphaseStaticColliderRegister staticRegister = new();
+    private readonly BroadphaseStaticColliderRegister<Coordinates> staticRegister = new();
     
     private readonly Dictionary<Coordinates, BroadphaseBucket> buckets = new();
     private readonly HashSet<BroadphaseBucket> availableBuckets = []; //could be a queue or stack as well

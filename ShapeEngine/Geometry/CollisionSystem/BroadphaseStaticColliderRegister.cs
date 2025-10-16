@@ -4,13 +4,13 @@ using ShapeEngine.Geometry.RectDef;
 namespace ShapeEngine.Geometry.CollisionSystem;
 
 //TODO: Docs
-public class BroadphaseStaticColliderRegister
+public class BroadphaseStaticColliderRegister<T>
 {
     private readonly Dictionary<Collider, Rect> registerRects = new();
-    private readonly Dictionary<Collider, HashSet<Coordinates>> register = new();
+    private readonly Dictionary<Collider, HashSet<T>> register = new();
     private readonly HashSet<Collider> unusedRegisterColliders = [];
 
-    public bool AddEntry(Collider collider, int capacity, out HashSet<Coordinates> coordinates, out Rect rect)
+    public bool AddEntry(Collider collider, int capacity, out HashSet<T> coordinates, out Rect rect)
     {
         if (register.TryGetValue(collider, out var value))
         {
@@ -19,7 +19,7 @@ public class BroadphaseStaticColliderRegister
             rect = registerRects[collider];
             return true;
         }
-        coordinates = new HashSet<Coordinates>(capacity);
+        coordinates = new HashSet<T>(capacity);
         register[collider] = coordinates;
         registerRects[collider] = new Rect();
         rect = new();
