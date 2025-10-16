@@ -7,24 +7,18 @@ namespace ShapeEngine.Geometry.CollisionSystem.CollisionHandlerDef;
 
 /// <summary>
 /// Handles collision detection, resolution, and spatial queries for registered <see cref="CollisionObject"/> instances.
-/// Implements <see cref="IBounds"/> to provide bounding information for the collision system.
 /// </summary>
 /// <remarks>
 /// This class manages the registration, update, and removal of collision objects,
 /// and provides methods for collision queries and spatial operations.
 /// </remarks>
-public partial class CollisionHandler : IBounds
+public partial class CollisionHandler
 {
     #region Members
     /// <summary>
     /// Gets the number of registered <see cref="CollisionObject"/> instances in the collision system.
     /// </summary>
     public int Count => collisionBodyRegister.AllObjects.Count;
-
-    /// <summary>
-    /// Gets the bounding rectangle of the collision system.
-    /// </summary>
-    public Rect Bounds => broadphase.GetBounds();
     
     private readonly CollisionObjectRegister collisionBodyRegister;
     
@@ -102,20 +96,6 @@ public partial class CollisionHandler : IBounds
     #endregion
     
     #region Public Functions
-
-    /// <summary>
-    /// Gets the current bounding rectangle of the collision system.
-    /// </summary>
-    public Rect GetBounds()
-    {
-        return broadphase.GetBounds();
-    }
-
-    /// <summary>
-    /// Resizes the bounds of the collision system.
-    /// </summary>
-    /// <param name="newBounds">The new bounding rectangle.</param>
-    public void SetBounds(Rect newBounds) => broadphase.SetBounds(newBounds);
 
     /// <summary>
     /// Removes all registered collision objects and clears the collision system.

@@ -120,7 +120,7 @@ public class EndlessSpaceCollision : ExampleScene
     private readonly float cellSize;
 
     private bool gameOverScreenActive = false;
-
+    private readonly BroadphaseSpatialHash spatialHash;
     public EndlessSpaceCollision()
     {
         drawInputDeviceInfo = false;
@@ -131,7 +131,7 @@ public class EndlessSpaceCollision : ExampleScene
 
         DestroyerPosition = universe.Center + Rng.Instance.RandVec2(UniverseSize * 1.25f, UniverseSize * 2f);
 
-        var spatialHash = new BroadphaseSpatialHash(universe, CollisionRows, CollisionCols);
+        spatialHash = new BroadphaseSpatialHash(universe, CollisionRows, CollisionCols);
         InitCollisionHandler(spatialHash);
         
         cellSize = UniverseSize / CollisionRows;
@@ -616,7 +616,7 @@ public class EndlessSpaceCollision : ExampleScene
             }
         }
         
-        CollisionHandler?.SetBounds(universe);
+        spatialHash.SetBounds(universe);
         CollisionHandler?.Update(time.Delta);
 
         // var removed = 0;

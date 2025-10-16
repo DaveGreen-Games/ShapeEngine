@@ -555,13 +555,14 @@ namespace Examples.Scenes.ExampleScenes
         private readonly InputAction iaDragLaser;
         private readonly InputAction iaShootLaser;
         private readonly InputActionTree inputActionTree;
-        
+
+        private readonly BroadphaseSpatialHash spatialHash;
         public AsteroidMiningExample()
         {
             Title = "Asteroid Mining Example";
             UpdateBoundaryRect(Game.Instance.GameScreenInfo.Area);
             InitSpawnArea(boundaryRect);
-            var spatialHash = new BroadphaseSpatialHash(boundaryRect, 4, 4);
+            spatialHash = new BroadphaseSpatialHash(boundaryRect, 4, 4);
             InitCollisionHandler(spatialHash);
             
             InputActionSettings defaultSettings = new();
@@ -658,7 +659,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             UpdateBoundaryRect(game.Area);
             SpawnArea?.SetBounds(boundaryRect);
-            CollisionHandler?.SetBounds(boundaryRect);
+            spatialHash.SetBounds(boundaryRect);
             // spawnArea.Update(time, game, ui);
 
             for (int i = lastCutOuts.Count - 1; i >= 0; i--)

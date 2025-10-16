@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
+using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.LineDef;
@@ -635,13 +636,9 @@ public class BroadphaseSpatialHash : IBroadphase
     private bool GetCellId(int x, int y, out int id)
     {
         id = -1;
-        if (x < 0 || y < 0) return false;
+        if (x < 0 || y < 0)  return false;
         id = x + y * Cols;
         return true;
-    }
-    private bool IsValidId(int id)
-    {
-        return id >= 0 && id < BucketCount;
     }
 
     /// <summary>
@@ -723,6 +720,8 @@ public class BroadphaseSpatialHash : IBroadphase
         if(ids == null) return; //already added this frame
         
         var boundingRect = GetCellIDs(collider, ref ids);
+        //TODO: Remove from static register? How to handle static colliders out of bounds?
+        // or just leave it the way it is?
         if (ids.Count <= 0) return; 
 
         if (staticColliderIds != null)
