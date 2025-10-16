@@ -78,7 +78,73 @@ public readonly struct Coordinates : IEquatable<Coordinates>
     /// </summary>
     /// <returns>A <see cref="Vector2"/> with (X/Col, Y/Row).</returns>
     public Vector2 ToVector2() => new(X, Y);
+    /// <summary>
+    /// Calculates the 1D index in a row-major order for this coordinate, given the number of columns.
+    /// </summary>
+    /// <param name="cols">The total number of columns in the grid.</param>
+    /// <returns>The 1D index corresponding to this coordinate.</returns>
+    public int GetIndexCols(int cols)
+    {
+        return X + Y * cols;
+    }
+    /// <summary>
+    /// Calculates the 1D index in a column-major order for this coordinate, given the number of rows.
+    /// </summary>
+    /// <param name="rows">The total number of rows in the grid.</param>
+    /// <returns>The 1D index corresponding to this coordinate in column-major order.</returns>
+    public int GetIndexRows(int rows)
+    {
+        return Y + X * rows;
+    }
 
+    /// <summary>
+    /// Converts a 2D point to grid coordinates based on the grid's origin, spacing, and dimensions.
+    /// </summary>
+    /// <param name="x">The x (horizontal) position of the point.</param>
+    /// <param name="y">The y (vertical) position of the point.</param>
+    /// <param name="origin">The origin (top-left corner) of the grid in world coordinates.</param>
+    /// <param name="spacing">The spacing between grid cells (width, height).</param>
+    /// <param name="cols">The number of columns in the grid.</param>
+    /// <param name="rows">The number of rows in the grid.</param>
+    /// <returns>The corresponding <see cref="Coordinates"/> on the grid.</returns>
+    public static Coordinates PointToCoordinates(float x, float y, Vector2 origin, Vector2 spacing, int cols, int rows)
+    {
+        int xi = Math.Clamp((int)Math.Floor((x - origin.X) / spacing.X), 0, cols - 1);
+        int yi = Math.Clamp((int)Math.Floor((y - origin.Y) / spacing.Y), 0, rows - 1);
+        return new(xi, yi);
+    }
+    
+    /// <summary>
+    /// Converts a 2D point to grid coordinates based on the grid's origin, spacing, and dimensions.
+    /// </summary>
+    /// <param name="point">The 2D point in world coordinates.</param>
+    /// <param name="origin">The origin (top-left corner) of the grid in world coordinates.</param>
+    /// <param name="spacing">The spacing between grid cells (width, height).</param>
+    /// <param name="cols">The number of columns in the grid.</param>
+    /// <param name="rows">The number of rows in the grid.</param>
+    /// <returns>The corresponding <see cref="Coordinates"/> on the grid.</returns>
+    public static Coordinates PointToCoordinates(Vector2 point, Vector2 origin, Vector2 spacing, int cols, int rows) => PointToCoordinates(point.X, point.Y, origin, spacing, cols, rows);
+    /// <summary>
+    /// Converts a 2D point to grid coordinates based on the cell size.
+    /// </summary>
+    /// <param name="x">The x (horizontal) position of the point.</param>
+    /// <param name="y">The y (vertical) position of the point.</param>
+    /// <param name="cellSize">The size of each grid cell.</param>
+    /// <returns>The corresponding <see cref="Coordinates"/> on the grid.</returns>
+    public static Coordinates PointToCoordinates(float x, float y, Size cellSize)
+    {
+        var cx = (int)Math.Floor(x / cellSize.Width);
+        var cy = (int)Math.Floor(y / cellSize.Width);
+        return new Coordinates(cx, cy);
+    }
+    /// <summary>
+    /// Converts a 2D point to grid coordinates based on the cell size.
+    /// </summary>
+    /// <param name="point">The 2D point in world coordinates.</param>
+    /// <param name="cellSize">The size of each grid cell.</param>
+    /// <returns>The corresponding <see cref="Coordinates"/> on the grid.</returns>
+    public static Coordinates PointToCoordinates(Vector2 point, Size cellSize) => PointToCoordinates(point.X, point.Y, cellSize);
+    
     #region Operators
     /// <summary>
     /// Determines whether this coordinate is equal to another coordinate.
