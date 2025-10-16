@@ -1,7 +1,5 @@
 ﻿using System.Numerics;
 using ShapeEngine.Color;
-using ShapeEngine.Core;
-using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.LineDef;
@@ -604,7 +602,7 @@ public class BroadphaseSpatialHash : IBroadphase
     private Vector2 GetCoordinatesWorld(int index)
     {
         var coord = GetCoordinatesGrid(index);
-        return new Vector2(coord.x * SpacingX, coord.y * SpacingY);
+        return new Vector2(Bounds.X + coord.x * SpacingX, Bounds.Y + coord.y * SpacingY);
     }
     /// <summary>
     /// Gets the rectangle representing a cell at the given grid coordinates.
@@ -636,37 +634,21 @@ public class BroadphaseSpatialHash : IBroadphase
     private bool GetCellId(int x, int y, out int id)
     {
         id = -1;
-        if (x < 0 || y < 0)  return false;
+        if (x < 0 || x > Cols - 1 || y < 0 || y > Rows - 1) return false;
         id = x + y * Cols;
         return true;
     }
-
     /// <summary>
-    /// Calculates the cell ID (bucket index) for the given world-space coordinates (x, y).
+    /// Gets the grid cell coordinates for the given world-space coordinates,
+    /// clamping the result to ensure it stays within the valid grid bounds.
     /// </summary>
     /// <param name="x">World x coordinate.</param>
     /// <param name="y">World y coordinate.</param>
-    /// <param name="id">The resulting cell ID if valid; otherwise, -1.</param>
-    /// <returns>True if the coordinates are valid and the ID is set; otherwise, false.</returns>
-    private bool GetCellId(float x, float y, out int id)
-    {
-        (int xi, int yi) = GetCellCoordinate(x, y);
-        return GetCellId(xi, yi, out id);
-    }
-    /// <summary>
-    /// Gets the grid cell coordinates for the given world-space coordinates.
-    /// </summary>
-    /// <param name="x">World x coordinate.</param>
-    /// <param name="y">World y coordinate.</param>
-    /// <returns>Tuple of (x, y) grid coordinates.</returns>
+    /// <returns>Tuple of (x, y) grid coordinates, clamped to the grid size.</returns>
     private (int x, int y) GetCellCoordinate(float x, float y)
     {
-        // int xi = Math.Clamp((int)Math.Floor((x - Bounds.X) / SpacingX), 0, Cols - 1);
-        // int yi = Math.Clamp((int)Math.Floor((y - Bounds.Y) / SpacingY), 0, Rows - 1);
-        var xi = (int)Math.Floor((x - Bounds.X) / SpacingX);
-        var yi = (int)Math.Floor((y - Bounds.Y) / SpacingY);
-        if (xi < 0 || xi > Cols - 1) xi = -1;
-        if (yi < 0 || yi > Rows - 1) yi = -1;
+        int xi = Math.Clamp((int)Math.Floor((x - Bounds.X) / SpacingX), 0, Cols - 1); 
+        int yi = Math.Clamp((int)Math.Floor((y - Bounds.Y) / SpacingY), 0, Rows - 1);
         return (xi, yi);
     }
     
@@ -761,6 +743,8 @@ public class BroadphaseSpatialHash : IBroadphase
     /// <param name="idList">The set to populate with the cell ID.</param>
     private void GetCellIDs(Vector2 point, ref HashSet<int> idList)
     {
+        if (!Bounds.ContainsPoint(point)) return;
+        
         var coordinate = GetCellCoordinate(point.X, point.Y);
         bool validId = GetCellId(coordinate.x, coordinate.y, out int id);
         if(!validId) return;
@@ -779,6 +763,8 @@ public class BroadphaseSpatialHash : IBroadphase
     private Rect GetCellIDs(Segment segment, ref HashSet<int> idList, bool testFullShape = true)
     {
         var boundingRect = segment.GetBoundingBox();
+        if (!Bounds.OverlapShape(boundingRect)) return boundingRect;
+            
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
         var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
 
@@ -814,6 +800,7 @@ public class BroadphaseSpatialHash : IBroadphase
     private Rect GetCellIDs(Line line, ref HashSet<int> idList, bool testFullShape = true)
     {
         var boundingRect = line.GetBoundingBox();
+        if (!Bounds.OverlapShape(boundingRect)) return boundingRect;
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
         var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
 
@@ -849,9 +836,10 @@ public class BroadphaseSpatialHash : IBroadphase
     private Rect GetCellIDs(Ray ray, ref HashSet<int> idList, bool testFullShape = true)
     {
         var boundingRect = ray.GetBoundingBox();
+        if (!Bounds.OverlapShape(boundingRect)) return boundingRect;
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
         var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
-
+        
         for (int j = topLeft.y; j <= bottomRight.y; j++)
         {
             for (int i = topLeft.x; i <= bottomRight.x; i++)
@@ -885,6 +873,7 @@ public class BroadphaseSpatialHash : IBroadphase
     private Rect GetCellIDs(Triangle triangle, ref HashSet<int> idList, bool testFullShape = true)
     {
         var boundingRect = triangle.GetBoundingBox();
+        if (!Bounds.OverlapShape(boundingRect)) return boundingRect;
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
         var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
 
@@ -921,6 +910,7 @@ public class BroadphaseSpatialHash : IBroadphase
     private Rect GetCellIDs(Quad quad, ref HashSet<int> idList, bool testFullShape = true)
     {
         var boundingRect = quad.GetBoundingBox();
+        if (!Bounds.OverlapShape(boundingRect)) return boundingRect;
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
         var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
 
@@ -957,6 +947,7 @@ public class BroadphaseSpatialHash : IBroadphase
     private Rect GetCellIDs(Circle circle, ref HashSet<int> idList, bool testFullShape = true)
     {
         var boundingRect = circle.GetBoundingBox();
+        if (!Bounds.OverlapShape(boundingRect)) return boundingRect;
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
         var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
 
@@ -991,6 +982,7 @@ public class BroadphaseSpatialHash : IBroadphase
     /// </returns>
     private Rect GetCellIDs(Rect rect, ref HashSet<int> idList)
     {
+        if (!Bounds.OverlapShape(rect)) return rect;
         var topLeft = GetCellCoordinate(rect.X, rect.Y);
         var bottomRight = GetCellCoordinate(rect.X + rect.Width, rect.Y + rect.Height);
 
@@ -1019,6 +1011,7 @@ public class BroadphaseSpatialHash : IBroadphase
     private Rect GetCellIDs(Polygon poly, ref HashSet<int> idList, bool testFullShape = true)
     {
         var boundingRect = poly.GetBoundingBox();
+        if (!Bounds.OverlapShape(boundingRect)) return boundingRect;
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
         var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
 
@@ -1054,6 +1047,7 @@ public class BroadphaseSpatialHash : IBroadphase
     private Rect GetCellIDs(Polyline polyLine, ref HashSet<int> idList, bool testFullShape = true)
     {
         var boundingRect = polyLine.GetBoundingBox();
+        if (!Bounds.OverlapShape(boundingRect)) return boundingRect;
         var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
         var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
 
