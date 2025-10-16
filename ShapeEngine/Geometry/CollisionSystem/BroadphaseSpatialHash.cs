@@ -56,9 +56,6 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     // private readonly HashSet<Collider> unusedRegisterColliders = [];
     
     private readonly BroadphaseColliderRegister<int> register = new();
-    
-    //TODO: Implement MotionType optimizations (static vs dynamic objects).
-    //TODO: implement
     private readonly BroadphaseStaticColliderRegister staticRegister = new();
     
     
@@ -674,7 +671,6 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
         return (xi, yi);
     }
     
-    //TODO: use static parameter of collisionBody here
     /// <summary>
     /// Adds all colliders from a collision object to the spatial hash.
     /// </summary>
@@ -683,39 +679,28 @@ public class BroadphaseSpatialHash : IBounds, IBroadphase
     {
         foreach (var collider in collisionBody.Colliders)
         {
-            Add(collider);//TODO: use static parameter
+            Add(collider, collisionBody.MotionType);
         }
     }
-   
-    //TODO: Implement broadphase type optimizations (point, bounding box, full shape).
+    
     /// <summary>
     /// Adds a collider to the spatial hash, updating the register and buckets.
     /// </summary>
     /// <param name="collider">The collider to add.</param>
-    private void Add(Collider collider)
+    /// <param name="motionType">The motion type of the parent <see cref="CollisionObject"/> used for this <see cref="Collider"/>.
+    /// <see cref="MotionType.Static"/> is used to cache the collider rect and ids in a separate static register for potential optimizations.
+    /// </param>
+    private void Add(Collider collider, MotionType motionType)
     {
         // The SpatialHash is cleared and filled every frame, so skipping disabled colliders here is safe.
         if (!collider.Enabled) return;
-            
-        // List<int> ids;
         
         var ids = register.AddEntry(collider, 0);
         if(ids == null) return; //already added this frame
         
-        // if (register.TryGetValue(collider, out var value))
-        // {
-            // ids = value;
-            // ids.Clear();
-        // }
-        // else
-        // {
-            // ids = new List<int>();
-            // register.Add(collider, ids);
-            
-        // }
         GetCellIDs(collider, ref ids);
         if (ids.Count <= 0) return;
-        // unusedRegisterColliders.Remove(collider);
+
         foreach (int hash in ids)
         {
             buckets[hash].Add(collider);
