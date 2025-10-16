@@ -4,6 +4,7 @@ using ShapeEngine.StaticLib;
 using System.Numerics;
 using System.Text;
 using ShapeEngine.Color;
+using ShapeEngine.Core.GameDef;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Geometry.CircleDef;
 using ShapeEngine.Geometry.CollisionSystem;
@@ -254,7 +255,7 @@ namespace Examples.Scenes.ExampleScenes
         public override void DrawGameUI(ScreenInfo gameUi)
         {
         }
-        
+
     }
     internal class Bullet : CollisionObject
     {
@@ -524,7 +525,6 @@ namespace Examples.Scenes.ExampleScenes
         }
     }
     
-
     
     public class GameObjectHandlerExample : ExampleScene
     {
@@ -638,9 +638,6 @@ namespace Examples.Scenes.ExampleScenes
             
             // var spatialHash = new BroadphaseSpatialHash(boundaryRect, 50, 50);
             // InitCollisionHandler(spatialHash);
-            // var quadTree = new BroadphaseQuadTree(boundaryRect, 5, new Size(50, 50));
-            // InitCollisionHandler(quadTree);
-
             var dynamicSpatialHash = new BroadphaseDynamicSpatialHash(150, 150, 10000);
             InitCollisionHandler(dynamicSpatialHash);
             
@@ -655,7 +652,10 @@ namespace Examples.Scenes.ExampleScenes
         private void OnGameObjectDied(GameObject obj)
         {
             if (CollisionHandler == null) return;
-            if(obj is CollisionObject co) CollisionHandler.Remove(co);
+            if (obj is CollisionObject co)
+            {
+                CollisionHandler.Remove(co);
+            }
         }
 
 
@@ -718,57 +718,60 @@ namespace Examples.Scenes.ExampleScenes
                 ClearAreaCollisionObjects(clearArea, clearAreaMask);
                 clearAreaActive = false;
             }
-            
-            if (iaSpawnRock.State.Pressed)
-            {
-                for (int i = 0; i < 50; i++)
-                {
-                    var spawnPos = mousePosGame + Rng.Instance.RandVec2(0, 200);
-                    var r = new Rock(spawnPos);
-                    SpawnArea?.AddGameObject(r);
-                    CollisionHandler?.Add(r);
-                }
-            
-            }
-            if (iaSpawnBird.State.Pressed)
-            {
-                Bird b = new(mousePosGame);
-                SpawnArea?.AddGameObject(b);
-                CollisionHandler?.Add(b);
-            
-            }
-            if (iaSpawnBall.State.Down)
-            {
-                for (var i = 0; i < 10; i++)
-                {
-                    // Ball b = new(mousePosGame + ShapeRandom.RandVec2(0, 5), ShapeRandom.RandVec2() * 300, 10);
-                    // gameObjectHandler.AddAreaObject(b);
-                    var ball = new Ball(mousePosGame);
-                    SpawnArea?.AddGameObject(ball);
-                    CollisionHandler?.Add(ball);
-                }
 
-            }
-            if (iaSpawnBullet.State.Pressed)
+            if (boundaryRect.ContainsPoint(mousePosGame))
             {
-                for (var i = 0; i < 100; i++)
+                if (iaSpawnRock.State.Pressed)
                 {
-                    var bullet = new Bullet(mousePosGame);
-                    SpawnArea?.AddGameObject(bullet);
-                    CollisionHandler?.Add(bullet);
+                    for (int i = 0; i < 50; i++)
+                    {
+                        var spawnPos = mousePosGame + Rng.Instance.RandVec2(0, 200);
+                        var r = new Rock(spawnPos);
+                        SpawnArea?.AddGameObject(r);
+                        CollisionHandler?.Add(r);
+                    }
+            
                 }
-                
-            }
-            if (iaSpawnOverlapper.State.Pressed)
-            {
-                for (var i = 0; i < 3; i++)
+                if (iaSpawnBird.State.Pressed)
                 {
-                    var overlapper = new Overlapper(mousePosGame);
-                    SpawnArea?.AddGameObject(overlapper);
-                    CollisionHandler?.Add(overlapper);
+                    Bird b = new(mousePosGame);
+                    SpawnArea?.AddGameObject(b);
+                    CollisionHandler?.Add(b);
+            
                 }
+                if (iaSpawnBall.State.Down)
+                {
+                    for (var i = 0; i < 10; i++)
+                    {
+                        var ball = new Ball(mousePosGame);
+                        SpawnArea?.AddGameObject(ball);
+                        CollisionHandler?.Add(ball);
+                    }
+
+                }
+                if (iaSpawnBullet.State.Pressed)
+                {
+                    for (var i = 0; i < 100; i++)
+                    {
+                        var bullet = new Bullet(mousePosGame);
+                        SpawnArea?.AddGameObject(bullet);
+                        CollisionHandler?.Add(bullet);
+                    }
                 
+                }
+                if (iaSpawnOverlapper.State.Pressed)
+                {
+                    for (var i = 0; i < 3; i++)
+                    {
+                        var overlapper = new Overlapper(mousePosGame);
+                        SpawnArea?.AddGameObject(overlapper);
+                        CollisionHandler?.Add(overlapper);
+                    }
+                
+                }
             }
+            
+            
             
             if (iaToggleDebug.State.Pressed) { drawDebug = !drawDebug; }
 
@@ -820,8 +823,7 @@ namespace Examples.Scenes.ExampleScenes
             textFont.FontSpacing = 1f;
             textFont.ColorRgba = Colors.Warm;
             textFont.DrawTextWrapNone("Object Count", rects.top, new(0.5f, 0f));
-            
-            textFont.DrawTextWrapNone($"{CollisionHandler?.Count ?? 0}", rects.bottom, new(0.5f));
+            textFont.DrawTextWrapNone($"{CollisionHandler?.Count ?? 0}", rects.bottom, new(0.5f)); //TODO: colliders are not properly removed from the collision handler 
         }
 
         private void DrawInputText(Rect rect)

@@ -58,41 +58,48 @@ public partial class CollisionHandler
     #endregion
     
     #region Add & Remove Collision Objects
+
     /// <summary>
     /// Adds a <see cref="CollisionObject"/> to the collision system.
     /// </summary>
     /// <param name="collisionObject">The collision object to add.</param>
-    public void Add(CollisionObject collisionObject) => collisionBodyRegister.Add(collisionObject);
-
+    /// <returns><c>true</c> if the object was added; otherwise, <c>false</c>.</returns>
+    public bool Add(CollisionObject collisionObject) => collisionBodyRegister.Add(collisionObject);
+    
     /// <summary>
-    /// Adds a collection of <see cref="CollisionObject"/> instances to the collision system.
+    /// Adds a range of <see cref="CollisionObject"/> instances to the collision system.
     /// </summary>
     /// <param name="collisionObjects">The collection of collision objects to add.</param>
-    public void AddRange(IEnumerable<CollisionObject> collisionObjects) => collisionBodyRegister.AddRange(collisionObjects);
+    /// <returns>The number of objects added.</returns>
+    public int AddRange(IEnumerable<CollisionObject> collisionObjects) => collisionBodyRegister.AddRange(collisionObjects);
 
     /// <summary>
-    /// Adds multiple <see cref="CollisionObject"/> instances to the collision system.
+    /// Adds a range of <see cref="CollisionObject"/> instances to the collision system.
     /// </summary>
     /// <param name="collisionObjects">The collision objects to add.</param>
-    public void AddRange(params CollisionObject[] collisionObjects)=> collisionBodyRegister.AddRange(collisionObjects);
+    /// <returns>The number of objects added.</returns>
+    public int AddRange(params CollisionObject[] collisionObjects)=> collisionBodyRegister.AddRange(collisionObjects);
 
     /// <summary>
     /// Removes a <see cref="CollisionObject"/> from the collision system.
     /// </summary>
     /// <param name="collisionObject">The collision object to remove.</param>
-    public void Remove(CollisionObject collisionObject)=> collisionBodyRegister.Remove(collisionObject);
+    /// <returns><c>true</c> if the object was removed; otherwise, <c>false</c>.</returns>
+    public bool Remove(CollisionObject collisionObject)=> collisionBodyRegister.Remove(collisionObject);
 
     /// <summary>
     /// Removes a collection of <see cref="CollisionObject"/> instances from the collision system.
     /// </summary>
     /// <param name="collisionObjects">The collection of collision objects to remove.</param>
-    public void RemoveRange(IEnumerable<CollisionObject> collisionObjects)  => collisionBodyRegister.RemoveRange(collisionObjects);
+    /// <returns>The number of objects removed.</returns>
+    public int RemoveRange(IEnumerable<CollisionObject> collisionObjects)  => collisionBodyRegister.RemoveRange(collisionObjects);
 
     /// <summary>
     /// Removes multiple <see cref="CollisionObject"/> instances from the collision system.
     /// </summary>
     /// <param name="collisionObjects">The collision objects to remove.</param>
-    public void RemoveRange(params CollisionObject[] collisionObjects)  => collisionBodyRegister.RemoveRange(collisionObjects);
+    /// <returns>The number of objects removed.</returns>
+    public int RemoveRange(params CollisionObject[] collisionObjects)  => collisionBodyRegister.RemoveRange(collisionObjects);
     #endregion
     
     #region Public Functions

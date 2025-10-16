@@ -1,3 +1,5 @@
+using ShapeEngine.Core.GameDef;
+
 namespace ShapeEngine.Geometry.CollisionSystem.CollisionHandlerDef;
 
 public partial class CollisionHandler
@@ -7,8 +9,8 @@ public partial class CollisionHandler
     private class ObjectRegister<T>
     {
         public readonly HashSet<T> AllObjects;
-        private readonly List<T> tempHolding;
-        private readonly List<T> tempRemoving;
+        private readonly HashSet<T> tempHolding;
+        private readonly HashSet<T> tempRemoving;
 
         public ObjectRegister(int capacity)
         {
@@ -17,17 +19,77 @@ public partial class CollisionHandler
             tempRemoving = new(capacity / 4);
         }
 
-        public void Add(T obj) => tempHolding.Add(obj);
+        public bool Add(T obj)
+        {
+            return !tempRemoving.Contains(obj) && !AllObjects.Contains(obj) && tempHolding.Add(obj);
+        }
 
-        public void AddRange(IEnumerable<T> objs) => tempHolding.AddRange(objs);
+        public int AddRange(IEnumerable<T> objs)
+        {
+            var added = 0;
+            foreach (var obj in objs)
+            {
+                if(tempRemoving.Contains(obj)) continue;
+                if(AllObjects.Contains(obj)) continue;
+                if(tempHolding.Add(obj))
+                {
+                    added++;
+                }
+            }
+            return added;
+        }
 
-        public void AddRange(params T[] objs) => tempHolding.AddRange(objs);
+        public int AddRange(params T[] objs)
+        {
+            var added = 0;
+            foreach (var obj in objs)
+            {
+                if(tempRemoving.Contains(obj)) continue;
+                if(AllObjects.Contains(obj)) continue;
+                if(tempHolding.Add(obj))
+                {
+                    added++;
+                }
+            }
 
-        public void Remove(T obj) => tempRemoving.Add(obj);
+            return added;
+        }
 
-        public void RemoveRange(IEnumerable<T> objs) => tempRemoving.AddRange(objs);
+        public bool Remove(T obj)
+        {
+            if (tempHolding.Remove(obj))
+            {
+                if (AllObjects.Contains(obj))
+                {
+                    return tempRemoving.Add(obj);
+                }
 
-        public void RemoveRange(params T[] objs) => tempRemoving.AddRange(objs);
+                return false;
+            }
+            
+            if (!AllObjects.Contains(obj)) return false;
+            return tempRemoving.Add(obj);
+        }
+
+        public int RemoveRange(IEnumerable<T> objs)
+        {
+            var removed = 0;
+            foreach (var obj in objs)
+            {
+                if(Remove(obj)) removed++;
+            }
+            return removed;
+        }
+
+        public int RemoveRange(params T[] objs)
+        {
+            var removed = 0;
+            foreach (var obj in objs)
+            {
+                if(Remove(obj)) removed++;
+            }
+            return removed;
+        }
 
         public void Process()
         {
